@@ -318,6 +318,70 @@
       (car (emacsvox-aural-voice-workbench--explicit-selectors "voice-bolden"))
       '(:kind engine-default :scope portable :engine-id "winrt")))))
 
+(ert-deftest emacsvox-aural-voice-workbench-suggestions-are-reviewed-and-undoable ()
+  "An exact family alias remains staged with provenance until explicit save."
+  (emacsvox-test--with-voice-workbench
+    (let* ((inventory
+            '(:adapter "omnivox" :source "live" :engines
+              ((:engine-id "eloquence" :availability "available"
+                :health "healthy" :default-voice-id "v1"
+                :voices
+                ((:engine-id "eloquence" :voice-id "v1"
+                  :display-name "Adult male 1" :language "en-US"
+                  :gender "male" :availability "available"))))))
+           (tts-voice-inventory-function
+            (lambda () (copy-tree inventory))))
+      (cl-progv '(voice-annotate-settings) '((paul nil 4 0 4))
+        (emacsvox-aural-voice-workbench-refresh "voice-annotate")
+        (let ((suggestions
+               (emacsvox-aural-voice-workbench--suggestions
+                "voice-annotate")))
+          (should (eq (plist-get (car suggestions) :reason) 'exact-alias))
+          (should
+           (equal
+            (plist-get (plist-get (car suggestions) :selector) :voice-id)
+            "v1")))
+        (cl-letf
+            (((symbol-function 'completing-read)
+              (lambda (_prompt collection &rest _) (caar collection)))
+             ((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+          (emacsvox-aural-voice-workbench-suggest-route))))
+    (let ((selector
+           (car
+            (emacsvox-aural-voice-workbench--explicit-selectors
+             "voice-annotate"))))
+      (should (eq (plist-get selector :kind) 'exact))
+      (should (equal (plist-get selector :voice-id) "v1")))
+    (should
+     (eq (plist-get (car emacsvox-aural-voice-workbench-provenance) :kind)
+         'suggested))
+    (let ((entry (tabulated-list-get-entry)))
+      (should (string-match-p "suggested" (aref entry 11))))
+    (emacsvox-aural-voice-workbench-undo)
+    (should-not
+     (emacsvox-aural-voice-workbench--profile-binding "voice-annotate"))
+    (should-not emacsvox-aural-voice-workbench-provenance)))
+
+(ert-deftest emacsvox-aural-voice-workbench-migrates-palette-without-saving ()
+  "Palette migration fills unmapped voices in one staged transaction only."
+  (emacsvox-test--with-voice-workbench
+    (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+      (emacsvox-aural-voice-workbench--migrate-active-palette))
+    (should
+     (emacsvox-aural-voice-workbench--profile-binding "voice-annotate"))
+    (should (emacsvox-aural-voice-workbench--dirty-p))
+    (should
+     (eq (plist-get (car emacsvox-aural-voice-workbench-provenance) :kind)
+         'imported))
+    (should
+     (equal
+      (plist-get
+       (car
+        (emacsvox-aural-voice-workbench--explicit-selectors
+         "voice-annotate"))
+       :engine-id)
+      "eloquence"))))
+
 (ert-deftest emacsvox-aural-voice-workbench-cancel-restores-opening-copy ()
   "Cancelling staged work restores the exact committed profile and clears undo."
   (emacsvox-test--with-voice-workbench
@@ -460,6 +524,7 @@
          ("S" . emacsvox-aural-voice-workbench-stop-preview)
          ("t" . emacsvox-aural-voice-workbench-tune)
          ("a" . emacsvox-aural-voice-workbench-assign)
+         ("j" . emacsvox-aural-voice-workbench-suggest-route)
          ("c" . emacsvox-aural-voice-workbench-cancel-assignment)
          ("[" . emacsvox-aural-voice-workbench-move-selector-up)
          ("]" . emacsvox-aural-voice-workbench-move-selector-down)
@@ -473,6 +538,10 @@
          ("y" . emacsvox-aural-voice-workbench-copy-route)
          ("M" . emacsvox-aural-voice-workbench-bind-unmapped)
          ("X" . emacsvox-aural-voice-workbench-replace-engine)
+         ("m" . emacsvox-aural-voice-workbench-migrate)
+         ("N" . emacsvox-aural-voice-workbench-apply-preset)
+         ("E" . emacsvox-aural-voice-workbench-export-profile)
+         ("I" . emacsvox-aural-voice-workbench-import-profile)
          ("u" . emacsvox-aural-voice-workbench-undo)
          ("x" . emacsvox-aural-voice-workbench-cancel-staged)
          ("w" . emacsvox-aural-voice-workbench-save-and-apply)

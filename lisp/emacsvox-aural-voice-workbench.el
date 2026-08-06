@@ -42,6 +42,33 @@
     (styles . "Styles and effects"))
   "Workbench view identifiers and spoken titles.")
 
+(defconst emacsvox-aural-voice-workbench--known-engine-aliases
+  '(("eloquence"
+     ("v1" paul outloud-v1 v1 male)
+     ("v2" outloud-v2 v2 female)
+     ("v3" outloud-v3 v3 child)
+     ("v4" outloud-v4 v4 male)
+     ("v5" outloud-v5 v5 male)
+     ("v6" outloud-v6 v6 female)
+     ("v7" outloud-v7 v7 female)
+     ("v8" outloud-v8 v8 male))
+    ("outloud"
+     ("paul" paul outloud-v1 v1 male)
+     ("outloud-v2" outloud-v2 v2 female)
+     ("outloud-v3" outloud-v3 v3 child)
+     ("outloud-v4" outloud-v4 v4 male)
+     ("outloud-v5" outloud-v5 v5 male)
+     ("outloud-v6" outloud-v6 v6 female)
+     ("outloud-v7" outloud-v7 v7 female)
+     ("outloud-v8" outloud-v8 v8 male))
+    ("dectalk"
+     ("paul" paul male) ("betty" betty female)
+     ("harry" harry male) ("frank" frank male)
+     ("kit" kit child) ("rita" rita female)
+     ("ursula" ursula female) ("dennis" dennis male)
+     ("wendy" wendy female)))
+  "Compatibility aliases used only to explain reviewable route suggestions.")
+
 (defvar-local emacsvox-aural-voice-workbench-view 'logical
   "View displayed by the current Voice Workbench.")
 
@@ -80,6 +107,9 @@
 
 (defvar-local emacsvox-aural-voice-workbench-diagnostics nil
   "Current inventory and apply diagnostics for the staged profile.")
+
+(defvar-local emacsvox-aural-voice-workbench-provenance nil
+  "Ephemeral explanations for imported, preset, and suggested staged edits.")
 
 (defun emacsvox-aural-voice-workbench--active-palette ()
   "Return the currently effective portable voice palette."
@@ -267,6 +297,37 @@
            (emacsvox-aural-voice-workbench--selectors logical-voice)))))
     (if scopes (mapconcat #'symbol-name scopes ", ") "inherited")))
 
+(defun emacsvox-aural-voice-workbench--provenance-description
+    (logical-voice)
+  "Return routing provenance visible for LOGICAL-VOICE."
+  (let* ((name (format "%s" logical-voice))
+         (session
+          (cl-find-if
+           (lambda (entry) (equal name (format "%s" (car entry))))
+           emacsvox-aural-session-routing-bindings))
+         (record
+          (cl-find-if
+           (lambda (entry)
+             (let ((voice (plist-get entry :logical-voice)))
+               (or (null voice) (equal name (format "%s" voice)))))
+           emacsvox-aural-voice-workbench-provenance))
+         (scopes
+          (delete-dups
+           (mapcar
+            (lambda (selector) (plist-get selector :scope))
+            (emacsvox-aural-voice-workbench--explicit-selectors name)))))
+    (cond
+     (session "session override")
+     (record
+      (format "%s: %s"
+              (plist-get record :kind) (plist-get record :detail)))
+     (scopes
+      (format "saved %s"
+              (mapconcat #'symbol-name scopes "/")))
+     ((plist-get emacsvox-aural-voice-workbench-staged-profile :engine-order)
+      "inherited engine order")
+     (t "adapter default"))))
+
 (defun emacsvox-aural-voice-workbench--palette-entry (logical-voice)
   "Return palette entry associated with LOGICAL-VOICE."
   (let ((name (format "%s" logical-voice))
@@ -351,6 +412,7 @@
       (or (plist-get binding :language) "")
       (emacsvox-aural-voice-workbench--scope-description logical-voice)
       (if (equal route "adapter default") "unmapped" "routed")
+      (emacsvox-aural-voice-workbench--provenance-description logical-voice)
       (emacsvox-aural-voice-workbench--family-diagnostic logical-voice)))))
 
 (defun emacsvox-aural-voice-workbench--all-engine-voices ()
@@ -639,6 +701,7 @@
       (if effects
           (emacsvox-aural-voice-workbench--join-symbols effects)
         "not advertised")
+      (emacsvox-aural-voice-workbench--provenance-description logical)
       (emacsvox-aural-voice-workbench--family-diagnostic logical)))))
 
 (defun emacsvox-aural-voice-workbench--format ()
@@ -649,7 +712,7 @@
       ("Requested style" 34 t) ("Selector order" 48 t)
       ("Predicted route" 24 t) ("Last played" 30 t)
       ("Registration" 36 t) ("Language" 12 t) ("Scope" 16 t)
-      ("Status" 12 t) ("Diagnostic" 0 t)])
+      ("Status" 12 t) ("Provenance" 28 t) ("Diagnostic" 0 t)])
     ('physical
      [("Physical voice" 28 t) ("Engine" 14 t) ("Language" 12 t)
       ("Gender" 10 t) ("Quality" 12 t) ("Availability" 14 t)
@@ -665,6 +728,7 @@
       ("Portable definition" 38 t) ("Staged route" 42 t)
       ("Last played" 30 t)
       ("Adapter ACSS" 30 t) ("Post effects" 24 t)
+      ("Provenance" 28 t)
       ("Diagnostic" 0 t)])))
 
 (defun emacsvox-aural-voice-workbench--entries ()
@@ -743,9 +807,12 @@
     (if (fboundp 'tts-speak) (tts-speak text) (message "%s" text))
     text))
 
-(defun emacsvox-aural-voice-workbench--stage (description mutation)
-  "Apply MUTATION to the staged profile and record DESCRIPTION for undo."
-  (let ((before (copy-tree emacsvox-aural-voice-workbench-staged-profile)))
+(defun emacsvox-aural-voice-workbench--stage
+    (description mutation &optional provenance)
+  "Apply MUTATION and record DESCRIPTION and optional PROVENANCE for undo."
+  (let ((before (copy-tree emacsvox-aural-voice-workbench-staged-profile))
+        (before-provenance
+         (copy-tree emacsvox-aural-voice-workbench-provenance)))
     (condition-case error-data
         (progn
           (funcall mutation)
@@ -757,7 +824,11 @@
                 (emacsvox-aural-voice-workbench--announce
                  "No routing changes were needed")
                 nil)
-            (push (list :profile before :description description)
+            (when provenance
+              (push (copy-tree provenance)
+                    emacsvox-aural-voice-workbench-provenance))
+            (push (list :profile before :description description
+                        :provenance before-provenance)
                   emacsvox-aural-voice-workbench-undo-stack)
             (setq emacsvox-aural-voice-workbench-last-edit description)
             (emacsvox-aural-voice-workbench-refresh)
@@ -765,8 +836,244 @@
              "%s staged. Save is not yet applied" description)
             t))
       (error
-       (setq emacsvox-aural-voice-workbench-staged-profile before)
+       (setq emacsvox-aural-voice-workbench-staged-profile before
+             emacsvox-aural-voice-workbench-provenance before-provenance)
        (signal (car error-data) (cdr error-data))))))
+
+(defun emacsvox-aural-voice-workbench--comparison-name (value)
+  "Return normalized comparison text for voice metadata VALUE."
+  (and value
+       (downcase
+        (string-trim
+         (if (symbolp value) (symbol-name value) (format "%s" value))))))
+
+(defun emacsvox-aural-voice-workbench--definition-family (definition)
+  "Return requested family carried by portable voice DEFINITION."
+  (or
+   (emacsvox-aural-routing--style-family definition)
+   (when (symbolp definition)
+     (let ((settings
+            (intern-soft (format "%s-settings" definition))))
+       (and settings (boundp settings)
+            (car-safe (symbol-value settings)))))))
+
+(defun emacsvox-aural-voice-workbench--requested-family (logical-voice)
+  "Return active-palette family requested by LOGICAL-VOICE."
+  (when-let* ((entry
+               (emacsvox-aural-voice-workbench--palette-entry logical-voice)))
+    (emacsvox-aural-voice-workbench--definition-family (cdr entry))))
+
+(defun emacsvox-aural-voice-workbench--known-voice-aliases
+    (engine-id voice-id)
+  "Return compatibility aliases for ENGINE-ID and VOICE-ID."
+  (let ((engine
+         (assoc-string
+          engine-id emacsvox-aural-voice-workbench--known-engine-aliases t)))
+    (copy-sequence
+     (cdr
+      (cl-find-if
+       (lambda (entry)
+         (equal
+          (emacsvox-aural-voice-workbench--comparison-name voice-id)
+          (emacsvox-aural-voice-workbench--comparison-name (car entry))))
+       (cdr engine))))))
+
+(defun emacsvox-aural-voice-workbench--voice-aliases (engine voice)
+  "Return normalized discoverable names for VOICE from ENGINE."
+  (delete-dups
+   (delq
+    nil
+    (mapcar
+     #'emacsvox-aural-voice-workbench--comparison-name
+     (append
+      (list (plist-get voice :voice-id)
+            (plist-get voice :display-name)
+            (plist-get voice :native-id))
+      (plist-get voice :aliases)
+      (emacsvox-aural-voice-workbench--known-voice-aliases
+       (plist-get engine :engine-id) (plist-get voice :voice-id)))))))
+
+(defun emacsvox-aural-voice-workbench--family-gender (family)
+  "Return portable gender implied by FAMILY, or nil."
+  (let ((name (emacsvox-aural-voice-workbench--comparison-name family))
+        found)
+    (cond
+     ((member name '("male" "female" "neutral")) (intern name))
+     (t
+      (dolist (engine emacsvox-aural-voice-workbench--known-engine-aliases)
+        (dolist (entry (cdr engine))
+          (when
+              (member
+               name
+               (mapcar
+                #'emacsvox-aural-voice-workbench--comparison-name
+                (cdr entry)))
+            (cond
+             ((memq 'female (cdr entry)) (setq found 'female))
+             ((memq 'male (cdr entry)) (setq found 'male))
+             ((memq 'neutral (cdr entry)) (setq found 'neutral))))))
+      found))))
+
+(defun emacsvox-aural-voice-workbench--ordered-engines ()
+  "Return inventory engines in staged policy order, then discovery order."
+  (let ((engines
+         (copy-sequence
+          (plist-get emacsvox-aural-voice-workbench-inventory :engines)))
+        result)
+    (dolist
+        (id
+         (plist-get emacsvox-aural-voice-workbench-staged-profile
+                    :engine-order))
+      (when-let* ((engine
+                   (cl-find
+                    id engines
+                    :key (lambda (entry) (plist-get entry :engine-id))
+                    :test #'equal)))
+        (push engine result)
+        (setq engines (delq engine engines))))
+    (append (nreverse result) engines)))
+
+(defun emacsvox-aural-voice-workbench--usable-voice-p (voice)
+  "Return non-nil when inventory VOICE can currently be suggested."
+  (not (member (format "%s" (plist-get voice :availability))
+               '("unavailable" "failed"))))
+
+(defun emacsvox-aural-voice-workbench--suggestion
+    (logical selector reason &optional realized)
+  "Construct a suggestion for LOGICAL using SELECTOR because REASON."
+  (append
+   (list :logical-voice logical :selector selector :reason reason
+         :provenance 'suggested)
+   (and realized (list :realized realized))))
+
+(defun emacsvox-aural-voice-workbench--suggestions (logical-voice)
+  "Return ordered, reviewable route suggestions for LOGICAL-VOICE."
+  (let* ((binding
+          (emacsvox-aural-voice-workbench--profile-binding logical-voice))
+         (language (plist-get binding :language))
+         (family
+          (emacsvox-aural-voice-workbench--requested-family logical-voice))
+         (family-name
+          (emacsvox-aural-voice-workbench--comparison-name family))
+         (gender (emacsvox-aural-voice-workbench--family-gender family))
+         suggestions seen)
+    (cl-labels
+        ((add
+          (selector reason &optional realized)
+          (unless (member selector seen)
+            (push selector seen)
+            (push
+             (emacsvox-aural-voice-workbench--suggestion
+              logical-voice selector reason realized)
+             suggestions)))
+         (matching-voice
+          (voices wanted-language wanted-gender)
+          (cl-find-if
+           (lambda (voice)
+             (and
+              (emacsvox-aural-voice-workbench--usable-voice-p voice)
+              (or (null wanted-language)
+                  (emacsvox-aural-voice-workbench--same-value-p
+                   wanted-language (plist-get voice :language)))
+              (or (null wanted-gender)
+                  (emacsvox-aural-voice-workbench--same-value-p
+                   wanted-gender (plist-get voice :gender)))))
+           voices)))
+      (dolist (engine (emacsvox-aural-voice-workbench--ordered-engines))
+        (let* ((engine-id (plist-get engine :engine-id))
+               (voices (plist-get engine :voices))
+               (alias
+                (and
+                 family-name
+                 (cl-find-if
+                  (lambda (voice)
+                    (and
+                     (emacsvox-aural-voice-workbench--usable-voice-p voice)
+                     (member
+                      family-name
+                      (emacsvox-aural-voice-workbench--voice-aliases
+                       engine voice))))
+                  voices)))
+               (both (and language gender
+                          (matching-voice voices language gender)))
+               (by-language
+                (and language (matching-voice voices language nil)))
+               (by-gender
+                (and gender (matching-voice voices nil gender))))
+          (when alias
+            (add
+             (list :kind 'exact :scope 'local :engine-id engine-id
+                   :voice-id (plist-get alias :voice-id))
+             'exact-alias (plist-get alias :voice-id)))
+          (when both
+            (add
+             (list :kind 'properties :scope 'portable
+                   :engine-id engine-id :language language :gender gender)
+             'language-and-gender (plist-get both :voice-id)))
+          (when by-language
+            (add
+             (list :kind 'properties :scope 'portable
+                   :engine-id engine-id :language language)
+             'language (plist-get by-language :voice-id)))
+          (when by-gender
+            (add
+             (list :kind 'properties :scope 'portable
+                   :engine-id engine-id :gender gender)
+             'gender (plist-get by-gender :voice-id)))
+          (when voices
+            (add
+             (list :kind 'engine-default :scope 'portable
+                   :engine-id engine-id)
+             'engine-default (plist-get engine :default-voice-id)))))
+      (nreverse suggestions))))
+
+(defun emacsvox-aural-voice-workbench--suggestion-description (suggestion)
+  "Return a review label for SUGGESTION."
+  (format
+   "%s: %s%s"
+   (plist-get suggestion :reason)
+   (emacsvox-aural-voice-workbench--selector-description
+    (plist-get suggestion :selector))
+   (if-let* ((realized (plist-get suggestion :realized)))
+       (format " currently resolves to %s" realized)
+     "")))
+
+(defun emacsvox-aural-voice-workbench-suggest-route ()
+  "Review and stage one inferred route for the current logical voice."
+  (interactive)
+  (let* ((logical (emacsvox-aural-voice-workbench--current-logical-voice))
+         (existing
+          (emacsvox-aural-voice-workbench--explicit-selectors logical))
+         (suggestions
+          (cl-remove-if
+           (lambda (entry)
+             (member (plist-get entry :selector) existing))
+           (emacsvox-aural-voice-workbench--suggestions logical)))
+         (candidates
+          (mapcar
+           (lambda (entry)
+             (cons
+              (emacsvox-aural-voice-workbench--suggestion-description entry)
+              entry))
+           suggestions)))
+    (unless candidates
+      (user-error "No new route suggestion is available for %s" logical))
+    (let* ((choice
+            (completing-read "Review route suggestion: " candidates
+                             nil 'must-match))
+           (suggestion (cdr (assoc-string choice candidates)))
+           (selector (plist-get suggestion :selector))
+           (reason (plist-get suggestion :reason)))
+      (when (y-or-n-p (format "Stage %s for %s? " choice logical))
+        (emacsvox-aural-voice-workbench--stage
+         (format "Accepted %s suggestion for %s" reason logical)
+         (lambda ()
+           (emacsvox-aural-voice-workbench--replace-binding
+            logical (append existing (list selector))))
+         (list :logical-voice logical :kind 'suggested
+               :detail (format "%s, %s" reason
+                               (emacsvox-aural-voice-workbench--selector-description
+                                selector))))))))
 
 (defun emacsvox-aural-voice-workbench--current-logical-voice ()
   "Return the logical voice represented by the current row."
@@ -1226,6 +1533,129 @@
              (emacsvox-aural-voice-workbench--replace-binding
               logical (cl-remove-duplicates replaced :test #'equal)))))))))
 
+(defun emacsvox-aural-voice-workbench--migrate-active-palette ()
+  "Stage best current-adapter suggestions for every unmapped palette voice."
+  (let (mappings)
+    (dolist (logical (emacsvox-aural-voice-workbench--logical-voices))
+      (unless (emacsvox-aural-voice-workbench--explicit-selectors logical)
+        (when-let* ((suggestion
+                     (car
+                      (emacsvox-aural-voice-workbench--suggestions logical))))
+          (push
+           (cons logical (copy-tree (plist-get suggestion :selector)))
+           mappings))))
+    (unless mappings
+      (user-error "No unmapped palette voices have current adapter suggestions"))
+    (when
+        (y-or-n-p
+         (format
+          "Stage %d active-palette mappings for review? " (length mappings)))
+      (emacsvox-aural-voice-workbench--stage
+       (format "Imported %d active palette mappings" (length mappings))
+       (lambda ()
+         (dolist (mapping mappings)
+           (emacsvox-aural-voice-workbench--replace-binding
+            (car mapping) (list (cdr mapping)))))
+       (list :kind 'imported
+             :detail (format "active palette, %d suggested mappings"
+                             (length mappings)))))))
+
+(defun emacsvox-aural-voice-workbench--migrate-omnivox-customize ()
+  "Replace staged data with current legacy Omnivox Customize settings."
+  (let* ((id (plist-get emacsvox-aural-voice-workbench-staged-profile :id))
+         (profile
+          (emacsvox-aural-routing-profile-from-omnivox
+           id "Imported current Omnivox Customize routing")))
+    (when
+        (y-or-n-p
+         "Replace every staged route with current Omnivox Customize values? ")
+      (emacsvox-aural-voice-workbench--stage
+       "Imported Omnivox Customize routing"
+       (lambda ()
+         (setq emacsvox-aural-voice-workbench-staged-profile
+               (copy-tree profile)))
+       '(:kind imported :detail "Omnivox Customize values")))))
+
+(defun emacsvox-aural-voice-workbench-migrate ()
+  "Stage an explicit migration from a legacy voice configuration source."
+  (interactive)
+  (let ((source
+         (completing-read
+          "Migration source: "
+          '("active palette and current adapter families"
+            "current Omnivox Customize values")
+          nil 'must-match)))
+    (if (string-prefix-p "current Omnivox" source)
+        (emacsvox-aural-voice-workbench--migrate-omnivox-customize)
+      (emacsvox-aural-voice-workbench--migrate-active-palette))))
+
+(defun emacsvox-aural-voice-workbench-apply-preset ()
+  "Review and stage one routing-policy or portability preset."
+  (interactive)
+  (let* ((candidates
+          (append
+           (mapcar
+            (lambda (entry)
+              (cons (plist-get (cdr entry) :label) (car entry)))
+            emacsvox-aural-routing-engine-order-presets)
+           '(("Prefer each logical voice's language" . native-language)
+             ("Remove exact native IDs, keep portable traits" . fully-portable))))
+         (choice
+          (completing-read "Routing preset: " candidates nil 'must-match))
+         (preset (cdr (assoc-string choice candidates)))
+         (profile
+          (emacsvox-aural-routing-apply-preset-to-data
+           emacsvox-aural-voice-workbench-staged-profile preset
+           emacsvox-aural-voice-workbench-inventory)))
+    (when (y-or-n-p (format "Stage preset %s for review? " choice))
+      (emacsvox-aural-voice-workbench--stage
+       (format "Applied %s preset" preset)
+       (lambda ()
+         (setq emacsvox-aural-voice-workbench-staged-profile
+               (copy-tree profile)))
+       (list :kind 'preset :detail choice)))))
+
+(defun emacsvox-aural-voice-workbench-export-profile ()
+  "Export the staged routing profile without activating it."
+  (interactive)
+  (let* ((kind
+          (completing-read
+           "Export routing: "
+           '("portable copy without exact native IDs"
+             "complete machine-local profile")
+           nil 'must-match))
+         (portable (string-prefix-p "portable" kind))
+         (file
+          (read-file-name
+           "Export routing profile to: " emacsvox-user-directory nil nil
+           (format "%s-routing.el"
+                   (plist-get emacsvox-aural-voice-workbench-staged-profile
+                              :id)))))
+    (emacsvox-aural-export-routing-profile
+     emacsvox-aural-voice-workbench-staged-profile file portable
+     emacsvox-aural-voice-workbench-inventory)
+    (emacsvox-aural-voice-workbench--announce
+     "%s routing profile exported to %s"
+     (if portable "Portable" "Complete") file)))
+
+(defun emacsvox-aural-voice-workbench-import-profile ()
+  "Read one data-only routing profile into the staged workbench copy."
+  (interactive)
+  (let* ((file
+          (read-file-name
+           "Import routing profile: " emacsvox-user-directory nil 'must-match))
+         (profile (emacsvox-aural-read-routing-profile file)))
+    (when
+        (y-or-n-p
+         (format "Replace staged routing with profile %s from %s? "
+                 (plist-get profile :id) file))
+      (emacsvox-aural-voice-workbench--stage
+       (format "Imported routing profile %s" (plist-get profile :id))
+       (lambda ()
+         (setq emacsvox-aural-voice-workbench-staged-profile
+               (copy-tree profile)))
+       (list :kind 'imported :detail (abbreviate-file-name file))))))
+
 (defun emacsvox-aural-voice-workbench-undo ()
   "Undo the most recent staged routing edit without changing saved state."
   (interactive)
@@ -1233,6 +1663,8 @@
     (unless snapshot (user-error "No staged routing edit to undo"))
     (setq emacsvox-aural-voice-workbench-staged-profile
           (copy-tree (plist-get snapshot :profile))
+          emacsvox-aural-voice-workbench-provenance
+          (copy-tree (plist-get snapshot :provenance))
           emacsvox-aural-voice-workbench-last-edit
           (format "Undid %s" (plist-get snapshot :description)))
     (emacsvox-aural-voice-workbench-refresh)
@@ -1248,6 +1680,7 @@
     (setq emacsvox-aural-voice-workbench-staged-profile
           (copy-tree emacsvox-aural-voice-workbench-committed-profile)
           emacsvox-aural-voice-workbench-undo-stack nil
+          emacsvox-aural-voice-workbench-provenance nil
           emacsvox-aural-voice-workbench-last-edit "Cancelled staged edits")
     (when emacsvox-aural-voice-workbench-assignment-target
       (setq emacsvox-aural-voice-workbench-filter
@@ -1809,7 +2242,10 @@
                emacsvox-aural-routing-apply-status))
       (princ
        (format "\nCurrent diagnostics:\n%S\n"
-               emacsvox-aural-voice-workbench-diagnostics)))
+               emacsvox-aural-voice-workbench-diagnostics))
+      (princ
+       (format "\nStaged provenance:\n%S\n"
+               emacsvox-aural-voice-workbench-provenance)))
     summary))
 
 (defun emacsvox-aural-voice-workbench-help ()
@@ -1832,6 +2268,7 @@
       "B compare two voices  T edit common preview text\n"
       "S stop preview        t tune logical voice on staged route\n"
       "a assign or choose physical voice\n"
+      "j review one route suggestion\n"
       "c cancel assignment   [/] move selector earlier/later\n"
       "d delete selector     y copy another logical route\n"
       "M map all unmapped    X replace engine in selected routes\n"
@@ -1839,6 +2276,8 @@
       "f toggle fallback     {/} reorder fallback\n"
       "D disable/restore     K request failed-engine recovery probe\n"
       "u undo staged edit    x cancel all staged edits\n"
+      "m migrate legacy setup  N stage routing preset\n"
+      "E export profile        I import profile\n"
       "w save and apply      r retry committed apply\n"
       "U restore previous saved revision\n"
       "g redraw quietly      h aural home\n"
@@ -1869,6 +2308,7 @@
   (setq-local emacsvox-aural-voice-workbench-diagnostics
               (emacsvox-aural-voice-workbench--profile-diagnostics
                emacsvox-aural-voice-workbench-staged-profile))
+  (setq-local emacsvox-aural-voice-workbench-provenance nil)
   (emacsvox-aural-ui-configure-tabulated
    "voice workbench"
    #'emacsvox-aural-voice-workbench-speak-current
@@ -1897,6 +2337,7 @@
        ("S" . emacsvox-aural-voice-workbench-stop-preview)
        ("t" . emacsvox-aural-voice-workbench-tune)
        ("a" . emacsvox-aural-voice-workbench-assign)
+       ("j" . emacsvox-aural-voice-workbench-suggest-route)
        ("c" . emacsvox-aural-voice-workbench-cancel-assignment)
        ("[" . emacsvox-aural-voice-workbench-move-selector-up)
        ("]" . emacsvox-aural-voice-workbench-move-selector-down)
@@ -1910,6 +2351,10 @@
        ("y" . emacsvox-aural-voice-workbench-copy-route)
        ("M" . emacsvox-aural-voice-workbench-bind-unmapped)
        ("X" . emacsvox-aural-voice-workbench-replace-engine)
+       ("m" . emacsvox-aural-voice-workbench-migrate)
+       ("N" . emacsvox-aural-voice-workbench-apply-preset)
+       ("E" . emacsvox-aural-voice-workbench-export-profile)
+       ("I" . emacsvox-aural-voice-workbench-import-profile)
        ("u" . emacsvox-aural-voice-workbench-undo)
        ("x" . emacsvox-aural-voice-workbench-cancel-staged)
        ("w" . emacsvox-aural-voice-workbench-save-and-apply)
