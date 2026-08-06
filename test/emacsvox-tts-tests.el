@@ -192,6 +192,42 @@
       (speaker "s\n")
       (speaker "version\n")))))
 
+(ert-deftest emacsvox-tts-reentrant-speech-preserves-outer-text ()
+  "Nested speech cannot erase the enclosing TTS preparation buffer."
+  (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+    (kill-buffer scratch))
+  (let ((tts-stop-immediately nil)
+        (emacsvox-pronounce-table nil)
+        (emacsvox-pronounce-personality nil)
+        (voice-lock-mode nil)
+        (emacsvox-use-icons nil)
+        nested
+        queued)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-prepared-text-p)
+              (lambda (_text) t))
+             ((symbol-function 'tts--protocol-sync) #'ignore)
+             ((symbol-function 'tts-move-across-a-chunk)
+              (lambda (&rest _arguments)
+                (goto-char (point-max))
+                t))
+             ((symbol-function 'tts-voice-reset-code)
+              (lambda () "reset"))
+             ((symbol-function 'tts--protocol-queue-code)
+              (lambda (_code)
+                (unless nested
+                  (setq nested t)
+                  (tts--speak-transaction "inner"))))
+             ((symbol-function 'tts--protocol-queue-text)
+              (lambda (text) (push text queued)))
+             ((symbol-function 'tts--protocol-dispatch) #'ignore))
+          (tts--speak-transaction "outer"))
+      (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+        (kill-buffer scratch)))
+    (should (equal (nreverse queued) '("inner" "outer")))
+    (should-not (get-buffer " *tts-scratch-buffer* <2>"))))
+
 (ert-deftest emacsvox-tts-protocol-dispatches-tracked-speech ()
   "Tracked speech uses the supported playback command and returns its token."
   (let ((tts--tracked-dispatch-sequence 40)

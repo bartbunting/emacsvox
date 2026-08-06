@@ -2021,6 +2021,11 @@ unless   `tts-quiet' is set to t. "
 (defvar tts--tracked-completion-function nil
   "Completion callback for the dynamically current speech submission.")
 
+(defvar tts--scratch-buffers-in-use nil
+  "Dynamically active TTS preparation buffers.
+
+Nested speech uses this stack to avoid erasing an enclosing preparation.")
+
 (defun tts-speak-tracked (text callback)
   "Speak TEXT and call CALLBACK after server playback completes.
 CALLBACK receives the tracked dispatch identifier and terminal status.  A
@@ -2100,60 +2105,71 @@ audio queues; it does not prove that a physical audio device was heard."
                     (substring-no-properties tts-allcaps-prefix))
               emacsvox-aural-submission-context)
            tts-allcaps-prefix))
-        (tts-scratch-buffer (get-buffer-create " *tts-scratch-buffer* "))
         (start 1)
         (end nil)
         (mode tts-punctuation-mode)
         (voice-lock voice-lock-mode)) ; done snapshotting
-    (with-current-buffer tts-scratch-buffer
-      (setq buffer-undo-list  t)
-      (erase-buffer)
-      (when (eq orig-mode 'org-mode)
-        (setq org-link-descriptive links-desc)
-        (tts-org-fold))
-      ;; inherit environment
-      (setq                           ; mirror snapshot
-       yank-excluded-properties tts-yank-excluded-properties
-       char-property-alias-alist  char-alias
-       emacsvox-pronounce-table pron-table
-       emacsvox-pronounce-personality pron-personality
-       buffer-invisibility-spec invisibility-spec
-       tts-chunk-separator-syntax chunk-sep
-       tts-speech-rate speech-rate
-       tts-punctuation-mode mode
-       tts-split-caps split-caps
-       tts-caps caps
-       tts-speak-nonprinting-chars inherit-speak-nonprinting-chars
-       tts-strip-octals inherit-strip-octals
-       voice-lock-mode voice-lock)
-      (set-syntax-table syntax-table)
-      (tts--protocol-sync)
-      (insert-for-yank text)          ; insert and pre-process text
-      (tts--delete-invisible-text)
-      (tts-handle-repeating-patterns mode)
-      (when pron-table (tts-apply-pronunciations pron-table))
-      (when tts-handle-unicode (tts-unicode-replace-chars mode))
-      (tts-quote mode)
-      (goto-char (point-min))         ; text is ready to be spoken
-      (skip-syntax-forward "-")       ;skip leading whitespace
-      (setq start (point))
-      (while (and (not (eobp))
-                  (tts-move-across-a-chunk chunk-sep complement-sep))
-        (unless ;;;If  embedded punctuations, continue
-            (and (char-after (point))
-                 (= ?. (char-syntax (preceding-char)))
-                 (not (= 32 (char-syntax (following-char)))))
-          (skip-syntax-forward "-") ;skip  trailing whitespace
-          (setq end (point))
-          (tts-audio-format start end)
-          (setq start end)))     ; end while
-      ;; process trailing text
-      (unless (= start (point-max))
-        (skip-syntax-forward " ")       ;skip leading whitespace
-        (unless (eobp) (tts-audio-format (point) (point-max))))))
-  (if tts--tracked-completion-function
-      (tts--protocol-dispatch-tracked tts--tracked-completion-function)
-    (tts--protocol-dispatch)))
+    (let* ((nested-scratch-p (consp tts--scratch-buffers-in-use))
+           (tts-scratch-buffer
+            (if nested-scratch-p
+                (generate-new-buffer " *tts-scratch-buffer* ")
+              (get-buffer-create " *tts-scratch-buffer* ")))
+           (tts--scratch-buffers-in-use
+            (cons tts-scratch-buffer tts--scratch-buffers-in-use)))
+      (unwind-protect
+          (progn
+            (with-current-buffer tts-scratch-buffer
+              (setq buffer-undo-list  t)
+              (erase-buffer)
+              (when (eq orig-mode 'org-mode)
+                (setq org-link-descriptive links-desc)
+                (tts-org-fold))
+              ;; inherit environment
+              (setq                           ; mirror snapshot
+               yank-excluded-properties tts-yank-excluded-properties
+               char-property-alias-alist  char-alias
+               emacsvox-pronounce-table pron-table
+               emacsvox-pronounce-personality pron-personality
+               buffer-invisibility-spec invisibility-spec
+               tts-chunk-separator-syntax chunk-sep
+               tts-speech-rate speech-rate
+               tts-punctuation-mode mode
+               tts-split-caps split-caps
+               tts-caps caps
+               tts-speak-nonprinting-chars inherit-speak-nonprinting-chars
+               tts-strip-octals inherit-strip-octals
+               voice-lock-mode voice-lock)
+              (set-syntax-table syntax-table)
+              (tts--protocol-sync)
+              (insert-for-yank text)          ; insert and pre-process text
+              (tts--delete-invisible-text)
+              (tts-handle-repeating-patterns mode)
+              (when pron-table (tts-apply-pronunciations pron-table))
+              (when tts-handle-unicode (tts-unicode-replace-chars mode))
+              (tts-quote mode)
+              (goto-char (point-min))         ; text is ready to be spoken
+              (skip-syntax-forward "-")       ;skip leading whitespace
+              (setq start (point))
+              (while (and (not (eobp))
+                          (tts-move-across-a-chunk chunk-sep complement-sep))
+                (unless ;;;If  embedded punctuations, continue
+                    (and (char-after (point))
+                         (= ?. (char-syntax (preceding-char)))
+                         (not (= 32 (char-syntax (following-char)))))
+                  (skip-syntax-forward "-") ;skip  trailing whitespace
+                  (setq end (point))
+                  (tts-audio-format start end)
+                  (setq start end)))     ; end while
+              ;; process trailing text
+              (unless (= start (point-max))
+                (skip-syntax-forward " ")       ;skip leading whitespace
+                (unless (eobp) (tts-audio-format (point) (point-max)))))
+            (if tts--tracked-completion-function
+                (tts--protocol-dispatch-tracked
+                 tts--tracked-completion-function)
+              (tts--protocol-dispatch)))
+        (when (and nested-scratch-p (buffer-live-p tts-scratch-buffer))
+          (kill-buffer tts-scratch-buffer))))))
 
 (defmacro ems-with-messages-silenced (&rest body)
   "Evaluate body  after temporarily silencing messages."
