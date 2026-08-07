@@ -3235,6 +3235,39 @@
       (emacsvox-aural-editor--read-space nil "Cue")
       '(:azimuth 135.0)))))
 
+(ert-deftest emacsvox-aural-advanced-editor-speaks-full-prompt-context ()
+  "Advanced rule prompts identify both the selected rule and requested field."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-aural-scheme-editor-mode)
+      (setq
+       emacsvox-aural-editor-scope 'session
+       emacsvox-aural-editor-target (current-buffer)
+       emacsvox-aural-editor-rules
+       '((:id directory-rule
+          :match (:role filesystem-entry :entry-kind directory)
+          :render (:content (:voice bolden)))))
+      (emacsvox-aural-editor-refresh)
+      (goto-char
+       (text-property-any
+        (point-min) (point-max)
+        emacsvox-aural-editor-rule-index-property 0))
+      (let ((minibuffer-setup-hook nil)
+            spoken)
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-editor--read-rule)
+              (lambda (old &optional _)
+                (cl-letf (((symbol-function 'minibuffer-prompt)
+                           (lambda () "Rule identifier: ")))
+                  (run-hooks 'minibuffer-setup-hook))
+                old))
+             ((symbol-function 'tts-speak)
+              (lambda (text) (setq spoken text))))
+          (emacsvox-aural-editor-edit-rule))
+        (should (string-match-p "directory-rule" spoken))
+        (should (string-match-p "voice bolden" spoken))
+        (should (string-match-p "Rule identifier" spoken))))))
+
 (ert-deftest emacsvox-aural-editor-voices-follow-active-profile-palette ()
   "Voice choices honor the profile override and explain their ordering."
   (let ((emacsvox-aural-voice-palette-registry

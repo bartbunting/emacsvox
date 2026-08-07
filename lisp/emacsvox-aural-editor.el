@@ -23,6 +23,7 @@
 (declare-function emacsvox-aural-simple-editor-open
                   "emacsvox-aural-simple-editor" (&optional scheme))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
+(declare-function tts-speak "tts-speak" (text))
 
 (defvar-local emacsvox-aural-editor-scope nil
   "Scope edited by the current aural editor buffer.")
@@ -197,6 +198,45 @@
   "Mark the current editor dirty and refresh its mode line."
   (setq emacsvox-aural-editor-dirty t)
   (force-mode-line-update))
+
+(defun emacsvox-aural-editor--speak-edit-prompt (context)
+  "Speak editing CONTEXT followed by the current minibuffer prompt."
+  (when (fboundp 'tts-speak)
+    (tts-speak
+     (string-join
+      (delq
+       nil
+       (list
+        (and context (not (string-empty-p context)) context)
+        (when-let* ((prompt (minibuffer-prompt)))
+          (string-trim prompt))))
+      ". "))))
+
+(defmacro emacsvox-aural-editor--with-spoken-prompts (context &rest body)
+  "Run BODY with every minibuffer prompt spoken after editing CONTEXT."
+  (declare (indent 1) (debug t))
+  `(let* ((prompt-context ,context)
+          (minibuffer-setup-hook
+           (append
+            minibuffer-setup-hook
+            (list
+             (lambda ()
+               (emacsvox-aural-editor--speak-edit-prompt
+                prompt-context))))))
+     ,@body))
+
+(defun emacsvox-aural-editor--rule-prompt-context (rule action)
+  "Describe RULE completely enough to orient an ACTION prompt sequence."
+  (let ((render (plist-get rule :render)))
+    (format
+     "%s rule %s, %s. Match %S. Before %s. Content %s. After %s"
+     action
+     (plist-get rule :id)
+     (if (emacsvox-aural-editor-rule-enabled-p rule) "enabled" "disabled")
+     (plist-get rule :match)
+     (emacsvox-aural-editor--phase-summary (plist-get render :before))
+     (emacsvox-aural-editor--content-summary (plist-get render :content))
+     (emacsvox-aural-editor--phase-summary (plist-get render :after)))))
 
 (defun emacsvox-aural-editor--read-boolean (prompt default)
   "Read a boolean using PROMPT and DEFAULT."
@@ -670,7 +710,10 @@ LABEL identifies the speech or cue being edited."
 (defun emacsvox-aural-editor-add-rule ()
   "Add a guided rule after the selected rule or at the end."
   (interactive)
-  (let* ((rule (emacsvox-aural-editor--read-rule))
+  (let* ((rule
+          (emacsvox-aural-editor--with-spoken-prompts
+              "Adding a new aural rule"
+            (emacsvox-aural-editor--read-rule)))
          (index
           (condition-case nil
               (1+ (emacsvox-aural-editor--index-at-point))
@@ -688,9 +731,11 @@ LABEL identifies the speech or cue being edited."
   "Edit the selected rule through guided prompts."
   (interactive)
   (let* ((index (emacsvox-aural-editor--index-at-point))
+         (old (nth index emacsvox-aural-editor-rules))
          (rule
-          (emacsvox-aural-editor--read-rule
-           (nth index emacsvox-aural-editor-rules))))
+          (emacsvox-aural-editor--with-spoken-prompts
+              (emacsvox-aural-editor--rule-prompt-context old "Editing")
+            (emacsvox-aural-editor--read-rule old))))
     (setf (nth index emacsvox-aural-editor-rules) rule)
     (emacsvox-aural-editor-mark-dirty)
     (emacsvox-aural-editor-refresh)))
@@ -700,12 +745,18 @@ LABEL identifies the speech or cue being edited."
   (interactive)
   (let* ((index (emacsvox-aural-editor--index-at-point))
          (old (nth index emacsvox-aural-editor-rules))
-         (copy-id
-          (intern
-           (read-string
-            "Copied rule identifier: "
-            (format "%s-copy" (plist-get old :id)))))
-         (rule (emacsvox-aural-editor--read-rule old copy-id)))
+         (result
+          (emacsvox-aural-editor--with-spoken-prompts
+              (emacsvox-aural-editor--rule-prompt-context old "Copying")
+            (let* ((copy-id
+                    (intern
+                     (read-string
+                      "Copied rule identifier: "
+                      (format "%s-copy" (plist-get old :id)))))
+                   (rule
+                    (emacsvox-aural-editor--read-rule old copy-id)))
+              (cons copy-id rule))))
+         (rule (cdr result)))
     (setq
      emacsvox-aural-editor-rules
      (append
