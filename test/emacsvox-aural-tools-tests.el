@@ -3235,6 +3235,26 @@
       (emacsvox-aural-editor--read-space nil "Cue")
       '(:azimuth 135.0)))))
 
+(ert-deftest emacsvox-aural-editor-voices-follow-active-profile-palette ()
+  "Voice choices honor the profile override and explain their ordering."
+  (let ((emacsvox-aural-voice-palette-registry
+         (make-hash-table :test #'eq))
+        (emacsvox-aural-voice-palette-override 'profile-palette))
+    (emacsvox-aural-register-voice-palette
+     'base-palette
+     :summary "Inherited voices"
+     :entries '((zeta . voice-bolden) (alpha . voice-lighten)))
+    (emacsvox-aural-register-voice-palette
+     'profile-palette
+     :summary "Profile voices"
+     :parent 'base-palette
+     :entries '((dired_directory . voice-bolden) (alerts . voice-brighten)))
+    (should
+     (equal
+      (emacsvox-aural-editor-voice-candidates 'zeta)
+      '("zeta" "default" "inaudible" "alerts" "dired_directory"
+        "alpha")))))
+
 (ert-deftest emacsvox-aural-editor-builds-safe-semantic-speech-template ()
   "The advanced editor builds data-only speech templates."
   (cl-letf

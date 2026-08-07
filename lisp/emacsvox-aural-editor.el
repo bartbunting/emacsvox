@@ -18,6 +18,7 @@
 (require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-feature-fragments)
 (require 'emacsvox-aural-preview)
+(require 'emacsvox-aural-providers)
 
 (declare-function emacsvox-aural-simple-editor-open
                   "emacsvox-aural-simple-editor" (&optional scheme))
@@ -374,18 +375,36 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
      emacsvox-aural-cue-registry)
     (sort cues #'string-lessp)))
 
-(defun emacsvox-aural-editor-voice-candidates ()
-  "Return selected palette voice names plus special voice values."
-  (let* ((palette
-          (or
-           (emacsvox-aural-effective-scheme-provider 'voice-palette)
-           'acss-default))
-         (voices
-          (mapcar
-           (lambda (entry) (symbol-name (car entry)))
-           (emacsvox-aural-effective-voice-entries palette))))
-    (sort (delete-dups (append '("default" "inaudible") voices))
-          #'string-lessp)))
+(defun emacsvox-aural-editor--voice-entry-names (entries)
+  "Return the sorted voice names in palette ENTRIES."
+  (sort
+   (mapcar (lambda (entry) (symbol-name (car entry))) entries)
+   #'string-lessp))
+
+(defun emacsvox-aural-editor-voice-candidates (&optional current)
+  "Return effective voice choices in a stable, meaningful order.
+
+When CURRENT is non-nil, retain it as the first choice.  Special values come
+next, followed by voices defined directly by the active palette and then
+inherited voices.  Names within each palette group are alphabetical."
+  (let* ((palette (emacsvox-aural-effective-voice-palette))
+         (record (emacsvox-aural-voice-palette palette))
+         (direct
+          (emacsvox-aural-editor--voice-entry-names
+           (emacsvox-aural-voice-palette-entries record)))
+         (effective
+          (emacsvox-aural-editor--voice-entry-names
+           (emacsvox-aural-effective-voice-entries palette)))
+         (inherited
+          (cl-remove-if (lambda (name) (member name direct)) effective))
+         (current-name
+          (and current
+               (if (symbolp current) (symbol-name current) current))))
+    (delete-dups
+     (append
+      (and current-name (list current-name))
+      '("default" "inaudible")
+      direct inherited))))
 
 (defun emacsvox-aural-editor--read-voice (&optional prompt)
   "Read a voice name using PROMPT, returning nil for default."
