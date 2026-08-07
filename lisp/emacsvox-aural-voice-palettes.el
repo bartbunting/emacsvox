@@ -325,6 +325,20 @@ replaces live state.  Return the value of MUTATION."
       (user-error "Use a non-keyword voice name"))
     name))
 
+(defun emacsvox-aural-voice-palettes--read-new-entry-name
+    (id &optional initial)
+  "Read a new voice entry name for palette ID, offering INITIAL."
+  (let* ((text
+          (string-trim
+           (read-string "New voice name: " initial)))
+         (name (intern text)))
+    (when
+        (or (string-empty-p text) (keywordp name) (memq name '(nil t)))
+      (user-error "Use a non-keyword voice name"))
+    (when (assq name (emacsvox-aural-effective-voice-entries id))
+      (user-error "Voice already exists in palette %s: %s" id name))
+    name))
+
 (defun emacsvox-aural-voice-palettes--personality-candidates ()
   "Return known compatibility personality names."
   (let ((names
@@ -385,7 +399,10 @@ replaces live state.  Return the value of MUTATION."
 
 (defun emacsvox-aural-voice-palettes--read-definition (&optional current)
   "Read a complete voice definition, offering CURRENT."
-  (let* ((default (if (symbolp current) "personality" "custom ACSS"))
+  (let* ((default
+          (if (and current (symbolp current))
+              "personality"
+            "custom ACSS"))
          (kind
           (completing-read
            "Voice definition kind: "
@@ -1036,19 +1053,48 @@ Return the compiled voice without dispatching the speech queue."
    emacsvox-aural-voice-palette-previews-palette
    (emacsvox-aural-voice-palette-previews--current-voice)))
 
+(defun emacsvox-aural-voice-palette-previews--editable-palette ()
+  "Return an editable palette for the current voice preview.
+
+When the preview shows a built-in palette, offer to create and activate an
+empty personal overlay that inherits from it.  Continue the current preview
+in that overlay so subsequent edits do not create more palettes."
+  (let* ((source emacsvox-aural-voice-palette-previews-palette)
+         (palette (emacsvox-aural-voice-palette source)))
+    (if (not (emacsvox-aural-voice-palette-built-in palette))
+        source
+      (unless
+          (y-or-n-p
+           (format
+            "Palette %s is built in; create and activate a personal overlay? "
+            source))
+        (user-error "Voice editing cancelled"))
+      (let* ((id
+              (emacsvox-aural-voice-palettes--read-new-id
+               (format "%s-personal" source)))
+             (data
+              (list
+               :schema-version emacsvox-aural-voice-palette-schema-version
+               :id id
+               :summary (format "Personal additions to %s" source)
+               :parent source
+               :entries nil)))
+        (emacsvox-aural-voice-palettes--install-data data)
+        (emacsvox-aural-select-voice-palette id)
+        (setq emacsvox-aural-voice-palette-previews-palette id)
+        (message "Created and activated personal voice palette %s" id)
+        id))))
+
 (defun emacsvox-aural-voice-palette-previews-edit ()
   "Replace the effective voice at point using the guided definition editor."
   (interactive)
-  (let* ((palette-id emacsvox-aural-voice-palette-previews-palette)
-         (palette (emacsvox-aural-voice-palette palette-id))
-         (voice
+  (let* ((voice
           (emacsvox-aural-voice-palette-previews--current-voice)))
-    (when (emacsvox-aural-voice-palette-built-in palette)
-      (user-error
-       "Built-in palette; press o, then c to make an editable copy"))
-    (emacsvox-aural-voice-palettes--edit-entry palette-id voice)
-    (emacsvox-aural-voice-palette-previews-refresh voice)
-    voice))
+    (let ((palette-id
+           (emacsvox-aural-voice-palette-previews--editable-palette)))
+      (emacsvox-aural-voice-palettes--edit-entry palette-id voice)
+      (emacsvox-aural-voice-palette-previews-refresh voice)
+      voice)))
 
 (defun emacsvox-aural-voice-tuner--complete-style
     (definition palette)
@@ -1801,11 +1847,52 @@ identity."
 (defun emacsvox-aural-voice-palette-previews-tune ()
   "Open a transactional tuner for the effective voice at point."
   (interactive)
-  (emacsvox-aural-voice-tuner-open
-   emacsvox-aural-voice-palette-previews-palette
-   (emacsvox-aural-voice-palette-previews--current-voice)
-   (current-buffer)
-   emacsvox-aural-voice-palette-previews-text))
+  (let* ((voice
+          (emacsvox-aural-voice-palette-previews--current-voice))
+         (palette
+          (emacsvox-aural-voice-palette-previews--editable-palette)))
+    (emacsvox-aural-voice-palette-previews-refresh voice)
+    (emacsvox-aural-voice-tuner-open
+     palette voice (current-buffer)
+     emacsvox-aural-voice-palette-previews-text)))
+
+(defun emacsvox-aural-voice-palette-previews-new ()
+  "Create a new voice in the palette shown by the current preview."
+  (interactive)
+  (let* ((palette
+          (emacsvox-aural-voice-palette-previews--editable-palette))
+         (voice
+          (emacsvox-aural-voice-palettes--read-new-entry-name palette))
+         (definition
+          (emacsvox-aural-voice-palettes--read-definition)))
+    (emacsvox-aural-voice-palettes--install-entry-definition
+     palette voice definition)
+    (emacsvox-aural-voice-palette-previews-refresh voice)
+    voice))
+
+(defun emacsvox-aural-voice-palette-previews-copy ()
+  "Copy the current voice to a new, independently routable voice."
+  (interactive)
+  (let* ((source-palette
+          emacsvox-aural-voice-palette-previews-palette)
+         (source-voice
+          (emacsvox-aural-voice-palette-previews--current-voice))
+         (definition
+          (or
+           (emacsvox-aural-voice source-voice source-palette)
+           (user-error "Unknown voice: %s" source-voice)))
+         (style
+          (emacsvox-aural-voice-tuner--complete-style
+           definition source-palette))
+         (palette
+          (emacsvox-aural-voice-palette-previews--editable-palette))
+         (voice
+          (emacsvox-aural-voice-palettes--read-new-entry-name
+           palette (format "%s-copy" source-voice))))
+    (emacsvox-aural-voice-palettes--install-entry-definition
+     palette voice style)
+    (emacsvox-aural-voice-palette-previews-refresh voice)
+    voice))
 
 (defun emacsvox-aural-voice-palette-previews-help ()
   "Display and speak voice-palette preview help."
@@ -1823,7 +1910,9 @@ identity."
       "T comparison text    S stop preview\n"
       "SPC speak voice      t tune voice\n"
       "e also tunes; s also stops for compatibility\n"
+      "c copy voice         N new voice\n"
       "E replace definition\n"
+      "Editing a built-in creates one active personal overlay\n"
       "x explain voice\n"
       "g refresh            o palette manager\n"
       "h aural home         q quit\n")))
@@ -1865,6 +1954,8 @@ identity."
        ("S" . emacsvox-aural-voice-palette-previews-stop)
        ("e" . emacsvox-aural-voice-palette-previews-tune)
        ("E" . emacsvox-aural-voice-palette-previews-edit)
+       ("c" . emacsvox-aural-voice-palette-previews-copy)
+       ("N" . emacsvox-aural-voice-palette-previews-new)
        ("x" . emacsvox-aural-voice-palette-previews-explain)
        ("o" . emacsvox-aural-voice-palette-previews-open-manager)
        ("h" . emacsvox-aural)
@@ -1972,10 +2063,11 @@ after displaying the preview buffer."
       "left/right column    . speak titled cell\n"
       "RET browse voices    SPC speak palette\n"
       "a activate override  f follow active scheme\n"
-      "N create             c copy\n"
+      "N create palette     c copy palette\n"
       "e edit voice         E edit summary and parent\n"
       "D delete voice       d delete palette\n"
       "B or P browse voices x explain voice\n"
+      "In the voice list, N creates and c copies a voice\n"
       "v view and validate  g refresh\n"
       "h aural home         q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
