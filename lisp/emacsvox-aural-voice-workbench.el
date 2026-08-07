@@ -1267,12 +1267,19 @@ or persisting a routing choice."
          (index
           (emacsvox-aural-voice-workbench--read-selector-index
            logical "Move selector: "))
-         (destination (+ index direction)))
+         (destination (+ index direction))
+         (total (length selectors))
+         (description
+          (emacsvox-aural-voice-workbench--selector-description
+           (nth index selectors))))
     (unless (<= 0 destination (1- (length selectors)))
-      (user-error "That selector is already at the route boundary"))
+      (user-error
+       "%s is already at position %d of %d, the route boundary"
+       description (1+ index) total))
     (cl-rotatef (nth index selectors) (nth destination selectors))
     (emacsvox-aural-voice-workbench--stage
-     (format "Reordered fallback %d for %s" (1+ index) logical)
+     (format "Moved %s to position %d of %d in the %s route"
+             description (1+ destination) total logical)
      (lambda ()
        (emacsvox-aural-voice-workbench--replace-binding logical selectors)))))
 
@@ -1331,12 +1338,16 @@ or persisting a routing choice."
     (unless index
       (user-error "%s is not in the %s; use its toggle command first"
                   engine-id label))
-    (let ((destination (+ index direction)))
+    (let ((destination (+ index direction))
+          (total (length engines)))
       (unless (<= 0 destination (1- (length engines)))
-        (user-error "%s is already at the %s boundary" engine-id label))
+        (user-error
+         "%s is already at position %d of %d, the %s boundary"
+         engine-id (1+ index) total label))
       (cl-rotatef (nth index engines) (nth destination engines))
       (emacsvox-aural-voice-workbench--stage
-       (format "Moved %s in global %s" engine-id label)
+       (format "Moved %s to position %d of %d in global %s"
+               engine-id (1+ destination) total label)
        (lambda ()
          (emacsvox-aural-voice-workbench--set-policy-engine-list
           field engines))))))

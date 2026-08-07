@@ -111,13 +111,27 @@
   (emacsvox-test--with-voice-workbench
     (setq emacsvox-aural-voice-workbench-view 'engines)
     (emacsvox-aural-voice-workbench-refresh "eloquence")
-    (emacsvox-aural-voice-workbench-move-selector-down)
+    (let (spoken)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text) (setq spoken text))))
+        (emacsvox-aural-voice-workbench-move-selector-down))
+      (should
+       (string-match-p
+        "eloquence to position 2 of 2 in global preferred order"
+        spoken)))
     (should
      (equal
       (plist-get emacsvox-aural-voice-workbench-staged-profile :engine-order)
       '("winrt" "eloquence")))
     (emacsvox-aural-voice-workbench-toggle-fallback-engine)
-    (emacsvox-aural-voice-workbench-move-fallback-engine-up)
+    (let (spoken)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text) (setq spoken text))))
+        (emacsvox-aural-voice-workbench-move-fallback-engine-up))
+      (should
+       (string-match-p
+        "eloquence to position 1 of 2 in global fallback order"
+        spoken)))
     (should
      (equal
       (plist-get
@@ -265,7 +279,14 @@
     (cl-letf (((symbol-function 'completing-read)
                (lambda (&rest _)
                  "1. eloquence/eci:Reed [local]")))
-      (emacsvox-aural-voice-workbench-move-selector-down))
+      (let (spoken)
+        (cl-letf (((symbol-function 'tts-speak)
+                   (lambda (text) (setq spoken text))))
+          (emacsvox-aural-voice-workbench-move-selector-down))
+        (should
+         (string-match-p
+          "position 2 of 2 in the voice-bolden route"
+          spoken))))
     (should
      (equal
       (plist-get
