@@ -21,6 +21,21 @@ fi
 # otherwise reuse an older image while a process at the same path is running.
 resolved_program=$(readlink -f -- "$program")
 
+# Prefer the matching content-addressed runtime on the Windows filesystem.
+# This avoids Windows loading the executable, DLLs, and helper processes over
+# the WSL network share. Keep the WSL runtime as a compatibility fallback.
+windows_runtime_path_file="$server_directory/omnivox-bin/current/windows-runtime.path"
+if [ -r "$windows_runtime_path_file" ]; then
+    windows_runtime_path=$(sed -n '1p' "$windows_runtime_path_file")
+    if [ -n "$windows_runtime_path" ] &&
+       windows_runtime_directory=$(wslpath -u "$windows_runtime_path"); then
+        windows_program="$windows_runtime_directory/omnivox.exe"
+        if [ -x "$windows_program" ]; then
+            resolved_program=$(readlink -f -- "$windows_program")
+        fi
+    fi
+fi
+
 # The Windows build stages eSpeak's many small data files on the Windows
 # filesystem. Reading them through \\wsl.localhost adds several seconds to
 # startup and to any native voice discovery.

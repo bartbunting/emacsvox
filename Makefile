@@ -198,6 +198,7 @@ windows-omnivox:
 			printf '%s\n' "$$data_digest"; \
 		} | sha256sum | cut -c1-16)"; \
 		version_dir="$(OMNIVOX_RUNTIME_DIR)/versions/$$build_id"; \
+		windows_runtime_dir="$$(wslpath -u "$$windows_local_app_data")/Emacsvox/Omnivox/runtime/$$build_id"; \
 		mkdir -p "$$version_dir"; \
 		if [ ! -x "$$version_dir/omnivox.exe" ]; then \
 			cp "$$executable" "$$version_dir/omnivox.exe.new"; \
@@ -251,6 +252,30 @@ windows-omnivox:
 			> "$$version_dir/espeak-ng-data.path.new"; \
 		mv -f "$$version_dir/espeak-ng-data.path.new" \
 			"$$version_dir/espeak-ng-data.path"; \
+		mkdir -p "$$windows_runtime_dir"; \
+		for runtime_file in omnivox.exe libstdc++-6.dll libgcc_s_seh-1.dll \
+			OmnivoxEloquenceHelper32.exe OmnivoxDectalkHelper32.exe; do \
+			if [ ! -f "$$windows_runtime_dir/$$runtime_file" ]; then \
+				cp "$$version_dir/$$runtime_file" \
+					"$$windows_runtime_dir/$$runtime_file.new.$$$$"; \
+				mv "$$windows_runtime_dir/$$runtime_file.new.$$$$" \
+					"$$windows_runtime_dir/$$runtime_file"; \
+			fi; \
+		done; \
+		for runtime_file in DECtalk.dll dtalk_us.dic; do \
+			if [ -f "$$version_dir/$$runtime_file" ] && \
+				[ ! -f "$$windows_runtime_dir/$$runtime_file" ]; then \
+				cp "$$version_dir/$$runtime_file" \
+					"$$windows_runtime_dir/$$runtime_file.new.$$$$"; \
+				mv "$$windows_runtime_dir/$$runtime_file.new.$$$$" \
+					"$$windows_runtime_dir/$$runtime_file"; \
+			fi; \
+		done; \
+		windows_runtime_path="$$(wslpath -w "$$windows_runtime_dir")"; \
+		printf '%s\n' "$$windows_runtime_path" \
+			> "$$version_dir/windows-runtime.path.new"; \
+		mv -f "$$version_dir/windows-runtime.path.new" \
+			"$$version_dir/windows-runtime.path"; \
 		ln -sfn "versions/$$build_id" "$(OMNIVOX_RUNTIME_DIR)/current.new"; \
 		mv -Tf "$(OMNIVOX_RUNTIME_DIR)/current.new" \
 			"$(OMNIVOX_RUNTIME_DIR)/current"; \
