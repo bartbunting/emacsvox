@@ -115,6 +115,28 @@
   (should-not
    (lookup-key emacsvox-aural-voice-tuner-mode-map (kbd "s"))))
 
+(ert-deftest emacsvox-aural-voice-preview-uses-workbench-preview-bindings ()
+  "The palette browser shares tune, text, and stop keys with Workbench."
+  (dolist
+      (binding
+       '(("t" . emacsvox-aural-voice-palette-previews-tune)
+         ("T" . emacsvox-aural-voice-palette-previews-set-text)
+         ("S" . emacsvox-aural-voice-palette-previews-stop)
+         ("e" . emacsvox-aural-voice-palette-previews-tune)
+         ("s" . emacsvox-aural-voice-palette-previews-stop)))
+    (should
+     (eq
+      (lookup-key emacsvox-aural-voice-palette-previews-mode-map
+                  (kbd (car binding)))
+      (cdr binding)))))
+
+(ert-deftest emacsvox-aural-voice-tuner-uses-consistent-cancel-binding ()
+  "The tuner accepts the shared transaction-cancellation key."
+  (should
+   (eq
+    (lookup-key emacsvox-aural-voice-tuner-mode-map (kbd "C-c C-k"))
+    #'emacsvox-aural-voice-tuner-quit)))
+
 (ert-deftest emacsvox-aural-voice-palettes-install-data-is-atomic ()
   "Palette replacement saves a complete temporary registry before publishing."
   (emacsvox-test--with-voice-palettes
@@ -866,6 +888,31 @@
        (cl-find-if
         (lambda (entry) (eq (cdr entry) 'female))
         offered))))))
+
+(ert-deftest emacsvox-aural-voice-tuner-completes-routed-fallback-family ()
+  "Routed adapters complete portable families without requiring a match."
+  (let (offered require-match)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+          (lambda ()
+            '(:adapter omnivox
+              :family-selection routed
+              :generic-families (male female child)
+              :families nil
+              :dimensions (average-pitch))))
+         ((symbol-function 'completing-read)
+          (lambda (_prompt collection _predicate must-match &rest _)
+            (setq offered collection
+                  require-match must-match)
+            "female — portable")))
+      (should
+       (eq (emacsvox-aural-voice-tuner--read-family nil)
+           'female)))
+    (should-not require-match)
+    (should
+     (cl-find-if
+      (lambda (entry) (eq (cdr entry) 'child))
+      offered))))
 
 (ert-deftest emacsvox-aural-voice-tuner-rejects-unsupported-family-edit ()
   "Adapters without inline family selection explain that limitation."

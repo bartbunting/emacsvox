@@ -2368,7 +2368,8 @@ refreshing the Workbench at LOGICAL-VOICE."
       "Engine view: O toggle preferred; [/] reorder preferred\n"
       "f toggle fallback     {/} reorder fallback\n"
       "D disable/restore     K request failed-engine recovery probe\n"
-      "u undo staged edit    x cancel all staged edits\n"
+      "u undo staged edit    C-c C-k cancel all staged edits\n"
+      "x explain row\n"
       "m migrate legacy setup  N stage routing preset\n"
       "E export profile        I import profile\n"
       "w or C-c C-c save and apply\n"
@@ -2450,9 +2451,10 @@ refreshing the Workbench at LOGICAL-VOICE."
        ("E" . emacsvox-aural-voice-workbench-export-profile)
        ("I" . emacsvox-aural-voice-workbench-import-profile)
        ("u" . emacsvox-aural-voice-workbench-undo)
-       ("x" . emacsvox-aural-voice-workbench-cancel-staged)
+       ("x" . emacsvox-aural-voice-workbench-describe)
        ("w" . emacsvox-aural-voice-workbench-save-and-apply)
        ("C-c C-c" . emacsvox-aural-voice-workbench-save-and-apply)
+       ("C-c C-k" . emacsvox-aural-voice-workbench-cancel-staged)
        ("r" . emacsvox-aural-voice-workbench-retry-apply)
        ("U" . emacsvox-aural-voice-workbench-undo-applied)
        ("q" . emacsvox-aural-quit)

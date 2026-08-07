@@ -51,7 +51,7 @@
   "Comparison text used by the current preview buffer.")
 
 (defconst emacsvox-aural-voice-tuner--dimension-descriptions
-  '((family . "Base voice, stored as a portable or synth-specific ACSS family")
+  '((family . "Portable or synth-specific ACSS family; a physical route takes precedence")
     (average-pitch . "Overall pitch from zero through nine")
     (pitch-range . "Pitch variation from zero through nine")
     (stress . "Word emphasis from zero through nine")
@@ -1131,7 +1131,11 @@ Return the compiled voice without dispatching the speech queue."
 (defun emacsvox-aural-voice-tuner--dimension-label (dimension)
   "Return the user-facing tuner label for DIMENSION."
   (if (eq dimension 'family)
-      "Base Voice (ACSS Family)"
+      (if (eq (plist-get (emacsvox-aural-active-voice-capabilities)
+                         :family-selection)
+              'routed)
+          "Portable Fallback Family"
+        "Base Voice (ACSS Family)")
     (capitalize (emacsvox-aural-humanize dimension))))
 
 (defun emacsvox-aural-voice-tuner--family-description
@@ -1535,12 +1539,23 @@ ANNOUNCEMENT overrides the normal setting description."
                 choices nil t nil nil (car-safe initial-entry))))
          (cdr (assoc-string answer choices))))
       ('routed
-       (let ((answer
-              (string-trim
-               (read-string
-                "Portable fallback family; blank means adapter default: "
-                (and current (format "%s" current))))))
-         (unless (string-empty-p answer) answer)))
+       (let* ((choices
+               (cons
+                '("adapter default" . nil)
+                (emacsvox-aural-voice-tuner--family-candidates capability)))
+              (initial-entry
+               (cl-find current choices :key #'cdr :test #'equal))
+              (answer
+               (string-trim
+                (completing-read
+                 "Portable fallback family (not the Omnivox route): "
+                 choices nil nil nil nil
+                 (or (car-safe initial-entry)
+                     (and current (format "%s" current))))))
+              (entry (assoc-string answer choices)))
+         (if entry
+             (cdr entry)
+           (unless (string-empty-p answer) answer))))
       (_
        (let ((answer
               (string-trim
@@ -1657,6 +1672,8 @@ ANNOUNCEMENT overrides the normal setting description."
       "Changes are temporary until saved.  Every adjustment announces the\n"
       "new value and adapter support, then auditions the same comparison text.\n"
       "Unsupported dimensions remain portable but do not affect this adapter.\n"
+      "For a routed adapter, Portable Fallback Family is retained for other\n"
+      "adapters but does not replace the physical voice chosen in Workbench.\n"
       "Saving a changed personality converts this palette entry to a complete\n"
       "custom ACSS style; cancelling preserves its original definition.\n\n"
       "n or down next       p or up previous\n"
@@ -1666,7 +1683,7 @@ ANNOUNCEMENT overrides the normal setting description."
       "P audition           u undo last change\n"
       "R restore opening style\n"
       "w save and return    C-c C-c save and return\n"
-      "q cancel and return\n"
+      "q or C-c C-k cancel and return\n"
       "h aural home         ? help\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -1709,6 +1726,7 @@ ANNOUNCEMENT overrides the normal setting description."
        ("R" . emacsvox-aural-voice-tuner-restore)
        ("w" . emacsvox-aural-voice-tuner-save)
        ("C-c C-c" . emacsvox-aural-voice-tuner-save)
+       ("C-c C-k" . emacsvox-aural-voice-tuner-quit)
        ("<right>" . emacsvox-aural-voice-tuner-increase)
        ("<left>" . emacsvox-aural-voice-tuner-decrease)
        ("+" . emacsvox-aural-voice-tuner-increase)
@@ -1802,8 +1820,9 @@ identity."
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET or P preview     A preview every voice\n"
-      "t comparison text    s stop preview\n"
-      "SPC speak voice      e tune voice\n"
+      "T comparison text    S stop preview\n"
+      "SPC speak voice      t tune voice\n"
+      "e also tunes; s also stops for compatibility\n"
       "E replace definition\n"
       "x explain voice\n"
       "g refresh            o palette manager\n"
@@ -1840,8 +1859,10 @@ identity."
      '(("RET" . emacsvox-aural-voice-palette-previews-play)
        ("P" . emacsvox-aural-voice-palette-previews-play)
        ("A" . emacsvox-aural-voice-palette-previews-play-all)
-       ("t" . emacsvox-aural-voice-palette-previews-set-text)
+       ("t" . emacsvox-aural-voice-palette-previews-tune)
+       ("T" . emacsvox-aural-voice-palette-previews-set-text)
        ("s" . emacsvox-aural-voice-palette-previews-stop)
+       ("S" . emacsvox-aural-voice-palette-previews-stop)
        ("e" . emacsvox-aural-voice-palette-previews-tune)
        ("E" . emacsvox-aural-voice-palette-previews-edit)
        ("x" . emacsvox-aural-voice-palette-previews-explain)
@@ -1949,12 +1970,12 @@ after displaying the preview buffer."
       "all five dimensions; blank values mean the adapter default.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "RET or B browse voices   SPC speak palette\n"
+      "RET browse voices    SPC speak palette\n"
       "a activate override  f follow active scheme\n"
       "N create             c copy\n"
       "e edit voice         E edit summary and parent\n"
       "D delete voice       d delete palette\n"
-      "P browse voices      x explain voice\n"
+      "B or P browse voices x explain voice\n"
       "v view and validate  g refresh\n"
       "h aural home         q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
