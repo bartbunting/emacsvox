@@ -127,7 +127,8 @@ internal static class OmnivoxEloquenceHelper
         catch (Exception error)
         {
             Console.Error.WriteLine("Omnivox Eloquence helper failed: " +
-                error.Message);
+                error.ToString());
+            Console.Error.Flush();
             return 1;
         }
     }

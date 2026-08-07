@@ -47,6 +47,22 @@ if [ -z "${ESPEAK_NG_DATA-}" ] && [ -r "$espeak_data_path_file" ]; then
     fi
 fi
 
+# Preserve diagnostics outside Emacs: speech servers normally have no process
+# buffer, so stderr would otherwise be discarded.  A distinct file per launch
+# keeps concurrent Emacs instances and restarts separate.
+omnivox_state_directory=${XDG_STATE_HOME:-"$HOME/.local/state"}
+omnivox_log_directory=${OMNIVOX_LOG_DIRECTORY:-"$omnivox_state_directory/emacsvox/omnivox"}
+omnivox_session_id=$(date -u +%Y%m%dT%H%M%SZ)-$$
+if mkdir -p -- "$omnivox_log_directory"; then
+    omnivox_log_file="$omnivox_log_directory/omnivox-$omnivox_session_id.log"
+    exec 2>>"$omnivox_log_file"
+    printf '%s session_start session_id=%s launcher_pid=%s program=%s\n' \
+        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$omnivox_session_id" "$$" \
+        "$resolved_program" >&2
+else
+    echo "Could not create Omnivox log directory: $omnivox_log_directory" >&2
+fi
+
 # WSL passes selected Linux variables to Windows programs through WSLENV.
 # Preserve the caller's entries and add Omnivox's non-path compatibility
 # settings once, including when an existing entry has WSLENV flags.

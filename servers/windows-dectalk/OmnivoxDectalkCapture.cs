@@ -242,8 +242,12 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                 Speak("[" + voiceCode + " :dv ap " +
                     pitch.ToString(CultureInfo.InvariantCulture) + "] " +
                     BuildTextWithIndexes(text));
+                OmnivoxHelperLog.Event("native_call_started",
+                    "engine=dectalk call=TextToSpeechSync");
                 Check(OmnivoxNativeDectalk.TextToSpeechSync(handle),
                     "TextToSpeechSync");
+                OmnivoxHelperLog.Event("native_call_completed",
+                    "engine=dectalk call=TextToSpeechSync");
                 ThrowCallbackError();
                 lock (stateLock)
                 {

@@ -204,7 +204,13 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
                     volume.ToString(CultureInfo.InvariantCulture) + " ");
                 AddTextWithIndexes(text, anchors);
                 Check(OmnivoxNativeEci.Synthesize(handle), "eciSynthesize");
+                OmnivoxHelperLog.Event("native_call_started",
+                    "engine=eloquence call=eciSynchronize");
                 Check(OmnivoxNativeEci.Synchronize(handle), "eciSynchronize");
+                OmnivoxHelperLog.Event("native_call_completed",
+                    "engine=eloquence call=eciSynchronize frames=" +
+                    (capture.Length / 2).ToString(
+                        CultureInfo.InvariantCulture));
                 ThrowCallbackError();
                 return new OmnivoxCaptureResult(capture.ToArray(),
                     reachedMarkers.ToArray());

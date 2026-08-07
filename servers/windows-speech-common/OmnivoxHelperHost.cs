@@ -7,11 +7,35 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Web.Script.Serialization;
+
+internal static class OmnivoxHelperLog
+{
+    private static readonly object OutputLock = new object();
+
+    internal static void Event(string name, string details)
+    {
+        lock (OutputLock)
+        {
+            Console.Error.WriteLine(
+                "{0:O} helper_event={1} pid={2} thread={3}{4}",
+                DateTime.UtcNow, name, Process.GetCurrentProcess().Id,
+                Thread.CurrentThread.ManagedThreadId,
+                String.IsNullOrEmpty(details) ? "" : " " + details);
+            Console.Error.Flush();
+        }
+    }
+
+    internal static string ExceptionDetails(Exception error)
+    {
+        return error.ToString().Replace('\r', ' ').Replace('\n', ' ');
+    }
+}
 
 internal sealed class OmnivoxHelperVoice
 {
@@ -290,10 +314,14 @@ internal sealed class OmnivoxHelperHost
         json = new JavaScriptSerializer();
         json.MaxJsonLength = MaximumFrameBytes;
         json.RecursionLimit = 32;
+        OmnivoxHelperLog.Event("process_started",
+            "engine=" + engine.EngineId + " engine_version=" +
+            engine.Version + " helper=\"" + engine.HelperName + "\"");
     }
 
     internal int Run()
     {
+        OmnivoxHelperLog.Event("protocol_loop_started", "");
         while (!shuttingDown)
         {
             string line;
@@ -314,6 +342,7 @@ internal sealed class OmnivoxHelperHost
         }
 
         StopAndJoinActive();
+        OmnivoxHelperLog.Event("protocol_loop_stopped", "");
         return 0;
     }
 
@@ -556,6 +585,13 @@ internal sealed class OmnivoxHelperHost
             active = synthesis;
         }
 
+        OmnivoxHelperLog.Event("request_accepted",
+            "request_id=" + requestId.ToString(CultureInfo.InvariantCulture) +
+            " voice=" + voiceId + " text_bytes=" +
+            Encoding.UTF8.GetByteCount(text).ToString(
+                CultureInfo.InvariantCulture) + " anchors=" +
+            synthesis.Anchors.Length.ToString(CultureInfo.InvariantCulture));
+
         Dictionary<string, object> started = Response(requestId,
             "synthesis_started");
         Dictionary<string, object> format = new Dictionary<string, object>();
@@ -584,8 +620,12 @@ internal sealed class OmnivoxHelperHost
 
     private void SynthesisWorker(ActiveSynthesis synthesis)
     {
+        Stopwatch elapsed = Stopwatch.StartNew();
+        string request = "request_id=" + synthesis.RequestId.ToString(
+            CultureInfo.InvariantCulture);
         try
         {
+            OmnivoxHelperLog.Event("native_synthesis_started", request);
             OmnivoxCaptureResult result = engine.Synthesize(synthesis.Text,
                 synthesis.VoiceId, synthesis.Rate, synthesis.Pitch,
                 synthesis.Volume, synthesis.Anchors);
@@ -606,6 +646,12 @@ internal sealed class OmnivoxHelperHost
             ulong frameCount = (ulong)(audio.Length / frameBytes);
             ValidateMarkers(markers, frameCount, synthesis.Text,
                 synthesis.Anchors);
+            OmnivoxHelperLog.Event("native_synthesis_completed",
+                request + " frames=" + frameCount.ToString(
+                    CultureInfo.InvariantCulture) + " markers=" +
+                markers.Length.ToString(CultureInfo.InvariantCulture) +
+                " elapsed_ms=" + elapsed.ElapsedMilliseconds.ToString(
+                    CultureInfo.InvariantCulture));
             if (synthesis.Cancelled)
             {
                 WriteSimple(synthesis.RequestId, "synthesis_cancelled");
@@ -636,9 +682,16 @@ internal sealed class OmnivoxHelperHost
                 synthesis.RequestId, "synthesis_completed");
             completed["frame_count"] = frameCount;
             WriteFrame(completed);
+            OmnivoxHelperLog.Event("request_completed",
+                request + " elapsed_ms=" + elapsed.ElapsedMilliseconds.ToString(
+                    CultureInfo.InvariantCulture));
         }
         catch (Exception error)
         {
+            OmnivoxHelperLog.Event("request_failed",
+                request + " elapsed_ms=" + elapsed.ElapsedMilliseconds.ToString(
+                    CultureInfo.InvariantCulture) + " error=\"" +
+                OmnivoxHelperLog.ExceptionDetails(error) + "\"");
             if (synthesis.Cancelled)
             {
                 WriteSimple(synthesis.RequestId, "synthesis_cancelled");
@@ -820,6 +873,10 @@ internal sealed class OmnivoxHelperHost
             synthesis.Cancelled = true;
         }
         engine.Stop();
+        OmnivoxHelperLog.Event("cancel_requested",
+            "request_id=" + requestId.ToString(CultureInfo.InvariantCulture) +
+            " target_request_id=" + targetRequestId.ToString(
+                CultureInfo.InvariantCulture));
 
         Dictionary<string, object> response = Response(requestId,
             "cancel_accepted");
@@ -843,7 +900,11 @@ internal sealed class OmnivoxHelperHost
             return;
         }
         engine.Stop();
-        synthesis.Worker.Join(TimeSpan.FromSeconds(10));
+        bool joined = synthesis.Worker.Join(TimeSpan.FromSeconds(10));
+        OmnivoxHelperLog.Event("shutdown_join",
+            "request_id=" + synthesis.RequestId.ToString(
+                CultureInfo.InvariantCulture) + " joined=" +
+            (joined ? "true" : "false"));
     }
 
     private void WriteDescriptor(ulong requestId)

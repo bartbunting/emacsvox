@@ -155,7 +155,8 @@ internal static class OmnivoxDectalkHelper
         catch (Exception error)
         {
             Console.Error.WriteLine("Omnivox DECtalk helper failed: " +
-                error.Message);
+                error.ToString());
+            Console.Error.Flush();
             return 1;
         }
     }
