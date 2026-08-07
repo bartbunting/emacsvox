@@ -80,7 +80,8 @@
         (should (equal (aref row 5) "27")))
       (dolist
           (binding
-           '(("RET" . emacsvox-aural-voice-palettes-describe)
+           '(("RET" . emacsvox-aural-voice-palettes-preview)
+             ("B" . emacsvox-aural-voice-palettes-preview)
              ("a" . emacsvox-aural-voice-palettes-activate)
              ("f" . emacsvox-aural-voice-palettes-follow-scheme)
              ("N" . emacsvox-aural-voice-palettes-create)

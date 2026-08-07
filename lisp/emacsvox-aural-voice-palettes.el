@@ -1949,7 +1949,7 @@ after displaying the preview buffer."
       "all five dimensions; blank values mean the adapter default.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "RET view voices      SPC speak palette\n"
+      "RET or B browse voices   SPC speak palette\n"
       "a activate override  f follow active scheme\n"
       "N create             c copy\n"
       "e edit voice         E edit summary and parent\n"
@@ -1988,7 +1988,8 @@ after displaying the preview buffer."
 
 (dolist
     (binding
-     '(("RET" . emacsvox-aural-voice-palettes-describe)
+     '(("RET" . emacsvox-aural-voice-palettes-preview)
+       ("B" . emacsvox-aural-voice-palettes-preview)
        ("a" . emacsvox-aural-voice-palettes-activate)
        ("f" . emacsvox-aural-voice-palettes-follow-scheme)
        ("N" . emacsvox-aural-voice-palettes-create)
