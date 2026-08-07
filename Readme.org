@@ -99,12 +99,13 @@ Use =m= to stage migration from existing Omnivox settings or the current
 palette, =N= for routing presets, and =E= or =I= to exchange one data-only
 profile.  No inferred route is saved without review.
 
-Use =w= to atomically save and apply the complete profile to every live speech
-stream.  A partial apply remains visible and can be retried with =r=; =U=
-restores the previous saved revision.  Rows distinguish predicted, registered,
-and last actually played routes and report fallback or omitted dimensions.
-Standalone Eloquence/Outloud and DECtalk adapters consume the same profile
-through their static voice-family descriptions.
+Use =w= or =C-c C-c= to atomically save and apply the complete profile to every
+live speech stream.  The voice tuner uses the same keys to save one edited
+style and return.  A partial apply remains visible and can be retried with =r=;
+=U= restores the previous saved revision.  Rows distinguish predicted,
+registered, and last actually played routes and report fallback or omitted
+dimensions.  Standalone Eloquence/Outloud and DECtalk adapters consume the
+same profile through their static voice-family descriptions.
 
 The following variables remain an advanced compatibility and migration input.
 For example:

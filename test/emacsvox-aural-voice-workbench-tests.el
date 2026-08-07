@@ -703,6 +703,7 @@
          ("u" . emacsvox-aural-voice-workbench-undo)
          ("x" . emacsvox-aural-voice-workbench-cancel-staged)
          ("w" . emacsvox-aural-voice-workbench-save-and-apply)
+         ("C-c C-c" . emacsvox-aural-voice-workbench-save-and-apply)
          ("r" . emacsvox-aural-voice-workbench-retry-apply)
          ("U" . emacsvox-aural-voice-workbench-undo-applied)
          ("q" . emacsvox-aural-quit)

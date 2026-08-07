@@ -2371,7 +2371,8 @@ refreshing the Workbench at LOGICAL-VOICE."
       "u undo staged edit    x cancel all staged edits\n"
       "m migrate legacy setup  N stage routing preset\n"
       "E export profile        I import profile\n"
-      "w save and apply      r retry committed apply\n"
+      "w or C-c C-c save and apply\n"
+      "r retry committed apply\n"
       "U restore previous saved revision\n"
       "g redraw quietly      h aural home\n"
       "q hide, keep staged   ? help\n")))
@@ -2451,6 +2452,7 @@ refreshing the Workbench at LOGICAL-VOICE."
        ("u" . emacsvox-aural-voice-workbench-undo)
        ("x" . emacsvox-aural-voice-workbench-cancel-staged)
        ("w" . emacsvox-aural-voice-workbench-save-and-apply)
+       ("C-c C-c" . emacsvox-aural-voice-workbench-save-and-apply)
        ("r" . emacsvox-aural-voice-workbench-retry-apply)
        ("U" . emacsvox-aural-voice-workbench-undo-applied)
        ("q" . emacsvox-aural-quit)

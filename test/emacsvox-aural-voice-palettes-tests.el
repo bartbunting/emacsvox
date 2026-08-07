@@ -101,6 +101,19 @@
            (kbd (car binding)))
           (cdr binding)))))))
 
+(ert-deftest emacsvox-aural-voice-tuner-uses-consistent-save-bindings ()
+  "The tuner saves with Workbench-compatible acceptance keys."
+  (should
+   (eq
+    (lookup-key emacsvox-aural-voice-tuner-mode-map (kbd "w"))
+    #'emacsvox-aural-voice-tuner-save))
+  (should
+   (eq
+    (lookup-key emacsvox-aural-voice-tuner-mode-map (kbd "C-c C-c"))
+    #'emacsvox-aural-voice-tuner-save))
+  (should-not
+   (lookup-key emacsvox-aural-voice-tuner-mode-map (kbd "s"))))
+
 (ert-deftest emacsvox-aural-voice-palettes-install-data-is-atomic ()
   "Palette replacement saves a complete temporary registry before publishing."
   (emacsvox-test--with-voice-palettes

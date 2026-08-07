@@ -1665,7 +1665,8 @@ ANNOUNCEMENT overrides the normal setting description."
       "RET or e edit        d use adapter default\n"
       "P audition           u undo last change\n"
       "R restore opening style\n"
-      "s save and return    q cancel and return\n"
+      "w save and return    C-c C-c save and return\n"
+      "q cancel and return\n"
       "h aural home         ? help\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -1696,6 +1697,8 @@ ANNOUNCEMENT overrides the normal setting description."
    #'emacsvox-aural-voice-tuner--set-entries nil t)
   (tabulated-list-init-header))
 
+(define-key emacsvox-aural-voice-tuner-mode-map (kbd "s") nil)
+
 (dolist
     (binding
      '(("RET" . emacsvox-aural-voice-tuner-edit)
@@ -1704,7 +1707,8 @@ ANNOUNCEMENT overrides the normal setting description."
        ("P" . emacsvox-aural-voice-tuner-audition)
        ("u" . emacsvox-aural-voice-tuner-undo)
        ("R" . emacsvox-aural-voice-tuner-restore)
-       ("s" . emacsvox-aural-voice-tuner-save)
+       ("w" . emacsvox-aural-voice-tuner-save)
+       ("C-c C-c" . emacsvox-aural-voice-tuner-save)
        ("<right>" . emacsvox-aural-voice-tuner-increase)
        ("<left>" . emacsvox-aural-voice-tuner-decrease)
        ("+" . emacsvox-aural-voice-tuner-increase)
