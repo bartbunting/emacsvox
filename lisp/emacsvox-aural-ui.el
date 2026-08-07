@@ -55,6 +55,9 @@ When nil, movement speaks the current titled cell.")
 (defvar-local emacsvox-aural-ui-refresh-function nil
   "Interactive function that refreshes the current interface.")
 
+(defvar-local emacsvox-aural-ui-dismiss-warning-function nil
+  "Optional function returning a warning to speak after this interface hides.")
+
 (defvar-local emacsvox-aural-ui-help-origin-buffer nil
   "Aural interface buffer from which the current Help buffer was opened.")
 
@@ -416,7 +419,10 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
   (interactive)
   (unless (emacsvox-aural-ui-interface-buffer-p)
     (user-error "This is not an aural interface buffer"))
-  (let ((facts
+  (let ((warning
+         (and emacsvox-aural-ui-dismiss-warning-function
+              (funcall emacsvox-aural-ui-dismiss-warning-function)))
+        (facts
          '(:role aural-interface :events (aural-interface-closed)))
         (context
          (emacsvox-aural-capture-context 'aural-tools 'state-change)))
@@ -427,7 +433,11 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
             (emacsvox-aural-submission-module 'aural-tools)
             (emacsvox-aural-submission-occasion 'state-change))
         (emacsvox-icon 'close-object)
-        (emacsvox-speak-mode-line)))))
+        (emacsvox-speak-mode-line)
+        (when warning
+          (if (fboundp 'tts-speak)
+              (tts-speak warning)
+            (message "%s" warning)))))))
 
 (defvar emacsvox-aural-interface-mode-map
   (let ((map (make-sparse-keymap)))

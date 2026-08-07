@@ -736,5 +736,48 @@
                      (kbd (car binding)))
          (cdr binding)))))
 
+(ert-deftest emacsvox-aural-voice-workbench-quit-warns-about-staged-route ()
+  "Hiding a dirty Workbench says that the physical route is not saved."
+  (emacsvox-test--with-voice-workbench
+    (emacsvox-aural-voice-workbench--stage
+     "Change a route"
+     (lambda ()
+       (setf
+        (plist-get emacsvox-aural-voice-workbench-staged-profile :summary)
+        "changed")))
+    (let (spoken quit)
+      (cl-letf
+          (((symbol-function 'quit-window)
+            (lambda (&optional _) (setq quit t)))
+           ((symbol-function 'tts-speak)
+            (lambda (text) (setq spoken text)))
+           ((symbol-function 'emacsvox-icon) #'ignore)
+           ((symbol-function 'emacsvox-speak-mode-line) #'ignore))
+        (emacsvox-aural-quit))
+      (should quit)
+      (should
+       (string-match-p "Physical route changes remain staged" spoken))
+      (should (string-match-p "press w to save and apply" spoken)))))
+
+(ert-deftest emacsvox-aural-voice-tuner-distinguishes-style-from-route-save ()
+  "Tuner save reports that a Workbench route remains a separate transaction."
+  (emacsvox-test--with-voice-workbench
+    (emacsvox-aural-voice-workbench--stage
+     "Assign Harry"
+     (lambda ()
+       (setf
+        (plist-get emacsvox-aural-voice-workbench-staged-profile :summary)
+        "Harry staged")))
+    (let (spoken)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text) (setq spoken text))))
+        (emacsvox-aural-voice-tuner--announce-save
+         (current-buffer) 'dired_directory t))
+      (should (string-match-p
+               "Portable style for dired_directory saved" spoken))
+      (should (string-match-p
+               "physical route is still staged, not saved" spoken))
+      (should (string-match-p "press w to save and apply" spoken)))))
+
 (provide 'emacsvox-aural-voice-workbench-tests)
 ;;; emacsvox-aural-voice-workbench-tests.el ends here

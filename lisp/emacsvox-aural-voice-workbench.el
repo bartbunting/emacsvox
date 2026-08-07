@@ -2361,7 +2361,8 @@ refreshing the Workbench at LOGICAL-VOICE."
       "Emacsvox Voice Workbench\n\n"
       "The workbench presents portable voice style and machine-local routing\n"
       "together while keeping their saved data separate. Exact native IDs are\n"
-      "local; property selectors can be portable; session routes are temporary.\n\n"
+      "local; property selectors can be portable; session routes are temporary.\n"
+      "Tuner w saves portable style only; Workbench w saves and applies routes.\n\n"
       "l logical voices      v physical voices\n"
       "e engines             s styles and effects\n"
       "n/p or up/down rows   left/right columns\n"
@@ -2387,9 +2388,16 @@ refreshing the Workbench at LOGICAL-VOICE."
       "r retry committed apply\n"
       "U restore previous saved revision\n"
       "g redraw quietly      h aural home\n"
-      "q hide, keep staged   ? help\n")))
+      "q hide; warns if route is unsaved   ? help\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
+
+(defun emacsvox-aural-voice-workbench--dismiss-warning ()
+  "Return a warning when physical routing changes remain staged."
+  (when (emacsvox-aural-voice-workbench--dirty-p)
+    (concat
+     "Voice Workbench hidden. Physical route changes remain staged, "
+     "not saved. Return to the Workbench and press w to save and apply.")))
 
 (define-derived-mode
     emacsvox-aural-voice-workbench-mode
@@ -2415,6 +2423,8 @@ refreshing the Workbench at LOGICAL-VOICE."
               (emacsvox-aural-voice-workbench--profile-diagnostics
                emacsvox-aural-voice-workbench-staged-profile))
   (setq-local emacsvox-aural-voice-workbench-provenance nil)
+  (setq-local emacsvox-aural-ui-dismiss-warning-function
+              #'emacsvox-aural-voice-workbench--dismiss-warning)
   (emacsvox-aural-ui-configure-tabulated
    "voice workbench"
    #'emacsvox-aural-voice-workbench-speak-current

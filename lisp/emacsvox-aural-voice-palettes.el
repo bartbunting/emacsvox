@@ -1676,8 +1676,39 @@ ANNOUNCEMENT overrides the normal setting description."
           (funcall 'emacsvox-aural-voice-workbench-refresh
                    (format "%s" voice)))))))
 
+(defun emacsvox-aural-voice-tuner--source-route-staged-p (source)
+  "Return non-nil when SOURCE is a Workbench with unsaved routing edits."
+  (and
+   (buffer-live-p source)
+   (with-current-buffer source
+     (and
+      (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+      (boundp 'emacsvox-aural-voice-workbench-staged-profile)
+      (boundp 'emacsvox-aural-voice-workbench-committed-profile)
+      (not
+       (equal emacsvox-aural-voice-workbench-staged-profile
+              emacsvox-aural-voice-workbench-committed-profile))))))
+
+(defun emacsvox-aural-voice-tuner--announce-save
+    (source voice style-saved)
+  "Announce what was saved for VOICE and whether SOURCE has a staged route."
+  (let ((text
+         (concat
+          (if style-saved
+              (format "Portable style for %s saved. " voice)
+            (format "No portable style changes for %s. " voice))
+          (if (emacsvox-aural-voice-tuner--source-route-staged-p source)
+              (concat
+               "Its physical route is still staged, not saved. "
+               "In Voice Workbench press w to save and apply the route.")
+            "No physical route was changed."))))
+    (if (fboundp 'tts-speak)
+        (tts-speak text)
+      (message "%s" text))
+    text))
+
 (defun emacsvox-aural-voice-tuner-save ()
-  "Atomically save the working style and return to the voice preview."
+  "Atomically save the portable style and return to the voice preview."
   (interactive)
   (let ((source emacsvox-aural-voice-tuner-source-buffer)
         (palette emacsvox-aural-voice-tuner-palette)
@@ -1697,7 +1728,8 @@ ANNOUNCEMENT overrides the normal setting description."
     (emacsvox-aural-quit t)
     (when saved
       (emacsvox-aural-voice-tuner--refresh-source
-       source palette voice))))
+       source palette voice))
+    (emacsvox-aural-voice-tuner--announce-save source voice saved)))
 
 (defun emacsvox-aural-voice-tuner-quit ()
   "Cancel tuning, asking before discarding unsaved changes."
@@ -1722,13 +1754,16 @@ ANNOUNCEMENT overrides the normal setting description."
       "adapters but does not replace the physical voice chosen in Workbench.\n"
       "Saving a changed personality converts this palette entry to a complete\n"
       "custom ACSS style; cancelling preserves its original definition.\n\n"
+      "Tuner w saves only this portable style.  If its physical route is\n"
+      "staged in Voice Workbench, return there and press w to save and apply\n"
+      "that separate machine-local route.\n\n"
       "n or down next       p or up previous\n"
       "left/right decrease/increase numeric value\n"
       "0 through 9 set numeric value directly\n"
       "RET or e edit        d use adapter default\n"
       "P audition           u undo last change\n"
       "R restore opening style\n"
-      "w save and return    C-c C-c save and return\n"
+      "w save style, return C-c C-c save style, return\n"
       "q or C-c C-k cancel and return\n"
       "h aural home         ? help\n")))
   (when (fboundp 'emacsvox-speak-help)
