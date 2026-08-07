@@ -460,6 +460,20 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       actions))
     (should-not actions)))
 
+(ert-deftest emacsvox-aural-structured-timeline-omits-a-nil-logical-voice ()
+  "Plain speech does not turn Lisp nil into a logical voice named nil."
+  (let* ((content
+          (emacsvox-aural--make-concrete-content :text "Plain" :speak t))
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content content :context '(:icons-enabled t)))
+         (envelope
+          (car
+           (emacsvox-aural--build-structured-timeline
+            1 1 (list (list plan "Plain" nil)))))
+         (span (aref (plist-get envelope :spans) 0)))
+    (should (eq (plist-get span :logical_voice_id) :null))))
+
 (ert-deftest emacsvox-aural-delivers-one-negotiated-structured-timeline ()
   "A complete direct Aural presentation replaces its legacy wire packet."
   (let* ((process

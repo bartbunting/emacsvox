@@ -546,9 +546,12 @@ OWNER so a logical transaction cannot be partially delivered across streams."
      (string-match
       "\\[\\[logical_voice \\([A-Za-z0-9_.-]+\\)\\]\\]" command))
     (match-string 1 command))
-   ((symbolp request) (symbol-name request))
+   ((and request (symbolp request)) (symbol-name request))
    ((stringp request) request)
-   ((and (listp request) (symbolp (plist-get request :preset)))
+   ((and
+     (listp request)
+     (plist-get request :preset)
+     (symbolp (plist-get request :preset)))
     (symbol-name (plist-get request :preset)))
    ((and (listp request) (stringp (plist-get request :preset)))
     (plist-get request :preset))))
