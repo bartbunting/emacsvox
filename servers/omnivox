@@ -21,12 +21,23 @@ fi
 # otherwise reuse an older image while a process at the same path is running.
 resolved_program=$(readlink -f -- "$program")
 
+# The Windows build stages eSpeak's many small data files on the Windows
+# filesystem. Reading them through \\wsl.localhost adds several seconds to
+# startup and to any native voice discovery.
+espeak_data_path_file="$server_directory/omnivox-bin/current/espeak-ng-data.path"
+if [ -z "${ESPEAK_NG_DATA-}" ] && [ -r "$espeak_data_path_file" ]; then
+    ESPEAK_NG_DATA=$(sed -n '1p' "$espeak_data_path_file")
+    if [ -n "$ESPEAK_NG_DATA" ]; then
+        export ESPEAK_NG_DATA
+    fi
+fi
+
 # WSL passes selected Linux variables to Windows programs through WSLENV.
 # Preserve the caller's entries and add Omnivox's non-path compatibility
 # settings once, including when an existing entry has WSLENV flags.
 for variable in OMNIVOX_ENGINE OMNIVOX_AUDIO_TARGET \
     OMNIVOX_ELOQUENCE_HELPER OMNIVOX_ECI_DLL \
-    OMNIVOX_DECTALK_HELPER OMNIVOX_DECTALK_DLL; do
+    OMNIVOX_DECTALK_HELPER OMNIVOX_DECTALK_DLL ESPEAK_NG_DATA; do
     case ":${WSLENV-}:" in
         *":$variable:"*|*":$variable/"*) ;;
         *) WSLENV="${WSLENV:+$WSLENV:}$variable" ;;

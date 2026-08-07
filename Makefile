@@ -172,6 +172,21 @@ windows-omnivox:
 		data_digest="$$(cd "$$espeak_data" && \
 			find . -type f -print0 | LC_ALL=C sort -z | \
 			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+		windows_local_app_data="$$(powershell.exe -NoProfile -NonInteractive \
+			-Command '[Environment]::GetFolderPath("LocalApplicationData")' | \
+			tr -d '\r')"; \
+		if [ -z "$$windows_local_app_data" ]; then \
+			echo "Could not locate Windows LocalAppData" >&2; \
+			exit 1; \
+		fi; \
+		windows_cache_parent="$$(wslpath -u "$$windows_local_app_data")/Emacsvox/Omnivox/espeak-data/$$data_digest"; \
+		mkdir -p "$$windows_cache_parent"; \
+		if [ ! -f "$$windows_cache_parent/espeak-ng-data/phontab" ]; then \
+			cache_stage="$$windows_cache_parent/espeak-ng-data.new.$$$$"; \
+			cp -a "$$espeak_data" "$$cache_stage"; \
+			mv "$$cache_stage" "$$windows_cache_parent/espeak-ng-data"; \
+		fi; \
+		windows_cache_path="$$(wslpath -w "$$windows_cache_parent")"; \
 		build_id="$$( { \
 			sha256sum "$$executable" "$$eloquence_helper" "$$dectalk_helper" \
 				"$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
@@ -232,6 +247,10 @@ windows-omnivox:
 			mv "$$version_dir/espeak-ng-data.new" \
 				"$$version_dir/espeak-ng-data"; \
 		fi; \
+		printf '%s\n' "$$windows_cache_path" \
+			> "$$version_dir/espeak-ng-data.path.new"; \
+		mv -f "$$version_dir/espeak-ng-data.path.new" \
+			"$$version_dir/espeak-ng-data.path"; \
 		ln -sfn "versions/$$build_id" "$(OMNIVOX_RUNTIME_DIR)/current.new"; \
 		mv -Tf "$(OMNIVOX_RUNTIME_DIR)/current.new" \
 			"$(OMNIVOX_RUNTIME_DIR)/current"; \
