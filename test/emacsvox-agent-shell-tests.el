@@ -5496,15 +5496,15 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should
          (equal
           (substring-no-properties rendered)
-          "[…] Wait step\n[…] Busy step\n[✓] Done step\n[✗] Failed step"))
+          "[◔] Wait step\n[◔] Busy step\n[✓] Done step\n[✗] Failed step"))
         (should
          (equal
           (substring-no-properties spoken)
           (concat
            "[ pending ] Wait step\n[ in progress ] Busy step\n"
            "[ completed ] Done step\n[ failed ] Failed step")))
-        (should (string-match-p "…" rendered))
-        (should-not (string-match-p "[…✓✗]" spoken))
+        (should (string-match-p "◔" rendered))
+        (should-not (string-match-p "[◔…✓✗]" spoken))
         (let ((position (string-match "pending" spoken)))
           (should position)
           (should
