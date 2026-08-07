@@ -765,7 +765,7 @@ or persisting a routing choice."
      [("Palette voice" 22 t) ("Logical voice" 26 t)
       ("Portable definition" 38 t) ("Staged route" 42 t)
       ("Last played" 30 t)
-      ("Adapter ACSS" 30 t) ("Post effects" 24 t)
+      ("Adapter ACSS" 30 t) ("Supported post effects" 30 t)
       ("Provenance" 28 t)
       ("Diagnostic" 0 t)])))
 
@@ -1905,23 +1905,49 @@ or persisting a routing choice."
                (emacsvox-aural-voice-workbench--palette-entry logical-voice)))
     (let* ((definition (cdr entry))
            (style
-            (if (and (symbolp definition) (boundp definition))
-                (symbol-value definition)
-              definition))
+            (emacsvox-aural-voice-tuner--complete-style
+             definition (emacsvox-aural-voice-workbench--active-palette)))
            result)
       (dolist
           (dimension
-           '((:average-pitch . acss-average-pitch)
-             (:pitch-range . acss-pitch-range)
-             (:stress . acss-stress)
-             (:richness . acss-richness)))
+           '(rate average-pitch pitch-range stress richness))
         (when-let* ((value
-                     (and (fboundp (cdr dimension))
-                          (ignore-errors (funcall (cdr dimension) style))))
+                     (plist-get
+                      style
+                      (emacsvox-aural--voice-dimension-key dimension)))
                     (normalized
                      (emacsvox-aural-voice-workbench--normalized-acss-value
                       value)))
-          (setq result (plist-put result (car dimension) normalized))))
+          (setq
+           result
+           (plist-put
+            result
+            (emacsvox-aural--voice-dimension-key dimension)
+            normalized))))
+      result)))
+
+(defun emacsvox-aural-voice-workbench--preview-effects (logical-voice)
+  "Return normalized post-synthesis effects for LOGICAL-VOICE."
+  (when-let* ((entry
+               (emacsvox-aural-voice-workbench--palette-entry logical-voice)))
+    (let ((style
+           (emacsvox-aural-voice-tuner--complete-style
+            (cdr entry) (emacsvox-aural-voice-workbench--active-palette)))
+          result)
+      (dolist (dimension emacsvox-aural-post-synthesis-dimensions)
+        (when-let* ((value
+                     (plist-get
+                      style
+                      (emacsvox-aural--voice-dimension-key dimension)))
+                    (normalized
+                     (emacsvox-aural-voice-workbench--normalized-acss-value
+                      value)))
+          (setq
+           result
+           (plist-put
+            result
+            (emacsvox-aural--voice-dimension-key dimension)
+            normalized))))
       result)))
 
 (defun emacsvox-aural-voice-workbench--physical-preview-entry (pair)
@@ -1943,13 +1969,15 @@ or persisting a routing choice."
           (emacsvox-aural-voice-workbench--profile-binding logical-voice))
          (language (plist-get binding :language))
          (selector
-          (or (car (emacsvox-aural-voice-workbench--selectors logical-voice))
-              (list :kind 'properties :language language :scope 'portable))))
+          (or
+           (car (emacsvox-aural-voice-workbench--selectors logical-voice))
+           (emacsvox-aural-voice-workbench--default-tuning-selector)
+           (list :kind 'properties :language language :scope 'portable))))
     (list
      :text emacsvox-aural-voice-workbench-preview-text
      :selector selector :language language
      :acss (emacsvox-aural-voice-workbench--preview-acss logical-voice)
-     :effects nil)))
+     :effects (emacsvox-aural-voice-workbench--preview-effects logical-voice))))
 
 (defun emacsvox-aural-voice-workbench--current-preview-entry ()
   "Return a preview entry for the current Workbench row."
