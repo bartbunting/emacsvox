@@ -400,6 +400,30 @@ RULE-INDEX associates the line with a working declarative rule."
         (push (format "advanced volume %s" (plist-get content :volume)) parts))
       (string-join (nreverse parts) "; "))))
 
+(defun emacsvox-aural-simple-editor--content-speech-description (content)
+  "Describe only the speech choice in CONTENT."
+  (cond
+   ((and (plist-member content :speak) (plist-get content :speak))
+    "speak the content")
+   ((plist-member content :speak) "do not speak the content")
+   (t "inherit the existing speech choice")))
+
+(defun emacsvox-aural-simple-editor--content-voice-description (content)
+  "Describe only the voice choice in CONTENT."
+  (if (plist-member content :voice)
+      (if-let* ((voice (plist-get content :voice)))
+          (format "use the %s voice"
+                  (emacsvox-aural-simple-editor--humanize voice))
+        "use the default voice")
+    "inherit the existing voice"))
+
+(defun emacsvox-aural-simple-editor--content-space-description (content)
+  "Describe only the spatial choice in CONTENT."
+  (if-let* ((space (plist-get content :space)))
+      (format "place it %s"
+              (emacsvox-aural-simple-editor--space-description space))
+    "inherit the existing position"))
+
 (defun emacsvox-aural-simple-editor--advanced-action-p (action)
   "Return non-nil when ACTION needs advanced editing."
   (or
@@ -469,7 +493,7 @@ RULE-INDEX associates the line with a working declarative rule."
           " (active)"
         "")))
     (insert
-     "TAB and Shift-TAB move through fields.  RET edits one field.\n"
+     "TAB and Shift-TAB move through fields.  RET or e edits one field.\n"
      "Keys: n new presentation, p preview, s save, a activate,\n"
      "A advanced editor, d delete rule, t enable rule, ? help, q quit.\n\n")
     (insert "Scheme\n")
@@ -530,12 +554,26 @@ RULE-INDEX associates the line with a working declarative rule."
            (plist-get render :before))
           (list :kind 'before :rule index)
           index)
-         (emacsvox-aural-simple-editor--insert-field
-          "Content:"
-          (emacsvox-aural-simple-editor--content-description
-           (plist-get render :content))
-          (list :kind 'content :rule index)
-          index)
+         (let ((content (plist-get render :content)))
+           (insert
+            (format
+             "  Content:           %s\n"
+             (emacsvox-aural-simple-editor--content-description content)))
+           (emacsvox-aural-simple-editor--insert-field
+            "Content speech:"
+            (emacsvox-aural-simple-editor--content-speech-description content)
+            (list :kind 'content-speech :rule index)
+            index)
+           (emacsvox-aural-simple-editor--insert-field
+            "Content voice:"
+            (emacsvox-aural-simple-editor--content-voice-description content)
+            (list :kind 'content-voice :rule index)
+            index)
+           (emacsvox-aural-simple-editor--insert-field
+            "Content position:"
+            (emacsvox-aural-simple-editor--content-space-description content)
+            (list :kind 'content-space :rule index)
+            index))
          (emacsvox-aural-simple-editor--insert-field
           "After content:"
           (emacsvox-aural-simple-editor--phase-description
@@ -915,6 +953,66 @@ instead of replacing it."
              content :space)))
     content))
 
+(defun emacsvox-aural-simple-editor--edit-content-speech (old)
+  "Return OLD after editing only its content speech choice."
+  (let* ((content (copy-tree old))
+         (answer
+          (completing-read
+           "Content speech: "
+           '("keep current" "inherit" "yes" "no")
+           nil 'must-match nil nil "keep current")))
+    (pcase answer
+      ("inherit"
+       (setq content
+             (emacsvox-aural-simple-editor--plist-delete content :speak)))
+      ("yes" (setq content (plist-put content :speak t)))
+      ("no" (setq content (plist-put content :speak nil))))
+    content))
+
+(defun emacsvox-aural-simple-editor--edit-content-voice (old)
+  "Return OLD after editing only its content voice choice."
+  (let* ((content (copy-tree old))
+         (current
+          (and (plist-member content :voice) (plist-get content :voice)))
+         (answer
+          (completing-read
+           "Content voice: "
+           (delete-dups
+            (append
+             '("keep current" "inherit")
+             (emacsvox-aural-editor-voice-candidates current)))
+           nil 'must-match nil nil "keep current")))
+    (pcase answer
+      ("inherit"
+       (setq content
+             (emacsvox-aural-simple-editor--plist-delete content :voice)))
+      ("default" (setq content (plist-put content :voice nil)))
+      ("keep current")
+      (_ (setq content (plist-put content :voice (intern answer)))))
+    content))
+
+(defun emacsvox-aural-simple-editor--edit-content-space (old)
+  "Return OLD after editing only its content spatial choice."
+  (let* ((content (copy-tree old))
+         (space
+          (emacsvox-aural-simple-editor--read-space
+           (plist-get content :space) "Content")))
+    (if space
+        (plist-put content :space space)
+      (emacsvox-aural-simple-editor--plist-delete content :space))))
+
+(defun emacsvox-aural-simple-editor--speak-edit-prompt (context)
+  "Speak the current field CONTEXT and live minibuffer prompt."
+  (when (fboundp 'tts-speak)
+    (tts-speak
+     (string-join
+      (delq nil
+            (list
+             (and context (not (string-empty-p context)) context)
+             (when-let* ((prompt (minibuffer-prompt)))
+               (string-trim prompt))))
+      ". "))))
+
 (defun emacsvox-aural-simple-editor--rule (index)
   "Return working rule INDEX."
   (or
@@ -929,7 +1027,17 @@ instead of replacing it."
            (emacsvox-aural-simple-editor--field-at-point)
            (user-error "Move to an editable field first")))
          (kind (plist-get field :kind))
-         (index (plist-get field :rule)))
+         (index (plist-get field :rule))
+         (context
+          (string-trim
+           (buffer-substring-no-properties
+            (line-beginning-position) (line-end-position))))
+         (minibuffer-setup-hook
+          (append
+           minibuffer-setup-hook
+           (list
+            (lambda ()
+              (emacsvox-aural-simple-editor--speak-edit-prompt context))))))
     (if (eq kind 'advanced)
         (emacsvox-aural-simple-editor-use-advanced)
       (pcase kind
@@ -1019,14 +1127,25 @@ instead of replacing it."
          (setq rule (plist-put rule :render render))
          (emacsvox-aural-compile-rule rule 'user)
          (setf (nth index emacsvox-aural-editor-rules) rule)))
-      ('content
+      ((or 'content 'content-speech 'content-voice 'content-space)
        (let* ((rule
                (copy-tree
                 (emacsvox-aural-simple-editor--rule index)))
               (render (copy-tree (plist-get rule :render)))
+              (old-content (plist-get render :content))
               (content
-               (emacsvox-aural-simple-editor--edit-content
-                (plist-get render :content))))
+               (pcase kind
+                 ('content-speech
+                  (emacsvox-aural-simple-editor--edit-content-speech
+                   old-content))
+                 ('content-voice
+                  (emacsvox-aural-simple-editor--edit-content-voice
+                   old-content))
+                 ('content-space
+                  (emacsvox-aural-simple-editor--edit-content-space
+                   old-content))
+                 (_
+                  (emacsvox-aural-simple-editor--edit-content old-content)))))
          (setq render (plist-put render :content content))
          (setq rule (plist-put rule :render render))
          (emacsvox-aural-compile-rule rule 'user)
@@ -1278,7 +1397,7 @@ instead of replacing it."
       "it applies to and what happens before, during, and after its content.\n"
       "A new presentation can target registered meaning or a visual face.\n\n"
       "TAB next field       Shift-TAB previous field\n"
-      "RET edit field       n new presentation\n"
+      "RET or e edit field  n new presentation\n"
       "p preview            x explain\n"
       "d delete             t enable or disable\n"
       "v validate           s save\n"

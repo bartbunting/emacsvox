@@ -3428,6 +3428,16 @@
           text))
         (should
          (string-match-p
+          "Content speech:.*inherit the existing speech choice"
+          text))
+        (should
+         (string-match-p "Content voice:.*use the bolden voice" text))
+        (should
+         (string-match-p
+          "Content position:.*inherit the existing position"
+          text))
+        (should
+         (string-match-p
           "Advanced details:.*advanced after-content operations"
           text))
         (should-not (string-match-p "(:role" text))
@@ -3473,6 +3483,49 @@
           "My clear scheme"))
         (should (equal emacsvox-aural-editor-rules rules-before))
         (should emacsvox-aural-editor-dirty)))))
+
+(ert-deftest emacsvox-aural-simple-editor-edits-content-voice-directly ()
+  "The voice field changes one value and speaks its complete prompt context."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'simple-test
+     '((:id directory
+        :match (:role filesystem-entry :entry-kind directory)
+        :render
+        (:content
+         (:speak t :voice bolden :space (:balance -0.65))))))
+    (with-temp-buffer
+      (emacsvox-test--setup-simple-editor 'simple-test)
+      (should
+       (emacsvox-aural-simple-editor--goto-field
+        '(:kind content-voice :rule 0)))
+      (let ((minibuffer-setup-hook nil)
+            prompt
+            choices
+            spoken)
+        (cl-letf
+            (((symbol-function 'completing-read)
+              (lambda (actual-prompt actual-choices &rest _)
+                (setq prompt actual-prompt choices actual-choices)
+                (cl-letf (((symbol-function 'minibuffer-prompt)
+                           (lambda () actual-prompt)))
+                  (run-hooks 'minibuffer-setup-hook))
+                "brighten"))
+             ((symbol-function 'tts-speak)
+              (lambda (text) (setq spoken text)))
+             ((symbol-function 'emacsvox-speak-line) #'ignore))
+          (emacsvox-aural-simple-editor-edit-field))
+        (should (equal prompt "Content voice: "))
+        (should (equal (seq-take choices 4)
+                       '("keep current" "inherit" "bolden" "default")))
+        (should (string-match-p "Content voice:.*bolden" spoken))
+        (let ((content
+               (plist-get
+                (plist-get (car emacsvox-aural-editor-rules) :render)
+                :content)))
+          (should (eq (plist-get content :voice) 'brighten))
+          (should (eq (plist-get content :speak) t))
+          (should (equal (plist-get content :space) '(:balance -0.65))))))))
 
 (ert-deftest emacsvox-aural-simple-editor-builds-ordered-feedback ()
   "Simple feedback choices produce validated ordered actions and placement."
