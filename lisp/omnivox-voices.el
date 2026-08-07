@@ -1692,9 +1692,26 @@ Return the number of distinct processes that received the command."
           (lambda (left right)
             (string-lessp (symbol-name left) (symbol-name right))))))
 
+(defun omnivox--discovered-post-synthesis-dimensions ()
+  "Return normalized post-synthesis dimensions advertised by Omnivox."
+  (let (dimensions)
+    (dolist (engine (append (plist-get omnivox-engine-inventory :engines) nil))
+      (dolist
+          (dimension
+           (append
+            (plist-get (plist-get engine :capabilities)
+                       :post_synthesis_dimensions)
+            nil))
+        (when dimension
+          (push (omnivox--preview-dimension-symbol dimension) dimensions))))
+    (sort (delete-dups dimensions)
+          (lambda (left right)
+            (string-lessp (symbol-name left) (symbol-name right))))))
+
 (defun omnivox-voice-capabilities ()
   "Return discovered ACSS and routed-family capabilities for Omnivox."
-  (let ((dimensions (omnivox--discovered-acss-dimensions)))
+  (let ((dimensions (omnivox--discovered-acss-dimensions))
+        (effects (omnivox--discovered-post-synthesis-dimensions)))
     (list
      :adapter 'omnivox
      :source (if omnivox-engine-inventory 'discovered 'pending)
@@ -1702,6 +1719,7 @@ Return the number of distinct processes that received the command."
      :families nil
      :generic-families '(male female child)
      :dimensions dimensions
+     :post-synthesis-dimensions effects
      :parameters
      (mapcar
       (lambda (dimension)

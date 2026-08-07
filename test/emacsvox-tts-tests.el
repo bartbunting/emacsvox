@@ -521,6 +521,29 @@
                      0)))
       (delete-process process))))
 
+(ert-deftest emacsvox-tts-omnivox-aggregates-post-synthesis-capabilities ()
+  "Adapter capabilities include effects advertised by any live engine."
+  (let ((omnivox-engine-inventory
+         '(:engines
+           [(:id "eloquence"
+             :capabilities
+             (:acss (:rate t :average_pitch t)
+              :post_synthesis_dimensions
+              ["gain" "low_pass" "reverb"]))
+            (:id "dectalk"
+             :capabilities
+             (:acss (:rate t :pitch_range t)
+              :post_synthesis_dimensions
+              ["echo" "gain" "high_pass"]))
+            (:id "legacy" :capabilities (:acss (:volume t)))])))
+    (let ((capabilities (omnivox-voice-capabilities)))
+      (should
+       (equal (plist-get capabilities :dimensions)
+              '(average-pitch pitch-range rate volume)))
+      (should
+       (equal (plist-get capabilities :post-synthesis-dimensions)
+              '(echo gain high-pass low-pass reverb))))))
+
 (ert-deftest emacsvox-tts-omnivox-negotiates-independent-routing-policy ()
   "Modern Omnivox receives global policy before selector-only registration."
   (let* ((process
