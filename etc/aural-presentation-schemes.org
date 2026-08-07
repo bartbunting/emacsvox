@@ -1111,7 +1111,7 @@ The normal point-remapping workflow is:
 2. press =C-e H= and then =r=;
 3. choose a voice from the active palette;
 4. choose personal, session, or current-buffer lifetime;
-5. review the generated rule and press =s= to save it.
+5. review the generated rule and press =w= or =C-c C-c= to write it.
 
 For example, on a Dired directory this derives =filesystem-entry=,
 =entry-kind directory=, and =module dired=.  It does not retain the
@@ -1381,7 +1381,8 @@ The simple form exposes these stable operations:
 | =n=                  | Add a presentation through natural prompts           |
 | =d= / =t=            | Delete, or enable/disable, the presentation at point |
 | =p= / =x=            | Preview or explain the presentation at point         |
-| =v= / =s=            | Validate or atomically save                          |
+| =v=                  | Validate without writing                             |
+| =w= or =C-c C-c=     | Atomically write the changes                         |
 | =a=                  | Activate the edited scheme                           |
 | =A=                  | Switch to the advanced editor without losing changes |
 | =h=                  | Return to the aural home                             |
@@ -1413,7 +1414,8 @@ The advanced buffer exposes these stable operations:
 | =M-up= / =M-down=    | Reorder rules and their explicit visible order |
 | =m=                  | Edit scheme inheritance and providers          |
 | =p= / =x=            | Preview or explain the unsaved rule            |
-| =v= / =s=            | Validate or atomically save/apply               |
+| =v=                  | Validate without writing                        |
+| =w= or =C-c C-c=     | Atomically write and apply the changes          |
 | =A=                  | Return to the simple editor                     |
 | =h=                  | Return to the aural home                         |
 | =?=                  | Describe the completion-driven workflow         |

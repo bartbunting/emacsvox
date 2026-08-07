@@ -2106,6 +2106,19 @@
     (lookup-key emacsvox-aural-voice-tuner-mode-map (kbd "q"))
     #'emacsvox-aural-voice-tuner-quit)))
 
+(ert-deftest emacsvox-aural-editors-use-consistent-write-bindings ()
+  "Rule editors use w and C-c C-c for writing, leaving s unbound."
+  (dolist
+      (entry
+       `((,emacsvox-aural-scheme-editor-mode-map
+          . ,#'emacsvox-aural-editor-save)
+         (,emacsvox-aural-simple-editor-mode-map
+          . ,#'emacsvox-aural-simple-editor-save)))
+    (let ((map (car entry)) (command (cdr entry)))
+      (should (eq (lookup-key map (kbd "w")) command))
+      (should (eq (lookup-key map (kbd "C-c C-c")) command))
+      (should-not (lookup-key map (kbd "s"))))))
+
 (ert-deftest emacsvox-aural-quit-presents-mode-scoped-close-feedback ()
   "Dismissing an aural interface cues its close and speaks the destination."
   (let (events)
@@ -3267,6 +3280,33 @@
         (should (string-match-p "directory-rule" spoken))
         (should (string-match-p "voice bolden" spoken))
         (should (string-match-p "Rule identifier" spoken))))))
+
+(ert-deftest emacsvox-aural-advanced-editor-speaks-metadata-prompts ()
+  "Advanced metadata prompts identify the fragment and requested field."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-aural-scheme-editor-mode)
+      (setq
+       emacsvox-aural-editor-scope 'fragment
+       emacsvox-aural-editor-target 'navigation-details
+       emacsvox-aural-editor-scheme-data
+       '(:summary "Navigation details" :rules nil)
+       emacsvox-aural-editor-rules nil)
+      (let ((minibuffer-setup-hook nil)
+            spoken)
+        (cl-letf
+            (((symbol-function 'read-string)
+              (lambda (_prompt initial &rest _)
+                (cl-letf (((symbol-function 'minibuffer-prompt)
+                           (lambda () "Feature fragment summary: ")))
+                  (run-hooks 'minibuffer-setup-hook))
+                initial))
+             ((symbol-function 'tts-speak)
+              (lambda (text) (setq spoken text))))
+          (emacsvox-aural-editor-edit-metadata))
+        (should (string-match-p "navigation-details" spoken))
+        (should (string-match-p "Navigation details" spoken))
+        (should (string-match-p "Feature fragment summary" spoken))))))
 
 (ert-deftest emacsvox-aural-editor-voices-follow-active-profile-palette ()
   "Voice choices honor the profile override and explain their ordering."

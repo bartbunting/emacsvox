@@ -297,7 +297,7 @@ unsaved in the advanced rule editor so the selector can be reviewed or
     (require 'emacsvox-aural-editor)
     (emacsvox-aural-editor-open-prefilled-rule scope rule source)
     (message
-     "Prepared %s voice override for %s; review it and press s to save"
+     "Prepared %s voice override for %s; review it and press w to write"
      scope description)))
 
 (defun emacsvox-aural-tools--earcon-remap-selector (facts context)
@@ -518,7 +518,7 @@ generated change opens unsaved in the advanced editor for review."
             (emacsvox-aural-editor-open-without-rule
              scope rule-id source)
             (message
-             "Prepared removal of %s earcon override; press s to restore inherited behavior"
+             "Prepared removal of %s earcon override; press w to restore inherited behavior"
              scope))
         (let* ((phase-key (intern (format ":%s" phase)))
                (anchor
@@ -554,7 +554,7 @@ generated change opens unsaved in the advanced editor for review."
             (emacsvox-aural-editor-open-prefilled-rule
              scope rule source)
             (message
-             "Prepared %s %s-earcon override for %s; review it and press s to save"
+             "Prepared %s %s-earcon override for %s; review it and press w to write"
              scope phase description)))))))
 
 

@@ -474,7 +474,7 @@
       "C-e H opens this home from any ordinary buffer\n"
       "C-e E explains presentation from any ordinary buffer\n"
       "To remap an item, move to it, open C-e H, then press r or R.\n"
-      "The generated override opens unsaved; review it and press s to save.\n"
+      "The generated override opens unwritten; review it and press w to write.\n"
       "h returns here from any aural manager or editor\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)

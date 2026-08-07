@@ -140,7 +140,7 @@
     (insert
      "Keys: n add, RET/e edit, c copy, d delete, t enable/disable,\n"
      "M-up/M-down reorder, m metadata, p preview, x explain, v validate,\n"
-     "s save, g refresh, q quit, ? help.\n\n")
+     "w write, C-c C-c write, g refresh, q quit, ? help.\n\n")
     (if emacsvox-aural-editor-rules
         (cl-loop
          for rule in emacsvox-aural-editor-rules
@@ -237,6 +237,27 @@
      (emacsvox-aural-editor--phase-summary (plist-get render :before))
      (emacsvox-aural-editor--content-summary (plist-get render :content))
      (emacsvox-aural-editor--phase-summary (plist-get render :after)))))
+
+(defun emacsvox-aural-editor--metadata-prompt-context ()
+  "Describe the scheme or fragment metadata being edited."
+  (let ((data emacsvox-aural-editor-scheme-data))
+    (string-join
+     (delq
+      nil
+      (list
+       (format "Editing metadata for %s"
+               (emacsvox-aural-editor--scope-label))
+       (format "Current summary %s"
+               (or (plist-get data :summary) "empty"))
+       (when (eq emacsvox-aural-editor-scope 'scheme)
+         (format "Parent %s" (or (plist-get data :parent) "none")))
+       (when (eq emacsvox-aural-editor-scope 'scheme)
+         (format "Sound pack %s"
+                 (or (plist-get data :resource-pack) "inherited")))
+       (when (eq emacsvox-aural-editor-scope 'scheme)
+         (format "Voice palette %s"
+                 (or (plist-get data :voice-palette) "inherited")))))
+     ". ")))
 
 (defun emacsvox-aural-editor--read-boolean (prompt default)
   "Read a boolean using PROMPT and DEFAULT."
@@ -829,47 +850,49 @@ LABEL identifies the speech or cue being edited."
   (interactive)
   (unless (memq emacsvox-aural-editor-scope '(scheme fragment))
     (user-error "This rule-layer scope has no metadata"))
-  (let* ((data (copy-tree emacsvox-aural-editor-scheme-data))
-         (summary
-          (read-string
-           (if (eq emacsvox-aural-editor-scope 'fragment)
-               "Feature fragment summary: "
-             "Scheme summary: ")
-           (plist-get data :summary)))
-         (parent
-          (when (eq emacsvox-aural-editor-scope 'scheme)
-            (emacsvox-aural-editor-read-symbol-or-nil
-             "Parent scheme (empty for none): "
-             (plist-get data :parent)
-             (remove
-              (symbol-name emacsvox-aural-editor-target)
-              (emacsvox-aural-scheme-candidates))
-             'must-match)))
-         (pack
-          (when (eq emacsvox-aural-editor-scope 'scheme)
-            (emacsvox-aural-editor-read-symbol-or-nil
-             "Sound pack (empty to inherit): "
-             (plist-get data :resource-pack)
-             (emacsvox-aural-resource-pack-candidates 'sound)
-             'must-match)))
-         (palette
-          (when (eq emacsvox-aural-editor-scope 'scheme)
-            (let (values)
-              (maphash
-               (lambda (id _) (push (symbol-name id) values))
-               emacsvox-aural-voice-palette-registry)
+  (emacsvox-aural-editor--with-spoken-prompts
+      (emacsvox-aural-editor--metadata-prompt-context)
+    (let* ((data (copy-tree emacsvox-aural-editor-scheme-data))
+           (summary
+            (read-string
+             (if (eq emacsvox-aural-editor-scope 'fragment)
+                 "Feature fragment summary: "
+               "Scheme summary: ")
+             (plist-get data :summary)))
+           (parent
+            (when (eq emacsvox-aural-editor-scope 'scheme)
               (emacsvox-aural-editor-read-symbol-or-nil
-               "Voice palette (empty to inherit): "
-               (plist-get data :voice-palette)
-               values 'must-match)))))
-    (setq data (plist-put data :summary summary))
-    (when (eq emacsvox-aural-editor-scope 'scheme)
-      (setq data (plist-put data :parent parent))
-      (setq data (plist-put data :resource-pack pack))
-      (setq data (plist-put data :voice-palette palette)))
-    (setq emacsvox-aural-editor-scheme-data data)
-    (emacsvox-aural-editor-mark-dirty)
-    (emacsvox-aural-editor-refresh)))
+               "Parent scheme (empty for none): "
+               (plist-get data :parent)
+               (remove
+                (symbol-name emacsvox-aural-editor-target)
+                (emacsvox-aural-scheme-candidates))
+               'must-match)))
+           (pack
+            (when (eq emacsvox-aural-editor-scope 'scheme)
+              (emacsvox-aural-editor-read-symbol-or-nil
+               "Sound pack (empty to inherit): "
+               (plist-get data :resource-pack)
+               (emacsvox-aural-resource-pack-candidates 'sound)
+               'must-match)))
+           (palette
+            (when (eq emacsvox-aural-editor-scope 'scheme)
+              (let (values)
+                (maphash
+                 (lambda (id _) (push (symbol-name id) values))
+                 emacsvox-aural-voice-palette-registry)
+                (emacsvox-aural-editor-read-symbol-or-nil
+                 "Voice palette (empty to inherit): "
+                 (plist-get data :voice-palette)
+                 values 'must-match)))))
+      (setq data (plist-put data :summary summary))
+      (when (eq emacsvox-aural-editor-scope 'scheme)
+        (setq data (plist-put data :parent parent))
+        (setq data (plist-put data :resource-pack pack))
+        (setq data (plist-put data :voice-palette palette)))
+      (setq emacsvox-aural-editor-scheme-data data)
+      (emacsvox-aural-editor-mark-dirty)
+      (emacsvox-aural-editor-refresh))))
 
 (defun emacsvox-aural-editor-normalized-rules ()
   "Return working rules with visible list order recorded explicitly."
@@ -1156,7 +1179,7 @@ LABEL identifies the speech or cue being edited."
       "t enable/disable    M-up/M-down reorder\n"
       "m metadata          p preview\n"
       "x explain           v validate\n"
-      "s save\n"
+      "w or C-c C-c write changes\n"
       "h aural home\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
@@ -1186,7 +1209,9 @@ LABEL identifies the speech or cue being edited."
     (define-key map (kbd "p") #'emacsvox-aural-editor-preview-rule)
     (define-key map (kbd "x") #'emacsvox-aural-editor-explain-rule)
     (define-key map (kbd "v") #'emacsvox-aural-editor-validate)
-    (define-key map (kbd "s") #'emacsvox-aural-editor-save)
+    (define-key map (kbd "s") nil)
+    (define-key map (kbd "w") #'emacsvox-aural-editor-save)
+    (define-key map (kbd "C-c C-c") #'emacsvox-aural-editor-save)
     (define-key map (kbd "g") #'emacsvox-aural-editor-refresh)
     (define-key map (kbd "h") #'emacsvox-aural)
     (define-key map (kbd "?") #'emacsvox-aural-editor-help)

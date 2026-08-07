@@ -494,7 +494,7 @@ RULE-INDEX associates the line with a working declarative rule."
         "")))
     (insert
      "TAB and Shift-TAB move through fields.  RET or e edits one field.\n"
-     "Keys: n new presentation, p preview, s save, a activate,\n"
+     "Keys: n new presentation, p preview, w write, a activate,\n"
      "A advanced editor, d delete rule, t enable rule, ? help, q quit.\n\n")
     (insert "Scheme\n")
     (emacsvox-aural-simple-editor--insert-field
@@ -1400,7 +1400,7 @@ instead of replacing it."
       "RET or e edit field  n new presentation\n"
       "p preview            x explain\n"
       "d delete             t enable or disable\n"
-      "v validate           s save\n"
+      "v validate           w or C-c C-c write\n"
       "a activate scheme    A advanced editor\n"
       "g refresh            h aural home\n"
       "q quit\n")))
@@ -1423,7 +1423,9 @@ instead of replacing it."
     (define-key map (kbd "p") #'emacsvox-aural-simple-editor-preview)
     (define-key map (kbd "x") #'emacsvox-aural-simple-editor-explain)
     (define-key map (kbd "v") #'emacsvox-aural-simple-editor-validate)
-    (define-key map (kbd "s") #'emacsvox-aural-simple-editor-save)
+    (define-key map (kbd "s") nil)
+    (define-key map (kbd "w") #'emacsvox-aural-simple-editor-save)
+    (define-key map (kbd "C-c C-c") #'emacsvox-aural-simple-editor-save)
     (define-key map (kbd "a") #'emacsvox-aural-simple-editor-activate)
     (define-key map (kbd "A") #'emacsvox-aural-simple-editor-use-advanced)
     (define-key map (kbd "g") #'emacsvox-aural-simple-editor-refresh)
