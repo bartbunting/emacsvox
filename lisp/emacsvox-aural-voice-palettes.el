@@ -457,7 +457,7 @@ replaces live state.  Return the value of MUTATION."
          (palette (emacsvox-aural-voice-palette id))
          (direct (emacsvox-aural-voice-palette-entries palette))
          (report (emacsvox-aural-voice-palettes--validation id)))
-    (with-help-window (help-buffer)
+    (emacsvox-aural-ui-with-help-window
       (princ (format "Voice palette: %s\n\n" id))
       (princ (format "Summary: %s\n"
                      (emacsvox-aural-voice-palette-summary palette)))
@@ -1665,7 +1665,7 @@ ANNOUNCEMENT overrides the normal setting description."
 (defun emacsvox-aural-voice-tuner-help ()
   "Display and speak voice tuner help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Voice Tuner\n\n"
@@ -1810,7 +1810,7 @@ identity."
 (defun emacsvox-aural-voice-palette-previews-help ()
   "Display and speak voice-palette preview help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Voice Palette Preview\n\n"
@@ -1932,7 +1932,7 @@ after displaying the preview buffer."
                        (length degradations)
                        (if (= (length degradations) 1) "" "s"))
              "No fallback"))))
-    (with-help-window (help-buffer)
+    (emacsvox-aural-ui-with-help-window
       (princ (format "Voice: %s\nPalette: %s\n\n" voice id))
       (princ (format "Requested preset: %S\n" definition))
       (princ
@@ -1961,7 +1961,7 @@ after displaying the preview buffer."
 (defun emacsvox-aural-voice-palettes-help ()
   "Display and speak voice-palette manager help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Voice Palettes\n\n"

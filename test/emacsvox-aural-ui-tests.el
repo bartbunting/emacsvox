@@ -116,6 +116,44 @@
      (eq (key-binding (kbd "q"))
          #'emacsvox-aural-quit))))
 
+(ert-deftest emacsvox-aural-ui-help-quit-restores-exact-origin ()
+  "Aural Help ignores stale window history and restores its invoking row."
+  (save-window-excursion
+    (let ((origin (generate-new-buffer " *Aural Help Origin*"))
+          (home (generate-new-buffer " *Aural Help Wrong Return*")))
+      (unwind-protect
+          (let ((window (selected-window)))
+            (switch-to-buffer origin)
+            (insert "first\nsecond\nthird\n")
+            (goto-char (point-min))
+            (forward-line 1)
+            (let ((origin-position (point)))
+              (cl-letf
+                  (((symbol-function 'emacsvox-speak-help)
+                    (lambda ()
+                      (pop-to-buffer (help-buffer))))
+                   ((symbol-function 'quit-window)
+                    (lambda (&optional _kill _window)
+                      (set-window-buffer (selected-window) home)))
+                   ((symbol-function 'emacsvox-icon) #'ignore)
+                   ((symbol-function 'emacsvox-speak-mode-line) #'ignore))
+                (emacsvox-aural-ui-with-help-window
+                  (princ "Aural help contents"))
+                (emacsvox-speak-help)
+                (should (eq (current-buffer) (get-buffer (help-buffer))))
+                (should
+                 (eq (key-binding (kbd "q"))
+                     #'emacsvox-aural-ui-help-quit))
+                (call-interactively #'emacsvox-aural-ui-help-quit))
+              (should (= (point) origin-position)))
+            (should (eq (window-buffer window) origin))
+            (should (= (window-point window)
+                       (with-current-buffer origin (point)))))
+        (when (get-buffer "*Help*")
+          (kill-buffer "*Help*"))
+        (kill-buffer origin)
+        (kill-buffer home)))))
+
 (ert-deftest emacsvox-aural-ui-movement-preserves-column-and-runs-callbacks ()
   "Spoken row movement should preserve columns and run configured callbacks."
   (with-temp-buffer

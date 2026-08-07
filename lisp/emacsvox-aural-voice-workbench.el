@@ -2320,7 +2320,7 @@ refreshing the Workbench at LOGICAL-VOICE."
   "Display and speak exact Workbench row and configuration details."
   (interactive)
   (let ((summary (emacsvox-aural-voice-workbench-speak-current)))
-    (with-help-window (help-buffer)
+    (emacsvox-aural-ui-with-help-window
       (princ (format "%s\n\n" summary))
       (princ (format "Status: %s\n\n"
                      (emacsvox-aural-voice-workbench--header)))
@@ -2344,7 +2344,7 @@ refreshing the Workbench at LOGICAL-VOICE."
 (defun emacsvox-aural-voice-workbench-help ()
   "Display and speak Voice Workbench navigation help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Emacsvox Voice Workbench\n\n"

@@ -55,6 +55,82 @@ When nil, movement speaks the current titled cell.")
 (defvar-local emacsvox-aural-ui-refresh-function nil
   "Interactive function that refreshes the current interface.")
 
+(defvar-local emacsvox-aural-ui-help-origin-buffer nil
+  "Aural interface buffer from which the current Help buffer was opened.")
+
+(defvar-local emacsvox-aural-ui-help-origin-window nil
+  "Window that displayed the originating aural interface.")
+
+(defvar-local emacsvox-aural-ui-help-origin-position nil
+  "Marker recording point in the originating aural interface.")
+
+(defvar emacsvox-aural-ui-help-return-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "q") #'emacsvox-aural-ui-help-quit)
+    map)
+  "Keymap that gives aural Help buffers an exact return destination.")
+
+(define-minor-mode emacsvox-aural-ui-help-return-mode
+  "Return from Help to the exact aural interface that requested it."
+  :lighter nil
+  :keymap emacsvox-aural-ui-help-return-mode-map)
+
+(defun emacsvox-aural-ui-help-quit ()
+  "Quit Help and restore its originating aural interface and position."
+  (interactive)
+  (let ((origin-buffer emacsvox-aural-ui-help-origin-buffer)
+        (origin-window emacsvox-aural-ui-help-origin-window)
+        (origin-position emacsvox-aural-ui-help-origin-position))
+    (quit-window)
+    (cond
+     ((and (window-live-p origin-window)
+           (buffer-live-p origin-buffer))
+      (set-window-buffer origin-window origin-buffer)
+      (select-window origin-window)
+      (when (and (markerp origin-position)
+                 (marker-position origin-position))
+        (with-current-buffer origin-buffer
+          (goto-char origin-position))
+        (set-window-point origin-window origin-position)))
+     ((buffer-live-p origin-buffer)
+      (pop-to-buffer origin-buffer)
+      (when (and (markerp origin-position)
+                 (marker-position origin-position))
+        (goto-char origin-position))))
+    (when (markerp origin-position)
+      (set-marker origin-position nil))
+    (when (fboundp 'emacsvox-icon)
+      (emacsvox-icon 'close-object))
+    (when (fboundp 'emacsvox-speak-mode-line)
+      (emacsvox-speak-mode-line))))
+
+(defun emacsvox-aural-ui-display-help (producer)
+  "Display Help from PRODUCER and remember the exact aural origin.
+
+PRODUCER writes the Help contents to `standard-output', as it would inside
+`with-help-window'.  A local `q' binding returns to the invoking buffer,
+window, and point even when a reusable Help window has stale restoration
+metadata."
+  (let ((origin-buffer (current-buffer))
+        (origin-window (selected-window))
+        (origin-position (copy-marker (point))))
+    (with-help-window (help-buffer)
+      (funcall producer))
+    (when-let* ((buffer (get-buffer (help-buffer))))
+      (with-current-buffer buffer
+        (when (markerp emacsvox-aural-ui-help-origin-position)
+          (set-marker emacsvox-aural-ui-help-origin-position nil))
+        (setq-local emacsvox-aural-ui-help-origin-buffer origin-buffer)
+        (setq-local emacsvox-aural-ui-help-origin-window origin-window)
+        (setq-local emacsvox-aural-ui-help-origin-position origin-position)
+        (emacsvox-aural-ui-help-return-mode 1)))
+    (get-buffer (help-buffer))))
+
+(defmacro emacsvox-aural-ui-with-help-window (&rest body)
+  "Display BODY as Help that returns to its exact aural origin with `q'."
+  (declare (indent 0) (debug t))
+  `(emacsvox-aural-ui-display-help (lambda () ,@body)))
+
 (defun emacsvox-aural-ui-register-interface (&optional source-buffer)
   "Mark the current buffer as an aural interface.
 
