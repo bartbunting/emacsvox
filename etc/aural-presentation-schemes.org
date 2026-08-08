@@ -3755,10 +3755,16 @@ Deliverable: if the global rate is 75, a voice offset of =-1= speaks at 74 and
 supports rate.  Changing the global rate retains the relative relationship;
 the palette never replaces the user's global rate.
 
-Checks: bounded Rust protocol, conversion, preview, and capability tests;
-focused Emacsvox validation, compiler, timeline, workbench, tuner, preview,
-and compatibility tests; cross-target and live integration checks follow the
-normal Omnivox deployment gate.
+Checks: bounded Rust protocol, conversion, preview, and capability tests pass.
+Focused source-loaded Emacsvox validation, compiler, timeline, workbench,
+tuner, preview, and compatibility tests pass, as do compiled Aural parity,
+normal build-tree startup, the Aural audit, and all 27 semantic traces.
+Production Rust Clippy passes with warnings denied; native and
+=x86_64-pc-windows-gnu= release builds and content-addressed Windows staging
+pass.  Two live Emacsvox sessions restarted onto the staged runtime and
+negotiated =relative_rate_v1=.  A live =lighten-extra= check at global rate 60
+omitted legacy =:rate 0= entirely, while test spans serialized only
+=rate_offset: -1= and =rate_offset: 4=, never an absolute rate.
 
 ** Deferred Cross-Repository Work Retained by the Plan
 
