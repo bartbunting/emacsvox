@@ -130,6 +130,11 @@ Lock toggles.  The advanced face-rule policy remains available through
 Presentation profiles no longer capture, apply, display, or compare
 buffer-local Voice Lock.  Older saved compatibility fields remain readable
 and are discarded when registered, so subsequent profile saves omit them.
+Profiles now use the fixed internal compatibility baseline rather than saving
+or displaying a selectable scheme.  Older =:scheme= profile fields remain
+readable and are discarded during registration.  Aural Home no longer shows
+a Schemes route; its Presentation Options and Presentation Overrides routes
+are the user-facing composition controls.
 The semantic vocabulary list now provides the same titled-cell and boundary
 navigation.  Preferred interactive command aliases share the discoverable
 ~emacsvox-aural-~ prefix; established verb-first names remain compatible.

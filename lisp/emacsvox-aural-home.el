@@ -14,7 +14,6 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-history)
-(require 'emacsvox-aural-scheme-manager)
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-recent-feedback)
@@ -168,11 +167,6 @@
        "Presentation profiles"
        (emacsvox-aural-home--profile-status)
        "Save and switch complete global presentation configurations"))
-     (list
-      'schemes
-      (vector
-       "Schemes" (symbol-name emacsvox-aural-active-scheme)
-       "Choose the one global base recipe and see who provided each scheme"))
      (list
       'voices
       (vector
@@ -358,7 +352,6 @@
     ('recent-feedback
      (emacsvox-aural-home-recent-feedback))
     ('profiles (emacsvox-aural-home-profiles))
-    ('schemes (emacsvox-aural-list-schemes))
     ('voices (emacsvox-aural-home-voice-palettes))
     ('voice-workbench (emacsvox-aural-home-voice-workbench))
     ('features (emacsvox-aural-list-feature-fragments))
@@ -392,10 +385,10 @@
       "Emacsvox Aural Home\n\n"
       "This is the main entry point for presentation discovery, editing,\n"
       "inspection, sound packs, spatial settings, and diagnostics.\n\n"
-      "One active scheme supplies the global base recipe. Automatic mode\n"
-      "presentation, enabled options, and finally personal, session, and\n"
-      "buffer overrides compose on top. Open Schemes to choose the base;\n"
-      "open Presentation overrides to inspect the strongest rule layers.\n\n"
+      "A fixed internal baseline preserves compatible presentation. Automatic\n"
+      "mode presentation, enabled options, and finally personal, session, and\n"
+      "buffer overrides compose on top. Open Presentation options to choose\n"
+      "additions; open Presentation overrides for the strongest rule layers.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET open or perform  SPC speak complete row\n"
@@ -472,9 +465,6 @@
       (emacsvox-aural-home-speak-current))
     buffer))
 
-(add-hook
- 'emacsvox-aural-active-scheme-changed-hook
- #'emacsvox-aural-ui-refresh-home-if-live)
 (add-hook
  'emacsvox-aural-feature-fragments-changed-hook
  #'emacsvox-aural-ui-refresh-home-if-live)

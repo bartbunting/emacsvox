@@ -60,7 +60,6 @@
   (list
    :id (or id 'work)
    :summary "Focused work"
-   :scheme 'default
    :feature-fragments '(profile-feature)
    :sound-pack 'chimes
    :voice-palette 'acss-default
@@ -124,22 +123,22 @@
       (should (emacsvox-aural-compatibility-voice-enabled-p))
       (should
        (equal
-        (aref (cadr (emacsvox-aural-profiles--row 'work)) 6)
+        (aref (cadr (emacsvox-aural-profiles--row 'work)) 5)
         "on/mono"))
       (should (emacsvox-aural-profile-current-p 'work)))))
 
-(ert-deftest emacsvox-aural-profiles-ignore-saved-compatibility-voice ()
-  "Deprecated compatibility state neither changes nor differentiates buffers."
+(ert-deftest emacsvox-aural-profiles-ignore-deprecated-profile-fields ()
+  "Deprecated scheme and compatibility state do not affect live settings."
   (emacsvox-test--with-aural-profiles
     (emacsvox-aural-register-profile
      (plist-put
-      (emacsvox-test--profile-data)
+      (plist-put (emacsvox-test--profile-data) :scheme 'obsolete)
       :compatibility-voice-enabled nil))
-    (should-not
-     (plist-member
-      (emacsvox-aural-profile-entry-data
-       (emacsvox-aural-profile-entry 'work))
-      :compatibility-voice-enabled))
+    (let ((registered
+           (emacsvox-aural-profile-entry-data
+            (emacsvox-aural-profile-entry 'work))))
+      (should-not (plist-member registered :scheme))
+      (should-not (plist-member registered :compatibility-voice-enabled)))
     (let ((source (generate-new-buffer " *profile-source*"))
           (other (generate-new-buffer " *profile-other*"))
           compatibility-changes)
@@ -155,7 +154,9 @@
                 (((symbol-function 'emacsvox-sounds-select-theme)
                   (lambda (pack)
                     (setq emacsvox-sounds-current-pack pack))))
+              (setq emacsvox-aural-active-scheme 'obsolete)
               (emacsvox-aural-apply-profile 'work source))
+            (should (eq emacsvox-aural-active-scheme 'default))
             (should
              (emacsvox-aural-compatibility-voice-enabled-p source))
             (should
@@ -166,7 +167,21 @@
             (should
              (eq (emacsvox-aural-profile-status 'work other) 'active)))
         (kill-buffer source)
-        (kill-buffer other)))))
+        (kill-buffer other)))
+    (let* ((old-data (emacsvox-aural-user-data))
+           (old-profile (car (plist-get old-data :profiles))))
+      (plist-put old-profile :scheme 'obsolete)
+      (plist-put old-profile :compatibility-voice-enabled nil)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-read-user-data)
+            (lambda (&optional _) old-data)))
+        (emacsvox-aural-load-user-data))
+      (let ((loaded
+             (emacsvox-aural-profile-entry-data
+              (emacsvox-aural-profile-entry 'work))))
+        (should-not (plist-member loaded :scheme))
+        (should-not
+         (plist-member loaded :compatibility-voice-enabled))))))
 
 (ert-deftest emacsvox-aural-profiles-select-one-identical-profile ()
   "Identical saved configurations do not both appear active."
@@ -287,7 +302,7 @@
             (emacsvox-aural-inspection-attach-source source)
             (should
              (equal
-              (car (aref tabulated-list-format 5))
+              (car (aref tabulated-list-format 4))
               "Voice Palette"))
             (cl-letf
                 (((symbol-function 'emacsvox-aural-profiles--read-new-id)
@@ -502,7 +517,7 @@
     (let ((data
            (emacsvox-aural-capture-profile-data
             'captured "Captured configuration")))
-      (should (eq (plist-get data :scheme) 'default))
+      (should-not (plist-member data :scheme))
       (should
        (equal
         (plist-get data :feature-fragments)
@@ -518,7 +533,7 @@
       (setq emacsvox-aural-active-profile 'captured)
       (should
        (equal
-        (aref (cadr (emacsvox-aural-profiles--row 'captured)) 6)
+        (aref (cadr (emacsvox-aural-profiles--row 'captured)) 5)
         "on/auto"))
       (should (eq (emacsvox-aural-profile-status 'captured) 'active)))))
 

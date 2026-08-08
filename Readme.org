@@ -226,8 +226,8 @@ may register read-only built-in schemes; users create personal schemes or copy
 a built-in one before editing it.  Entering Org, Notmuch, or another mode does
 not silently switch schemes.  Every presentation consults the active scheme,
 but only rules whose selectors match the current facts and context contribute.
-Choosing a saved presentation profile may explicitly activate that profile's
-scheme.  Mode compatibility is supplied separately and automatically,
+Applying a saved presentation profile restores the fixed compatibility
+baseline.  Mode compatibility is supplied separately and automatically,
 optional presentation fragments compose above the scheme, and personal,
 session, and buffer overrides are the strongest layers.
 
@@ -238,8 +238,8 @@ into the profile, or =a= to restore the saved profile values.  Restoring asks
 for confirmation before replacing live differences.
 
 Use =M-x emacsvox-aural=, or =C-e H=, to open the spoken aural home.  It
-reports current status and routes to saved profiles, schemes, feature
-fragments, recent exact feedback, buffer-local rules, semantic vocabulary,
+reports current status and routes to saved profiles, presentation options,
+recent exact feedback, buffer-local rules, semantic vocabulary,
 sound packs, spatial controls, training, and the Aural Doctor.  Press =H= in
 Aural Home, or run =M-x emacsvox-aural-list-recent-feedback=, to browse,
 explain, replay, audition, or remap one of the retained presentations.  From
@@ -263,10 +263,10 @@ preview resolves the complete current cascade; disabling or removing a rule
 restores the next weaker behavior.
 
 Use =M-x emacsvox-aural-list-profiles= to save and switch complete named
-configurations.  A profile references one base scheme and ordered feature
-fragments, and can capture sound-pack, voice-palette, and portable spatial
-settings without copying their rules.  Buffer-local Voice Lock remains
-independent of profiles.  Use =M-x emacsvox-aural-doctor= when
+configurations over Emacsvox's fixed internal baseline.  A profile selects
+ordered feature fragments and can capture sound-pack, voice-palette, and
+portable spatial settings without copying their rules.  Buffer-local Voice
+Lock remains independent of profiles.  Use =M-x emacsvox-aural-doctor= when
 bindings, loaded byte-code, personal data, resources, or the backend appear
 wrong; it reports each check and offers only explicit safe repairs.
 

@@ -120,8 +120,8 @@ In the Presentation Options manager, what do =a=, =P=, and =C-u P= do?
   without enabling it.
 - =C-u P= previews the selected option by itself.
 
-Presentation options are independent feature fragments layered over the one
-active base scheme.
+Presentation options are independent feature fragments layered over the fixed
+internal compatibility baseline.
 
 * 08. What does an Aural presentation profile contain?
 ** Front
@@ -129,11 +129,11 @@ What does an Aural presentation profile save, and what does it deliberately
 not copy?
 
 ** Back
-A profile references one base scheme and an ordered set of feature fragments.
-It may also capture the sound pack, voice palette, and portable spatial
-settings.
+A profile selects an ordered set of feature fragments over the fixed internal
+compatibility baseline.  It may also capture the sound pack, voice palette,
+and portable spatial settings.
 
-It does not copy presentation rules.  Rules remain owned by their schemes,
+It does not copy presentation rules.  Rules remain owned by the baseline,
 fragments, and override layers, so editing those definitions affects profiles
 that reference them.  It also does not capture buffer-local Voice Lock.
 

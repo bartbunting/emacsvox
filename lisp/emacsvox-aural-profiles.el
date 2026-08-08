@@ -6,8 +6,8 @@
 
 ;;; Commentary:
 
-;; Accessible management for named configurations that reference existing
-;; schemes and fragments while capturing sound, voice, and spatial choices.
+;; Accessible management for named configurations that select presentation
+;; options while capturing sound, voice, and spatial choices.
 
 ;;; Code:
 
@@ -130,12 +130,11 @@
      (vector
       (symbol-name id)
       (emacsvox-aural-profiles--status-cell id)
-      (symbol-name (plist-get data :scheme))
       (if-let* ((fragments (plist-get data :feature-fragments)))
           (mapconcat #'symbol-name fragments ", ")
         "none")
-      (format "%s" (or (plist-get data :sound-pack) "scheme"))
-      (format "%s" (or (plist-get data :voice-palette) "scheme"))
+      (format "%s" (or (plist-get data :sound-pack) "baseline"))
+      (format "%s" (or (plist-get data :voice-palette) "baseline"))
       (emacsvox-aural-profiles--spatial-summary
        (plist-get data :spatial))
       (if (car validation) "valid" "invalid")
@@ -197,17 +196,16 @@
          (summary
           (format
            (concat
-            "%s. %s. Scheme %s. Options %s. Sound %s. Voice palette %s. "
+            "%s. %s. Options %s. Sound %s. Voice palette %s. "
             "Spatial %s. %s")
            (emacsvox-aural-humanize id)
            (emacsvox-aural-profiles--spoken-status id)
-           (plist-get data :scheme)
            (if-let* ((fragments (plist-get data :feature-fragments)))
                (mapconcat
                 #'emacsvox-aural-humanize fragments ", ")
              "none")
-           (or (plist-get data :sound-pack) "from scheme")
-           (or (plist-get data :voice-palette) "from scheme")
+           (or (plist-get data :sound-pack) "from baseline")
+           (or (plist-get data :voice-palette) "from baseline")
            (emacsvox-aural-profiles--spatial-summary
             (plist-get data :spatial))
            (plist-get data :summary))))
@@ -254,9 +252,9 @@
       "none"))
    ((and
      (listp value)
-     (eq (plist-get value :source) 'scheme))
+     (eq (plist-get value :source) 'baseline))
     (format
-     "from scheme, %s"
+     "from baseline, %s"
      (emacsvox-aural-humanize (plist-get value :value))))
    ((null value) "none")
    ((symbolp value) (emacsvox-aural-humanize value))
@@ -296,15 +294,14 @@
        (format
         "Status: %s\n"
         status))
-      (princ (format "Scheme: %s\n" (plist-get data :scheme)))
       (princ
        (format
         "Presentation options: %S\n"
         (plist-get data :feature-fragments)))
       (princ (format "Sound pack: %s\n"
-                     (or (plist-get data :sound-pack) "from scheme")))
+                     (or (plist-get data :sound-pack) "from baseline")))
       (princ (format "Voice palette: %s\n"
-                     (or (plist-get data :voice-palette) "from scheme")))
+                     (or (plist-get data :voice-palette) "from baseline")))
       (princ (format "Spatial settings: %S\n"
                      (plist-get data :spatial)))
       (princ
@@ -326,7 +323,7 @@
               (emacsvox-aural-profiles--format-difference-value
                field (plist-get difference :live)))))))
       (princ
-       "\nProfiles reference existing components. Edit their rules in the scheme or fragment manager.\n"))
+       "\nProfiles reference existing options. Edit rules in the option or override manager.\n"))
     (when (called-interactively-p 'interactive)
       (emacsvox-aural-profiles-speak-current)
       (when (and differences (fboundp 'tts-speak))
@@ -503,16 +500,16 @@ MUTATION."
     (princ
      (concat
       "Aural Presentation Profiles\n\n"
-      "A profile switches one complete named configuration. It references a\n"
-      "base scheme and ordered presentation options and captures sound-pack\n"
-      "and voice-palette choices and spatial settings. Exactly one profile\n"
+      "A profile switches one complete named configuration over Emacsvox's\n"
+      "fixed compatibility baseline. It selects ordered presentation options\n"
+      "and captures sound-pack, voice-palette, and spatial choices. One profile\n"
       "identity can be selected. Buffer-local Voice Lock is independent.\n"
       "Active means the selected profile matches the live configuration.\n"
       "Diverged means it remains selected but its saved values and the live\n"
       "configuration differ; it does not mean that a write is pending.\n"
       "Press w to replace the saved profile with the current live values.\n"
       "Press a to restore the saved values; this confirms before discarding\n"
-      "live differences. Edit rules in the scheme and option managers.\n\n"
+      "live differences. Edit rules in the option and override managers.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET or a apply saved SPC speak profile\n"
@@ -536,7 +533,6 @@ MUTATION."
    tabulated-list-format
    [("Profile" 24 t)
     ("Status" 48 t)
-    ("Scheme" 20 t)
     ("Options" 28 t)
     ("Sound" 16 t)
     ("Voice Palette" 18 t)

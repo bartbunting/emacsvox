@@ -1993,7 +1993,7 @@
                (equal
                 (mapcar #'car tabulated-list-entries)
                 '(explain remap remap-earcon overrides recent-feedback profiles
-                  schemes voices voice-workbench features buffer-rules
+                  voices voice-workbench features buffer-rules
                   semantics sounds spatial spatial-settings training
                   diagnostics)))
               (dolist

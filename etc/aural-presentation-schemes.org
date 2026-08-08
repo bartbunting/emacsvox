@@ -2222,9 +2222,9 @@ Implemented details:
 ** DONE Slice 19: Saved Presentation Profiles
 CLOSED: [2026-07-26 Sun]
 
-- Persist named profiles that reference one registered base scheme, an ordered
-  set of registered feature fragments, and optional sound-pack, voice-palette,
-  and portable-spatial settings.
+- Persist named profiles that select an ordered set of registered feature
+  fragments over the fixed internal compatibility baseline, plus optional
+  sound-pack, voice-palette, and portable-spatial settings.
 - Persist one selected profile identity.  Report it as active while the live
   configuration matches and diverged after settings differ; identical
   unselected profiles remain inactive.
@@ -2232,7 +2232,7 @@ CLOSED: [2026-07-26 Sun]
   live state, then switch the complete configuration and run existing change
   hooks.
 - Keep profiles as references to existing components rather than copied rules;
-  scheme and fragment editors remain the single rule-editing model.
+  option and override editors remain the user-facing rule-editing model.
 - Supply an accessible spoken manager for viewing, creating from the current
   configuration, copying, activating, renaming, deleting, validating, and
   saving profiles.
@@ -2248,14 +2248,18 @@ Implemented details:
   schema version 6 persists profile references, selected identity, voice
   palettes, and stable presentation-option order while migrating versions 1
   through 5 without evaluating code;
-- profile application validates the complete target, applies scheme,
-  fragments, sound, voice, and spatial state as one transaction; its fallible
+- profile application validates the complete target, restores the internal
+  baseline, then applies fragments, sound, voice, and spatial state as one
+  transaction; its fallible
   sound selection completes before coordinated variables and hooks are
   published, so a failed application emits no intermediate scheme or fragment
   state;
 - buffer-local Voice Lock is not profile state.  Older schema-6 profile data
   containing =:compatibility-voice-enabled= remains readable, but registration
   discards the deprecated field and subsequent saves omit it;
+- the fixed internal baseline is implicit profile state.  Older profile data
+  containing =:scheme= remains readable, but registration discards the field
+  and subsequent saves omit it;
 - coordinated state changes advance the configuration generation once and
   notify from the final state; reloading an active scheme also reports an
   effective sound-provider change when its identifier stays the same;

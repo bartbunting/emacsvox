@@ -41,7 +41,6 @@ part of profile state."
   (list
    :id id
    :summary summary
-   :scheme emacsvox-aural-active-scheme
    :feature-fragments
    (copy-sequence emacsvox-aural-enabled-feature-fragments)
    :sound-pack
@@ -100,7 +99,7 @@ part of profile state."
             "Unknown presentation profile: %S" id)))
          (data (copy-tree (emacsvox-aural-profile-entry-data entry)))
          (_ (emacsvox-aural--validate-profile-data data))
-         (scheme (plist-get data :scheme))
+         (scheme 'default)
          (fragments (plist-get data :feature-fragments))
          (pack
           (or
@@ -191,7 +190,7 @@ source-buffer argument is retained for older callers but is ignored."
             (or
              (plist-get data :sound-pack)
              (emacsvox-aural-effective-scheme-provider
-              'resource-pack (plist-get data :scheme))))
+              'resource-pack 'default)))
            differences)
       (cl-labels
           ((record (field label saved live same-p)
@@ -200,10 +199,6 @@ source-buffer argument is retained for older callers but is ignored."
                 (list
                  :field field :label label :saved saved :live live)
                 differences))))
-        (record
-         'scheme "scheme"
-         (plist-get data :scheme) emacsvox-aural-active-scheme
-         (eq (plist-get data :scheme) emacsvox-aural-active-scheme))
         (record
          'feature-fragments "presentation options"
          (plist-get data :feature-fragments)
@@ -220,13 +215,13 @@ source-buffer argument is retained for older callers but is ignored."
          (or
           palette
           (list
-           :source 'scheme
+           :source 'baseline
            :value
            (emacsvox-aural-effective-scheme-provider
-            'voice-palette (plist-get data :scheme))))
+            'voice-palette 'default)))
          (or
           emacsvox-aural-voice-palette-override
-          (list :source 'scheme :value live-palette))
+          (list :source 'baseline :value live-palette))
          (if palette
              (eq palette live-palette)
            (null emacsvox-aural-voice-palette-override)))

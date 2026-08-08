@@ -1230,7 +1230,9 @@ a complete user file before its entries replace the live registries."
   (emacsvox-aural--require-plist data "Presentation profile")
   (let* ((id (plist-get data :id))
          (summary (plist-get data :summary))
-         (scheme (plist-get data :scheme))
+         ;; Accepted only so profiles written before the baseline became
+         ;; implicit continue to load safely.
+         (saved-scheme (plist-get data :scheme))
          (fragments (plist-get data :feature-fragments))
          (pack (plist-get data :sound-pack))
          (palette (plist-get data :voice-palette))
@@ -1262,10 +1264,12 @@ a complete user file before its entries replace the live registries."
     (unless (and (stringp summary) (not (string-empty-p summary)))
       (emacsvox-aural--scheme-error
        "Presentation profile %S requires a summary" id))
-    (emacsvox-aural--require-symbol scheme "Presentation profile scheme")
-    (unless (gethash scheme scheme-registry)
+    (when (plist-member data :scheme)
+      (emacsvox-aural--require-symbol
+       saved-scheme "Deprecated presentation profile scheme"))
+    (unless (gethash 'default scheme-registry)
       (emacsvox-aural--scheme-error
-       "Presentation profile %S names unknown scheme %S" id scheme))
+       "Presentation profile %S requires the internal default baseline" id))
     (emacsvox-aural--validate-enabled-feature-fragments
      fragments fragment-registry)
     (when pack
@@ -1304,18 +1308,19 @@ a complete user file before its entries replace the live registries."
 
 When REPLACE is non-nil, replace an existing personal entry of the same ID."
   (emacsvox-aural--validate-profile-data data)
-  (let* ((data (copy-tree data))
-         (_ (cl-remf data :compatibility-voice-enabled))
-         (id (plist-get data :id))
-         (existing (emacsvox-aural-profile-entry id)))
-    (when (and existing (not replace))
-      (emacsvox-aural--scheme-error
-       "Presentation profile is already registered: %S" id))
-    (let ((entry
-           (emacsvox-aural--make-profile-entry
-            :id id :data data :source source)))
-      (puthash id entry emacsvox-aural-profile-registry)
-      entry)))
+  (let ((data (copy-tree data)))
+    (cl-remf data :compatibility-voice-enabled)
+    (cl-remf data :scheme)
+    (let* ((id (plist-get data :id))
+           (existing (emacsvox-aural-profile-entry id)))
+      (when (and existing (not replace))
+        (emacsvox-aural--scheme-error
+         "Presentation profile is already registered: %S" id))
+      (let ((entry
+             (emacsvox-aural--make-profile-entry
+              :id id :data data :source source)))
+        (puthash id entry emacsvox-aural-profile-registry)
+        entry))))
 
 (defun emacsvox-aural-profile-candidates ()
   "Return registered presentation profile identifiers as sorted strings."
@@ -1616,16 +1621,19 @@ The file is read as data and is never evaluated."
       (dolist (profile profiles)
         (emacsvox-aural--validate-profile-data
          profile registry fragment-registry palette-registry)
-        (let* ((id (plist-get profile :id))
-               (entry
-                (emacsvox-aural--make-profile-entry
-                 :id id
-                 :data (copy-tree profile)
-                 :source (or file emacsvox-aural-schemes-file))))
-          (when (gethash id profile-registry)
-            (emacsvox-aural--scheme-error
-             "Duplicate presentation profile: %S" id))
-          (puthash id entry profile-registry)))
+        (let ((profile (copy-tree profile)))
+          (cl-remf profile :compatibility-voice-enabled)
+          (cl-remf profile :scheme)
+          (let* ((id (plist-get profile :id))
+                 (entry
+                  (emacsvox-aural--make-profile-entry
+                   :id id
+                   :data profile
+                   :source (or file emacsvox-aural-schemes-file))))
+            (when (gethash id profile-registry)
+              (emacsvox-aural--scheme-error
+               "Duplicate presentation profile: %S" id))
+            (puthash id entry profile-registry))))
       ;; Validate the complete replacement before changing live state.
       (let ((emacsvox-aural-scheme-registry registry)
             (emacsvox-aural-feature-fragment-registry fragment-registry)
