@@ -51,6 +51,15 @@ their concrete audio resources do not use the speech queue."
   (tts--protocol-dispatch)
   result)
 
+(defun emacsvox-aural-preview-structured-style-supported-p ()
+  "Return non-nil when previews can carry complete concrete voice styles."
+  (and
+   (processp tts-speaker-process)
+   (process-live-p tts-speaker-process)
+   (process-get
+    tts-speaker-process
+    emacsvox-aural--structured-timeline-process-property)))
+
 (defun emacsvox-aural-preview-compiled-voice-plan (compiled text)
   "Return a concrete preview plan for COMPILED voice speaking TEXT.
 

@@ -700,6 +700,34 @@
           (emacsvox-aural-concrete-content-text content)
           "Lighten Extra voice. Shared sample."))))))
 
+(ert-deftest emacsvox-aural-voice-tuner-reports-unavailable-effect-preview-path ()
+  "Supported effects are not reported as applied on a legacy preview path."
+  (with-temp-buffer
+    (emacsvox-aural-voice-tuner-mode)
+    (setq
+     emacsvox-aural-voice-tuner-working-style '(:reverb 7)
+     emacsvox-aural-voice-tuner-route-selector nil)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+          (lambda ()
+            '(:adapter omnivox :post-synthesis-dimensions (reverb))))
+         ((symbol-function
+           'emacsvox-aural-preview-structured-style-supported-p)
+          (lambda () nil)))
+      (should-not (emacsvox-aural-voice-tuner--applied-p 'reverb))
+      (should
+       (equal
+        (emacsvox-aural-voice-tuner--effective-value 'reverb)
+        "not applied"))
+      (should
+       (equal
+        (emacsvox-aural-voice-tuner--support-description 'reverb)
+        "saved; preview transport cannot apply"))
+      (should
+       (string-match-p
+        "saved but is not applied in this audition"
+        (emacsvox-aural-voice-tuner--setting-announcement 'reverb))))))
+
 (ert-deftest emacsvox-aural-rich-voice-style-validates-and-persists-effects ()
   "Portable palette styles retain rate and post-synthesis dimensions."
   (emacsvox-test--with-voice-palettes

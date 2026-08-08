@@ -1161,6 +1161,28 @@ in that overlay so subsequent edits do not create more palettes."
      (memq dimension
            (emacsvox-aural-voice-tuner--capability-dimensions)))))
 
+(defun emacsvox-aural-voice-tuner--degraded-p (dimension)
+  "Return non-nil when the latest routed preview omitted DIMENSION."
+  (and
+   emacsvox-aural-voice-tuner-route-selector
+   (memq
+    dimension
+    (plist-get
+     emacsvox-aural-voice-tuner-preview-result
+     (if (emacsvox-aural-voice-tuner--effect-dimension-p dimension)
+         :degraded-effects
+       :degraded-acss)))))
+
+(defun emacsvox-aural-voice-tuner--applied-p (dimension)
+  "Return non-nil when the current preview applies DIMENSION."
+  (and
+   (emacsvox-aural-voice-tuner--supported-p dimension)
+   (not (emacsvox-aural-voice-tuner--degraded-p dimension))
+   (or
+    emacsvox-aural-voice-tuner-route-selector
+    (not (emacsvox-aural-voice-tuner--effect-dimension-p dimension))
+    (emacsvox-aural-preview-structured-style-supported-p))))
+
 (defun emacsvox-aural-voice-tuner--value (dimension)
   "Return the current requested value for DIMENSION."
   (plist-get
@@ -1212,24 +1234,24 @@ in that overlay so subsequent edits do not create more palettes."
 (defun emacsvox-aural-voice-tuner--support-description (dimension)
   "Describe active adapter support for DIMENSION."
   (if (not emacsvox-aural-voice-tuner-route-selector)
-      (format
-       "%s by %s"
-       (if (emacsvox-aural-voice-tuner--supported-p dimension)
-           "supported"
-         "unsupported")
-       (emacsvox-aural-humanize
-        (emacsvox-aural-voice-tuner--adapter)))
+      (cond
+       ((not (emacsvox-aural-voice-tuner--supported-p dimension))
+        (format
+         "unsupported by %s"
+         (emacsvox-aural-humanize
+          (emacsvox-aural-voice-tuner--adapter))))
+       ((not (emacsvox-aural-voice-tuner--applied-p dimension))
+        "saved; preview transport cannot apply")
+       (t
+        (format
+         "supported by %s"
+         (emacsvox-aural-humanize
+          (emacsvox-aural-voice-tuner--adapter)))))
     (cond
      ((and emacsvox-aural-voice-tuner-route-selector
            (eq dimension 'family))
       "portable fallback; physical route owns the base voice")
-     ((memq
-       dimension
-       (plist-get
-        emacsvox-aural-voice-tuner-preview-result
-        (if (emacsvox-aural-voice-tuner--effect-dimension-p dimension)
-            :degraded-effects
-          :degraded-acss)))
+     ((emacsvox-aural-voice-tuner--degraded-p dimension)
       (format "omitted by %s" (emacsvox-aural-voice-tuner--adapter)))
      ((emacsvox-aural-voice-tuner--supported-p dimension)
       (format "%s by %s"
@@ -1245,7 +1267,7 @@ in that overlay so subsequent edits do not create more palettes."
   (if (and emacsvox-aural-voice-tuner-route-selector
            (eq dimension 'family))
       "retained for fallback; not applied to the selected physical voice"
-    (if (emacsvox-aural-voice-tuner--supported-p dimension)
+    (if (emacsvox-aural-voice-tuner--applied-p dimension)
         (if (eq dimension 'family)
             (let* ((value (emacsvox-aural-voice-tuner--value dimension))
                    (capability (emacsvox-aural-active-voice-capabilities))
@@ -1376,7 +1398,7 @@ in that overlay so subsequent edits do not create more palettes."
    (emacsvox-aural-voice-tuner--requested-value dimension)
    (capitalize
     (emacsvox-aural-voice-tuner--support-description dimension))
-   (if (emacsvox-aural-voice-tuner--supported-p dimension)
+   (if (emacsvox-aural-voice-tuner--applied-p dimension)
        "."
      "; this setting is saved but is not applied in this audition.")))
 
