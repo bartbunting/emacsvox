@@ -229,7 +229,7 @@
     (should (string= first second))
     (dolist
         (heading
-         '("* Scheme Author Reference"
+         '("* Presentation Rule Author Reference"
            "* Module Author Reference"
            "* Semantic Registry"
            "** Built-in Feature Fragments"

@@ -99,16 +99,14 @@ part of profile state."
             "Unknown presentation profile: %S" id)))
          (data (copy-tree (emacsvox-aural-profile-entry-data entry)))
          (_ (emacsvox-aural--validate-profile-data data))
-         (scheme 'default)
          (fragments (plist-get data :feature-fragments))
          (pack
           (or
            (plist-get data :sound-pack)
            (emacsvox-aural-effective-scheme-provider
-            'resource-pack scheme)))
+            'resource-pack 'default)))
          (palette (plist-get data :voice-palette))
          (spatial (plist-get data :spatial))
-         (old-scheme emacsvox-aural-active-scheme)
          (old-fragments
           (copy-sequence emacsvox-aural-enabled-feature-fragments))
          (old-fragment-order
@@ -143,7 +141,6 @@ part of profile state."
             (let ((emacsvox-sounds--silent-theme-selection t))
               (emacsvox-sounds-select-theme pack)))
           (setq
-           emacsvox-aural-active-scheme scheme
            emacsvox-aural-feature-fragment-order
            (emacsvox-aural--merge-enabled-feature-fragment-order fragments)
            emacsvox-aural-enabled-feature-fragments
@@ -156,11 +153,10 @@ part of profile state."
           (setq state-committed t)
           (emacsvox-aural--notify-coordinated-state-change
            previous 'profile-applied
-           '(active-scheme feature-fragments))
+           '(feature-fragments))
           (run-hook-with-args 'emacsvox-aural-profile-applied-hook id))
       (unless state-committed
         (setq
-         emacsvox-aural-active-scheme old-scheme
          emacsvox-aural-feature-fragment-order old-fragment-order
          emacsvox-aural-enabled-feature-fragments old-fragments
          emacsvox-aural-voice-palette-override old-palette

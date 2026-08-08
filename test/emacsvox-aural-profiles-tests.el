@@ -150,13 +150,13 @@
              'emacsvox-aural-compatibility-voice-changed-hook
              (lambda (&rest change)
                (push change compatibility-changes)))
-            (cl-letf
-                (((symbol-function 'emacsvox-sounds-select-theme)
-                  (lambda (pack)
-                    (setq emacsvox-sounds-current-pack pack))))
-              (setq emacsvox-aural-active-scheme 'obsolete)
-              (emacsvox-aural-apply-profile 'work source))
-            (should (eq emacsvox-aural-active-scheme 'default))
+            (let ((emacsvox-aural-active-scheme 'obsolete))
+              (cl-letf
+                  (((symbol-function 'emacsvox-sounds-select-theme)
+                    (lambda (pack)
+                      (setq emacsvox-sounds-current-pack pack))))
+                (emacsvox-aural-apply-profile 'work source))
+              (should (eq emacsvox-aural-active-scheme 'obsolete)))
             (should
              (emacsvox-aural-compatibility-voice-enabled-p source))
             (should
@@ -490,7 +490,7 @@
              (eq
               (plist-get
                (emacsvox-aural-read-user-data) :schema-version)
-              6))
+              emacsvox-aural-user-data-schema-version))
             (should
              (eq
               (plist-get

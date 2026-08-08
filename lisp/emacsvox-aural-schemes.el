@@ -107,12 +107,12 @@ configuration; callers can then report it as diverged.")
 
 (defcustom emacsvox-aural-schemes-file
   (expand-file-name "aural-schemes.el" emacsvox-user-directory)
-  "Data-only file containing personal aural schemes and rules."
+  "Data-only file containing personal aural presentation settings."
   :type 'file
   :group 'emacsvox-aural)
 
-(defconst emacsvox-aural-user-data-schema-version 6
-  "Current schema version for the personal scheme data file.")
+(defconst emacsvox-aural-user-data-schema-version 7
+  "Current schema version for the personal presentation data file.")
 
 (defun emacsvox-aural--migrate-user-data-v1-to-v2 (data)
   "Add feature-fragment storage to version 1 user DATA."
@@ -155,12 +155,18 @@ configuration; callers can then report it as diverged.")
   (setq data (plist-put data :active-profile nil))
   (plist-put data :schema-version 6))
 
+(defun emacsvox-aural--migrate-user-data-v6-to-v7 (data)
+  "Drop retired personal schemes from version 6 user DATA."
+  (cl-remf data :schemes)
+  (plist-put data :schema-version 7))
+
 (defconst emacsvox-aural--built-in-user-data-migrations
   '((1 . emacsvox-aural--migrate-user-data-v1-to-v2)
     (2 . emacsvox-aural--migrate-user-data-v2-to-v3)
     (3 . emacsvox-aural--migrate-user-data-v3-to-v4)
     (4 . emacsvox-aural--migrate-user-data-v4-to-v5)
-    (5 . emacsvox-aural--migrate-user-data-v5-to-v6))
+    (5 . emacsvox-aural--migrate-user-data-v5-to-v6)
+    (6 . emacsvox-aural--migrate-user-data-v6-to-v7))
   "Required migrations supplied by Emacsvox.")
 
 (defvar emacsvox-aural-user-data-migrations nil
@@ -1369,7 +1375,6 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
   "Validate and return current-schema user DATA."
   (emacsvox-aural--require-plist data "Aural user data")
   (let ((version (plist-get data :schema-version))
-        (schemes (plist-get data :schemes))
         (fragments (plist-get data :feature-fragments))
         (enabled (plist-get data :enabled-feature-fragments))
         (order (plist-get data :feature-fragment-order))
@@ -1383,7 +1388,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           unless
           (memq
            key
-           '(:schema-version :schemes :feature-fragments
+           '(:schema-version :feature-fragments
              :enabled-feature-fragments :feature-fragment-order :voice-palettes
              :profiles :active-profile :user-rules))
           collect key)))
@@ -1393,8 +1398,6 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
     (when unknown
       (emacsvox-aural--scheme-error
        "Unknown user data keys: %S" unknown))
-    (unless (listp schemes)
-      (emacsvox-aural--scheme-error "User schemes must be a list"))
     (unless (listp fragments)
       (emacsvox-aural--scheme-error "User feature fragments must be a list"))
     (unless (listp profiles)
@@ -1411,13 +1414,6 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           (palette-registry
            (emacsvox-aural--built-in-voice-palette-registry))
           profile-ids)
-      (dolist (scheme schemes)
-        (let* ((compiled (emacsvox-aural-compile-scheme scheme))
-               (id (emacsvox-aural-scheme-id compiled)))
-          (when (gethash id scheme-registry)
-            (emacsvox-aural--scheme-error
-             "Duplicate or protected user scheme: %S" id))
-          (puthash id t scheme-registry)))
       (dolist (fragment fragments)
         (let* ((compiled
                 (emacsvox-aural--compile-feature-fragment fragment))
@@ -1537,12 +1533,11 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
     registry))
 
 (defun emacsvox-aural-load-user-data (&optional file)
-  "Load personal schemes and rules from FILE.
+  "Load personal aural presentation settings from FILE.
 
 The file is read as data and is never evaluated."
   (when-let* ((data (emacsvox-aural-read-user-data file)))
     (let ((previous (emacsvox-aural--capture-coordinated-state))
-          (schemes (plist-get data :schemes))
           (fragments (plist-get data :feature-fragments))
           (enabled (plist-get data :enabled-feature-fragments))
           (order (plist-get data :feature-fragment-order))
@@ -1556,23 +1551,8 @@ The file is read as data and is never evaluated."
           (palette-registry
            (emacsvox-aural--built-in-voice-palette-registry))
           (profile-registry (make-hash-table :test #'eq))
-          entries
           fragment-entries
           palette-entries)
-      (dolist (scheme schemes)
-        (let* ((compiled (emacsvox-aural-compile-scheme scheme))
-               (id (emacsvox-aural-scheme-id compiled)))
-          (when (gethash id registry)
-            (emacsvox-aural--scheme-error
-             "User scheme cannot replace built-in %S" id))
-          (push
-           (emacsvox-aural--make-scheme-entry
-            :id id
-            :data (copy-tree scheme)
-            :compiled compiled
-            :built-in nil
-            :source (or file emacsvox-aural-schemes-file))
-           entries)))
       (dolist (fragment fragments)
         (let* ((compiled
                 (emacsvox-aural--compile-feature-fragment
@@ -1590,11 +1570,6 @@ The file is read as data and is never evaluated."
             :built-in nil
             :source (or file emacsvox-aural-schemes-file))
            fragment-entries)))
-      (dolist (entry entries)
-        (puthash
-         (emacsvox-aural-scheme-entry-id entry)
-         entry
-         registry))
       (dolist (entry fragment-entries)
         (puthash
          (emacsvox-aural-feature-fragment-entry-id entry)
@@ -1647,7 +1622,7 @@ The file is read as data and is never evaluated."
            (emacsvox-aural--scheme-chain id)
            (emacsvox-aural-effective-scheme-rules id))
          registry)
-        (emacsvox-aural--scheme-chain emacsvox-aural-active-scheme)
+        (emacsvox-aural--scheme-chain 'default)
         (emacsvox-aural--validate-enabled-feature-fragments
          enabled fragment-registry)
         (maphash
@@ -1671,13 +1646,8 @@ The file is read as data and is never evaluated."
       data)))
 
 (defun emacsvox-aural-user-data ()
-  "Return current personal schemes, fragments, palettes, profiles, and rules."
-  (let (schemes fragments palettes profiles)
-    (maphash
-     (lambda (_ entry)
-       (unless (emacsvox-aural-scheme-entry-built-in entry)
-         (push (copy-tree (emacsvox-aural-scheme-entry-data entry)) schemes)))
-     emacsvox-aural-scheme-registry)
+  "Return current personal fragments, palettes, profiles, and rules."
+  (let (fragments palettes profiles)
     (maphash
      (lambda (_ entry)
        (unless (emacsvox-aural-feature-fragment-entry-built-in entry)
@@ -1698,14 +1668,6 @@ The file is read as data and is never evaluated."
         (copy-tree (emacsvox-aural-profile-entry-data entry))
         profiles))
      emacsvox-aural-profile-registry)
-    (setq
-     schemes
-     (sort
-      schemes
-      (lambda (left right)
-        (string-lessp
-         (symbol-name (plist-get left :id))
-         (symbol-name (plist-get right :id))))))
     (setq
      fragments
      (sort
@@ -1732,7 +1694,6 @@ The file is read as data and is never evaluated."
          (symbol-name (plist-get right :id))))))
     (list
      :schema-version emacsvox-aural-user-data-schema-version
-     :schemes schemes
      :feature-fragments fragments
      :enabled-feature-fragments
      (copy-sequence emacsvox-aural-enabled-feature-fragments)
@@ -1744,7 +1705,7 @@ The file is read as data and is never evaluated."
      :user-rules (copy-tree emacsvox-aural-user-rules))))
 
 (defun emacsvox-aural-save-user-data (&optional file)
-  "Atomically save personal scheme data to FILE.
+  "Atomically save personal aural presentation data to FILE.
 
 An existing file is copied to FILE~ before replacement."
   (let* ((file (expand-file-name (or file emacsvox-aural-schemes-file)))
@@ -1759,7 +1720,7 @@ An existing file is copied to FILE~ before replacement."
     (unwind-protect
         (progn
           (with-temp-buffer
-            (insert ";;; Aural presentation scheme data -*- mode: emacs-lisp; -*-\n")
+            (insert ";;; Aural presentation data -*- mode: emacs-lisp; -*-\n")
             (insert ";;; This file is read as data and is not evaluated.\n\n")
             (let ((print-length nil)
                   (print-level nil))

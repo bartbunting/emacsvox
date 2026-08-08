@@ -520,30 +520,23 @@ origin layers, from strongest to weakest, are:
 2. temporary session overrides;
 3. persistent personal user rules;
 4. ordered enabled feature fragments;
-5. active scheme rules;
+5. fixed internal compatibility-baseline rules;
 6. module-provided defaults;
 7. core fallbacks.
 
-Exactly one base scheme is active.  Feature fragments are independent
-rules-only additions that can be enabled and disabled without changing the
-base scheme.  Their explicit enabled order runs from weaker to stronger.
-They cannot inherit schemes or select a resource pack or voice palette.
-This lets one fragment append a cue while another appends speech, preserving
-the base scheme's inherited presentation.  Persistent personal rules remain
-stronger than every fragment.
+The internal =default= baseline is fixed.  Feature fragments are independent
+rules-only additions that can be enabled and disabled without changing that
+baseline.  Their explicit enabled order runs from weaker to stronger.  They
+cannot inherit schemes or select a resource pack or voice palette.  This lets
+one fragment append a cue while another appends speech while persistent
+personal rules remain stronger than every fragment.
 
-A scheme is therefore a global base recipe, not a mode hook or a complete
-snapshot of all current presentation settings.  It contains named rules and
-may choose default resource-pack and voice-palette providers.  Core,
-integration, and third-party provider libraries may register read-only
-built-in schemes; personal data may register editable personal schemes.
-Activating a scheme is always explicit.  Entering a mode does not select a
-scheme bearing that mode's name.  Every presentation resolution consults the
-active scheme, but only matching selectors contribute.  Applying a saved
-profile may explicitly select the scheme recorded by that profile.  The
-integration's automatic compatibility fragment continues to supply its
-defaults, and module selectors decide which scheme, option, or override rules
-apply there.
+The scheme structure remains an internal declarative representation for the
+compatibility baseline and rule compiler; it is no longer a user-selectable
+configuration.  The integration's automatic compatibility fragment supplies
+mode defaults, and module selectors decide which baseline, option, or override
+rules apply there.  Profiles refer to Presentation Options, sound packs, voice
+palettes, and spatial settings rather than selecting or copying scheme rules.
 
 There are two deliberately different fragment concepts:
 
@@ -667,18 +660,18 @@ data and individual schemes are independently versioned; migration functions
 must explicitly advance an older version.  Invalid replacement data is fully
 staged and validated before it can replace the live personal registry.
 
-Personal data schema version 6 stores named presentation profiles and the
-single selected profile identity alongside
-personal presentation-option definitions, their stable order, their ordered
-enabled identifiers, voice palettes, schemes, and persistent rules.  Versions
-1 through 5 migrate automatically.  The version 4 migration derives stable
+Personal data schema version 7 stores named presentation profiles and the
+single selected profile identity alongside personal presentation-option
+definitions, their stable order, their ordered enabled identifiers, voice
+palettes, and persistent rules.  Versions 1 through 6 migrate automatically.
+The version 6 migration discards retired personal scheme definitions while
+preserving the remaining settings.  The version 4 migration derives stable
 order from the former enabled order, followed by disabled personal options,
 so toggling no longer changes precedence.  The version 5 migration adds an
 initially empty =:active-profile= reference.
 
-=emacsvox-aural-active-scheme= is a Customize option.  Startup loads the
-personal data, validates scheme inheritance and providers, and selects the
-active scheme's inherited resource pack.
+Startup loads and validates the personal data, then uses the fixed internal
+=default= baseline for compatibility rules and fallback resources.
 
 * Voice Integration
 
@@ -2251,9 +2244,10 @@ as concise, verbose, or task-specific setups in one operation.
 Implemented details:
 
 - profile support entered in personal data schema version 3; the current
-  schema version 6 persists profile references, selected identity, voice
+  schema version 7 persists profile references, selected identity, voice
   palettes, and stable presentation-option order while migrating versions 1
-  through 5 without evaluating code;
+  through 6 without evaluating code.  Version 7 drops retired personal scheme
+  definitions;
 - profile application validates the complete target, restores the internal
   baseline, then applies fragments, sound, voice, and spatial state as one
   transaction; its fallible

@@ -142,6 +142,11 @@ Normal startup and builds no longer load the retired scheme manager or simple
 scheme editor, and their interactive list, selection, and edit commands are no
 longer exposed.  The declarative rule editor remains available for personal
 Presentation Options and presentation overrides.
+Personal data schema 7 retires the =:schemes= field.  Existing version 1
+through 6 files remain readable; migration discards only their local scheme
+definitions while preserving Presentation Options, voice palettes, profiles,
+selected profile identity, and personal rules.  New saves no longer publish
+scheme state, and applying a profile no longer changes it.
 The semantic vocabulary list now provides the same titled-cell and boundary
 navigation.  Preferred interactive command aliases share the discoverable
 ~emacsvox-aural-~ prefix; established verb-first names remain compatible.

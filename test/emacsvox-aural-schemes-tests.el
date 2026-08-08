@@ -932,6 +932,7 @@
             (emacsvox-aural-save-user-data file)
             (let ((first (emacsvox-aural-read-user-data file)))
               (should (= (file-modes file) #o600))
+              (should-not (plist-member first :schemes))
               (setq
                emacsvox-aural-user-rules
                (list
@@ -951,7 +952,7 @@
                   (emacsvox-aural-user-rules nil))
               (emacsvox-aural--register-default-scheme)
               (emacsvox-aural-load-user-data file)
-              (should (emacsvox-aural-scheme-entry 'personal))
+              (should-not (emacsvox-aural-scheme-entry 'personal))
               (should
                (emacsvox-aural-feature-fragment-entry
                 'personal-fragment))
@@ -996,25 +997,20 @@
              :type 'emacsvox-aural-scheme-error))
         (delete-directory directory t)))))
 
-(ert-deftest emacsvox-aural-schemes-reload-notifies-provider-change ()
-  "Reloading an active definition reconciles its changed sound provider."
+(ert-deftest emacsvox-aural-schemes-load-drops-retired-personal-schemes ()
+  "Loading version 6 data discards retired personal scheme definitions."
   (emacsvox-test--with-isolated-schemes
     (let* ((directory (make-temp-file "emacsvox-provider-reload-" t))
-           (file (expand-file-name "aural.el" directory))
-           changes)
+           (file (expand-file-name "aural.el" directory)))
       (unwind-protect
           (progn
             (emacsvox-aural-register-scheme
              (emacsvox-test--scheme
               'work "Old work scheme" nil :parent 'default))
-            (emacsvox-aural-select-scheme 'work)
-            (add-hook
-             'emacsvox-aural-effective-resource-pack-changed-hook
-             (lambda (old new) (push (list old new) changes)))
             (emacsvox-test--write-lisp-data
              file
              (list
-              :schema-version emacsvox-aural-user-data-schema-version
+              :schema-version 6
               :schemes
               (list
                (emacsvox-test--scheme
@@ -1022,15 +1018,16 @@
                 :parent 'default :resource-pack '3d))
               :feature-fragments nil
               :enabled-feature-fragments nil
+              :feature-fragment-order nil
               :voice-palettes nil
               :profiles nil
+              :active-profile nil
               :user-rules nil))
-            (emacsvox-aural-load-user-data file)
-            (should
-             (equal
-              (emacsvox-aural-effective-scheme-provider 'resource-pack)
-              '3d))
-            (should (equal changes '((chimes 3d)))))
+            (let ((loaded (emacsvox-aural-load-user-data file)))
+              (should (= (plist-get loaded :schema-version) 7))
+              (should-not (plist-member loaded :schemes)))
+            (should-not (emacsvox-aural-scheme-entry 'work))
+            (should (emacsvox-aural-scheme-entry 'default)))
         (delete-directory directory t)))))
 
 (ert-deftest emacsvox-aural-schemes-migrate-versioned-user-data ()
@@ -1046,8 +1043,7 @@
        (equal
         (emacsvox-aural-migrate-user-data
          '(:schema-version 0 :schemes nil :user-rules nil))
-        '(:schema-version 6
-          :schemes nil
+        '(:schema-version 7
           :user-rules nil
           :feature-fragments nil
           :enabled-feature-fragments nil
@@ -1072,7 +1068,8 @@
               :voice-palettes nil
               :profiles nil
               :user-rules nil))))
-      (should (eq (plist-get migrated :schema-version) 6))
+      (should (eq (plist-get migrated :schema-version) 7))
+      (should-not (plist-member migrated :schemes))
       (should
        (equal
         (plist-get migrated :feature-fragment-order)
@@ -1082,7 +1079,6 @@
      (emacsvox-aural--validate-user-data
       (list
        :schema-version emacsvox-aural-user-data-schema-version
-       :schemes nil
        :feature-fragments nil
        :enabled-feature-fragments nil
        :feature-fragment-order nil
@@ -1166,7 +1162,7 @@
         (delete-directory directory t)))))
 
 (ert-deftest emacsvox-aural-schemes-load-is-atomic ()
-  "Invalid replacement data leaves live personal schemes and rules intact."
+  "Invalid replacement data leaves the live baseline and rules intact."
   (emacsvox-test--with-isolated-schemes
     (emacsvox-aural-register-scheme
      (emacsvox-test--scheme 'working "Working" () :parent 'default))
@@ -1182,12 +1178,14 @@
             (emacsvox-test--write-lisp-data
              file
              (list
-              :schema-version 1
-              :schemes
-              (list
-               (emacsvox-test--scheme
-                'broken "Broken" () :parent 'missing))
-              :user-rules nil))
+              :schema-version emacsvox-aural-user-data-schema-version
+              :feature-fragments nil
+              :enabled-feature-fragments nil
+              :feature-fragment-order nil
+              :voice-palettes nil
+              :profiles nil
+              :active-profile nil
+              :user-rules 'invalid))
             (should-error
              (emacsvox-aural-load-user-data file)
              :type 'emacsvox-aural-scheme-error)
@@ -1198,8 +1196,8 @@
             (should-not (emacsvox-aural-scheme-entry 'broken)))
         (delete-directory directory t)))))
 
-(ert-deftest emacsvox-aural-schemes-protect-built-ins ()
-  "Personal data cannot replace a built-in scheme identifier."
+(ert-deftest emacsvox-aural-schemes-reject-retired-current-scheme-data ()
+  "Current-schema personal data rejects the retired schemes field."
   (emacsvox-test--with-isolated-schemes
     (let* ((directory (make-temp-file "emacsvox-schemes-" t))
            (file (expand-file-name "collision.el" directory)))
@@ -1208,10 +1206,16 @@
             (emacsvox-test--write-lisp-data
              file
              (list
-              :schema-version 1
+              :schema-version emacsvox-aural-user-data-schema-version
               :schemes
               (list
                (emacsvox-test--scheme 'default "Replacement" ()))
+              :feature-fragments nil
+              :enabled-feature-fragments nil
+              :feature-fragment-order nil
+              :voice-palettes nil
+              :profiles nil
+              :active-profile nil
               :user-rules nil))
             (should-error
              (emacsvox-aural-load-user-data file)

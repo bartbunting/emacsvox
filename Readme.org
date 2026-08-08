@@ -194,12 +194,13 @@ attempts and check stop generations before and after each engine call.  The
 failure exclusion is local to that batch; persistent health/recovery and
 immediate =tts_say= or letter routing remain planned.
 
-** Aural Presentation Schemes
+** Aural Presentation
 
 Emacsvox can present registered meaning with speech, voices, auditory cues,
-pauses, and stereo placement.  The default scheme preserves existing output,
-while users can override presentation globally or for a module, major mode,
-derived mode, session, or individual buffer.
+pauses, and stereo placement.  A fixed internal =default= baseline preserves
+existing output.  Users compose Presentation Options above it and can override
+presentation globally or for a module, major mode, derived mode, session, or
+individual buffer.
 
 Point feedback on spoken lines is now modality-selectable.  Enable it with
 =M-x emacsvox-toggle-show-point=, then use
@@ -219,17 +220,12 @@ style.  Point actions in personal rules should use =:anchor run= to stay at
 the marked text boundary.  The existing =emacsvox-show-point= option remains
 the master switch.
 
-Exactly one scheme is active globally.  Think of it as the base recipe: a
-named set of presentation rules with optional default sound-pack and
-voice-palette choices.  Emacsvox core and integration providers such as Org
-may register read-only built-in schemes; users create personal schemes or copy
-a built-in one before editing it.  Entering Org, Notmuch, or another mode does
-not silently switch schemes.  Every presentation consults the active scheme,
-but only rules whose selectors match the current facts and context contribute.
-Applying a saved presentation profile restores the fixed compatibility
-baseline.  Mode compatibility is supplied separately and automatically,
-optional presentation fragments compose above the scheme, and personal,
-session, and buffer overrides are the strongest layers.
+The compatibility baseline is an implementation layer, not a user-selectable
+configuration.  Mode compatibility is supplied separately and automatically.
+Ordered Presentation Options compose above those defaults, and personal,
+session, and buffer overrides are the strongest layers.  Presentation Profiles
+save complete named choices of options, sound pack, voice palette, and spatial
+settings without copying rules.
 
 The profile manager reports the selected profile as =active= while its saved
 values match the live configuration and =diverged= when they differ.  Diverged
@@ -276,7 +272,7 @@ documents user controls, presentation-option and module authoring, registered
 semantics, sound packs, voice palettes, migration, queue ordering, and spatial
 fallback.
 
-Scheme rules can also target a named visual face as an explicit compatibility
+Presentation rules can also target a named visual face as an explicit compatibility
 fallback.  A face presentation may append an icon before or after the text and
 select a palette voice, with the usual module, mode, occasion, session, and
 buffer scopes.  Layered faces compose their actions; the strongest face wins
