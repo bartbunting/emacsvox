@@ -376,15 +376,21 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (emacsvox-aural--make-concrete-content
            :text "Hello" :speak t :voice-request 'heading
            :voice-command "[[logical_voice heading]]"
-           :voice-style '(:rate 9 :average-pitch 3 :reverb 4 :echo 2)
+           :voice-style '(:rate-offset -4 :average-pitch 3 :reverb 4 :echo 2)
            :balance 0.5))
          (plan
           (emacsvox-aural--make-concrete-plan
            :before (list cue) :content content :after (list tone)
            :context '(:icons-enabled t)))
          (built
-          (emacsvox-aural--build-structured-timeline
-           7 19 (list (list plan "Hello" 20))))
+          (cl-letf
+              (((symbol-function 'processp) (lambda (_) t))
+               ((symbol-function 'process-get)
+                (lambda (_ property)
+                  (eq property
+                      emacsvox-aural--relative-rate-process-property))))
+            (emacsvox-aural--build-structured-timeline
+             7 19 (list (list plan "Hello" 20)))))
          (envelope (car built))
          (span (aref (plist-get envelope :spans) 0))
          (actions (append (plist-get envelope :actions) nil))
@@ -405,7 +411,8 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (should (= (plist-get envelope :dispatch_id) 19))
     (should (equal (plist-get span :text) "Hello"))
     (should (equal (plist-get span :logical_voice_id) "heading"))
-    (should (= (plist-get (plist-get span :acss) :rate) 1.0))
+    (should-not (plist-member (plist-get span :acss) :rate))
+    (should (= (plist-get span :rate_offset) -4))
     (should
      (= (plist-get (plist-get span :acss) :average_pitch) (/ 3.0 9.0)))
     (should (equal (plist-get (plist-get span :effects) :mode) "replace"))
@@ -2579,7 +2586,7 @@ is the default inherited by a newly created TTS scratch buffer."
   (emacsvox-test--with-transport-scheme
     (let ((custom
            '(:family nil :average-pitch 6 :pitch-range nil :stress 4
-             :richness nil :rate 4 :gain nil :low-pass nil :high-pass 5
+             :richness nil :rate-offset -4 :gain nil :low-pass nil :high-pass 5
              :pan nil :reverb 5 :echo 0))
           generated)
       (cl-letf
@@ -2589,7 +2596,8 @@ is the default inherited by a newly created TTS scratch buffer."
            ((symbol-function 'emacsvox-aural-active-voice-capabilities)
             (lambda ()
               '(:adapter omnivox
-                :dimensions (average-pitch pitch-range stress richness)
+                :dimensions
+                (average-pitch pitch-range stress richness rate-offset)
                 :post-synthesis-dimensions
                 (gain low-pass high-pass pan reverb echo))))
            ((symbol-function 'voice-from-acss)
@@ -2616,6 +2624,40 @@ is the default inherited by a newly created TTS scratch buffer."
            (equal
             (emacsvox-aural-concrete-content-voice-style content)
             custom)))))))
+
+(ert-deftest emacsvox-aural-transport-ignores-legacy-absolute-rate ()
+  "Old rate zero is neutral and nonzero values request explicit retuning."
+  (cl-letf
+      (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+        (lambda () '(:adapter omnivox :dimensions (rate-offset)))))
+    (let ((neutral (emacsvox-aural-compile-voice-style '(:rate 0)))
+          (legacy (emacsvox-aural-compile-voice-style '(:rate 4))))
+      (should-not
+       (plist-member (emacsvox-aural-compiled-voice-style neutral) :rate))
+      (should-not (emacsvox-aural-compiled-voice-degradations neutral))
+      (should-not
+       (plist-member (emacsvox-aural-compiled-voice-style legacy) :rate))
+      (should
+       (eq
+        (plist-get
+         (car (emacsvox-aural-compiled-voice-degradations legacy)) :reason)
+        'legacy-absolute-rate)))))
+
+(ert-deftest emacsvox-aural-transport-preserves-or-degrades-relative-rate ()
+  "Relative rate remains portable and visibly degrades without support."
+  (dolist (case '(((rate-offset) nil) (() unsupported-voice-dimension)))
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+          (lambda () `(:adapter test :dimensions ,(car case)))))
+      (let* ((compiled
+              (emacsvox-aural-compile-voice-style '(:rate-offset 4)))
+             (degradation
+              (car (emacsvox-aural-compiled-voice-degradations compiled))))
+        (should (= (plist-get
+                    (emacsvox-aural-compiled-voice-style compiled)
+                    :rate-offset)
+                   4))
+        (should (eq (plist-get degradation :reason) (cadr case)))))))
 
 (ert-deftest emacsvox-aural-transport-records-unsupported-voice-dimension ()
   "Unsupported explicit ACSS data degrades to the adapter default visibly."

@@ -418,6 +418,33 @@ portable palette object and every other dimension remain untouched."
         (when (plist-member style key)
           (setq effective
                 (plist-put effective key (plist-get style key))))))
+    (when-let* ((legacy-rate
+                 (and
+                  (plist-member style :rate)
+                  (plist-get style :rate))))
+      (unless (zerop legacy-rate)
+        (push
+         (list
+          :reason 'legacy-absolute-rate
+          :dimension 'rate
+          :requested legacy-rate
+          :message
+          "Legacy absolute rate is not applied; retune this voice using Relative Rate")
+         degradations)))
+    (when-let* ((rate-offset
+                 (and
+                  (plist-member style :rate-offset)
+                  (plist-get style :rate-offset))))
+      (when (and
+             (not (zerop rate-offset))
+             (not (memq 'rate-offset supported)))
+        (push
+         (list
+          :reason 'unsupported-voice-dimension
+          :adapter (plist-get capability :adapter)
+          :dimension 'rate-offset
+          :requested rate-offset)
+         degradations)))
     (let ((style-command
            (when command-style
              (unless (fboundp 'voice-from-acss)

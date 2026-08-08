@@ -107,6 +107,10 @@ Each function receives the failure plist stored in
   'emacsvox-aural-structured-timeline
   "Process property enabling version 1 structured presentation delivery.")
 
+(defconst emacsvox-aural--relative-rate-process-property
+  'emacsvox-aural-relative-rate
+  "Process property enabling signed relative rate in timelines.")
+
 (defun emacsvox-aural-enable-framed-delivery (process)
   "Enable complete replaceable transaction framing for PROCESS."
   (process-put
@@ -116,6 +120,11 @@ Each function receives the failure plist stored in
 (defun emacsvox-aural-enable-structured-timeline (process)
   "Enable structured aural presentation timelines for PROCESS."
   (process-put process emacsvox-aural--structured-timeline-process-property t)
+  process)
+
+(defun emacsvox-aural-enable-relative-rate (process)
+  "Enable signed relative speech-rate fields for PROCESS."
+  (process-put process emacsvox-aural--relative-rate-process-property t)
   process)
 
 (defun emacsvox-aural-delivery-send (process command &optional kind)
@@ -497,8 +506,7 @@ OWNER so a logical transaction cannot be partially delivered across streams."
   (let (result)
     (dolist
         (mapping
-         '((:rate . :rate)
-           (:average-pitch . :average_pitch)
+         '((:average-pitch . :average_pitch)
            (:pitch-range . :pitch_range)
            (:stress . :stress)
            (:richness . :richness)))
@@ -507,6 +515,17 @@ OWNER so a logical transaction cannot be partially delivered across streams."
                     (plist-get style (car mapping)))))
         (setq result (plist-put result (cdr mapping) value))))
     (or result (make-hash-table :test #'equal))))
+
+(defun emacsvox-aural--timeline-rate-offset (style)
+  "Return STYLE's nonzero relative rate when the live process supports it."
+  (let ((value (plist-get style :rate-offset)))
+    (and
+     (numberp value)
+     (not (zerop value))
+     (processp tts-speaker-process)
+     (process-get
+      tts-speaker-process emacsvox-aural--relative-rate-process-property)
+     value)))
 
 (defun emacsvox-aural--timeline-style-effects (style &optional balance)
   "Return JSON post-synthesis effects carried by STYLE and stereo BALANCE."
@@ -688,14 +707,17 @@ recorded plans contain no speech span and therefore require legacy lowering."
           (text request style command balance lifecycle pending context)
           (let* ((span-id (cl-incf span-sequence))
                  (logical
-                  (emacsvox-aural--timeline-logical-voice command request)))
+                  (emacsvox-aural--timeline-logical-voice command request))
+                 (rate-offset
+                  (emacsvox-aural--timeline-rate-offset style)))
             (push
              (append
               (list
                :id span-id :text text
                :logical_voice_id (or logical :null)
                :acss (emacsvox-aural--timeline-style-acss style)
-               :effects (effect-directive style balance)))
+               :effects (effect-directive style balance))
+              (when rate-offset (list :rate_offset rate-offset)))
              spans)
             (dolist (action pending)
               (if (numberp action)

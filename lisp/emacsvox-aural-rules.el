@@ -47,8 +47,8 @@
   '(family average-pitch pitch-range stress richness)
   "Device-independent dimensions supported by aural voice styles.")
 
-(defconst emacsvox-aural-voice-rate-dimensions '(rate)
-  "Portable speech-rate dimensions carried with aural voice styles.")
+(defconst emacsvox-aural-voice-rate-dimensions '(rate-offset)
+  "Portable relative speech-rate dimensions carried with voice styles.")
 
 (defconst emacsvox-aural-post-synthesis-dimensions
   '(gain low-pass high-pass pan reverb echo)
@@ -61,9 +61,13 @@
   "All dimensions editable as one portable rich voice style.")
 
 (defconst emacsvox-aural--voice-style-keys
-  '(:preset :family :average-pitch :pitch-range :stress :richness :rate
+  '(:preset :family :average-pitch :pitch-range :stress :richness
+    :rate-offset :rate
     :gain :low-pass :high-pass :pan :reverb :echo)
-  "Properties accepted in an explicit aural voice style.")
+  "Properties accepted in an explicit aural voice style.
+
+`:rate' is accepted only to load legacy palettes.  New styles use the signed
+`:rate-offset' property.")
 
 (defconst emacsvox-aural--selector-keys
   '(:role :event :events :state :states :module :mode :occasion
@@ -247,7 +251,6 @@ rate, or post-synthesis dimensions."
   (dolist (dimension
            (append
             '(average-pitch pitch-range stress richness)
-            emacsvox-aural-voice-rate-dimensions
             emacsvox-aural-post-synthesis-dimensions))
     (let ((key (emacsvox-aural--voice-dimension-key dimension)))
       (when (plist-member style key)
@@ -258,6 +261,24 @@ rate, or post-synthesis dimensions."
             (emacsvox-aural--rule-error
              "%s %S must be an integer from 0 through 9, or nil: %S"
              label key value))))))
+  (when (plist-member style :rate-offset)
+    (let ((value (plist-get style :rate-offset)))
+      (unless (or
+               (null value)
+               (and (integerp value) (<= -20 value 20)))
+        (emacsvox-aural--rule-error
+         "%s :rate-offset must be an integer from -20 through 20, or nil: %S"
+         label value))))
+  ;; Keep old palette files loadable, but compilation deliberately does not
+  ;; apply this absolute zero-to-nine value.
+  (when (plist-member style :rate)
+    (let ((value (plist-get style :rate)))
+      (unless (or
+               (null value)
+               (and (integerp value) (<= 0 value 9)))
+        (emacsvox-aural--rule-error
+         "%s legacy :rate must be an integer from 0 through 9, or nil: %S"
+         label value))))
   style)
 
 (defun emacsvox-aural-validate-voice-value (voice label)

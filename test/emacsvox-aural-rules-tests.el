@@ -494,6 +494,8 @@
       (voice
        '((:average-pitch 10)
          (:stress -1)
+         (:rate-offset -21)
+         (:rate-offset 21)
          (:family 42)
          (:unknown 4)
          (:preset :keyword)))
@@ -503,6 +505,14 @@
       '(:role heading)
       `(:content (:voice ,voice)))
      :type 'emacsvox-aural-rule-error)))
+
+(ert-deftest emacsvox-aural-rules-accept-signed-relative-rate ()
+  "Voice styles accept portable direct-point relative rates."
+  (dolist (value '(-20 -1 0 4 20 nil))
+    (should
+     (emacsvox-aural-validate-voice-value
+      (list :rate-offset value)
+      "relative rate test"))))
 
 (ert-deftest emacsvox-aural-rules-compose-layered-face-presentations ()
   "Every named face may add actions while the strongest face wins voice ties."
