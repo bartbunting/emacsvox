@@ -1831,6 +1831,12 @@ Implemented details:
 - focused tests exercise global, =org-mode=, derived-mode, =org= module, and
   one-buffer user selectors against real Org facts and context.
 
+Retirement note: the six selectable demonstration schemes were later removed
+when profiles and ordered presentation options replaced scheme selection as
+the user-facing model.  Org heading-level labels, section cues, and visibility
+announcements remain available as composable built-in options over the fixed
+compatibility baseline.
+
 The compatibility comparison preserves the observable default order of
 heading text followed by =large-movement=.  A 2,000-iteration, source-loaded
 planning benchmark on the development machine, excluding speech and audio

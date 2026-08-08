@@ -85,8 +85,8 @@ The default _C-e d_ key sequence is unchanged.
 Emacsvox now has semantic aural presentation schemes.  A scheme can combine
 speech, device-independent voices, auditory cues, pauses, and portable stereo
 placement before or after content.  The default scheme preserves existing
-voices and icons; selectable Org examples demonstrate alternative
-presentations.
+voices and icons.  Org's optional heading-level labels, section cues, and
+visibility announcements are available as composable Presentation Options.
 
 Use ~emacsvox-list-aural-schemes~, ~emacsvox-set-aural-scheme~, and
 ~emacsvox-edit-aural-scheme~ to inspect, select, and customize schemes.  Rules
@@ -135,6 +135,9 @@ or displaying a selectable scheme.  Older =:scheme= profile fields remain
 readable and are discarded during registration.  Aural Home no longer shows
 a Schemes route; its Presentation Options and Presentation Overrides routes
 are the user-facing composition controls.
+The six selectable Org demonstration schemes have been retired.  Their useful
+user choices remain available through the existing Org Presentation Options,
+without replacing the compatibility baseline.
 The semantic vocabulary list now provides the same titled-cell and boundary
 navigation.  Preferred interactive command aliases share the discoverable
 ~emacsvox-aural-~ prefix; established verb-first names remain compatible.

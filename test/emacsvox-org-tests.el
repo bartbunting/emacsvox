@@ -542,9 +542,11 @@
            (emacsvox-aural-render-plan-after plan))
           '((cue large-movement))))))))
 
-(ert-deftest emacsvox-org-explanation-infers-navigation-and-speaks-plan ()
-  "Org point help explains the scheme occasion and multimodal order."
-  (let ((emacsvox-aural-active-scheme 'org-combined)
+(ert-deftest emacsvox-org-explanation-infers-navigation-and-speaks-options ()
+  "Org point help explains the option occasion and multimodal order."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments
+         '(org-heading-level-labels org-heading-section-cues))
         (emacsvox-aural-user-rules nil)
         (emacsvox-aural-session-rules nil)
         (emacsvox-aural-buffer-rules nil))
@@ -567,96 +569,19 @@
         (should
          (equal
           matches
-          '(org-heading-navigation-compatibility org-combined-heading)))
+          '(org-heading-navigation-compatibility
+            org-fragment-heading-section-cue
+            org-fragment-heading-level-label)))
         (should
          (string-match-p
-          "Scheme org combined" summary))
+          "Scheme default" summary))
         (should
          (string-match-p
           (concat
-           "Before the content, say Heading once for the object, "
+           "Before the content, say Heading 1 once for the object, "
            "then play the section cue once for the object")
           summary))
-        (should
-         (string-match-p
-          "content is spoken using the bolden voice"
-          summary))))))
-
-(ert-deftest emacsvox-org-example-schemes-cover-presentation-modalities ()
-  "Selectable Org examples cover voice, labels, cues, phases, and state."
-  (dolist
-      (scheme
-       '(org-voice-only org-spoken-label org-cue-only
-         org-combined org-before-after org-folded-state))
-    (let ((entry (emacsvox-aural-scheme-entry scheme)))
-      (should entry)
-      (should (emacsvox-aural-scheme-entry-built-in entry))))
-  (let* ((facts
-          '(:role heading :level 1 :states (folded)
-            :events (focus-entered)))
-         (context
-          '(:module org :mode org-mode
-            :mode-lineage (org-mode outline-mode)
-            :occasion navigation))
-         (emacsvox-aural-user-rules nil)
-         (emacsvox-aural-session-rules nil)
-         (emacsvox-aural-buffer-rules nil))
-    (let* ((emacsvox-aural-active-scheme 'org-voice-only)
-           (plan (emacsvox-aural-resolve-active facts context)))
-      (should
-       (eq
-        (emacsvox-aural-content-style-voice
-         (emacsvox-aural-render-plan-content plan))
-        'bolden))
-      (should-not (emacsvox-aural-render-plan-after plan)))
-    (let* ((emacsvox-aural-active-scheme 'org-spoken-label)
-           (plan (emacsvox-aural-resolve-active facts context)))
-      (should
-       (equal
-        (mapcar #'emacsvox-aural-action-text
-                (emacsvox-aural-render-plan-before plan))
-        '("Heading 1"))))
-    (let* ((emacsvox-aural-active-scheme 'org-cue-only)
-           (plan (emacsvox-aural-resolve-active facts context)))
-      (should
-       (equal
-        (mapcar #'emacsvox-aural-action-cue
-                (emacsvox-aural-render-plan-before plan))
-        '(section))))
-    (let* ((emacsvox-aural-active-scheme 'org-combined)
-           (plan (emacsvox-aural-resolve-active facts context)))
-      (should
-       (equal
-        (mapcar #'emacsvox-aural-action-kind
-                (emacsvox-aural-render-plan-before plan))
-        '(speech cue)))
-      (should
-       (eq
-        (emacsvox-aural-content-style-voice
-         (emacsvox-aural-render-plan-content plan))
-        'bolden)))
-    (let* ((emacsvox-aural-active-scheme 'org-before-after)
-           (plan (emacsvox-aural-resolve-active facts context)))
-      (should
-       (equal
-        (mapcar #'emacsvox-aural-action-text
-                (emacsvox-aural-render-plan-before plan))
-        '("Heading")))
-      (should
-       (equal
-        (mapcar #'emacsvox-aural-action-text
-                (emacsvox-aural-render-plan-after plan))
-        '("end heading"))))
-    (let* ((emacsvox-aural-active-scheme 'org-folded-state)
-           (plan (emacsvox-aural-resolve-active facts context)))
-      (should
-       (equal
-        (mapcar #'emacsvox-aural-action-text
-                (cl-remove-if-not
-                 (lambda (action)
-                   (eq (emacsvox-aural-action-kind action) 'speech))
-                 (emacsvox-aural-render-plan-after plan)))
-        '("folded"))))))
+        (should (string-match-p "After the content" summary))))))
 
 (ert-deftest emacsvox-org-feature-fragments-are-optional-built-ins ()
   "Org feature fragments are registered read-only and remain opt-in."
@@ -699,7 +624,7 @@
 
 (ert-deftest emacsvox-org-feature-fragments-compose-with-the-base-scheme ()
   "Optional Org features add to rather than replace inherited presentation."
-  (let ((emacsvox-aural-active-scheme 'org-combined)
+  (let ((emacsvox-aural-active-scheme 'default)
         (emacsvox-aural-enabled-feature-fragments
          '(org-heading-level-labels org-heading-section-cues))
         (emacsvox-aural-user-rules nil)
@@ -726,14 +651,10 @@
          #'emacsvox-aural-action-id
          (emacsvox-aural-render-plan-before plan))
         '(org-fragment-heading-level-label-action
-          org-combined-label
-          org-combined-cue
           org-fragment-heading-section-cue-action)))
-      (should
-       (eq
-        (emacsvox-aural-content-style-voice
-         (emacsvox-aural-render-plan-content plan))
-        'bolden))
+      (should-not
+       (emacsvox-aural-content-style-voice
+        (emacsvox-aural-render-plan-content plan)))
       (should
        (equal
         (emacsvox-aural-concrete-action-text
@@ -905,9 +826,11 @@
            (emacsvox-aural-concrete-plan-after concrete))
           (list expected)))))))
 
-(ert-deftest emacsvox-org-combined-scheme-queues-one-concrete-plan ()
-  "The motivating label, cue, voice, and heading text queue end to end."
-  (let* ((emacsvox-aural-active-scheme 'org-combined)
+(ert-deftest emacsvox-org-presentation-options-queue-one-concrete-plan ()
+  "Enabled label and cue options queue with heading text end to end."
+  (let* ((emacsvox-aural-active-scheme 'default)
+         (emacsvox-aural-enabled-feature-fragments
+          '(org-heading-level-labels org-heading-section-cues))
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
          (emacsvox-aural-buffer-rules nil)
@@ -939,12 +862,11 @@
     (should
      (equal
       (nreverse events)
-      `((text "Heading")
+      '((text "Heading 1")
         (cue "section")
         (code "RESET")
-        (code ,(format "<%s>" (symbol-value 'voice-bolden)))
         (text "Title")
-        (code "RESET"))))))
+        (cue "large-movement"))))))
 
 (ert-deftest emacsvox-org-user-overrides-cover-every-context-axis ()
   "Org headings honor global, mode, derived-mode, module, and buffer rules."

@@ -167,110 +167,6 @@
     (unless (emacsvox-aural-semantic semantic)
       (error "Org requires unregistered aural semantic %S" semantic))))
 
-(defun emacsvox-org--voice-only-rules ()
-  "Return declarative level rules for the voice-only Org example."
-  (mapcar
-   (lambda (entry)
-     (let ((level (car entry))
-           (voice (cdr entry)))
-       (list
-        :id (intern (format "org-voice-heading-level-%d" level))
-        :match (list :role 'heading :module 'org :level level)
-        :render (list :content (list :voice voice)))))
-   emacsvox-org-aural-level-voices))
-
-(defun emacsvox-org--spoken-label-rules ()
-  "Return declarative level rules for the spoken-label Org example."
-  (mapcar
-   (lambda (entry)
-     (let ((level (car entry)))
-       (list
-        :id (intern (format "org-spoken-heading-level-%d" level))
-        :match
-        (list
-         :role 'heading :module 'org :level level
-         :occasion 'navigation)
-        :render
-        (list
-         :before
-         (list
-          (list
-           :id (intern (format "org-heading-level-%d-label" level))
-           :kind 'speech
-           :text (format "Heading %d" level)))
-         :after
-         '(:remove (org-heading-navigation-movement))))))
-   emacsvox-org-aural-level-voices))
-
-(defun emacsvox-org-aural-example-scheme-data ()
-  "Return the built-in data-only Org example schemes."
-  (list
-   (list
-    :schema-version 1
-    :id 'org-voice-only
-    :summary "Org heading levels presented only through distinct voices"
-    :parent 'default
-    :rules
-    (append
-     (emacsvox-org--voice-only-rules)
-     '((:id org-voice-only-remove-navigation-cue
-        :match (:role heading :module org :occasion navigation)
-        :render
-        (:after (:remove (org-heading-navigation-movement)))))))
-   (list
-    :schema-version 1
-    :id 'org-spoken-label
-    :summary "Org heading levels spoken before heading contents"
-    :parent 'default
-    :rules (emacsvox-org--spoken-label-rules))
-   '(:schema-version 1
-     :id org-cue-only
-     :summary "Org headings introduced by one semantic section cue"
-     :parent default
-     :rules
-     ((:id org-cue-only-heading
-       :match (:role heading :module org :occasion navigation)
-       :render
-       (:before
-        ((:id org-heading-section-cue :kind cue :cue section))
-        :after (:remove (org-heading-navigation-movement))))))
-   '(:schema-version 1
-     :id org-combined
-     :summary "Org headings combine a label, cue, and content voice"
-     :parent default
-     :rules
-     ((:id org-combined-heading
-       :match (:role heading :module org :occasion navigation)
-       :render
-       (:before
-        ((:id org-combined-label :kind speech :text "Heading")
-         (:id org-combined-cue :kind cue :cue section))
-        :content (:voice bolden)
-        :after (:remove (org-heading-navigation-movement))))))
-   '(:schema-version 1
-     :id org-before-after
-     :summary "Org headings use explicit speech before and after contents"
-     :parent default
-     :rules
-     ((:id org-before-after-heading
-       :match (:role heading :module org :occasion navigation)
-       :render
-       (:before
-        ((:id org-before-label :kind speech :text "Heading"))
-        :after
-        (:replace
-         ((:id org-after-label :kind speech :text "end heading")))))))
-   '(:schema-version 1
-     :id org-folded-state
-     :summary "Folded Org headings announce their state after contents"
-     :parent default
-     :rules
-     ((:id org-folded-heading-state
-       :match (:role heading :module org :state folded)
-       :render
-       (:after
-        ((:id org-folded-label :kind speech :text "folded"))))))))
-
 (defun emacsvox-org-aural-feature-fragment-data ()
   "Return optional built-in Org presentation feature fragments."
   '((:schema-version 1
@@ -341,7 +237,7 @@
   "Curated data-only previews for optional Org presentation features.")
 
 (defun emacsvox-org-register-aural-presentation ()
-  "Register Org compatibility rules, examples, and optional fragments."
+  "Register Org compatibility rules and optional fragments."
   (dolist (definition emacsvox-org-aural-semantic-definitions)
     (let ((id (car definition))
           (metadata (cdr definition)))
@@ -371,10 +267,6 @@
             :kind cue
             :cue open-object))))))
      :source "emacsvox-aural-provider-org"))
-  (dolist (data (emacsvox-org-aural-example-scheme-data))
-    (unless (emacsvox-aural-scheme-entry (plist-get data :id))
-      (emacsvox-aural-register-scheme
-       data :built-in t :source "emacsvox-aural-provider-org")))
   (dolist (data (emacsvox-org-aural-feature-fragment-data))
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment
