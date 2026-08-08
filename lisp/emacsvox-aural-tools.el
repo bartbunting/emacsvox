@@ -43,6 +43,58 @@ message notification policy."
                   "emacsvox-aural-editor" (scope rule source-buffer))
 (declare-function emacsvox-aural-editor-open-without-rule
                   "emacsvox-aural-editor" (scope rule-id source-buffer))
+
+(defun emacsvox-aural-tools--rule-candidates (&optional context)
+  "Return completion candidates for rules relevant to CONTEXT."
+  (mapcar
+   (lambda (rule)
+     (symbol-name (emacsvox-aural-rule-id rule)))
+   (emacsvox-aural-current-rules
+    (or context (emacsvox-aural-context-at-point)))))
+
+(cl-defun emacsvox-preview-aural-rule
+    (rule-id &optional facts (context nil context-supplied-p))
+  "Resolve, compile, and play RULE-ID against FACTS and CONTEXT."
+  (interactive
+   (list
+    (intern
+     (completing-read
+      "Preview aural rule: "
+      (emacsvox-aural-tools--rule-candidates)
+      nil 'must-match))))
+  (let* ((point-facts (and (null facts) (emacsvox-aural-facts-at-point)))
+         (lookup-context
+          (or context (emacsvox-aural-context-at-point)))
+         (rule
+          (cl-find
+           rule-id
+           (emacsvox-aural-current-rules lookup-context)
+           :key #'emacsvox-aural-rule-id
+           :test #'eq)))
+    (unless rule
+      (user-error "Rule is not available in the current context: %S" rule-id))
+    (pcase-let*
+        ((`(,representative-facts ,representative-context)
+          (emacsvox-aural-inspection-representative-input rule))
+         (facts
+          (copy-tree
+           (or facts point-facts representative-facts)))
+         (context
+          (if (or context-supplied-p point-facts)
+              lookup-context
+            representative-context))
+         (content
+          (or
+           (plist-get facts :content)
+           (and
+            (called-interactively-p 'interactive)
+            (read-string "Preview content: " "Example"))))
+         (facts (if content (plist-put facts :content content) facts))
+         (render (emacsvox-aural-resolve facts context (list rule)))
+         (concrete (emacsvox-aural-compile-plan render facts context)))
+      (emacsvox-aural-preview-play-plan concrete))))
+
+(defalias 'emacsvox-aural-preview-rule #'emacsvox-preview-aural-rule)
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
 
 (defun emacsvox-aural-tools--remap-source-input (&optional record)

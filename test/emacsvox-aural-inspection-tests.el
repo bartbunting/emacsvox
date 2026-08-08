@@ -10,6 +10,7 @@
 (require 'ert)
 (require 'emacsvox-aural-inspection)
 (require 'emacsvox-aural-explanation)
+(require 'emacsvox-aural-feature-fragments)
 
 (ert-deftest emacsvox-aural-inspection-propagates-nested-source ()
   "Nested interfaces retain the original ordinary inspection source."
@@ -103,8 +104,8 @@
              (eq
               (emacsvox-aural-inspection-source-buffer)
               source))
-            (emacsvox-list-aural-schemes))
-          (with-current-buffer "*Aural Schemes*"
+            (emacsvox-aural-list-feature-fragments))
+          (with-current-buffer "*Aural Feature Fragments*"
             (should
              (eq
               (emacsvox-aural-inspection-source-buffer)
@@ -114,7 +115,7 @@
            (list
             source
             (get-buffer "*Aural Semantics*")
-            (get-buffer "*Aural Schemes*")))
+            (get-buffer "*Aural Feature Fragments*")))
         (when (buffer-live-p buffer)
           (kill-buffer buffer))))))
 

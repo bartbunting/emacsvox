@@ -2034,17 +2034,10 @@
             (emacsvox-list-aural-semantics)
             (with-current-buffer "*Aural Semantics*"
               (should (derived-mode-p 'emacsvox-aural-semantics-mode))
-              (should tabulated-list-entries))
-            (emacsvox-list-aural-schemes)
-            (with-current-buffer "*Aural Schemes*"
-              (should (derived-mode-p 'emacsvox-aural-schemes-mode))
-              (should
-               (equal
-                (mapcar #'car tabulated-list-entries)
-                '(default)))))
+              (should tabulated-list-entries)))
         (dolist
             (buffer
-             '("*Emacsvox Aural*" "*Aural Semantics*" "*Aural Schemes*"))
+             '("*Emacsvox Aural*" "*Aural Semantics*"))
           (when (get-buffer buffer)
             (kill-buffer buffer)))
         (kill-buffer source)))))
@@ -2094,7 +2087,6 @@
       (map
        (list
         emacsvox-aural-semantics-mode-map
-        emacsvox-aural-schemes-mode-map
         emacsvox-aural-feature-fragments-mode-map
         emacsvox-aural-overrides-mode-map
         emacsvox-aural-recent-feedback-mode-map
@@ -2102,8 +2094,7 @@
         emacsvox-aural-voice-workbench-mode-map
         emacsvox-aural-voice-palette-previews-mode-map
         emacsvox-aural-voice-tuner-mode-map
-        emacsvox-aural-scheme-editor-mode-map
-        emacsvox-aural-simple-editor-mode-map))
+        emacsvox-aural-scheme-editor-mode-map))
     (should
      (eq (lookup-key map (kbd "h")) #'emacsvox-aural))))
 
@@ -2113,7 +2104,6 @@
       (mode
        '(emacsvox-aural-home-mode
          emacsvox-aural-semantics-mode
-         emacsvox-aural-schemes-mode
          emacsvox-aural-feature-fragments-mode
          emacsvox-aural-overrides-mode
          emacsvox-aural-recent-feedback-mode
@@ -2124,15 +2114,10 @@
       (funcall mode)
       (should
        (eq (key-binding (kbd "q")) #'emacsvox-aural-quit))))
-  (dolist
-      (map
-       (list
-        emacsvox-aural-scheme-editor-mode-map
-        emacsvox-aural-simple-editor-mode-map))
-    (should
-     (eq
-      (lookup-key map (kbd "q"))
-      #'emacsvox-aural-editor-quit)))
+  (should
+   (eq
+    (lookup-key emacsvox-aural-scheme-editor-mode-map (kbd "q"))
+    #'emacsvox-aural-editor-quit))
   (should
    (eq
     (lookup-key emacsvox-aural-voice-tuner-mode-map (kbd "q"))
@@ -2143,9 +2128,7 @@
   (dolist
       (entry
        `((,emacsvox-aural-scheme-editor-mode-map
-          . ,#'emacsvox-aural-editor-save)
-         (,emacsvox-aural-simple-editor-mode-map
-          . ,#'emacsvox-aural-simple-editor-save)))
+          . ,#'emacsvox-aural-editor-save)))
     (let ((map (car entry)) (command (cdr entry)))
       (should (eq (lookup-key map (kbd "w")) command))
       (should (eq (lookup-key map (kbd "C-c C-c")) command))
@@ -2203,28 +2186,8 @@
           . emacsvox-list-aural-semantics)
          (emacsvox-aural-describe-semantic
           . emacsvox-describe-aural-semantic)
-         (emacsvox-aural-list-schemes
-          . emacsvox-list-aural-schemes)
-         (emacsvox-aural-describe-scheme
-          . emacsvox-describe-aural-scheme)
-         (emacsvox-aural-show-scheme-validation
-          . emacsvox-validate-aural-scheme)
          (emacsvox-aural-explain-presentation
           . emacsvox-explain-aural-presentation)
-         (emacsvox-aural-preview-scheme
-          . emacsvox-preview-aural-scheme)
-         (emacsvox-aural-set-scheme
-          . emacsvox-set-aural-scheme)
-         (emacsvox-aural-copy-scheme
-          . emacsvox-copy-aural-scheme)
-         (emacsvox-aural-delete-scheme
-          . emacsvox-delete-aural-scheme)
-         (emacsvox-aural-rename-scheme
-          . emacsvox-rename-aural-scheme)
-         (emacsvox-aural-edit-scheme
-          . emacsvox-edit-aural-scheme)
-         (emacsvox-aural-edit-scheme-advanced
-          . emacsvox-edit-aural-scheme-advanced)
          (emacsvox-aural-edit-rules
           . emacsvox-edit-aural-rules)
          (emacsvox-aural-edit-feature-fragment
@@ -2345,7 +2308,6 @@
                    ("d" . emacsvox-aural-delete-feature-fragment)
                    ("v"
                     . emacsvox-aural-show-feature-fragment-validation)
-                   ("s" . emacsvox-aural-list-schemes)
                    ("h" . emacsvox-aural)
                    ("?" . emacsvox-aural-feature-fragments-help)))
               (should
@@ -3771,27 +3733,6 @@
                  emacsvox-test--core-default-rule-ids
                  '(built-in-rule))))))
         (delete-directory directory t)))))
-
-(ert-deftest emacsvox-edit-aural-scheme-opens-simple-editor ()
-  "The public editing command now opens the simple spoken form."
-  (emacsvox-test--with-aural-tools
-    (emacsvox-test--register-tools-scheme
-     'simple-test
-     '((:id heading
-        :match (:role heading)
-        :render (:content (:voice bolden)))))
-    (let (buffer)
-      (unwind-protect
-          (cl-letf
-              (((symbol-function 'emacsvox-speak-line) #'ignore))
-            (save-window-excursion
-              (setq buffer
-                    (emacsvox-edit-aural-scheme 'simple-test)))
-            (with-current-buffer buffer
-              (should
-               (derived-mode-p 'emacsvox-aural-simple-editor-mode))))
-        (when (buffer-live-p buffer)
-          (kill-buffer buffer))))))
 
 (ert-deftest emacsvox-aural-editor-toggle-reorder-and-save-session ()
   "The accessible working model toggles, reorders, validates, and commits."

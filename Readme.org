@@ -270,11 +270,11 @@ Lock remains independent of profiles.  Use =M-x emacsvox-aural-doctor= when
 bindings, loaded byte-code, personal data, resources, or the backend appear
 wrong; it reports each check and offers only explicit safe repairs.
 
-Use =M-x emacsvox-aural-list-schemes= to browse schemes and
-=M-x emacsvox-aural-edit-scheme= to customize one accessibly.  The generated
+The generated
 [[file:etc/aural-presentation-reference.org][Aural Presentation Reference]]
-documents user controls, scheme and module authoring, registered semantics,
-sound packs, voice palettes, migration, queue ordering, and spatial fallback.
+documents user controls, presentation-option and module authoring, registered
+semantics, sound packs, voice palettes, migration, queue ordering, and spatial
+fallback.
 
 Scheme rules can also target a named visual face as an explicit compatibility
 fallback.  A face presentation may append an icon before or after the text and

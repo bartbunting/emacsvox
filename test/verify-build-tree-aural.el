@@ -51,7 +51,6 @@
           emacsvox-aural-explanation
           emacsvox-aural-tools
           emacsvox-aural-editor
-          emacsvox-aural-simple-editor
           emacsvox-aural-doctor
           emacsvox-aural-profiles
           emacsvox-aural-voice-palettes
@@ -114,7 +113,6 @@
           emacsvox-aural-editor--scope-label
           emacsvox-aural-editor-open-prefilled-rule
           emacsvox-aural-editor-normalized-rules
-          emacsvox-aural-simple-editor--humanize
           emacsvox-aural-doctor--finding
           emacsvox-aural-profiles--ids
           emacsvox-aural-voice-palettes--active-id
@@ -139,6 +137,19 @@
     (let ((file (symbol-file function 'defun)))
       (unless (and file (string-suffix-p ".elc" file))
         (error "%S was not loaded from normal byte-code: %S" function file))))
+  (dolist
+      (feature
+       '(emacsvox-aural-scheme-manager emacsvox-aural-simple-editor))
+    (when (featurep feature)
+      (error "Retired scheme interface was loaded: %S" feature)))
+  (dolist
+      (command
+       '(emacsvox-list-aural-schemes
+         emacsvox-set-aural-scheme
+         emacsvox-edit-aural-scheme
+         emacsvox-edit-aural-scheme-advanced))
+    (when (fboundp command)
+      (error "Retired scheme command remains available: %S" command)))
   (unless
       (string-suffix-p
        ".elc" (or (symbol-file 'voice-animate 'defvar) ""))

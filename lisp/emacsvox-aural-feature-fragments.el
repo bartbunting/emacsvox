@@ -1366,7 +1366,7 @@ announce the selected example after displaying the buffer."
       "N create personal    c copy as personal\n"
       "e edit personal      d delete personal\n"
       "v validate           g refresh\n"
-      "s scheme manager     h aural home\n"
+      "h aural home\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -1408,7 +1408,6 @@ announce the selected example after displaying the buffer."
        ("e" . emacsvox-aural-feature-fragments-edit)
        ("d" . emacsvox-aural-delete-feature-fragment)
        ("v" . emacsvox-aural-show-feature-fragment-validation)
-       ("s" . emacsvox-aural-list-schemes)
        ("h" . emacsvox-aural)
        ("?" . emacsvox-aural-feature-fragments-help)))
   (define-key

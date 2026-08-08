@@ -138,6 +138,10 @@ are the user-facing composition controls.
 The six selectable Org demonstration schemes have been retired.  Their useful
 user choices remain available through the existing Org Presentation Options,
 without replacing the compatibility baseline.
+Normal startup and builds no longer load the retired scheme manager or simple
+scheme editor, and their interactive list, selection, and edit commands are no
+longer exposed.  The declarative rule editor remains available for personal
+Presentation Options and presentation overrides.
 The semantic vocabulary list now provides the same titled-cell and boundary
 navigation.  Preferred interactive command aliases share the discoverable
 ~emacsvox-aural-~ prefix; established verb-first names remain compatible.

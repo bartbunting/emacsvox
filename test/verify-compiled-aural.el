@@ -119,7 +119,6 @@
          "emacsvox-aural-transport"
          "emacsvox-aural-preview"
          "emacsvox-aural-validation"
-         "emacsvox-aural-scheme-manager"
          "emacsvox-aural-semantics"
          "emacsvox-aural-explanation"
          "emacsvox-aural-tools"
@@ -129,7 +128,6 @@
          "emacsvox-aural-routing-profiles"
          "emacsvox-aural-editor"
          "emacsvox-aural-overrides"
-         "emacsvox-aural-simple-editor"
          "emacsvox-aural-doctor"
          "emacsvox-aural-profiles"
          "emacsvox-aural-voice-palettes"
@@ -194,7 +192,6 @@
          emacsvox-aural-preview-play-runs
          emacsvox-aural-validation--report
          emacsvox-aural-inspection-source-buffer
-         emacsvox-aural-scheme-manager--scheme-row
          emacsvox-aural-semantics--set-entries
          emacsvox-aural-explanation--training-presented
          emacsvox-aural-recent-feedback--entries
@@ -207,7 +204,6 @@
          emacsvox-aural-editor-open-prefilled-rule
          emacsvox-aural-editor-normalized-rules
          emacsvox-aural-overrides--collect
-         emacsvox-aural-simple-editor--humanize
          emacsvox-aural-doctor--finding
          emacsvox-aural-profiles--ids
          emacsvox-aural-voice-palettes--active-id
@@ -228,6 +224,19 @@
        ".elc" (or (symbol-file 'voice-animate 'defvar) ""))
     (error "voice-animate was not loaded from byte-code: %S"
            (symbol-file 'voice-animate 'defvar)))
+  (dolist
+      (feature
+       '(emacsvox-aural-scheme-manager emacsvox-aural-simple-editor))
+    (when (featurep feature)
+      (error "Retired scheme interface was loaded: %S" feature)))
+  (dolist
+      (command
+       '(emacsvox-list-aural-schemes
+         emacsvox-set-aural-scheme
+         emacsvox-edit-aural-scheme
+         emacsvox-edit-aural-scheme-advanced))
+    (when (fboundp command)
+      (error "Retired scheme command remains available: %S" command)))
   (unless (eq (lookup-key emacsvox-keymap (kbd "H")) 'emacsvox-aural)
     (error "Compiled keymap does not bind C-e H to the aural home"))
   (unless

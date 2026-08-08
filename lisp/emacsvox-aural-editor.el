@@ -20,8 +20,6 @@
 (require 'emacsvox-aural-preview)
 (require 'emacsvox-aural-providers)
 
-(declare-function emacsvox-aural-simple-editor-open
-                  "emacsvox-aural-simple-editor" (&optional scheme))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
@@ -1476,28 +1474,13 @@ the ordinary source whose buffer-local rules should be edited."
             (set-window-point window position)))))
     buffer))
 
-(defun emacsvox-edit-aural-scheme-advanced (&optional scheme)
-  "Open the advanced declarative editor for personal SCHEME."
-  (interactive)
-  (emacsvox-edit-aural-rules 'scheme scheme))
-
 (defun emacsvox-edit-aural-feature-fragment (&optional fragment)
   "Open the declarative editor for personal feature FRAGMENT."
   (interactive)
   (emacsvox-edit-aural-rules 'fragment fragment))
 
-(defun emacsvox-edit-aural-scheme (&optional scheme)
-  "Open the simple spoken editor for personal SCHEME."
-  (interactive)
-  (require 'emacsvox-aural-simple-editor)
-  (emacsvox-aural-simple-editor-open scheme))
-
 (defalias 'emacsvox-aural-edit-rules
   #'emacsvox-edit-aural-rules)
-(defalias 'emacsvox-aural-edit-scheme-advanced
-  #'emacsvox-edit-aural-scheme-advanced)
-(defalias 'emacsvox-aural-edit-scheme
-  #'emacsvox-edit-aural-scheme)
 (defalias 'emacsvox-aural-edit-feature-fragment
   #'emacsvox-edit-aural-feature-fragment)
 
