@@ -1516,31 +1516,34 @@ ANNOUNCEMENT overrides the normal setting description."
     dimension))
 
 (defun emacsvox-aural-voice-tuner-increase ()
-  "Increase the current numeric dimension and audition it."
+  "Increase the current numeric dimension and audition its new value."
   (interactive)
   (let* ((dimension (emacsvox-aural-voice-tuner--numeric-dimension))
          (current (emacsvox-aural-voice-tuner--value dimension))
          (value (if (numberp current) (1+ current) 5)))
     (when (> value 9)
       (user-error "%s is already at nine" dimension))
-    (emacsvox-aural-voice-tuner--set-value dimension value)))
+    (emacsvox-aural-voice-tuner--set-value
+     dimension value (number-to-string value))))
 
 (defun emacsvox-aural-voice-tuner-decrease ()
-  "Decrease the current numeric dimension and audition it."
+  "Decrease the current numeric dimension and audition its new value."
   (interactive)
   (let* ((dimension (emacsvox-aural-voice-tuner--numeric-dimension))
          (current (emacsvox-aural-voice-tuner--value dimension))
          (value (if (numberp current) (1- current) 5)))
     (when (< value 0)
       (user-error "%s is already at zero" dimension))
-    (emacsvox-aural-voice-tuner--set-value dimension value)))
+    (emacsvox-aural-voice-tuner--set-value
+     dimension value (number-to-string value))))
 
 (defun emacsvox-aural-voice-tuner-set-digit ()
   "Set the current numeric dimension from the typed digit and audition it."
   (interactive)
   (emacsvox-aural-voice-tuner--set-value
    (emacsvox-aural-voice-tuner--numeric-dimension)
-   (- last-command-event ?0)))
+   (- last-command-event ?0)
+   (char-to-string last-command-event)))
 
 (defun emacsvox-aural-voice-tuner-use-default ()
   "Use the adapter default for the current dimension and audition it."

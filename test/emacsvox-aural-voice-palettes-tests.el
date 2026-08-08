@@ -592,6 +592,25 @@
         (dolist (buffer buffers)
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
 
+(ert-deftest emacsvox-aural-voice-tuner-adjustments-announce-only-values ()
+  "Horizontal and digit adjustments omit repeated setting descriptions."
+  (with-temp-buffer
+    (emacsvox-aural-voice-tuner-mode)
+    (setq emacsvox-aural-voice-tuner-working-style '(:echo 7))
+    (let (announcements)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-voice-tuner--current-dimension)
+            (lambda () 'echo))
+           ((symbol-function 'emacsvox-aural-voice-tuner-refresh) #'ignore)
+           ((symbol-function 'emacsvox-aural-voice-tuner-audition)
+            (lambda (&optional announcement)
+              (push announcement announcements))))
+        (emacsvox-aural-voice-tuner-increase)
+        (emacsvox-aural-voice-tuner-decrease)
+        (let ((last-command-event ?9))
+          (emacsvox-aural-voice-tuner-set-digit)))
+      (should (equal (nreverse announcements) '("8" "7" "9"))))))
+
 (ert-deftest emacsvox-aural-voice-tuner-auditions-selected-engine-route ()
   "Route-aware tuning uses normalized values and engine-specific support."
   (with-temp-buffer
@@ -792,7 +811,9 @@
                        (emacsvox-aural-concrete-content-text
                         (emacsvox-aural-concrete-plan-content
                          (car preview-plans)))))
-                  (should (string-match-p "Average Pitch 5" text))
+                  (should (string-prefix-p "5 " text))
+                  (should-not (string-match-p "Average Pitch" text))
+                  (should-not (string-match-p "Supported By" text))
                   (should
                    (string-match-p
                     "Aside voice. The quick brown fox jumps over the lazy dog."
