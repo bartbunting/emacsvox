@@ -84,7 +84,7 @@ What are the main navigation and inspection keys in Aural Home?
 * 05. Which single-key routes are available from Aural Home?
 ** Front
 Which Aural Home keys open overrides, recent feedback, profiles, voice
-palettes, and diagnostics, and which keys toggle compatibility controls?
+palettes, and diagnostics?
 
 ** Back
 - =O=: presentation overrides.
@@ -92,8 +92,6 @@ palettes, and diagnostics, and which keys toggle compatibility controls?
 - =P=: presentation profiles.
 - =V=: voice palettes.
 - =D=: Aural Doctor.
-- =v=: toggle visual-face presentation rules.
-- =l=: toggle legacy compatibility voices.
 
 These keys apply in Aural Home; the same letters can mean something different
 inside another Aural manager.

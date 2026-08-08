@@ -2587,17 +2587,17 @@ Implemented contract:
   gate semantic rules or explicit =:legacy-face= scheme rules.
 - =emacsvox-aural-face-presentation-enabled= is a separate global,
   default-on control for every rule containing an explicit =:legacy-face=
-  selector.  =M-x emacsvox-aural-toggle-face-presentation=, the
-  =Visual face presentation= home row, and =v= in the aural home toggle it
-  without changing Voice Lock or semantic presentation.
+  selector.  =M-x emacsvox-aural-toggle-face-presentation= toggles it without
+  changing Voice Lock or semantic presentation.  It remains an advanced
+  authoring and diagnostic control rather than an Aural Home row.
 - Source contexts freeze =:face-presentation-enabled= and
   =:voice-lock-enabled=.  Matching, legacy fallback, concrete presentation,
   point explanation, preview, and continuous speech therefore use one
   reproducible policy snapshot.
 - Spoken and detailed explanation state both controls and their division of
-  responsibility.  The aural home reports the global face state and Voice
-  Lock state in its remembered source buffer; the Aural Doctor reports the
-  same policy without changing it.
+  responsibility.  The Aural Doctor reports the policy without changing it;
+  Voice Lock remains directly available through =C-e d v= for the current
+  buffer and =C-e d C-v= globally.
 - The four policy combinations are covered with an explicit face cue and
   voice, a legacy personality voice, and a semantic voice.  Disabling face
   presentation removes only explicit face-rule contributions; disabling

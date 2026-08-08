@@ -123,6 +123,10 @@ The selected presentation profile is now applied completely at startup rather
 than restoring only its identity and option list.  Diverged profiles name the
 differing setting areas and direct users to press =v= for saved-versus-live
 details, including the source buffer used for compatibility-voice comparison.
+Aural Home no longer duplicates the visual-face policy or buffer-local Voice
+Lock toggles.  The advanced face-rule policy remains available through
+=M-x emacsvox-aural-toggle-face-presentation= and the Aural Doctor; use
+=C-e d v= for Voice Lock in the current buffer and =C-e d C-v= globally.
 The semantic vocabulary list now provides the same titled-cell and boundary
 navigation.  Preferred interactive command aliases share the discoverable
 ~emacsvox-aural-~ prefix; established verb-first names remain compatible.
