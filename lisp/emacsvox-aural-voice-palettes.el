@@ -950,26 +950,20 @@ replaces live state.  Return the value of MUTATION."
    (capitalize (emacsvox-aural-humanize voice))
    text))
 
-(defun emacsvox-aural-voice-palettes--queue-compiled-preview
+(defun emacsvox-aural-voice-palettes--compiled-preview-plan
     (compiled label text)
-  "Queue COMPILED voice speaking comparison TEXT under voice LABEL."
+  "Return a preview plan for COMPILED voice and comparison TEXT under LABEL."
   (let ((command (emacsvox-aural-compiled-voice-command compiled)))
     (when (eq command 'inaudible)
       (user-error "Voice %s suppresses speech" label))
-    (tts--protocol-queue-code (tts-voice-reset-code))
-    (when command
-      (tts--protocol-queue-code command))
-    (tts--protocol-queue-text
-     (emacsvox-aural-voice-palettes--preview-sample label text))
-    (tts--protocol-queue-code (tts-voice-reset-code))
-    compiled))
+    (emacsvox-aural-preview-compiled-voice-plan
+     compiled
+     (emacsvox-aural-voice-palettes--preview-sample label text))))
 
-(defun emacsvox-aural-voice-palettes--queue-preview
+(defun emacsvox-aural-voice-palettes--preview-plan
     (palette voice text)
-  "Queue VOICE from PALETTE speaking comparison TEXT.
-
-Return the compiled voice without dispatching the speech queue."
-  (emacsvox-aural-voice-palettes--queue-compiled-preview
+  "Return a preview plan for VOICE from PALETTE speaking comparison TEXT."
+  (emacsvox-aural-voice-palettes--compiled-preview-plan
    (emacsvox-aural-compile-voice-style voice palette)
    voice text))
 
@@ -979,27 +973,30 @@ Return the compiled voice without dispatching the speech queue."
   (let ((voice
          (emacsvox-aural-voice-palette-previews--current-voice)))
     (emacsvox-aural-voice-palette-previews--remember-current)
-    (emacsvox-aural-preview-begin t)
-    (let ((compiled
-           (emacsvox-aural-voice-palettes--queue-preview
+    (let ((plan
+           (emacsvox-aural-voice-palettes--preview-plan
             emacsvox-aural-voice-palette-previews-palette
             voice
             emacsvox-aural-voice-palette-previews-text)))
-      (emacsvox-aural-preview-dispatch compiled))))
+      (emacsvox-aural-preview-play-plan plan))))
 
 (defun emacsvox-aural-voice-palette-previews-play-all ()
   "Audition every effective voice using the same comparison text."
   (interactive)
-  (emacsvox-aural-preview-begin t)
   (let ((count 0)
-        unavailable)
+        unavailable
+        runs)
     (dolist (entry emacsvox-aural-voice-palette-previews-entries)
       (condition-case error
-          (progn
-            (emacsvox-aural-voice-palettes--queue-preview
-             emacsvox-aural-voice-palette-previews-palette
-             (car entry)
-             emacsvox-aural-voice-palette-previews-text)
+          (let* ((plan
+                  (emacsvox-aural-voice-palettes--preview-plan
+                   emacsvox-aural-voice-palette-previews-palette
+                   (car entry)
+                   emacsvox-aural-voice-palette-previews-text))
+                 (text
+                  (emacsvox-aural-concrete-content-text
+                   (emacsvox-aural-concrete-plan-content plan))))
+            (push (list plan text nil) runs)
             (cl-incf count))
         (error
          (push
@@ -1007,7 +1004,7 @@ Return the compiled voice without dispatching the speech queue."
           unavailable))))
     (unless (> count 0)
       (user-error "No voices in this palette can be previewed"))
-    (emacsvox-aural-preview-dispatch)
+    (emacsvox-aural-preview-play-runs (nreverse runs))
     (emacsvox-aural-preview-message
      "Previewing %d voice%s%s; press s to stop"
      count
@@ -1439,19 +1436,19 @@ in that overlay so subsequent edits do not create more palettes."
                  (emacsvox-aural-voice-tuner-refresh
                   (tabulated-list-get-id)))))))
         emacsvox-aural-voice-tuner-preview-result)
-    (let ((compiled
-           (emacsvox-aural-compile-voice-style
-            emacsvox-aural-voice-tuner-working-style
-            emacsvox-aural-voice-tuner-palette)))
-      (emacsvox-aural-preview-begin t)
-      (when announcement
-        (tts--protocol-queue-code (tts-voice-reset-code))
-        (tts--protocol-queue-text announcement))
-      (emacsvox-aural-voice-palettes--queue-compiled-preview
-       compiled
-       emacsvox-aural-voice-tuner-voice
-       emacsvox-aural-voice-tuner-preview-text)
-      (emacsvox-aural-preview-dispatch)
+    (let* ((compiled
+            (emacsvox-aural-compile-voice-style
+             emacsvox-aural-voice-tuner-working-style
+             emacsvox-aural-voice-tuner-palette))
+           (text
+            (concat
+             (and announcement (concat announcement " "))
+             (emacsvox-aural-voice-palettes--preview-sample
+              emacsvox-aural-voice-tuner-voice
+              emacsvox-aural-voice-tuner-preview-text)))
+           (plan
+            (emacsvox-aural-preview-compiled-voice-plan compiled text)))
+      (emacsvox-aural-preview-play-plan plan)
       (when announcement
         (emacsvox-aural-preview-message "%s" announcement))
       compiled)))

@@ -667,6 +667,39 @@
         (emacsvox-aural-voice-tuner--support-description 'reverb)
         "omitted by eloquence")))))
 
+(ert-deftest emacsvox-aural-voice-tuner-auditions-portable-effects-without-route ()
+  "Palette tuning carries the complete unsaved style without a physical route."
+  (with-temp-buffer
+    (emacsvox-aural-voice-tuner-mode)
+    (setq
+     emacsvox-aural-voice-tuner-palette 'test
+     emacsvox-aural-voice-tuner-voice 'lighten-extra
+     emacsvox-aural-voice-tuner-working-style
+     '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5)
+     emacsvox-aural-voice-tuner-preview-text "Shared sample."
+     emacsvox-aural-voice-tuner-route-selector nil)
+    (let (preview-plan)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-compile-voice-style)
+            (lambda (definition _palette)
+              (emacsvox-aural--make-compiled-voice
+               :command "[[logical_voice acss-a6]]"
+               :request (copy-tree definition)
+               :style (copy-tree definition)
+               :capability '(:adapter omnivox))))
+           ((symbol-function 'emacsvox-aural-preview-play-plan)
+            (lambda (plan) (setq preview-plan plan))))
+        (emacsvox-aural-voice-tuner-audition))
+      (let ((content (emacsvox-aural-concrete-plan-content preview-plan)))
+        (should
+         (equal
+          (emacsvox-aural-concrete-content-voice-style content)
+          '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5)))
+        (should
+         (equal
+          (emacsvox-aural-concrete-content-text content)
+          "Lighten Extra voice. Shared sample."))))))
+
 (ert-deftest emacsvox-aural-rich-voice-style-validates-and-persists-effects ()
   "Portable palette styles retain rate and post-synthesis dimensions."
   (emacsvox-test--with-voice-palettes
@@ -690,8 +723,7 @@
   (emacsvox-test--with-voice-palettes
     (emacsvox-aural-register-voice-palette-data
      emacsvox-test--voice-palette-data)
-    (let (buffers events
-          (stops 0))
+    (let (buffers preview-plans)
       (unwind-protect
           (save-window-excursion
             (cl-letf
@@ -706,19 +738,10 @@
                   (lambda (&rest settings) settings))
                  ((symbol-function 'tts-get-voice-command)
                   (lambda (voice) (format "<%s>" voice)))
-                 ((symbol-function 'emacsvox-aural--ensure-speaker) #'ignore)
-                 ((symbol-function 'emacsvox-aural-preview-stop)
-                  (lambda () (cl-incf stops)))
+                 ((symbol-function 'emacsvox-aural-preview-play-plan)
+                  (lambda (plan) (push plan preview-plans)))
                  ((symbol-function 'emacsvox-aural-preview-message)
-                  #'ignore)
-                 ((symbol-function 'tts-voice-reset-code)
-                  (lambda () "RESET"))
-                 ((symbol-function 'tts--protocol-queue-code)
-                  (lambda (code) (push (list 'code code) events)))
-                 ((symbol-function 'tts--protocol-queue-text)
-                  (lambda (text) (push (list 'text text) events)))
-                 ((symbol-function 'tts--protocol-dispatch)
-                  (lambda () (push 'dispatch events))))
+                  #'ignore))
               (setq buffers (emacsvox-test--open-reading-voice-tuner 'aside))
               (with-current-buffer (cadr buffers)
                 (should (emacsvox-aural-voice-tuner--goto 'average-pitch))
@@ -737,19 +760,15 @@
                    (emacsvox-aural-voice 'aside 'reading)
                    :average-pitch)
                   4))
-                (should
-                 (cl-find-if
-                  (lambda (event)
-                    (and
-                     (eq (car-safe event) 'text)
-                     (string-match-p "Average Pitch 5" (cadr event))))
-                  events))
-                (should
-                 (member
-                  '(text
-                    "Aside voice. The quick brown fox jumps over the lazy dog.")
-                  events))
-                (setq events nil)
+                (let ((text
+                       (emacsvox-aural-concrete-content-text
+                        (emacsvox-aural-concrete-plan-content
+                         (car preview-plans)))))
+                  (should (string-match-p "Average Pitch 5" text))
+                  (should
+                   (string-match-p
+                    "Aside voice. The quick brown fox jumps over the lazy dog."
+                    text)))
                 (emacsvox-aural-voice-tuner-undo)
                 (should
                  (=
@@ -758,7 +777,7 @@
                    :average-pitch)
                   4))
                 (should-not emacsvox-aural-voice-tuner-dirty)))
-            (should (= stops 2)))
+            (should (= (length preview-plans) 2)))
         (dolist (buffer buffers)
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
 
@@ -947,28 +966,23 @@
       (should dismissed))))
 
 (ert-deftest emacsvox-aural-voice-palette-preview-queues-labelled-comparison ()
-  "One preview stops manager speech and labels shared text in the voice."
+  "One preview builds a concrete plan containing the labelled shared text."
   (emacsvox-test--with-voice-palettes
     (emacsvox-aural-register-voice-palette-data
      emacsvox-test--voice-palette-data)
-    (let (events
-          (stops 0))
+    (let (preview-plan)
       (unwind-protect
           (save-window-excursion
             (cl-letf
-                (((symbol-function 'emacsvox-aural--ensure-speaker) #'ignore)
-                 ((symbol-function 'emacsvox-aural-preview-stop)
-                  (lambda () (cl-incf stops)))
-                 ((symbol-function 'tts-get-voice-command)
-                  (lambda (voice) (format "<%s>" voice)))
-                 ((symbol-function 'tts-voice-reset-code)
-                  (lambda () "RESET"))
-                 ((symbol-function 'tts--protocol-queue-code)
-                  (lambda (code) (push (list 'code code) events)))
-                 ((symbol-function 'tts--protocol-queue-text)
-                  (lambda (text) (push (list 'text text) events)))
-                 ((symbol-function 'tts--protocol-dispatch)
-                  (lambda () (push 'dispatch events))))
+                (((symbol-function 'emacsvox-aural-compile-voice-style)
+                  (lambda (&rest _)
+                    (emacsvox-aural--make-compiled-voice
+                     :command "[[logical_voice heading]]"
+                     :request 'heading
+                     :style '(:average-pitch 6 :reverb 7)
+                     :capability '(:adapter omnivox))))
+                 ((symbol-function 'emacsvox-aural-preview-play-plan)
+                  (lambda (plan) (setq preview-plan plan))))
               (emacsvox-aural-list-voice-palette-previews 'reading)
               (with-current-buffer "*Aural Voice Palette Preview*"
                 (should
@@ -976,21 +990,15 @@
                 (emacsvox-aural-voice-palette-previews-play))))
         (when (get-buffer "*Aural Voice Palette Preview*")
           (kill-buffer "*Aural Voice Palette Preview*")))
-      (should (= stops 1))
-      (should
-       (equal
-        (nreverse events)
-        `((code "RESET")
-          (code
-           ,(format
-             "<%s>"
-             (if (boundp 'voice-bolden)
-                 (symbol-value 'voice-bolden)
-               'voice-bolden)))
-          (text
-           "Heading voice. The quick brown fox jumps over the lazy dog.")
-          (code "RESET")
-          dispatch))))))
+      (let ((content (emacsvox-aural-concrete-plan-content preview-plan)))
+        (should
+         (equal
+          (emacsvox-aural-concrete-content-text content)
+          "Heading voice. The quick brown fox jumps over the lazy dog."))
+        (should
+         (equal
+          (emacsvox-aural-concrete-content-voice-style content)
+          '(:average-pitch 6 :reverb 7)))))))
 
 (ert-deftest emacsvox-aural-voice-tuner-offers-portable-and-exact-families ()
   "Enumerated adapters expose generic choices beside native base voices."
@@ -1077,25 +1085,17 @@
        :entries
        ((first :personality voice-bolden)
         (second :personality voice-animate))))
-    (let (events)
+    (let (preview-runs)
       (unwind-protect
           (save-window-excursion
             (cl-letf
-                (((symbol-function 'emacsvox-aural--ensure-speaker) #'ignore)
-                 ((symbol-function 'emacsvox-aural-preview-stop)
-                  #'ignore)
-                 ((symbol-function 'emacsvox-aural-preview-message)
+                (((symbol-function 'emacsvox-aural-preview-message)
                   #'ignore)
                  ((symbol-function 'tts-get-voice-command)
                   (lambda (voice) (format "<%s>" voice)))
-                 ((symbol-function 'tts-voice-reset-code)
-                  (lambda () "RESET"))
-                 ((symbol-function 'tts--protocol-queue-code)
-                  (lambda (code) (push (list 'code code) events)))
-                 ((symbol-function 'tts--protocol-queue-text)
-                  (lambda (text) (push (list 'text text) events)))
-                 ((symbol-function 'tts--protocol-dispatch)
-                  (lambda () (push 'dispatch events))))
+                 ((symbol-function 'emacsvox-aural-preview-play-runs)
+                  (lambda (runs &optional _transaction-id)
+                    (setq preview-runs runs))))
               (emacsvox-aural-list-voice-palette-previews 'pair)
               (with-current-buffer "*Aural Voice Palette Preview*"
                 (should
@@ -1106,15 +1106,15 @@
                   2)))))
         (when (get-buffer "*Aural Voice Palette Preview*")
           (kill-buffer "*Aural Voice Palette Preview*")))
-      (should (= (cl-count 'dispatch events) 1))
+      (should (= (length preview-runs) 2))
       (should
        (equal
         (sort
          (mapcar
-          #'cadr
-          (cl-remove-if-not
-           (lambda (event) (eq (car-safe event) 'text))
-           events))
+          (lambda (run)
+            (emacsvox-aural-concrete-content-text
+             (emacsvox-aural-concrete-plan-content (car run))))
+          preview-runs)
          #'string-lessp)
         '("First voice. The quick brown fox jumps over the lazy dog."
           "Second voice. The quick brown fox jumps over the lazy dog."))))))
