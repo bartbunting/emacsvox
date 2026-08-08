@@ -642,7 +642,14 @@ Symbol and string keys with the same printed name are equivalent."
       (list
        :status 'failed :completion-guarantee 'playback
        :requested (copy-tree (plist-get entry :selector))
-       :realized nil :degraded-acss nil
+       :realized nil
+       :degraded-acss
+       (append
+        (tts--voice-preview-dimensions (plist-get entry :acss))
+        (and
+         (numberp (plist-get entry :rate-offset))
+         (not (zerop (plist-get entry :rate-offset)))
+         '(rate-offset)))
        :degraded-effects
        (tts--voice-preview-dimensions (plist-get entry :effects))
        :message (or (plist-get response :message)

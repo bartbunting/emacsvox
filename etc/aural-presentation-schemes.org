@@ -3732,6 +3732,34 @@ a start/EOF smoke test.  That direct cross-target tree does not stage
 unavailable and retained WinRT; installed Emacsvox runtime staging remains the
 source of optional eSpeak and proprietary helper assets.
 
+** DONE Slice 59: Relative Voice Rate
+CLOSED: [2026-08-08 Sat]
+
+- Replace the palette's ambiguous absolute zero-to-nine =:rate= with a signed
+  =:rate-offset= measured in direct points on the live global zero-to-100
+  scale.  The portable range is =-20..20=; zero and nil mean unchanged.
+- Negotiate Omnivox =relative_rate_v1= independently from timeline and preview
+  support.  Structured speech and exact preview carry the same offset, apply
+  it after route selection, and reuse each engine's existing normalized rate
+  mapping and degradation reporting.
+- Keep old palette files loadable without reproducing the slow-rate bug.
+  Legacy =:rate 0= is neutral.  A nonzero legacy absolute value is ignored,
+  reported as requiring retuning, and removed when the edited style is next
+  saved through the tuner.
+- Expose Relative Rate in the tuner with one-point left/right adjustment,
+  signed =-20..20= entry, concise slower/faster announcements, exact-route
+  preview, and a visible older-server/unsupported-engine fallback.
+
+Deliverable: if the global rate is 75, a voice offset of =-1= speaks at 74 and
+=+4= speaks at 79 on WinRT, Eloquence, DECtalk, and eSpeak when that engine
+supports rate.  Changing the global rate retains the relative relationship;
+the palette never replaces the user's global rate.
+
+Checks: bounded Rust protocol, conversion, preview, and capability tests;
+focused Emacsvox validation, compiler, timeline, workbench, tuner, preview,
+and compatibility tests; cross-target and live integration checks follow the
+normal Omnivox deployment gate.
+
 ** Deferred Cross-Repository Work Retained by the Plan
 
 Voice Workbench completion does not imply that the remaining Omnivox engine
@@ -3853,6 +3881,10 @@ For Slice 50, keep routing profiles separate from portable voice palettes while
 presenting them together in the Voice Workbench.  Exact machine-local voice IDs
 require explicit local scope; portable styles and property selectors continue
 to re-resolve on each environment.
+
+For Slice 59, define portable voice rate as a signed direct-point offset from
+the current global zero-to-100 rate.  Do not normalize the palette value as an
+absolute engine rate, and do not silently approximate it on an older server.
 
 * Open Decisions
 

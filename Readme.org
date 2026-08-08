@@ -95,6 +95,13 @@ voice palette is built in, =t= offers to create and activate an editable
 personal copy before tuning.  Use =a= to assign an installed voice and =j= to
 review a portable route suggestion.  Exact native IDs are machine-local;
 language, gender, and engine default selectors re-resolve on each machine.
+The tuner's Relative Rate is a signed direct-point offset from the current
+global zero-to-100 rate: at 75, =-1= speaks at 74 and =+4= at 79.  Zero or an
+unset value means unchanged.  Omnivox applies it after route selection, so the
+same effective normalized rate reaches WinRT, Eloquence, DECtalk, or eSpeak.
+An older server or an engine without rate support keeps the palette setting
+but reports it as omitted.  Legacy palette =:rate 0= is safely neutral;
+nonzero legacy absolute values are ignored and identified for retuning.
 Use =m= to stage migration from existing Omnivox settings or the current
 palette, =N= for routing presets, and =E= or =I= to exchange one data-only
 profile.  No inferred route is saved without review.
