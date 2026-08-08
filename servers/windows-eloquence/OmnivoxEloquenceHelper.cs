@@ -70,7 +70,8 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
     }
 
     public OmnivoxCaptureResult Synthesize(string text, string voiceId,
-        double rate, double pitch, double volume,
+        double rate, double pitch, double? pitchRange, double? stress,
+        double? richness, double volume,
         OmnivoxHelperAnchor[] anchors)
     {
         // Existing Emacsvox Eloquence operation treats 75 as its normal

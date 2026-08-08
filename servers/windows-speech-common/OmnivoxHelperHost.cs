@@ -223,17 +223,19 @@ internal interface IOmnivoxCaptureEngine : IDisposable
     OmnivoxHelperVoice[] Voices { get; }
     OmnivoxHelperCapabilities Capabilities { get; }
     OmnivoxCaptureResult Synthesize(string text, string voiceId, double rate,
-        double pitch, double volume, OmnivoxHelperAnchor[] anchors);
+        double pitch, double? pitchRange, double? stress, double? richness,
+        double volume, OmnivoxHelperAnchor[] anchors);
     void Stop();
 }
 
 /// <summary>
-/// Engine-neutral implementation of Omnivox helper protocol versions 1 and 2.
+/// Engine-neutral implementation of Omnivox helper protocol versions 1-3.
 /// Native adapters provide inventory, captured PCM, and interruption only.
 /// </summary>
 internal sealed class OmnivoxHelperHost
 {
-    private const int LatestProtocolVersion = 2;
+    private const int LatestProtocolVersion = 3;
+    private const int AnchorProtocolVersion = 2;
     private const int LegacyProtocolVersion = 1;
     private const int MaximumFrameBytes = 1024 * 1024;
     private const int MaximumTextBytes = 256 * 1024;
@@ -264,6 +266,9 @@ internal sealed class OmnivoxHelperHost
         internal string VoiceId;
         internal double Rate;
         internal double Pitch;
+        internal double? PitchRange;
+        internal double? Stress;
+        internal double? Richness;
         internal double Volume;
         internal OmnivoxHelperAnchor[] Anchors;
         internal volatile bool Cancelled;
@@ -407,8 +412,8 @@ internal sealed class OmnivoxHelperHost
 
             requestId = ReadUnsigned(request, "request_id");
             int version = ReadInteger(request, "protocol_version");
-            if (version != LatestProtocolVersion &&
-                version != LegacyProtocolVersion)
+            if (version < LegacyProtocolVersion ||
+                version > LatestProtocolVersion)
             {
                 throw Fault("unsupported_version",
                     "unsupported helper protocol version " + version, false);
@@ -486,8 +491,7 @@ internal sealed class OmnivoxHelperHost
                 "supported_protocol_versions must be an array", false);
         }
         int count = 0;
-        bool supportsLatest = false;
-        bool supportsLegacy = false;
+        int highestSupported = 0;
         HashSet<int> seen = new HashSet<int>();
         foreach (object item in versions)
         {
@@ -499,19 +503,21 @@ internal sealed class OmnivoxHelperHost
                 throw Fault("invalid_request",
                     "supported_protocol_versions is invalid", false);
             }
-            supportsLatest |= version == LatestProtocolVersion;
-            supportsLegacy |= version == LegacyProtocolVersion;
+            if (version >= LegacyProtocolVersion &&
+                version <= LatestProtocolVersion)
+            {
+                highestSupported = Math.Max(highestSupported, version);
+            }
         }
         if (count == 0 ||
-            (!supportsLatest && !supportsLegacy) ||
+            highestSupported == 0 ||
             !seen.Contains(requestVersion))
         {
             throw Fault("unsupported_version",
                 "no supported helper protocol version was offered", false);
         }
 
-        selectedProtocolVersion = supportsLatest ? LatestProtocolVersion :
-            LegacyProtocolVersion;
+        selectedProtocolVersion = highestSupported;
         negotiated = true;
         Dictionary<string, object> response = Response(requestId, "hello");
         response["selected_protocol_version"] = selectedProtocolVersion;
@@ -523,7 +529,7 @@ internal sealed class OmnivoxHelperHost
     private void HandleSynthesize(ulong requestId,
         IDictionary<string, object> request)
     {
-        if (selectedProtocolVersion >= LatestProtocolVersion)
+        if (selectedProtocolVersion >= AnchorProtocolVersion)
         {
             RequireFields(request, "protocol_version", "request_id", "type",
                 "text", "settings", "anchors");
@@ -552,7 +558,15 @@ internal sealed class OmnivoxHelperHost
             throw Fault("invalid_parameter",
                 "settings must be a JSON object", false);
         }
-        RequireFields(settings, "voice_id", "rate", "pitch", "volume");
+        if (selectedProtocolVersion >= LatestProtocolVersion)
+        {
+            RequireFields(settings, "voice_id", "rate", "pitch", "volume",
+                "pitch_range", "stress", "richness");
+        }
+        else
+        {
+            RequireFields(settings, "voice_id", "rate", "pitch", "volume");
+        }
         string voiceId = settings["voice_id"] == null ?
             engine.DefaultVoiceId : ReadString(settings, "voice_id", false);
         if (!HasVoice(voiceId))
@@ -568,8 +582,14 @@ internal sealed class OmnivoxHelperHost
         synthesis.VoiceId = voiceId;
         synthesis.Rate = ReadNumber(settings, "rate", 0.0, 1.0);
         synthesis.Pitch = ReadNumber(settings, "pitch", 0.5, 2.0);
+        synthesis.PitchRange = ReadOptionalAcssNumber(settings, "pitch_range",
+            engine.Capabilities.PitchRange);
+        synthesis.Stress = ReadOptionalAcssNumber(settings, "stress",
+            engine.Capabilities.Stress);
+        synthesis.Richness = ReadOptionalAcssNumber(settings, "richness",
+            engine.Capabilities.Richness);
         synthesis.Volume = ReadNumber(settings, "volume", 0.0, 1.0);
-        synthesis.Anchors = selectedProtocolVersion >= LatestProtocolVersion ?
+        synthesis.Anchors = selectedProtocolVersion >= AnchorProtocolVersion ?
             ReadAnchors(request, text) : new OmnivoxHelperAnchor[0];
         synthesis.Worker = new Thread(delegate() { SynthesisWorker(synthesis); });
         synthesis.Worker.Name = "omnivox-" + engine.EngineId + "-synthesis";
@@ -628,6 +648,7 @@ internal sealed class OmnivoxHelperHost
             OmnivoxHelperLog.Event("native_synthesis_started", request);
             OmnivoxCaptureResult result = engine.Synthesize(synthesis.Text,
                 synthesis.VoiceId, synthesis.Rate, synthesis.Pitch,
+                synthesis.PitchRange, synthesis.Stress, synthesis.Richness,
                 synthesis.Volume, synthesis.Anchors);
             if (result == null)
             {
@@ -940,7 +961,7 @@ internal sealed class OmnivoxHelperHost
         markers["sentence"] = advertised.SentenceMarkers;
         markers["phoneme"] = advertised.PhonemeMarkers;
         markers["native_index"] = advertised.NativeIndexMarkers;
-        if (selectedProtocolVersion >= LatestProtocolVersion)
+        if (selectedProtocolVersion >= AnchorProtocolVersion)
         {
             markers["requested_anchors"] =
                 !String.IsNullOrEmpty(advertised.RequestedAnchors) ?
@@ -1172,6 +1193,23 @@ internal sealed class OmnivoxHelperHost
             throw Fault("invalid_parameter",
                 "invalid numeric field: " + field, false);
         }
+    }
+
+    private double? ReadOptionalAcssNumber(
+        IDictionary<string, object> values, string field, bool supported)
+    {
+        object raw;
+        if (!values.TryGetValue(field, out raw) || raw == null)
+        {
+            return null;
+        }
+        if (!supported)
+        {
+            throw Fault("invalid_parameter",
+                engine.DisplayName + " does not support ACSS " + field,
+                false);
+        }
+        return ReadNumber(values, field, 0.0, 1.0);
     }
 
     private static void RequireFields(IDictionary<string, object> values,
