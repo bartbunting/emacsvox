@@ -16,6 +16,7 @@
 (require 'emacsvox-aural-transport)
 
 (defvar emacsvox-speak-messages)
+(defvar tts-speaker-process)
 
 (declare-function emacsvox-sounds-play-concrete-cue
                   "emacsvox-sounds"
@@ -50,11 +51,44 @@ their concrete audio resources do not use the speech queue."
   (tts--protocol-dispatch)
   result)
 
+(defun emacsvox-aural-preview-compiled-voice-plan (compiled text)
+  "Return a concrete preview plan for COMPILED voice speaking TEXT.
+
+The concrete content retains the complete portable voice style so structured
+speech adapters can audition rate and post-synthesis effects as well as the
+legacy inline voice command."
+  (unless (emacsvox-aural-compiled-voice-p compiled)
+    (signal 'wrong-type-argument
+            (list 'emacsvox-aural-compiled-voice-p compiled)))
+  (when (eq (emacsvox-aural-compiled-voice-command compiled) 'inaudible)
+    (user-error "Inaudible voices cannot be previewed"))
+  (emacsvox-aural--make-concrete-plan
+   :content
+   (emacsvox-aural--make-concrete-content
+    :text text
+    :speak t
+    :voice-command (emacsvox-aural-compiled-voice-command compiled)
+    :voice-request
+    (copy-tree (emacsvox-aural-compiled-voice-request compiled))
+    :voice-style
+    (copy-tree (emacsvox-aural-compiled-voice-style compiled))
+    :voice-provenance
+    (copy-tree (emacsvox-aural-compiled-voice-provenance compiled))
+    :voice-capability
+    (copy-tree (emacsvox-aural-compiled-voice-capability compiled))
+    :voice-degradations
+    (copy-tree (emacsvox-aural-compiled-voice-degradations compiled)))
+   :degradations
+   (copy-tree (emacsvox-aural-compiled-voice-degradations compiled))))
+
 (defun emacsvox-aural-preview-play-plan (concrete)
   "Stop old output, play concrete plan CONCRETE, and return it."
   (emacsvox-aural-preview-begin t)
-  (emacsvox-aural-queue-concrete-plan concrete)
-  (emacsvox-aural-preview-dispatch concrete))
+  (emacsvox-aural-call-with-delivery-transaction
+   tts-speaker-process
+   (lambda ()
+     (emacsvox-aural-queue-concrete-plan concrete)
+     (emacsvox-aural-preview-dispatch concrete))))
 
 (defun emacsvox-aural-preview-play-runs (runs &optional transaction-id)
   "Stop old output and replay exact concrete RUNS once.
@@ -62,11 +96,14 @@ their concrete audio resources do not use the speech queue."
 RUNS have the form accepted by `emacsvox-aural-queue-concrete-runs'.
 TRANSACTION-ID, when non-nil, retains the replay as one history transaction."
   (emacsvox-aural-preview-begin t)
-  (if transaction-id
-      (emacsvox-aural-call-with-presentation-transaction
-       transaction-id #'emacsvox-aural-queue-concrete-runs runs)
-    (emacsvox-aural-queue-concrete-runs runs))
-  (emacsvox-aural-preview-dispatch runs))
+  (emacsvox-aural-call-with-delivery-transaction
+   tts-speaker-process
+   (lambda ()
+     (if transaction-id
+         (emacsvox-aural-call-with-presentation-transaction
+          transaction-id #'emacsvox-aural-queue-concrete-runs runs)
+       (emacsvox-aural-queue-concrete-runs runs))
+     (emacsvox-aural-preview-dispatch runs))))
 
 (defun emacsvox-aural-preview--play-cue (resource sample-id balance)
   "Play concrete cue RESOURCE with SAMPLE-ID and optional BALANCE."

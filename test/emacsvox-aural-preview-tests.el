@@ -28,6 +28,49 @@
       (should (eq (emacsvox-aural-preview-play-plan plan) plan)))
     (should (equal events '(stop ensure queue dispatch)))))
 
+(ert-deftest emacsvox-aural-preview-plan-uses-one-delivery-transaction ()
+  "A speech preview exposes its concrete style to structured delivery."
+  (let ((plan 'concrete-plan)
+        (tts-speaker-process 'preview-speaker)
+        transaction-owner)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural--ensure-speaker) #'ignore)
+         ((symbol-function 'tts-stop) #'ignore)
+         ((symbol-function 'emacsvox-aural-call-with-delivery-transaction)
+          (lambda (owner function &rest arguments)
+            (setq transaction-owner owner)
+            (apply function arguments)))
+         ((symbol-function 'emacsvox-aural-queue-concrete-plan) #'ignore)
+         ((symbol-function 'tts--protocol-dispatch) #'ignore))
+      (emacsvox-aural-preview-play-plan plan))
+    (should (eq transaction-owner tts-speaker-process))))
+
+(ert-deftest emacsvox-aural-preview-compiled-voice-retains-effects ()
+  "A compiled palette voice becomes a concrete effect-bearing preview plan."
+  (let* ((compiled
+          (emacsvox-aural--make-compiled-voice
+           :command "[[logical_voice lighten-extra]]"
+           :request 'lighten-extra
+           :style '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5)
+           :capability '(:adapter omnivox)
+           :degradations nil))
+         (plan
+          (emacsvox-aural-preview-compiled-voice-plan
+           compiled "Lighten extra voice."))
+         (content (emacsvox-aural-concrete-plan-content plan))
+         (built
+          (emacsvox-aural--build-structured-timeline
+           1 1 (list (list plan "Lighten extra voice." nil))))
+         (span (aref (plist-get (car built) :spans) 0))
+         (effects (plist-get (plist-get span :effects) :style)))
+    (should (equal (emacsvox-aural-concrete-content-text content)
+                   "Lighten extra voice."))
+    (should (equal (emacsvox-aural-concrete-content-voice-style content)
+                   '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5)))
+    (should (= (plist-get effects :high_pass) (/ 5.0 9.0)))
+    (should (= (plist-get effects :reverb) (/ 7.0 9.0)))
+    (should (= (plist-get effects :echo) (/ 5.0 9.0)))))
+
 (ert-deftest emacsvox-aural-preview-runs-retain-one-transaction ()
   "A multi-run preview queues and dispatches within one history transaction."
   (let ((runs '((first "First" nil) (second "Second" 0.1)))
