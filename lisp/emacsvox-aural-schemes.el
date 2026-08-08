@@ -77,7 +77,7 @@
   "Identifier of the presentation profile most recently selected.
 
 The profile remains selected when live settings diverge from its saved
-configuration; callers can then report it as modified.")
+configuration; callers can then report it as diverged.")
 
 (defvar emacsvox-aural-enabled-feature-fragments nil
   "Ordered identifiers of optional feature fragments in the cascade.")

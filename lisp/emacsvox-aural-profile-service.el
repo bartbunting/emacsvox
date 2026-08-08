@@ -276,7 +276,7 @@
    ((not (emacsvox-aural--profile-valid-p id)) 'invalid)
    ((not (eq id emacsvox-aural-active-profile)) 'inactive)
    ((emacsvox-aural-profile-matches-current-p id source-buffer) 'active)
-   (t 'modified)))
+   (t 'diverged)))
 
 (defun emacsvox-aural-profile-current-p (id &optional source-buffer)
   "Return whether profile ID is selected and matches SOURCE-BUFFER."

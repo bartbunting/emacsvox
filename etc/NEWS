@@ -162,8 +162,10 @@ combinations of a base scheme, ordered feature fragments, sound pack, voice
 palette, and portable spatial settings.  Profiles reference existing
 components instead of copying their rules, and activation is transactional.
 Exactly one persisted profile identity is selected.  It is shown as ~active~
-while live settings match its saved values and as ~modified~ after the scheme,
-presentation-option order, sound, voice, or spatial settings change.  Other
+while live settings match its saved values and as ~diverged~ after the scheme,
+presentation-option order, sound, voice, or spatial settings change.  In the
+profile manager, ~w~ writes current live values into a saved profile, while
+~a~ applies saved values and confirms before replacing divergence.  Other
 profiles remain inactive even when they happen to contain identical values.
 Personal data schema version 6 adds this selected identity; older files migrate
 automatically.

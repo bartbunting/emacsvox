@@ -253,10 +253,29 @@
     data))
 
 (defun emacsvox-aural-profiles-activate ()
-  "Apply the presentation profile at point."
+  "Apply the saved presentation profile at point.
+
+Confirm first when the currently selected profile has diverged, because
+applying a saved profile replaces the differing live configuration."
   (interactive)
   (let ((id (emacsvox-aural-profiles--at-point-or-read))
         (source (emacsvox-aural-profiles--require-source-buffer)))
+    (when-let* ((selected (emacsvox-aural-current-profile-id)))
+      (when (eq (emacsvox-aural-profile-status selected source) 'diverged)
+        (unless
+            (yes-or-no-p
+             (if (eq selected id)
+                 (format
+                  (concat
+                   "Profile %s has diverged. Restore its saved configuration "
+                   "and discard the differing live settings? ")
+                  id)
+               (format
+                (concat
+                 "Selected profile %s has diverged. Applying saved profile %s "
+                 "will discard the differing live settings. Continue? ")
+                selected id)))
+          (user-error "Apply cancelled; live settings are unchanged"))))
     (emacsvox-aural-apply-profile id source)
     (emacsvox-aural-save-user-data)
     (emacsvox-aural-profiles-refresh id)
@@ -330,7 +349,7 @@ MUTATION."
     id))
 
 (defun emacsvox-aural-profiles-update-from-current ()
-  "Replace the profile at point with the complete current configuration."
+  "Write the complete current configuration into the profile at point."
   (interactive)
   (let* ((id (emacsvox-aural-profiles--at-point-or-read))
          (summary
@@ -342,6 +361,12 @@ MUTATION."
           (emacsvox-aural-capture-profile-data
            id summary
            (emacsvox-aural-profiles--require-source-buffer))))
+    (unless
+        (yes-or-no-p
+         (format
+          "Replace saved profile %s with the current live configuration? "
+          id))
+      (user-error "Write cancelled; saved profile is unchanged"))
     (emacsvox-aural-profiles--persist-mutation
      (lambda ()
        (emacsvox-aural-register-profile
@@ -402,13 +427,17 @@ MUTATION."
       "legacy compatibility voice policy, and spatial choices. Exactly one\n"
       "profile identity can be selected. Compatibility voice policy applies\n"
       "only to the ordinary source buffer associated with this manager.\n"
-      "Active means its saved values match; modified means live settings have\n"
-      "changed since selection. Edit rules in the scheme and option managers.\n\n"
+      "Active means the selected profile matches the live configuration.\n"
+      "Diverged means it remains selected but its saved values and the live\n"
+      "configuration differ; it does not mean that a write is pending.\n"
+      "Press w to replace the saved profile with the current live values.\n"
+      "Press a to restore the saved values; this confirms before discarding\n"
+      "live differences. Edit rules in the scheme and option managers.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "RET or a activate    SPC speak profile\n"
+      "RET or a apply saved SPC speak profile\n"
       "v view and validate  N save current as new\n"
-      "c copy               u update from current\n"
+      "c copy               w write current into profile\n"
       "r rename             d delete\n"
       "g refresh            h aural home\n"
       "q quit\n")))
@@ -472,7 +501,8 @@ MUTATION."
        ("v" . emacsvox-aural-profiles-describe)
        ("N" . emacsvox-aural-profiles-create)
        ("c" . emacsvox-aural-profiles-copy)
-       ("u" . emacsvox-aural-profiles-update-from-current)
+       ("w" . emacsvox-aural-profiles-update-from-current)
+       ("u" . nil)
        ("r" . emacsvox-aural-profiles-rename)
        ("d" . emacsvox-aural-profiles-delete)
        ("h" . emacsvox-aural)

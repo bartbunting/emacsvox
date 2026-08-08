@@ -152,7 +152,7 @@
             (should
              (eq (emacsvox-aural-profile-status 'work source) 'active))
             (should
-             (eq (emacsvox-aural-profile-status 'work other) 'modified)))
+             (eq (emacsvox-aural-profile-status 'work other) 'diverged)))
         (kill-buffer source)
         (kill-buffer other)))))
 
@@ -189,8 +189,8 @@
       (should (eq (emacsvox-aural-profile-status 'first) 'inactive))
       (should (eq (emacsvox-aural-profile-status 'second) 'active)))))
 
-(ert-deftest emacsvox-aural-profiles-selected-profile-becomes-modified ()
-  "Changing live configuration retains selected identity as modified."
+(ert-deftest emacsvox-aural-profiles-selected-profile-becomes-diverged ()
+  "Changing live configuration retains selected identity as diverged."
   (emacsvox-test--with-aural-profiles
     (emacsvox-aural-register-profile (emacsvox-test--profile-data))
     (cl-letf
@@ -200,16 +200,16 @@
       (emacsvox-aural-apply-profile 'work))
     (emacsvox-aural-set-enabled-feature-fragments nil)
     (should (eq emacsvox-aural-active-profile 'work))
-    (should (eq (emacsvox-aural-profile-status 'work) 'modified))
+    (should (eq (emacsvox-aural-profile-status 'work) 'diverged))
     (should-not (emacsvox-aural-profile-current-p 'work))
     (should (eq (emacsvox-aural-current-profile-id) 'work))
     (should
      (equal
       (aref (cadr (emacsvox-aural-profiles--row 'work)) 1)
-      "modified"))))
+      "diverged"))))
 
 (ert-deftest emacsvox-aural-profiles-report-invalid-selected-profile ()
-  "A selected profile with a missing component is invalid, not modified."
+  "A selected profile with a missing component is invalid, not diverged."
   (emacsvox-test--with-aural-profiles
     (emacsvox-aural-register-profile (emacsvox-test--profile-data))
     (setq emacsvox-aural-active-profile 'work)
@@ -246,6 +246,58 @@
               (should-not emacsvox-aural-active-profile)
               (should (emacsvox-aural-profile-entry 'first))
               (should-not (emacsvox-aural-profile-entry 'renamed))))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-profiles-apply-confirms-before-losing-divergence ()
+  "Applying a saved profile never silently replaces diverged live settings."
+  (emacsvox-test--with-aural-profiles
+    (emacsvox-aural-register-profile (emacsvox-test--profile-data))
+    (let ((source (generate-new-buffer " *profile-confirm-source*"))
+          applied)
+      (unwind-protect
+          (with-temp-buffer
+            (emacsvox-aural-profiles-mode)
+            (emacsvox-aural-inspection-attach-source source)
+            (setq emacsvox-aural-active-profile 'work)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-profiles--at-point-or-read)
+                  (lambda () 'work))
+                 ((symbol-function 'emacsvox-aural-profile-status)
+                  (lambda (&rest _) 'diverged))
+                 ((symbol-function 'yes-or-no-p) (lambda (&rest _) nil))
+                 ((symbol-function 'emacsvox-aural-apply-profile)
+                  (lambda (&rest _) (setq applied t))))
+              (should-error
+               (emacsvox-aural-profiles-activate)
+               :type 'user-error)
+              (should-not applied)))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-profiles-write-confirms-before-replacement ()
+  "Writing live settings never silently replaces a saved profile."
+  (emacsvox-test--with-aural-profiles
+    (emacsvox-aural-register-profile (emacsvox-test--profile-data))
+    (let ((source (generate-new-buffer " *profile-write-source*"))
+          (original
+           (copy-tree
+            (emacsvox-aural-profile-entry-data
+             (emacsvox-aural-profile-entry 'work)))))
+      (unwind-protect
+          (with-temp-buffer
+            (emacsvox-aural-profiles-mode)
+            (emacsvox-aural-inspection-attach-source source)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-profiles--at-point-or-read)
+                  (lambda () 'work))
+                 ((symbol-function 'yes-or-no-p) (lambda (&rest _) nil)))
+              (should-error
+               (emacsvox-aural-profiles-update-from-current)
+               :type 'user-error)
+              (should
+               (equal
+                original
+                (emacsvox-aural-profile-entry-data
+                 (emacsvox-aural-profile-entry 'work))))))
         (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-profiles-manager-mutations-are-transactional ()
@@ -447,6 +499,12 @@
              (eq
               (lookup-key emacsvox-aural-profiles-mode-map (kbd "h"))
               #'emacsvox-aural))
+            (should
+             (eq
+              (lookup-key emacsvox-aural-profiles-mode-map (kbd "w"))
+              #'emacsvox-aural-profiles-update-from-current))
+            (should-not
+             (lookup-key emacsvox-aural-profiles-mode-map (kbd "u")))
             (should
              (eq
               (key-binding (kbd "q"))

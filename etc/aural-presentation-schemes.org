@@ -2226,7 +2226,7 @@ CLOSED: [2026-07-26 Sun]
   set of registered feature fragments, and optional sound-pack, voice-palette,
   and portable-spatial settings.
 - Persist one selected profile identity.  Report it as active while the live
-  configuration matches and modified after settings diverge; identical
+  configuration matches and diverged after settings differ; identical
   unselected profiles remain inactive.
 - Apply a profile transactionally: validate every reference before changing
   live state, then switch the complete configuration and run existing change
@@ -2256,8 +2256,10 @@ Implemented details:
 - coordinated state changes advance the configuration generation once and
   notify from the final state; reloading an active scheme also reports an
   effective sound-provider change when its identifier stays the same;
-- =emacsvox-aural-list-profiles= provides spoken create, copy, update,
-  activate, rename, delete, view, validate, refresh, and home commands.
+- =emacsvox-aural-list-profiles= provides spoken create, copy, write-current,
+  apply-saved, rename, delete, view, validate, refresh, and home commands;
+  =w= writes live settings into a profile, while =a= applies saved settings
+  after confirming before any diverged live configuration is replaced.
 
 ** DONE Slice 20: Workflow Semantic Migrations
 CLOSED: [2026-07-26 Sun]

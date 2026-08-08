@@ -206,6 +206,12 @@ scheme.  Mode compatibility is supplied separately and automatically,
 optional presentation fragments compose above the scheme, and personal,
 session, and buffer overrides are the strongest layers.
 
+The profile manager reports the selected profile as =active= while its saved
+values match the live configuration and =diverged= when they differ.  Diverged
+is not an unsaved-edit indicator: press =w= to write the current live values
+into the profile, or =a= to restore the saved profile values.  Restoring asks
+for confirmation before replacing live differences.
+
 Use =M-x emacsvox-aural=, or =C-e H=, to open the spoken aural home.  It
 reports current status and routes to saved profiles, schemes, feature
 fragments, recent exact feedback, buffer-local rules, semantic vocabulary,
