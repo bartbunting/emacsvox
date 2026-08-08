@@ -29,26 +29,13 @@
   'emacsvox-aural-profiles--current-id
   #'emacsvox-aural-current-profile-id)
 
-(defun emacsvox-aural-profiles--source-buffer ()
-  "Return the ordinary source associated with the profile interface."
-  (emacsvox-aural-inspection-source-buffer))
-
-(defun emacsvox-aural-profiles--require-source-buffer ()
-  "Return the live profile source, or report that it is unavailable."
-  (or
-   (emacsvox-aural-profiles--source-buffer)
-   (user-error "No live source buffer is available")))
-
 (defun emacsvox-aural-profiles--status (id)
-  "Return profile status for ID and the current inspection source."
-  (if-let* ((source (emacsvox-aural-profiles--source-buffer)))
-      (emacsvox-aural-profile-status id source)
-    'unavailable))
+  "Return live global profile status for ID."
+  (emacsvox-aural-profile-status id))
 
 (defun emacsvox-aural-profiles--differences (id)
-  "Return live differences for profile ID in the inspection source."
-  (when-let* ((source (emacsvox-aural-profiles--source-buffer)))
-    (emacsvox-aural-profile-differences id source)))
+  "Return live global differences for profile ID."
+  (emacsvox-aural-profile-differences id))
 
 (defun emacsvox-aural-profiles--natural-list (items)
   "Join ITEMS as a concise spoken natural-language list."
@@ -100,22 +87,16 @@
             "diverged; press v for details"))
       (symbol-name status))))
 
-(defun emacsvox-aural-profiles-status (&optional source-buffer)
-  "Return concise profile status for SOURCE-BUFFER."
+(defun emacsvox-aural-profiles-status (&optional _source-buffer)
+  "Return concise global presentation-profile status."
   (let ((count (hash-table-count emacsvox-aural-profile-registry))
-        (current (emacsvox-aural-current-profile-id))
-        (source
-         (or
-          source-buffer
-          (emacsvox-aural-profiles--source-buffer))))
+        (current (emacsvox-aural-current-profile-id)))
     (cond
      (current
       (format
        "%s %s; %d saved"
        current
-       (if source
-           (emacsvox-aural-profile-status current source)
-         'unavailable)
+       (emacsvox-aural-profile-status current)
        count))
      ((zerop count) "none saved")
      (t (format "%d saved; no profile selected" count)))))
@@ -139,12 +120,6 @@
      (if (plist-get spatial :enabled) "on" "off")
      (or (plist-get spatial :output) "current"))))
 
-(defun emacsvox-aural-profiles--compatibility-voice-summary (data)
-  "Return concise compatibility voice status for profile DATA."
-  (if (plist-member data :compatibility-voice-enabled)
-      (if (plist-get data :compatibility-voice-enabled) "on" "off")
-    "unchanged"))
-
 (defun emacsvox-aural-profiles--row (id)
   "Return a tabulated row for presentation profile ID."
   (let* ((entry (emacsvox-aural-profile-entry id))
@@ -161,7 +136,6 @@
         "none")
       (format "%s" (or (plist-get data :sound-pack) "scheme"))
       (format "%s" (or (plist-get data :voice-palette) "scheme"))
-      (emacsvox-aural-profiles--compatibility-voice-summary data)
       (emacsvox-aural-profiles--spatial-summary
        (plist-get data :spatial))
       (if (car validation) "valid" "invalid")
@@ -224,7 +198,7 @@
           (format
            (concat
             "%s. %s. Scheme %s. Options %s. Sound %s. Voice palette %s. "
-            "Compatibility voices %s. Spatial %s. %s")
+            "Spatial %s. %s")
            (emacsvox-aural-humanize id)
            (emacsvox-aural-profiles--spoken-status id)
            (plist-get data :scheme)
@@ -234,7 +208,6 @@
              "none")
            (or (plist-get data :sound-pack) "from scheme")
            (or (plist-get data :voice-palette) "from scheme")
-           (emacsvox-aural-profiles--compatibility-voice-summary data)
            (emacsvox-aural-profiles--spatial-summary
             (plist-get data :spatial))
            (plist-get data :summary))))
@@ -273,8 +246,7 @@
   (cond
    ((memq
      field
-     '(compatibility-voice-enabled spatial-enabled
-       spatial-speech-enabled spatial-cue-enabled))
+     '(spatial-enabled spatial-speech-enabled spatial-cue-enabled))
     (if value "enabled" "disabled"))
    ((eq field 'feature-fragments)
     (if value
@@ -333,10 +305,6 @@
                      (or (plist-get data :sound-pack) "from scheme")))
       (princ (format "Voice palette: %s\n"
                      (or (plist-get data :voice-palette) "from scheme")))
-      (princ
-       (format
-        "Legacy compatibility voices: %s\n"
-        (emacsvox-aural-profiles--compatibility-voice-summary data)))
       (princ (format "Spatial settings: %S\n"
                      (plist-get data :spatial)))
       (princ
@@ -346,11 +314,7 @@
         (if (car validation) "" (format "; %s" (cdr validation)))))
       (when differences
         (princ
-         (format
-          "\nDifferences from live configuration%s:\n"
-          (if-let* ((source (emacsvox-aural-profiles--source-buffer)))
-              (format " for buffer %s" (buffer-name source))
-            "")))
+         "\nDifferences from live configuration:\n")
         (dolist (difference differences)
           (let ((field (plist-get difference :field)))
             (princ
@@ -378,10 +342,9 @@
 Confirm first when the currently selected profile has diverged, because
 applying a saved profile replaces the differing live configuration."
   (interactive)
-  (let ((id (emacsvox-aural-profiles--at-point-or-read))
-        (source (emacsvox-aural-profiles--require-source-buffer)))
+  (let ((id (emacsvox-aural-profiles--at-point-or-read)))
     (when-let* ((selected (emacsvox-aural-current-profile-id)))
-      (when (eq (emacsvox-aural-profile-status selected source) 'diverged)
+      (when (eq (emacsvox-aural-profile-status selected) 'diverged)
         (unless
             (yes-or-no-p
              (if (eq selected id)
@@ -396,7 +359,7 @@ applying a saved profile replaces the differing live configuration."
                  "will discard the differing live settings. Continue? ")
                 selected id)))
           (user-error "Apply cancelled; live settings are unchanged"))))
-    (emacsvox-aural-apply-profile id source)
+    (emacsvox-aural-apply-profile id)
     (emacsvox-aural-save-user-data)
     (emacsvox-aural-profiles-refresh id)
     (emacsvox-aural-ui-refresh-home-if-live)
@@ -433,8 +396,7 @@ MUTATION."
                        (format "Saved presentation profile %s" id)))
          (data
           (emacsvox-aural-capture-profile-data
-           id summary
-           (emacsvox-aural-profiles--require-source-buffer))))
+           id summary)))
     (emacsvox-aural-profiles--persist-mutation
      (lambda ()
        (emacsvox-aural-register-profile
@@ -479,8 +441,7 @@ MUTATION."
            :summary))
          (data
           (emacsvox-aural-capture-profile-data
-           id summary
-           (emacsvox-aural-profiles--require-source-buffer))))
+           id summary)))
     (unless
         (yes-or-no-p
          (format
@@ -544,10 +505,8 @@ MUTATION."
       "Aural Presentation Profiles\n\n"
       "A profile switches one complete named configuration. It references a\n"
       "base scheme and ordered presentation options and captures sound-pack\n"
-      "and voice-palette choices,\n"
-      "legacy compatibility voice policy, and spatial choices. Exactly one\n"
-      "profile identity can be selected. Compatibility voice policy applies\n"
-      "only to the ordinary source buffer associated with this manager.\n"
+      "and voice-palette choices and spatial settings. Exactly one profile\n"
+      "identity can be selected. Buffer-local Voice Lock is independent.\n"
       "Active means the selected profile matches the live configuration.\n"
       "Diverged means it remains selected but its saved values and the live\n"
       "configuration differ; it does not mean that a write is pending.\n"
@@ -581,7 +540,6 @@ MUTATION."
     ("Options" 28 t)
     ("Sound" 16 t)
     ("Voice Palette" 18 t)
-    ("Compatibility" 15 t)
     ("Spatial" 14 t)
     ("Validation" 12 t)
     ("Purpose" 0 t)])
@@ -597,23 +555,9 @@ MUTATION."
       (when (derived-mode-p 'emacsvox-aural-profiles-mode)
         (emacsvox-aural-profiles-refresh)))))
 
-(defun emacsvox-aural-profiles-compatibility-voice-changed
-    (buffer _enabled)
-  "Refresh profiles when compatibility voices change in source BUFFER."
-  (when-let* ((profiles (get-buffer "*Aural Presentation Profiles*")))
-    (with-current-buffer profiles
-      (when
-          (and
-           (derived-mode-p 'emacsvox-aural-profiles-mode)
-           (eq buffer (emacsvox-aural-profiles--source-buffer)))
-        (emacsvox-aural-profiles-refresh)))))
-
 (add-hook
  'emacsvox-aural-configuration-changed-hook
  #'emacsvox-aural-profiles-refresh-if-live)
-(add-hook
- 'emacsvox-aural-compatibility-voice-changed-hook
- #'emacsvox-aural-profiles-compatibility-voice-changed)
 
 (dolist
     (binding

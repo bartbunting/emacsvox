@@ -2253,6 +2253,9 @@ Implemented details:
   sound selection completes before coordinated variables and hooks are
   published, so a failed application emits no intermediate scheme or fragment
   state;
+- buffer-local Voice Lock is not profile state.  Older schema-6 profile data
+  containing =:compatibility-voice-enabled= remains readable, but registration
+  discards the deprecated field and subsequent saves omit it;
 - coordinated state changes advance the configuration generation once and
   notify from the final state; reloading an active scheme also reports an
   effective sound-provider change when its identifier stays the same;

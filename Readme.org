@@ -265,7 +265,8 @@ restores the next weaker behavior.
 Use =M-x emacsvox-aural-list-profiles= to save and switch complete named
 configurations.  A profile references one base scheme and ordered feature
 fragments, and can capture sound-pack, voice-palette, and portable spatial
-settings without copying their rules.  Use =M-x emacsvox-aural-doctor= when
+settings without copying their rules.  Buffer-local Voice Lock remains
+independent of profiles.  Use =M-x emacsvox-aural-doctor= when
 bindings, loaded byte-code, personal data, resources, or the backend appear
 wrong; it reports each check and offers only explicit safe repairs.
 

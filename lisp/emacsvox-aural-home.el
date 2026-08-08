@@ -167,7 +167,7 @@
       (vector
        "Presentation profiles"
        (emacsvox-aural-home--profile-status)
-       "Save and switch complete presentation and source compatibility configurations"))
+       "Save and switch complete global presentation configurations"))
      (list
       'schemes
       (vector

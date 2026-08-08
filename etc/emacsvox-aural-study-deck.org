@@ -135,7 +135,7 @@ settings.
 
 It does not copy presentation rules.  Rules remain owned by their schemes,
 fragments, and override layers, so editing those definitions affects profiles
-that reference them.
+that reference them.  It also does not capture buffer-local Voice Lock.
 
 * 09. What are the four kinds of registered Aural semantic?
 ** Front

@@ -1234,6 +1234,8 @@ a complete user file before its entries replace the live registries."
          (fragments (plist-get data :feature-fragments))
          (pack (plist-get data :sound-pack))
          (palette (plist-get data :voice-palette))
+         ;; Accepted only so schema-6 files written before profiles became
+         ;; global-only continue to load safely.
          (compatibility-voice
           (plist-get data :compatibility-voice-enabled))
          (spatial (plist-get data :spatial))
@@ -1302,14 +1304,16 @@ a complete user file before its entries replace the live registries."
 
 When REPLACE is non-nil, replace an existing personal entry of the same ID."
   (emacsvox-aural--validate-profile-data data)
-  (let* ((id (plist-get data :id))
+  (let* ((data (copy-tree data))
+         (_ (cl-remf data :compatibility-voice-enabled))
+         (id (plist-get data :id))
          (existing (emacsvox-aural-profile-entry id)))
     (when (and existing (not replace))
       (emacsvox-aural--scheme-error
        "Presentation profile is already registered: %S" id))
     (let ((entry
            (emacsvox-aural--make-profile-entry
-            :id id :data (copy-tree data) :source source)))
+            :id id :data data :source source)))
       (puthash id entry emacsvox-aural-profile-registry)
       entry)))
 
