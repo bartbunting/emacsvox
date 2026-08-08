@@ -3766,6 +3766,39 @@ negotiated =relative_rate_v1=.  A live =lighten-extra= check at global rate 60
 omitted legacy =:rate 0= entirely, while test spans serialized only
 =rate_offset: -1= and =rate_offset: 4=, never an absolute rate.
 
+** DONE Slice 60: Configurable Point Presentation
+CLOSED: [2026-08-08 Sat]
+
+- Keep =emacsvox-show-point= as the buffer-local-compatible master switch and
+  add a separate presentation choice for animated voice, a micro-tone, an
+  earcon, voice combinations, spoken “point”, custom rules, or silence.
+- Capture =point-located= with its beginning, interior, end, or empty position
+  and exact before/after text boundary.  Put non-content feedback before the
+  character under point and after the last character at end of line.
+- Anchor point actions to the marked formatting run, even though a native
+  submission deliberately groups the complete utterance as one aural object.
+  Do not add point facts to action-only line conditions, where empty or
+  unspeakable-line feedback already describes the result.
+- Clip concrete runs at TTS clause boundaries without replaying their before
+  or after actions.  Empty and whitespace-only visual lines omit the legacy
+  physical-line boundary cue because their line-condition tone is sufficient.
+- Make the default scheme own the modality mapping.  =custom= publishes the
+  facts but contributes no built-in rule, leaving personal, session, and
+  buffer rules free to choose another presentation.
+- Register a 1200 Hz, 30 millisecond =point-marker-tone= and a portable
+  =point-marker= cue that falls back through the existing =button= asset.
+
+Deliverable: physical and visual line speech use the same semantic point
+marker, users can select or preview its modality without editing Lisp, and
+personal schemes can replace it without changing line-speaking code.
+
+Checks: focused semantic, scheme, resource, physical-line, visual-line,
+empty-line, Python-navigation, and selector tests pass.  The full source run
+passes every point and Aural test; its three pre-existing unrelated Agent
+Shell and Omnivox failures remain.  Compiled Aural parity, normal build-tree
+startup, the Aural audit and generated reference, and all 27 semantic traces
+pass.
+
 ** Deferred Cross-Repository Work Retained by the Plan
 
 Voice Workbench completion does not imply that the remaining Omnivox engine

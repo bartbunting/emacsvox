@@ -116,6 +116,19 @@ currently highlighted candidate."
   (unless (= start end)
     (emacsvox-aural-source-substring start end)))
 
+(defun emacsvox-vertico--initial-candidate-content (candidate)
+  "Return one utterance containing the minibuffer prompt and CANDIDATE."
+  (let* ((raw-prompt (minibuffer-prompt))
+         (prompt (and raw-prompt (string-trim raw-prompt))))
+    (mapconcat
+     #'identity
+     (delq
+      nil
+      (list
+       (and prompt (not (string-empty-p prompt)) prompt)
+       (and candidate (not (string-empty-p candidate)) candidate)))
+     " ")))
+
 (defun emacsvox-vertico--interactive-exit-p ()
   "Return non-nil for either interactive Vertico exit command."
   (or (ems-interactive-p 'vertico-exit)
@@ -185,7 +198,8 @@ feedback when an attempted exit is refused."
 
 (defun emacsvox--advice-vertico--exhibit-after (&rest _)
   "Present the current candidate after Vertico updates its display."
-  (let* ((navigation-icon
+  (let* ((initial-p (null emacsvox-vertico--prev-index))
+         (navigation-icon
           (emacsvox-vertico--interactive-navigation-icon))
          (new-cand
           (substring
@@ -198,6 +212,11 @@ feedback when an attempted exit is refused."
          (changed-p
           (not (equal emacsvox-vertico--prev-candidate new-cand)))
          (suppress-p emacsvox-vertico--suppress-next-exhibit-p)
+         (content
+          (cond
+           (initial-p
+            (emacsvox-vertico--initial-candidate-content new-cand))
+           (changed-p new-cand)))
          (icon
           (or navigation-icon
               (when
@@ -206,11 +225,14 @@ feedback when an attempted exit is refused."
                            (equal emacsvox-vertico--prev-index -1)))
                 'select-object))))
     (setq-local emacsvox-vertico--suppress-next-exhibit-p nil)
-    (when (and (not suppress-p) (or changed-p navigation-icon))
+    (when
+        (and
+         (not suppress-p)
+         (or initial-p changed-p navigation-icon))
       (emacsvox-vertico--submit-candidate-feedback
        (emacsvox-vertico-candidate-facts)
        icon
-       (and changed-p new-cand)))
+       content))
     (setq-local emacsvox-vertico--prev-candidate new-cand
                 emacsvox-vertico--prev-index vertico--index)))
 

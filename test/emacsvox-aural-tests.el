@@ -26,7 +26,8 @@
       (id
        '(heading level folded focus-entered state-changed object-changed
          product-identity activity-ended selection-cleared game-over
-         line-condition edit-operation))
+         line-condition edit-operation point-located point-position
+         point-boundary point-presentation))
     (should (emacsvox-aural-semantic id)))
   (dolist
       (id

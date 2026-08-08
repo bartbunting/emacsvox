@@ -193,6 +193,79 @@
        '(:line-condition empty)
        '(:mode text-mode :occasion navigation))))))
 
+(ert-deftest emacsvox-aural-default-scheme-presents-point-modalities ()
+  "Point styles select voice, tone, earcon, speech, or personal policy."
+  (emacsvox-test--with-isolated-schemes
+    (let ((context '(:mode text-mode :occasion navigation)))
+      (let* ((plan
+              (emacsvox-aural-resolve-active
+               '(:events (point-located)
+                 :point-position interior
+                 :point-boundary before
+                 :point-presentation voice)
+               context))
+             (content (emacsvox-aural-render-plan-content plan)))
+        (should
+         (eq (emacsvox-aural-content-style-voice content) 'animate)))
+      (dolist
+          (case
+           '((tone tone point-marker-tone)
+             (earcon cue point-marker)
+             (voice-tone tone point-marker-tone)
+             (voice-earcon cue point-marker)
+             (spoken speech "point")))
+        (let* ((style (nth 0 case))
+               (kind (nth 1 case))
+               (value (nth 2 case))
+               (plan
+                (emacsvox-aural-resolve-active
+                 (list
+                  :events '(point-located)
+                  :point-position 'interior
+                  :point-boundary 'before
+                  :point-presentation style)
+                 context))
+               (action (car (emacsvox-aural-render-plan-before plan))))
+          (should (eq (emacsvox-aural-action-kind action) kind))
+          (should (eq (emacsvox-aural-action-anchor action) 'run))
+          (should
+           (equal
+            (pcase kind
+              ('tone (emacsvox-aural-action-tone action))
+              ('cue (emacsvox-aural-action-cue action))
+              ('speech (emacsvox-aural-action-text action)))
+            value))
+          (when (memq style '(voice-tone voice-earcon))
+            (should
+             (eq
+              (emacsvox-aural-content-style-voice
+               (emacsvox-aural-render-plan-content plan))
+              'animate)))))
+      (let ((after
+             (emacsvox-aural-resolve-active
+              '(:events (point-located)
+                :point-position end
+                :point-boundary after
+                :point-presentation tone)
+              context)))
+        (should-not (emacsvox-aural-render-plan-before after))
+        (let ((action (car (emacsvox-aural-render-plan-after after))))
+          (should
+           (eq
+            (emacsvox-aural-action-tone action)
+            'point-marker-tone))
+          (should (eq (emacsvox-aural-action-anchor action) 'run))))
+      (let ((custom
+             (emacsvox-aural-resolve-active
+              '(:events (point-located)
+                :point-position interior
+                :point-boundary before
+                :point-presentation custom)
+              context)))
+        (should-not (emacsvox-aural-render-plan-matched-rules custom))
+        (should-not (emacsvox-aural-render-plan-before custom))
+        (should-not (emacsvox-aural-render-plan-after custom))))))
+
 (ert-deftest emacsvox-aural-schemes-inherit-rules-and-providers ()
   "A child inherits providers and its equally specific rule wins."
   (emacsvox-test--with-isolated-schemes

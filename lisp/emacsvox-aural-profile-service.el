@@ -12,6 +12,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'subr-x)
 (require 'emacsvox-aural-spatial)
 (require 'emacsvox-aural-schemes)
@@ -194,8 +195,12 @@
               (emacsvox-sounds-select-theme old-pack))))))
     id))
 
-(defun emacsvox-aural-profile-matches-current-p (id &optional source-buffer)
-  "Return whether live settings for SOURCE-BUFFER equal profile ID."
+(defun emacsvox-aural-profile-differences (id &optional source-buffer)
+  "Return structured differences between profile ID and live settings.
+
+SOURCE-BUFFER supplies the buffer-local compatibility-voice state.  Each
+result is a plist containing `:field', `:label', `:saved', and `:live'.  Only
+settings governed by the saved profile are compared."
   (when-let* ((entry (emacsvox-aural-profile-entry id)))
     (let* ((data (emacsvox-aural-profile-entry-data entry))
            (source
@@ -210,56 +215,89 @@
             (or
              (plist-get data :sound-pack)
              (emacsvox-aural-effective-scheme-provider
-              'resource-pack (plist-get data :scheme)))))
-      (and
-       (eq (plist-get data :scheme) emacsvox-aural-active-scheme)
-       (equal
-        (plist-get data :feature-fragments)
-        emacsvox-aural-enabled-feature-fragments)
-       (if palette
-           (eq palette live-palette)
-         (null emacsvox-aural-voice-palette-override))
-       (or
-        (not (boundp 'emacsvox-sounds-current-pack))
-        (eq pack emacsvox-sounds-current-pack))
-       (or
-        (not (plist-member data :compatibility-voice-enabled))
-        (eq
-         (plist-get data :compatibility-voice-enabled)
-         (emacsvox-aural-compatibility-voice-enabled-p source)))
-       (or
-        (null spatial)
-        (and
+              'resource-pack (plist-get data :scheme))))
+           differences)
+      (cl-labels
+          ((record (field label saved live same-p)
+             (unless same-p
+               (push
+                (list
+                 :field field :label label :saved saved :live live)
+                differences))))
+        (record
+         'scheme "scheme"
+         (plist-get data :scheme) emacsvox-aural-active-scheme
+         (eq (plist-get data :scheme) emacsvox-aural-active-scheme))
+        (record
+         'feature-fragments "presentation options"
+         (plist-get data :feature-fragments)
+         emacsvox-aural-enabled-feature-fragments
+         (equal
+          (plist-get data :feature-fragments)
+          emacsvox-aural-enabled-feature-fragments))
+        (when (boundp 'emacsvox-sounds-current-pack)
+          (record
+           'sound-pack "sound pack" pack emacsvox-sounds-current-pack
+           (eq pack emacsvox-sounds-current-pack)))
+        (record
+         'voice-palette "voice palette"
          (or
-          (not (plist-member spatial :enabled))
-          (eq
-           (plist-get spatial :enabled)
-           emacsvox-aural-spatial-enabled))
+          palette
+          (list
+           :source 'scheme
+           :value
+           (emacsvox-aural-effective-scheme-provider
+            'voice-palette (plist-get data :scheme))))
          (or
-          (not (plist-member spatial :speech-enabled))
-          (eq
-           (plist-get spatial :speech-enabled)
-           emacsvox-aural-spatial-speech-enabled))
-         (or
-          (not (plist-member spatial :cue-enabled))
-          (eq
-           (plist-get spatial :cue-enabled)
-           emacsvox-aural-spatial-cue-enabled))
-         (or
-          (not (plist-member spatial :output))
-          (eq
-           (plist-get spatial :output)
-           emacsvox-aural-spatial-output))
-         (or
-          (not (plist-member spatial :maximum-separation))
-          (=
-           (plist-get spatial :maximum-separation)
-           emacsvox-aural-spatial-maximum-separation))
-         (or
-          (not (plist-member spatial :remapping))
-           (eq
-           (plist-get spatial :remapping)
-           emacsvox-aural-spatial-remapping))))))))
+          emacsvox-aural-voice-palette-override
+          (list :source 'scheme :value live-palette))
+         (if palette
+             (eq palette live-palette)
+           (null emacsvox-aural-voice-palette-override)))
+        (when (plist-member data :compatibility-voice-enabled)
+          (let ((live
+                 (emacsvox-aural-compatibility-voice-enabled-p source)))
+            (record
+             'compatibility-voice-enabled "compatibility voices"
+             (plist-get data :compatibility-voice-enabled) live
+             (eq (plist-get data :compatibility-voice-enabled) live))))
+        (when spatial
+          (dolist
+              (setting
+               (list
+                (list
+                 :enabled 'spatial-enabled "spatial presentation"
+                 emacsvox-aural-spatial-enabled #'eq)
+                (list
+                 :speech-enabled 'spatial-speech-enabled "spatial speech"
+                 emacsvox-aural-spatial-speech-enabled #'eq)
+                (list
+                 :cue-enabled 'spatial-cue-enabled "spatial cues"
+                 emacsvox-aural-spatial-cue-enabled #'eq)
+                (list
+                 :output 'spatial-output "spatial output"
+                 emacsvox-aural-spatial-output #'eq)
+                (list
+                 :maximum-separation 'spatial-maximum-separation
+                 "maximum spatial separation"
+                 emacsvox-aural-spatial-maximum-separation #'=)
+                (list
+                 :remapping 'spatial-remapping "spatial remapping"
+                 emacsvox-aural-spatial-remapping #'eq)))
+            (pcase-let
+                ((`(,key ,field ,label ,live ,predicate) setting))
+              (when (plist-member spatial key)
+                (let ((saved (plist-get spatial key)))
+                  (record
+                   field label saved live
+                   (funcall predicate saved live)))))))
+        (nreverse differences)))))
+
+(defun emacsvox-aural-profile-matches-current-p (id &optional source-buffer)
+  "Return whether live settings for SOURCE-BUFFER equal profile ID."
+  (and
+   (emacsvox-aural-profile-entry id)
+   (null (emacsvox-aural-profile-differences id source-buffer))))
 
 (defun emacsvox-aural--profile-valid-p (id)
   "Return non-nil when profile ID still has valid component references."

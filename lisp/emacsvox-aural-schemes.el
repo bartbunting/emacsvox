@@ -1335,6 +1335,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
   "emacsvox-aural-profile-service")
 (autoload 'emacsvox-aural-apply-profile
   "emacsvox-aural-profile-service")
+(autoload 'emacsvox-aural-profile-differences
+  "emacsvox-aural-profile-service")
 (autoload 'emacsvox-aural-profile-matches-current-p
   "emacsvox-aural-profile-service")
 (autoload 'emacsvox-aural-profile-status
@@ -1770,7 +1772,96 @@ An existing file is copied to FILE~ before replacement."
        :resource-pack chimes
        :voice-palette acss-default
        :rules
-       ((:id core-edit-deletion-tone
+       ((:id core-point-voice
+         :match (:event point-located :point-presentation voice)
+         :render (:content (:voice animate)))
+        (:id core-point-tone-before
+         :match
+         (:event point-located :point-presentation tone
+          :point-boundary before)
+         :render
+         (:before
+          ((:id core-point-tone-before-action
+            :kind tone :tone point-marker-tone :anchor run))))
+        (:id core-point-tone-after
+         :match
+         (:event point-located :point-presentation tone
+          :point-boundary after)
+         :render
+         (:after
+          ((:id core-point-tone-after-action
+            :kind tone :tone point-marker-tone :anchor run))))
+        (:id core-point-earcon-before
+         :match
+         (:event point-located :point-presentation earcon
+          :point-boundary before)
+         :render
+         (:before
+          ((:id core-point-earcon-before-action
+            :kind cue :cue point-marker :anchor run))))
+        (:id core-point-earcon-after
+         :match
+         (:event point-located :point-presentation earcon
+          :point-boundary after)
+         :render
+         (:after
+          ((:id core-point-earcon-after-action
+            :kind cue :cue point-marker :anchor run))))
+        (:id core-point-voice-tone-voice
+         :match (:event point-located :point-presentation voice-tone)
+         :render (:content (:voice animate)))
+        (:id core-point-voice-tone-before
+         :match
+         (:event point-located :point-presentation voice-tone
+          :point-boundary before)
+         :render
+         (:before
+          ((:id core-point-voice-tone-before-action
+            :kind tone :tone point-marker-tone :anchor run))))
+        (:id core-point-voice-tone-after
+         :match
+         (:event point-located :point-presentation voice-tone
+          :point-boundary after)
+         :render
+         (:after
+          ((:id core-point-voice-tone-after-action
+            :kind tone :tone point-marker-tone :anchor run))))
+        (:id core-point-voice-earcon-voice
+         :match (:event point-located :point-presentation voice-earcon)
+         :render (:content (:voice animate)))
+        (:id core-point-voice-earcon-before
+         :match
+         (:event point-located :point-presentation voice-earcon
+          :point-boundary before)
+         :render
+         (:before
+          ((:id core-point-voice-earcon-before-action
+            :kind cue :cue point-marker :anchor run))))
+        (:id core-point-voice-earcon-after
+         :match
+         (:event point-located :point-presentation voice-earcon
+          :point-boundary after)
+         :render
+         (:after
+          ((:id core-point-voice-earcon-after-action
+            :kind cue :cue point-marker :anchor run))))
+        (:id core-point-spoken-before
+         :match
+         (:event point-located :point-presentation spoken
+          :point-boundary before)
+         :render
+         (:before
+          ((:id core-point-spoken-before-action
+            :kind speech :text "point" :voice annotate :anchor run))))
+        (:id core-point-spoken-after
+         :match
+         (:event point-located :point-presentation spoken
+          :point-boundary after)
+         :render
+         (:after
+          ((:id core-point-spoken-after-action
+            :kind speech :text "point" :voice annotate :anchor run))))
+        (:id core-edit-deletion-tone
          :match (:edit-operation deletion)
          :render
          (:before

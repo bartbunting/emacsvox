@@ -315,6 +315,10 @@ Operational semantic contract version: =1=.
 | =org-table-row= | =attribute= | =org= | =integer= | =org-table= | - | - | - | - | - | - | The one-based logical row of an Org table cell |
 | =org-timer= | =role= | =org= | - | - | - | - | - | - | - | - | An Org relative timer or countdown operation |
 | =permission-request= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | - | An agent action awaiting user permission |
+| =point-boundary= | =attribute= | =core= | =before=, =after= | - | - | - | - | - | =before=, =after= | - | Whether a point marker occurs before or after its text run |
+| =point-located= | =event= | =core= | - | - | - | - | - | - | - | - | A spoken text boundary corresponds to buffer point |
+| =point-position= | =attribute= | =core= | =beginning=, =interior=, =end=, =empty= | - | - | - | - | - | =before=, =content=, =after= | - | Where buffer point occurs within the selected text |
+| =point-presentation= | =attribute= | =core= | =voice=, =tone=, =earcon=, =voice-tone=, =voice-earcon=, =spoken=, =custom= | - | - | - | - | - | =before=, =content=, =after= | - | The user-requested presentation for buffer point |
 | =processing= | =state= | =agent-shell= | - | - | - | - | - | =continuous=, =notification= | =before=, =content=, =after= | - | An agent session is processing a request |
 | =processing-completed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An agent completed initialization or a request |
 | =processing-failed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An agent request ended exceptionally |
@@ -371,7 +375,7 @@ Operational semantic contract version: =1=.
 
 | Identifier | Provided By | Parent | Sound Pack | Voice Palette | Rules | Intent |
 |------------+-------------+--------+------------+---------------+-------+--------|
-| =default= | Emacsvox core | - | =chimes= | =acss-default= | =10= | Compatibility-preserving Emacsvox presentation |
+| =default= | Emacsvox core | - | =chimes= | =acss-default= | =23= | Compatibility-preserving Emacsvox presentation |
 | =org-before-after= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings use explicit speech before and after contents |
 | =org-combined= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings combine a label, cue, and content voice |
 | =org-cue-only= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings introduced by one semantic section cue |
@@ -478,6 +482,7 @@ Default spatialization is =neutral=, =stereo=, or =pre-spatialized=.  Mark HRTF 
 | =on= | =cue= | =core= | - | A setting or state was turned on |
 | =open-object= | =cue= | =core= | - | An object, view, or container was opened |
 | =paragraph= | =cue= | =core= | - | A paragraph boundary or operation was reached |
+| =point-marker= | =cue= | =core= | =button= | Buffer point was reached within selected text |
 | =process-active= | =cue= | =core= | - | A process remains active |
 | =progress= | =cue= | =core= | - | An operation is making progress |
 | =pwd= | =prompt= | =core= | - | A password is requested |
@@ -536,6 +541,7 @@ A tone action names a registered tone with =:tone=.  The rule remains backend-in
 | =notebook-cell-code= | =440= | =150= | - | =ein= | The current notebook cell contains executable code |
 | =notebook-cell-markdown= | =659.3= | =150= | - | =ein= | The current notebook cell contains Markdown |
 | =notebook-cell-raw= | =220= | =150= | - | =ein= | The current notebook cell contains uninterpreted text |
+| =point-marker-tone= | =1200= | =30= | - | =core= | Buffer point was reached within selected text |
 | =solitaire-hole= | =800= | =100= | - | =core= | A hole occupies a Solitaire board cell |
 | =solitaire-stone= | =400= | =150= | - | =core= | A stone occupies a Solitaire board cell |
 

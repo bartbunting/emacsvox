@@ -203,10 +203,74 @@
     (should (eq (emacsvox-aural-profile-status 'work) 'diverged))
     (should-not (emacsvox-aural-profile-current-p 'work))
     (should (eq (emacsvox-aural-current-profile-id) 'work))
+    (let ((differences
+           (emacsvox-aural-profile-differences 'work (current-buffer))))
+      (should
+       (equal
+        (mapcar
+         (lambda (difference) (plist-get difference :field))
+         differences)
+        '(feature-fragments)))
+      (should
+       (equal
+        (car differences)
+        '(:field feature-fragments
+          :label "presentation options"
+          :saved (profile-feature)
+          :live nil))))
     (should
      (equal
       (aref (cadr (emacsvox-aural-profiles--row 'work)) 1)
-      "diverged"))))
+      "diverged: presentation options; v details"))
+    (should
+     (equal
+      (emacsvox-aural-profiles--spoken-status 'work)
+      "diverged in presentation options; press v for details"))))
+
+(ert-deftest emacsvox-aural-profiles-describe-explains-divergence ()
+  "The v command displays and speaks saved and live profile differences."
+  (emacsvox-test--with-aural-profiles
+    (emacsvox-aural-register-profile (emacsvox-test--profile-data))
+    (cl-letf
+        (((symbol-function 'emacsvox-sounds-select-theme)
+          (lambda (pack) (setq emacsvox-sounds-current-pack pack))))
+      (emacsvox-aural-apply-profile 'work))
+    (setq
+     emacsvox-sounds-current-pack 'bart
+     emacsvox-aural-voice-palette-override 'test)
+    (let ((source (current-buffer)) spoken)
+      (unwind-protect
+          (with-temp-buffer
+            (emacsvox-aural-profiles-mode)
+            (emacsvox-aural-inspection-attach-source source)
+            (emacsvox-aural-profiles-refresh 'work)
+            (cl-letf
+                (((symbol-function 'called-interactively-p)
+                  (lambda (&rest _) t))
+                 ((symbol-function 'tts-speak)
+                  (lambda (text) (push text spoken))))
+              (emacsvox-aural-profiles-describe))
+            (should
+             (string-match-p
+              "Divergence details.*Sound pack: saved chimes; live bart"
+              (car spoken)))
+            (should
+             (string-match-p
+              "Voice palette: saved acss default; live test"
+              (car spoken)))
+            (with-current-buffer (help-buffer)
+              (should
+               (string-match-p
+                "Differences from live configuration" (buffer-string)))
+              (should
+               (string-match-p
+                "Sound pack: saved chimes; live bart" (buffer-string)))
+              (should
+               (string-match-p
+                "Voice palette: saved acss default; live test"
+                (buffer-string)))))
+        (when (get-buffer (help-buffer))
+          (kill-buffer (help-buffer)))))))
 
 (ert-deftest emacsvox-aural-profiles-report-invalid-selected-profile ()
   "A selected profile with a missing component is invalid, not diverged."
@@ -225,6 +289,10 @@
           (with-temp-buffer
             (emacsvox-aural-profiles-mode)
             (emacsvox-aural-inspection-attach-source source)
+            (should
+             (equal
+              (car (aref tabulated-list-format 5))
+              "Voice Palette"))
             (cl-letf
                 (((symbol-function 'emacsvox-aural-profiles--read-new-id)
                   (lambda (&rest _) (pop new-ids)))
@@ -513,6 +581,11 @@
                        (lambda (text) (push text spoken)))
                       ((symbol-function 'emacsvox-icon) #'ignore))
               (emacsvox-aural-profiles-refresh)
+              (emacsvox-aural-profiles-speak-current)
+              (should
+               (string-match-p
+                "Voice palette acss-default"
+                (car spoken)))
               (emacsvox-aural-profiles-speak-current-cell)
               (should (string-match-p "Profile" (car spoken)))
               (goto-char (point-min))

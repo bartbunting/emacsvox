@@ -10,6 +10,24 @@
 
 ;;; Code:
 
+(defvar emacsvox-speak-messages)
+
+(defun emacsvox-aural-tools--announce-result
+    (format-string &rest arguments)
+  "Display and speak FORMAT-STRING with ARGUMENTS on the main speech stream.
+
+Completion acceptance is already spoken on that stream.  Keep the command's
+outcome ordered after it instead of relying on the independent, buffer-local
+message notification policy."
+  (let ((text (apply #'format format-string arguments)))
+    (if (fboundp 'tts-speak)
+        (progn
+          (let ((emacsvox-speak-messages nil))
+            (message "%s" text))
+          (tts-speak text))
+      (message "%s" text))
+    text))
+
 (require 'cl-lib)
 (require 'subr-x)
 (require 'emacsvox-aural-schemes)
@@ -296,7 +314,7 @@ unsaved in the advanced rule editor so the selector can be reviewed or
            :render (list :content (list :voice voice)))))
     (require 'emacsvox-aural-editor)
     (emacsvox-aural-editor-open-prefilled-rule scope rule source)
-    (message
+    (emacsvox-aural-tools--announce-result
      "Prepared %s voice override for %s; review it and press w to write"
      scope description)))
 
@@ -517,7 +535,7 @@ generated change opens unsaved in the advanced editor for review."
           (progn
             (emacsvox-aural-editor-open-without-rule
              scope rule-id source)
-            (message
+            (emacsvox-aural-tools--announce-result
              "Prepared removal of %s earcon override; press w to restore inherited behavior"
              scope))
         (let* ((phase-key (intern (format ":%s" phase)))
@@ -553,7 +571,7 @@ generated change opens unsaved in the advanced editor for review."
                   :render (list phase-key phase-data))))
             (emacsvox-aural-editor-open-prefilled-rule
              scope rule source)
-            (message
+            (emacsvox-aural-tools--announce-result
              "Prepared %s %s-earcon override for %s; review it and press w to write"
              scope phase description)))))))
 

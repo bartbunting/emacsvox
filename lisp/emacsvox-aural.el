@@ -547,6 +547,7 @@ Registry validation rejects missing targets and alias cycles."
        '((heading role "A titled structural section")
          (folded state "Descendants of an object are hidden")
          (focus-entered event "Navigation arrived at an aural object")
+         (point-located event "A spoken text boundary corresponds to buffer point")
          (state-changed event "A registered state changed")
          (object-changed event "A registered object was created or modified")
          (product-identity event "Emacsvox identity or readiness was presented")
@@ -581,6 +582,37 @@ Registry validation rejects missing targets and alias cycles."
      '(empty whitespace-only separator decorative unspeakable)
      :usage
      "Describes the result of line selection, filtering, and punctuation policy."))
+  (unless (emacsvox-aural-semantic 'point-position)
+    (emacsvox-aural-register-semantic
+     'point-position
+     :kind 'attribute
+     :summary "Where buffer point occurs within the selected text"
+     :value-type 'symbol
+     :allowed-values '(beginning interior end empty)
+     :phases '(before content after)
+     :usage
+     "Marks the character or empty boundary used to present buffer point."))
+  (unless (emacsvox-aural-semantic 'point-boundary)
+    (emacsvox-aural-register-semantic
+     'point-boundary
+     :kind 'attribute
+     :summary "Whether a point marker occurs before or after its text run"
+     :value-type 'symbol
+     :allowed-values '(before after)
+     :phases '(before after)
+     :usage
+     "Places non-speech point feedback at the exact selected-text boundary."))
+  (unless (emacsvox-aural-semantic 'point-presentation)
+    (emacsvox-aural-register-semantic
+     'point-presentation
+     :kind 'attribute
+     :summary "The user-requested presentation for buffer point"
+     :value-type 'symbol
+     :allowed-values
+     '(voice tone earcon voice-tone voice-earcon spoken custom)
+     :phases '(before content after)
+     :usage
+     "Selects the built-in point presentation while allowing stronger rules to override it."))
   (unless (emacsvox-aural-semantic 'edit-operation)
     (emacsvox-aural-register-semantic
      'edit-operation

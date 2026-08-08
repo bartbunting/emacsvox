@@ -349,6 +349,7 @@
     (goto-char (+ (point-min) 2))
     (let ((ems--interactive-fn-name 'python-nav-forward-statement)
           (emacsvox-show-point t)
+          (emacsvox-show-point-presentation 'voice)
           (emacsvox-audio-indentation nil)
           (tts-punctuation-mode 'all)
           submission)
@@ -366,13 +367,18 @@
               (plist-get (cdr submission) :compatibility-actions)))
         (should (equal spoken "value"))
         (should
-         (eq (get-text-property 2 'personality spoken) voice-animate))
-        (should (= (get-text-property 2 'pause spoken) 5))
+         (equal
+          (get-text-property
+           2 emacsvox-aural-facts-property spoken)
+          '(:events (point-located)
+            :point-boundary before
+            :point-position interior
+            :point-presentation voice)))
         (should
          (equal
           (mapcar
            #'emacsvox-aural-compatibility-action-value actions)
-          '(item tick-tick)))
+          '(item)))
         (should-not (get-text-property 2 'auditory-icon spoken)))
       (should-not (get-text-property 2 'personality (buffer-string)))
       (should-not (get-text-property 2 'pause (buffer-string))))))
@@ -589,6 +595,7 @@
     (goto-char (+ (point-min) 2))
     (let ((ems--interactive-fn-name 'python-nav-forward-statement)
           (emacsvox-show-point t)
+          (emacsvox-show-point-presentation 'voice)
           (emacsvox-audio-indentation nil)
           (tts-punctuation-mode 'all)
           (emacsvox-aural-active-scheme 'default)
@@ -627,7 +634,7 @@
            (apply
             #'append
             (mapcar #'emacsvox-aural-concrete-plan-before plans)))
-          '(item tick-tick)))
+          '(item)))
         (should
          (equal
           (mapcar
@@ -636,6 +643,13 @@
             #'append
             (mapcar #'emacsvox-aural-concrete-plan-after plans)))
           '(paragraph))))
+      (should
+       (eq
+        (emacsvox-aural-concrete-content-voice-request
+         (emacsvox-aural-concrete-plan-content
+          (emacsvox-aural-concrete-plan-at 2
+           (emacsvox-aural-submission-prepared-content submission))))
+        'animate))
       (should (= (length emacsvox-aural-presentation-history) 1)))))
 
 (ert-deftest emacsvox-python-backspace-is-one-native-edit-transaction ()

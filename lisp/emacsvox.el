@@ -56,6 +56,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-profile-service)
 (require 'emacsvox-aural-scheme-manager)
 (require 'emacsvox-aural-routing-profiles)
 (require 'emacsvox-aural-semantics)
@@ -369,6 +370,33 @@ This cannot be set via custom; set this in your startup file before
       (when val (require 'pip)))
   :group 'emacsvox)
 
+(defun emacsvox--restore-startup-presentation ()
+  "Apply the saved profile, or select the active scheme's sound pack.
+
+Return the applied profile ID, or nil when startup uses the scheme fallback.
+An invalid or unavailable saved profile produces a warning without preventing
+the rest of Emacsvox startup."
+  (if-let* ((profile (emacsvox-aural-current-profile-id)))
+      (condition-case error
+          (emacsvox-aural-apply-profile profile (current-buffer))
+        (error
+         (display-warning
+          'emacsvox
+          (format
+           "Could not apply startup presentation profile %s: %s"
+           profile (error-message-string error))
+          :warning)
+         (emacsvox-sounds-select-theme
+          (or
+           (emacsvox-aural-effective-scheme-provider 'resource-pack)
+           'chimes))
+         nil))
+    (emacsvox-sounds-select-theme
+     (or
+      (emacsvox-aural-effective-scheme-provider 'resource-pack)
+      'chimes))
+    nil))
+
 (defun emacsvox()
   "Start the Emacsvox Audio Desktop.
 Use Emacs as you normally would, emacsvox provides spoken feedback.
@@ -422,10 +450,7 @@ commands and options."
   (emacsvox-aural-load-user-data)
   (emacsvox-aural-load-routing-profiles nil t)
   (emacsvox-aural-validate-scheme-registry)
-  (emacsvox-sounds-select-theme
-   (or
-    (emacsvox-aural-effective-scheme-provider 'resource-pack)
-    'chimes))
+  (emacsvox--restore-startup-presentation)
   (emacsvox-pronounce-load-dictionaries)
   (make-thread #'(lambda nil  (ems--fastload "emacsvox-advice")))
   (ems--fastload "emacsvox-websearch")

@@ -1215,22 +1215,57 @@ Argument COMPLEMENT  is the complement of separator."
     start emacsvox-aural-concrete-plan-property
     (current-buffer) end)))
 
+(defun tts--concrete-plan-slice (plan start end)
+  "Return PLAN and its leading pause clipped to START through END.
+
+TTS may divide one concrete formatting run into several sentence chunks.
+Only the chunk containing the run's real beginning may queue its before
+actions and leading pause, and only the chunk containing its real end may
+queue its after actions and object-completion effects."
+  (let* ((property emacsvox-aural-concrete-plan-property)
+         (continues-before
+          (and
+           (> start (point-min))
+           (eq plan (get-text-property (1- start) property))))
+         (continues-after
+          (and
+           (< end (point-max))
+           (eq plan (get-text-property end property))))
+         (slice
+          (if (or continues-before continues-after)
+              (copy-emacsvox-aural-concrete-plan plan)
+            plan)))
+    (when continues-before
+      (setf
+       (emacsvox-aural-concrete-plan-before slice) nil
+       (emacsvox-aural-concrete-plan-object-start-p slice) nil))
+    (when continues-after
+      (setf
+       (emacsvox-aural-concrete-plan-after slice) nil
+       (emacsvox-aural-concrete-plan-object-end-p slice) nil))
+    (cons
+     slice
+     (unless continues-before
+       (get-text-property start 'pause)))))
+
 (defun tts-audio-format (start end)
   "Format and speak text from `start' to `end'. "
   (if (emacsvox-aural-concrete-plan-at start)
       (let ((position start)
             runs)
         (while (< position end)
-          (let ((plan (emacsvox-aural-concrete-plan-at position))
-                (next
-                 (next-single-property-change
-                  position emacsvox-aural-concrete-plan-property
-                  (current-buffer) end)))
+          (let* ((plan (emacsvox-aural-concrete-plan-at position))
+                 (next
+                  (next-single-property-change
+                   position emacsvox-aural-concrete-plan-property
+                   (current-buffer) end))
+                 (slice
+                  (tts--concrete-plan-slice plan position next)))
             (push
              (list
-              plan
+              (car slice)
               (buffer-substring-no-properties position next)
-              (get-text-property position 'pause))
+              (cdr slice))
              runs)
             (setq position next)))
         (emacsvox-aural-queue-concrete-runs (nreverse runs)))

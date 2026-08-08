@@ -389,6 +389,9 @@ themed overrides below an active sound pack."
     (line-unspeakable
      "A nonempty line with no speakable content was reached"
      2093 150 t)
+    (point-marker-tone
+     "Buffer point was reached within selected text"
+     1200 30 nil)
     (notebook-cell-code
      "The current notebook cell contains executable code"
      440 150 nil ein)
@@ -1753,6 +1756,11 @@ PATH protects this helper from invalid inheritance cycles."
        :summary (nth 1 definition)
        :fallback (nth 2 definition)
        :owner 'mail)))
+  (unless (emacsvox-aural-cue 'point-marker)
+    (emacsvox-aural-register-cue
+     'point-marker
+     :summary "Buffer point was reached within selected text"
+     :fallback 'button))
   (dolist (definition emacsvox-aural-default-tone-definitions)
     (unless (emacsvox-aural-tone (car definition))
       (emacsvox-aural-register-tone

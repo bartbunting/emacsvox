@@ -611,8 +611,8 @@ Return the server's standard output."
          (point-min) (point-max) "tclsh" t t nil)))
       (should (equal (buffer-string) "1 0 0 2 1 7\n")))))
 
-(ert-deftest emacsvox-windows-eloquence-batches-native-synthesis ()
-  "Eloquence should synthesize once per cue-delimited speech segment."
+(ert-deftest emacsvox-windows-eloquence-drains-speech-before-native-cue ()
+  "Eloquence should drain each cue-delimited segment before its cue."
   (should
    (equal
     (emacsvox-windows-speech-tests--run-server-library
@@ -646,6 +646,7 @@ Return the server's standard output."
      "ADD {`vs75 }\n"
      "RPC {INDEX_TONE 440 100}\n"
      "RPC SYNTH\n"
+     "RPC SPEAKING\n"
      "CUE /sounds/cue.ogg\n"
      "ADD second\n"
      "RPC SYNTH\n"

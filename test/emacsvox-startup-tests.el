@@ -110,5 +110,57 @@
       (nreverse events)
       '((punctuations all) split-caps caps pronunciations)))))
 
+(ert-deftest emacsvox-startup-applies-the-selected-presentation-profile ()
+  "Startup restores the complete selected profile rather than only its ID."
+  (with-temp-buffer
+    (let (applied)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-current-profile-id)
+            (lambda () 'work))
+           ((symbol-function 'emacsvox-aural-apply-profile)
+            (lambda (id source)
+              (setq applied (list id source))
+              id))
+           ((symbol-function 'emacsvox-sounds-select-theme)
+            (lambda (&rest _)
+              (ert-fail "Selected profile unexpectedly used scheme fallback"))))
+        (should (eq (emacsvox--restore-startup-presentation) 'work)))
+      (should (equal applied (list 'work (current-buffer)))))))
+
+(ert-deftest emacsvox-startup-without-profile-selects-scheme-sound-pack ()
+  "Startup retains the scheme sound fallback when no profile is selected."
+  (let (selected)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-current-profile-id) #'ignore)
+         ((symbol-function 'emacsvox-aural-effective-scheme-provider)
+          (lambda (provider &optional _scheme)
+            (and (eq provider 'resource-pack) 'bart)))
+         ((symbol-function 'emacsvox-sounds-select-theme)
+          (lambda (pack) (setq selected pack))))
+      (should-not (emacsvox--restore-startup-presentation)))
+    (should (eq selected 'bart))))
+
+(ert-deftest emacsvox-startup-profile-failure-warns-and-falls-back ()
+  "A failed saved profile does not prevent startup from selecting sounds."
+  (let (selected warning)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-current-profile-id)
+          (lambda () 'work))
+         ((symbol-function 'emacsvox-aural-apply-profile)
+          (lambda (&rest _) (error "Unavailable pack")))
+         ((symbol-function 'emacsvox-aural-effective-scheme-provider)
+          (lambda (provider &optional _scheme)
+            (and (eq provider 'resource-pack) 'chimes)))
+         ((symbol-function 'emacsvox-sounds-select-theme)
+          (lambda (pack) (setq selected pack)))
+         ((symbol-function 'display-warning)
+          (lambda (type message &optional level _buffer-name)
+            (setq warning (list type message level)))))
+      (should-not (emacsvox--restore-startup-presentation)))
+    (should (eq selected 'chimes))
+    (should (eq (car warning) 'emacsvox))
+    (should (string-match-p "work.*Unavailable pack" (cadr warning)))
+    (should (eq (caddr warning) :warning))))
+
 (provide 'emacsvox-startup-tests)
 ;;; emacsvox-startup-tests.el ends here

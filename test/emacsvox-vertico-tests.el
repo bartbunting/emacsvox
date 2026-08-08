@@ -259,6 +259,50 @@
          (equal emacsvox-vertico--prev-candidate "candidate"))
         (should (= emacsvox-vertico--prev-index 2))))))
 
+(ert-deftest emacsvox-vertico-initial-candidate-includes-minibuffer-prompt ()
+  "The first candidate follows its prompt in one spoken submission."
+  (with-temp-buffer
+    (let ((vertico--index 0)
+          (vertico--base "")
+          captured)
+      (cl-letf
+          (((symbol-function 'minibuffer-prompt)
+            (lambda () "Voice for filesystem entry: "))
+           ((symbol-function 'vertico--candidate)
+            (lambda (&optional _highlight) "default"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments)))))
+        (emacsvox--advice-vertico--exhibit-after))
+      (pcase-let ((`(,content . ,arguments) captured))
+        (should
+         (equal content "Voice for filesystem entry: default"))
+        (should (eq (plist-get arguments :module) 'vertico))
+        (should (eq (plist-get arguments :occasion) 'navigation)))
+      (should (equal emacsvox-vertico--prev-candidate "default"))
+      (should (= emacsvox-vertico--prev-index 0)))))
+
+(ert-deftest emacsvox-vertico-later-candidate-does-not-repeat-prompt ()
+  "Candidate movement after entry speaks only the changed candidate."
+  (with-temp-buffer
+    (let ((vertico--index 1)
+          (vertico--base "")
+          captured)
+      (setq-local
+       emacsvox-vertico--prev-candidate "default"
+       emacsvox-vertico--prev-index 0)
+      (cl-letf
+          (((symbol-function 'minibuffer-prompt)
+            (lambda ()
+              (ert-fail "Later candidate movement repeated the prompt")))
+           ((symbol-function 'vertico--candidate)
+            (lambda (&optional _highlight) "expressive"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest _arguments)
+              (setq captured content))))
+        (emacsvox--advice-vertico--exhibit-after))
+      (should (equal captured "expressive")))))
+
 (ert-deftest emacsvox-vertico-repeated-boundary-is-action-only ()
   "Repeated boundary navigation cues without repeating candidate content."
   (with-temp-buffer

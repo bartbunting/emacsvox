@@ -196,8 +196,8 @@
       "edit-deletion" "edit-line-created" "edit-lowercase" "edit-uppercase"
       "field-empty" "line-decoration" "line-empty" "line-separator"
       "line-unspeakable" "line-whitespace" "notebook-cell-code"
-      "notebook-cell-markdown" "notebook-cell-raw" "solitaire-hole"
-      "solitaire-stone")))
+      "notebook-cell-markdown" "notebook-cell-raw" "point-marker-tone"
+      "solitaire-hole" "solitaire-stone")))
   (dolist
       (expected
        '((buffer-modified 700 100 nil)
@@ -216,6 +216,7 @@
          (notebook-cell-code 440 150 nil)
          (notebook-cell-markdown 659.3 150 nil)
          (notebook-cell-raw 220 150 nil)
+         (point-marker-tone 1200 30 nil)
          (solitaire-hole 800 100 nil)
          (solitaire-stone 400 150 nil)))
     (let ((tone (emacsvox-aural-tone (car expected))))
@@ -513,6 +514,13 @@
      (string-suffix-p
       "/packs/3d/deselect-object.ogg"
       (emacsvox-aural-resolve-cue 'unmark-object '3d t)))))
+
+(ert-deftest emacsvox-aural-resources-point-marker-has-a-portable-fallback ()
+  "The point earcon works in every bundled pack without a new sound file."
+  (let ((cue (emacsvox-aural-cue 'point-marker)))
+    (should cue)
+    (should (eq (emacsvox-aural-cue-owner cue) 'core))
+    (should (eq (emacsvox-aural-cue-fallback cue) 'button))))
 
 (ert-deftest emacsvox-aural-resources-require-button-for-standalone-pack ()
   "A sound pack without inherited button fallback is not standalone-valid."

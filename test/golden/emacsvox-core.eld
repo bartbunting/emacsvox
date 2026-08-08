@@ -53,9 +53,7 @@
 	(:text "alpha beta\n" :point 1 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
  (:name next-logical-line :events
-	((stop all) (icon left)
-	 (speak (:text "second" :personalities ((0 1 acss-p6-s6-r6)))))
-	:value nil :state
+	((stop all) (speak (:text "second"))) :value nil :state
 	(:text "first\nsecond\n" :point 7 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
  (:name forward-word :events ((speak (:text "beta"))) :value t :state
@@ -65,9 +63,7 @@
 	(:text "alpha beta" :point 7 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
  (:name back-to-indentation :events
-	((stop all) (icon tick-tick)
-	 (speak (:text "  alpha" :personalities ((2 3 acss-p6-s6-r6)))))
-	:value nil :state
+	((stop all) (speak (:text "  alpha"))) :value nil :state
 	(:text "  alpha\n" :point 3 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
  (:name forward-sentence :events ((speak (:text "Second sentence.")))
@@ -83,9 +79,8 @@
 	 :point 18 :mark nil :mark-active nil :modified nil :kill-ring
 	 nil))
  (:name forward-list :events
-	((icon large-movement) (stop all) (icon tick-tick)
-	 (speak
-	  (:text "(one) (two)" :personalities ((5 6 acss-p6-s6-r6)))))
+	((icon large-movement) (stop all)
+	 (speak (:text "(one) (two)")))
 	:value 6 :state
 	(:text "(one) (two)" :point 6 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))

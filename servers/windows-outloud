@@ -538,10 +538,16 @@ proc speech_task {} {
             }
             a {
                 windows_eci_flush
-                set sound [lindex $event 1]
-                catch {
-                    windows_speech_queue_sound $tts(play) $sound
-                } errCode
+                # Speech and external cues use independent native playback
+                # queues.  Drain preceding speech before starting the cue so
+                # a run-local marker is heard at its text boundary instead of
+                # racing to the beginning of the utterance.
+                if {[service]} {
+                    set sound [lindex $event 1]
+                    catch {
+                        windows_speech_queue_sound $tts(play) $sound
+                    } errCode
+                }
             }
             b {
                 lvarpop event

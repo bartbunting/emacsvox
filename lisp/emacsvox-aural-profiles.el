@@ -12,6 +12,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'seq)
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-schemes)
@@ -43,6 +44,61 @@
   (if-let* ((source (emacsvox-aural-profiles--source-buffer)))
       (emacsvox-aural-profile-status id source)
     'unavailable))
+
+(defun emacsvox-aural-profiles--differences (id)
+  "Return live differences for profile ID in the inspection source."
+  (when-let* ((source (emacsvox-aural-profiles--source-buffer)))
+    (emacsvox-aural-profile-differences id source)))
+
+(defun emacsvox-aural-profiles--natural-list (items)
+  "Join ITEMS as a concise spoken natural-language list."
+  (pcase items
+    ('nil "")
+    (`(,only) only)
+    (`(,first ,second) (format "%s and %s" first second))
+    (_
+     (format
+      "%s, and %s"
+      (mapconcat #'identity (butlast items) ", ")
+      (car (last items))))))
+
+(defun emacsvox-aural-profiles--difference-labels (differences &optional limit)
+  "Summarize DIFFERENCES by label, optionally showing at most LIMIT labels."
+  (let* ((labels
+          (delete-dups
+           (mapcar
+            (lambda (difference) (plist-get difference :label))
+            differences)))
+         (shown (if limit (seq-take labels limit) labels))
+         (remaining (- (length labels) (length shown)))
+         (summary (emacsvox-aural-profiles--natural-list shown)))
+    (if (> remaining 0)
+        (format "%s plus %d more" summary remaining)
+      summary)))
+
+(defun emacsvox-aural-profiles--status-cell (id)
+  "Return concise table status for profile ID."
+  (let ((status (emacsvox-aural-profiles--status id)))
+    (if (eq status 'diverged)
+        (let ((differences (emacsvox-aural-profiles--differences id)))
+          (if differences
+              (format
+               "diverged: %s; v details"
+               (emacsvox-aural-profiles--difference-labels differences 2))
+            "diverged; v details"))
+      (symbol-name status))))
+
+(defun emacsvox-aural-profiles--spoken-status (id)
+  "Return accessible status detail for profile ID."
+  (let ((status (emacsvox-aural-profiles--status id)))
+    (if (eq status 'diverged)
+        (let ((differences (emacsvox-aural-profiles--differences id)))
+          (if differences
+              (format
+               "diverged in %s; press v for details"
+               (emacsvox-aural-profiles--difference-labels differences))
+            "diverged; press v for details"))
+      (symbol-name status))))
 
 (defun emacsvox-aural-profiles-status (&optional source-buffer)
   "Return concise profile status for SOURCE-BUFFER."
@@ -98,7 +154,7 @@
      id
      (vector
       (symbol-name id)
-      (symbol-name (emacsvox-aural-profiles--status id))
+      (emacsvox-aural-profiles--status-cell id)
       (symbol-name (plist-get data :scheme))
       (if-let* ((fragments (plist-get data :feature-fragments)))
           (mapconcat #'symbol-name fragments ", ")
@@ -167,10 +223,10 @@
          (summary
           (format
            (concat
-            "%s. %s. Scheme %s. Options %s. Sound %s. Voice %s. "
+            "%s. %s. Scheme %s. Options %s. Sound %s. Voice palette %s. "
             "Compatibility voices %s. Spatial %s. %s")
            (emacsvox-aural-humanize id)
-           (emacsvox-aural-profiles--status id)
+           (emacsvox-aural-profiles--spoken-status id)
            (plist-get data :scheme)
            (if-let* ((fragments (plist-get data :feature-fragments)))
                (mapconcat
@@ -212,20 +268,62 @@
   (interactive)
   (emacsvox-aural-ui-move-column -1))
 
+(defun emacsvox-aural-profiles--format-difference-value (field value)
+  "Return an accessible rendering of difference VALUE for FIELD."
+  (cond
+   ((memq
+     field
+     '(compatibility-voice-enabled spatial-enabled
+       spatial-speech-enabled spatial-cue-enabled))
+    (if value "enabled" "disabled"))
+   ((eq field 'feature-fragments)
+    (if value
+        (mapconcat #'emacsvox-aural-humanize value ", then ")
+      "none"))
+   ((and
+     (listp value)
+     (eq (plist-get value :source) 'scheme))
+    (format
+     "from scheme, %s"
+     (emacsvox-aural-humanize (plist-get value :value))))
+   ((null value) "none")
+   ((symbolp value) (emacsvox-aural-humanize value))
+   (t (format "%s" value))))
+
+(defun emacsvox-aural-profiles--spoken-differences (differences)
+  "Return complete spoken detail for DIFFERENCES."
+  (mapconcat
+   (lambda (difference)
+     (let ((field (plist-get difference :field)))
+       (format
+        "%s: saved %s; live %s"
+        (capitalize (plist-get difference :label))
+        (emacsvox-aural-profiles--format-difference-value
+         field (plist-get difference :saved))
+        (emacsvox-aural-profiles--format-difference-value
+         field (plist-get difference :live)))))
+   differences
+   ". "))
+
 (defun emacsvox-aural-profiles-describe (&optional id)
   "Display and speak complete details for profile ID."
   (interactive)
   (let* ((id (or id (emacsvox-aural-profiles--at-point-or-read)))
          (entry (emacsvox-aural-profile-entry id))
          (data (emacsvox-aural-profile-entry-data entry))
-         (validation (emacsvox-aural-profiles--validation id)))
+         (validation (emacsvox-aural-profiles--validation id))
+         (status (emacsvox-aural-profiles--status id))
+         (differences
+          (and
+           (eq status 'diverged)
+           (emacsvox-aural-profiles--differences id))))
     (with-help-window (help-buffer)
       (princ (format "Presentation profile: %s\n\n" id))
       (princ (format "Summary: %s\n" (plist-get data :summary)))
       (princ
        (format
         "Status: %s\n"
-        (emacsvox-aural-profiles--status id)))
+        status))
       (princ (format "Scheme: %s\n" (plist-get data :scheme)))
       (princ
        (format
@@ -246,10 +344,32 @@
         "Validation: %s%s\n"
         (if (car validation) "valid" "invalid")
         (if (car validation) "" (format "; %s" (cdr validation)))))
+      (when differences
+        (princ
+         (format
+          "\nDifferences from live configuration%s:\n"
+          (if-let* ((source (emacsvox-aural-profiles--source-buffer)))
+              (format " for buffer %s" (buffer-name source))
+            "")))
+        (dolist (difference differences)
+          (let ((field (plist-get difference :field)))
+            (princ
+             (format
+              "- %s: saved %s; live %s\n"
+              (capitalize (plist-get difference :label))
+              (emacsvox-aural-profiles--format-difference-value
+               field (plist-get difference :saved))
+              (emacsvox-aural-profiles--format-difference-value
+               field (plist-get difference :live)))))))
       (princ
        "\nProfiles reference existing components. Edit their rules in the scheme or fragment manager.\n"))
     (when (called-interactively-p 'interactive)
-      (emacsvox-aural-profiles-speak-current))
+      (emacsvox-aural-profiles-speak-current)
+      (when (and differences (fboundp 'tts-speak))
+        (tts-speak
+         (concat
+          "Divergence details. "
+          (emacsvox-aural-profiles--spoken-differences differences)))))
     data))
 
 (defun emacsvox-aural-profiles-activate ()
@@ -423,7 +543,8 @@ MUTATION."
      (concat
       "Aural Presentation Profiles\n\n"
       "A profile switches one complete named configuration. It references a\n"
-      "base scheme and ordered presentation options and captures sound, voice,\n"
+      "base scheme and ordered presentation options and captures sound-pack\n"
+      "and voice-palette choices,\n"
       "legacy compatibility voice policy, and spatial choices. Exactly one\n"
       "profile identity can be selected. Compatibility voice policy applies\n"
       "only to the ordinary source buffer associated with this manager.\n"
@@ -455,11 +576,11 @@ MUTATION."
   (setq
    tabulated-list-format
    [("Profile" 24 t)
-    ("Status" 10 t)
+    ("Status" 48 t)
     ("Scheme" 20 t)
     ("Options" 28 t)
     ("Sound" 16 t)
-    ("Voice" 18 t)
+    ("Voice Palette" 18 t)
     ("Compatibility" 15 t)
     ("Spatial" 14 t)
     ("Validation" 12 t)

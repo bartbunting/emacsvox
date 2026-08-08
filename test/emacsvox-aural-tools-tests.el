@@ -26,7 +26,20 @@
 (require 'emacsvox-aural-voice-workbench)
 
 (defconst emacsvox-test--core-default-rule-ids
-  '(core-edit-deletion-tone
+  '(core-point-voice
+    core-point-tone-before
+    core-point-tone-after
+    core-point-earcon-before
+    core-point-earcon-after
+    core-point-voice-tone-voice
+    core-point-voice-tone-before
+    core-point-voice-tone-after
+    core-point-voice-earcon-voice
+    core-point-voice-earcon-before
+    core-point-voice-earcon-after
+    core-point-spoken-before
+    core-point-spoken-after
+    core-edit-deletion-tone
     core-edit-line-created-tone
     core-edit-uppercase-tone
     core-edit-lowercase-tone
@@ -36,7 +49,7 @@
     core-separator-line-tone
     core-decorative-line-tone
     core-unspeakable-line-tone)
-  "Rule IDs providing the default first-class tone policy.")
+  "Rule IDs providing the default first-class core policy.")
 
 (defmacro emacsvox-test--with-aural-tools (&rest body)
   "Run BODY with isolated scheme, override, and training state."
@@ -111,6 +124,25 @@
    :mode (or mode 'text-mode)
    :mode-lineage (list (or mode 'text-mode))
    :occasion 'inspection))
+
+(ert-deftest emacsvox-aural-tools-results-follow-completion-on-main-speech ()
+  "A wizard result bypasses optional message speech and follows selection."
+  (let ((emacsvox-speak-messages t)
+        events)
+    (cl-letf (((symbol-function 'message)
+               (lambda (_format text)
+                 (push (list 'message emacsvox-speak-messages text) events)))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speech text) events))))
+      (should
+       (equal
+        (emacsvox-aural-tools--announce-result "Prepared %s" "override")
+        "Prepared override")))
+    (should
+     (equal
+      (nreverse events)
+      '((message nil "Prepared override")
+        (speech "Prepared override"))))))
 
 (ert-deftest emacsvox-aural-tools-disabled-rules-stay-valid-but-inactive ()
   "Schema-v1 disabled rules remain inspectable without entering resolution."
@@ -232,7 +264,8 @@
              (emacsvox-aural--make-content-style
               :voice 'voice-bolden)))
            answers
-           prepared)
+           prepared
+           spoken)
       (unwind-protect
           (cl-letf
               (((symbol-function
@@ -260,8 +293,14 @@
                  'emacsvox-aural-editor-open-prefilled-rule)
                 (lambda (scope rule source-buffer)
                   (setq prepared
-                        (list scope rule source-buffer)))))
+                        (list scope rule source-buffer))))
+               ((symbol-function 'tts-speak)
+                (lambda (text) (setq spoken text))))
             (emacsvox-aural-remap-voice-at-point)
+            (should
+             (string-prefix-p
+              "Prepared personal voice override"
+              spoken))
             (should
              (equal
               prepared
@@ -688,7 +727,8 @@
              :before (list action)))
            prepared
            previewed
-           auditions)
+           auditions
+           spoken)
       (unwind-protect
           (cl-letf
               (((symbol-function
@@ -723,8 +763,14 @@
                ((symbol-function
                  'emacsvox-aural-editor-open-prefilled-rule)
                 (lambda (scope rule source-buffer)
-                  (setq prepared (list scope rule source-buffer)))))
+                  (setq prepared (list scope rule source-buffer))))
+               ((symbol-function 'tts-speak)
+                (lambda (text) (setq spoken text))))
             (emacsvox-aural-remap-earcon-at-point)
+            (should
+             (string-prefix-p
+              "Prepared personal before-earcon override"
+              spoken))
             (should
              (equal
               prepared
@@ -819,7 +865,8 @@
            (concrete
             (emacsvox-aural--make-concrete-plan
              :after (list action)))
-           prepared)
+           prepared
+           spoken)
       (unwind-protect
           (cl-letf
               (((symbol-function
@@ -844,8 +891,14 @@
                ((symbol-function
                  'emacsvox-aural-editor-open-prefilled-rule)
                 (lambda (scope rule source-buffer)
-                  (setq prepared (list scope rule source-buffer)))))
+                  (setq prepared (list scope rule source-buffer))))
+               ((symbol-function 'tts-speak)
+                (lambda (text) (setq spoken text))))
             (emacsvox-aural-remap-earcon-at-point)
+            (should
+             (string-prefix-p
+              "Prepared session after-earcon override"
+              spoken))
             (should
              (equal
               prepared
@@ -881,7 +934,8 @@
            (concrete
             (emacsvox-aural--make-concrete-plan
              :before (list action)))
-           removed)
+           removed
+           spoken)
       (cl-letf
           (((symbol-function
              'emacsvox-aural-tools--remap-source-input)
@@ -902,8 +956,16 @@
            ((symbol-function
              'emacsvox-aural-editor-open-without-rule)
             (lambda (scope rule-id source)
-              (setq removed (list scope rule-id source)))))
+              (setq removed (list scope rule-id source))))
+           ((symbol-function 'tts-speak)
+            (lambda (text) (setq spoken text))))
         (emacsvox-aural-remap-earcon-at-point))
+      (should
+       (equal
+        spoken
+        (concat
+         "Prepared removal of session earcon override; "
+         "press w to restore inherited behavior")))
       (should
        (equal
         removed
@@ -2224,7 +2286,7 @@
           (should (equal (aref row 1) "active"))
           (should (equal (aref row 2) "personal"))
           (should (equal (aref row 3) "default"))
-          (should (equal (aref row 5) "1 direct, 11 total"))
+          (should (equal (aref row 5) "1 direct, 24 total"))
           (should (equal (aref row 7) "you (personal)")))
         (should
          (eq
@@ -2849,7 +2911,7 @@
       (should (string-match-p "Provided by you (personal)" summary))
       (should (string-match-p "Based on default" summary))
       (should (string-match-p "Sound pack chimes" summary))
-      (should (string-match-p "11 effective presentations" summary))
+      (should (string-match-p "24 effective presentations" summary))
       (should (string-match-p "Valid" summary)))))
 
 (ert-deftest emacsvox-aural-scheme-manager-identifies-integration-provider ()
@@ -3010,7 +3072,7 @@
               (should (string-match-p "parent-heading" text))
               (should
                (string-match-p
-                "Effective presentation order (12 total)"
+                "Effective presentation order (25 total)"
                 text)))))
       (when (get-buffer "*Help*")
         (kill-buffer "*Help*")))))

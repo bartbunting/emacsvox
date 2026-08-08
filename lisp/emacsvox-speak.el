@@ -419,17 +419,112 @@ Useful to do this before you listen to an entire buffer."
 
 ;;;  Showing the point:
 
+(defcustom emacsvox-show-point-presentation 'voice
+  "How `emacsvox-speak-line' presents buffer point.
+
+`voice' applies the animated voice to the character at point.  `tone' and
+`earcon' place a short marker at the exact text boundary.  `voice-tone' and
+`voice-earcon' combine the corresponding presentations.  `spoken' says
+\"point\" at the boundary.  `custom' publishes point facts for personal aural
+rules without adding a built-in presentation, and `none' suppresses point
+presentation while leaving `emacsvox-show-point' enabled."
+  :type
+  '(choice
+    (const :tag "Animated voice" voice)
+    (const :tag "Micro-tone" tone)
+    (const :tag "Earcon" earcon)
+    (const :tag "Animated voice and micro-tone" voice-tone)
+    (const :tag "Animated voice and earcon" voice-earcon)
+    (const :tag "Spoken word: point" spoken)
+    (const :tag "Personal aural rules" custom)
+    (const :tag "No point presentation" none))
+  :group 'emacsvox-aural)
+
 (defvar emacsvox-show-point nil
-  " If T, command `emacsvox-speak-line' \\[emacsvox-speak-line]
+  "If T, command `emacsvox-speak-line' \\[emacsvox-speak-line]
 indicates position of point by an aural highlight.
 Command `emacsvox-toggle-show-point' bound to
-\\[emacsvox-toggle-show-point]  toggles this setting.")
+\\[emacsvox-toggle-show-point] toggles this setting.  The presentation is
+selected by `emacsvox-show-point-presentation'.")
 
 (ems-generate-switcher 'emacsvox-toggle-show-point
                        'emacsvox-show-point
                        "Toggle state of  Emacsvox-show-point.
 Interactive PREFIX arg means toggle  the global default value, and then set the
 current local  value to the result.")
+
+(defconst emacsvox-show-point-presentation-values
+  '(voice tone earcon voice-tone voice-earcon spoken custom none)
+  "Supported values of `emacsvox-show-point-presentation'.")
+
+(defun emacsvox-set-show-point-presentation (presentation &optional global)
+  "Select point PRESENTATION and preview the current line.
+
+Set the option buffer-locally by default.  With interactive prefix GLOBAL,
+also set the global default and use it in the current buffer."
+  (interactive
+   (list
+    (intern
+     (completing-read
+      "Point presentation: "
+      (mapcar #'symbol-name emacsvox-show-point-presentation-values)
+      nil t nil nil
+      (symbol-name emacsvox-show-point-presentation)))
+    current-prefix-arg))
+  (unless (memq presentation emacsvox-show-point-presentation-values)
+    (user-error "Unknown point presentation: %S" presentation))
+  (when global
+    (set-default 'emacsvox-show-point-presentation presentation))
+  (setq-local emacsvox-show-point-presentation presentation)
+  (when (called-interactively-p 'interactive)
+    (let ((emacsvox-show-point t))
+      (emacsvox-speak-line)))
+  presentation)
+
+(defun emacsvox-speak--point-facts (position start end)
+  "Return semantic point facts for POSITION between START and END.
+
+Return nil when point presentation is disabled."
+  (when
+      (and
+       emacsvox-show-point
+       (not (eq emacsvox-show-point-presentation 'none)))
+    (let* ((empty (= start end))
+           (location
+            (cond
+             (empty 'empty)
+             ((<= position start) 'beginning)
+             ((>= position end) 'end)
+             (t 'interior)))
+           (boundary
+            (if (and (not empty) (>= position end)) 'after 'before)))
+      (list
+       :events '(point-located)
+       :point-position location
+       :point-boundary boundary
+       :point-presentation emacsvox-show-point-presentation))))
+
+(defun emacsvox-speak--annotate-point (text position start end facts)
+  "Attach point FACTS to the appropriate character in TEXT.
+
+POSITION, START, and END are source-buffer positions.  At END, attach the
+facts to the final character while `point-boundary' records that non-content
+feedback belongs after it."
+  (when (and facts (> (length text) 0))
+    (let* ((offset
+            (cond
+             ((<= position start) 0)
+             ((>= position end) (1- (length text)))
+             (t (min (1- (length text)) (- position start)))))
+           (existing
+            (get-text-property offset emacsvox-aural-facts-property text)))
+      (add-text-properties
+       offset (1+ offset)
+       (list
+        emacsvox-aural-facts-property
+        (emacsvox-aural-merge-facts existing facts))
+       text)))
+  text)
 
 ;;;  compute percentage into the buffer:
 
@@ -869,6 +964,7 @@ interruption so native submissions can apply their complete delivery policy."
          (start (line-beginning-position))
          (end (line-end-position))
          (line nil)
+         (point-facts nil)
          (orig (point))
          (linenum
           (when
@@ -881,21 +977,12 @@ interruption so native submissions can apply their complete delivery policy."
      ((null arg))
      ((> arg 0) (setq start orig))
      (t (setq end orig)))
+    (setq point-facts (emacsvox-speak--point-facts orig start end))
     (when icon (emacsvox-icon icon))
-    (when emacsvox-show-point
-      (emacsvox-icon
-       (cond
-        ((bolp) 'left)
-        ((eolp) 'right)
-        (t 'tick-tick))))
     (setq line
-          (if emacsvox-show-point
-              (ems-set-pause-temporarily
-               orig (1+ orig) 5
-               (ems-set-personality-temporarily
-                orig (1+ orig) voice-animate
-                (emacsvox-aural-source-substring start end)))
-            (emacsvox-aural-source-substring start end)))
+          (emacsvox-speak--annotate-point
+           (emacsvox-aural-source-substring start end)
+           orig start end point-facts))
     (when (and (null arg) emacsvox-speak-line-column-filter)
       (setq
        line
@@ -1107,20 +1194,20 @@ Cues the start of a physical line with auditory icon `left'."
            'navigation))
          (facts (copy-tree emacsvox-aural-submission-facts))
          (compatibility-actions
-          (when icon (list (emacsvox-aural-compatibility-icon icon))))
-         start end line)
+          (when
+              (and icon (not (memq condition '(empty whitespace-only))))
+            (list (emacsvox-aural-compatibility-icon icon))))
+         start end line point-facts)
     (save-excursion
       (beginning-of-visual-line)
       (setq start (point))
       (end-of-visual-line)
       (setq end (point))
+      (setq point-facts (emacsvox-speak--point-facts orig start end))
       (setq line
-            (if emacsvox-show-point
-                (ems-set-personality-temporarily
-                 orig (1+ orig)
-                 voice-animate
-                 (emacsvox-aural-source-substring start end))
-              (emacsvox-aural-source-substring start end))))
+            (emacsvox-speak--annotate-point
+             (emacsvox-aural-source-substring start end)
+             orig start end point-facts)))
     (let ((emacsvox-aural-submission-context context)
           (emacsvox-aural-submission-module module)
           (emacsvox-aural-submission-occasion occasion)
@@ -3324,6 +3411,7 @@ Use `,' and `.' to continuously decrease/increase `selective-display'.
            '(
              window-system window-system-version emacs-version system-type
              emacsvox-version emacsvox-show-point
+             emacsvox-show-point-presentation
              tts-program tts-speech-rate tts-character-scale
              tts-split-caps tts-punctuation-mode visual-line-mode
              emacsvox-line-echo  emacsvox-word-echo emacsvox-character-echo

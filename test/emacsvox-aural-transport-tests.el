@@ -1696,6 +1696,225 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (emacsvox-aural-compatibility-action-value (car actions))
           'item))))))
 
+(ert-deftest emacsvox-show-point-marker-is-local-to-the-text-boundary ()
+  "A real one-object submission keeps point tones and cues on their run."
+  (emacsvox-test--with-transport-scheme
+    (let ((context (emacsvox-test--transport-context)))
+      (dolist (presentation '(tone earcon))
+        (dolist
+            (case '((before 1 before) (after 2 after)))
+          (let* ((boundary (nth 0 case))
+                 (offset (nth 1 case))
+                 (phase (nth 2 case))
+                 (text (copy-sequence "abc")))
+            (add-text-properties
+             offset (1+ offset)
+             (list
+              emacsvox-aural-facts-property
+              (list
+               :events '(point-located)
+               :point-position (if (eq boundary 'after) 'end 'interior)
+               :point-boundary boundary
+               :point-presentation presentation))
+             text)
+            (let* ((submission
+                    (cl-letf (((symbol-function 'tts-speak) #'ignore))
+                      (emacsvox-aural-submit text :context context)))
+                   (prepared
+                    (emacsvox-aural-submission-prepared-content submission))
+                   (plans
+                    (mapcar
+                     (lambda (position)
+                       (emacsvox-aural-concrete-plan-at position prepared))
+                     '(0 1 2)))
+                   (point-plan
+                    (emacsvox-aural-concrete-plan-at offset prepared))
+                   (actions
+                    (if (eq phase 'before)
+                        (emacsvox-aural-concrete-plan-before point-plan)
+                      (emacsvox-aural-concrete-plan-after point-plan))))
+              (should
+               (equal
+                (mapcar #'emacsvox-aural-concrete-plan-object-id plans)
+                (make-list
+                 3 (emacsvox-aural-concrete-plan-object-id (car plans)))))
+              (should (= (length actions) 1))
+              (pcase presentation
+                ('tone
+                 (should
+                  (eq
+                   (emacsvox-aural-concrete-action-tone (car actions))
+                   'point-marker-tone)))
+                ('earcon
+                 (should
+                  (eq
+                   (emacsvox-aural-concrete-action-cue (car actions))
+                   'point-marker))))
+              (should
+               (eq
+                (emacsvox-aural-concrete-action-anchor (car actions))
+                'run))
+              (should-not
+               (if (eq phase 'before)
+                   (emacsvox-aural-concrete-plan-after point-plan)
+                 (emacsvox-aural-concrete-plan-before point-plan)))
+              (let* ((runs
+                      (cl-loop
+                       for index from 0 below (length text)
+                       collect
+                       (list
+                        (nth index plans)
+                        (substring text index (1+ index))
+                        nil)))
+                     (envelope
+                      (car
+                       (emacsvox-aural--build-structured-timeline
+                        1 1 runs)))
+                     (wire-action
+                      (seq-find
+                       (lambda (action)
+                         (equal
+                          (plist-get action :type)
+                          (if (eq presentation 'tone) "tone" "audio")))
+                       (append (plist-get envelope :actions) nil)))
+                     (wire-position (plist-get wire-action :position)))
+                (should wire-action)
+                (should (= (plist-get wire-position :span_id) (1+ offset)))
+                (should
+                 (equal
+                  (plist-get wire-position :affinity)
+                  (symbol-name phase))))
+              (dolist (index (remove offset '(0 1 2)))
+                (let ((plan (emacsvox-aural-concrete-plan-at index prepared)))
+                  (should-not (emacsvox-aural-concrete-plan-before plan))
+                  (should-not
+                   (emacsvox-aural-concrete-plan-after plan)))))))))))
+
+(ert-deftest emacsvox-aural-clause-chunks-do-not-repeat-boundary-actions ()
+  "Sentence chunking queues object boundary actions exactly once."
+  (emacsvox-test--with-transport-scheme
+    (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+      (kill-buffer scratch))
+    (let* ((text
+            (concat
+             "The complete source run is clean. "
+             "It has only baseline failures; all expected tests passed, "
+             "with one existing skip. I am doing the final build check."))
+           (context
+            '(:module agent-shell
+              :mode agent-shell-mode
+              :mode-lineage (agent-shell-mode comint-mode)
+              :occasion navigation
+              :face-presentation-enabled t
+              :voice-lock-enabled nil
+              :icons-enabled t))
+           (tts-speaker-process 'speaker)
+           (tts-notify-process nil)
+           (tts-stop-immediately nil)
+           (tts-quiet nil)
+           (tts-caps nil)
+           (emacsvox-pronounce-table nil)
+           (emacsvox-pronounce-personality nil)
+           (point-offset (string-match "baseline" text))
+           prepared
+           events)
+      (unwind-protect
+          (progn
+            (add-text-properties
+             point-offset (1+ point-offset)
+             (list
+              emacsvox-aural-facts-property
+              '(:events (point-located)
+                :point-position interior
+                :point-boundary before
+                :point-presentation earcon))
+             text)
+            (cl-letf (((symbol-function 'tts-speak)
+                       (lambda (value) (setq prepared value))))
+              (emacsvox-aural-submit
+               text
+               :context context
+               :compatibility-actions
+               (list
+                (emacsvox-aural-compatibility-icon 'left)
+                (emacsvox-aural-compatibility-icon 'right 'after))))
+            (cl-letf
+                (((symbol-function 'process-live-p) (lambda (_) t))
+                 ((symbol-function 'tts--protocol-sync) #'ignore)
+                 ((symbol-function 'tts--protocol-dispatch) #'ignore)
+                 ((symbol-function 'tts--protocol-queue-code) #'ignore)
+                 ((symbol-function 'tts-voice-reset-code)
+                  (lambda () "RESET"))
+                 ((symbol-function 'tts--protocol-queue-text)
+                  (lambda (payload) (push (list 'text payload) events)))
+                 ((symbol-function 'tts--protocol-silence) #'ignore)
+                 ((symbol-function 'emacsvox-aural-queue-concrete-action)
+                  (lambda (action &optional _context)
+                    (push
+                     (list
+                      'action
+                      (emacsvox-aural-concrete-action-cue action)
+                      (emacsvox-aural-concrete-action-anchor action))
+                     events))))
+              (let ((emacsvox-aural-submission-context context))
+                (tts-speak prepared))))
+        (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+          (kill-buffer scratch)))
+      (setq events (nreverse events))
+      (should (> (cl-count 'text events :key #'car) 2))
+      (should
+       (equal
+        (seq-filter (lambda (event) (eq (car event) 'action)) events)
+        '((action left object)
+          (action point-marker run)
+          (action right object))))
+      (should (equal (car events) '(action left object)))
+      (should (equal (car (last events)) '(action right object)))
+      (let ((point-index
+             (cl-position
+              '(action point-marker run) events :test #'equal)))
+        (should point-index)
+        (should
+         (seq-some
+          (lambda (event)
+            (and
+             (eq (car event) 'text)
+             (string-match-p "complete source run" (cadr event))))
+          (seq-take events point-index)))
+        (should
+         (seq-some
+          (lambda (event)
+            (and
+             (eq (car event) 'text)
+             (string-match-p "baseline" (cadr event))))
+          (seq-drop events (1+ point-index))))))))
+
+(ert-deftest emacsvox-show-point-does-not-duplicate-blank-line-feedback ()
+  "Empty and whitespace-only lines submit only their line condition."
+  (dolist (case '(("" empty) (" \t" whitespace-only)))
+    (with-temp-buffer
+      (insert (car case))
+      (goto-char (point-min))
+      (let ((emacsvox-show-point t)
+            (emacsvox-show-point-presentation 'tone)
+            (emacsvox-audio-indentation nil)
+            (tts-speaker-process 'speaker)
+            (tts-quiet nil)
+            submission)
+        (cl-letf
+            (((symbol-function 'process-live-p) (lambda (_) t))
+             ((symbol-function 'emacsvox-icon) #'ignore)
+             ((symbol-function 'emacsvox-aural-submit-actions)
+              (lambda (&rest arguments) (setq submission arguments))))
+          (emacsvox-speak-line-with-speaker
+           (lambda (_) (ert-fail "Blank line should not submit content"))))
+        (let ((facts (plist-get submission :facts)))
+          (should (eq (plist-get facts :line-condition) (cadr case)))
+          (should-not (plist-get facts :events))
+          (should-not (plist-member facts :point-position))
+          (should-not (plist-member facts :point-boundary))
+          (should-not (plist-member facts :point-presentation)))))))
+
 (ert-deftest emacsvox-speak-line-preserves-distinct-same-valued-icon ()
   "An excluded newline cue cannot remove a same-valued icon from line text."
   (with-temp-buffer
@@ -1928,52 +2147,82 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (emacsvox-aural-compatibility-action-value (car actions))
           'left))))))
 
-(ert-deftest emacsvox-speak-visual-line-submits-one-native-blank-boundary ()
-  "A blank visual line submits its cue and semantic tone together."
+(ert-deftest emacsvox-speak-visual-line-captures-point-presentation-facts ()
+  "Visual-line speech marks the same exact point character as physical lines."
   (with-temp-buffer
+    (insert "visual")
+    (goto-char (+ (point-min) 2))
     (visual-line-mode 1)
-    (let ((emacsvox-show-point nil)
-          (emacsvox-aural-submission-facts
-           '(:role paragraph :content "stale text"))
-          (emacsvox-aural-submission-context nil)
-          (emacsvox-aural-submission-module nil)
-          (emacsvox-aural-submission-occasion nil)
-          legacy-speech
-          (stops 0)
-          submission
-          submission-context)
+    (let ((emacsvox-show-point t)
+          (emacsvox-show-point-presentation 'earcon)
+          submission)
       (cl-letf
           (((symbol-function 'beginning-of-visual-line)
             (lambda (&rest _) (goto-char (line-beginning-position))))
            ((symbol-function 'end-of-visual-line)
             (lambda (&rest _) (goto-char (line-end-position))))
-           ((symbol-function 'process-live-p) (lambda (_process) t))
-           ((symbol-function 'tts-stop)
-            (lambda (&optional _all) (cl-incf stops)))
-           ((symbol-function 'tts-speak)
-            (lambda (text) (setq legacy-speech text)))
-           ((symbol-function 'emacsvox-icon) #'ignore)
-           ((symbol-function 'emacsvox-aural-submit-actions)
-            (lambda (&rest arguments)
-              (setq
-               submission arguments
-               submission-context
-               (copy-tree emacsvox-aural-submission-context)))))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments)))))
         (emacsvox-speak-visual-line))
-      (should-not legacy-speech)
-      (should (zerop stops))
-      (let ((facts (plist-get submission :facts))
-            (actions (plist-get submission :compatibility-actions)))
-        (should (eq (plist-get facts :role) 'paragraph))
-        (should (eq (plist-get facts :line-condition) 'empty))
-        (should-not (plist-member facts :content))
-        (should
-         (eq (plist-get submission-context :occasion) 'navigation))
-        (should (= (length actions) 1))
-        (should
-         (eq
-          (emacsvox-aural-compatibility-action-value (car actions))
-          'left))))))
+      (let* ((content (car submission))
+             (facts
+              (get-text-property
+               2 emacsvox-aural-facts-property content)))
+        (should (equal (substring-no-properties content) "visual"))
+        (should (equal (plist-get facts :events) '(point-located)))
+        (should (eq (plist-get facts :point-position) 'interior))
+        (should (eq (plist-get facts :point-boundary) 'before))
+        (should (eq (plist-get facts :point-presentation) 'earcon))))))
+
+(ert-deftest emacsvox-speak-visual-line-omits-redundant-blank-boundary ()
+  "Blank visual lines submit their condition without a boundary cue."
+  (dolist (text '("" " \t"))
+    (with-temp-buffer
+      (insert text)
+      (goto-char (point-min))
+      (visual-line-mode 1)
+      (let ((emacsvox-show-point nil)
+            (emacsvox-aural-submission-facts
+             '(:role paragraph :content "stale text"))
+            (emacsvox-aural-submission-context nil)
+            (emacsvox-aural-submission-module nil)
+            (emacsvox-aural-submission-occasion nil)
+            legacy-speech
+            (stops 0)
+            submission
+            submission-context)
+        (cl-letf
+            (((symbol-function 'beginning-of-visual-line)
+              (lambda (&rest _) (goto-char (line-beginning-position))))
+             ((symbol-function 'end-of-visual-line)
+              (lambda (&rest _) (goto-char (line-end-position))))
+             ((symbol-function 'process-live-p) (lambda (_process) t))
+             ((symbol-function 'tts-stop)
+              (lambda (&optional _all) (cl-incf stops)))
+             ((symbol-function 'tts-speak)
+              (lambda (spoken) (setq legacy-speech spoken)))
+             ((symbol-function 'emacsvox-icon) #'ignore)
+             ((symbol-function 'emacsvox-aural-submit-actions)
+              (lambda (&rest arguments)
+                (setq
+                 submission arguments
+                 submission-context
+                 (copy-tree emacsvox-aural-submission-context)))))
+          (emacsvox-speak-visual-line))
+        (should-not legacy-speech)
+        (should (zerop stops))
+        (let ((facts (plist-get submission :facts))
+              (actions (plist-get submission :compatibility-actions)))
+          (should (eq (plist-get facts :role) 'paragraph))
+          (should
+           (eq
+            (plist-get facts :line-condition)
+            (if (string-empty-p text) 'empty 'whitespace-only)))
+          (should-not (plist-member facts :content))
+          (should
+           (eq (plist-get submission-context :occasion) 'navigation))
+          (should-not actions))))))
 
 (ert-deftest emacsvox-speak-visual-line-replaces-one-complete-navigation-packet ()
   "Rapid visual movement keeps only the newest complete line packet."

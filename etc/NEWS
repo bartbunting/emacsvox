@@ -97,6 +97,32 @@ and validating schemes.  Built-ins remain read-only; deletion protects
 schemes that are inherited by others, and rename updates child schemes.
 Row and column movement speaks the column title and value, and announces the
 top, bottom, first-column, and last-column boundaries.
+
+The =emacsvox-show-point= line marker is now configurable through
+=emacsvox-show-point-presentation=.  Use
+=M-x emacsvox-set-show-point-presentation= to preview animated voice,
+micro-tone, earcon, combined, spoken, custom-rule, and silent styles.  A prefix
+argument also changes the global default.  Non-voice markers are placed at the
+exact point boundary; the =custom= style exposes registered point facts for
+personal presentation rules.  Sentence and clause chunking no longer repeats
+an object or run boundary action within one formatting run, and blank or
+whitespace-only visual lines no longer stack a physical-line boundary earcon
+on their existing line-condition feedback.  The native Windows Eloquence
+server now drains preceding speech before starting an external point earcon,
+so the separate speech and cue playback queues preserve its text boundary.
+Omnivox now discards an interrupted timeline's unfinished overlay tail before
+rendering a replacement line, preventing a cancelled point earcon from
+reappearing at the beginning of the next navigation utterance.  Presentation
+Profiles now labels its voice-provider column =Voice Palette=.  The voice and
+earcon remap-at-point workflows explicitly speak their prepared result after
+completion selection instead of relying on buffer-local message speech.
+Vertico's initial completion presentation now speaks the minibuffer prompt and
+first candidate as one ordered utterance, so prompts such as =Find file:= and
+the contextual remap descriptions are not cancelled by candidate navigation.
+The selected presentation profile is now applied completely at startup rather
+than restoring only its identity and option list.  Diverged profiles name the
+differing setting areas and direct users to press =v= for saved-versus-live
+details, including the source buffer used for compatibility-voice comparison.
 The semantic vocabulary list now provides the same titled-cell and boundary
 navigation.  Preferred interactive command aliases share the discoverable
 ~emacsvox-aural-~ prefix; established verb-first names remain compatible.

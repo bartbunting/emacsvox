@@ -10,6 +10,71 @@
 (require 'ert)
 (require 'emacsvox-speak)
 
+(ert-deftest emacsvox-show-point-facts-classify-text-boundaries ()
+  "Point facts distinguish beginning, interior, end, and empty positions."
+  (let ((emacsvox-show-point t)
+        (emacsvox-show-point-presentation 'tone))
+    (dolist
+        (case
+         '((10 10 14 beginning before)
+           (12 10 14 interior before)
+           (14 10 14 end after)
+           (10 10 10 empty before)))
+      (let ((facts
+             (emacsvox-speak--point-facts
+              (nth 0 case) (nth 1 case) (nth 2 case))))
+        (should (equal (plist-get facts :events) '(point-located)))
+        (should (eq (plist-get facts :point-position) (nth 3 case)))
+        (should (eq (plist-get facts :point-boundary) (nth 4 case)))
+        (should (eq (plist-get facts :point-presentation) 'tone)))))
+  (let ((emacsvox-show-point nil))
+    (should-not (emacsvox-speak--point-facts 1 1 2)))
+  (let ((emacsvox-show-point t)
+        (emacsvox-show-point-presentation 'none))
+    (should-not (emacsvox-speak--point-facts 1 1 2))))
+
+(ert-deftest emacsvox-show-point-annotation-composes-with-local-facts ()
+  "The point marker occupies one character and preserves provider facts."
+  (let* ((emacsvox-show-point t)
+         (emacsvox-show-point-presentation 'earcon)
+         (text (copy-sequence "abc"))
+         (facts (emacsvox-speak--point-facts 12 10 13)))
+    (add-text-properties
+     2 3
+     (list emacsvox-aural-facts-property '(:role heading :level 2))
+     text)
+    (emacsvox-speak--annotate-point text 12 10 13 facts)
+    (should-not
+     (get-text-property 1 emacsvox-aural-facts-property text))
+    (let ((merged
+           (get-text-property 2 emacsvox-aural-facts-property text)))
+      (should (eq (plist-get merged :role) 'heading))
+      (should (= (plist-get merged :level) 2))
+      (should (equal (plist-get merged :events) '(point-located)))
+      (should (eq (plist-get merged :point-position) 'interior))
+      (should (eq (plist-get merged :point-presentation) 'earcon)))))
+
+(ert-deftest emacsvox-set-show-point-presentation-supports-local-and-global ()
+  "The selector changes one buffer unless a global default is requested."
+  (let ((original (default-value 'emacsvox-show-point-presentation)))
+    (unwind-protect
+        (with-temp-buffer
+          (setq-local emacsvox-show-point-presentation 'voice)
+          (should
+           (eq (emacsvox-set-show-point-presentation 'tone) 'tone))
+          (should (local-variable-p 'emacsvox-show-point-presentation))
+          (should (eq emacsvox-show-point-presentation 'tone))
+          (emacsvox-set-show-point-presentation 'earcon t)
+          (should (eq emacsvox-show-point-presentation 'earcon))
+          (should
+           (eq
+            (default-value 'emacsvox-show-point-presentation)
+            'earcon))
+          (should-error
+           (emacsvox-set-show-point-presentation 'unknown)
+           :type 'user-error))
+      (set-default 'emacsvox-show-point-presentation original))))
+
 (ert-deftest emacsvox-speak-rest-of-buffer-advances-after-playback ()
   "Tracked reading advances point and source only after each completion."
   (let ((tts-speaker-process 'speaker)

@@ -201,6 +201,24 @@ pauses, and stereo placement.  The default scheme preserves existing output,
 while users can override presentation globally or for a module, major mode,
 derived mode, session, or individual buffer.
 
+Point feedback on spoken lines is now modality-selectable.  Enable it with
+=M-x emacsvox-toggle-show-point=, then use
+=M-x emacsvox-set-show-point-presentation= to choose an animated voice, a
+30-millisecond micro-tone, an earcon, voice plus tone or earcon, the spoken
+word “point”, personal aural rules, or no presentation.  The selector changes
+the current buffer and previews its line; use a prefix argument to also change
+the global default.  Customize =emacsvox-show-point-presentation= to save the
+choice.  Tone, earcon, and speech markers occur at the exact boundary before
+the character under point, or after the final character at end of line.  They
+are omitted on empty, whitespace-only, decorative, and otherwise unspeakable
+lines, whose existing line-condition feedback is already sufficient.
+The =custom= choice publishes =point-located=, =point-position=,
+=point-boundary=, and =point-presentation= facts without imposing built-in
+output, so personal rules can choose another sound, voice, pause, or spatial
+style.  Point actions in personal rules should use =:anchor run= to stay at
+the marked text boundary.  The existing =emacsvox-show-point= option remains
+the master switch.
+
 Exactly one scheme is active globally.  Think of it as the base recipe: a
 named set of presentation rules with optional default sound-pack and
 voice-palette choices.  Emacsvox core and integration providers such as Org
