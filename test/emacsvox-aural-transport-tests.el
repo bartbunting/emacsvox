@@ -4070,61 +4070,43 @@ is the default inherited by a newly created TTS scratch buffer."
           (text-property-not-all
            (point-min) (point-max) property plan)))))))
 
-(ert-deftest emacsvox-aural-transport-cap-prefixes-compile-at-source ()
-  "Inserted capitalization prefixes and source content both stay concrete."
+(ert-deftest emacsvox-aural-transport-capitalization-compiles-at-source ()
+  "Capitalization actions compile at the boundary without changing text."
   (emacsvox-test--with-transport-scheme
     (emacsvox-test--transport-scheme
      '((:id source-mode
         :match (:role heading :mode emacs-lisp-mode)
         :render (:content (:voice bolden)))))
-    (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
-      (kill-buffer scratch))
-    (let ((tts-speaker-process 'speaker)
-          (tts-stop-immediately nil)
-          (tts-quiet nil)
-          (tts-caps t)
-          (tts-caps-prefix
-           (propertize "cap " 'personality 'cap-voice))
-          (tts-allcaps-prefix
-           (propertize "all caps " 'personality 'all-caps-voice))
+    (let ((tts-caps t)
+          (emacsvox-capitalization-presentation 'spoken)
           (emacsvox-aural-submission-facts
            '(:role heading :content "Word"))
-          (emacsvox-pronounce-table nil)
-          (emacsvox-pronounce-personality nil)
-          queued)
-      (unwind-protect
-          (with-temp-buffer
-            (setq
-             major-mode 'emacs-lisp-mode
-             voice-lock-mode t)
-            (cl-letf
-                (((symbol-function 'process-live-p) (lambda (_) t))
-                 ((symbol-function 'tts-get-voice-command)
-                  (lambda (voice) (format "<%s>" voice)))
-                 ((symbol-function 'tts--protocol-sync) #'ignore)
-                 ((symbol-function 'tts--protocol-dispatch) #'ignore)
-                 ((symbol-function 'emacsvox-aural-queue-concrete-plan)
-                  (lambda (plan &optional text)
-                    (push
-                     (list
-                      text
-                      (emacsvox-aural-concrete-content-voice-command
-                       (emacsvox-aural-concrete-plan-content plan)))
-                     queued)))
-                 ((symbol-function 'tts-move-across-a-chunk)
-                  (lambda (&rest _)
-                    (goto-char (point-max))
-                    t)))
-              (tts-speak "Word")))
-        (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
-          (kill-buffer scratch)))
-      (should
-       (equal
-        (nreverse queued)
-        `(("cap " "<cap-voice>")
-          ("Word"
-           ,(emacsvox-test--transport-adapter-command
-             'voice-bolden))))))))
+          prepared)
+      (with-temp-buffer
+        (setq major-mode 'emacs-lisp-mode)
+        (cl-letf
+            (((symbol-function 'tts-get-voice-command)
+              (lambda (voice) (format "<%s>" voice))))
+          (setq
+           prepared
+           (emacsvox-aural-prepare-text
+            "Word"
+            emacsvox-aural-submission-facts
+            '(:mode emacs-lisp-mode :occasion continuous
+              :voice-lock-enabled t)))))
+      (should (equal (substring-no-properties prepared) "Word"))
+      (let* ((plan
+              (get-text-property
+               0 emacsvox-aural-concrete-plan-property prepared))
+             (action
+              (car (emacsvox-aural-concrete-plan-before plan))))
+        (should (eq (emacsvox-aural-concrete-action-kind action) 'speech))
+        (should (equal (emacsvox-aural-concrete-action-text action) "cap"))
+        (should
+         (equal
+          (emacsvox-aural-concrete-content-voice-command
+           (emacsvox-aural-concrete-plan-content plan))
+          (emacsvox-test--transport-adapter-command 'voice-bolden)))))))
 
 (ert-deftest emacsvox-aural-transport-notification-captures-before-logging ()
   "Notification logging cannot replace the source buffer context."

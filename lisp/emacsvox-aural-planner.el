@@ -473,7 +473,8 @@ adapter records applied to the first explicit presentation object."
   (unless (stringp text)
     (emacsvox-aural--transport-error
      "Aural text preparation requires a string: %S" text))
-  (let* ((prepared (copy-sequence text))
+  (let* ((prepared
+          (copy-sequence (emacsvox-aural-annotate-source-text text)))
          (base-facts (or facts emacsvox-aural-submission-facts))
          (base-context
           (copy-tree

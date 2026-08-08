@@ -268,6 +268,54 @@
         (should-not (emacsvox-aural-render-plan-before custom))
         (should-not (emacsvox-aural-render-plan-after custom))))))
 
+(ert-deftest emacsvox-aural-default-scheme-presents-capitalization-modalities ()
+  "Capital and all-caps facts select distinct speech and tones."
+  (emacsvox-test--with-isolated-schemes
+    (let ((context '(:mode text-mode :occasion continuous)))
+      (dolist
+          (case
+           '((capital spoken speech "cap")
+             (all-caps spoken speech "all caps")
+             (capital tone tone capital-letter-tone)
+             (all-caps tone tone capital-all-caps-tone)))
+        (let* ((plan
+                (emacsvox-aural-resolve-active
+                 (list
+                  :events '(capitalization-located)
+                  :capitalization-kind (nth 0 case)
+                  :capitalization-presentation (nth 1 case))
+                 context))
+               (action (car (emacsvox-aural-render-plan-before plan))))
+          (should (eq (emacsvox-aural-action-kind action) (nth 2 case)))
+          (should (eq (emacsvox-aural-action-anchor action) 'run))
+          (should
+           (equal
+            (pcase (nth 2 case)
+              ('speech (emacsvox-aural-action-text action))
+              ('tone (emacsvox-aural-action-tone action)))
+            (nth 3 case)))))
+      (dolist (kind '(capital all-caps))
+        (let* ((plan
+                (emacsvox-aural-resolve-active
+                 (list
+                  :events '(capitalization-located)
+                  :capitalization-kind kind
+                  :capitalization-presentation 'spoken-tone)
+                 context))
+               (actions (emacsvox-aural-render-plan-before plan)))
+          (should
+           (equal
+            (mapcar #'emacsvox-aural-action-kind actions)
+            '(speech tone)))))
+      (let ((custom
+             (emacsvox-aural-resolve-active
+              '(:events (capitalization-located)
+                :capitalization-kind capital
+                :capitalization-presentation custom)
+              context)))
+        (should-not (emacsvox-aural-render-plan-matched-rules custom))
+        (should-not (emacsvox-aural-render-plan-before custom))))))
+
 (ert-deftest emacsvox-aural-schemes-inherit-rules-and-providers ()
   "A child inherits providers and its equally specific rule wins."
   (emacsvox-test--with-isolated-schemes

@@ -192,7 +192,8 @@
   (should
    (equal
     (emacsvox-aural-tone-candidates)
-    '("buffer-modified" "buffer-read-only" "completion-separator"
+    '("buffer-modified" "buffer-read-only" "capital-all-caps-tone"
+      "capital-letter-tone" "completion-separator"
       "edit-deletion" "edit-line-created" "edit-lowercase" "edit-uppercase"
       "field-empty" "line-decoration" "line-empty" "line-separator"
       "line-unspeakable" "line-whitespace" "notebook-cell-code"
@@ -202,6 +203,8 @@
       (expected
        '((buffer-modified 700 100 nil)
          (buffer-read-only 250 100 nil)
+         (capital-all-caps-tone 1300 20 nil)
+         (capital-letter-tone 440 20 nil)
          (completion-separator 500 50 nil)
          (edit-deletion 500 75 t)
          (edit-line-created 225 75 t)

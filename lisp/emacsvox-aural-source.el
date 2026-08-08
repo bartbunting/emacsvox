@@ -60,6 +60,13 @@ The function receives one nonempty source string and must return a string.
 It is intended for mode-specific, presentation-only transformations that must
 remain synchronized with the concrete plans frozen by a native submission.")
 
+(defvar emacsvox-aural-source-annotation-functions nil
+  "Functions that add presentation properties before source planning.
+
+Each function receives a source string and must return a string.  Annotation
+must preserve the visible characters; transformations belong in
+`emacsvox-aural-source-transform-function'.")
+
 (defvar emacsvox-aural-ui-interface-buffer)
 
 (defconst emacsvox-aural-facts-property
@@ -103,6 +110,15 @@ buffer's `buffer-invisibility-spec'.")
            text)))
     (unless (stringp result)
       (error "Aural source transformation returned non-string: %S" result))
+    result))
+
+(defun emacsvox-aural-annotate-source-text (text)
+  "Apply registered source annotation functions to TEXT in order."
+  (let ((result text))
+    (dolist (function emacsvox-aural-source-annotation-functions)
+      (setq result (funcall function result))
+      (unless (stringp result)
+        (error "Aural source annotation returned non-string: %S" result)))
     result))
 
 (defun emacsvox-aural-source-text-property (position property &optional object)

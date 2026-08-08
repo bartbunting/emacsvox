@@ -556,7 +556,10 @@ effect must run only after the complete timeline command has been sent."
    (format "tts_sync_state %s %s %s %s\n"
            tts-punctuation-mode
            (if tts-split-caps 1 0)
-           (if tts-caps 1 0)
+           ;; Capitalization presentation is now carried by concrete aural
+           ;; actions.  Disable legacy server-side scanning to avoid a second
+           ;; cue for the same source boundary.
+           0
            tts-speech-rate)))
 
 ;;;;   letter
@@ -690,10 +693,8 @@ replaced with a repeat count. ")
 
 (defvar-local tts-caps nil
   "Non-nil means  indicate  capitalization.
-Capitalized words are preceded by `cap', and upper-case words are
-  preceded by `ac' spoken in a lower voice.
-Use tts-toggle-caps
-bound to \\[tts-toggle-caps].")
+The presentation is selected by `emacsvox-capitalization-presentation'.
+Use `tts-toggle-caps' bound to \\[tts-toggle-caps].")
 
 (defcustom emacsvox-capitalization-presentation 'tone
   "How enabled capitalization indication is presented.
@@ -1040,46 +1041,103 @@ specifies the current pronunciation mode --- See
         (tts--replace-match-preserving-aural-plan
          (format " %s " (aref tts-character-to-speech-table char))
          nil t))))))
-(defconst tts-caps-regexp
-  (concat
-   "\\(\\b[A-Z][A-Z0-9_-]+\\b\\)"
-   "\\|"
-   "\\(\\b[A-Z]\\)")
-  "Match capitalized or upper-case words.")
+(defun tts--capitalization-word-character-p (character)
+  "Return non-nil when CHARACTER continues a capitalization word."
+  (and
+   character
+   (or
+    (/= (upcase character) (downcase character))
+    (get-char-code-property character 'numeric-value)
+    (= character ?_))))
 
-(defcustom tts-caps-prefix
+(defun tts--all-caps-run-character-p (character)
+  "Return non-nil when CHARACTER may occur in an all-capitals run."
+  (and
+   character
+   (or
+    (char-uppercase-p character)
+    (get-char-code-property character 'numeric-value)
+    (memq character '(?_ ?-)))))
 
-  (propertize  "cap" 'personality 'acss-s4-r6)
-  "Prefix used to indicate capitalization":type 'string
-  :group 'tts
-  :set #'(lambda (sym val)
-           (set-default sym
-                        (propertize  val 'personality 'acss-p3-s1-r3))))
-
-(defcustom tts-allcaps-prefix
-
-  (propertize  " acc " 'personality 'acss-s4-r6)
-  "Prefix used to indicate AllCaps"
-  :type 'string
-  :group 'tts
-  :set #'(lambda (sym val)
-           (set-default sym
-                        (propertize  val 'personality 'acss-p3-s1-r3))))
-
-(defun tts-handle-caps ()
-  "Handle capitalization"
-  (when tts-caps
-    (let ((inhibit-read-only t)
-          (case-fold-search nil))
-      (goto-char (point-min))
+(defun tts--all-caps-run-end (text start)
+  "Return the end of an all-capitals run in TEXT at START, or nil."
+  (when
+      (and
+       (char-uppercase-p (aref text start))
+       (or
+        (zerop start)
+        (not
+         (tts--capitalization-word-character-p
+          (aref text (1- start))))))
+    (let ((end start)
+          (length (length text))
+          (count 0))
       (while
-          (re-search-forward tts-caps-regexp nil t)
-        (save-excursion
-          (goto-char (match-beginning 0))
+          (and
+           (< end length)
+           (tts--all-caps-run-character-p (aref text end)))
+        (cl-incf end)
+        (cl-incf count))
+      (when
+          (and
+           (>= count 2)
+           (or
+            (= end length)
+            (not
+             (tts--capitalization-word-character-p
+              (aref text end)))))
+        end))))
+
+(defun tts--capitalization-facts (kind)
+  "Return semantic facts for capitalization KIND, or nil when disabled."
+  (when
+      (and
+       tts-caps
+       (not (eq emacsvox-capitalization-presentation 'none)))
+    (list
+     :events '(capitalization-located)
+     :capitalization-kind kind
+     :capitalization-presentation emacsvox-capitalization-presentation)))
+
+(defun tts--annotate-capitalization (text)
+  "Return a copy of TEXT annotated at capitalized boundaries."
+  (let ((result (copy-sequence text))
+        (position 0)
+        (length (length text)))
+    (when-let* ((enabled (tts--capitalization-facts 'capital)))
+      (while (< position length)
+        (let ((all-caps-end
+               (tts--all-caps-run-end text position)))
           (cond
-           ((= 1  (- (match-end 0) (match-beginning 0)))
-            (insert tts-caps-prefix))
-           (t (insert tts-allcaps-prefix))))))))
+           (all-caps-end
+            (let ((facts (tts--capitalization-facts 'all-caps)))
+              (add-text-properties
+               position (1+ position)
+               (list
+                emacsvox-aural-facts-property
+                (emacsvox-aural-merge-facts
+                 (get-text-property
+                  position emacsvox-aural-facts-property result)
+                 facts))
+               result))
+            (setq position all-caps-end))
+           (t
+            (when (char-uppercase-p (aref text position))
+              (add-text-properties
+               position (1+ position)
+               (list
+                emacsvox-aural-facts-property
+                (emacsvox-aural-merge-facts
+                 (get-text-property
+                  position emacsvox-aural-facts-property result)
+                 enabled))
+               result))
+            (cl-incf position))))))
+    result))
+
+(add-hook
+ 'emacsvox-aural-source-annotation-functions
+ #'tts--annotate-capitalization)
 
 ;; Takes a string, and replaces occurrences  of this pattern
 ;; that are longer than 3 by a string of the form \"count
@@ -1131,7 +1189,6 @@ specifies the current pronunciation mode --- See
   (let ((inhibit-read-only t))
     ;; dtk will think it's processing a command otherwise:
     (tts-fix-brackets mode)
-    (tts-handle-caps)
     ;; fix control chars
     (tts-fix-control-chars)))
 
@@ -2743,22 +2800,6 @@ by the audio device's buffering latency."
         (speech-rate tts-speech-rate)
         (caps tts-caps)
         (split-caps tts-split-caps)
-        (tts-caps-prefix
-         (if tts-caps
-             (emacsvox-aural-prepare-text
-              tts-caps-prefix
-              (list :content
-                    (substring-no-properties tts-caps-prefix))
-              emacsvox-aural-submission-context)
-           tts-caps-prefix))
-        (tts-allcaps-prefix
-         (if tts-caps
-             (emacsvox-aural-prepare-text
-              tts-allcaps-prefix
-              (list :content
-                    (substring-no-properties tts-allcaps-prefix))
-              emacsvox-aural-submission-context)
-           tts-allcaps-prefix))
         (start 1)
         (end nil)
         (mode tts-punctuation-mode)

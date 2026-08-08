@@ -1780,6 +1780,58 @@ An existing file is copied to FILE~ before replacement."
          (:after
           ((:id core-point-spoken-after-action
             :kind speech :text "point" :voice annotate :anchor run))))
+        (:id core-capital-spoken
+         :match
+         (:event capitalization-located :capitalization-kind capital
+          :capitalization-presentation spoken)
+         :render
+         (:before
+          ((:id core-capital-spoken-action
+            :kind speech :text "cap" :voice annotate :anchor run))))
+        (:id core-all-caps-spoken
+         :match
+         (:event capitalization-located :capitalization-kind all-caps
+          :capitalization-presentation spoken)
+         :render
+         (:before
+          ((:id core-all-caps-spoken-action
+            :kind speech :text "all caps" :voice annotate :anchor run))))
+        (:id core-capital-tone
+         :match
+         (:event capitalization-located :capitalization-kind capital
+          :capitalization-presentation tone)
+         :render
+         (:before
+          ((:id core-capital-tone-action
+            :kind tone :tone capital-letter-tone :anchor run))))
+        (:id core-all-caps-tone
+         :match
+         (:event capitalization-located :capitalization-kind all-caps
+          :capitalization-presentation tone)
+         :render
+         (:before
+          ((:id core-all-caps-tone-action
+            :kind tone :tone capital-all-caps-tone :anchor run))))
+        (:id core-capital-spoken-tone
+         :match
+         (:event capitalization-located :capitalization-kind capital
+          :capitalization-presentation spoken-tone)
+         :render
+         (:before
+          ((:id core-capital-spoken-tone-action
+            :kind speech :text "cap" :voice annotate :anchor run)
+           (:id core-capital-spoken-tone-tone-action
+            :kind tone :tone capital-letter-tone :anchor run))))
+        (:id core-all-caps-spoken-tone
+         :match
+         (:event capitalization-located :capitalization-kind all-caps
+          :capitalization-presentation spoken-tone)
+         :render
+         (:before
+          ((:id core-all-caps-spoken-tone-action
+            :kind speech :text "all caps" :voice annotate :anchor run)
+           (:id core-all-caps-spoken-tone-tone-action
+            :kind tone :tone capital-all-caps-tone :anchor run))))
         (:id core-edit-deletion-tone
          :match (:edit-operation deletion)
          :render

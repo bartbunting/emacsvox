@@ -1978,11 +1978,67 @@
            :type 'user-error))
       (set-default 'emacsvox-capitalization-presentation original))))
 
+(ert-deftest emacsvox-tts-capitalization-annotation-distinguishes-runs ()
+  "Capital, camel-case, all-caps, numeric, and Unicode boundaries differ."
+  (let* ((tts-caps t)
+         (emacsvox-capitalization-presentation 'spoken)
+         (text "Hello camelCase NASA A1 Élan ÉTÉ")
+         (annotated (tts--annotate-capitalization text))
+         found)
+    (should (equal (substring-no-properties annotated) text))
+    (dotimes (position (length annotated))
+      (when-let* ((facts
+                   (get-text-property
+                    position emacsvox-aural-facts-property annotated)))
+        (push
+         (list
+          (substring annotated position (1+ position))
+          (plist-get facts :capitalization-kind)
+          (plist-get facts :capitalization-presentation))
+         found)))
+    (should
+     (equal
+      (nreverse found)
+      '(("H" capital spoken)
+        ("C" capital spoken)
+        ("N" all-caps spoken)
+        ("A" all-caps spoken)
+        ("É" capital spoken)
+        ("É" all-caps spoken))))))
+
+(ert-deftest emacsvox-tts-capitalization-annotation-composes-and-disables ()
+  "Capitalization facts preserve provider facts and honor both off states."
+  (let ((text (copy-sequence "Word")))
+    (add-text-properties
+     0 1
+     (list emacsvox-aural-facts-property '(:role heading :level 2))
+     text)
+    (let* ((tts-caps t)
+           (emacsvox-capitalization-presentation 'tone)
+           (annotated (tts--annotate-capitalization text))
+           (facts
+            (get-text-property
+             0 emacsvox-aural-facts-property annotated)))
+      (should (eq (plist-get facts :role) 'heading))
+      (should (= (plist-get facts :level) 2))
+      (should (equal (plist-get facts :events) '(capitalization-located)))
+      (should (eq (plist-get facts :capitalization-kind) 'capital))
+      (should (eq (plist-get facts :capitalization-presentation) 'tone)))
+    (dolist
+        (settings
+         '((nil tone) (t none)))
+      (let* ((tts-caps (nth 0 settings))
+             (emacsvox-capitalization-presentation (nth 1 settings))
+             (annotated (tts--annotate-capitalization "Word")))
+        (should-not
+         (get-text-property
+          0 emacsvox-aural-facts-property annotated))))))
+
 (ert-deftest emacsvox-tts-protocol-synchronizes-buffer-state ()
   "The synchronization command snapshots the current speech state."
   (let ((tts-punctuation-mode 'none)
         (tts-split-caps t)
-        (tts-caps nil)
+        (tts-caps t)
         (tts-speech-rate 210))
     (should
      (equal

@@ -392,6 +392,12 @@ themed overrides below an active sound pack."
     (point-marker-tone
      "Buffer point was reached within selected text"
      1200 30 nil)
+    (capital-letter-tone
+     "A capitalized character begins at this text boundary"
+     440 20 nil)
+    (capital-all-caps-tone
+     "An all-capitals word begins at this text boundary"
+     1300 20 nil)
     (notebook-cell-code
      "The current notebook cell contains executable code"
      440 150 nil ein)
