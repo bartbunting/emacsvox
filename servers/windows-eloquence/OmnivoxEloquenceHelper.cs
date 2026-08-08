@@ -27,6 +27,9 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
         {
             Rate = true,
             AveragePitch = true,
+            PitchRange = true,
+            Stress = true,
+            Richness = true,
             Volume = true,
             WordMarkers = true,
             SentenceMarkers = true,
@@ -45,6 +48,15 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
             { "v7", 68 },
             { "v8", 61 }
         };
+
+    private static readonly int[] PitchRange =
+        { 0, 5, 15, 20, 25, 30, 47, 64, 81, 100 };
+    private static readonly int[] Roughness =
+        { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90 };
+    private static readonly int[] Breathiness =
+        { 0, 4, 8, 12, 16, 20, 24, 28, 32, 36 };
+    private static readonly int[] RichnessVolume =
+        { 60, 78, 80, 84, 88, 92, 93, 95, 97, 100 };
 
     private readonly OmnivoxEloquenceCapture capture;
 
@@ -82,10 +94,50 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
             VoicePitchBaselines[voiceId] * pitch,
             MidpointRounding.AwayFromZero);
         nativePitch = Math.Max(0, Math.Min(100, nativePitch));
-        int nativeVolume = (int)Math.Round(volume * 100.0,
-            MidpointRounding.AwayFromZero);
+        string voiceParameters = MapExtendedAcss(pitchRange, stress, richness);
+        int nativeVolume = MapVolume(volume, richness);
         return capture.Synthesize(text, voiceId, nativeRate, nativePitch,
-            nativeVolume, anchors);
+            voiceParameters, nativeVolume, anchors);
+    }
+
+    internal static string MapExtendedAcss(double? pitchRange,
+        double? stress, double? richness)
+    {
+        string parameters = "";
+        if (pitchRange.HasValue)
+        {
+            parameters += " `vf" + MapNormalized(pitchRange.Value, PitchRange);
+        }
+        if (stress.HasValue)
+        {
+            parameters += " `vr" + MapNormalized(stress.Value, Roughness);
+        }
+        if (richness.HasValue)
+        {
+            parameters += " `vy" + MapNormalized(richness.Value, Breathiness);
+        }
+        return parameters;
+    }
+
+    internal static int MapVolume(double volume, double? richness)
+    {
+        // The legacy richness table compensates for breathier voices with a
+        // paired volume. Combine that compensation with independent volume.
+        int compensation = richness.HasValue ?
+            MapNormalized(richness.Value, RichnessVolume) : 100;
+        double mapped = Math.Max(0.0, Math.Min(1.0, volume)) * compensation;
+        return (int)Math.Round(mapped, MidpointRounding.AwayFromZero);
+    }
+
+    private static int MapNormalized(double value, int[] levels)
+    {
+        double position = Math.Max(0.0, Math.Min(1.0, value)) *
+            (levels.Length - 1);
+        int lower = (int)Math.Floor(position);
+        int upper = Math.Min(lower + 1, levels.Length - 1);
+        double mapped = levels[lower] +
+            (levels[upper] - levels[lower]) * (position - lower);
+        return (int)Math.Round(mapped, MidpointRounding.AwayFromZero);
     }
 
     public void Stop()

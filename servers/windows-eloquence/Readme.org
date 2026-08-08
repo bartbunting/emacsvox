@@ -148,22 +148,25 @@ captured 11.025 kHz mono signed 16-bit PCM to the versioned Omnivox helper
 protocol.  It does not play that audio itself and does not alter the existing
 =windows-outloud= playback bridge.  Its inventory keeps the engine ID
 =eloquence= separate from native voice IDs =v1= through =v8=, with =v1= as the
-default.  Both protocol versions map normalized speech rate, average pitch,
-and volume to ECI's native voice controls.  Pitch
-range, stress, and richness remain unavailable rather than being silently
-claimed.  It advertises word and sentence markers, inserts bounded ECI indexes
-at Unicode word starts and conservative source sentence starts, and records
-each index reply at the current captured PCM frame.  Marker source ranges are
+default.  All protocol versions map normalized speech rate, average pitch,
+and volume to ECI's native voice controls.  Protocol version 3 additionally
+maps pitch range to =vf=, stress to =vr= roughness, and richness to =vy=
+breathiness plus the original =vv= compensation.  These reproduce the
+original Emacspeak ten-level tables and interpolate arbitrary normalized
+values; independent volume is multiplied by the richness compensation rather
+than overwritten.  It advertises word and sentence markers, inserts bounded
+ECI indexes at Unicode word starts and conservative source sentence starts,
+and records each index reply at the current captured PCM frame.  Marker source ranges are
 UTF-8 byte ranges into the exact helper request; apostrophes and hyphens inside
 a word stay attached.  Phoneme and caller-defined native indexes remain
 unavailable.  Omnivox remains responsible for fallback, effects, mixing,
 playback, and playback completion.
 
-Helper protocol version 2 also advertises exact requested anchors.  Each
-bounded opaque ID and UTF-8 source boundary is merged with the automatic word
-indexes and inserted through ECI's index API, so Eloquence returns its exact PCM
-frame without splitting the utterance.  Version 1 remains available unchanged
-for an older Omnivox host and truthfully omits anchor support.
+Helper protocol version 2 and later also advertise exact requested anchors.
+Each bounded opaque ID and UTF-8 source boundary is merged with the automatic
+word indexes and inserted through ECI's index API, so Eloquence returns its
+exact PCM frame without splitting the utterance.  Version 1 remains available
+unchanged for an older Omnivox host and truthfully omits anchor support.
 
 The bounded JSON loop, negotiation, inventory framing, PCM chunking, request
 validation, marker framing, and cancellation coordination live in the engine-neutral

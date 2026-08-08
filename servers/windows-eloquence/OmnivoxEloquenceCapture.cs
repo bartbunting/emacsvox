@@ -183,7 +183,8 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
     }
 
     internal OmnivoxCaptureResult Synthesize(string text, string voiceId,
-        int rate, int pitch, int volume, OmnivoxHelperAnchor[] anchors)
+        int rate, int pitch, string voiceParameters, int volume,
+        OmnivoxHelperAnchor[] anchors)
     {
         lock (synthesisLock)
         {
@@ -200,7 +201,8 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
                 Configure();
                 AddText(" `" + voiceId + " `vs" +
                     rate.ToString(CultureInfo.InvariantCulture) + " `vb" +
-                    pitch.ToString(CultureInfo.InvariantCulture) + " `vv" +
+                    pitch.ToString(CultureInfo.InvariantCulture) +
+                    voiceParameters + " `vv" +
                     volume.ToString(CultureInfo.InvariantCulture) + " ");
                 AddTextWithIndexes(text, anchors);
                 Check(OmnivoxNativeEci.Synthesize(handle), "eciSynthesize");
