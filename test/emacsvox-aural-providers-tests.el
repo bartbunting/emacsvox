@@ -12,7 +12,7 @@
 (require 'emacsvox-aural-providers)
 
 (ert-deftest emacsvox-aural-providers-select-resource-pack-by-precedence ()
-  "Registered sound state precedes scheme selection and fallback."
+  "Registered sound state precedes the baseline and fallback."
   (cl-letf
       (((symbol-function 'emacsvox-aural-resource-pack)
         (lambda (id) (and (eq id 'active-pack) id)))
@@ -34,7 +34,7 @@
         (list
          (emacsvox-aural-provider-selection-id selection)
          (emacsvox-aural-provider-selection-source selection))
-        '(scheme-pack scheme)))))
+        '(scheme-pack baseline)))))
   (cl-letf
       (((symbol-function 'emacsvox-aural-resource-pack) #'ignore)
        ((symbol-function 'emacsvox-aural-effective-scheme-provider)
@@ -49,7 +49,7 @@
         '(chimes fallback))))))
 
 (ert-deftest emacsvox-aural-providers-select-voice-palette-by-precedence ()
-  "Registered voice override precedes scheme selection and fallback."
+  "Registered voice override precedes the baseline and fallback."
   (cl-letf
       (((symbol-function 'emacsvox-aural-voice-palette)
         (lambda (id) (and (eq id 'active-palette) id)))
@@ -71,7 +71,7 @@
         (list
          (emacsvox-aural-provider-selection-id selection)
          (emacsvox-aural-provider-selection-source selection))
-        '(scheme-palette scheme)))))
+        '(scheme-palette baseline)))))
   (cl-letf
       (((symbol-function 'emacsvox-aural-voice-palette) #'ignore)
        ((symbol-function 'emacsvox-aural-effective-scheme-provider)

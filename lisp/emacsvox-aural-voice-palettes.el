@@ -733,8 +733,8 @@ replaces live state.  Return the value of MUTATION."
     (emacsvox-aural-voice-palettes-speak-current)
     id))
 
-(defun emacsvox-aural-voice-palettes-follow-scheme ()
-  "Clear the palette override and follow the active scheme."
+(defun emacsvox-aural-voice-palettes-follow-baseline ()
+  "Clear the palette override and use the compatibility baseline."
   (interactive)
   (emacsvox-aural-select-voice-palette nil)
   (emacsvox-aural-voice-palettes-refresh
@@ -2198,7 +2198,7 @@ after displaying the preview buffer."
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET browse voices    SPC speak palette\n"
-      "a activate override  f follow active scheme\n"
+      "a activate override  f use compatibility baseline\n"
       "N create palette     c copy palette\n"
       "e edit voice         E edit summary and parent\n"
       "D delete voice       d delete palette\n"
@@ -2240,7 +2240,7 @@ after displaying the preview buffer."
      '(("RET" . emacsvox-aural-voice-palettes-preview)
        ("B" . emacsvox-aural-voice-palettes-preview)
        ("a" . emacsvox-aural-voice-palettes-activate)
-       ("f" . emacsvox-aural-voice-palettes-follow-scheme)
+       ("f" . emacsvox-aural-voice-palettes-follow-baseline)
        ("N" . emacsvox-aural-voice-palettes-create)
        ("c" . emacsvox-aural-voice-palettes-copy)
        ("e" . emacsvox-aural-voice-palettes-edit-entry)

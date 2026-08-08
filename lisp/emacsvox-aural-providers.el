@@ -7,8 +7,8 @@
 ;;; Commentary:
 
 ;; One explicit runtime selection boundary for sound packs and voice
-;; palettes.  This preserves the current precedence while exposing which
-;; configuration layer supplied the effective provider.
+;; palettes.  This preserves precedence while exposing which configuration
+;; layer supplied the effective provider.
 
 ;;; Code:
 
@@ -28,30 +28,30 @@
   "Return the effective sound-pack provider selection.
 
 The active compatibility sound state wins when it names a registered pack,
-followed by the active scheme provider and the bundled `chimes' fallback."
+followed by the fixed baseline provider and the bundled `chimes' fallback."
   (let* ((active
           (and
            (boundp 'emacsvox-sounds-current-pack)
            emacsvox-sounds-current-pack
            (emacsvox-aural-resource-pack emacsvox-sounds-current-pack)
            emacsvox-sounds-current-pack))
-         (scheme
+         (baseline
           (and
            (not active)
            (emacsvox-aural-effective-scheme-provider 'resource-pack))))
     (emacsvox-aural--make-provider-selection
      :kind 'resource-pack
-     :id (or active scheme 'chimes)
+     :id (or active baseline 'chimes)
      :source
      (cond
       (active 'sound-state)
-      (scheme 'scheme)
+      (baseline 'baseline)
       (t 'fallback)))))
 
 (defun emacsvox-aural-voice-provider-selection ()
   "Return the effective voice-palette provider selection.
 
-A registered explicit override wins, followed by the active scheme provider
+A registered explicit override wins, followed by the fixed baseline provider
 and the built-in `acss-default' fallback."
   (let* ((override
           (and
@@ -59,17 +59,17 @@ and the built-in `acss-default' fallback."
            (emacsvox-aural-voice-palette
             emacsvox-aural-voice-palette-override)
            emacsvox-aural-voice-palette-override))
-         (scheme
+         (baseline
           (and
            (not override)
            (emacsvox-aural-effective-scheme-provider 'voice-palette))))
     (emacsvox-aural--make-provider-selection
      :kind 'voice-palette
-     :id (or override scheme 'acss-default)
+     :id (or override baseline 'acss-default)
      :source
      (cond
       (override 'explicit-override)
-      (scheme 'scheme)
+      (baseline 'baseline)
       (t 'fallback)))))
 
 (defun emacsvox-aural-effective-resource-pack ()

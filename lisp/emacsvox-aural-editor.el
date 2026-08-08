@@ -1,4 +1,4 @@
-;;; emacsvox-aural-editor.el --- Accessible aural scheme editor -*- lexical-binding: t; -*-
+;;; emacsvox-aural-editor.el --- Accessible aural presentation editor -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Emacsvox Contributors
 
@@ -6,9 +6,9 @@
 
 ;;; Commentary:
 
-;; A completion-driven special-mode editor for personal schemes and personal,
-;; session, or buffer-local rule layers.  Users never need to edit raw scheme
-;; data, while the buffer remains plain text and predictable for speech access.
+;; A completion-driven special-mode editor for Presentation Options and
+;; personal, session, or buffer-local rule layers.  The buffer remains plain
+;; text and predictable for speech access.
 
 ;;; Code:
 
@@ -27,10 +27,10 @@
   "Scope edited by the current aural editor buffer.")
 
 (defvar-local emacsvox-aural-editor-target nil
-  "Scheme/fragment identifier or source buffer edited by this editor.")
+  "Fragment identifier or source buffer edited by this editor.")
 
 (defvar-local emacsvox-aural-editor-scheme-data nil
-  "Working personal scheme or feature-fragment data.")
+  "Working personal feature-fragment data.")
 
 (defvar-local emacsvox-aural-editor-rules nil
   "Working declarative rules in display order.")
@@ -56,7 +56,6 @@
       (if (buffer-live-p emacsvox-aural-editor-target)
           (buffer-name emacsvox-aural-editor-target)
         "a killed buffer")))
-    ('scheme (format "personal scheme %s" emacsvox-aural-editor-target))
     ('fragment
      (format "personal feature fragment %s" emacsvox-aural-editor-target))))
 
@@ -110,7 +109,7 @@
      ", ")))
 
 (defun emacsvox-aural-editor-refresh ()
-  "Render the current working scheme or rule layer."
+  "Render the current working Presentation Option or rule layer."
   (interactive)
   (let ((inhibit-read-only t)
         (position (point)))
@@ -118,18 +117,6 @@
     (insert (format "Aural Presentation Editor: %s\n\n"
                     (emacsvox-aural-editor--scope-label)))
     (pcase emacsvox-aural-editor-scope
-      ('scheme
-       (insert
-        (format
-         "Summary: %s\nParent: %s\nSound pack: %s\nVoice palette: %s\n\n"
-         (plist-get emacsvox-aural-editor-scheme-data :summary)
-         (or (plist-get emacsvox-aural-editor-scheme-data :parent) "none")
-         (or
-          (plist-get emacsvox-aural-editor-scheme-data :resource-pack)
-          "inherited")
-         (or
-          (plist-get emacsvox-aural-editor-scheme-data :voice-palette)
-          "inherited"))))
       ('fragment
        (insert
         (format
@@ -237,7 +224,7 @@
      (emacsvox-aural-editor--phase-summary (plist-get render :after)))))
 
 (defun emacsvox-aural-editor--metadata-prompt-context ()
-  "Describe the scheme or fragment metadata being edited."
+  "Describe the Presentation Option metadata being edited."
   (let ((data emacsvox-aural-editor-scheme-data))
     (string-join
      (delq
@@ -246,15 +233,7 @@
        (format "Editing metadata for %s"
                (emacsvox-aural-editor--scope-label))
        (format "Current summary %s"
-               (or (plist-get data :summary) "empty"))
-       (when (eq emacsvox-aural-editor-scope 'scheme)
-         (format "Parent %s" (or (plist-get data :parent) "none")))
-       (when (eq emacsvox-aural-editor-scope 'scheme)
-         (format "Sound pack %s"
-                 (or (plist-get data :resource-pack) "inherited")))
-       (when (eq emacsvox-aural-editor-scope 'scheme)
-         (format "Voice palette %s"
-                 (or (plist-get data :voice-palette) "inherited")))))
+               (or (plist-get data :summary) "empty"))))
      ". ")))
 
 (defun emacsvox-aural-editor--read-boolean (prompt default)
@@ -844,50 +823,18 @@ LABEL identifies the speech or cue being edited."
   (emacsvox-aural-editor-move-rule 1))
 
 (defun emacsvox-aural-editor-edit-metadata ()
-  "Edit metadata for the current personal scheme or feature fragment."
+  "Edit metadata for the current personal Presentation Option."
   (interactive)
-  (unless (memq emacsvox-aural-editor-scope '(scheme fragment))
+  (unless (eq emacsvox-aural-editor-scope 'fragment)
     (user-error "This rule-layer scope has no metadata"))
   (emacsvox-aural-editor--with-spoken-prompts
       (emacsvox-aural-editor--metadata-prompt-context)
     (let* ((data (copy-tree emacsvox-aural-editor-scheme-data))
            (summary
             (read-string
-             (if (eq emacsvox-aural-editor-scope 'fragment)
-                 "Feature fragment summary: "
-               "Scheme summary: ")
-             (plist-get data :summary)))
-           (parent
-            (when (eq emacsvox-aural-editor-scope 'scheme)
-              (emacsvox-aural-editor-read-symbol-or-nil
-               "Parent scheme (empty for none): "
-               (plist-get data :parent)
-               (remove
-                (symbol-name emacsvox-aural-editor-target)
-                (emacsvox-aural-scheme-candidates))
-               'must-match)))
-           (pack
-            (when (eq emacsvox-aural-editor-scope 'scheme)
-              (emacsvox-aural-editor-read-symbol-or-nil
-               "Sound pack (empty to inherit): "
-               (plist-get data :resource-pack)
-               (emacsvox-aural-resource-pack-candidates 'sound)
-               'must-match)))
-           (palette
-            (when (eq emacsvox-aural-editor-scope 'scheme)
-              (let (values)
-                (maphash
-                 (lambda (id _) (push (symbol-name id) values))
-                 emacsvox-aural-voice-palette-registry)
-                (emacsvox-aural-editor-read-symbol-or-nil
-                 "Voice palette (empty to inherit): "
-                 (plist-get data :voice-palette)
-                 values 'must-match)))))
+             "Presentation Option summary: "
+             (plist-get data :summary))))
       (setq data (plist-put data :summary summary))
-      (when (eq emacsvox-aural-editor-scope 'scheme)
-        (setq data (plist-put data :parent parent))
-        (setq data (plist-put data :resource-pack pack))
-        (setq data (plist-put data :voice-palette palette)))
       (setq emacsvox-aural-editor-scheme-data data)
       (emacsvox-aural-editor-mark-dirty)
       (emacsvox-aural-editor-refresh))))
@@ -900,7 +847,7 @@ LABEL identifies the speech or cue being edited."
    collect (plist-put (copy-tree rule) :order order)))
 
 (defun emacsvox-aural-editor--working-scheme-data ()
-  "Return complete working personal scheme or fragment data."
+  "Return complete working personal Presentation Option data."
   (plist-put
    (copy-tree emacsvox-aural-editor-scheme-data)
    :rules
@@ -909,19 +856,6 @@ LABEL identifies the speech or cue being edited."
 (defun emacsvox-aural-editor-validation-report ()
   "Validate working data and return a report or simple success marker."
   (pcase emacsvox-aural-editor-scope
-    ('scheme
-     (let* ((data (emacsvox-aural-editor--working-scheme-data))
-            (compiled (emacsvox-aural-compile-scheme data 'scheme "editor"))
-            (entry
-             (emacsvox-aural--make-scheme-entry
-              :id emacsvox-aural-editor-target
-              :data data
-              :compiled compiled
-              :source "editor"))
-            (registry (copy-hash-table emacsvox-aural-scheme-registry)))
-       (puthash emacsvox-aural-editor-target entry registry)
-       (let ((emacsvox-aural-scheme-registry registry))
-         (emacsvox-aural-validate-scheme emacsvox-aural-editor-target))))
     ('fragment
      (let* ((data (emacsvox-aural-editor--working-scheme-data))
             (old
@@ -967,31 +901,9 @@ LABEL identifies the speech or cue being edited."
           (emacsvox-aural-display-validation
            report
            (if (eq emacsvox-aural-editor-scope 'fragment)
-               "feature fragment"
-             "scheme"))))
+               "Presentation Option"
+             "rule layer"))))
     (error (user-error "%s" (error-message-string error)))))
-
-(defun emacsvox-aural-editor-commit-scheme (rules)
-  "Atomically commit personal scheme with normalized RULES."
-  (let* ((id emacsvox-aural-editor-target)
-         (old (emacsvox-aural-scheme-entry id))
-         (data
-          (plist-put
-           (copy-tree emacsvox-aural-editor-scheme-data)
-           :rules rules))
-         (compiled (emacsvox-aural-compile-scheme data 'scheme "editor"))
-         (entry
-          (emacsvox-aural--make-scheme-entry
-           :id id :data data :compiled compiled
-           :source emacsvox-aural-schemes-file)))
-    (when (and old (emacsvox-aural-scheme-entry-built-in old))
-      (user-error "Built-in schemes cannot be edited; copy it first"))
-    (emacsvox-aural-persist-scheme-mutation
-     'scheme-edited
-     (lambda ()
-       (puthash id entry emacsvox-aural-scheme-registry)
-       entry))
-    (setq emacsvox-aural-editor-scheme-data data)))
 
 (defun emacsvox-aural-editor--commit-fragment (rules)
   "Atomically commit personal feature fragment with normalized RULES."
@@ -1076,12 +988,11 @@ LABEL identifies the speech or cue being edited."
          (not (eq report t))
          (not (emacsvox-aural-validation-report-valid report)))
       (user-error
-       "Cannot save invalid aural scheme: %s"
+       "Cannot save invalid aural presentation: %s"
        (string-join
         (emacsvox-aural-validation-report-errors report)
         "; ")))
     (pcase emacsvox-aural-editor-scope
-      ('scheme (emacsvox-aural-editor-commit-scheme rules))
       ('fragment (emacsvox-aural-editor--commit-fragment rules))
       (_ (emacsvox-aural-editor--commit-layer rules)))
     (setq
@@ -1100,7 +1011,8 @@ LABEL identifies the speech or cue being edited."
      ('session 'session)
      ('buffer 'buffer)
      ('fragment 'fragment)
-     (_ 'scheme))
+     (_ (error "Unknown aural editor scope: %S"
+               emacsvox-aural-editor-scope)))
    (emacsvox-aural-editor--index-at-point)
    "editor"))
 
@@ -1140,10 +1052,7 @@ LABEL identifies the speech or cue being edited."
          (concrete (emacsvox-aural-compile-plan render facts context))
          (explanation
           (emacsvox-aural--make-explanation
-           :scheme
-           (if (eq emacsvox-aural-editor-scope 'scheme)
-               emacsvox-aural-editor-target
-             emacsvox-aural-active-scheme)
+           :scheme emacsvox-aural-active-scheme
            :facts facts
            :context context
            :matching-rules
@@ -1219,21 +1128,11 @@ LABEL identifies the speech or cue being edited."
 
 (define-derived-mode emacsvox-aural-scheme-editor-mode
     emacsvox-aural-interface-mode
-  "Aural-Scheme-Editor"
-  "Accessible editor for declarative aural schemes and rule layers."
+  "Aural-Presentation-Editor"
+  "Accessible editor for declarative Presentation Options and rule layers."
   (setq-local
    mode-line-process
    '(:eval (when emacsvox-aural-editor-dirty " [modified]"))))
-
-(defun emacsvox-aural-editor-personal-scheme-candidates ()
-  "Return editable non-built-in aural scheme identifiers."
-  (let (ids)
-    (maphash
-     (lambda (id entry)
-       (unless (emacsvox-aural-scheme-entry-built-in entry)
-         (push (symbol-name id) ids)))
-     emacsvox-aural-scheme-registry)
-    (sort ids #'string-lessp)))
 
 (defun emacsvox-aural-editor--personal-fragment-candidates ()
   "Return editable non-built-in feature fragment identifiers."
@@ -1346,49 +1245,38 @@ This restores inherited behavior after the edited scope is saved."
   'emacsvox-aural-editor--open-without-rule
   #'emacsvox-aural-editor-open-without-rule)
 
-(defun emacsvox-edit-aural-rules (scope &optional scheme source-buffer)
+(defun emacsvox-edit-aural-rules (scope &optional fragment source-buffer)
   "Open an accessible rule editor for SCOPE.
 
-SCOPE is `personal', `session', `buffer', `scheme', or `fragment'.  SCHEME
-identifies a personal scheme or feature fragment.  SOURCE-BUFFER defaults to
+SCOPE is `personal', `session', `buffer', or `fragment'.  FRAGMENT identifies
+a personal Presentation Option.  SOURCE-BUFFER defaults to
 the ordinary source associated with the current buffer for buffer scope."
   (interactive
    (list
     (intern
      (completing-read
       "Edit aural scope: "
-      '("personal" "session" "buffer" "scheme" "fragment")
+      '("personal" "session" "buffer" "fragment")
       nil 'must-match))))
   (let* ((origin-buffer (or source-buffer (current-buffer)))
          (source-buffer
           (emacsvox-aural-inspection-remember-source-buffer
            origin-buffer))
-         (scheme
-          (when (memq scope '(scheme fragment))
+         (fragment
+          (when (eq scope 'fragment)
             (or
-             scheme
+             fragment
              (let ((candidates
-                    (if (eq scope 'scheme)
-                        (emacsvox-aural-editor-personal-scheme-candidates)
-                      (emacsvox-aural-editor--personal-fragment-candidates))))
+                    (emacsvox-aural-editor--personal-fragment-candidates)))
                (unless candidates
-                 (user-error
-                  "No personal %s; create or copy one first"
-                  (if (eq scope 'scheme)
-                      "schemes"
-                    "feature fragments")))
+                 (user-error "No personal Presentation Options; create or copy one first"))
                (intern
                 (completing-read
-                 (if (eq scope 'scheme)
-                     "Edit personal scheme: "
-                   "Edit personal feature fragment: ")
+                 "Edit personal Presentation Option: "
                  candidates nil 'must-match))))))
          (entry
-          (and
-           scheme
-           (if (eq scope 'fragment)
-               (emacsvox-aural-feature-fragment-entry scheme)
-             (emacsvox-aural-scheme-entry scheme))))
+          (and fragment
+               (emacsvox-aural-feature-fragment-entry fragment)))
          (rules
           (pcase scope
             ('personal emacsvox-aural-user-rules)
@@ -1398,18 +1286,10 @@ the ordinary source associated with the current buffer for buffer scope."
                (user-error "No live source buffer is available"))
              (buffer-local-value
               'emacsvox-aural-buffer-rules source-buffer))
-            ('scheme
-             (unless entry
-               (user-error "Unknown personal scheme: %S" scheme))
-             (when (emacsvox-aural-scheme-entry-built-in entry)
-               (user-error "Built-in schemes cannot be edited; copy it first"))
-             (plist-get
-              (emacsvox-aural-scheme-entry-data entry)
-              :rules))
             ('fragment
              (unless entry
                (user-error
-                "Unknown personal feature fragment: %S" scheme))
+                "Unknown personal Presentation Option: %S" fragment))
              (when
                  (emacsvox-aural-feature-fragment-entry-built-in entry)
                (user-error
@@ -1421,7 +1301,7 @@ the ordinary source associated with the current buffer for buffer scope."
          (name
           (format
            "*Aural Editor: %s*"
-           (if (memq scope '(scheme fragment)) scheme scope)))
+           (if (eq scope 'fragment) fragment scope)))
          (buffer (get-buffer-create name)))
     (with-current-buffer buffer
       (emacsvox-aural-scheme-editor-mode)
@@ -1429,13 +1309,10 @@ the ordinary source associated with the current buffer for buffer scope."
       (setq
        emacsvox-aural-editor-scope scope
        emacsvox-aural-editor-target
-       (if (memq scope '(scheme fragment)) scheme source-buffer)
+       (if (eq scope 'fragment) fragment source-buffer)
        emacsvox-aural-editor-scheme-data
        (and entry
-            (copy-tree
-             (if (eq scope 'fragment)
-                 (emacsvox-aural-feature-fragment-entry-data entry)
-               (emacsvox-aural-scheme-entry-data entry))))
+            (copy-tree (emacsvox-aural-feature-fragment-entry-data entry)))
        emacsvox-aural-editor-rules (copy-tree rules)
        emacsvox-aural-editor-dirty nil)
       (emacsvox-aural-editor-refresh))
@@ -1504,10 +1381,5 @@ the ordinary source whose buffer-local rules should be edited."
   #'emacsvox-aural-editor-normalized-rules)
 (defalias 'emacsvox-aural-editor--validation-report
   #'emacsvox-aural-editor-validation-report)
-(defalias 'emacsvox-aural-editor--commit-scheme
-  #'emacsvox-aural-editor-commit-scheme)
-(defalias 'emacsvox-aural-editor--personal-scheme-candidates
-  #'emacsvox-aural-editor-personal-scheme-candidates)
-
 (provide 'emacsvox-aural-editor)
 ;;; emacsvox-aural-editor.el ends here

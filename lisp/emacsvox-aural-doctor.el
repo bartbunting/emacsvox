@@ -96,26 +96,23 @@
            (if compiled "byte-compiled" "source")
            loaded)))))))
 
-(defun emacsvox-aural-doctor--scheme-finding ()
-  "Diagnose the active base scheme."
+(defun emacsvox-aural-doctor--baseline-finding ()
+  "Diagnose the fixed compatibility baseline."
   (condition-case error
       (let ((report
-             (emacsvox-aural-validate-scheme
-              emacsvox-aural-active-scheme)))
+             (emacsvox-aural-validate-scheme 'default)))
         (if (emacsvox-aural-validation-report-valid report)
             (emacsvox-aural-doctor--finding
-             'active-scheme 'ok "Active scheme" "valid"
-             (format "%s" emacsvox-aural-active-scheme))
+             'baseline 'ok "Compatibility baseline" "valid" "default")
           (emacsvox-aural-doctor--finding
-           'active-scheme 'error "Active scheme" "invalid"
+           'baseline 'error "Compatibility baseline" "invalid"
            (format
-            "%s: %s"
-            emacsvox-aural-active-scheme
+            "default: %s"
             (string-join
              (emacsvox-aural-validation-report-errors report) "; ")))))
     (error
      (emacsvox-aural-doctor--finding
-      'active-scheme 'error "Active scheme" "unavailable"
+      'baseline 'error "Compatibility baseline" "unavailable"
       (error-message-string error)))))
 
 (defun emacsvox-aural-doctor--fragment-finding ()
@@ -177,13 +174,13 @@
            ((not effective)
             (emacsvox-aural-doctor--finding
              'sound-pack 'error "Sound pack" "none"
-             "Neither the selected theme nor active scheme provides a sound pack"
+             "Neither the selected theme nor compatibility baseline provides a sound pack"
              '(emacsvox-aural-doctor-refresh-sound-packs)))
            ((emacsvox-aural-resource-report-valid report)
             (emacsvox-aural-doctor--finding
              'sound-pack 'ok "Sound pack" "valid"
              (format
-              "Effective %s; selected %s; scheme %s"
+              "Effective %s; selected %s; baseline %s"
               effective (or selected "none") (or scheme-pack "none"))
              '(emacsvox-aural-doctor-refresh-sound-packs)))
            (t
@@ -286,12 +283,12 @@
    "Training adds a concise semantic explanation after presentations"))
 
 (defun emacsvox-aural-doctor--face-presentation-finding ()
-  "Report explicit visual-face scheme policy."
+  "Report explicit visual-face presentation policy."
   (emacsvox-aural-doctor--finding
    'face-presentation 'info "Visual face presentation"
    (if emacsvox-aural-face-presentation-enabled "enabled" "disabled")
    (concat
-    "This global setting controls only explicit :legacy-face scheme rules. "
+    "This global setting controls only explicit :legacy-face presentation rules. "
     "Legacy compatibility voices and semantic presentation remain "
     "independent.")))
 
@@ -370,7 +367,7 @@
        (car entry) (cadr entry)))
     emacsvox-aural-doctor--loaded-entry-points)
    (list
-    (emacsvox-aural-doctor--scheme-finding)
+    (emacsvox-aural-doctor--baseline-finding)
     (emacsvox-aural-doctor--fragment-finding)
     (emacsvox-aural-doctor--profile-finding)
     (emacsvox-aural-doctor--sound-finding)

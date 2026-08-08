@@ -35,7 +35,7 @@
   "Sound directory used while loading resource registries for the audit.")
 
 (require 'emacsvox-sounds)
-(require 'emacsvox-aural-scheme-manager)
+(require 'emacsvox-aural-validation)
 (require 'emacsvox-aural-provider-org)
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-provider-org-srs)
@@ -638,7 +638,7 @@ below a presentation boundary."
    "configuration.  Press =a= or =RET= to apply its saved values; this "
    "confirms before discarding diverged live settings.\n\n"
    "Use =M-x emacsvox-aural-doctor= to inspect the live bindings, loaded "
-   "source or byte-code, active scheme and fragments, saved profiles, sound "
+   "source or byte-code, compatibility baseline and Presentation Options, saved profiles, sound "
    "resources, personal data, spatial fallback, speech server, and training "
    "state, including the independent face and Voice Lock controls.  It does "
    "not start the server or repair anything automatically.  "
@@ -752,10 +752,10 @@ below a presentation boundary."
    "=emacsvox-aural-presentation-history-limit= to persist the value.\n\n"
    "** Cascade and Deterministic Selection\n\n"
    "Matching rules are applied from weaker to stronger.  Origin layers are "
-   "=core=, module fragments, the active inherited scheme, ordered enabled "
+   "=core=, module fragments, the fixed compatibility baseline, ordered enabled "
    "presentation options, persistent user rules, session rules, and buffer "
-   "rules.  One base scheme is active, while any number of independent "
-   "presentation options may add presentation without replacing it.  "
+   "rules.  Any number of independent Presentation Options may add "
+   "presentation without replacing the baseline.  "
    "Automatic module compatibility fragments are a separate default layer "
    "and do not appear as toggleable options.  Within an origin, semantic "
    "identity, an exact combined module/mode match, exact or nearest derived "
@@ -898,7 +898,7 @@ below a presentation boundary."
    "role.  These restrictions, =:occasions=, and =:phases= are enforced for "
    "facts and rules rather than serving only as documentation.  The registry "
    "owner defines the intent, type, and allowed values; modules emit those "
-   "facts, while schemes and fragments decide only how to present them.  "
+   "facts, while baseline, option, and override rules decide only how to present them.  "
    "For example, core owns the =visibility= attribute "
    "and its =folded= and =expanded= values.  Do not use a visual face, voice "
    "name, cue name, or file name as semantic identity.\n\n"
@@ -1069,9 +1069,23 @@ below a presentation boundary."
     emacsvox-aural-feature-fragment-registry
     #'emacsvox-aural-feature-fragment-entry-id)))
 
+(defun emacsvox-aural-audit--baseline-provider (entry)
+  "Return a user-facing provider name for baseline ENTRY."
+  (let ((source
+         (format "%s" (or (emacsvox-aural-scheme-entry-source entry) ""))))
+    (cond
+     ((string= source "built-in") "Emacsvox core")
+     ((string-match "\\`emacsvox-aural-provider-\\(.+\\)\\'" source)
+      (format
+       "%s integration"
+       (capitalize
+        (replace-regexp-in-string "-" " " (match-string 1 source)))))
+     ((string-empty-p source) "Emacsvox")
+     (t source))))
+
 (defun emacsvox-aural-audit--insert-schemes ()
   "Insert generated scheme and fragment tables at point."
-  (insert "* Built-in Schemes\n\n")
+  (insert "* Internal Compatibility Baseline\n\n")
   (emacsvox-aural-audit--insert-table
    '("Identifier" "Provided By" "Parent" "Sound Pack" "Voice Palette"
      "Rules" "Intent")
@@ -1080,7 +1094,7 @@ below a presentation boundary."
       (let ((scheme (emacsvox-aural-scheme-entry-compiled entry)))
         (list
          (emacsvox-aural-scheme-entry-id entry)
-         (emacsvox-aural-scheme-manager--scheme-provider entry)
+         (emacsvox-aural-audit--baseline-provider entry)
          (emacsvox-aural-scheme-parent scheme)
          (emacsvox-aural-effective-scheme-provider
           'resource-pack (emacsvox-aural-scheme-entry-id entry))
@@ -1089,7 +1103,7 @@ below a presentation boundary."
          (length (emacsvox-aural-scheme-rules scheme))
          (emacsvox-aural-scheme-summary scheme))))
     (emacsvox-aural-audit--built-in-schemes)))
-  (insert "** Built-in Feature Fragments\n\n")
+  (insert "* Built-in Presentation Options\n\n")
   (emacsvox-aural-audit--insert-table
    '("Identifier" "Collection" "Rules" "Curated Examples" "Source" "Intent")
    (mapcar
@@ -1203,7 +1217,7 @@ below a presentation boundary."
    "tone cannot split itself from following actions.  Tones use the speech "
    "server protocol and are independent of auditory-icon enablement.  Register "
    "new stable tone names with =emacsvox-aural-register-tone= rather than "
-   "putting raw frequencies in scheme rules.\n\n")
+   "putting raw frequencies in presentation rules.\n\n")
   (emacsvox-aural-audit--insert-table
    '("Identifier" "Pitch (Hz)" "Duration (ms)" "Legacy Force" "Owner" "Intent")
    (mapcar
@@ -1287,7 +1301,7 @@ below a presentation boundary."
    "To migrate a direct icon path, first characterize its text, cue, and order. "
    "Register or reuse the intent, then pass explicit text and the preserved "
    "cue to one =emacsvox-aural-submit= call.  For cue-, pause-, or tone-only "
-   "feedback, use =emacsvox-aural-submit-actions= so the active scheme owns "
+   "feedback, use =emacsvox-aural-submit-actions= so the presentation cascade owns "
    "the modality.  Express a preserved compatibility cue as an ordered "
    "=emacsvox-aural-compatibility-icon= action rather than calling "
    "=emacsvox-icon= beside the submission.  Legacy cue remaps and suppression "
@@ -1300,7 +1314,7 @@ below a presentation boundary."
    "other established behavior.  Do not replace cue symbols with file paths "
    "and do not queue unresolved semantic names.\n\n"
    "To migrate styled text, keep existing =personality= or face properties "
-   "while adding semantic fact properties.  A semantic scheme can then "
+   "while adding semantic fact properties.  A semantic presentation rule can then "
    "override the voice for one module, mode, derived mode, or buffer.  Voice "
    "Lock controls only the legacy personality voice fallback; it does not "
    "disable semantic rules or explicit face rules.  A "
@@ -1337,19 +1351,19 @@ below a presentation boundary."
    "now attach registered conversation, document, organizer, message, "
    "filesystem, version-control, and command-session facts around their "
    "established feedback.  Their speech and cue order remains unchanged "
-   "unless a scheme or fragment matches the new facts.  Optional fragments "
+   "unless a Presentation Option or override matches the new facts.  Options "
    "demonstrate customization without requiring the corresponding third-party "
    "package at startup.\n\n"
-   "Rollout is deliberately staged.  The default scheme is compatibility "
-   "preserving, the Org variants are selectable examples, and integrations "
+   "Rollout is deliberately staged.  The fixed default baseline is compatibility "
+   "preserving, Org choices are composable Presentation Options, and integrations "
    "move in small tested batches.  Critical alerts currently follow the same "
    "explicit suppression contract as other actions; deployments that require "
-   "a mandatory alternative should enforce that policy in a site scheme until "
+   "a mandatory alternative should enforce that policy in site rules until "
    "a shared critical-alert contract is registered.\n\n"
    "* Maintenance\n\n"
    "Run =make aural-reference= after changing a registry or this generator.  "
    "Run =make aural-audit= to validate registry cross-references, every "
-   "registered pack and built-in scheme, literal cue calls, legacy tone-call "
+   "registered pack and internal baseline, literal cue calls, legacy tone-call "
    "inventory, voice palettes, semantic icon boundaries in migrated modules, "
    "and this generated file.  "
    "=utils/count-icons.pl= remains a historical text counter; the "
@@ -1467,7 +1481,7 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
           (unless (emacsvox-aural-validation-report-valid report)
             (push
              (format
-              "Scheme %s: %s"
+              "Compatibility baseline %s: %s"
               id
               (string-join
                (emacsvox-aural-validation-report-errors report)

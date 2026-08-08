@@ -448,19 +448,6 @@ directory.")
     (unless emacsvox-sounds--silent-theme-selection
       (emacsvox-icon 'button))))
 
-(defun emacsvox-sounds-follow-aural-scheme (&rest _providers)
-  "Select the sound pack inherited by the active aural scheme."
-  (when-let* ((pack
-               (emacsvox-aural-effective-scheme-provider 'resource-pack)))
-    (unless (eq pack emacsvox-sounds-current-pack)
-      (let ((emacsvox-sounds--silent-theme-selection t))
-        (emacsvox-sounds-select-theme pack)))))
-
-(with-eval-after-load 'emacsvox-aural-schemes
-  (add-hook
-   'emacsvox-aural-effective-resource-pack-changed-hook
-   #'emacsvox-sounds-follow-aural-scheme))
-
 (defvar ems--play-args nil
   "Arguments passed to play program.
 Automatically Set when the player is selected, do not set by hand.")

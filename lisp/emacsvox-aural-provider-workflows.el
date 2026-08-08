@@ -9,7 +9,7 @@
 ;; Register the lightweight semantic vocabulary shared by the Notmuch, Gnus,
 ;; Dired, Magit, Shell/Comint, Agent Shell, Python, Vertico, BS, Corfu,
 ;; Tabulated List, and Solitaire integrations.  This file has no dependency on
-;; those packages, so personal schemes can validate at startup before any
+;; those packages, so Presentation Options can validate at startup before any
 ;; integration is loaded.
 
 ;;; Code:

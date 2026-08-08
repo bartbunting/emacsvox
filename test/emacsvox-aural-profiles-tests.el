@@ -31,8 +31,6 @@
          (emacsvox-aural-feature-fragment-order nil)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-voice-palette-override nil)
-         (emacsvox-aural-active-scheme-changed-hook nil)
-         (emacsvox-aural-effective-resource-pack-changed-hook nil)
          (emacsvox-aural-feature-fragments-changed-hook nil)
          (emacsvox-aural-profile-applied-hook nil)
          (emacsvox-aural-compatibility-voice-changed-hook nil)
@@ -150,13 +148,12 @@
              'emacsvox-aural-compatibility-voice-changed-hook
              (lambda (&rest change)
                (push change compatibility-changes)))
-            (let ((emacsvox-aural-active-scheme 'obsolete))
-              (cl-letf
-                  (((symbol-function 'emacsvox-sounds-select-theme)
-                    (lambda (pack)
-                      (setq emacsvox-sounds-current-pack pack))))
-                (emacsvox-aural-apply-profile 'work source))
-              (should (eq emacsvox-aural-active-scheme 'obsolete)))
+            (cl-letf
+                (((symbol-function 'emacsvox-sounds-select-theme)
+                  (lambda (pack)
+                    (setq emacsvox-sounds-current-pack pack))))
+              (emacsvox-aural-apply-profile 'work source))
+            (should (eq emacsvox-aural-active-scheme 'default))
             (should
              (emacsvox-aural-compatibility-voice-enabled-p source))
             (should
@@ -448,18 +445,13 @@
   (emacsvox-test--with-aural-profiles
     (emacsvox-aural-register-profile (emacsvox-test--profile-data))
     (let ((old-spatial emacsvox-aural-spatial-output)
-          fragment-notifications
-          scheme-notifications)
+          fragment-notifications)
       (add-hook
        'emacsvox-aural-feature-fragments-changed-hook
        (lambda ()
          (push
           (copy-sequence emacsvox-aural-enabled-feature-fragments)
           fragment-notifications)))
-      (add-hook
-       'emacsvox-aural-active-scheme-changed-hook
-       (lambda ()
-         (push emacsvox-aural-active-scheme scheme-notifications)))
       (cl-letf
           (((symbol-function 'emacsvox-sounds-select-theme)
             (lambda (&rest _) (error "sound switch failed"))))
@@ -470,8 +462,7 @@
       (should-not emacsvox-aural-active-profile)
       (should (eq emacsvox-aural-spatial-output old-spatial))
       (should (eq emacsvox-sounds-current-pack 'chimes))
-      (should-not fragment-notifications)
-      (should-not scheme-notifications))))
+      (should-not fragment-notifications))))
 
 (ert-deftest emacsvox-aural-profiles-persist-and-load-references ()
   "Current storage atomically preserves profiles referencing personal data."

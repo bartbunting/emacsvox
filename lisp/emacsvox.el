@@ -369,9 +369,9 @@ This cannot be set via custom; set this in your startup file before
   :group 'emacsvox)
 
 (defun emacsvox--restore-startup-presentation ()
-  "Apply the saved profile, or select the active scheme's sound pack.
+  "Apply the saved profile, or select the compatibility-baseline sound pack.
 
-Return the applied profile ID, or nil when startup uses the scheme fallback.
+Return the applied profile ID, or nil when startup uses the baseline fallback.
 An invalid or unavailable saved profile produces a warning without preventing
 the rest of Emacsvox startup."
   (if-let* ((profile (emacsvox-aural-current-profile-id)))

@@ -123,12 +123,12 @@
               id))
            ((symbol-function 'emacsvox-sounds-select-theme)
             (lambda (&rest _)
-              (ert-fail "Selected profile unexpectedly used scheme fallback"))))
+              (ert-fail "Selected profile unexpectedly used baseline fallback"))))
         (should (eq (emacsvox--restore-startup-presentation) 'work)))
       (should (equal applied (list 'work (current-buffer)))))))
 
-(ert-deftest emacsvox-startup-without-profile-selects-scheme-sound-pack ()
-  "Startup retains the scheme sound fallback when no profile is selected."
+(ert-deftest emacsvox-startup-without-profile-selects-baseline-sound-pack ()
+  "Startup retains the baseline sound fallback when no profile is selected."
   (let (selected)
     (cl-letf
         (((symbol-function 'emacsvox-aural-current-profile-id) #'ignore)

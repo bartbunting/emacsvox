@@ -83,7 +83,7 @@
            '(("RET" . emacsvox-aural-voice-palettes-preview)
              ("B" . emacsvox-aural-voice-palettes-preview)
              ("a" . emacsvox-aural-voice-palettes-activate)
-             ("f" . emacsvox-aural-voice-palettes-follow-scheme)
+             ("f" . emacsvox-aural-voice-palettes-follow-baseline)
              ("N" . emacsvox-aural-voice-palettes-create)
              ("c" . emacsvox-aural-voice-palettes-copy)
              ("e" . emacsvox-aural-voice-palettes-edit-entry)
@@ -253,8 +253,8 @@
         (should-not selected)
         (should-not emacsvox-aural-voice-palette-override)))))
 
-(ert-deftest emacsvox-aural-voice-palettes-activate-and-follow-scheme ()
-  "The manager can select an override and return control to the scheme."
+(ert-deftest emacsvox-aural-voice-palettes-activate-and-follow-baseline ()
+  "The manager can select an override and return to the baseline."
   (emacsvox-test--with-voice-palettes
     (emacsvox-aural-register-voice-palette-data
      emacsvox-test--voice-palette-data)
@@ -267,7 +267,7 @@
             #'ignore))
         (emacsvox-aural-voice-palettes-activate)
         (should (eq emacsvox-aural-voice-palette-override 'reading))
-        (emacsvox-aural-voice-palettes-follow-scheme)
+        (emacsvox-aural-voice-palettes-follow-baseline)
         (should-not emacsvox-aural-voice-palette-override)
         (should
          (eq

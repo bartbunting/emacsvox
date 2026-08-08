@@ -409,7 +409,7 @@ plan at point always supplies its actual occasion as the initial default."
   "Describe frozen visual-face and compatibility controls in CONTEXT."
   (format
    (concat
-    "Visual face scheme presentation is %s. "
+    "Visual face presentation is %s. "
     "Legacy compatibility voices are %s and control only face and "
     "personality voice mapping; Voice Lock is the compatibility adapter")
    (if
@@ -482,7 +482,7 @@ selected occasion has no matching rule."
             (emacsvox-aural-explanation-presentation-id explanation))
          "Simulation using the current configuration.")
        (format
-        "Scheme %s."
+        "Compatibility baseline %s."
         (emacsvox-aural-humanize scheme))
        (format
         "%s."
@@ -589,7 +589,7 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
          "Basis: simulation using the current configuration; this may differ from previously heard output\n"))
       (princ
        (format
-        "Scheme: %s\n"
+        "Compatibility baseline: %s\n"
         (or
          (emacsvox-aural-explanation-scheme explanation)
          emacsvox-aural-active-scheme)))
@@ -703,7 +703,7 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
                    (plist-get rule :semantic-aliases))))
               (when diagnostic
                 (princ (format "  Deprecation: %s\n" diagnostic)))))
-        (princ "No scheme rule matched for this occasion.\n"))
+        (princ "No presentation rule matched for this occasion.\n"))
       (princ "\nTechnical details\n\n")
       (princ
        (format "Facts: %S\n" (emacsvox-aural-explanation-facts explanation)))

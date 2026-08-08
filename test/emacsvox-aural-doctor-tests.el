@@ -161,7 +161,7 @@
             "not running"))
           (should
            (cl-find
-            'active-scheme findings
+            'baseline findings
             :key #'emacsvox-aural-doctor-finding-id))
           (should face-policy)
           (should compatibility-voice)

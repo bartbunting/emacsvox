@@ -146,8 +146,10 @@
       (command
        '(emacsvox-list-aural-schemes
          emacsvox-set-aural-scheme
+         emacsvox-aural-select-scheme
          emacsvox-edit-aural-scheme
-         emacsvox-edit-aural-scheme-advanced))
+         emacsvox-edit-aural-scheme-advanced
+         emacsvox-aural-voice-palettes-follow-scheme))
     (when (fboundp command)
       (error "Retired scheme command remains available: %S" command)))
   (unless

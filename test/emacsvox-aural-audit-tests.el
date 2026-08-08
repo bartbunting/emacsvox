@@ -232,7 +232,7 @@
          '("* Presentation Rule Author Reference"
            "* Module Author Reference"
            "* Semantic Registry"
-           "** Built-in Feature Fragments"
+           "* Built-in Presentation Options"
            "* Sound Pack Author Reference"
            "* Voice Palette Author Reference"
            "* Compatibility, Migration, and Rollout"))

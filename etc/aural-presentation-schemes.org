@@ -1,15 +1,22 @@
-#+title: Semantic Aural Presentation Schemes
+#+title: Semantic Aural Presentation Design
 #+author: Emacsvox Contributors
 #+date: <2026-07-25 Sat>
 
 * Purpose
+
+Current status: the original selectable-scheme concept documented in the
+historical implementation slices below has been retired.  The internal scheme
+record remains only as the compiler representation for the fixed =default=
+compatibility baseline.  User configuration is now Presentation Profiles,
+ordered Presentation Options, and scoped Presentation Overrides.
 
 Build one semantic aural-presentation system for Emacsvox.
 
 Speech labels, voice changes, auditory icons, pauses, ordering, and spatial
 placement are alternative and composable ways to present meaning.  Modules
 should describe what an object, state, or event means; a user-selected scheme
-should decide how that meaning is rendered.
+is no longer required because composable presentation rules decide how that
+meaning is rendered.
 
 For example, an Org heading may be presented with any combination of:
 
@@ -39,7 +46,7 @@ aural object
   `-- one or more formatting runs
       |
       v
-matching scheme rules
+matching presentation rules
       |
       v
 backend-independent aural render plan

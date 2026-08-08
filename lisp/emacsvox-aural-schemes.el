@@ -97,10 +97,8 @@ configuration; callers can then report it as diverged.")
 (defvar-local emacsvox-aural-module nil
   "Semantic module identifier for aural presentation in this buffer.")
 
-(defcustom emacsvox-aural-active-scheme 'default
-  "Selected registered aural presentation scheme."
-  :type 'symbol
-  :group 'emacsvox-aural)
+(defconst emacsvox-aural-active-scheme 'default
+  "Internal compatibility-baseline identifier.")
 
 (defvar emacsvox-aural-voice-palette-override nil
   "Optional voice palette selected by a complete presentation profile.")
@@ -176,9 +174,6 @@ Each function receives one data plist and returns a plist with a greater
 `:schema-version'.  Required Emacsvox migrations are always applied after
 consulting this extension alist.")
 
-(defvar emacsvox-aural-active-scheme-changed-hook nil
-  "Hook run after selecting a different active scheme.")
-
 (defvar emacsvox-aural-feature-fragments-changed-hook nil
   "Hook run after the ordered enabled feature fragments change.")
 
@@ -187,13 +182,6 @@ consulting this extension alist.")
 
 (defvar emacsvox-aural-voice-palette-changed-hook nil
   "Hook run after the selected voice-palette override changes.")
-
-(defvar emacsvox-aural-effective-resource-pack-changed-hook nil
-  "Abnormal hook run when the active scheme's effective sound pack changes.
-
-Each function receives the previous and current resource-pack identifiers.
-This includes provider changes caused by reloading the active scheme while
-retaining the same scheme identifier.")
 
 (defvar emacsvox-aural-configuration-generation 0
   "Monotonic generation of compiled aural presentation configuration.")
@@ -581,7 +569,7 @@ the manager."
       (list entry))))
 
 (defun emacsvox-aural-effective-scheme-rules (&optional id include-disabled)
-  "Return inherited compiled rules for scheme ID or the active scheme.
+  "Return inherited compiled rules for scheme ID or the internal baseline.
 
 When INCLUDE-DISABLED is non-nil, retain validated disabled rules for
 diagnostics and cross-layer identifier checks."
@@ -625,7 +613,7 @@ diagnostics and cross-layer identifier checks."
     value))
 
 (defun emacsvox-aural-effective-scheme-provider (property &optional id)
-  "Return inherited provider PROPERTY for scheme ID or the active scheme.
+  "Return inherited provider PROPERTY for scheme ID or the internal baseline.
 
 PROPERTY is `resource-pack' or `voice-palette'."
   (unless (memq property '(resource-pack voice-palette))
@@ -649,14 +637,9 @@ PROPERTY is `resource-pack' or `voice-palette'."
 (defun emacsvox-aural--capture-coordinated-state ()
   "Return a data-only snapshot of coordinated presentation state."
   (list
-   :scheme emacsvox-aural-active-scheme
    :feature-fragments
    (copy-sequence emacsvox-aural-enabled-feature-fragments)
-   :voice-palette emacsvox-aural-voice-palette-override
-   :resource-pack
-   (condition-case nil
-       (emacsvox-aural-effective-scheme-provider 'resource-pack)
-     (emacsvox-aural-scheme-error nil))))
+   :voice-palette emacsvox-aural-voice-palette-override))
 
 (defun emacsvox-aural--notify-coordinated-state-change
     (previous reason &optional force)
@@ -667,22 +650,6 @@ category symbols whose established command hook should run even when its
 stored value is unchanged."
   (let ((current (emacsvox-aural--capture-coordinated-state)))
     (emacsvox-aural-configuration-changed reason)
-    (unless
-        (equal
-         (plist-get previous :resource-pack)
-         (plist-get current :resource-pack))
-      (run-hook-with-args
-       'emacsvox-aural-effective-resource-pack-changed-hook
-       (plist-get previous :resource-pack)
-       (plist-get current :resource-pack)))
-    (when
-        (or
-         (memq 'active-scheme force)
-         (not
-          (eq
-           (plist-get previous :scheme)
-           (plist-get current :scheme))))
-      (run-hooks 'emacsvox-aural-active-scheme-changed-hook))
     (when
         (or
          (memq 'feature-fragments force)
@@ -744,27 +711,6 @@ not loaded yet; validation is deferred until the complete registry check."
      (emacsvox-aural--validate-scheme-providers id))
    emacsvox-aural-scheme-registry)
   t)
-
-(defun emacsvox-aural-select-scheme (id)
-  "Select registered scheme ID and run the selection hook."
-  (interactive
-   (list
-    (intern
-     (completing-read
-      "Aural scheme: "
-      (emacsvox-aural-scheme-candidates)
-      nil 'must-match nil nil
-      (symbol-name emacsvox-aural-active-scheme)))))
-  (unless (emacsvox-aural-scheme-entry id)
-    (emacsvox-aural--scheme-error "Unknown scheme: %S" id))
-  (emacsvox-aural--scheme-chain id)
-  (emacsvox-aural-effective-scheme-rules id)
-  (emacsvox-aural--validate-scheme-providers id t)
-  (let ((previous (emacsvox-aural--capture-coordinated-state)))
-    (setq emacsvox-aural-active-scheme id)
-    (emacsvox-aural--notify-coordinated-state-change
-     previous 'active-scheme '(active-scheme)))
-  id)
 
 (defun emacsvox-aural--compile-rule-list
     (data origin source &optional include-disabled)
@@ -993,7 +939,7 @@ context rather than capturing one at the source boundary."
      context)))
 
 (defun emacsvox-aural-resolve-active-inputs (inputs &optional anchor)
-  "Resolve one object's semantic INPUTS through active layers for ANCHOR.
+  "Resolve one object's semantic INPUTS through current layers for ANCHOR.
 
 INPUTS is a nonempty list of (FACTS . CONTEXT) pairs.  Contextual rule
 collection uses the first pair because object boundaries guarantee stable
@@ -1003,7 +949,7 @@ module context."
     inputs (list anchor))))
 
 (defun emacsvox-aural-resolve-active (facts &optional context anchor)
-  "Resolve FACTS through active scheme and contextual rule layers.
+  "Resolve FACTS through the baseline and contextual rule layers.
 
 Optional ANCHOR limits ordered actions to one object/run lifecycle."
   (let ((context
@@ -1049,7 +995,7 @@ Optional ANCHOR limits ordered actions to one object/run lifecycle."
 
 (defun emacsvox-aural-resolve-legacy-icon
     (icon &optional context facts anchor)
-  "Resolve legacy ICON through the active scheme in CONTEXT.
+  "Resolve legacy ICON through the compatibility baseline in CONTEXT.
 
 The returned plan initially contains ICON as action `legacy-cue'.  Contextual
 rules can remove that action or replace its cue without changing callers.
@@ -1360,7 +1306,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
   "emacsvox-aural-profile-service")
 
 (defun emacsvox-aural-select-voice-palette (&optional palette)
-  "Select voice PALETTE as a global override, or nil to follow the scheme."
+  "Select voice PALETTE as a global override, or nil to use the baseline."
   (when
       (and palette (not (emacsvox-aural-voice-palette palette)))
     (emacsvox-aural--scheme-error

@@ -52,8 +52,6 @@
          (emacsvox-aural-unsupported-volume-policy 'degrade)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-feature-fragment-order nil)
-         (emacsvox-aural-active-scheme-changed-hook nil)
-         (emacsvox-aural-effective-resource-pack-changed-hook nil)
          (emacsvox-aural-resource-pack-registry
           (make-hash-table :test #'eq))
          (emacsvox-aural-resource-overlay-registry
@@ -94,7 +92,7 @@
     :summary "Concrete transport test scheme"
     :parent 'default
     :rules rules))
-  (emacsvox-aural-select-scheme 'transport-test))
+  (set 'emacsvox-aural-active-scheme 'transport-test))
 
 (defun emacsvox-test--transport-context (&optional mode)
   "Return a minimal presentation context for MODE."

@@ -28,8 +28,6 @@
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-configuration-generation 0)
          (emacsvox-aural-configuration-changed-hook nil)
-         (emacsvox-aural-active-scheme-changed-hook nil)
-         (emacsvox-aural-effective-resource-pack-changed-hook nil)
          (emacsvox-aural-feature-fragments-changed-hook nil)
          (emacsvox-aural--current-rules-cache
           (make-hash-table :test #'equal))

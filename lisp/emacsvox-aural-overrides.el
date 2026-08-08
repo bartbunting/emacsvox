@@ -460,10 +460,10 @@
          (emacsvox-aural-override-record-source-buffer record))))
       (princ
        (format
-        "\nActive base scheme: %s\n"
+        "\nCompatibility baseline: %s\n"
         emacsvox-aural-active-scheme))
       (princ
-       "The scheme supplies the base recipe. Automatic module presentation and enabled options compose around it; personal, session, and buffer overrides are the final and strongest layers.\n")
+       "The fixed baseline preserves compatibility. Automatic module presentation and enabled options compose above it; personal, session, and buffer overrides are the final and strongest layers.\n")
       (princ
        "\nPreview resolves the complete current cascade for a representative or matching live example. Removing this override restores the next weaker inherited behavior.\n")
       (princ (format "\nDeclarative data:\n\n%S\n" rule)))
@@ -744,9 +744,9 @@
      (concat
       "Aural Presentation Overrides\n\n"
       "This is one view over the existing personal, session, and remembered\n"
-      "source-buffer rule layers. Overrides are not schemes. One active scheme\n"
-      "supplies the base recipe; module compatibility, enabled presentation\n"
-      "options, then these override layers compose around and after it.\n"
+      "source-buffer rule layers. The fixed compatibility baseline and module\n"
+      "defaults are followed by enabled Presentation Options, then these\n"
+      "stronger override layers.\n"
       "Personal overrides persist, session overrides last until Emacs exits,\n"
       "and buffer overrides last only for the remembered live buffer.\n\n"
       "The Here column says whether a selector matches the remembered source\n"

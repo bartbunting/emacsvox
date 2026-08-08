@@ -41,12 +41,14 @@
          (emacsvox-aural--current-rules-cache-hits 0)
          (emacsvox-aural--current-rules-cache-misses 0)
          (emacsvox-aural-active-scheme 'default)
-         (emacsvox-aural-active-scheme-changed-hook nil)
-         (emacsvox-aural-effective-resource-pack-changed-hook nil)
          (emacsvox-aural-feature-fragments-changed-hook nil)
          (emacsvox-aural-user-data-migrations nil))
      (emacsvox-aural--register-default-scheme)
      ,@body))
+
+(defun emacsvox-test--use-internal-scheme (id)
+  "Use internal test scheme ID within isolated engine tests."
+  (set 'emacsvox-aural-active-scheme id))
 
 (ert-deftest emacsvox-aural-schemes-cache-rules-and-providers-by-generation ()
   "Stable configuration reuses rule snapshots and inherited providers."
@@ -57,7 +59,7 @@
       (list (emacsvox-test--voice-rule 'cached-heading 'voice-bolden))
       :parent 'default
       :resource-pack 'chimes))
-    (emacsvox-aural-select-scheme 'cached)
+    (emacsvox-test--use-internal-scheme 'cached)
     (clrhash emacsvox-aural--current-rules-cache)
     (clrhash emacsvox-aural--provider-cache)
     (setq
@@ -280,7 +282,7 @@
       'child "Child"
       (list (emacsvox-test--voice-rule 'child-heading 'voice-bolden))
       :parent 'parent))
-    (emacsvox-aural-select-scheme 'child)
+    (emacsvox-test--use-internal-scheme 'child)
     (should
      (eq
       (emacsvox-aural-effective-scheme-provider 'resource-pack)
@@ -348,21 +350,12 @@
        (emacsvox-aural-validate-scheme-registry)
        :type 'emacsvox-aural-scheme-error))))
 
-(ert-deftest emacsvox-aural-schemes-reject-invalid-provider-before-selection ()
-  "A failed provider check leaves the current active scheme unchanged."
+(ert-deftest emacsvox-aural-schemes-baseline-is-fixed ()
+  "The compatibility baseline is internal and has no selection command."
   (emacsvox-test--with-isolated-schemes
-    (let ((emacsvox-aural-resource-pack-registry
-           (make-hash-table :test #'eq)))
-      (emacsvox-aural-register-resource-pack
-       'chimes :summary "Test chimes" :directory temporary-file-directory)
-      (emacsvox-aural-register-scheme
-       (emacsvox-test--scheme
-        'broken-provider "Broken provider" ()
-        :resource-pack 'not-registered))
-      (should-error
-       (emacsvox-aural-select-scheme 'broken-provider)
-       :type 'emacsvox-aural-scheme-error)
-      (should (eq emacsvox-aural-active-scheme 'default)))))
+    (should (eq emacsvox-aural-active-scheme 'default))
+    (should-not (custom-variable-p 'emacsvox-aural-active-scheme))
+    (should-not (fboundp 'emacsvox-aural-select-scheme))))
 
 (ert-deftest emacsvox-aural-schemes-layer-contextual-overrides ()
   "Buffer rules override session, personal, scheme, and module rules."
@@ -380,7 +373,7 @@
       'contextual "Contextual"
       (list (emacsvox-test--voice-rule 'scheme-heading 'voice-lighten))
       :parent 'default))
-    (emacsvox-aural-select-scheme 'contextual)
+    (emacsvox-test--use-internal-scheme 'contextual)
     (setq
      emacsvox-aural-user-rules
      (list (emacsvox-test--voice-rule 'user-heading 'voice-smoothen))
@@ -499,7 +492,7 @@
            ((:id extra-label :kind speech :text "Level")))))))
      :built-in t
      :source "test")
-    (emacsvox-aural-select-scheme 'spoken)
+    (emacsvox-test--use-internal-scheme 'spoken)
     (emacsvox-aural-set-enabled-feature-fragments
      '(with-icon with-prefix))
     (setq
@@ -715,7 +708,7 @@
       'named "Named"
       (list (emacsvox-test--voice-rule 'same 'voice-lighten))
       :parent 'default))
-    (emacsvox-aural-select-scheme 'named)
+    (emacsvox-test--use-internal-scheme 'named)
     (setq
      emacsvox-aural-user-rules
      (list (emacsvox-test--voice-rule 'same 'voice-bolden)))
@@ -1221,18 +1214,6 @@
              (emacsvox-aural-load-user-data file)
              :type 'emacsvox-aural-scheme-error))
         (delete-directory directory t)))))
-
-(ert-deftest emacsvox-aural-schemes-selection-runs-change-hook ()
-  "Selecting a valid scheme notifies provider and editor integrations."
-  (emacsvox-test--with-isolated-schemes
-    (let (selected)
-      (emacsvox-aural-register-scheme
-       (emacsvox-test--scheme 'quiet "Quiet" () :parent 'default))
-      (add-hook
-       'emacsvox-aural-active-scheme-changed-hook
-       (lambda () (setq selected emacsvox-aural-active-scheme)))
-      (emacsvox-aural-select-scheme 'quiet)
-      (should (eq selected 'quiet)))))
 
 (provide 'emacsvox-aural-schemes-tests)
 ;;; emacsvox-aural-schemes-tests.el ends here

@@ -21,7 +21,7 @@
 
 (declare-function emacsvox-edit-aural-rules
                   "emacsvox-aural-editor"
-                  (scope &optional scheme source-buffer))
+                  (scope &optional fragment source-buffer))
 (declare-function emacsvox-aural-doctor
                   "emacsvox-aural-doctor" ())
 (declare-function emacsvox-aural-doctor-summary

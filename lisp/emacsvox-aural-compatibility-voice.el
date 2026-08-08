@@ -66,7 +66,7 @@ Hook functions receive the buffer and its new enabled state.")
   "Set legacy compatibility voices to ENABLED in BUFFER.
 
 This controls only legacy face and personality voice mapping.  Semantic
-presentation and explicit visual-face scheme rules remain independent."
+presentation and explicit visual-face presentation rules remain independent."
   (unless (memq enabled '(nil t))
     (error "Compatibility voice state must be nil or t: %S" enabled))
   (let ((buffer (or buffer (current-buffer))))
@@ -82,7 +82,7 @@ presentation and explicit visual-face scheme rules remain independent."
 
 With a positive prefix ARG, enable them.  With zero or a negative prefix,
 disable them.  This does not change semantic presentation or explicit
-visual-face scheme rules."
+visual-face presentation rules."
   (interactive "P")
   (let* ((buffer (or buffer (current-buffer)))
          (enabled

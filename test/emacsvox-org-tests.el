@@ -574,7 +574,7 @@
             org-fragment-heading-level-label)))
         (should
          (string-match-p
-          "Scheme default" summary))
+          "Compatibility baseline default" summary))
         (should
          (string-match-p
           (concat
