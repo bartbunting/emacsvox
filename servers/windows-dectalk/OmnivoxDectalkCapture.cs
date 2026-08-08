@@ -230,7 +230,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
     }
 
     internal OmnivoxCaptureResult Synthesize(string text, string voiceCode,
-        int rate, int pitch, double volume)
+        int rate, int pitch, string voiceParameters, double volume)
     {
         lock (synthesisLock)
         {
@@ -240,7 +240,8 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                 Check(OmnivoxNativeDectalk.TextToSpeechSetRate(handle,
                     (uint)rate), "TextToSpeechSetRate");
                 Speak("[" + voiceCode + " :dv ap " +
-                    pitch.ToString(CultureInfo.InvariantCulture) + "] " +
+                    pitch.ToString(CultureInfo.InvariantCulture) +
+                    voiceParameters + "] " +
                     BuildTextWithIndexes(text));
                 OmnivoxHelperLog.Event("native_call_started",
                     "engine=dectalk call=TextToSpeechSync");

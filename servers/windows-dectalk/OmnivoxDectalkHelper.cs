@@ -52,11 +52,31 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
             { "wendy", 200 }
         };
 
+    private static readonly int[] PitchRange =
+        { 0, 20, 40, 60, 80, 100, 137, 174, 211, 250 };
+    private static readonly int[] Assertiveness =
+        { 0, 10, 20, 30, 40, 50, 60, 70, 80, 100 };
+    private static readonly int[] HatRise =
+        { 0, 3, 6, 9, 12, 18, 34, 48, 63, 80 };
+    private static readonly int[] StressRise =
+        { 0, 6, 12, 18, 24, 32, 50, 65, 82, 90 };
+    private static readonly int[] Quickness =
+        { 0, 20, 40, 60, 80, 100, 100, 100, 100, 100 };
+    private static readonly int[] BaselineFall =
+        { 0, 3, 6, 9, 14, 18, 20, 35, 60, 40 };
+    private static readonly int[] Richness =
+        { 0, 14, 28, 42, 56, 70, 60, 70, 80, 100 };
+    private static readonly int[] Smoothness =
+        { 100, 80, 60, 40, 20, 3, 24, 16, 8, 0 };
+
     private static readonly OmnivoxHelperCapabilities EngineCapabilities =
         new OmnivoxHelperCapabilities
         {
             Rate = true,
             AveragePitch = true,
+            PitchRange = true,
+            Stress = true,
+            Richness = true,
             Volume = true,
             WordMarkers = true,
             SentenceMarkers = true,
@@ -109,8 +129,44 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
             VoiceAveragePitch[voiceId] * pitch,
             MidpointRounding.AwayFromZero);
         nativePitch = Math.Max(50, Math.Min(500, nativePitch));
+        string voiceParameters = MapExtendedAcss(pitchRange, stress, richness);
         return capture.Synthesize(text, voiceCode, nativeRate, nativePitch,
-            volume);
+            voiceParameters, volume);
+    }
+
+    internal static string MapExtendedAcss(double? pitchRange,
+        double? stress, double? richness)
+    {
+        string parameters = "";
+        if (pitchRange.HasValue)
+        {
+            parameters += " pr " + MapNormalized(pitchRange.Value, PitchRange) +
+                " as " + MapNormalized(pitchRange.Value, Assertiveness);
+        }
+        if (stress.HasValue)
+        {
+            parameters += " hr " + MapNormalized(stress.Value, HatRise) +
+                " sr " + MapNormalized(stress.Value, StressRise) +
+                " qu " + MapNormalized(stress.Value, Quickness) +
+                " bf " + MapNormalized(stress.Value, BaselineFall);
+        }
+        if (richness.HasValue)
+        {
+            parameters += " ri " + MapNormalized(richness.Value, Richness) +
+                " sm " + MapNormalized(richness.Value, Smoothness);
+        }
+        return parameters;
+    }
+
+    private static int MapNormalized(double value, int[] levels)
+    {
+        double position = Math.Max(0.0, Math.Min(1.0, value)) *
+            (levels.Length - 1);
+        int lower = (int)Math.Floor(position);
+        int upper = Math.Min(lower + 1, levels.Length - 1);
+        double mapped = levels[lower] +
+            (levels[upper] - levels[lower]) * (position - lower);
+        return (int)Math.Round(mapped, MidpointRounding.AwayFromZero);
     }
 
     public void Stop()
