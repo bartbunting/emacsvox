@@ -539,13 +539,12 @@ OWNER so a logical transaction cannot be partially delivered across streams."
       0.5)))
 
 (defun emacsvox-aural--timeline-logical-voice (command request)
-  "Return the logical voice ID frozen in COMMAND or portable REQUEST."
+  "Return the logical voice ID frozen in portable REQUEST or COMMAND.
+
+A named portable request owns routing identity.  Generated legacy commands
+may contain an ACSS implementation name such as `acss-a6'; use that only when
+the concrete request has no named preset."
   (cond
-   ((and
-     (stringp command)
-     (string-match
-      "\\[\\[logical_voice \\([A-Za-z0-9_.-]+\\)\\]\\]" command))
-    (match-string 1 command))
    ((and request (symbolp request)) (symbol-name request))
    ((stringp request) request)
    ((and
@@ -554,7 +553,12 @@ OWNER so a logical transaction cannot be partially delivered across streams."
      (symbolp (plist-get request :preset)))
     (symbol-name (plist-get request :preset)))
    ((and (listp request) (stringp (plist-get request :preset)))
-    (plist-get request :preset))))
+    (plist-get request :preset))
+   ((and
+     (stringp command)
+     (string-match
+      "\\[\\[logical_voice \\([A-Za-z0-9_.-]+\\)\\]\\]" command))
+    (match-string 1 command))))
 
 (defun emacsvox-aural--timeline-position (span-id affinity)
   "Return one span-boundary JSON position for SPAN-ID and AFFINITY."

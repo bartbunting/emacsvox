@@ -435,6 +435,24 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       2))
     (should (= (length (cadr built)) 4))))
 
+(ert-deftest emacsvox-aural-structured-timeline-prefers-named-voice-request ()
+  "Generated ACSS command names do not replace portable routing identity."
+  (let* ((content
+          (emacsvox-aural--make-concrete-content
+           :text "Prompt" :speak t :voice-request 'lighten-extra
+           :voice-command "[[logical_voice acss-a6]] [[pitch 1.2]]"
+           :voice-style '(:average-pitch 6 :reverb 5)))
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content content :context '(:icons-enabled t)))
+         (envelope
+          (car
+           (emacsvox-aural--build-structured-timeline
+            1 1 (list (list plan "Prompt" nil)))))
+         (span (aref (plist-get envelope :spans) 0)))
+    (should
+     (equal (plist-get span :logical_voice_id) "lighten-extra"))))
+
 (ert-deftest emacsvox-aural-structured-timeline-honors-disabled-icons ()
   "Structured lowering retains the frozen auditory-icon policy."
   (let* ((cue
