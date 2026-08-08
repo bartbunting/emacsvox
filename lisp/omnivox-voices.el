@@ -40,6 +40,7 @@
 (defvar tts-voice-configuration-apply-function)
 (defvar tts-last-realized-voice-function)
 (defvar tts-realized-voice-changed-hook)
+(defvar tts--capitalization-presentation-property)
 
 (defgroup omnivox nil
   "Omnivox speech server."
@@ -1336,6 +1337,12 @@ logical registry is replaced, so partial failure is explicit and retryable."
                (plist-get response :features))
        (member "playback_marker_events_v2"
                (plist-get response :features)))
+      t))
+    (process-put
+     process tts--capitalization-presentation-property
+     (and
+      (member "capitalization_presentation_v1"
+              (plist-get response :features))
       t))
     (when (member "emacsvox_tx" (plist-get response :features))
       (emacsvox-aural-enable-framed-delivery process))

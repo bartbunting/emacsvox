@@ -1310,12 +1310,10 @@ Local to each buffer.  Used to decide if we  spell or speak the word. ")
     (cl-loop for char across word
              do
              (setq char-string (format "%c " char))
-             (when (and (<= ?A char)
-                        (<= char ?Z))
+             (when (char-uppercase-p char)
                (put-text-property 0 1
                                   'personality voice-animate
-                                  char-string)
-               (setq char-string (format "cap %s " char-string)))
+                                  char-string))
              (setq result
                    (concat result
                            char-string)))
@@ -1403,44 +1401,25 @@ spelled out  instead of being spoken."
     ("w" . "whisky")
     ("x" . "xray")
     ("y" . "yankee")
-    ("z" . "zulu")
-    ("A" . "cap alpha")
-    ("B" . "cap bravo")
-    ("C" . "cap charlie")
-    ("D" . "cap delta")
-    ("E" . "cap echo")
-    ("F" . "cap foxtrot")
-    ("G" . "cap golf")
-    ("H" . "cap hotel")
-    ("I" . "cap india")
-    ("J" . "cap juliet")
-    ("K" . "cap kilo")
-    ("L" . "cap lima")
-    ("M" . "cap mike")
-    ("N" . "cap november")
-    ("O" . "cap oscar")
-    ("P" . "cap poppa")
-    ("Q" . "cap quebec")
-    ("R" . "cap romeo")
-    ("S" . "cap sierra")
-    ("T" . "cap tango")
-    ("U" . "cap uniform")
-    ("V" . "cap victor")
-    ("W" . "cap whisky")
-    ("X" . "cap xray")
-    ("Y" . "cap yankee")
-    ("Z" . "cap zulu"))
+    ("z" . "zulu"))
   "Mapping from characters to their phonemic equivalents.")
 
 (defun emacsvox-get-phonetic-string (char)
-  "Return the phonetic string for this CHAR or its upper case equivalent.
-char is assumed to be one of a--z."
-  
-  (let ((char-string (char-to-string char)))
-    (or (cdr
-         (assoc char-string emacsvox-char-to-phonetic-table))
-        (tts-unicode-full-name-for-char char)
-        char-string)))
+  "Return the phonetic string for CHAR while preserving capitalization.
+An uppercase ASCII letter capitalizes the phonetic word's first character so
+the normal semantic capitalization presentation handles its cue."
+  (let* ((char-string (char-to-string char))
+         (phonetic
+          (cdr
+           (assoc
+            (downcase char-string)
+            emacsvox-char-to-phonetic-table))))
+    (cond
+     ((and phonetic (char-uppercase-p char))
+      (concat (upcase (substring phonetic 0 1)) (substring phonetic 1)))
+     (phonetic)
+     ((tts-unicode-full-name-for-char char))
+     (char-string))))
 
 ;;;  Speak Chars:
 

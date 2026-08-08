@@ -518,7 +518,8 @@
                :protocol_version 1 :request_id identifier
                :type "capabilities" :server_version "1.3.0"
                :supported_protocol_versions [1]
-               :features ["control_v1" "emacsvox_tx" "engine_inventory"
+               :features ["capitalization_presentation_v1"
+                          "control_v1" "emacsvox_tx" "engine_inventory"
                           "logical_voice_registration"
                           "playback_marker_events_v1"
                           "preferred_engine"
@@ -560,6 +561,9 @@
             process tts--tracked-playback-completion-property))
           (should
            (process-get process tts--marker-playback-events-property))
+          (should
+           (process-get
+            process tts--capitalization-presentation-property))
           (should (= (plist-get omnivox-engine-inventory
                                 :inventory_generation)
                      3))
@@ -726,7 +730,10 @@
             process emacsvox-aural--framed-delivery-process-property))
           (should-not
            (process-get
-            process tts--tracked-playback-completion-property)))
+            process tts--tracked-playback-completion-property))
+          (should-not
+           (process-get
+            process tts--capitalization-presentation-property)))
       (delete-process process))))
 
 (ert-deftest emacsvox-tts-omnivox-preserves-structured-voice-selectors ()
@@ -1164,6 +1171,38 @@
         (kill-buffer scratch)))
     (should (equal (nreverse queued) '("inner" "outer")))
     (should-not (get-buffer " *tts-scratch-buffer* <2>"))))
+
+(ert-deftest emacsvox-tts-speech-snapshots-local-capitalization-presentation ()
+  "Speech preparation carries the source buffer's caps selector into scratch."
+  (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+    (kill-buffer scratch))
+  (let ((tts-stop-immediately nil)
+        (emacsvox-pronounce-table nil)
+        (emacsvox-pronounce-personality nil)
+        (voice-lock-mode nil)
+        observed)
+    (unwind-protect
+        (with-temp-buffer
+          (setq-local emacsvox-capitalization-presentation 'spoken-tone)
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-prepared-text-p)
+                (lambda (_text) t))
+               ((symbol-function 'tts--protocol-sync)
+                (lambda ()
+                  (setq observed emacsvox-capitalization-presentation)))
+               ((symbol-function 'tts-move-across-a-chunk)
+                (lambda (&rest _arguments)
+                  (goto-char (point-max))
+                  t))
+               ((symbol-function 'tts-voice-reset-code)
+                (lambda () "reset"))
+               ((symbol-function 'tts--protocol-queue-code) #'ignore)
+               ((symbol-function 'tts--protocol-queue-text) #'ignore)
+               ((symbol-function 'tts--protocol-dispatch) #'ignore))
+            (tts--speak-transaction "Word")))
+      (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+        (kill-buffer scratch)))
+    (should (eq observed 'spoken-tone))))
 
 (ert-deftest emacsvox-tts-protocol-dispatches-tracked-speech ()
   "Tracked speech uses the supported playback command and returns its token."
@@ -2044,6 +2083,47 @@
      (equal
       (emacsvox-test--tts-capture-protocol #'tts--protocol-sync)
       '((speaker "tts_sync_state none 1 0 210\n"))))))
+
+(ert-deftest emacsvox-tts-protocol-synchronizes-negotiated-capitalization ()
+  "Negotiated Omnivox letters and state honor the current caps selector."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-capitalization-protocol-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-punctuation-mode 'none)
+         (tts-split-caps t)
+         (tts-caps t)
+         (tts-speech-rate 210)
+         (emacsvox-capitalization-presentation 'spoken-tone)
+         writes)
+    (unwind-protect
+        (progn
+          (process-put
+           process tts--capitalization-presentation-property t)
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-delivery-send)
+                (lambda (target command &optional _kind)
+                  (push (list target command) writes))))
+            (tts--protocol-sync)
+            (should
+             (equal
+              (nreverse writes)
+              (list
+               (list
+                process
+                "tts_set_capitalization_presentation spoken-tone\n")
+               (list process "tts_sync_state none 1 0 210\n"))))
+            (setq writes nil
+                  tts-caps nil)
+            (tts-letter "A")
+            (should
+             (equal
+              (nreverse writes)
+              (list
+               (list process "tts_set_capitalization_presentation none\n")
+               (list process "l {A}\n"))))))
+      (delete-process process))))
 
 (ert-deftest emacsvox-tts-protocol-dispatches-language-operations ()
   "Language navigation and preference commands retain their protocol."

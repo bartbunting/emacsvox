@@ -61,6 +61,8 @@
 (defvar tts-split-caps)
 (defvar tts-caps)
 (defvar tts-speech-rate)
+(defvar emacsvox-capitalization-presentation)
+(defvar emacsvox-capitalization-presentation-values)
 (defvar emacsvox-aural-source-invisible-property)
 
 (declare-function ems--fastload "emacsvox-preamble" (file))
@@ -160,6 +162,10 @@ a `cancelled' record when pending input interrupts that wait.")
 (defconst tts--marker-playback-events-property
   'tts--marker-playback-events
   "Process property recording negotiated marker playback support.")
+
+(defconst tts--capitalization-presentation-property
+  'tts--capitalization-presentation
+  "Process property recording negotiated capitalization presentation support.")
 
 (defvar tts--tracked-dispatch-sequence 0
   "Sequence used to identify tracked speech dispatches.")
@@ -549,8 +555,35 @@ effect must run only after the complete timeline command has been sent."
 
 ;;;;  sync
 
+(defun tts--effective-capitalization-presentation ()
+  "Return the capitalization presentation to send to the speech server."
+  (if
+      (and
+       tts-caps
+       (memq
+        emacsvox-capitalization-presentation
+        emacsvox-capitalization-presentation-values))
+      emacsvox-capitalization-presentation
+    'none))
+
+(defun tts--protocol-sync-capitalization-presentation (&optional process)
+  "Synchronize capitalization presentation with negotiated PROCESS.
+PROCESS defaults to `tts-speaker-process'.  Older speech servers continue to
+use their existing isolated-letter behavior."
+  (let ((target (or process tts-speaker-process)))
+    (when
+        (and
+         (processp target)
+         (process-get target tts--capitalization-presentation-property))
+      (emacsvox-aural-delivery-send
+       target
+       (format
+        "tts_set_capitalization_presentation %s\n"
+        (tts--effective-capitalization-presentation))))))
+
 (defun tts--protocol-sync ()
   "Synchronize speech state with running server"
+  (tts--protocol-sync-capitalization-presentation)
   (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "tts_sync_state %s %s %s %s\n"
@@ -2800,6 +2833,7 @@ by the audio device's buffering latency."
         (speech-rate tts-speech-rate)
         (caps tts-caps)
         (split-caps tts-split-caps)
+        (capitalization-presentation emacsvox-capitalization-presentation)
         (start 1)
         (end nil)
         (mode tts-punctuation-mode)
@@ -2834,6 +2868,9 @@ by the audio device's buffering latency."
                tts-speak-nonprinting-chars inherit-speak-nonprinting-chars
                tts-strip-octals inherit-strip-octals
                voice-lock-mode voice-lock)
+              (setq-local
+               emacsvox-capitalization-presentation
+               capitalization-presentation)
               (set-syntax-table syntax-table)
               (tts--protocol-sync)
               (insert-for-yank text)          ; insert and pre-process text
@@ -2934,6 +2971,7 @@ grouping"
   "Speak a LETTER."
   (unless tts-quiet
     (when (process-live-p tts-speaker-process)
+      (tts--protocol-sync-capitalization-presentation)
       (tts--protocol-letter letter))))
 ;;;  Notify:
 

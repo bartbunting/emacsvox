@@ -98,6 +98,43 @@
            :type 'user-error))
       (set-default 'emacsvox-indentation-presentation original))))
 
+(ert-deftest emacsvox-spelling-publishes-capitals-without-spoken-prefixes ()
+  "Spelling preserves uppercase source text for the selected aural cue."
+  (let (spoken)
+    (cl-letf
+        (((symbol-function 'tts-speak)
+          (lambda (text) (setq spoken text))))
+      (emacsvox-speak-spell-word "Ab"))
+    (should (equal (substring-no-properties spoken) "A b "))
+    (should-not (string-match-p "cap" spoken))
+    (should (eq (get-text-property 0 'personality spoken) voice-animate))
+    (let* ((tts-caps t)
+           (emacsvox-capitalization-presentation 'tone)
+           (annotated (tts--annotate-capitalization spoken))
+           (facts
+            (get-text-property
+             0 emacsvox-aural-facts-property annotated)))
+      (should (eq (plist-get facts :capitalization-kind) 'capital))
+      (should (eq (plist-get facts :capitalization-presentation) 'tone)))))
+
+(ert-deftest emacsvox-phonetic-words-preserve-capitalization-semantically ()
+  "Uppercase phonetic words retain a capital boundary instead of saying cap."
+  (should (equal (emacsvox-get-phonetic-string ?a) "alpha"))
+  (should (equal (emacsvox-get-phonetic-string ?A) "Alpha"))
+  (let* ((tts-caps t)
+         (emacsvox-capitalization-presentation 'spoken-tone)
+         (annotated
+          (tts--annotate-capitalization
+           (emacsvox-get-phonetic-string ?A)))
+         (facts
+          (get-text-property
+           0 emacsvox-aural-facts-property annotated)))
+    (should (eq (plist-get facts :capitalization-kind) 'capital))
+    (should
+     (eq
+      (plist-get facts :capitalization-presentation)
+      'spoken-tone))))
+
 (ert-deftest emacsvox-speak-rest-of-buffer-advances-after-playback ()
   "Tracked reading advances point and source only after each completion."
   (let ((tts-speaker-process 'speaker)
