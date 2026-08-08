@@ -2208,7 +2208,12 @@ before the following entry or subsequent ordinary speech."
                 (list :engine-id (plist-get realized :engine-id)
                       :voice-id (plist-get realized :voice-id))
                 :degraded-acss
-                (tts--voice-preview-dimensions (plist-get entry :acss))
+                (append
+                 (tts--voice-preview-dimensions (plist-get entry :acss))
+                 (and
+                  (numberp (plist-get entry :rate-offset))
+                  (not (zerop (plist-get entry :rate-offset)))
+                  '(rate-offset)))
                 :degraded-effects
                 (tts--voice-preview-dimensions (plist-get entry :effects))))))
           entries)))
@@ -2229,9 +2234,10 @@ before the following entry or subsequent ordinary speech."
   "Function previewing a sequence of normalized voice entries.
 
 The function receives ENTRIES and CALLBACK. Each entry is a plist containing
-`:text', `:selector', `:acss', `:effects', and `:language'. CALLBACK receives
-one terminal result. Adapters without playback acknowledgement use `queued'
-and `queued-only' rather than claiming natural completion.")
+`:text', `:selector', `:acss', `:rate-offset', `:effects', and `:language'.
+CALLBACK receives one terminal result. Adapters without playback
+acknowledgement use `queued' and `queued-only' rather than claiming natural
+completion.")
 
 (defun tts-preview-voices (entries callback)
   "Preview normalized ENTRIES and call CALLBACK with one terminal result."
@@ -2246,16 +2252,17 @@ and `queued-only' rather than claiming natural completion.")
   (funcall tts-voice-preview-function (copy-tree entries) callback))
 
 (cl-defun tts-preview-voice
-    (text selector &key acss effects language callback)
+    (text selector &key acss rate-offset effects language callback)
   "Preview TEXT through SELECTOR without changing saved routing.
-ACSS and EFFECTS are unsaved normalized plists. LANGUAGE constrains portable
-selection. CALLBACK receives a normalized terminal result plist."
+ACSS and EFFECTS are unsaved normalized plists. RATE-OFFSET is a signed point
+adjustment to the current speech rate. LANGUAGE constrains portable selection.
+CALLBACK receives a normalized terminal result plist."
   (unless (and (stringp text) (not (string-empty-p text)))
     (error "Voice preview text must be a nonempty string"))
   (tts-preview-voices
    (list
-    (list :text text :selector selector :acss acss :effects effects
-          :language language))
+    (list :text text :selector selector :acss acss
+          :rate-offset rate-offset :effects effects :language language))
    (when callback
      (lambda (result)
        (let ((single

@@ -611,6 +611,29 @@
           (emacsvox-aural-voice-tuner-set-digit)))
       (should (equal (nreverse announcements) '("8" "7" "9"))))))
 
+(ert-deftest emacsvox-aural-voice-tuner-adjusts-relative-rate-by-direct-points ()
+  "Relative rate crosses zero in single points with concise announcements."
+  (with-temp-buffer
+    (emacsvox-aural-voice-tuner-mode)
+    (setq emacsvox-aural-voice-tuner-working-style '(:rate-offset nil))
+    (let (announcements)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-voice-tuner--current-dimension)
+            (lambda () 'rate-offset))
+           ((symbol-function 'emacsvox-aural-voice-tuner-refresh) #'ignore)
+           ((symbol-function 'emacsvox-aural-voice-tuner-audition)
+            (lambda (&optional announcement)
+              (push announcement announcements))))
+        (emacsvox-aural-voice-tuner-decrease)
+        (emacsvox-aural-voice-tuner-increase)
+        (emacsvox-aural-voice-tuner-increase))
+      (should (= (plist-get emacsvox-aural-voice-tuner-working-style
+                            :rate-offset)
+                 1))
+      (should
+       (equal (nreverse announcements)
+              '("1 point slower" "unchanged" "1 point faster"))))))
+
 (ert-deftest emacsvox-aural-voice-tuner-auditions-selected-engine-route ()
   "Route-aware tuning uses normalized values and engine-specific support."
   (with-temp-buffer
@@ -620,7 +643,7 @@
      emacsvox-aural-voice-tuner-voice 'aside
      emacsvox-aural-voice-tuner-working-style
      '(:family paul :average-pitch 4 :pitch-range 3
-       :stress nil :richness 6 :rate 7 :gain 5 :reverb 4)
+       :stress nil :richness 6 :rate-offset -7 :gain 5 :reverb 4)
      emacsvox-aural-voice-tuner-preview-text "Shared sample."
      emacsvox-aural-voice-tuner-route-selector
      '(:kind exact :scope local :engine-id "eloquence"
@@ -665,8 +688,9 @@
         (should (= (plist-get acss :average-pitch) (/ 4.0 9.0)))
         (should (= (plist-get acss :pitch-range) (/ 3.0 9.0)))
         (should (= (plist-get acss :richness) (/ 6.0 9.0)))
-        (should (= (plist-get acss :rate) (/ 7.0 9.0)))
+        (should-not (plist-member acss :rate))
         (should-not (plist-member acss :family)))
+      (should (= (plist-get (nth 2 request) :rate-offset) -7))
       (let ((effects (plist-get (nth 2 request) :effects)))
         (should (= (plist-get effects :gain) (/ 5.0 9.0)))
         (should (= (plist-get effects :reverb) (/ 4.0 9.0))))
@@ -748,7 +772,7 @@
         (emacsvox-aural-voice-tuner--setting-announcement 'reverb))))))
 
 (ert-deftest emacsvox-aural-rich-voice-style-validates-and-persists-effects ()
-  "Portable palette styles retain rate and post-synthesis dimensions."
+  "Portable palette styles retain relative rate and post-synthesis dimensions."
   (emacsvox-test--with-voice-palettes
     (let ((data
            (copy-tree emacsvox-test--voice-palette-data)))
@@ -756,11 +780,11 @@
        (assq 'aside (plist-get data :entries))
        '(:style
          (:family nil :average-pitch 4 :pitch-range 3
-          :stress nil :richness 6 :rate 7 :gain 5
+          :stress nil :richness 6 :rate-offset -7 :gain 5
           :low-pass 8 :high-pass nil :pan 2 :reverb 4 :echo 1)))
       (emacsvox-aural-register-voice-palette-data data)
       (let ((style (emacsvox-aural-voice 'aside 'reading)))
-        (should (= (plist-get style :rate) 7))
+        (should (= (plist-get style :rate-offset) -7))
         (should (= (plist-get style :gain) 5))
         (should (= (plist-get style :reverb) 4))
         (should (= (plist-get style :echo) 1))))))

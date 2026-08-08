@@ -17,6 +17,10 @@
 
 (declare-function emacsvox-aural-enable-framed-delivery
                   "emacsvox-aural-transport" (process))
+(declare-function emacsvox-aural-enable-relative-rate
+                  "emacsvox-aural-transport" (process))
+(declare-function emacsvox-aural-enable-structured-timeline
+                  "emacsvox-aural-transport" (process))
 (declare-function tts--dispatch-playback-marker-event
                   "tts-speak" (process event))
 (declare-function tts-stop "tts-speak" (&optional all))
@@ -632,7 +636,7 @@ Symbol and string keys with the same printed name are equivalent."
   (intern (replace-regexp-in-string "_" "-" (format "%s" value))))
 
 (defun omnivox--normalize-preview-response
-    (entry response effects-supported)
+    (entry response effects-supported rate-supported)
   "Normalize preview RESPONSE for ENTRY and EFFECTS-SUPPORTED status."
   (if (not (equal (plist-get response :type) "preview_completed"))
       (list
@@ -653,8 +657,18 @@ Symbol and string keys with the same printed name are equivalent."
             (list :engine-id (plist-get realized :engine_id)
                   :voice-id (plist-get realized :voice_id)))
        :degraded-acss
-       (mapcar #'omnivox--preview-dimension-symbol
-               (plist-get response :degraded_acss))
+       (let ((degraded
+              (mapcar #'omnivox--preview-dimension-symbol
+                      (plist-get response :degraded_acss))))
+         (when (and
+                (numberp (plist-get entry :rate-offset))
+                (not (zerop (plist-get entry :rate-offset))))
+           (if rate-supported
+               (when (memq 'rate degraded)
+                 (setq degraded
+                       (cons 'rate-offset (delq 'rate degraded))))
+             (push 'rate-offset degraded)))
+         degraded)
        :degraded-effects
        (if effects-supported
            (mapcar #'omnivox--preview-dimension-symbol
@@ -671,7 +685,10 @@ Symbol and string keys with the same printed name are equivalent."
     (error "The live Omnivox server does not support transactional preview"))
   (let ((effects-supported
          (omnivox--process-supports-p
-          tts-speaker-process "post_synthesis_effects_v1")))
+          tts-speaker-process "post_synthesis_effects_v1"))
+        (rate-supported
+         (omnivox--process-supports-p
+          tts-speaker-process "relative_rate_v1")))
     (tts-stop)
     (omnivox--send-control-request
      tts-speaker-process
@@ -683,6 +700,11 @@ Symbol and string keys with the same printed name are equivalent."
        (omnivox--preview-selector-json (plist-get entry :selector))
        :language (or (plist-get entry :language) :null)
        :acss (omnivox--preview-acss-json (plist-get entry :acss)))
+      (when (and
+             rate-supported
+             (numberp (plist-get entry :rate-offset))
+             (not (zerop (plist-get entry :rate-offset))))
+        (list :rate_offset (plist-get entry :rate-offset)))
       (when effects-supported
         (list :effects
               (omnivox--preview-effects-json
@@ -690,7 +712,7 @@ Symbol and string keys with the same printed name are equivalent."
      (lambda (_process response)
        (funcall callback
                 (omnivox--normalize-preview-response
-                 entry response effects-supported))))))
+                 entry response effects-supported rate-supported))))))
 
 (defun omnivox-preview-voice-sequence (entries callback)
   "Preview Omnivox ENTRIES in order and call CALLBACK after playback."
@@ -1312,6 +1334,8 @@ logical registry is replaced, so partial failure is explicit and retryable."
       (emacsvox-aural-enable-framed-delivery process))
     (when (member "presentation_timeline_v1" (plist-get response :features))
       (emacsvox-aural-enable-structured-timeline process))
+    (when (member "relative_rate_v1" (plist-get response :features))
+      (emacsvox-aural-enable-relative-rate process))
     (when (eq process tts-speaker-process)
       (setq omnivox-control-capabilities response))
     (if (member "engine_inventory" (plist-get response :features))
@@ -1710,8 +1734,13 @@ Return the number of distinct processes that received the command."
 
 (defun omnivox-voice-capabilities ()
   "Return discovered ACSS and routed-family capabilities for Omnivox."
-  (let ((dimensions (omnivox--discovered-acss-dimensions))
+  (let ((dimensions
+         (remove 'rate (omnivox--discovered-acss-dimensions)))
         (effects (omnivox--discovered-post-synthesis-dimensions)))
+    (when (and
+           (omnivox--control-feature-p "relative_rate_v1")
+           (memq 'rate (omnivox--discovered-acss-dimensions)))
+      (push 'rate-offset dimensions))
     (list
      :adapter 'omnivox
      :source (if omnivox-engine-inventory 'discovered 'pending)
@@ -1723,7 +1752,9 @@ Return the number of distinct processes that received the command."
      :parameters
      (mapcar
       (lambda (dimension)
-        (list dimension :type 'integer :minimum 0 :maximum 9 :default 5))
+        (if (eq dimension 'rate-offset)
+            (list dimension :type 'integer :minimum -20 :maximum 20 :default 0)
+          (list dimension :type 'integer :minimum 0 :maximum 9 :default 5)))
       dimensions)
      :inventory (omnivox-voice-inventory))))
 

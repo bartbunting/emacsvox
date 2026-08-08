@@ -571,7 +571,7 @@
         (((symbol-function 'emacsvox-aural-voice-workbench--palette-entry)
           (lambda (_logical)
             '(annotate
-              :rate 6 :average-pitch 4 :pitch-range nil :stress 2
+              :rate-offset -6 :average-pitch 4 :pitch-range nil :stress 2
               :richness 7 :gain 5 :low-pass 8 :high-pass 1 :pan 5
               :reverb 7 :echo 3))))
       (let* ((entry
@@ -583,7 +583,8 @@
         (should (eq (plist-get selector :kind) 'engine-default))
         (should (eq (plist-get selector :scope) 'session))
         (should (equal (plist-get selector :engine-id) "eloquence"))
-        (should (= (plist-get acss :rate) (/ 6.0 9.0)))
+        (should-not (plist-member acss :rate))
+        (should (= (plist-get entry :rate-offset) -6))
         (should (= (plist-get acss :average-pitch) (/ 4.0 9.0)))
         (should-not (plist-member acss :pitch-range))
         (should (= (plist-get effects :low-pass) (/ 8.0 9.0)))

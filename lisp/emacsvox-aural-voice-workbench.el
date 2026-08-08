@@ -1921,7 +1921,7 @@ or persisting a routing choice."
            result)
       (dolist
           (dimension
-           '(rate average-pitch pitch-range stress richness))
+           '(average-pitch pitch-range stress richness))
         (when-let* ((value
                      (plist-get
                       style
@@ -1936,6 +1936,16 @@ or persisting a routing choice."
             (emacsvox-aural--voice-dimension-key dimension)
             normalized))))
       result)))
+
+(defun emacsvox-aural-voice-workbench--preview-rate-offset (logical-voice)
+  "Return portable relative rate for LOGICAL-VOICE, when nonzero."
+  (when-let* ((entry
+               (emacsvox-aural-voice-workbench--palette-entry logical-voice))
+              (style
+               (emacsvox-aural-voice-tuner--complete-style
+                (cdr entry) (emacsvox-aural-voice-workbench--active-palette)))
+              (value (plist-get style :rate-offset)))
+    (and (numberp value) (not (zerop value)) value)))
 
 (defun emacsvox-aural-voice-workbench--preview-effects (logical-voice)
   "Return normalized post-synthesis effects for LOGICAL-VOICE."
@@ -1988,6 +1998,8 @@ or persisting a routing choice."
      :text emacsvox-aural-voice-workbench-preview-text
      :selector selector :language language
      :acss (emacsvox-aural-voice-workbench--preview-acss logical-voice)
+     :rate-offset
+     (emacsvox-aural-voice-workbench--preview-rate-offset logical-voice)
      :effects (emacsvox-aural-voice-workbench--preview-effects logical-voice))))
 
 (defun emacsvox-aural-voice-workbench--current-preview-entry ()

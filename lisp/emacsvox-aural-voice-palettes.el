@@ -56,7 +56,7 @@
     (pitch-range . "Pitch variation from zero through nine")
     (stress . "Word emphasis from zero through nine")
     (richness . "Spectral richness from zero through nine")
-    (rate . "Speech rate from zero through nine")
+    (rate-offset . "Relative rate from twenty points slower through twenty points faster; zero is unchanged")
     (gain . "Post-synthesis gain; five is neutral")
     (low-pass . "Low-pass cutoff; higher values retain more high frequencies")
     (high-pass . "High-pass cutoff; higher values remove more low frequencies")
@@ -106,6 +106,9 @@
 
 (defvar-local emacsvox-aural-voice-tuner-preview-result nil
   "Most recent normalized route-preview completion result.")
+
+(defvar-local emacsvox-aural-voice-tuner-legacy-rate nil
+  "Ignored nonzero legacy absolute rate found when this tuner opened.")
 
 (defun emacsvox-aural-voice-palettes--active-id ()
   "Return the currently effective voice palette."
@@ -1128,7 +1131,18 @@ in that overlay so subsequent edits do not create more palettes."
 (defun emacsvox-aural-voice-tuner--capability-dimensions ()
   "Return dimensions supported by the selected tuner route."
   (if emacsvox-aural-voice-tuner-route-engine
-      (plist-get emacsvox-aural-voice-tuner-route-engine :acss-dimensions)
+      (let ((dimensions
+             (copy-sequence
+              (plist-get emacsvox-aural-voice-tuner-route-engine
+                         :acss-dimensions))))
+        (when (and
+               (memq 'rate dimensions)
+               (memq
+                'rate-offset
+                (plist-get
+                 (emacsvox-aural-active-voice-capabilities) :dimensions)))
+          (push 'rate-offset dimensions))
+        dimensions)
     (plist-get (emacsvox-aural-active-voice-capabilities) :dimensions)))
 
 (defun emacsvox-aural-voice-tuner--effect-dimension-p (dimension)
@@ -1193,15 +1207,26 @@ in that overlay so subsequent edits do not create more palettes."
   "Return a user-facing description of voice VALUE."
   (if (null value) "adapter default" (format "%s" value)))
 
+(defun emacsvox-aural-voice-tuner--rate-offset-description (value)
+  "Return a concise description of relative rate VALUE."
+  (cond
+   ((or (null value) (zerop value)) "unchanged")
+   ((< value 0)
+    (format "%d point%s slower" (- value) (if (= value -1) "" "s")))
+   (t
+    (format "%d point%s faster" value (if (= value 1) "" "s")))))
+
 (defun emacsvox-aural-voice-tuner--dimension-label (dimension)
   "Return the user-facing tuner label for DIMENSION."
-  (if (eq dimension 'family)
-      (if (eq (plist-get (emacsvox-aural-active-voice-capabilities)
-                         :family-selection)
-              'routed)
-          "Portable Fallback Family"
-        "Base Voice (ACSS Family)")
-    (capitalize (emacsvox-aural-humanize dimension))))
+  (pcase dimension
+    ('family
+     (if (eq (plist-get (emacsvox-aural-active-voice-capabilities)
+                        :family-selection)
+             'routed)
+         "Portable Fallback Family"
+       "Base Voice (ACSS Family)"))
+    ('rate-offset "Relative Rate")
+    (_ (capitalize (emacsvox-aural-humanize dimension)))))
 
 (defun emacsvox-aural-voice-tuner--family-description
     (family &optional effective)
@@ -1227,9 +1252,11 @@ in that overlay so subsequent edits do not create more palettes."
 (defun emacsvox-aural-voice-tuner--requested-value (dimension)
   "Describe the requested tuner value for DIMENSION."
   (let ((value (emacsvox-aural-voice-tuner--value dimension)))
-    (if (eq dimension 'family)
-        (emacsvox-aural-voice-tuner--family-description value)
-      (emacsvox-aural-voice-tuner--display-value value))))
+    (pcase dimension
+      ('family (emacsvox-aural-voice-tuner--family-description value))
+      ('rate-offset
+       (emacsvox-aural-voice-tuner--rate-offset-description value))
+      (_ (emacsvox-aural-voice-tuner--display-value value)))))
 
 (defun emacsvox-aural-voice-tuner--support-description (dimension)
   "Describe active adapter support for DIMENSION."
@@ -1283,8 +1310,11 @@ in that overlay so subsequent edits do not create more palettes."
                 "adapter default; requested family unavailable")
                (t
                 (emacsvox-aural-voice-tuner--family-description value t))))
-          (emacsvox-aural-voice-tuner--display-value
-           (emacsvox-aural-voice-tuner--value dimension)))
+          (if (eq dimension 'rate-offset)
+              (emacsvox-aural-voice-tuner--rate-offset-description
+               (emacsvox-aural-voice-tuner--value dimension))
+            (emacsvox-aural-voice-tuner--display-value
+             (emacsvox-aural-voice-tuner--value dimension))))
       "not applied")))
 
 (defun emacsvox-aural-voice-tuner--route-description ()
@@ -1337,7 +1367,12 @@ in that overlay so subsequent edits do not create more palettes."
     emacsvox-aural-voice-tuner-voice
     emacsvox-aural-voice-tuner-palette
     (emacsvox-aural-voice-tuner--route-description)
-    (if emacsvox-aural-voice-tuner-dirty "modified" "unchanged")))
+    (concat
+     (if emacsvox-aural-voice-tuner-dirty "modified" "unchanged")
+     (if emacsvox-aural-voice-tuner-legacy-rate
+         (format "; legacy absolute rate %s ignored—retune Relative Rate"
+                 emacsvox-aural-voice-tuner-legacy-rate)
+       ""))))
   (force-mode-line-update))
 
 (defun emacsvox-aural-voice-tuner-refresh (&optional dimension)
@@ -1426,7 +1461,7 @@ in that overlay so subsequent edits do not create more palettes."
                emacsvox-aural-voice-tuner-voice
                emacsvox-aural-voice-tuner-preview-text)))
             acss effects)
-        (dolist (dimension '(rate average-pitch pitch-range stress richness))
+        (dolist (dimension '(average-pitch pitch-range stress richness))
           (let* ((key (emacsvox-aural--voice-dimension-key dimension))
                  (value
                   (plist-get emacsvox-aural-voice-tuner-working-style key)))
@@ -1445,7 +1480,10 @@ in that overlay so subsequent edits do not create more palettes."
         (setq emacsvox-aural-voice-tuner-preview-result '(:status running))
         (tts-preview-voice
          text emacsvox-aural-voice-tuner-route-selector
-         :acss acss :effects effects
+         :acss acss
+         :rate-offset
+         (plist-get emacsvox-aural-voice-tuner-working-style :rate-offset)
+         :effects effects
          :language emacsvox-aural-voice-tuner-route-language
          :callback
          (lambda (result)
@@ -1520,22 +1558,36 @@ ANNOUNCEMENT overrides the normal setting description."
   (interactive)
   (let* ((dimension (emacsvox-aural-voice-tuner--numeric-dimension))
          (current (emacsvox-aural-voice-tuner--value dimension))
-         (value (if (numberp current) (1+ current) 5)))
-    (when (> value 9)
-      (user-error "%s is already at nine" dimension))
+         (rate-offset-p (eq dimension 'rate-offset))
+         (value (if (numberp current)
+                    (1+ current)
+                  (if rate-offset-p 1 5)))
+         (maximum (if rate-offset-p 20 9)))
+    (when (> value maximum)
+      (user-error "%s is already at %s" dimension maximum))
     (emacsvox-aural-voice-tuner--set-value
-     dimension value (number-to-string value))))
+     dimension value
+     (if rate-offset-p
+         (emacsvox-aural-voice-tuner--rate-offset-description value)
+       (number-to-string value)))))
 
 (defun emacsvox-aural-voice-tuner-decrease ()
   "Decrease the current numeric dimension and audition its new value."
   (interactive)
   (let* ((dimension (emacsvox-aural-voice-tuner--numeric-dimension))
          (current (emacsvox-aural-voice-tuner--value dimension))
-         (value (if (numberp current) (1- current) 5)))
-    (when (< value 0)
-      (user-error "%s is already at zero" dimension))
+         (rate-offset-p (eq dimension 'rate-offset))
+         (value (if (numberp current)
+                    (1- current)
+                  (if rate-offset-p -1 5)))
+         (minimum (if rate-offset-p -20 0)))
+    (when (< value minimum)
+      (user-error "%s is already at %s" dimension minimum))
     (emacsvox-aural-voice-tuner--set-value
-     dimension value (number-to-string value))))
+     dimension value
+     (if rate-offset-p
+         (emacsvox-aural-voice-tuner--rate-offset-description value)
+       (number-to-string value)))))
 
 (defun emacsvox-aural-voice-tuner-set-digit ()
   "Set the current numeric dimension from the typed digit and audition it."
@@ -1640,8 +1692,25 @@ ANNOUNCEMENT overrides the normal setting description."
          (value
           (if (eq dimension 'family)
               (emacsvox-aural-voice-tuner--read-family current)
-            (emacsvox-aural-voice-palettes--read-style-number
-             dimension current))))
+            (if (eq dimension 'rate-offset)
+                (let* ((answer
+                        (string-trim
+                         (read-string
+                          (format
+                           "Relative rate, -20 through 20; blank means unchanged%s: "
+                           (if current (format " [%s]" current) "")))))
+                       (value
+                        (unless (string-empty-p answer)
+                          (string-to-number answer))))
+                  (when (and
+                         value
+                         (not (string-match-p "\\`[-+]?[0-9]+\\'" answer)))
+                    (user-error "Relative rate must be -20 through 20 or blank"))
+                  (when (and value (not (<= -20 value 20)))
+                    (user-error "Relative rate must be -20 through 20 or blank"))
+                  value)
+              (emacsvox-aural-voice-palettes--read-style-number
+               dimension current)))))
     (emacsvox-aural-voice-tuner--set-value dimension value)))
 
 (defun emacsvox-aural-voice-tuner-undo ()
@@ -1895,7 +1964,13 @@ identity."
          emacsvox-aural-voice-tuner-route-language language
          emacsvox-aural-voice-tuner-route-engine (copy-tree engine)
          emacsvox-aural-voice-tuner-route-realized (copy-tree realized)
-         emacsvox-aural-voice-tuner-preview-result nil)
+         emacsvox-aural-voice-tuner-preview-result nil
+         emacsvox-aural-voice-tuner-legacy-rate
+         (and
+          (emacsvox-aural-voice-style-p definition)
+          (numberp (plist-get definition :rate))
+          (not (zerop (plist-get definition :rate)))
+          (plist-get definition :rate)))
         (emacsvox-aural-voice-tuner-refresh))
       (emacsvox-aural-ui-pop-to-buffer buffer)
       (emacsvox-aural-voice-tuner-speak-current)

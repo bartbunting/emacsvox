@@ -335,7 +335,7 @@
         (progn
           (process-put
            process omnivox--control-capabilities-property
-           '(:features ("exact_voice_preview")))
+           '(:features ("exact_voice_preview" "relative_rate_v1")))
           (omnivox--install-control-filter process)
           (cl-letf
               (((symbol-function 'tts-stop) #'ignore)
@@ -348,6 +348,7 @@
                  :engine-id "eloquence" :voice-id "eci:Reed")
                 :language "en-AU"
                 :acss (:average-pitch 0.6 :richness 0.8)
+                :rate-offset -4
                 :effects (:reverb 0.5)))
              (lambda (value) (setq result value)))
             (should-not result)
@@ -364,6 +365,7 @@
               (should (= (plist-get (plist-get request :acss)
                                     :average_pitch)
                          0.6))
+              (should (= (plist-get request :rate_offset) -4))
               (omnivox--control-process-filter
                process
                (emacsvox-test--omnivox-event
@@ -372,17 +374,63 @@
                  :type "preview_completed" :status "completed"
                  :requested (plist-get request :selector)
                  :realized '(:engine_id "eloquence" :voice_id "eci:Reed")
-                 :degraded_acss ["richness"] :message :null)))))
+                 :degraded_acss ["richness" "rate"] :message :null)))))
           (should (eq (plist-get result :status) 'completed))
           (let ((preview (car (plist-get result :results))))
             (should (eq (plist-get preview :status) 'completed))
             (should
              (equal (plist-get preview :realized)
                     '(:engine-id "eloquence" :voice-id "eci:Reed")))
-            (should (equal (plist-get preview :degraded-acss) '(richness)))
+            (should
+             (equal (plist-get preview :degraded-acss)
+                    '(rate-offset richness)))
             (should (equal (plist-get preview :degraded-effects) '(:reverb))))
           (should (= omnivox--logical-registry-generation 17))
           (should-not (gethash 301 (omnivox--pending-requests process))))
+      (when (process-live-p process) (delete-process process)))))
+
+(ert-deftest emacsvox-tts-omnivox-old-preview-omits-relative-rate-visibly ()
+  "An older Omnivox is never sent an absolute fallback rate."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-omnivox-old-rate-preview-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (omnivox--control-request-sequence 325)
+         result writes)
+    (process-put
+     process omnivox--control-capabilities-property
+     '(:features ("exact_voice_preview")))
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'process-send-string)
+              (lambda (_process command) (push command writes)))
+             ((symbol-function 'tts-stop) #'ignore))
+          (omnivox-preview-voice-sequence
+           '((:text "relative preview"
+              :selector
+              (:kind exact :scope session
+               :engine-id "dectalk" :voice-id "Paul")
+              :acss nil :rate-offset 4 :effects nil))
+           (lambda (value) (setq result value)))
+          (let* ((request
+                  (emacsvox-test--omnivox-decode-command (car writes)))
+                 (identifier (plist-get request :request_id)))
+            (should-not (plist-member request :rate_offset))
+            (should-not (plist-member (plist-get request :acss) :rate))
+            (omnivox--control-process-filter
+             process
+             (emacsvox-test--omnivox-event
+              (list
+               :protocol_version 1 :request_id identifier
+               :type "preview_completed" :status "completed"
+               :requested (plist-get request :selector)
+               :realized '(:engine_id "dectalk" :voice_id "Paul")
+               :degraded_acss [] :degraded_effects [] :message :null))))
+          (should
+           (equal
+            (plist-get (car (plist-get result :results)) :degraded-acss)
+            '(rate-offset))))
       (when (process-live-p process) (delete-process process)))))
 
 (ert-deftest emacsvox-tts-omnivox-preview-transports-supported-effects ()
@@ -523,7 +571,8 @@
 
 (ert-deftest emacsvox-tts-omnivox-aggregates-post-synthesis-capabilities ()
   "Adapter capabilities include effects advertised by any live engine."
-  (let ((omnivox-engine-inventory
+  (let ((omnivox-control-capabilities '(:features ("relative_rate_v1")))
+        (omnivox-engine-inventory
          '(:engines
            [(:id "eloquence"
              :capabilities
@@ -539,7 +588,7 @@
     (let ((capabilities (omnivox-voice-capabilities)))
       (should
        (equal (plist-get capabilities :dimensions)
-              '(average-pitch pitch-range rate volume)))
+              '(rate-offset average-pitch pitch-range volume)))
       (should
        (equal (plist-get capabilities :post-synthesis-dimensions)
               '(echo gain high-pass low-pass reverb))))))
