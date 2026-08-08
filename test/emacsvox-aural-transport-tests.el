@@ -2556,6 +2556,49 @@ is the default inherited by a newly created TTS scratch buffer."
         (should-not
          (emacsvox-aural-compiled-voice-degradations compiled))))))
 
+(ert-deftest emacsvox-aural-transport-legacy-personality-uses-custom-palette-entry ()
+  "A legacy face personality follows its customized portable palette name."
+  (emacsvox-test--with-transport-scheme
+    (let ((custom
+           '(:family nil :average-pitch 6 :pitch-range nil :stress 4
+             :richness nil :rate 4 :gain nil :low-pass nil :high-pass 5
+             :pan nil :reverb 5 :echo 0))
+          generated)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-voice)
+            (lambda (name _palette)
+              (when (eq name 'lighten-extra) custom)))
+           ((symbol-function 'emacsvox-aural-active-voice-capabilities)
+            (lambda ()
+              '(:adapter omnivox
+                :dimensions (average-pitch pitch-range stress richness)
+                :post-synthesis-dimensions
+                (gain low-pass high-pass pan reverb echo))))
+           ((symbol-function 'voice-from-acss)
+            (lambda (style)
+              (setq generated style)
+              'generated-lighten-extra))
+           ((symbol-function 'tts-get-voice-command)
+            (lambda (_) "<custom-lighten-extra>")))
+        (let* ((voice-lock-mode t)
+               (prepared
+                (emacsvox-aural-prepare-text
+                 (propertize
+                  "prompt" 'personality 'voice-lighten-extra)))
+               (content
+                (emacsvox-aural-concrete-plan-content
+                 (emacsvox-aural-concrete-plan-at 0 prepared))))
+          (should
+           (eq
+            (emacsvox-aural-concrete-content-voice-request content)
+            'lighten-extra))
+          (should (= (acss-average-pitch generated) 6))
+          (should (= (acss-stress generated) 4))
+          (should
+           (equal
+            (emacsvox-aural-concrete-content-voice-style content)
+            custom)))))))
+
 (ert-deftest emacsvox-aural-transport-records-unsupported-voice-dimension ()
   "Unsupported explicit ACSS data degrades to the adapter default visibly."
   (cl-letf

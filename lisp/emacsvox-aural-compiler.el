@@ -120,6 +120,25 @@ PACK and CUE remain readable while RESOURCE contents distinguish generations."
         (symbol-value resolved)
       resolved)))
 
+(defun emacsvox-aural--palette-voice-definition (voice palette)
+  "Return the effective palette name and definition for VOICE in PALETTE.
+
+Legacy face mappings use personality names such as `voice-lighten-extra',
+while portable palettes expose the corresponding name `lighten-extra'.  Use
+that portable entry only after it has been replaced with a custom definition;
+an unchanged personality alias must continue through the legacy compiler and
+must not recursively resolve to itself."
+  (when (symbolp voice)
+    (let ((direct (emacsvox-aural-voice voice palette)))
+      (if direct
+          (list voice direct)
+        (when-let* ((portable
+                     (car (rassq voice emacsvox-aural-default-voice-entries)))
+                    (definition
+                     (emacsvox-aural-voice portable palette)))
+          (unless (eq definition voice)
+            (list portable definition)))))))
+
 (defun emacsvox-aural--legacy-voice-adapter ()
   "Identify the active legacy ACSS adapter from its compiler function."
   (let ((implementation
@@ -482,17 +501,19 @@ and ACSS dimensions to the rules that supplied them."
            #'emacsvox-aural-compiled-voice-degradations parts))
          :preset (copy-tree voice))))
      ((symbolp voice)
-      (let ((palette-definition
-             (emacsvox-aural-voice voice palette)))
-        (if palette-definition
+      (let* ((palette-entry
+              (emacsvox-aural--palette-voice-definition voice palette))
+             (logical-voice (car palette-entry))
+             (palette-definition (cadr palette-entry)))
+        (if palette-entry
             (let ((compiled
                    (emacsvox-aural-compile-voice-style
                     (emacsvox-aural--route-palette-voice-definition
-                     voice palette-definition)
+                     logical-voice palette-definition)
                     palette provenance)))
               (setf
-               (emacsvox-aural-compiled-voice-request compiled) voice
-               (emacsvox-aural-compiled-voice-preset compiled) voice)
+               (emacsvox-aural-compiled-voice-request compiled) logical-voice
+               (emacsvox-aural-compiled-voice-preset compiled) logical-voice)
               compiled)
           (let* ((resolved (emacsvox-aural--resolve-voice-name voice palette))
                  (style (emacsvox-aural--personality-style voice)))
