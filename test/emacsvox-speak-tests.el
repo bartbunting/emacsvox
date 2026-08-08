@@ -75,6 +75,29 @@
            :type 'user-error))
       (set-default 'emacsvox-show-point-presentation original))))
 
+(ert-deftest emacsvox-set-indentation-presentation-supports-local-and-global ()
+  "The indentation selector changes one buffer or its global default."
+  (let ((original (default-value 'emacsvox-indentation-presentation)))
+    (unwind-protect
+        (with-temp-buffer
+          (setq-local emacsvox-indentation-presentation 'spoken)
+          (should
+           (eq
+            (emacsvox-set-indentation-presentation 'pitch-tone)
+            'pitch-tone))
+          (should (local-variable-p 'emacsvox-indentation-presentation))
+          (should (eq emacsvox-indentation-presentation 'pitch-tone))
+          (emacsvox-set-indentation-presentation 'duration-tone t)
+          (should (eq emacsvox-indentation-presentation 'duration-tone))
+          (should
+           (eq
+            (default-value 'emacsvox-indentation-presentation)
+            'duration-tone))
+          (should-error
+           (emacsvox-set-indentation-presentation 'unknown)
+           :type 'user-error))
+      (set-default 'emacsvox-indentation-presentation original))))
+
 (ert-deftest emacsvox-speak-rest-of-buffer-advances-after-playback ()
   "Tracked reading advances point and source only after each completion."
   (let ((tts-speaker-process 'speaker)

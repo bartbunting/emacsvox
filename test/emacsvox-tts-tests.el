@@ -1955,6 +1955,29 @@
    (equal (swiftmac-get-family-code "en-US:Alex")
           " [{voice en-US:Alex}] ")))
 
+(ert-deftest emacsvox-set-capitalization-presentation-supports-local-and-global ()
+  "The capitalization selector changes one buffer or its global default."
+  (let ((original (default-value 'emacsvox-capitalization-presentation)))
+    (unwind-protect
+        (with-temp-buffer
+          (setq-local emacsvox-capitalization-presentation 'tone)
+          (should
+           (eq
+            (emacsvox-set-capitalization-presentation 'spoken)
+            'spoken))
+          (should (local-variable-p 'emacsvox-capitalization-presentation))
+          (should (eq emacsvox-capitalization-presentation 'spoken))
+          (emacsvox-set-capitalization-presentation 'spoken-tone t)
+          (should (eq emacsvox-capitalization-presentation 'spoken-tone))
+          (should
+           (eq
+            (default-value 'emacsvox-capitalization-presentation)
+            'spoken-tone))
+          (should-error
+           (emacsvox-set-capitalization-presentation 'unknown)
+           :type 'user-error))
+      (set-default 'emacsvox-capitalization-presentation original))))
+
 (ert-deftest emacsvox-tts-protocol-synchronizes-buffer-state ()
   "The synchronization command snapshots the current speech state."
   (let ((tts-punctuation-mode 'none)

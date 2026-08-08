@@ -548,6 +548,8 @@ Registry validation rejects missing targets and alias cycles."
          (folded state "Descendants of an object are hidden")
          (focus-entered event "Navigation arrived at an aural object")
          (point-located event "A spoken text boundary corresponds to buffer point")
+         (capitalization-located event "A spoken text boundary begins capitalized content")
+         (indentation-located event "A spoken line has leading indentation")
          (state-changed event "A registered state changed")
          (object-changed event "A registered object was created or modified")
          (product-identity event "Emacsvox identity or readiness was presented")
@@ -613,6 +615,59 @@ Registry validation rejects missing targets and alias cycles."
      :phases '(before content after)
      :usage
      "Selects the built-in point presentation while allowing stronger rules to override it."))
+  (unless (emacsvox-aural-semantic 'capitalization-kind)
+    (emacsvox-aural-register-semantic
+     'capitalization-kind
+     :kind 'attribute
+     :summary "Whether a boundary begins one capital or an all-capitals run"
+     :value-type 'symbol
+     :allowed-values '(capital all-caps)
+     :phases '(before)
+     :usage
+     "Distinguishes an individual capital from one cue for an all-capitals word."))
+  (unless (emacsvox-aural-semantic 'capitalization-presentation)
+    (emacsvox-aural-register-semantic
+     'capitalization-presentation
+     :kind 'attribute
+     :summary "The user-requested presentation for capitalization"
+     :value-type 'symbol
+     :allowed-values '(spoken tone spoken-tone custom)
+     :phases '(before)
+     :usage
+     "Selects built-in capitalization feedback while allowing stronger rules to override it."))
+  (unless (emacsvox-aural-semantic 'indentation-columns)
+    (emacsvox-aural-register-semantic
+     'indentation-columns
+     :kind 'attribute
+     :summary "The visual-column width of leading line indentation"
+     :value-type 'integer
+     :phases '(before)))
+  (unless (emacsvox-aural-semantic 'indentation-presentation)
+    (emacsvox-aural-register-semantic
+     'indentation-presentation
+     :kind 'attribute
+     :summary "The user-requested presentation for line indentation"
+     :value-type 'symbol
+     :allowed-values
+     '(spoken duration-tone pitch-tone
+       spoken-duration-tone spoken-pitch-tone custom)
+     :phases '(before)
+     :usage
+     "Selects spoken, duration-coded, or pitch-coded indentation feedback."))
+  (unless (emacsvox-aural-semantic 'indentation-tone-pitch)
+    (emacsvox-aural-register-semantic
+     'indentation-tone-pitch
+     :kind 'attribute
+     :summary "Computed indentation tone pitch in hertz"
+     :value-type 'number
+     :phases '(before)))
+  (unless (emacsvox-aural-semantic 'indentation-tone-duration)
+    (emacsvox-aural-register-semantic
+     'indentation-tone-duration
+     :kind 'attribute
+     :summary "Computed indentation tone duration in milliseconds"
+     :value-type 'integer
+     :phases '(before)))
   (unless (emacsvox-aural-semantic 'edit-operation)
     (emacsvox-aural-register-semantic
      'edit-operation

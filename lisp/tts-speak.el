@@ -695,6 +695,53 @@ Capitalized words are preceded by `cap', and upper-case words are
 Use tts-toggle-caps
 bound to \\[tts-toggle-caps].")
 
+(defcustom emacsvox-capitalization-presentation 'tone
+  "How enabled capitalization indication is presented.
+
+`spoken' says \"cap\" or \"all caps\".  `tone' places a short tone at the
+capitalized boundary, and `spoken-tone' combines both presentations.  `custom'
+publishes capitalization facts for personal aural rules without adding a
+built-in presentation.  `none' suppresses capitalization presentation while
+leaving `tts-caps' enabled.  Camel-case splitting remains controlled
+independently by `tts-split-caps'."
+  :type
+  '(choice
+    (const :tag "Spoken cap or all caps" spoken)
+    (const :tag "Capitalization tone" tone)
+    (const :tag "Spoken label and tone" spoken-tone)
+    (const :tag "Personal aural rules" custom)
+    (const :tag "No capitalization presentation" none))
+  :group 'emacsvox-aural)
+
+(defconst emacsvox-capitalization-presentation-values
+  '(spoken tone spoken-tone custom none)
+  "Supported values of `emacsvox-capitalization-presentation'.")
+
+(defun emacsvox-set-capitalization-presentation (presentation &optional global)
+  "Select capitalization PRESENTATION and preview representative text.
+
+Set the option buffer-locally by default.  With interactive prefix GLOBAL,
+also set the global default and use it in the current buffer."
+  (interactive
+   (list
+    (intern
+     (completing-read
+      "Capitalization presentation: "
+      (mapcar
+       #'symbol-name emacsvox-capitalization-presentation-values)
+      nil t nil nil
+      (symbol-name emacsvox-capitalization-presentation)))
+    current-prefix-arg))
+  (unless (memq presentation emacsvox-capitalization-presentation-values)
+    (user-error "Unknown capitalization presentation: %S" presentation))
+  (when global
+    (set-default 'emacsvox-capitalization-presentation presentation))
+  (setq-local emacsvox-capitalization-presentation presentation)
+  (when (called-interactively-p 'interactive)
+    (let ((tts-caps t))
+      (tts-speak "Capital camelCase NASA")))
+  presentation)
+
 (defconst tts-punctuation-mode-alist
   '("some" "all" "none")
   "List of  punctuation modes.")

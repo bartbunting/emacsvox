@@ -27,7 +27,10 @@
        '(heading level folded focus-entered state-changed object-changed
          product-identity activity-ended selection-cleared game-over
          line-condition edit-operation point-located point-position
-         point-boundary point-presentation))
+         point-boundary point-presentation capitalization-located
+         capitalization-kind capitalization-presentation indentation-located
+         indentation-columns indentation-presentation indentation-tone-pitch
+         indentation-tone-duration))
     (should (emacsvox-aural-semantic id)))
   (dolist
       (id

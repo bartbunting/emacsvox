@@ -573,6 +573,79 @@ You can use command `emacsvox-toggle-audio-indentation' bound to
 
 (make-variable-buffer-local 'emacsvox-audio-indentation)
 
+(defcustom emacsvox-indentation-presentation 'spoken
+  "How enabled line indentation is presented.
+
+`spoken' says the indentation column.  `duration-tone' uses a fixed pitch and
+increases duration with indentation.  `pitch-tone' uses a fixed duration and
+raises pitch with indentation.  The two `spoken-...-tone' values combine the
+corresponding tone with speech.  `custom' publishes indentation facts for
+personal aural rules, and `none' suppresses presentation while leaving
+`emacsvox-audio-indentation' enabled."
+  :type
+  '(choice
+    (const :tag "Spoken indentation column" spoken)
+    (const :tag "Duration-coded tone" duration-tone)
+    (const :tag "Rising-pitch tone" pitch-tone)
+    (const :tag "Spoken column and duration-coded tone"
+           spoken-duration-tone)
+    (const :tag "Spoken column and rising-pitch tone"
+           spoken-pitch-tone)
+    (const :tag "Personal aural rules" custom)
+    (const :tag "No indentation presentation" none))
+  :group 'emacsvox-aural)
+
+(defconst emacsvox-indentation-presentation-values
+  '(spoken duration-tone pitch-tone
+    spoken-duration-tone spoken-pitch-tone custom none)
+  "Supported values of `emacsvox-indentation-presentation'.")
+
+(defcustom emacsvox-indentation-pitch-tone-base 250.0
+  "Pitch in hertz for the first nonzero indentation column."
+  :type 'number
+  :group 'emacsvox-aural)
+
+(defcustom emacsvox-indentation-pitch-tone-semitones-per-column 1.0
+  "Pitch rise in semitones for each additional indentation column."
+  :type 'number
+  :group 'emacsvox-aural)
+
+(defcustom emacsvox-indentation-pitch-tone-maximum 2000.0
+  "Maximum pitch in hertz for rising-pitch indentation tones."
+  :type 'number
+  :group 'emacsvox-aural)
+
+(defcustom emacsvox-indentation-pitch-tone-duration 150
+  "Requested duration in milliseconds for rising-pitch indentation tones.
+
+The actual duration is never shorter than the registered blank-line tone."
+  :type 'integer
+  :group 'emacsvox-aural)
+
+(defun emacsvox-set-indentation-presentation (presentation &optional global)
+  "Select indentation PRESENTATION and preview the current line.
+
+Set the option buffer-locally by default.  With interactive prefix GLOBAL,
+also set the global default and use it in the current buffer."
+  (interactive
+   (list
+    (intern
+     (completing-read
+      "Indentation presentation: "
+      (mapcar #'symbol-name emacsvox-indentation-presentation-values)
+      nil t nil nil
+      (symbol-name emacsvox-indentation-presentation)))
+    current-prefix-arg))
+  (unless (memq presentation emacsvox-indentation-presentation-values)
+    (user-error "Unknown indentation presentation: %S" presentation))
+  (when global
+    (set-default 'emacsvox-indentation-presentation presentation))
+  (setq-local emacsvox-indentation-presentation presentation)
+  (when (called-interactively-p 'interactive)
+    (let ((emacsvox-audio-indentation t))
+      (emacsvox-speak-line)))
+  presentation)
+
 ;; Indicate indentation.
 ;; Argument indent   indicates number of columns to indent.
 
