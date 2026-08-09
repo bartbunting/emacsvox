@@ -481,6 +481,10 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (should (equal (plist-get (car spans) :text) "TestCase"))
           (should (= (length tones) 2))
           (should
+           (cl-every
+            (lambda (tone) (equal (plist-get tone :mode) "insert"))
+            tones))
+          (should
            (equal
             (mapcar
              (lambda (tone)

@@ -288,6 +288,9 @@
                (action (car (emacsvox-aural-render-plan-before plan))))
           (should (eq (emacsvox-aural-action-kind action) (nth 2 case)))
           (should (eq (emacsvox-aural-action-anchor action) 'run))
+          (when (eq (nth 2 case) 'tone)
+            (should
+             (eq (emacsvox-aural-action-audio-mode action) 'insert)))
           (should
            (equal
             (pcase (nth 2 case)
@@ -306,7 +309,11 @@
           (should
            (equal
             (mapcar #'emacsvox-aural-action-kind actions)
-            '(speech tone)))))
+            '(speech tone)))
+          (should
+           (eq
+            (emacsvox-aural-action-audio-mode (cadr actions))
+            'insert))))
       (let ((custom
              (emacsvox-aural-resolve-active
               '(:events (capitalization-located)

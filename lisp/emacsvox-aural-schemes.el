@@ -1875,7 +1875,8 @@ An existing file is copied to FILE~ before replacement."
          :render
          (:before
           ((:id core-capital-tone-action
-            :kind tone :tone capital-letter-tone :anchor run))))
+            :kind tone :tone capital-letter-tone
+            :audio-mode insert :anchor run))))
         (:id core-all-caps-tone
          :match
          (:event capitalization-located :capitalization-kind all-caps
@@ -1883,7 +1884,8 @@ An existing file is copied to FILE~ before replacement."
          :render
          (:before
           ((:id core-all-caps-tone-action
-            :kind tone :tone capital-all-caps-tone :anchor run))))
+            :kind tone :tone capital-all-caps-tone
+            :audio-mode insert :anchor run))))
         (:id core-capital-spoken-tone
          :match
          (:event capitalization-located :capitalization-kind capital
@@ -1893,7 +1895,8 @@ An existing file is copied to FILE~ before replacement."
           ((:id core-capital-spoken-tone-action
             :kind speech :text "cap" :voice annotate :anchor run)
            (:id core-capital-spoken-tone-tone-action
-            :kind tone :tone capital-letter-tone :anchor run))))
+            :kind tone :tone capital-letter-tone
+            :audio-mode insert :anchor run))))
         (:id core-all-caps-spoken-tone
          :match
          (:event capitalization-located :capitalization-kind all-caps
@@ -1903,7 +1906,8 @@ An existing file is copied to FILE~ before replacement."
           ((:id core-all-caps-spoken-tone-action
             :kind speech :text "all caps" :voice annotate :anchor run)
            (:id core-all-caps-spoken-tone-tone-action
-            :kind tone :tone capital-all-caps-tone :anchor run))))
+            :kind tone :tone capital-all-caps-tone
+            :audio-mode insert :anchor run))))
         (:id core-edit-deletion-tone
          :match (:edit-operation deletion)
          :render
