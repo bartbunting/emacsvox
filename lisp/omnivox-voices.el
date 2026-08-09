@@ -21,6 +21,10 @@
                   "emacsvox-aural-transport" (process))
 (declare-function emacsvox-aural-enable-structured-timeline
                   "emacsvox-aural-transport" (process))
+(declare-function emacsvox-aural-effective-voice-entries
+                  "emacsvox-aural-resources" (palette-id &optional path))
+(declare-function emacsvox-aural-effective-voice-palette
+                  "emacsvox-aural-providers" ())
 (declare-function tts--dispatch-playback-marker-event
                   "tts-speak" (process event))
 (declare-function tts-stop "tts-speak" (&optional all))
@@ -41,6 +45,7 @@
 (defvar tts-last-realized-voice-function)
 (defvar tts-realized-voice-changed-hook)
 (defvar tts--capitalization-presentation-property)
+(defvar voice-setup-defined-voices)
 
 (defgroup omnivox nil
   "Omnivox speech server."
@@ -509,17 +514,6 @@ Return non-nil for every marker-prefixed line, including malformed records."
    ((stringp name) name)
    (t (error "Invalid logical Omnivox voice name: %S" name))))
 
-(defun omnivox--effective-logical-voice-id (name)
-  "Return the logical ID emitted when Emacs personality NAME is spoken.
-Follow the same single symbol indirection as `tts-speak-using-voice'."
-  (omnivox--logical-voice-id
-   (if (and (symbolp name)
-            (boundp name)
-            (let ((value (symbol-value name)))
-              (or (symbolp value) (stringp value))))
-       (symbol-value name)
-     name)))
-
 (defun omnivox--logical-voice-directive (name)
   "Return the queued routing directive for logical voice NAME."
   (let ((id (omnivox--logical-voice-id name)))
@@ -530,11 +524,77 @@ Follow the same single symbol indirection as `tts-speak-using-voice'."
 
 (defun omnivox--logical-setting (id settings)
   "Return logical voice ID's value from SETTINGS.
-Symbol and string keys with the same printed name are equivalent."
+Symbol and string keys with the same printed name are equivalent.
+
+Logical IDs are stable presentation names.  Do not follow personality
+variable indirection here: `voice-annotate' and its generated `acss-*'
+implementation are separate registry entries, and routing configuration for
+one must not silently migrate to the other."
   (cl-loop
    for (name . value) in settings
-   when (equal id (omnivox--effective-logical-voice-id name))
+   when (equal id (omnivox--logical-voice-id name))
    return value))
+
+(defun omnivox--active-palette-entries ()
+  "Return active portable voice entries when Aural resources are loaded."
+  (when (and (fboundp 'emacsvox-aural-effective-voice-palette)
+             (fboundp 'emacsvox-aural-effective-voice-entries))
+    (condition-case nil
+        (emacsvox-aural-effective-voice-entries
+         (emacsvox-aural-effective-voice-palette))
+      (error nil))))
+
+(defun omnivox--portable-style-acss (style)
+  "Return normalized Omnivox ACSS fields from portable STYLE."
+  (let (result)
+    (dolist
+        (mapping
+         '((:average-pitch . :average_pitch)
+           (:pitch-range . :pitch_range)
+           (:stress . :stress)
+           (:richness . :richness)))
+      (when (numberp (plist-get style (car mapping)))
+        (setq result
+              (plist-put
+               result (cdr mapping)
+               (omnivox--normalize-acss-value
+                (plist-get style (car mapping)))))))
+    result))
+
+(defun omnivox--logical-acss-for-value (value &optional seen)
+  "Resolve normalized ACSS for logical voice VALUE without changing its ID.
+SEEN prevents malformed personality-variable cycles."
+  (cond
+   ((and (recordp value)
+         (> (length value) 1)
+         (eq (aref value 0) 'acss))
+    (omnivox--normalized-acss-json value))
+   ((and (listp value)
+         (or (plist-member value :average-pitch)
+             (plist-member value :pitch-range)
+             (plist-member value :stress)
+             (plist-member value :richness)))
+    (omnivox--portable-style-acss value))
+   ((or (symbolp value) (stringp value))
+    (let* ((id (omnivox--logical-voice-id value))
+           (missing (make-symbol "missing"))
+           (direct (gethash id omnivox--logical-acss-table missing)))
+      (cond
+       ((not (eq direct missing)) (copy-tree direct))
+       ((and (symbolp value)
+             (boundp value)
+             (not (memq value seen))
+             (not (eq (symbol-value value) value)))
+        (omnivox--logical-acss-for-value
+         (symbol-value value) (cons value seen))))))))
+
+(defun omnivox--logical-acss (id)
+  "Return normalized ACSS for stable logical voice ID."
+  (or
+   (omnivox--logical-acss-for-value (or (intern-soft id) id))
+   (when-let* ((entry
+                (assq (intern-soft id) (omnivox--active-palette-entries))))
+     (omnivox--logical-acss-for-value (cdr entry)))))
 
 (defun omnivox--required-selector-id (value kind)
   "Validate and return selector ID VALUE described by KIND."
@@ -753,10 +813,14 @@ Symbol and string keys with the same printed name are equivalent."
   (let (ids)
     (maphash (lambda (id _style) (push id ids))
              omnivox--logical-acss-table)
+    (dolist (voice voice-setup-defined-voices)
+      (push (omnivox--logical-voice-id voice) ids))
+    (dolist (entry (omnivox--active-palette-entries))
+      (push (omnivox--logical-voice-id (car entry)) ids))
     (dolist (entry omnivox-logical-voice-preferences)
-      (push (omnivox--effective-logical-voice-id (car entry)) ids))
+      (push (omnivox--logical-voice-id (car entry)) ids))
     (dolist (entry omnivox-logical-voice-languages)
-      (push (omnivox--effective-logical-voice-id (car entry)) ids))
+      (push (omnivox--logical-voice-id (car entry)) ids))
     (sort (delete-dups ids) #'string-lessp)))
 
 (defun omnivox--selector-engine-id (selector)
@@ -801,7 +865,7 @@ inside this logical definition."
      :id id
      :language (or language :null)
      :preferences (vconcat (mapcar #'omnivox--selector-json selectors))
-     :acss (copy-tree (gethash id omnivox--logical-acss-table)))))
+     :acss (omnivox--logical-acss id))))
 
 (defun omnivox--fallback-policy-json (&optional runtime-routing-policy)
   "Return the configured logical voice fallback policy as JSON data."

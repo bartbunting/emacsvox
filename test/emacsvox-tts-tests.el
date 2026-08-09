@@ -747,7 +747,7 @@
          (omnivox--logical-acss-table (make-hash-table :test #'equal))
          (definition
           (omnivox--logical-definition-json
-           (omnivox--effective-logical-voice-id 'voice-annotate)))
+           (omnivox--logical-voice-id 'voice-annotate)))
          (selectors (plist-get definition :preferences)))
     (should (equal (plist-get definition :language) "en-US"))
     (should (equal (plist-get (aref selectors 0) :engine_id) "dectalk"))
@@ -773,27 +773,44 @@
     (should-error
      (omnivox--logical-voice-directive "invalid voice") :type 'error)))
 
-(ert-deftest emacsvox-tts-omnivox-canonicalizes-semantic-voice-settings ()
-  "Portable settings follow the personality indirection used for speech."
+(ert-deftest emacsvox-tts-omnivox-registers-stable-logical-voice-aliases ()
+  "Portable and personality names retain identity and share ACSS style."
   (let ((semantic-name 'emacsvox-test-semantic-voice)
         (omnivox-logical-voice-preferences
          '((emacsvox-test-semantic-voice
             (engine-default "espeak"))))
         (omnivox-logical-voice-languages
          '((emacsvox-test-semantic-voice . "en-US")))
-        (omnivox--logical-acss-table (make-hash-table :test #'equal)))
+        (omnivox--logical-acss-table (make-hash-table :test #'equal))
+        (voice-setup-defined-voices '(emacsvox-test-semantic-voice)))
     (set semantic-name 'acss-a4-s6)
     (unwind-protect
         (progn
           (puthash "acss-a4-s6" '(:average_pitch 0.4)
                    omnivox--logical-acss-table)
-          (should (equal (omnivox--logical-voice-ids) '("acss-a4-s6")))
-          (let* ((definition
-                  (omnivox--logical-definition-json "acss-a4-s6"))
+          (cl-letf
+              (((symbol-function 'omnivox--active-palette-entries)
+                (lambda ()
+                  '((annotate . emacsvox-test-semantic-voice)))))
+            (should
+             (equal
+              (omnivox--logical-voice-ids)
+              '("acss-a4-s6" "annotate"
+                "emacsvox-test-semantic-voice")))
+            (should
+             (equal
+              (plist-get
+               (omnivox--logical-definition-json "annotate") :acss)
+              '(:average_pitch 0.4)))
+            (let* ((definition
+                    (omnivox--logical-definition-json
+                     "emacsvox-test-semantic-voice"))
                  (selector (aref (plist-get definition :preferences) 0)))
-            (should (equal (plist-get definition :language) "en-US"))
-            (should (equal (plist-get selector :kind) "engine_default"))
-            (should (equal (plist-get selector :engine_id) "espeak"))))
+              (should (equal (plist-get definition :language) "en-US"))
+              (should
+               (equal (plist-get definition :acss) '(:average_pitch 0.4)))
+              (should (equal (plist-get selector :kind) "engine_default"))
+              (should (equal (plist-get selector :engine_id) "espeak")))))
       (makunbound semantic-name))))
 
 (ert-deftest emacsvox-tts-omnivox-logical-generations-are-content-based ()
@@ -1054,14 +1071,17 @@
          (omnivox-global-default-selector nil)
          (omnivox-allow-same-language-fallback t)
          (omnivox--logical-acss-table (make-hash-table :test #'equal))
+         (voice-setup-defined-voices nil)
          (omnivox--logical-registry-generation 0)
          (omnivox--logical-registry-signature nil)
          (omnivox--control-request-sequence 200)
          writes)
     (puthash "voice-annotate" '(:stress 0.0)
              omnivox--logical-acss-table)
-    (unwind-protect
-        (progn
+    (cl-letf (((symbol-function 'omnivox--active-palette-entries)
+               (lambda () nil)))
+      (unwind-protect
+          (progn
           (process-put
            speaker omnivox--control-capabilities-property
            '(:type "capabilities"
@@ -1094,8 +1114,8 @@
               (should (= (plist-get request :registry_generation) 1))
               (should (= (length (plist-get request :definitions)) 1))
               (should (equal (plist-get selector :engine_id) expected)))))
-      (delete-process speaker)
-      (delete-process notifier))))
+        (delete-process speaker)
+        (delete-process notifier)))))
 
 (defun emacsvox-test--tts-capture-protocol (thunk)
   "Call THUNK and return chronological speech protocol writes."
