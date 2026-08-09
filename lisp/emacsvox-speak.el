@@ -694,17 +694,28 @@ The actual duration is never shorter than the registered blank-line tone."
       facts)))
 
 (defun emacsvox-speak--annotate-indentation (text facts)
-  "Attach indentation FACTS before the first speakable character in TEXT."
+  "Attach indentation FACTS across the first content token in TEXT.
+
+Covering the token keeps its first character in the same synthesis span as
+the rest of the word.  Existing range-local facts remain range-local."
   (when (and facts (> (length text) 0))
-    (let* ((offset (or (string-match "[^ \t]" text) 0))
-           (existing
-            (get-text-property offset emacsvox-aural-facts-property text)))
-      (add-text-properties
-       offset (1+ offset)
-       (list
-        emacsvox-aural-facts-property
-        (emacsvox-aural-merge-facts existing facts))
-       text)))
+    (let* ((start (or (string-match "[^ \t]" text) 0))
+           (end (or (string-match "[ \t]" text start) (length text)))
+           (position start))
+      (while (< position end)
+        (let* ((next
+                (next-single-property-change
+                 position emacsvox-aural-facts-property text end))
+               (existing
+                (get-text-property
+                 position emacsvox-aural-facts-property text)))
+          (add-text-properties
+           position next
+           (list
+            emacsvox-aural-facts-property
+            (emacsvox-aural-merge-facts existing facts))
+           text)
+          (setq position next)))))
   text)
 
 (defun emacsvox-speak--preview-indentation-presentation ()

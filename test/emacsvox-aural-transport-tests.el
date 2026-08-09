@@ -4173,6 +4173,12 @@ is the default inherited by a newly created TTS scratch buffer."
           '(:mode text-mode :occasion navigation
             :voice-lock-enabled t))))
       (should (equal (substring-no-properties prepared) "    value"))
+      (should
+       (eq
+        (get-text-property
+         4 emacsvox-aural-concrete-plan-property prepared)
+        (get-text-property
+         5 emacsvox-aural-concrete-plan-property prepared)))
       (let* ((plan
               (get-text-property
                4 emacsvox-aural-concrete-plan-property prepared))

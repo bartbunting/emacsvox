@@ -166,7 +166,13 @@
            (get-text-property 2 emacsvox-aural-facts-property text)))
       (should (memq 'point-located (plist-get merged :events)))
       (should (memq 'indentation-located (plist-get merged :events)))
-      (should (= (plist-get merged :indentation-columns) 2)))))
+      (should (= (plist-get merged :indentation-columns) 2)))
+    (let ((following
+           (get-text-property 3 emacsvox-aural-facts-property text)))
+      (should
+       (equal (plist-get following :events) '(indentation-located)))
+      (should-not (memq 'point-located (plist-get following :events)))
+      (should (= (plist-get following :indentation-columns) 2)))))
 
 (ert-deftest emacsvox-indentation-preview-uses-representative-depth ()
   "The selector audition is useful even on an unindented current line."
