@@ -651,6 +651,80 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (tts-cancel-tracked-dispatch identifier)
       (delete-process process))))
 
+(ert-deftest emacsvox-aural-capitalization-sync-keeps-structured-timeline ()
+  "Capitalization state sync cannot force positioned tones onto legacy wire."
+  (emacsvox-test--with-transport-scheme
+    (let* ((text
+            "The quick brown donkey fell off the ledge because he hit the edge of the sledge with his WEDGE")
+           (wedge-offset
+            (string-bytes (substring text 0 (string-match "WEDGE" text))))
+           (process
+            (make-pipe-process
+             :name "emacsvox-capitalization-timeline-test"
+             :buffer nil :noquery t))
+           (tts-speaker-process process)
+           (tts-notify-process nil)
+           (tts-caps t)
+           (tts-split-caps t)
+           (tts-stop-immediately nil)
+           (tts-punctuation-mode "some")
+           (tts-speech-rate 100)
+           (tts-quiet nil)
+           (voice-lock-mode t)
+           (emacsvox-capitalization-presentation 'tone)
+           (emacsvox-aural-submission-context
+            '(:mode text-mode :mode-lineage (text-mode)
+              :occasion continuous :face-presentation-enabled t
+              :voice-lock-enabled t :icons-enabled nil))
+           (emacsvox-aural-submission-occasion 'continuous)
+           (emacsvox-aural--delivery-sequence 0)
+           writes)
+      (unwind-protect
+          (progn
+            (process-put
+             process emacsvox-aural--structured-timeline-process-property t)
+            (process-put
+             process tts--capitalization-presentation-property t)
+            (cl-letf
+                (((symbol-function 'process-send-string)
+                  (lambda (_owner command) (push command writes)))
+                 ((symbol-function 'tts-voice-reset-code)
+                  (lambda () "")))
+              (tts-speak text))
+            (should (= (length writes) 1))
+            (let ((wire (car writes)))
+              (should
+               (string-prefix-p
+                "tts_set_capitalization_presentation tone\n"
+                wire))
+              (should-not (string-match-p "\nt [0-9]" wire))
+              (should
+               (string-match
+                "emacsvox_timeline {\\([^}]+\\)}\n\\'" wire))
+              (let* ((decoded
+                      (decode-coding-string
+                       (base64-decode-string (match-string 1 wire)) 'utf-8))
+                     (envelope
+                      (json-parse-string
+                       decoded :object-type 'plist :array-type 'list))
+                     (tones
+                      (seq-filter
+                       (lambda (action)
+                         (equal (plist-get action :type) "tone"))
+                       (plist-get envelope :actions))))
+                (should (= (length tones) 2))
+                (should
+                 (equal
+                  (mapcar
+                   (lambda (tone)
+                     (let ((position (plist-get tone :position)))
+                       (list
+                        (plist-get tone :frequency_hz)
+                        (plist-get position :utf8_offset))))
+                   tones)
+                  (list (list 440.0 0) (list 1300.0 wedge-offset)))))))
+        (delete-process process)))))
+
 (ert-deftest emacsvox-aural-keeps-whole-legacy-packet-on-raw-write ()
   "An unmodelled command prevents partial structured conversion."
   (let* ((process

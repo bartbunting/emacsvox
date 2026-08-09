@@ -467,6 +467,15 @@ OWNER so a logical transaction cannot be partially delivered across streams."
    (list plan text pause positioned-actions)
    emacsvox-aural--delivery-timeline-runs))
 
+(defun emacsvox-aural--structured-compatible-delivery-entry-p (entry)
+  "Return non-nil when ENTRY can accompany a structured timeline."
+  (let ((command (emacsvox-aural--delivery-entry-command entry)))
+    (or
+     (eq 'structured-fallback
+         (emacsvox-aural--delivery-entry-kind entry))
+     (string-prefix-p "tts_sync_state " command)
+     (string-prefix-p "tts_set_capitalization_presentation " command))))
+
 (defun emacsvox-aural-structured-delivery-pending-p ()
   "Return non-nil when the current transaction can replace its legacy queue."
   (and
@@ -475,13 +484,7 @@ OWNER so a logical transaction cannot be partially delivered across streams."
     #'emacsvox-aural--timeline-run-has-speech-p
     emacsvox-aural--delivery-timeline-runs)
    (cl-every
-    (lambda (entry)
-      (or
-       (eq 'structured-fallback
-           (emacsvox-aural--delivery-entry-kind entry))
-       (string-prefix-p
-        "tts_sync_state "
-        (emacsvox-aural--delivery-entry-command entry))))
+    #'emacsvox-aural--structured-compatible-delivery-entry-p
     emacsvox-aural--delivery-transaction-entries)))
 
 (defun emacsvox-aural--timeline-run-has-speech-p (run)
@@ -863,13 +866,7 @@ recorded plans contain no speech span and therefore require legacy lowering."
         (eq owner tts-speaker-process)
         (cl-every #'emacsvox-aural--timeline-run-has-speech-p runs)
         (cl-every
-         (lambda (entry)
-           (or
-            (eq 'structured-fallback
-                (emacsvox-aural--delivery-entry-kind entry))
-            (string-prefix-p
-             "tts_sync_state "
-             (emacsvox-aural--delivery-entry-command entry))))
+         #'emacsvox-aural--structured-compatible-delivery-entry-p
          entries)))
       (list entries effects)
     (let* ((built
