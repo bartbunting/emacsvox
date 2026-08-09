@@ -2077,12 +2077,21 @@
            (annotated (tts--annotate-capitalization text))
            (facts
             (get-text-property
-             0 emacsvox-aural-facts-property annotated)))
+             0 emacsvox-aural-facts-property annotated))
+           (capital-facts
+            (car
+             (get-text-property
+              0 emacsvox-aural-positioned-facts-property annotated))))
       (should (eq (plist-get facts :role) 'heading))
       (should (= (plist-get facts :level) 2))
-      (should (equal (plist-get facts :events) '(capitalization-located)))
-      (should (eq (plist-get facts :capitalization-kind) 'capital))
-      (should (eq (plist-get facts :capitalization-presentation) 'tone)))
+      (should-not (plist-member facts :events))
+      (should
+       (equal
+        (plist-get capital-facts :events)
+        '(capitalization-located)))
+      (should (eq (plist-get capital-facts :capitalization-kind) 'capital))
+      (should
+       (eq (plist-get capital-facts :capitalization-presentation) 'tone)))
     (dolist
         (settings
          '((nil tone) (t none)))
@@ -2091,7 +2100,10 @@
              (annotated (tts--annotate-capitalization "Word")))
         (should-not
          (get-text-property
-          0 emacsvox-aural-facts-property annotated))))))
+          0 emacsvox-aural-facts-property annotated))
+        (should-not
+         (get-text-property
+          0 emacsvox-aural-positioned-facts-property annotated))))))
 
 (ert-deftest emacsvox-tts-protocol-synchronizes-buffer-state ()
   "The synchronization command snapshots the current speech state."

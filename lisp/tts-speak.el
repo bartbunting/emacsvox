@@ -1065,9 +1065,6 @@ specifies the current pronunciation mode --- See
 (defvar-local tts-speak-nonprinting-chars nil
   "Speak non-printing chars.")
 
-(declare-function emacsvox-aural-structured-timeline-available-p
-                  "emacsvox-aural-transport" ())
-
 (defvar tts-octal-chars
   "[\000-\010\013\014\016-\037\177-\377]"
   "Regular expression matching control chars. ")
@@ -1173,10 +1170,7 @@ FACTS as an internal semantic position."
         (position 0)
         (length (length text))
         (positioned-p
-         (and
-          (eq emacsvox-capitalization-presentation 'tone)
-          (fboundp 'emacsvox-aural-structured-timeline-available-p)
-          (emacsvox-aural-structured-timeline-available-p))))
+         (eq emacsvox-capitalization-presentation 'tone)))
     (when-let* ((enabled (tts--capitalization-facts 'capital)))
       (while (< position length)
         (let ((all-caps-end

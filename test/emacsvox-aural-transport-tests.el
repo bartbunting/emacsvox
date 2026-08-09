@@ -492,6 +492,40 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
              tones)
             '(("text_offset" 1 0) ("text_offset" 1 4)))))))))
 
+(ert-deftest emacsvox-aural-capital-tones-preserve-legacy-word-tails ()
+  "Legacy tone insertion keeps each capital with the rest of its word."
+  (emacsvox-test--with-transport-scheme
+    (let* ((tts-caps t)
+           (tts-speaker-process nil)
+           (emacsvox-capitalization-presentation 'tone)
+           (prepared
+            (emacsvox-aural-prepare-text
+             "This Is a TestCase" nil (emacsvox-test--transport-context)))
+           events)
+      (with-temp-buffer
+        (insert prepared)
+        (cl-letf
+            (((symbol-function 'tts-voice-reset-code)
+              (lambda () "RESET"))
+             ((symbol-function 'tts--protocol-queue-code) #'ignore)
+             ((symbol-function 'tts--protocol-queue-text)
+              (lambda (text) (push (list 'text text) events)))
+             ((symbol-function 'tts--protocol-tone)
+              (lambda (pitch duration &optional force)
+                (push (list 'tone pitch duration force) events))))
+          (tts-audio-format (point-min) (point-max))))
+      (should
+       (equal
+        (nreverse events)
+        '((tone 440 20 nil)
+          (text "This ")
+          (tone 440 20 nil)
+          (text "Is a ")
+          (tone 440 20 nil)
+          (text "Test")
+          (tone 440 20 nil)
+          (text "Case")))))))
+
 (ert-deftest emacsvox-aural-structured-timeline-prefers-named-voice-request ()
   "Generated ACSS command names do not replace portable routing identity."
   (let* ((content

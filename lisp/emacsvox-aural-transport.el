@@ -960,8 +960,52 @@ recorded plans contain no speech span and therefore require legacy lowering."
             (functionp emacsvox-aural-speech-balance-function))
          (funcall emacsvox-aural-speech-balance-function 0.0))))))
 
-(defun emacsvox-aural--queue-concrete-content (content payload)
-  "Queue concrete CONTENT using final text PAYLOAD."
+(defun emacsvox-aural--utf8-offset-position (text offset)
+  "Return the character position at UTF-8 byte OFFSET in TEXT."
+  (unless
+      (and (integerp offset) (>= offset 0) (<= offset (string-bytes text)))
+    (emacsvox-aural--transport-error
+     "Invalid positioned action offset %S for %S" offset text))
+  (let ((position 0)
+        (bytes 0)
+        (length (length text)))
+    (while (and (< bytes offset) (< position length))
+      (setq
+       bytes
+       (+ bytes (string-bytes (substring text position (1+ position)))))
+      (cl-incf position))
+    (unless (= bytes offset)
+      (emacsvox-aural--transport-error
+       "Positioned action offset %S splits a UTF-8 character in %S"
+       offset text))
+    position))
+
+(defun emacsvox-aural--queue-positioned-content
+    (payload positioned-actions)
+  "Queue PAYLOAD with compiled POSITIONED-ACTIONS at internal offsets."
+  (let ((cursor 0)
+        (previous-offset 0))
+    (dolist (positioned positioned-actions)
+      (let* ((offset (plist-get positioned :utf8-offset))
+             (position
+              (emacsvox-aural--utf8-offset-position payload offset)))
+        (when (< offset previous-offset)
+          (emacsvox-aural--transport-error
+           "Positioned action offsets are not ordered: %S" positioned-actions))
+        (when (> position cursor)
+          (tts--protocol-queue-text (substring payload cursor position)))
+        (dolist (entry (plist-get positioned :actions))
+          (emacsvox-aural-queue-concrete-action
+           (emacsvox-aural-concrete-positioned-action-action entry)
+           (emacsvox-aural-concrete-positioned-action-context entry)))
+        (setq cursor position
+              previous-offset offset)))
+    (when (< cursor (length payload))
+      (tts--protocol-queue-text (substring payload cursor)))))
+
+(defun emacsvox-aural--queue-concrete-content
+    (content payload &optional positioned-actions)
+  "Queue concrete CONTENT using PAYLOAD and POSITIONED-ACTIONS."
   (when
       (and
        (emacsvox-aural-concrete-content-speak content)
@@ -980,7 +1024,10 @@ recorded plans contain no speech span and therefore require legacy lowering."
                    (emacsvox-aural-concrete-content-voice-command content)))
         (unless (string-empty-p command)
           (tts--protocol-queue-code command)))
-      (tts--protocol-queue-text payload)
+      (if positioned-actions
+          (emacsvox-aural--queue-positioned-content
+           payload positioned-actions)
+        (tts--protocol-queue-text payload))
       (when (emacsvox-aural-concrete-content-voice-command content)
         (tts--protocol-queue-code (tts-voice-reset-code)))
       (when
@@ -1101,11 +1148,14 @@ action or pause separates them."
             (setq group (nreverse group))
             (if (cdr group)
                 (emacsvox-aural--queue-concrete-run-group group)
-              (pcase-let ((`(,plan ,text ,pause . ,_) (car group)))
+              (pcase-let ((`(,plan ,text ,pause . ,extra) (car group)))
                 (when pause
                   (tts--protocol-silence pause))
                 (let ((emacsvox-aural--queued-run-leading-pause pause))
-                  (emacsvox-aural-queue-concrete-plan plan text))))
+                  (if (car extra)
+                      (emacsvox-aural-queue-concrete-plan
+                       plan text (car extra))
+                    (emacsvox-aural-queue-concrete-plan plan text)))))
             (setq group nil
                   previous nil))))
       (dolist (run runs)
@@ -1119,11 +1169,12 @@ action or pause separates them."
       (flush))))
 
 (cl-defun emacsvox-aural-queue-concrete-plan
-    (plan &optional (text nil text-supplied-p))
+    (plan &optional (text nil text-supplied-p) positioned-actions)
   "Queue concrete PLAN in strict before, content, and after order.
 
 When TEXT is supplied it replaces the plan's source text after normal TTS
-cleanup, without rerunning semantic or contextual resolution."
+cleanup, without rerunning semantic or contextual resolution.
+POSITIONED-ACTIONS occur at UTF-8 offsets inside that final text."
   (let* ((structured (emacsvox-aural--structured-capture-p))
          (emacsvox-aural--delivery-entry-kind
           (if structured 'structured-fallback
@@ -1135,11 +1186,13 @@ cleanup, without rerunning semantic or contextual resolution."
             (emacsvox-aural-concrete-content-text content))))
     (when (and structured (not emacsvox-aural--structured-runs-recorded-p))
       (emacsvox-aural--capture-structured-run
-       plan payload emacsvox-aural--queued-run-leading-pause nil))
+       plan payload emacsvox-aural--queued-run-leading-pause
+       positioned-actions))
     (let ((context (emacsvox-aural-concrete-plan-context plan)))
       (dolist (action (emacsvox-aural-concrete-plan-before plan))
         (emacsvox-aural-queue-concrete-action action context)))
-    (emacsvox-aural--queue-concrete-content content payload)
+    (emacsvox-aural--queue-concrete-content
+     content payload positioned-actions)
     (dolist (action (emacsvox-aural-concrete-plan-after plan))
       (emacsvox-aural-queue-concrete-action
        action (emacsvox-aural-concrete-plan-context plan)))
