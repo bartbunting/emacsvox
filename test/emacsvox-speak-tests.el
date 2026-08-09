@@ -168,6 +168,27 @@
       (should (memq 'indentation-located (plist-get merged :events)))
       (should (= (plist-get merged :indentation-columns) 2)))))
 
+(ert-deftest emacsvox-indentation-preview-uses-representative-depth ()
+  "The selector audition is useful even on an unindented current line."
+  (let ((emacsvox-audio-indentation t)
+        (emacsvox-indentation-presentation 'pitch-tone)
+        spoken)
+    (cl-letf (((symbol-function 'tts-speak)
+               (lambda (text) (setq spoken text))))
+      (emacsvox-speak--preview-indentation-presentation))
+    (should
+     (equal
+      (substring-no-properties spoken)
+      "    indentation preview"))
+    (let ((facts
+           (get-text-property
+            4 emacsvox-aural-facts-property spoken)))
+      (should (memq 'indentation-located (plist-get facts :events)))
+      (should (= (plist-get facts :indentation-columns) 4))
+      (should (eq (plist-get facts :indentation-presentation) 'pitch-tone))
+      (should (numberp (plist-get facts :indentation-tone-pitch)))
+      (should (integerp (plist-get facts :indentation-tone-duration))))))
+
 (ert-deftest emacsvox-line-indentation-no-longer-injects-spoken-text ()
   "Line extraction leaves source intact and publishes indentation facts."
   (with-temp-buffer

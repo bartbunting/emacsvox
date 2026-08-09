@@ -707,8 +707,19 @@ The actual duration is never shorter than the registered blank-line tone."
        text)))
   text)
 
+(defun emacsvox-speak--preview-indentation-presentation ()
+  "Audition the selected indentation presentation at four columns."
+  (let* ((columns 4)
+         (text
+          (concat
+           (make-string columns ?\s)
+           "indentation preview")))
+    (tts-speak
+     (emacsvox-speak--annotate-indentation
+      text (emacsvox-speak--indentation-facts columns)))))
+
 (defun emacsvox-set-indentation-presentation (presentation &optional global)
-  "Select indentation PRESENTATION and preview the current line.
+  "Select indentation PRESENTATION and preview four-column indentation.
 
 Set the option buffer-locally by default.  With interactive prefix GLOBAL,
 also set the global default and use it in the current buffer."
@@ -728,7 +739,7 @@ also set the global default and use it in the current buffer."
   (setq-local emacsvox-indentation-presentation presentation)
   (when (called-interactively-p 'interactive)
     (let ((emacsvox-audio-indentation t))
-      (emacsvox-speak-line)))
+      (emacsvox-speak--preview-indentation-presentation)))
   presentation)
 
 ;; Indicate indentation.

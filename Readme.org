@@ -234,9 +234,11 @@ combined with speech, =custom=, or =none=.  Rising pitch starts at
 =emacsvox-indentation-pitch-tone-base=, rises by the configured semitones per
 column, and is capped at =emacsvox-indentation-pitch-tone-maximum=.  Its
 duration is never shorter than the registered blank-line tone.  Both selector
-commands change the current buffer and preview the result; use =C-u= to also
-change the global default.  The =custom= choices publish semantic facts for
-personal Aural Presentation rules without imposing built-in output.
+commands change the current buffer and preview the result; indentation uses a
+representative four-column sample so the audition also works on an unindented
+line.  Use =C-u= to also change the global default.  The =custom= choices
+publish semantic facts for personal Aural Presentation rules without imposing
+built-in output.
 
 The compatibility baseline is an implementation layer, not a user-selectable
 configuration.  Mode compatibility is supplied separately and automatically.
