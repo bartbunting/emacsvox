@@ -33,7 +33,8 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
             Volume = true,
             WordMarkers = true,
             SentenceMarkers = true,
-            RequestedAnchors = "exact"
+            RequestedAnchors = "exact",
+            TextRepertoire = "windows_1252"
         };
 
     private static readonly Dictionary<string, int> VoicePitchBaselines =

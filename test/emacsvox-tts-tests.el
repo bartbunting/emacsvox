@@ -499,6 +499,7 @@
          (omnivox--logical-registry-generation 0)
          (omnivox--logical-registry-signature nil)
          (omnivox-control-last-error nil)
+         (tts-handle-unicode t)
          (omnivox--control-request-sequence 80)
          writes)
     (puthash "voice-bolden" '(:average_pitch 0.4)
@@ -523,7 +524,9 @@
                           "logical_voice_registration"
                           "playback_marker_events_v1"
                           "preferred_engine"
+                          "text_repertoire_routing_v1"
                           "tracked_playback_completion"]))))
+          (should-not tts-handle-unicode)
           (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
                  (identifier (plist-get request :request_id)))
             (should (equal (plist-get request :type) "inventory"))
@@ -714,10 +717,11 @@
 (ert-deftest emacsvox-tts-omnivox-gates-framing-on-capability ()
   "Legacy Omnivox processes are not sent framed presentations."
   (let ((process
-         (make-pipe-process
+        (make-pipe-process
           :name "emacsvox-omnivox-legacy-capability-test"
           :buffer nil :noquery t))
-        (tts-speaker-process nil))
+        (tts-speaker-process nil)
+        (tts-handle-unicode nil))
     (unwind-protect
         (progn
           (omnivox--handle-capabilities-response
@@ -739,10 +743,11 @@
 (ert-deftest emacsvox-tts-omnivox-negotiates-timeline-v2-only ()
   "The adapter records V1 as an upgrade error and enables only timeline V2."
   (let* ((process
-          (make-pipe-process
+         (make-pipe-process
            :name "emacsvox-omnivox-timeline-capability-test"
            :buffer nil :noquery t))
          (tts-speaker-process process)
+         (tts-handle-unicode nil)
          (omnivox-control-last-error nil))
     (unwind-protect
         (progn
@@ -2525,6 +2530,71 @@ variables; nil removes the variable."
         (select "dtk-soft")
         initialize
         (rate ,dectalk-default-speech-rate global))))))
+
+(ert-deftest emacsvox-tts-omnivox-keeps-unicode-mitigation-until-negotiated ()
+  "Omnivox keeps Unicode expansion until route-aware support is confirmed."
+  (let ((variables
+         '(tts-default-voice
+           tts-handle-unicode
+           tts-voice-capabilities-function
+           tts-voice-inventory-function
+           tts-voice-inventory-refresh-function
+           tts-voice-configuration-apply-function
+           tts-last-realized-voice-function
+           tts-engine-recovery-probe-function
+           tts-voice-preview-function
+           tts-voice-preview-code-function
+           tts-default-speech-rate
+           tts-speech-rate
+           tts-speech-rate-base
+           tts-speech-rate-step
+           emacsvox-play-program
+           omnivox-default-voice-id
+           omnivox-default-speech-rate)))
+    (cl-progv
+        variables
+        (make-list (length variables) nil)
+      (setq omnivox-default-voice-id ""
+            omnivox-default-speech-rate 60
+            tts-handle-unicode t)
+      (cl-letf (((symbol-function 'set-default) #'ignore)
+                ((symbol-function 'tts-unicode-update-untouched-charsets)
+                 #'ignore)
+                ((symbol-function 'omnivox--negotiate-processes) #'ignore)
+                ((symbol-function 'tts-voice-defined-p) #'ignore)
+                ((symbol-function 'tts-get-voice-command) #'ignore)
+                ((symbol-function 'tts-define-voice-from-acss) #'ignore))
+        (omnivox-configure-tts)
+        (should tts-handle-unicode)))))
+
+(ert-deftest emacsvox-tts-omnivox-preserves-unicode-after-all-streams-negotiate ()
+  "Every live stream must route exact Unicode before client expansion stops."
+  (let* ((speaker
+          (make-pipe-process
+           :name "emacsvox-unicode-routing-speaker"
+           :buffer nil :noquery t))
+         (notifier
+          (make-pipe-process
+           :name "emacsvox-unicode-routing-notifier"
+           :buffer nil :noquery t))
+         (tts-speaker-process speaker)
+         (tts-notify-process notifier)
+         (tts-handle-unicode t)
+         (capabilities
+          '(:type "capabilities"
+            :features ("text_repertoire_routing_v1"))))
+    (unwind-protect
+        (progn
+          (process-put speaker omnivox--control-capabilities-property
+                       capabilities)
+          (omnivox--update-unicode-preprocessing)
+          (should tts-handle-unicode)
+          (process-put notifier omnivox--control-capabilities-property
+                       capabilities)
+          (omnivox--update-unicode-preprocessing)
+          (should-not tts-handle-unicode))
+      (when (process-live-p speaker) (delete-process speaker))
+      (when (process-live-p notifier) (delete-process notifier)))))
 
 (ert-deftest emacsvox-tts-dectalk-configures-canonical-state ()
   "The DECtalk adapter configures generic TTS state and dispatch."

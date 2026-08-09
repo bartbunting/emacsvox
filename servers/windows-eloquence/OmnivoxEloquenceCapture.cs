@@ -158,8 +158,8 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
             }
 
             textEncoding = Encoding.GetEncoding(1252,
-                EncoderFallback.ReplacementFallback,
-                DecoderFallback.ReplacementFallback);
+                EncoderFallback.ExceptionFallback,
+                DecoderFallback.ExceptionFallback);
             outputBuffer = Marshal.AllocHGlobal(OutputBufferSamples * 2);
             callback = OnEciCallback;
             OmnivoxNativeEci.RegisterCallback(handle, callback, IntPtr.Zero);

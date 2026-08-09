@@ -38,6 +38,7 @@
 (defvar tts-speech-rate)
 (defvar tts-speech-rate-base)
 (defvar tts-speech-rate-step)
+(defvar tts-handle-unicode)
 (defvar tts-voice-capabilities-function)
 (defvar tts-voice-inventory-function)
 (defvar tts-voice-inventory-refresh-function)
@@ -1382,11 +1383,27 @@ logical registry is replaced, so partial failure is explicit and retryable."
             (omnivox-register-logical-voices))))
     (omnivox--record-control-error process response)))
 
+(defun omnivox--update-unicode-preprocessing ()
+  "Use client-side Unicode names unless every live Omnivox routes exact text."
+  (let (processes)
+    (dolist (process (delete-dups (list tts-speaker-process
+                                        tts-notify-process)))
+      (when (and process (process-live-p process))
+        (push process processes)))
+    (when processes
+      (let ((all-supported t))
+        (dolist (process processes)
+          (unless (omnivox--process-supports-p
+                   process "text_repertoire_routing_v1")
+            (setq all-supported nil)))
+        (setq tts-handle-unicode (not all-supported))))))
+
 (defun omnivox--handle-capabilities-response (process response)
   "Store capability RESPONSE from PROCESS and request its inventory."
   (if (not (equal (plist-get response :type) "capabilities"))
       (omnivox--record-control-error process response)
     (process-put process omnivox--control-capabilities-property response)
+    (omnivox--update-unicode-preprocessing)
     (process-put
      process tts--tracked-playback-completion-property
      (and
@@ -1436,6 +1453,7 @@ logical registry is replaced, so partial failure is explicit and retryable."
   (when (and (process-live-p process)
              (not (process-get process omnivox--control-negotiated-property)))
     (process-put process omnivox--control-negotiated-property t)
+    (omnivox--update-unicode-preprocessing)
     (omnivox--install-control-filter process)
     (condition-case error-data
         (omnivox--send-control-request
@@ -1929,6 +1947,9 @@ Return the number of distinct processes that received the command."
 (defun omnivox-configure-tts ()
   "Configure Emacsvox to use Omnivox."
   (setq tts-default-voice 'paul)
+  ;; Preserve compatibility until every live process confirms that it can
+  ;; select a lossless route for the original Unicode text and UTF-8 offsets.
+  (setq tts-handle-unicode t)
   (fset 'tts-voice-defined-p #'omnivox-voice-defined-p)
   (fset 'tts-get-voice-command #'omnivox-get-voice-command)
   (fset 'tts-define-voice-from-acss #'omnivox-define-voice-from-acss)

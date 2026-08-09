@@ -82,7 +82,8 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
             SentenceMarkers = true,
             PhonemeMarkers = true,
             NativeIndexMarkers = true,
-            RequestedAnchors = "word_boundary"
+            RequestedAnchors = "word_boundary",
+            TextRepertoire = "iso_8859_1"
         };
 
     private readonly OmnivoxDectalkCapture capture;

@@ -68,6 +68,7 @@ internal sealed class OmnivoxHelperCapabilities
     internal bool NativeIndexMarkers { get; set; }
     internal string RequestedAnchors { get; set; }
     internal bool LanguageSwitching { get; set; }
+    internal string TextRepertoire { get; set; }
 }
 
 internal sealed class OmnivoxHelperAnchor
@@ -973,6 +974,9 @@ internal sealed class OmnivoxHelperHost
         }
         capabilities["markers"] = markers;
         capabilities["language_switching"] = advertised.LanguageSwitching;
+        capabilities["text_repertoire"] =
+            !String.IsNullOrEmpty(advertised.TextRepertoire) ?
+            advertised.TextRepertoire : "unknown";
         capabilities["native_extensions"] = new object[0];
         descriptor["capabilities"] = capabilities;
 
@@ -1085,6 +1089,7 @@ internal sealed class OmnivoxHelperHost
     {
         string value = Required(values, field) as string;
         if (value == null || (!allowEmpty && value.Length == 0) ||
+            !IsWellFormedUnicode(value) ||
             Encoding.UTF8.GetByteCount(value) > MaximumStringLength)
         {
             throw Fault("invalid_request", "invalid string field: " + field,
@@ -1096,12 +1101,33 @@ internal sealed class OmnivoxHelperHost
     private static string ReadText(IDictionary<string, object> values)
     {
         string value = Required(values, "text") as string;
-        if (value == null)
+        if (value == null || !IsWellFormedUnicode(value))
         {
             throw Fault("invalid_request", "invalid string field: text",
                 false);
         }
         return value;
+    }
+
+    private static bool IsWellFormedUnicode(string value)
+    {
+        for (int index = 0; index < value.Length; ++index)
+        {
+            if (Char.IsHighSurrogate(value[index]))
+            {
+                if (index + 1 >= value.Length ||
+                    !Char.IsLowSurrogate(value[index + 1]))
+                {
+                    return false;
+                }
+                ++index;
+            }
+            else if (Char.IsLowSurrogate(value[index]))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static int ReadInteger(IDictionary<string, object> values,

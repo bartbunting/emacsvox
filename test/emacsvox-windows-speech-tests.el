@@ -823,6 +823,36 @@ Return the server's standard output."
        (expand-file-name file emacsvox-servers-directory))
       (should-not (search-forward "EMACSPEAK_" nil t)))))
 
+(ert-deftest emacsvox-windows-helpers-advertise-and-enforce-text-repertoires ()
+  "Native helper input must be routed or rejected without replacement."
+  (dolist
+      (entry
+       '(("windows-eloquence/OmnivoxEloquenceHelper.cs"
+          "TextRepertoire = \"windows_1252\"")
+         ("windows-dectalk/OmnivoxDectalkHelper.cs"
+          "TextRepertoire = \"iso_8859_1\"")
+         ("windows-speech-common/OmnivoxHelperHost.cs"
+          "capabilities[\"text_repertoire\"]")
+         ("windows-speech-common/OmnivoxHelperHost.cs"
+          "IsWellFormedUnicode(value)")))
+    (with-temp-buffer
+      (insert-file-contents
+       (expand-file-name (car entry) emacsvox-servers-directory))
+      (should (search-forward (cadr entry) nil t))))
+  (dolist
+      (file
+       '("windows-eloquence/OmnivoxEloquenceCapture.cs"
+         "windows-eloquence/EloquenceBridge.cs"
+         "windows-dectalk/OmnivoxDectalkCapture.cs"
+         "windows-dectalk/DectalkBridge.cs"))
+    (with-temp-buffer
+      (insert-file-contents
+       (expand-file-name file emacsvox-servers-directory))
+      (should (search-forward "EncoderFallback.ExceptionFallback" nil t))
+      (goto-char (point-min))
+      (should-not
+       (search-forward "EncoderFallback.ReplacementFallback" nil t)))))
+
 (provide 'emacsvox-windows-speech-tests)
 
 ;;; emacsvox-windows-speech-tests.el ends here

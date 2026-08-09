@@ -157,8 +157,8 @@ internal sealed class DectalkEngine : IDisposable
         try
         {
             textEncoding = Encoding.GetEncoding(28591,
-                EncoderFallback.ReplacementFallback,
-                DecoderFallback.ReplacementFallback);
+                EncoderFallback.ExceptionFallback,
+                DecoderFallback.ExceptionFallback);
             bufferMessage = NativeDectalk.RegisterWindowMessage(
                 "DECtalkBufferMessage");
             if (bufferMessage == 0)

@@ -194,6 +194,12 @@ numeric phoneme or index value.  Those native records do not identify a
 source-text span, so their optional UTF-8 source ranges are left absent rather
 than guessed.
 
+The descriptor advertises =iso_8859_1= as its lossless text repertoire.
+Omnivox resolves each chunk around this helper when the exact UTF-8 text needs
+a Unicode-capable route, preserving text and requested anchor offsets.  The
+native encoder uses exception fallback as a final guard, so an unexpected
+out-of-repertoire request fails and can be rerouted instead of becoming =?=.
+
 The helper creates word markers by inserting private DECtalk indexes immediately
 before bounded Unicode words and translating only those callbacks back to the
 original UTF-8 source ranges.  Apostrophes, curly apostrophes, and hyphens remain

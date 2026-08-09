@@ -183,8 +183,8 @@ internal sealed class EloquenceEngine : IDisposable
             }
 
             textEncoding = Encoding.GetEncoding(1252,
-                EncoderFallback.ReplacementFallback,
-                DecoderFallback.ReplacementFallback);
+                EncoderFallback.ExceptionFallback,
+                DecoderFallback.ExceptionFallback);
             outputBuffer = Marshal.AllocHGlobal(OutputBufferSamples * 2);
             player = new WaveOutPlayer(SpeechSampleRate, 1, 16,
                 OutputBufferSamples * 2);

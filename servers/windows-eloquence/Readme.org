@@ -170,6 +170,12 @@ word indexes and inserted through ECI's index API, so Eloquence returns its
 exact PCM frame without splitting the utterance.  Version 1 remains available
 unchanged for an older Omnivox host and truthfully omits anchor support.
 
+The descriptor advertises =windows_1252= as its lossless text repertoire.
+Omnivox resolves each chunk around this helper when the exact UTF-8 text needs
+a Unicode-capable route, preserving text and requested anchor offsets.  The
+native encoder uses exception fallback as a final guard, so an unexpected
+out-of-repertoire request fails and can be rerouted instead of becoming =?=.
+
 The bounded JSON loop, negotiation, inventory framing, PCM chunking, request
 validation, marker framing, and cancellation coordination live in the engine-neutral
 =servers/windows-speech-common/OmnivoxHelperHost.cs=.  The Eloquence-specific
