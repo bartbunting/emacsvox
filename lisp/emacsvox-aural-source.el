@@ -73,6 +73,15 @@ must preserve the visible characters; transformations belong in
   'emacsvox-aural-facts
   "Text property holding semantic facts for one formatted text run.")
 
+(defconst emacsvox-aural-positioned-facts-property
+  'emacsvox-aural-positioned-facts
+  "Text property holding semantic facts anchored inside a formatting run.
+
+Its value is a list of fact plists.  Unlike
+`emacsvox-aural-facts-property', this property does not create an object or
+speech-run boundary; the planner compiles its presentation at the property's
+source position.")
+
 (defconst emacsvox-aural-module-property
   'emacsvox-aural-module
   "Text property overriding the semantic module for one text run.")

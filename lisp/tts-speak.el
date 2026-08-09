@@ -832,11 +832,19 @@ start of the source match."
         (plan
          (get-text-property
           (match-beginning (or subexp 0))
-          emacsvox-aural-concrete-plan-property)))
+          emacsvox-aural-concrete-plan-property))
+        (positioned
+         (get-text-property
+          (match-beginning (or subexp 0))
+          emacsvox-aural-concrete-positioned-actions-property)))
     (replace-match replacement fixedcase literal nil subexp)
     (when plan
       (put-text-property
-       start (point) emacsvox-aural-concrete-plan-property plan))))
+       start (point) emacsvox-aural-concrete-plan-property plan))
+    (when positioned
+      (put-text-property
+       start (point) emacsvox-aural-concrete-positioned-actions-property
+       positioned))))
 
 (defsubst tts-replace-match (replace)
   
@@ -1057,6 +1065,9 @@ specifies the current pronunciation mode --- See
 (defvar-local tts-speak-nonprinting-chars nil
   "Speak non-printing chars.")
 
+(declare-function emacsvox-aural-structured-timeline-available-p
+                  "emacsvox-aural-transport" ())
+
 (defvar tts-octal-chars
   "[\000-\010\013\014\016-\037\177-\377]"
   "Regular expression matching control chars. ")
@@ -1132,11 +1143,40 @@ specifies the current pronunciation mode --- See
      :capitalization-kind kind
      :capitalization-presentation emacsvox-capitalization-presentation)))
 
+(defun tts--add-capitalization-annotation (text position facts positioned-p)
+  "Add capitalization FACTS to TEXT at POSITION.
+When POSITIONED-P is non-nil, preserve the surrounding speech run and attach
+FACTS as an internal semantic position."
+  (if positioned-p
+      (let ((existing
+             (copy-tree
+              (get-text-property
+               position emacsvox-aural-positioned-facts-property text))))
+        (unless (member facts existing)
+          (setq existing (append existing (list (copy-tree facts)))))
+        (add-text-properties
+         position (1+ position)
+         (list emacsvox-aural-positioned-facts-property existing)
+         text))
+    (add-text-properties
+     position (1+ position)
+     (list
+      emacsvox-aural-facts-property
+      (emacsvox-aural-merge-facts
+       (get-text-property position emacsvox-aural-facts-property text)
+       facts))
+     text)))
+
 (defun tts--annotate-capitalization (text)
   "Return a copy of TEXT annotated at capitalized boundaries."
   (let ((result (copy-sequence text))
         (position 0)
-        (length (length text)))
+        (length (length text))
+        (positioned-p
+         (and
+          (eq emacsvox-capitalization-presentation 'tone)
+          (fboundp 'emacsvox-aural-structured-timeline-available-p)
+          (emacsvox-aural-structured-timeline-available-p))))
     (when-let* ((enabled (tts--capitalization-facts 'capital)))
       (while (< position length)
         (let ((all-caps-end
@@ -1144,27 +1184,13 @@ specifies the current pronunciation mode --- See
           (cond
            (all-caps-end
             (let ((facts (tts--capitalization-facts 'all-caps)))
-              (add-text-properties
-               position (1+ position)
-               (list
-                emacsvox-aural-facts-property
-                (emacsvox-aural-merge-facts
-                 (get-text-property
-                  position emacsvox-aural-facts-property result)
-                 facts))
-               result))
+              (tts--add-capitalization-annotation
+               result position facts positioned-p))
             (setq position all-caps-end))
            (t
             (when (char-uppercase-p (aref text position))
-              (add-text-properties
-               position (1+ position)
-               (list
-                emacsvox-aural-facts-property
-                (emacsvox-aural-merge-facts
-                 (get-text-property
-                  position emacsvox-aural-facts-property result)
-                 enabled))
-               result))
+              (tts--add-capitalization-annotation
+               result position enabled positioned-p))
             (cl-incf position))))))
     result))
 
@@ -1385,6 +1411,31 @@ queue its after actions and object-completion effects."
      (unless continues-before
        (get-text-property start 'pause)))))
 
+(defun tts--concrete-positioned-actions (start end)
+  "Return compiled actions positioned inside buffer text from START to END.
+Offsets are UTF-8 byte offsets relative to START, matching the structured
+timeline protocol."
+  (let ((position start)
+        result)
+    (while (< position end)
+      (when-let* ((actions
+                   (get-text-property
+                    position
+                    emacsvox-aural-concrete-positioned-actions-property)))
+        (push
+         (list
+          :utf8-offset
+          (string-bytes
+           (buffer-substring-no-properties start position))
+          :actions (copy-tree actions))
+         result))
+      (setq
+       position
+       (next-single-property-change
+        position emacsvox-aural-concrete-positioned-actions-property
+        (current-buffer) end)))
+    (nreverse result)))
+
 (defun tts-audio-format (start end)
   "Format and speak text from `start' to `end'. "
   (if (emacsvox-aural-concrete-plan-at start)
@@ -1402,7 +1453,8 @@ queue its after actions and object-completion effects."
              (list
               (car slice)
               (buffer-substring-no-properties position next)
-              (cdr slice))
+              (cdr slice)
+              (tts--concrete-positioned-actions position next))
              runs)
             (setq position next)))
         (emacsvox-aural-queue-concrete-runs (nreverse runs)))

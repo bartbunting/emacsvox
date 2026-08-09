@@ -441,6 +441,57 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       2))
     (should (= (length (cadr built)) 4))))
 
+(ert-deftest emacsvox-aural-capital-tones-preserve-camel-case-span ()
+  "Capital tones use internal offsets without splitting a camel-case word."
+  (emacsvox-test--with-transport-scheme
+    (let ((tts-caps t)
+          (emacsvox-capitalization-presentation 'tone))
+      (cl-letf
+          (((symbol-function
+             'emacsvox-aural-structured-timeline-available-p)
+            (lambda () t)))
+        (let* ((prepared
+                (emacsvox-aural-prepare-text
+                 "TestCase" nil (emacsvox-test--transport-context)))
+               (plan (emacsvox-aural-concrete-plan-at 0 prepared))
+               (positioned
+                (with-temp-buffer
+                  (insert prepared)
+                  (tts--concrete-positioned-actions
+                   (point-min) (point-max))))
+               (envelope
+                (car
+                 (emacsvox-aural--build-structured-timeline
+                  1 1 (list (list plan "TestCase" nil positioned)))))
+               (spans (append (plist-get envelope :spans) nil))
+               (tones
+                (seq-filter
+                 (lambda (action)
+                   (equal (plist-get action :type) "tone"))
+                 (append (plist-get envelope :actions) nil))))
+          (should
+           (cl-loop
+            for position from 0 below (length prepared)
+            always
+            (eq plan (emacsvox-aural-concrete-plan-at position prepared))))
+          (should-not
+           (text-property-not-all
+            0 (length prepared) emacsvox-aural-facts-property nil prepared))
+          (should (= (length spans) 1))
+          (should (equal (plist-get (car spans) :text) "TestCase"))
+          (should (= (length tones) 2))
+          (should
+           (equal
+            (mapcar
+             (lambda (tone)
+               (let ((position (plist-get tone :position)))
+                 (list
+                  (plist-get position :position)
+                  (plist-get position :span_id)
+                  (plist-get position :utf8_offset))))
+             tones)
+            '(("text_offset" 1 0) ("text_offset" 1 4)))))))))
+
 (ert-deftest emacsvox-aural-structured-timeline-prefers-named-voice-request ()
   "Generated ACSS command names do not replace portable routing identity."
   (let* ((content
@@ -4086,7 +4137,10 @@ is the default inherited by a newly created TTS scratch buffer."
 (ert-deftest emacsvox-aural-transport-cleanup-preserves-frozen-plan ()
   "Scratch-buffer replacements retain the plan frozen at submission."
   (let ((plan (list :frozen-plan t))
+        (positioned (list :positioned-actions t))
         (property emacsvox-aural-concrete-plan-property)
+        (positioned-property
+         emacsvox-aural-concrete-positioned-actions-property)
         (emacsvox-pronounce-personality nil))
     (dolist
         (case
@@ -4106,12 +4160,18 @@ is the default inherited by a newly created TTS scratch buffer."
                (puthash "word" "replacement" table)
                (tts-apply-pronunciations table))))))
       (with-temp-buffer
-        (insert (propertize (car case) property plan))
+        (insert
+         (propertize
+          (car case) property plan positioned-property positioned))
         (funcall (cdr case))
         (should
          (not
           (text-property-not-all
-           (point-min) (point-max) property plan)))))))
+           (point-min) (point-max) property plan)))
+        (should
+         (not
+          (text-property-not-all
+           (point-min) (point-max) positioned-property positioned)))))))
 
 (ert-deftest emacsvox-aural-transport-capitalization-compiles-at-source ()
   "Capitalization actions compile at the boundary without changing text."

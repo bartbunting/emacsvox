@@ -453,10 +453,18 @@ OWNER so a logical transaction cannot be partially delivered across streams."
    (process-get
     tts-speaker-process emacsvox-aural--structured-timeline-process-property)))
 
-(defun emacsvox-aural--capture-structured-run (plan text pause)
-  "Capture concrete PLAN, final TEXT, and leading PAUSE for the timeline."
+(defun emacsvox-aural-structured-timeline-available-p ()
+  "Return non-nil when the speaker accepts structured presentation timelines."
+  (and
+   (processp tts-speaker-process)
+   (process-get
+    tts-speaker-process emacsvox-aural--structured-timeline-process-property)))
+
+(defun emacsvox-aural--capture-structured-run
+    (plan text pause positioned-actions)
+  "Capture PLAN, final TEXT, PAUSE, and POSITIONED-ACTIONS for the timeline."
   (push
-   (list plan text pause)
+   (list plan text pause positioned-actions)
    emacsvox-aural--delivery-timeline-runs))
 
 (defun emacsvox-aural-structured-delivery-pending-p ()
@@ -478,7 +486,7 @@ OWNER so a logical transaction cannot be partially delivered across streams."
 
 (defun emacsvox-aural--timeline-run-has-speech-p (run)
   "Return non-nil when concrete RUN contains a nonempty speech span."
-  (pcase-let* ((`(,plan ,text ,_) run)
+  (pcase-let* ((`(,plan ,text ,_ . ,_) run)
                (content (emacsvox-aural-concrete-plan-content plan)))
     (or
      (and
@@ -586,6 +594,15 @@ the concrete request has no named preset."
    :span_id span-id
    :affinity (symbol-name affinity)))
 
+(defun emacsvox-aural--timeline-text-offset-position
+    (span-id utf8-offset affinity)
+  "Return an internal UTF-8 position in SPAN-ID at UTF8-OFFSET."
+  (list
+   :position "text_offset"
+   :span_id span-id
+   :utf8_offset utf8-offset
+   :affinity (symbol-name affinity)))
+
 (defun emacsvox-aural--timeline-lifecycle (action)
   "Return ACTION's valid lifecycle anchor as a JSON string."
   (symbol-name
@@ -644,9 +661,11 @@ recorded plans contain no speech span and therefore require legacy lowering."
           (when semantic-value
             (push (cons wire-id (copy-tree semantic-value)) bindings)))
          (add-action
-          (action span-id affinity context)
+          (action span-id affinity context &optional explicit-position)
           (let* ((position
-                  (emacsvox-aural--timeline-position span-id affinity))
+                  (or
+                   explicit-position
+                   (emacsvox-aural--timeline-position span-id affinity)))
                  (lifecycle
                   (emacsvox-aural--timeline-lifecycle action))
                  (semantic-value
@@ -747,7 +766,8 @@ recorded plans contain no speech span and therefore require legacy lowering."
             (string-empty-p
              (emacsvox-aural-concrete-action-text action))))))
       (dolist (run runs)
-        (pcase-let* ((`(,plan ,text ,pause) run)
+        (pcase-let* ((`(,plan ,text ,pause . ,extra) run)
+                     (positioned-actions (car extra))
                      (content (emacsvox-aural-concrete-plan-content plan))
                      (context (emacsvox-aural-concrete-plan-context plan))
                      (pending (and pause (list pause)))
@@ -780,6 +800,21 @@ recorded plans contain no speech span and therefore require legacy lowering."
               (emacsvox-aural-concrete-content-balance content)
               nil pending context)
              pending nil))
+          (dolist (positioned positioned-actions)
+            (let ((offset (plist-get positioned :utf8-offset)))
+              (unless
+                  (and last-span (integerp offset)
+                       (>= offset 0) (<= offset (string-bytes text)))
+                (emacsvox-aural--transport-error
+                 "Invalid positioned action offset %S for %S" offset text))
+              (dolist
+                  (entry (plist-get positioned :actions))
+                (add-action
+                 (emacsvox-aural-concrete-positioned-action-action entry)
+                 last-span 'before
+                 (emacsvox-aural-concrete-positioned-action-context entry)
+                 (emacsvox-aural--timeline-text-offset-position
+                  last-span offset 'before)))))
           (dolist (action (emacsvox-aural-concrete-plan-after plan))
             (if (speech-action-p action)
                 (progn
@@ -984,20 +1019,25 @@ run's leading transport pause."
 (defun emacsvox-aural--coalescible-concrete-runs-p (left right)
   "Return non-nil when adjacent concrete runs LEFT and RIGHT can be joined.
 
-Each run is a list of PLAN, final text, and an optional leading pause."
+Each run contains PLAN, final text, an optional leading pause, and optional
+positioned actions."
   (pcase-let
-      ((`(,left-plan ,left-text ,_) left)
-       (`(,right-plan ,right-text ,right-pause) right))
+      ((`(,left-plan ,left-text ,_ . ,left-extra) left)
+       (`(,right-plan ,right-text ,right-pause . ,right-extra) right))
     (let ((left-content
            (emacsvox-aural-concrete-plan-content left-plan))
           (right-content
-           (emacsvox-aural-concrete-plan-content right-plan)))
+           (emacsvox-aural-concrete-plan-content right-plan))
+          (left-positioned (car left-extra))
+          (right-positioned (car right-extra)))
       (and
        (not right-pause)
        (stringp left-text)
        (not (string-empty-p left-text))
        (stringp right-text)
        (not (string-empty-p right-text))
+       (null left-positioned)
+       (null right-positioned)
        (emacsvox-aural-concrete-content-speak left-content)
        (emacsvox-aural-concrete-content-speak right-content)
        (emacsvox-aural-concrete-plan-object-id left-plan)
@@ -1040,10 +1080,10 @@ Each run is a list of PLAN, final text, and an optional leading pause."
 (defun emacsvox-aural-queue-concrete-runs (runs)
   "Queue adjacent concrete RUNS without artificial speech boundaries.
 
-Each entry in RUNS is a list of PLAN, final text, and an optional leading
-pause.  Adjacent runs are coalesced only within one aural object when their
-effective speech transport settings match and no action or pause separates
-them."
+Each entry in RUNS contains PLAN, final text, an optional leading pause, and
+optional positioned actions.  Adjacent runs are coalesced only within one
+aural object when their effective speech transport settings match and no
+action or pause separates them."
   (let* ((structured (emacsvox-aural--structured-capture-p))
          (emacsvox-aural--delivery-entry-kind
           (if structured 'structured-fallback
@@ -1053,7 +1093,7 @@ them."
     (when structured
       (dolist (run runs)
         (emacsvox-aural--capture-structured-run
-         (car run) (nth 1 run) (nth 2 run))))
+         (car run) (nth 1 run) (nth 2 run) (nth 3 run))))
     (cl-labels
         ((flush
           ()
@@ -1061,7 +1101,7 @@ them."
             (setq group (nreverse group))
             (if (cdr group)
                 (emacsvox-aural--queue-concrete-run-group group)
-              (pcase-let ((`(,plan ,text ,pause) (car group)))
+              (pcase-let ((`(,plan ,text ,pause . ,_) (car group)))
                 (when pause
                   (tts--protocol-silence pause))
                 (let ((emacsvox-aural--queued-run-leading-pause pause))
@@ -1095,7 +1135,7 @@ cleanup, without rerunning semantic or contextual resolution."
             (emacsvox-aural-concrete-content-text content))))
     (when (and structured (not emacsvox-aural--structured-runs-recorded-p))
       (emacsvox-aural--capture-structured-run
-       plan payload emacsvox-aural--queued-run-leading-pause))
+       plan payload emacsvox-aural--queued-run-leading-pause nil))
     (let ((context (emacsvox-aural-concrete-plan-context plan)))
       (dolist (action (emacsvox-aural-concrete-plan-before plan))
         (emacsvox-aural-queue-concrete-action action context)))

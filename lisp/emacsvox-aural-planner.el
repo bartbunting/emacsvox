@@ -400,6 +400,69 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
           (emacsvox-aural-concrete-plan-object-end-p concrete) last-p)
     concrete))
 
+(defun emacsvox-aural--compile-positioned-facts (facts context)
+  "Compile semantic FACTS into actions frozen at one source position."
+  (unless
+      (and (listp facts) (proper-list-p facts)
+           (zerop (% (length facts) 2)))
+    (emacsvox-aural--transport-error
+     "Positioned semantic facts must be a plist: %S" facts))
+  (let* ((render
+          (emacsvox-aural-resolve-active-inputs
+           (list (cons facts context)) 'run))
+         (concrete (emacsvox-aural-compile-plan render facts context))
+         (actions
+          (append
+           (emacsvox-aural-concrete-plan-before concrete)
+           (emacsvox-aural-concrete-plan-after concrete))))
+    (when
+        (cl-some
+         (lambda (action)
+           (eq (emacsvox-aural-concrete-action-kind action) 'speech))
+         actions)
+      (emacsvox-aural--transport-error
+       "Positioned speech actions require a speech-span boundary: %S" facts))
+    (mapcar
+     (lambda (action)
+       (emacsvox-aural--make-concrete-positioned-action
+        :action action :context (copy-tree context)))
+     actions)))
+
+(defun emacsvox-aural--prepare-positioned-actions (text start end)
+  "Compile positioned semantic facts between START and END in TEXT."
+  (let ((position start))
+    (while (< position end)
+      (when-let* ((entries
+                   (get-text-property
+                    position emacsvox-aural-positioned-facts-property text)))
+        (unless (and (listp entries) (proper-list-p entries))
+          (emacsvox-aural--transport-error
+           "Positioned semantic facts must be a list: %S" entries))
+        (let* ((plan
+                (get-text-property
+                 position emacsvox-aural-concrete-plan-property text))
+               (context
+                (and plan (emacsvox-aural-concrete-plan-context plan)))
+               actions)
+          (unless context
+            (emacsvox-aural--transport-error
+             "Positioned semantic facts have no concrete source context"))
+          (dolist (facts entries)
+            (setq
+             actions
+             (append
+              actions
+              (emacsvox-aural--compile-positioned-facts facts context))))
+          (when actions
+            (add-text-properties
+             position (1+ position)
+             (list emacsvox-aural-concrete-positioned-actions-property actions)
+             text))))
+      (setq
+       position
+       (next-single-property-change
+        position emacsvox-aural-positioned-facts-property text end)))))
+
 (defun emacsvox-aural--prepare-object
     (text start end base-facts base-context object-id
           &optional compatibility-actions)
@@ -457,7 +520,8 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
           (emacsvox-aural-source-run-start run)
           (emacsvox-aural-source-run-end run)
           (list emacsvox-aural-concrete-plan-property concrete)
-          text))))))
+          text))))
+    (emacsvox-aural--prepare-positioned-actions text start end)))
 
 (defun emacsvox-aural-prepare-text
     (text &optional facts context compatibility-actions)

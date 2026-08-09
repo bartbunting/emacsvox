@@ -28,6 +28,10 @@
   'emacsvox-aural-concrete-plan
   "Text property holding a source-resolved concrete plan.")
 
+(defconst emacsvox-aural-concrete-positioned-actions-property
+  'emacsvox-aural-concrete-positioned-actions
+  "Text property holding compiled actions anchored inside speech content.")
+
 (cl-defstruct
     (emacsvox-aural-concrete-action
      (:constructor emacsvox-aural--make-concrete-action))
@@ -48,6 +52,12 @@
   voice-request voice-style voice-provenance voice-capability
   voice-degradations
   requested-volume volume-capability volume-degradation)
+
+(cl-defstruct
+    (emacsvox-aural-concrete-positioned-action
+     (:constructor emacsvox-aural--make-concrete-positioned-action))
+  "One compiled ACTION and its frozen source CONTEXT at a text position."
+  action context)
 
 (cl-defstruct
     (emacsvox-aural-compiled-voice
