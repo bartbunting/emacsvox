@@ -98,6 +98,96 @@
            :type 'user-error))
       (set-default 'emacsvox-indentation-presentation original))))
 
+(ert-deftest emacsvox-indentation-facts-calibrate-duration-and-pitch-tones ()
+  "Indentation modes publish stable duration or rising-pitch tone facts."
+  (let ((emacsvox-audio-indentation t)
+        (emacsvox-indentation-pitch-tone-base 250.0)
+        (emacsvox-indentation-pitch-tone-semitones-per-column 1.0)
+        (emacsvox-indentation-pitch-tone-maximum 500.0)
+        (emacsvox-indentation-pitch-tone-duration 10))
+    (let* ((emacsvox-indentation-presentation 'duration-tone)
+           (shallow (emacsvox-speak--indentation-facts 1))
+           (deeper (emacsvox-speak--indentation-facts 5)))
+      (should (= (plist-get shallow :indentation-tone-pitch) 250.0))
+      (should (= (plist-get deeper :indentation-tone-pitch) 250.0))
+      (should (= (plist-get shallow :indentation-tone-duration) 70))
+      (should (= (plist-get deeper :indentation-tone-duration) 150)))
+    (let* ((emacsvox-indentation-presentation 'pitch-tone)
+           (shallow (emacsvox-speak--indentation-facts 1))
+           (deeper (emacsvox-speak--indentation-facts 5))
+           (capped (emacsvox-speak--indentation-facts 100))
+           (minimum-duration
+            (emacsvox-speak--blank-line-tone-duration)))
+      (should (= (plist-get shallow :indentation-tone-pitch) 250.0))
+      (should
+       (>
+        (plist-get deeper :indentation-tone-pitch)
+        (plist-get shallow :indentation-tone-pitch)))
+      (should (= (plist-get capped :indentation-tone-pitch) 500.0))
+      (should
+       (=
+        (plist-get shallow :indentation-tone-duration)
+        minimum-duration)))
+    (let ((emacsvox-indentation-presentation 'spoken))
+      (let ((facts (emacsvox-speak--indentation-facts 3)))
+        (should (= (plist-get facts :indentation-columns) 3))
+        (should-not (plist-member facts :indentation-tone-pitch))))
+    (let ((emacsvox-indentation-presentation 'custom))
+      (should
+       (equal
+        (emacsvox-speak--indentation-facts 2)
+        '(:events (indentation-located)
+          :indentation-columns 2
+          :indentation-presentation custom))))
+    (let ((emacsvox-indentation-presentation 'none))
+      (should-not (emacsvox-speak--indentation-facts 2)))
+    (let ((emacsvox-audio-indentation nil)
+          (emacsvox-indentation-presentation 'pitch-tone))
+      (should-not (emacsvox-speak--indentation-facts 2)))))
+
+(ert-deftest emacsvox-indentation-annotation-composes-at-content-boundary ()
+  "Indentation facts merge before content without replacing source text."
+  (let* ((text (copy-sequence "  value"))
+         (facts
+          '(:events (indentation-located)
+            :indentation-columns 2
+            :indentation-presentation spoken)))
+    (add-text-properties
+     2 3
+     (list
+      emacsvox-aural-facts-property
+      '(:events (point-located) :point-position beginning))
+     text)
+    (emacsvox-speak--annotate-indentation text facts)
+    (should (equal (substring-no-properties text) "  value"))
+    (should-not
+     (get-text-property 0 emacsvox-aural-facts-property text))
+    (let ((merged
+           (get-text-property 2 emacsvox-aural-facts-property text)))
+      (should (memq 'point-located (plist-get merged :events)))
+      (should (memq 'indentation-located (plist-get merged :events)))
+      (should (= (plist-get merged :indentation-columns) 2)))))
+
+(ert-deftest emacsvox-line-indentation-no-longer-injects-spoken-text ()
+  "Line extraction leaves source intact and publishes indentation facts."
+  (with-temp-buffer
+    (insert "  value")
+    (goto-char (point-min))
+    (let ((emacsvox-audio-indentation t)
+          (emacsvox-indentation-presentation 'spoken)
+          (emacsvox-show-point nil)
+          (tts-punctuation-mode 'all)
+          spoken)
+      (emacsvox-speak-line-with-speaker
+       (lambda (text) (setq spoken text)))
+      (should (equal (substring-no-properties spoken) "  value"))
+      (let ((facts
+             (get-text-property
+              2 emacsvox-aural-facts-property spoken)))
+        (should (equal (plist-get facts :events) '(indentation-located)))
+        (should (= (plist-get facts :indentation-columns) 2))
+        (should (eq (plist-get facts :indentation-presentation) 'spoken))))))
+
 (ert-deftest emacsvox-spelling-publishes-capitals-without-spoken-prefixes ()
   "Spelling preserves uppercase source text for the selected aural cue."
   (let (spoken)

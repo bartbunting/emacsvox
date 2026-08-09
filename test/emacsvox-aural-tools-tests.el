@@ -37,6 +37,17 @@
     core-point-voice-earcon-after
     core-point-spoken-before
     core-point-spoken-after
+    core-indentation-spoken
+    core-indentation-duration-tone
+    core-indentation-pitch-tone
+    core-indentation-spoken-duration-tone
+    core-indentation-spoken-pitch-tone
+    core-capital-spoken
+    core-all-caps-spoken
+    core-capital-tone
+    core-all-caps-tone
+    core-capital-spoken-tone
+    core-all-caps-spoken-tone
     core-edit-deletion-tone
     core-edit-line-created-tone
     core-edit-uppercase-tone

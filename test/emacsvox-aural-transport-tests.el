@@ -4147,6 +4147,47 @@ is the default inherited by a newly created TTS scratch buffer."
            (emacsvox-aural-concrete-plan-content plan))
           (emacsvox-test--transport-adapter-command 'voice-bolden)))))))
 
+(ert-deftest emacsvox-aural-transport-indentation-compiles-at-source ()
+  "Line indentation facts freeze a rising tone without changing source text."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme nil)
+    (let ((emacsvox-audio-indentation t)
+          (emacsvox-indentation-presentation 'pitch-tone)
+          (emacsvox-indentation-pitch-tone-base 250.0)
+          (emacsvox-indentation-pitch-tone-semitones-per-column 1.0)
+          (emacsvox-indentation-pitch-tone-maximum 2000.0)
+          (emacsvox-indentation-pitch-tone-duration 10)
+          (emacsvox-show-point nil)
+          (tts-punctuation-mode 'all)
+          line
+          prepared)
+      (with-temp-buffer
+        (insert "    value")
+        (goto-char (point-min))
+        (emacsvox-speak-line-with-speaker
+         (lambda (text) (setq line text)))
+        (setq
+         prepared
+         (emacsvox-aural-prepare-text
+          line nil
+          '(:mode text-mode :occasion navigation
+            :voice-lock-enabled t))))
+      (should (equal (substring-no-properties prepared) "    value"))
+      (let* ((plan
+              (get-text-property
+               4 emacsvox-aural-concrete-plan-property prepared))
+             (action
+              (car (emacsvox-aural-concrete-plan-before plan))))
+        (should (eq (emacsvox-aural-concrete-action-kind action) 'tone))
+        (should
+         (>
+          (emacsvox-aural-concrete-action-pitch action)
+          emacsvox-indentation-pitch-tone-base))
+        (should
+         (>=
+          (emacsvox-aural-concrete-action-duration action)
+          (emacsvox-speak--blank-line-tone-duration)))))))
+
 (ert-deftest emacsvox-aural-transport-notification-captures-before-logging ()
   "Notification logging cannot replace the source buffer context."
   (let ((destination (generate-new-buffer " *notification-log*"))

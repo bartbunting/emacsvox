@@ -1780,6 +1780,74 @@ An existing file is copied to FILE~ before replacement."
          (:after
           ((:id core-point-spoken-after-action
             :kind speech :text "point" :voice annotate :anchor run))))
+        (:id core-indentation-spoken
+         :match
+         (:event indentation-located :indentation-presentation spoken
+          :requires (indentation-columns))
+         :render
+         (:before
+          ((:id core-indentation-spoken-action
+            :kind speech :text-template "indent {indentation-columns}"
+            :voice indent :anchor run))))
+        (:id core-indentation-duration-tone
+         :match
+         (:event indentation-located
+          :indentation-presentation duration-tone
+          :requires
+          (indentation-tone-pitch indentation-tone-duration))
+         :render
+         (:before
+          ((:id core-indentation-duration-tone-action
+            :kind tone
+            :pitch (:fact indentation-tone-pitch)
+            :duration (:fact indentation-tone-duration)
+            :anchor run))))
+        (:id core-indentation-pitch-tone
+         :match
+         (:event indentation-located :indentation-presentation pitch-tone
+          :requires
+          (indentation-tone-pitch indentation-tone-duration))
+         :render
+         (:before
+          ((:id core-indentation-pitch-tone-action
+            :kind tone
+            :pitch (:fact indentation-tone-pitch)
+            :duration (:fact indentation-tone-duration)
+            :anchor run))))
+        (:id core-indentation-spoken-duration-tone
+         :match
+         (:event indentation-located
+          :indentation-presentation spoken-duration-tone
+          :requires
+          (indentation-columns indentation-tone-pitch
+           indentation-tone-duration))
+         :render
+         (:before
+          ((:id core-indentation-spoken-duration-action
+            :kind speech :text-template "indent {indentation-columns}"
+            :voice indent :anchor run)
+           (:id core-indentation-spoken-duration-tone-action
+            :kind tone
+            :pitch (:fact indentation-tone-pitch)
+            :duration (:fact indentation-tone-duration)
+            :anchor run))))
+        (:id core-indentation-spoken-pitch-tone
+         :match
+         (:event indentation-located
+          :indentation-presentation spoken-pitch-tone
+          :requires
+          (indentation-columns indentation-tone-pitch
+           indentation-tone-duration))
+         :render
+         (:before
+          ((:id core-indentation-spoken-pitch-action
+            :kind speech :text-template "indent {indentation-columns}"
+            :voice indent :anchor run)
+           (:id core-indentation-spoken-pitch-tone-action
+            :kind tone
+            :pitch (:fact indentation-tone-pitch)
+            :duration (:fact indentation-tone-duration)
+            :anchor run))))
         (:id core-capital-spoken
          :match
          (:event capitalization-located :capitalization-kind capital

@@ -622,6 +622,91 @@ The actual duration is never shorter than the registered blank-line tone."
   :type 'integer
   :group 'emacsvox-aural)
 
+(defconst emacsvox-speak--indentation-duration-tone-pitch 250.0
+  "Fixed pitch in hertz for duration-coded indentation tones.")
+
+(defconst emacsvox-speak--indentation-duration-tone-base 50
+  "Base duration in milliseconds for duration-coded indentation tones.")
+
+(defconst emacsvox-speak--indentation-duration-tone-per-column 20
+  "Milliseconds added per indentation column in duration-coded tones.")
+
+(defun emacsvox-speak--blank-line-tone-duration ()
+  "Return the registered blank-line tone duration in milliseconds."
+  (if-let* ((tone (emacsvox-aural-tone 'line-empty)))
+      (ceiling (emacsvox-aural-tone-duration tone))
+    150))
+
+(defun emacsvox-speak--indentation-pitch (columns)
+  "Return rising indentation pitch in hertz for COLUMNS."
+  (let* ((base (max 1.0 (float emacsvox-indentation-pitch-tone-base)))
+         (step
+          (max
+           0.0
+           (float emacsvox-indentation-pitch-tone-semitones-per-column)))
+         (maximum
+          (max base (float emacsvox-indentation-pitch-tone-maximum)))
+         (semitones (* (max 0 (1- columns)) step)))
+    (min maximum (* base (expt 2.0 (/ semitones 12.0))))))
+
+(defun emacsvox-speak--indentation-tone-values (columns presentation)
+  "Return the pitch and duration pair for COLUMNS and PRESENTATION."
+  (pcase presentation
+    ((or 'duration-tone 'spoken-duration-tone)
+     (cons
+      emacsvox-speak--indentation-duration-tone-pitch
+      (+
+       emacsvox-speak--indentation-duration-tone-base
+       (* emacsvox-speak--indentation-duration-tone-per-column columns))))
+    ((or 'pitch-tone 'spoken-pitch-tone)
+     (cons
+      (emacsvox-speak--indentation-pitch columns)
+      (max
+       (emacsvox-speak--blank-line-tone-duration)
+       (ceiling (max 0 emacsvox-indentation-pitch-tone-duration)))))))
+
+(defun emacsvox-speak--indentation-facts (columns)
+  "Return semantic indentation facts for COLUMNS, or nil when disabled."
+  (when
+      (and
+       emacsvox-audio-indentation
+       (> columns 0)
+       (memq
+        emacsvox-indentation-presentation
+        emacsvox-indentation-presentation-values)
+       (not (eq emacsvox-indentation-presentation 'none)))
+    (let ((facts
+           (list
+            :events '(indentation-located)
+            :indentation-columns columns
+            :indentation-presentation emacsvox-indentation-presentation)))
+      (when-let*
+          ((tone
+            (emacsvox-speak--indentation-tone-values
+             columns emacsvox-indentation-presentation)))
+        (setq
+         facts
+         (append
+          facts
+          (list
+           :indentation-tone-pitch (car tone)
+           :indentation-tone-duration (cdr tone)))))
+      facts)))
+
+(defun emacsvox-speak--annotate-indentation (text facts)
+  "Attach indentation FACTS before the first speakable character in TEXT."
+  (when (and facts (> (length text) 0))
+    (let* ((offset (or (string-match "[^ \t]" text) 0))
+           (existing
+            (get-text-property offset emacsvox-aural-facts-property text)))
+      (add-text-properties
+       offset (1+ offset)
+       (list
+        emacsvox-aural-facts-property
+        (emacsvox-aural-merge-facts existing facts))
+       text)))
+  text)
+
 (defun emacsvox-set-indentation-presentation (presentation &optional global)
   "Select indentation PRESENTATION and preview the current line.
 
@@ -1092,11 +1177,10 @@ interruption so native submissions can apply their complete delivery policy."
         (when speakable
           (when
               (and (null arg) indent (> indent 0))
-            (setq indent
-                  (propertize
-                   (format "indent %d" indent)
-                   'personality voice-indent))
-            (setq line (concat indent line)))
+            (setq
+             line
+             (emacsvox-speak--annotate-indentation
+              line (emacsvox-speak--indentation-facts indent))))
           (when linenum
             (setq linenum (format "%d" linenum))
             (setq linenum (propertize linenum 'personality voice-lighten))
