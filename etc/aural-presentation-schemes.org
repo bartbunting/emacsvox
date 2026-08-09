@@ -3813,6 +3813,37 @@ Shell and Omnivox failures remain.  Compiled Aural parity, normal build-tree
 startup, the Aural audit and generated reference, and all 27 semantic traces
 pass.
 
+** DONE Slice 61: Capitalization and Indentation Presentation
+CLOSED: [2026-08-09 Sun]
+
+- Keep =tts-caps= and =emacsvox-audio-indentation= as buffer-local master
+  switches.  Add independent presentation selectors with =custom= and =none=
+  choices so enablement and modality are no longer conflated.
+- Preserve capitalized source text and publish =capitalization-located= facts
+  at capital and whole all-caps boundaries.  Resolve spoken labels, tones, or
+  their combination through ordinary Aural Presentation rules instead of
+  inserting “cap” into queued speech.
+- Negotiate =capitalization_presentation_v1= with Omnivox so its isolated
+  letter command follows the same selection.  Keep queued capitalization in
+  Emacs's semantic cascade and disable duplicate server-side scanning.
+- Preserve indentation whitespace and publish =indentation-located= at the
+  first content character.  Provide spoken column, fixed-pitch duration-coded
+  tone, fixed-duration rising-pitch tone, and both spoken combinations.
+- Make rising pitch configurable in musical semitone steps with a maximum
+  frequency.  Clamp its fixed duration to at least the registered blank-line
+  tone duration so deeper indentation changes pitch, not cue length.
+- Allow inline tone pitch and duration to read numeric semantic facts through
+  =(:fact ATTRIBUTE)=.  Freeze those values into the concrete plan before
+  queueing, like other presentation decisions.
+- Pair the existing lower-case toggles with upper-case selectors under the TTS
+  prefix: =C-e d c= / =C-e d C= for capitalization and
+  =C-e d i= / =C-e d I= for indentation.
+
+Deliverable: queued text, spelling, phonetic spelling, immediate letters, and
+line speech use explicit semantic presentation choices without rewriting the
+source.  Indentation depth can be heard either as duration or as rising pitch,
+and personal rules can replace every built-in modality.
+
 ** Deferred Cross-Repository Work Retained by the Plan
 
 Voice Workbench completion does not imply that the remaining Omnivox engine

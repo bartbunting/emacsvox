@@ -305,6 +305,8 @@
    ("C-n" tts-notify-initialize)
    ("C-o" outloud)
    ("C-v" global-voice-lock-mode)
+   ("C" emacsvox-set-capitalization-presentation)
+   ("I" emacsvox-set-indentation-presentation)
    ("d" tts-select-server)
    ("L" tts-local-server)
    ("N" tts-set-next-language)

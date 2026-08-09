@@ -163,6 +163,9 @@ Operational semantic contract version: =1=.
 | =boundary-entered= | =event= | =core= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Navigation arrived at a source-code boundary |
 | =buffer-entry= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A buffer represented in a buffer list or selector |
 | =candidate= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | One available completion candidate |
+| =capitalization-kind= | =attribute= | =core= | =capital=, =all-caps= | - | - | - | - | - | =before= | - | Whether a boundary begins one capital or an all-capitals run |
+| =capitalization-located= | =event= | =core= | - | - | - | - | - | - | - | - | A spoken text boundary begins capitalized content |
+| =capitalization-presentation= | =attribute= | =core= | =spoken=, =tone=, =spoken-tone=, =custom= | - | - | - | - | - | =before= | - | The user-requested presentation for capitalization |
 | =checked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is complete |
 | =code-construct= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =edit=, =state-change=, =inspection= | =before=, =content=, =after= | - | A structural construct in source code |
 | =code-edit-kind= | =attribute= | =core= | =symbol= | =code-construct= | - | - | - | - | - | - | The editing operation applied to source code |
@@ -230,6 +233,11 @@ Operational semantic contract version: =1=.
 | =game-status= | =role= | =core= | - | - | - | - | - | =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | Overall state or progress of an interactive game |
 | =has-attachments= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A message contains one or more attachments |
 | =heading= | =role= | =core= | - | - | - | - | - | - | - | - | A titled structural section |
+| =indentation-columns= | =attribute= | =core= | =integer= | - | - | - | - | - | =before= | - | The visual-column width of leading line indentation |
+| =indentation-located= | =event= | =core= | - | - | - | - | - | - | - | - | A spoken line has leading indentation |
+| =indentation-presentation= | =attribute= | =core= | =spoken=, =duration-tone=, =pitch-tone=, =spoken-duration-tone=, =spoken-pitch-tone=, =custom= | - | - | - | - | - | =before= | - | The user-requested presentation for line indentation |
+| =indentation-tone-duration= | =attribute= | =core= | =integer= | - | - | - | - | - | =before= | - | Computed indentation tone duration in milliseconds |
+| =indentation-tone-pitch= | =attribute= | =core= | =number= | - | - | - | - | - | =before= | - | Computed indentation tone pitch in hertz |
 | =learning-answer-revealed= | =event= | =org-srs= | - | =learning-item= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A learning item's answer was revealed |
 | =learning-cloze-updated= | =event= | =org-srs= | - | =learning-item= | - | - | - | =edit=, =state-change=, =notification= | =before=, =content=, =after= | - | The cloze items in an Org entry were updated |
 | =learning-item= | =role= | =org-srs= | - | - | - | - | - | =navigation=, =state-change=, =notification=, =inspection=, =edit= | =before=, =content=, =after= | - | A question and answer reviewed through spaced repetition |
@@ -372,7 +380,7 @@ Operational semantic contract version: =1=.
 
 | Identifier | Provided By | Parent | Sound Pack | Voice Palette | Rules | Intent |
 |------------+-------------+--------+------------+---------------+-------+--------|
-| =default= | Emacsvox core | - | =chimes= | =acss-default= | =23= | Compatibility-preserving Emacsvox presentation |
+| =default= | Emacsvox core | - | =chimes= | =acss-default= | =34= | Compatibility-preserving Emacsvox presentation |
 
 * Built-in Presentation Options
 
@@ -518,6 +526,8 @@ A tone action names a registered tone with =:tone=.  The rule remains backend-in
 |------------+------------+---------------+--------------+-------+--------|
 | =buffer-modified= | =700= | =100= | - | =core= | A buffer has unsaved modifications |
 | =buffer-read-only= | =250= | =100= | - | =core= | A buffer is read-only |
+| =capital-all-caps-tone= | =1300= | =20= | - | =core= | An all-capitals word begins at this text boundary |
+| =capital-letter-tone= | =440= | =20= | - | =core= | A capitalized character begins at this text boundary |
 | =completion-separator= | =500= | =50= | - | =core= | A completion separator was inserted |
 | =edit-deletion= | =500= | =75= | =t= | =core= | Text was deleted |
 | =edit-line-created= | =225= | =75= | =t= | =core= | A new line was created |

@@ -95,7 +95,21 @@ The =emacsvox-show-point= line marker is now configurable through
 micro-tone, earcon, combined, spoken, custom-rule, and silent styles.  A prefix
 argument also changes the global default.  Non-voice markers are placed at the
 exact point boundary; the =custom= style exposes registered point facts for
-personal presentation rules.  Sentence and clause chunking no longer repeats
+personal presentation rules.
+
+Capitalization and indentation indication now separate enablement from
+presentation.  =C-e d c= and =C-e d i= remain the master toggles;
+=C-e d C= selects spoken, tone, combined, custom-rule, or silent
+capitalization, while =C-e d I= selects spoken indentation, a duration-coded
+tone, a fixed-duration rising-pitch tone, either spoken combination, custom
+rules, or silence.  Prefixing either selector also changes its global default.
+Queued capitalization and indentation retain their source text and publish
+semantic boundary facts for the Aural Presentation cascade.  Omnivox
+negotiates the same capitalization selection for isolated letters.  The
+rising indentation tone increases pitch with indentation and is never shorter
+than the registered blank-line tone.
+
+Sentence and clause chunking no longer repeats
 an object or run boundary action within one formatting run, and blank or
 whitespace-only visual lines no longer stack a physical-line boundary earcon
 on their existing line-condition feedback.  The native Windows Eloquence

@@ -220,6 +220,24 @@ style.  Point actions in personal rules should use =:anchor run= to stay at
 the marked text boundary.  The existing =emacsvox-show-point= option remains
 the master switch.
 
+Capitalization and indentation use the same master-switch-plus-presentation
+model.  =C-e d c= toggles capitalization indication and =C-e d C= selects
+=spoken=, =tone=, =spoken-tone=, =custom=, or =none=.  The selected aural
+presentation applies to capitalized boundaries and all-caps runs in queued
+speech without inserting the words “cap” into the source text.  A current
+Omnivox server also applies it to isolated letters; older speech servers retain
+their existing isolated-letter behavior.
+
+=C-e d i= toggles indentation indication and =C-e d I= selects spoken column,
+fixed-pitch duration-coded tone, fixed-duration rising-pitch tone, either tone
+combined with speech, =custom=, or =none=.  Rising pitch starts at
+=emacsvox-indentation-pitch-tone-base=, rises by the configured semitones per
+column, and is capped at =emacsvox-indentation-pitch-tone-maximum=.  Its
+duration is never shorter than the registered blank-line tone.  Both selector
+commands change the current buffer and preview the result; use =C-u= to also
+change the global default.  The =custom= choices publish semantic facts for
+personal Aural Presentation rules without imposing built-in output.
+
 The compatibility baseline is an implementation layer, not a user-selectable
 configuration.  Mode compatibility is supplied separately and automatically.
 Ordered Presentation Options compose above those defaults, and personal,
