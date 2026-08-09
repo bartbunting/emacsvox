@@ -20,7 +20,7 @@
 (declare-function emacsvox-aural-enable-relative-rate
                   "emacsvox-aural-transport" (process))
 (declare-function emacsvox-aural-enable-structured-timeline
-                  "emacsvox-aural-transport" (process))
+                  "emacsvox-aural-transport" (process &optional version))
 (declare-function emacsvox-aural-effective-voice-entries
                   "emacsvox-aural-resources" (palette-id &optional path))
 (declare-function emacsvox-aural-effective-voice-palette
@@ -1410,8 +1410,16 @@ logical registry is replaced, so partial failure is explicit and retryable."
       t))
     (when (member "emacsvox_tx" (plist-get response :features))
       (emacsvox-aural-enable-framed-delivery process))
-    (when (member "presentation_timeline_v1" (plist-get response :features))
-      (emacsvox-aural-enable-structured-timeline process))
+    (cond
+     ((member "presentation_timeline_v2" (plist-get response :features))
+      (emacsvox-aural-enable-structured-timeline process 2))
+     ((member "presentation_timeline_v1" (plist-get response :features))
+      (emacsvox-aural-enable-structured-timeline process 1)
+      (omnivox--record-control-error
+       process
+       '(:type "error" :code "upgrade_required"
+         :message
+         "Omnivox timeline V2 is required; rebuild and restart the server"))))
     (when (member "relative_rate_v1" (plist-get response :features))
       (emacsvox-aural-enable-relative-rate process))
     (when (eq process tts-speaker-process)

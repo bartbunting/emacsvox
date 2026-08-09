@@ -56,9 +56,7 @@ their concrete audio resources do not use the speech queue."
   (and
    (processp tts-speaker-process)
    (process-live-p tts-speaker-process)
-   (process-get
-    tts-speaker-process
-    emacsvox-aural--structured-timeline-process-property)))
+   (emacsvox-aural-structured-timeline-available-p)))
 
 (defun emacsvox-aural-preview-compiled-voice-plan (compiled text)
   "Return a concrete preview plan for COMPILED voice speaking TEXT.

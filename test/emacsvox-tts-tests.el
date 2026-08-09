@@ -736,6 +736,44 @@
             process tts--capitalization-presentation-property)))
       (delete-process process))))
 
+(ert-deftest emacsvox-tts-omnivox-negotiates-timeline-v2-only ()
+  "The adapter records V1 as an upgrade error and enables only timeline V2."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-omnivox-timeline-capability-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (omnivox-control-last-error nil))
+    (unwind-protect
+        (progn
+          (omnivox--handle-capabilities-response
+           process
+           '(:type "capabilities" :server_version "1.3.0"
+             :supported_protocol_versions (1)
+             :features ("presentation_timeline_v1")))
+          (should
+           (=
+            (process-get
+             process emacsvox-aural--structured-timeline-process-property)
+            1))
+          (should
+           (equal
+            (plist-get
+             (plist-get omnivox-control-last-error :response) :code)
+            "upgrade_required"))
+          (omnivox--handle-capabilities-response
+           process
+           '(:type "capabilities" :server_version "1.3.0"
+             :supported_protocol_versions (1)
+             :features ("presentation_timeline_v2")))
+          (should
+           (=
+            (process-get
+             process emacsvox-aural--structured-timeline-process-property)
+            2))
+          (should (emacsvox-aural-structured-timeline-available-p)))
+      (delete-process process))))
+
 (ert-deftest emacsvox-tts-omnivox-preserves-structured-voice-selectors ()
   "Logical preferences keep engine IDs separate from native voice IDs."
   (let* ((omnivox-logical-voice-preferences

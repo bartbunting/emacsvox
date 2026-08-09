@@ -405,9 +405,11 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (seq-find
            (lambda (action) (equal (plist-get action :type) "tone"))
            actions)))
-    (should (= (plist-get envelope :protocol_version) 1))
+    (should (= (plist-get envelope :protocol_version) 2))
     (should (= (plist-get envelope :generation) 7))
     (should (= (plist-get envelope :dispatch_id) 19))
+    (should (equal (plist-get envelope :delivery_policy) "ordered"))
+    (should-not (plist-member envelope :replacement_key))
     (should (equal (plist-get span :text) "Hello"))
     (should (equal (plist-get span :logical_voice_id) "heading"))
     (should-not (plist-member (plist-get span :acss) :rate))
@@ -440,6 +442,78 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         actions))
       2))
     (should (= (length (cadr built)) 4))))
+
+(ert-deftest emacsvox-aural-structured-timeline-preserves-delivery-policy ()
+  "Version 2 carries ordered, urgent, and keyed replacement semantics."
+  (let ((plan
+         (emacsvox-aural--make-concrete-plan
+          :content
+          (emacsvox-aural--make-concrete-content
+           :text "Policy" :speak t)
+          :context '(:icons-enabled nil))))
+    (dolist
+        (case
+         '((ordered nil "ordered" nil)
+           (urgent nil "urgent" nil)
+           (replaceable navigation "replaceable" "navigation")))
+      (let* ((emacsvox-aural-submission-delivery-policy (nth 0 case))
+             (emacsvox-aural-submission-replacement-key (nth 1 case))
+             (envelope
+              (car
+               (emacsvox-aural--build-structured-timeline
+                8 20 (list (list plan "Policy" nil))))))
+        (should (= (plist-get envelope :protocol_version) 2))
+        (should (equal (plist-get envelope :delivery_policy) (nth 2 case)))
+        (if (nth 3 case)
+            (should
+             (equal (plist-get envelope :replacement_key) (nth 3 case)))
+          (should-not (plist-member envelope :replacement_key)))))))
+
+(ert-deftest emacsvox-aural-structured-timeline-bounds-replacement-key ()
+  "Replacement identity is rejected before an invalid timeline is written."
+  (let* ((emacsvox-aural-submission-delivery-policy 'replaceable)
+         (emacsvox-aural-submission-replacement-key (make-string 129 ?x))
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content :text "Bounded" :speak t)
+           :context '(:icons-enabled nil))))
+    (should-error
+     (emacsvox-aural--build-structured-timeline
+      1 1 (list (list plan "Bounded" nil)))
+     :type 'error)))
+
+(ert-deftest emacsvox-aural-structured-timeline-matches-interop-fixtures ()
+  "The documented V1/V2 Base64 vectors match Emacs UTF-8 JSON encoding."
+  (dolist
+      (case
+       '(((:protocol_version 1 :generation 27 :dispatch_id 91
+           :spans [(:id 1 :text "café 日本")] :actions [])
+          "eyJwcm90b2NvbF92ZXJzaW9uIjoxLCJnZW5lcmF0aW9uIjoyNywiZGlzcGF0Y2hfaWQiOjkxLCJzcGFucyI6W3siaWQiOjEsInRleHQiOiJjYWbDqSDml6XmnKwifV0sImFjdGlvbnMiOltdfQ==")
+         ((:protocol_version 2 :generation 27 :dispatch_id 91
+           :delivery_policy "replaceable" :replacement_key "speaker"
+           :spans [(:id 1 :text "café 日本")] :actions [])
+          "eyJwcm90b2NvbF92ZXJzaW9uIjoyLCJnZW5lcmF0aW9uIjoyNywiZGlzcGF0Y2hfaWQiOjkxLCJkZWxpdmVyeV9wb2xpY3kiOiJyZXBsYWNlYWJsZSIsInJlcGxhY2VtZW50X2tleSI6InNwZWFrZXIiLCJzcGFucyI6W3siaWQiOjEsInRleHQiOiJjYWbDqSDml6XmnKwifV0sImFjdGlvbnMiOltdfQ==")))
+    (should
+     (equal
+      (emacsvox-aural--encode-structured-timeline (car case))
+      (cadr case)))))
+
+(ert-deftest emacsvox-aural-requires-negotiated-timeline-v2 ()
+  "Timeline V1 is diagnosed instead of silently lowering Aural policy."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-timeline-version-test" :buffer nil :noquery t))
+         (tts-speaker-process process))
+    (unwind-protect
+        (progn
+          (emacsvox-aural-enable-structured-timeline process 1)
+          (should-error
+           (emacsvox-aural-structured-timeline-available-p)
+           :type 'error)
+          (emacsvox-aural-enable-structured-timeline process 2)
+          (should (emacsvox-aural-structured-timeline-available-p)))
+      (delete-process process))))
 
 (ert-deftest emacsvox-aural-capital-tones-preserve-camel-case-span ()
   "Capital tones use internal offsets without splitting a camel-case word."
@@ -611,7 +685,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (unwind-protect
         (progn
           (process-put
-           process emacsvox-aural--structured-timeline-process-property t)
+           process emacsvox-aural--structured-timeline-process-property 2)
           (process-put process tts--tracked-playback-completion-property t)
           (process-put process tts--marker-playback-events-property t)
           (cl-letf
@@ -639,7 +713,9 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                    (envelope
                     (json-parse-string
                      decoded :object-type 'plist :array-type 'list)))
-              (should (= (plist-get envelope :protocol_version) 1))
+              (should (= (plist-get envelope :protocol_version) 2))
+              (should (equal (plist-get envelope :delivery_policy) "ordered"))
+              (should-not (plist-member envelope :replacement_key))
               (should (= (plist-get envelope :generation) 1))
               (should (= (plist-get envelope :dispatch_id) identifier))
               (should
@@ -649,6 +725,73 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (should (gethash identifier tts--tracked-dispatches))
           (should (gethash identifier tts--marker-dispatches)))
       (tts-cancel-tracked-dispatch identifier)
+      (delete-process process))))
+
+(ert-deftest emacsvox-aural-delivers-keyed-replaceable-timeline-v2 ()
+  "The final delayed wire packet retains its replacement domain."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-structured-replacement-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts--tracked-dispatch-sequence 50)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         (tts--marker-event-function #'ignore)
+         (tts--tracked-completion-function #'ignore)
+         (emacsvox-aural--pending-deliveries
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--delivery-sequence 0)
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text "latest navigation" :speak t)
+           :context '(:occasion navigation)))
+         writes identifier)
+    (unwind-protect
+        (progn
+          (process-put
+           process emacsvox-aural--structured-timeline-process-property 2)
+          (process-put process tts--tracked-playback-completion-property t)
+          (process-put process tts--marker-playback-events-property t)
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (_owner command) (push command writes)))
+               ((symbol-function 'run-with-idle-timer)
+                (lambda (&rest _arguments) 'replacement-timer))
+               ((symbol-function 'cancel-timer) #'ignore)
+               ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+            (let ((emacsvox-aural-submission-delivery-policy 'replaceable)
+                  (emacsvox-aural-submission-replacement-key 'navigation))
+              (setq
+               identifier
+               (emacsvox-aural-call-with-delivery-transaction
+                process
+                (lambda ()
+                  (emacsvox-aural-queue-concrete-plan
+                   plan "latest navigation")
+                  (tts--protocol-dispatch)))))
+            (should-not writes)
+            (emacsvox-aural-flush-pending-deliveries process 'navigation))
+          (should (= (length writes) 1))
+          (should
+           (string-match
+            "\\`emacsvox_timeline {\\([^}]+\\)}\n\\'" (car writes)))
+          (let* ((decoded
+                  (decode-coding-string
+                   (base64-decode-string (match-string 1 (car writes)))
+                   'utf-8))
+                 (envelope
+                  (json-parse-string
+                   decoded :object-type 'plist :array-type 'list)))
+            (should (= (plist-get envelope :protocol_version) 2))
+            (should
+             (equal (plist-get envelope :delivery_policy) "replaceable"))
+            (should
+             (equal (plist-get envelope :replacement_key) "navigation"))
+            (should (= (plist-get envelope :dispatch_id) identifier))))
+      (when identifier (tts-cancel-tracked-dispatch identifier))
       (delete-process process))))
 
 (ert-deftest emacsvox-aural-capitalization-sync-keeps-structured-timeline ()
@@ -682,7 +825,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (unwind-protect
           (progn
             (process-put
-             process emacsvox-aural--structured-timeline-process-property t)
+             process emacsvox-aural--structured-timeline-process-property 2)
             (process-put
              process tts--capitalization-presentation-property t)
             (cl-letf
@@ -741,7 +884,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (unwind-protect
         (progn
           (process-put
-           process emacsvox-aural--structured-timeline-process-property t)
+           process emacsvox-aural--structured-timeline-process-property 2)
           (cl-letf
               (((symbol-function 'process-send-string)
                 (lambda (_owner command) (push command writes)))

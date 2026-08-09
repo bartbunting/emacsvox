@@ -105,11 +105,17 @@ Each function receives the failure plist stored in
 
 (defconst emacsvox-aural--structured-timeline-process-property
   'emacsvox-aural-structured-timeline
-  "Process property enabling version 1 structured presentation delivery.")
+  "Process property recording the negotiated structured timeline version.")
 
 (defconst emacsvox-aural--relative-rate-process-property
   'emacsvox-aural-relative-rate
   "Process property enabling signed relative rate in timelines.")
+
+(defconst emacsvox-aural--structured-timeline-version 2
+  "Structured presentation timeline version emitted by Emacsvox.")
+
+(defconst emacsvox-aural--timeline-replacement-key-max-bytes 128
+  "Maximum UTF-8 size of one timeline replacement key.")
 
 (defun emacsvox-aural-enable-framed-delivery (process)
   "Enable complete replaceable transaction framing for PROCESS."
@@ -117,9 +123,16 @@ Each function receives the failure plist stored in
    process emacsvox-aural--framed-delivery-process-property t)
   process)
 
-(defun emacsvox-aural-enable-structured-timeline (process)
-  "Enable structured aural presentation timelines for PROCESS."
-  (process-put process emacsvox-aural--structured-timeline-process-property t)
+(defun emacsvox-aural-enable-structured-timeline (process &optional version)
+  "Record structured aural timeline VERSION support for PROCESS.
+
+VERSION defaults to 2 for direct callers.  Version 1 is recorded only so an
+installation mismatch can be reported before Aural semantics are lowered."
+  (setq version (or version 2))
+  (unless (memq version '(1 2))
+    (error "Unsupported structured timeline version: %S" version))
+  (process-put
+   process emacsvox-aural--structured-timeline-process-property version)
   process)
 
 (defun emacsvox-aural-enable-relative-rate (process)
@@ -449,16 +462,24 @@ OWNER so a logical transaction cannot be partially delivered across streams."
   "Return non-nil when the current transaction can carry a timeline."
   (and
    emacsvox-aural--delivery-transaction-active-p
-   (processp tts-speaker-process)
-   (process-get
-    tts-speaker-process emacsvox-aural--structured-timeline-process-property)))
+   (emacsvox-aural-structured-timeline-available-p)))
 
 (defun emacsvox-aural-structured-timeline-available-p ()
-  "Return non-nil when the speaker accepts structured presentation timelines."
-  (and
-   (processp tts-speaker-process)
-   (process-get
-    tts-speaker-process emacsvox-aural--structured-timeline-process-property)))
+  "Return non-nil when the speaker accepts version 2 presentation timelines.
+
+Signal a clear installation error when negotiation found only version 1."
+  (when (processp tts-speaker-process)
+    (let ((version
+           (process-get
+            tts-speaker-process
+            emacsvox-aural--structured-timeline-process-property)))
+      (cond
+       ((eql version 2) t)
+       ((eql version 1)
+        (error
+         "Omnivox timeline V2 is required; rebuild and restart the speech server"))
+       (version
+        (error "Unsupported negotiated Omnivox timeline version: %S" version))))))
 
 (defun emacsvox-aural--capture-structured-run
     (plan text pause positioned-actions)
@@ -610,6 +631,37 @@ the concrete request has no named preset."
   "Return ACTION's valid lifecycle anchor as a JSON string."
   (symbol-name
    (or (emacsvox-aural-concrete-action-anchor action) 'object)))
+
+(defun emacsvox-aural--timeline-delivery-fields ()
+  "Return version 2 delivery fields for the current Aural submission."
+  (let ((policy (or emacsvox-aural-submission-delivery-policy 'ordered)))
+    (unless (memq policy '(ordered replaceable urgent))
+      (error "Unsupported aural delivery policy: %S" policy))
+    (append
+     (list :delivery_policy (symbol-name policy))
+     (when (eq policy 'replaceable)
+       (unless emacsvox-aural-submission-replacement-key
+         (error "Replaceable aural delivery requires a replacement key"))
+       (let ((key
+              (cond
+               ((symbolp emacsvox-aural-submission-replacement-key)
+                (symbol-name emacsvox-aural-submission-replacement-key))
+               ((stringp emacsvox-aural-submission-replacement-key)
+                emacsvox-aural-submission-replacement-key)
+               (t
+                (let ((print-circle t))
+                  (prin1-to-string
+                   emacsvox-aural-submission-replacement-key))))))
+         (when
+             (or
+              (string-empty-p key)
+              (>
+               (string-bytes key)
+               emacsvox-aural--timeline-replacement-key-max-bytes))
+           (error
+            "Aural replacement key must contain 1 to %d UTF-8 bytes"
+            emacsvox-aural--timeline-replacement-key-max-bytes))
+         (list :replacement_key key))))))
 
 (defun emacsvox-aural--timeline-semantic-value (action)
   "Return the richer client value associated with concrete ACTION."
@@ -840,12 +892,15 @@ recorded plans contain no speech span and therefore require legacy lowering."
                 (add-action action last-span 'after context)))))))
     (unless unsupported
       (list
-       (list
-        :protocol_version 1
-        :generation generation
-        :dispatch_id dispatch-id
-        :spans (vconcat (nreverse spans))
-        :actions (vconcat (nreverse actions)))
+       (append
+        (list
+         :protocol_version emacsvox-aural--structured-timeline-version
+         :generation generation
+         :dispatch_id dispatch-id)
+        (emacsvox-aural--timeline-delivery-fields)
+        (list
+         :spans (vconcat (nreverse spans))
+         :actions (vconcat (nreverse actions))))
        (nreverse bindings)))))
 
 (defun emacsvox-aural--encode-structured-timeline (envelope)
