@@ -160,7 +160,8 @@
     (dolist (rule rules)
       (dolist (action (emacsvox-aural-rule-actions rule))
         (when (eq (emacsvox-aural-action-kind action) 'tone)
-          (push (emacsvox-aural-action-tone action) tones))))
+          (when-let* ((tone (emacsvox-aural-action-tone action)))
+            (push tone tones)))))
     (delete-dups tones)))
 
 (defun emacsvox-aural-validation--prepare-scheme (scheme)

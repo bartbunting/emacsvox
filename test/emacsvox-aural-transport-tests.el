@@ -2718,6 +2718,45 @@ is the default inherited by a newly created TTS scratch buffer."
         "tone line-empty at 130.8 Hz for 150 ms"
         (emacsvox-aural-describe-concrete-action action))))))
 
+(ert-deftest emacsvox-aural-transport-freezes-fact-backed-tones ()
+  "Dynamic tone facts become ordinary backend-ready pitch and duration."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id indentation-tone
+        :match
+        (:event indentation-located
+         :requires
+         (indentation-tone-pitch indentation-tone-duration))
+        :render
+        (:before
+         ((:id dynamic-indentation-tone :kind tone
+           :pitch (:fact indentation-tone-pitch)
+           :duration (:fact indentation-tone-duration)))))))
+    (let* ((facts
+            '(:events (indentation-located)
+              :indentation-tone-pitch 500.0
+              :indentation-tone-duration 175
+              :content "  value"))
+           (context (emacsvox-test--transport-context))
+           (render (emacsvox-aural-resolve-active facts context))
+           (plan (emacsvox-aural-compile-plan render facts context))
+           (action (car (emacsvox-aural-concrete-plan-before plan)))
+           events)
+      (should (eq (emacsvox-aural-concrete-action-kind action) 'tone))
+      (should
+       (eq
+        (emacsvox-aural-concrete-action-tone action)
+        'dynamic-indentation-tone))
+      (should (= (emacsvox-aural-concrete-action-pitch action) 500.0))
+      (should (= (emacsvox-aural-concrete-action-duration action) 175))
+      (should-not (emacsvox-aural-concrete-action-force action))
+      (cl-letf
+          (((symbol-function 'tts--protocol-tone)
+            (lambda (pitch duration &optional force)
+              (push (list pitch duration force) events))))
+        (emacsvox-aural-queue-concrete-action action context))
+      (should (equal events '((500.0 175 nil)))))))
+
 (ert-deftest emacsvox-aural-transport-rejects-unregistered-tones ()
   "An unknown tone cannot cross the concrete source boundary."
   (emacsvox-test--with-transport-scheme

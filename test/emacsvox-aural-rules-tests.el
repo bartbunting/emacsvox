@@ -97,6 +97,38 @@
     (should (eq (emacsvox-aural-action-tone action) 'line-empty))
     (should-not (emacsvox-aural-action-duration action))))
 
+(ert-deftest emacsvox-aural-rules-compile-fact-backed-tone-actions ()
+  "Tone pitch and duration may be frozen from selector-guaranteed facts."
+  (let* ((rule
+          (emacsvox-test--compile-rule
+           'indentation-tone
+           '(:event indentation-located
+             :requires
+             (indentation-tone-pitch indentation-tone-duration))
+           '(:before
+             ((:id dynamic-indentation-tone
+               :kind tone
+               :pitch (:fact indentation-tone-pitch)
+               :duration (:fact indentation-tone-duration))))))
+         (action
+          (car
+           (emacsvox-aural-phase-operations-append
+            (emacsvox-aural-contribution-before
+             (emacsvox-aural-rule-contribution rule))))))
+    (should-not (emacsvox-aural-action-tone action))
+    (should
+     (equal
+      (emacsvox-aural-action-pitch action)
+      '(:fact indentation-tone-pitch)))
+    (should
+     (equal
+      (emacsvox-aural-action-duration action)
+      '(:fact indentation-tone-duration)))
+    (should
+     (equal
+      (emacsvox-aural-action-template-fields action)
+      '(indentation-tone-pitch indentation-tone-duration)))))
+
 (ert-deftest emacsvox-aural-rules-reject-unsafe-or-unguaranteed-templates ()
   "Templates accept only registered, selector-guaranteed semantic fields."
   (dolist
@@ -126,6 +158,12 @@
          (:before
           ((:id tone-with-duration :kind tone :tone line-empty
             :duration 10)))
+         (:before
+          ((:id incomplete-inline-tone :kind tone :pitch 440)))
+         (:before
+          ((:id unguaranteed-inline-tone :kind tone
+            :pitch (:fact indentation-tone-pitch)
+            :duration 150)))
          (:before
           ((:id unnamed-tone :kind tone)))
          (:before

@@ -693,6 +693,37 @@ degradation records.  Return balance, capability, and degradation records."
     (push (substring template position) parts)
     (apply #'concat (nreverse parts))))
 
+(defun emacsvox-aural--resolve-numeric-action-value
+    (action facts property expression positive)
+  "Resolve numeric action EXPRESSION from FACTS.
+
+ACTION and PROPERTY identify diagnostics.  POSITIVE selects a strict
+greater-than-zero check instead of the default nonnegative check."
+  (let* ((field
+          (and
+           (proper-list-p expression)
+           (= (length expression) 2)
+           (eq (car expression) :fact)
+           (cadr expression)))
+         (key (and field (intern (format ":%s" field))))
+         (value
+          (if field
+              (if (plist-member facts key)
+                  (plist-get facts key)
+                (emacsvox-aural--transport-error
+                 "Action %S %s fact %S is missing"
+                 (emacsvox-aural-action-id action) property field))
+            expression)))
+    (unless
+        (and
+         (numberp value)
+         (if positive (> value 0) (>= value 0)))
+      (emacsvox-aural--transport-error
+       "Action %S %s must resolve to a %s number: %S"
+       (emacsvox-aural-action-id action) property
+       (if positive "positive" "nonnegative") value))
+    value))
+
 (defun emacsvox-aural--compile-volume (volume identity)
   "Freeze unsupported VOLUME handling for presentation IDENTITY.
 
@@ -807,16 +838,28 @@ according to `emacsvox-aural-unsupported-volume-policy'."
       :source (emacsvox-aural-action-source action)
       :anchor (emacsvox-aural-action-anchor action)))
     ('tone
-     (let ((tone
-            (emacsvox-aural--resolve-tone
-             (emacsvox-aural-action-tone action))))
+     (let* ((tone-id (emacsvox-aural-action-tone action))
+            (tone (and tone-id (emacsvox-aural--resolve-tone tone-id)))
+            (pitch
+             (if tone
+                 (emacsvox-aural-tone-pitch tone)
+               (emacsvox-aural--resolve-numeric-action-value
+                action facts :pitch
+                (emacsvox-aural-action-pitch action) t)))
+            (duration
+             (if tone
+                 (emacsvox-aural-tone-duration tone)
+               (emacsvox-aural--resolve-numeric-action-value
+                action facts :duration
+                (emacsvox-aural-action-duration action) nil))))
        (emacsvox-aural--make-concrete-action
         :id (emacsvox-aural-action-id action)
         :kind 'tone
-        :tone (emacsvox-aural-tone-id tone)
-        :pitch (emacsvox-aural-tone-pitch tone)
-        :duration (emacsvox-aural-tone-duration tone)
-        :force (emacsvox-aural-tone-force tone)
+        :tone (if tone (emacsvox-aural-tone-id tone)
+                (emacsvox-aural-action-id action))
+        :pitch pitch
+        :duration duration
+        :force (and tone (emacsvox-aural-tone-force tone))
         :source (emacsvox-aural-action-source action)
         :anchor (emacsvox-aural-action-anchor action)))))))
 
