@@ -229,12 +229,14 @@ internal interface IOmnivoxCaptureEngine : IDisposable
 }
 
 /// <summary>
-/// Engine-neutral implementation of Omnivox helper protocol versions 1-3.
+/// Engine-neutral implementation of Omnivox helper protocol versions 1-4.
 /// Native adapters provide inventory, captured PCM, and interruption only.
 /// </summary>
 internal sealed class OmnivoxHelperHost
 {
-    private const int LatestProtocolVersion = 3;
+    private const int LatestProtocolVersion = 4;
+    private const int ExtendedRateProtocolVersion = 4;
+    private const int ExtendedAcssProtocolVersion = 3;
     private const int AnchorProtocolVersion = 2;
     private const int LegacyProtocolVersion = 1;
     private const int MaximumFrameBytes = 1024 * 1024;
@@ -558,7 +560,7 @@ internal sealed class OmnivoxHelperHost
             throw Fault("invalid_parameter",
                 "settings must be a JSON object", false);
         }
-        if (selectedProtocolVersion >= LatestProtocolVersion)
+        if (selectedProtocolVersion >= ExtendedAcssProtocolVersion)
         {
             RequireFields(settings, "voice_id", "rate", "pitch", "volume",
                 "pitch_range", "stress", "richness");
@@ -580,7 +582,9 @@ internal sealed class OmnivoxHelperHost
         synthesis.RequestId = requestId;
         synthesis.Text = text;
         synthesis.VoiceId = voiceId;
-        synthesis.Rate = ReadNumber(settings, "rate", 0.0, 1.0);
+        double maximumRate = selectedProtocolVersion >=
+            ExtendedRateProtocolVersion ? 2.0 : 1.0;
+        synthesis.Rate = ReadNumber(settings, "rate", 0.0, maximumRate);
         synthesis.Pitch = ReadNumber(settings, "pitch", 0.5, 2.0);
         synthesis.PitchRange = ReadOptionalAcssNumber(settings, "pitch_range",
             engine.Capabilities.PitchRange);

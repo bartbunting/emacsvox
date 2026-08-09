@@ -87,7 +87,8 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
         OmnivoxHelperAnchor[] anchors)
     {
         // Existing Emacsvox Eloquence operation treats 75 as its normal
-        // speed. Preserve that midpoint while providing a bounded range.
+        // speed. Protocol v4's 2.0 maximum maps to 240, within ECI's native
+        // 0-through-250 speed range.
         int nativeRate = (int)Math.Round(20.0 + rate * 110.0,
             MidpointRounding.AwayFromZero);
         int nativePitch = (int)Math.Round(

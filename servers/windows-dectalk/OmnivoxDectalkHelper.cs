@@ -120,9 +120,13 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
         }
 
         // Preserve DECtalk's established 225 WPM midpoint while covering its
-        // supported 75-through-600 range.
-        double mapped = rate <= 0.5 ? 75.0 + rate * 300.0 :
-            225.0 + (rate - 0.5) * 750.0;
+        // supported 75-through-600 range. Protocol v4 can carry higher rates
+        // for engines with more headroom, so clamp only at DECtalk's native
+        // maximum.
+        double boundedRate = Math.Min(rate, 1.0);
+        double mapped = boundedRate <= 0.5 ?
+            75.0 + boundedRate * 300.0 :
+            225.0 + (boundedRate - 0.5) * 750.0;
         int nativeRate = (int)Math.Round(mapped,
             MidpointRounding.AwayFromZero);
         int nativePitch = (int)Math.Round(

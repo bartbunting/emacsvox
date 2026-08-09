@@ -148,7 +148,9 @@ captured 11.025 kHz mono signed 16-bit PCM to the versioned Omnivox helper
 protocol.  It does not play that audio itself and does not alter the existing
 =windows-outloud= playback bridge.  Its inventory keeps the engine ID
 =eloquence= separate from native voice IDs =v1= through =v8=, with =v1= as the
-default.  All protocol versions map normalized speech rate, average pitch,
+default.  Protocol versions 1 through 3 map normalized speech rate through
+1.0; protocol version 4 extends it through 2.0, mapping to native ECI speed
+240 within the engine's 0-through-250 range.  All versions map average pitch
 and volume to ECI's native voice controls.  Protocol version 3 additionally
 maps pitch range to =vf=, stress to =vr= roughness, and richness to =vy=
 breathiness plus the original =vv= compensation.  These reproduce the

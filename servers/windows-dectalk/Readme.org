@@ -177,6 +177,8 @@ Omnivox.  It does not own playback and does not change the existing
 
 All helper protocol versions map normalized rate across DECtalk's
 75-through-600 WPM range while preserving 225 WPM at the normal midpoint.
+Protocol version 4 accepts the shared extended rate range but clamps values
+above 1.0 at DECtalk's native 600 WPM maximum.
 Average pitch is mapped from each DECtalk personality's documented baseline to
 the native =ap= voice parameter.  Normalized volume is applied as gain to the
 captured PCM because DECtalk's volume commands do not affect speech written to
