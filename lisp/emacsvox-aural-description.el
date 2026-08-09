@@ -138,8 +138,11 @@
          (emacsvox-aural-concrete-action-duration action)))
        ('tone
         (format
-         "%s: tone %s at %s Hz for %s ms"
+         "%s: %s tone %s at %s Hz for %s ms"
          (emacsvox-aural-concrete-action-id action)
+         (or
+          (emacsvox-aural-concrete-action-audio-mode action)
+          'overlay)
          (emacsvox-aural-concrete-action-tone action)
          (emacsvox-aural-concrete-action-pitch action)
          (emacsvox-aural-concrete-action-duration action))))

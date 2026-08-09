@@ -95,6 +95,7 @@
              (emacsvox-aural-rule-contribution rule))))))
     (should (eq (emacsvox-aural-action-kind action) 'tone))
     (should (eq (emacsvox-aural-action-tone action) 'line-empty))
+    (should (eq (emacsvox-aural-action-audio-mode action) 'overlay))
     (should-not (emacsvox-aural-action-duration action))))
 
 (ert-deftest emacsvox-aural-rules-compile-fact-backed-tone-actions ()
@@ -109,7 +110,8 @@
              ((:id dynamic-indentation-tone
                :kind tone
                :pitch (:fact indentation-tone-pitch)
-               :duration (:fact indentation-tone-duration))))))
+               :duration (:fact indentation-tone-duration)
+               :audio-mode insert)))))
          (action
           (car
            (emacsvox-aural-phase-operations-append
@@ -124,6 +126,7 @@
      (equal
       (emacsvox-aural-action-duration action)
       '(:fact indentation-tone-duration)))
+    (should (eq (emacsvox-aural-action-audio-mode action) 'insert))
     (should
      (equal
       (emacsvox-aural-action-template-fields action)
@@ -160,6 +163,12 @@
             :duration 10)))
          (:before
           ((:id incomplete-inline-tone :kind tone :pitch 440)))
+         (:before
+          ((:id invalid-tone-mode :kind tone :tone line-empty
+            :audio-mode simultaneous)))
+         (:before
+          ((:id speech-with-tone-mode :kind speech :text "Heading"
+            :audio-mode insert)))
          (:before
           ((:id unguaranteed-inline-tone :kind tone
             :pitch (:fact indentation-tone-pitch)

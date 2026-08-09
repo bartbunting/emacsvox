@@ -369,6 +369,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
          (tone
           (emacsvox-aural--make-concrete-action
            :id 'capital :kind 'tone :pitch 880 :duration 35
+           :audio-mode 'insert
            :anchor 'transition :source 'capitalization))
          (content
           (emacsvox-aural--make-concrete-content
@@ -429,7 +430,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (should (equal (plist-get audio :path) "/tmp/opening.ogg"))
     (should (= (plist-get silence :duration_ms) 20))
     (should (= (plist-get wire-tone :frequency_hz) 880.0))
-    (should (equal (plist-get wire-tone :mode) "overlay"))
+    (should (equal (plist-get wire-tone :mode) "insert"))
     (should
      (=
       (length
@@ -2731,7 +2732,8 @@ is the default inherited by a newly created TTS scratch buffer."
         (:before
          ((:id dynamic-indentation-tone :kind tone
            :pitch (:fact indentation-tone-pitch)
-           :duration (:fact indentation-tone-duration)))))))
+           :duration (:fact indentation-tone-duration)
+           :audio-mode insert))))))
     (let* ((facts
             '(:events (indentation-located)
               :indentation-tone-pitch 500.0
@@ -2749,6 +2751,8 @@ is the default inherited by a newly created TTS scratch buffer."
         'dynamic-indentation-tone))
       (should (= (emacsvox-aural-concrete-action-pitch action) 500.0))
       (should (= (emacsvox-aural-concrete-action-duration action) 175))
+      (should
+       (eq (emacsvox-aural-concrete-action-audio-mode action) 'insert))
       (should-not (emacsvox-aural-concrete-action-force action))
       (cl-letf
           (((symbol-function 'tts--protocol-tone)

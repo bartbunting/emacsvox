@@ -43,6 +43,10 @@
   '(object run transition)
   "Lifetimes at which ordered aural actions may be emitted.")
 
+(defconst emacsvox-aural-tone-audio-modes
+  '(overlay insert)
+  "Ways a tone action may share or advance the speech timeline.")
+
 (defconst emacsvox-aural-voice-dimensions
   '(family average-pitch pitch-range stress richness)
   "Device-independent dimensions supported by aural voice styles.")
@@ -100,7 +104,7 @@
      (:constructor emacsvox-aural--make-action))
   "A validated backend-independent action."
   id kind text text-template template-fields cue pitch duration voice volume space
-  anchor source tone)
+  anchor source tone audio-mode)
 
 (cl-defstruct
     (emacsvox-aural-phase-operations
@@ -860,13 +864,17 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
          (tone (plist-get data :tone))
          (pitch (plist-get data :pitch))
          (duration (plist-get data :duration))
+         (audio-mode
+          (if (plist-member data :audio-mode)
+              (plist-get data :audio-mode)
+            'overlay))
          (voice (plist-get data :voice))
          (volume (plist-get data :volume))
          (space (plist-get data :space))
          (anchor (or (plist-get data :anchor) default-anchor))
          (allowed
           '(:id :kind :text :text-template :cue :name :tone :pitch :duration
-            :voice :volume :space :anchor))
+            :audio-mode :voice :volume :space :anchor))
          (unknown
           (cl-loop
            for (key _) on data by #'cddr
@@ -887,7 +895,8 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
                  :anchor))
               ('cue '(:id :kind :cue :name :volume :space :anchor))
               ('pause '(:id :kind :duration :anchor))
-              ('tone '(:id :kind :tone :pitch :duration :anchor))
+              ('tone
+               '(:id :kind :tone :pitch :duration :audio-mode :anchor))
               (_ allowed)))
            (incompatible
             (cl-loop
@@ -927,6 +936,10 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
          (emacsvox-aural--rule-error
           "Pause action %S requires nonnegative :duration" id)))
       ('tone
+       (unless (memq audio-mode emacsvox-aural-tone-audio-modes)
+         (emacsvox-aural--rule-error
+          "Tone action %S audio mode must be overlay or insert: %S"
+          id audio-mode))
        (let ((pitch-present-p (plist-member data :pitch))
              (duration-present-p (plist-member data :duration)))
          (cond
@@ -980,6 +993,7 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
      :tone tone
      :pitch pitch
      :duration duration
+     :audio-mode (and (eq kind 'tone) audio-mode)
      :voice voice
      :volume volume
      :space (copy-tree space)

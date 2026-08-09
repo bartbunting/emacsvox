@@ -859,6 +859,7 @@ according to `emacsvox-aural-unsupported-volume-policy'."
                 (emacsvox-aural-action-id action))
         :pitch pitch
         :duration duration
+        :audio-mode (emacsvox-aural-action-audio-mode action)
         :force (and tone (emacsvox-aural-tone-force tone))
         :source (emacsvox-aural-action-source action)
         :anchor (emacsvox-aural-action-anchor action)))))))

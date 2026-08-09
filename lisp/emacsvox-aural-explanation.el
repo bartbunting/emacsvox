@@ -328,9 +328,15 @@ plan at point always supplies its actual occasion as the initial default."
        (emacsvox-aural-concrete-action-duration action)))
      ('tone
       (format
-       "play the %s tone"
+       "play the %s tone %s"
        (emacsvox-aural-humanize
-        (emacsvox-aural-concrete-action-tone action)))))
+        (emacsvox-aural-concrete-action-tone action))
+       (if
+           (eq
+            (emacsvox-aural-concrete-action-audio-mode action)
+            'insert)
+           "before speech"
+         "over speech"))))
    (pcase (emacsvox-aural-concrete-action-anchor action)
      ('object " once for the object")
      ('run " for this formatting run")

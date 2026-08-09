@@ -36,7 +36,8 @@
   anchor requested-space balance spatial-capability spatial-degradations
   voice-request voice-style voice-provenance voice-capability
   voice-degradations
-  requested-volume volume-capability volume-degradation tone pitch force)
+  requested-volume volume-capability volume-degradation tone pitch force
+  audio-mode)
 
 (cl-defstruct
     (emacsvox-aural-concrete-content

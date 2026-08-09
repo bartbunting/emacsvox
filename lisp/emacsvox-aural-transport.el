@@ -599,7 +599,8 @@ the concrete request has no named preset."
    :anchor (emacsvox-aural-concrete-action-anchor action)
    :source (emacsvox-aural-concrete-action-source action)
    :cue (emacsvox-aural-concrete-action-cue action)
-   :tone (emacsvox-aural-concrete-action-tone action)))
+   :tone (emacsvox-aural-concrete-action-tone action)
+   :audio-mode (emacsvox-aural-concrete-action-audio-mode action)))
 
 (defun emacsvox-aural--build-structured-timeline
     (generation dispatch-id runs)
@@ -685,7 +686,12 @@ recorded plans contain no speech span and therefore require legacy lowering."
                  (float (emacsvox-aural-concrete-action-pitch action))
                  :duration_ms
                  (emacsvox-aural-concrete-action-duration action)
-                 :mode "overlay" :volume 1.0
+                 :mode
+                 (symbol-name
+                  (or
+                   (emacsvox-aural-concrete-action-audio-mode action)
+                   'overlay))
+                 :volume 1.0
                  :pan (emacsvox-aural--timeline-action-pan action)
                  :effect_bus "dry")
                 semantic-value))

@@ -548,7 +548,14 @@ LABEL identifies the speech or cue being edited."
           (completing-read
            "Named tone: "
            (emacsvox-aural-tone-candidates)
-           nil 'must-match))))))
+           nil 'must-match))))
+       (let ((audio-mode
+              (intern
+               (completing-read
+                "Tone timing: " '("overlay" "insert")
+                nil 'must-match nil nil "overlay"))))
+         (unless (eq audio-mode 'overlay)
+           (setq action (plist-put action :audio-mode audio-mode))))))
     (when (memq kind '(speech cue))
       (when-let* ((space
                    (emacsvox-aural-editor--read-space
