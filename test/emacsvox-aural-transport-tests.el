@@ -4187,8 +4187,20 @@ is the default inherited by a newly created TTS scratch buffer."
               (get-text-property
                4 emacsvox-aural-concrete-plan-property prepared))
              (action
-              (car (emacsvox-aural-concrete-plan-before plan))))
+              (car (emacsvox-aural-concrete-plan-before plan)))
+             (built
+              (emacsvox-aural--build-structured-timeline
+               1 1 (list (list plan "value" nil))))
+             (envelope (car built))
+             (span (aref (plist-get envelope :spans) 0))
+             (wire-tone
+              (seq-find
+               (lambda (entry)
+                 (equal (plist-get entry :type) "tone"))
+               (append (plist-get envelope :actions) nil))))
         (should (eq (emacsvox-aural-concrete-action-kind action) 'tone))
+        (should
+         (eq (emacsvox-aural-concrete-action-audio-mode action) 'insert))
         (should
          (>
           (emacsvox-aural-concrete-action-pitch action)
@@ -4196,7 +4208,9 @@ is the default inherited by a newly created TTS scratch buffer."
         (should
          (>=
           (emacsvox-aural-concrete-action-duration action)
-          (emacsvox-speak--blank-line-tone-duration)))))))
+          (emacsvox-speak--blank-line-tone-duration)))
+        (should (equal (plist-get span :text) "value"))
+        (should (equal (plist-get wire-tone :mode) "insert"))))))
 
 (ert-deftest emacsvox-aural-transport-notification-captures-before-logging ()
   "Notification logging cannot replace the source buffer context."

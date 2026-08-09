@@ -233,8 +233,10 @@ fixed-pitch duration-coded tone, fixed-duration rising-pitch tone, either tone
 combined with speech, =custom=, or =none=.  Rising pitch starts at
 =emacsvox-indentation-pitch-tone-base=, rises by the configured semitones per
 column, and is capped at =emacsvox-indentation-pitch-tone-maximum=.  Its
-duration is never shorter than the registered blank-line tone.  Both selector
-commands change the current buffer and preview the result; indentation uses a
+duration is never shorter than the registered blank-line tone.  Indentation
+tones complete before the line is spoken, rather than mixing with and masking
+its first phoneme.  Both selector commands change the current buffer and
+preview the result; indentation uses a
 representative four-column sample so the audition also works on an unindented
 line.  Use =C-u= to also change the global default.  The =custom= choices
 publish semantic facts for personal Aural Presentation rules without imposing

@@ -107,7 +107,8 @@ Queued capitalization and indentation retain their source text and publish
 semantic boundary facts for the Aural Presentation cascade.  Omnivox
 negotiates the same capitalization selection for isolated letters.  The
 rising indentation tone increases pitch with indentation and is never shorter
-than the registered blank-line tone.
+than the registered blank-line tone.  Indentation tones now complete before
+line speech instead of clipping against its first phoneme.
 
 Sentence and clause chunking no longer repeats
 an object or run boundary action within one formatting run, and blank or

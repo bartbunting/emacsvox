@@ -352,6 +352,8 @@
                  "indent {indentation-columns}")))
               ('tone
                (should
+                (eq (emacsvox-aural-action-audio-mode action) 'insert))
+               (should
                 (equal
                  (emacsvox-aural-action-pitch action)
                  '(:fact indentation-tone-pitch)))
