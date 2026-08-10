@@ -727,8 +727,8 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (tts-cancel-tracked-dispatch identifier)
       (delete-process process))))
 
-(ert-deftest emacsvox-aural-delivers-keyed-replaceable-timeline-v2 ()
-  "The final delayed wire packet retains its replacement domain."
+(ert-deftest emacsvox-aural-delivers-tracked-replaceable-timeline-immediately ()
+  "Tracked work is written before its ID returns and retains replacement policy."
   (let* ((process
           (make-pipe-process
            :name "emacsvox-structured-replacement-test"
@@ -758,9 +758,6 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (cl-letf
               (((symbol-function 'process-send-string)
                 (lambda (_owner command) (push command writes)))
-               ((symbol-function 'run-with-idle-timer)
-                (lambda (&rest _arguments) 'replacement-timer))
-               ((symbol-function 'cancel-timer) #'ignore)
                ((symbol-function 'tts-voice-reset-code) (lambda () "")))
             (let ((emacsvox-aural-submission-delivery-policy 'replaceable)
                   (emacsvox-aural-submission-replacement-key 'navigation))
@@ -772,8 +769,8 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                   (emacsvox-aural-queue-concrete-plan
                    plan "latest navigation")
                   (tts--protocol-dispatch)))))
-            (should-not writes)
-            (emacsvox-aural-flush-pending-deliveries process 'navigation))
+            (should
+             (= (hash-table-count emacsvox-aural--pending-deliveries) 0)))
           (should (= (length writes) 1))
           (should
            (string-match
@@ -790,8 +787,49 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
              (equal (plist-get envelope :delivery_policy) "replaceable"))
             (should
              (equal (plist-get envelope :replacement_key) "navigation"))
-            (should (= (plist-get envelope :dispatch_id) identifier))))
+            (should (= (plist-get envelope :dispatch_id) identifier)))
+          (should (gethash identifier tts--tracked-dispatches))
+          (should (gethash identifier tts--marker-dispatches)))
       (when identifier (tts-cancel-tracked-dispatch identifier))
+      (delete-process process))))
+
+(ert-deftest emacsvox-aural-failed-tracked-transaction-does-not-issue-id ()
+  "A failed outer write neither returns an ID nor commits callback ownership."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-tracked-transaction-failure-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-program "/tmp/emacsvox/servers/omnivox")
+         (tts--tracked-dispatch-sequence 60)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         (tts--tracked-completion-function #'ignore)
+         (emacsvox-aural--delivery-sequence 0)
+         (emacsvox-aural-last-delivery-failure nil)
+         result)
+    (unwind-protect
+        (progn
+          (process-put process tts--tracked-playback-completion-property t)
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (&rest _arguments)
+                  (error "simulated transaction write failure")))
+               ((symbol-function 'message) #'ignore))
+            (setq
+             result
+             (emacsvox-aural-call-with-delivery-transaction
+              process
+              (lambda ()
+                (emacsvox-aural-delivery-send process "q {tracked }\n")
+                (tts--protocol-dispatch-tracked #'ignore)))))
+          (should-not result)
+          (should (= (hash-table-count tts--tracked-dispatches) 0))
+          (should (= (hash-table-count tts--marker-dispatches) 0))
+          (should
+           (eq
+            (plist-get emacsvox-aural-last-delivery-failure :reason)
+            'process-send-error)))
       (delete-process process))))
 
 (ert-deftest emacsvox-aural-capitalization-sync-keeps-structured-timeline ()
@@ -1211,6 +1249,8 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (emacsvox-aural--submission-sequence 0)
           (tts-speaker-process 'speech)
           (tts-notify-process nil)
+          (tts--tracked-dispatches (make-hash-table :test #'eql))
+          (tts--marker-dispatches (make-hash-table :test #'eql))
           (tts-stop-immediately nil)
           (tts-stopped-hook nil)
           (tts-quiet nil)
@@ -1219,6 +1259,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (emacsvox-pronounce-table nil)
           (emacsvox-pronounce-personality nil)
           cancelled-timer
+          terminal-events
           (context
            '(:module test
              :mode text-mode
@@ -1245,11 +1286,20 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
          :context context
          :delivery-policy 'replaceable)
         (should (= (hash-table-count emacsvox-aural--pending-deliveries) 1))
+        (puthash
+         77
+         (cons
+          'speech
+          (lambda (identifier status)
+            (push (list identifier status) terminal-events)))
+         tts--tracked-dispatches)
         (setq writes nil)
         (emacsvox-aural-submit
          "urgent content" :context context :delivery-policy 'urgent))
       (should (= (hash-table-count emacsvox-aural--pending-deliveries) 0))
       (should (eq cancelled-timer 'pending-navigation-timer))
+      (should (equal terminal-events '((77 cancelled))))
+      (should-not (gethash 77 tts--tracked-dispatches))
       (setq writes (nreverse writes))
       (should (equal (cadar writes) "s\n"))
       (should

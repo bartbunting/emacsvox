@@ -378,9 +378,18 @@ Return non-nil when every entry was sent to a live process."
       emacsvox-aural-replacement-idle-delay nil
       #'emacsvox-aural--deliver-pending table-key))))
 
+(defun emacsvox-aural--tracked-submission-p ()
+  "Return non-nil when the current submission promises terminal callbacks."
+  (or tts--tracked-completion-function tts--marker-event-function))
+
 (defun emacsvox-aural--submit-delivery-entries
     (owner entries effects generation)
-  "Submit protocol ENTRIES and commit EFFECTS under current source policy."
+  "Submit protocol ENTRIES and commit EFFECTS under current source policy.
+
+Return `sent' after a successful write, `pending' after idle scheduling, and
+nil when no complete write occurred.  Tracked submissions are never left
+pending because their synchronous public API must return an issued dispatch
+identifier."
   (when entries
     (when-let* ((foreign
                  (cl-find-if
@@ -401,9 +410,17 @@ Return non-nil when every entry was sent to a live process."
         owner emacsvox-aural-submission-replacement-key)
        (when emacsvox-aural-submission-controls-interruption
          (tts--interrupt-process owner t))
-       (emacsvox-aural--schedule-replaceable-delivery
-        owner emacsvox-aural-submission-replacement-key
-        entries effects generation))
+       (if (emacsvox-aural--tracked-submission-p)
+           (when
+               (emacsvox-aural--send-delivery-entries
+                entries owner generation
+                emacsvox-aural--history-transaction-id)
+             (emacsvox-aural--commit-delivery-effects effects)
+             'sent)
+         (emacsvox-aural--schedule-replaceable-delivery
+          owner emacsvox-aural-submission-replacement-key
+          entries effects generation)
+         'pending))
       ('urgent
        (emacsvox-aural-cancel-pending-deliveries owner)
        (when emacsvox-aural-submission-controls-interruption
@@ -411,13 +428,15 @@ Return non-nil when every entry was sent to a live process."
        (when
            (emacsvox-aural--send-delivery-entries
             entries owner nil emacsvox-aural--history-transaction-id)
-         (emacsvox-aural--commit-delivery-effects effects)))
+         (emacsvox-aural--commit-delivery-effects effects)
+         'sent))
       (_
        (emacsvox-aural-flush-pending-deliveries owner)
        (when
            (emacsvox-aural--send-delivery-entries
             entries owner nil emacsvox-aural--history-transaction-id)
-         (emacsvox-aural--commit-delivery-effects effects))))))
+         (emacsvox-aural--commit-delivery-effects effects)
+         'sent)))))
 
 (defun emacsvox-aural-call-with-delivery-transaction
     (owner function &rest arguments)
@@ -454,8 +473,15 @@ OWNER so a logical transaction cannot be partially delivered across streams."
                 (cons
                  (funcall emacsvox-aural--delivery-history-registrar)
                  effects)))
-        (emacsvox-aural--submit-delivery-entries
-         owner entries effects generation))
+        (let ((outcome
+               (emacsvox-aural--submit-delivery-entries
+                owner entries effects generation)))
+          (when
+              (and
+               (integerp result)
+               (emacsvox-aural--tracked-submission-p)
+               (not (eq outcome 'sent)))
+            (setq result nil))))
       result)))
 
 (defun emacsvox-aural--structured-capture-p ()

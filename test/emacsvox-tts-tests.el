@@ -1292,6 +1292,33 @@
                "emacsvox_tracked_dispatch 41\n")))))
       (tts-cancel-tracked-dispatch identifier))))
 
+(ert-deftest emacsvox-tts-tracked-direct-write-failure-does-not-register ()
+  "A synchronous write failure leaves no tracked callback ownership behind."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-tracked-write-failure-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-program "/tmp/emacsvox/servers/omnivox")
+         (tts--tracked-dispatch-sequence 40)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         callback)
+    (unwind-protect
+        (progn
+          (process-put process tts--tracked-playback-completion-property t)
+          (cl-letf
+              (((symbol-function 'tts--ensure-tracked-process-filter) #'ignore)
+               ((symbol-function 'emacsvox-aural-delivery-send)
+                (lambda (&rest _arguments)
+                  (error "simulated tracked write failure"))))
+            (should-error
+             (tts--protocol-dispatch-tracked
+              (lambda (&rest arguments) (setq callback arguments)))
+             :type 'error))
+          (should-not callback)
+          (should (= (hash-table-count tts--tracked-dispatches) 0)))
+      (delete-process process))))
+
 (ert-deftest emacsvox-tts-protocol-dispatches-marker-aware-speech ()
   "Marker-aware speech uses its negotiated command and owns both callbacks."
   (let* ((process
@@ -1681,6 +1708,95 @@
       (remhash 74 tts--tracked-dispatches)
       (delete-process process))))
 
+(ert-deftest emacsvox-tts-stop-reports-tracked-cancellation-once ()
+  "Explicit and repeated stops give each issued dispatch one terminal result."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-tracked-stop-test" :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-notify-process nil)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         callbacks
+         marker-events
+         writes)
+    (unwind-protect
+        (progn
+          (puthash
+           17
+           (cons
+            process
+            (lambda (identifier status)
+              (push
+               (list
+                identifier status
+                (gethash identifier tts--tracked-dispatches)
+                (gethash identifier tts--marker-dispatches))
+               callbacks)))
+           tts--tracked-dispatches)
+          (puthash
+           17
+           (tts--marker-dispatch-create
+            :process process
+            :callback
+            (lambda (&rest event) (push event marker-events)))
+           tts--marker-dispatches)
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-cancel-pending-deliveries)
+                #'ignore)
+               ((symbol-function 'emacsvox-aural-delivery-send)
+                (lambda (owner command kind)
+                  (push (list owner command kind) writes))))
+            (tts-stop)
+            (tts-stop))
+          (should (equal callbacks '((17 cancelled nil nil))))
+          (should-not (gethash 17 tts--tracked-dispatches))
+          (should-not (gethash 17 tts--marker-dispatches))
+          (should-not
+           (tts--dispatch-playback-marker-event
+            process '(:dispatch_id 17 :sequence 1 :type "late")))
+          (should-not marker-events)
+          (should (= (length writes) 2)))
+      (delete-process process))))
+
+(ert-deftest emacsvox-tts-tracked-callback-errors-do-not-strand-peers ()
+  "One failing terminal callback cannot prevent other callbacks from retiring."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-tracked-callback-error-test"
+           :buffer nil :noquery t))
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         callbacks
+         messages)
+    (unwind-protect
+        (progn
+          (puthash
+           18 (cons process (lambda (&rest _arguments) (error "callback boom")))
+           tts--tracked-dispatches)
+          (puthash
+           19
+           (cons
+            process
+            (lambda (identifier status)
+              (push (list identifier status) callbacks)))
+           tts--tracked-dispatches)
+          (cl-letf
+              (((symbol-function 'message)
+                (lambda (format-string &rest arguments)
+                  (push (apply #'format format-string arguments) messages))))
+            (tts--cancel-process-tracked-dispatches process 'cancelled)
+            (tts--cancel-process-tracked-dispatches process 'cancelled))
+          (should (equal callbacks '((19 cancelled))))
+          (should (= (hash-table-count tts--tracked-dispatches) 0))
+          (should
+           (seq-some
+            (lambda (entry)
+              (string-match-p "Tracked speech callback failed: callback boom"
+                              entry))
+            messages)))
+      (delete-process process))))
+
 (ert-deftest emacsvox-tts-retiring-process-cleans-owned-runtime-state ()
   "Retiring a server cancels delivery, callbacks, clients, and the process."
   (let ((process
@@ -1690,7 +1806,13 @@
         events)
     (unwind-protect
         (progn
-          (puthash 17 (cons process #'ignore) tts--tracked-dispatches)
+          (puthash
+           17
+           (cons
+            process
+            (lambda (identifier status)
+              (push (list 'callback identifier status) events)))
+           tts--tracked-dispatches)
           (let ((tts-stopped-hook
                  (list (lambda (stopped) (push (list 'hook stopped) events)))))
             (cl-letf
@@ -1708,6 +1830,7 @@
             (nreverse events)
             `((cancel ,process)
               (send ,process "s\n" stop)
+              (callback 17 cancelled)
               (hook ,process)
               (delete ,process)))))
       (when (process-live-p process)

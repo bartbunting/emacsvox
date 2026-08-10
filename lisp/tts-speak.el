@@ -345,9 +345,13 @@ Return non-nil when EVENT belongs to a live marker dispatch."
   (remhash identifier tts--tracked-dispatches)
   (remhash identifier tts--marker-dispatches))
 
-(defun tts--cancel-process-tracked-dispatches (process &optional status)
-  "Forget every tracked dispatch owned by PROCESS.
-When STATUS is non-nil, notify each callback after removing its entry."
+(defun tts--cancel-process-tracked-dispatches (process status)
+  "Retire every tracked dispatch owned by PROCESS with terminal STATUS.
+
+Entries are removed before callbacks run, so reentrant stop and server output
+cannot deliver a second terminal result."
+  (unless (memq status '(completed cancelled failed))
+    (error "Invalid tracked dispatch terminal status: %S" status))
   (let (entries marker-identifiers)
     (maphash
      (lambda (identifier entry)
@@ -364,10 +368,9 @@ When STATUS is non-nil, notify each callback after removing its entry."
      tts--marker-dispatches)
     (dolist (identifier marker-identifiers)
       (remhash identifier tts--marker-dispatches))
-    (when status
-      (dolist (entry (nreverse entries))
-        (tts--call-tracked-dispatch-callback
-         (cdr entry) (car entry) status)))))
+    (dolist (entry (nreverse entries))
+      (tts--call-tracked-dispatch-callback
+       (cdr entry) (car entry) status))))
 
 (defun tts--speech-process-terminal-p (process)
   "Return non-nil when PROCESS has reached a terminal status."
@@ -445,9 +448,10 @@ urgent policies cancel different scopes."
            (process-live-p tts-notify-process)
            (not (eq process tts-notify-process)))
     (tts-notify-stop))
-  (tts--cancel-process-tracked-dispatches process)
-  (when (process-live-p process)
-    (emacsvox-aural-delivery-send process "s\n" 'stop))
+  (unwind-protect
+      (when (process-live-p process)
+        (emacsvox-aural-delivery-send process "s\n" 'stop))
+    (tts--cancel-process-tracked-dispatches process 'cancelled))
   (run-hook-with-args 'tts-stopped-hook process))
 
 (defun tts--retire-process (process)
@@ -470,13 +474,21 @@ or `failed'.  Return the identifier allocated to this dispatch."
     (signal 'wrong-type-argument (list 'functionp callback)))
   (tts--require-tracked-playback-completion)
   (tts--ensure-tracked-process-filter tts-speaker-process)
-  (let ((identifier (cl-incf tts--tracked-dispatch-sequence)))
-    (puthash
-     identifier (cons tts-speaker-process callback)
-     tts--tracked-dispatches)
-    (emacsvox-aural-delivery-send
-     tts-speaker-process
-     (format "emacsvox_tracked_dispatch %d\n" identifier))
+  (let ((identifier (cl-incf tts--tracked-dispatch-sequence))
+        (process tts-speaker-process))
+    (condition-case error-data
+        (progn
+          (emacsvox-aural-delivery-send
+           process
+           (format "emacsvox_tracked_dispatch %d\n" identifier))
+          (emacsvox-aural--defer-delivery-effect
+           (lambda ()
+             (puthash
+              identifier (cons process callback)
+              tts--tracked-dispatches))))
+      (error
+       (tts-cancel-tracked-dispatch identifier)
+       (signal (car error-data) (cdr error-data))))
     identifier))
 
 (defun tts--protocol-dispatch-marked (marker-callback completion-callback)
@@ -490,19 +502,23 @@ COMPLETION-CALLBACK receives the identifier and terminal status."
   (tts--require-marker-playback-events)
   (tts--require-tracked-playback-completion)
   (tts--ensure-tracked-process-filter tts-speaker-process)
-  (let ((identifier (cl-incf tts--tracked-dispatch-sequence)))
-    (puthash
-     identifier (cons tts-speaker-process completion-callback)
-     tts--tracked-dispatches)
-    (puthash
-     identifier
-     (tts--marker-dispatch-create
-      :process tts-speaker-process :callback marker-callback)
-     tts--marker-dispatches)
+  (let ((identifier (cl-incf tts--tracked-dispatch-sequence))
+        (process tts-speaker-process))
     (condition-case error-data
-        (emacsvox-aural-delivery-send
-         tts-speaker-process
-         (format "emacsvox_marker_dispatch %d\n" identifier))
+        (progn
+          (emacsvox-aural-delivery-send
+           process
+           (format "emacsvox_marker_dispatch %d\n" identifier))
+          (emacsvox-aural--defer-delivery-effect
+           (lambda ()
+             (puthash
+              identifier (cons process completion-callback)
+              tts--tracked-dispatches)
+             (puthash
+              identifier
+              (tts--marker-dispatch-create
+               :process process :callback marker-callback)
+              tts--marker-dispatches))))
       (error
        (tts-cancel-tracked-dispatch identifier)
        (signal (car error-data) (cdr error-data))))
