@@ -519,6 +519,8 @@
                :protocol_version 1 :request_id identifier
                :type "capabilities" :server_version "1.3.0"
                :supported_protocol_versions [1]
+               :deprecated_commands ["set_lang"
+                                     "tts_set_notification_channel"]
                :features ["capitalization_presentation_v1"
                           "control_v1" "emacsvox_tx" "engine_inventory"
                           "logical_voice_registration"
@@ -557,6 +559,10 @@
                '(:registry_generation 1 :bindings [])))))
           (should (equal (plist-get omnivox-control-capabilities :type)
                          "capabilities"))
+          (should
+           (equal
+            (plist-get omnivox-control-capabilities :deprecated_commands)
+            '("set_lang" "tts_set_notification_channel")))
           (should
            (process-get
             process emacsvox-aural--framed-delivery-process-property))
@@ -599,6 +605,8 @@
               ["echo" "gain" "high_pass"]))
             (:id "legacy" :capabilities (:acss (:volume t)))])))
     (let ((capabilities (omnivox-voice-capabilities)))
+      (should
+       (eq (plist-get capabilities :language-selection) 'logical-voices))
       (should
        (equal (plist-get capabilities :dimensions)
               '(rate-offset average-pitch pitch-range volume)))
@@ -2108,6 +2116,48 @@
     (should-not tts-notify-process)
     (should (equal observed '(old nil)))))
 
+(ert-deftest emacsvox-tts-omnivox-notification-process-gets-channel-target ()
+  "A distinct Omnivox notifier receives its own validated process route."
+  (let ((process-environment (copy-sequence process-environment))
+        (tts-notify-process nil)
+        (tts-program "omnivox")
+        (tts-notification-device "right")
+        observed)
+    (setenv "OMNIVOX_AUDIO_TARGET" nil)
+    (cl-letf
+        (((symbol-function 'tts-make-process)
+          (lambda (name)
+            (setq observed (list name (getenv "OMNIVOX_AUDIO_TARGET")))
+            'notification))
+         ((symbol-function 'process-live-p)
+          (lambda (process) (eq process 'notification))))
+      (should (eq (tts-notify-initialize) 'notification)))
+    (should (equal observed '("Notify" "right")))
+    (should-not (getenv "OMNIVOX_AUDIO_TARGET"))))
+
+(ert-deftest emacsvox-tts-omnivox-notification-routing-is-process-based ()
+  "Omnivox supports a second process without inventing an in-process stream."
+  (let ((tts-notification-device nil))
+    (should (tts-multistream-p "omnivox")))
+  (let ((tts-notification-device "default"))
+    (should-not (tts-multistream-p "omnivox")))
+  (let ((tts-program "omnivox")
+        (tts-notification-device "named-device"))
+    (should-not (tts--notification-omnivox-audio-target)))
+  (let ((tts-program "omnivox")
+        (tts-notification-device "left"))
+    (should
+     (equal (tts--notification-omnivox-audio-target) "left")))
+  (let ((tts-program "swiftmac")
+        (tts-notification-device "left"))
+    (should-not (tts--notification-omnivox-audio-target))))
+
+(ert-deftest emacsvox-tts-notification-without-second-process-shares-speaker ()
+  "A disabled notifier keeps notifications on the main process and route."
+  (let ((tts-speaker-process 'speaker)
+        (tts-notify-process nil))
+    (should (eq (tts-notify-process) 'speaker))))
+
 (ert-deftest emacsvox-tts-protocol-dispatches-tone-and-silence ()
   "Tone and silence commands preserve optional forced dispatch."
   (should
@@ -2347,18 +2397,44 @@
 
 (ert-deftest emacsvox-tts-protocol-dispatches-language-operations ()
   "Language navigation and preference commands retain their protocol."
-  (should
-   (equal
-    (emacsvox-test--tts-capture-protocol
-     (lambda ()
-       (tts--protocol-next-language t)
-       (tts--protocol-previous-language nil)
-       (tts--protocol-set-language "en-gb" t)
-       (tts--protocol-set-preferred-language "en" "en-gb")))
-    '((speaker "set_next_lang t\n")
-      (speaker "set_previous_lang nil\n")
-      (speaker "set_lang en-gb t \n")
-      (speaker "set_preferred_lang en en-gb \n")))))
+  (let ((tts-voice-capabilities-function #'tts-default-voice-capabilities))
+    (should
+     (equal
+      (emacsvox-test--tts-capture-protocol
+       (lambda ()
+         (tts--protocol-next-language t)
+         (tts--protocol-previous-language nil)
+         (tts--protocol-set-language "en-gb" t)
+         (tts--protocol-set-preferred-language "en" "en-gb")))
+      '((speaker "set_next_lang t\n")
+        (speaker "set_previous_lang nil\n")
+        (speaker "set_lang en-gb t \n")
+        (speaker "set_preferred_lang en en-gb \n"))))))
+
+(ert-deftest emacsvox-tts-omnivox-refuses-legacy-language-operations ()
+  "Omnivox language commands fail visibly before writing a no-op protocol."
+  (let ((tts-speaker-process 'speaker)
+        (tts-notify-process nil)
+        (tts-voice-capabilities-function
+         (lambda ()
+           '(:adapter omnivox :language-selection logical-voices)))
+        writes)
+    (cl-letf
+        (((symbol-function 'process-live-p) (lambda (_) t))
+         ((symbol-function 'emacsvox-aural-delivery-send)
+          (lambda (&rest arguments) (push arguments writes))))
+      (dolist
+          (operation
+           (list
+            (lambda () (tts-set-language "fr"))
+            #'tts-set-next-language
+            #'tts-set-previous-language
+            (lambda () (tts-set-preferred-language "fr" "fr-FR"))))
+        (let ((error-data (should-error (funcall operation) :type 'user-error)))
+          (should
+           (string-match-p
+            "logical voices" (error-message-string error-data))))))
+    (should-not writes)))
 
 (ert-deftest emacsvox-tts-process-routing-honors-dynamic-binding ()
   "Temporarily selecting another process redirects protocol writes."

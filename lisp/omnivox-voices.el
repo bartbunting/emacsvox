@@ -1859,6 +1859,7 @@ Return the number of distinct processes that received the command."
     (list
      :adapter 'omnivox
      :source (if omnivox-engine-inventory 'discovered 'pending)
+     :language-selection 'logical-voices
      :family-selection 'routed
      :families nil
      :generic-families '(male female child)

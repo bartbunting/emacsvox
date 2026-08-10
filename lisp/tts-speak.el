@@ -621,26 +621,35 @@ use their existing isolated-letter behavior."
 
 ;;;;   language
 
+(defun tts--require-legacy-language-protocol ()
+  "Refuse legacy global language commands when the adapter has another owner."
+  (when
+      (eq
+       (plist-get (tts-voice-capabilities) :language-selection)
+       'logical-voices)
+    (user-error
+     "Omnivox routes language through logical voices; run M-x emacsvox-aural-voice-workbench")))
+
 (defun tts--protocol-next-language (&optional say_it)
-  
+  (tts--require-legacy-language-protocol)
   (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "set_next_lang %s\n" say_it)))
 
 (defun tts--protocol-previous-language (&optional say_it)
-  
+  (tts--require-legacy-language-protocol)
   (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "set_previous_lang %s\n" say_it)))
 
 (defun tts--protocol-set-language (language say_it)
-  
+  (tts--require-legacy-language-protocol)
   (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "set_lang %s %s \n" language say_it)))
 
 (defun tts--protocol-set-preferred-language (alias language)
-  
+  (tts--require-legacy-language-protocol)
   (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "set_preferred_lang %s %s \n" alias language)))
@@ -971,7 +980,8 @@ Uses a 5ms fade-in and fade-out. "
 (defun tts-set-language (lang)
   "Set language. If your server supports it, also set the synthesis
  voice, using the syntax language:voice , where language can be
- omitted."
+ omitted.  Adapters with logical-voice language routing reject this
+ legacy global operation with an actionable error."
   (interactive "sEnter language: \n")
   
   (when (process-live-p tts-speaker-process)
@@ -981,7 +991,8 @@ Uses a 5ms fade-in and fade-out. "
     (tts--protocol-set-language lang (called-interactively-p 'interactive))))
 
 (defun tts-set-next-language ()
-  "Switch to  next  language"
+  "Switch to next legacy language.
+Signal a user error when logical voices own language routing."
   (interactive)
   
   (when (process-live-p tts-speaker-process)
@@ -991,7 +1002,8 @@ Uses a 5ms fade-in and fade-out. "
     (tts--protocol-next-language (called-interactively-p 'interactive))))
 
 (defun tts-set-previous-language ()
-  "Switch to  previous  language"
+  "Switch to previous legacy language.
+Signal a user error when logical voices own language routing."
   (interactive)
   
   (when (process-live-p tts-speaker-process)
@@ -1001,7 +1013,8 @@ Uses a 5ms fade-in and fade-out. "
     (tts--protocol-previous-language (called-interactively-p 'interactive))))
 
 (defun tts-set-preferred-language (alias lang)
-  "Set language by alias."
+  "Set legacy language ALIAS to LANG.
+Signal a user error when logical voices own language routing."
   (interactive "s")
   
   (when (process-live-p tts-speaker-process)
@@ -2093,6 +2106,7 @@ Set by \\[tts-set-punctuations].")
   "Return the compatibility capability descriptor for an unknown adapter."
   '(:adapter unknown
     :source compatibility
+    :language-selection legacy
     :family-selection unsupported
     :families nil
     :generic-families nil
@@ -2106,7 +2120,8 @@ Set by \\[tts-set-punctuations].")
 The returned data is a plist.  `:adapter' identifies the adapter;
 `:source' says whether its data is static, discovered, or a compatibility
 fallback; `:family-selection' is `enumerated', `free-form', or
-`unsupported'; `:families' contains entries of the form
+`unsupported'; `:language-selection' is `legacy' or `logical-voices';
+`:families' contains entries of the form
 (ID :label LABEL ...); `:dimensions' lists supported normalized ACSS
 dimensions; and `:parameters' describes their accepted values.")
 
@@ -2594,7 +2609,7 @@ then select the first entry advertising that generic characteristic."
   (tts-initialize))
 
 (defvar tts-multi-engines
-  '("espeak"  "outloud"   "dtk-soft" "sharpwin" "swiftmac")
+  '("espeak" "omnivox" "outloud" "dtk-soft" "sharpwin" "swiftmac")
   "List of TTS engines that are multi capable.")
 
 (defsubst tts-multistream-p (engine)
@@ -2664,7 +2679,9 @@ program. Port defaults to tts-local-server-port"
   "Virtual sound device to use for notifications stream.
 Set to nil to disable a separate Notification stream.
 If you set the device here, make sure it exists first.
-For swiftmac, set this to `left' or `right'."
+For SwiftMac, set this to `left' or `right'.  For Omnivox, `left',
+`right', or `both' starts a separately routed second process; nil keeps
+notifications on the main process and its route."
   :type '(choice
           (const :tag "None" nil)
           (string :value ""))
@@ -3092,8 +3109,18 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
      ((tts-notify-process)              ; we have a live notifier
       (tts-notify-apply #'emacsvox-icon icon)))))
 
+(defun tts--notification-omnivox-audio-target ()
+  "Return a validated Omnivox channel target for the notification process."
+  (and
+   (stringp tts-program)
+   (string-match-p
+    "\\`omnivox\\(?:\\.exe\\)?\\'" (file-name-nondirectory tts-program))
+   (stringp tts-notification-device)
+   (member tts-notification-device '("left" "right" "both"))
+   tts-notification-device))
+
 (defun tts-notify-initialize ()
-  "Initialize notification TTS stream."
+  "Initialize a separate notification TTS process when configured."
   (interactive)
   
   (let ((old tts-notify-process)
@@ -3107,7 +3134,9 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
           (("ALSA_DEFAULT" tts-notification-device)
            ("SWIFTMAC_AUDIO_TARGET" tts-notification-device)
            ("SHARPWIN_AUDIO_TARGET" tts-notification-device)
-           ("PULSE_SINK" tts-notification-device))
+           ("PULSE_SINK" tts-notification-device)
+           ("OMNIVOX_AUDIO_TARGET"
+            (tts--notification-omnivox-audio-target)))
         (setq new (tts-make-process "Notify"))
         (unless (process-live-p new)
           (error "Fail: Notification Speech Server"))))
