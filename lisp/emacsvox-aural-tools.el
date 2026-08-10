@@ -100,10 +100,10 @@ message notification policy."
 (defun emacsvox-aural-tools--remap-source-input (&optional record)
   "Return presentation input for optional frozen RECORD or the current source.
 
-For RECORD, use its exact frozen voice and semantic context.  Associate it
+For RECORD, use its frozen voice and semantic context.  Associate it
 with the current inspection source only when the buffer name still matches;
 history deliberately does not retain source buffers.  Without RECORD, prefer
-the latest exact presentation from the current source and fall back to
+the latest retained presentation from the current source and fall back to
 inspectable facts at point."
   (if record
       (progn

@@ -740,8 +740,8 @@
             process tts--capitalization-presentation-property)))
       (delete-process process))))
 
-(ert-deftest emacsvox-tts-omnivox-negotiates-timeline-v2-only ()
-  "The adapter records V1 as an upgrade error and enables only timeline V2."
+(ert-deftest emacsvox-tts-omnivox-negotiates-timeline-v3-only ()
+  "The adapter records older versions as errors and enables timeline V3."
   (let* ((process
          (make-pipe-process
            :name "emacsvox-omnivox-timeline-capability-test"
@@ -776,6 +776,19 @@
             (process-get
              process emacsvox-aural--structured-timeline-process-property)
             2))
+          (should-error
+           (emacsvox-aural-structured-timeline-available-p)
+           :type 'error)
+          (omnivox--handle-capabilities-response
+           process
+           '(:type "capabilities" :server_version "1.3.0"
+             :supported_protocol_versions (1)
+             :features ("presentation_timeline_v3")))
+          (should
+           (=
+            (process-get
+             process emacsvox-aural--structured-timeline-process-property)
+            3))
           (should (emacsvox-aural-structured-timeline-available-p)))
       (delete-process process))))
 

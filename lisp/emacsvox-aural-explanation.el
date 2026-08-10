@@ -6,7 +6,7 @@
 
 ;;; Commentary:
 
-;; Exact and simulated presentation explanations, spoken and visual reports,
+;; Retained and simulated presentation explanations, spoken and visual reports,
 ;; spatial capability inspection, concise descriptions, and training mode.
 
 ;;; Code:
@@ -220,7 +220,7 @@ plan at point always supplies its actual occasion as the initial default."
      :basis 'simulation)))
 
 (defun emacsvox-aural-explain-record (record)
-  "Return an exact explanation of frozen presentation RECORD."
+  "Return an explanation of retained frozen presentation RECORD."
   (unless (emacsvox-aural-presentation-record-p record)
     (user-error "Not an aural presentation record: %S" record))
   (let* ((concrete (emacsvox-aural-presentation-record-plan record))
@@ -234,7 +234,12 @@ plan at point always supplies its actual occasion as the initial default."
      :render-plan render
      :concrete-plan concrete
      :suppressed-actions nil
-     :basis 'exact-queued
+     :basis
+     (if
+         (emacsvox-aural-presentation-record-effective-payload-truncated-p
+          record)
+         'retained-preview
+       'exact-queued)
      :presentation-id (emacsvox-aural-presentation-record-id record)
      :queued-at (copy-tree
                  (emacsvox-aural-presentation-record-queued-at record))
@@ -479,14 +484,16 @@ selected occasion has no matching rule."
       nil
       (list
        "Aural explanation."
-       (if
-           (eq
-            (emacsvox-aural-explanation-basis explanation)
-            'exact-queued)
-           (format
-            "Exact queued presentation %s."
-            (emacsvox-aural-explanation-presentation-id explanation))
-         "Simulation using the current configuration.")
+       (pcase (emacsvox-aural-explanation-basis explanation)
+         ('exact-queued
+          (format
+           "Exact queued presentation %s."
+           (emacsvox-aural-explanation-presentation-id explanation)))
+         ('retained-preview
+          (format
+           "Bounded queued preview %s; the complete payload was not retained."
+           (emacsvox-aural-explanation-presentation-id explanation)))
+         (_ "Simulation using the current configuration."))
        (format
         "Compatibility baseline %s."
         (emacsvox-aural-humanize scheme))
@@ -574,14 +581,19 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
     (with-help-window (help-buffer)
       (princ "Aural presentation explanation\n\n")
       (if
-          (eq
+          (memq
            (emacsvox-aural-explanation-basis explanation)
-           'exact-queued)
+           '(exact-queued retained-preview))
           (let ((location
                  (emacsvox-aural-explanation-source-location explanation)))
             (princ
              (format
-              "Basis: exact queued presentation %s, submitted at %s\n"
+              (if
+                  (eq
+                   (emacsvox-aural-explanation-basis explanation)
+                   'exact-queued)
+                  "Basis: exact queued presentation %s, submitted at %s\n"
+                "Basis: bounded queued preview %s, submitted at %s; complete payload not retained\n")
               (emacsvox-aural-explanation-presentation-id explanation)
               (format-time-string
                "%Y-%m-%d %H:%M:%S"

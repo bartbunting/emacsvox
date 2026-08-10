@@ -160,7 +160,7 @@
       (vector
        "Recent aural feedback"
        (emacsvox-aural-home--recent-feedback-status)
-       "Browse, explain, replay, audition, and remap exact presentations that were heard"))
+       "Browse, explain, replay, audition, and remap bounded presentations that were heard"))
      (list
       'profiles
       (vector
@@ -306,7 +306,7 @@
    #'emacsvox-aural-remap-earcon-at-point))
 
 (defun emacsvox-aural-home-recent-feedback ()
-  "Open exact retained presentations from Aural Home."
+  "Open bounded retained presentations from Aural Home."
   (interactive)
   (emacsvox-aural-list-recent-feedback
    (emacsvox-aural-home--source-buffer)))

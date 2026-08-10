@@ -1789,6 +1789,44 @@
               (when (get-buffer "*Help*")
                 (kill-buffer "*Help*")))))))))
 
+(ert-deftest emacsvox-aural-tools-labels-truncated-history-as-preview ()
+  "Explanation never describes a bounded history payload as exact."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (rename-buffer "aural-preview-explanation-source" t)
+      (let* ((emacsvox-aural--history-preview-max-bytes 4)
+             (facts '(:role heading :content "Long heading"))
+             (context (emacsvox-aural-capture-context nil 'navigation))
+             (render (emacsvox-aural-resolve-active facts context))
+             (concrete (emacsvox-aural-compile-plan render facts context)))
+        (cl-letf
+            (((symbol-function 'tts-voice-reset-code)
+              (lambda () "RESET"))
+             ((symbol-function 'tts--protocol-queue-code) #'ignore)
+             ((symbol-function 'tts--protocol-queue-text) #'ignore))
+          (emacsvox-aural-queue-concrete-plan concrete "Long heading"))
+        (let* ((record (emacsvox-aural-last-presentation (current-buffer)))
+               (explanation (emacsvox-aural-explain-record record))
+               (spoken
+                (emacsvox-aural-explanation--spoken-explanation explanation)))
+          (should
+           (emacsvox-aural-presentation-record-payload-truncated-p record))
+          (should
+           (eq
+            (emacsvox-aural-explanation-basis explanation)
+            'retained-preview))
+          (should (string-match-p "Bounded queued preview" spoken))
+          (unwind-protect
+              (save-window-excursion
+                (emacsvox-aural-explanation-display explanation)
+                (with-current-buffer "*Help*"
+                  (should
+                   (string-match-p
+                    "Basis: bounded queued preview"
+                    (buffer-string)))))
+            (when (get-buffer "*Help*")
+              (kill-buffer "*Help*"))))))))
+
 (ert-deftest emacsvox-aural-tools-explanation-names-matching-occasions ()
   "No-match spoken help identifies a useful alternative occasion."
   (emacsvox-test--with-aural-tools

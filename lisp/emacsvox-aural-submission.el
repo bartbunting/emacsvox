@@ -191,8 +191,16 @@ PHASE is `before' by default and may alternatively be `after'."
          (plist-put
           (emacsvox-aural-concrete-plan-context plan)
           :presentation-transaction-id id)))
-      (emacsvox-aural-call-with-presentation-transaction
-       id #'tts-speak prepared)
+      (let* ((presented-plans nil)
+             (emacsvox-aural--presented-plan-collector
+              (lambda (presented-plan)
+                (push presented-plan presented-plans))))
+        (emacsvox-aural-call-with-presentation-transaction
+         id #'tts-speak prepared)
+        (when presented-plans
+          (setf
+           (emacsvox-aural-submission-plans submission)
+           (nreverse presented-plans))))
       submission)))
 
 (defun emacsvox-aural--submit-actions (compatibility-actions)
@@ -209,6 +217,10 @@ PHASE is `before' by default and may alternatively be `after'."
           (plist-put
            (copy-tree context)
            :presentation-transaction-id id))
+         (presented-plans nil)
+         (emacsvox-aural--presented-plan-collector
+          (lambda (presented-plan)
+            (push presented-plan presented-plans)))
          (plan
           (emacsvox-aural-call-with-presentation-transaction
            id #'emacsvox-aural-present facts plan-context
@@ -223,7 +235,7 @@ PHASE is `before' by default and may alternatively be `after'."
      :compatibility-actions
      (mapcar #'copy-emacsvox-aural-compatibility-action actions)
      :prepared-content nil
-     :plans (list plan))))
+     :plans (or (nreverse presented-plans) (list plan)))))
 
 (cl-defun emacsvox-aural-submit-actions
     (&key

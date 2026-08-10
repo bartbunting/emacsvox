@@ -1428,15 +1428,22 @@ logical registry is replaced, so partial failure is explicit and retryable."
     (when (member "emacsvox_tx" (plist-get response :features))
       (emacsvox-aural-enable-framed-delivery process))
     (cond
-     ((member "presentation_timeline_v2" (plist-get response :features))
-      (emacsvox-aural-enable-structured-timeline process 2))
-     ((member "presentation_timeline_v1" (plist-get response :features))
-      (emacsvox-aural-enable-structured-timeline process 1)
+     ((member "presentation_timeline_v3" (plist-get response :features))
+      (emacsvox-aural-enable-structured-timeline process 3))
+     ((or
+       (member "presentation_timeline_v2" (plist-get response :features))
+       (member "presentation_timeline_v1" (plist-get response :features)))
+      (emacsvox-aural-enable-structured-timeline
+       process
+       (if
+           (member "presentation_timeline_v2" (plist-get response :features))
+           2
+         1))
       (omnivox--record-control-error
        process
        '(:type "error" :code "upgrade_required"
          :message
-         "Omnivox timeline V2 is required; rebuild and restart the server"))))
+         "Omnivox timeline V3 is required; rebuild and restart the server"))))
     (when (member "relative_rate_v1" (plist-get response :features))
       (emacsvox-aural-enable-relative-rate process))
     (when (eq process tts-speaker-process)

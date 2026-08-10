@@ -124,6 +124,67 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         text (length text))))
     (nreverse plans)))
 
+(defun emacsvox-test--decode-multipart-timeline (commands)
+  "Decode multipart timeline COMMANDS and return payload metadata.
+
+COMMANDS may be a list of complete protocol commands or one combined process
+write.  State synchronization lines in a combined write are ignored."
+  (let* ((lines
+          (if (stringp commands)
+              (split-string commands "\n" t)
+            (cl-mapcan
+             (lambda (command)
+               (split-string command "\n" t))
+             commands)))
+         (parts
+          (seq-filter
+           (lambda (line)
+             (string-prefix-p "emacsvox_timeline_part " line))
+           lines)))
+    (unless parts
+      (error "No multipart timeline commands in %S" commands))
+    (let* ((first (split-string (car parts) " " t))
+           (version (string-to-number (nth 1 first)))
+           (generation (string-to-number (nth 2 first)))
+           (dispatch-id (string-to-number (nth 3 first)))
+           (part-count (string-to-number (nth 5 first)))
+           (decoded-bytes (string-to-number (nth 6 first)))
+           encoded)
+      (unless (= (length parts) part-count)
+        (error "Expected %d parts, received %d" part-count (length parts)))
+      (cl-loop
+       for line in parts
+       for expected-index from 0
+       for fields = (split-string line " " t)
+       do
+       (unless
+           (and
+            (= (length fields) 8)
+            (= (string-to-number (nth 1 fields)) version)
+            (= (string-to-number (nth 2 fields)) generation)
+            (= (string-to-number (nth 3 fields)) dispatch-id)
+            (= (string-to-number (nth 4 fields)) expected-index)
+            (= (string-to-number (nth 5 fields)) part-count)
+            (= (string-to-number (nth 6 fields)) decoded-bytes))
+         (error "Inconsistent multipart timeline command: %s" line))
+       (setq encoded (concat encoded (nth 7 fields))))
+      (let* ((payload (base64-decode-string encoded))
+             (decoded (decode-coding-string payload 'utf-8))
+             (envelope
+              (json-parse-string
+               decoded :object-type 'plist :array-type 'list)))
+        (unless (= (string-bytes payload) decoded-bytes)
+          (error "Declared %d decoded bytes, received %d"
+                 decoded-bytes (string-bytes payload)))
+        (list
+         :version version
+         :generation generation
+         :dispatch-id dispatch-id
+         :part-count part-count
+         :decoded-bytes decoded-bytes
+         :encoded encoded
+         :envelope envelope)))))
+
 (ert-deftest emacsvox-aural-source-text-property-ignores-aliases ()
   "Source capture distinguishes actual properties from character aliases."
   (let ((text (propertize "face" 'face 'font-lock-comment-face)))
@@ -405,7 +466,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (seq-find
            (lambda (action) (equal (plist-get action :type) "tone"))
            actions)))
-    (should (= (plist-get envelope :protocol_version) 2))
+    (should (= (plist-get envelope :protocol_version) 3))
     (should (= (plist-get envelope :generation) 7))
     (should (= (plist-get envelope :dispatch_id) 19))
     (should (equal (plist-get envelope :delivery_policy) "ordered"))
@@ -444,7 +505,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (should (= (length (cadr built)) 4))))
 
 (ert-deftest emacsvox-aural-structured-timeline-preserves-delivery-policy ()
-  "Version 2 carries ordered, urgent, and keyed replacement semantics."
+  "Version 3 carries ordered, urgent, and keyed replacement semantics."
   (let ((plan
          (emacsvox-aural--make-concrete-plan
           :content
@@ -462,7 +523,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
               (car
                (emacsvox-aural--build-structured-timeline
                 8 20 (list (list plan "Policy" nil))))))
-        (should (= (plist-get envelope :protocol_version) 2))
+        (should (= (plist-get envelope :protocol_version) 3))
         (should (equal (plist-get envelope :delivery_policy) (nth 2 case)))
         (if (nth 3 case)
             (should
@@ -499,8 +560,114 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (emacsvox-aural--encode-structured-timeline (car case))
       (cadr case)))))
 
-(ert-deftest emacsvox-aural-requires-negotiated-timeline-v2 ()
-  "Timeline V1 is diagnosed instead of silently lowering Aural policy."
+(ert-deftest emacsvox-aural-multipart-framing-preserves-one-unicode-envelope ()
+  "V3 fragments serialized bytes without splitting spans or positioned actions."
+  (let* ((text (apply #'concat (make-list 30 "café 日本 TestCase ")))
+         (tone
+          (emacsvox-aural--make-concrete-action
+           :id 'capital :kind 'tone :pitch 880 :duration 25
+           :audio-mode 'insert :anchor 'transition :source 'capitalization))
+         (context '(:icons-enabled nil))
+         (positioned
+          (list
+           (list
+            :utf8-offset 6
+            :actions
+            (list
+             (emacsvox-aural--make-concrete-positioned-action
+              :action tone :context context)))))
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text text :speak t :voice-request 'comment)
+           :context context))
+         (envelope
+          (car
+           (emacsvox-aural--build-structured-timeline
+            17 29 (list (list plan text nil positioned)))))
+         (emacsvox-aural--timeline-frame-max-bytes 128)
+         (emacsvox-aural--timeline-aggregate-max-bytes 8192)
+         (emacsvox-aural--timeline-encoded-fragment-max-bytes
+          (* 4 (/ (+ emacsvox-aural--timeline-frame-max-bytes 2) 3)))
+         (commands (emacsvox-aural--frame-structured-timeline envelope))
+         (decoded (emacsvox-test--decode-multipart-timeline commands))
+         (round-tripped (plist-get decoded :envelope))
+         (actions (plist-get round-tripped :actions))
+         (wire-tone
+          (seq-find
+           (lambda (action) (equal (plist-get action :type) "tone"))
+           actions)))
+    (should (> (length commands) 1))
+    (should (<= (length commands) emacsvox-aural--timeline-max-parts))
+    (should (= (plist-get decoded :version) 3))
+    (should (= (plist-get decoded :generation) 17))
+    (should (= (plist-get decoded :dispatch-id) 29))
+    (should (= (plist-get decoded :part-count) (length commands)))
+    (should (= (length (plist-get round-tripped :spans)) 1))
+    (should
+     (equal
+      (plist-get (car (plist-get round-tripped :spans)) :text)
+      text))
+    (should wire-tone)
+    (should
+     (equal
+      (plist-get (plist-get wire-tone :position) :position)
+      "text_offset"))
+    (should (= (plist-get (plist-get wire-tone :position) :utf8_offset) 6))))
+
+(ert-deftest emacsvox-aural-timeline-frame-boundary-is-decoded-json-size ()
+  "An exact-size V3 payload stays direct and one byte less becomes multipart."
+  (let* ((plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text "boundary café" :speak t)
+           :context '(:icons-enabled nil)))
+         (envelope
+          (car
+           (emacsvox-aural--build-structured-timeline
+            3 5 (list (list plan "boundary café" nil)))))
+         (payload (emacsvox-aural--structured-timeline-payload envelope))
+         (payload-bytes (car payload)))
+    (let ((emacsvox-aural--timeline-frame-max-bytes payload-bytes))
+      (should
+       (string-prefix-p
+        "emacsvox_timeline {"
+        (car (emacsvox-aural--frame-structured-timeline envelope)))))
+    (let* ((emacsvox-aural--timeline-frame-max-bytes (1- payload-bytes))
+           (emacsvox-aural--timeline-encoded-fragment-max-bytes
+            (* 4 (/ (+ emacsvox-aural--timeline-frame-max-bytes 2) 3)))
+           (commands (emacsvox-aural--frame-structured-timeline envelope)))
+      (should (> (length commands) 1))
+      (should
+       (cl-every
+        (lambda (command)
+          (string-prefix-p "emacsvox_timeline_part 3 " command))
+        commands)))))
+
+(ert-deftest emacsvox-aural-multipart-framing-rejects-too-many-parts ()
+  "A logical presentation cannot exceed the negotiated 64-part bound."
+  (let* ((text (make-string 512 ?x))
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content :text text :speak t)
+           :context '(:icons-enabled nil)))
+         (envelope
+          (car
+           (emacsvox-aural--build-structured-timeline
+            1 1 (list (list plan text nil)))))
+         (emacsvox-aural--timeline-frame-max-bytes 32)
+         (emacsvox-aural--timeline-aggregate-max-bytes 4096)
+         (emacsvox-aural--timeline-encoded-fragment-max-bytes 44)
+         (emacsvox-aural--timeline-max-parts 2))
+    (should-error
+     (emacsvox-aural--frame-structured-timeline envelope)
+     :type 'emacsvox-aural-transport-error)))
+
+(ert-deftest emacsvox-aural-requires-negotiated-timeline-v3 ()
+  "Older timelines are diagnosed instead of silently lowering Aural policy."
   (let* ((process
           (make-pipe-process
            :name "emacsvox-timeline-version-test" :buffer nil :noquery t))
@@ -512,6 +679,10 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
            (emacsvox-aural-structured-timeline-available-p)
            :type 'error)
           (emacsvox-aural-enable-structured-timeline process 2)
+          (should-error
+           (emacsvox-aural-structured-timeline-available-p)
+           :type 'error)
+          (emacsvox-aural-enable-structured-timeline process 3)
           (should (emacsvox-aural-structured-timeline-available-p)))
       (delete-process process))))
 
@@ -685,7 +856,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (unwind-protect
         (progn
           (process-put
-           process emacsvox-aural--structured-timeline-process-property 2)
+           process emacsvox-aural--structured-timeline-process-property 3)
           (process-put process tts--tracked-playback-completion-property t)
           (process-put process tts--marker-playback-events-property t)
           (cl-letf
@@ -713,7 +884,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                    (envelope
                     (json-parse-string
                      decoded :object-type 'plist :array-type 'list)))
-              (should (= (plist-get envelope :protocol_version) 2))
+              (should (= (plist-get envelope :protocol_version) 3))
               (should (equal (plist-get envelope :delivery_policy) "ordered"))
               (should-not (plist-member envelope :replacement_key))
               (should (= (plist-get envelope :generation) 1))
@@ -725,6 +896,148 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (should (gethash identifier tts--tracked-dispatches))
           (should (gethash identifier tts--marker-dispatches)))
       (tts-cancel-tracked-dispatch identifier)
+      (delete-process process))))
+
+(ert-deftest emacsvox-aural-delivers-multipart-timeline-as-one-tracked-write ()
+  "All V3 parts share one write, dispatch ID, and callback registration."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-multipart-delivery-test" :buffer nil :noquery t))
+         (text (apply #'concat (make-list 40 "café 日本 ")))
+         (tts-speaker-process process)
+         (tts--tracked-dispatch-sequence 70)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         (tts--marker-event-function #'ignore)
+         (tts--tracked-completion-function #'ignore)
+         (emacsvox-aural--delivery-sequence 0)
+         (emacsvox-aural--timeline-frame-max-bytes 128)
+         (emacsvox-aural--timeline-aggregate-max-bytes 8192)
+         (emacsvox-aural--timeline-encoded-fragment-max-bytes
+          (* 4 (/ (+ emacsvox-aural--timeline-frame-max-bytes 2) 3)))
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content :text text :speak t)
+           :context '(:occasion navigation :icons-enabled nil)))
+         writes identifier)
+    (unwind-protect
+        (progn
+          (process-put
+           process emacsvox-aural--structured-timeline-process-property 3)
+          (process-put process tts--tracked-playback-completion-property t)
+          (process-put process tts--marker-playback-events-property t)
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (owner command)
+                  (push (list owner command) writes)))
+               ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+            (setq
+             identifier
+             (emacsvox-aural-call-with-delivery-transaction
+              process
+              (lambda ()
+                (emacsvox-aural-queue-concrete-plan plan text)
+                (tts--protocol-dispatch)))))
+          (should (= identifier 71))
+          (should (= (length writes) 1))
+          (should (eq (caar writes) process))
+          (let* ((decoded
+                  (emacsvox-test--decode-multipart-timeline (cadar writes)))
+                 (envelope (plist-get decoded :envelope)))
+            (should (> (plist-get decoded :part-count) 1))
+            (should (= (plist-get decoded :dispatch-id) identifier))
+            (should (= (plist-get envelope :dispatch_id) identifier))
+            (should
+             (equal
+              (plist-get (car (plist-get envelope :spans)) :text)
+              text)))
+          (should (= (hash-table-count tts--tracked-dispatches) 1))
+          (should (= (hash-table-count tts--marker-dispatches) 1))
+          (should (gethash identifier tts--tracked-dispatches))
+          (should (gethash identifier tts--marker-dispatches)))
+      (when identifier (tts-cancel-tracked-dispatch identifier))
+      (delete-process process))))
+
+(ert-deftest emacsvox-aural-rejects-unsendable-timelines-atomically ()
+  "Aggregate overflow and an oversized resource cause no partial side effects."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-atomic-timeline-rejection-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts--tracked-dispatch-sequence 80)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         (tts--marker-event-function #'ignore)
+         (tts--tracked-completion-function #'ignore)
+         (emacsvox-aural--delivery-sequence 0)
+         (emacsvox-aural-presentation-history nil)
+         writes)
+    (unwind-protect
+        (progn
+          (process-put
+           process emacsvox-aural--structured-timeline-process-property 3)
+          (process-put process tts--tracked-playback-completion-property t)
+          (process-put process tts--marker-playback-events-property t)
+          (cl-labels
+              ((attempt
+                (transaction-id plan text aggregate-limit)
+                (let* ((emacsvox-aural--timeline-frame-max-bytes 128)
+                       (emacsvox-aural--timeline-aggregate-max-bytes
+                        aggregate-limit)
+                       (emacsvox-aural--timeline-encoded-fragment-max-bytes
+                        (*
+                         4
+                         (/ (+ emacsvox-aural--timeline-frame-max-bytes 2)
+                            3))))
+                  (should-error
+                   (emacsvox-aural-call-with-presentation-transaction
+                    transaction-id
+                    #'emacsvox-aural-call-with-delivery-transaction
+                    process
+                    (lambda ()
+                      (emacsvox-aural-queue-concrete-plan plan text)
+                      (tts--protocol-dispatch)))
+                   :type 'emacsvox-aural-transport-error)
+                  (should-not writes)
+                  (should-not emacsvox-aural-presentation-history)
+                  (should (zerop (hash-table-count tts--tracked-dispatches)))
+                  (should (zerop (hash-table-count tts--marker-dispatches))))))
+            (cl-letf
+                (((symbol-function 'process-send-string)
+                  (lambda (_owner command) (push command writes)))
+                 ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+              (let* ((transaction-id 91)
+                     (text (make-string 1024 ?x))
+                     (plan
+                      (emacsvox-aural--make-concrete-plan
+                       :content
+                       (emacsvox-aural--make-concrete-content
+                        :text text :speak t)
+                       :context
+                       (list
+                        :icons-enabled nil
+                        :presentation-transaction-id transaction-id))))
+                (attempt transaction-id plan text 256))
+              (let* ((transaction-id 92)
+                     (text "atomic resource")
+                     (resource (concat "/" (make-string 4097 ?x)))
+                     (cue
+                      (emacsvox-aural--make-concrete-action
+                       :id 'oversized :kind 'cue :cue 'oversized
+                       :resource resource :anchor 'object))
+                     (plan
+                      (emacsvox-aural--make-concrete-plan
+                       :before (list cue)
+                       :content
+                       (emacsvox-aural--make-concrete-content
+                        :text text :speak t)
+                       :context
+                       (list
+                        :icons-enabled t
+                        :presentation-transaction-id transaction-id))))
+                (attempt transaction-id plan text 8192)))))
       (delete-process process))))
 
 (ert-deftest emacsvox-aural-delivers-tracked-replaceable-timeline-immediately ()
@@ -752,7 +1065,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (unwind-protect
         (progn
           (process-put
-           process emacsvox-aural--structured-timeline-process-property 2)
+           process emacsvox-aural--structured-timeline-process-property 3)
           (process-put process tts--tracked-playback-completion-property t)
           (process-put process tts--marker-playback-events-property t)
           (cl-letf
@@ -782,7 +1095,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                  (envelope
                   (json-parse-string
                    decoded :object-type 'plist :array-type 'list)))
-            (should (= (plist-get envelope :protocol_version) 2))
+            (should (= (plist-get envelope :protocol_version) 3))
             (should
              (equal (plist-get envelope :delivery_policy) "replaceable"))
             (should
@@ -863,7 +1176,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (unwind-protect
           (progn
             (process-put
-             process emacsvox-aural--structured-timeline-process-property 2)
+             process emacsvox-aural--structured-timeline-process-property 3)
             (process-put
              process tts--capitalization-presentation-property t)
             (cl-letf
@@ -922,7 +1235,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (unwind-protect
         (progn
           (process-put
-           process emacsvox-aural--structured-timeline-process-property 2)
+           process emacsvox-aural--structured-timeline-process-property 3)
           (cl-letf
               (((symbol-function 'process-send-string)
                 (lambda (_owner command) (push command writes)))
@@ -1813,10 +2126,21 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
          (= (emacsvox-aural-presentation-record-effective-transaction-id
              record)
             1))
-        (should
-         (equal
-          (emacsvox-aural-presentation-record-effective-plans record)
-          (list plan)))))))
+        (let ((record-plan
+               (car
+                (emacsvox-aural-presentation-record-effective-plans record))))
+          (should-not (eq record-plan plan))
+          (should
+           (equal
+            (emacsvox-aural-concrete-plan-before record-plan)
+            (emacsvox-aural-concrete-plan-before plan)))
+          (should
+           (equal
+            (emacsvox-aural-concrete-plan-after record-plan)
+            (emacsvox-aural-concrete-plan-after plan)))
+          (should-not (emacsvox-aural-concrete-plan-degradations plan))
+          (should-not
+           (emacsvox-aural-concrete-plan-degradations record-plan)))))))
 
 (ert-deftest emacsvox-aural-action-submission-merges-compatibility-cue ()
   "Action-only compatibility cues share semantic ordering and transaction."
@@ -3683,6 +4007,21 @@ is the default inherited by a newly created TTS scratch buffer."
           (emacsvox-aural-concrete-content-text
            (emacsvox-aural-concrete-plan-content plan))
           "third"))
+        (should
+         (equal
+          (emacsvox-aural-presentation-record-payload-preview record)
+          "third"))
+        (should
+         (= (emacsvox-aural-presentation-record-payload-character-count record)
+            5))
+        (should
+         (= (emacsvox-aural-presentation-record-payload-byte-count record) 5))
+        (should-not
+         (emacsvox-aural-presentation-record-payload-truncated-p record))
+        (should
+         (string-match-p
+          "\\`[[:xdigit:]]\\{64\\}\\'"
+          (emacsvox-aural-presentation-record-payload-sha256 record)))
         (should-not (plist-get context :source-buffer))
         (cl-labels
             ((retains-buffer-p
@@ -3698,6 +4037,106 @@ is the default inherited by a newly created TTS scratch buffer."
                 (seq-some #'retains-buffer-p value))
                (t nil))))
           (should-not (retains-buffer-p record)))))))
+
+(ert-deftest emacsvox-aural-history-bounds-unicode-payload-with-full-digest ()
+  "Large history keeps one UTF-8-safe preview while digesting all speech."
+  (let ((emacsvox-aural--history-preview-max-bytes 12)
+        (emacsvox-aural-presentation-history-limit 2)
+        (emacsvox-aural-presentation-history nil)
+        (emacsvox-aural--presentation-sequence 0))
+    (cl-labels
+        ((make-plan
+          (content-text)
+          (emacsvox-aural--make-concrete-plan
+           :before
+           (list
+            (emacsvox-aural--make-concrete-action
+             :id 'before :kind 'speech :text "pré"))
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text content-text :speak t)
+           :after
+           (list
+            (emacsvox-aural--make-concrete-action
+             :id 'after :kind 'speech :text "Ωmega"))
+           :facts (list :content content-text)
+           :context '(:icons-enabled nil))))
+      (let* ((first-plan (make-plan "日本語abcdef"))
+             (second-plan (make-plan "日本語abcdeg")))
+        (emacsvox-aural-record-presentation first-plan)
+        (emacsvox-aural-record-presentation second-plan)
+        (should (= (length emacsvox-aural-presentation-history) 2))
+        (let ((second-record (car emacsvox-aural-presentation-history))
+              (first-record (cadr emacsvox-aural-presentation-history)))
+          (dolist (record (list first-record second-record))
+            (should
+             (equal
+              (emacsvox-aural-presentation-record-payload-preview record)
+              "pré日本Ω"))
+            (should
+             (=
+              (string-bytes
+               (emacsvox-aural-presentation-record-payload-preview record))
+              12))
+            (should
+             (=
+              (emacsvox-aural-presentation-record-payload-character-count
+               record)
+              17))
+            (should
+             (=
+              (emacsvox-aural-presentation-record-payload-byte-count record)
+              25))
+            (should
+             (emacsvox-aural-presentation-record-payload-truncated-p record))
+            (should
+             (equal
+              (apply
+               #'concat
+               (emacsvox-aural--history-plan-payload-texts
+                (emacsvox-aural-presentation-record-plan record)))
+              "pré日本Ω")))
+          (should-not
+           (equal
+            (emacsvox-aural-presentation-record-payload-sha256 first-record)
+            (emacsvox-aural-presentation-record-payload-sha256 second-record)))
+          (should
+           (equal
+            (emacsvox-aural-concrete-content-text
+             (emacsvox-aural-concrete-plan-content first-plan))
+            "日本語abcdef"))
+          (should
+           (equal
+            (emacsvox-aural-concrete-action-text
+             (car (emacsvox-aural-concrete-plan-after first-plan)))
+            "Ωmega")))))))
+
+(ert-deftest emacsvox-aural-history-refuses-incomplete-preview-replay ()
+  "A truncated history preview cannot be announced as complete replay."
+  (require 'emacsvox-aural-recent-feedback)
+  (let* ((emacsvox-aural--history-preview-max-bytes 4)
+         (emacsvox-aural-presentation-history-limit 1)
+         (emacsvox-aural-presentation-history nil)
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text "more than a preview" :speak t)
+           :context '(:icons-enabled nil)))
+         replayed)
+    (emacsvox-aural-record-presentation plan)
+    (let ((record (car emacsvox-aural-presentation-history)))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-recent-feedback--record)
+            (lambda () record))
+           ((symbol-function 'emacsvox-aural-preview-play-runs)
+            (lambda (&rest _arguments) (setq replayed t)))
+           ((symbol-function 'emacsvox-aural-preview-play-concrete-plan)
+            (lambda (&rest _arguments) (setq replayed t))))
+        (should-error
+         (emacsvox-aural-recent-feedback-replay)
+         :type 'user-error))
+      (should-not replayed))))
 
 (ert-deftest emacsvox-aural-transport-excludes-inhibited-interface-history ()
   "Interface presentations leave existing source history and sequence intact."

@@ -111,11 +111,36 @@ Each function receives the failure plist stored in
   'emacsvox-aural-relative-rate
   "Process property enabling signed relative rate in timelines.")
 
-(defconst emacsvox-aural--structured-timeline-version 2
+(defconst emacsvox-aural--structured-timeline-version 3
   "Structured presentation timeline version emitted by Emacsvox.")
+
+(defconst emacsvox-aural--timeline-frame-max-bytes (* 256 1024)
+  "Maximum decoded JSON bytes in one direct timeline transport frame.")
+
+(defconst emacsvox-aural--timeline-aggregate-max-bytes (* 16 1024 1024)
+  "Maximum decoded JSON bytes in one logical multipart timeline.")
+
+(defconst emacsvox-aural--timeline-max-parts 64
+  "Maximum number of transport fragments in one logical timeline.")
+
+(defconst emacsvox-aural--timeline-encoded-fragment-max-bytes
+  (* 4 (/ (+ emacsvox-aural--timeline-frame-max-bytes 2) 3))
+  "Maximum Base64 bytes carried by one multipart transport fragment.")
+
+(defconst emacsvox-aural--timeline-id-max-bytes 128
+  "Maximum UTF-8 size of one timeline identifier.")
 
 (defconst emacsvox-aural--timeline-replacement-key-max-bytes 128
   "Maximum UTF-8 size of one timeline replacement key.")
+
+(defconst emacsvox-aural--timeline-resource-path-max-bytes 4096
+  "Maximum UTF-8 size of one timeline audio-resource path.")
+
+(defconst emacsvox-aural--timeline-max-spans (* 4096 64)
+  "Maximum speech spans in one logical V3 timeline.")
+
+(defconst emacsvox-aural--timeline-max-actions (* 4096 64)
+  "Maximum non-speech actions in one logical V3 timeline.")
 
 (defun emacsvox-aural-enable-framed-delivery (process)
   "Enable complete replaceable transaction framing for PROCESS."
@@ -126,10 +151,11 @@ Each function receives the failure plist stored in
 (defun emacsvox-aural-enable-structured-timeline (process &optional version)
   "Record structured aural timeline VERSION support for PROCESS.
 
-VERSION defaults to 2 for direct callers.  Version 1 is recorded only so an
-installation mismatch can be reported before Aural semantics are lowered."
-  (setq version (or version 2))
-  (unless (memq version '(1 2))
+VERSION defaults to 3 for direct callers.  Older versions are recorded only
+so an installation mismatch can be reported before Aural semantics are
+lowered."
+  (setq version (or version 3))
+  (unless (memq version '(1 2 3))
     (error "Unsupported structured timeline version: %S" version))
   (process-put
    process emacsvox-aural--structured-timeline-process-property version)
@@ -456,6 +482,11 @@ OWNER so a logical transaction cannot be partially delivered across streams."
       (setq result (apply function arguments))
       (let* ((entries (nreverse emacsvox-aural--delivery-transaction-entries))
              (effects (nreverse emacsvox-aural--delivery-transaction-effects))
+             (history-effect
+              (and
+               entries
+               (functionp emacsvox-aural--delivery-history-registrar)
+               (funcall emacsvox-aural--delivery-history-registrar)))
              (generation (cl-incf emacsvox-aural--delivery-sequence))
              (structured
               (emacsvox-aural--finalize-structured-delivery
@@ -465,14 +496,8 @@ OWNER so a logical transaction cannot be partially delivered across streams."
               effects (cadr structured))
         (when (integerp (caddr structured))
           (setq result (caddr structured)))
-        (when
-            (and
-             entries
-             (functionp emacsvox-aural--delivery-history-registrar))
-          (setq effects
-                (cons
-                 (funcall emacsvox-aural--delivery-history-registrar)
-                 effects)))
+        (when (and entries history-effect)
+          (setq effects (cons history-effect effects)))
         (let ((outcome
                (emacsvox-aural--submit-delivery-entries
                 owner entries effects generation)))
@@ -491,19 +516,19 @@ OWNER so a logical transaction cannot be partially delivered across streams."
    (emacsvox-aural-structured-timeline-available-p)))
 
 (defun emacsvox-aural-structured-timeline-available-p ()
-  "Return non-nil when the speaker accepts version 2 presentation timelines.
+  "Return non-nil when the speaker accepts version 3 presentation timelines.
 
-Signal a clear installation error when negotiation found only version 1."
+Signal a clear installation error when negotiation found an older version."
   (when (processp tts-speaker-process)
     (let ((version
            (process-get
             tts-speaker-process
             emacsvox-aural--structured-timeline-process-property)))
       (cond
-       ((eql version 2) t)
-       ((eql version 1)
+       ((eql version 3) t)
+       ((memq version '(1 2))
         (error
-         "Omnivox timeline V2 is required; rebuild and restart the speech server"))
+         "Omnivox timeline V3 is required; rebuild and restart the speech server"))
        (version
         (error "Unsupported negotiated Omnivox timeline version: %S" version))))))
 
@@ -659,7 +684,7 @@ the concrete request has no named preset."
    (or (emacsvox-aural-concrete-action-anchor action) 'object)))
 
 (defun emacsvox-aural--timeline-delivery-fields ()
-  "Return version 2 delivery fields for the current Aural submission."
+  "Return V3 delivery fields for the current Aural submission."
   (let ((policy (or emacsvox-aural-submission-delivery-policy 'ordered)))
     (unless (memq policy '(ordered replaceable urgent))
       (error "Unsupported aural delivery policy: %S" policy))
@@ -929,13 +954,138 @@ recorded plans contain no speech span and therefore require legacy lowering."
          :actions (vconcat (nreverse actions))))
        (nreverse bindings)))))
 
+(defun emacsvox-aural--timeline-validate-id (value kind)
+  "Validate timeline identifier VALUE described by KIND."
+  (unless
+      (and
+       (stringp value)
+       (not (string-empty-p value))
+       (<= (string-bytes value) emacsvox-aural--timeline-id-max-bytes))
+    (emacsvox-aural--transport-error
+     "%s must contain 1 to %d UTF-8 bytes"
+     kind emacsvox-aural--timeline-id-max-bytes)))
+
+(defun emacsvox-aural--validate-structured-timeline (envelope)
+  "Validate V3 timeline ENVELOPE before any transport write."
+  (unless
+      (eql
+       (plist-get envelope :protocol_version)
+       emacsvox-aural--structured-timeline-version)
+    (emacsvox-aural--transport-error
+     "Multipart delivery requires timeline protocol version %d"
+     emacsvox-aural--structured-timeline-version))
+  (dolist (field '(:generation :dispatch_id))
+    (unless
+        (let ((value (plist-get envelope field)))
+          (and (integerp value) (> value 0)))
+      (emacsvox-aural--transport-error
+       "Structured timeline %S must be a positive integer" field)))
+  (let* ((spans (append (plist-get envelope :spans) nil))
+         (actions (append (plist-get envelope :actions) nil))
+         (span-texts (make-hash-table :test #'eql))
+         (action-ids (make-hash-table :test #'equal)))
+    (unless
+        (and
+         spans
+         (<= (length spans) emacsvox-aural--timeline-max-spans))
+      (emacsvox-aural--transport-error
+       "Structured timeline must contain 1 to %d speech spans"
+       emacsvox-aural--timeline-max-spans))
+    (when (> (length actions) emacsvox-aural--timeline-max-actions)
+      (emacsvox-aural--transport-error
+       "Structured timeline exceeds %d actions"
+       emacsvox-aural--timeline-max-actions))
+    (dolist (span spans)
+      (let ((id (plist-get span :id))
+            (text (plist-get span :text))
+            (logical-voice (plist-get span :logical_voice_id))
+            (effects (plist-get span :effects)))
+        (unless (and (integerp id) (> id 0) (not (gethash id span-texts)))
+          (emacsvox-aural--transport-error
+           "Structured timeline has an invalid or duplicate span ID: %S" id))
+        (unless (and (stringp text) (not (string-empty-p text)))
+          (emacsvox-aural--transport-error
+           "Structured timeline span %S has no speech text" id))
+        (when (and logical-voice (not (eq logical-voice :null)))
+          (emacsvox-aural--timeline-validate-id
+           logical-voice "Logical voice ID"))
+        (when (equal (plist-get effects :mode) "replace")
+          (emacsvox-aural--timeline-validate-id
+           (plist-get effects :state_id) "Effect state ID"))
+        (puthash id text span-texts)))
+    (dolist (action actions)
+      (let* ((id (plist-get action :id))
+             (position (plist-get action :position))
+             (span-id (plist-get position :span_id))
+             (span-text (gethash span-id span-texts))
+             (type (plist-get action :type)))
+        (emacsvox-aural--timeline-validate-id id "Action ID")
+        (when (gethash id action-ids)
+          (emacsvox-aural--transport-error
+           "Structured timeline has duplicate action ID %S" id))
+        (puthash id t action-ids)
+        (unless span-text
+          (emacsvox-aural--transport-error
+           "Structured action %S references unknown span %S" id span-id))
+        (when (equal (plist-get position :position) "text_offset")
+          (emacsvox-aural--utf8-offset-position
+           span-text (plist-get position :utf8_offset)))
+        (when (equal type "audio")
+          (let ((path (plist-get action :path)))
+            (unless
+                (and
+                 (stringp path)
+                 (not (string-empty-p path))
+                 (<=
+                  (string-bytes path)
+                  emacsvox-aural--timeline-resource-path-max-bytes))
+              (emacsvox-aural--transport-error
+               "Audio action %S path must contain 1 to %d UTF-8 bytes"
+               id emacsvox-aural--timeline-resource-path-max-bytes)))))))
+  envelope)
+
+(defun emacsvox-aural--structured-timeline-payload (envelope)
+  "Return ENVELOPE as bounded UTF-8 JSON and Base64 payload data."
+  (let* ((json (json-serialize envelope))
+         (payload (encode-coding-string json 'utf-8 t))
+         (payload-bytes (string-bytes payload)))
+    (when (> payload-bytes emacsvox-aural--timeline-aggregate-max-bytes)
+      (emacsvox-aural--transport-error
+       "Structured aural presentation contains %d JSON bytes; aggregate limit is %d"
+       payload-bytes emacsvox-aural--timeline-aggregate-max-bytes))
+    (list payload-bytes (base64-encode-string payload t))))
+
 (defun emacsvox-aural--encode-structured-timeline (envelope)
   "Encode structured timeline ENVELOPE as bounded Base64 JSON."
-  (let* ((json (json-serialize envelope))
-         (payload (encode-coding-string json 'utf-8 t)))
-    (when (> (string-bytes payload) (* 256 1024))
-      (error "Structured aural presentation exceeds 262144 bytes"))
-    (base64-encode-string payload t)))
+  (cadr (emacsvox-aural--structured-timeline-payload envelope)))
+
+(defun emacsvox-aural--frame-structured-timeline (envelope)
+  "Return complete bounded protocol commands carrying V3 ENVELOPE."
+  (emacsvox-aural--validate-structured-timeline envelope)
+  (pcase-let* ((`(,payload-bytes ,encoded)
+                 (emacsvox-aural--structured-timeline-payload envelope))
+                (generation (plist-get envelope :generation))
+                (dispatch-id (plist-get envelope :dispatch_id)))
+    (if (<= payload-bytes emacsvox-aural--timeline-frame-max-bytes)
+        (list (format "emacsvox_timeline {%s}\n" encoded))
+      (let* ((fragment-bytes
+              emacsvox-aural--timeline-encoded-fragment-max-bytes)
+             (part-count (/ (+ (length encoded) fragment-bytes -1)
+                            fragment-bytes)))
+        (when (> part-count emacsvox-aural--timeline-max-parts)
+          (emacsvox-aural--transport-error
+           "Structured aural presentation needs %d transport parts; limit is %d"
+           part-count emacsvox-aural--timeline-max-parts))
+        (cl-loop
+         for part-index from 0 below part-count
+         for start = (* part-index fragment-bytes)
+         for end = (min (length encoded) (+ start fragment-bytes))
+         collect
+         (format
+          "emacsvox_timeline_part %d %d %d %d %d %d %s\n"
+          emacsvox-aural--structured-timeline-version
+          generation dispatch-id part-index part-count payload-bytes
+          (substring encoded start end)))))))
 
 (defun emacsvox-aural--finalize-structured-delivery
     (owner generation entries effects runs)
@@ -976,13 +1126,11 @@ recorded plans contain no speech span and therefore require legacy lowering."
                (eq 'structured-fallback
                    (emacsvox-aural--delivery-entry-kind entry)))
              entries)
-            (list
-             (emacsvox-aural--make-delivery-entry
-              :process owner :kind 'structured
-              :command
-              (format
-               "emacsvox_timeline {%s}\n"
-               (emacsvox-aural--encode-structured-timeline envelope)))))
+            (mapcar
+             (lambda (command)
+               (emacsvox-aural--make-delivery-entry
+                :process owner :kind 'structured :command command))
+             (emacsvox-aural--frame-structured-timeline envelope)))
            (append effects (list (cdr registration)))
            actual-id))))))
 
@@ -1121,18 +1269,34 @@ recorded plans contain no speech span and therefore require legacy lowering."
 
 TEXT is the final payload when TEXT-SUPPLIED-P is non-nil.  PAUSE is the
 run's leading transport pause."
-  (let ((emacsvox-aural--history-respect-icon-policy t))
+  (let* ((emacsvox-aural--history-respect-icon-policy t)
+         (presented-plan
+          (when emacsvox-aural--presented-plan-collector
+            (if text-supplied-p
+                (emacsvox-aural--freeze-presentation-plan plan text)
+              (emacsvox-aural--freeze-presentation-plan plan)))))
     (if text-supplied-p
         (emacsvox-aural-record-presentation plan text pause)
-      (emacsvox-aural-record-presentation plan)))
-  (when
-      (or
-       (null (emacsvox-aural-concrete-plan-object-id plan))
-       (emacsvox-aural-concrete-plan-object-end-p plan))
-    (emacsvox-aural--defer-delivery-effect
-     (lambda ()
-       (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan))))
-  plan)
+      (emacsvox-aural-record-presentation plan))
+    (when emacsvox-aural--presented-plan-collector
+      (funcall emacsvox-aural--presented-plan-collector presented-plan))
+    (when
+        (or
+         (null (emacsvox-aural-concrete-plan-object-id plan))
+         (emacsvox-aural-concrete-plan-object-end-p plan))
+      (let ((queued-plan presented-plan))
+        (emacsvox-aural--defer-delivery-effect
+         (lambda ()
+           (when emacsvox-aural-plan-presented-hook
+             (let ((emacsvox-aural--history-respect-icon-policy t))
+               (run-hook-with-args
+                'emacsvox-aural-plan-presented-hook
+                (if queued-plan
+                    (emacsvox-aural--history-value queued-plan)
+                  (if text-supplied-p
+                      (emacsvox-aural--freeze-presentation-plan plan text)
+                    (emacsvox-aural--freeze-presentation-plan plan))))))))))
+    plan))
 
 (defun emacsvox-aural--concrete-content-transport-key (content)
   "Return the speech-transport settings that distinguish CONTENT."

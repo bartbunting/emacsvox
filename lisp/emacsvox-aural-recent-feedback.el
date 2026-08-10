@@ -6,7 +6,7 @@
 
 ;;; Commentary:
 
-;; Spoken browsing, replay, inspection, and remapping of exact retained aural
+;; Spoken browsing, replay, inspection, and remapping of bounded retained aural
 ;; presentations.
 
 ;;; Code:
@@ -71,7 +71,7 @@
       text)))
 
 (defun emacsvox-aural-recent-feedback--content (record)
-  "Return a concise description of RECORD's exact content."
+  "Return a concise description of RECORD's retained content preview."
   (let* ((plans
           (emacsvox-aural-presentation-record-effective-plans record))
          (contents
@@ -209,6 +209,18 @@
         fallbacks
         (if (= fallbacks 1) "fallback" "fallbacks"))
        parts))
+    (when
+        (emacsvox-aural-presentation-record-effective-payload-truncated-p
+         record)
+      (push
+       (format
+        "preview %d of %d bytes"
+        (string-bytes
+         (or
+          (emacsvox-aural-presentation-record-payload-preview record)
+          ""))
+        (emacsvox-aural-presentation-record-payload-byte-count record))
+       parts))
     (if parts
         (string-join (nreverse parts) ", ")
       "ok")))
@@ -342,7 +354,7 @@ the value across sessions."
     summary))
 
 (defun emacsvox-aural-recent-feedback-explain ()
-  "Explain the exact frozen feedback record at point."
+  "Explain the retained frozen feedback record at point."
   (interactive)
   (emacsvox-aural-explanation-display
    (emacsvox-aural-explain-record
@@ -350,12 +362,23 @@ the value across sessions."
    t))
 
 (defun emacsvox-aural-recent-feedback-replay ()
-  "Replay the complete frozen presentation at point."
+  "Replay the complete frozen presentation at point when it was retained."
   (interactive)
   (let* ((record (emacsvox-aural-recent-feedback--record))
          (id (emacsvox-aural-presentation-record-id record))
          (plans
           (emacsvox-aural-presentation-record-effective-plans record)))
+    (when
+        (emacsvox-aural-presentation-record-effective-payload-truncated-p
+         record)
+      (user-error
+       "Presentation %s retains only a %d-byte preview of %d bytes and cannot be replayed completely"
+       id
+       (string-bytes
+        (or
+         (emacsvox-aural-presentation-record-payload-preview record)
+         ""))
+       (emacsvox-aural-presentation-record-payload-byte-count record)))
     (if (cdr plans)
         (emacsvox-aural-preview-play-runs
          (emacsvox-aural-presentation-record-runs record)
@@ -399,11 +422,12 @@ the value across sessions."
     (princ
      (concat
       "Recent Aural Feedback\n\n"
-      "Each row is one exact frozen presentation that was actually queued.\n"
-      "The browser never re-resolves it using the current configuration.\n\n"
+      "Each row is one bounded frozen presentation that was actually queued.\n"
+      "Large payloads retain a preview, totals, and SHA-256 digest.\n"
+      "The browser never re-resolves retained data using current configuration.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "SPC speak record     RET or e explain exact output\n"
+      "SPC speak record     RET or e explain retained output\n"
       "P replay all         c audition only its earcons\n"
       "r prepare voice remap from this record\n"
       "R replace, suppress, or restore one exact earcon\n"
@@ -418,7 +442,7 @@ the value across sessions."
     emacsvox-aural-recent-feedback-mode
     emacsvox-aural-tabulated-mode
   "Aural-Feedback"
-  "Spoken browser for exact recently queued aural presentations."
+  "Spoken browser for bounded recently queued aural presentations."
   (emacsvox-aural-ui-configure-tabulated
    "recent aural feedback"
    #'emacsvox-aural-recent-feedback-speak-current
@@ -458,7 +482,7 @@ the value across sessions."
 
 ;;;###autoload
 (defun emacsvox-aural-list-recent-feedback (&optional source-buffer)
-  "Open the spoken browser for exact retained aural feedback.
+  "Open the spoken browser for bounded retained aural feedback.
 
 SOURCE-BUFFER supplies the ordinary source to retain for navigation and
 possible buffer-local remapping.  History itself contains only frozen data,

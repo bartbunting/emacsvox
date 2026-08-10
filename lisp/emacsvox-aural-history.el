@@ -15,6 +15,7 @@
 (require 'cl-lib)
 (require 'emacsvox-aural)
 (require 'emacsvox-aural-concrete)
+(require 'emacsvox-aural-rules)
 
 (defvar emacsvox-aural-submission-delivery-policy)
 
@@ -24,9 +25,13 @@
   "One bounded, data-only record of a transport-submitted presentation.
 
 PLAN remains the representative first run for compatibility.  PLANS and
-PAUSES retain every exact formatting run in a native transaction."
+PAUSES retain bounded formatting-run previews in a native transaction."
   id queued-at plan source-buffer-name source-position object-id run-id
-  plans pauses transaction-id)
+  plans pauses transaction-id payload-preview payload-character-count
+  payload-byte-count payload-sha256 payload-truncated-p)
+
+(defconst emacsvox-aural--history-preview-max-bytes 4096
+  "Maximum aggregate UTF-8 speech preview retained in one history record.")
 
 (defvar emacsvox-aural-plan-presented-hook nil
   "Abnormal hook run after presenting one concrete aural plan.
@@ -61,6 +66,14 @@ Enable it temporarily when diagnosing presentation inside the Aural UI."
 (defvar emacsvox-aural--history-respect-icon-policy nil
   "Non-nil while queue history must remove disabled cue actions.")
 
+(defvar emacsvox-aural--presented-plan-collector nil
+  "Dynamically bound function collecting effective queued plans.
+
+Queue transport calls the function once for each concrete formatting run,
+after applying payload replacement and source icon policy to a data-only copy.
+Native submissions use this to report what was actually presented without
+mutating their compiled plans or depending on history retention.")
+
 (defvar emacsvox-aural--history-transaction-id nil
   "Identifier of the dynamically active native history transaction.")
 
@@ -84,6 +97,15 @@ record only if that packet is actually sent.")
      :source-buffer-name
      (and (marker-buffer value) (buffer-name (marker-buffer value)))))
    ((stringp value) (substring-no-properties value))
+   ((recordp value)
+    (let ((copy (copy-sequence value)))
+      (cl-loop
+       for index from 1 below (length value)
+       do
+       (aset
+        copy index
+        (emacsvox-aural--history-value (aref value index))))
+      copy))
    ((consp value)
     (cons
      (emacsvox-aural--history-value (car value))
@@ -110,10 +132,9 @@ record only if that packet is actually sent.")
   "Return a data-only copy of PLAN containing optional exact TEXT."
   (let* ((context (emacsvox-aural-concrete-plan-context plan))
          (frozen (emacsvox-aural--history-value plan))
-         (frozen-context
-          (plist-put
-           (emacsvox-aural-concrete-plan-context frozen)
-           :source-buffer nil)))
+         (frozen-context (emacsvox-aural-concrete-plan-context frozen)))
+    (when (plist-member frozen-context :source-buffer)
+      (setq frozen-context (plist-put frozen-context :source-buffer nil)))
     (setf
      (emacsvox-aural-concrete-plan-context frozen)
      frozen-context)
@@ -121,21 +142,24 @@ record only if that packet is actually sent.")
         (and
          emacsvox-aural--history-respect-icon-policy
          (not (emacsvox-aural-icons-enabled-p context)))
-      (setf
-       (emacsvox-aural-concrete-plan-before frozen)
-       (cl-remove
-        'cue
-        (emacsvox-aural-concrete-plan-before frozen)
-        :key #'emacsvox-aural-concrete-action-kind))
-      (setf
-       (emacsvox-aural-concrete-plan-after frozen)
-       (cl-remove
-        'cue
-        (emacsvox-aural-concrete-plan-after frozen)
-        :key #'emacsvox-aural-concrete-action-kind))
-      (push
-       '(:reason icons-disabled-at-source)
-       (emacsvox-aural-concrete-plan-degradations frozen)))
+      (let ((before (emacsvox-aural-concrete-plan-before frozen))
+            (after (emacsvox-aural-concrete-plan-after frozen)))
+        (when
+            (cl-some
+             (lambda (action)
+               (eq 'cue (emacsvox-aural-concrete-action-kind action)))
+             (append before after))
+          (setf
+           (emacsvox-aural-concrete-plan-before frozen)
+           (cl-remove
+            'cue before :key #'emacsvox-aural-concrete-action-kind))
+          (setf
+           (emacsvox-aural-concrete-plan-after frozen)
+           (cl-remove
+            'cue after :key #'emacsvox-aural-concrete-action-kind))
+          (push
+           '(:reason icons-disabled-at-source)
+           (emacsvox-aural-concrete-plan-degradations frozen)))))
     (when text-supplied-p
       (setf
        (emacsvox-aural-concrete-content-text
@@ -158,10 +182,145 @@ record only if that packet is actually sent.")
        nil)))
   record)
 
+(defun emacsvox-aural--history-text-prefix (text byte-limit)
+  "Return the longest character prefix of TEXT within BYTE-LIMIT UTF-8 bytes."
+  (cond
+   ((or (not (stringp text)) (<= byte-limit 0)) "")
+   ((<= (string-bytes text) byte-limit) text)
+   (t
+    (let ((low 0)
+          (high (1+ (length text))))
+      (while (< (1+ low) high)
+        (let ((middle (/ (+ low high) 2)))
+          (if (<= (string-bytes (substring text 0 middle)) byte-limit)
+              (setq low middle)
+            (setq high middle))))
+      (substring text 0 low)))))
+
+(defun emacsvox-aural--history-plan-payload-texts (plan)
+  "Return ordered speech payload strings represented by concrete PLAN."
+  (let (texts)
+    (dolist (action (emacsvox-aural-concrete-plan-before plan))
+      (when
+          (and
+           (eq 'speech (emacsvox-aural-concrete-action-kind action))
+           (stringp (emacsvox-aural-concrete-action-text action)))
+        (push (emacsvox-aural-concrete-action-text action) texts)))
+    (when-let* ((text
+                 (emacsvox-aural-concrete-content-text
+                  (emacsvox-aural-concrete-plan-content plan))))
+      (push text texts))
+    (dolist (action (emacsvox-aural-concrete-plan-after plan))
+      (when
+          (and
+           (eq 'speech (emacsvox-aural-concrete-action-kind action))
+           (stringp (emacsvox-aural-concrete-action-text action)))
+        (push (emacsvox-aural-concrete-action-text action) texts)))
+    (nreverse texts)))
+
+(defun emacsvox-aural--history-payload-metadata (plans)
+  "Return preview, totals, digest, and truncation metadata for PLANS."
+  (let ((texts
+         (cl-mapcan
+          (lambda (plan)
+            (copy-sequence
+             (emacsvox-aural--history-plan-payload-texts plan)))
+          plans))
+        (remaining emacsvox-aural--history-preview-max-bytes)
+        preview-parts
+        (character-count 0)
+        (byte-count 0)
+        digest)
+    (with-temp-buffer
+      (set-buffer-multibyte nil)
+      (dolist (text texts)
+        (let* ((bytes (string-bytes text))
+               (prefix (emacsvox-aural--history-text-prefix text remaining)))
+          (cl-incf character-count (length text))
+          (cl-incf byte-count bytes)
+          (when (not (string-empty-p prefix))
+            (push prefix preview-parts)
+            (cl-decf remaining (string-bytes prefix)))
+          (insert (number-to-string bytes) ":")
+          (insert (encode-coding-string text 'utf-8 t))
+          (insert "\0")))
+      (setq digest (secure-hash 'sha256 (current-buffer))))
+    (list
+     :preview (apply #'concat (nreverse preview-parts))
+     :character-count character-count
+     :byte-count byte-count
+     :sha256 digest
+     :truncated-p
+     (> byte-count emacsvox-aural--history-preview-max-bytes))))
+
+(defun emacsvox-aural--bound-history-plan-payload (plan remaining)
+  "Bound concrete PLAN's retained speech strings using REMAINING UTF-8 bytes.
+
+Return the preview budget left after PLAN."
+  (cl-labels
+      ((bound-text
+        (text)
+        (let ((preview
+               (emacsvox-aural--history-text-prefix text remaining)))
+          (cl-decf remaining (string-bytes preview))
+          preview))
+       (bound-action
+        (action)
+        (when
+            (and
+             (eq 'speech (emacsvox-aural-concrete-action-kind action))
+             (stringp (emacsvox-aural-concrete-action-text action)))
+          (setf
+           (emacsvox-aural-concrete-action-text action)
+           (bound-text (emacsvox-aural-concrete-action-text action))))))
+    (dolist (action (emacsvox-aural-concrete-plan-before plan))
+      (bound-action action))
+    (let* ((content (emacsvox-aural-concrete-plan-content plan))
+           (text (emacsvox-aural-concrete-content-text content)))
+      (when (stringp text)
+        (setf
+         (emacsvox-aural-concrete-content-text content)
+         (bound-text text))))
+    (dolist (action (emacsvox-aural-concrete-plan-after plan))
+      (bound-action action))
+    (let ((facts (emacsvox-aural-concrete-plan-facts plan))
+          (content
+           (emacsvox-aural-concrete-content-text
+            (emacsvox-aural-concrete-plan-content plan))))
+      (when (plist-member facts :content)
+        (setf
+         (emacsvox-aural-concrete-plan-facts plan)
+         (plist-put facts :content content))))
+    ;; Render plans may repeat speech-action strings.  Keep their policy shape
+    ;; for explanation while the concrete preview and record digest own text.
+    (when-let* ((render (emacsvox-aural-concrete-plan-source-plan plan)))
+      (dolist
+          (action
+           (append
+            (emacsvox-aural-render-plan-before render)
+            (emacsvox-aural-render-plan-after render)))
+        (when (eq 'speech (emacsvox-aural-action-kind action))
+          (setf (emacsvox-aural-action-text action) "")
+          (setf (emacsvox-aural-action-text-template action) nil))))
+    remaining))
+
+(defun emacsvox-aural--bound-history-plans (plans)
+  "Bound retained payload strings across frozen PLANS and return PLANS."
+  (let ((remaining emacsvox-aural--history-preview-max-bytes))
+    (dolist (plan plans)
+      (setq remaining
+            (emacsvox-aural--bound-history-plan-payload plan remaining))))
+  plans)
+
 (defun emacsvox-aural--make-history-record
     (plans pauses &optional transaction-id)
   "Return a history record for frozen PLANS, PAUSES, and TRANSACTION-ID."
-  (let* ((plan (car plans))
+  (let* ((payload (emacsvox-aural--history-payload-metadata plans))
+         (plans
+          (if (plist-get payload :truncated-p)
+              (emacsvox-aural--bound-history-plans plans)
+            plans))
+         (plan (car plans))
          (context (emacsvox-aural-concrete-plan-context plan)))
     (emacsvox-aural--make-presentation-record
      :id (cl-incf emacsvox-aural--presentation-sequence)
@@ -170,6 +329,11 @@ record only if that packet is actually sent.")
      :plans plans
      :pauses pauses
      :transaction-id transaction-id
+     :payload-preview (plist-get payload :preview)
+     :payload-character-count (plist-get payload :character-count)
+     :payload-byte-count (plist-get payload :byte-count)
+     :payload-sha256 (plist-get payload :sha256)
+     :payload-truncated-p (plist-get payload :truncated-p)
      :source-buffer-name (plist-get context :source-buffer-name)
      :source-position (plist-get context :source-position)
      :object-id
@@ -274,8 +438,15 @@ presentations keep independent history records."
       (emacsvox-aural-presentation-record-transaction-id record)
     (args-out-of-range nil)))
 
+(defun emacsvox-aural-presentation-record-effective-payload-truncated-p
+    (record)
+  "Return non-nil when RECORD retains only a payload preview."
+  (condition-case nil
+      (emacsvox-aural-presentation-record-payload-truncated-p record)
+    (args-out-of-range nil)))
+
 (defun emacsvox-aural-presentation-record-runs (record)
-  "Return RECORD as exact PLAN, payload, and leading-pause runs."
+  "Return RECORD as bounded PLAN, payload-preview, and leading-pause runs."
   (let ((plans
          (emacsvox-aural-presentation-record-effective-plans record))
         (pauses
