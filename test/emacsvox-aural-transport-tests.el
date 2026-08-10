@@ -759,20 +759,20 @@ write.  State synchronization lines in a combined write are ignored."
              ((symbol-function 'tts--protocol-queue-code) #'ignore)
              ((symbol-function 'tts--protocol-queue-text)
               (lambda (text) (push (list 'text text) events)))
-             ((symbol-function 'tts--protocol-tone)
-              (lambda (pitch duration &optional force)
-                (push (list 'tone pitch duration force) events))))
+             ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
+              (lambda (pitch duration mode)
+                (push (list 'tone pitch duration mode) events))))
           (tts-audio-format (point-min) (point-max))))
       (should
        (equal
         (nreverse events)
-        '((tone 440 20 nil)
+        '((tone 440 20 insert)
           (text "This ")
-          (tone 440 20 nil)
+          (tone 440 20 insert)
           (text "Is a ")
-          (tone 440 20 nil)
+          (tone 440 20 insert)
           (text "Test")
-          (tone 440 20 nil)
+          (tone 440 20 insert)
           (text "Case")))))))
 
 (ert-deftest emacsvox-aural-structured-timeline-prefers-named-voice-request ()
@@ -1177,6 +1177,8 @@ write.  State synchronization lines in a combined write are ignored."
           (progn
             (process-put
              process emacsvox-aural--structured-timeline-process-property 3)
+            (process-put
+             process emacsvox-aural--presentation-tone-process-property 1)
             (process-put
              process tts--capitalization-presentation-property t)
             (cl-letf
@@ -1635,8 +1637,15 @@ write.  State synchronization lines in a combined write are ignored."
           (tts-stopped-hook nil)
           writes)
       (cl-letf
-          (((symbol-function 'process-live-p)
+          (((symbol-function 'processp)
             (lambda (process) (eq process 'speech)))
+           ((symbol-function 'process-live-p)
+            (lambda (process) (eq process 'speech)))
+           ((symbol-function 'process-get)
+            (lambda (_process property)
+              (and
+               (eq property emacsvox-aural--presentation-tone-process-property)
+               1)))
            ((symbol-function 'process-send-string)
             (lambda (process command)
               (push (list process command) writes))))
@@ -1652,7 +1661,8 @@ write.  State synchronization lines in a combined write are ignored."
       (should
        (equal
         (nreverse writes)
-        '((speech "s\n") (speech "t 130 150\nd\n")))))))
+        '((speech "s\n")
+          (speech "emacsvox_tone 1 overlay 130.8 150\nd\n")))))))
 
 (ert-deftest emacsvox-aural-delivery-coalesces-native-navigation-burst ()
   "Real native submissions retain only the final speech protocol packet."
@@ -2074,9 +2084,9 @@ write.  State synchronization lines in a combined write are ignored."
       (cl-letf
           (((symbol-function 'emacsvox-aural--ensure-speaker)
             (lambda () (push 'ensure events)))
-           ((symbol-function 'tts--protocol-tone)
-            (lambda (pitch duration &optional force)
-              (push (list 'tone pitch duration force) events)))
+           ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
+            (lambda (pitch duration mode)
+              (push (list 'tone pitch duration mode) events)))
            ((symbol-function 'tts--protocol-silence)
             (lambda (duration &optional _force)
               (push (list 'pause duration) events)))
@@ -2094,7 +2104,7 @@ write.  State synchronization lines in a combined write are ignored."
       (should
        (equal
         (nreverse events)
-        '(ensure (tone 130.8 150 nil) (pause 40) dispatch)))
+        '(ensure (tone 130.8 150 overlay) (pause 40) dispatch)))
       (should (emacsvox-aural-submission-p submission))
       (should (= (emacsvox-aural-submission-id submission) 1))
       (should
@@ -2166,9 +2176,9 @@ write.  State synchronization lines in a combined write are ignored."
             (lambda () (push 'ensure events)))
            ((symbol-function 'emacsvox-queue-resource)
             (lambda (_resource) (push 'cue events)))
-           ((symbol-function 'tts--protocol-tone)
-            (lambda (pitch duration &optional force)
-              (push (list 'tone pitch duration force) events)))
+           ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
+            (lambda (pitch duration mode)
+              (push (list 'tone pitch duration mode) events)))
            ((symbol-function 'tts--protocol-silence)
             (lambda (duration &optional _force)
               (push (list 'pause duration) events)))
@@ -2188,7 +2198,7 @@ write.  State synchronization lines in a combined write are ignored."
       (should
        (equal
         (nreverse events)
-        '(ensure cue (tone 130.8 150 nil) (pause 40) dispatch)))
+        '(ensure cue (tone 130.8 150 overlay) (pause 40) dispatch)))
       (should
        (equal
         (mapcar
@@ -2998,16 +3008,16 @@ write.  State synchronization lines in a combined write are ignored."
                 (lambda (text)
                   (ert-fail
                    (format "A line condition queued content: %S" text))))
-               ((symbol-function 'tts--protocol-tone)
-                (lambda (pitch duration &optional force)
-                  (push (list 'tone pitch duration force) events)))
+               ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
+                (lambda (pitch duration mode)
+                  (push (list 'tone pitch duration mode) events)))
                ((symbol-function 'tts--protocol-dispatch)
                 (lambda () (push 'dispatch events))))
             (emacsvox-speak-line))
           (should
            (equal
             (nreverse events)
-            (list (list 'tone (nth 3 case) 150 nil) 'dispatch)))
+            (list (list 'tone (nth 3 case) 150 'overlay) 'dispatch)))
           (let* ((record (emacsvox-aural-last-presentation))
                  (plan
                   (car
@@ -3057,9 +3067,9 @@ write.  State synchronization lines in a combined write are ignored."
               (lambda (text)
                 (ert-fail
                  (format "Edit queued content: %S" text))))
-             ((symbol-function 'tts--protocol-tone)
-              (lambda (pitch duration &optional force)
-                (push (list 'tone pitch duration force) events)))
+             ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
+              (lambda (pitch duration mode)
+                (push (list 'tone pitch duration mode) events)))
              ((symbol-function 'tts--protocol-dispatch)
               (lambda () (push 'dispatch events))))
           (emacsvox-speak-edit-operation (car case)))
@@ -3067,7 +3077,7 @@ write.  State synchronization lines in a combined write are ignored."
          (equal
           (nreverse events)
           (list
-           (list 'tone (nth 2 case) (nth 3 case) nil)
+           (list 'tone (nth 2 case) (nth 3 case) 'overlay)
            'dispatch)))
         (let* ((record (emacsvox-aural-last-presentation))
                (plan
@@ -3389,11 +3399,11 @@ is the default inherited by a newly created TTS scratch buffer."
       (should (= (emacsvox-aural-concrete-action-duration action) 150))
       (should (emacsvox-aural-concrete-action-force action))
       (cl-letf
-          (((symbol-function 'tts--protocol-tone)
-            (lambda (pitch duration &optional force)
-              (push (list pitch duration force) events))))
+          (((symbol-function 'emacsvox-aural--protocol-presentation-tone)
+            (lambda (pitch duration mode)
+              (push (list pitch duration mode) events))))
         (emacsvox-aural-queue-concrete-action action context))
-      (should (equal events '((130.8 150 nil))))
+      (should (equal events '((130.8 150 overlay))))
       (should
        (string-match-p
         "tone line-empty at 130.8 Hz for 150 ms"
@@ -3435,11 +3445,62 @@ is the default inherited by a newly created TTS scratch buffer."
        (eq (emacsvox-aural-concrete-action-audio-mode action) 'insert))
       (should-not (emacsvox-aural-concrete-action-force action))
       (cl-letf
-          (((symbol-function 'tts--protocol-tone)
-            (lambda (pitch duration &optional force)
-              (push (list pitch duration force) events))))
+          (((symbol-function 'emacsvox-aural--protocol-presentation-tone)
+            (lambda (pitch duration mode)
+              (push (list pitch duration mode) events))))
         (emacsvox-aural-queue-concrete-action action context))
-      (should (equal events '((500.0 175 nil)))))))
+      (should (equal events '((500.0 175 insert)))))))
+
+(ert-deftest emacsvox-aural-transport-emits-versioned-presentation-tones ()
+  "Compatibility lowering retains fractional pitch and explicit clock mode."
+  (let ((tts-speaker-process 'speaker)
+        writes)
+    (cl-letf
+        (((symbol-function 'processp) (lambda (process) (eq process 'speaker)))
+         ((symbol-function 'process-get)
+          (lambda (_process property)
+            (and
+             (eq property emacsvox-aural--presentation-tone-process-property)
+             1)))
+         ((symbol-function 'emacsvox-aural-delivery-send)
+          (lambda (process command &optional _kind)
+            (push (list process command) writes))))
+      (emacsvox-aural--protocol-presentation-tone 297.3018 150 'insert)
+      (emacsvox-aural--protocol-presentation-tone 880 35 'overlay))
+    (should
+     (equal
+      (nreverse writes)
+      '((speaker "emacsvox_tone 1 insert 297.3018 150\n")
+        (speaker "emacsvox_tone 1 overlay 880 35\n"))))))
+
+(ert-deftest emacsvox-aural-transport-rejects-unsupported-presentation-tones ()
+  "Missing capability and invalid audio are rejected before a process write."
+  (let ((tts-speaker-process 'speaker)
+        writes)
+    (cl-letf
+        (((symbol-function 'processp) (lambda (_process) t))
+         ((symbol-function 'process-get) (lambda (&rest _) nil))
+         ((symbol-function 'emacsvox-aural-delivery-send)
+          (lambda (&rest arguments) (push arguments writes))))
+      (should-error
+       (emacsvox-aural--protocol-presentation-tone 440 50 'insert)
+       :type 'emacsvox-aural-transport-error))
+    (cl-letf
+        (((symbol-function 'processp) (lambda (_process) t))
+         ((symbol-function 'process-get) (lambda (&rest _) 1))
+         ((symbol-function 'emacsvox-aural-delivery-send)
+          (lambda (&rest arguments) (push arguments writes))))
+      (dolist
+          (arguments
+           '((0 50 insert)
+             (24001 50 insert)
+             (440 0 insert)
+             (440 60001 insert)
+             (440 50 independent)))
+        (should-error
+         (apply #'emacsvox-aural--protocol-presentation-tone arguments)
+         :type 'emacsvox-aural-transport-error)))
+    (should-not writes)))
 
 (ert-deftest emacsvox-aural-transport-rejects-unregistered-tones ()
   "An unknown tone cannot cross the concrete source boundary."

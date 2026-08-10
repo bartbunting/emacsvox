@@ -523,6 +523,7 @@
                           "control_v1" "emacsvox_tx" "engine_inventory"
                           "logical_voice_registration"
                           "playback_marker_events_v1"
+                          "presentation_tone_v1"
                           "preferred_engine"
                           "text_repertoire_routing_v1"
                           "tracked_playback_completion"]))))
@@ -567,6 +568,11 @@
           (should
            (process-get
             process tts--capitalization-presentation-property))
+          (should
+           (=
+            (process-get
+             process emacsvox-aural--presentation-tone-process-property)
+            1))
           (should (= (plist-get omnivox-engine-inventory
                                 :inventory_generation)
                      3))
@@ -737,7 +743,10 @@
             process tts--tracked-playback-completion-property))
           (should-not
            (process-get
-            process tts--capitalization-presentation-property)))
+            process tts--capitalization-presentation-property))
+          (should-not
+           (process-get
+            process emacsvox-aural--presentation-tone-process-property)))
       (delete-process process))))
 
 (ert-deftest emacsvox-tts-omnivox-negotiates-timeline-v3-only ()

@@ -19,6 +19,8 @@
                   "emacsvox-aural-transport" (process))
 (declare-function emacsvox-aural-enable-relative-rate
                   "emacsvox-aural-transport" (process))
+(declare-function emacsvox-aural-enable-presentation-tone
+                  "emacsvox-aural-transport" (process &optional version))
 (declare-function emacsvox-aural-enable-structured-timeline
                   "emacsvox-aural-transport" (process &optional version))
 (declare-function emacsvox-aural-effective-voice-entries
@@ -1446,6 +1448,8 @@ logical registry is replaced, so partial failure is explicit and retryable."
          "Omnivox timeline V3 is required; rebuild and restart the server"))))
     (when (member "relative_rate_v1" (plist-get response :features))
       (emacsvox-aural-enable-relative-rate process))
+    (when (member "presentation_tone_v1" (plist-get response :features))
+      (emacsvox-aural-enable-presentation-tone process 1))
     (when (eq process tts-speaker-process)
       (setq omnivox-control-capabilities response))
     (if (member "engine_inventory" (plist-get response :features))

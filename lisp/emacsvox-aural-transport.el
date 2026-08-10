@@ -31,7 +31,6 @@
 (declare-function tts--protocol-queue-code "tts-speak" (code))
 (declare-function tts--protocol-queue-text "tts-speak" (text))
 (declare-function tts--protocol-silence "tts-speak" (duration &optional force))
-(declare-function tts--protocol-tone "tts-speak" (pitch duration &optional force))
 (declare-function tts--prepare-structured-dispatch
                   "tts-speak"
                   (marker-callback completion-callback semantic-actions))
@@ -111,6 +110,19 @@ Each function receives the failure plist stored in
   'emacsvox-aural-relative-rate
   "Process property enabling signed relative rate in timelines.")
 
+(defconst emacsvox-aural--presentation-tone-process-property
+  'emacsvox-aural-presentation-tone
+  "Process property recording negotiated presentation-tone support.")
+
+(defconst emacsvox-aural--presentation-tone-version 1
+  "Version of the explicit insert/overlay tone command emitted by Emacsvox.")
+
+(defconst emacsvox-aural--presentation-tone-max-frequency-hz 24000.0
+  "Highest frequency accepted by the presentation-tone protocol.")
+
+(defconst emacsvox-aural--presentation-tone-max-duration-ms 60000
+  "Longest duration accepted by the presentation-tone protocol.")
+
 (defconst emacsvox-aural--structured-timeline-version 3
   "Structured presentation timeline version emitted by Emacsvox.")
 
@@ -165,6 +177,54 @@ lowered."
   "Enable signed relative speech-rate fields for PROCESS."
   (process-put process emacsvox-aural--relative-rate-process-property t)
   process)
+
+(defun emacsvox-aural-enable-presentation-tone (process &optional version)
+  "Record explicit presentation-tone VERSION support for PROCESS."
+  (setq version (or version emacsvox-aural--presentation-tone-version))
+  (unless (= version emacsvox-aural--presentation-tone-version)
+    (error "Unsupported presentation-tone version: %S" version))
+  (process-put
+   process emacsvox-aural--presentation-tone-process-property version)
+  process)
+
+(defun emacsvox-aural--protocol-presentation-tone (pitch duration mode)
+  "Queue a bounded PITCH/DURATION tone using explicit presentation MODE."
+  (unless (memq mode '(insert overlay))
+    (emacsvox-aural--transport-error
+     "Presentation tone mode must be insert or overlay: %S" mode))
+  (unless
+      (and
+       (numberp pitch)
+       (> pitch 0)
+       (<= pitch emacsvox-aural--presentation-tone-max-frequency-hz))
+    (emacsvox-aural--transport-error
+     "Presentation tone frequency must be greater than zero and at most %s Hz: %S"
+     emacsvox-aural--presentation-tone-max-frequency-hz pitch))
+  (unless
+      (and
+       (integerp duration)
+       (> duration 0)
+       (<= duration emacsvox-aural--presentation-tone-max-duration-ms))
+    (emacsvox-aural--transport-error
+     "Presentation tone duration must be from 1 through %d ms: %S"
+     emacsvox-aural--presentation-tone-max-duration-ms duration))
+  (unless
+      (and
+       (processp tts-speaker-process)
+       (=
+        (or
+         (process-get
+          tts-speaker-process
+          emacsvox-aural--presentation-tone-process-property)
+         0)
+        emacsvox-aural--presentation-tone-version))
+    (emacsvox-aural--transport-error
+     "This presentation requires Omnivox presentation_tone_v1; rebuild and restart the server"))
+  (emacsvox-aural-delivery-send
+   tts-speaker-process
+   (format
+    "emacsvox_tone %d %s %s %d\n"
+    emacsvox-aural--presentation-tone-version mode pitch duration)))
 
 (defun emacsvox-aural-delivery-send (process command &optional kind)
   "Send COMMAND to PROCESS through the current delivery transaction.
@@ -1156,12 +1216,12 @@ recorded plans contain no speech span and therefore require legacy lowering."
      (tts--protocol-silence
       (emacsvox-aural-concrete-action-duration action)))
     ('tone
-     ;; Retain the old standalone force request as concrete metadata, but
-     ;; never dispatch in the middle of an ordered plan.  The containing
-     ;; presentation owns the safe dispatch boundary.
-     (tts--protocol-tone
+     (emacsvox-aural--protocol-presentation-tone
       (emacsvox-aural-concrete-action-pitch action)
-      (emacsvox-aural-concrete-action-duration action)))
+      (emacsvox-aural-concrete-action-duration action)
+      (or
+       (emacsvox-aural-concrete-action-audio-mode action)
+       'overlay)))
     ('speech
      (let ((command
             (emacsvox-aural-concrete-action-voice-command action))

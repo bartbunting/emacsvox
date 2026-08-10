@@ -526,9 +526,9 @@
             (lambda () (push 'ensure events)))
            ((symbol-function 'emacsvox-queue-resource)
             (lambda (_) (push 'cue events)))
-           ((symbol-function 'tts--protocol-tone)
-            (lambda (pitch duration &optional force)
-              (push (list 'tone pitch duration force) events)))
+           ((symbol-function 'emacsvox-aural--protocol-presentation-tone)
+            (lambda (pitch duration mode)
+              (push (list 'tone pitch duration mode) events)))
            ((symbol-function 'tts--protocol-queue-text)
             (lambda (text)
               (ert-fail
@@ -545,7 +545,7 @@
         (append
          '(ensure)
          (when icons-enabled '(cue))
-         '((tone 500 50 nil) dispatch))))
+         '((tone 500 50 overlay) dispatch))))
       (should (= (length emacsvox-aural-presentation-history) 1))
       (let ((plan (car (emacsvox-aural-submission-plans submission))))
         (should
