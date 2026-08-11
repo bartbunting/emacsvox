@@ -46,8 +46,9 @@ Licensed runtime binaries are never committed to Emacsvox or Omnivox.
 * Staging and verification
 
 =make windows-omnivox= refuses tracked source changes, performs locked builds,
-cleans only its dedicated generated Cargo target, creates a content-addressed
-version, and writes =PROVENANCE= and =SHA256SUMS= beside the payload.  The
+validates and recreates only its literal dedicated generated Cargo target,
+creates a content-addressed version, and writes =PROVENANCE= and =SHA256SUMS=
+beside the payload.  Symlinked or unexpected clean targets are rejected.  The
 dependency download cache is retained.  The provenance file contains source
 revisions, toolchain and lock identities, artifact hashes, and the
 licensed-runtime policy, but no machine-local paths.  It records the

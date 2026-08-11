@@ -175,7 +175,21 @@ windows-omnivox:
 		--workdir /workspace/omnivox \
 		"$(OMNIVOX_RELEASE_IMAGE)" sh -eu -c ' \
 			mkdir -p "$$HOME" "$$CARGO_HOME"; \
-			cargo clean --target-dir "$$CARGO_TARGET_DIR"; \
+			if [ "$$CARGO_TARGET_DIR" != \
+				/workspace/omnivox/target/emacsvox-release ]; then \
+				echo "Refusing to clean unexpected release target: $$CARGO_TARGET_DIR" >&2; \
+				exit 1; \
+			fi; \
+			if [ "$$(readlink -f -- "$${CARGO_TARGET_DIR%/*}")" != \
+				/workspace/omnivox/target ]; then \
+				echo "Refusing to clean through a redirected target parent" >&2; \
+				exit 1; \
+			fi; \
+			if [ -L "$$CARGO_TARGET_DIR" ]; then \
+				echo "Refusing to clean symlinked release target: $$CARGO_TARGET_DIR" >&2; \
+				exit 1; \
+			fi; \
+			rm -rf -- "$$CARGO_TARGET_DIR"; \
 			mkdir -p "$$CARGO_TARGET_DIR"; \
 			cargo build --locked --release -p omnivox-cli; \
 			export CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc-win32; \
