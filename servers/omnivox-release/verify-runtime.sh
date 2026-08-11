@@ -64,6 +64,13 @@ if [ "$actual_deployed_digest" != "$expected_deployed_digest" ]; then
     echo "Local diagnostics do not identify the staged Omnivox executable" >&2
     exit 1
 fi
+provenance_deployed_digest=$(
+    sed -n 's/^omnivox_executable_sha256=//p' "$current/PROVENANCE"
+)
+if [ "$actual_deployed_digest" != "$provenance_deployed_digest" ]; then
+    echo "Staged Omnivox executable does not match its provenance" >&2
+    exit 1
+fi
 
 windows_runtime_path=$(sed -n '1p' "$current/windows-runtime.path")
 windows_runtime=$(wslpath -u "$windows_runtime_path")

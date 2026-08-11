@@ -23,6 +23,9 @@ ld emits the remaining COFF symbols in a variable order.  The exact
 symbol-bearing executable and a local manifest are retained under the ignored
 =cache/diagnostics/= directory; they are never staged or committed.
 =SOURCE_DATE_EPOCH=0= also prevents =strip= from adding a new PE timestamp.
+The container workspace, Cargo home, and target paths are fixed by the Makefile
+because Rust artifacts can retain registry paths; changing those internal paths
+changes the executable identity even when the source is identical.
 
 Run =make verify-windows-omnivox-toolchain= to build and validate this
 environment.  Deterministic compilation makes identical helper sources and
