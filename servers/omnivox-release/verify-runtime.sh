@@ -1,0 +1,101 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 2 ]; then
+    echo "usage: $0 OMNIVOX_RUNTIME_DIR OMNIVOX_RELEASE_DIR" >&2
+    exit 2
+fi
+
+runtime_root=$1
+release_root=$2
+current=$(readlink -f -- "$runtime_root/current")
+versions_root=$(readlink -f -- "$runtime_root/versions")
+case "$current/" in
+    "$versions_root"/*/) ;;
+    *)
+        echo "Omnivox current does not resolve below $versions_root" >&2
+        exit 1
+        ;;
+esac
+
+for required in PROVENANCE SHA256SUMS espeak-ng-data.path \
+    windows-runtime.path omnivox.exe; do
+    if [ ! -f "$current/$required" ]; then
+        echo "Staged Omnivox file is missing: $current/$required" >&2
+        exit 1
+    fi
+done
+
+(cd "$current" && sha256sum --check SHA256SUMS)
+
+build_id=$(sed -n 's/^build_id=//p' "$current/PROVENANCE")
+if [ "$build_id" != "$(basename -- "$current")" ]; then
+    echo "Provenance build ID does not match the selected version directory" >&2
+    exit 1
+fi
+
+diagnostics=$release_root/cache/diagnostics/$build_id
+for required in MANIFEST omnivox.unstripped.exe; do
+    if [ ! -f "$diagnostics/$required" ]; then
+        echo "Local Omnivox diagnostics are missing: $diagnostics/$required" >&2
+        exit 1
+    fi
+done
+diagnostics_build_id=$(sed -n 's/^build_id=//p' "$diagnostics/MANIFEST")
+if [ "$diagnostics_build_id" != "$build_id" ]; then
+    echo "Local diagnostics build ID does not match the staged runtime" >&2
+    exit 1
+fi
+expected_unstripped_digest=$(
+    sed -n 's/^unstripped_omnivox_sha256=//p' "$diagnostics/MANIFEST"
+)
+actual_unstripped_digest=$(
+    sha256sum "$diagnostics/omnivox.unstripped.exe" | cut -d ' ' -f1
+)
+if [ "$actual_unstripped_digest" != "$expected_unstripped_digest" ]; then
+    echo "Local unstripped Omnivox executable does not match its manifest" >&2
+    exit 1
+fi
+expected_deployed_digest=$(
+    sed -n 's/^deployed_omnivox_sha256=//p' "$diagnostics/MANIFEST"
+)
+actual_deployed_digest=$(sha256sum "$current/omnivox.exe" | cut -d ' ' -f1)
+if [ "$actual_deployed_digest" != "$expected_deployed_digest" ]; then
+    echo "Local diagnostics do not identify the staged Omnivox executable" >&2
+    exit 1
+fi
+
+windows_runtime_path=$(sed -n '1p' "$current/windows-runtime.path")
+windows_runtime=$(wslpath -u "$windows_runtime_path")
+while read -r _checksum payload; do
+    if [ ! -f "$windows_runtime/$payload" ] ||
+       ! cmp -s "$current/$payload" "$windows_runtime/$payload"; then
+        echo "Windows-local Omnivox payload differs: $payload" >&2
+        exit 1
+    fi
+done < "$current/SHA256SUMS"
+
+espeak_cache_path=$(sed -n '1p' "$current/espeak-ng-data.path")
+espeak_cache=$(wslpath -u "$espeak_cache_path")/espeak-ng-data
+if [ ! -f "$espeak_cache/phontab" ]; then
+    echo "Windows-local eSpeak data is incomplete: $espeak_cache" >&2
+    exit 1
+fi
+expected_espeak_digest=$(
+    sed -n 's/^espeak_data_sha256=//p' "$current/PROVENANCE"
+)
+actual_espeak_digest=$(
+    cd "$espeak_cache"
+    find . -type f -print0 | LC_ALL=C sort -z |
+        xargs -0 sha256sum | sha256sum | cut -d ' ' -f1
+)
+if [ "$actual_espeak_digest" != "$expected_espeak_digest" ]; then
+    echo "Windows-local eSpeak data does not match provenance" >&2
+    exit 1
+fi
+
+printf '%s\n' \
+    "verified_build_id=$build_id" \
+    "repository_runtime=$current" \
+    "launcher_runtime=$windows_runtime" \
+    "local_diagnostics=$diagnostics"

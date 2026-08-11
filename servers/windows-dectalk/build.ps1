@@ -1,7 +1,9 @@
 param(
     [switch]$Clean,
     [switch]$HelperOnly,
-    [string]$OutputDirectory = "bin"
+    [string]$OutputDirectory = "bin",
+    [string]$CompilerPath,
+    [string]$ReferenceDirectory
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,16 +18,32 @@ if ($Clean) {
     exit 0
 }
 
-$Compiler = Join-Path $env:WINDIR `
-    "Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+$CompilerArguments = @("/nologo")
+if (![string]::IsNullOrEmpty($CompilerPath)) {
+    if ([string]::IsNullOrEmpty($ReferenceDirectory)) {
+        throw "ReferenceDirectory is required with CompilerPath"
+    }
+    $Compiler = $CompilerPath
+    $CompilerArguments += @(
+        "/deterministic+",
+        "/debug-",
+        "/nostdlib+",
+        "/reference:$ReferenceDirectory\mscorlib.dll",
+        "/reference:$ReferenceDirectory\System.dll",
+        "/reference:$ReferenceDirectory\System.Core.dll",
+        "/reference:$ReferenceDirectory\System.Web.Extensions.dll"
+    )
+} else {
+    $Compiler = Join-Path $env:WINDIR `
+        "Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+}
 if (!(Test-Path $Compiler)) {
-    throw "The .NET Framework C# compiler was not found at $Compiler"
+    throw "The C# compiler was not found at $Compiler"
 }
 
 New-Item -ItemType Directory -Force $Bin | Out-Null
 
-& $Compiler /nologo /target:exe /optimize+ /platform:x86 `
-    /reference:System.Web.Extensions.dll `
+& $Compiler @CompilerArguments /target:exe /optimize+ /platform:x86 `
     "/out:$Bin\OmnivoxDectalkHelper32.exe" `
     (Join-Path $Root "OmnivoxDectalkCapture.cs") `
     (Join-Path $Root "OmnivoxDectalkHelper.cs") `
@@ -40,13 +58,13 @@ if (!$HelperOnly) {
         (Join-Path $Common "BridgeProtocol.cs"),
         (Join-Path $Common "WaveOutPlayer.cs")
     )
-    & $Compiler /nologo /target:exe /optimize+ /platform:x86 `
+    & $Compiler @CompilerArguments /target:exe /optimize+ /platform:x86 `
         "/out:$Bin\DectalkBridge32.exe" $BridgeSources
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to build DectalkBridge32.exe"
     }
 
-    & $Compiler /nologo /target:exe /optimize+ /platform:x64 `
+    & $Compiler @CompilerArguments /target:exe /optimize+ /platform:x64 `
         "/out:$Bin\DectalkBridge.exe" `
         (Join-Path $Root "DectalkBridgeLauncher.cs") `
         (Join-Path $Common "BridgeLauncher.cs")

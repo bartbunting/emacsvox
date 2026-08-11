@@ -3,16 +3,24 @@ BUILD_SCRIPT = $(shell wslpath -m $(CURDIR)/build.ps1)
 RUNTIME_DIR = runtime
 RUNTIME_ARCHIVE = $(RUNTIME_DIR)/vs2022.zip
 RUNTIME_URL = https://github.com/dectalk/dectalk/releases/download/2023-10-30/vs2022.zip
-RUNTIME_SHA256 = 4a778056c109b37f95ade4b3d3e308b9396b22a4b0629f9756ec0e5051b9636d
+include ../omnivox-release/toolchain.lock
+RUNTIME_SHA256 = $(dectalk_archive_sha256)
+
+ifdef OMNIVOX_CSC
+COMPILER_ARGS = \
+	-CompilerPath "$(shell wslpath -m "$(OMNIVOX_CSC)")" \
+	-ReferenceDirectory "$(shell wslpath -m "$(OMNIVOX_REFERENCE_DIR)")"
+endif
 
 all: runtime
-	$(POWERSHELL) -NoProfile -ExecutionPolicy Bypass -File "$(BUILD_SCRIPT)"
+	$(POWERSHELL) -NoProfile -ExecutionPolicy Bypass -File "$(BUILD_SCRIPT)" \
+		$(COMPILER_ARGS)
 	chmod +x bin/DectalkBridge.exe bin/DectalkBridge32.exe \
 		bin/OmnivoxDectalkHelper32.exe
 
 omnivox-helper:
 	$(POWERSHELL) -NoProfile -ExecutionPolicy Bypass -File "$(BUILD_SCRIPT)" \
-		-HelperOnly
+		$(COMPILER_ARGS) -HelperOnly
 	chmod +x bin/OmnivoxDectalkHelper32.exe
 
 $(RUNTIME_ARCHIVE):

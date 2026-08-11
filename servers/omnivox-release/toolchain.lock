@@ -1,0 +1,19 @@
+# Shell assignments consumed by verify-toolchain.sh.  Keep values free of
+# machine-local paths and update them only as a reviewed release-toolchain
+# change.
+release_contract_version=1
+rustc_release=1.97.1
+mingw_gcc_release=12-win32
+mingw_gcc_package=12.2.0-14+deb12u1+25.2+b1
+mingw_binutils_package=2.40-2+10.4
+libclang_package=1:14.0-55.7~deb12u1
+roslyn_version=5.6.0
+roslyn_package_url=https://api.nuget.org/v3-flatcontainer/microsoft.net.compilers.toolset.framework/5.6.0/microsoft.net.compilers.toolset.framework.5.6.0.nupkg
+roslyn_nupkg_sha256=302310963f0c98c53e1c4d77594341a09a98c34f67b524f4b3d1158393bf6401
+roslyn_csc_sha256=4256dca0b33648340966f0656d03159a625e7f3ea43d2fc19c7397e089578cee
+roslyn_directory_sha256=d9ae63a02e0775d2f7e33f0c02c8b05ff32a5eb7006a109fc9490ea8817c82a7
+reference_assemblies_version=1.0.3
+reference_assemblies_url=https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg
+reference_assemblies_nupkg_sha256=54d6e20a1b61caf79395d6d71d091265e81f5a5705ac4ae52af45ca143c3c694
+reference_assemblies_directory_sha256=1c7842c8b48b568a4fe085fdfd302214fb5d037d907128442b977a818641c454
+dectalk_archive_sha256=4a778056c109b37f95ade4b3d3e308b9396b22a4b0629f9756ec0e5051b9636d

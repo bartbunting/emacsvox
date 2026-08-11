@@ -46,6 +46,7 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
 .PHONY: test unit-test compiled-aural-test build-aural-test trace trace-test reference-test advice-audit name-audit tts-audit
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
+.PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers verify-windows-omnivox-runtime
 .PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
 test: unit-test compiled-aural-test build-aural-test trace-test
 
@@ -139,29 +140,72 @@ windows-dtk:
 OMNIVOX_DIR ?= $(abspath ../omnivox)
 OMNIVOX_TARGET ?= x86_64-pc-windows-gnu
 OMNIVOX_RUNTIME_DIR = $(CURDIR)/servers/omnivox-bin
-MINGW_CXX ?= x86_64-w64-mingw32-g++
+OMNIVOX_RELEASE_DIR = $(CURDIR)/servers/omnivox-release
+OMNIVOX_RELEASE_IMAGE ?= emacsvox-omnivox-windows-gnu:rust-1.97.1
+OMNIVOX_RELEASE_TARGET_DIR = $(OMNIVOX_DIR)/target/emacsvox-release
+include $(OMNIVOX_RELEASE_DIR)/toolchain.lock
+OMNIVOX_CSC = $(OMNIVOX_RELEASE_DIR)/cache/roslyn-$(roslyn_version)/tasks/net472/csc.exe
+OMNIVOX_REFERENCE_DIR = $(OMNIVOX_RELEASE_DIR)/cache/net40-reference-assemblies-$(reference_assemblies_version)/build/.NETFramework/v4.0
+
+verify-windows-omnivox-toolchain:
+	OMNIVOX_RELEASE_IMAGE="$(OMNIVOX_RELEASE_IMAGE)" \
+		"$(OMNIVOX_RELEASE_DIR)/verify-toolchain.sh"
+
+verify-windows-omnivox-helpers:
+	"$(OMNIVOX_RELEASE_DIR)/verify-helper-determinism.sh" \
+		"$(CURDIR)" "$(OMNIVOX_CSC)" "$(OMNIVOX_REFERENCE_DIR)"
 
 windows-omnivox:
-	$(MAKE) -C servers/windows-eloquence omnivox-helper
-	$(MAKE) -C servers/windows-dectalk omnivox-helper
-	cd "$(OMNIVOX_DIR)" && cargo build --locked --release -p omnivox-cli
-	cd "$(OMNIVOX_DIR)" && \
-		CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc \
-		CXX_x86_64_pc_windows_gnu=$(MINGW_CXX) \
-		AR_x86_64_pc_windows_gnu=x86_64-w64-mingw32-ar \
-		CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc \
-		cargo build --locked --release -p omnivox-cli \
-			--target $(OMNIVOX_TARGET)
 	@set -eu; \
-		executable="$(OMNIVOX_DIR)/target/$(OMNIVOX_TARGET)/release/omnivox.exe"; \
+		for repository in "$(CURDIR)" "$(OMNIVOX_DIR)"; do \
+			if ! git -C "$$repository" diff --quiet --ignore-submodules -- || \
+				! git -C "$$repository" diff --cached --quiet --ignore-submodules --; then \
+				echo "Refusing to stage Omnivox from tracked changes in $$repository" >&2; \
+				exit 1; \
+			fi; \
+		done
+	$(MAKE) verify-windows-omnivox-toolchain
+	$(MAKE) verify-windows-omnivox-helpers
+	docker run --rm --platform linux/amd64 \
+		--user "$$(id -u):$$(id -g)" \
+		--env HOME=/workspace/omnivox/target/emacsvox-home \
+		--env CARGO_HOME=/workspace/omnivox/target/emacsvox-cargo-home \
+		--env CARGO_TARGET_DIR=/workspace/omnivox/target/emacsvox-release \
+		--volume "$(OMNIVOX_DIR):/workspace/omnivox" \
+		--workdir /workspace/omnivox \
+		"$(OMNIVOX_RELEASE_IMAGE)" sh -eu -c ' \
+			mkdir -p "$$HOME" "$$CARGO_HOME"; \
+			cargo clean --target-dir "$$CARGO_TARGET_DIR"; \
+			mkdir -p "$$CARGO_TARGET_DIR"; \
+			cargo build --locked --release -p omnivox-cli; \
+			export CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc-win32; \
+			export CXX_x86_64_pc_windows_gnu=x86_64-w64-mingw32-g++-win32; \
+			export AR_x86_64_pc_windows_gnu=x86_64-w64-mingw32-ar; \
+			export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc-win32; \
+			export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS="-C link-arg=-Wl,--no-insert-timestamp"; \
+			cargo build --locked --release -p omnivox-cli \
+				--target $(OMNIVOX_TARGET); \
+			cp "$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.exe" \
+				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.unstripped.exe"; \
+			SOURCE_DATE_EPOCH=0 x86_64-w64-mingw32-strip --strip-all \
+				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.exe"; \
+			mkdir -p "$$CARGO_TARGET_DIR/windows-runtime"; \
+			cp "$$(x86_64-w64-mingw32-g++-win32 -print-file-name=libstdc++-6.dll)" \
+				"$$CARGO_TARGET_DIR/windows-runtime/libstdc++-6.dll"; \
+			cp "$$(x86_64-w64-mingw32-g++-win32 -print-file-name=libgcc_s_seh-1.dll)" \
+				"$$CARGO_TARGET_DIR/windows-runtime/libgcc_s_seh-1.dll"; \
+		'
+	@set -eu; \
+		executable="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/omnivox.exe"; \
+		unstripped_executable="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/omnivox.unstripped.exe"; \
 		eloquence_helper="$(CURDIR)/servers/windows-eloquence/bin/OmnivoxEloquenceHelper32.exe"; \
 		dectalk_helper="$(CURDIR)/servers/windows-dectalk/bin/OmnivoxDectalkHelper32.exe"; \
 		dectalk_dll="$(CURDIR)/servers/windows-dectalk/runtime/DECtalk.dll"; \
 		dectalk_dictionary="$(CURDIR)/servers/windows-dectalk/runtime/dtalk_us.dic"; \
-		stdlib="$$($(MINGW_CXX) -print-file-name=libstdc++-6.dll)"; \
-		gcc_runtime="$$($(MINGW_CXX) -print-file-name=libgcc_s_seh-1.dll)"; \
+		stdlib="$(OMNIVOX_RELEASE_TARGET_DIR)/windows-runtime/libstdc++-6.dll"; \
+		gcc_runtime="$(OMNIVOX_RELEASE_TARGET_DIR)/windows-runtime/libgcc_s_seh-1.dll"; \
 		espeak_phontab="$$(find \
-			"$(OMNIVOX_DIR)/target/release/build" \
+			"$(OMNIVOX_RELEASE_TARGET_DIR)/release/build" \
 			-path '*/espeak-rs-sys-*/out/share/espeak-ng-data/phontab' \
 			-print -quit)"; \
 		if [ -z "$$espeak_phontab" ]; then \
@@ -187,6 +231,35 @@ windows-omnivox:
 			mv "$$cache_stage" "$$windows_cache_parent/espeak-ng-data"; \
 		fi; \
 		windows_cache_path="$$(wslpath -w "$$windows_cache_parent")"; \
+		emacsvox_commit="$$(git -C "$(CURDIR)" rev-parse HEAD)"; \
+		omnivox_commit="$$(git -C "$(OMNIVOX_DIR)" rev-parse HEAD)"; \
+		cargo_lock_digest="$$(sha256sum "$(OMNIVOX_DIR)/Cargo.lock" | cut -d ' ' -f1)"; \
+		toolchain_lock_digest="$$(sha256sum "$(OMNIVOX_RELEASE_DIR)/toolchain.lock" | cut -d ' ' -f1)"; \
+		dockerfile_digest="$$(sha256sum "$(OMNIVOX_RELEASE_DIR)/Dockerfile" | cut -d ' ' -f1)"; \
+		release_image_id="$$(docker image inspect --format '{{.Id}}' "$(OMNIVOX_RELEASE_IMAGE)")"; \
+		rustc_version="$$(docker run --rm --platform linux/amd64 \
+			"$(OMNIVOX_RELEASE_IMAGE)" rustc --version)"; \
+		mingw_version="$$(docker run --rm --platform linux/amd64 \
+			"$(OMNIVOX_RELEASE_IMAGE)" \
+			x86_64-w64-mingw32-gcc-win32 --version | sed -n '1p')"; \
+		csc_digest="$$(sha256sum "$(OMNIVOX_CSC)" | cut -d ' ' -f1)"; \
+		windows_csc="$$(wslpath -m "$(OMNIVOX_CSC)")"; \
+		csc_version="$$(powershell.exe -NoProfile -NonInteractive -Command \
+			"& '$$windows_csc' /version" | tr -d '\r')"; \
+		executable_digest="$$(sha256sum "$$executable" | cut -d ' ' -f1)"; \
+		unstripped_digest="$$(sha256sum "$$unstripped_executable" | cut -d ' ' -f1)"; \
+		eloquence_runtime_digest=external-not-observed; \
+		if [ -n "$${OMNIVOX_ECI_DLL:-}" ]; then \
+			eci_file="$$OMNIVOX_ECI_DLL"; \
+			if [ ! -f "$$eci_file" ]; then \
+				eci_file="$$(wslpath -u "$$OMNIVOX_ECI_DLL")"; \
+			fi; \
+			if [ ! -f "$$eci_file" ]; then \
+				echo "OMNIVOX_ECI_DLL does not identify a readable file" >&2; \
+				exit 1; \
+			fi; \
+			eloquence_runtime_digest="$$(sha256sum "$$eci_file" | cut -d ' ' -f1)"; \
+		fi; \
 		build_id="$$( { \
 			sha256sum "$$executable" "$$eloquence_helper" "$$dectalk_helper" \
 				"$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
@@ -195,52 +268,63 @@ windows-omnivox:
 			else \
 				printf '%s\n' no-dectalk-runtime; \
 			fi; \
-			printf '%s\n' "$$data_digest"; \
+			printf '%s\n' "$$data_digest" "$$emacsvox_commit" \
+				"$$omnivox_commit" "$$cargo_lock_digest" \
+				"$$toolchain_lock_digest" "$$dockerfile_digest" \
+				"$$release_image_id" "$$csc_digest" \
+				"$(roslyn_nupkg_sha256)" \
+				"$(reference_assemblies_nupkg_sha256)" \
+				"$$eloquence_runtime_digest"; \
 		} | sha256sum | cut -c1-16)"; \
 		version_dir="$(OMNIVOX_RUNTIME_DIR)/versions/$$build_id"; \
+		diagnostics_dir="$(OMNIVOX_RELEASE_DIR)/cache/diagnostics/$$build_id"; \
 		windows_runtime_dir="$$(wslpath -u "$$windows_local_app_data")/Emacsvox/Omnivox/runtime/$$build_id"; \
+		mkdir -p "$$diagnostics_dir"; \
+		cp "$$unstripped_executable" \
+			"$$diagnostics_dir/omnivox.unstripped.exe.new"; \
+		mv -f "$$diagnostics_dir/omnivox.unstripped.exe.new" \
+			"$$diagnostics_dir/omnivox.unstripped.exe"; \
+		{ \
+			printf '%s\n' \
+				'format=emacsvox-omnivox-local-diagnostics-v1' \
+				"build_id=$$build_id" \
+				"emacsvox_commit=$$emacsvox_commit" \
+				"omnivox_commit=$$omnivox_commit" \
+				"deployed_omnivox_sha256=$$executable_digest" \
+				"unstripped_omnivox_sha256=$$unstripped_digest"; \
+		} > "$$diagnostics_dir/MANIFEST.new"; \
+		mv -f "$$diagnostics_dir/MANIFEST.new" \
+			"$$diagnostics_dir/MANIFEST"; \
 		mkdir -p "$$version_dir"; \
-		if [ ! -x "$$version_dir/omnivox.exe" ]; then \
-			cp "$$executable" "$$version_dir/omnivox.exe.new"; \
-			chmod +x "$$version_dir/omnivox.exe.new"; \
-			mv -f "$$version_dir/omnivox.exe.new" "$$version_dir/omnivox.exe"; \
-		fi; \
-		if [ ! -f "$$version_dir/libstdc++-6.dll" ]; then \
-			cp "$$stdlib" "$$version_dir/libstdc++-6.dll.new"; \
-			mv -f "$$version_dir/libstdc++-6.dll.new" \
-				"$$version_dir/libstdc++-6.dll"; \
-		fi; \
-		if [ ! -f "$$version_dir/libgcc_s_seh-1.dll" ]; then \
-			cp "$$gcc_runtime" "$$version_dir/libgcc_s_seh-1.dll.new"; \
-			mv -f "$$version_dir/libgcc_s_seh-1.dll.new" \
-				"$$version_dir/libgcc_s_seh-1.dll"; \
-		fi; \
-		if [ ! -x "$$version_dir/OmnivoxEloquenceHelper32.exe" ]; then \
-			cp "$$eloquence_helper" \
-				"$$version_dir/OmnivoxEloquenceHelper32.exe.new"; \
-			chmod +x "$$version_dir/OmnivoxEloquenceHelper32.exe.new"; \
-			mv -f "$$version_dir/OmnivoxEloquenceHelper32.exe.new" \
-				"$$version_dir/OmnivoxEloquenceHelper32.exe"; \
-		fi; \
-		if [ ! -x "$$version_dir/OmnivoxDectalkHelper32.exe" ]; then \
-			cp "$$dectalk_helper" \
-				"$$version_dir/OmnivoxDectalkHelper32.exe.new"; \
-			chmod +x "$$version_dir/OmnivoxDectalkHelper32.exe.new"; \
-			mv -f "$$version_dir/OmnivoxDectalkHelper32.exe.new" \
-				"$$version_dir/OmnivoxDectalkHelper32.exe"; \
-		fi; \
+		install_payload() { \
+			payload_source=$$1; \
+			payload_destination=$$2; \
+			payload_mode=$$3; \
+			if [ ! -f "$$payload_destination" ]; then \
+				cp "$$payload_source" "$$payload_destination.new"; \
+				mv -f "$$payload_destination.new" "$$payload_destination"; \
+			fi; \
+			if ! cmp -s "$$payload_source" "$$payload_destination"; then \
+				echo "Existing content-addressed payload differs: $$payload_destination" >&2; \
+				exit 1; \
+			fi; \
+			if [ "$$payload_mode" = executable ]; then \
+				chmod +x "$$payload_destination"; \
+			fi; \
+		}; \
+		install_payload "$$executable" "$$version_dir/omnivox.exe" executable; \
+		install_payload "$$stdlib" "$$version_dir/libstdc++-6.dll" regular; \
+		install_payload "$$gcc_runtime" \
+			"$$version_dir/libgcc_s_seh-1.dll" regular; \
+		install_payload "$$eloquence_helper" \
+			"$$version_dir/OmnivoxEloquenceHelper32.exe" executable; \
+		install_payload "$$dectalk_helper" \
+			"$$version_dir/OmnivoxDectalkHelper32.exe" executable; \
 		if [ -f "$$dectalk_dll" ] && [ -f "$$dectalk_dictionary" ]; then \
-			if [ ! -f "$$version_dir/DECtalk.dll" ]; then \
-				cp "$$dectalk_dll" "$$version_dir/DECtalk.dll.new"; \
-				mv -f "$$version_dir/DECtalk.dll.new" \
-					"$$version_dir/DECtalk.dll"; \
-			fi; \
-			if [ ! -f "$$version_dir/dtalk_us.dic" ]; then \
-				cp "$$dectalk_dictionary" \
-					"$$version_dir/dtalk_us.dic.new"; \
-				mv -f "$$version_dir/dtalk_us.dic.new" \
-					"$$version_dir/dtalk_us.dic"; \
-			fi; \
+			install_payload "$$dectalk_dll" \
+				"$$version_dir/DECtalk.dll" regular; \
+			install_payload "$$dectalk_dictionary" \
+				"$$version_dir/dtalk_us.dic" regular; \
 		fi; \
 		if [ ! -f "$$version_dir/espeak-ng-data/phontab" ]; then \
 			rm -rf "$$version_dir/espeak-ng-data.new"; \
@@ -248,13 +332,61 @@ windows-omnivox:
 			mv "$$version_dir/espeak-ng-data.new" \
 				"$$version_dir/espeak-ng-data"; \
 		fi; \
+		version_data_digest="$$(cd "$$version_dir/espeak-ng-data" && \
+			find . -type f -print0 | LC_ALL=C sort -z | \
+			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+		if [ "$$version_data_digest" != "$$data_digest" ]; then \
+			echo "Staged eSpeak data does not match its build input" >&2; \
+			exit 1; \
+		fi; \
 		printf '%s\n' "$$windows_cache_path" \
 			> "$$version_dir/espeak-ng-data.path.new"; \
 		mv -f "$$version_dir/espeak-ng-data.path.new" \
 			"$$version_dir/espeak-ng-data.path"; \
+		dectalk_runtime=not-bundled; \
+		if [ -f "$$version_dir/DECtalk.dll" ] && \
+			[ -f "$$version_dir/dtalk_us.dic" ]; then \
+			dectalk_runtime=bundled-pinned-archive; \
+		fi; \
+		{ \
+			printf '%s\n' \
+				'format=emacsvox-omnivox-provenance-v1' \
+				"build_id=$$build_id" \
+				"emacsvox_commit=$$emacsvox_commit" \
+				"omnivox_commit=$$omnivox_commit" \
+				"cargo_lock_sha256=$$cargo_lock_digest" \
+				"toolchain_lock_sha256=$$toolchain_lock_digest" \
+				"dockerfile_sha256=$$dockerfile_digest" \
+				"release_image_id=$$release_image_id" \
+				"rustc=$$rustc_version" \
+				"mingw_gcc=$$mingw_version" \
+				"roslyn_csc=$$csc_version" \
+				"roslyn_csc_sha256=$$csc_digest" \
+				"roslyn_nupkg_sha256=$(roslyn_nupkg_sha256)" \
+				"net40_reference_assemblies_nupkg_sha256=$(reference_assemblies_nupkg_sha256)" \
+				"target=$(OMNIVOX_TARGET)" \
+				"windows_rustflags=-C link-arg=-Wl,--no-insert-timestamp" \
+				"windows_strip=SOURCE_DATE_EPOCH=0 x86_64-w64-mingw32-strip --strip-all" \
+				"omnivox_executable_sha256=$$executable_digest" \
+				"unstripped_diagnostics=retained-local-not-staged" \
+				"espeak_data_sha256=$$data_digest" \
+				"eloquence_runtime=external-user-supplied-not-bundled" \
+				"eloquence_runtime_sha256=$$eloquence_runtime_digest" \
+				"dectalk_runtime=$$dectalk_runtime"; \
+		} > "$$version_dir/PROVENANCE.new"; \
+		mv -f "$$version_dir/PROVENANCE.new" "$$version_dir/PROVENANCE"; \
+		payload_files='omnivox.exe libstdc++-6.dll libgcc_s_seh-1.dll OmnivoxEloquenceHelper32.exe OmnivoxDectalkHelper32.exe PROVENANCE'; \
+		if [ "$$dectalk_runtime" = bundled-pinned-archive ]; then \
+			payload_files="$$payload_files DECtalk.dll dtalk_us.dic"; \
+		fi; \
+		(cd "$$version_dir" && sha256sum $$payload_files) \
+			> "$$version_dir/SHA256SUMS.new"; \
+		mv -f "$$version_dir/SHA256SUMS.new" "$$version_dir/SHA256SUMS"; \
+		(cd "$$version_dir" && sha256sum --check SHA256SUMS); \
 		mkdir -p "$$windows_runtime_dir"; \
 		for runtime_file in omnivox.exe libstdc++-6.dll libgcc_s_seh-1.dll \
-			OmnivoxEloquenceHelper32.exe OmnivoxDectalkHelper32.exe; do \
+			OmnivoxEloquenceHelper32.exe OmnivoxDectalkHelper32.exe \
+			PROVENANCE SHA256SUMS; do \
 			if [ ! -f "$$windows_runtime_dir/$$runtime_file" ]; then \
 				cp "$$version_dir/$$runtime_file" \
 					"$$windows_runtime_dir/$$runtime_file.new.$$$$"; \
@@ -281,6 +413,11 @@ windows-omnivox:
 			"$(OMNIVOX_RUNTIME_DIR)/current"; \
 		chmod +x servers/omnivox; \
 		echo "Staged Omnivox runtime $$build_id"
+	$(MAKE) verify-windows-omnivox-runtime
+
+verify-windows-omnivox-runtime:
+	"$(OMNIVOX_RELEASE_DIR)/verify-runtime.sh" \
+		"$(OMNIVOX_RUNTIME_DIR)" "$(OMNIVOX_RELEASE_DIR)"
 
 clean-windows-speech: clean-windows-audio clean-windows-outloud clean-windows-dtk
 
