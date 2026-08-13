@@ -55,6 +55,8 @@ omnivox_log_directory=${OMNIVOX_LOG_DIRECTORY:-"$omnivox_state_directory/emacsvo
 omnivox_session_id=$(date -u +%Y%m%dT%H%M%SZ)-$$
 if mkdir -p -- "$omnivox_log_directory"; then
     omnivox_log_file="$omnivox_log_directory/omnivox-$omnivox_session_id.log"
+    (umask 077 && : >>"$omnivox_log_file")
+    chmod 600 -- "$omnivox_log_file"
     exec 2>>"$omnivox_log_file"
     printf '%s session_start session_id=%s launcher_pid=%s program=%s\n' \
         "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$omnivox_session_id" "$$" \
@@ -67,6 +69,7 @@ fi
 # Preserve the caller's entries and add Omnivox's non-path compatibility
 # settings once, including when an existing entry has WSLENV flags.
 for variable in OMNIVOX_ENGINE OMNIVOX_AUDIO_TARGET \
+    OMNIVOX_LOG_SYNTHESIS_TEXT \
     OMNIVOX_ELOQUENCE_HELPER OMNIVOX_ECI_DLL \
     OMNIVOX_DECTALK_HELPER OMNIVOX_DECTALK_DLL ESPEAK_NG_DATA; do
     case ":${WSLENV-}:" in
