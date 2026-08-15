@@ -421,12 +421,15 @@ Both current and legacy Agent Shell wait icons are recognized.")
            end)))))
     found))
 
-(defun emacsvox-agent-shell--chat-label-context-at-point ()
-  "Return the visible agent-shell chat label context on the current line.
+(defun emacsvox-agent-shell--chat-label-context-between
+    (source-start source-end)
+  "Return the visible chat label context between SOURCE-START and SOURCE-END.
 The optional chat mode renders labels as overlays, so this adapter captures
-their semantic text without changing the underlying shell buffer."
-  (let* ((line-start (line-beginning-position))
-         (source-end (line-end-position))
+their semantic text without changing the underlying shell buffer.  An overlay
+ending at SOURCE-START labels the content that follows it."
+  (let* ((source-start
+          (min (point-max) (max (point-min) source-start)))
+         (source-end (min (point-max) (max source-start source-end)))
          (overlays
           (delete-dups
            (append
@@ -434,13 +437,13 @@ their semantic text without changing the underlying shell buffer."
             ;; so the matching overlay ends exactly where the spoken line
             ;; begins.  Do not include overlays that merely begin at the line
             ;; end: those label the following turn.
-            (and (> line-start (point-min))
+            (and (> source-start (point-min))
                  (seq-filter
                   (lambda (candidate)
-                    (= (overlay-end candidate) line-start))
-                  (overlays-in (1- line-start) line-start)))
-            (and (< line-start source-end)
-                 (overlays-in line-start source-end)))))
+                    (= (overlay-end candidate) source-start))
+                  (overlays-in (1- source-start) source-start)))
+            (and (< source-start source-end)
+                 (overlays-in source-start source-end)))))
          (chat-overlays
           (seq-filter
            (lambda (candidate)
@@ -452,10 +455,10 @@ their semantic text without changing the underlying shell buffer."
            (cdr chat-overlays)
            (cond
             ((emacsvox-agent-shell--prompt-face-between-p
-              line-start source-end)
+              source-start source-end)
              'agent-shell-chat-me)
             ((save-excursion
-               (goto-char line-start)
+               (goto-char source-start)
                (search-forward
                 "<shell-maker-end-of-prompt>" source-end t))
              'agent-shell-chat-agent))))
@@ -480,6 +483,20 @@ their semantic text without changing the underlying shell buffer."
              (label (and (stringp rendered) (string-trim rendered))))
         (when (and label (not (string-empty-p label)))
           (list :category category :text label))))))
+
+(defun emacsvox-agent-shell--chat-label-context-at-point ()
+  "Return the visible agent-shell chat label context on the current line."
+  (emacsvox-agent-shell--chat-label-context-between
+   (line-beginning-position) (line-end-position)))
+
+(defun emacsvox-agent-shell--visual-line-source-bounds ()
+  "Return the current visual line's underlying source bounds."
+  (save-excursion
+    (let ((inhibit-field-text-motion t))
+      (beginning-of-visual-line)
+      (let ((start (point)))
+        (end-of-visual-line)
+        (cons start (point))))))
 
 (defun emacsvox-agent-shell--prompt-face-at-p (text position)
   "Return non-nil when TEXT at POSITION carries an agent-shell prompt face."
@@ -701,6 +718,25 @@ the original characters in the buffer."
 
 (defvar-local emacsvox-agent-shell--vertical-navigation-origin nil
   "Semantic block identity captured before vertical movement.")
+
+(defun emacsvox-agent-shell--synthetic-agent-row-p (start end)
+  "Return non-nil when START through END repeats an agent chat display row.
+
+Agent Shell's multiline `before-string' can make upward visual motion visit
+the hidden response marker and the first response row as one source interval
+after that response row was already visited directly."
+  (and
+   emacsvox-agent-shell--vertical-navigation-active-p
+   (< start end)
+   (save-excursion
+     (goto-char start)
+     (search-forward "<shell-maker-end-of-prompt>" end t))
+   (seq-some
+    (lambda (overlay)
+      (and
+       (eq (overlay-get overlay 'category) 'agent-shell-chat-agent)
+       (< (overlay-end overlay) end)))
+    (overlays-in start end))))
 
 (defun emacsvox-agent-shell--block-location-identity (location)
   "Return a stable identity for semantic block LOCATION."
@@ -2179,8 +2215,13 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
   "Add semantic block-entry context to Agent Shell visual-line speech.
 
 Core visual-line presentation owns blank-line semantics and interruption."
-  (let ((emacsvox-agent-shell--chat-label-context
-         (emacsvox-agent-shell--chat-label-context-at-point))
+  (let* ((source-bounds
+          (emacsvox-agent-shell--visual-line-source-bounds))
+         (source-start (car source-bounds))
+         (source-end (cdr source-bounds))
+         (emacsvox-agent-shell--chat-label-context
+          (emacsvox-agent-shell--chat-label-context-between
+           source-start source-end))
         (state (get-text-property (point) 'agent-shell-ui-state))
         (section (get-text-property (point) 'agent-shell-ui-section))
         (emacsvox-agent-shell--line-navigation-speech-p t)
@@ -2194,14 +2235,17 @@ Core visual-line presentation owns blank-line semantics and interruption."
            (and state
                 (map-elt state :collapsed)
                 (memq section '(indicator label-left label-right)))))
-      (emacsvox-agent-shell--call-with-vertical-block-entry
-       (if collapsed-heading-p
-           ;; Invisible fragment bodies occupy no display width, so core visual
-           ;; line bounds can span the complete folded body.  Present the visible
-           ;; physical heading instead of copying that underlying interval.
-           #'emacsvox-speak--present-physical-line
-         original-function)
-       (if collapsed-heading-p nil arguments)))))
+      (unless
+          (emacsvox-agent-shell--synthetic-agent-row-p
+           source-start source-end)
+        (emacsvox-agent-shell--call-with-vertical-block-entry
+         (if collapsed-heading-p
+             ;; Invisible fragment bodies occupy no display width, so core
+             ;; visual bounds can span the complete folded body.  Present the
+             ;; visible physical heading instead of copying that interval.
+             #'emacsvox-speak--present-physical-line
+           original-function)
+         (if collapsed-heading-p nil arguments))))))
 
 (defun emacsvox-agent-shell--speak-line-around
     (original-function &rest arguments)

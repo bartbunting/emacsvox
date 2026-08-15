@@ -5754,6 +5754,82 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should (eq (get-text-property 0 'face spoken)
                     'agent-shell-chat-agent-label))))))
 
+(ert-deftest emacsvox-agent-shell-chat-navigation-is-directionally-symmetric ()
+  "Synthetic chat rows should not duplicate or mislabel upward speech."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local
+     agent-shell--state
+     '((:agent-config . ((:mode-line-name . "Codex"))))
+     agent-shell-chat--labeled t)
+    (let (prompt-start question-start question-end
+          marker-start thought-start thought-end)
+      (setq prompt-start (point))
+      (insert
+       (propertize
+        "Codex> " 'font-lock-face
+        '(comint-highlight-prompt comint-highlight-prompt)))
+      (setq question-start (point))
+      (insert "where were we?")
+      (setq question-end (point))
+      (insert "\n")
+      (setq marker-start (point))
+      (insert
+       (propertize
+        "<shell-maker-end-of-prompt>"
+        'invisible t 'shell-maker--marker t)
+       "\n\n")
+      (setq thought-start (point))
+      (insert "▶ Thought")
+      (setq thought-end (point))
+      (agent-shell-chat--relabel)
+      (cl-labels
+          ((speech-for
+            (start end)
+            (let ((emacsvox-agent-shell--chat-label-context
+                   (emacsvox-agent-shell--chat-label-context-between
+                    start end))
+                  (emacsvox-agent-shell--vertical-navigation-active-p t))
+              (unless
+                  (emacsvox-agent-shell--synthetic-agent-row-p start end)
+                (substring-no-properties
+                 (emacsvox-agent-shell--prepare-speech-text
+                  (buffer-substring start end)))))))
+        ;; Downward motion lands directly on each content row.
+        (should
+         (equal
+          (mapcar
+           (lambda (bounds) (speech-for (car bounds) (cdr bounds)))
+           (list
+            (cons question-start question-end)
+            (cons thought-start thought-end)))
+          '("Me. where were we?" "Codex. ▶ Thought")))
+        ;; Upward motion also visits the hidden marker span that backs the
+        ;; agent label.  It must not repeat Thought.
+        (should
+         (equal
+          (delq
+           nil
+           (mapcar
+            (lambda (bounds) (speech-for (car bounds) (cdr bounds)))
+            (list
+             (cons thought-start thought-end)
+             (cons marker-start thought-end)
+             (cons prompt-start question-end))))
+          '("Codex. ▶ Thought" "Me. where were we?"))))
+      (let ((emacsvox-agent-shell--vertical-navigation-active-p t)
+            called)
+        (goto-char marker-start)
+        (cl-letf
+            (((symbol-function 'beginning-of-visual-line)
+              (lambda (&rest _) (goto-char marker-start)))
+             ((symbol-function 'end-of-visual-line)
+              (lambda (&rest _) (goto-char thought-end))))
+          (emacsvox-agent-shell--speak-visual-line-around
+           (lambda (&rest _) (setq called t))))
+        (should-not called)))))
+
 (ert-deftest emacsvox-agent-shell-chat-label-lookup-scales-by-property-run ()
   "Chat label discovery should not inspect every character on long lines."
   (with-temp-buffer
