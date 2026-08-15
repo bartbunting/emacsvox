@@ -8,6 +8,7 @@
 (load (expand-file-name "../lisp/emacsvox-vertico.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
+(require 'emacsvox-advice)
 
 (ert-deftest emacsvox-vertico-advice-is-current-and-direct ()
   "Current Vertico targets use native advice directly."
@@ -281,6 +282,63 @@
         (should (eq (plist-get arguments :occasion) 'navigation)))
       (should (equal emacsvox-vertico--prev-candidate "default"))
       (should (= emacsvox-vertico--prev-index 0)))))
+
+(ert-deftest emacsvox-vertico-owns-initial-minibuffer-content ()
+  "Generic setup leaves initial content to an active Vertico session."
+  (with-temp-buffer
+    (let ((emacsvox-minibuffer-dictionary (make-hash-table :test #'equal))
+          (emacsvox-pronounce-table nil)
+          (minibuffer-default "~/src/emacsvox/")
+          (vertico--index 0)
+          (vertico--base "")
+          (minibuffer-setup-hook
+           '(vertico--setup emacsvox-minibuffer-setup-hook))
+          events)
+      (cl-letf
+          (((symbol-function 'tts-stop)
+            (lambda (scope) (push (list 'stop scope) events)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events)))
+           ((symbol-function 'tts-notify)
+            (lambda (&rest _)
+              (ert-fail "Generic minibuffer setup duplicated Vertico speech")))
+           ((symbol-function 'minibuffer-prompt)
+            (lambda () "Find file: "))
+           ((symbol-function 'vertico--candidate)
+            (lambda (&optional _highlight) "~/src/emacsvox/"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push
+               (list 'aural content (plist-get arguments :module))
+               events))))
+        (run-hooks 'minibuffer-setup-hook)
+        (should (local-variable-p 'vertico--input))
+        (emacsvox--advice-vertico--exhibit-after))
+      (should
+       (equal
+        (nreverse events)
+        '((stop all)
+          (icon open-object)
+          (icon help)
+          (aural "Find file: ~/src/emacsvox/" vertico)))))))
+
+(ert-deftest emacsvox-vertico-loaded-but-inactive-keeps-minibuffer-speech ()
+  "Generic setup still speaks when Vertico is loaded but not active."
+  (with-temp-buffer
+    (insert "Shell command: ")
+    (let ((emacsvox-minibuffer-dictionary (make-hash-table :test #'equal))
+          (emacsvox-pronounce-table nil)
+          (minibuffer-default nil)
+          (tts-punctuation-mode 'all)
+          (vertico--input nil)
+          spoken)
+      (cl-letf
+          (((symbol-function 'tts-stop) #'ignore)
+           ((symbol-function 'emacsvox-icon) #'ignore)
+           ((symbol-function 'tts-notify)
+            (lambda (content &rest _) (setq spoken content))))
+        (emacsvox-minibuffer-setup-hook))
+      (should (equal spoken "Shell command: ")))))
 
 (ert-deftest emacsvox-vertico-later-candidate-does-not-repeat-prompt ()
   "Candidate movement after entry speaks only the changed candidate."

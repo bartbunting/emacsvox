@@ -39,6 +39,7 @@
 (defvar vertico--allow-prompt)
 (defvar vertico--base)
 (defvar vertico--index)
+(defvar vertico--input)
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -68,6 +69,13 @@
 
 (defvar-local emacsvox-vertico--suppress-next-exhibit-p nil
   "Non-nil when a command already presented the next display update.")
+
+(defun emacsvox-vertico--owns-minibuffer-content-p ()
+  "Return non-nil when Vertico owns the current minibuffer's content speech.
+
+Vertico sets `vertico--input' buffer-locally from its setup hook before the
+appended Emacsvox minibuffer setup hook runs."
+  (bound-and-true-p vertico--input))
 
 ;;; 
 (declare-function 'vertico--candidate "vertico.el" (&optional hl))

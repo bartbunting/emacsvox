@@ -2654,6 +2654,9 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
     table)
   "Dictionary used in minibuffer.")
 
+(declare-function emacsvox-vertico--owns-minibuffer-content-p
+                  "emacsvox-vertico" nil)
+
 (defun emacsvox-minibuffer-setup-hook ()
   "Actions to take when entering the minibuffer with emacsvox running."
   (tts-stop 'all)
@@ -2662,12 +2665,16 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
     (puthash  default-directory "" emacsvox-pronounce-table)
     (emacsvox-icon 'open-object)
     (when minibuffer-default (emacsvox-icon 'help))
-    (tts-with-punctuations
-     'all
-     (tts-notify
-      (concat
-       (buffer-string)
-       (if (stringp minibuffer-default) minibuffer-default ""))))))
+    (unless
+        (and
+         (fboundp 'emacsvox-vertico--owns-minibuffer-content-p)
+         (emacsvox-vertico--owns-minibuffer-content-p))
+      (tts-with-punctuations
+       'all
+       (tts-notify
+        (concat
+         (buffer-string)
+         (if (stringp minibuffer-default) minibuffer-default "")))))))
 
 (add-hook 'minibuffer-setup-hook 'emacsvox-minibuffer-setup-hook 'at-end)
 
