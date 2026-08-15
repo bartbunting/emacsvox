@@ -1619,7 +1619,29 @@
         (:remove (legacy-cue)
          :append
          ((:id agent-shell-toggled-expanded-cue-action
-           :kind cue :cue open-object))))))))
+           :kind cue :cue open-object)))))))
+    (:schema-version 1
+     :id agent-shell-block-visibility-labels
+     :summary "Speak collapsed or expanded after navigated Agent Shell blocks"
+     :rules
+     ((:id agent-shell-navigated-folded-label
+       :match
+       (:module agent-shell :event focus-entered
+        :occasion navigation :visibility folded)
+       :render
+       (:after
+        (:append
+         ((:id agent-shell-navigated-folded-label-action
+           :kind speech :text "collapsed")))))
+      (:id agent-shell-navigated-expanded-label
+       :match
+       (:module agent-shell :event focus-entered
+        :occasion navigation :visibility expanded)
+       :render
+       (:after
+        (:append
+         ((:id agent-shell-navigated-expanded-label-action
+           :kind speech :text "expanded"))))))))
   "Optional built-in presentation layers for Agent Shell transcript blocks.")
 
 (defun emacsvox-aural-register-workflow-provider ()

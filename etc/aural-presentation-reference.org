@@ -389,6 +389,7 @@ Operational semantic contract version: =1=.
 | =agent-shell-block-type-cues= | =agent-shell= | =11= | =0= | emacsvox-aural-provider-workflows | Use distinct semantic cues for Agent Shell block types |
 | =agent-shell-block-type-labels= | =agent-shell= | =1= | =0= | emacsvox-aural-provider-workflows | Speak the semantic type when entering an Agent Shell block |
 | =agent-shell-block-visibility-cues= | =agent-shell= | =4= | =0= | emacsvox-aural-provider-workflows | Cue folded and expanded Agent Shell blocks on entry and toggle |
+| =agent-shell-block-visibility-labels= | =agent-shell= | =2= | =0= | emacsvox-aural-provider-workflows | Speak collapsed or expanded after navigated Agent Shell blocks |
 | =dired-entry-state-labels= | =dired= | =3= | =0= | emacsvox-aural-provider-workflows | Speak Dired mark and deletion-flag changes after the entry |
 | =magit-section-visibility-cues= | =magit= | =4= | =0= | emacsvox-aural-provider-workflows | Add semantic open and close cues when Magit section visibility changes |
 | =mail-message-status-cues= | =mail= | =5= | =4= | emacsvox-aural-provider-workflows | Add semantic cues for unread, replied, forwarded, flagged, and attached messages |

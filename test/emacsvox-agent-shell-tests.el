@@ -3794,7 +3794,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (fragment
        '(agent-shell-block-type-labels
          agent-shell-block-type-cues
-         agent-shell-block-visibility-cues))
+         agent-shell-block-visibility-cues
+         agent-shell-block-visibility-labels))
     (let ((entry (emacsvox-aural-feature-fragment-entry fragment)))
       (should entry)
       (should (emacsvox-aural-feature-fragment-entry-built-in entry))
@@ -3810,12 +3811,13 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (emacsvox-aural-feature-fragment-enabled-p fragment)))))
 
 (ert-deftest emacsvox-agent-shell-feature-fragments-compose-on-navigation ()
-  "Agent Shell labels, type cues, and visibility cues compose in order."
+  "Agent Shell labels, cues, and trailing visibility compose in order."
   (let ((emacsvox-aural-active-scheme 'default)
         (emacsvox-aural-enabled-feature-fragments
          '(agent-shell-block-type-labels
            agent-shell-block-type-cues
-           agent-shell-block-visibility-cues))
+           agent-shell-block-visibility-cues
+           agent-shell-block-visibility-labels))
         (emacsvox-aural-user-rules nil)
         (emacsvox-aural-session-rules nil)
         (emacsvox-aural-buffer-rules nil)
@@ -3845,7 +3847,52 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (mapcar
          #'emacsvox-aural-concrete-action-cue
          (cdr (emacsvox-aural-concrete-plan-before concrete)))
-        '(progress close-object))))))
+        '(progress close-object)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-concrete-action-text
+         (emacsvox-aural-concrete-plan-after concrete))
+        '("collapsed"))))))
+
+(ert-deftest emacsvox-agent-shell-visibility-labels-follow-navigation-content ()
+  "The optional visibility words should follow only navigated block content."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments
+         '(agent-shell-block-visibility-labels))
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (context
+         '(:module agent-shell :mode agent-shell-mode
+           :occasion navigation)))
+    (dolist (case '((folded "collapsed") (expanded "expanded")))
+      (let* ((visibility (car case))
+             (expected (cadr case))
+             (facts
+              (list :role 'agent-block :events '(focus-entered)
+                    :agent-block-kind 'thought :visibility visibility))
+             (plan (emacsvox-aural-resolve-active facts context))
+             (concrete
+              (emacsvox-aural-compile-plan plan facts context)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-text
+           (emacsvox-aural-concrete-plan-after concrete))
+          (list expected)))))
+    (let* ((state-context
+            '(:module agent-shell :mode agent-shell-mode
+              :occasion state-change))
+           (state-facts
+            '(:role agent-block :events (visibility-changed)
+              :agent-block-kind thought :visibility folded))
+           (plan
+            (emacsvox-aural-resolve-active state-facts state-context))
+           (concrete
+            (emacsvox-aural-compile-plan
+             plan state-facts state-context)))
+      (should-not (emacsvox-aural-concrete-plan-after concrete)))))
 
 (ert-deftest emacsvox-agent-shell-visibility-fragment-replaces-toggle-cue ()
   "The visibility fragment should replace, not duplicate, the fallback cue."
