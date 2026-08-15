@@ -3972,7 +3972,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (goto-char (plist-get activity :position))
       (let ((action (key-binding (kbd "RET"))))
         (should (functionp action))
-        (should-not (eq action 'agent-shell-ui-toggle-fragment))
+        (should (eq action 'agent-shell-ui-toggle-fragment))
         (should
          (equal
           (emacsvox-agent-shell-test--capture-events

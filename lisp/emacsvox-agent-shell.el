@@ -283,7 +283,9 @@ not truncated."
 (defconst emacsvox-agent-shell--ui-face-voice-map
   '((agent-shell-model voice-brighten-extra)
     (agent-shell-thought-level voice-animate-extra)
+    (agent-shell-thought-body voice-animate)
     (agent-shell-container-indicator voice-lighten)
+    (agent-shell-diff-changes-label voice-bolden-medium)
     (agent-shell-buffer-name voice-animate)
     (agent-shell-session-id voice-lighten)
     (agent-shell-session-mode voice-smoothen)
