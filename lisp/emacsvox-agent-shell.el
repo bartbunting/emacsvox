@@ -421,6 +421,23 @@ Both current and legacy Agent Shell wait icons are recognized.")
            end)))))
     found))
 
+(defun emacsvox-agent-shell--chat-label-rendering (rendered)
+  "Return semantic label information from chat overlay RENDERED text.
+The car is the first nonblank display line, preserving its properties.  The
+cdr is non-nil when later nonblank content belongs to the same rendering, as
+with Agent Shell's live input marker."
+  (when (stringp rendered)
+    (when-let* ((start (string-match "[^[:space:]]" rendered)))
+      (let* ((length (length rendered))
+             (line-end (or (string-match "[\n\r]" rendered start) length))
+             (label (string-trim (substring rendered start line-end)))
+             (trailing-p
+              (and (< line-end length)
+                   (string-match-p
+                    "[^[:space:]]" rendered (1+ line-end)))))
+        (unless (string-empty-p label)
+          (cons label trailing-p))))))
+
 (defun emacsvox-agent-shell--chat-label-context-between
     (source-start source-end)
   "Return the visible chat label context between SOURCE-START and SOURCE-END.
@@ -480,9 +497,16 @@ ending at SOURCE-START labels the content that follows it."
                       (not (string-empty-p (string-trim candidate)))))
                (list (overlay-get overlay 'before-string)
                      (overlay-get overlay 'display))))
-             (label (and (stringp rendered) (string-trim rendered))))
-        (when (and label (not (string-empty-p label)))
-          (list :category category :text label))))))
+             (label-rendering
+              (emacsvox-agent-shell--chat-label-rendering rendered))
+             (label (car label-rendering)))
+        (when label
+          (append
+           (list :category category :text label)
+           (when (and
+                  (eq category 'agent-shell-chat-me)
+                  (cdr label-rendering))
+             '(:editable t))))))))
 
 (defun emacsvox-agent-shell--chat-label-context-at-point ()
   "Return the visible agent-shell chat label context on the current line."
@@ -541,7 +565,9 @@ ending at SOURCE-START labels the content that follows it."
           (setq content (substring content (match-end 0))))
         (setq content (string-trim-left content))
         (if (string-empty-p (string-trim (substring-no-properties content)))
-            label
+            (if (plist-get context :editable)
+                (concat label ". Ready for input.")
+              label)
           (concat label ". " content)))
     text))
 
