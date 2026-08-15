@@ -868,8 +868,13 @@ SOURCE-FACTS preserve the selected Dired entry."
    'large-movement 'navigation 'focus-entered))
 
 (emacsvox-dired--define-after-advice
-    (dired-next-line dired-previous-line
-     dired-unmark-backward dired-maybe-insert-subdir)
+    (dired-next-line dired-previous-line)
+    "Speak the filename without a redundant movement cue."
+  (emacsvox-dired-present-current
+   nil 'navigation 'focus-entered))
+
+(emacsvox-dired--define-after-advice
+    (dired-unmark-backward dired-maybe-insert-subdir)
     "Speak the filename."
   (emacsvox-dired-present-current
    'select-object 'navigation 'focus-entered))

@@ -124,7 +124,7 @@
     (nreverse events)))
 
 (ert-deftest emacsvox-dired-converted-advice-preserves-feedback-order ()
-  "Representative commands retain their interactive speech and icons."
+  "Representative commands retain their intentional interactive feedback."
   (should
    (equal
     (emacsvox-test--dired-feedback 'dired)
@@ -136,7 +136,11 @@
   (should
    (equal
     (emacsvox-test--dired-feedback 'dired-next-line)
-    '((icon select-object) speak-dired-line)))
+    '(speak-dired-line)))
+  (should
+   (equal
+    (emacsvox-test--dired-feedback 'dired-previous-line)
+    '(speak-dired-line)))
   (should
    (equal
     (emacsvox-test--dired-feedback 'locate)
@@ -1050,8 +1054,8 @@
        (emacsvox-aural-render-plan-before plan))
       '(mark-object)))))
 
-(ert-deftest emacsvox-dired-navigation-uses-one-native-submission ()
-  "Default current-entry feedback submits content and cue together."
+(ert-deftest emacsvox-dired-ordinary-navigation-omits-redundant-cue ()
+  "Ordinary current-entry feedback submits content without a movement cue."
   (let ((content (propertize "entry.txt" 'personality 'voice-lighten))
         calls)
     (cl-letf
@@ -1066,11 +1070,10 @@
             (push (cons submitted arguments) calls)
             'submission)))
       (emacsvox-dired-present-current
-       'select-object 'navigation 'focus-entered))
+       nil 'navigation 'focus-entered))
     (should (= (length calls) 1))
     (pcase-let* ((`(,submitted . ,arguments) (car calls))
-                 (actions (plist-get arguments :compatibility-actions))
-                 (action (car actions)))
+                 (actions (plist-get arguments :compatibility-actions)))
       (should (equal submitted "entry.txt"))
       (should (eq (get-text-property 0 'personality submitted) 'voice-lighten))
       (should
@@ -1080,12 +1083,7 @@
           :events (focus-entered))))
       (should (eq (plist-get arguments :module) 'dired))
       (should (eq (plist-get arguments :occasion) 'navigation))
-      (should (= (length actions) 1))
-      (should (eq (emacsvox-aural-compatibility-action-phase action) 'before))
-      (should
-       (eq
-        (emacsvox-aural-compatibility-action-value action)
-        'select-object)))))
+      (should-not actions))))
 
 (ert-deftest emacsvox-dired-missing-filename-keeps-legacy-fallback ()
   "A non-entry row still cues, speaks the line, and dings."
@@ -1152,7 +1150,7 @@
         (setq
          submission
          (emacsvox-dired-present-current
-          'select-object 'navigation 'focus-entered)))
+          nil 'navigation 'focus-entered)))
       (should (emacsvox-aural-submission-p submission))
       (should
        (equal
