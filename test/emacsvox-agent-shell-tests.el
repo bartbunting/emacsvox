@@ -142,6 +142,8 @@
                   "emacsvox-agent-shell" (text))
 (declare-function emacsvox-agent-shell--replace-status-icons-for-speech
                   "emacsvox-agent-shell" (text))
+(declare-function emacsvox-agent-shell--remove-visual-chrome-for-speech
+                  "emacsvox-agent-shell" (text))
 (declare-function emacsvox-agent-shell--record-response-section
                   "emacsvox-agent-shell" (range))
 (declare-function emacsvox-agent-shell--section-marker-snapshot
@@ -5682,6 +5684,43 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                      " waiting  ordinary …"))
       (should (equal (substring-no-properties rendered)
                      "… ordinary …")))))
+
+(ert-deftest emacsvox-agent-shell-speech-omits-fragment-visual-chrome ()
+  "Line speech should omit fold and thought icons without changing source."
+  (with-temp-buffer
+    (let ((label
+           (concat
+            "✶ "
+            (propertize
+             "Thinking" 'font-lock-face 'agent-shell-section-heading))))
+      (agent-shell-ui-update-fragment
+       (agent-shell-ui-make-fragment-model
+        :namespace-id "1" :block-id "1-agent_thought_chunk"
+       :label-left label :body "Reasoning")
+       :expanded nil)
+      (setq major-mode 'agent-shell-mode)
+      (goto-char (point-min))
+      (search-forward "Thinking")
+      (goto-char (match-beginning 0))
+      (let* ((source
+              (buffer-substring
+               (line-beginning-position) (line-end-position)))
+             (spoken (emacsvox-agent-shell--prepare-speech-text source)))
+        (should (equal (substring-no-properties source) "▶ ✶ Thinking"))
+        (should (equal (substring-no-properties spoken) "Thinking"))
+        (should
+         (eq
+          (get-text-property 0 'font-lock-face spoken)
+          'agent-shell-section-heading))
+        (should (string-match-p "[▶✶]" source))
+        (should-not (string-match-p "[▶✶]" spoken))))))
+
+(ert-deftest emacsvox-agent-shell-visual-chrome-filter-is-property-scoped ()
+  "Ordinary matching Unicode characters should remain available to speech."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (let ((text "▶ ✶ Thinking"))
+      (should (eq (emacsvox-agent-shell--prepare-speech-text text) text)))))
 
 (ert-deftest emacsvox-agent-shell-transforms-before-native-preparation ()
   "Native Agent Shell text is transformed once before plans are frozen."

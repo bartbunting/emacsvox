@@ -569,6 +569,77 @@ icon's text properties so its status voice remains available to Emacsvox."
                           (cdr replacement)
                           (substring result (1+ position))))))))))
 
+(defun emacsvox-agent-shell--thought-heading-start (text start end)
+  "Return the semantic thought heading start in TEXT from START to END.
+Agent Shell places its configurable thought-process icon before text carrying
+the `agent-shell-section-heading' face.  Restrict this compatibility inference
+to a semantic thought fragment so ordinary faced text is never suppressed."
+  (let* ((state (get-text-property start 'agent-shell-ui-state text))
+         (qualified-id (and state (map-elt state :qualified-id))))
+    (when (eq (emacsvox-agent-shell--semantic-block-type qualified-id state)
+              'thought)
+      (let ((position start))
+        (while
+            (and
+             (< position end)
+             (not
+              (or
+               (emacsvox-agent-shell--face-spec-includes-p
+                (get-text-property position 'face text)
+                'agent-shell-section-heading)
+               (emacsvox-agent-shell--face-spec-includes-p
+                (get-text-property position 'font-lock-face text)
+                'agent-shell-section-heading))))
+          (setq
+           position
+           (min
+            (or (next-single-property-change
+                 position 'face text end)
+                end)
+            (or (next-single-property-change
+                 position 'font-lock-face text end)
+                end))))
+        (and (< position end) position)))))
+
+(defun emacsvox-agent-shell--remove-visual-chrome-for-speech (text)
+  "Return TEXT without Agent Shell's decorative fragment prefixes.
+Remove property-scoped fold indicators from every fragment.  For semantic
+thought fragments, also remove the configurable icon before the faced heading.
+Only the returned speech copy changes; pointwise character review still names
+the original characters in the buffer."
+  (let ((position 0)
+        (length (length text))
+        removals)
+    (while (< position length)
+      (let* ((section
+              (get-text-property position 'agent-shell-ui-section text))
+             (next
+              (or
+               (next-single-property-change
+                position 'agent-shell-ui-section text length)
+               length)))
+        (pcase section
+          ('indicator
+           (push (cons position next) removals))
+          ('label-left
+           (when-let* ((heading
+                        (emacsvox-agent-shell--thought-heading-start
+                         text position next))
+                       ((> heading position)))
+             (push (cons position heading) removals))))
+        (setq position next)))
+    (if (null removals)
+        text
+      (let ((source-position 0)
+            parts)
+        (dolist (range (nreverse removals))
+          (when (< source-position (car range))
+            (push (substring text source-position (car range)) parts))
+          (setq source-position (max source-position (cdr range))))
+        (when (< source-position length)
+          (push (substring text source-position) parts))
+        (apply #'concat (nreverse parts))))))
+
 (defvar emacsvox-agent-shell--line-navigation-speech-p nil
   "Non-nil while Agent Shell is preparing line-navigation speech.")
 
@@ -595,7 +666,8 @@ icon's text properties so its status voice remains available to Emacsvox."
              (emacsvox-agent-shell--limit-line-navigation-speech text)))
         (emacsvox-agent-shell--add-chat-label-for-speech
          (emacsvox-agent-shell--replace-status-icons-for-speech
-          (emacsvox-agent-shell--speech-copy-without-yank-handler text))))
+          (emacsvox-agent-shell--remove-visual-chrome-for-speech
+           (emacsvox-agent-shell--speech-copy-without-yank-handler text)))))
     text))
 
 (defconst emacsvox-agent-shell--vertical-toggle-hint-regexp
