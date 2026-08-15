@@ -5075,7 +5075,8 @@ Return nil when the configured verbosity requests status cues only."
   (let* ((data (map-elt event :data))
          (tool-call-id (map-elt data :tool-call-id))
          (tool-call (map-elt data :tool-call))
-         (status (map-elt tool-call :status)))
+         (status (map-elt tool-call :status))
+         (output (map-elt tool-call :output)))
     (when (and tool-call-id status)
       (unless (hash-table-p emacsvox-agent-shell--tool-call-status-cache)
         (setq emacsvox-agent-shell--tool-call-status-cache
@@ -5103,7 +5104,10 @@ Return nil when the configured verbosity requests status cues only."
                    status
                    (emacsvox-agent-shell--tool-call-description
                     tool-call tool-call-id)
-                   (map-elt tool-call :content))))
+                   (if (and (stringp output)
+                            (not (string-empty-p output)))
+                       output
+                     (map-elt tool-call :content)))))
             (if text
                 (emacsvox-aural-submit
                  text

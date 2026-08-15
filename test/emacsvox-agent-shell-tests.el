@@ -738,8 +738,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (nreverse events)))
 
 (defun emacsvox-agent-shell-test--tool-call-event
-    (tool-call-id status title &optional content kind)
-  "Make a public tool event with TOOL-CALL-ID, STATUS, TITLE, CONTENT, and KIND."
+    (tool-call-id status title &optional content kind output)
+  "Make a tool event with TOOL-CALL-ID, STATUS, TITLE, CONTENT, KIND, and OUTPUT."
   (list
    (cons :event 'tool-call-update)
    (cons :data
@@ -749,7 +749,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 (list (cons :status status)
                       (cons :title title)
                       (cons :content content)
-                      (cons :kind kind)))))))
+                      (cons :kind kind)
+                      (cons :output output)))))))
 
 (defun emacsvox-agent-shell-test--permission-event (request)
   "Convert fixture permission REQUEST to a public agent-shell event."
@@ -3476,7 +3477,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                  "compiler" "failed" "Compile project"
                  '[((type . "content")
                     (content (type . "text")
-                             (text . "Undefined function")))])))
+                             (text . "Undefined function")))])
+                (emacsvox-agent-shell-test--tool-call-event
+                 "shell" "completed" "Run command"
+                 nil nil "stdout\nstderr\n")))
             (emacsvox-agent-shell--handle-tool-call-update event)))
         '((icon progress)
           (speak "Tool started: Calculate total.")
@@ -3484,7 +3488,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (speak "Tool completed: Calculate total. Output: Total: 42")
           (icon warn-user)
           (speak
-           "Tool failed: Compile project. Output: Undefined function")))))))
+           "Tool failed: Compile project. Output: Undefined function")
+          (icon task-done)
+          (speak
+           "Tool completed: Run command. Output: stdout\nstderr")))))))
 
 (ert-deftest emacsvox-agent-shell-tool-updates-speak-once-per-status ()
   "Repeated streaming updates should not repeat an unchanged tool status."
