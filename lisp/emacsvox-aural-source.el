@@ -319,20 +319,29 @@ data-only face provenance, effective invisibility, and effective auditory icons
 without changing BUFFER."
   (with-current-buffer (or buffer (current-buffer))
     (let ((text (buffer-substring start end))
-          (position start))
+          (position start)
+          previous-snapshot)
       (while (< position end)
         (let* ((next (next-char-property-change position end))
                (snapshot
                 (emacsvox-aural-capture-source-faces position))
+               (frozen-snapshot
+                (cond
+                 ((null snapshot)
+                  (setq previous-snapshot nil))
+                 ((equal snapshot previous-snapshot)
+                  previous-snapshot)
+                 (t
+                  (setq previous-snapshot (copy-tree snapshot)))))
                (invisible (get-char-property position 'invisible))
                (effectively-invisible (invisible-p position))
                (icon (get-char-property position 'auditory-icon))
                (properties
                 (append
-                 (when snapshot
+                 (when frozen-snapshot
                    (list
                     emacsvox-aural-source-faces-property
-                    (copy-tree snapshot)))
+                    frozen-snapshot))
                  (when invisible
                    (list 'invisible (copy-tree invisible)))
                  (when effectively-invisible

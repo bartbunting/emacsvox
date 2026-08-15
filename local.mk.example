@@ -1,0 +1,2 @@
+# Copy this file to the ignored local.mk when Emacs 31 is not the system Emacs.
+EMACS=/path/to/emacs-31/bin/emacs

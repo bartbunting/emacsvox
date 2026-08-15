@@ -509,6 +509,15 @@
             (((symbol-function 'process-send-string)
               (lambda (_process command) (push command writes))))
           (omnivox--negotiate-process process)
+          (should
+           (eq
+            (process-get
+             process emacsvox-aural--delivery-readiness-process-property)
+            'pending))
+          (should
+           (timerp
+            (process-get
+             process omnivox--control-negotiation-timer-property)))
           (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
                  (identifier (plist-get request :request_id)))
             (should (equal (plist-get request :type) "capabilities"))
@@ -529,6 +538,14 @@
                           "preferred_engine"
                           "text_repertoire_routing_v1"
                           "tracked_playback_completion"]))))
+          (should
+           (eq
+            (process-get
+             process emacsvox-aural--delivery-readiness-process-property)
+            'ready))
+          (should-not
+           (process-get
+            process omnivox--control-negotiation-timer-property))
           (should-not tts-handle-unicode)
           (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
                  (identifier (plist-get request :request_id)))

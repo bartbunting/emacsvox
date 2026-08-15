@@ -317,7 +317,7 @@ write.  State synchronization lines in a combined write are ignored."
 (ert-deftest emacsvox-aural-delivery-replaces-complete-navigation-payloads ()
   "A burst sends only its newest complete speech and cue transaction."
   (let ((emacsvox-aural--pending-deliveries
-         (make-hash-table :test #'equal))
+        (make-hash-table :test #'equal))
         (emacsvox-aural--delivery-sequence 0)
         timers
         writes)
@@ -377,6 +377,41 @@ write.  State synchronization lines in a combined write are ignored."
             (emacsvox-aural-submission-delivery-policy 'urgent))
         (emacsvox-aural-call-with-delivery-transaction 'speech #'ignore))
       (should (= (hash-table-count emacsvox-aural--pending-deliveries) 1)))))
+
+(ert-deftest emacsvox-aural-suppresses-delivery-during-server-negotiation ()
+  "A pending server cannot receive or partially execute an aural transaction."
+  (let ((process
+         (make-pipe-process
+          :name "emacsvox-aural-negotiation-test" :buffer nil :noquery t))
+        invoked
+        writes)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'process-send-string)
+              (lambda (_process command) (push command writes))))
+          (emacsvox-aural-set-delivery-readiness process 'pending)
+          (should-not
+           (emacsvox-aural-call-with-delivery-transaction
+            process
+            (lambda ()
+              (setq invoked t)
+              (emacsvox-aural-delivery-send process "d\n")
+              'executed)))
+          (should-not invoked)
+          (should-not writes)
+          (emacsvox-aural-set-delivery-readiness process 'ready)
+          (should
+           (eq
+            (emacsvox-aural-call-with-delivery-transaction
+             process
+             (lambda ()
+               (setq invoked t)
+               (emacsvox-aural-delivery-send process "d\n")
+               'executed))
+            'executed))
+          (should invoked)
+          (should (equal writes '("d\n"))))
+      (delete-process process))))
 
 (ert-deftest emacsvox-aural-delivery-frames-windows-replaceable-payload ()
   "Framing carries one UTF-8-safe generation and complete protocol packet."
@@ -1106,6 +1141,68 @@ write.  State synchronization lines in a combined write are ignored."
       (when identifier (tts-cancel-tracked-dispatch identifier))
       (delete-process process))))
 
+(ert-deftest emacsvox-aural-delivers-native-replaceable-timeline-immediately ()
+  "Untracked navigation bypasses Emacs timers when Omnivox can replace it."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-native-replacement-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts--marker-event-function nil)
+         (tts--tracked-completion-function nil)
+         (emacsvox-aural--pending-deliveries
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--delivery-sequence 0)
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text "responsive navigation" :speak t)
+           :context '(:occasion navigation)))
+         writes)
+    (unwind-protect
+        (progn
+          (process-put
+           process emacsvox-aural--structured-timeline-process-property 3)
+          (process-put process tts--tracked-playback-completion-property t)
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (_owner command) (push command writes)))
+               ((symbol-function 'run-with-idle-timer)
+                (lambda (&rest _arguments)
+                  (ert-fail "Native replacement must not use an Emacs timer")))
+               ((symbol-function 'tts--interrupt-process)
+                (lambda (&rest _arguments)
+                  (ert-fail "Native replacement must not send a hard stop")))
+               ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+            (let ((emacsvox-aural-submission-delivery-policy 'replaceable)
+                  (emacsvox-aural-submission-replacement-key 'navigation)
+                  (emacsvox-aural-submission-controls-interruption t))
+              (emacsvox-aural-call-with-delivery-transaction
+               process
+               (lambda ()
+                 (emacsvox-aural-queue-concrete-plan
+                  plan "responsive navigation")
+                 (tts--protocol-dispatch)))))
+          (should
+           (= (hash-table-count emacsvox-aural--pending-deliveries) 0))
+          (should (= (length writes) 1))
+          (should
+           (string-match
+            "\\`emacsvox_timeline {\\([^}]+\\)}\n\\'" (car writes)))
+          (let* ((decoded
+                  (decode-coding-string
+                   (base64-decode-string (match-string 1 (car writes)))
+                   'utf-8))
+                 (envelope
+                  (json-parse-string
+                   decoded :object-type 'plist :array-type 'list)))
+            (should
+             (equal (plist-get envelope :delivery_policy) "replaceable"))
+            (should
+             (equal (plist-get envelope :replacement_key) "navigation"))))
+      (delete-process process))))
+
 (ert-deftest emacsvox-aural-failed-tracked-transaction-does-not-issue-id ()
   "A failed outer write neither returns an ID nor commits callback ownership."
   (let* ((process
@@ -1177,6 +1274,7 @@ write.  State synchronization lines in a combined write are ignored."
           (progn
             (process-put
              process emacsvox-aural--structured-timeline-process-property 3)
+            (process-put process tts--tracked-playback-completion-property t)
             (process-put
              process emacsvox-aural--presentation-tone-process-property 1)
             (process-put
@@ -1990,6 +2088,51 @@ write.  State synchronization lines in a combined write are ignored."
         (emacsvox-aural-submission-prepared-content submission)))
       (should (emacsvox-aural-prepared-text-p spoken))
       (should (equal (substring-no-properties spoken) "label. content")))))
+
+(ert-deftest emacsvox-aural-submission-opt-in-diagnostics-record-timing-and-text ()
+  "Sensitive submission diagnostics should be complete and disabled by default."
+  (emacsvox-test--with-transport-scheme
+    (let* ((file (make-temp-file "emacsvox-aural-diagnostics-"))
+           (emacsvox-aural-diagnostic-log-file file)
+           (emacsvox-aural-command-start-time (- (float-time) 0.05))
+           (this-command 'next-line)
+           (context
+            '(:module agent-shell
+              :mode agent-shell-mode
+              :mode-lineage (agent-shell-mode comint-mode)
+              :occasion navigation
+              :face-presentation-enabled t
+              :voice-lock-enabled nil
+              :icons-enabled nil))
+           records)
+      (unwind-protect
+          (progn
+            (cl-letf (((symbol-function 'tts-speak) #'ignore))
+              (emacsvox-aural-submit
+               "sensitive diagnostic text" :context context))
+            (with-temp-buffer
+              (insert-file-contents file)
+              (goto-char (point-min))
+              (condition-case nil
+                  (while t (push (read (current-buffer)) records))
+                (end-of-file nil)))
+            (setq records (nreverse records))
+            (should
+             (equal
+              (mapcar (lambda (record) (plist-get record :event)) records)
+              '(submission-start submission-complete)))
+            (should
+             (equal
+              (plist-get (car records) :content)
+              "sensitive diagnostic text"))
+            (should
+             (> (plist-get (car records) :command-elapsed-ms) 0))
+            (should
+             (numberp
+              (plist-get (cadr records) :submission-elapsed-ms)))
+            (should
+             (eq (plist-get (cadr records) :status) 'completed)))
+        (when (file-exists-p file) (delete-file file))))))
 
 (ert-deftest emacsvox-aural-submission-records-one-exact-history-transaction ()
   "Clause and formatting runs remain exact inside one history transaction."
@@ -4485,6 +4628,27 @@ is the default inherited by a newly created TTS scratch buffer."
          (get-text-property
           9 emacsvox-aural-source-invisible-property))
         (should-not (get-text-property 9 'auditory-icon))))))
+
+(ert-deftest emacsvox-aural-source-coalesces-equal-faces-across-metadata ()
+  "Non-speech metadata must not split one continuous source face."
+  (with-temp-buffer
+    (insert (propertize "edited" 'face 'bold))
+    (add-text-properties 1 3 '(help-echo "first metadata run"))
+    (add-text-properties 3 5 '(help-echo "second metadata run"))
+    (let* ((source
+            (emacsvox-aural-source-substring
+             (point-min) (point-max)))
+           (property emacsvox-aural-source-faces-property))
+      (should
+       (equal
+        (mapcar
+         (lambda (record) (plist-get record :face))
+         (get-text-property 0 property source))
+        '(bold)))
+      (should
+       (= (next-single-property-change
+           0 property source (length source))
+          (length source))))))
 
 (ert-deftest emacsvox-aural-source-freezes-effective-invisibility-decision ()
   "TTS removes source-hidden text despite a different destination spec."

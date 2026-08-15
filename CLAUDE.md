@@ -16,17 +16,24 @@ backends.
 
 ## Build and Test Commands
 
-Use Emacs 31 or newer.  When it is not the default `emacs`, pass its path:
+Use Emacs 31 or newer.  When it is not the default `emacs`, copy
+`local.mk.example` to the ignored `local.mk` and set `EMACS` there.  Then the
+compiler selection is consistent across every command:
 
 ```sh
-make config EMACS=/path/to/emacs
-make EMACS=/path/to/emacs
-make test EMACS=/path/to/emacs
-make trace-test EMACS=/path/to/emacs
-make advice-audit EMACS=/path/to/emacs
-make name-audit EMACS=/path/to/emacs
-make tts-audit EMACS=/path/to/emacs
+make check-emacs
+make bytecode             # incremental build after an ordinary Lisp edit
+make bytecode-check       # non-mutating startup/deployment preflight
+make bytecode-rebuild     # after branch changes, pulls, or macro changes
+make test
+make trace-test
+make advice-audit
+make name-audit
+make tts-audit
 ```
+
+Tests prefer source and do not prove ignored in-tree byte-code is current.
+Never clean source changes to satisfy a build precondition.
 
 Build individual TTS servers with:
 

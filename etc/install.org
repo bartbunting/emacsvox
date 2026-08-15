@@ -9,14 +9,33 @@ To install a specific version of Emacsvox:
   5. Copy the resulting =emacsvox= directory to the install location.
   6. Load =lisp/emacsvox-setup.el= from that installation.
 
+Emacsvox requires Emacs 31 or newer.  When that is not the system =emacs=,
+create the ignored machine-local =local.mk= in the repository root:
+
+#+BEGIN_SRC makefile
+EMACS=/path/to/emacs-31/bin/emacs
+#+END_SRC
+
+All build and test targets then use that compiler without repeating
+=EMACS=...= on every invocation.  =make check-emacs= verifies the selection.
+
 ** Source checkouts and byte-code
 
-After changing branches, pulling changes, or editing Emacsvox Lisp, rebuild
-from the repository root:
+After changing branches or pulling changes, discard ignored byte-code from the
+previous tree and rebuild it from the repository root:
 
 #+BEGIN_SRC sh
-make config && make
+make bytecode-rebuild
 #+END_SRC
+
+For an ordinary Lisp edit, an incremental rebuild is sufficient:
+
+#+BEGIN_SRC sh
+make bytecode
+#+END_SRC
+
+=make bytecode-check= is a non-mutating preflight for startup or deployment.
+It reports missing, stale, orphaned, or wrong-Emacs source-tree byte-code.
 
 During development, load the setup source explicitly:
 

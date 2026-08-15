@@ -142,7 +142,7 @@
        (format
         (concat
          "Newer Emacsvox source will be loaded instead of stale byte-code: %s. "
-         "Run make config && make from the repository root to rebuild it.")
+         "Run make bytecode from the repository root to rebuild it.")
         (mapconcat #'file-name-nondirectory stale ", "))
        :warning))
     (add-to-list 'load-path directory)

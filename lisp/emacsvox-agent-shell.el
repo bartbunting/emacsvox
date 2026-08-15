@@ -90,12 +90,15 @@
                   "agent-shell-ui" ())
 (declare-function shell-maker-busy "shell-maker" ())
 (declare-function shell-maker-point-at-last-prompt-p "shell-maker" ())
+(declare-function emacsvox-speak--present-physical-line
+                  "emacsvox-speak" (&optional arg compatibility-actions))
 
 (defvar emacsvox-comint-autospeak)
 (defvar emacsvox-pronounce-date-mm-dd-yyyy-pattern)
 (defvar emacsvox-pronounce-date-yyyy-mm-dd-pattern)
 (defvar emacsvox-pronounce-rfc-3339-datetime-pattern)
 (defvar emacsvox-pronounce-sha-checksum-pattern)
+(defvar ems--speak-max-length)
 (defvar tts-speaker-process)
 (defvar agent-shell-ui--fold-toggle-state)
 
@@ -222,6 +225,19 @@ for the active speech server to interpret."
                    (const :tag "Completed" completed)
                    (const :tag "Failed" failed))
            (string :tag "Spoken label")))
+  :group 'emacsvox-agent-shell)
+
+(defcustom emacsvox-agent-shell-line-speech-max-characters 512
+  "Maximum Agent Shell characters compiled for line-navigation speech.
+
+When a physical or visual line is longer, navigation speaks its first
+characters and a count of the omitted remainder.  This prevents rendered tool
+and search output from opening the core long-line prompt or building an
+unnecessarily large presentation.  Set this to nil to restore the core
+long-line policy.  Explicit Agent Shell response and block-reading commands are
+not truncated."
+  :type '(choice (const :tag "Use core long-line policy" nil)
+                 (integer :tag "Characters"))
   :group 'emacsvox-agent-shell)
 
 ;;;  Speech Setup
@@ -553,15 +569,33 @@ icon's text properties so its status voice remains available to Emacsvox."
                           (cdr replacement)
                           (substring result (1+ position))))))))))
 
+(defvar emacsvox-agent-shell--line-navigation-speech-p nil
+  "Non-nil while Agent Shell is preparing line-navigation speech.")
+
+(defun emacsvox-agent-shell--limit-line-navigation-speech (text)
+  "Return bounded line-navigation speech TEXT for Agent Shell."
+  (let ((limit emacsvox-agent-shell-line-speech-max-characters))
+    (if (and emacsvox-agent-shell--line-navigation-speech-p
+             (integerp limit)
+             (> limit 0)
+             (> (length text) limit))
+        (concat
+         (substring text 0 limit)
+         (format " [line truncated; %d characters omitted]"
+                 (- (length text) limit)))
+      text)))
+
 (defun emacsvox-agent-shell--prepare-speech-text (text)
   "Prepare TEXT for speech in agent-shell, leaving other modes unchanged."
   (if (and (stringp text)
            (derived-mode-p 'agent-shell-mode
                            'agent-shell-viewport-view-mode
                            'agent-shell-viewport-edit-mode))
-      (emacsvox-agent-shell--add-chat-label-for-speech
-       (emacsvox-agent-shell--replace-status-icons-for-speech
-        (emacsvox-agent-shell--speech-copy-without-yank-handler text)))
+      (let ((text
+             (emacsvox-agent-shell--limit-line-navigation-speech text)))
+        (emacsvox-agent-shell--add-chat-label-for-speech
+         (emacsvox-agent-shell--replace-status-icons-for-speech
+          (emacsvox-agent-shell--speech-copy-without-yank-handler text))))
     text))
 
 (defconst emacsvox-agent-shell--vertical-toggle-hint-regexp
@@ -589,6 +623,9 @@ icon's text properties so its status voice remains available to Emacsvox."
   "Remember the semantic block before interactive vertical movement."
   (setq emacsvox-agent-shell--vertical-navigation-active-p
         (memq this-command '(next-line previous-line)))
+  (setq emacsvox-aural-command-start-time
+        (and emacsvox-agent-shell--vertical-navigation-active-p
+             (float-time)))
   (when emacsvox-agent-shell--vertical-navigation-active-p
     (setq emacsvox-agent-shell--vertical-navigation-origin
           (emacsvox-agent-shell--block-location-identity
@@ -597,7 +634,8 @@ icon's text properties so its status voice remains available to Emacsvox."
 (defun emacsvox-agent-shell--vertical-navigation-post-command ()
   "Clear transient vertical block-entry state."
   (setq emacsvox-agent-shell--vertical-navigation-active-p nil
-        emacsvox-agent-shell--vertical-navigation-origin nil))
+        emacsvox-agent-shell--vertical-navigation-origin nil
+        emacsvox-aural-command-start-time nil))
 
 (defun emacsvox-agent-shell--vertical-block-entry-facts ()
   "Return destination facts when vertical movement entered another block."
@@ -2048,17 +2086,58 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
 
 Core visual-line presentation owns blank-line semantics and interruption."
   (let ((emacsvox-agent-shell--chat-label-context
-         (emacsvox-agent-shell--chat-label-context-at-point)))
-    (emacsvox-agent-shell--call-with-vertical-block-entry
-     original-function arguments)))
+         (emacsvox-agent-shell--chat-label-context-at-point))
+        (state (get-text-property (point) 'agent-shell-ui-state))
+        (section (get-text-property (point) 'agent-shell-ui-section))
+        (emacsvox-agent-shell--line-navigation-speech-p t)
+        (ems--speak-max-length
+         (if (and
+              (integerp emacsvox-agent-shell-line-speech-max-characters)
+              (> emacsvox-agent-shell-line-speech-max-characters 0))
+             most-positive-fixnum
+           ems--speak-max-length)))
+    (let ((collapsed-heading-p
+           (and state
+                (map-elt state :collapsed)
+                (memq section '(indicator label-left label-right)))))
+      (emacsvox-agent-shell--call-with-vertical-block-entry
+       (if collapsed-heading-p
+           ;; Invisible fragment bodies occupy no display width, so core visual
+           ;; line bounds can span the complete folded body.  Present the visible
+           ;; physical heading instead of copying that underlying interval.
+           #'emacsvox-speak--present-physical-line
+         original-function)
+       (if collapsed-heading-p nil arguments)))))
 
 (defun emacsvox-agent-shell--speak-line-around
     (original-function &rest arguments)
   "Add semantic block-entry facts to vertical line speech."
-  (let ((emacsvox-agent-shell--chat-label-context
-         (emacsvox-agent-shell--chat-label-context-at-point)))
-    (emacsvox-agent-shell--call-with-vertical-block-entry
-     original-function arguments)))
+  (let* ((start (line-beginning-position))
+         (end (line-end-position))
+         (observed-at (float-time)))
+    (emacsvox-aural-diagnostic-log-event
+     'line-presentation-start
+     :command this-command
+     :buffer (buffer-name)
+     :mode major-mode
+     :point (point)
+     :line (line-number-at-pos)
+     :command-elapsed-ms
+     (emacsvox-aural--diagnostic-elapsed-ms
+      emacsvox-aural-command-start-time observed-at)
+     :content-characters (- end start)
+     :content (buffer-substring-no-properties start end))
+    (let ((emacsvox-agent-shell--chat-label-context
+           (emacsvox-agent-shell--chat-label-context-at-point))
+          (emacsvox-agent-shell--line-navigation-speech-p t)
+          (ems--speak-max-length
+           (if (and
+                (integerp emacsvox-agent-shell-line-speech-max-characters)
+                (> emacsvox-agent-shell-line-speech-max-characters 0))
+               most-positive-fixnum
+             ems--speak-max-length)))
+      (emacsvox-agent-shell--call-with-vertical-block-entry
+       original-function arguments))))
 
 (defun emacsvox-agent-shell--tts-speak-around
     (original-function text &rest arguments)
@@ -2565,9 +2644,19 @@ PREDICATE receives TEXT and the start position of each property run."
 (defun emacsvox-agent-shell--visible-block-text (start end)
   "Return complete visible block text between START and END."
   (when (and start end (< start end))
-    (let ((text (filter-buffer-substring start end)))
-      (setq text (string-trim (substring-no-properties text)))
-      (unless (string-empty-p text) text))))
+    (let ((position start)
+          parts)
+      (while (< position end)
+        (let ((next
+               (or
+                (next-single-char-property-change
+                 position 'invisible nil end)
+                end)))
+          (unless (invisible-p position)
+            (push (buffer-substring-no-properties position next) parts))
+          (setq position next)))
+      (let ((text (string-trim (string-join (nreverse parts)))))
+        (unless (string-empty-p text) text)))))
 
 (defun emacsvox-agent-shell--fragment-visibility (start end state)
   "Return semantic visibility for foldable fragment STATE from START to END."
@@ -3248,10 +3337,12 @@ END-BOUNDARY is non-nil."
      (t (concat "Activity group, " label)))))
 
 (defun emacsvox-agent-shell--block-location-speech (location)
-  "Return complete semantic speech for block LOCATION."
+  "Return concise semantic navigation speech for block LOCATION."
   (let* ((type (plist-get location :type))
          (label (plist-get location :label))
-         (body (plist-get location :body))
+         (body
+          (emacsvox-agent-shell--concise-block-text
+           (plist-get location :body)))
          (fallback
           (or label
               (emacsvox-agent-shell--block-type-label
@@ -3374,30 +3465,14 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
     :visibility (plist-get location :visibility))))
 
 (defun emacsvox-agent-shell--expanded-block-speech (location)
-  "Return newly revealed body speech for expanded block LOCATION.
-
-Block headings were already spoken when focus reached the toggle.  Exclude
-them here so expansion reads only content that has just become visible."
-  (let ((type (plist-get location :type)))
-    (if (eq type 'activity-group)
-        (when-let* ((state (plist-get location :state))
-                    (qualified-id (map-elt state :qualified-id))
-                    (members
-                     (seq-filter
-                      (lambda (candidate)
-                        (equal
-                         (map-elt
-                          (plist-get candidate :state) :group-id)
-                         qualified-id))
-                      (emacsvox-agent-shell--fragment-locations)))
-                    (bodies
-                     (delq
-                      nil
-                      (mapcar
-                       (lambda (member) (plist-get member :body))
-                       members))))
-          (string-join bodies "\n"))
-      (plist-get location :body))))
+  "Return concise visibility speech for expanded block LOCATION."
+  (let* ((type (plist-get location :type))
+         (label (plist-get location :label))
+         (heading
+          (if (eq type 'activity-group)
+              (emacsvox-agent-shell--activity-group-speech-label label)
+            (or label (emacsvox-agent-shell--block-type-label type)))))
+    (format "%s, expanded." heading)))
 
 (defun emacsvox-agent-shell--call-toggle-fragment
     (original-function arguments interactive-p)

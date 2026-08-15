@@ -36,7 +36,8 @@
 .POSIX:
 MAKE=make
 MAKEFLAGS=--no-print-directory
-EMACS=emacs
+-include local.mk
+EMACS ?= emacs
 README = README
 
 ### Tests
@@ -45,13 +46,57 @@ TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
 .PHONY: test unit-test compiled-aural-test build-aural-test trace trace-test reference-test advice-audit name-audit tts-audit
+.PHONY: check-emacs bytecode bytecode-check bytecode-rebuild
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
+.PHONY: windows-omnivox-dev
 .PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers verify-windows-omnivox-runtime
 .PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
 test: unit-test compiled-aural-test build-aural-test trace-test
 
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el
+
+check-emacs:
+	@$(EMACS) -Q --batch --eval \
+		'(unless (version<= "31" emacs-version) \
+		   (error "Emacsvox requires Emacs 31 or newer; got %s from %s" \
+		          emacs-version invocation-directory))'
+
+# Keep ignored in-tree byte-code explicit: ordinary edits can use the
+# incremental target, while branch changes should discard every old .elc.
+bytecode: check-emacs config
+	$(MAKE) -C lisp EMACS="$(EMACS)" all
+	$(MAKE) EMACS="$(EMACS)" bytecode-check
+
+bytecode-check: check-emacs
+	@set -eu; \
+		if ! $(MAKE) -C lisp EMACS="$(EMACS)" --question all; then \
+			echo "Emacsvox byte-code is missing or stale; run make bytecode." >&2; \
+			exit 1; \
+		fi; \
+		selected_version="$$($(EMACS) -Q --batch --eval '(princ emacs-version)')"; \
+		for compiled in lisp/*.elc; do \
+			if [ ! -e "$$compiled" ]; then continue; fi; \
+			source=$${compiled%c}; \
+			if [ ! -e "$$source" ]; then \
+				echo "Orphaned Emacsvox byte-code: $$compiled" >&2; \
+				echo "Run make bytecode-rebuild after branch changes." >&2; \
+				exit 1; \
+			fi; \
+			compiled_version="$$(sed -n \
+				'3s/^;;; in Emacs version //p' "$$compiled")"; \
+			if [ "$$compiled_version" != "$$selected_version" ]; then \
+				echo "Byte-code compiler mismatch: $$compiled" >&2; \
+				echo "Built by Emacs $$compiled_version; selected Emacs is $$selected_version." >&2; \
+				echo "Run make bytecode-rebuild." >&2; \
+				exit 1; \
+			fi; \
+		done; \
+		echo "Emacsvox byte-code is current."
+
+bytecode-rebuild:
+	$(MAKE) clean
+	$(MAKE) EMACS="$(EMACS)" bytecode
 
 compiled-aural-test:
 	$(EMACS) -Q --batch -l test/run-compiled-aural-tests.el
@@ -105,7 +150,7 @@ aural-reference:
 
 ###   User level targets emacsvox   outloud espeak 
 
-emacsvox: config 
+emacsvox: check-emacs config
 	@cd lisp && $(MAKE) $(MAKEFLAGS)
 	@make   $(README)
 	@chmod 644 $(README)
@@ -143,6 +188,8 @@ OMNIVOX_RUNTIME_DIR = $(CURDIR)/servers/omnivox-bin
 OMNIVOX_RELEASE_DIR = $(CURDIR)/servers/omnivox-release
 OMNIVOX_RELEASE_IMAGE ?= emacsvox-omnivox-windows-gnu:rust-1.97.1
 OMNIVOX_RELEASE_TARGET_DIR = $(OMNIVOX_DIR)/target/emacsvox-release
+OMNIVOX_ALLOW_DIRTY ?= 0
+OMNIVOX_BUILD_KIND ?= release-clean-worktree
 include $(OMNIVOX_RELEASE_DIR)/toolchain.lock
 OMNIVOX_CSC = $(OMNIVOX_RELEASE_DIR)/cache/roslyn-$(roslyn_version)/tasks/net472/csc.exe
 OMNIVOX_REFERENCE_DIR = $(OMNIVOX_RELEASE_DIR)/cache/net40-reference-assemblies-$(reference_assemblies_version)/build/.NETFramework/v4.0
@@ -155,15 +202,22 @@ verify-windows-omnivox-helpers:
 	"$(OMNIVOX_RELEASE_DIR)/verify-helper-determinism.sh" \
 		"$(CURDIR)" "$(OMNIVOX_CSC)" "$(OMNIVOX_REFERENCE_DIR)"
 
+windows-omnivox-dev:
+	$(MAKE) OMNIVOX_ALLOW_DIRTY=1 \
+		OMNIVOX_BUILD_KIND=local-dirty-worktree windows-omnivox
+
 windows-omnivox:
 	@set -eu; \
-		for repository in "$(CURDIR)" "$(OMNIVOX_DIR)"; do \
-			if ! git -C "$$repository" diff --quiet --ignore-submodules -- || \
-				! git -C "$$repository" diff --cached --quiet --ignore-submodules --; then \
-				echo "Refusing to stage Omnivox from tracked changes in $$repository" >&2; \
-				exit 1; \
-			fi; \
-		done
+		if [ "$(OMNIVOX_ALLOW_DIRTY)" != 1 ]; then \
+			for repository in "$(CURDIR)" "$(OMNIVOX_DIR)"; do \
+				if ! git -C "$$repository" diff --quiet --ignore-submodules -- || \
+					! git -C "$$repository" diff --cached --quiet --ignore-submodules --; then \
+					echo "Refusing to stage Omnivox from tracked changes in $$repository" >&2; \
+					echo "Use make windows-omnivox-dev for a provenance-labelled development build." >&2; \
+					exit 1; \
+				fi; \
+			done; \
+		fi
 	$(MAKE) verify-windows-omnivox-toolchain
 	$(MAKE) verify-windows-omnivox-helpers
 	docker run --rm --platform linux/amd64 \
@@ -247,6 +301,11 @@ windows-omnivox:
 		windows_cache_path="$$(wslpath -w "$$windows_cache_parent")"; \
 		emacsvox_commit="$$(git -C "$(CURDIR)" rev-parse HEAD)"; \
 		omnivox_commit="$$(git -C "$(OMNIVOX_DIR)" rev-parse HEAD)"; \
+		build_kind="$(OMNIVOX_BUILD_KIND)"; \
+		emacsvox_worktree_digest="$$(git -C "$(CURDIR)" diff --binary HEAD -- | \
+			sha256sum | cut -d ' ' -f1)"; \
+		omnivox_worktree_digest="$$(git -C "$(OMNIVOX_DIR)" diff --binary HEAD -- | \
+			sha256sum | cut -d ' ' -f1)"; \
 		cargo_lock_digest="$$(sha256sum "$(OMNIVOX_DIR)/Cargo.lock" | cut -d ' ' -f1)"; \
 		toolchain_lock_digest="$$(sha256sum "$(OMNIVOX_RELEASE_DIR)/toolchain.lock" | cut -d ' ' -f1)"; \
 		dockerfile_digest="$$(sha256sum "$(OMNIVOX_RELEASE_DIR)/Dockerfile" | cut -d ' ' -f1)"; \
@@ -283,7 +342,9 @@ windows-omnivox:
 				printf '%s\n' no-dectalk-runtime; \
 			fi; \
 			printf '%s\n' "$$data_digest" "$$emacsvox_commit" \
-				"$$omnivox_commit" "$$cargo_lock_digest" \
+				"$$omnivox_commit" "$$build_kind" \
+				"$$emacsvox_worktree_digest" "$$omnivox_worktree_digest" \
+				"$$cargo_lock_digest" \
 				"$$toolchain_lock_digest" "$$dockerfile_digest" \
 				"$$release_image_id" "$$csc_digest" \
 				"$(roslyn_nupkg_sha256)" \
@@ -304,6 +365,9 @@ windows-omnivox:
 				"build_id=$$build_id" \
 				"emacsvox_commit=$$emacsvox_commit" \
 				"omnivox_commit=$$omnivox_commit" \
+				"build_kind=$$build_kind" \
+				"emacsvox_worktree_sha256=$$emacsvox_worktree_digest" \
+				"omnivox_worktree_sha256=$$omnivox_worktree_digest" \
 				"deployed_omnivox_sha256=$$executable_digest" \
 				"unstripped_omnivox_sha256=$$unstripped_digest"; \
 		} > "$$diagnostics_dir/MANIFEST.new"; \
@@ -368,6 +432,9 @@ windows-omnivox:
 				"build_id=$$build_id" \
 				"emacsvox_commit=$$emacsvox_commit" \
 				"omnivox_commit=$$omnivox_commit" \
+				"build_kind=$$build_kind" \
+				"emacsvox_worktree_sha256=$$emacsvox_worktree_digest" \
+				"omnivox_worktree_sha256=$$omnivox_worktree_digest" \
 				"cargo_lock_sha256=$$cargo_lock_digest" \
 				"toolchain_lock_sha256=$$toolchain_lock_digest" \
 				"dockerfile_sha256=$$dockerfile_digest" \

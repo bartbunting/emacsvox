@@ -46,6 +46,36 @@ if [ "$diagnostics_build_id" != "$build_id" ]; then
     echo "Local diagnostics build ID does not match the staged runtime" >&2
     exit 1
 fi
+for field in build_kind emacsvox_worktree_sha256 omnivox_worktree_sha256; do
+    provenance_value=$(sed -n "s/^$field=//p" "$current/PROVENANCE")
+    diagnostics_value=$(sed -n "s/^$field=//p" "$diagnostics/MANIFEST")
+    if [ -z "$provenance_value" ] ||
+       [ "$provenance_value" != "$diagnostics_value" ]; then
+        echo "Omnivox provenance and diagnostics disagree on $field" >&2
+        exit 1
+    fi
+done
+build_kind=$(sed -n 's/^build_kind=//p' "$current/PROVENANCE")
+case "$build_kind" in
+    release-clean-worktree | local-dirty-worktree) ;;
+    *)
+        echo "Unknown Omnivox build kind: $build_kind" >&2
+        exit 1
+        ;;
+esac
+for field in emacsvox_worktree_sha256 omnivox_worktree_sha256; do
+    digest=$(sed -n "s/^$field=//p" "$current/PROVENANCE")
+    case "$digest" in
+        *[!0-9a-f]* | '')
+            echo "Invalid Omnivox provenance digest: $field" >&2
+            exit 1
+            ;;
+    esac
+    if [ "${#digest}" -ne 64 ]; then
+        echo "Invalid Omnivox provenance digest length: $field" >&2
+        exit 1
+    fi
+done
 expected_unstripped_digest=$(
     sed -n 's/^unstripped_omnivox_sha256=//p' "$diagnostics/MANIFEST"
 )

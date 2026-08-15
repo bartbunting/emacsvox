@@ -42,6 +42,59 @@
 (defvar emacsvox-aural--submission-sequence 0
   "Sequence used to identify native aural submissions.")
 
+(defcustom emacsvox-aural-diagnostic-log-file nil
+  "File receiving opt-in aural submission diagnostics.
+
+When non-nil, Emacsvox appends one Lisp plist per line with command timing,
+submission timing, and complete submitted text.  The log can therefore contain
+sensitive material and is disabled by default."
+  :type '(choice (const :tag "Disabled" nil) file)
+  :group 'emacsvox-aural)
+
+(defvar-local emacsvox-aural-command-start-time nil
+  "Floating-point time when a diagnosed interactive command started.")
+
+(defvar emacsvox-aural-last-diagnostic-log-error nil
+  "Most recent error encountered while writing aural diagnostics.")
+
+(defun emacsvox-aural--diagnostic-elapsed-ms (start &optional end)
+  "Return milliseconds elapsed from numeric START through END."
+  (when (numberp start)
+    (* 1000.0 (- (or end (float-time)) start))))
+
+(defun emacsvox-aural-diagnostic-log-event (event &rest fields)
+  "Append opt-in diagnostic EVENT and FIELDS to the configured log.
+
+Logging never prevents presentation; a write failure is retained in
+`emacsvox-aural-last-diagnostic-log-error'."
+  (when emacsvox-aural-diagnostic-log-file
+    (condition-case error-data
+        (let* ((now (current-time))
+               (file (expand-file-name emacsvox-aural-diagnostic-log-file))
+               (directory (file-name-directory file))
+               (record
+                (append
+                 (list
+                  :time (float-time now)
+                  :utc (format-time-string
+                        "%Y-%m-%dT%H:%M:%S.%3NZ" now t)
+                  :event event)
+                 fields))
+               (coding-system-for-write 'utf-8-unix))
+          (when directory (make-directory directory t))
+          (with-temp-buffer
+            (let ((print-circle t)
+                  (print-length nil)
+                  (print-level nil))
+              (prin1 record (current-buffer)))
+            (insert "\n")
+            (write-region (point-min) (point-max) file 'append 'silent))
+          (setq emacsvox-aural-last-diagnostic-log-error nil)
+          record)
+      (error
+       (setq emacsvox-aural-last-diagnostic-log-error error-data)
+       nil))))
+
 (defun emacsvox-aural--submission-error (format-string &rest arguments)
   "Signal a submission error described by FORMAT-STRING and ARGUMENTS."
   (signal
@@ -281,17 +334,55 @@ ordered list produced by `emacsvox-aural-compatibility-icon'.  Before actions
 precede semantic before-actions; after actions follow semantic after-actions.
 Semantic rules are resolved once for the object, while legacy icons resolve
 only their cue-specific adapter policy."
-  (let ((emacsvox-aural-submission-controls-interruption t))
-    (emacsvox-aural-call-with-submission
-     #'emacsvox-aural--submit-content
-     :facts facts
-     :context context
-     :module (or module (plist-get context :module))
-     :occasion
-     (or occasion (plist-get context :occasion) 'continuous)
-     :delivery-policy delivery-policy
-     :replacement-key replacement-key
-     :arguments (list content compatibility-actions))))
+  (let* ((command-start emacsvox-aural-command-start-time)
+         (submit-observed-at (float-time))
+         (plain-content
+          (and (stringp content) (substring-no-properties content)))
+         submission
+         completed)
+    (emacsvox-aural-diagnostic-log-event
+     'submission-start
+     :command this-command
+     :buffer (buffer-name)
+     :mode major-mode
+     :point (point)
+     :command-elapsed-ms
+     (emacsvox-aural--diagnostic-elapsed-ms
+      command-start submit-observed-at)
+     :content-characters (and plain-content (length plain-content))
+     :content plain-content)
+    (let ((work-start (float-time)))
+      (unwind-protect
+          (progn
+            (setq
+             submission
+             (let ((emacsvox-aural-submission-controls-interruption t))
+               (emacsvox-aural-call-with-submission
+                #'emacsvox-aural--submit-content
+                :facts facts
+                :context context
+                :module (or module (plist-get context :module))
+                :occasion
+                (or occasion (plist-get context :occasion) 'continuous)
+                :delivery-policy delivery-policy
+                :replacement-key replacement-key
+                :arguments (list content compatibility-actions))))
+            (setq completed t))
+        (let ((finished-at (float-time)))
+          (emacsvox-aural-diagnostic-log-event
+           'submission-complete
+           :command this-command
+           :buffer (buffer-name)
+           :mode major-mode
+           :status (if completed 'completed 'failed)
+           :submission-id
+           (and submission (emacsvox-aural-submission-id submission))
+           :command-elapsed-ms
+           (emacsvox-aural--diagnostic-elapsed-ms
+            command-start finished-at)
+           :submission-elapsed-ms
+           (emacsvox-aural--diagnostic-elapsed-ms work-start finished-at))))
+      submission)))
 
 (provide 'emacsvox-aural-submission)
 ;;; emacsvox-aural-submission.el ends here

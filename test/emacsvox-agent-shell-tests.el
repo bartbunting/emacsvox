@@ -44,6 +44,8 @@
 (defvar emacsvox-agent-shell--block-repeat-map)
 (defvar emacsvox-agent-shell--vertical-navigation-active-p)
 (defvar emacsvox-agent-shell--vertical-navigation-origin)
+(defvar emacsvox-agent-shell--line-navigation-speech-p)
+(defvar emacsvox-agent-shell-line-speech-max-characters)
 (defvar emacsvox-agent-shell-foreground-speech-level)
 (defvar emacsvox-agent-shell--table-navigation-active)
 (defvar emacsvox-agent-shell--table-navigation-map)
@@ -61,8 +63,10 @@
 (defvar emacsvox-agent-shell-speech-level)
 (defvar emacsvox-agent-shell-status-speech-labels)
 (defvar emacsvox-comint-autospeak)
+(defvar emacsvox-aural-command-start-time)
 (defvar tts-yank-excluded-properties)
 (defvar ems--message-filter)
+(defvar ems--speak-max-length)
 (defvar agent-shell--state)
 (defvar agent-shell-section-functions)
 (defvar agent-shell-header-style)
@@ -2297,6 +2301,124 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            (setq same-block-facts emacsvox-aural-submission-facts))))
       (should-not same-block-facts))))
 
+(ert-deftest emacsvox-agent-shell-line-navigation-speech-is-bounded ()
+  "Line navigation should bound only its speech copy."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (let ((emacsvox-agent-shell-line-speech-max-characters 5)
+          (emacsvox-agent-shell--line-navigation-speech-p t))
+      (let* ((source (propertize "abcdefghij" 'face 'bold))
+             (speech
+              (emacsvox-agent-shell--prepare-speech-text source)))
+        (should
+         (equal
+          (substring-no-properties speech)
+          "abcde [line truncated; 5 characters omitted]"))
+        (should (eq (get-text-property 0 'face speech) 'bold))))
+    (let ((emacsvox-agent-shell-line-speech-max-characters 5)
+          (emacsvox-agent-shell--line-navigation-speech-p nil))
+      (should
+       (equal
+        (emacsvox-agent-shell--prepare-speech-text "abcdefghij")
+        "abcdefghij")))))
+
+(ert-deftest emacsvox-agent-shell-physical-line-bypasses-core-length-prompt ()
+  "Bounded Agent Shell navigation should not invoke core long-line policy."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert "abcdefghij")
+    (goto-char (point-min))
+    (let ((emacsvox-agent-shell-line-speech-max-characters 5)
+          (ems--speak-max-length 4)
+          observed-limit
+          spoken)
+      (emacsvox-agent-shell--speak-line-around
+       (lambda (&rest _)
+         (setq
+          observed-limit ems--speak-max-length
+          spoken
+          (emacsvox-agent-shell--prepare-speech-text
+           (buffer-substring (point-min) (point-max))))))
+      (should (= observed-limit most-positive-fixnum))
+      (should
+       (equal
+        spoken "abcde [line truncated; 5 characters omitted]")))))
+
+(ert-deftest emacsvox-agent-shell-visual-line-speech-is-bounded ()
+  "Visual line navigation should apply the same compilation bound."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (let ((emacsvox-agent-shell-line-speech-max-characters 5)
+          spoken)
+      (emacsvox-agent-shell--speak-visual-line-around
+       (lambda (&rest _)
+         (setq spoken
+               (emacsvox-agent-shell--prepare-speech-text "abcdefghij"))))
+      (should
+       (equal spoken "abcde [line truncated; 5 characters omitted]")))))
+
+(ert-deftest emacsvox-agent-shell-folded-visual-line-uses-visible-heading ()
+  "Folded visual-line speech should not extract its invisible body."
+  (with-temp-buffer
+    (let ((start (point))
+          spoken)
+      (insert "Thought heading\n")
+      (let ((body-start (point)))
+        (insert (make-string 10000 ?x))
+        (add-text-properties body-start (point) '(invisible t)))
+      (add-text-properties
+       start (point)
+       '(agent-shell-ui-state ((:qualified-id . "1-agent_thought_chunk")
+                               (:collapsed . t))))
+      (add-text-properties
+       start (+ start (length "Thought heading"))
+       '(agent-shell-ui-section label-left))
+      (setq major-mode 'agent-shell-mode
+            buffer-invisibility-spec t)
+      (goto-char start)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak--present-physical-line)
+            (lambda (&rest _)
+              (setq spoken
+                    (buffer-substring-no-properties
+                     (line-beginning-position) (line-end-position))))))
+        (emacsvox-agent-shell--speak-visual-line-around
+         (lambda (&rest _)
+           (ert-fail "Folded navigation used the complete visual span"))))
+      (should (equal spoken "Thought heading")))))
+
+(ert-deftest emacsvox-agent-shell-collapsed-body-keeps-visual-line-presenter ()
+  "Collapsed fragment metadata on body text must not force physical lines."
+  (with-temp-buffer
+    (insert
+     (propertize
+      "wrapped body text"
+      'agent-shell-ui-state
+      '((:qualified-id . "1-agent_message_chunk") (:collapsed . t))
+      'agent-shell-ui-section 'body))
+    (goto-char (point-min))
+    (let (presenter)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak--present-physical-line)
+            (lambda (&rest _) (setq presenter 'physical))))
+        (emacsvox-agent-shell--speak-visual-line-around
+         (lambda (&rest _) (setq presenter 'visual))))
+      (should (eq presenter 'visual)))))
+
+(ert-deftest emacsvox-agent-shell-visible-block-text-omits-hidden-content ()
+  "Semantic visible text should exclude collapsed buffer intervals."
+  (with-temp-buffer
+    (insert "before ")
+    (let ((hidden-start (point)))
+      (insert (make-string 10000 ?x))
+      (add-text-properties hidden-start (point) '(invisible t)))
+    (insert " after")
+    (setq buffer-invisibility-spec t)
+    (should
+     (equal
+      (emacsvox-agent-shell--visible-block-text (point-min) (point-max))
+      "before  after"))))
+
 (ert-deftest emacsvox-agent-shell-visual-lines-leave-blank-policy-to-core ()
   "Agent Shell should not duplicate core visual-line blank presentation."
   (dolist (case '((agent-shell-mode "")
@@ -3607,6 +3729,38 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                (plist-get arguments :compatibility-actions))
               1)))))))
 
+(ert-deftest emacsvox-agent-shell-block-jumps-bound-body-previews ()
+  "Semantic navigation should never submit a complete large block body."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert "target")
+    (let ((target
+           (list :position 1 :end 7 :type 'agent-response
+                 :body (make-string 50000 ?x)))
+          spoken)
+      (cl-letf
+          (((symbol-function
+             'emacsvox-agent-shell--block-location-in-direction)
+            (lambda (&rest _) target))
+           ((symbol-function 'emacsvox-agent-shell--expand-block-parent)
+            #'ignore)
+           ((symbol-function 'emacsvox-agent-shell--submit-text-feedback)
+            (lambda (content &rest _) (setq spoken content)))
+           ((symbol-function 'tts-stop) #'ignore))
+        (emacsvox-agent-shell--jump-block-of-type
+         'agent-response 'forward))
+      (should (= (length spoken) 80))
+      (should (string-suffix-p "..." spoken)))))
+
+(ert-deftest emacsvox-agent-shell-expansion-speech-excludes-body ()
+  "Expansion feedback should report state without copying body content."
+  (should
+   (equal
+    (emacsvox-agent-shell--expanded-block-speech
+     (list :type 'thought :label "Thinking"
+           :body (make-string 50000 ?x)))
+    "Thinking, expanded.")))
+
 (ert-deftest emacsvox-agent-shell-foldable-locations-expose-visibility ()
   "Foldable transcript locations should expose canonical visibility facts."
   (emacsvox-agent-shell-test--with-semantic-blocks
@@ -3749,7 +3903,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should
          (equal
           (cadar presentations)
-          "Reasoning\nTool output\nsecond line"))
+          "Activity group, Thought, read a file, expanded."))
         (should
          (eq
           (plist-get
@@ -3758,8 +3912,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            :visibility)
           'expanded))))))
 
-(ert-deftest emacsvox-agent-shell-fold-action-ret-presents-only-new-content ()
-  "Inline RET should read revealed bodies and cue collapse without old text."
+(ert-deftest emacsvox-agent-shell-fold-action-ret-announces-state-concisely ()
+  "Inline RET should announce visibility without reading complete bodies."
   (emacsvox-agent-shell-test--with-semantic-blocks
     (let* ((activity
             (seq-find
@@ -3777,7 +3931,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (call-interactively (key-binding (kbd "RET"))))
           '((icon open-object)
             (speak
-             "Reasoning\nTool output\nsecond line")
+             "Activity group, Thought, read a file, expanded.")
             (icon close-object)))))
       (should
        (eq
@@ -3786,8 +3940,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          :visibility)
         'folded)))))
 
-(ert-deftest emacsvox-agent-shell-thought-toggle-does-not-repeat-heading ()
-  "A Thought toggle should read its body once and stay silent on collapse."
+(ert-deftest emacsvox-agent-shell-thought-toggle-announces-state-concisely ()
+  "A Thought toggle should announce expansion and stay silent on collapse."
   (emacsvox-agent-shell-test--with-semantic-blocks
     (let ((activity
            (seq-find
@@ -3809,7 +3963,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (call-interactively #'agent-shell-ui-toggle-fragment)
           (call-interactively #'agent-shell-ui-toggle-fragment))
         '((icon open-object)
-          (speak "Reasoning")
+          (speak "Thinking, expanded.")
           (icon close-object)))))))
 
 (ert-deftest emacsvox-agent-shell-internal-fold-toggle-remains-silent ()
@@ -3861,9 +4015,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 
 (ert-deftest emacsvox-agent-shell-block-navigation-expands-activity-members ()
   "Selecting a hidden thought or tool should expand its activity group."
-  (dolist (case '((thought "Thinking. Reasoning")
+  (dolist (case '((thought "Thinking, collapsed.")
                   (tool-call
-                   "completed Read file. Tool output\nsecond line")))
+                   "completed Read file, collapsed.")))
     (emacsvox-agent-shell-test--with-semantic-blocks
       (let* ((type (car case))
              (location
@@ -3894,7 +4048,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          'user-prompt 'forward))
       '((stop nil)
         (icon large-movement)
-        (speak "Codex> first request\ncontinued request"))))
+        (speak "Codex> first request continued request"))))
     (goto-char (point-min))
     (should
      (equal
@@ -3950,7 +4104,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          'agent-response 'forward))
       '((stop nil)
         (icon large-movement)
-        (speak "First answer\nwith a second line")
+        (speak "First answer with a second line")
         (stop nil)
         (icon large-movement)
         (speak "Second answer"))))
@@ -3968,7 +4122,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          'agent-response 'backward))
       '((stop nil)
         (icon large-movement)
-        (speak "First answer\nwith a second line"))))))
+        (speak "First answer with a second line"))))))
 
 (ert-deftest emacsvox-agent-shell-block-navigation-is-directional ()
   "Navigation should not rebuild all semantic locations for each move."
@@ -3990,7 +4144,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            'agent-response 'forward)))
       '((stop nil)
         (icon large-movement)
-        (speak "First answer\nwith a second line")
+        (speak "First answer with a second line")
         (stop nil)
         (icon large-movement)
         (speak "Second answer"))))
@@ -4126,7 +4280,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (emacsvox-agent-shell-previous-block-at-point)))
         '((stop nil)
           (icon large-movement)
-          (speak "First answer\nwith a second line"))))
+          (speak "First answer with a second line"))))
       (forward-char 3)
       (let ((origin (point)))
         (should

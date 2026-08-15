@@ -18,12 +18,18 @@ default_tts=dtk-soft
 
 if [ -r /proc/version ] && grep -qi microsoft /proc/version; then
   windows_support=$emacsvox_root/servers
-  windows_tts=$windows_support/windows-outloud
+  windows_omnivox=$windows_support/omnivox
+  windows_omnivox_bin=$windows_support/omnivox-bin/current/omnivox.exe
+  windows_outloud=$windows_support/windows-outloud
   windows_play=$windows_support/windows-play
-  if [ -f "$windows_support/tts-lib.tcl" ] &&
-     [ -x "$windows_tts" ] && [ -x "$windows_play" ]; then
-    default_tts=$windows_tts
+  if [ -x "$windows_play" ]; then
     export EMACSVOX_PLAY="${EMACSVOX_PLAY:-$windows_play}"
+  fi
+  if [ -x "$windows_omnivox" ] && [ -x "$windows_omnivox_bin" ]; then
+    default_tts=$windows_omnivox
+  elif [ -f "$windows_support/tts-lib.tcl" ] &&
+       [ -x "$windows_outloud" ]; then
+    default_tts=$windows_outloud
   fi
 fi
 

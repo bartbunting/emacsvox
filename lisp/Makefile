@@ -65,7 +65,6 @@ swiftmac-voices.elc
 
 TTS_OBJECTS = \
 emacsvox-preamble.elc \
-emacsvox-loaddefs.elc \
 tts-speak.elc \
 $(VOICE_OBJECTS)
 

@@ -114,6 +114,10 @@ Each function receives the failure plist stored in
   'emacsvox-aural-presentation-tone
   "Process property recording negotiated presentation-tone support.")
 
+(defconst emacsvox-aural--delivery-readiness-process-property
+  'emacsvox-aural-delivery-readiness
+  "Process property gating aural delivery during server negotiation.")
+
 (defconst emacsvox-aural--presentation-tone-version 1
   "Version of the explicit insert/overlay tone command emitted by Emacsvox.")
 
@@ -186,6 +190,28 @@ lowered."
   (process-put
    process emacsvox-aural--presentation-tone-process-property version)
   process)
+
+(defun emacsvox-aural-set-delivery-readiness (process readiness)
+  "Set PROCESS aural delivery READINESS.
+
+READINESS is one of `pending', `ready', or `failed'.  Complete aural
+transactions are suppressed while readiness is pending.  A ready or failed
+process proceeds through ordinary capability validation, so a failed or stale
+server still produces the relevant protocol diagnostic."
+  (unless (memq readiness '(pending ready failed))
+    (error "Invalid aural delivery readiness: %S" readiness))
+  (process-put
+   process emacsvox-aural--delivery-readiness-process-property readiness)
+  process)
+
+(defun emacsvox-aural-delivery-pending-p (process)
+  "Return non-nil when PROCESS is still negotiating aural capabilities."
+  (and
+   (processp process)
+   (eq
+    (process-get
+     process emacsvox-aural--delivery-readiness-process-property)
+    'pending)))
 
 (defun emacsvox-aural--protocol-presentation-tone (pitch duration mode)
   "Queue a bounded PITCH/DURATION tone using explicit presentation MODE."
@@ -468,14 +494,26 @@ Return non-nil when every entry was sent to a live process."
   "Return non-nil when the current submission promises terminal callbacks."
   (or tts--tracked-completion-function tts--marker-event-function))
 
+(defun emacsvox-aural--native-replacement-delivery-p (owner entries)
+  "Return non-nil when OWNER natively replaces structured ENTRIES."
+  (and
+   (processp owner)
+   (eql
+    (process-get
+     owner emacsvox-aural--structured-timeline-process-property)
+    emacsvox-aural--structured-timeline-version)
+   (cl-some
+    (lambda (entry)
+      (eq 'structured (emacsvox-aural--delivery-entry-kind entry)))
+    entries)))
+
 (defun emacsvox-aural--submit-delivery-entries
     (owner entries effects generation)
   "Submit protocol ENTRIES and commit EFFECTS under current source policy.
 
 Return `sent' after a successful write, `pending' after idle scheduling, and
-nil when no complete write occurred.  Tracked submissions are never left
-pending because their synchronous public API must return an issued dispatch
-identifier."
+nil when no complete write occurred.  Tracked submissions and structured
+timelines with native replacement are never left pending."
   (when entries
     (when-let* ((foreign
                  (cl-find-if
@@ -494,19 +532,29 @@ identifier."
       ('replaceable
        (emacsvox-aural-cancel-pending-deliveries
         owner emacsvox-aural-submission-replacement-key)
-       (when emacsvox-aural-submission-controls-interruption
-         (tts--interrupt-process owner t))
-       (if (emacsvox-aural--tracked-submission-p)
+       (let ((native
+              (emacsvox-aural--native-replacement-delivery-p owner entries)))
+         ;; A negotiated structured timeline carries its replacement policy to
+         ;; Omnivox.  Let the server perform soft generation/audio preemption;
+         ;; a legacy `s' here would hard-cancel and potentially restart the
+         ;; native helper for every navigation event.
+         (when
+             (and
+              emacsvox-aural-submission-controls-interruption
+              (not native))
+           (tts--interrupt-process owner t))
+         (if
+             (or (emacsvox-aural--tracked-submission-p) native)
            (when
                (emacsvox-aural--send-delivery-entries
                 entries owner generation
                 emacsvox-aural--history-transaction-id)
              (emacsvox-aural--commit-delivery-effects effects)
              'sent)
-         (emacsvox-aural--schedule-replaceable-delivery
-          owner emacsvox-aural-submission-replacement-key
-          entries effects generation)
-         'pending))
+           (emacsvox-aural--schedule-replaceable-delivery
+            owner emacsvox-aural-submission-replacement-key
+            entries effects generation)
+           'pending)))
       ('urgent
        (emacsvox-aural-cancel-pending-deliveries owner)
        (when emacsvox-aural-submission-controls-interruption
@@ -532,8 +580,14 @@ Nested calls join the enclosing transaction.  The outer source submission's
 delivery policy determines whether the complete captured payload is sent now
 or supersedes an older pending payload.  Every captured command must target
 OWNER so a logical transaction cannot be partially delivered across streams."
-  (if emacsvox-aural--delivery-transaction-active-p
-      (apply function arguments)
+  (cond
+   ((and
+     (not emacsvox-aural--delivery-transaction-active-p)
+     (emacsvox-aural-delivery-pending-p owner))
+    nil)
+   (emacsvox-aural--delivery-transaction-active-p
+    (apply function arguments))
+   (t
     (let ((emacsvox-aural--delivery-transaction-active-p t)
           (emacsvox-aural--delivery-transaction-entries nil)
           (emacsvox-aural--delivery-transaction-effects nil)
@@ -567,7 +621,7 @@ OWNER so a logical transaction cannot be partially delivered across streams."
                (emacsvox-aural--tracked-submission-p)
                (not (eq outcome 'sent)))
             (setq result nil))))
-      result)))
+      result))))
 
 (defun emacsvox-aural--structured-capture-p ()
   "Return non-nil when the current transaction can carry a timeline."

@@ -23,6 +23,8 @@
                   "emacsvox-aural-transport" (process &optional version))
 (declare-function emacsvox-aural-enable-structured-timeline
                   "emacsvox-aural-transport" (process &optional version))
+(declare-function emacsvox-aural-set-delivery-readiness
+                  "emacsvox-aural-transport" (process readiness))
 (declare-function emacsvox-aural-effective-voice-entries
                   "emacsvox-aural-resources" (palette-id &optional path))
 (declare-function emacsvox-aural-effective-voice-palette
@@ -186,6 +188,10 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 (defconst omnivox--control-negotiated-property 'omnivox--control-negotiated
   "Process property preventing duplicate capability negotiation.")
 
+(defconst omnivox--control-negotiation-timer-property
+  'omnivox--control-negotiation-timer
+  "Process property holding the capability negotiation timeout timer.")
+
 (defvar omnivox--control-request-sequence 0
   "Sequence used to identify Omnivox control requests.")
 
@@ -233,6 +239,14 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 
 (defcustom omnivox-voice-configuration-timeout 5
   "Seconds allowed for a complete multi-process configuration apply."
+  :group 'omnivox
+  :type 'number)
+
+(defcustom omnivox-control-negotiation-timeout 30
+  "Seconds allowed for initial Omnivox capability negotiation.
+
+Aural presentation delivery is suppressed during this interval so commands
+cannot overtake server initialization or fail capability checks prematurely."
   :group 'omnivox
   :type 'number)
 
@@ -1400,10 +1414,37 @@ logical registry is replaced, so partial failure is explicit and retryable."
             (setq all-supported nil)))
         (setq tts-handle-unicode (not all-supported))))))
 
+(defun omnivox--finish-capability-negotiation (process readiness)
+  "Finish PROCESS capability negotiation with aural READINESS."
+  (when-let* ((timer
+               (process-get
+                process omnivox--control-negotiation-timer-property)))
+    (cancel-timer timer))
+  (process-put process omnivox--control-negotiation-timer-property nil)
+  (emacsvox-aural-set-delivery-readiness process readiness))
+
+(defun omnivox--capability-negotiation-timeout (process)
+  "Fail pending capability negotiation for live Omnivox PROCESS."
+  (when
+      (and
+       (process-live-p process)
+       (not
+        (process-get process omnivox--control-capabilities-property)))
+    (omnivox--finish-capability-negotiation process 'failed)
+    (setq omnivox-control-last-error
+          (list
+           :process process :error 'capability-negotiation-timeout
+           :time (current-time)))
+    (message
+     "Omnivox capability negotiation timed out after %s seconds"
+     omnivox-control-negotiation-timeout)))
+
 (defun omnivox--handle-capabilities-response (process response)
   "Store capability RESPONSE from PROCESS and request its inventory."
   (if (not (equal (plist-get response :type) "capabilities"))
-      (omnivox--record-control-error process response)
+      (progn
+        (omnivox--finish-capability-negotiation process 'failed)
+        (omnivox--record-control-error process response))
     (process-put process omnivox--control-capabilities-property response)
     (omnivox--update-unicode-preprocessing)
     (process-put
@@ -1452,6 +1493,7 @@ logical registry is replaced, so partial failure is explicit and retryable."
       (emacsvox-aural-enable-presentation-tone process 1))
     (when (eq process tts-speaker-process)
       (setq omnivox-control-capabilities response))
+    (omnivox--finish-capability-negotiation process 'ready)
     (if (member "engine_inventory" (plist-get response :features))
         (omnivox--send-control-request
          process '(:type "inventory") #'omnivox--handle-inventory-response)
@@ -1464,13 +1506,21 @@ logical registry is replaced, so partial failure is explicit and retryable."
   (when (and (process-live-p process)
              (not (process-get process omnivox--control-negotiated-property)))
     (process-put process omnivox--control-negotiated-property t)
+    (emacsvox-aural-set-delivery-readiness process 'pending)
     (omnivox--update-unicode-preprocessing)
     (omnivox--install-control-filter process)
     (condition-case error-data
-        (omnivox--send-control-request
-         process '(:type "capabilities")
-         #'omnivox--handle-capabilities-response)
+        (progn
+          (omnivox--send-control-request
+           process '(:type "capabilities")
+           #'omnivox--handle-capabilities-response)
+          (process-put
+           process omnivox--control-negotiation-timer-property
+           (run-at-time
+            omnivox-control-negotiation-timeout nil
+            #'omnivox--capability-negotiation-timeout process)))
       (error
+       (omnivox--finish-capability-negotiation process 'failed)
        (setq omnivox-control-last-error
              (list :process process :error error-data :time (current-time)))
        (message "Could not negotiate Omnivox control protocol: %s"

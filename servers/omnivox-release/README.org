@@ -59,6 +59,13 @@ deterministic stripped executable hash; the deliberately non-reproducible
 unstripped hash is kept only in its local diagnostics manifest so it cannot
 perturb the staged build identity.
 
-=make verify-windows-omnivox-runtime= verifies the repository stage, the
-Windows-local runtime copy, the external eSpeak cache digest, and launcher
-selection through =servers/omnivox-bin/current=.
+For local testing from active changes, use =make windows-omnivox-dev=.  It uses
+the same pinned build and staging path without requiring either worktree to be
+clean, labels the result =local-dirty-worktree=, and records SHA-256 hashes of
+both repositories' tracked diffs in the runtime provenance and build identity.
+It does not weaken the clean-worktree requirement of =make windows-omnivox=.
+
+=make verify-windows-omnivox-runtime= verifies the repository stage, build-kind
+and worktree-digest agreement with local diagnostics, the Windows-local runtime
+copy, the external eSpeak cache digest, and launcher selection through
+=servers/omnivox-bin/current=.

@@ -25,7 +25,7 @@
      (search-forward-regexp "microsoft" nil t))))
 
 (ert-deftest emacsvox-launcher-uses-bundled-windows-runtime ()
-  "The tracked launcher selects only its checkout's Windows runtime."
+  "The tracked launcher prefers its checkout's staged Omnivox runtime."
   (skip-unless (emacsvox-launcher-tests--wsl-p))
   (let ((fake-emacs (make-temp-file "emacsvox-launcher-emacs-")))
     (unwind-protect
@@ -54,18 +54,26 @@
                                    emacsvox-launcher-tests--root)
                  nil t nil)))
               (let ((root (directory-file-name
-                           emacsvox-launcher-tests--root)))
+                           emacsvox-launcher-tests--root))
+                    (server
+                     (if
+                         (file-executable-p
+                          (expand-file-name
+                           "servers/omnivox-bin/current/omnivox.exe"
+                           emacsvox-launcher-tests--root))
+                         "omnivox"
+                       "windows-outloud")))
                 (should
                  (equal
                   (buffer-string)
                   (format
                    (concat
                     "ROOT=%s\n"
-                    "TTS=%s/servers/windows-outloud\n"
+                    "TTS=%s/servers/%s\n"
                     "PLAY=%s/servers/windows-play\n"
                     "LEGACY_DIR=\n"
                     "LEGACY_PLAY=\n")
-                   root root root)))))))
+                   root root server root)))))))
       (delete-file fake-emacs))))
 
 (provide 'emacsvox-launcher-tests)
