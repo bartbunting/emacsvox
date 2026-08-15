@@ -162,6 +162,8 @@
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--filter-vertical-toggle-hint
                   "emacsvox-agent-shell" ())
+(declare-function emacsvox-agent-shell--semantic-item-feedback
+                  "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--restore-message-filter
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--vertical-toggle-hint-cleanup
@@ -3614,6 +3616,97 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (eq (nth 3 (car presentations)) 'agent-shell))
       (should (eq (nth 4 (car presentations)) 'navigation)))))
 
+(ert-deftest emacsvox-agent-shell-actionable-items-are-semantic ()
+  "Links, images, and source controls should announce labels, not chrome."
+  (with-temp-buffer
+    (insert "[docs](https://example.com)")
+    (agent-shell-markdown-replace-markup)
+    (goto-char (point-min))
+    (should
+     (equal
+      (emacsvox-agent-shell-test--capture-events
+        (emacsvox-agent-shell--semantic-item-feedback))
+      '((icon item)
+        (speak "docs, link. Press Return to open in browser."))))
+    (should (string-match-p ems--message-filter
+                            "Press RET to open in browser"))
+    (emacsvox-agent-shell--restore-message-filter))
+  (with-temp-buffer
+    (insert "![diagram](https://example.com/diagram.png)")
+    (agent-shell-markdown-replace-markup :complete t)
+    (goto-char (point-min))
+    (should
+     (equal
+      (emacsvox-agent-shell-test--capture-events
+        (emacsvox-agent-shell--semantic-item-feedback))
+      '((icon item)
+        (speak "diagram, image. Press Return to open image in browser."))))
+    (emacsvox-agent-shell--restore-message-filter))
+  (with-temp-buffer
+    (insert "architecture diagram")
+    (add-text-properties
+     (point-min) (point-max)
+     '(display (image :type png) help-echo "Open image"))
+    (goto-char (point-min))
+    (should
+     (equal
+      (emacsvox-agent-shell-test--capture-events
+        (emacsvox-agent-shell--semantic-item-feedback))
+      '((icon item)
+        (speak
+         "architecture diagram, image. Press Return to open image; plus, minus, or zero to resize."))))
+    (should (string-match-p ems--message-filter
+                            "Press RET to open image, +/-/0 to resize"))
+    (emacsvox-agent-shell--restore-message-filter))
+  (emacsvox-agent-shell-test--with-rendered-source-blocks
+    (goto-char (point-min))
+    (search-forward "⧉")
+    (backward-char)
+    (should
+     (equal
+      (emacsvox-agent-shell-test--capture-events
+        (emacsvox-agent-shell--semantic-item-feedback))
+      '((icon item)
+        (speak
+         "elisp source block, 2 lines. Press Return to copy."))))
+    (should (string-match-p ems--message-filter "Press RET to copy"))
+    (emacsvox-agent-shell--restore-message-filter)))
+
+(ert-deftest emacsvox-agent-shell-actionable-items-speak-in-both-views ()
+  "Shell and viewport item movement should share semantic link feedback."
+  (dolist
+      (case
+       '((emacsvox-agent-shell--next-item-around
+          agent-shell-next-item agent-shell-mode forward)
+         (emacsvox-agent-shell--previous-item-around
+          agent-shell-previous-item agent-shell-mode backward)
+         (emacsvox-agent-shell--viewport-next-item-around
+          agent-shell-viewport-next-item
+          agent-shell-viewport-view-mode forward)
+         (emacsvox-agent-shell--viewport-previous-item-around
+          agent-shell-viewport-previous-item
+          agent-shell-viewport-view-mode backward)))
+    (with-temp-buffer
+      (insert "before\n[docs](https://example.com)\nafter\n")
+      (agent-shell-markdown-replace-markup)
+      (let ((destination
+             (save-excursion
+               (goto-char (point-min))
+               (search-forward "docs")
+               (match-beginning 0))))
+        (setq major-mode (nth 2 case))
+        (goto-char
+         (if (eq (nth 3 case) 'forward) (point-min) (point-max)))
+        (should
+         (equal
+          (emacsvox-agent-shell-test--capture-events
+            (cl-letf (((symbol-function 'ems-interactive-p)
+                       (lambda (function) (eq function (nth 1 case)))))
+              (funcall (nth 0 case)
+                       (lambda (&rest _) (goto-char destination)))))
+          '((icon item)
+            (speak "docs, link. Press Return to open in browser."))))))))
+
 (ert-deftest emacsvox-agent-shell-permission-button-advice-observes-boundary ()
   "Interactive choice navigation should speak moves but not failed moves."
   (with-temp-buffer
@@ -5788,6 +5881,21 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           'agent-shell-section-heading))
         (should (string-match-p "[▶✶]" source))
         (should-not (string-match-p "[▶✶]" spoken))))))
+
+(ert-deftest emacsvox-agent-shell-speech-omits-source-copy-chrome ()
+  "Continuous line speech should not send the source copy glyph to TTS."
+  (emacsvox-agent-shell-test--with-rendered-source-blocks
+    (setq major-mode 'agent-shell-mode)
+    (goto-char (point-min))
+    (search-forward "⧉")
+    (let* ((source
+            (buffer-substring
+             (line-beginning-position) (line-end-position)))
+           (spoken (emacsvox-agent-shell--prepare-speech-text source)))
+      (should (string-match-p "⧉" source))
+      (should-not (string-match-p "⧉" spoken))
+      (should (equal (string-trim (substring-no-properties spoken))
+                     "elisp")))))
 
 (ert-deftest emacsvox-agent-shell-visual-chrome-filter-is-property-scoped ()
   "Ordinary matching Unicode characters should remain available to speech."

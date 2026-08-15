@@ -608,6 +608,8 @@ to a semantic thought fragment so ordinary faced text is never suppressed."
   "Return TEXT without Agent Shell's decorative fragment prefixes.
 Remove property-scoped fold indicators from every fragment.  For semantic
 thought fragments, also remove the configurable icon before the faced heading.
+Rendered source-block copy controls are likewise omitted from continuous
+speech; item navigation announces their action semantically.
 Only the returned speech copy changes; pointwise character review still names
 the original characters in the buffer."
   (let ((position 0)
@@ -616,20 +618,30 @@ the original characters in the buffer."
     (while (< position length)
       (let* ((section
               (get-text-property position 'agent-shell-ui-section text))
+             (source-copy
+              (get-text-property
+               position 'agent-shell-markdown-source-block-copy text))
              (next
-              (or
-               (next-single-property-change
-                position 'agent-shell-ui-section text length)
-               length)))
-        (pcase section
-          ('indicator
-           (push (cons position next) removals))
-          ('label-left
-           (when-let* ((heading
-                        (emacsvox-agent-shell--thought-heading-start
-                         text position next))
-                       ((> heading position)))
-             (push (cons position heading) removals))))
+              (min
+               (or
+                (next-single-property-change
+                 position 'agent-shell-ui-section text length)
+                length)
+               (or
+                (next-single-property-change
+                 position 'agent-shell-markdown-source-block-copy text length)
+                length))))
+        (if source-copy
+            (push (cons position next) removals)
+          (pcase section
+            ('indicator
+             (push (cons position next) removals))
+            ('label-left
+             (when-let* ((heading
+                          (emacsvox-agent-shell--thought-heading-start
+                           text position next))
+                         ((> heading position)))
+               (push (cons position heading) removals)))))
         (setq position next)))
     (if (null removals)
         text
@@ -676,6 +688,10 @@ the original characters in the buffer."
 (defconst emacsvox-agent-shell--vertical-toggle-hint-regexp
   "\\`Press RET to toggle\\'"
   "Exact message pattern for agent-shell's collapsible-label cursor sensor.")
+
+(defconst emacsvox-agent-shell--item-action-hint-regexp
+  "\\`Press RET to \\(?:copy\\|open\\)"
+  "Message pattern for Agent Shell item actions spoken semantically.")
 
 (defvar-local emacsvox-agent-shell--saved-message-filter nil
   "Saved local-state flag and value for `ems--message-filter'.")
@@ -741,7 +757,7 @@ the original characters in the buffer."
     (apply original-function arguments)))
 
 (defun emacsvox-agent-shell--restore-message-filter ()
-  "Restore the message filter saved before vertical motion."
+  "Restore the message filter saved before navigation feedback."
   (when emacsvox-agent-shell--saved-message-filter
     (let ((was-local
            (car emacsvox-agent-shell--saved-message-filter))
@@ -752,23 +768,26 @@ the original characters in the buffer."
           (setq-local ems--message-filter value)
         (kill-local-variable 'ems--message-filter)))))
 
+(defun emacsvox-agent-shell--filter-message-through-post-command (regexp)
+  "Filter messages matching REGEXP until navigation sensors have run."
+  (emacsvox-agent-shell--restore-message-filter)
+  (setq emacsvox-agent-shell--saved-message-filter
+        (cons (local-variable-p 'ems--message-filter)
+              ems--message-filter))
+  (setq-local
+   ems--message-filter
+   (if (stringp ems--message-filter)
+       (concat "\\(?:" ems--message-filter "\\|" regexp "\\)")
+     regexp)))
+
 (defun emacsvox-agent-shell--filter-vertical-toggle-hint ()
   "Temporarily filter the redundant action hint before vertical motion.
 Normal Emacsvox line speech describes the collapsible label.  Keep
 agent-shell's cursor-sensor message visible, but filter its exact text from
 speech until the cursor sensor has run from `post-command-hook'."
   (when (memq this-command '(next-line previous-line))
-    (emacsvox-agent-shell--restore-message-filter)
-    (setq emacsvox-agent-shell--saved-message-filter
-          (cons (local-variable-p 'ems--message-filter)
-                ems--message-filter))
-    (setq-local
-     ems--message-filter
-     (if (stringp ems--message-filter)
-         (concat "\\(?:" ems--message-filter "\\|"
-                 emacsvox-agent-shell--vertical-toggle-hint-regexp
-                 "\\)")
-       emacsvox-agent-shell--vertical-toggle-hint-regexp))))
+    (emacsvox-agent-shell--filter-message-through-post-command
+     emacsvox-agent-shell--vertical-toggle-hint-regexp)))
 
 (defun emacsvox-agent-shell--vertical-toggle-hint-setup ()
   "Install buffer-local filtering for vertical collapsible-label entry."
@@ -4526,6 +4545,131 @@ the corresponding buffer boundary."
       (goto-char table-position)
       (emacsvox-agent-shell--table-entry-feedback direction))))
 
+(defun emacsvox-agent-shell--item-label-at (property position)
+  "Return concise visible text for PROPERTY's run at POSITION."
+  (when-let* ((range
+               (emacsvox-agent-shell--property-range-at-position
+                property position)))
+    (emacsvox-agent-shell--nonempty-text
+     (replace-regexp-in-string
+      "[[:space:]\n\r]+" " "
+      (buffer-substring-no-properties (car range) (cdr range))))))
+
+(defun emacsvox-agent-shell--item-help-action-at (position)
+  "Return the action described by `help-echo' at POSITION."
+  (let* ((value (get-text-property position 'help-echo))
+         (rendered
+          (cond
+           ((stringp value) value)
+           ((functionp value)
+            (condition-case nil
+                (funcall value (selected-window) (current-buffer) position)
+              (error nil))))))
+    (emacsvox-agent-shell--nonempty-text rendered)))
+
+(defun emacsvox-agent-shell--item-action-sentence (position fallback)
+  "Return a speech-friendly action at POSITION, using FALLBACK if needed."
+  (let* ((action
+          (or (emacsvox-agent-shell--item-help-action-at position)
+              fallback))
+         (verb
+          (concat (downcase (substring action 0 1))
+                  (substring action 1))))
+    (format "Press Return to %s."
+            (string-remove-suffix "." verb))))
+
+(defun emacsvox-agent-shell--image-position-at-point ()
+  "Return the displayed image position at or immediately before point."
+  (seq-find
+   (lambda (position)
+     (and (>= position (point-min))
+          (< position (point-max))
+          (eq (car-safe (get-text-property position 'display)) 'image)))
+   (list (point) (1- (point)))))
+
+(defun emacsvox-agent-shell--image-link-at-p (position)
+  "Return non-nil when the rendered link at POSITION represents an image."
+  (when-let* ((source
+               (get-text-property position 'agent-shell-markdown-source)))
+    (and (stringp source)
+         (string-match-p "\\`[[:space:]]*!\\[" source))))
+
+(defun emacsvox-agent-shell--semantic-item-feedback ()
+  "Speak an actionable source block, image, or link at point.
+Return non-nil when point represents one of those semantic items."
+  (let ((position (point))
+        speech)
+    (cond
+     ((get-text-property
+       position 'agent-shell-markdown-source-block-copy)
+      (let ((location
+             (emacsvox-agent-shell--source-block-location-at-position
+              position)))
+        (setq
+         speech
+         (concat
+          (if location
+              (propertize
+               (emacsvox-agent-shell--source-block-summary location)
+               'face 'agent-shell-markdown-source-block-language)
+            "Source block.")
+          " Press Return to copy."))))
+     ((when-let* ((image-position
+                   (emacsvox-agent-shell--image-position-at-point)))
+        (setq position image-position)
+        (let* ((label
+                (or
+                 (emacsvox-agent-shell--item-label-at
+                  'display image-position)
+                 "Image"))
+               (action
+                (string-remove-suffix
+                 "."
+                 (emacsvox-agent-shell--item-action-sentence
+                  image-position "open image"))))
+          (setq speech
+                (format "%s, image. %s; plus, minus, or zero to resize."
+                        label action)))))
+     ((and (get-text-property position 'agent-shell-markdown-url)
+           (emacsvox-agent-shell--image-link-at-p position))
+      (let ((label
+             (or
+              (emacsvox-agent-shell--item-label-at
+               'agent-shell-markdown-url position)
+              "Image")))
+        (setq speech
+              (format "%s, image. %s"
+                      label
+                      (emacsvox-agent-shell--item-action-sentence
+                       position "open image")))))
+     ((when-let* ((url
+                   (get-text-property
+                    position 'agent-shell-markdown-url)))
+        (let ((label
+               (or
+                (emacsvox-agent-shell--item-label-at
+                 'agent-shell-markdown-url position)
+                (emacsvox-agent-shell--nonempty-text url)
+                "Link")))
+          (setq speech
+                (concat
+                 (propertize label 'face 'agent-shell-markdown-link)
+                 ", link. "
+                 (emacsvox-agent-shell--item-action-sentence
+                  position "open")))))))
+    (when speech
+      ;; The cursor sensor still displays its dynamic hint in the echo area.
+      ;; Filter only its redundant speech after this atomic announcement.
+      (emacsvox-agent-shell--filter-message-through-post-command
+       emacsvox-agent-shell--item-action-hint-regexp)
+      (emacsvox-agent-shell--submit-text-feedback
+       speech
+       (emacsvox-agent-shell--block-location-facts
+        (emacsvox-agent-shell--block-location-at-point position)
+        'focus-entered)
+       'navigation 'item)
+      t)))
+
 (defun emacsvox-agent-shell--next-item-around
     (original-function &rest arguments)
   "Discover, enter, traverse, and leave rendered tables semantically."
@@ -4549,7 +4693,8 @@ the corresponding buffer boundary."
                        (emacsvox-agent-shell--table-discovery-feedback
                         origin 'forward))
                   (emacsvox-agent-shell--permission-button-feedback)
-                  (emacsvox-agent-shell--table-cell-feedback))
+                  (emacsvox-agent-shell--table-cell-feedback)
+                  (emacsvox-agent-shell--semantic-item-feedback))
         (when-let* ((line (ems--this-line))
                     ((emacsvox-agent-shell--nonempty-text line)))
           (emacsvox-agent-shell--submit-text-feedback
@@ -4582,7 +4727,8 @@ the corresponding buffer boundary."
                        (emacsvox-agent-shell--table-discovery-feedback
                         origin 'backward))
                   (emacsvox-agent-shell--permission-button-feedback)
-                  (emacsvox-agent-shell--table-cell-feedback))
+                  (emacsvox-agent-shell--table-cell-feedback)
+                  (emacsvox-agent-shell--semantic-item-feedback))
         (when-let* ((line (ems--this-line))
                     ((emacsvox-agent-shell--nonempty-text line)))
           (emacsvox-agent-shell--submit-text-feedback
@@ -4681,7 +4827,9 @@ the corresponding buffer boundary."
       (or (and (not started-in-table-p)
                (emacsvox-agent-shell--table-discovery-feedback
                 origin 'forward))
-          (emacsvox-agent-shell--table-cell-feedback)))))
+          (emacsvox-agent-shell--permission-button-feedback)
+          (emacsvox-agent-shell--table-cell-feedback)
+          (emacsvox-agent-shell--semantic-item-feedback)))))
 
 (defun emacsvox-agent-shell--viewport-previous-item-around
     (original-function &rest arguments)
@@ -4702,7 +4850,9 @@ the corresponding buffer boundary."
       (or (and (not started-in-table-p)
                (emacsvox-agent-shell--table-discovery-feedback
                 origin 'backward))
-          (emacsvox-agent-shell--table-cell-feedback)))))
+          (emacsvox-agent-shell--permission-button-feedback)
+          (emacsvox-agent-shell--table-cell-feedback)
+          (emacsvox-agent-shell--semantic-item-feedback)))))
 
 (defun emacsvox-agent-shell--viewport-show-buffer-after (&rest _)
   "Announce viewport display."
