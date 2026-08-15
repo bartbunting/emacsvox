@@ -2683,7 +2683,7 @@ PREDICATE receives TEXT and the start position of each property run."
           plain)))))
 
 (defun emacsvox-agent-shell--block-section-text (start end section)
-  "Return text for fragment SECTION between START and END."
+  "Return semantic speech text for fragment SECTION between START and END."
   (let ((position start)
         result)
     (while (and (< position end) (not result))
@@ -2694,9 +2694,11 @@ PREDICATE receives TEXT and the start position of each property run."
         (when (eq (get-text-property position 'agent-shell-ui-section)
                   section)
           (setq result
-                (buffer-substring-no-properties position next)))
+                (buffer-substring position next)))
         (setq position next)))
-    (emacsvox-agent-shell--concise-block-text result)))
+    (emacsvox-agent-shell--concise-block-text
+     (and result
+          (emacsvox-agent-shell--remove-visual-chrome-for-speech result)))))
 
 (defun emacsvox-agent-shell--block-section-range (start end section)
   "Return the range of fragment SECTION between START and END."

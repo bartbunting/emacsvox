@@ -4015,6 +4015,33 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (speak "Thinking, expanded.")
           (icon close-object)))))))
 
+(ert-deftest emacsvox-agent-shell-decorated-thought-toggle-is-semantic ()
+  "A rendered thought icon should not enter expansion speech."
+  (with-temp-buffer
+    (agent-shell-ui-update-fragment
+     (agent-shell-ui-make-fragment-model
+      :namespace-id "1" :block-id "1-agent_thought_chunk"
+      :label-left
+      (concat
+       "✶ "
+       (propertize
+        "Thinking" 'font-lock-face 'agent-shell-section-heading))
+      :body "Reasoning")
+     :expanded nil)
+    (setq major-mode 'agent-shell-mode)
+    (goto-char (point-min))
+    (search-forward "Thinking")
+    (goto-char (match-beginning 0))
+    (let ((location
+           (emacsvox-agent-shell--fragment-location-at-position (point))))
+      (should (equal (plist-get location :label) "Thinking"))
+      (should
+       (equal
+        (emacsvox-agent-shell-test--capture-events
+          (call-interactively #'agent-shell-ui-toggle-fragment))
+        '((icon open-object)
+          (speak "Thinking, expanded.")))))))
+
 (ert-deftest emacsvox-agent-shell-internal-fold-toggle-remains-silent ()
   "Programmatic use of the internal fold primitive should remain silent."
   (emacsvox-agent-shell-test--with-semantic-blocks
