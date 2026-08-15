@@ -1097,6 +1097,7 @@ recorded plans contain no speech span and therefore require legacy lowering."
   (let* ((spans (append (plist-get envelope :spans) nil))
          (actions (append (plist-get envelope :actions) nil))
          (span-texts (make-hash-table :test #'eql))
+         (span-offsets (make-hash-table :test #'eql))
          (action-ids (make-hash-table :test #'equal)))
     (unless
         (and
@@ -1142,8 +1143,12 @@ recorded plans contain no speech span and therefore require legacy lowering."
           (emacsvox-aural--transport-error
            "Structured action %S references unknown span %S" id span-id))
         (when (equal (plist-get position :position) "text_offset")
-          (emacsvox-aural--utf8-offset-position
-           span-text (plist-get position :utf8_offset)))
+          (puthash
+           span-id
+           (cons
+            (plist-get position :utf8_offset)
+            (gethash span-id span-offsets))
+           span-offsets))
         (when (equal type "audio")
           (let ((path (plist-get action :path)))
             (unless
@@ -1153,9 +1158,14 @@ recorded plans contain no speech span and therefore require legacy lowering."
                  (<=
                   (string-bytes path)
                   emacsvox-aural--timeline-resource-path-max-bytes))
-              (emacsvox-aural--transport-error
-               "Audio action %S path must contain 1 to %d UTF-8 bytes"
-               id emacsvox-aural--timeline-resource-path-max-bytes)))))))
+               (emacsvox-aural--transport-error
+                "Audio action %S path must contain 1 to %d UTF-8 bytes"
+                id emacsvox-aural--timeline-resource-path-max-bytes))))))
+    (maphash
+     (lambda (span-id offsets)
+       (emacsvox-aural--utf8-offset-position-table
+        (gethash span-id span-texts) offsets))
+     span-offsets))
   envelope)
 
 (defun emacsvox-aural--structured-timeline-payload (envelope)
@@ -1300,46 +1310,77 @@ recorded plans contain no speech span and therefore require legacy lowering."
             (functionp emacsvox-aural-speech-balance-function))
          (funcall emacsvox-aural-speech-balance-function 0.0))))))
 
-(defun emacsvox-aural--utf8-offset-position (text offset)
-  "Return the character position at UTF-8 byte OFFSET in TEXT."
-  (unless
-      (and (integerp offset) (>= offset 0) (<= offset (string-bytes text)))
-    (emacsvox-aural--transport-error
-     "Invalid positioned action offset %S for %S" offset text))
-  (let ((position 0)
-        (bytes 0)
-        (length (length text)))
-    (while (and (< bytes offset) (< position length))
-      (setq
-       bytes
-       (+ bytes (string-bytes (substring text position (1+ position)))))
-      (cl-incf position))
-    (unless (= bytes offset)
-      (emacsvox-aural--transport-error
-       "Positioned action offset %S splits a UTF-8 character in %S"
-       offset text))
-    position))
+(defun emacsvox-aural--utf8-offset-position-table (text offsets)
+  "Map UTF-8 byte OFFSETS to character positions in TEXT with one scan."
+  (let* ((utf8 (encode-coding-string text 'utf-8 t))
+         (byte-length (length utf8))
+         (requested (make-hash-table :test #'eql))
+         (positions (make-hash-table :test #'eql))
+         (remaining 0))
+    (dolist (offset offsets)
+      (unless
+          (and (integerp offset) (>= offset 0) (<= offset byte-length))
+        (emacsvox-aural--transport-error
+         "Invalid positioned action offset %S for %S" offset text))
+      (unless (gethash offset requested)
+        (puthash offset t requested)
+        (cl-incf remaining)))
+    (let ((byte-position 0)
+          (character-position 0))
+      (cl-labels
+          ((record-position
+            ()
+            (when (gethash byte-position requested)
+              (puthash byte-position character-position positions)
+              (remhash byte-position requested)
+              (cl-decf remaining))))
+        (record-position)
+        (while (and (> remaining 0) (< byte-position byte-length))
+          (cl-incf byte-position)
+          (while
+              (and
+               (< byte-position byte-length)
+               (= (logand (aref utf8 byte-position) #xc0) #x80))
+            (cl-incf byte-position))
+          (cl-incf character-position)
+          (record-position))))
+    (when (> remaining 0)
+      (let (invalid-offset)
+        (maphash
+         (lambda (offset _present)
+           (unless invalid-offset (setq invalid-offset offset)))
+         requested)
+        (emacsvox-aural--transport-error
+         "Positioned action offset %S splits a UTF-8 character in %S"
+         invalid-offset text)))
+    positions))
 
 (defun emacsvox-aural--queue-positioned-content
     (payload positioned-actions)
   "Queue PAYLOAD with compiled POSITIONED-ACTIONS at internal offsets."
-  (let ((cursor 0)
-        (previous-offset 0))
+  (let* ((cursor 0)
+         (previous-offset 0)
+         (offsets
+          (mapcar
+           (lambda (positioned) (plist-get positioned :utf8-offset))
+           positioned-actions))
+         (positions
+          (emacsvox-aural--utf8-offset-position-table payload offsets)))
+    (dolist (offset offsets)
+      (when (< offset previous-offset)
+        (emacsvox-aural--transport-error
+         "Positioned action offsets are not ordered: %S" positioned-actions))
+      (setq previous-offset offset))
     (dolist (positioned positioned-actions)
       (let* ((offset (plist-get positioned :utf8-offset))
-             (position
-              (emacsvox-aural--utf8-offset-position payload offset)))
-        (when (< offset previous-offset)
-          (emacsvox-aural--transport-error
-           "Positioned action offsets are not ordered: %S" positioned-actions))
+             (position (gethash offset positions)))
         (when (> position cursor)
           (tts--protocol-queue-text (substring payload cursor position)))
         (dolist (entry (plist-get positioned :actions))
           (emacsvox-aural-queue-concrete-action
            (emacsvox-aural-concrete-positioned-action-action entry)
            (emacsvox-aural-concrete-positioned-action-context entry)))
-        (setq cursor position
-              previous-offset offset)))
+        (setq cursor position)))
     (when (< cursor (length payload))
       (tts--protocol-queue-text (substring payload cursor)))))
 

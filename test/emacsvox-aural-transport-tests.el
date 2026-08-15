@@ -721,6 +721,71 @@ write.  State synchronization lines in a combined write are ignored."
           (should (emacsvox-aural-structured-timeline-available-p)))
       (delete-process process))))
 
+(ert-deftest emacsvox-aural-indexes-dense-unicode-offsets-in-one-pass ()
+  "UTF-8 offset indexing accepts boundaries and rejects split characters."
+  (let* ((text "aé日𐐷z")
+         (encoder (symbol-function 'encode-coding-string))
+         (encode-count 0)
+         positions)
+    (cl-letf
+        (((symbol-function 'encode-coding-string)
+          (lambda (&rest arguments)
+            (cl-incf encode-count)
+            (apply encoder arguments))))
+      (setq
+       positions
+       (emacsvox-aural--utf8-offset-position-table
+        text '(10 0 3 3 11 1))))
+    (should (= encode-count 1))
+    (should (= (gethash 0 positions) 0))
+    (should (= (gethash 1 positions) 1))
+    (should (= (gethash 3 positions) 2))
+    (should (= (gethash 10 positions) 4))
+    (should (= (gethash 11 positions) 5))
+    (should-error
+     (emacsvox-aural--utf8-offset-position-table text '(2))
+     :type 'emacsvox-aural-transport-error)
+    (should-error
+     (emacsvox-aural--utf8-offset-position-table text '(12))
+     :type 'emacsvox-aural-transport-error)))
+
+(ert-deftest emacsvox-aural-positioned-actions-use-a-running-utf8-offset ()
+  "Dense buffer properties retain exact UTF-8 byte boundaries."
+  (with-temp-buffer
+    (insert "aé日Z")
+    (dotimes (index 4)
+      (put-text-property
+       (+ (point-min) index) (+ (point-min) index 1)
+       emacsvox-aural-concrete-positioned-actions-property
+       (list (list :index index))))
+    (let* ((payload (buffer-substring-no-properties (point-min) (point-max)))
+           (byte-counter (symbol-function 'string-bytes))
+           (examined-characters 0)
+           positioned)
+      (cl-letf
+          (((symbol-function 'string-bytes)
+            (lambda (text)
+              (cl-incf examined-characters (length text))
+              (funcall byte-counter text))))
+        (setq
+         positioned
+         (tts--concrete-positioned-actions
+          (point-min) (point-max) payload)))
+      (should (= examined-characters (length payload)))
+      (should
+       (equal
+        (mapcar
+         (lambda (entry) (plist-get entry :utf8-offset))
+         positioned)
+        '(0 1 3 6)))
+      (should
+       (equal
+        (mapcar
+         (lambda (entry)
+           (plist-get (car (plist-get entry :actions)) :index))
+         positioned)
+        '(0 1 2 3))))))
+
 (ert-deftest emacsvox-aural-capital-tones-preserve-camel-case-span ()
   "Capital tones use internal offsets without splitting a camel-case word."
   (emacsvox-test--with-transport-scheme

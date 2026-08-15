@@ -1434,11 +1434,15 @@ queue its after actions and object-completion effects."
      (unless continues-before
        (get-text-property start 'pause)))))
 
-(defun tts--concrete-positioned-actions (start end)
+(defun tts--concrete-positioned-actions (start end &optional payload)
   "Return compiled actions positioned inside buffer text from START to END.
 Offsets are UTF-8 byte offsets relative to START, matching the structured
-timeline protocol."
+timeline protocol.  PAYLOAD, when supplied, is the property-free text for
+the same region and avoids extracting it again."
   (let ((position start)
+        (payload (or payload (buffer-substring-no-properties start end)))
+        (payload-position 0)
+        (utf8-offset 0)
         result)
     (while (< position end)
       (when-let* ((actions
@@ -1448,15 +1452,21 @@ timeline protocol."
         (push
          (list
           :utf8-offset
-          (string-bytes
-           (buffer-substring-no-properties start position))
+          utf8-offset
           :actions (copy-tree actions))
          result))
-      (setq
-       position
-       (next-single-property-change
-        position emacsvox-aural-concrete-positioned-actions-property
-        (current-buffer) end)))
+      (let* ((next
+              (next-single-property-change
+               position emacsvox-aural-concrete-positioned-actions-property
+               (current-buffer) end))
+             (next-payload-position
+              (+ payload-position (- next position))))
+        (cl-incf
+         utf8-offset
+         (string-bytes
+          (substring payload payload-position next-payload-position)))
+        (setq position next
+              payload-position next-payload-position)))
     (nreverse result)))
 
 (defun tts-audio-format (start end)
@@ -1470,14 +1480,16 @@ timeline protocol."
                   (next-single-property-change
                    position emacsvox-aural-concrete-plan-property
                    (current-buffer) end))
+                 (payload
+                  (buffer-substring-no-properties position next))
                  (slice
                   (tts--concrete-plan-slice plan position next)))
             (push
              (list
               (car slice)
-              (buffer-substring-no-properties position next)
+              payload
               (cdr slice)
-              (tts--concrete-positioned-actions position next))
+              (tts--concrete-positioned-actions position next payload))
              runs)
             (setq position next)))
         (emacsvox-aural-queue-concrete-runs (nreverse runs)))
