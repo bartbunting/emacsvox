@@ -469,11 +469,12 @@ their semantic text without changing the underlying shell buffer."
     (when overlay
       (let* ((category (overlay-get overlay 'category))
              (rendered
-              (overlay-get
-               overlay
-               (if (eq category 'agent-shell-chat-me)
-                   'display
-                 'before-string)))
+              (seq-find
+               (lambda (candidate)
+                 (and (stringp candidate)
+                      (not (string-empty-p (string-trim candidate)))))
+               (list (overlay-get overlay 'before-string)
+                     (overlay-get overlay 'display))))
              (label (and (stringp rendered) (string-trim rendered))))
         (when (and label (not (string-empty-p label)))
           (list :category category :text label))))))
