@@ -288,7 +288,8 @@
   (with-temp-buffer
     (let ((emacsvox-minibuffer-dictionary (make-hash-table :test #'equal))
           (emacsvox-pronounce-table nil)
-          (minibuffer-default "~/src/emacsvox/")
+          (default-directory "/mnt/c/Users/bart/bin/")
+          (minibuffer-default "/mnt/c/Users/bart/bin/")
           (vertico--index 0)
           (vertico--base "")
           (minibuffer-setup-hook
@@ -305,14 +306,24 @@
            ((symbol-function 'minibuffer-prompt)
             (lambda () "Find file: "))
            ((symbol-function 'vertico--candidate)
-            (lambda (&optional _highlight) "~/src/emacsvox/"))
+            (lambda (&optional _highlight) "/mnt/c/Users/bart/bin/"))
            ((symbol-function 'emacsvox-aural-submit)
             (lambda (content &rest arguments)
-              (push
-               (list 'aural content (plist-get arguments :module))
-               events))))
+              (let ((pronunciation-table emacsvox-pronounce-table)
+                    processed)
+                (with-temp-buffer
+                  (insert content)
+                  (tts-apply-pronunciations pronunciation-table)
+                  (setq processed (buffer-string)))
+                (push
+                 (list 'aural processed (plist-get arguments :module))
+                 events)))))
         (run-hooks 'minibuffer-setup-hook)
         (should (local-variable-p 'vertico--input))
+        (should
+         (eq
+          (gethash default-directory emacsvox-pronounce-table 'missing)
+          'missing))
         (emacsvox--advice-vertico--exhibit-after))
       (should
        (equal
@@ -320,7 +331,7 @@
         '((stop all)
           (icon open-object)
           (icon help)
-          (aural "Find file: ~/src/emacsvox/" vertico)))))))
+          (aural "Find file: /mnt/c/Users/bart/bin/" vertico)))))))
 
 (ert-deftest emacsvox-vertico-loaded-but-inactive-keeps-minibuffer-speech ()
   "Generic setup still speaks when Vertico is loaded but not active."
@@ -328,6 +339,7 @@
     (insert "Shell command: ")
     (let ((emacsvox-minibuffer-dictionary (make-hash-table :test #'equal))
           (emacsvox-pronounce-table nil)
+          (default-directory "/mnt/c/Users/bart/bin/")
           (minibuffer-default nil)
           (tts-punctuation-mode 'all)
           (vertico--input nil)
@@ -338,6 +350,10 @@
            ((symbol-function 'tts-notify)
             (lambda (content &rest _) (setq spoken content))))
         (emacsvox-minibuffer-setup-hook))
+      (should
+       (equal
+        (gethash default-directory emacsvox-pronounce-table)
+        ""))
       (should (equal spoken "Shell command: ")))))
 
 (ert-deftest emacsvox-vertico-later-candidate-does-not-repeat-prompt ()

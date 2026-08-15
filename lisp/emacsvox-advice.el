@@ -2640,10 +2640,10 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 ;;;  setup minibuffer hooks:
 
 ;; We temporarily silence the pronunciation of default-directory when
-;; in the minibuffer to speed up interaction. this is achieved by
-;; defining a minibuffer-dictionary var that holds  pronunciations
-;; local to the minibuffer. We add default-directory in the setup hook
-;; and remove it in the exit hook.
+;; generic minibuffer speech owns the content, to speed up interaction.
+;; A completion UI that owns its initial presentation must retain the
+;; directory in its content.  We add default-directory in the setup hook
+;; when appropriate and remove it in the exit hook.
 ;; We also use this to silence emacsvox-media-shortcuts, and may use
 ;; it in the future for other relevant use-cases.
 
@@ -2660,15 +2660,17 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 (defun emacsvox-minibuffer-setup-hook ()
   "Actions to take when entering the minibuffer with emacsvox running."
   (tts-stop 'all)
-  (let ((inhibit-field-text-motion t))
+  (let ((inhibit-field-text-motion t)
+        (vertico-owns-content-p
+         (and
+          (fboundp 'emacsvox-vertico--owns-minibuffer-content-p)
+          (emacsvox-vertico--owns-minibuffer-content-p))))
     (setq emacsvox-pronounce-table emacsvox-minibuffer-dictionary)
-    (puthash  default-directory "" emacsvox-pronounce-table)
+    (unless vertico-owns-content-p
+      (puthash default-directory "" emacsvox-pronounce-table))
     (emacsvox-icon 'open-object)
     (when minibuffer-default (emacsvox-icon 'help))
-    (unless
-        (and
-         (fboundp 'emacsvox-vertico--owns-minibuffer-content-p)
-         (emacsvox-vertico--owns-minibuffer-content-p))
+    (unless vertico-owns-content-p
       (tts-with-punctuations
        'all
        (tts-notify
