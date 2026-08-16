@@ -1,4 +1,4 @@
-;;; emacsvox-aural-schemes.el --- Contextual aural schemes -*- lexical-binding: t; -*-
+;;; emacsvox-aural-schemes.el --- Aural Presentation configuration -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Emacsvox Contributors
 
@@ -6,9 +6,11 @@
 
 ;;; Commentary:
 
-;; Register and inherit declarative schemes, combine module, personal, session,
-;; and buffer rule layers, preserve legacy personality hints, and persist user
-;; data without evaluating it.
+;; Register and inherit internal declarative rule sets, combine module,
+;; Presentation Option, personal, session, and buffer layers, preserve legacy
+;; personality hints, and persist user data without evaluating it.  Public
+;; configuration no longer exposes a selectable scheme layer; historical
+;; scheme names remain in the data model and compatibility filename.
 
 ;;; Code:
 

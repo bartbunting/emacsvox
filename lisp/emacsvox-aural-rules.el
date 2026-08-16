@@ -1,4 +1,4 @@
-;;; emacsvox-aural-rules.el --- Aural scheme rule engine -*- lexical-binding: t; -*-
+;;; emacsvox-aural-rules.el --- Aural Presentation rule engine -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Emacsvox Contributors
 
@@ -6,10 +6,11 @@
 
 ;;; Commentary:
 
-;; Compile safe versioned plist schemes into validated internal structures,
-;; match them against semantic facts and source context, and produce an ordered
-;; backend-independent render plan.  This module performs no audio or speech
-;; I/O.
+;; Compile safe versioned presentation rule sets into validated internal
+;; structures, match them against semantic facts and source context, and
+;; produce an ordered backend-independent render plan.  The retained internal
+;; scheme records are not user-selectable configurations.  This module performs
+;; no audio or speech I/O.
 
 ;;; Code:
 
@@ -1350,7 +1351,7 @@ LAYER-ORDER records inheritance order within one origin."
     (when resource-pack
       (emacsvox-aural--require-symbol resource-pack "Scheme resource pack"))
     (when voice-palette
-      (emacsvox-aural--require-symbol voice-palette "Scheme voice palette"))
+      (emacsvox-aural--require-symbol voice-palette "Presentation voice palette"))
     (unless (listp rules)
       (emacsvox-aural--rule-error "Rules for scheme %S must be a list" id))
     (when unknown

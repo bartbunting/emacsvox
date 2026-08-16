@@ -6,8 +6,8 @@
 
 ;;; Commentary:
 
-;; This module owns the device-independent vocabulary used by aural
-;; presentation schemes.  It deliberately contains no speech-server, sound
+;; This module owns the device-independent vocabulary used by Aural
+;; Presentation.  It deliberately contains no speech-server, sound
 ;; player, major-mode, or resource resolution.
 
 ;;; Code:
@@ -16,7 +16,7 @@
 (require 'subr-x)
 
 (defgroup emacsvox-aural nil
-  "Semantic aural presentation schemes."
+  "Semantic Aural Presentation."
   :group 'emacsvox
   :prefix "emacsvox-aural-")
 

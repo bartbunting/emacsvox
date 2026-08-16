@@ -30,7 +30,6 @@
 
 ;;; Commentary:
 ;; CONSULT ==  A modern completing-read 
-;; @section Consult
 ;; @itemize
 ;; @item Setup @code{consult-after-jump-hook} to speak  where we
 ;; land.

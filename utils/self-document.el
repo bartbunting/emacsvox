@@ -55,6 +55,10 @@
 (defvar self-document-map)
 (defvar self-document-patterns)
 (defvar tts-program)
+(defvar emacsvox-user-directory)
+
+(defvar self-document-temporary-user-directory nil
+  "Temporary Emacsvox data directory used while loading documented modules.")
 
 ;;;   Required modules
 
@@ -62,7 +66,6 @@
 (require 'cl-extra)
 (require 'lisp-mnt)
 (require 'subr-x)
-(require 'texnfo-upd)
 (require 'regexp-opt)
 
 
@@ -97,20 +100,29 @@
 
 (defun self-document-load-modules ()
   "Load all Emacsvox modules."
-  (let ((file-name-handler-alist nil)
-        (load-source-file-function  nil)
-        (tts-program "log-null"))
-    (package-initialize)              ; bootstrap emacs package system
-    ;; Silently Bootstrap Emacsvox.
-    (load-library "emacsvox-setup")
-    (setq-default emacsvox-use-icons nil)
-    ;; Load all Emacsvox modules:
-    (cl-loop
-     for f in  self-document-files do
-     (unless (string-match "emacsvox-setup" f) ; avoid loading setup twice :
-       (condition-case nil
-           (load-library f)
-         (error (message  "Warn: Did not load  %s" f)))))))
+  (let* ((file-name-handler-alist nil)
+         (load-source-file-function nil)
+         (tts-program "log-null")
+         (temporary-user-directory
+          (file-name-as-directory
+           (make-temp-file "emacsvox-self-document-" t)))
+         (emacsvox-user-directory temporary-user-directory))
+    (setq self-document-temporary-user-directory temporary-user-directory)
+    (unwind-protect
+        (progn
+          (package-initialize)        ; bootstrap emacs package system
+          ;; Silently bootstrap Emacsvox without reading personal data.
+          (load-library "emacsvox-setup")
+          (setq-default emacsvox-use-icons nil)
+          ;; Load all Emacsvox modules:
+          (cl-loop
+           for f in self-document-files do
+           (unless (string-match "emacsvox-setup" f) ; avoid loading setup twice
+             (condition-case nil
+                 (load-library f)
+               (error (message "Warn: Did not load %s" f))))))
+      (when (file-directory-p temporary-user-directory)
+        (delete-directory temporary-user-directory t)))))
 
 (defconst self-document-patterns
   (concat "^"
@@ -235,6 +247,30 @@
                     (or lmc
                         (format "### %s: No Commentary\n" name))))))
 
+(defun self-document--portable-default-value (value)
+  "Render VALUE without embedding this build machine's absolute paths."
+  (let* ((root
+          (file-name-as-directory
+           (expand-file-name ".." self-document-lisp-directory)))
+         (user-home (file-name-as-directory (expand-file-name "~/")))
+         (rendered
+          (with-temp-buffer
+            (cl-prettyprint value)
+            (buffer-substring-no-properties (point-min) (point-max)))))
+    (when self-document-temporary-user-directory
+      (setq rendered
+            (replace-regexp-in-string
+             (regexp-quote self-document-temporary-user-directory)
+             "~/.emacsvox/" rendered t t)))
+    (setq rendered
+          (replace-regexp-in-string
+           "~/\\.emacsvox//+" "~/.emacsvox/" rendered t t))
+    (setq rendered
+          (replace-regexp-in-string
+           (regexp-quote root) "<emacsvox-root>/" rendered t t))
+    (replace-regexp-in-string
+     (regexp-quote user-home) "~/" rendered t t)))
+
 (defun self-document-option (o)
   "Document this option."
   (let ((doc (sd-texinfo-escape
@@ -246,9 +282,7 @@
                         (format "###%s: Not Documented\n" o))))
     (insert
      (format "\nDefault Value: \n@verbatim\n%s\n@end verbatim\n\n"
-             (with-temp-buffer
-               (cl-prettyprint value)
-               (buffer-substring-no-properties (point-min) (point-max)))))
+             (self-document--portable-default-value value)))
     (insert "\n@end defvar\n\n")))
 
 (defun self-document-module-options (self)
@@ -299,13 +333,17 @@
            #'(lambda (a b) (string-lessp (symbol-name a) (symbol-name b)))))
     (mapc #'self-document-command commands)))
 
+(defun self-document-module-documentable-p (self)
+  "Return non-nil when SELF has documentation worth emitting."
+  (or (self-document-commentary self)
+      (self-document-commands self)
+      (self-document-options self)))
+
 (defun self-document-module (self)
   "Generate documentation for commands and options in a module."
   (let ((file-name-handler-alist nil))
     ;; Only generate in non-degenerate case
-    (when (or (self-document-commentary self)
-              (not  (zerop (length (self-document-commands self))))
-              (not  (zerop (length (self-document-options self)))))
+    (when (self-document-module-documentable-p self)
       (self-document-module-preamble self)
       (when (self-document-commands self) (self-document-module-commands self))
       (when (self-document-options self)(self-document-module-options
@@ -371,22 +409,23 @@
       (search-forward (format "%c" 127) (point-max) 'no-error)
     (replace-match "<DEL>")))
 
-(defun self-document-update-menu-entries ()
-  "Locates master menu, and updates description for each node."
-  (message "Adding descriptions to master menu entries.")
-  (save-excursion
-    (goto-char  (point-min))
-    (goto-char (re-search-forward "^@menu"))
-    (forward-line 1)
-    (while (not (looking-at "^@end menu"))
-      (goto-char (line-beginning-position))
-      (forward-char 2)
-      (when-let* ((module (sexp-at-point))
-                  (summary
-                   (lm-summary (locate-library (format "%s.el" module)))))
-        (goto-char (line-end-position))
-        (insert (format "%s." summary)))
-      (forward-line 1))))
+(defun self-document-insert-module-menu (keys)
+  "Insert a Texinfo menu for the documentable modules in KEYS."
+  (insert "@menu\n")
+  (dolist (module keys)
+    (let ((entry (gethash module self-document-map)))
+      (when (self-document-module-documentable-p entry)
+        (let* ((library (locate-library (format "%s.el" module)))
+               (summary (and library (lm-summary library))))
+          (insert (format "* %s::" module))
+          (when summary
+            (insert (format " %s" (sd-texinfo-escape summary)))
+            (unless (string-match-p "[.!?]\\='" summary)
+              (insert ".")))
+          (insert "\n")))))
+  (insert "* URL Templates:: Generated web-search templates.\n")
+  (insert "@end menu\n\n"))
+
 (defun self-document-all-modules()
   "Generate documentation for all modules."
   (self-document-all-keymaps)
@@ -401,29 +440,27 @@
            #'string-lessp))
     (with-current-buffer output
       (erase-buffer)
-      (let ((texinfo-mode-hook  nil))
-        (insert "@c Auto-generated, do not hand-edit.\n")
-        (insert
-         (format
-          "@node Emacsvox Commands And Options \n
+      (insert "@c Auto-generated, do not hand-edit.\n")
+      (insert
+       (format
+        "@node Emacsvox Commands And Options \n
 @chapter Emacsvox Commands And Options \n\n
 @include intro-docs.texi\n\n
 This chapter documents a total of %d commands and %d options.\n\n"
-          self-document-command-count self-document-option-count ))
-        (cl-loop
-         for k in keys do
-         (self-document-module (gethash k self-document-map)))
-        (emacsvox-url-template-generate-texinfo-documentation (current-buffer))
-        (texinfo-all-menus-update)
-        (self-document-update-menu-entries)
-        (flush-lines "^Commentary: *$" (point-min) (point-max))
-        (self-document-fix-fn-key)
-        (self-document-fix-bs)
-        (delete-trailing-whitespace (point-min) (point-max))
-        (shell-command-on-region        ; squeeze blanks
-         (point-min) (point-max)
-         "cat -s" (current-buffer) 'replace)
-        (save-buffer))))
+        self-document-command-count self-document-option-count ))
+      (self-document-insert-module-menu keys)
+      (cl-loop
+       for k in keys do
+       (self-document-module (gethash k self-document-map)))
+      (emacsvox-url-template-generate-texinfo-documentation (current-buffer))
+      (flush-lines "^Commentary: *$" (point-min) (point-max))
+      (self-document-fix-fn-key)
+      (self-document-fix-bs)
+      (delete-trailing-whitespace (point-min) (point-max))
+      (shell-command-on-region          ; squeeze blanks
+       (point-min) (point-max)
+       "cat -s" (current-buffer) 'replace)
+      (save-buffer)))
   (message "Done!"))
 
 

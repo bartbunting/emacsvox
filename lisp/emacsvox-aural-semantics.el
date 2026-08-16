@@ -281,7 +281,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     buffer))
 
 (defun emacsvox-describe-aural-semantic (&optional semantic)
-  "Describe registered SEMANTIC and schemes that present it."
+  "Describe registered SEMANTIC and presentation data that uses it."
   (interactive)
   (let* ((semantic
           (or

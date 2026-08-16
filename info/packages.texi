@@ -14,11 +14,17 @@ sections that each pertain to a specific class of tasks; in individual
 subsections within a section give a brief overview of particular Emacs
 packages that have been speech-enabled.
 
-For a categorized list of speech-enabled applications on theEmacsvox
-desktop, see the original Emacspeak application list at
-@url{http://emacspeak.sf.net/applications.html}.  In
-Emacs 24 and later, you can use Emacs' builtin package manager to
-install and update packages.
+Several application essays in this chapter are inherited historical surveys.
+They are labelled where their named software is no longer current.  Use the
+generated module reference and each live mode's @kbd{C-h m} output for the
+authoritative current commands and bindings.
+
+For the current speech-enabled module inventory, use the generated
+@xref{Emacsvox Commands And Options}.  Emacsvox 60 requires Emacs 31 or newer,
+whose built-in package manager can install and update external packages.
+The original Emacspeak application list at
+@url{http://emacspeak.sf.net/applications.html} is retained only as historical
+background.
 
 @menu
 * Document Authoring::

@@ -71,7 +71,7 @@
 ;;; Semantic module context:
 
 (defun emacsvox-notmuch-enable-aural-context ()
-  "Identify the current Notmuch buffer to aural presentation schemes."
+  "Identify the current Notmuch buffer to Aural Presentation."
   (setq-local emacsvox-aural-module 'notmuch))
 
 (dolist

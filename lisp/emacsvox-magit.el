@@ -239,7 +239,7 @@ The left-margin face is purely graphical and contains no spoken content.")
   "Dynamically bound detail for an operation dispatched through Magit.")
 
 (defun emacsvox-magit-enable-aural-context ()
-  "Identify the current Magit buffer to aural presentation schemes."
+  "Identify the current Magit buffer to Aural Presentation."
   (setq-local emacsvox-aural-module 'magit)
   (add-hook
    'magit-section-movement-hook

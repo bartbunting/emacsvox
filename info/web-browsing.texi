@@ -1,17 +1,9 @@
-
-
-Note that there is newer material at 
-@url{http://emacspeak.blogspot.com/2014/05/emacspeak-eww-updates-for-complete.html}
-and in @xref{emacsvox-eww}.
-For Emacs 24.4 and later, note that the built-in Web browser EWW is also
-the browser of choice for emacsvox.
-Finally, note that Emacs/W3 is now considered obsolete, and
-Emacsvox support for w3m is no longer maintained.
-
-
-
-@MDash{} 
- T. V. Raman, October 2014.
+@strong{Historical application survey.}  EWW is the supported built-in Web
+browser for current Emacsvox.  See @xref{EWW,,,emacs} for browser operation
+and @xref{emacsvox-eww} for the generated Emacsvox command reference.
+Emacs/W3 and the unmaintained w3m integration below are retained only to
+preserve the original 2007 survey and must not be treated as current setup
+guidance.
 
 This document, ``The State of Web Browsing in Emacsvox'' describes
 the primary web browsers in use under emacsvox and ways they might be
@@ -39,10 +31,9 @@ other hand, if you spend a little time learning a particular browser
 and its functionality, web browsing can be made more efficient and the
 web more navigable.
 
-This document is intended to be an introduction to the 2 primary
-browsers that run under emacs: emacs/w3 and EWW.  I also intend
-to introduce a couple of add-on packages intended to make life easier
-and to address specific shortcomings.
+This historical document introduced the browsers and add-ons available when
+it was written.  Its Emacs/W3 sections document period workflows; use EWW for
+current browsing.
 
 The primary reason for this documentation is the fact that a lot of
 the documentation of the various functions tells exactly what it does,

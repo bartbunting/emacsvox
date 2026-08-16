@@ -374,7 +374,12 @@ For a more detailed installation guide, and further instructions on usage, see t
         make espeak
         #+END_SRC
    - ViaVoice Outloud / IBM TTS (Eloquence):
-     - Purchase this engine from the Voxin site. See [[https://voxin.oralux.net/rss.xml][Voxin Packages]] for the latest packages and [[https://voxin.oralux.net][Voxin Main Site]] for more information.
+     - Install a separately licensed compatible IBM TTS/Eloquence runtime;
+       Emacsvox does not distribute it.  The Voxin site publishes current
+       availability and compatibility information.  Its Cerence and
+       Vocalizer voices are not supported by the Outloud adapter.  See
+       [[https://voxin.oralux.net/rss.xml][Voxin news]] and the
+       [[https://voxin.oralux.net][Voxin site]].
    - Mac:
      - You can use the built-in Mac TTS engine. Emacsvox includes a speech server for this purpose.
 

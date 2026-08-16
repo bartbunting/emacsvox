@@ -1,11 +1,13 @@
 @c $Id$
 
 @node Announce
-@chapter Announcing Emacspeak Manual 2nd Edition As An Open Source Project
+@chapter Manual Provenance And Contributions
 
-This is to announce the launch of a new open source project to create
-a user manual for Emacspeak @MDash{} an Emacs speech extension that
-provides a complete audio desktop.
+This manual began as the second-edition Emacspeak user manual and still
+contains selected chapters from that project.  Emacsvox-specific operating
+guidance, names, requirements, and generated command reference are maintained
+in this repository.  Historical chapters retain Emacspeak terminology where
+that identity and period context matter.
 
 @menu
 * Contributing: Contributing.
@@ -16,34 +18,31 @@ provides a complete audio desktop.
 @node Contributing
 @section How To Contribute To This Manual
 
-This manual is organized as a series of chapters, with each chapter in
-a separate file.  If you feel capable of contributing to a specific
-section, send out a message to the Emacspeak mailing list
-@url{mailto:emacspeak@@emacspeak.net}, stating your intention to work on
-a section.  You can then start adding
-content to a local copy of the chapter to which you are contributing.
-When you feel you have something to submit, send out a Github Pull
-Request.
+The Texinfo chapters live under @file{info/}; the current project overview and
+installation summary live in @file{Readme.org} and @file{etc/install.org}.
+Submit changes through the Emacsvox repository at
+@url{https://github.com/bartbunting/emacsvox}.  Read @file{AGENTS.md} before
+building or testing: Emacsvox requires Emacs 31 or newer and repository-local
+@file{local.mk} selects the compiler used by supported targets.
+
+Do not hand-edit generated references.  @file{info/docs.texi} and
+@file{info/keys.texi} come from the source documentation generator;
+@file{etc/aural-presentation-reference.org} comes from
+@file{utils/emacsvox-aural-audit.el}.
+
 @node Authoring Guidelines
 @section Authoring Guidelines
 
-For this manual to hang together and make sense to the new user at
-whom it is targeted, contributors need to stick to a consistent style.
-If you plan to contribute content, you should take some time to read
-the existing sections @MDash{} note that many of these are skeletal
-and the first contributions will be to flesh these sections out.
-
-If you are familiar with texinfo, go ahead and mark up your content
-using texinfo.  If you are not, simply author the documentation you
-create as plain formatted ASCII.  If you do submit files as texinfo
-source, make sure to validate them at your end first by running the
-files through @command{makeinfo} @MDash{} badly created or malformed
-texinfo source takes more time to fix than marking up straight text.
+Keep current operating instructions separate from historical accounts.  State
+which back end or platform a procedure applies to, avoid duplicating detailed
+protocol contracts across repositories, and link to the owning document.
+Validate Texinfo changes with @command{makeinfo}; regenerate and commit the
+installed @file{emacsvox.info} files when the manual changes.
 
 @node Credits
 @section Credits
 
-This initial version draws heavily from the original Emacspeak user
-manual, and includes contributions from Jim Van Zandt and Jason White.
-Authors who contribute complete sections will be acknowledged here as
-well as in the specific section they author.
+The original manual drew heavily from the Emacspeak user manual and includes
+contributions from Jim Van Zandt and Jason White.  Emacsvox retains that work
+with attribution while maintaining its current project documentation in the
+Emacsvox repository.

@@ -100,7 +100,7 @@ starting an independent SoX process."
                   "ein-worksheet" (&rest --cl-rest--))
 
 (defun emacsvox-ein-enable-aural-context ()
-  "Identify the current EIN buffer to aural presentation schemes."
+  "Identify the current EIN buffer to Aural Presentation."
   (setq-local emacsvox-aural-module 'ein))
 
 (defun emacsvox-ein--update-notebook-aural-context ()

@@ -2,161 +2,167 @@
 @node Installation
 @chapter Installation Instructions
 
-This chapter gives brief and detailed installation instructions
-for configuring, installing and starting Emacsvox.
+This chapter describes a source-checkout installation.  Emacsvox requires
+Emacs 31 or newer; use the same selected Emacs for configuration, compilation,
+tests, and startup.
 
 @menu
 * Obtaining Emacsvox::         Obtaining Emacsvox.
-* Quick Installation::          Default installation  and startup.
+* Quick Installation::         Configure, build, and start Emacsvox.
 * Building And Testing The Speech Server::
 @end menu
 
 @node Obtaining Emacsvox
 @section Obtaining Emacsvox
 
-Emacsvox is available on the Internet at:
-@table @b
-@item Git Repository
-@url{https://github.com/robertmeta/emacsvox}
-@end table
+The maintained Emacsvox repository is
+@url{https://github.com/bartbunting/emacsvox}.
+
+@example
+git clone https://github.com/bartbunting/emacsvox
+cd emacsvox
+@end example
 
 @node Quick Installation
 @section Quick Installation
 
-Here are the quick installation instructions.  See the next section
-for detailed installation instructions.
-
-Emacsvox requires Emacs 31 or later.  The instructions below build it
-from the source checkout.
-
-@itemize @bullet
+@enumerate
 @item
-Clone the source repository.
+Select Emacs 31 or newer.  If it is not the system @command{emacs}, copy
+@file{local.mk.example} to the ignored @file{local.mk} and set @code{EMACS}:
 
 @example
-git clone https://github.com/robertmeta/emacsvox
+EMACS=/path/to/emacs-31/bin/emacs
+@end example
+
+Verify the selection before diagnosing a compiler failure:
+
+@example
+make check-emacs
 @end example
 
 @item
-Change to the @code{emacsvox} directory.
+Configure and compile the checkout:
+
+@example
+make all
+@end example
+
+Do not compile Emacsvox with an older system Emacs.  Tests prefer source and
+therefore do not prove that the byte-code used by a normal startup is current.
 
 @item
-Type @samp{make config} to configure the sources.
-
-@item
-Type @samp{make} to compile the files.
-
-@item
-Next, decide which text-to-speech engine you will be using, and
-proceed to install that engine.  Your choices are:
+Install or build a speech server.  The common choices are:
 
 @itemize @bullet
 @item
-Open Source ESpeak on Linux.  Install the ESpeak packages for your
-system, then compile the Emacsvox ESpeak server by doing:
-
-@example
-cd servers/native-espeak
-make
-@end example
-
-@item
-ViaVoice Outloud (AKA Eloquent).  You need to purchase this engine
-from the voxin site --- note that the Vocalizer voices available from
-that site are not supported.  That purchase will give you
-install-ready packages for the speech engine.  See
-@url{https://voxin.oralux.net/rss.xml} for the latest packages, and
-@url{https://voxin.oralux.net} for the main Voxin Web site.
+@strong{Omnivox on Windows/WSL.}  Keep the Omnivox repository beside Emacsvox
+at @file{../omnivox}, or set @code{OMNIVOX_DIR}, then run
+@command{make windows-omnivox}.  This stages a content-addressed Windows
+runtime beneath @file{servers/omnivox-bin}.  Select server name
+@code{omnivox}.  See @file{Readme.org} and
+@file{servers/omnivox-release/README.org} for the engine, helper, licensing,
+and reproducibility details.
 
 @item
-On the Mac, you can use the builtin Mac TTS engine @MDash{} Emacsvox
-comes with a speech server for that TTS engine written in @code{swift}.
+@strong{eSpeak on GNU/Linux.}  Install the system eSpeak development packages
+and run @command{make espeak}.  Select server name @code{espeak}.
+
+@item
+@strong{SwiftMac on macOS.}  Install Swift 5.9 or newer and run
+@command{make swiftmac}.  Select server name @code{swiftmac}.  See
+@file{servers/mac-swiftmac/Readme.org}.
+
+@item
+@strong{Eloquence/Outloud.}  A separately licensed compatible IBM TTS or
+Eloquence runtime is required; it is not included with Emacsvox.  Run
+@command{make outloud} for the GNU/Linux server.  Voxin information is at
+@url{https://voxin.oralux.net}.  Cerence and Vocalizer voices are not supported
+by the Outloud adapter.
+
+@item
+@strong{Software DECtalk.}  Install the engine separately and run
+@command{make dtk}.  See @file{servers/software-dtk/Readme.org}.
 @end itemize
 
+Native Windows audio, standalone Eloquence, and standalone DECtalk bridges are
+also available through @command{make windows-audio},
+@command{make windows-outloud}, and @command{make windows-dtk}.  Their READMEs
+under @file{servers/} document the WSL-specific setup.  The optional Piper
+notification path is experimental and is not a primary speech-server adapter.
+
 @item
-Having installed and configured the TTS engine of your choice, and
-having built the associated speech server, set Emacsvox up to use that
-engine by setting environment variable @env{TTS_PROGRAM}.  If using @command{bash}
-as your shell, add the line
-
-@example
-export TTS_PROGRAM=@var{<engine-name>}
-@end example
-
-to your @code{.bash_profile}.
-
-As an example, to use ESpeak, add
+Select the server before loading Emacsvox.  In a shell startup file, set
+@env{TTS_PROGRAM} to the server name, for example:
 
 @example
 export TTS_PROGRAM=espeak
 @end example
 
-@item
-Run it by adding the line
+The equivalent Emacs form, evaluated before setup, is:
 
 @lisp
-(load-file "@var{<emacsvox-dir>}/lisp/emacsvox-setup.el")
+(setenv "TTS_PROGRAM" "espeak")
 @end lisp
 
-to the top of your .emacs file.
+The retired DECtalk-named generic environment selector is not recognized; see
+@file{etc/tts-modernization.org} for the migration table.  Names for actual
+DECtalk servers, including @code{dtk-exp} and @code{dtk-soft}, remain valid
+server choices.
 
-In the above, @var{<emacsvox-dir>} refers to the directory where you
-unpacked the sources.
-@end itemize
+@item
+For a changing source checkout, load the setup source explicitly:
 
-See the next section for details on building and testing the speech
-server.
+@lisp
+(load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
+@end lisp
+
+The setup entry point can then warn and prefer source when newer Lisp would
+otherwise be hidden by stale byte-code.  A stable installed copy with current
+byte-code may instead use:
+
+@lisp
+(load-library "emacsvox-setup")
+@end lisp
+@end enumerate
+
+After an ordinary Lisp edit, run @command{make bytecode}.  After switching
+branches, pulling, or changing Lisp macros or public interfaces, run
+@command{make bytecode-rebuild}.  The non-mutating
+@command{make bytecode-check} verifies that byte-code exists, is current, and
+was produced by the selected Emacs.
 
 @node Building And Testing The Speech Server
 @section Building And Testing The Speech Server
-@subsection Speech Servers
 
-Speech servers are located in the @code{emacsvox/servers} directory.
+Speech-server launchers live in @file{servers/}.  Build them through the
+repository-root targets above so the selected paths and staging rules remain
+consistent.
 
-@itemize @bullet
-@item
-ESpeak: @code{servers/espeak}.  This is a TCL script that uses a library built
-in @code{servers/native-espeak/}.
-
-@item
-Dectalk: @code{servers/dtk-exp}.  This is a TCL script that does not
-depend on any native code.
-@item Software Dectalk: @code{servers/dtk-soft}.  See
-@url{https://github.com/robertmeta/emacsvox/blob/master/servers/software-dtk/Readme.org}.
-@item
-Outloud: @code{servers/outloud} 
-  This is a TCL script that uses the library built in
-@code{servers/linux-outloud}.  Note that a checkout from GitHub gives
-you a prebuilt library @MDash{} however you will need to purchase the
-TTS engine from @url{http://voxin.oralux.net}.
-
-@item
-Mac: @code{servers/mac-swiftmac}.  This is a server implemented in
-@code{swift}; the older Python implementation is being deprecated but
-still available as Python script @code{servers/mac}.  The server binds to the native
-Mac TTS.
-@end itemize
-
-@subsubsection Testing The Selected Server.
-
-Once you have picked the TTS engine to use, run the selected server
-script at a shell prompt, e.g. for the @code{espeak} engine, execute:
+The standalone Tcl-compatible servers implement a legacy line protocol.  To
+smoke-test one outside Emacs, run its launcher from the repository root, for
+example:
 
 @example
 ./servers/espeak
 @end example
 
-This will result in a TCL prompt.  Here, you can test the TTS engine
-by typing
+Then enter:
 
 @example
-q "this is a test."
+q @{This is a test.@}
 d
+s
 @end example
 
-You should hear the TTS engine speak the text.
+The @code{q} command queues text, @code{d} dispatches it, and @code{s} stops
+speech.  Type @kbd{C-d} to close the server.  Backend-specific READMEs may
+provide stronger diagnostics and should take precedence over this generic
+smoke test.
 
-Type @kbd{s} to stop speech.
-You should see a TCL prompt when you execute it.
-
-Quit this TCL session by typing @kbd{C-d} (an end-of-file character).
+From Emacs, use @code{M-x tts-speak-version} to verify the selected adapter and
+@code{M-x tts-restart} after changing server configuration.  Omnivox also
+records per-process diagnostic logs below
+@file{$XDG_STATE_HOME/emacsvox/omnivox}, defaulting to
+@file{~/.local/state/emacsvox/omnivox}; spoken text is omitted unless explicit
+text logging is enabled.

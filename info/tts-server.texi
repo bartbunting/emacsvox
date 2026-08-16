@@ -1,28 +1,72 @@
 @c $Id$
 @node TTS Servers
-@chapter TTS Servers
+@chapter Speech Server Protocols
 
-Emacsvox produces spoken output by communicating with one of many
-speech servers.  This section documents the communication protocol
-between the client application i.e. Emacsvox, and the Text to Speech
-(@acronym{TTS}) server. This section is primarily intended for
-developers wishing to:
+Emacsvox produces spoken output by communicating with one of several speech
+servers.  Two protocol families coexist:
 
 @itemize @bullet
 @item
-Create new speech servers that comply with this communication protocol
+The legacy command-and-queue line protocol is implemented by standalone Tcl
+servers and retained by Omnivox for compatibility.
 
 @item
-Developers of other client applications who wish to use the various
-Emacsvox speech servers.
+Capability-negotiated Omnivox control, marker, logical-voice, and structured
+presentation protocols carry bounded JSON records beside that legacy stream.
 @end itemize
+
+This chapter is primarily for speech-server and client developers.  The
+detailed Omnivox contracts are owned by the Omnivox repository; this manual
+summarizes their relationship to Emacsvox and then documents the legacy line
+protocol.
 
 For additional notes on how to log and view @acronym{TTS} server
 commands when developing a speech server, see
-the original Emacspeak article at
+the historical Emacspeak article at
 @url{http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html}.
 
-@section High-level Overview
+@section Omnivox Structured Protocol
+
+At process startup the Emacsvox adapter requests capabilities and live engine
+inventory.  Features are used only after negotiation; an older server
+continues on the legacy path.  Current Emacsvox requires
+@code{presentation_timeline_v3} before it submits an Aural Presentation as a
+structured timeline.
+
+A complete timeline contains its delivery policy, replacement domain,
+generation, dispatch ID, speech spans, and positioned actions.  Small
+timelines use one bounded frame; large timelines use a bounded multipart
+envelope that is validated and admitted atomically.  Decodable rejected or
+stale direct timelines receive terminal status so Emacs callbacks can retire
+their dispatch records.
+
+@code{ordered} and @code{urgent} timelines are admitted immediately.  Only
+matching @code{replaceable} work uses the short server-side coalescing window.
+Receipt of a newer valid replaceable generation immediately cancels queued,
+synthesizing, and buffered work in the same replacement domain.  It does not
+globally stop ordered, urgent, legacy, or differently keyed output.
+
+Marker events distinguish dispatch admission, synthesis, playback start,
+positioned markers, and terminal completion.  Playback markers track mixer
+source consumption and may precede physical sound by the output device's
+buffer latency; a protocol write or terminal callback is therefore not proof
+of acoustic onset.
+
+The canonical protocol documents are:
+
+@itemize @bullet
+@item
+@url{https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md,
+Omnivox Control Protocol}
+@item
+@url{https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md,
+Omnivox Presentation Timeline Protocol}
+@item
+@url{https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md,
+Omnivox Helper Protocol}
+@end itemize
+
+@section Legacy Line Protocol
 
 The @acronym{TTS} server reads commands from standard input.
 Script @strong{speech-server} can be used to cause a @acronym{TTS}
@@ -62,7 +106,7 @@ acknowledge that the request has been completely processed. This is a
 non-blocking operation, i.e., if the client application generates
 additional requests, these are processed @strong{immediately}.
 
-The above design allows the Emacsvox @acronym{TTS} server to be
+This design allows a legacy Emacsvox @acronym{TTS} server to be
 @strong{highly} responsive; Client applications can queue large
 amounts of text (typically queued a clause at a time to achieve the
 best prosody), ask the @acronym{TTS} server to start speaking, and

@@ -119,7 +119,7 @@ instead you hear only the first screenful."
 ;;;   helper functions
 
 (defun emacsvox-gnus-enable-aural-context ()
-  "Identify the current Gnus buffer to aural presentation schemes."
+  "Identify the current Gnus buffer to Aural Presentation."
   (setq-local emacsvox-aural-module 'gnus))
 
 (dolist

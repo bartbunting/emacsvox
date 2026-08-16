@@ -56,7 +56,7 @@
 ;;;  Semantic aural presentation:
 
 (defun emacsvox-python-enable-aural-context ()
-  "Identify the current Python buffer to aural presentation schemes."
+  "Identify the current Python buffer to Aural Presentation."
   (setq-local emacsvox-aural-module 'python))
 
 (add-hook 'python-mode-hook #'emacsvox-python-enable-aural-context)

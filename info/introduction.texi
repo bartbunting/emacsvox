@@ -5,47 +5,54 @@
 
 @cindex Introduction
 
-Emacsvox provides a complete audio desktop by speech-enabling all of
-Emacs.
+Emacsvox is an Emacs 31-or-newer audio desktop derived from Emacspeak.  It is
+not a pixel-oriented screen reader.  It runs inside Emacs, where commands,
+buffers, text properties, faces, modes, and application state are available as
+structured information.  That context lets Emacsvox present the meaning and
+result of an interaction rather than merely reading the visible display.
 
-In the past, screen reading programs have allowed visually impaired
-users to get feedback using synthesized speech.  Such programs have
-been commercially available for a long time.  Most of them originally
-ran on PC's under @acronym{DOS}, and have moved over to the Windows
-environment.  However, screen-readers for the UNIX environment have
-been conspicuous in their absence.  Note that this is now changing
-with the availability of console-level Linux screenreaders such as
-@command{speakup}.  Such Linux screenreaders provide the same level of
-UNIX accessibility provided in the late 80's by PC terminal emulators
-running a @acronym{DOS} screenreader.  This means that most visually
-impaired computer users face the additional handicap of being
-@acronym{DOS}-impaired @MDash{} a far more serious problem:-)
+Application integrations adapt interactive commands and changing buffers to
+produce spoken text, voice changes, auditory icons, tones, pauses, and spatial
+feedback.  The core speech layer normalizes text and formatting and sends it
+to the selected speech adapter.  Established direct speech paths remain
+available for compatibility, while migrated integrations can submit a complete
+Aural Presentation transaction.
 
-Emacsvox is an emacs subsystem that provides complete speech access.
-It is @strong{not} a screen-reader @MDash{} rather, it is a complete
-user environment with built-in speech feedback.  Emacsvox has a
-significant advantage; since it runs inside Emacs, a
-structure-sensitive, fully customizable environment, Emacsvox has
-more context-specific information about what it is speaking than its
-screenreader counterparts.  This is why Emacsvox is not a
-``screenreader'', it is a system that produces speech output.
+@section Aural Presentation
 
-A Traditional screen-reader speaks the content of the screen, leaving
-it to the user to interpret the visual layout.  Emacsvox, on the
-other hand, treats speech as a first-class output modality; it speaks
-the information in a manner that is easy to comprehend when listening.
+Aural Presentation separates semantic facts from their audible rendering.
+An integration records what an object or event means; providers and rules
+choose voices and actions; a planner and compiler produce a concrete ordered
+presentation.  The fixed internal baseline preserves established Emacsvox
+feedback.  Users can compose Presentation Options, profiles, palettes, sound
+packs, spatial settings, and scoped overrides without replacing that baseline.
 
-The basic concepts used by Emacsvox are simple; all interactive Emacs
-commands have been adapted to provide speech feedback.  Hence, you use
-Emacs as normal; Emacsvox works behind the scene to give audio
-feedback in addition to updating the screen.
+Open Aural Home with @kbd{C-e H} or
+@code{M-x emacsvox-aural}.  Use @kbd{C-e E} to explain the presentation at
+point.  The generated author and lifecycle reference is
+@file{etc/aural-presentation-reference.org} in the source tree.
 
-Emacsvox consists of a core speech system that provides speech and
-audio services to the rest of the Emacsvox desktop;
-application-specific extensions provide context-specific spoken
-feedback using these services.  Emacsvox currently comes with speech
-extensions for several popular Emacs subsystems and editing modes.  I
-would like to thank their respective authors for their wonderful work
-which makes Emacs more than a text editor@footnote{ I have now been
-using Emacsvox under Linux as the only source of speech feedback
-since 1994.}.
+@section Speech Adapters And Omnivox
+
+Emacsvox retains standalone speech servers for engines such as eSpeak,
+Eloquence, DECtalk, and SwiftMac.  Omnivox is the multi-engine server used by
+the current Windows/WSL integration.  It negotiates capabilities, reports live
+engine and physical-voice inventory, routes portable logical voices, and
+accepts structured presentation timelines.  Keyed replaceable timelines
+cancel only older work in the same replacement domain; ordered and urgent work
+are not placed behind the replaceable coalescing window.
+
+The Emacsvox @file{Readme.org} documents user-facing Omnivox setup and voice
+routing.  Omnivox owns the detailed control, helper, and presentation-timeline
+protocol contracts in its own repository.  The legacy line protocol remains
+supported for standalone and older speech servers; @xref{TTS Servers} explains
+the boundary between those protocol families.
+
+@section Documentation Scope
+
+This manual includes generated command documentation as well as inherited
+Emacspeak essays and application guides.  Historical chapters are useful for
+design context but may describe software and Web services from their original
+period.  Current setup starts with @xref{Installation}; rapidly changing
+features are documented in @file{Readme.org}, @file{etc/NEWS}, and the generated
+Aural Presentation reference.

@@ -6,10 +6,10 @@
 
 ;;; Commentary:
 
-;; Register the lightweight Org compatibility fragment, selectable example
-;; schemes, and optional feature fragments before personal aural data is
-;; loaded.  This file deliberately does not load Org itself; live semantic
-;; fact capture remains in emacsvox-org.el.
+;; Register the lightweight Org compatibility fragment, curated preview data,
+;; and optional Presentation Options before personal aural data is loaded.
+;; This file deliberately does not load Org itself; live semantic fact capture
+;; remains in emacsvox-org.el.
 
 ;;; Code:
 
@@ -159,7 +159,7 @@
     (6 . monotone)
     (7 . lighten-medium)
     (8 . lighten-extra))
-  "Voice-palette entries used by the Org voice-only example scheme.")
+  "Legacy palette-entry table retained for Org presentation data compatibility.")
 
 (defun emacsvox-org--require-aural-semantics ()
   "Verify that every semantic interpreted by Org is registered."

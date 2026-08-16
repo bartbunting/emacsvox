@@ -1,43 +1,47 @@
 * SwiftMac
 
-This is a server for Emacsvox for modern macs using
-swift 5.9+.
+This is the bundled SwiftMac speech server for modern macOS.  Its package
+declares Swift 5.9 and macOS 11 as minimum build versions.
 
-Project: https://github.com/robertmeta/swiftmac
+Upstream project: https://github.com/intelligrit/swiftmac
 
 ** Quick Install (requires swift compiler)
- - make swiftmac (from the Emacsvox root; ignore warnings)
- - Change the server in your configuration to "swiftmac"
- - Restart emacs
+
+1. From the Emacsvox repository root, run =make swiftmac=.
+2. Set ~TTS_PROGRAM=swiftmac~ before loading Emacsvox, or select
+   =swiftmac= with =M-x tts-select-server=.
+3. Restart Emacs so the new server process and voice adapter are loaded.
 
 ** Recommended Settings
 #+BEGIN_SRC emacs-lisp
-  ; pick your favorite voice 
-  (setopt swiftmac-default-voice-string "[{voice :Alex}] [[pitch 1]]")
-  ; general Emacsvox setup not specific to SwiftMac
-  (add-to-list 'load-path "/path/to/emacsvox/lisp")
-  ; stops doubletalk (when emacs supports it)
-  (setopt mac-ignore-accessibility 't) 
-  ; choose swiftmac
-  (setopt tts-program "swiftmac")
-  ; for notifications: set to right or left
-  (setopt tts-notification-device "right") 
-  ; initialize Emacsvox
-  (require 'emacsvox-setup)
-  ; more options: https://github.com/robertmeta/swiftmac/
+  ;; Evaluate these before loading Emacsvox.
+  (setenv "TTS_PROGRAM" "swiftmac")
+  (setq swiftmac-default-voice-string "[{voice :Alex}] [[pitch 1]]"
+        mac-ignore-accessibility t
+        tts-notification-device "right")
+  (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
 #+END_SRC
 
+Leave =tts-notification-device= nil to share the main stream, or use ="left"=
+or ="right"= to start a separately positioned notification stream.  A
+changing source checkout should use =load-file= as shown; after an ordinary
+Lisp edit, run =make bytecode= before restarting.
+
 ** See long names for voices
- - swift show-voices.swift - will list them all
- - swift show-voices.swift --json - returns the same installed inventory as
-   bounded JSON without speaking samples; Emacsvox uses this form in its voice
-   inventory provider.
+
+- =swift servers/mac-swiftmac/show-voices.swift= lists all installed voices.
+- Add =--json= to return bounded inventory data without speaking samples.
+  Emacsvox uses this form for the Voice Workbench; press =R= there to refresh
+  installed voice inventory.
 
 ** Cloud Development
- - Just launch swiftmac directly with the -p parameter and specify a port
+
+Launching =swiftmac -p PORT= exposes its development TCP listener.  This is a
+development facility, not the normal local Emacsvox setup.
 
 ** Dependencies 
  - https://github.com/arkasas/OggDecoder.git
 
 ** Bugs?
- - https://github.com/robertmeta/swiftmac/issues
+
+- https://github.com/intelligrit/swiftmac/issues

@@ -3,13 +3,20 @@
 @top Emacsvox
 
 @ifinfo 
+This manual combines current Emacsvox operating guidance and generated
+command reference with selected historical Emacspeak material.  Chapters
+labelled as heritage are preserved for background, not as current setup
+instructions.  For rapidly evolving Omnivox and Aural Presentation details,
+also consult @file{Readme.org} and
+@file{etc/aural-presentation-reference.org} in the source tree.
+
 The manual is divided into the following chapters:
 @end ifinfo
 
 @menu
 * Copying: Copyright.
-* Announce: Announce.
-* Background: Background.
+* Manual Provenance: Announce.
+* Emacspeak Heritage: Background.
 * Introduction: Introduction.
 * Installation: Installation.
 * Basic Usage: Basic Usage.
@@ -22,7 +29,7 @@ The manual is divided into the following chapters:
 * Running Terminal Based Applications: Running Terminal Based Applications.
 * Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
 * TTS Servers:  TTS Servers.
-* Emacspeak At Twenty: Emacspeak At Twenty.
+* Emacspeak At Twenty (Historical): Emacspeak At Twenty.
 * Acknowledgments: Acknowledgments.
 
 Indices:

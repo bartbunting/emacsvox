@@ -26,6 +26,14 @@
 @item C-w  emacsvox-speak-window-information
 @item C-x  emacsvox-speak-header-line
 @item SPC  emacsvox-speak-windowful
+@item %  emacsvox-speak-current-percentage
+@item '  emacsvox-empv-play-file
+@item =  emacsvox-speak-current-column
+@item @@  emacsvox-speak-message-at-time
+@item A  emacsvox-appt-repeat-announcement
+@item B  emacsvox-speak-buffer-interactively
+@item E  emacsvox-aural-explain-presentation
+@item H  emacsvox-aural
 @item L  emacsvox-speak-line-interactively
 @item M  emacsvox-speak-minor-mode-line
 @item N  emacsvox-view-emacsvox-news
@@ -60,11 +68,10 @@
 @item u  emacsvox-url-template-fetch
 @item w  emacsvox-speak-word
 @item |  emacsvox-speak-line-set-column-filter
+@item C  emacsvox-customize
 @item !  emacsvox-speak-run-shell-command
 @item $  flyspell-mode
-@item %  emacsvox-speak-current-percentage
 @item &  emacsvox-wizards-shell-command-on-current-file
-@item '  emacsvox-empv-play-file
 @item (  amixer
 @item )  emacsvox-sounds-select-theme
 @item ,  emacsvox-buffer-select
@@ -74,11 +81,6 @@
 @item 3  amixer-volume-adjust
 @item 4  amixer-volume-adjust
 @item ;  emacsvox-multimedia
-@item =  emacsvox-speak-current-column
-@item @@  emacsvox-speak-message-at-time
-@item A  emacsvox-appt-repeat-announcement
-@item B  emacsvox-speak-buffer-interactively
-@item C  emacsvox-customize
 @end table
 
 @node Emacsvox Keybindings On emacsvox-tts-submap
@@ -109,6 +111,8 @@
 @item 8  tts-set-predefined-rate
 @item 9  tts-set-predefined-rate
 @item =  tts-rate-adjust
+@item C  emacsvox-set-capitalization-presentation
+@item I  emacsvox-set-indentation-presentation
 @item L  tts-local-server
 @item N  tts-set-next-language
 @item P  tts-set-previous-language

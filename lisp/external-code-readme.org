@@ -1,2 +1,5 @@
-* Emacs 23:
-Older implementation of tetris.el 
+* Historical External Code
+
+This directory retains an older Emacs 23-era implementation of =tetris.el=
+for source provenance.  It is not the supported Emacsvox implementation and
+must not be used as evidence of the current Emacs 31 requirement.

@@ -7,7 +7,7 @@
 ;;; Commentary:
 
 ;; Define the portable spatial contract and user policy independently of
-;; speech and cue transports.  Declarative schemes request either normalized
+;; speech and cue transports.  Declarative presentation rules request normalized
 ;; stereo balance or listener-relative azimuth; transport compilation reduces
 ;; that request to the capability of the selected backend.
 

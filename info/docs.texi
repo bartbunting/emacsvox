@@ -1,248 +1,291 @@
 @c Auto-generated, do not hand-edit.
-@menu
-* amixer::Set Audio Volume from Emacs.
-* dectalk-voices::Dectalk Voice  Codes.
-* dom-addons::dom.el addons.
-* emacsvox::The Complete Audio Desktop.
-* emacsvox-2048::Speech-enable 2048 Game.
-* emacsvox-abc-mode::Speech-enable ABC.
-* emacsvox-ace-window::Speech-enable ACE-WINDOW.
-* emacsvox-add-log::Speech-enable add-log.
-* emacsvox-advice::Advice Emacs Core.
-* emacsvox-amark::BookMarks For Audio.
-* emacsvox-annotate::Annotations.
-* emacsvox-arc::Speech enable archive-mode.
-* emacsvox-auctex::Speech enable AucTeX --.
-* emacsvox-avy::Speech-enable AVY.
-* emacsvox-bbdb::Speech enable BBDB.
-* emacsvox-bibtex::Speech enable bibtex.
-* emacsvox-bookmark::Speech enable bookmark.
-* emacsvox-bookshare::BOOKSHARE client.
-* emacsvox-browse-kill-ring::kill-ring.
-* emacsvox-bs::speech-enable bs.
-* emacsvox-buff-menu::Speech enable buff.
-* emacsvox-c::Speech enable C, C++.
-* emacsvox-calc::Speech enable Calc.
-* emacsvox-calculator::Extend calculator.
-* emacsvox-calendar::Speech enable Calendar.
-* emacsvox-calibredb::CALIBREDB.
-* emacsvox-chess::Speech-enable CHESS.
-* emacsvox-cider::Speech-enable CIDER.
-* emacsvox-clojure::Speech-enable CLOJURE.
-* emacsvox-cmuscheme::CMUScheme.
-* emacsvox-combobulate::Speech-enable.
-* emacsvox-comint::Speech-enable COMINT.
-* emacsvox-company::Speech-enable COMPANY.
-* emacsvox-compile::Speech enable compile.
-* emacsvox-consult::Speech-enable CONSULT.
-* emacsvox-corfu::Speech-enable Corfu.
-* emacsvox-cperl::Speech enable CPerl.
-* emacsvox-custom::Speech enable custom.
-* emacsvox-dbus::DBus On Emacsvox.
-* emacsvox-deadgrep::Speech-enable DEADGREP.
-* emacsvox-debugger::Speech-enable DEBUG.
-* emacsvox-denote::Speech-enable DENOTE.
-* emacsvox-desktop::Speech-enable desktop.
-* emacsvox-devdocs::Speech-enable DEVDOCS.
-* emacsvox-dictionary::dictionaries.
-* emacsvox-diff-mode::Speech-enable DIFF.
-* emacsvox-dired::Speech enable Dired Mode.
-* emacsvox-dumb-jump::DUMB-JUMP.
-* emacsvox-eat::Speech-enable EAT.
-* emacsvox-ebuku::Speech-enable EBUKU.
-* emacsvox-ediff::Speech enable  ediff.
-* emacsvox-eglot::Speech-enable EGLOT.
-* emacsvox-ein::Speech-enable EIN.
-* emacsvox-elfeed::Speech-enable ELFEED.
-* emacsvox-elisp-refs::ELISP-REFS.
-* emacsvox-ellama::Speech-enable ELLAMA.
-* emacsvox-elpher::Speech-enable ELPHER.
-* emacsvox-elpy::Speech-enable ELPY.
-* emacsvox-embark::Speech-enable EMBARK.
-* emacsvox-emms::Speech-enable EMMS.
-* emacsvox-empv::Speech-enable EMPV.
-* emacsvox-enriched::Audio FormatRichtext.
-* emacsvox-entertain::Speech enable games.
-* emacsvox-enwc::Speech-enable ENWC.
-* emacsvox-epa::Speech-enable GPG Helper.
-* emacsvox-epub::epubs for  desktop.
-* emacsvox-erc::speech-enable erc.
-* emacsvox-eshell::Speech-enable EShell.
-* emacsvox-ess::Speech-enable ESS.
-* emacsvox-etable::Speech enable table.el.
-* emacsvox-eterm::Speech enable eterm.
-* emacsvox-eudc::Speech enable  LDAP.
-* emacsvox-evil::Speech-enable EVIL.
-* emacsvox-eww::Speech-enable EWW Browser.
-* emacsvox-extras::Speech-enable EXTRAS.
-* emacsvox-exwm::Speech-enable EXWM.
-* emacsvox-feeds::Atom, RSS.
-* emacsvox-ffap::Speech-enable FFAP.
-* emacsvox-ffip::Speech-enable FFIP.
-* emacsvox-filtertext::filter text.
-* emacsvox-flycheck::Speech-enable FLYCHECK.
-* emacsvox-flymake::Speech-enable FLYMAKE.
-* emacsvox-flyspell::Speech enable flyspell.
-* emacsvox-folding::Speech enable Folding.
-* emacsvox-forge::Speech-enable FORGE.
-* emacsvox-forms::Speech enable  forms mode.
-* emacsvox-geiser::Speech-enable GEISER.
-* emacsvox-github-explorer::GitHub Explorer.
-* emacsvox-gnuplot::speech-enable gnuplot.
-* emacsvox-gnus::Speech enable Gnus.
-* emacsvox-go-mode::Speech-enable GO-MODE.
-* emacsvox-gomoku::Speech enable Gomoku.
-* emacsvox-google::Google Search Tools.
-* emacsvox-gptel::Speech-enable GPTEL.
-* emacsvox-gridtext::Filter columnar text.
-* emacsvox-gud::Speech enable debugger.
-* emacsvox-haskell::Speech-enable HASKELL.
-* emacsvox-helm::Speech-enable HELM.
-* emacsvox-helpful::Speech-enable HELPFUL.
-* emacsvox-hide::Hide/Expose Text blocks.
-* emacsvox-hide-lines::HIDE-LINES.
-* emacsvox-hideshow::speech-enable hideshow.
-* emacsvox-hydra::Speech-Enable hydra.
-* emacsvox-ibuffer::speech-enable ibuffer.
-* emacsvox-ido::speech-enable ido.
-* emacsvox-iedit::Speech-enable IEDIT.
-* emacsvox-info::Speech enable Info --.
-* emacsvox-ispell::Speech enable Ispell.
-* emacsvox-ivy::Speech-enable IVY.
-* emacsvox-journalctl::JOURNALCTL.
-* emacsvox-js2::Speech-enable JS2.
-* emacsvox-keymap::Setup   keybindings.
-* emacsvox-kmacro::Speech-enable KMacros.
-* emacsvox-librivox::LIBRIVOX API client.
-* emacsvox-lispy::Speech-enable LISPY.
-* emacsvox-lua::Speech-enable LUA.
-* emacsvox-m-player::Media Player.
-* emacsvox-magit::Speech-enable MAGIT.
-* emacsvox-make-mode::Speech enable make.
-* emacsvox-man::Speech enable Man.
-* emacsvox-marginalia::Speech-enable Marginalia.
-* emacsvox-markdown::Speech-enable Markdown.
-* emacsvox-maths::Audio-Formatted Maths.
-* emacsvox-message::Speech enable Message.
-* emacsvox-mines::Speech-enable MINES.
-* emacsvox-mu4e::Speech-enable MU4E.
-* emacsvox-muggles::Convenience Hydras.
-* emacsvox-multiple-cursors::Speech-enable MULTIPLE-CURSORS.
-* emacsvox-muse::Speech-enable Muse.
-* emacsvox-net-utils::net-utils.
-* emacsvox-newsticker::newsticker.
-* emacsvox-nm::NM using  D-Bus..
-* emacsvox-notmuch::Speech-enable NOTMUCH.
-* emacsvox-nov::Speech-enable NOV.
-* emacsvox-nxml::Speech enable nxml mode.
-* emacsvox-ocr::ocr Front-end desktop.
-* emacsvox-org::Speech-enable org.
-* emacsvox-orgalist::Speech-enable ORGALIST.
-* emacsvox-outline::Speech enable Outline.
-* emacsvox-package::Speech-enable PACKAGE.
-* emacsvox-paradox::Speech-enable PARADOX.
-* emacsvox-perl::Speech enable Perl Mode.
-* emacsvox-pipewire::Speech-enable PIPEWIRE.
-* emacsvox-popup::Speech-enable POPUP.
-* emacsvox-preamble::standard  include.
-* emacsvox-proced::Speech-enable PROCED.
-* emacsvox-project::Speech-enable PROJECT.
-* emacsvox-projectile::PROJECTILE.
-* emacsvox-pronounce::pronunciations.
-* emacsvox-py::Speech enable Python.
-* emacsvox-pydoc::Speech-enable PYDOC.
-* emacsvox-python::Speech enable Python.
-* emacsvox-racket::Speech-enable RACKET.
-* emacsvox-re-builder::re-builder.
-* emacsvox-reftex::speech enable reftex.
-* emacsvox-related::Speech-enable RELATED.
-* emacsvox-rg::Speech-enable RG.
-* emacsvox-rmail::Speech enable RMail.
-* emacsvox-rpm-spec::Speech enable rpm spec.
-* emacsvox-rst::Speech-enable RST.
-* emacsvox-ruby::Speech enable Ruby Mode.
-* emacsvox-rust-mode::Speech-enable RUST.
-* emacsvox-sage::Speech-enable SAGE.
-* emacsvox-sdcv::Speech-enable SDCV.
-* emacsvox-ses::Speech-enable ses.
-* emacsvox-setup::Setup Emacsvox --.
-* emacsvox-sgml-mode::Speech enable SGML.
-* emacsvox-sh-script::Speech enable script.
-* emacsvox-slime::Speech-enable SLIME.
-* emacsvox-smartparens::SMARTPARENS.
-* emacsvox-solitaire::Solitaire.
-* emacsvox-sounds::auditory icons.
-* emacsvox-speak::Core Speech Lib.
-* emacsvox-speedbar::speedbar -.
-* emacsvox-sql::Speech enable sql-mode.
-* emacsvox-sudoku::Play SuDoku.
-* emacsvox-supercite::Speech enable SC.
-* emacsvox-syslog::Speech-enable SYSLOG.
-* emacsvox-tab-bar::Speech-enable tab-bar.
-* emacsvox-table::Table data model.
-* emacsvox-table-ui::Table Navigation UI.
-* emacsvox-tabulate::Handle table data.
-* emacsvox-tabulated-list::Speech-enable.
-* emacsvox-tar::Speech enable Tar Mode.
-* emacsvox-tcl::Speech enable TCL.
-* emacsvox-tempo::Speech enable tempo.
-* emacsvox-tetris::Tetris.
-* emacsvox-texinfo::Speech enable texinfo.
-* emacsvox-threes::Speech-enable THREES.
-* emacsvox-todo-mode::speech-enable todo.
-* emacsvox-transient::TRANSIENT.
-* emacsvox-treesit::Speech-enable TREESIT.
-* emacsvox-typo::Speech-enable TYPO.
-* emacsvox-url-template::URI templates.
-* emacsvox-vdiff::Speech-enable VDIFF.
-* emacsvox-vertico::Speech-enable Vertico.
-* emacsvox-view::Speech enable View mode -.
-* emacsvox-vterm::Speech-enable VTERM.
-* emacsvox-wdired::Speech-enable wdired.
-* emacsvox-we::Transform WebUsing XSLT.
-* emacsvox-websearch::search utilities.
-* emacsvox-webspace::Webspaces.
-* emacsvox-which-key::Speech-enable Which-Key.
-* emacsvox-widget::Speech enable widgets.
-* emacsvox-windmove::windmove.
-* emacsvox-wizards::Magic.
-* emacsvox-woman::Speech-enable WOMAN.
-* emacsvox-xkcd::Speech-enable XKCD.
-* emacsvox-xref::Speech-enable XREF.
-* emacsvox-xslt::XSLT.
-* emacsvox-yaml::Speech-enable YAML.
-* emacsvox-yasnippet::YASNIPPET.
-* espeak-voices::Define  Espeak tags.
-* extra-muggles::Additional Hydras.
-* g-utils::Google Client Utilities.
-* gm-nnir::Searching GMail Using NNIR.
-* gmaps::Google Maps.
-* ladspa::Ladspa Tools For Emacs.
-* light::Control Brightness.
-* mac-voices::Define  Mac tags.
-* omaps::Open street  Maps.
-* outloud-voices::Define  OutLoud tags.
-* pip::Interface To Piper TTS.
-* plain-voices::No Voice lock voices.
-* soundscape::Soundscapes.
-* sox::An Audio Work-Bench.
-* sox-gen::Binaural Beats And More Using SoX.
-* swiftmac-voices::Define  Swiftmac tags.
-* tetris::Tetris for Emacs.
-* tts-speak::Interface to speech server.
-* voice-defs::Define voices for voice-lock.
-* voice-setup::Setup voices for voice-lock.
-* xbacklight::Brightness.
-* URL Templates ::
-@end menu
-
 @node Emacsvox Commands And Options
 
 @chapter Emacsvox Commands And Options
 
 @include intro-docs.texi
 
-This chapter documents a total of 1118 commands and 122 options.
+This chapter documents a total of 1472 commands and 177 options.
+
+@menu
+* amixer:: Set Audio Volume from Emacs.
+* dectalk-voices:: Dectalk Voice  Codes.
+* dom-addons:: dom.el addons.
+* emacsvox:: The Complete Audio Desktop.
+* emacsvox-2048:: Speech-enable 2048 Game.
+* emacsvox-abc-mode:: Speech-enable ABC.
+* emacsvox-ace-window:: Speech-enable ACE-WINDOW.
+* emacsvox-add-log:: Speech-enable add-log.
+* emacsvox-advice:: Advice Emacs Core.
+* emacsvox-agent-shell:: Speech-enable AGENT-SHELL.
+* emacsvox-amark:: BookMarks For Audio.
+* emacsvox-annotate:: Annotations.
+* emacsvox-arc:: Speech enable archive-mode.
+* emacsvox-auctex:: Speech enable AucTeX --.
+* emacsvox-aural:: Semantic aural presentation.
+* emacsvox-aural-compatibility-voice:: Legacy voice policy.
+* emacsvox-aural-compiler:: Concrete aural compiler.
+* emacsvox-aural-concrete:: Backend-ready aural plans.
+* emacsvox-aural-description:: Natural aural descriptions.
+* emacsvox-aural-doctor:: Spoken aural diagnostics.
+* emacsvox-aural-editor:: Accessible aural presentation editor.
+* emacsvox-aural-explanation:: Explain aural presentation.
+* emacsvox-aural-feature-fragments:: Spoken presentation options.
+* emacsvox-aural-history:: Frozen aural observability.
+* emacsvox-aural-home:: Spoken aural control center.
+* emacsvox-aural-inspection:: Context for aural inspection.
+* emacsvox-aural-overrides:: Spoken presentation override manager.
+* emacsvox-aural-planner:: Source aural planner.
+* emacsvox-aural-preview:: Shared aural preview runtime.
+* emacsvox-aural-profile-service:: Aural profile service.
+* emacsvox-aural-profiles:: Spoken presentation profiles.
+* emacsvox-aural-provider-markdown:: Data-only Markdown aural provider.
+* emacsvox-aural-provider-notmuch:: Data-only Notmuch aural provider.
+* emacsvox-aural-provider-org:: Data-only Org aural provider.
+* emacsvox-aural-provider-org-srs:: Org-srs aural provider.
+* emacsvox-aural-provider-workflows:: Shared workflow aural provider.
+* emacsvox-aural-providers:: Effective aural providers.
+* emacsvox-aural-recent-feedback:: Browse frozen feedback.
+* emacsvox-aural-resources:: Aural resource providers.
+* emacsvox-aural-routing-profiles:: Machine routing for voices.
+* emacsvox-aural-rules:: Aural Presentation rule engine.
+* emacsvox-aural-schemes:: Aural Presentation configuration.
+* emacsvox-aural-semantics:: Browse aural semantics.
+* emacsvox-aural-sound-packs:: Spoken sound-pack workbench.
+* emacsvox-aural-source:: Aural source boundary.
+* emacsvox-aural-spatial:: Portable aural spatialization.
+* emacsvox-aural-submission:: Aural presentation transactions.
+* emacsvox-aural-tools:: Contextual aural remapping.
+* emacsvox-aural-transport:: Concrete aural transport.
+* emacsvox-aural-ui:: Shared accessible aural interfaces.
+* emacsvox-aural-validation:: Aural configuration diagnostics.
+* emacsvox-aural-voice-palettes:: Spoken voice-palette manager.
+* emacsvox-aural-voice-workbench:: Spoken voice routing UI.
+* emacsvox-avy:: Speech-enable AVY.
+* emacsvox-bbdb:: Speech enable BBDB.
+* emacsvox-bibtex:: Speech enable bibtex.
+* emacsvox-bookmark:: Speech enable bookmark.
+* emacsvox-bookshare:: BOOKSHARE client.
+* emacsvox-browse-kill-ring:: kill-ring.
+* emacsvox-bs:: speech-enable bs.
+* emacsvox-buff-menu:: Speech enable buff.
+* emacsvox-c:: Speech enable C, C++.
+* emacsvox-calc:: Speech enable Calc.
+* emacsvox-calculator:: Extend calculator.
+* emacsvox-calendar:: Speech enable Calendar.
+* emacsvox-calibredb:: CALIBREDB.
+* emacsvox-chess:: Speech-enable CHESS.
+* emacsvox-cider:: Speech-enable CIDER.
+* emacsvox-clojure:: Speech-enable CLOJURE.
+* emacsvox-cmuscheme:: CMUScheme.
+* emacsvox-combobulate:: Speech-enable.
+* emacsvox-comint:: Speech-enable COMINT.
+* emacsvox-company:: Speech-enable COMPANY.
+* emacsvox-compile:: Speech enable compile.
+* emacsvox-consult:: Speech-enable CONSULT.
+* emacsvox-corfu:: Speech-enable Corfu.
+* emacsvox-cperl:: Speech enable CPerl.
+* emacsvox-custom:: Speech enable custom.
+* emacsvox-dbus:: DBus On Emacsvox.
+* emacsvox-deadgrep:: Speech-enable DEADGREP.
+* emacsvox-debugger:: Speech-enable DEBUG.
+* emacsvox-denote:: Speech-enable DENOTE.
+* emacsvox-desktop:: Speech-enable desktop.
+* emacsvox-devdocs:: Speech-enable DEVDOCS.
+* emacsvox-dictionary:: dictionaries.
+* emacsvox-diff-mode:: Speech-enable DIFF.
+* emacsvox-dired:: Speech enable Dired Mode.
+* emacsvox-dumb-jump:: DUMB-JUMP.
+* emacsvox-eat:: Speech-enable EAT.
+* emacsvox-ebuku:: Speech-enable EBUKU.
+* emacsvox-ediff:: Speech enable  ediff.
+* emacsvox-eglot:: Speech-enable EGLOT.
+* emacsvox-ein:: Speech-enable EIN.
+* emacsvox-elfeed:: Speech-enable ELFEED.
+* emacsvox-elisp-refs:: ELISP-REFS.
+* emacsvox-ellama:: Speech-enable ELLAMA.
+* emacsvox-elpher:: Speech-enable ELPHER.
+* emacsvox-elpy:: Speech-enable ELPY.
+* emacsvox-embark:: Speech-enable EMBARK.
+* emacsvox-emms:: Speech-enable EMMS.
+* emacsvox-empv:: Speech-enable EMPV.
+* emacsvox-enriched:: Audio FormatRichtext.
+* emacsvox-entertain:: Speech enable games.
+* emacsvox-enwc:: Speech-enable ENWC.
+* emacsvox-epa:: Speech-enable GPG Helper.
+* emacsvox-epub:: epubs for  desktop.
+* emacsvox-erc:: speech-enable erc.
+* emacsvox-eshell:: Speech-enable EShell.
+* emacsvox-ess:: Speech-enable ESS.
+* emacsvox-etable:: Speech enable table.el.
+* emacsvox-eterm:: Speech enable eterm.
+* emacsvox-eudc:: Speech enable  LDAP.
+* emacsvox-evil:: Speech-enable EVIL.
+* emacsvox-eww:: Speech-enable EWW Browser.
+* emacsvox-extras:: Speech-enable EXTRAS.
+* emacsvox-exwm:: Speech-enable EXWM.
+* emacsvox-feeds:: Atom, RSS.
+* emacsvox-ffap:: Speech-enable FFAP.
+* emacsvox-ffip:: Speech-enable FFIP.
+* emacsvox-filtertext:: filter text.
+* emacsvox-flycheck:: Speech-enable FLYCHECK.
+* emacsvox-flymake:: Speech-enable FLYMAKE.
+* emacsvox-flyspell:: Speech enable flyspell.
+* emacsvox-folding:: Speech enable Folding.
+* emacsvox-forge:: Speech-enable FORGE.
+* emacsvox-forms:: Speech enable  forms mode.
+* emacsvox-geiser:: Speech-enable GEISER.
+* emacsvox-github-explorer:: GitHub Explorer.
+* emacsvox-gnuplot:: speech-enable gnuplot.
+* emacsvox-gnus:: Speech enable Gnus.
+* emacsvox-go-mode:: Speech-enable GO-MODE.
+* emacsvox-gomoku:: Speech enable Gomoku.
+* emacsvox-google:: Google Search Tools.
+* emacsvox-gptel:: Speech-enable GPTEL.
+* emacsvox-gridtext:: Filter columnar text.
+* emacsvox-gud:: Speech enable debugger.
+* emacsvox-haskell:: Speech-enable HASKELL.
+* emacsvox-helm:: Speech-enable HELM.
+* emacsvox-helpful:: Speech-enable HELPFUL.
+* emacsvox-hide:: Hide/Expose Text blocks.
+* emacsvox-hide-lines:: HIDE-LINES.
+* emacsvox-hideshow:: speech-enable hideshow.
+* emacsvox-hydra:: Speech-Enable hydra.
+* emacsvox-ibuffer:: speech-enable ibuffer.
+* emacsvox-ido:: speech-enable ido.
+* emacsvox-iedit:: Speech-enable IEDIT.
+* emacsvox-info:: Speech enable Info --.
+* emacsvox-ispell:: Speech enable Ispell.
+* emacsvox-ivy:: Speech-enable IVY.
+* emacsvox-journalctl:: JOURNALCTL.
+* emacsvox-js2:: Speech-enable JS2.
+* emacsvox-keymap:: Setup   keybindings.
+* emacsvox-kmacro:: Speech-enable KMacros.
+* emacsvox-librivox:: LIBRIVOX API client.
+* emacsvox-lispy:: Speech-enable LISPY.
+* emacsvox-lua:: Speech-enable LUA.
+* emacsvox-m-player:: Media Player.
+* emacsvox-magit:: Speech-enable MAGIT.
+* emacsvox-make-mode:: Speech enable make.
+* emacsvox-man:: Speech enable Man.
+* emacsvox-marginalia:: Speech-enable Marginalia.
+* emacsvox-markdown:: Speech-enable Markdown.
+* emacsvox-maths:: Audio-Formatted Maths.
+* emacsvox-message:: Speech enable Message.
+* emacsvox-mines:: Speech-enable MINES.
+* emacsvox-mu4e:: Speech-enable MU4E.
+* emacsvox-muggles:: Convenience Hydras.
+* emacsvox-multiple-cursors:: Speech-enable MULTIPLE-CURSORS.
+* emacsvox-muse:: Speech-enable Muse.
+* emacsvox-net-utils:: net-utils.
+* emacsvox-newsticker:: newsticker.
+* emacsvox-nm:: NM using  D-Bus..
+* emacsvox-notmuch:: Speech-enable NOTMUCH.
+* emacsvox-nov:: Speech-enable NOV.
+* emacsvox-nxml:: Speech enable nxml mode.
+* emacsvox-ocr:: ocr Front-end desktop.
+* emacsvox-org:: Speech-enable org.
+* emacsvox-org-srs:: Speech-enable Org-srs reviews.
+* emacsvox-orgalist:: Speech-enable ORGALIST.
+* emacsvox-outline:: Speech enable Outline.
+* emacsvox-package:: Speech-enable PACKAGE.
+* emacsvox-paradox:: Speech-enable PARADOX.
+* emacsvox-perl:: Speech enable Perl Mode.
+* emacsvox-pipewire:: Speech-enable PIPEWIRE.
+* emacsvox-popup:: Speech-enable POPUP.
+* emacsvox-preamble:: standard  include.
+* emacsvox-proced:: Speech-enable PROCED.
+* emacsvox-project:: Speech-enable PROJECT.
+* emacsvox-projectile:: PROJECTILE.
+* emacsvox-pronounce:: pronunciations.
+* emacsvox-py:: Speech enable Python.
+* emacsvox-pydoc:: Speech-enable PYDOC.
+* emacsvox-python:: Speech enable Python.
+* emacsvox-racket:: Speech-enable RACKET.
+* emacsvox-re-builder:: re-builder.
+* emacsvox-reftex:: speech enable reftex.
+* emacsvox-related:: Speech-enable RELATED.
+* emacsvox-rg:: Speech-enable RG.
+* emacsvox-rmail:: Speech enable RMail.
+* emacsvox-rpm-spec:: Speech enable rpm spec.
+* emacsvox-rst:: Speech-enable RST.
+* emacsvox-ruby:: Speech enable Ruby Mode.
+* emacsvox-rust-mode:: Speech-enable RUST.
+* emacsvox-sage:: Speech-enable SAGE.
+* emacsvox-sdcv:: Speech-enable SDCV.
+* emacsvox-ses:: Speech-enable ses.
+* emacsvox-setup:: Setup Emacsvox --.
+* emacsvox-sgml-mode:: Speech enable SGML.
+* emacsvox-sh-script:: Speech enable script.
+* emacsvox-slime:: Speech-enable SLIME.
+* emacsvox-smartparens:: SMARTPARENS.
+* emacsvox-solitaire:: Solitaire.
+* emacsvox-sounds:: auditory icons.
+* emacsvox-speak:: Core Speech Lib.
+* emacsvox-speedbar:: speedbar -.
+* emacsvox-sql:: Speech enable sql-mode.
+* emacsvox-sudoku:: Play SuDoku.
+* emacsvox-supercite:: Speech enable SC.
+* emacsvox-syslog:: Speech-enable SYSLOG.
+* emacsvox-tab-bar:: Speech-enable tab-bar.
+* emacsvox-table:: Table data model.
+* emacsvox-table-ui:: Table Navigation UI.
+* emacsvox-tabulate:: Handle table data.
+* emacsvox-tabulated-list:: Speech-enable.
+* emacsvox-tar:: Speech enable Tar Mode.
+* emacsvox-tcl:: Speech enable TCL.
+* emacsvox-tempo:: Speech enable tempo.
+* emacsvox-tetris:: Tetris.
+* emacsvox-texinfo:: Speech enable texinfo.
+* emacsvox-threes:: Speech-enable THREES.
+* emacsvox-todo-mode:: speech-enable todo.
+* emacsvox-transient:: TRANSIENT.
+* emacsvox-treesit:: Speech-enable TREESIT.
+* emacsvox-typo:: Speech-enable TYPO.
+* emacsvox-url-template:: URI templates.
+* emacsvox-vdiff:: Speech-enable VDIFF.
+* emacsvox-vertico:: Speech-enable Vertico.
+* emacsvox-view:: Speech enable View mode -.
+* emacsvox-vterm:: Speech-enable VTERM.
+* emacsvox-wdired:: Speech-enable wdired.
+* emacsvox-we:: Transform WebUsing XSLT.
+* emacsvox-websearch:: search utilities.
+* emacsvox-webspace:: Webspaces.
+* emacsvox-which-key:: Speech-enable Which-Key.
+* emacsvox-widget:: Speech enable widgets.
+* emacsvox-windmove:: windmove.
+* emacsvox-windows-speech:: Native Windows speech integration.
+* emacsvox-wizards:: Magic.
+* emacsvox-woman:: Speech-enable WOMAN.
+* emacsvox-xkcd:: Speech-enable XKCD.
+* emacsvox-xref:: Speech-enable XREF.
+* emacsvox-xslt:: XSLT.
+* emacsvox-yaml:: Speech-enable YAML.
+* emacsvox-yasnippet:: YASNIPPET.
+* espeak-voices:: Define  Espeak tags.
+* extra-muggles:: Additional Hydras.
+* g-utils:: Google Client Utilities.
+* gm-nnir:: Searching GMail Using NNIR.
+* gmaps:: Google Maps.
+* ladspa:: Ladspa Tools For Emacs.
+* light:: Control Brightness.
+* mac-voices:: Define  Mac tags.
+* omaps:: Open street  Maps.
+* omnivox-voices:: Omnivox voice adapter.
+* outloud-voices:: Define  OutLoud tags.
+* pip:: Interface To Piper TTS.
+* plain-voices:: No Voice lock voices.
+* soundscape:: Soundscapes.
+* sox:: An Audio Work-Bench.
+* sox-gen:: Binaural Beats And More Using SoX.
+* swiftmac-voices:: Define  Swiftmac tags.
+* tetris:: Tetris for Emacs.
+* tts-speak:: Interface to speech server.
+* voice-defs:: Define voices for voice-lock.
+* voice-setup:: Setup voices for voice-lock.
+* xbacklight:: Brightness.
+* URL Templates:: Generated web-search templates.
+@end menu
 
 @node amixer
 @section amixer
@@ -506,7 +549,7 @@ Soundscape data directory.
 Default Value:
 @verbatim
 
-"/home/bart/.boodler/Collection"
+"~/.boodler/Collection"
 
 @end verbatim
 
@@ -772,6 +815,578 @@ nil
 
 @end defvar
 
+@node emacsvox-agent-shell
+@section emacsvox-agent-shell
+
+agent-shell provides native agentic integrations for AI agents
+like Claude Code, Gemini CLI, Goose, Cursor, and others.
+It is built on shell-maker and provides a comint-based interface.
+
+This module speech-enables agent-shell, providing:
+- Semantic response, thought, and plan speech at turn-completion boundaries
+- On-demand full and structural-overview speech for the latest agent answer
+- Permission, lifecycle, error, and tool-status feedback
+- Focus-aware foreground and background speech levels
+- Semantic header and face-to-voice support
+- Typed transcript and fenced source-block navigation
+- Two-dimensional rendered Markdown table navigation and copying
+- Viewport mode integration and reload-safe buffer teardown
+
+Customize `emacsvox-agent-shell' for speech levels, table feedback, and
+lifecycle announcements.  The interactive commands document their keys.
+See https://github.com/xenodium/agent-shell for agent-shell itself.
+
+@subsection Emacsvox-Agent-Shell Commands
+
+@subsubsection emacsvox-agent-shell--accept-block-type-default
+@deffn {Command} emacsvox-agent-shell--accept-block-type-default
+@findex emacsvox-agent-shell--accept-block-type-default
+
+@format
+Accept the default block type when the minibuffer is empty.
+Otherwise insert the invoking character normally.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-copy-source-block
+@deffn {Command} emacsvox-agent-shell-copy-source-block
+@findex emacsvox-agent-shell-copy-source-block
+
+@format
+Copy the rendered Markdown source block at point using agent-shell.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-cycle-speech-level
+@deffn {Command} emacsvox-agent-shell-cycle-speech-level  (&optional reset)
+@findex emacsvox-agent-shell-cycle-speech-level
+
+@format
+Cycle automatic speech for the current agent-shell session.
+Cycle from the effective level toward less speech: full, response, notify,
+quiet, then full again.  With prefix argument RESET, restore ‘auto’ so focus
+selects the configured foreground or background level.
+
+(fn &optional RESET)
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-disable
+@deffn {Command} emacsvox-agent-shell-disable
+@findex emacsvox-agent-shell-disable
+
+@format
+Disable Emacsvox support for agent-shell.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-enable
+@deffn {Command} emacsvox-agent-shell-enable
+@findex emacsvox-agent-shell-enable
+
+@format
+Enable Emacsvox support for agent-shell.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-block-at-point
+@deffn {Command} emacsvox-agent-shell-next-block-at-point
+@findex emacsvox-agent-shell-next-block-at-point
+
+@format
+Move to the next block matching the semantic block at point.
+When invoked by ‘]’ at an editable prompt, insert that character instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-next-block-of-type
+@deffn {Command} emacsvox-agent-shell-next-block-of-type
+@findex emacsvox-agent-shell-next-block-of-type
+
+@format
+Select a semantic block type and move to its next occurrence.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-block-at-point
+@deffn {Command} emacsvox-agent-shell-previous-block-at-point
+@findex emacsvox-agent-shell-previous-block-at-point
+
+@format
+Move to the previous block matching the semantic block at point.
+When invoked by ‘[’ at an editable prompt, insert that character instead.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-previous-block-of-type
+@deffn {Command} emacsvox-agent-shell-previous-block-of-type
+@findex emacsvox-agent-shell-previous-block-of-type
+
+@format
+Select a semantic block type and move to its previous occurrence.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-repeat-next-block
+@deffn {Command} emacsvox-agent-shell-repeat-next-block
+@findex emacsvox-agent-shell-repeat-next-block
+
+@format
+Move to the next occurrence of the selected semantic block type.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-repeat-previous-block
+@deffn {Command} emacsvox-agent-shell-repeat-previous-block
+@findex emacsvox-agent-shell-repeat-previous-block
+
+@format
+Move to the previous occurrence of the selected semantic block type.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-select-background-speech-level
+@deffn {Command} emacsvox-agent-shell-select-background-speech-level
+@findex emacsvox-agent-shell-select-background-speech-level
+
+@format
+Select the automatic speech level shared by background sessions.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-select-speech-level
+@deffn {Command} emacsvox-agent-shell-select-speech-level
+@findex emacsvox-agent-shell-select-speech-level
+
+@format
+Select the automatic speech level for the current agent-shell session.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-speak-header
+@deffn {Command} emacsvox-agent-shell-speak-header
+@findex emacsvox-agent-shell-speak-header
+
+@format
+Speak the full semantic header for the current agent-shell session.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-speak-last-response
+@deffn {Command} emacsvox-agent-shell-speak-last-response
+@findex emacsvox-agent-shell-speak-last-response
+
+@format
+Speak the latest agent answer in full without moving point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-speak-response-overview
+@deffn {Command} emacsvox-agent-shell-speak-response-overview
+@findex emacsvox-agent-shell-speak-response-overview
+
+@format
+Speak a concise structural overview of the latest agent answer.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-speak-source-block
+@deffn {Command} emacsvox-agent-shell-speak-source-block
+@findex emacsvox-agent-shell-speak-source-block
+
+@format
+Read the complete rendered Markdown source block at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-copy-cell
+@deffn {Command} emacsvox-agent-shell-table-copy-cell
+@findex emacsvox-agent-shell-table-copy-cell
+
+@format
+Copy the logical Markdown table cell at point to the kill ring.
+Remove renderer padding, borders, and text properties.  Preserve the complete
+logical value of a wrapped cell.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-copy-column
+@deffn {Command} emacsvox-agent-shell-table-copy-column
+@findex emacsvox-agent-shell-table-copy-column
+
+@format
+Copy the logical Markdown table column at point to the kill ring.
+Separate cells with newlines and omit Markdown separator syntax.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-copy-row
+@deffn {Command} emacsvox-agent-shell-table-copy-row
+@findex emacsvox-agent-shell-table-copy-row
+
+@format
+Copy the logical Markdown table row at point to the kill ring.
+Separate cells with tabs and omit Markdown separator syntax.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-exit-backward
+@deffn {Command} emacsvox-agent-shell-table-exit-backward
+@findex emacsvox-agent-shell-table-exit-backward
+
+@format
+Leave the current Markdown table and move to preceding content.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-exit-forward
+@deffn {Command} emacsvox-agent-shell-table-exit-forward
+@findex emacsvox-agent-shell-table-exit-forward
+
+@format
+Leave the current Markdown table and move to following content.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-next-column
+@deffn {Command} emacsvox-agent-shell-table-next-column  (&optional count)
+@findex emacsvox-agent-shell-table-next-column
+
+@format
+Move COUNT columns right in the current logical Markdown table row.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-next-row
+@deffn {Command} emacsvox-agent-shell-table-next-row  (&optional count)
+@findex emacsvox-agent-shell-table-next-row
+
+@format
+Move COUNT logical Markdown table rows down, retaining the column.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-previous-column
+@deffn {Command} emacsvox-agent-shell-table-previous-column  (&optional count)
+@findex emacsvox-agent-shell-table-previous-column
+
+@format
+Move COUNT columns left in the current logical Markdown table row.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-previous-row
+@deffn {Command} emacsvox-agent-shell-table-previous-row  (&optional count)
+@findex emacsvox-agent-shell-table-previous-row
+
+@format
+Move COUNT logical Markdown table rows up, retaining the column.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-select-speaking-method
+@deffn {Command} emacsvox-agent-shell-table-select-speaking-method
+@findex emacsvox-agent-shell-table-select-speaking-method
+
+@format
+Interactively change automatic Markdown table cell speech.
+Press c to toggle column titles, r to toggle row titles, or o to
+switch between data-first and title-first ordering.  Speak the complete
+resulting configuration after the change.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-speak-cell
+@deffn {Command} emacsvox-agent-shell-table-speak-cell
+@findex emacsvox-agent-shell-table-speak-cell
+
+@format
+Speak the logical Markdown table cell at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-speak-column
+@deffn {Command} emacsvox-agent-shell-table-speak-column
+@findex emacsvox-agent-shell-table-speak-column
+
+@format
+Speak the logical Markdown table column at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-speak-context
+@deffn {Command} emacsvox-agent-shell-table-speak-context
+@findex emacsvox-agent-shell-table-speak-context
+
+@format
+Speak current Markdown table position and dimensions.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-speak-dimensions
+@deffn {Command} emacsvox-agent-shell-table-speak-dimensions
+@findex emacsvox-agent-shell-table-speak-dimensions
+
+@format
+Speak the dimensions of the Markdown table at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-agent-shell-table-speak-row
+@deffn {Command} emacsvox-agent-shell-table-speak-row
+@findex emacsvox-agent-shell-table-speak-row
+
+@format
+Speak the logical Markdown table row at point.
+@end format
+@end deffn
+
+@subsection emacsvox-agent-shell Options
+
+@defvar {User Option} emacsvox-agent-shell-background-speech-level
+@verbatim
+Automatic speech level for an unfocused agent-shell session.
+The available levels have the same meaning as
+‘emacsvox-agent-shell-foreground-speech-level’.  Background completion uses
+Emacsvox’s notification stream and includes the session buffer name.
+@end verbatim
+
+Default Value:
+@verbatim
+
+notify
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-foreground-speech-level
+@verbatim
+Automatic speech level for the focused agent-shell session.
+The focused session is the selected agent-shell buffer or the shell associated
+with the selected viewport.  ‘full’ preserves configured response, thought,
+plan, tool, and lifecycle feedback.  ‘response’ speaks agent responses and
+completion feedback while suppressing routine thought, plan, and tool chatter.
+‘notify’ only signals completion, and ‘quiet’ suppresses routine feedback.
+Permissions and errors remain controlled separately because they may require
+action.
+@end verbatim
+
+Default Value:
+@verbatim
+
+response
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-line-speech-max-characters
+@verbatim
+Maximum Agent Shell characters compiled for line-navigation speech.
+
+When a physical or visual line is longer, navigation speaks its first
+characters and a count of the omitted remainder.  This prevents rendered tool
+and search output from opening the core long-line prompt or building an
+unnecessarily large presentation.  Set this to nil to restore the core
+long-line policy.  Explicit Agent Shell response and block-reading commands are
+not truncated.
+@end verbatim
+
+Default Value:
+@verbatim
+
+512
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-processing-end-icon
+@verbatim
+Auditory icon played when the model finishes processing.
+@end verbatim
+
+Default Value:
+@verbatim
+
+task-done
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-processing-start-icon
+@verbatim
+Auditory icon played when the model starts processing a prompt.
+@end verbatim
+
+Default Value:
+@verbatim
+
+progress
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-signal-processing
+@verbatim
+Whether to announce the agent’s processing lifecycle.
+When non-nil, public agent-shell events produce start and completion
+icons.  Exceptional completion and error events also produce a brief
+spoken explanation.  Initialization has its own start and completion
+cues.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-speak-permissions
+@verbatim
+Whether to speak permission requests immediately.
+When t, permission requests are spoken as soon as they appear.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-speak-thought-process
+@verbatim
+How to handle agent thought process chunks.
+- 'speak: Speak the thought process content
+- 'icon: Play an auditory icon only (default)
+- nil: Silent, no feedback
+@end verbatim
+
+Default Value:
+@verbatim
+
+icon
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-speak-tool-calls
+@verbatim
+Whether to announce tool calls as they happen.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-speech-delay
+@verbatim
+Delay used to coalesce streamed out-of-turn agent messages.
+Normal response completion follows agent-shell’s public ‘turn-complete’ event,
+so this value never determines when a submitted turn is spoken.
+@end verbatim
+
+Default Value:
+@verbatim
+
+0.5
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-status-speech-labels
+@verbatim
+Words spoken for agent-shell’s rendered status icons.
+These substitutions affect only speech copies in agent-shell and its viewport;
+the visual icons remain unchanged.  Remove an entry to leave that status icon
+for the active speech server to interpret.
+@end verbatim
+
+Default Value:
+@verbatim
+
+((pending . "pending")
+ (in-progress . "in progress")
+ (completed . "completed")
+ (failed . "failed"))
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-table-data-position
+@verbatim
+Whether table cell data is spoken before or after its titles.
+@end verbatim
+
+Default Value:
+@verbatim
+
+first
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-table-titles
+@verbatim
+Table titles spoken with the current Markdown table cell.
+Column titles come from the first row when the Markdown source has a
+separator row.  Row titles come from the first column, following
+Emacsvox’s table convention.  Customize this set to enable either,
+both, or neither kind of title.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(column)
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-tool-output-verbosity
+@verbatim
+Verbosity level for tool call output.
+- 'full: Speak the complete tool output
+- 'summary: Speak a summary (status and title)
+- 'status: Only speak the final status
+@end verbatim
+
+Default Value:
+@verbatim
+
+summary
+
+@end verbatim
+
+@end defvar
+
 @node emacsvox-amark
 @section emacsvox-amark
 
@@ -1001,6 +1616,4076 @@ Tie the next n  words.
 (fn N)
 @end format
 @end deffn
+
+@node emacsvox-aural
+@section emacsvox-aural
+
+This module owns the device-independent vocabulary used by Aural
+Presentation.  It deliberately contains no speech-server, sound
+player, major-mode, or resource resolution.
+
+@subsection Emacsvox-Aural Commands
+
+@subsubsection emacsvox-aural-toggle-face-presentation
+@deffn {Command} emacsvox-aural-toggle-face-presentation  (&optional arg)
+@findex emacsvox-aural-toggle-face-presentation
+
+@format
+Toggle explicit visual-face presentation.
+
+With a positive prefix ARG, enable it.  With zero or a negative prefix,
+disable it.  This does not change semantic presentation or Voice Lock.
+
+(fn &optional ARG)
+@end format
+@end deffn
+
+@subsection emacsvox-aural Options
+
+@defvar {User Option} emacsvox-aural-face-presentation-enabled
+@verbatim
+Whether rules selected by explicit visual faces participate.
+
+This control affects rules with a ‘:legacy-face’ selector.  It does not
+disable semantic role, state, event, or attribute presentation, and it does
+not replace ‘voice-lock-mode’.  Voice Lock continues to control only the
+legacy face/personality-to-voice compatibility mapping.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-compatibility-voice
+@section emacsvox-aural-compatibility-voice
+
+Aural-facing control over the per-buffer legacy face and personality voice
+adapter.  Voice Lock remains the compatibility implementation while aural
+presentation owns the user-facing policy.
+
+@subsection Emacsvox-Aural-Compatibility-Voice Commands
+
+@subsubsection emacsvox-aural-toggle-compatibility-voice
+@deffn {Command} emacsvox-aural-toggle-compatibility-voice  (&optional arg buffer)
+@findex emacsvox-aural-toggle-compatibility-voice
+
+@format
+Toggle legacy compatibility voices in BUFFER.
+
+With a positive prefix ARG, enable them.  With zero or a negative prefix,
+disable them.  This does not change semantic presentation or explicit
+visual-face presentation rules.
+
+(fn &optional ARG BUFFER)
+@end format
+@end deffn
+
+@subsubsection voice-lock-mode
+@deffn {Command} voice-lock-mode  (&optional arg)
+@table @kbd
+@item C-e d v
+@kindex C-e d v
+@end table
+
+@findex voice-lock-mode
+
+@format
+Toggle the legacy face and personality voice compatibility adapter.
+
+This is a minor mode.  If called interactively, toggle the ‘Voice-Lock
+mode’ mode.  If the prefix argument is positive, enable the mode, and if
+it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable ‘voice-lock-mode’.
+
+The mode’s hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)
+@end format
+@end deffn
+
+@subsubsection voice-lock-mode--turn-on
+@deffn {Command} voice-lock-mode--turn-on
+@findex voice-lock-mode--turn-on
+
+@format
+Turn on the Voice Lock compatibility adapter.
+@end format
+@end deffn
+
+@subsection emacsvox-aural-compatibility-voice Options
+
+@defvar {User Option} voice-lock-mode-hook
+@verbatim
+Hook run after entering or leaving ‘voice-lock-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+@end verbatim
+
+Default Value:
+@verbatim
+
+(emacsvox-aural--voice-lock-mode-changed voice-lock-mode--set-explicitly)
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-compiler
+@section emacsvox-aural-compiler
+
+Compile resolved render plans to frozen resources, voices, spatial values,
+and backend-ready ordered actions.  This module performs no queueing or
+speech-server process control.
+
+@subsection emacsvox-aural-compiler Options
+
+@defvar {User Option} emacsvox-aural-unsupported-volume-policy
+@verbatim
+Policy for explicit volume when the active transport cannot apply it.
+
+‘degrade’ queues the presentation without volume and records the exact
+capability degradation.  ‘reject’ signals an error before anything is queued.
+@end verbatim
+
+Default Value:
+@verbatim
+
+degrade
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-concrete
+@section emacsvox-aural-concrete
+
+Data-only records shared by concrete compilation, queue transport,
+descriptions, inspection, and history.  This module owns no rule
+resolution, resource lookup, TTS policy, or backend calls.
+
+@node emacsvox-aural-description
+@section emacsvox-aural-description
+
+Pure, reusable descriptions of aural values, selectors, rules, and
+concrete actions for spoken managers, editors, and explanation buffers.
+
+@node emacsvox-aural-doctor
+@section emacsvox-aural-doctor
+
+Diagnose the running aural installation and configuration without starting
+a speech server or changing presentation state.  Safe, deterministic repairs
+are explicit commands from the spoken report.
+
+@subsection Emacsvox-Aural-Doctor Commands
+
+@subsubsection emacsvox-aural-doctor
+@deffn {Command} emacsvox-aural-doctor
+@findex emacsvox-aural-doctor
+
+@format
+Open the spoken Aural Doctor and announce its overall result.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-help
+@deffn {Command} emacsvox-aural-doctor-help
+@findex emacsvox-aural-doctor-help
+
+@format
+Display and speak Aural Doctor help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-mode
+@deffn {Command} emacsvox-aural-doctor-mode
+@findex emacsvox-aural-doctor-mode
+
+@format
+Spoken diagnostics for aural presentation.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-doctor-mode-hook’, as the final or penultimate
+step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+?		emacsvox-aural-doctor-help
+h		emacsvox-aural
+r		emacsvox-aural-doctor-repair-current
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-next
+@deffn {Command} emacsvox-aural-doctor-next
+@findex emacsvox-aural-doctor-next
+
+@format
+Move to and speak the next diagnostic finding.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-next-column
+@deffn {Command} emacsvox-aural-doctor-next-column
+@findex emacsvox-aural-doctor-next-column
+
+@format
+Move right and speak the next diagnostic column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-previous
+@deffn {Command} emacsvox-aural-doctor-previous
+@findex emacsvox-aural-doctor-previous
+
+@format
+Move to and speak the previous diagnostic finding.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-previous-column
+@deffn {Command} emacsvox-aural-doctor-previous-column
+@findex emacsvox-aural-doctor-previous-column
+
+@format
+Move left and speak the previous diagnostic column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-refresh
+@deffn {Command} emacsvox-aural-doctor-refresh  (&optional id)
+@findex emacsvox-aural-doctor-refresh
+
+@format
+Rerun diagnostics, preserving row ID and the current column.
+
+(fn &optional ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-refresh-sound-packs
+@deffn {Command} emacsvox-aural-doctor-refresh-sound-packs
+@findex emacsvox-aural-doctor-refresh-sound-packs
+
+@format
+Refresh dynamically discovered and registered sound packs.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-reload-personal-data
+@deffn {Command} emacsvox-aural-doctor-reload-personal-data
+@findex emacsvox-aural-doctor-reload-personal-data
+
+@format
+Reload the validated personal aural data file.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-repair-current
+@deffn {Command} emacsvox-aural-doctor-repair-current
+@findex emacsvox-aural-doctor-repair-current
+
+@format
+Run the deterministic repair offered by the finding at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-restore-bindings
+@deffn {Command} emacsvox-aural-doctor-restore-bindings
+@findex emacsvox-aural-doctor-restore-bindings
+
+@format
+Restore the documented aural home and point-explanation bindings.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-speak-current
+@deffn {Command} emacsvox-aural-doctor-speak-current
+@findex emacsvox-aural-doctor-speak-current
+
+@format
+Speak the complete diagnostic finding at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-doctor-speak-current-cell
+@deffn {Command} emacsvox-aural-doctor-speak-current-cell
+@findex emacsvox-aural-doctor-speak-current-cell
+
+@format
+Speak the current diagnostic column title and value.
+@end format
+@end deffn
+
+@node emacsvox-aural-editor
+@section emacsvox-aural-editor
+
+A completion-driven special-mode editor for Presentation Options and
+personal, session, or buffer-local rule layers.  The buffer remains plain
+text and predictable for speech access.
+
+@subsection Emacsvox-Aural-Editor Commands
+
+@subsubsection emacsvox-aural-edit-feature-fragment
+@deffn {Command} emacsvox-aural-edit-feature-fragment  (&optional fragment)
+@findex emacsvox-aural-edit-feature-fragment
+
+@format
+Open the declarative editor for personal feature FRAGMENT.
+
+(fn &optional FRAGMENT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-edit-rules
+@deffn {Command} emacsvox-aural-edit-rules  (scope &optional fragment source-buffer)
+@findex emacsvox-aural-edit-rules
+
+@format
+Open an accessible rule editor for SCOPE.
+
+SCOPE is ‘personal’, ‘session’, ‘buffer’, or ‘fragment’.  FRAGMENT identifies
+a personal Presentation Option.  SOURCE-BUFFER defaults to
+the ordinary source associated with the current buffer for buffer scope.
+
+(fn SCOPE &optional FRAGMENT SOURCE-BUFFER)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-add-rule
+@deffn {Command} emacsvox-aural-editor-add-rule
+@findex emacsvox-aural-editor-add-rule
+
+@format
+Add a guided rule after the selected rule or at the end.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-copy-rule
+@deffn {Command} emacsvox-aural-editor-copy-rule
+@findex emacsvox-aural-editor-copy-rule
+
+@format
+Copy the selected rule and request a new stable identifier.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-delete-rule
+@deffn {Command} emacsvox-aural-editor-delete-rule
+@findex emacsvox-aural-editor-delete-rule
+
+@format
+Delete the selected working rule after confirmation.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-edit-metadata
+@deffn {Command} emacsvox-aural-editor-edit-metadata
+@findex emacsvox-aural-editor-edit-metadata
+
+@format
+Edit metadata for the current personal Presentation Option.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-edit-rule
+@deffn {Command} emacsvox-aural-editor-edit-rule
+@findex emacsvox-aural-editor-edit-rule
+
+@format
+Edit the selected rule through guided prompts.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-explain-rule
+@deffn {Command} emacsvox-aural-editor-explain-rule
+@findex emacsvox-aural-editor-explain-rule
+
+@format
+Explain the selected unsaved working rule against representative facts.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-help
+@deffn {Command} emacsvox-aural-editor-help
+@findex emacsvox-aural-editor-help
+
+@format
+Display aural editor commands and workflow.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-move-rule-down
+@deffn {Command} emacsvox-aural-editor-move-rule-down
+@findex emacsvox-aural-editor-move-rule-down
+
+@format
+Move the selected rule later in its scope.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-move-rule-up
+@deffn {Command} emacsvox-aural-editor-move-rule-up
+@findex emacsvox-aural-editor-move-rule-up
+
+@format
+Move the selected rule earlier in its scope.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-preview-rule
+@deffn {Command} emacsvox-aural-editor-preview-rule
+@findex emacsvox-aural-editor-preview-rule
+
+@format
+Preview the selected unsaved working rule.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-quit
+@deffn {Command} emacsvox-aural-editor-quit
+@findex emacsvox-aural-editor-quit
+
+@format
+Quit the editor, asking before discarding working changes.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-refresh
+@deffn {Command} emacsvox-aural-editor-refresh
+@findex emacsvox-aural-editor-refresh
+
+@format
+Render the current working Presentation Option or rule layer.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-save
+@deffn {Command} emacsvox-aural-editor-save
+@findex emacsvox-aural-editor-save
+
+@format
+Validate and atomically save or apply current working rules.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-toggle-rule
+@deffn {Command} emacsvox-aural-editor-toggle-rule
+@findex emacsvox-aural-editor-toggle-rule
+
+@format
+Enable or disable the selected working rule without discarding it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-validate
+@deffn {Command} emacsvox-aural-editor-validate
+@findex emacsvox-aural-editor-validate
+
+@format
+Validate all working rules and display diagnostics.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-scheme-editor-mode
+@deffn {Command} emacsvox-aural-scheme-editor-mode
+@findex emacsvox-aural-scheme-editor-mode
+
+@format
+Accessible editor for declarative Presentation Options and rule layers.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-interface-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-scheme-editor-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-editor-edit-rule
+SPC		scroll-up-command
+-		negative-argument
+0 .. 9		digit-argument
+<		beginning-of-buffer
+>		end-of-buffer
+?		emacsvox-aural-editor-help
+c		emacsvox-aural-editor-copy-rule
+d		emacsvox-aural-editor-delete-rule
+e		emacsvox-aural-editor-edit-rule
+g		emacsvox-aural-editor-refresh
+h		emacsvox-aural
+m		emacsvox-aural-editor-edit-metadata
+n		emacsvox-aural-editor-add-rule
+p		emacsvox-aural-editor-preview-rule
+q		emacsvox-aural-editor-quit
+t		emacsvox-aural-editor-toggle-rule
+v		emacsvox-aural-editor-validate
+w		emacsvox-aural-editor-save
+x		emacsvox-aural-editor-explain-rule
+DEL		scroll-down-command
+S-SPC		scroll-down-command
+M-<down>	emacsvox-aural-editor-move-rule-down
+M-<up>		emacsvox-aural-editor-move-rule-up
+
+C-c C-c		emacsvox-aural-editor-save
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-edit-aural-feature-fragment
+@deffn {Command} emacsvox-edit-aural-feature-fragment  (&optional fragment)
+@findex emacsvox-edit-aural-feature-fragment
+
+@format
+Open the declarative editor for personal feature FRAGMENT.
+
+(fn &optional FRAGMENT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-edit-aural-rules
+@deffn {Command} emacsvox-edit-aural-rules  (scope &optional fragment source-buffer)
+@findex emacsvox-edit-aural-rules
+
+@format
+Open an accessible rule editor for SCOPE.
+
+SCOPE is ‘personal’, ‘session’, ‘buffer’, or ‘fragment’.  FRAGMENT identifies
+a personal Presentation Option.  SOURCE-BUFFER defaults to
+the ordinary source associated with the current buffer for buffer scope.
+
+(fn SCOPE &optional FRAGMENT SOURCE-BUFFER)
+@end format
+@end deffn
+
+@node emacsvox-aural-explanation
+@section emacsvox-aural-explanation
+
+Retained and simulated presentation explanations, spoken and visual reports,
+spatial capability inspection, concise descriptions, and training mode.
+
+@subsection Emacsvox-Aural-Explanation Commands
+
+@subsubsection emacsvox-aural-describe-spatial-capabilities
+@deffn {Command} emacsvox-aural-describe-spatial-capabilities
+@findex emacsvox-aural-describe-spatial-capabilities
+
+@format
+Describe current spatial backends and user policy.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-explain-presentation
+@deffn {Command} emacsvox-aural-explain-presentation  (&optional facts context record)
+@table @kbd
+@item C-e E
+@kindex C-e E
+@end table
+
+@findex emacsvox-aural-explain-presentation
+
+@format
+Explain exact queued RECORD or simulate FACTS in CONTEXT.
+
+Interactively, use the last queued presentation for the source buffer when
+available.  With a prefix argument, deliberately simulate an occasion chosen
+by the user.  When no queued record is available, infer the occasion that
+produces the most useful simulation.  The visual and spoken explanations
+always identify whether they describe queued output or a simulation.
+
+(fn &optional FACTS CONTEXT RECORD)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-training-mode
+@deffn {Command} emacsvox-aural-training-mode  (&optional arg)
+@findex emacsvox-aural-training-mode
+
+@format
+Speak concise semantics after each normal aural presentation.
+
+This is a global minor mode.  If called interactively, toggle the
+‘Emacsvox-Aural-Training mode’ mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
+
+If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate ‘(default-value 'emacsvox-aural-training-mode)’.
+
+The mode’s hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)
+@end format
+@end deffn
+
+@subsubsection emacsvox-describe-aural-spatial-capabilities
+@deffn {Command} emacsvox-describe-aural-spatial-capabilities
+@findex emacsvox-describe-aural-spatial-capabilities
+
+@format
+Describe current spatial backends and user policy.
+@end format
+@end deffn
+
+@subsubsection emacsvox-explain-aural-presentation
+@deffn {Command} emacsvox-explain-aural-presentation  (&optional facts context record)
+@findex emacsvox-explain-aural-presentation
+
+@format
+Explain exact queued RECORD or simulate FACTS in CONTEXT.
+
+Interactively, use the last queued presentation for the source buffer when
+available.  With a prefix argument, deliberately simulate an occasion chosen
+by the user.  When no queued record is available, infer the occasion that
+produces the most useful simulation.  The visual and spoken explanations
+always identify whether they describe queued output or a simulation.
+
+(fn &optional FACTS CONTEXT RECORD)
+@end format
+@end deffn
+
+@subsection emacsvox-aural-explanation Options
+
+@defvar {User Option} emacsvox-aural-training-mode
+@verbatim
+Non-nil if Emacsvox-Aural-Training mode is enabled.
+See the ‘emacsvox-aural-training-mode’ command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node ‘Easy Customization’)
+or call the function ‘emacsvox-aural-training-mode’.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-training-mode-hook
+@verbatim
+Hook run after entering or leaving ‘emacsvox-aural-training-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-training-voice
+@verbatim
+Palette-aware voice used for semantic training explanations.
+@end verbatim
+
+Default Value:
+@verbatim
+
+annotate
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-feature-fragments
+@section emacsvox-aural-feature-fragments
+
+Accessible management, preview, validation, and persistence for optional
+aural presentation fragments.
+
+@subsection Emacsvox-Aural-Feature-Fragments Commands
+
+@subsubsection emacsvox-aural-copy-feature-fragment
+@deffn {Command} emacsvox-aural-copy-feature-fragment  (source new-id)
+@findex emacsvox-aural-copy-feature-fragment
+
+@format
+Copy feature fragment SOURCE to disabled personal fragment NEW-ID.
+
+(fn SOURCE NEW-ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-create-feature-fragment
+@deffn {Command} emacsvox-aural-create-feature-fragment  (id &optional summary)
+@findex emacsvox-aural-create-feature-fragment
+
+@format
+Create disabled personal feature fragment ID with SUMMARY.
+
+(fn ID &optional SUMMARY)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-delete-feature-fragment
+@deffn {Command} emacsvox-aural-delete-feature-fragment  (&optional fragment)
+@findex emacsvox-aural-delete-feature-fragment
+
+@format
+Delete personal feature FRAGMENT, disabling it when necessary.
+
+(fn &optional FRAGMENT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-describe-feature-fragment
+@deffn {Command} emacsvox-aural-describe-feature-fragment  (&optional fragment)
+@findex emacsvox-aural-describe-feature-fragment
+
+@format
+Describe registered presentation option FRAGMENT.
+
+(fn &optional FRAGMENT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-audition-cues
+@deffn {Command} emacsvox-aural-feature-fragment-previews-audition-cues
+@findex emacsvox-aural-feature-fragment-previews-audition-cues
+
+@format
+Audition only the earcons in the preview example at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-help
+@deffn {Command} emacsvox-aural-feature-fragment-previews-help
+@findex emacsvox-aural-feature-fragment-previews-help
+
+@format
+Display and speak presentation-option preview help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-mode
+@deffn {Command} emacsvox-aural-feature-fragment-previews-mode
+@findex emacsvox-aural-feature-fragment-previews-mode
+
+@format
+Spoken browser for representative presentation-option examples.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-feature-fragment-previews-mode-hook’, as the
+final or penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-feature-fragment-previews-play
+?		emacsvox-aural-feature-fragment-previews-help
+P		emacsvox-aural-feature-fragment-previews-play
+c		emacsvox-aural-feature-fragment-previews-audition-cues
+h		emacsvox-aural
+i		emacsvox-aural-feature-fragment-previews-toggle-isolated
+o		emacsvox-aural-list-feature-fragments
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-next
+@deffn {Command} emacsvox-aural-feature-fragment-previews-next
+@findex emacsvox-aural-feature-fragment-previews-next
+
+@format
+Move to and speak the next preview example.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-next-column
+@deffn {Command} emacsvox-aural-feature-fragment-previews-next-column
+@findex emacsvox-aural-feature-fragment-previews-next-column
+
+@format
+Move right and speak the next preview column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-play
+@deffn {Command} emacsvox-aural-feature-fragment-previews-play
+@findex emacsvox-aural-feature-fragment-previews-play
+
+@format
+Play the complete preview example at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-previous
+@deffn {Command} emacsvox-aural-feature-fragment-previews-previous
+@findex emacsvox-aural-feature-fragment-previews-previous
+
+@format
+Move to and speak the previous preview example.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-previous-column
+@deffn {Command} emacsvox-aural-feature-fragment-previews-previous-column
+@findex emacsvox-aural-feature-fragment-previews-previous-column
+
+@format
+Move left and speak the previous preview column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-refresh
+@deffn {Command} emacsvox-aural-feature-fragment-previews-refresh  (&optional example-id)
+@findex emacsvox-aural-feature-fragment-previews-refresh
+
+@format
+Refresh preview examples, preserving EXAMPLE-ID and the current column.
+
+(fn &optional EXAMPLE-ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-speak-current
+@deffn {Command} emacsvox-aural-feature-fragment-previews-speak-current
+@findex emacsvox-aural-feature-fragment-previews-speak-current
+
+@format
+Speak a concise description of the preview example at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-speak-current-cell
+@deffn {Command} emacsvox-aural-feature-fragment-previews-speak-current-cell
+@findex emacsvox-aural-feature-fragment-previews-speak-current-cell
+
+@format
+Speak the current preview column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragment-previews-toggle-isolated
+@deffn {Command} emacsvox-aural-feature-fragment-previews-toggle-isolated
+@findex emacsvox-aural-feature-fragment-previews-toggle-isolated
+
+@format
+Toggle composed versus isolated resolution in this preview buffer.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-activate
+@deffn {Command} emacsvox-aural-feature-fragments-activate
+@findex emacsvox-aural-feature-fragments-activate
+
+@format
+Open the option at point, or toggle its collection.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-edit
+@deffn {Command} emacsvox-aural-feature-fragments-edit
+@findex emacsvox-aural-feature-fragments-edit
+
+@format
+Edit the personal feature fragment at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-help
+@deffn {Command} emacsvox-aural-feature-fragments-help
+@findex emacsvox-aural-feature-fragments-help
+
+@format
+Display and speak presentation-option manager help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-mode
+@deffn {Command} emacsvox-aural-feature-fragments-mode
+@findex emacsvox-aural-feature-fragments-mode
+
+@format
+Major mode for viewing and managing aural presentation options.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-feature-fragments-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+TAB		emacsvox-aural-feature-fragments-toggle-collection
+RET		emacsvox-aural-feature-fragments-activate
+?		emacsvox-aural-feature-fragments-help
+N		emacsvox-aural-create-feature-fragment
+P		emacsvox-aural-feature-fragments-preview
+a		emacsvox-aural-feature-fragments-toggle-view
+c		emacsvox-aural-copy-feature-fragment
+d		emacsvox-aural-delete-feature-fragment
+e		emacsvox-aural-feature-fragments-edit
+h		emacsvox-aural
+t		emacsvox-aural-feature-fragments-toggle
+v		emacsvox-aural-show-feature-fragment-validation
+M-<down>	emacsvox-aural-feature-fragments-move-down
+M-<up>		emacsvox-aural-feature-fragments-move-up
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-move-down
+@deffn {Command} emacsvox-aural-feature-fragments-move-down
+@findex emacsvox-aural-feature-fragments-move-down
+
+@format
+Move the enabled feature fragment at point later.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-move-up
+@deffn {Command} emacsvox-aural-feature-fragments-move-up
+@findex emacsvox-aural-feature-fragments-move-up
+
+@format
+Move the enabled feature fragment at point earlier.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-next
+@deffn {Command} emacsvox-aural-feature-fragments-next
+@findex emacsvox-aural-feature-fragments-next
+
+@format
+Move to and speak the next presentation-option row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-next-column
+@deffn {Command} emacsvox-aural-feature-fragments-next-column
+@findex emacsvox-aural-feature-fragments-next-column
+
+@format
+Move right and speak the next feature-fragment column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-preview
+@deffn {Command} emacsvox-aural-feature-fragments-preview  (&optional isolated fragment example-id)
+@findex emacsvox-aural-feature-fragments-preview
+
+@format
+Preview a presentation option without changing its enabled state.
+
+Use live facts from the remembered source buffer when they match FRAGMENT.
+Otherwise use a curated or automatically derived simulated example.  When
+several simulations are available interactively, open a persistent preview
+buffer instead of repeatedly prompting in the minibuffer.
+With prefix argument ISOLATED, play only the option rather than composing it
+with the active configuration.  EXAMPLE-ID selects a simulation directly.
+
+(fn &optional ISOLATED FRAGMENT EXAMPLE-ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-previous
+@deffn {Command} emacsvox-aural-feature-fragments-previous
+@findex emacsvox-aural-feature-fragments-previous
+
+@format
+Move to and speak the previous presentation-option row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-previous-column
+@deffn {Command} emacsvox-aural-feature-fragments-previous-column
+@findex emacsvox-aural-feature-fragments-previous-column
+
+@format
+Move left and speak the previous feature-fragment column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-refresh
+@deffn {Command} emacsvox-aural-feature-fragments-refresh  (&optional fragment)
+@findex emacsvox-aural-feature-fragments-refresh
+
+@format
+Refresh the feature-fragment manager, preserving FRAGMENT and column.
+
+(fn &optional FRAGMENT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-speak-current
+@deffn {Command} emacsvox-aural-feature-fragments-speak-current
+@findex emacsvox-aural-feature-fragments-speak-current
+
+@format
+Speak the presentation option or collection at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-speak-current-cell
+@deffn {Command} emacsvox-aural-feature-fragments-speak-current-cell
+@findex emacsvox-aural-feature-fragments-speak-current-cell
+
+@format
+Speak the current feature-fragment column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-toggle
+@deffn {Command} emacsvox-aural-feature-fragments-toggle  (&optional fragment)
+@findex emacsvox-aural-feature-fragments-toggle
+
+@format
+Enable or disable feature FRAGMENT without changing its stable order.
+
+(fn &optional FRAGMENT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-toggle-collection
+@deffn {Command} emacsvox-aural-feature-fragments-toggle-collection
+@findex emacsvox-aural-feature-fragments-toggle-collection
+
+@format
+Expand or collapse the presentation-option collection at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-feature-fragments-toggle-view
+@deffn {Command} emacsvox-aural-feature-fragments-toggle-view
+@findex emacsvox-aural-feature-fragments-toggle-view
+
+@format
+Switch between grouped discovery and active precedence views.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-list-feature-fragments
+@deffn {Command} emacsvox-aural-list-feature-fragments
+@findex emacsvox-aural-list-feature-fragments
+
+@format
+Open the accessible manager for aural presentation options.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-show-feature-fragment-validation
+@deffn {Command} emacsvox-aural-show-feature-fragment-validation  (&optional fragment)
+@findex emacsvox-aural-show-feature-fragment-validation
+
+@format
+Validate feature FRAGMENT and display actionable diagnostics.
+
+(fn &optional FRAGMENT)
+@end format
+@end deffn
+
+@node emacsvox-aural-history
+@section emacsvox-aural-history
+
+Bounded, data-only records of presentations actually submitted to a live
+transport.  History never retains source buffers and does not resolve rules,
+resources, voices, or backend transport.
+
+@subsection emacsvox-aural-history Options
+
+@defvar {User Option} emacsvox-aural-history-record-interface-presentations
+@verbatim
+Whether presentations originating in Aural interfaces enter history.
+
+Leave this nil during normal use so interface navigation, opening, closing,
+help, previews, and status speech do not displace source-buffer feedback.
+Enable it temporarily when diagnosing presentation inside the Aural UI.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-presentation-history-limit
+@verbatim
+Maximum number of transport-submitted presentations retained for inspection.
+
+History records contain frozen data and source names and positions, but never
+retain source buffers.  Set this to zero to disable history.
+@end verbatim
+
+Default Value:
+@verbatim
+
+20
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-home
+@section emacsvox-aural-home
+
+Status and routing home for aural presentation discovery, management,
+diagnosis, and contextual remapping.
+
+@subsection Emacsvox-Aural-Home Commands
+
+@subsubsection emacsvox-aural
+@deffn {Command} emacsvox-aural  (&optional source-buffer)
+@table @kbd
+@item C-e H
+@kindex C-e H
+@end table
+
+@findex emacsvox-aural
+
+@format
+Open the spoken aural home using SOURCE-BUFFER for contextual operations.
+
+(fn &optional SOURCE-BUFFER)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-activate
+@deffn {Command} emacsvox-aural-home-activate
+@findex emacsvox-aural-home-activate
+
+@format
+Perform the primary operation for the aural home row at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-explain
+@deffn {Command} emacsvox-aural-home-explain
+@findex emacsvox-aural-home-explain
+
+@format
+Explain presentation at point in the remembered source buffer.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-help
+@deffn {Command} emacsvox-aural-home-help
+@findex emacsvox-aural-home-help
+
+@format
+Display and speak aural home commands and discovery guidance.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-mode
+@deffn {Command} emacsvox-aural-home-mode
+@findex emacsvox-aural-home-mode
+
+@format
+Spoken home mode for aural presentation discovery and interaction.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-home-mode-hook’, as the final or penultimate step
+during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-home-activate
+?		emacsvox-aural-home-help
+D		emacsvox-aural-doctor
+H		emacsvox-aural-home-recent-feedback
+O		emacsvox-aural-home-overrides
+P		emacsvox-aural-home-profiles
+R		emacsvox-aural-home-remap-earcon
+V		emacsvox-aural-home-voice-palettes
+W		emacsvox-aural-home-voice-workbench
+r		emacsvox-aural-home-remap-voice
+x		emacsvox-aural-home-explain
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-next
+@deffn {Command} emacsvox-aural-home-next
+@findex emacsvox-aural-home-next
+
+@format
+Move to and speak the next aural home row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-next-column
+@deffn {Command} emacsvox-aural-home-next-column
+@findex emacsvox-aural-home-next-column
+
+@format
+Move right and speak the next aural home column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-overrides
+@deffn {Command} emacsvox-aural-home-overrides
+@findex emacsvox-aural-home-overrides
+
+@format
+Open unified presentation overrides from Aural Home.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-previous
+@deffn {Command} emacsvox-aural-home-previous
+@findex emacsvox-aural-home-previous
+
+@format
+Move to and speak the previous aural home row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-previous-column
+@deffn {Command} emacsvox-aural-home-previous-column
+@findex emacsvox-aural-home-previous-column
+
+@format
+Move left and speak the previous aural home column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-profiles
+@deffn {Command} emacsvox-aural-home-profiles
+@findex emacsvox-aural-home-profiles
+
+@format
+Open the complete presentation-profile manager.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-recent-feedback
+@deffn {Command} emacsvox-aural-home-recent-feedback
+@findex emacsvox-aural-home-recent-feedback
+
+@format
+Open bounded retained presentations from Aural Home.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-refresh
+@deffn {Command} emacsvox-aural-home-refresh  (&optional id)
+@findex emacsvox-aural-home-refresh
+
+@format
+Refresh aural home status, preserving row ID and the current column.
+
+(fn &optional ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-remap-earcon
+@deffn {Command} emacsvox-aural-home-remap-earcon
+@findex emacsvox-aural-home-remap-earcon
+
+@format
+Prepare an earcon override for the remembered source item.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-remap-voice
+@deffn {Command} emacsvox-aural-home-remap-voice
+@findex emacsvox-aural-home-remap-voice
+
+@format
+Prepare a voice override for the remembered source item.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-speak-current
+@deffn {Command} emacsvox-aural-home-speak-current
+@findex emacsvox-aural-home-speak-current
+
+@format
+Speak the complete aural home row at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-speak-current-cell
+@deffn {Command} emacsvox-aural-home-speak-current-cell
+@findex emacsvox-aural-home-speak-current-cell
+
+@format
+Speak the current aural home column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-voice-palettes
+@deffn {Command} emacsvox-aural-home-voice-palettes
+@findex emacsvox-aural-home-voice-palettes
+
+@format
+Open the accessible voice-palette manager.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-voice-workbench
+@deffn {Command} emacsvox-aural-home-voice-workbench
+@findex emacsvox-aural-home-voice-workbench
+
+@format
+Open cross-synth voice routing and style management.
+@end format
+@end deffn
+
+@node emacsvox-aural-inspection
+@section emacsvox-aural-inspection
+
+Source-buffer ownership and at-point context capture shared by aural
+managers, editors, explanations, and previews.  Each interface keeps its
+own ordinary source buffer; the most recent source remains only as a
+fallback for interfaces opened without an explicit association.
+
+@node emacsvox-aural-overrides
+@section emacsvox-aural-overrides
+
+Present personal, session, and source-buffer rules as one accessible view.
+This manager does not introduce another presentation layer: it explains
+and mutates the existing strongest three layers in the aural cascade.
+
+@subsection Emacsvox-Aural-Overrides Commands
+
+@subsubsection emacsvox-aural-list-overrides
+@deffn {Command} emacsvox-aural-list-overrides  (&optional source)
+@findex emacsvox-aural-list-overrides
+
+@format
+Open the unified Presentation Overrides manager for optional SOURCE.
+
+(fn &optional SOURCE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-clear-filter
+@deffn {Command} emacsvox-aural-overrides-clear-filter
+@findex emacsvox-aural-overrides-clear-filter
+
+@format
+Clear every override-manager filter.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-delete
+@deffn {Command} emacsvox-aural-overrides-delete
+@findex emacsvox-aural-overrides-delete
+
+@format
+Remove the selected override and restore weaker presentation.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-describe
+@deffn {Command} emacsvox-aural-overrides-describe
+@findex emacsvox-aural-overrides-describe
+
+@format
+Display and speak complete details for the override at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-edit
+@deffn {Command} emacsvox-aural-overrides-edit
+@findex emacsvox-aural-overrides-edit
+
+@format
+Open the selected override in its scoped advanced editor.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-filter
+@deffn {Command} emacsvox-aural-overrides-filter
+@findex emacsvox-aural-overrides-filter
+
+@format
+Filter overrides by scope, module, and semantic role.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-help
+@deffn {Command} emacsvox-aural-overrides-help
+@findex emacsvox-aural-overrides-help
+
+@format
+Display and speak Presentation Overrides help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-mode
+@deffn {Command} emacsvox-aural-overrides-mode
+@findex emacsvox-aural-overrides-mode
+
+@format
+Spoken manager for personal, session, and buffer presentation overrides.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-overrides-mode-hook’, as the final or penultimate
+step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-overrides-edit
+?		emacsvox-aural-overrides-help
+P		emacsvox-aural-overrides-preview
+a		emacsvox-aural-overrides-clear-filter
+d		emacsvox-aural-overrides-delete
+e		emacsvox-aural-overrides-edit
+f		emacsvox-aural-overrides-filter
+h		emacsvox-aural
+t		emacsvox-aural-overrides-toggle
+x		emacsvox-aural-overrides-describe
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-next
+@deffn {Command} emacsvox-aural-overrides-next
+@findex emacsvox-aural-overrides-next
+
+@format
+Move to and speak the next presentation override.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-next-column
+@deffn {Command} emacsvox-aural-overrides-next-column
+@findex emacsvox-aural-overrides-next-column
+
+@format
+Move right and speak the next override column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-preview
+@deffn {Command} emacsvox-aural-overrides-preview
+@findex emacsvox-aural-overrides-preview
+
+@format
+Preview the selected override in the complete current cascade.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-previous
+@deffn {Command} emacsvox-aural-overrides-previous
+@findex emacsvox-aural-overrides-previous
+
+@format
+Move to and speak the previous presentation override.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-previous-column
+@deffn {Command} emacsvox-aural-overrides-previous-column
+@findex emacsvox-aural-overrides-previous-column
+
+@format
+Move left and speak the previous override column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-refresh
+@deffn {Command} emacsvox-aural-overrides-refresh  (&optional key)
+@findex emacsvox-aural-overrides-refresh
+
+@format
+Refresh overrides, preserving optional row KEY and current column.
+
+(fn &optional KEY)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-speak-current
+@deffn {Command} emacsvox-aural-overrides-speak-current
+@findex emacsvox-aural-overrides-speak-current
+
+@format
+Speak the complete presentation override at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-speak-current-cell
+@deffn {Command} emacsvox-aural-overrides-speak-current-cell
+@findex emacsvox-aural-overrides-speak-current-cell
+
+@format
+Speak the current override column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-overrides-toggle
+@deffn {Command} emacsvox-aural-overrides-toggle
+@findex emacsvox-aural-overrides-toggle
+
+@format
+Enable or disable the selected override immediately.
+@end format
+@end deffn
+
+@node emacsvox-aural-planner
+@section emacsvox-aural-planner
+
+Infer presentation objects and formatting runs from captured source text,
+resolve semantic policy once at the source boundary, and attach frozen
+concrete plans.  This module performs no queueing or backend process work.
+
+@node emacsvox-aural-preview
+@section emacsvox-aural-preview
+
+Coordinate explicit previews without owning their feature-specific content.
+Speech previews stop earlier output, queue one concrete plan or caller-built
+sequence, and dispatch once.  Cue-only previews stop speech but bypass the
+speech queue, presentation history, and training hooks.
+
+@node emacsvox-aural-profile-service
+@section emacsvox-aural-profile-service
+
+Stable non-UI operations over presentation-profile state.  Profile
+managers and diagnostics depend on this service rather than each other's
+private functions.
+
+@node emacsvox-aural-profiles
+@section emacsvox-aural-profiles
+
+Accessible management for named configurations that select presentation
+options while capturing sound, voice, and spatial choices.
+
+@subsection Emacsvox-Aural-Profiles Commands
+
+@subsubsection emacsvox-aural-list-profiles
+@deffn {Command} emacsvox-aural-list-profiles  (&optional profile)
+@findex emacsvox-aural-list-profiles
+
+@format
+Open the spoken manager for saved presentation PROFILE configurations.
+
+(fn &optional PROFILE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-activate
+@deffn {Command} emacsvox-aural-profiles-activate
+@findex emacsvox-aural-profiles-activate
+
+@format
+Apply the saved presentation profile at point.
+
+Confirm first when the currently selected profile has diverged, because
+applying a saved profile replaces the differing live configuration.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-copy
+@deffn {Command} emacsvox-aural-profiles-copy
+@findex emacsvox-aural-profiles-copy
+
+@format
+Copy the profile at point under a new identifier.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-create
+@deffn {Command} emacsvox-aural-profiles-create
+@findex emacsvox-aural-profiles-create
+
+@format
+Save the complete current presentation configuration as a new profile.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-delete
+@deffn {Command} emacsvox-aural-profiles-delete
+@findex emacsvox-aural-profiles-delete
+
+@format
+Delete the personal presentation profile at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-describe
+@deffn {Command} emacsvox-aural-profiles-describe  (&optional id)
+@findex emacsvox-aural-profiles-describe
+
+@format
+Display and speak complete details for profile ID.
+
+(fn &optional ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-help
+@deffn {Command} emacsvox-aural-profiles-help
+@findex emacsvox-aural-profiles-help
+
+@format
+Display and speak presentation-profile manager help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-mode
+@deffn {Command} emacsvox-aural-profiles-mode
+@findex emacsvox-aural-profiles-mode
+
+@format
+Spoken manager for complete aural presentation profiles.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-profiles-mode-hook’, as the final or penultimate
+step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-profiles-activate
+?		emacsvox-aural-profiles-help
+N		emacsvox-aural-profiles-create
+a		emacsvox-aural-profiles-activate
+c		emacsvox-aural-profiles-copy
+d		emacsvox-aural-profiles-delete
+h		emacsvox-aural
+r		emacsvox-aural-profiles-rename
+v		emacsvox-aural-profiles-describe
+w		emacsvox-aural-profiles-update-from-current
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-next
+@deffn {Command} emacsvox-aural-profiles-next
+@findex emacsvox-aural-profiles-next
+
+@format
+Move to and speak the next presentation profile.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-next-column
+@deffn {Command} emacsvox-aural-profiles-next-column
+@findex emacsvox-aural-profiles-next-column
+
+@format
+Move right and speak the next profile column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-previous
+@deffn {Command} emacsvox-aural-profiles-previous
+@findex emacsvox-aural-profiles-previous
+
+@format
+Move to and speak the previous presentation profile.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-previous-column
+@deffn {Command} emacsvox-aural-profiles-previous-column
+@findex emacsvox-aural-profiles-previous-column
+
+@format
+Move left and speak the previous profile column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-refresh
+@deffn {Command} emacsvox-aural-profiles-refresh  (&optional id)
+@findex emacsvox-aural-profiles-refresh
+
+@format
+Refresh profiles, preserving ID and the current column.
+
+(fn &optional ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-rename
+@deffn {Command} emacsvox-aural-profiles-rename
+@findex emacsvox-aural-profiles-rename
+
+@format
+Rename the presentation profile at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-speak-current
+@deffn {Command} emacsvox-aural-profiles-speak-current
+@findex emacsvox-aural-profiles-speak-current
+
+@format
+Speak the complete presentation profile at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-speak-current-cell
+@deffn {Command} emacsvox-aural-profiles-speak-current-cell
+@findex emacsvox-aural-profiles-speak-current-cell
+
+@format
+Speak the current profile column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-profiles-update-from-current
+@deffn {Command} emacsvox-aural-profiles-update-from-current
+@findex emacsvox-aural-profiles-update-from-current
+
+@format
+Write the complete current configuration into the profile at point.
+@end format
+@end deffn
+
+@node emacsvox-aural-provider-markdown
+@section emacsvox-aural-provider-markdown
+
+Register Markdown structure and its compatibility presentation without
+loading markdown-mode.  Live fact capture remains in emacsvox-markdown.el.
+
+@node emacsvox-aural-provider-notmuch
+@section emacsvox-aural-provider-notmuch
+
+Register Notmuch-specific preview metadata without loading Notmuch.
+Shared mail semantics and presentation options come from the workflow
+provider.  Live fact capture remains in emacsvox-notmuch.el.
+
+@node emacsvox-aural-provider-org
+@section emacsvox-aural-provider-org
+
+Register the lightweight Org compatibility fragment, curated preview data,
+and optional Presentation Options before personal aural data is loaded.
+This file deliberately does not load Org itself; live semantic fact capture
+remains in emacsvox-org.el.
+
+@node emacsvox-aural-provider-org-srs
+@section emacsvox-aural-provider-org-srs
+
+Register Org-srs review semantics without loading Org-srs.  Live review
+feedback is implemented by emacsvox-org-srs.el after Org-srs is loaded.
+
+@node emacsvox-aural-provider-workflows
+@section emacsvox-aural-provider-workflows
+
+Register the lightweight semantic vocabulary shared by the Notmuch, Gnus,
+Dired, Magit, Shell/Comint, Agent Shell, Python, Vertico, BS, Corfu,
+Tabulated List, and Solitaire integrations.  This file has no dependency on
+those packages, so Presentation Options can validate at startup before any
+integration is loaded.
+
+@node emacsvox-aural-providers
+@section emacsvox-aural-providers
+
+One explicit runtime selection boundary for sound packs and voice
+palettes.  This preserves precedence while exposing which configuration
+layer supplied the effective provider.
+
+@node emacsvox-aural-recent-feedback
+@section emacsvox-aural-recent-feedback
+
+Spoken browsing, replay, inspection, and remapping of bounded retained aural
+presentations.
+
+@subsection Emacsvox-Aural-Recent-Feedback Commands
+
+@subsubsection emacsvox-aural-list-recent-feedback
+@deffn {Command} emacsvox-aural-list-recent-feedback  (&optional source-buffer)
+@findex emacsvox-aural-list-recent-feedback
+
+@format
+Open the spoken browser for bounded retained aural feedback.
+
+SOURCE-BUFFER supplies the ordinary source to retain for navigation and
+possible buffer-local remapping.  History itself contains only frozen data,
+buffer names, and positions.
+
+(fn &optional SOURCE-BUFFER)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-recent-feedback-audition-cues
+@deffn {Command} emacsvox-aural-recent-feedback-audition-cues
+@findex emacsvox-aural-recent-feedback-audition-cues
+
+@format
+Audition only the exact earcons in the feedback record at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-recent-feedback-explain
+@deffn {Command} emacsvox-aural-recent-feedback-explain
+@findex emacsvox-aural-recent-feedback-explain
+
+@format
+Explain the retained frozen feedback record at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-recent-feedback-help
+@deffn {Command} emacsvox-aural-recent-feedback-help
+@findex emacsvox-aural-recent-feedback-help
+
+@format
+Display and speak recent aural feedback help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-recent-feedback-mode
+@deffn {Command} emacsvox-aural-recent-feedback-mode
+@findex emacsvox-aural-recent-feedback-mode
+
+@format
+Spoken browser for bounded recently queued aural presentations.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-recent-feedback-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-recent-feedback-explain
+?		emacsvox-aural-recent-feedback-help
+L		emacsvox-aural-set-history-limit
+P		emacsvox-aural-recent-feedback-replay
+R		emacsvox-aural-recent-feedback-remap-earcon
+c		emacsvox-aural-recent-feedback-audition-cues
+e		emacsvox-aural-recent-feedback-explain
+h		emacsvox-aural
+i		emacsvox-aural-toggle-interface-history-recording
+r		emacsvox-aural-recent-feedback-remap-voice
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-recent-feedback-refresh
+@deffn {Command} emacsvox-aural-recent-feedback-refresh  (&optional id)
+@findex emacsvox-aural-recent-feedback-refresh
+
+@format
+Refresh recent feedback, preserving optional record ID.
+
+(fn &optional ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-recent-feedback-remap-earcon
+@deffn {Command} emacsvox-aural-recent-feedback-remap-earcon
+@findex emacsvox-aural-recent-feedback-remap-earcon
+
+@format
+Prepare an earcon override from the frozen feedback record at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-recent-feedback-remap-voice
+@deffn {Command} emacsvox-aural-recent-feedback-remap-voice
+@findex emacsvox-aural-recent-feedback-remap-voice
+
+@format
+Prepare a voice override from the frozen feedback record at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-recent-feedback-replay
+@deffn {Command} emacsvox-aural-recent-feedback-replay
+@findex emacsvox-aural-recent-feedback-replay
+
+@format
+Replay the complete frozen presentation at point when it was retained.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-recent-feedback-speak-current
+@deffn {Command} emacsvox-aural-recent-feedback-speak-current
+@findex emacsvox-aural-recent-feedback-speak-current
+
+@format
+Speak all useful fields for the feedback record at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-set-history-limit
+@deffn {Command} emacsvox-aural-set-history-limit  (limit)
+@findex emacsvox-aural-set-history-limit
+
+@format
+Set the retained presentation history LIMIT for this Emacs session.
+
+LIMIT may be any natural number.  Zero disables history.  Lowering the limit
+immediately discards the oldest excess records; increasing it affects future
+recording.  Customize ‘emacsvox-aural-presentation-history-limit’ to persist
+the value across sessions.
+
+(fn LIMIT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-toggle-interface-history-recording
+@deffn {Command} emacsvox-aural-toggle-interface-history-recording
+@findex emacsvox-aural-toggle-interface-history-recording
+
+@format
+Toggle retention of presentations originating inside Aural interfaces.
+@end format
+@end deffn
+
+@node emacsvox-aural-resources
+@section emacsvox-aural-resources
+
+Register semantic cue and tone names, sound resource packs, module resource
+overlays, requirement profiles, and device-independent voice palettes.
+Resource resolution remains independent of local-player and speech-server
+protocols.
+
+@subsection Emacsvox-Aural-Resources Commands
+
+@subsubsection emacsvox-aural-refresh-discovered-resource-packs
+@deffn {Command} emacsvox-aural-refresh-discovered-resource-packs
+@findex emacsvox-aural-refresh-discovered-resource-packs
+
+@format
+Rescan configured discovery roots and return discovered pack identifiers.
+@end format
+@end deffn
+
+@subsection emacsvox-aural-resources Options
+
+@defvar {User Option} emacsvox-aural-disabled-resource-overlays
+@verbatim
+Module resource overlays that should use their generic cue fallbacks.
+
+Disabling an overlay suppresses both its packaged defaults and matching
+themed overrides below an active sound pack.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-personal-sound-packs-directory
+@verbatim
+Directory containing personal sound packs.
+
+Each immediate child is a candidate pack.  Set this to nil to disable the
+standard personal discovery root.  The directory need not exist.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"~/.emacsvox/sounds/packs/"
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-routing-profiles
+@section emacsvox-aural-routing-profiles
+
+Store physical-engine routing separately from portable ACSS voice palettes.
+Property selectors can travel between machines, exact native identifiers
+require explicit local scope, and session selectors are never persisted.
+
+@subsection emacsvox-aural-routing-profiles Options
+
+@defvar {User Option} emacsvox-aural-routing-profiles-file
+@verbatim
+Data-only file containing machine-local voice routing profiles.
+
+This file is deliberately separate from portable voice palettes.  It may
+contain explicitly local physical voice IDs and should not be synchronized
+unless the user has reviewed those bindings.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"~/.emacsvox/aural-routing-profiles.el"
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-rules
+@section emacsvox-aural-rules
+
+Compile safe versioned presentation rule sets into validated internal
+structures, match them against semantic facts and source context, and
+produce an ordered backend-independent render plan.  The retained internal
+scheme records are not user-selectable configurations.  This module performs
+no audio or speech I/O.
+
+@node emacsvox-aural-schemes
+@section emacsvox-aural-schemes
+
+Register and inherit internal declarative rule sets, combine module,
+Presentation Option, personal, session, and buffer layers, preserve legacy
+personality hints, and persist user data without evaluating it.  Public
+configuration no longer exposes a selectable scheme layer; historical
+scheme names remain in the data model and compatibility filename.
+
+@subsection emacsvox-aural-schemes Options
+
+@defvar {User Option} emacsvox-aural-schemes-file
+@verbatim
+Data-only file containing personal aural presentation settings.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"~/.emacsvox/aural-schemes.el"
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-semantics
+@section emacsvox-aural-semantics
+
+Semantic selection, representative facts, reference discovery, and the
+accessible browser for the registered aural vocabulary.
+
+@subsection Emacsvox-Aural-Semantics Commands
+
+@subsubsection emacsvox-aural-describe-semantic
+@deffn {Command} emacsvox-aural-describe-semantic  (&optional semantic)
+@findex emacsvox-aural-describe-semantic
+
+@format
+Describe registered SEMANTIC and presentation data that uses it.
+
+(fn &optional SEMANTIC)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-list-semantics
+@deffn {Command} emacsvox-aural-list-semantics
+@findex emacsvox-aural-list-semantics
+
+@format
+Open the accessible list of registered semantic vocabulary.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-semantics-help
+@deffn {Command} emacsvox-aural-semantics-help
+@findex emacsvox-aural-semantics-help
+
+@format
+Display and speak semantic-list help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-semantics-mode
+@deffn {Command} emacsvox-aural-semantics-mode
+@findex emacsvox-aural-semantics-mode
+
+@format
+Major mode for browsing registered aural semantics.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-semantics-mode-hook’, as the final or penultimate
+step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-describe-aural-semantic
+?		emacsvox-aural-semantics-help
+h		emacsvox-aural
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-semantics-next
+@deffn {Command} emacsvox-aural-semantics-next
+@findex emacsvox-aural-semantics-next
+
+@format
+Move to and speak the next semantic.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-semantics-next-column
+@deffn {Command} emacsvox-aural-semantics-next-column
+@findex emacsvox-aural-semantics-next-column
+
+@format
+Move right and speak the next semantic column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-semantics-previous
+@deffn {Command} emacsvox-aural-semantics-previous
+@findex emacsvox-aural-semantics-previous
+
+@format
+Move to and speak the previous semantic.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-semantics-previous-column
+@deffn {Command} emacsvox-aural-semantics-previous-column
+@findex emacsvox-aural-semantics-previous-column
+
+@format
+Move left and speak the previous semantic column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-semantics-refresh
+@deffn {Command} emacsvox-aural-semantics-refresh  (&optional semantic)
+@findex emacsvox-aural-semantics-refresh
+
+@format
+Refresh the semantic list, preserving SEMANTIC and the current column.
+
+(fn &optional SEMANTIC)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-semantics-speak-current
+@deffn {Command} emacsvox-aural-semantics-speak-current
+@findex emacsvox-aural-semantics-speak-current
+
+@format
+Speak a concise description of the semantic at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-semantics-speak-current-cell
+@deffn {Command} emacsvox-aural-semantics-speak-current-cell
+@findex emacsvox-aural-semantics-speak-current-cell
+
+@format
+Speak the current semantic column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-describe-aural-semantic
+@deffn {Command} emacsvox-describe-aural-semantic  (&optional semantic)
+@findex emacsvox-describe-aural-semantic
+
+@format
+Describe registered SEMANTIC and presentation data that uses it.
+
+(fn &optional SEMANTIC)
+@end format
+@end deffn
+
+@subsubsection emacsvox-list-aural-semantics
+@deffn {Command} emacsvox-list-aural-semantics
+@findex emacsvox-list-aural-semantics
+
+@format
+Open the accessible list of registered semantic vocabulary.
+@end format
+@end deffn
+
+@node emacsvox-aural-sound-packs
+@section emacsvox-aural-sound-packs
+
+Accessible sound-pack and cue browsers.  Users can inspect native,
+inherited, fallback, and missing assets; audition concrete cues; activate
+packs; validate coverage; open directories; and edit safe discovered-pack
+manifests without editing raw Lisp.
+
+@subsection Emacsvox-Aural-Sound-Packs Commands
+
+@subsubsection emacsvox-aural-list-sound-pack-cues
+@deffn {Command} emacsvox-aural-list-sound-pack-cues  (&optional pack)
+@findex emacsvox-aural-list-sound-pack-cues
+
+@format
+Open the spoken cue browser for PACK or the sound pack at point.
+
+(fn &optional PACK)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-list-sound-packs
+@deffn {Command} emacsvox-aural-list-sound-packs  (&optional pack)
+@findex emacsvox-aural-list-sound-packs
+
+@format
+Open the spoken sound-pack manager, selecting PACK when supplied.
+
+(fn &optional PACK)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-audition
+@deffn {Command} emacsvox-aural-sound-pack-cues-audition
+@findex emacsvox-aural-sound-pack-cues-audition
+
+@format
+Audition the concrete cue at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-help
+@deffn {Command} emacsvox-aural-sound-pack-cues-help
+@findex emacsvox-aural-sound-pack-cues-help
+
+@format
+Display and speak sound-pack cue-browser help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-mode
+@deffn {Command} emacsvox-aural-sound-pack-cues-mode
+@findex emacsvox-aural-sound-pack-cues-mode
+
+@format
+Spoken browser for sound-pack cue intent and concrete provenance.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-sound-pack-cues-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-sound-pack-cues-audition
+?		emacsvox-aural-sound-pack-cues-help
+P		emacsvox-aural-sound-pack-cues-audition
+h		emacsvox-aural
+o		emacsvox-aural-sound-packs-open-directory
+s		emacsvox-aural-list-sound-packs
+v		emacsvox-aural-sound-pack-cues-show-validation
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-next
+@deffn {Command} emacsvox-aural-sound-pack-cues-next
+@findex emacsvox-aural-sound-pack-cues-next
+
+@format
+Move to and speak the next cue.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-next-column
+@deffn {Command} emacsvox-aural-sound-pack-cues-next-column
+@findex emacsvox-aural-sound-pack-cues-next-column
+
+@format
+Move right and speak the next cue column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-previous
+@deffn {Command} emacsvox-aural-sound-pack-cues-previous
+@findex emacsvox-aural-sound-pack-cues-previous
+
+@format
+Move to and speak the previous cue.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-previous-column
+@deffn {Command} emacsvox-aural-sound-pack-cues-previous-column
+@findex emacsvox-aural-sound-pack-cues-previous-column
+
+@format
+Move left and speak the previous cue column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-refresh
+@deffn {Command} emacsvox-aural-sound-pack-cues-refresh  (&optional cue)
+@findex emacsvox-aural-sound-pack-cues-refresh
+
+@format
+Refresh the cue browser, preserving CUE and the current column.
+
+(fn &optional CUE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-show-validation
+@deffn {Command} emacsvox-aural-sound-pack-cues-show-validation
+@findex emacsvox-aural-sound-pack-cues-show-validation
+
+@format
+Display and speak validation for the cue browser’s sound pack.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-speak-current
+@deffn {Command} emacsvox-aural-sound-pack-cues-speak-current
+@findex emacsvox-aural-sound-pack-cues-speak-current
+
+@format
+Speak the cue, provenance, and intent at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-pack-cues-speak-current-cell
+@deffn {Command} emacsvox-aural-sound-pack-cues-speak-current-cell
+@findex emacsvox-aural-sound-pack-cues-speak-current-cell
+
+@format
+Speak the current cue-browser column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-activate
+@deffn {Command} emacsvox-aural-sound-packs-activate
+@findex emacsvox-aural-sound-packs-activate
+
+@format
+Activate the sound pack at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-audition
+@deffn {Command} emacsvox-aural-sound-packs-audition
+@findex emacsvox-aural-sound-packs-audition
+
+@format
+Audition a representative cue from the sound pack at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-edit-manifest
+@deffn {Command} emacsvox-aural-sound-packs-edit-manifest
+@findex emacsvox-aural-sound-packs-edit-manifest
+
+@format
+Guidedly edit safe manifest metadata for the discovered pack at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-help
+@deffn {Command} emacsvox-aural-sound-packs-help
+@findex emacsvox-aural-sound-packs-help
+
+@format
+Display and speak sound-pack manager help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-mode
+@deffn {Command} emacsvox-aural-sound-packs-mode
+@findex emacsvox-aural-sound-packs-mode
+
+@format
+Spoken manager for registered and dynamically discovered sound packs.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-sound-packs-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-list-sound-pack-cues
+?		emacsvox-aural-sound-packs-help
+P		emacsvox-aural-sound-packs-audition
+a		emacsvox-aural-sound-packs-activate
+e		emacsvox-aural-sound-packs-edit-manifest
+h		emacsvox-aural
+o		emacsvox-aural-sound-packs-open-directory
+v		emacsvox-aural-sound-packs-show-validation
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-next
+@deffn {Command} emacsvox-aural-sound-packs-next
+@findex emacsvox-aural-sound-packs-next
+
+@format
+Move to and speak the next sound pack.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-next-column
+@deffn {Command} emacsvox-aural-sound-packs-next-column
+@findex emacsvox-aural-sound-packs-next-column
+
+@format
+Move right and speak the next sound-pack column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-open-directory
+@deffn {Command} emacsvox-aural-sound-packs-open-directory
+@findex emacsvox-aural-sound-packs-open-directory
+
+@format
+Open the current sound pack’s directory in Dired.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-previous
+@deffn {Command} emacsvox-aural-sound-packs-previous
+@findex emacsvox-aural-sound-packs-previous
+
+@format
+Move to and speak the previous sound pack.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-previous-column
+@deffn {Command} emacsvox-aural-sound-packs-previous-column
+@findex emacsvox-aural-sound-packs-previous-column
+
+@format
+Move left and speak the previous sound-pack column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-refresh
+@deffn {Command} emacsvox-aural-sound-packs-refresh  (&optional pack)
+@findex emacsvox-aural-sound-packs-refresh
+
+@format
+Refresh the sound-pack manager, preserving PACK and the current column.
+
+(fn &optional PACK)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-show-validation
+@deffn {Command} emacsvox-aural-sound-packs-show-validation  (&optional pack-id)
+@findex emacsvox-aural-sound-packs-show-validation
+
+@format
+Display and speak validation for PACK-ID or the pack at point.
+
+(fn &optional PACK-ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-speak-current
+@deffn {Command} emacsvox-aural-sound-packs-speak-current
+@findex emacsvox-aural-sound-packs-speak-current
+
+@format
+Speak a natural summary of the sound pack at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-sound-packs-speak-current-cell
+@deffn {Command} emacsvox-aural-sound-packs-speak-current-cell
+@findex emacsvox-aural-sound-packs-speak-current-cell
+
+@format
+Speak the current sound-pack column title and value.
+@end format
+@end deffn
+
+@node emacsvox-aural-source
+@section emacsvox-aural-source
+
+Immutable submission context, semantic text properties, source formatting
+records, and data-only face snapshots captured before speech text enters a
+scratch buffer.  This module does not compile or queue presentations.
+
+@node emacsvox-aural-spatial
+@section emacsvox-aural-spatial
+
+Define the portable spatial contract and user policy independently of
+speech and cue transports.  Declarative presentation rules request normalized
+stereo balance or listener-relative azimuth; transport compilation reduces
+that request to the capability of the selected backend.
+
+@subsection emacsvox-aural-spatial Options
+
+@defvar {User Option} emacsvox-aural-spatial-cue-enabled
+@verbatim
+Non-nil permits spatial presentation of auditory cues.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-spatial-enabled
+@verbatim
+Non-nil enables spatial presentation globally.
+
+Disabling this option preserves every speech and cue action but centers it.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-spatial-maximum-separation
+@verbatim
+Maximum absolute stereo balance after user remapping.
+
+The value is between 0.0 for centered output and 1.0 for full separation.
+@end verbatim
+
+Default Value:
+@verbatim
+
+1.0
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-spatial-output
+@verbatim
+Declared spatial capability of the final audio output.
+
+‘auto’ uses each transport adapter’s reported capability.  ‘mono’ forces
+portable centered compilation even when an adapter can produce stereo.
+@end verbatim
+
+Default Value:
+@verbatim
+
+auto
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-spatial-remapping
+@verbatim
+User remapping applied to normalized balance requests.
+
+‘normal’ preserves direction, ‘reverse’ swaps left and right,
+‘collapse-left’ centers positions requested on the left, ‘collapse-right’
+centers positions requested on the right, and ‘center’ centers everything.
+A function value receives and returns a balance in the range -1.0 to 1.0.
+@end verbatim
+
+Default Value:
+@verbatim
+
+normal
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-spatial-speech-enabled
+@verbatim
+Non-nil permits spatial presentation of speech.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-submission
+@section emacsvox-aural-submission
+
+Combine semantic content and explicitly ordered compatibility actions at
+one frozen source boundary.  Legacy entry points remain independent
+adapters until their callers migrate to this service.
+
+@subsection emacsvox-aural-submission Options
+
+@defvar {User Option} emacsvox-aural-diagnostic-log-file
+@verbatim
+File receiving opt-in aural submission diagnostics.
+
+When non-nil, Emacsvox appends one Lisp plist per line with command timing,
+submission timing, and complete submitted text.  The log can therefore contain
+sensitive material and is disabled by default.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-tools
+@section emacsvox-aural-tools
+
+Contextual voice and earcon remapping plus override reset commands.
+
+@subsection Emacsvox-Aural-Tools Commands
+
+@subsubsection emacsvox-aural-preview-rule
+@deffn {Command} emacsvox-aural-preview-rule  (arg1 &rest rest)
+@findex emacsvox-aural-preview-rule
+
+@format
+Resolve, compile, and play RULE-ID against FACTS and CONTEXT.
+
+(fn RULE-ID &optional FACTS (CONTEXT nil CONTEXT-SUPPLIED-P))
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-remap-earcon-at-point
+@deffn {Command} emacsvox-aural-remap-earcon-at-point  (&optional record)
+@findex emacsvox-aural-remap-earcon-at-point
+
+@format
+Prepare a scoped override for one earcon in RECORD or at point.
+
+Audition the exact selected earcon before asking whether to replace, suppress,
+or restore it.  Replacement also auditions the newly resolved cue.  The
+generated change opens unsaved in the advanced editor for review.
+
+(fn &optional RECORD)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-remap-voice-at-point
+@deffn {Command} emacsvox-aural-remap-voice-at-point  (&optional record)
+@findex emacsvox-aural-remap-voice-at-point
+
+@format
+Prepare a scoped named-voice override for RECORD or presentation at point.
+
+When RECORD is non-nil, use that frozen presentation from recent feedback.
+Otherwise the latest presentation heard in the source buffer supplies exact
+facts and context.  The generated rule ignores transient events and
+occasions, but retains object kind, state, and provider identity.  It opens
+unsaved in the advanced rule editor so the selector can be reviewed or
+  refined before ‘s’ saves it.
+
+(fn &optional RECORD)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-reset-overrides
+@deffn {Command} emacsvox-aural-reset-overrides  (scope)
+@findex emacsvox-aural-reset-overrides
+
+@format
+Remove aural override rules from SCOPE.
+
+SCOPE is ‘personal’, ‘session’, or ‘buffer’.
+
+(fn SCOPE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-preview-aural-rule
+@deffn {Command} emacsvox-preview-aural-rule  (arg1 &rest rest)
+@findex emacsvox-preview-aural-rule
+
+@format
+Resolve, compile, and play RULE-ID against FACTS and CONTEXT.
+
+(fn RULE-ID &optional FACTS (CONTEXT nil CONTEXT-SUPPLIED-P))
+@end format
+@end deffn
+
+@subsubsection emacsvox-reset-aural-overrides
+@deffn {Command} emacsvox-reset-aural-overrides  (scope)
+@findex emacsvox-reset-aural-overrides
+
+@format
+Remove aural override rules from SCOPE.
+
+SCOPE is ‘personal’, ‘session’, or ‘buffer’.
+
+(fn SCOPE)
+@end format
+@end deffn
+
+@node emacsvox-aural-transport
+@section emacsvox-aural-transport
+
+Queue backend-ready ordered actions through speech and sound transports,
+and expose the immediate and compatibility presentation entry points.
+
+@subsection emacsvox-aural-transport Options
+
+@defvar {User Option} emacsvox-aural-replacement-idle-delay
+@verbatim
+Seconds of input idle before sending a replaceable presentation.
+
+Each newer transaction with the same speaker and replacement key restarts this
+delay.  Ordered and urgent transactions are never delayed.
+@end verbatim
+
+Default Value:
+@verbatim
+
+0.025
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-ui
+@section emacsvox-aural-ui
+
+Common interface identity, spoken tabulated-list navigation, refresh
+preservation, and dismissal feedback for the aural managers and editors.
+
+@subsection Emacsvox-Aural-Ui Commands
+
+@subsubsection emacsvox-aural-interface-mode
+@deffn {Command} emacsvox-aural-interface-mode
+@findex emacsvox-aural-interface-mode
+
+@format
+Base mode for non-tabulated aural interfaces.
+
+In addition to any hooks its parent mode ‘special-mode’ might have
+run, this mode runs the hook ‘emacsvox-aural-interface-mode-hook’, as
+the final or penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+SPC		scroll-up-command
+-		negative-argument
+0 .. 9		digit-argument
+<		beginning-of-buffer
+>		end-of-buffer
+?		describe-mode
+g		revert-buffer
+h		describe-mode
+q		emacsvox-aural-quit
+DEL		scroll-down-command
+S-SPC		scroll-down-command
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-quit
+@deffn {Command} emacsvox-aural-quit  (&optional kill)
+@findex emacsvox-aural-quit
+
+@format
+Dismiss the current aural interface and report its destination.
+
+When KILL is non-nil, kill the interface buffer as ‘quit-window’ would.
+
+(fn &optional KILL)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-tabulated-mode
+@deffn {Command} emacsvox-aural-tabulated-mode
+@findex emacsvox-aural-tabulated-mode
+
+@format
+Base mode for spoken tabulated aural interfaces.
+
+In addition to any hooks its parent mode ‘tabulated-list-mode’ might
+have run, this mode runs the hook
+‘emacsvox-aural-tabulated-mode-hook’, as the final or penultimate step
+during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+TAB		forward-button
+C-n		emacsvox-aural-ui-next-row
+C-p		emacsvox-aural-ui-previous-row
+SPC		emacsvox-aural-ui-speak-current-row
+-		negative-argument
+.		emacsvox-aural-ui-speak-current-cell
+0 .. 9		digit-argument
+<		beginning-of-buffer
+>		end-of-buffer
+?		describe-mode
+S		tabulated-list-sort
+g		emacsvox-aural-ui-refresh
+h		describe-mode
+n		emacsvox-aural-ui-next-row
+p		emacsvox-aural-ui-previous-row
+q		emacsvox-aural-quit
+@{		tabulated-list-narrow-current-column
+@}		tabulated-list-widen-current-column
+DEL		scroll-down-command
+S-SPC		scroll-down-command
+M-<left>	tabulated-list-previous-column
+M-<right>	tabulated-list-next-column
+<backtab>	backward-button
+<down>		emacsvox-aural-ui-next-row
+<follow-link>	mouse-face
+<left>		emacsvox-aural-ui-previous-column
+<mouse-2>	mouse-select-window
+<right>		emacsvox-aural-ui-next-column
+<up>		emacsvox-aural-ui-previous-row
+
+C-M-i		backward-button
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-help-quit
+@deffn {Command} emacsvox-aural-ui-help-quit
+@findex emacsvox-aural-ui-help-quit
+
+@format
+Quit Help and restore its originating aural interface and position.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-help-return-mode
+@deffn {Command} emacsvox-aural-ui-help-return-mode  (&optional arg)
+@findex emacsvox-aural-ui-help-return-mode
+
+@format
+Return from Help to the exact aural interface that requested it.
+
+This is a minor mode.  If called interactively, toggle the
+‘Emacsvox-Aural-Ui-Help-Return mode’ mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
+
+If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable ‘emacsvox-aural-ui-help-return-mode’.
+
+The mode’s hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-next-column
+@deffn {Command} emacsvox-aural-ui-next-column
+@findex emacsvox-aural-ui-next-column
+
+@format
+Move right and speak the next column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-next-row
+@deffn {Command} emacsvox-aural-ui-next-row
+@findex emacsvox-aural-ui-next-row
+
+@format
+Move to and speak the next row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-previous-column
+@deffn {Command} emacsvox-aural-ui-previous-column
+@findex emacsvox-aural-ui-previous-column
+
+@format
+Move left and speak the previous column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-previous-row
+@deffn {Command} emacsvox-aural-ui-previous-row
+@findex emacsvox-aural-ui-previous-row
+
+@format
+Move to and speak the previous row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-refresh
+@deffn {Command} emacsvox-aural-ui-refresh
+@findex emacsvox-aural-ui-refresh
+
+@format
+Refresh the current interface using its configured callback.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-speak-current-cell
+@deffn {Command} emacsvox-aural-ui-speak-current-cell  (&optional value-first)
+@findex emacsvox-aural-ui-speak-current-cell
+
+@format
+Speak the current tabulated cell.
+
+Speak its column title first by default.  When VALUE-FIRST is non-nil, speak
+the cell value first.
+
+(fn &optional VALUE-FIRST)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-speak-current-row
+@deffn {Command} emacsvox-aural-ui-speak-current-row
+@findex emacsvox-aural-ui-speak-current-row
+
+@format
+Speak the complete current row using its configured callback.
+@end format
+@end deffn
+
+@subsection emacsvox-aural-ui Options
+
+@defvar {User Option} emacsvox-aural-ui-help-return-mode-hook
+@verbatim
+Hook run after entering or leaving ‘emacsvox-aural-ui-help-return-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-validation
+@section emacsvox-aural-validation
+
+Shared validation for complete Aural configurations and Presentation Option
+fragments.  This module keeps diagnostic model logic independent of the
+interactive managers that display its reports.
+
+@node emacsvox-aural-voice-palettes
+@section emacsvox-aural-voice-palettes
+
+Accessible management for inherited, data-safe ACSS voice palettes.
+
+@subsection Emacsvox-Aural-Voice-Palettes Commands
+
+@subsubsection emacsvox-aural-list-voice-palettes
+@deffn {Command} emacsvox-aural-list-voice-palettes  (&optional palette)
+@findex emacsvox-aural-list-voice-palettes
+
+@format
+Open the spoken manager for voice PALETTE providers.
+
+(fn &optional PALETTE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-copy
+@deffn {Command} emacsvox-aural-voice-palette-previews-copy
+@findex emacsvox-aural-voice-palette-previews-copy
+
+@format
+Copy the current voice to a new, independently routable voice.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-edit
+@deffn {Command} emacsvox-aural-voice-palette-previews-edit
+@findex emacsvox-aural-voice-palette-previews-edit
+
+@format
+Replace the effective voice at point using the guided definition editor.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-explain
+@deffn {Command} emacsvox-aural-voice-palette-previews-explain
+@findex emacsvox-aural-voice-palette-previews-explain
+
+@format
+Explain the effective voice at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-help
+@deffn {Command} emacsvox-aural-voice-palette-previews-help
+@findex emacsvox-aural-voice-palette-previews-help
+
+@format
+Display and speak voice-palette preview help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-mode
+@deffn {Command} emacsvox-aural-voice-palette-previews-mode
+@findex emacsvox-aural-voice-palette-previews-mode
+
+@format
+Spoken browser for effective voices in one palette.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-voice-palette-previews-mode-hook’, as the final
+or penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-voice-palette-previews-play
+?		emacsvox-aural-voice-palette-previews-help
+A		emacsvox-aural-voice-palette-previews-play-all
+E		emacsvox-aural-voice-palette-previews-edit
+N		emacsvox-aural-voice-palette-previews-new
+P		emacsvox-aural-voice-palette-previews-play
+S		emacsvox-aural-voice-palette-previews-stop
+T		emacsvox-aural-voice-palette-previews-set-text
+c		emacsvox-aural-voice-palette-previews-copy
+e		emacsvox-aural-voice-palette-previews-tune
+h		emacsvox-aural
+o		emacsvox-aural-voice-palette-previews-open-manager
+s		emacsvox-aural-voice-palette-previews-stop
+t		emacsvox-aural-voice-palette-previews-tune
+x		emacsvox-aural-voice-palette-previews-explain
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-new
+@deffn {Command} emacsvox-aural-voice-palette-previews-new
+@findex emacsvox-aural-voice-palette-previews-new
+
+@format
+Create a new voice in the palette shown by the current preview.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-next
+@deffn {Command} emacsvox-aural-voice-palette-previews-next
+@findex emacsvox-aural-voice-palette-previews-next
+
+@format
+Move to and speak the next effective voice.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-next-column
+@deffn {Command} emacsvox-aural-voice-palette-previews-next-column
+@findex emacsvox-aural-voice-palette-previews-next-column
+
+@format
+Move right and speak the next voice column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-open-manager
+@deffn {Command} emacsvox-aural-voice-palette-previews-open-manager
+@findex emacsvox-aural-voice-palette-previews-open-manager
+
+@format
+Return to the palette manager for the current preview palette.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-play
+@deffn {Command} emacsvox-aural-voice-palette-previews-play
+@findex emacsvox-aural-voice-palette-previews-play
+
+@format
+Audition the effective voice at point with the comparison text.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-play-all
+@deffn {Command} emacsvox-aural-voice-palette-previews-play-all
+@findex emacsvox-aural-voice-palette-previews-play-all
+
+@format
+Audition every effective voice using the same comparison text.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-previous
+@deffn {Command} emacsvox-aural-voice-palette-previews-previous
+@findex emacsvox-aural-voice-palette-previews-previous
+
+@format
+Move to and speak the previous effective voice.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-previous-column
+@deffn {Command} emacsvox-aural-voice-palette-previews-previous-column
+@findex emacsvox-aural-voice-palette-previews-previous-column
+
+@format
+Move left and speak the previous voice column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-refresh
+@deffn {Command} emacsvox-aural-voice-palette-previews-refresh  (&optional voice)
+@findex emacsvox-aural-voice-palette-previews-refresh
+
+@format
+Refresh palette voices, preserving VOICE and the current column.
+
+(fn &optional VOICE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-set-text
+@deffn {Command} emacsvox-aural-voice-palette-previews-set-text
+@findex emacsvox-aural-voice-palette-previews-set-text
+
+@format
+Set the comparison text used by this preview buffer.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-speak-current
+@deffn {Command} emacsvox-aural-voice-palette-previews-speak-current
+@findex emacsvox-aural-voice-palette-previews-speak-current
+
+@format
+Speak the complete palette voice row at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-speak-current-cell
+@deffn {Command} emacsvox-aural-voice-palette-previews-speak-current-cell
+@findex emacsvox-aural-voice-palette-previews-speak-current-cell
+
+@format
+Speak the current preview column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-stop
+@deffn {Command} emacsvox-aural-voice-palette-previews-stop
+@findex emacsvox-aural-voice-palette-previews-stop
+
+@format
+Stop the current voice audition.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palette-previews-tune
+@deffn {Command} emacsvox-aural-voice-palette-previews-tune
+@findex emacsvox-aural-voice-palette-previews-tune
+
+@format
+Open a transactional tuner for the effective voice at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-activate
+@deffn {Command} emacsvox-aural-voice-palettes-activate
+@findex emacsvox-aural-voice-palettes-activate
+
+@format
+Activate the voice palette at point as an override.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-copy
+@deffn {Command} emacsvox-aural-voice-palettes-copy
+@findex emacsvox-aural-voice-palettes-copy
+
+@format
+Copy the voice palette at point to a personal palette.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-create
+@deffn {Command} emacsvox-aural-voice-palettes-create
+@findex emacsvox-aural-voice-palettes-create
+
+@format
+Create an empty personal voice palette.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-delete
+@deffn {Command} emacsvox-aural-voice-palettes-delete
+@findex emacsvox-aural-voice-palettes-delete
+
+@format
+Delete the personal voice palette at point when it is unreferenced.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-delete-entry
+@deffn {Command} emacsvox-aural-voice-palettes-delete-entry
+@findex emacsvox-aural-voice-palettes-delete-entry
+
+@format
+Delete one direct entry from the personal palette at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-describe
+@deffn {Command} emacsvox-aural-voice-palettes-describe  (&optional id)
+@findex emacsvox-aural-voice-palettes-describe
+
+@format
+Display and speak the effective voices in palette ID.
+
+(fn &optional ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-edit-entry
+@deffn {Command} emacsvox-aural-voice-palettes-edit-entry
+@findex emacsvox-aural-voice-palettes-edit-entry
+
+@format
+Create or replace one direct voice entry in the personal palette at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-edit-metadata
+@deffn {Command} emacsvox-aural-voice-palettes-edit-metadata
+@findex emacsvox-aural-voice-palettes-edit-metadata
+
+@format
+Edit summary and parent of the personal palette at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-explain
+@deffn {Command} emacsvox-aural-voice-palettes-explain  (&optional id voice)
+@findex emacsvox-aural-voice-palettes-explain
+
+@format
+Explain one effective voice and its adapter fallback.
+
+(fn &optional ID VOICE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-follow-baseline
+@deffn {Command} emacsvox-aural-voice-palettes-follow-baseline
+@findex emacsvox-aural-voice-palettes-follow-baseline
+
+@format
+Clear the palette override and use the compatibility baseline.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-help
+@deffn {Command} emacsvox-aural-voice-palettes-help
+@findex emacsvox-aural-voice-palettes-help
+
+@format
+Display and speak voice-palette manager help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-mode
+@deffn {Command} emacsvox-aural-voice-palettes-mode
+@findex emacsvox-aural-voice-palettes-mode
+
+@format
+Spoken manager for inherited ACSS voice palettes.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-voice-palettes-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-voice-palettes-preview
+?		emacsvox-aural-voice-palettes-help
+B		emacsvox-aural-voice-palettes-preview
+D		emacsvox-aural-voice-palettes-delete-entry
+E		emacsvox-aural-voice-palettes-edit-metadata
+N		emacsvox-aural-voice-palettes-create
+P		emacsvox-aural-voice-palettes-preview
+a		emacsvox-aural-voice-palettes-activate
+c		emacsvox-aural-voice-palettes-copy
+d		emacsvox-aural-voice-palettes-delete
+e		emacsvox-aural-voice-palettes-edit-entry
+f		emacsvox-aural-voice-palettes-follow-baseline
+h		emacsvox-aural
+v		emacsvox-aural-voice-palettes-describe
+x		emacsvox-aural-voice-palettes-explain
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-next
+@deffn {Command} emacsvox-aural-voice-palettes-next
+@findex emacsvox-aural-voice-palettes-next
+
+@format
+Move to and speak the next voice palette.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-next-column
+@deffn {Command} emacsvox-aural-voice-palettes-next-column
+@findex emacsvox-aural-voice-palettes-next-column
+
+@format
+Move right and speak the next palette column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-preview
+@deffn {Command} emacsvox-aural-voice-palettes-preview  (&optional id)
+@findex emacsvox-aural-voice-palettes-preview
+
+@format
+Browse and audition all effective voices in palette ID or at point.
+
+(fn &optional ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-previous
+@deffn {Command} emacsvox-aural-voice-palettes-previous
+@findex emacsvox-aural-voice-palettes-previous
+
+@format
+Move to and speak the previous voice palette.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-previous-column
+@deffn {Command} emacsvox-aural-voice-palettes-previous-column
+@findex emacsvox-aural-voice-palettes-previous-column
+
+@format
+Move left and speak the previous palette column.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-refresh
+@deffn {Command} emacsvox-aural-voice-palettes-refresh  (&optional id)
+@findex emacsvox-aural-voice-palettes-refresh
+
+@format
+Refresh palettes while preserving ID and the current column.
+
+(fn &optional ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-speak-current
+@deffn {Command} emacsvox-aural-voice-palettes-speak-current
+@findex emacsvox-aural-voice-palettes-speak-current
+
+@format
+Speak the complete voice-palette row at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-palettes-speak-current-cell
+@deffn {Command} emacsvox-aural-voice-palettes-speak-current-cell
+@findex emacsvox-aural-voice-palettes-speak-current-cell
+
+@format
+Speak the current palette column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-audition
+@deffn {Command} emacsvox-aural-voice-tuner-audition  (&optional announcement)
+@findex emacsvox-aural-voice-tuner-audition
+
+@format
+Audition the unsaved working style after optional ANNOUNCEMENT.
+
+(fn &optional ANNOUNCEMENT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-decrease
+@deffn {Command} emacsvox-aural-voice-tuner-decrease
+@findex emacsvox-aural-voice-tuner-decrease
+
+@format
+Decrease the current numeric dimension and audition its new value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-edit
+@deffn {Command} emacsvox-aural-voice-tuner-edit
+@findex emacsvox-aural-voice-tuner-edit
+
+@format
+Edit the current dimension and audition the new value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-help
+@deffn {Command} emacsvox-aural-voice-tuner-help
+@findex emacsvox-aural-voice-tuner-help
+
+@format
+Display and speak voice tuner help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-increase
+@deffn {Command} emacsvox-aural-voice-tuner-increase
+@findex emacsvox-aural-voice-tuner-increase
+
+@format
+Increase the current numeric dimension and audition its new value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-mode
+@deffn {Command} emacsvox-aural-voice-tuner-mode
+@findex emacsvox-aural-voice-tuner-mode
+
+@format
+Transactional spoken tuner for one personal-palette voice.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-voice-tuner-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-voice-tuner-edit
++		emacsvox-aural-voice-tuner-increase
+-		emacsvox-aural-voice-tuner-decrease
+0 .. 9		emacsvox-aural-voice-tuner-set-digit
+?		emacsvox-aural-voice-tuner-help
+P		emacsvox-aural-voice-tuner-audition
+R		emacsvox-aural-voice-tuner-restore
+d		emacsvox-aural-voice-tuner-use-default
+e		emacsvox-aural-voice-tuner-edit
+h		emacsvox-aural
+q		emacsvox-aural-voice-tuner-quit
+u		emacsvox-aural-voice-tuner-undo
+w		emacsvox-aural-voice-tuner-save
+<left>		emacsvox-aural-voice-tuner-decrease
+<right>		emacsvox-aural-voice-tuner-increase
+
+C-c C-c		emacsvox-aural-voice-tuner-save
+C-c C-k		emacsvox-aural-voice-tuner-quit
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-next
+@deffn {Command} emacsvox-aural-voice-tuner-next
+@findex emacsvox-aural-voice-tuner-next
+
+@format
+Move to and speak the next tunable dimension.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-previous
+@deffn {Command} emacsvox-aural-voice-tuner-previous
+@findex emacsvox-aural-voice-tuner-previous
+
+@format
+Move to and speak the previous tunable dimension.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-quit
+@deffn {Command} emacsvox-aural-voice-tuner-quit
+@findex emacsvox-aural-voice-tuner-quit
+
+@format
+Cancel tuning, asking before discarding unsaved changes.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-refresh
+@deffn {Command} emacsvox-aural-voice-tuner-refresh  (&optional dimension)
+@findex emacsvox-aural-voice-tuner-refresh
+
+@format
+Refresh the tuner while preserving DIMENSION and the current column.
+
+(fn &optional DIMENSION)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-restore
+@deffn {Command} emacsvox-aural-voice-tuner-restore
+@findex emacsvox-aural-voice-tuner-restore
+
+@format
+Restore and audition the style present when the tuner opened.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-save
+@deffn {Command} emacsvox-aural-voice-tuner-save
+@findex emacsvox-aural-voice-tuner-save
+
+@format
+Atomically save the portable style and return to the voice preview.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-set-digit
+@deffn {Command} emacsvox-aural-voice-tuner-set-digit
+@findex emacsvox-aural-voice-tuner-set-digit
+
+@format
+Set the current numeric dimension from the typed digit and audition it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-speak-current
+@deffn {Command} emacsvox-aural-voice-tuner-speak-current
+@findex emacsvox-aural-voice-tuner-speak-current
+
+@format
+Speak the complete tuner row at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-undo
+@deffn {Command} emacsvox-aural-voice-tuner-undo
+@findex emacsvox-aural-voice-tuner-undo
+
+@format
+Undo the most recent unsaved tuner change and audition it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-tuner-use-default
+@deffn {Command} emacsvox-aural-voice-tuner-use-default
+@findex emacsvox-aural-voice-tuner-use-default
+
+@format
+Use the adapter default for the current dimension and audition it.
+@end format
+@end deffn
+
+@subsection emacsvox-aural-voice-palettes Options
+
+@defvar {User Option} emacsvox-aural-voice-palettes-preview-text
+@verbatim
+Comparison text used when auditioning voices from a palette.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"The quick brown fox jumps over the lazy dog. Numbers one, two, three."
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-aural-voice-workbench
+@section emacsvox-aural-voice-workbench
+
+A single accessible workbench presents logical voices, physical inventory,
+engines, and portable style/effect information. Transactional previews use
+the same sample text without changing saved palettes or routing profiles.
+
+@subsection Emacsvox-Aural-Voice-Workbench Commands
+
+@subsubsection emacsvox-aural-voice-workbench
+@deffn {Command} emacsvox-aural-voice-workbench  (&optional view)
+@findex emacsvox-aural-voice-workbench
+
+@format
+Open the accessible Voice Workbench in VIEW.
+
+(fn &optional VIEW)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-apply-preset
+@deffn {Command} emacsvox-aural-voice-workbench-apply-preset
+@findex emacsvox-aural-voice-workbench-apply-preset
+
+@format
+Review and stage one routing-policy or portability preset.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-assign
+@deffn {Command} emacsvox-aural-voice-workbench-assign
+@findex emacsvox-aural-voice-workbench-assign
+
+@format
+Begin or complete quick logical-voice assignment for the current view.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-begin-assignment
+@deffn {Command} emacsvox-aural-voice-workbench-begin-assignment
+@findex emacsvox-aural-voice-workbench-begin-assignment
+
+@format
+Open the filtered physical browser for the current logical voice.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-bind-unmapped
+@deffn {Command} emacsvox-aural-voice-workbench-bind-unmapped
+@findex emacsvox-aural-voice-workbench-bind-unmapped
+
+@format
+Bind every explicitly unmapped logical voice to one engine default.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-cancel-assignment
+@deffn {Command} emacsvox-aural-voice-workbench-cancel-assignment
+@findex emacsvox-aural-voice-workbench-cancel-assignment
+
+@format
+Cancel the active physical assignment browser without changing routes.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-cancel-staged
+@deffn {Command} emacsvox-aural-voice-workbench-cancel-staged
+@findex emacsvox-aural-voice-workbench-cancel-staged
+
+@format
+Restore the exact profile snapshot from when the workbench opened.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-clear-filters
+@deffn {Command} emacsvox-aural-voice-workbench-clear-filters
+@findex emacsvox-aural-voice-workbench-clear-filters
+
+@format
+Clear all physical-voice filters and refresh.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-compare
+@deffn {Command} emacsvox-aural-voice-workbench-compare
+@findex emacsvox-aural-voice-workbench-compare
+
+@format
+A/B two installed physical voices with identical text and settings.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-complete-assignment
+@deffn {Command} emacsvox-aural-voice-workbench-complete-assignment
+@findex emacsvox-aural-voice-workbench-complete-assignment
+
+@format
+Append a selector from the current physical row to the assignment target.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-copy-route
+@deffn {Command} emacsvox-aural-voice-workbench-copy-route
+@findex emacsvox-aural-voice-workbench-copy-route
+
+@format
+Replace the current logical route with a staged copy of another route.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-delete-selector
+@deffn {Command} emacsvox-aural-voice-workbench-delete-selector
+@findex emacsvox-aural-voice-workbench-delete-selector
+
+@format
+Delete one explicit selector from the current logical route.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-describe
+@deffn {Command} emacsvox-aural-voice-workbench-describe
+@findex emacsvox-aural-voice-workbench-describe
+
+@format
+Display and speak exact Workbench row and configuration details.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-edit-preview-text
+@deffn {Command} emacsvox-aural-voice-workbench-edit-preview-text
+@findex emacsvox-aural-voice-workbench-edit-preview-text
+
+@format
+Edit the common Voice Workbench comparison text.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-engine-view
+@deffn {Command} emacsvox-aural-voice-workbench-engine-view
+@findex emacsvox-aural-voice-workbench-engine-view
+
+@format
+Show speech engines and their capabilities.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-export-profile
+@deffn {Command} emacsvox-aural-voice-workbench-export-profile
+@findex emacsvox-aural-voice-workbench-export-profile
+
+@format
+Export the staged routing profile without activating it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-help
+@deffn {Command} emacsvox-aural-voice-workbench-help
+@findex emacsvox-aural-voice-workbench-help
+
+@format
+Display and speak Voice Workbench navigation help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-import-profile
+@deffn {Command} emacsvox-aural-voice-workbench-import-profile
+@findex emacsvox-aural-voice-workbench-import-profile
+
+@format
+Read one data-only routing profile into the staged workbench copy.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-logical-view
+@deffn {Command} emacsvox-aural-voice-workbench-logical-view
+@findex emacsvox-aural-voice-workbench-logical-view
+
+@format
+Show logical voices.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-migrate
+@deffn {Command} emacsvox-aural-voice-workbench-migrate
+@findex emacsvox-aural-voice-workbench-migrate
+
+@format
+Stage an explicit migration from a legacy voice configuration source.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-mode
+@deffn {Command} emacsvox-aural-voice-workbench-mode
+@findex emacsvox-aural-voice-workbench-mode
+
+@format
+Spoken workbench for logical styles and physical voice routing.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-voice-workbench-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-voice-workbench-describe
+?		emacsvox-aural-voice-workbench-help
+A		emacsvox-aural-voice-workbench-preview-all
+B		emacsvox-aural-voice-workbench-compare
+C		emacsvox-aural-voice-workbench-clear-filters
+D		emacsvox-aural-voice-workbench-toggle-disabled-engine
+E		emacsvox-aural-voice-workbench-export-profile
+F		emacsvox-aural-voice-workbench-set-filter
+I		emacsvox-aural-voice-workbench-import-profile
+K		emacsvox-aural-voice-workbench-request-recovery-probe
+M		emacsvox-aural-voice-workbench-bind-unmapped
+N		emacsvox-aural-voice-workbench-apply-preset
+O		emacsvox-aural-voice-workbench-toggle-preferred-engine
+P		emacsvox-aural-voice-workbench-preview
+R		emacsvox-aural-voice-workbench-refresh-inventory
+S		emacsvox-aural-voice-workbench-stop-preview
+T		emacsvox-aural-voice-workbench-edit-preview-text
+U		emacsvox-aural-voice-workbench-undo-applied
+X		emacsvox-aural-voice-workbench-replace-engine
+[		emacsvox-aural-voice-workbench-move-selector-up
+]		emacsvox-aural-voice-workbench-move-selector-down
+a		emacsvox-aural-voice-workbench-assign
+c		emacsvox-aural-voice-workbench-cancel-assignment
+d		emacsvox-aural-voice-workbench-delete-selector
+e		emacsvox-aural-voice-workbench-engine-view
+f		emacsvox-aural-voice-workbench-toggle-fallback-engine
+h		emacsvox-aural
+j		emacsvox-aural-voice-workbench-suggest-route
+l		emacsvox-aural-voice-workbench-logical-view
+m		emacsvox-aural-voice-workbench-migrate
+q		emacsvox-aural-quit
+r		emacsvox-aural-voice-workbench-retry-apply
+s		emacsvox-aural-voice-workbench-style-view
+t		emacsvox-aural-voice-workbench-tune
+u		emacsvox-aural-voice-workbench-undo
+v		emacsvox-aural-voice-workbench-physical-view
+w		emacsvox-aural-voice-workbench-save-and-apply
+x		emacsvox-aural-voice-workbench-describe
+y		emacsvox-aural-voice-workbench-copy-route
+@{		emacsvox-aural-voice-workbench-move-fallback-engine-up
+@}		emacsvox-aural-voice-workbench-move-fallback-engine-down
+
+C-c C-c		emacsvox-aural-voice-workbench-save-and-apply
+C-c C-k		emacsvox-aural-voice-workbench-cancel-staged
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-move-fallback-engine-down
+@deffn {Command} emacsvox-aural-voice-workbench-move-fallback-engine-down
+@findex emacsvox-aural-voice-workbench-move-fallback-engine-down
+
+@format
+Move the current engine later in global fallback order.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-move-fallback-engine-up
+@deffn {Command} emacsvox-aural-voice-workbench-move-fallback-engine-up
+@findex emacsvox-aural-voice-workbench-move-fallback-engine-up
+
+@format
+Move the current engine earlier in global fallback order.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-move-selector-down
+@deffn {Command} emacsvox-aural-voice-workbench-move-selector-down
+@findex emacsvox-aural-voice-workbench-move-selector-down
+
+@format
+Move the current selector or preferred engine later.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-move-selector-up
+@deffn {Command} emacsvox-aural-voice-workbench-move-selector-up
+@findex emacsvox-aural-voice-workbench-move-selector-up
+
+@format
+Move the current selector or preferred engine earlier.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-physical-view
+@deffn {Command} emacsvox-aural-voice-workbench-physical-view
+@findex emacsvox-aural-voice-workbench-physical-view
+
+@format
+Show discovered physical voices.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-preview
+@deffn {Command} emacsvox-aural-voice-workbench-preview
+@findex emacsvox-aural-voice-workbench-preview
+
+@format
+Preview the current logical, physical, engine, or style row once.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-preview-all
+@deffn {Command} emacsvox-aural-voice-workbench-preview-all
+@findex emacsvox-aural-voice-workbench-preview-all
+
+@format
+Preview every currently visible physical voice using identical text.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-refresh
+@deffn {Command} emacsvox-aural-voice-workbench-refresh  (&optional id)
+@findex emacsvox-aural-voice-workbench-refresh
+
+@format
+Refresh the Workbench quietly, preserving row ID and column.
+
+(fn &optional ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-refresh-inventory
+@deffn {Command} emacsvox-aural-voice-workbench-refresh-inventory
+@findex emacsvox-aural-voice-workbench-refresh-inventory
+
+@format
+Request fresh adapter inventory and quietly rebuild the current view.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-replace-engine
+@deffn {Command} emacsvox-aural-voice-workbench-replace-engine
+@findex emacsvox-aural-voice-workbench-replace-engine
+
+@format
+Replace one engine in selected staged logical mappings.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-request-recovery-probe
+@deffn {Command} emacsvox-aural-voice-workbench-request-recovery-probe
+@findex emacsvox-aural-voice-workbench-request-recovery-probe
+
+@format
+Request a live recovery probe for the current failed engine.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-retry-apply
+@deffn {Command} emacsvox-aural-voice-workbench-retry-apply
+@findex emacsvox-aural-voice-workbench-retry-apply
+
+@format
+Idempotently retry the committed profile on all live speech streams.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-save-and-apply
+@deffn {Command} emacsvox-aural-voice-workbench-save-and-apply
+@findex emacsvox-aural-voice-workbench-save-and-apply
+
+@format
+Atomically save the staged profile and apply it to every speech stream.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-set-filter
+@deffn {Command} emacsvox-aural-voice-workbench-set-filter
+@findex emacsvox-aural-voice-workbench-set-filter
+
+@format
+Set or clear one physical-voice inventory filter.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-speak-current
+@deffn {Command} emacsvox-aural-voice-workbench-speak-current
+@findex emacsvox-aural-voice-workbench-speak-current
+
+@format
+Speak the complete current Workbench row with titled values.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-stop-preview
+@deffn {Command} emacsvox-aural-voice-workbench-stop-preview
+@findex emacsvox-aural-voice-workbench-stop-preview
+
+@format
+Stop the active preview immediately.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-style-view
+@deffn {Command} emacsvox-aural-voice-workbench-style-view
+@findex emacsvox-aural-voice-workbench-style-view
+
+@format
+Show portable styles, routes, and advertised effects.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-suggest-route
+@deffn {Command} emacsvox-aural-voice-workbench-suggest-route
+@findex emacsvox-aural-voice-workbench-suggest-route
+
+@format
+Review and stage one inferred route for the current logical voice.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-toggle-disabled-engine
+@deffn {Command} emacsvox-aural-voice-workbench-toggle-disabled-engine
+@findex emacsvox-aural-voice-workbench-toggle-disabled-engine
+
+@format
+Disable or restore the current engine in the staged policy.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-toggle-fallback-engine
+@deffn {Command} emacsvox-aural-voice-workbench-toggle-fallback-engine
+@findex emacsvox-aural-voice-workbench-toggle-fallback-engine
+
+@format
+Add or remove the current engine from global fallback order.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-toggle-preferred-engine
+@deffn {Command} emacsvox-aural-voice-workbench-toggle-preferred-engine
+@findex emacsvox-aural-voice-workbench-toggle-preferred-engine
+
+@format
+Add or remove the current engine from global preferred order.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-tune
+@deffn {Command} emacsvox-aural-voice-workbench-tune
+@findex emacsvox-aural-voice-workbench-tune
+
+@format
+Tune the current logical voice against its effective preview route.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-undo
+@deffn {Command} emacsvox-aural-voice-workbench-undo
+@findex emacsvox-aural-voice-workbench-undo
+
+@format
+Undo the most recent staged routing edit without changing saved state.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-undo-applied
+@deffn {Command} emacsvox-aural-voice-workbench-undo-applied
+@findex emacsvox-aural-voice-workbench-undo-applied
+
+@format
+Restore and apply the previous known-good profile revision.
+@end format
+@end deffn
+
+@subsection emacsvox-aural-voice-workbench Options
+
+@defvar {User Option} emacsvox-aural-voice-workbench-preview-text
+@verbatim
+Common text used for Voice Workbench preview and A/B comparison.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"The quick brown fox jumps over the lazy dog."
+
+@end verbatim
+
+@end defvar
 
 @node emacsvox-avy
 @section emacsvox-avy
@@ -1609,7 +6294,7 @@ Customize this to the root of where books are organized.
 Default Value:
 @verbatim
 
-"/home/bart/books/book-share"
+"~/books/book-share"
 
 @end verbatim
 
@@ -1629,11 +6314,14 @@ speech-enable bs.el -- an alternative to Emacs' default  list-buffers
 @subsection Emacsvox-Bs Commands
 
 @subsubsection emacsvox-bs-speak-buffer-line
-@deffn {Command} emacsvox-bs-speak-buffer-line
+@deffn {Command} emacsvox-bs-speak-buffer-line  (&optional icon)
 @findex emacsvox-bs-speak-buffer-line
 
 @format
-Speak information about this buffer
+Speak information about the BS buffer row at point.
+Optional ICON precedes the row in the same native transaction.
+
+(fn &optional ICON)
 @end format
 @end deffn
 
@@ -2179,8 +6867,10 @@ Interactive PREFIX arg means toggle  global default value.
 @findex emacsvox-toggle-comint-output-monitor
 
 @format
-Toggle  Emacsvox comint monitor.
-Interactive PREFIX arg means toggle the global default value.
+Toggle whether autospeech follows this Comint buffer in the background.
+Interactive PREFIX toggles the global default and applies it locally.
+
+(fn &optional PREFIX)
 @end format
 @end deffn
 
@@ -2276,7 +6966,6 @@ Speech feedback about the compilation error.
 @section emacsvox-consult
 
 CONSULT ==  A modern completing-read
-@section Consult
 @itemize
 @item Setup @code{consult-after-jump-hook} to speak  where we
 land.
@@ -2799,7 +7488,7 @@ This module speech-enables EIN
 @findex emacsvox-ein-speak-current-cell
 
 @format
-Speak current cell.
+Speak the complete current cell as one native presentation.
 @end format
 @end deffn
 
@@ -3901,7 +8590,7 @@ Directory where we keep .bsf files defining various bookshelves.
 Default Value:
 @verbatim
 
-"/home/bart/EBooks/bsf/"
+"~/EBooks/bsf/"
 
 @end verbatim
 
@@ -3915,7 +8604,7 @@ Root of Calibre library.
 Default Value:
 @verbatim
 
-"/home/bart/EBooks/calibre"
+"~/EBooks/calibre"
 
 @end verbatim
 
@@ -3957,7 +8646,7 @@ Directory under which we store Epubs.
 Default Value:
 @verbatim
 
-"/home/bart/EBooks/"
+"~/EBooks/"
 
 @end verbatim
 
@@ -6121,7 +10810,7 @@ information between different Emacs sessions.
 Default Value:
 @verbatim
 
-"/home/bart/.emacsvox//clipboard"
+"~/.emacsvox/clipboard"
 
 @end verbatim
 
@@ -6135,7 +10824,7 @@ Cookie store used by Curl.
 Default Value:
 @verbatim
 
-"/home/bart/.curl-cookies"
+"~/.curl-cookies"
 
 @end verbatim
 
@@ -6436,7 +11125,7 @@ Correction style to use with flyspell.
 Default Value:
 @verbatim
 
-nil
+flyspell-correct-ido
 
 @end verbatim
 
@@ -7332,8 +12021,9 @@ C-r and C-s.
 
 @defvar {User Option} emacsvox-ispell-max-choices
 @verbatim
-Emacsvox will not speak the choices if there are more than this
-many available corrections.
+Maximum number of correction choices Emacsvox will speak.
+When Ispell returns more choices, Emacsvox speaks this many of the
+highest-ranked corrections and announces the total.
 @end verbatim
 
 Default Value:
@@ -7733,7 +12423,7 @@ Location where we cache LIBRIVOX playlists.
 Default Value:
 @verbatim
 
-"/home/bart/.emacsvox/librivox"
+"~/.emacsvox/librivox"
 
 @end verbatim
 
@@ -8831,7 +13521,7 @@ Directory where we store clips.
 Default Value:
 @verbatim
 
-"/home/bart/mp3/clips"
+"~/mp3/clips"
 
 @end verbatim
 
@@ -8937,6 +13627,8 @@ Keybindings (active in markdown-mode):
 
 @format
 Toggle reading mode that strips markup syntax from speech.
+ARG enables the mode when positive, disables it otherwise, and toggles it
+when it is the symbol ‘toggle’.
 When enabled, voice personalities still indicate emphasis, headings, etc.,
 but you won’t hear the literal markup characters.
 
@@ -9181,6 +13873,17 @@ Move up in current Math expression. (auto-generated)
 @section emacsvox-message
 
 advice for posting message commands
+
+@subsection Emacsvox-Message Commands
+
+@subsubsection emacsvox-message-speak-compose-status
+@deffn {Command} emacsvox-message-speak-compose-status
+@findex emacsvox-message-speak-compose-status
+
+@format
+Speak sender, recipients, subject, attachments, and point location.
+@end format
+@end deffn
 
 @node emacsvox-mines
 @section emacsvox-mines
@@ -9628,6 +14331,160 @@ Functions you would like to run when network is disconnected:
 
 NOTMUCH ==  Emacs interface to notmuch mail
 
+@subsection Emacsvox-Notmuch Commands
+
+@subsubsection emacsvox-notmuch-speak-search-result
+@deffn {Command} emacsvox-notmuch-speak-search-result  (&optional result)
+@findex emacsvox-notmuch-speak-search-result
+
+@format
+Speak Notmuch search RESULT, defaulting to the result at point.
+
+(fn &optional RESULT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-notmuch-speak-show-message
+@deffn {Command} emacsvox-notmuch-speak-show-message  (&optional message body-line)
+@findex emacsvox-notmuch-speak-show-message
+
+@format
+Speak Notmuch MESSAGE, defaulting to the message at point.
+When BODY-LINE is non-nil, speak it after the semantic message summary.
+
+(fn &optional MESSAGE BODY-LINE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-notmuch-speak-show-position
+@deffn {Command} emacsvox-notmuch-speak-show-position
+@findex emacsvox-notmuch-speak-show-position
+
+@format
+Speak the current position in the thread and semantic message details.
+@end format
+@end deffn
+
+@subsection emacsvox-notmuch Options
+
+@defvar {User Option} emacsvox-notmuch-search-field-separator
+@verbatim
+String placed between spoken Notmuch search-result fields.
+@end verbatim
+
+Default Value:
+@verbatim
+
+", "
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-search-result-fields
+@verbatim
+Ordered fields spoken for the current Notmuch search result.
+
+The built-in fields are ‘authors’, ‘subject’, ‘date’, ‘count’,
+and ‘tags’.  A function may also be used as a field; it receives
+the Notmuch result plist and should return the string to speak.
+Remove a field to silence it, or reorder the list to change when
+it is spoken.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(authors subject date count tags)
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-search-status-icons
+@verbatim
+Map Notmuch status tags to auditory icons.
+
+Entries are checked in order and every matching non-nil icon is
+played.  Tags present in this alist are omitted from the spoken
+‘tags’ field.  Remove an entry to speak that status as an ordinary
+tag, or give it a nil icon to keep the status silent.  When the
+‘mail-message-status-cues’ presentation option is enabled, its semantic
+rules own unread, replied, forwarded, and flagged cues while these entries
+still suppress words.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(("unread" . mail-unread)
+ ("replied" . mail-replied)
+ ("forwarded" . mail-forwarded)
+ ("flagged" . mark-object))
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-show-field-separator
+@verbatim
+String placed between spoken fields for a Notmuch message.
+@end verbatim
+
+Default Value:
+@verbatim
+
+", "
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-show-message-fields
+@verbatim
+Ordered fields spoken for the current Notmuch message.
+
+The built-in fields are ‘from’, ‘subject’, ‘date’, ‘to’, ‘cc’,
+‘tags’, and ‘attachments’.  A function may also be used as a
+field; it receives the Notmuch message plist and should return the
+string to speak.  Remove a field to silence it, or reorder the
+list to change when it is spoken.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(from date to cc tags attachments)
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-show-status-icons
+@verbatim
+Map Notmuch message status tags to auditory icons.
+
+Entries are checked in order and every matching non-nil icon is
+played.  Tags present in this alist are omitted from the spoken
+‘tags’ field.  Remove an entry to speak that status as an ordinary
+tag, or give it a nil icon to keep the status silent.  When the
+‘mail-message-status-cues’ presentation option is enabled, its semantic
+rules own unread, replied, forwarded, and flagged cues while these entries
+still suppress words.
+@end verbatim
+
+Default Value:
+@verbatim
+
+(("unread" . mail-unread)
+ ("replied" . mail-replied)
+ ("forwarded" . mail-forwarded)
+ ("flagged" . mark-object))
+
+@end verbatim
+
+@end defvar
+
 @node emacsvox-nov
 @section emacsvox-nov
 
@@ -10005,7 +14862,7 @@ OCR engine to process acquired image.
 Default Value:
 @verbatim
 
-"/home/bart/src/emacsvox/etc/tesseract.pl"
+"<emacsvox-root>/etc/tesseract.pl"
 
 @end verbatim
 
@@ -10118,7 +14975,7 @@ will be placed.
 Default Value:
 @verbatim
 
-"/home/bart/.emacsvox/ocr/"
+"~/.emacsvox/ocr/"
 
 @end verbatim
 
@@ -10192,7 +15049,7 @@ Provide an input buffer in a specified mode.
 @findex emacsvox-org-speak-item
 
 @format
-Speak item
+Speak the current Org item through one semantic presentation.
 @end format
 @end deffn
 
@@ -10201,7 +15058,7 @@ Speak item
 @findex emacsvox-org-table-speak-both-headers-and-element
 
 @format
-echoes both row and col headers.
+Speak both headers and the current Org table cell.
 @end format
 @end deffn
 
@@ -10210,7 +15067,7 @@ echoes both row and col headers.
 @findex emacsvox-org-table-speak-column-header
 
 @format
-echoes column header
+Speak the current Org table column header.
 @end format
 @end deffn
 
@@ -10219,7 +15076,7 @@ echoes column header
 @findex emacsvox-org-table-speak-column-header-and-element
 
 @format
-echoes col header and element
+Speak the column header and current Org table cell.
 @end format
 @end deffn
 
@@ -10228,7 +15085,7 @@ echoes col header and element
 @findex emacsvox-org-table-speak-coordinates
 
 @format
-echoes coordinates
+Speak the current Org table coordinates.
 @end format
 @end deffn
 
@@ -10237,7 +15094,7 @@ echoes coordinates
 @findex emacsvox-org-table-speak-current-element
 
 @format
-echoes current table element
+Speak the current Org table cell.
 @end format
 @end deffn
 
@@ -10246,7 +15103,7 @@ echoes current table element
 @findex emacsvox-org-table-speak-row-header
 
 @format
-echoes row header
+Speak the current Org table row header.
 @end format
 @end deffn
 
@@ -10255,7 +15112,7 @@ echoes row header
 @findex emacsvox-org-table-speak-row-header-and-element
 
 @format
-echoes row header and element
+Speak the row header and current Org table cell.
 @end format
 @end deffn
 
@@ -10269,7 +15126,7 @@ Emacsvox org hotlist location.
 Default Value:
 @verbatim
 
-"/home/bart/.org/hotlist.org"
+"~/.org/hotlist.org"
 
 @end verbatim
 
@@ -10284,6 +15141,136 @@ Default Value:
 @verbatim
 
 emacsvox-org-table-speak-current-element
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-org-srs
+@section emacsvox-org-srs
+
+Speak the question, revealed answer, rating result, and session lifecycle
+of Org-srs.  Confirmation is command based by default so screen-reader
+navigation does not accidentally reveal an answer.
+
+@subsection Emacsvox-Org-Srs Commands
+
+@subsubsection emacsvox-org-srs-rate-again
+@deffn {Command} emacsvox-org-srs-rate-again
+@findex emacsvox-org-srs-rate-again
+
+@format
+Rate the current Org-srs item as again.
+@end format
+@end deffn
+
+@subsubsection emacsvox-org-srs-rate-easy
+@deffn {Command} emacsvox-org-srs-rate-easy
+@findex emacsvox-org-srs-rate-easy
+
+@format
+Rate the current Org-srs item as easy.
+@end format
+@end deffn
+
+@subsubsection emacsvox-org-srs-rate-good
+@deffn {Command} emacsvox-org-srs-rate-good
+@findex emacsvox-org-srs-rate-good
+
+@format
+Rate the current Org-srs item as good.
+@end format
+@end deffn
+
+@subsubsection emacsvox-org-srs-rate-hard
+@deffn {Command} emacsvox-org-srs-rate-hard
+@findex emacsvox-org-srs-rate-hard
+
+@format
+Rate the current Org-srs item as hard.
+@end format
+@end deffn
+
+@subsubsection emacsvox-org-srs-review-mode
+@deffn {Command} emacsvox-org-srs-review-mode  (&optional arg)
+@findex emacsvox-org-srs-review-mode
+
+@format
+Provide accessible keys while an Org-srs item is being reviewed.
+
+This is a minor mode.  If called interactively, toggle the
+‘Emacsvox-Org-Srs-Review mode’ mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
+
+If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable ‘emacsvox-org-srs-review-mode’.
+
+The mode’s hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)
+@end format
+@end deffn
+
+@subsubsection emacsvox-org-srs-speak-current
+@deffn {Command} emacsvox-org-srs-speak-current
+@findex emacsvox-org-srs-speak-current
+
+@format
+Repeat the current Org-srs question or revealed answer.
+@end format
+@end deffn
+
+@subsection emacsvox-org-srs Options
+
+@defvar {User Option} emacsvox-org-srs-announce-pending-count
+@verbatim
+Whether the first question announces the number of pending items.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-org-srs-review-mode-hook
+@verbatim
+Hook run after entering or leaving ‘emacsvox-org-srs-review-mode’.
+No problems result if this variable is not bound.
+‘add-hook’ automatically binds it.  (This is true for all hook variables.)
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-org-srs-use-command-confirmation
+@verbatim
+Use an explicit command to reveal each Org-srs answer.
+
+This prevents ordinary screen-reader navigation keys from being consumed by
+‘read-key’ and revealing the answer.  During a review, use ‘C-c C-c’ to reveal
+the answer.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
 
 @end verbatim
 
@@ -10689,7 +15676,7 @@ File that holds  emacsvox pronunciations.
 Default Value:
 @verbatim
 
-"/home/bart/.emacsvox/.dictionary"
+"~/.emacsvox/.dictionary"
 
 @end verbatim
 
@@ -10970,10 +15957,13 @@ Entry point for Emacsvox.
 The simplest and most basic way to start emacsvox is:
 emacs -q -l <emacsvox-dir>/lisp/emacsvox-setup.el
 The above starts a vanilla Emacs with just Emacsvox loaded.
+Loading this source file also detects newer startup sources that would
+otherwise be hidden by stale byte-code and temporarily prefers those
+sources.  Rebuild a changed checkout rather than relying on that fallback.
 Once the above has been verified to work,
 You can  add
 (load-library "emacsvox-setup")
-To your .emacs file.
+To your .emacs file when using an installed, already-built copy.
 See tvr/emacs-startup.el in the Emacsvox Git repository for  my setup.
 
 @node emacsvox-sgml-mode
@@ -11015,7 +16005,7 @@ Auditory interface to solitaire
 @findex emacsvox-solitaire-show-column
 
 @format
-Audio format current column.
+Present first-class tones for each cell in the current column.
 @end format
 @end deffn
 
@@ -11024,16 +16014,20 @@ Audio format current column.
 @findex emacsvox-solitaire-show-row
 
 @format
-Audio format current row.
+Present first-class tones for each cell in the current row.
 @end format
 @end deffn
 
 @subsubsection emacsvox-solitaire-speak-coordinates
-@deffn {Command} emacsvox-solitaire-speak-coordinates
+@deffn {Command} emacsvox-solitaire-speak-coordinates  (&optional icon occasion event)
 @findex emacsvox-solitaire-speak-coordinates
 
 @format
-Speak coordinates of current position
+Present the current cell coordinates in one native transaction.
+Optional ICON precedes the content.  OCCASION defaults to ‘inspection’, and
+EVENT records an optional semantic event.
+
+(fn &optional ICON OCCASION EVENT)
 @end format
 @end deffn
 
@@ -11093,10 +16087,12 @@ sound files  are strings ---  fully-qualified file-names.
 appropriate commands to the speech server (local or cloud).
 @item  This is determined by the value of @code{emacsvox-play-program}.
 @item As of
-Emacsvox 13.0, this module defines a themes architecture for
-auditory icons.  Sound files corresponding to a given theme are
-found in appropriate subdirectories of emacsvox-sounds-dir.
-@item There are two supported themes: @code{chimes} and @code{3d}.
+Emacsvox 13.0, this module defines a sound-pack architecture for
+auditory icons.  Bundled packs live below @file{sounds/packs/}; personal
+packs live below @file{~/.emacsvox/sounds/packs/} by default.
+@item The bundled packs are @code{chimes} and @code{3d}.  Additional
+pack directories containing @file{button.ogg}, or a data-only
+@file{emacsvox-sound-pack.el} manifest, are discovered dynamically.
 @item Contrast this with @code{prompts} --- they  dont belong to any theme.
 @end itemize
 @subsection Designing Auditory Icons
@@ -11132,7 +16128,7 @@ them using a local player.
 @findex emacsvox-sounds-select-theme
 
 @format
-Select theme for auditory icons.
+Select registered resource pack or compatibility directory THEME.
 
 (fn &optional THEME)
 @end format
@@ -11490,6 +16486,39 @@ Use ‘,’ and ‘.’ to continuously decrease/increase ‘selective-display�
 @end format
 @end deffn
 
+@subsubsection emacsvox-set-indentation-presentation
+@deffn {Command} emacsvox-set-indentation-presentation  (presentation &optional global)
+@table @kbd
+@item C-e d I
+@kindex C-e d I
+@end table
+
+@findex emacsvox-set-indentation-presentation
+
+@format
+Select indentation PRESENTATION and preview four-column indentation.
+
+Set the option buffer-locally by default.  With interactive prefix GLOBAL,
+also set the global default and use it in the current buffer.
+
+(fn PRESENTATION &optional GLOBAL)
+@end format
+@end deffn
+
+@subsubsection emacsvox-set-show-point-presentation
+@deffn {Command} emacsvox-set-show-point-presentation  (presentation &optional global)
+@findex emacsvox-set-show-point-presentation
+
+@format
+Select point PRESENTATION and preview the current line.
+
+Set the option buffer-locally by default.  With interactive prefix GLOBAL,
+also set the global default and use it in the current buffer.
+
+(fn PRESENTATION &optional GLOBAL)
+@end format
+@end deffn
+
 @subsubsection emacsvox-shell-command
 @deffn {Command} emacsvox-shell-command  (command)
 @findex emacsvox-shell-command
@@ -11818,6 +16847,10 @@ Speak current field.
 
 @format
 Speak header line if set.
+
+This function has :around advice: ‘emacsvox-agent-shell--speak-header-line-around’.
+
+(fn)
 @end format
 @end deffn
 
@@ -11863,6 +16896,7 @@ before-string, or after-string) is indicated with auditory icon
 spoken using command C-e M-l.
 
 This function has :around advice: ‘emacsvox--advice-markdown-speak-line-around’.
+This function has :around advice: ‘emacsvox-agent-shell--speak-line-around’.
 
 (fn &optional ARG)
 @end format
@@ -12032,6 +17066,8 @@ Optional interactive prefix arg ‘log-msg’ logs spoken info to
 Speak the mode-line.
 Speaks header-line if that is set when called non-interactively.
 Interactive prefix arg speaks buffer info.
+
+This function has :around advice: ‘emacsvox-agent-shell--speak-mode-line-around’.
 
 (fn &optional BUFFER-INFO)
 @end format
@@ -12266,7 +17302,9 @@ Speak region bounded by start and end.
 @findex emacsvox-speak-rest-of-buffer
 
 @format
-Speak remainder of the buffer starting at point
+Speak from point to buffer end, tracking interrupt position by chunk.
+Any subsequent user command interrupts speech.  Point remains at the start of
+the sentence-oriented chunk that was audible when interruption occurred.
 @end format
 @end deffn
 
@@ -12420,6 +17458,10 @@ Announce version information for running emacsvox.
 @format
 Speaks current visual line.
 Cues the start of a physical line with auditory icon ‘left’.
+
+This function has :around advice: ‘emacsvox-agent-shell--speak-visual-line-around’.
+
+(fn)
 @end format
 @end deffn
 
@@ -12729,6 +17771,85 @@ Default Value:
 
 @end defvar
 
+@defvar {User Option} emacsvox-indentation-pitch-tone-base
+@verbatim
+Pitch in hertz for the first nonzero indentation column.
+@end verbatim
+
+Default Value:
+@verbatim
+
+250.0
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-indentation-pitch-tone-duration
+@verbatim
+Requested duration in milliseconds for rising-pitch indentation tones.
+
+The actual duration is never shorter than the registered blank-line tone.
+@end verbatim
+
+Default Value:
+@verbatim
+
+150
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-indentation-pitch-tone-maximum
+@verbatim
+Maximum pitch in hertz for rising-pitch indentation tones.
+@end verbatim
+
+Default Value:
+@verbatim
+
+2000.0
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-indentation-pitch-tone-semitones-per-column
+@verbatim
+Pitch rise in semitones for each additional indentation column.
+@end verbatim
+
+Default Value:
+@verbatim
+
+1.0
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-indentation-presentation
+@verbatim
+How enabled line indentation is presented.
+
+‘spoken’ says the indentation column.  ‘duration-tone’ uses a fixed pitch and
+increases duration with indentation.  ‘pitch-tone’ uses a fixed duration and
+raises pitch with indentation.  The two ‘spoken-...-tone’ values combine the
+corresponding tone with speech.  ‘custom’ publishes indentation facts for
+personal aural rules, and ‘none’ suppresses presentation while leaving
+‘emacsvox-audio-indentation’ enabled.
+@end verbatim
+
+Default Value:
+@verbatim
+
+spoken
+
+@end verbatim
+
+@end defvar
+
 @defvar {User Option} emacsvox-mail-alert-interval
 @verbatim
 Interval in seconds between mail alerts for the same pending
@@ -12754,6 +17875,27 @@ Default Value:
 @verbatim
 
 "/var/mail/bart"
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-show-point-presentation
+@verbatim
+How ‘emacsvox-speak-line’ presents buffer point.
+
+‘voice’ applies the animated voice to the character at point.  ‘tone’ and
+‘earcon’ place a short marker at the exact text boundary.  ‘voice-tone’ and
+‘voice-earcon’ combine the corresponding presentations.  ‘spoken’ says
+"point" at the boundary.  ‘custom’ publishes point facts for personal aural
+rules without adding a built-in presentation, and ‘none’ suppresses point
+presentation while leaving ‘emacsvox-show-point’ enabled.
+@end verbatim
+
+Default Value:
+@verbatim
+
+voice
 
 @end verbatim
 
@@ -12798,6 +17940,22 @@ Default Value:
 @verbatim
 
 "%l %M%p on %A %B %_e"
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-tracked-reading-max-chars
+@verbatim
+Maximum source characters in one tracked reading chunk.
+Tracked reading prefers sentence boundaries and uses this limit to keep the
+position retained after interruption reasonably close to audible playback.
+@end verbatim
+
+Default Value:
+@verbatim
+
+280
 
 @end verbatim
 
@@ -13802,11 +18960,13 @@ Move to previous row and speak that cell.
 @end deffn
 
 @subsubsection emacsvox-tabulated-list-speak-cell
-@deffn {Command} emacsvox-tabulated-list-speak-cell
+@deffn {Command} emacsvox-tabulated-list-speak-cell  (&optional movement-icon)
 @findex emacsvox-tabulated-list-speak-cell
 
 @format
-Speak current cell.
+Speak the current cell with optional MOVEMENT-ICON.
+
+(fn &optional MOVEMENT-ICON)
 @end format
 @end deffn
 
@@ -15523,6 +20683,166 @@ relative position.
 
  required modules
 
+@node emacsvox-windows-speech
+@section emacsvox-windows-speech
+
+Register the native Windows speech servers bundled with Emacsvox.  Friendly
+names shown by `tts-select-server' are translated to paths below the
+configured server directory.  This module also configures native auditory
+icons, notification streams, stereo positioning, and dependency diagnosis.
+
+@subsection Emacsvox-Windows-Speech Commands
+
+@subsubsection emacsvox-windows-speech-configure-audio
+@deffn {Command} emacsvox-windows-speech-configure-audio  (&optional restart)
+@findex emacsvox-windows-speech-configure-audio
+
+@format
+Route auditory icons and generated SoX cues through Windows.
+With prefix argument RESTART, restart the active speech server afterward.
+
+(fn &optional RESTART)
+@end format
+@end deffn
+
+@subsubsection emacsvox-windows-speech-diagnose
+@deffn {Command} emacsvox-windows-speech-diagnose
+@findex emacsvox-windows-speech-diagnose
+
+@format
+Display native Windows speech dependency and build status.
+@end format
+@end deffn
+
+@subsubsection emacsvox-windows-speech-disable
+@deffn {Command} emacsvox-windows-speech-disable
+@findex emacsvox-windows-speech-disable
+
+@format
+Disable friendly selection of native Windows speech servers.
+@end format
+@end deffn
+
+@subsubsection emacsvox-windows-speech-enable
+@deffn {Command} emacsvox-windows-speech-enable
+@findex emacsvox-windows-speech-enable
+
+@format
+Enable friendly selection of native Windows speech servers.
+@end format
+@end deffn
+
+@subsubsection emacsvox-windows-speech-restore-audio
+@deffn {Command} emacsvox-windows-speech-restore-audio  (&optional restart)
+@findex emacsvox-windows-speech-restore-audio
+
+@format
+Restore audio settings saved before native Windows configuration.
+With prefix argument RESTART, restart the active speech server afterward.
+
+(fn &optional RESTART)
+@end format
+@end deffn
+
+@subsubsection emacsvox-windows-speech-select-dectalk
+@deffn {Command} emacsvox-windows-speech-select-dectalk
+@findex emacsvox-windows-speech-select-dectalk
+
+@format
+Select the native Windows DECtalk server.
+@end format
+@end deffn
+
+@subsubsection emacsvox-windows-speech-select-eloquence
+@deffn {Command} emacsvox-windows-speech-select-eloquence
+@findex emacsvox-windows-speech-select-eloquence
+
+@format
+Select the native Windows Eloquence server.
+@end format
+@end deffn
+
+@subsubsection emacsvox-windows-speech-select-server
+@deffn {Command} emacsvox-windows-speech-select-server  (server)
+@findex emacsvox-windows-speech-select-server
+
+@format
+Select friendly Windows speech SERVER and restart speech.
+
+(fn SERVER)
+@end format
+@end deffn
+
+@subsection emacsvox-windows-speech Options
+
+@defvar {User Option} emacsvox-windows-speech-enable-notification-stream
+@verbatim
+Whether Windows speech servers use a separate notification stream.
+The notification stream uses a second server and native bridge process, so
+notifications can speak independently of the main speech stream.  Changes
+take effect the next time the speech server is selected or restarted.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-windows-speech-main-pan
+@verbatim
+Stereo position of the main Windows speech stream.
+-1.0 is fully left, 0.0 is centered, and 1.0 is fully right.  Values
+outside that range are clamped when the speech process starts.  Changes
+take effect the next time the speech server is selected or restarted.
+@end verbatim
+
+Default Value:
+@verbatim
+
+0.0
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-windows-speech-notification-pan
+@verbatim
+Stereo position of the Windows notification speech stream.
+-1.0 is fully left, 0.0 is centered, and 1.0 is fully right.  Values
+outside that range are clamped when the notification process starts.
+Changes take effect when the speech server is selected or restarted.
+@end verbatim
+
+Default Value:
+@verbatim
+
+0.65
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-windows-speech-servers-directory
+@verbatim
+Directory containing native Windows speech server launchers.
+
+Set this directly or set ‘EMACSVOX_WINDOWS_SPEECH_SERVERS’ in the
+environment.  The bundled Emacsvox server directory is the default.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"<emacsvox-root>/servers/"
+
+@end verbatim
+
+@end defvar
+
 @node emacsvox-wizards
 @section emacsvox-wizards
 
@@ -17066,7 +22386,7 @@ This is just a text file, and we use grep to search it.
 Default Value:
 @verbatim
 
-"/home/bart/.emacsvox/tel-dir"
+"~/.emacsvox/tel-dir"
 
 @end verbatim
 
@@ -18157,6 +23477,12 @@ Default Value:
 Implements geocoding via the Open Street Maps API
 https://nominatim.org/
 
+@node omnivox-voices
+@section omnivox-voices
+
+Voice and rate support for the Omnivox speech server.  Omnivox accepts
+generic Emacsvox protocol commands and uses [[pitch FLOAT]] inline codes.
+
 @node outloud-voices
 @section outloud-voices
 
@@ -18201,20 +23527,20 @@ Default Value:
 Piper TTS is an Open Source neural-net TTS engine.
 This module exposes Piper TTS to Emacs.
 
- @section Piper TTS
 @enumerate
  @item  Sandbox for
-@url{https://github.com/rhasspy/piper}
-@item pipx install piper-tts.
+@url{https://github.com/OHF-Voice/piper1-gpl}
+@item Install piper-tts in a virtual environment whose bin directory is on
+Emacs's PATH.
 @item Set location of voice data in @code{pip-data-dir}.
 Default is @code{~/.local/share/voices-piper}
-@item ;; Create the data directory above if needed.
-  @item Run piper there
-using the --update-voices flag once for each desired voice to get
-the voice models.
+@item Use that environment's Python to run
+@code{-m piper.download_voices}.  Download a voice with its
+@code{--data-dir} option set to @code{pip-data-dir}.
 @item @code{M-x pip-speak} to speak.  @item At present
 @code{piper} is not suitable for use as a primary TTS engine for
-Emacsvox, given its high latency.
+Emacsvox through this experimental per-request wrapper, given its model-load
+latency and fixed 22,050 Hz raw-output assumption.
 @item However it might be
 interesting to use it for lower-priority speech where quality
 trumps latency.
@@ -18691,6 +24017,25 @@ This module defines the generic TTS interface.
 
 @subsection Tts-Speak Commands
 
+@subsubsection emacsvox-set-capitalization-presentation
+@deffn {Command} emacsvox-set-capitalization-presentation  (presentation &optional global)
+@table @kbd
+@item C-e d C
+@kindex C-e d C
+@end table
+
+@findex emacsvox-set-capitalization-presentation
+
+@format
+Select capitalization PRESENTATION and preview representative text.
+
+Set the option buffer-locally by default.  With interactive prefix GLOBAL,
+also set the global default and use it in the current buffer.
+
+(fn PRESENTATION &optional GLOBAL)
+@end format
+@end deffn
+
 @subsubsection tts-add-cleanup-pattern
 @deffn {Command} tts-add-cleanup-pattern  (&optional delete)
 @table @kbd
@@ -18765,7 +24110,7 @@ program. Port defaults to tts-local-server-port
 @findex tts-notify-initialize
 
 @format
-Initialize notification TTS stream.
+Initialize a separate notification TTS process when configured.
 @end format
 @end deffn
 
@@ -18844,6 +24189,8 @@ Restart TTS server.
 @format
 Select  speech server ‘program’.
 
+This function has :filter-args advice: ‘emacsvox-windows-speech--resolve-server-arguments’.
+
 (fn PROGRAM)
 @end format
 @end deffn
@@ -18897,7 +24244,8 @@ Argument S specifies the syntax class.
 @format
 Set language. If your server supports it, also set the synthesis
  voice, using the syntax language:voice , where language can be
- omitted.
+ omitted.  Adapters with logical-voice language routing reject this
+ legacy global operation with an actionable error.
 
 (fn LANG)
 @end format
@@ -18913,7 +24261,8 @@ Set language. If your server supports it, also set the synthesis
 @findex tts-set-next-language
 
 @format
-Switch to  next  language
+Switch to next legacy language.
+Signal a user error when logical voices own language routing.
 @end format
 @end deffn
 
@@ -18959,7 +24308,8 @@ rate = tts-speech-rate-base + tts-speech-rate-step * level.
 @findex tts-set-preferred-language
 
 @format
-Set language by alias.
+Set legacy language ALIAS to LANG.
+Signal a user error when logical voices own language routing.
 
 (fn ALIAS LANG)
 @end format
@@ -18975,7 +24325,8 @@ Set language by alias.
 @findex tts-set-previous-language
 
 @format
-Switch to  previous  language
+Switch to previous legacy language.
+Signal a user error when logical voices own language routing.
 @end format
 @end deffn
 
@@ -19065,7 +24416,7 @@ Speak version.
 
 @format
 Stop speech.  Optional arg ‘all’ or interactive call silences
-notification stream as well.
+  notification stream as well.
 
 (fn &optional ALL)
 @end format
@@ -19213,29 +24564,22 @@ When called interactively, CHAR defaults to the character after point.
 
 @subsection tts-speak Options
 
-@defvar {User Option} tts-allcaps-prefix
+@defvar {User Option} emacsvox-capitalization-presentation
 @verbatim
-Prefix used to indicate AllCaps
+How enabled capitalization indication is presented.
+
+‘spoken’ says "cap" or "all caps".  ‘tone’ places a short tone at the
+capitalized boundary, and ‘spoken-tone’ combines both presentations.  ‘custom’
+publishes capitalization facts for personal aural rules without adding a
+built-in presentation.  ‘none’ suppresses capitalization presentation while
+leaving ‘tts-caps’ enabled.  Camel-case splitting remains controlled
+independently by ‘tts-split-caps’.
 @end verbatim
 
 Default Value:
 @verbatim
 
-#(" acc " 0 5 (personality acss-p3-s1-r3))
-
-@end verbatim
-
-@end defvar
-
-@defvar {User Option} tts-caps-prefix
-@verbatim
-Prefix used to indicate capitalization
-@end verbatim
-
-Default Value:
-@verbatim
-
-#("cap" 0 3 (personality acss-p3-s1-r3))
+tone
 
 @end verbatim
 
@@ -19274,7 +24618,9 @@ Default Value:
 Virtual sound device to use for notifications stream.
 Set to nil to disable a separate Notification stream.
 If you set the device here, make sure it exists first.
-For swiftmac, set this to ‘left’ or ‘right’.
+For SwiftMac, set this to ‘left’ or ‘right’.  For Omnivox, ‘left’,
+‘right’, or ‘both’ starts a separately routed second process; nil keeps
+notifications on the main process and its route.
 @end verbatim
 
 Default Value:
@@ -19811,7 +25157,9 @@ Function  (in their defining forms) will be
  spoken in `voice-function-name-personality'.
 Reserved words will be spoken in `voice-keyword-personality'.
 
-To audio-format  text , use M-x voice-lock-mode.
+Legacy Voice Lock modes are provided by
+`emacsvox-aural-compatibility-voice'.  This module retains ACSS, face
+mapping, and local compatibility-provider machinery.
 When this minor mode is on, the voices of the current line are
 updated with every insertion or deletion.
 
@@ -19852,71 +25200,14 @@ use from other modules.
 
 @subsection Voice-Setup Commands
 
-@subsubsection voice-lock-mode
-@deffn {Command} voice-lock-mode  (&optional arg)
-@table @kbd
-@item C-e d v
-@kindex C-e d v
-@end table
-
-@findex voice-lock-mode
-
-@format
-Toggle voice lock mode.
-
-This is a minor mode.  If called interactively, toggle the ‘Voice-Lock
-mode’ mode.  If the prefix argument is positive, enable the mode, and if
-it is zero or negative, disable the mode.
-
-If called from Lisp, toggle the mode if ARG is ‘toggle’.  Enable the
-mode if ARG is nil, omitted, or is a positive number.  Disable the mode
-if ARG is a negative number.
-
-To check whether the minor mode is enabled in the current buffer,
-evaluate the variable ‘voice-lock-mode’.
-
-The mode’s hook is called both when the mode is enabled and when it is
-disabled.
-
-(fn &optional ARG)
-@end format
-@end deffn
-
-@subsubsection voice-lock-mode--turn-on
-@deffn {Command} voice-lock-mode--turn-on
-@findex voice-lock-mode--turn-on
-
-@format
-Turn on Voice Lock mode .
-@end format
-@end deffn
-
 @subsubsection voice-setup-toggle-silence-personality
 @deffn {Command} voice-setup-toggle-silence-personality
 @findex voice-setup-toggle-silence-personality
 
 @format
-Toggle audibility of personality under point  .
+Toggle local audibility of the personality or mapped face at point.
 @end format
 @end deffn
-
-@subsection voice-setup Options
-
-@defvar {User Option} voice-lock-mode-hook
-@verbatim
-Hook run after entering or leaving ‘voice-lock-mode’.
-No problems result if this variable is not bound.
-‘add-hook’ automatically binds it.  (This is true for all hook variables.)
-@end verbatim
-
-Default Value:
-@verbatim
-
-(voice-lock-mode--set-explicitly)
-
-@end verbatim
-
-@end defvar
 
 @node xbacklight
 @section xbacklight

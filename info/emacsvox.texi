@@ -3,7 +3,7 @@
 @finalout
 @setfilename ./emacsvox.info
 @include style.texi
-@settitle Emacsvox User's Manual --- 2nd Edition.
+@settitle Emacsvox User Manual
 @dircategory Accessibility
 @direntry
 * Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
@@ -67,6 +67,7 @@ and  was last updated on @today{}.
 
 
 @node Function Index
+@unnumbered Function Index
 @printindex fn
 
 @node Variable Index

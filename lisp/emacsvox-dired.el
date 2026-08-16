@@ -129,7 +129,7 @@ If in locate-mode, speak the full pathname."
 ;;; Semantic aural presentation:
 
 (defun emacsvox-dired-enable-aural-context ()
-  "Identify the current Dired buffer to aural presentation schemes."
+  "Identify the current Dired buffer to Aural Presentation."
   (setq-local emacsvox-aural-module 'dired))
 
 (add-hook 'dired-mode-hook #'emacsvox-dired-enable-aural-context)

@@ -6,7 +6,7 @@
 
 ;;; Commentary:
 
-;; Shared validation for complete aural schemes and presentation-option
+;; Shared validation for complete Aural configurations and Presentation Option
 ;; fragments.  This module keeps diagnostic model logic independent of the
 ;; interactive managers that display its reports.
 

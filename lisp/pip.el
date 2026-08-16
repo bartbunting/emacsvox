@@ -33,7 +33,6 @@
 ;; Piper TTS is an Open Source neural-net TTS engine.
 ;; This module exposes Piper TTS to Emacs.
 
-;;  @section Piper TTS
 ;; @enumerate
 ;;  @item  Sandbox for
 ;; @url{https://github.com/OHF-Voice/piper1-gpl}

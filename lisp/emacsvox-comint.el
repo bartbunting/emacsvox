@@ -134,7 +134,7 @@ buffer is not current or its window live.")
   (if (derived-mode-p 'shell-mode) 'shell 'repl))
 
 (defun emacsvox-comint-enable-aural-context ()
-  "Identify the current command-interaction buffer to aural schemes."
+  "Identify the current command-interaction buffer to Aural Presentation."
   (setq-local emacsvox-aural-module (emacsvox-comint--module)))
 
 (defun emacsvox-comint-facts (role &optional event operation properties)

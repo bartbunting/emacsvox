@@ -4,8 +4,9 @@
 @cindex speech system
 @cindex speech settings
 
-This section documents Emacsvox's  various user commands for controlling the
-text to speech (@acronym{TTS}) system.
+This section documents the main Emacsvox commands for controlling the
+text-to-speech (@acronym{TTS}) system.  The exact key bindings generated from
+the current keymaps appear in @xref{Emacsvox Keymaps}.
 
 @menu
 * Controlling Echo::             Character, Word and Line Echo.
@@ -68,11 +69,10 @@ to the result.
 Emacsvox user commands can set different characteristics of the speech
 output such as speech rate and  punctuations mode.
 
-Emacsvox provides a number of settings that affect how  attributes of
-the text such as capitalization are conveyed.
-These include settings that produce a short tone for each upper case
-letter,  as well as a smart mode for speaking mixed case words which is
-especially useful when programming.
+Emacsvox provides settings that affect how text attributes such as
+capitalization and indentation are conveyed.  Each feature has a master
+switch and a separately selected presentation, so enabling the feature does
+not force one fixed sound.
 These settings can be made locally in a given buffer or be applied to
 all buffers by preceding these commands with @kbd{C-u}.
 
@@ -97,11 +97,6 @@ factor when speaking characters.  Interactive PREFIX arg means set the
 global default value, and then set the current local value to the
 result.
 
-This function is advised.
-
-Before-advice `emacsvox-auto':
-Automatically defined advice to speak interactive prompts.
-
 @findex tts-set-predefined-rate
 @kindex C-e d DIGIT
 @item C-e d DIGIT
@@ -116,8 +111,8 @@ globally.
 @item C-e d p
 @code{tts-set-punctuations}
 
-Set punctuation mode to MODE.  Possible values are `some', `all', or
-`none'.  Interactive PREFIX arg means set the global default value,
+Set punctuation mode to MODE.  Possible values are @code{some}, @code{all},
+or @code{none}.  Interactive PREFIX arg means set the global default value,
 and then set the current local value to the result.
 
 @findex tts-toggle-split-caps
@@ -129,16 +124,26 @@ Toggle split caps mode.  Split caps mode is useful when reading
 Hungarian notation in program source code.  Interactive PREFIX arg
 means toggle the global default value, and then set the current local
 value to the result.
-@code{tts-toggle-caps}
-@item C-e d c
+
 @kindex C-e d c
 @findex tts-toggle-caps
+@item C-e d c
+@code{tts-toggle-caps}
 
+Toggle capitalization indication.  Interactive PREFIX arg means toggle the
+global default value, then set the current local value to the result.
 
-Toggle capitalization.  when set, capitalization is indicated by a
-@strong{cap} before the word, and upper-case words are indicated with a
-@strong{acc} before the word.  Interactive PREFIX arg means toggle the global default
-value, and then set the current local value to the result.
+@kindex C-e d C
+@findex emacsvox-set-capitalization-presentation
+@item C-e d C
+@code{emacsvox-set-capitalization-presentation}
+
+Choose @code{spoken}, @code{tone}, @code{spoken-tone}, @code{custom}, or
+@code{none}, and preview representative text.  @code{custom} publishes facts
+for personal Aural Presentation rules without adding built-in output.  A
+current Omnivox server applies the selected capitalization presentation to
+isolated letters as well as queued words; older speech servers retain their
+engine-specific isolated-letter behavior.
 @end table
 
 In addition, Emacsvox can convey the indentation of lines as they are
@@ -153,14 +158,25 @@ when working with program source.
 
 Toggle state of Emacsvox audio indentation.  Interactive PREFIX arg
 means toggle the global default value, and then set the current local
-value to the result.  
+value to the result.
+
+@findex emacsvox-set-indentation-presentation
+@kindex C-e d I
+@item C-e d I
+@code{emacsvox-set-indentation-presentation}
+
+Choose spoken column, duration-coded tone, rising-pitch tone, either tone
+combined with speech, @code{custom}, or @code{none}.  The command previews a
+four-column indentation sample.  Indentation tones complete before the line is
+spoken so they do not mask its first phoneme.
 
 @end table
 @node Miscellaneous
 @subsection Miscellaneous Speech Commands
 
-Speech can be stopped using command @code{tts-stop} @MDash{} though in
-normal use, the action of moving the cursor will stop ongoing speech.
+Speech can be stopped explicitly using command @code{tts-stop}.  In normal
+navigation, replaceable speech supersedes older work in the same replacement
+domain while ordered and urgent output is preserved.
 The speech server can be stopped and restarted for cases where the
 user wants to switch to a different server @MDash{} or in the rare
 case to nuke a runaway speech server.
@@ -251,8 +267,8 @@ classified into various syntactic classes.  Argument S specifies the
 syntax class.
 
 @findex tts-speak-version
-@kindex C-e d  cap V
-@item C-e d  cap V
+@kindex C-e d V
+@item C-e d V
 @code{tts-speak-version}
 
 Use this to find out which version of the @acronym{TTS} firmware you

@@ -58,7 +58,7 @@
 (voice-setup-add-map emacsvox-pydoc--face-voice-map)
 
 (defun emacsvox-pydoc-enable-aural-context ()
-  "Identify the current Pydoc buffer to aural presentation schemes."
+  "Identify the current Pydoc buffer to Aural Presentation."
   (setq-local emacsvox-aural-module 'python))
 
 (add-hook 'pydoc-mode-hook #'emacsvox-pydoc-enable-aural-context)

@@ -56,33 +56,32 @@ associated with them.
 which are currently defined.
 @end itemize
 
-The importance of these help functions can be illustrated by the
-Emacs/W3 web browser.  When point is positioned inside a table,
-certain key bindings are established with which you can access
-Emacsvox commands that make it possible to read the rows and columns
-of the table and explore its structure efficiently.  To get a
-description of these key bindings, you can use W3 to visit the sample
-@acronym{HTML} file supplied as part of the Emacsvox distribution,
-and, after having moved point onto the first row of the table, issue
-the command @kbd{C-h m} @code{describe-mode} to create a help buffer
-containing an explanation of the features offered by W3 mode.
+For example, after entering Dired or EWW, use @kbd{C-h m} to hear the
+mode-specific commands and every active minor mode.  Use @kbd{C-h b} when you
+need the exact effective bindings, including local package maps and personal
+configuration.  These live descriptions are more reliable than copying a
+large binding table into a tutorial.
 
 Emacsvox supplements the online help facilities available within
 Emacs by defining several commands of its own, as follows:
 
 @itemize @bullet
 @item
-@kbd{C-h c-e} @code{describe-emacsvox} presents a list of standard
-Emacsvox commands.
+@kbd{C-h C-e} @code{emacsvox-describe-emacsvox} presents a brief Emacsvox
+overview.
 
 @item
-@kbd{C-e F} @code{emacsvox-view-emacsvox-faq} opens a new buffer
-containing the Emacsvox @acronym{FAQ}, a list of frequently asked questions
-about Emacsvox together with their answers.
+@kbd{C-e N} @code{emacsvox-view-emacsvox-news} opens the versioned Emacsvox
+news, and @kbd{C-e T} @code{emacsvox-view-emacsvox-tips} opens the productivity
+tips.
 
 @item
-@kbd{C-e <F1>} @code{emacsvox-learn-mode} enters a mode in which the
-function of every key that you type is spoken; this mode can be
-terminated with the @kbd{C-g} @code{keyboard-quit} command.
+@kbd{C-h C-l} @code{emacsvox-learn-emacs} enters a loop in which the function
+of every key that you type is spoken; leave it with @kbd{C-g}.
+
+@item
+@kbd{C-e H} @code{emacsvox-aural} opens Aural Home.  From an ordinary buffer,
+@kbd{C-e E} @code{emacsvox-aural-explain-presentation} explains why the object
+at point received its voices and auditory actions.
 
 @end itemize
