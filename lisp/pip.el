@@ -36,17 +36,18 @@
 ;;  @section Piper TTS
 ;; @enumerate
 ;;  @item  Sandbox for
-;; @url{https://github.com/rhasspy/piper}
-;; @item pipx install piper-tts.
+;; @url{https://github.com/OHF-Voice/piper1-gpl}
+;; @item Install piper-tts in a virtual environment whose bin directory is on
+;; Emacs's PATH.
 ;; @item Set location of voice data in @code{pip-data-dir}.
 ;; Default is @code{~/.local/share/voices-piper}
-;; @item ;; Create the data directory above if needed.
-;;   @item Run piper there
-;; using the --update-voices flag once for each desired voice to get
-;; the voice models.
+;; @item Use that environment's Python to run
+;; @code{-m piper.download_voices}.  Download a voice with its
+;; @code{--data-dir} option set to @code{pip-data-dir}.
 ;; @item @code{M-x pip-speak} to speak.  @item At present
 ;; @code{piper} is not suitable for use as a primary TTS engine for
-;; Emacsvox, given its high latency.
+;; Emacsvox through this experimental per-request wrapper, given its model-load
+;; latency and fixed 22,050 Hz raw-output assumption.
 ;; @item However it might be
 ;; interesting to use it for lower-priority speech where quality
 ;; trumps latency.

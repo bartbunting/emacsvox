@@ -13,7 +13,7 @@ The answers follow the generated Emacsvox Aural Presentation Reference and the
 current Emacsvox keymaps.  The source blocks are examples for study and are
 marked not to evaluate.
 
-* 01. What is the difference between an aural semantic fact and a presentation scheme?
+* 01. How do Aural semantic facts differ from presentation rules?
 :PROPERTIES:
 :ID:       25a5e3b2-bc29-4051-a7a2-f1c9aa6134eb
 :END:
@@ -28,16 +28,18 @@ marked not to evaluate.
 :END:
 
 ** Front
-What is the difference between an aural semantic fact and a presentation
-scheme?
+How do Aural semantic facts differ from presentation rules?
 
 ** Back
 A semantic fact describes what an object or event /means/.  For example, an
 object may have the =heading= role and the =focus-entered= event.
 
-A presentation scheme decides /how/ matching facts are conveyed: speech,
-voice, an earcon, a tone, a pause, spatial placement, or a combination of
-these.  Integrations should emit meaning; schemes should choose presentation.
+A presentation rule decides /how/ matching facts contribute speech, voice, an
+earcon, a tone, a pause, spatial placement, or a combination of these.  The
+active cascade composes core rules, automatic module fragments, the fixed
+compatibility baseline, Presentation Options, and scoped overrides.
+Integrations should emit meaning; presentation policy should choose how it is
+conveyed.
 
 * 02. In what order does the Aural rule cascade apply matching rules?
 ** Front
@@ -48,7 +50,7 @@ The order is:
 
 1. Core rules.
 2. Automatic module fragments.
-3. The active inherited base scheme.
+3. The fixed internal compatibility baseline.
 4. Ordered, enabled presentation options.
 5. Persistent personal rules.
 6. Session rules.
@@ -254,18 +256,17 @@ Register a data-only module fragment whose rules match semantic facts:
 #+end_src
 
 The fragment supplies automatic compatibility presentation; it does not
-replace the active scheme or become a user-toggleable presentation option.
+replace the fixed baseline or become a user-toggleable Presentation Option.
 
-* 15. Which fields define an Aural scheme and one of its rules?
+* 15. Which fields define a personal Presentation Option and one of its rules?
 ** Front
-What are the principal fields of a declarative Aural scheme and of each rule
-inside it?
+What are the principal fields of a declarative personal Presentation Option
+and of each rule inside it?
 
 ** Back
-A scheme contains:
+A personal Presentation Option contains:
 
 - =:schema-version=, =:id=, a nonempty =:summary=, and =:rules=.
-- Optionally, =:parent=, =:resource-pack=, and =:voice-palette=.
 
 Each rule contains:
 
@@ -274,7 +275,7 @@ Each rule contains:
 - A =:render= plist describing what it contributes.
 - Optionally, =:enabled= and integer =:order= values.
 
-Personal scheme data is declarative data; evaluation syntax is rejected.
+Personal option data is declarative data; evaluation syntax is rejected.
 
 * 16. Which facts and context can an Aural rule match?
 ** Front

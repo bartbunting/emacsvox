@@ -6,7 +6,7 @@
 # LCD Archive Entry:
 # emacsvox| T. V. Raman |raman@cs.cornell.edu
 # A speech interface to Emacs |
-# Location https://github.com/robertmeta/emacsvox
+# Location https://github.com/bartbunting/emacsvox
 #
 
 ###  Copyright:

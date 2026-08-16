@@ -1,8 +1,33 @@
 * Piper TTS
 
-1. Sandbox for [[https://github.com/rhasspy/piper][Piper TTS]]
-2. pipx install piper-tts
-3. Set the location of voice data in =lisp/pip.el=.
-4. Create the data directory above if needed.
-5.  Run piper there  using the --update-voices flag once for each
-   desired voice to get the voices.
+These are experimental notes for the optional =lisp/pip.el= notification path.
+It invokes the locally installed Piper command through =pipspeak= and is not a
+primary Emacsvox speech-server adapter.  It is also separate from Omnivox's
+optional out-of-process Piper engine and packaging.
+
+1. Sandbox for [[https://github.com/OHF-Voice/piper1-gpl][Piper TTS]].
+2. Install =piper-tts= in a virtual environment whose =bin= directory is on
+   Emacs's =PATH=, for example:
+
+   #+begin_src sh
+   python3 -m venv ~/.local/share/emacsvox-piper-venv
+   ~/.local/share/emacsvox-piper-venv/bin/python -m pip install piper-tts
+   #+end_src
+
+3. Set =pip-data-dir= to the directory that should contain voice data.  Its
+   default is =~/.local/share/voices-piper=.
+4. List and download voices with Piper's supported downloader, for example:
+
+   #+begin_src sh
+   ~/.local/share/emacsvox-piper-venv/bin/python \
+     -m piper.download_voices
+   ~/.local/share/emacsvox-piper-venv/bin/python \
+     -m piper.download_voices \
+     --data-dir ~/.local/share/voices-piper en_US-lessac-medium
+   #+end_src
+
+The upstream command-line interface warns that loading a model for each call is
+slow.  Emacsvox's =pipspeak= is a small experimental raw-output wrapper for
+lower-priority notification use; it is not a low-latency primary server.  The
+wrapper currently assumes 22,050 Hz mono 16-bit PCM, so its selected model must
+use that sample rate.

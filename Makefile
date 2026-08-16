@@ -6,7 +6,7 @@
 # LCD Archive Entry:
 # emacsvox| T. V. Raman |raman@cs.cornell.edu
 # A speech interface to Emacs |
-# Location https://github.com/tvraman/emacsvox
+# Location https://github.com/bartbunting/emacsvox
 #
 
 ###  Copyright:
@@ -520,10 +520,9 @@ GITVERSION=$(shell git show HEAD | head -1  | cut -b 8- )
 README: 
 	@rm -f README
 	@echo "Emacsvox  Revision $(GITVERSION)" > $(README)
-	@echo "This release requires Emacs 29.1 or later."  > $(README)
+	@echo "This release requires Emacs 31 or later." >> $(README)
 	@echo "Distribution created by `whoami` at `date`" >> $(README)
-	@echo "Unpack the  distribution And type make config " >> $(README)
-	@echo "Then type make" >> $(README)
+	@echo "Unpack the distribution and type make all" >> $(README)
 EXCLUDES=-X .excludes --exclude-backups
 dist:
 	make ${README}

@@ -2,10 +2,12 @@
 
 * Emacs 31 Test Suite
 
-Run unit tests and the self-contained Emacsvox golden traces with:
+Select Emacs 31 in the repository's ignored =local.mk=, verify it with
+=make check-emacs=, then run the unit tests and self-contained Emacsvox golden
+traces with:
 
 #+begin_src sh
-make test EMACS=/home/bart/opt/emacs-31/bin/emacs
+make test
 #+end_src
 
 The trace tests replace low-level speech and sound functions temporarily.  They
@@ -22,8 +24,9 @@ The original reference is Emacspeak revision:
 7482f8e2713b5b8ea87132d9d2fcea6664ff4037
 #+end_example
 
-This is both the current upstream revision and the parent immediately before
-the Emacsvox conversion tooling was introduced.  Create an isolated checkout:
+This is the fixed comparison baseline and the parent immediately before the
+Emacsvox conversion tooling was introduced.  It is intentionally not advanced
+with current upstream.  Create an isolated checkout:
 
 #+begin_src sh
 git clone https://github.com/tvraman/emacspeak.git ~/src/emacspeak-reference
@@ -39,8 +42,7 @@ Run the optional comparison with:
 
 #+begin_src sh
 make reference-test \
-  EMACS=/home/bart/opt/emacs-31/bin/emacs \
-  EMACSPEAK_DIR=$HOME/src/emacspeak-reference
+  EMACSPEAK_DIR=/path/to/emacspeak-reference
 #+end_src
 
 The pinned legacy checkout produces many expected Emacs 31 obsolescence

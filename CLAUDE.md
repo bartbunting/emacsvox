@@ -1,122 +1,132 @@
-# CLAUDE.md
+# Emacsvox contributor guide
 
-This file provides repository guidance for automated coding tools.
+Repository workflow and safety requirements live in `AGENTS.md` and are
+authoritative. This file is a compact architecture and documentation index for
+automated coding tools; it does not replace those instructions.
 
-## Project Overview
+## Project boundary
 
-Emacsvox is an Emacs 31+ audio desktop derived from Emacspeak.  The active
-project, files, features, variables, commands, and documentation use the
-Emacsvox name.  References to Emacspeak are retained only for upstream
-attribution, historical material, external identifiers, and the pinned
-behavioural comparison checkout.
+Emacsvox is an Emacs 31+ audio desktop derived from Emacspeak. Active project
+APIs and configuration use the `emacsvox-*` and engine-independent `tts-*`
+namespaces. `dtk-*` is reserved for actual DECtalk backends. References to
+Emacspeak remain only for attribution, historical records, external
+identifiers, and the pinned behavioral comparison checkout.
 
-The codebase uses lexical binding and native `advice-add` advice.  Generic
-speech APIs use the `tts-*` namespace; `dtk-*` is reserved for actual DECtalk
-backends.
+The canonical current documents are:
 
-## Build and Test Commands
+- `Readme.org` — user overview, Omnivox integration, and quick installation.
+- `etc/install.org` — source-checkout and byte-code lifecycle.
+- `etc/NEWS` — current user-visible changes.
+- `etc/aural-presentation-reference.org` — generated Aural user and author
+  contract.
+- `servers/omnivox-release/README.org` — reproducible Windows bundle contract.
+- `test/README.org` — local and pinned-reference test workflows.
 
-Use Emacs 31 or newer.  When it is not the default `emacs`, copy
-`local.mk.example` to the ignored `local.mk` and set `EMACS` there.  Then the
-compiler selection is consistent across every command:
+`etc/advice-migration.org`, `etc/tts-modernization.org`,
+`etc/aural-presentation-schemes.org`, and `emacsvox-aural-report.org` retain
+point-in-time migration or design history. Do not infer current behavior from
+their historical checkpoints when a canonical document or current code says
+otherwise.
+
+## Build and checks
+
+Use the Emacs executable selected by the ignored `local.mk`. Never diagnose or
+compile this repository with an older system Emacs.
 
 ```sh
 make check-emacs
-make bytecode             # incremental build after an ordinary Lisp edit
-make bytecode-check       # non-mutating startup/deployment preflight
-make bytecode-rebuild     # after branch changes, pulls, or macro changes
+make all                 # configure and build a complete checkout
+make bytecode            # incremental build after an ordinary Lisp edit
+make bytecode-check      # non-mutating startup/deployment preflight
+make bytecode-rebuild    # branch, pull, macro, or public-interface change
+
 make test
-make trace-test
+make aural-audit
 make advice-audit
 make name-audit
 make tts-audit
 ```
 
-Tests prefer source and do not prove ignored in-tree byte-code is current.
-Never clean source changes to satisfy a build precondition.
+Tests prefer source and therefore do not prove that ignored in-tree byte-code
+is current. Use `make reference-test EMACSPEAK_DIR=/path/to/pinned/checkout`
+only for the fixed comparison described in `test/README.org`.
 
-Build individual TTS servers with:
+The Aural reference is generated. Edit its maintained prose or tables in
+`utils/emacsvox-aural-audit.el`, run `make aural-reference`, and commit the
+generator and generated file together.
 
-```sh
-make espeak
-make swiftmac
-make outloud
-make dtk
+Build individual speech servers with `make espeak`, `make swiftmac`,
+`make outloud`, or `make dtk`. For Omnivox, the reproducible release path is
+`make windows-omnivox`; use `make windows-omnivox-dev` for local testing from
+active tracked changes. Restart Emacsvox after staging a new Omnivox runtime,
+because an existing process keeps running its original content-addressed
+executable.
+
+## Runtime architecture
+
+The ordinary speech path begins in high-level commands and package advice in
+`lisp/emacsvox-speak.el` and the `lisp/emacsvox-*.el` integrations.
+`lisp/tts-speak.el` owns generic speech-server processes, state, text
+preparation, protocol writes, tracked callbacks, and process retirement.
+`lisp/voice-setup.el` and `lisp/voice-defs.el` map faces and personalities to
+engine-independent voice properties.
+
+The semantic Aural path is:
+
+```text
+integration/submission
+  -> source snapshot and providers
+  -> rule matching and planning
+  -> concrete-plan compilation
+  -> delivery-policy transport
+  -> tts-speak and the selected server adapter
 ```
 
-For an isolated startup check:
+The corresponding implementation is split across
+`emacsvox-aural-submission.el`, `emacsvox-aural-source.el`, provider modules,
+`emacsvox-aural-rules.el`, `emacsvox-aural-planner.el`,
+`emacsvox-aural-compiler.el`, `emacsvox-aural-concrete.el`, and
+`emacsvox-aural-transport.el`.
 
-```sh
-TTS_PROGRAM=log-null emacs -Q -l lisp/emacsvox-setup.el
-```
+For Omnivox, `lisp/omnivox-voices.el` negotiates capabilities, inventory,
+logical voices, runtime routing, marker events, and structured presentation
+timeline v3. Structured keyed replacement is sent immediately so Omnivox can
+cancel only the matching domain. The short Emacs idle delay is a legacy
+fallback; ordered and urgent submissions are not delayed. The server remains
+responsible for synthesis, generation-safe domain cancellation, audio
+buffering, and truthful terminal events.
 
-`lisp/emacsvox-loaddefs.el` is generated by `make config`; do not commit it.
+## Aural invariants
 
-## Architecture
+- Integrations publish semantic facts and occasions; presentation rules choose
+  speech, voice, cue, tone, pause, effects, and spatial style.
+- Capture facts, faces, properties, narrowing, and source context in the source
+  buffer before copying text into a scratch or notification buffer.
+- Submit one complete presentation transaction. Do not nest `tts-speak`,
+  `emacsvox-icon`, or another complete Aural resolver inside a native
+  submission.
+- Keep compatibility cues as data in the same transaction so delivery order,
+  cancellation, history, and callbacks share one lifecycle.
+- `ordered` preserves accepted work, `replaceable` supersedes only its owner
+  and replacement domain, and `urgent` performs explicit stream interruption.
+- Generated history is committed only after successful delivery and must not
+  retain live source buffers.
+- The fixed compatibility baseline, automatic module fragments, ordered
+  Presentation Options, and scoped overrides are separate layers. Selectable
+  presentation schemes are retired.
 
-1. `lisp/emacsvox-speak.el` implements high-level speech commands such as
-   `emacsvox-speak-line`, `emacsvox-speak-region`, and
-   `emacsvox-speak-buffer`.
-2. `lisp/tts-speak.el` manages speech-server state, processes, text
-   preparation, and the TTS protocol.
-3. `lisp/voice-setup.el` and `lisp/voice-defs.el` map Emacs faces and
-   personalities to engine-independent voice properties.
-4. `servers/` contains Tcl and native adapters for eSpeak, Outloud, macOS,
-   DECtalk, and other engines.  Shared Tcl support lives in
-   `servers/tts-lib.tcl`.
+## Package support and naming
 
-The speech-server protocol queues text with `q`, voice codes with `c`, silence
-with `sh`, and tones with `t`; `d` dispatches queued output and `s` stops it.
+Use named native `advice-add` functions and test the interactive target and
+return-value behavior. Do not introduce `defadvice`, positional advice
+accessors, anonymous advice functions, or compatibility aliases for removed
+Emacspeak and generic DTK names.
 
-## Advice and Package Support
+New package support normally belongs in `lisp/emacsvox-PACKAGE.el`, is lazily
+registered from `lisp/emacsvox.el`, publishes semantic facts at its feedback
+boundary, and receives focused ERT coverage under `test/`.
 
-Core and package modules use named native advice functions:
-
-```elisp
-(defun emacsvox--advice-some-function-after (&rest _)
-  "Provide speech feedback after `some-function'."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done)
-    (emacsvox-speak-line)))
-
-(advice-add
- 'some-function :after #'emacsvox--advice-some-function-after)
-```
-
-Do not introduce `defadvice`, `ad-get-arg`, `ad-do-it`, anonymous advice
-functions, or compatibility aliases for removed Emacspeak and generic DTK
-names.
-
-To add package support:
-
-1. Create `lisp/emacsvox-PACKAGE.el`.
-2. Register named advice with `advice-add`.
-3. Use `emacsvox-*` high-level feedback and `tts-*` generic speech APIs.
-4. Register lazy loading in `lisp/emacsvox.el`.
-5. Add focused ERT coverage under `test/`.
-
-## Key Files
-
-- `lisp/emacsvox.el` — main package integration registry
-- `lisp/emacsvox-setup.el` — initialization entry point
-- `lisp/emacsvox-preamble.el` — paths and core loading
-- `lisp/emacsvox-speak.el` — high-level speech API
-- `lisp/emacsvox-advice.el` — core Emacs advice
-- `lisp/tts-speak.el` — generic TTS runtime
-- `test/run-tests.el` — ERT batch entry point
-- `test/run-scenarios.el` — semantic trace comparison runner
-- `etc/advice-migration.org` — native-advice migration record
-- `etc/tts-modernization.org` — TTS namespace migration record
-
-## Naming Rules
-
-- Use `EMACSVOX_DIR` for the checkout root.
-- Use `EMACSVOX_PLAY` for the TTS server audio player.
-- Use `TTS_PROGRAM` to select the speech server.
-- Use `emacsvox-*` for project APIs and `tts-*` for engine-independent speech.
-- Keep `dtk-exp`, `dtk-soft`, and other names that identify real DECtalk
-  backends.
-
-Emacsvox intentionally provides no compatibility layer for the removed
-`emacspeak-*`, generic `dtk-*`, `EMACSPEAK_DIR`, `EMACSPEAK_PLAY`, or
-generic DTK environment interfaces.
+Use `EMACSVOX_DIR` for the checkout root, `EMACSVOX_PLAY` for the server audio
+player, and `TTS_PROGRAM` for speech-server selection. The removed
+`EMACSPEAK_*`, generic `DTK_*`, `emacspeak-*`, and generic `dtk-*` interfaces
+have no compatibility layer.

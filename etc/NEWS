@@ -2,13 +2,13 @@
 Programming is the art of telling another human being what one wants
 the computer to do.   [[https://www.azquotes.com/quote/964459][(DEK)]]
 
-Emacspeak News --History Of User-Visible Changes
+Emacsvox News -- History Of User-Visible Changes
 
-Author: T. V. Raman <tv.raman.tv@gmail.com>
+Maintained by Emacsvox Contributors.
 
-* Emacspeak 61 --- Emacspeak 61 User Visible Changes
+* Emacsvox 60 --- Current User-Visible Changes
 
-This version requires Emacs-29.1 or later.
+This version requires Emacs 31 or later.
 
 ** Native Windows Speech Under WSL
 
@@ -60,18 +60,25 @@ physical voice for following queued spans, while missing bindings fall back to
 the preferred engine.  Older servers ignore the additive directive and retain
 their existing pitch behavior.
 
-When a server advertises ~emacsvox_tx~, replaceable aural output is sent as one
-bounded, generation-numbered frame.  The server validates it atomically,
-coalesces consecutive frames to the newest generation, rejects stale frames,
-and treats stop as an external barrier.  Older Omnivox servers retain ordinary
-legacy delivery.
+Current Emacsvox uses ~presentation_timeline_v3~ for complete structured Aural
+delivery.  Timelines carry an explicit ordered, replaceable, or urgent policy;
+large payloads use bounded multipart framing and are validated before
+admission.  A newer valid replaceable timeline immediately cancels queued,
+synthesizing, and buffered output only in its matching replacement domain.
+Ordered, urgent, legacy, and differently keyed output remain intact.  The
+reader's short coalescing delay applies only to matching replaceable work;
+ordered and urgent timelines execute immediately.  ~emacsvox_tx~ remains the
+bounded legacy fallback for a server without timeline v3.
 
 Queued logical voices now re-resolve after a runtime missing-voice,
 unavailable-engine, or synthesis failure and retry the identical chunk on the
 configured fallback.  Each chunk is limited to four attempts, and stop
 generation checks prevent cancelled speech from starting a fallback attempt.
-Failure exclusions are local to the dispatched batch; persistent engine
-health and recovery remain future work.
+Runtime failures also feed persistent engine health circuits.  Cooldown and a
+single recovery probe keep ordinary requests on healthy fallbacks until the
+preferred engine recovers.  Immediate speech and isolated-letter commands use
+the current global routing policy and health snapshot, but do not carry a
+named logical voice.
 
 ** TTS Prefix Map Rename
 
@@ -118,13 +125,15 @@ server now drains preceding speech before starting an external point earcon,
 so the separate speech and cue playback queues preserve its text boundary.
 Omnivox now discards an interrupted timeline's unfinished overlay tail before
 rendering a replacement line, preventing a cancelled point earcon from
-reappearing at the beginning of the next navigation utterance.  Presentation
-Profiles now labels its voice-provider column =Voice Palette=.  The voice and
-earcon remap-at-point workflows explicitly speak their prepared result after
-completion selection instead of relying on buffer-local message speech.
-Vertico's initial completion presentation now speaks the minibuffer prompt and
-first candidate as one ordered utterance, so prompts such as =Find file:= and
-the contextual remap descriptions are not cancelled by candidate navigation.
+reappearing at the beginning of the next navigation utterance.  The
+Presentation Profiles manager now labels its voice-provider column
+=Voice Palette=.  The voice and earcon remap-at-point workflows explicitly
+speak their prepared result after completion selection instead of relying on
+buffer-local message speech.
+Vertico's initial file completion presentation now speaks the minibuffer prompt
+and current directory exactly once as one ordered utterance.  Later candidate
+navigation speaks only the changed candidate, while preserving the initial
+directory from pronunciation suppression.
 The selected presentation profile is now applied completely at startup rather
 than restoring only its identity and option list.  Diverged profiles name the
 differing setting areas and direct users to press =v= for saved-versus-live
@@ -233,22 +242,33 @@ boundaries, group operations, filesystem inspection, Magit views, blame,
 diffs, and process completion.
 Agent Shell is now an end-to-end reference integration for transcript
 content, session lifecycle, tools, permissions, source blocks, tables,
-viewports, and prompt editing.  Markdown now exposes headings, tasks, lists,
-links, code blocks, tables, footnotes, visibility, and document operations,
-and line movement uses the same semantic heading intent as structural
-navigation.  A source audit maintains the migrated-module set and rejects new
-context-free direct icon calls while allowing named compatibility adapters.
+viewports, and prompt editing.  Its chat overlays are normalized before speech,
+so decorative status glyphs and button names do not leak to another engine.
+Semantic item content uses the selected voice, collapsed or expanded state is
+announced after the item, upward and downward visual-line navigation agree,
+and an empty editable prompt says =Me. Ready for input.=  Ordinary Dired next
+and previous line movement now speaks the entry without a redundant
+=select-object= earcon; marking and other state-changing operations retain
+their cues.  Markdown now exposes headings, tasks, lists, links, code blocks,
+tables, footnotes, visibility, and document operations, and line movement uses
+the same semantic heading intent as structural navigation.  A source audit
+maintains the migrated-module set and rejects new context-free direct icon
+calls while allowing named compatibility adapters.
 
 ** Search From Calendar
 
-You can perform before/after  Web and Youtube searches from within the
-Emacs Calendar. Keys: _gg_, _gG_, _gy_ and _gY_ in Calendar.
+Calendar keys =gg= and =gG= start Google searches after or before the selected
+date.  Keys =gy= and =gY= start the corresponding YouTube searches through
+EMPV.
 
-** EMPV And Youtube
+** EMPV And YouTube
 
-More empv-aware commands.
+The =emacsvox-empv= integration speaks YouTube results and playback state.  It
+also provides URL and local-file playback, media history, precise relative or
+absolute seeking, current-position feedback, and audio-filter and channel
+controls through EMPV's repeat map.
 
 
 ** Speech-enable Consult
 
-Module ~emacspeak-consult~ speech-enables the ~consult~ package.
+Module ~emacsvox-consult~ speech-enables the ~consult~ package.

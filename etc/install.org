@@ -3,7 +3,7 @@
 To install a specific version of Emacsvox:
 
   1. Clone the repository and check out the desired tag or commit.
-  2. Run =make config && make= to build Emacsvox.
+  2. Run =make all= to configure and build Emacsvox.
   3. Optional: make espeak to build espeak support.
   4. Optional: make outloud to build ViaVoice outloud support.
   5. Copy the resulting =emacsvox= directory to the install location.

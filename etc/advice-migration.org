@@ -2,6 +2,12 @@
 #+author: Emacsvox Contributors
 #+date: <2026-07-24 Fri>
 
+Status: completed on 2026-07-24.  This file retains the original inventory,
+phase plan, and point-in-time check results as a migration record.  Statements
+inside those historical sections about remaining bridge code, converter
+limitations, or exact test counts are not descriptions of the current tree;
+the completion status near the end and =make advice-audit= are authoritative.
+
 * Goal
 
 Replace the remaining legacy and partially converted advice with correct native

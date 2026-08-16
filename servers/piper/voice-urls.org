@@ -1,35 +1,24 @@
-* Python Piper and Pipx
+* Piper Voice Downloads
 
-If piper is installed as
-#+begin_src shell
-  pipx install piper_tts
+This file belongs to the experimental =lisp/pip.el= notification path, not the
+Omnivox Piper engine.  The old hand-maintained model URLs and voice list were
+removed because Piper now provides a supported downloader and the direct URLs
+age independently.
+
+Install the current =piper-tts= package in a virtual environment, list
+available voices with that environment's Python, and download a chosen model
+into =pip-data-dir=:
+
+#+begin_src sh
+python3 -m venv ~/.local/share/emacsvox-piper-venv
+~/.local/share/emacsvox-piper-venv/bin/python -m pip install piper-tts
+~/.local/share/emacsvox-piper-venv/bin/python -m piper.download_voices
+~/.local/share/emacsvox-piper-venv/bin/python -m piper.download_voices \
+  --data-dir ~/.local/share/voices-piper en_US-lessac-medium
 #+end_src
 
-The resulting _piper_ if given a  model name appears to download the
-model and json file from Hugging Face. If that works, you dont need to
-use the URLs in the next section.
+Put =~/.local/share/emacsvox-piper-venv/bin= on the environment inherited by
+Emacs so =lisp/pip.el= can find the =piper= command.
 
-* Voice Names
-
-1. en_US-amy-medium
-2. en_US-arctic-medium
-en_m3. US-joe-medium
-4. en_US-kusal-medium
-5. en_US-l2arctic-mediumb
-6. en_US-lessac-high
-7. en_US-libritts-high
-8. en_US-ryan-high
-* Voice Choices
-
-I use _ryan-high_ and _lessac-high_ (male, female).
-
-* Download URLs
-
-https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/lessac/high/en_US-lessac-high.onnx
-https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/amy-medium/en_US-amy-medium.onnx
-https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/arctic-medium/en_US-arctic-medium.onnx
-https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/joe-medium/en_US-joe-medium.onnx
-https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/kusal-medium/en_US-kusal-medium.onnx
-https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/l2arctic-medium/en_US-l2arctic-medium.onnx
-https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/libritts/high/en_US-libritts-high.onnx
-https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/ryan/high/en_US-ryan-high.onnx
+See [[https://github.com/OHF-Voice/piper1-gpl/blob/main/docs/CLI.md][Piper's command-line reference]] for the maintained options and voice-download
+workflow.

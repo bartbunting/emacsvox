@@ -1,5 +1,10 @@
 #+title: DTK to TTS Namespace Modernization
 
+Status: completed on 2026-07-25.  This file retains the initial inventory and
+phase plan as a migration record.  Historical branch names, counts, and
+transitional compatibility steps are not current contributor instructions;
+the completion status near the end and =make tts-audit= are authoritative.
+
 * Purpose
 
 The original Emacspeak speech server was DECtalk, so the generic speech
@@ -26,7 +31,7 @@ The read-only inventory on 2026-07-24 found:
 Run the syntax-aware Lisp inventory with:
 
 #+begin_src sh
-make tts-audit EMACS=/home/bart/opt/emacs-31/bin/emacs
+make tts-audit
 #+end_src
 
 The audit is now a zero-legacy gate.  It parses =lisp/= forms and also scans

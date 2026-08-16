@@ -69,3 +69,8 @@ It does not weaken the clean-worktree requirement of =make windows-omnivox=.
 and worktree-digest agreement with local diagnostics, the Windows-local runtime
 copy, the external eSpeak cache digest, and launcher selection through
 =servers/omnivox-bin/current=.
+
+Staging changes what a newly launched speech process selects.  An existing
+Omnivox process continues running the content-addressed executable with which
+it started, so restart Emacsvox, or otherwise start a fresh speech server,
+after staging a new runtime.

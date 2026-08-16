@@ -1,21 +1,16 @@
+#+title: Emacsvox
+
 [[file:logo.png]]
 
-* Emacsvox
-
-* Table of Contents
-1. [[*Emacsvox][Emacsvox]]
-2. [[*Description][Description]]
-3. [[*Quick Installation Instructions][Quick Installation Instructions]]
-4. [[*Aural Presentation Schemes][Aural Presentation Schemes]]
-5. [[*Blog and Portfolio][Blog and Portfolio]]
-6. [[*Additional Info][Additional Info]]
-
-** Description
-*Emacsvox* is a modernized fork of Emacspeak - a speech interface that helps visually impaired users work with the Emacs editor. Emacsvox turns Emacs into a complete audio desktop, giving audio feedback allowing full access to all of its features.
+* Description
+*Emacsvox* is a modernized fork of Emacspeak, a speech interface that helps
+visually impaired users work with the Emacs editor.  Emacsvox turns Emacs into
+a complete audio desktop, providing spoken and non-speech feedback for its
+features.
 
 *Modernization Status:* Fully updated for Emacs 31+ with modern elisp patterns and advice-add throughout.
 
-** TTS Namespace Upgrade
+* TTS Namespace Upgrade
 
 The generic speech interface now uses =tts-*= names and the
 =TTS_PROGRAM= environment variable.  This is an intentional breaking change:
@@ -24,7 +19,7 @@ Names for actual DECtalk backends, such as =dtk-exp= and =dtk-soft=, are
 unchanged.  See [[file:etc/tts-modernization.org][the migration record]] for
 the complete naming policy and migration table.
 
-** Emacsvox Namespace Upgrade
+* Emacsvox Namespace Upgrade
 
 Active project configuration uses the Emacsvox name.  Set =EMACSVOX_DIR= when
 a speech server or external utility needs the checkout root, and set
@@ -35,11 +30,11 @@ recognized.  This is an intentional breaking change; update user configuration
 to the Emacsvox names.  References to Emacspeak remain where they identify the
 upstream project, historical material, or the pinned comparison test checkout.
 
-** Omnivox And Portable Logical Voices
+* Omnivox And Portable Logical Voices
 
-Omnivox is the native Windows server that is being extended into Emacsvox's
-multi-engine speech host.  Build and stage its content-addressed Windows
-runtime from this checkout with:
+Omnivox is Emacsvox's multi-engine speech host.  Its current Windows build can
+route speech among WinRT, eSpeak, and optional Eloquence and DECtalk helpers.
+Build and stage its content-addressed Windows runtime from this checkout with:
 
 #+BEGIN_SRC sh
 make windows-omnivox
@@ -73,11 +68,18 @@ inventory.  A logical voice without an explicit preference binds to the
 preferred engine reported by each speech process.  Registration waits for that
 process's inventory, so differing main, notification, or machine voice lists do
 not need to be copied into portable Emacs configuration.
-The WSL launcher forwards =OMNIVOX_ENGINE=, =OMNIVOX_AUDIO_TARGET=,
-=OMNIVOX_ELOQUENCE_HELPER=, =OMNIVOX_ECI_DLL=,
-=OMNIVOX_DECTALK_HELPER=, and =OMNIVOX_DECTALK_DLL= to the Windows process.
-The last four are optional overrides; normally staged helper discovery and
-each engine's standard runtime location need no configuration.
+The WSL launcher writes one private diagnostic log per speech process below
+=$XDG_STATE_HOME/emacsvox/omnivox=, defaulting to
+=~/.local/state/emacsvox/omnivox=.  Set =OMNIVOX_LOG_DIRECTORY= to use another
+directory.  Spoken text is omitted from those logs unless
+=OMNIVOX_LOG_SYNTHESIS_TEXT= is explicitly enabled.
+
+The launcher forwards =OMNIVOX_ENGINE=, =OMNIVOX_AUDIO_TARGET=,
+=OMNIVOX_LOG_SYNTHESIS_TEXT=, =OMNIVOX_ELOQUENCE_HELPER=, =OMNIVOX_ECI_DLL=,
+=OMNIVOX_DECTALK_HELPER=, =OMNIVOX_DECTALK_DLL=, and =ESPEAK_NG_DATA= to the
+Windows process.  Helper and DLL variables are optional overrides; normally
+the staged runtime and each engine's standard runtime location need no manual
+configuration.
 
 Portable preferences do not copy a machine's discovered voice list into user
 configuration.  Instead, each logical voice has ordered exact, engine-default,
@@ -156,16 +158,22 @@ Missing or unresolved routes fall back to the process's preferred legacy
 engine; older servers ignore the routing directive and continue to honor the
 existing pitch code.
 
-Servers that also advertise =emacsvox_tx= receive each replaceable aural
-presentation as one bounded, generation-numbered UTF-8 frame.  Omnivox
-validates the whole presentation before executing it, coalesces consecutive
-frames to the newest generation, rejects stale frames, and keeps stop outside
-the frame as a barrier.  Emacsvox automatically retains ordinary legacy
-delivery when the capability is absent.
+Current Emacsvox requires =presentation_timeline_v3= for structured Aural
+delivery.  Each complete presentation carries its delivery policy, replacement
+domain, generation, dispatch ID, speech spans, and positioned actions in a
+validated JSON timeline.  A small timeline uses one bounded frame; a larger
+one uses a bounded multipart envelope that is admitted atomically.  For keyed
+replaceable work, receipt of a newer valid timeline immediately cancels queued,
+synthesizing, and buffered work in that exact domain.  Ordered, urgent, legacy,
+and differently keyed output is preserved.  Only replaceable timeline
+admission uses the short coalescing window; ordered and urgent timelines are
+executed immediately.  The older =emacsvox_tx= frame remains a legacy fallback
+when structured timeline v3 is unavailable.
 
-Servers advertising =playback_marker_events_v1= also enable
+Servers advertising playback marker events v1 or v2 also enable
 =tts-speak-marked=.  It accepts one callback for playback events and one for
-the terminal status:
+the terminal status.  Version 2 additionally reports structured timeline
+action resolution and semantic events:
 
 #+BEGIN_SRC elisp
 (tts-speak-marked
@@ -190,11 +198,13 @@ tracked speech unchanged.
 For queued logical voices, current Omnivox servers re-resolve a missing voice
 or failed engine against the dispatched registry snapshot and retry the same
 text chunk on the selected fallback.  Retries are limited to four total
-attempts and check stop generations before and after each engine call.  The
-failure exclusion is local to that batch; persistent health/recovery and
-immediate =tts_say= or letter routing remain planned.
+attempts and check cancellation before and after each engine call.  Persistent
+health circuits keep repeatedly failing engines out of ordinary routing until
+a bounded cooldown and recovery probe succeeds.  Immediate =tts_say= and
+isolated-letter commands follow the current global engine policy and health
+snapshot; those commands do not carry a named logical-voice ID.
 
-** Aural Presentation
+* Aural Presentation
 
 Emacsvox can present registered meaning with speech, voices, auditory cues,
 pauses, and stereo placement.  A fixed internal =default= baseline preserves
@@ -312,7 +322,10 @@ metadata with =e=.  Partial packs inherit through a safely written data-only
 
 Agent Shell and Markdown are complete reference integrations.  Agent
 transcripts expose session lifecycle, response, thought, plan, tool,
-permission, source-block, table, viewport, and prompt-editor intent.
+permission, source-block, table, viewport, and prompt-editor intent.  Agent
+Shell's visual chat glyphs are normalized to semantic labels: item speech uses
+the selected voice, visibility is announced after the item, and an empty live
+prompt says =Me. Ready for input.= without speaking decorative button names.
 Markdown exposes headings, task state, lists, links, code blocks, tables,
 footnotes, separators, visibility, and document operations, with the same
 heading intent whether movement is by line or structural command.
@@ -320,18 +333,20 @@ heading intent whether movement is by line or structural command.
 Org exposes heading, content, list, paragraph, agenda, table, capture,
 source-edit, and export intent.  Its =org-action= attribute distinguishes
 navigation and lifecycle operations without hard-coding their presentation.
-Notmuch, Gnus, Dired, and Magit also place all retained compatibility cues
-inside semantic presentation boundaries.  The repository audit treats these
-seven modules as migrated and rejects a new context-free direct icon call.
+Notmuch, Gnus, Dired, Magit, and Shell/Comint also expose workflow intent.
+Routine Dired next/previous-file navigation speaks the entry without the
+redundant selection earcon; marking, unmarking, directory, and other state
+changes retain their distinct feedback.  The repository audit rejects a new
+context-free direct icon call in its maintained migrated-module set.
 
-** Quick Installation Instructions
+* Quick Installation Instructions
 
 For a more detailed installation guide, and further instructions on usage, see the documentation. For a quick installation guide, see below.
 
 1. Obtain the Source Code:
    - Clone the repository:
    #+BEGIN_SRC sh
-   git clone https://github.com/robertmeta/emacsvox
+   git clone https://github.com/bartbunting/emacsvox
    #+END_SRC
 
 2. Change to the Emacsvox Directory:
@@ -339,40 +354,41 @@ For a more detailed installation guide, and further instructions on usage, see t
    cd emacsvox
    #+END_SRC
 
-3. Configure the Sources:
+3. Select and verify Emacs:
+   If Emacs 31 is not the system default, copy =local.mk.example= to the
+   ignored =local.mk= and set =EMACS= there.  Then verify the selected binary:
    #+BEGIN_SRC sh
-   make config
+   make check-emacs
    #+END_SRC
 
-4. Compile the Files:
+4. Configure and compile the files:
    #+BEGIN_SRC sh
-   make
+   make all
    #+END_SRC
 
 5. Install a Text-to-Speech Engine:
-   - Open Source ESpeak on Linux:
-     1. Install the ESpeak packages for your system.
-     2. Compile the Emacsvox ESpeak server:
+   - Open-source eSpeak on Linux:
+     1. Install the eSpeak packages for your system.
+     2. Compile the Emacsvox eSpeak server:
         #+BEGIN_SRC sh
-        cd servers/native-espeak
-        make
+        make espeak
         #+END_SRC
-   - ViaVoice Outloud (AKA Eloquent):
+   - ViaVoice Outloud / IBM TTS (Eloquence):
      - Purchase this engine from the Voxin site. See [[https://voxin.oralux.net/rss.xml][Voxin Packages]] for the latest packages and [[https://voxin.oralux.net][Voxin Main Site]] for more information.
    - Mac:
      - You can use the built-in Mac TTS engine. Emacsvox includes a speech server for this purpose.
 
 6. Set Up the TTS Engine:
-   After installing TTS engine, set up Emacsvox by adding the following line to your shell's configuration file:
+   After installing a TTS engine, select it in your shell configuration:
 
    - For Bash (default on Linux or macOS before Catalina):
-     Add the following line to your `.bash_profile`:
+     Add the following line to your =~/.bash_profile=:
      #+BEGIN_SRC sh
      export TTS_PROGRAM=<engine-name>
      #+END_SRC
 
    - For Zsh (default on macOS Catalina and later):
-     Add the following line to your `.zshrc` file:
+     Add the following line to your =~/.zshrc= file:
      #+BEGIN_SRC sh
      export TTS_PROGRAM=<engine-name>
      #+END_SRC
@@ -387,25 +403,26 @@ For a more detailed installation guide, and further instructions on usage, see t
    #+BEGIN_SRC elisp
    (load-file "<emacsvox-dir>/lisp/emacsvox-setup.el")
    #+END_SRC
-   Replace <emacsvox-dir> with the directory where you unpacked the sources.
-   In a changing source checkout, rebuild with =make config && make= and keep
+   Replace =<emacsvox-dir>= with the directory where you unpacked the sources.
+   In a changing source checkout, rebuild with =make all= and keep
    this explicit =load-file= form.  It lets the setup entry point warn and
    prefer source if newer Lisp would otherwise be hidden by stale byte-code.
    A stable installed build may instead use =(load-library
    "emacsvox-setup")=.  See [[file:etc/install.org][the installation guide]]
    for the source-checkout and installed-package details.
 
-** Requirements
+* Requirements
 
 *Emacsvox requires Emacs 31 or later.*
 
-** Blog and Portfolio
+* Blog and Portfolio
   - [[https://emacspeak.blogspot.com][Original Emacspeak blog]]
   - [[https://tvraman.github.io][T. V. Raman]]
 
-** Additional Info
+* Additional Info
 
 Emacsvox is a fork of Emacspeak, modernized for Emacs 31+ with:
+
 - All deprecated defadvice converted to advice-add
 - Modern elisp patterns throughout
 - Consistent code formatting

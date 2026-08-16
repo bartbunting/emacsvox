@@ -1,9 +1,9 @@
 #!/bin/sh
 #PreRequisites:
-# install piper-tts using pipx:
-#pipx install piper-tts
-# Download the model to /usr/local/lib/piper/datasets
-# See voice-urls.org for download urls.
+# Install piper-tts in a virtual environment available on PATH.
+# Download a model into pip-data-dir, for example:
+#python3 -m piper.download_voices \
+#  --data-dir "$HOME/.local/share/voices-piper" en_US-lessac-medium
 
 #usage: pipspeak model device
 # where model is a fully-qualified path to the model.
