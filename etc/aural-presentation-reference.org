@@ -11,7 +11,7 @@ A semantic fact says what an object or event means.  Presentation rules decide w
 
 The fixed internal =default= baseline preserves existing Emacsvox voices and auditory icons; it is not a user-selectable configuration.  Automatic module compatibility, ordered Presentation Options, and overrides are separate layers.  Profiles save choices of options, sound pack, voice palette, and spatial settings without copying presentation rules.
 
-The built-in =default= baseline preserves existing Emacsvox voices and auditory icons.  Org alternatives are composable presentation options.  Use =M-x emacsvox-aural= or =C-e H= to open the spoken aural home.  It reports current status and routes to explanation, recent exact feedback, presentation options, presentation overrides, presentation profiles, source-buffer rules, semantic vocabulary, sound packs, spatial controls, training, and the Aural Doctor.  Press =h= in any routed manager or editor to return home.  Help opened from a voice interface remembers its exact manager, row, and window; =q= returns there rather than to Aural Home.  From an ordinary buffer, =C-e E= always invokes =emacsvox-aural-explain-presentation= at point.
+Use =M-x emacsvox-aural= or =C-e H= to open the spoken aural home.  It reports current status and routes to explanation, recent exact feedback, presentation options, presentation overrides, presentation profiles, source-buffer rules, semantic vocabulary, sound packs, spatial controls, training, and the Aural Doctor.  Press =h= in any routed manager or editor to return home.  Help opened from a voice interface remembers its exact manager, row, and window; =q= returns there rather than to Aural Home.  From an ordinary buffer, =C-e E= always invokes =emacsvox-aural-explain-presentation= at point.
 
 Visual face presentation is a separate default-on advanced control.  Run =M-x emacsvox-aural-toggle-face-presentation= or customize =emacsvox-aural-face-presentation-enabled= to toggle rules with a =:legacy-face= selector.  Turning it off does not disable semantic role, event, state, or attribute rules.  Voice Lock remains the established per-buffer control for historical face/personality-to-voice mapping and =:legacy-personality= matching: use =C-e d v= for the current buffer and =C-e d C-v= globally.  The source state of both controls is frozen into each presentation and reported by explanation and the Aural Doctor; they are not duplicated in Aural Home.
 
@@ -41,9 +41,9 @@ Each aural object has ordered =before= actions, one or more styled content runs,
 
 Named source faces are captured before source text is copied.  Ordered overlay faces use Emacs overlay priority and precede explicit =face= and =font-lock-face= text properties; both text properties are retained, with =face= first.  Only explicit symbol or string face names and named =:inherit= values are captured.  Theme inheritance and face remapping are not expanded into identity.  Frozen context retains data-only source, property, priority, range, and order provenance.
 
-Semantic and contextual resolution happens in Emacs at the source submission boundary.  Safe speech templates become literal text, cue names become concrete files or sample IDs, voices become adapter commands, and spatial requests become backend values before anything is queued.  The speech server never resolves templates, schemes, modes, modules, semantics, or resource fallbacks.  A complete multi-action plan uses one strict queue.  Only a standalone compatibility cue may use the selected local player.  Validated rule snapshots and inherited providers are reused within one configuration generation.  Sound content digests are reused by canonical file identity and modification metadata and are cleared when resource packs refresh.
+Semantic and contextual resolution happens in Emacs at the source submission boundary.  Safe speech templates become literal text, cue names become concrete files or sample IDs, voices become adapter commands, and spatial requests become backend values before anything is queued.  The speech server never resolves templates, presentation rules, modes, modules, semantics, or resource fallbacks.  A complete multi-action plan uses one strict queue.  Only a standalone compatibility cue may use the selected local player.  Validated rule snapshots and inherited providers are reused within one configuration generation.  Sound content digests are reused by canonical file identity and modification metadata and are cleared when resource packs refresh.
 
-Native complete submissions also own their interruption policy.  =ordered= flushes accepted older replaceable work and queues without an implicit stop.  =replaceable= cancels pending work with the same owner and replacement key, interrupts current playback, and schedules only the latest packet at the next input-idle boundary.  =urgent= cancels all pending work for the owner, interrupts playback, and sends immediately.  A transaction that resolves to no transport output never interrupts.  Bare =tts-speak= calls and compatibility submission wrappers retain the traditional =tts-stop-immediately= behaviour until migrated to the native submission API.
+Native complete submissions also own their interruption policy.  =ordered= flushes client-side pending legacy replacement for the owner and sends without an implicit stop.  =replaceable= cancels client-side pending work with the same owner and replacement key.  With negotiated structured timeline V3 it is written immediately: Omnivox performs soft generation and audio cancellation only in the matching replacement domain, without an Emacs idle delay or legacy stream stop.  On the legacy or framed fallback, an untracked replacement retains the configured input-idle delay and hard interruption; a tracked callback submission sends immediately.  =urgent= cancels all client-side pending work for the owner, hard-interrupts the stream when the submission owns interruption, and sends immediately.  A transaction that resolves to no transport output never interrupts.  Bare =tts-speak= calls and compatibility submission wrappers retain the traditional =tts-stop-immediately= behaviour until migrated to the native submission API.
 
 The current speech queue has no portable volume operation.  Explicit content or action volume therefore records an =unsupported-volume= capability degradation by default instead of being silently ignored.  Set =emacsvox-aural-unsupported-volume-policy= to =reject= to fail before queueing any presentation that requests volume.
 
@@ -53,7 +53,7 @@ Portable space is normalized =:balance= from =-1.0= left through =+1.0= right.  
 
 * Presentation Rule Author Reference
 
-Personal data lives in =~/.emacsvox/aural-schemes.el=.  It is versioned declarative Lisp data; evaluation syntax is rejected by the reader.  Prefer the accessible editor; if data is authored directly, retain the outer =:schema-version=, =:feature-fragments=, =:feature-fragment-order=, =:enabled-feature-fragments=, =:voice-palettes=, =:profiles=, =:active-profile=, and =:user-rules= fields.
+Personal data lives in =~/.emacsvox/aural-schemes.el=.  The historical filename is retained for compatibility; the schema stores Presentation Options, profiles, palettes, overrides, and rules rather than selectable schemes.  It is versioned declarative Lisp data; evaluation syntax is rejected by the reader.  Prefer the accessible editor; if data is authored directly, retain the outer =:schema-version=, =:feature-fragments=, =:feature-fragment-order=, =:enabled-feature-fragments=, =:voice-palettes=, =:profiles=, =:active-profile=, and =:user-rules= fields.
 
 A personal Presentation Option contains =:schema-version=, =:id=, a nonempty =:summary=, and =:rules=.  Every rule has a globally stable =:id=, optional boolean =:enabled=, optional integer =:order=, a =:match= plist, and a =:render= plist.
 
@@ -105,7 +105,7 @@ Repository data-only providers use the flat library name =emacsvox-aural-provide
 Extension checklist:
 
 1. Search the registry for an existing intent and reuse it when exact.
-2. Register new metadata before a saved scheme could reference it.
+2. Register new metadata before persistent presentation data can reference it.
 3. Emit facts and source context without choosing a resource.
 4. Submit explicit content and ordered compatibility actions together.
 5. Test one resolution, one history transaction, exact ordering, settings, and a user override.
@@ -549,11 +549,11 @@ A tone action names a registered tone with =:tone=.  The rule remains backend-in
 
 * Voice Palette Author Reference
 
-A palette maps stable scheme voice names to either device-independent Emacsvox personality symbols or declarative ACSS style data.  Schemes should name palette entries such as =bolden= instead of backend commands.  A palette may inherit another palette and override selected names.  Raw ACSS remains valid for a rule that deliberately needs a generated voice.
+A palette maps stable presentation voice names to either device-independent Emacsvox personality symbols or declarative ACSS style data.  Presentation rules and options should name palette entries such as =bolden= instead of backend commands.  A palette may inherit another palette and override selected names.  Raw ACSS remains valid for a rule that deliberately needs a generated voice.
 
 The ACSS =:family= dimension selects a base voice.  =male=, =female=, and =child= are portable requests: they resolve again through the active speech adapter whenever the style is compiled.  Adapter-specific names such as =outloud-v2= or =betty= request one exact synth voice.  If that exact voice is unavailable after changing synth, Emacsvox applies the new adapter default and reports an =unavailable-voice-family= degradation; it does not silently reinterpret the identifier.
 
-Each adapter publishes whether family selection is enumerated, free-form, or unsupported, together with available families, portable traits, supported normalized dimensions, and parameter ranges.  Outloud exposes its eight Eloquence presets, DECtalk exposes its nine built-ins, Mac and SwiftMac accept installed voice names, and eSpeak currently performs voice selection through its language interface rather than inline ACSS.  Catalogues are static today; the function-valued capability interface allows later discovery when a speech-server response channel exists.
+Each adapter publishes whether family selection is enumerated, free-form, or unsupported, together with available families, portable traits, supported normalized dimensions, and parameter ranges.  Outloud exposes its eight static Eloquence presets, DECtalk exposes its nine static built-ins, Mac accepts free-form installed voice names, and eSpeak performs voice selection through its language interface rather than inline ACSS.  SwiftMac enumerates installed voices when its local discovery helper is available and otherwise retains free-form selection.  Omnivox publishes a live discovered engine and physical-voice inventory, routing state, and runtime health through negotiated control responses; an explicit refresh requests new snapshots from live processes.  The function-valued inventory interface therefore supports both static/local and server-backed discovery.
 
 Numeric ACSS dimensions remain normalized from zero through nine and are applied only when explicitly requested.  For Eloquence and DECtalk non-default base voices, current numeric overrides reuse the established Paul calibration tables; omitted dimensions preserve the native preset's own characteristics.
 
@@ -561,8 +561,8 @@ Numeric ACSS dimensions remain normalized from zero through nine and are applied
 
 Existing device-independent ACSS personalities
 
-| Scheme Voice | Personality |
-|--------------+-------------|
+| Palette Voice | Personality |
+|---------------+-------------|
 | =animate= | =voice-animate= |
 | =animate-extra= | =voice-animate-extra= |
 | =animate-medium= | =voice-animate-medium= |
@@ -611,7 +611,7 @@ A text run may carry an ordered list of named faces.  Every matching face rule p
 
 Agent Shell, Markdown, Org, Notmuch, Gnus, Dired, Magit, and Shell/Comint now attach registered conversation, document, organizer, message, filesystem, version-control, and command-session facts around their established feedback.  Their speech and cue order remains unchanged unless a Presentation Option or override matches the new facts.  Options demonstrate customization without requiring the corresponding third-party package at startup.
 
-Rollout is deliberately staged.  The fixed default baseline is compatibility preserving, Org choices are composable Presentation Options, and integrations move in small tested batches.  Critical alerts currently follow the same explicit suppression contract as other actions; deployments that require a mandatory alternative should enforce that policy in site rules until a shared critical-alert contract is registered.
+The fixed default baseline preserves compatibility while integrations add composable Presentation Options in independently tested changes.  Critical alerts currently follow the same explicit suppression contract as other actions; deployments that require a mandatory alternative should enforce that policy in site rules until a shared critical-alert contract is registered.
 
 * Maintenance
 

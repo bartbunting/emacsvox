@@ -1,4 +1,4 @@
-;;; emacsvox-aural-audit.el --- Audit and document aural schemes -*- lexical-binding: t; -*-
+;;; emacsvox-aural-audit.el --- Audit Aural Presentation data -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Emacsvox Contributors
 
@@ -6,7 +6,7 @@
 
 ;;; Commentary:
 
-;; Validate the semantic, scheme, cue, sound-pack, and voice-palette
+;; Validate the semantic, presentation-rule, cue, sound-pack, and voice-palette
 ;; registries.  Parse literal auditory-icon and legacy tone calls without
 ;; evaluating source, and generate the maintained author reference from the
 ;; live registries.
@@ -598,8 +598,6 @@ below a presentation boundary."
    "module compatibility, ordered Presentation Options, and overrides are "
    "separate layers.  Profiles save choices of options, sound pack, voice "
    "palette, and spatial settings without copying presentation rules.\n\n"
-   "The built-in =default= baseline preserves existing Emacsvox voices and "
-   "auditory icons.  Org alternatives are composable presentation options.  "
    "Use =M-x emacsvox-aural= or =C-e H= to open the spoken aural home.  "
    "It reports current status and routes to explanation, recent exact "
    "feedback, presentation options, presentation overrides, "
@@ -793,19 +791,25 @@ below a presentation boundary."
    "submission boundary.  Safe speech templates become literal text, cue "
    "names become concrete files or sample IDs, voices become adapter "
    "commands, and spatial requests become backend values before anything is "
-   "queued.  The speech server never resolves templates, schemes, modes, "
-   "modules, semantics, or resource fallbacks.  A complete multi-action plan "
+   "queued.  The speech server never resolves templates, presentation rules, "
+   "modes, modules, semantics, or resource fallbacks.  A complete multi-action plan "
    "uses one strict queue.  Only a standalone compatibility cue may use the "
    "selected local player.  Validated rule snapshots and inherited providers "
    "are reused within one configuration generation.  Sound content digests "
    "are reused by canonical file identity and modification metadata and are "
    "cleared when resource packs refresh.\n\n"
    "Native complete submissions also own their interruption policy.  "
-   "=ordered= flushes accepted older replaceable work and queues without an "
-   "implicit stop.  =replaceable= cancels pending work with the same owner and "
-   "replacement key, interrupts current playback, and schedules only the "
-   "latest packet at the next input-idle boundary.  =urgent= cancels all "
-   "pending work for the owner, interrupts playback, and sends immediately.  "
+   "=ordered= flushes client-side pending legacy replacement for the owner and "
+   "sends without an implicit stop.  =replaceable= cancels client-side pending "
+   "work with the same owner and replacement key.  With negotiated structured "
+   "timeline V3 it is written immediately: Omnivox performs soft generation "
+   "and audio cancellation only in the matching replacement domain, without "
+   "an Emacs idle delay or legacy stream stop.  On the legacy or framed "
+   "fallback, an untracked replacement retains the configured input-idle "
+   "delay and hard interruption; a tracked callback submission sends "
+   "immediately.  =urgent= cancels all client-side pending work for the owner, "
+   "hard-interrupts the stream when the submission owns interruption, and "
+   "sends immediately.  "
    "A transaction that resolves to no transport output never interrupts.  "
    "Bare =tts-speak= calls and compatibility submission wrappers retain the "
    "traditional =tts-stop-immediately= behaviour until migrated to the native "
@@ -826,12 +830,15 @@ below a presentation boundary."
    "the current fallback.\n\n"))
 
 (defun emacsvox-aural-audit--insert-scheme-author-reference ()
-  "Insert the declarative scheme-author reference at point."
+  "Insert the declarative presentation-rule author reference at point."
   (insert
    "* Presentation Rule Author Reference\n\n"
-   "Personal data lives in =~/.emacsvox/aural-schemes.el=.  It is versioned "
-   "declarative Lisp data; evaluation syntax is rejected by the reader.  Prefer the "
-   "accessible editor; if data is authored directly, retain the outer "
+   "Personal data lives in =~/.emacsvox/aural-schemes.el=.  The historical "
+   "filename is retained for compatibility; the schema stores Presentation "
+   "Options, profiles, palettes, overrides, and rules rather than selectable "
+   "schemes.  It is versioned declarative Lisp data; evaluation syntax is "
+   "rejected by the reader.  Prefer the accessible editor; if data is authored "
+   "directly, retain the outer "
    "=:schema-version=, =:feature-fragments=, "
    "=:feature-fragment-order=, =:enabled-feature-fragments=, "
    "=:voice-palettes=, =:profiles=, =:active-profile=, and =:user-rules= "
@@ -978,7 +985,7 @@ below a presentation boundary."
    "descriptive shared scope such as =workflows=.\n\n"
    "Extension checklist:\n\n"
    "1. Search the registry for an existing intent and reuse it when exact.\n"
-   "2. Register new metadata before a saved scheme could reference it.\n"
+   "2. Register new metadata before persistent presentation data can reference it.\n"
    "3. Emit facts and source context without choosing a resource.\n"
    "4. Submit explicit content and ordered compatibility actions together.\n"
    "5. Test one resolution, one history transaction, exact ordering, settings, "
@@ -1237,9 +1244,10 @@ below a presentation boundary."
   "Insert voice-palette author guidance and generated tables at point."
   (insert
    "* Voice Palette Author Reference\n\n"
-   "A palette maps stable scheme voice names to either device-independent "
-   "Emacsvox personality symbols or declarative ACSS style data.  Schemes "
-   "should name palette entries such as =bolden= instead of backend commands.  "
+   "A palette maps stable presentation voice names to either device-independent "
+   "Emacsvox personality symbols or declarative ACSS style data.  Presentation "
+   "rules and options should name palette entries such as =bolden= instead of "
+   "backend commands.  "
    "A palette may inherit another palette and override selected names.  Raw "
    "ACSS remains valid for a rule that deliberately needs a generated voice."
    "\n\n"
@@ -1253,11 +1261,15 @@ below a presentation boundary."
    "Each adapter publishes whether family selection is enumerated, free-form, "
    "or unsupported, together with available families, portable traits, "
    "supported normalized dimensions, and parameter ranges.  Outloud exposes "
-   "its eight Eloquence presets, DECtalk exposes its nine built-ins, Mac and "
-   "SwiftMac accept installed voice names, and eSpeak currently performs "
+   "its eight static Eloquence presets, DECtalk exposes its nine static "
+   "built-ins, Mac accepts free-form installed voice names, and eSpeak performs "
    "voice selection through its language interface rather than inline ACSS.  "
-   "Catalogues are static today; the function-valued capability interface "
-   "allows later discovery when a speech-server response channel exists."
+   "SwiftMac enumerates installed voices when its local discovery helper is "
+   "available and otherwise retains free-form selection.  Omnivox publishes a "
+   "live discovered engine and physical-voice inventory, routing state, and "
+   "runtime health through negotiated control responses; an explicit refresh "
+   "requests new snapshots from live processes.  The function-valued inventory "
+   "interface therefore supports both static/local and server-backed discovery."
    "\n\n"
    "Numeric ACSS dimensions remain normalized from zero through nine and are "
    "applied only when explicitly requested.  For Eloquence and DECtalk "
@@ -1278,7 +1290,7 @@ below a presentation boundary."
     (when-let* ((parent (emacsvox-aural-voice-palette-parent palette)))
       (insert "Parent: =" (symbol-name parent) "=\n\n"))
     (emacsvox-aural-audit--insert-table
-     '("Scheme Voice" "Personality")
+     '("Palette Voice" "Personality")
      (mapcar
       (lambda (entry) (list (car entry) (cdr entry)))
       (sort
@@ -1354,9 +1366,9 @@ below a presentation boundary."
    "unless a Presentation Option or override matches the new facts.  Options "
    "demonstrate customization without requiring the corresponding third-party "
    "package at startup.\n\n"
-   "Rollout is deliberately staged.  The fixed default baseline is compatibility "
-   "preserving, Org choices are composable Presentation Options, and integrations "
-   "move in small tested batches.  Critical alerts currently follow the same "
+   "The fixed default baseline preserves compatibility while integrations add "
+   "composable Presentation Options in independently tested changes.  Critical "
+   "alerts currently follow the same "
    "explicit suppression contract as other actions; deployments that require "
    "a mandatory alternative should enforce that policy in site rules until "
    "a shared critical-alert contract is registered.\n\n"

@@ -68,8 +68,9 @@
 (defun swiftmac-voice-capabilities ()
   "Return SwiftMac voice and normalized ACSS capabilities.
 
-The server accepts installed voice names, but this adapter does not yet
-enumerate them back to Emacs."
+The server accepts installed voice names.  The capability remains free-form,
+while `swiftmac-voice-inventory' enumerates installed voices when the local
+discovery helper is available."
   '(:adapter swiftmac
     :source static
     :family-selection free-form
