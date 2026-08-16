@@ -68,6 +68,7 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-active-routing-profile 'workstation)
          (emacsvox-aural-session-routing-bindings nil)
+         (emacsvox-aural-session-engine-order nil)
          (emacsvox-aural-routing-profile-changed-hook nil)
          (emacsvox-aural-routing-apply-status nil)
          (emacsvox-aural-routing-apply-status-hook nil)
@@ -97,6 +98,140 @@
          (emacsvox-aural-voice-workbench-mode)
          (emacsvox-aural-voice-workbench-refresh)
          ,@body))))
+
+(ert-deftest emacsvox-aural-voice-workbench-lists-only-usable-engines ()
+  "Quick preference excludes disabled, unavailable, and failed engines."
+  (emacsvox-test--with-voice-workbench
+    (let ((inventory (copy-tree emacsvox-test--workbench-inventory))
+          (profile (copy-tree emacsvox-test--workbench-routing-profile)))
+      (setf (plist-get profile :disabled-engines) '("winrt"))
+      (setf
+       (plist-get inventory :engines)
+       (append
+        (plist-get inventory :engines)
+        '((:engine-id "failed" :display-name "Failed"
+           :availability "available" :health "failed" :voices nil)
+          (:engine-id "missing" :display-name "Missing"
+           :availability "unavailable" :health "unavailable"
+           :voices nil))))
+      (should
+       (equal
+        (mapcar
+         #'cdr
+         (emacsvox-aural-voice-workbench--engine-candidates
+          inventory profile))
+        '("eloquence"))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-prefers-engine-for-session ()
+  "Quick preference applies live but preserves saved routes and fallback."
+  (emacsvox-test--with-voice-workbench
+    (let ((saved
+           (copy-tree
+            (emacsvox-aural-routing-profile-entry-data
+             (emacsvox-aural-routing-profile 'workstation))))
+          spoken)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text) (setq spoken text))))
+        (emacsvox-aural-prefer-engine "winrt"))
+      (should
+       (equal emacsvox-aural-session-engine-order
+              '("winrt" "eloquence")))
+      (should
+       (equal omnivox-engine-priority-ids
+              emacsvox-aural-session-engine-order))
+      (should (equal omnivox-fallback-engine-ids '("winrt")))
+      (should
+       (equal
+        (emacsvox-aural-routing-profile-entry-data
+         (emacsvox-aural-routing-profile 'workstation))
+        saved))
+      (let ((first
+             (car (emacsvox-aural-routing-selectors 'voice-bolden))))
+        (should (eq (plist-get first :kind) 'exact))
+        (should (equal (plist-get first :engine-id) "eloquence")))
+      (should
+       (equal spoken
+              "Windows Speech is now preferred for this session"))
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text) (setq spoken text))))
+        (emacsvox-aural-restore-saved-engine-order))
+      (should-not emacsvox-aural-session-engine-order)
+      (should (equal omnivox-engine-priority-ids '("eloquence" "winrt")))
+      (should
+       (equal spoken
+              "Saved engine order restored; Eloquence is preferred")))))
+
+(ert-deftest emacsvox-aural-voice-workbench-saves-engine-preference ()
+  "A prefix saves only promoted global order and clears the session overlay."
+  (emacsvox-test--with-voice-workbench
+    (let* ((directory (make-temp-file "emacsvox-engine-preference-" t))
+           (emacsvox-aural-routing-profiles-file
+            (expand-file-name "routing.el" directory))
+           (fallback
+            (copy-tree
+             (plist-get emacsvox-test--workbench-routing-profile :fallback)))
+           (bindings
+            (copy-tree
+             (plist-get emacsvox-test--workbench-routing-profile :bindings)))
+           spoken)
+      (unwind-protect
+          (progn
+            (emacsvox-aural-prefer-engine "winrt")
+            (cl-letf (((symbol-function 'tts-speak)
+                       (lambda (text) (setq spoken text))))
+              (emacsvox-aural-prefer-engine "winrt" t))
+            (let* ((profile
+                    (emacsvox-aural-routing-profile-entry-data
+                     (emacsvox-aural-routing-profile 'workstation)))
+                   (saved-data
+                    (emacsvox-aural-read-routing-profiles
+                     emacsvox-aural-routing-profiles-file))
+                   (saved-profile (car (plist-get saved-data :profiles))))
+              (should-not emacsvox-aural-session-engine-order)
+              (should
+               (equal (plist-get profile :engine-order)
+                      '("winrt" "eloquence")))
+              (should
+               (equal (plist-get saved-profile :engine-order)
+                      '("winrt" "eloquence")))
+              (should (equal (plist-get profile :fallback) fallback))
+              (should (equal (plist-get profile :bindings) bindings))
+              (should
+               (equal spoken
+                      "Windows Speech is now the saved preferred engine"))))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-voice-workbench-protects-staged-edits ()
+  "Quick engine preference cannot obscure unsaved Workbench routing edits."
+  (emacsvox-test--with-voice-workbench
+    (setf (plist-get emacsvox-aural-voice-workbench-staged-profile :summary)
+          "unsaved")
+    (should-error
+     (emacsvox-aural-prefer-engine "winrt")
+     :type 'user-error)
+    (should-not emacsvox-aural-session-engine-order)))
+
+(ert-deftest emacsvox-aural-voice-workbench-save-failure-restores-session ()
+  "A failed persistent preference retains the prior temporary preference."
+  (emacsvox-test--with-voice-workbench
+    (emacsvox-aural-prefer-engine "winrt")
+    (let ((before
+           (copy-tree
+            (emacsvox-aural-routing-profile-entry-data
+             (emacsvox-aural-routing-profile 'workstation)))))
+      (cl-letf (((symbol-function 'emacsvox-aural-save-routing-profiles)
+                 (lambda (&rest _) (error "simulated save failure"))))
+        (should-error
+         (emacsvox-aural-prefer-engine "eloquence" t)
+         :type 'error))
+      (should
+       (equal emacsvox-aural-session-engine-order
+              '("winrt" "eloquence")))
+      (should
+       (equal
+        (emacsvox-aural-routing-profile-entry-data
+         (emacsvox-aural-routing-profile 'workstation))
+        before)))))
 
 (ert-deftest emacsvox-aural-voice-workbench-provides-four-spoken-views ()
   "One shared UI exposes logical, physical, engine, and style/effect rows."
