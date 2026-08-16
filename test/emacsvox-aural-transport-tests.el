@@ -124,6 +124,24 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         text (length text))))
     (nreverse plans)))
 
+(defun emacsvox-test--concrete-runs-in (text)
+  "Return structured transport runs carried by prepared TEXT."
+  (let ((position 0)
+        runs)
+    (while (< position (length text))
+      (let ((next
+             (next-single-property-change
+              position emacsvox-aural-concrete-plan-property
+              text (length text))))
+        (push
+         (list
+          (emacsvox-aural-concrete-plan-at position text)
+          (substring-no-properties text position next)
+          nil)
+         runs)
+        (setq position next)))
+    (nreverse runs)))
+
 (defun emacsvox-test--decode-multipart-timeline (commands)
   "Decode multipart timeline COMMANDS and return payload metadata.
 
@@ -538,6 +556,60 @@ write.  State synchronization lines in a combined write are ignored."
         actions))
       2))
     (should (= (length (cadr built)) 4))))
+
+(ert-deftest emacsvox-aural-structured-timeline-coalesces-css-face-runs ()
+  "Equivalent CSS face boundaries do not split words into synthesis calls."
+  (emacsvox-test--with-transport-scheme
+    (let* ((face '((:foreground "#212121")))
+           (text
+            (concat
+             (propertize "S" 'face (copy-tree face))
+             (propertize "ender" 'face (copy-tree face))))
+           (context
+            '(:module core
+              :mode notmuch-show-mode
+              :mode-lineage (notmuch-show-mode special-mode)
+              :occasion navigation
+              :face-presentation-enabled t
+              :voice-lock-enabled nil
+              :icons-enabled nil))
+           (prepared (emacsvox-aural-prepare-text text nil context))
+           (runs (emacsvox-test--concrete-runs-in prepared))
+           (envelope
+            (car
+             (emacsvox-aural--build-structured-timeline 7 11 runs)))
+           (spans (plist-get envelope :spans)))
+      (should (= (length runs) 2))
+      (should (= (length spans) 1))
+      (should (equal (plist-get (aref spans 0) :text) "Sender")))))
+
+(ert-deftest emacsvox-aural-structured-timeline-keeps-real-voice-runs ()
+  "A genuine structured voice change remains a synthesis boundary."
+  (let* ((object '(inferred-object 1))
+         (left
+          (emacsvox-aural--make-concrete-plan
+           :object-id object
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text "S" :speak t :voice-request 'emphasis)
+           :context '(:icons-enabled nil)))
+         (right
+          (emacsvox-aural--make-concrete-plan
+           :object-id object
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text "ender" :speak t :voice-request 'default)
+           :context '(:icons-enabled nil)))
+         (envelope
+          (car
+           (emacsvox-aural--build-structured-timeline
+            7 12 (list (list left "S" nil) (list right "ender" nil)))))
+         (spans (plist-get envelope :spans)))
+    (should (= (length spans) 2))
+    (should
+     (equal
+      (mapcar (lambda (span) (plist-get span :text)) (append spans nil))
+      '("S" "ender")))))
 
 (ert-deftest emacsvox-aural-structured-timeline-preserves-delivery-policy ()
   "Version 3 carries ordered, urgent, and keyed replacement semantics."
@@ -2674,9 +2746,27 @@ write.  State synchronization lines in a combined write are ignored."
                           (plist-get action :type)
                           (if (eq presentation 'tone) "tone" "audio")))
                        (append (plist-get envelope :actions) nil)))
-                     (wire-position (plist-get wire-action :position)))
+                     (wire-position (plist-get wire-action :position))
+                     (spans (append (plist-get envelope :spans) nil)))
                 (should wire-action)
-                (should (= (plist-get wire-position :span_id) (1+ offset)))
+                (let* ((wire-span-id (plist-get wire-position :span_id))
+                       (wire-span-index
+                        (cl-position
+                         wire-span-id spans
+                         :key (lambda (span) (plist-get span :id)))))
+                  (should wire-span-index)
+                  (let ((wire-boundary-offset
+                         (+
+                          (cl-loop
+                           for span in (seq-take spans wire-span-index)
+                           sum (string-bytes (plist-get span :text)))
+                          (if (eq phase 'after)
+                              (string-bytes
+                               (plist-get (nth wire-span-index spans) :text))
+                            0))))
+                    (should
+                     (= wire-boundary-offset
+                        (if (eq phase 'before) offset (1+ offset))))))
                 (should
                  (equal
                   (plist-get wire-position :affinity)

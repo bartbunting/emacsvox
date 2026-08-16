@@ -839,6 +839,98 @@ the concrete request has no named preset."
    :tone (emacsvox-aural-concrete-action-tone action)
    :audio-mode (emacsvox-aural-concrete-action-audio-mode action)))
 
+(defun emacsvox-aural--concrete-content-transport-key (content)
+  "Return the legacy speech-transport settings that distinguish CONTENT."
+  (list
+   (emacsvox-aural-concrete-content-speak content)
+   (emacsvox-aural-concrete-content-voice-command content)
+   (emacsvox-aural-concrete-content-balance content)))
+
+(defun emacsvox-aural--structured-content-transport-key (content)
+  "Return the structured speech settings that distinguish CONTENT."
+  (list
+   (emacsvox-aural-concrete-content-speak content)
+   (emacsvox-aural-concrete-content-voice-request content)
+   (emacsvox-aural-concrete-content-voice-style content)
+   (emacsvox-aural-concrete-content-voice-command content)
+   (emacsvox-aural-concrete-content-balance content)))
+
+(defun emacsvox-aural--coalescible-concrete-run-boundary-p (left right)
+  "Return non-nil when no presentation boundary separates LEFT and RIGHT."
+  (pcase-let
+      ((`(,left-plan ,left-text ,_ . ,left-extra) left)
+       (`(,right-plan ,right-text ,right-pause . ,right-extra) right))
+    (let ((left-content
+           (emacsvox-aural-concrete-plan-content left-plan))
+          (right-content
+           (emacsvox-aural-concrete-plan-content right-plan))
+          (left-positioned (car left-extra))
+          (right-positioned (car right-extra)))
+      (and
+       (not right-pause)
+       (stringp left-text)
+       (not (string-empty-p left-text))
+       (stringp right-text)
+       (not (string-empty-p right-text))
+       (null left-positioned)
+       (null right-positioned)
+       (emacsvox-aural-concrete-content-speak left-content)
+       (emacsvox-aural-concrete-content-speak right-content)
+       (emacsvox-aural-concrete-plan-object-id left-plan)
+       (equal
+        (emacsvox-aural-concrete-plan-object-id left-plan)
+        (emacsvox-aural-concrete-plan-object-id right-plan))
+       (null (emacsvox-aural-concrete-plan-after left-plan))
+       (null (emacsvox-aural-concrete-plan-before right-plan))))))
+
+(defun emacsvox-aural--coalescible-structured-runs-p (left right)
+  "Return non-nil when structured runs LEFT and RIGHT can share one span."
+  (and
+   (emacsvox-aural--coalescible-concrete-run-boundary-p left right)
+   (pcase-let ((`(,left-plan . ,_) left)
+               (`(,right-plan . ,_) right))
+     (equal
+      (emacsvox-aural--structured-content-transport-key
+       (emacsvox-aural-concrete-plan-content left-plan))
+      (emacsvox-aural--structured-content-transport-key
+       (emacsvox-aural-concrete-plan-content right-plan))))))
+
+(defun emacsvox-aural--coalesce-structured-runs (runs)
+  "Join wire-equivalent RUNS while retaining their outer plan boundaries.
+
+A joined run carries its last plan as a private fifth element so timeline
+construction can retain that plan's trailing actions and context."
+  (let (coalesced group previous)
+    (cl-labels
+        ((flush
+          ()
+          (when group
+            (let* ((forward (nreverse group))
+                   (first (car forward))
+                   (last (car (last forward))))
+              (push
+               (if (cdr forward)
+                   (list
+                    (car first)
+                    (mapconcat (lambda (run) (nth 1 run)) forward "")
+                    (nth 2 first)
+                    nil
+                    (car last))
+                 first)
+               coalesced))
+            (setq group nil
+                  previous nil))))
+      (dolist (run runs)
+        (unless
+            (and
+             previous
+             (emacsvox-aural--coalescible-structured-runs-p previous run))
+          (flush))
+        (push run group)
+        (setq previous run))
+      (flush))
+    (nreverse coalesced)))
+
 (defun emacsvox-aural--build-structured-timeline
     (generation dispatch-id runs)
   "Build a structured timeline for GENERATION, DISPATCH-ID, and RUNS.
@@ -985,11 +1077,14 @@ recorded plans contain no speech span and therefore require legacy lowering."
            (not
             (string-empty-p
              (emacsvox-aural-concrete-action-text action))))))
-      (dolist (run runs)
+      (dolist (run (emacsvox-aural--coalesce-structured-runs runs))
         (pcase-let* ((`(,plan ,text ,pause . ,extra) run)
                      (positioned-actions (car extra))
+                     (after-plan (or (cadr extra) plan))
                      (content (emacsvox-aural-concrete-plan-content plan))
                      (context (emacsvox-aural-concrete-plan-context plan))
+                     (after-context
+                      (emacsvox-aural-concrete-plan-context after-plan))
                      (pending (and pause (list pause)))
                      (last-span nil))
           (dolist (action (emacsvox-aural-concrete-plan-before plan))
@@ -1035,7 +1130,7 @@ recorded plans contain no speech span and therefore require legacy lowering."
                  (emacsvox-aural-concrete-positioned-action-context entry)
                  (emacsvox-aural--timeline-text-offset-position
                   last-span offset 'before)))))
-          (dolist (action (emacsvox-aural-concrete-plan-after plan))
+          (dolist (action (emacsvox-aural-concrete-plan-after after-plan))
             (if (speech-action-p action)
                 (progn
                   (setq
@@ -1046,7 +1141,7 @@ recorded plans contain no speech span and therefore require legacy lowering."
                     (emacsvox-aural-concrete-action-voice-style action)
                     (emacsvox-aural-concrete-action-voice-command action)
                     (emacsvox-aural-concrete-action-balance action)
-                    action pending context)
+                    action pending after-context)
                    pending nil))
               (setq pending (append pending (list action)))))
           (if (not last-span)
@@ -1054,7 +1149,7 @@ recorded plans contain no speech span and therefore require legacy lowering."
             (dolist (action pending)
               (if (numberp action)
                   (add-silence action last-span 'after)
-                (add-action action last-span 'after context)))))))
+                (add-action action last-span 'after after-context)))))))
     (unless unsupported
       (list
        (append
@@ -1453,46 +1548,20 @@ run's leading transport pause."
                     (emacsvox-aural--freeze-presentation-plan plan))))))))))
     plan))
 
-(defun emacsvox-aural--concrete-content-transport-key (content)
-  "Return the speech-transport settings that distinguish CONTENT."
-  (list
-   (emacsvox-aural-concrete-content-speak content)
-   (emacsvox-aural-concrete-content-voice-command content)
-   (emacsvox-aural-concrete-content-balance content)))
-
 (defun emacsvox-aural--coalescible-concrete-runs-p (left right)
   "Return non-nil when adjacent concrete runs LEFT and RIGHT can be joined.
 
 Each run contains PLAN, final text, an optional leading pause, and optional
 positioned actions."
-  (pcase-let
-      ((`(,left-plan ,left-text ,_ . ,left-extra) left)
-       (`(,right-plan ,right-text ,right-pause . ,right-extra) right))
-    (let ((left-content
-           (emacsvox-aural-concrete-plan-content left-plan))
-          (right-content
-           (emacsvox-aural-concrete-plan-content right-plan))
-          (left-positioned (car left-extra))
-          (right-positioned (car right-extra)))
-      (and
-       (not right-pause)
-       (stringp left-text)
-       (not (string-empty-p left-text))
-       (stringp right-text)
-       (not (string-empty-p right-text))
-       (null left-positioned)
-       (null right-positioned)
-       (emacsvox-aural-concrete-content-speak left-content)
-       (emacsvox-aural-concrete-content-speak right-content)
-       (emacsvox-aural-concrete-plan-object-id left-plan)
-       (equal
-        (emacsvox-aural-concrete-plan-object-id left-plan)
-        (emacsvox-aural-concrete-plan-object-id right-plan))
-       (null (emacsvox-aural-concrete-plan-after left-plan))
-       (null (emacsvox-aural-concrete-plan-before right-plan))
-       (equal
-        (emacsvox-aural--concrete-content-transport-key left-content)
-        (emacsvox-aural--concrete-content-transport-key right-content))))))
+  (and
+   (emacsvox-aural--coalescible-concrete-run-boundary-p left right)
+   (pcase-let ((`(,left-plan . ,_) left)
+               (`(,right-plan . ,_) right))
+     (equal
+      (emacsvox-aural--concrete-content-transport-key
+       (emacsvox-aural-concrete-plan-content left-plan))
+      (emacsvox-aural--concrete-content-transport-key
+       (emacsvox-aural-concrete-plan-content right-plan))))))
 
 (defun emacsvox-aural--queue-concrete-run-group (runs)
   "Queue forward-ordered, transport-equivalent concrete RUNS together."
