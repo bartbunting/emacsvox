@@ -57,6 +57,37 @@
   (should-not
    (ems-name-audit--allowed-name-p "run" "EMACSPEAK_DIR")))
 
+(ert-deftest emacsvox-name-audit-allows-intentional-references-narrowly ()
+  "External provenance and negative tests allow only their exact old names."
+  (should-not
+   (ems-name-audit--line-matches
+    "servers/windows-speech-NOTICE.md"
+    "Imported from emacspeak-support."
+    12))
+  (should-not
+   (ems-name-audit--line-matches
+    "test/emacsvox-launcher-tests.el"
+    "Unset EMACSPEAK_DIR and EMACSPEAK_PLAY."
+    46))
+  (should
+   (equal
+    (mapcar
+     (lambda (match) (nth 2 match))
+     (ems-name-audit--line-matches
+      "active.org"
+      "emacspeak-support EMACSPEAK_DIR EMACSPEAK_PLAY"
+      1))
+    '("emacspeak-support" "EMACSPEAK_DIR" "EMACSPEAK_PLAY")))
+  (should
+   (equal
+    (mapcar
+     (lambda (match) (nth 2 match))
+     (ems-name-audit--line-matches
+      "test/emacsvox-launcher-tests.el"
+      "EMACSPEAK_HOME"
+      1))
+    '("EMACSPEAK_HOME"))))
+
 (ert-deftest emacsvox-name-audit-recognizes-clean-report ()
   "A report with no matches is clean and formats deterministically."
   (let ((audit '(:file-count 3 :matches nil)))

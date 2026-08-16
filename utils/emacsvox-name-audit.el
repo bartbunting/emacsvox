@@ -60,7 +60,10 @@
     ("Makefile" "EMACSPEAK_DIR" "EMACSPEAK_TRACE_GOLDEN")
     ("Readme.org" "EMACSPEAK_DIR" "EMACSPEAK_PLAY")
     ("info/dir" "emacspeak-significance")
-    ("info/emacsvox.texi" "emacspeak-significance"))
+    ("info/emacsvox.texi" "emacspeak-significance")
+    ("servers/windows-speech-NOTICE.md" "emacspeak-support")
+    ("test/emacsvox-launcher-tests.el"
+     "EMACSPEAK_DIR" "EMACSPEAK_PLAY"))
   "Removed names intentionally documented in otherwise active files.")
 
 (defun ems-name-audit--tracked-files (directory)
