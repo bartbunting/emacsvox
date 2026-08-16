@@ -89,6 +89,12 @@ unless the user has reviewed those bindings."
 Each entry is (LOGICAL-VOICE . SELECTORS).  Session bindings replace the
 active profile's selectors for that logical voice and are never saved.")
 
+(defvar emacsvox-aural-session-engine-order nil
+  "Temporary global engine order for this Emacs session, or nil.
+
+This order overlays the active routing profile without changing saved data.
+Explicit logical-voice selectors retain precedence over this global order.")
+
 (defvar emacsvox-aural-routing-profile-changed-hook nil
   "Hook run after routing profiles or their active selection change.")
 
@@ -324,9 +330,40 @@ voice IDs require local or session scope and can never be portable."
      :engine-order engine-order :disabled-engines disabled-engines
      :fallback fallback :bindings bindings)))
 
+(defun emacsvox-aural-routing-prefer-engine-in-data (data engine-id)
+  "Return profile DATA with ENGINE-ID first in global engine order.
+
+Preserve explicit logical routes, fallback policy, and the relative order of
+every other engine.  Reject an engine disabled by this profile."
+  (let* ((profile
+          (copy-tree (emacsvox-aural-validate-routing-profile-data data)))
+         (engine-id
+          (emacsvox-aural-routing--require-id engine-id "Preferred engine")))
+    (when (member engine-id (plist-get profile :disabled-engines))
+      (emacsvox-aural-routing--error
+       "Cannot prefer disabled engine %s" engine-id))
+    (setq profile
+          (plist-put
+           profile :engine-order
+           (cons
+            engine-id
+            (delete
+             engine-id
+             (copy-sequence (plist-get profile :engine-order))))))
+    (emacsvox-aural-validate-routing-profile-data profile)))
+
 (defun emacsvox-aural-routing-profile (id)
   "Return the registered routing profile entry named ID."
   (gethash id emacsvox-aural-routing-profile-registry))
+
+(defun emacsvox-aural-routing-effective-profile-data (data)
+  "Return routing profile DATA with temporary session engine order applied."
+  (if (not emacsvox-aural-session-engine-order)
+      data
+    (let ((effective (copy-tree data)))
+      (plist-put
+       effective :engine-order
+       (copy-sequence emacsvox-aural-session-engine-order)))))
 
 (defun emacsvox-aural-register-routing-profile-data
     (data &optional source replace)
@@ -424,7 +461,11 @@ legacy adapters; current Omnivox receives the global order separately."
   (let* ((entry
           (emacsvox-aural-routing-profile
            (or profile-id emacsvox-aural-active-routing-profile)))
-         (data (and entry (emacsvox-aural-routing-profile-entry-data entry))))
+         (data
+          (and
+           entry
+           (emacsvox-aural-routing-effective-profile-data
+            (emacsvox-aural-routing-profile-entry-data entry)))))
     (emacsvox-aural-routing-selectors-from-data logical-voice data t)))
 
 (defun emacsvox-aural-routing--engine-equivalent-p (left right)
@@ -839,7 +880,9 @@ generation-safe asynchronous apply."
          (entry (emacsvox-aural-routing-profile id)))
     (unless entry
       (emacsvox-aural-routing--error "Unknown routing profile: %S" id))
-    (let* ((data (emacsvox-aural-routing-profile-entry-data entry))
+    (let* ((data
+            (emacsvox-aural-routing-effective-profile-data
+             (emacsvox-aural-routing-profile-entry-data entry)))
            (fallback (plist-get data :fallback))
            (bindings (plist-get data :bindings))
            voices preferences languages)
@@ -916,6 +959,35 @@ generation-safe asynchronous apply."
            (emacsvox-aural-routing--call-apply-callback callback status))))
       (run-hooks 'emacsvox-aural-routing-profile-changed-hook)
       id)))
+
+(defun emacsvox-aural-prefer-engine-for-session (engine-id &optional callback)
+  "Prefer ENGINE-ID globally for this session and apply it live.
+
+Explicit logical-voice routes and saved profile data remain unchanged.
+CALLBACK receives the terminal adapter apply result."
+  (let* ((entry
+          (emacsvox-aural-routing-profile
+           emacsvox-aural-active-routing-profile))
+         (profile
+          (and entry
+               (emacsvox-aural-routing-profile-entry-data entry))))
+    (unless profile
+      (emacsvox-aural-routing--error "No active routing profile"))
+    (let ((preferred
+           (emacsvox-aural-routing-prefer-engine-in-data profile engine-id)))
+      (setq emacsvox-aural-session-engine-order
+            (copy-sequence (plist-get preferred :engine-order)))
+      (emacsvox-aural-apply-routing-profile nil callback)
+      (copy-sequence emacsvox-aural-session-engine-order))))
+
+(defun emacsvox-aural-clear-session-engine-order (&optional callback)
+  "Clear temporary engine priority and reapply the saved active profile.
+
+CALLBACK receives the terminal adapter apply result."
+  (unless emacsvox-aural-session-engine-order
+    (emacsvox-aural-routing--error "No session engine preference is active"))
+  (setq emacsvox-aural-session-engine-order nil)
+  (emacsvox-aural-apply-routing-profile nil callback))
 
 (defun emacsvox-aural-commit-routing-profile-data
     (data &optional file callback)
@@ -1035,7 +1107,8 @@ When APPLY-ACTIVE is non-nil, also apply the saved active profile."
       (setq emacsvox-aural-routing-profile-registry registry
             emacsvox-aural-active-routing-profile
             (plist-get data :active-profile)
-            emacsvox-aural-session-routing-bindings nil)
+            emacsvox-aural-session-routing-bindings nil
+            emacsvox-aural-session-engine-order nil)
       (when (and apply-active emacsvox-aural-active-routing-profile)
         (emacsvox-aural-apply-routing-profile))
       (run-hooks 'emacsvox-aural-routing-profile-changed-hook)

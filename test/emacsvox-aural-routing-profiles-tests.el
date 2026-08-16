@@ -40,6 +40,7 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-active-routing-profile nil)
          (emacsvox-aural-session-routing-bindings nil)
+         (emacsvox-aural-session-engine-order nil)
          (emacsvox-aural-routing-profile-changed-hook nil)
          (omnivox-logical-voice-preferences nil)
          (omnivox-logical-voice-languages nil)
@@ -90,6 +91,71 @@
       (should (equal (plist-get (nth 1 selectors) :engine-id) "dectalk"))
       (should (equal (plist-get (nth 2 selectors) :engine-id) "winrt"))
       (should (equal (plist-get (nth 3 selectors) :engine-id) "espeak")))))
+
+(ert-deftest emacsvox-aural-routing-promotes-engine-without-changing-routes ()
+  "Engine preference preserves explicit selectors and fallback policy."
+  (let* ((input (copy-tree emacsvox-test--routing-profile))
+         (preferred
+          (emacsvox-aural-routing-prefer-engine-in-data input "winrt")))
+    (should
+     (equal
+      (plist-get preferred :engine-order)
+      '("winrt" "eloquence" "dectalk" "espeak")))
+    (should
+     (equal
+      (plist-get preferred :fallback)
+      (plist-get input :fallback)))
+    (should
+     (equal
+      (plist-get preferred :bindings)
+      (plist-get input :bindings)))
+    (should (equal input emacsvox-test--routing-profile))
+    (should-error
+     (emacsvox-aural-routing-prefer-engine-in-data input "dectalk")
+     :type 'emacsvox-aural-routing-profile-error)))
+
+(ert-deftest emacsvox-aural-routing-session-engine-order-is-unsaved-overlay ()
+  "Session preference applies globally after explicit logical selectors."
+  (emacsvox-test--with-routing-profiles
+    (emacsvox-aural-register-routing-profile-data
+     emacsvox-test--routing-profile "test")
+    (setq emacsvox-aural-active-routing-profile 'workstation)
+    (let (statuses)
+      (cl-letf
+          (((symbol-function 'tts-apply-voice-configuration)
+            (lambda (callback)
+              (let ((status '(:status applied :completion-guarantee local)))
+                (push status statuses)
+                (funcall callback status)
+                status))))
+        (emacsvox-aural-prefer-engine-for-session "winrt")
+        (should
+         (equal emacsvox-aural-session-engine-order
+                '("winrt" "eloquence" "dectalk" "espeak")))
+        (should
+         (equal omnivox-engine-priority-ids
+                emacsvox-aural-session-engine-order))
+        (let ((selectors
+               (emacsvox-aural-routing-selectors 'voice-bolden)))
+          (should (eq (plist-get (nth 0 selectors) :kind) 'exact))
+          (should (equal (plist-get (nth 0 selectors) :engine-id)
+                         "eloquence"))
+          (should (equal (plist-get (nth 1 selectors) :engine-id)
+                         "dectalk"))
+          (should (equal (plist-get (nth 2 selectors) :engine-id)
+                         "winrt")))
+        (let* ((user-data (emacsvox-aural-routing-user-data))
+               (saved-profile (car (plist-get user-data :profiles))))
+          (should
+           (equal
+            (plist-get saved-profile :engine-order)
+            '("eloquence" "dectalk" "winrt" "espeak"))))
+        (emacsvox-aural-clear-session-engine-order)
+        (should-not emacsvox-aural-session-engine-order)
+        (should
+         (equal omnivox-engine-priority-ids
+                '("eloquence" "dectalk" "winrt" "espeak")))
+        (should (= (length statuses) 2))))))
 
 (ert-deftest emacsvox-aural-routing-session-binding-replaces-saved-route ()
   "A temporary session route wins and is not added to saved user data."
