@@ -15,6 +15,15 @@ This manual documents *Emacsvox, The Complete Audio Desktop* and was
 last updated on August 16, 2026.
 
 
+File: emacsvox.info,  Node: emacsvox-browse-kill-ring,  Next: emacsvox-bs,  Prev: emacsvox-bookshare,  Up: Emacsvox Commands And Options
+
+12.59 emacsvox-browse-kill-ring
+===============================
+
+Browse the kill ring using browse-kill-ring.el - interactively insert
+items from kill-ring
+
+
 File: emacsvox.info,  Node: emacsvox-bs,  Next: emacsvox-buff-menu,  Prev: emacsvox-browse-kill-ring,  Up: Emacsvox Commands And Options
 
 12.60 emacsvox-bs

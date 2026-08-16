@@ -5,7 +5,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1472 commands and 177 options.
+This chapter documents a total of 1474 commands and 177 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -5208,6 +5208,36 @@ engines, and portable style/effect information. Transactional previews use
 the same sample text without changing saved palettes or routing profiles.
 
 @subsection Emacsvox-Aural-Voice-Workbench Commands
+
+@subsubsection emacsvox-aural-prefer-engine
+@deffn {Command} emacsvox-aural-prefer-engine  (engine-id &optional save)
+@table @kbd
+@item C-e d e
+@kindex C-e d e
+@end table
+
+@findex emacsvox-aural-prefer-engine
+
+@format
+Prefer ENGINE-ID globally while preserving explicit voice routes.
+
+By default the change lasts for this Emacs session.  With prefix argument
+SAVE, atomically save it in the active routing profile.  Remaining engines
+keep their relative order; explicit logical-voice routes and fallback policy
+are unchanged.  The command does not stop speech already playing.
+
+(fn ENGINE-ID &optional SAVE)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-restore-saved-engine-order
+@deffn {Command} emacsvox-aural-restore-saved-engine-order
+@findex emacsvox-aural-restore-saved-engine-order
+
+@format
+Clear the temporary engine preference and reapply the saved order.
+@end format
+@end deffn
 
 @subsubsection emacsvox-aural-voice-workbench
 @deffn {Command} emacsvox-aural-voice-workbench  (&optional view)

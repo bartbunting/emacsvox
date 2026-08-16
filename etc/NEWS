@@ -80,6 +80,14 @@ preferred engine recovers.  Immediate speech and isolated-letter commands use
 the current global routing policy and health snapshot, but do not carry a
 named logical voice.
 
+Press ~C-e d e~ to put one available nonfailed engine first in the global
+preferred order for the current Emacs session.  Use ~C-u C-e d e~ to save that
+order atomically, or ~M-x emacsvox-aural-restore-saved-engine-order~ to reapply
+the saved order.  The command preserves every explicit logical-voice route,
+the fallback policy, and the relative order of the other engines; explicit
+routes still take precedence.  It changes subsequent speech without stopping
+audio already playing.
+
 ** TTS Prefix Map Rename
 
 The generic speech prefix map is now ~emacsvox-tts-submap~.  The former

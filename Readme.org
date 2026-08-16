@@ -108,6 +108,15 @@ Use =m= to stage migration from existing Omnivox settings or the current
 palette, =N= for routing presets, and =E= or =I= to exchange one data-only
 profile.  No inferred route is saved without review.
 
+For a quick global engine change, press =C-e d e= and choose an available
+nonfailed engine.  This moves it to the front of the global preferred order
+for the current Emacs session without stopping speech already playing.  It
+does not change fallback policy or explicit logical-voice routes; an explicit
+route still wins.  The relative order of every other engine is retained.  Use
+=C-u C-e d e= to save the new order atomically in the active machine routing
+profile, or =M-x emacsvox-aural-restore-saved-engine-order= to discard a
+temporary preference and reapply the saved order.
+
 Use =w= or =C-c C-c= to atomically write and apply the complete profile to every
 live speech stream.  The voice tuner uses the same keys to write one edited
 style and return.  A partial apply remains visible and can be retried with =r=;

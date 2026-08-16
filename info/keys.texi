@@ -122,6 +122,7 @@
 @item a  tts-add-cleanup-pattern
 @item c  tts-toggle-caps
 @item d  tts-select-server
+@item e  emacsvox-aural-prefer-engine
 @item f  tts-set-character-scale
 @item i  emacsvox-toggle-audio-indentation
 @item k  emacsvox-toggle-character-echo
