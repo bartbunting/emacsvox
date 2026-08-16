@@ -71,6 +71,13 @@
          (emacsvox-aural-routing-profile-changed-hook nil)
          (emacsvox-aural-routing-apply-status nil)
          (emacsvox-aural-routing-apply-status-hook nil)
+         (omnivox-logical-voice-preferences nil)
+         (omnivox-logical-voice-languages nil)
+         (omnivox-engine-priority-ids nil)
+         (omnivox-fallback-engine-ids '("espeak"))
+         (omnivox-disabled-engine-ids nil)
+         (omnivox-global-default-selector nil)
+         (omnivox-allow-same-language-fallback t)
          (tts-voice-inventory-function
           (lambda () (copy-tree emacsvox-test--workbench-inventory)))
          (tts-voice-capabilities-function

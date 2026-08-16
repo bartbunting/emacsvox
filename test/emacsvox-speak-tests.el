@@ -228,9 +228,11 @@
     (let* ((tts-caps t)
            (emacsvox-capitalization-presentation 'tone)
            (annotated (tts--annotate-capitalization spoken))
-           (facts
+           (positioned
             (get-text-property
-             0 emacsvox-aural-facts-property annotated)))
+             0 emacsvox-aural-positioned-facts-property annotated))
+           (facts (car positioned)))
+      (should (= (length positioned) 1))
       (should (eq (plist-get facts :capitalization-kind) 'capital))
       (should (eq (plist-get facts :capitalization-presentation) 'tone)))))
 
