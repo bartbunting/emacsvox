@@ -53,6 +53,8 @@
 
 (declare-function notmuch-sanitize "notmuch-lib" (str))
 (declare-function notmuch-search-get-result "notmuch" (&optional pos))
+(declare-function notmuch-search-next-thread "notmuch" ())
+(declare-function notmuch-search-previous-thread "notmuch" ())
 (declare-function notmuch-show-clean-address "notmuch-show" (address))
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 (declare-function notmuch-show-get-message-properties "notmuch-show" ())
@@ -1952,8 +1954,10 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
            (emacsvox-notmuch--install-advice))))
 
 (with-eval-after-load 'notmuch
-  (define-key notmuch-search-mode-map (kbd "<down>") #'next-line)
-  (define-key notmuch-search-mode-map (kbd "<up>") #'previous-line))
+  (define-key
+   notmuch-search-mode-map (kbd "<down>") #'notmuch-search-next-thread)
+  (define-key
+   notmuch-search-mode-map (kbd "<up>") #'notmuch-search-previous-thread))
 
 (with-eval-after-load 'notmuch-show
   (define-key

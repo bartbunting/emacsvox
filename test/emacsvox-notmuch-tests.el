@@ -36,12 +36,12 @@
     (should (eq emacsvox-aural-module 'notmuch))
     (should (local-variable-p 'emacsvox-aural-module))))
 
-(ert-deftest emacsvox-notmuch-search-arrows-match-control-line-movement ()
-  "Search-buffer arrows use the same movement as C-n and C-p."
+(ert-deftest emacsvox-notmuch-search-arrows-match-thread-navigation ()
+  "Search-buffer arrows use the same semantic navigation as n and p."
   (with-temp-buffer
     (use-local-map notmuch-search-mode-map)
-    (dolist (keys '(("<down>" . "C-n")
-                    ("<up>" . "C-p")))
+    (dolist (keys '(("<down>" . "n")
+                    ("<up>" . "p")))
       (should
        (eq
         (key-binding (kbd (car keys)))
