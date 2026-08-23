@@ -581,8 +581,7 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
        "Terminal application screen exited")
      (emacsvox-eat--facts
       'command-interaction
-      (if entered-p 'operation-started 'operation-completed)
-      'terminal-application-screen)
+      (if entered-p 'operation-started 'operation-completed))
      'state-change
      (if entered-p 'open-object 'close-object))))
 
@@ -1021,9 +1020,7 @@ Ignore a stale or duplicate exit after another process has become active."
   "Present the human mode state produced by EAT command TARGET."
   (emacsvox-eat--submit
    (emacsvox-eat--mode-feedback target)
-   (emacsvox-eat--facts
-    'command-interaction 'state-changed 'mode-change
-    (list :terminal-mode target))
+   (emacsvox-eat--facts 'command-interaction 'state-changed)
    'state-change 'button))
 
 (cl-loop

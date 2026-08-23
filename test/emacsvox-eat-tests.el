@@ -8,6 +8,7 @@
 (load (expand-file-name "../lisp/emacsvox-eat.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
+(require 'emacsvox-aural-provider-workflows)
 
 (defun emacsvox-eat-test--screen (text &optional width generation)
   "Return a minimal public-screen fixture ending at the cursor in TEXT."
@@ -61,6 +62,25 @@
   (should (memq #'emacsvox-eat--process-started eat-exec-hook))
   (should (memq #'emacsvox-eat--process-exited eat-exit-hook)))
 
+(ert-deftest emacsvox-eat-state-facts-use-registered-vocabulary ()
+  "EAT lifecycle and mode facts satisfy the native semantic contract."
+  (dolist
+      (case
+       (list
+        (cons
+         (emacsvox-eat--facts 'command-interaction 'operation-started)
+         'state-change)
+        (cons
+         (emacsvox-eat--facts 'command-interaction 'operation-completed)
+         'state-change)
+        (cons
+         (emacsvox-eat--facts 'command-interaction 'state-changed)
+         'state-change)))
+    (should
+     (emacsvox-aural-normalize-input
+      (car case)
+      (list :module 'eat :mode 'eat-mode :occasion (cdr case))))))
+
 (ert-deftest emacsvox-eat-yank-feedback-is-target-aware ()
   "Only the matching interactive Eat yank command plays an icon."
   (let ((ems--interactive-fn-name 'eat-yank)
@@ -88,9 +108,7 @@
         (:facts
          (:role command-interaction
           :command-interaction-kind shell
-          :events (state-changed)
-          :command-operation mode-change
-          :terminal-mode eat-line-mode)
+          :events (state-changed))
          :module eat
          :occasion state-change
          :compatibility-actions ((icon button))))))))
@@ -1032,8 +1050,7 @@
            (:facts
             (:role command-interaction
              :command-interaction-kind shell
-             :events (operation-started)
-             :command-operation terminal-application-screen)
+             :events (operation-started))
             :module eat
             :occasion state-change
             :compatibility-actions ((icon open-object))))
@@ -1041,8 +1058,7 @@
            (:facts
             (:role command-interaction
              :command-interaction-kind shell
-             :events (operation-completed)
-             :command-operation terminal-application-screen)
+             :events (operation-completed))
             :module eat
             :occasion state-change
             :compatibility-actions ((icon close-object))))))))))
