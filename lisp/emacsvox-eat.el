@@ -102,6 +102,24 @@
 (defvar-local emacsvox-eat--last-changed-screen nil
   "Screen snapshot belonging to `emacsvox-eat--last-screen-diff'.")
 
+(defvar-local emacsvox-eat--pending-user-input-p nil
+  "Non-nil when the current update burst followed terminal input.")
+
+(defvar-local emacsvox-eat--quiescence-started-at nil
+  "Time at which the current bounded EAT update burst began.")
+
+(defvar-local emacsvox-eat--last-status-text nil
+  "Latest conservatively classified terminal status or progress row.")
+
+(defvar-local emacsvox-eat--last-status-spoken-at 0.0
+  "Time at which automatic EAT status speech was most recently submitted.")
+
+(defvar-local emacsvox-eat--terminal-id nil
+  "Process-local integer used in replaceable EAT delivery keys.")
+
+(defvar emacsvox-eat--next-terminal-id 0
+  "Next process-local identifier for an initialized EAT buffer.")
+
 (defconst emacsvox-eat--quiescence-delay 0.06
   "Seconds of quiet that finish one EAT screen update burst.")
 
@@ -110,6 +128,12 @@
 
 (defconst emacsvox-eat--maximum-output-characters 1000
   "Maximum terminal content characters before a bounded truncation notice.")
+
+(defconst emacsvox-eat--status-minimum-interval 1.5
+  "Minimum seconds between automatic in-progress terminal status updates.")
+
+(defconst emacsvox-eat--quiescence-maximum-delay 0.25
+  "Maximum seconds a continuous EAT update burst may postpone classification.")
 
 (defconst emacsvox-eat--face-attributes
   '(:foreground :background :weight :slant :underline :strike-through
@@ -425,7 +449,9 @@ Snapshots from different terminal generations are intentionally not compared."
     (cancel-timer emacsvox-eat--quiescence-timer))
   (setq emacsvox-eat--quiescence-timer nil
         emacsvox-eat--pending-screen-baseline nil
-        emacsvox-eat--pending-screen-diff nil))
+        emacsvox-eat--pending-screen-diff nil
+        emacsvox-eat--pending-user-input-p nil
+        emacsvox-eat--quiescence-started-at nil))
 
 (defun emacsvox-eat--complete-output-rows (diff snapshot)
   "Return conservative complete output rows represented by DIFF and SNAPSHOT.
@@ -451,12 +477,73 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
         (when (and start end (> end start))
           (emacsvox-eat--list-slice new-rows start end))))))
 
+(defun emacsvox-eat--status-row (diff snapshot)
+  "Return a conservative same-row status represented by DIFF and SNAPSHOT."
+  (when (and (plist-get diff :text-changed)
+             (not (plist-get diff :user-input))
+             (not (plist-get diff :size-changed))
+             (not (plist-get diff :alternate-screen-changed))
+             (not (plist-get snapshot :alternate-screen)))
+    (when-let* ((change (plist-get diff :row-change))
+                (cursor-row (plist-get snapshot :cursor-row))
+                (old-rows (plist-get change :old-rows))
+                (new-rows (plist-get change :new-rows))
+                ((= (length old-rows) 1))
+                ((= (length new-rows) 1))
+                ((= (plist-get change :start) cursor-row))
+                (row (car new-rows))
+                ((let ((case-fold-search t))
+                   (string-match-p
+                    (concat
+                     "[0-9]+\\(?:\\.[0-9]+\\)?%"
+                     "\\|\\_<\\(?:progress\\|loading\\|downloading"
+                     "\\|uploading\\|processing\\|complete\\|completed"
+                     "\\|done\\|failed\\|error\\)\\_>")
+                    row))))
+      row)))
+
+(defun emacsvox-eat--terminal-delivery-key (kind)
+  "Return a stable replacement key for terminal presentation KIND."
+  (unless emacsvox-eat--terminal-id
+    (setq emacsvox-eat--next-terminal-id
+          (1+ emacsvox-eat--next-terminal-id)
+          emacsvox-eat--terminal-id emacsvox-eat--next-terminal-id))
+  (list 'eat kind emacsvox-eat--terminal-id emacsvox-eat--generation))
+
+(defun emacsvox-eat--final-status-p (text)
+  "Return non-nil when status TEXT describes completion or failure."
+  (let ((case-fold-search t))
+    (or
+     (and
+      (string-match "\\([0-9]+\\(?:\\.[0-9]+\\)?\\)%" text)
+      (>= (string-to-number (match-string 1 text)) 100))
+     (string-match-p
+      "\\_<\\(?:complete\\|completed\\|done\\|failed\\|error\\)\\_>"
+      text))))
+
+(defun emacsvox-eat--present-status (text)
+  "Retain and, when due, present terminal status TEXT."
+  (let ((now (float-time)))
+    (setq emacsvox-eat--last-status-text text)
+    (when (or (emacsvox-eat--final-status-p text)
+              (>= (- now emacsvox-eat--last-status-spoken-at)
+                  emacsvox-eat--status-minimum-interval))
+      (setq emacsvox-eat--last-status-spoken-at now)
+      (when-let* ((content (emacsvox-eat--bounded-output (list text))))
+        (emacsvox-eat--submit
+         content
+         (emacsvox-eat--facts 'command-output 'command-output-received)
+         'continuous nil 'replaceable
+         (emacsvox-eat--terminal-delivery-key 'status))))))
+
 (defun emacsvox-eat--screen-quiesced (diff snapshot)
   "Retain and present the selected terminal DIFF ending at SNAPSHOT."
   (setq emacsvox-eat--last-screen-diff diff
         emacsvox-eat--last-changed-screen snapshot)
-  (when-let* ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
-    (emacsvox-eat--present-output-rows rows)))
+  (if-let* ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
+      (emacsvox-eat--present-output-rows rows)
+    (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
+      (emacsvox-eat--present-status status))))
 
 (defun emacsvox-eat--finish-quiescence (buffer generation serial)
   "Finish BUFFER's update burst identified by GENERATION and SERIAL."
@@ -467,23 +554,33 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
                  (= serial emacsvox-eat--update-serial))
         (setq emacsvox-eat--quiescence-timer nil)
         (let ((diff emacsvox-eat--pending-screen-diff)
-              (snapshot emacsvox-eat--screen-snapshot))
+              (snapshot emacsvox-eat--screen-snapshot)
+              (user-input-p emacsvox-eat--pending-user-input-p))
           (setq emacsvox-eat--pending-screen-baseline nil
-                emacsvox-eat--pending-screen-diff nil)
+                emacsvox-eat--pending-screen-diff nil
+                emacsvox-eat--pending-user-input-p nil
+                emacsvox-eat--quiescence-started-at nil)
           (when (and diff
                      (emacsvox-eat--selected-buffer-p))
+            (setq diff (plist-put diff :user-input user-input-p))
             (emacsvox-eat--screen-quiesced diff snapshot)))))))
 
 (defun emacsvox-eat--schedule-quiescence ()
   "Restart the timer for the current selected EAT update burst."
   (when (timerp emacsvox-eat--quiescence-timer)
     (cancel-timer emacsvox-eat--quiescence-timer))
-  (setq emacsvox-eat--quiescence-timer
-        (run-at-time
-         emacsvox-eat--quiescence-delay nil
-         #'emacsvox-eat--finish-quiescence
-         (current-buffer) emacsvox-eat--generation
-         emacsvox-eat--update-serial)))
+  (let* ((elapsed
+          (max 0.0
+               (- (float-time)
+                  (or emacsvox-eat--quiescence-started-at (float-time)))))
+         (deadline-delay
+          (max 0.0 (- emacsvox-eat--quiescence-maximum-delay elapsed)))
+         (delay (min emacsvox-eat--quiescence-delay deadline-delay)))
+    (setq emacsvox-eat--quiescence-timer
+          (run-at-time
+           delay nil #'emacsvox-eat--finish-quiescence
+           (current-buffer) emacsvox-eat--generation
+           emacsvox-eat--update-serial))))
 
 (defun emacsvox-eat--observe-screen ()
   "Capture and aggregate the current EAT screen without producing speech."
@@ -500,7 +597,12 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
                 (plist-get new :generation))))
           (emacsvox-eat--cancel-quiescence)
         (unless emacsvox-eat--pending-screen-baseline
-          (setq emacsvox-eat--pending-screen-baseline old))
+          (setq emacsvox-eat--pending-screen-baseline old
+                emacsvox-eat--quiescence-started-at (float-time)))
+        (setq emacsvox-eat--pending-user-input-p
+              (or emacsvox-eat--pending-user-input-p
+                  emacsvox-eat--recent-input
+                  emacsvox-eat--completion-snapshot))
         (setq emacsvox-eat--pending-screen-diff
               (emacsvox-eat--screen-diff
                emacsvox-eat--pending-screen-baseline new))
@@ -515,7 +617,9 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
         emacsvox-eat--screen-snapshot nil
         emacsvox-eat--recent-input nil
         emacsvox-eat--last-screen-diff nil
-        emacsvox-eat--last-changed-screen nil))
+        emacsvox-eat--last-changed-screen nil
+        emacsvox-eat--last-status-text nil
+        emacsvox-eat--last-status-spoken-at 0.0))
 
 (defun emacsvox-eat--advance-generation ()
   "Invalidate asynchronous state and advance the current EAT generation."
@@ -533,16 +637,21 @@ OPERATION and additional PROPERTIES are optional."
    (when operation (list :command-operation operation))
    properties))
 
-(defun emacsvox-eat--submit (content facts occasion &optional icon)
-  "Submit terminal CONTENT with FACTS, OCCASION, and compatibility ICON."
-  (emacsvox-aural-submit
-   content
-   :facts facts
-   :module 'eat
-   :occasion occasion
-   :compatibility-actions
-   (when icon
-     (list (emacsvox-aural-compatibility-icon icon)))))
+(defun emacsvox-eat--submit
+    (content facts occasion &optional icon delivery-policy replacement-key)
+  "Submit terminal CONTENT with semantic and delivery metadata.
+FACTS, OCCASION, and compatibility ICON describe presentation.  Optional
+DELIVERY-POLICY and REPLACEMENT-KEY control whole-transaction delivery."
+  (apply
+   #'emacsvox-aural-submit content
+   (append
+    (list :facts facts :module 'eat :occasion occasion)
+    (when delivery-policy (list :delivery-policy delivery-policy))
+    (when replacement-key (list :replacement-key replacement-key))
+    (list
+     :compatibility-actions
+     (when icon
+       (list (emacsvox-aural-compatibility-icon icon)))))))
 
 (defun emacsvox-eat--sanitize-output-row (row)
   "Return ROW with untrusted C0 controls and DEL replaced by spaces."

@@ -258,6 +258,10 @@
           (emacsvox-eat--pending-screen-baseline
            '(:generation 7 :text "older"))
           (emacsvox-eat--pending-screen-diff '(:changes (text)))
+          (emacsvox-eat--pending-user-input-p t)
+          (emacsvox-eat--quiescence-started-at 10.0)
+          (emacsvox-eat--last-status-text "Progress 40%")
+          (emacsvox-eat--last-status-spoken-at 20.0)
           (emacsvox-eat--quiescence-timer
            (run-at-time 60 nil #'ignore))
           process-a process-b)
@@ -270,7 +274,11 @@
       (should-not emacsvox-eat--screen-snapshot)
       (should-not emacsvox-eat--pending-screen-baseline)
       (should-not emacsvox-eat--pending-screen-diff)
+      (should-not emacsvox-eat--pending-user-input-p)
+      (should-not emacsvox-eat--quiescence-started-at)
       (should-not emacsvox-eat--quiescence-timer)
+      (should-not emacsvox-eat--last-status-text)
+      (should (= emacsvox-eat--last-status-spoken-at 0.0))
       (setq emacsvox-eat--completion-snapshot '(13 . "pending"))
       (emacsvox-eat--process-exited process-b)
       (should (= emacsvox-eat--generation 8))
@@ -493,6 +501,83 @@
             '("new heading" "new body" "$ "))
       (should-not
        (emacsvox-eat--complete-output-rows repaint snapshot)))))
+
+(ert-deftest emacsvox-eat-status-classifier-is-conservative ()
+  "Only recognizable, non-input same-row main-screen updates are status."
+  (let* ((diff
+          '(:text-changed t :user-input nil :size-changed nil
+            :alternate-screen-changed nil
+            :row-change
+            (:start 0 :old-rows ("Progress 0%")
+             :new-rows ("Progress 10%"))))
+         (snapshot '(:cursor-row 0 :alternate-screen nil)))
+    (should
+     (equal (emacsvox-eat--status-row diff snapshot) "Progress 10%"))
+    (dolist (change '(:user-input :size-changed :alternate-screen-changed))
+      (let ((changed (copy-tree diff)))
+        (setf (plist-get changed change) t)
+        (should-not (emacsvox-eat--status-row changed snapshot))))
+    (let ((alternate (copy-tree snapshot)))
+      (setf (plist-get alternate :alternate-screen) t)
+      (should-not (emacsvox-eat--status-row diff alternate)))
+    (let ((ordinary (copy-tree diff)))
+      (setf (plist-get (plist-get ordinary :row-change) :new-rows)
+            '("ordinary replacement"))
+      (should-not (emacsvox-eat--status-row ordinary snapshot)))))
+
+(ert-deftest emacsvox-eat-status-is-rate-limited-and-replaceable ()
+  "Intermediate progress is throttled while completion remains immediate."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 4)
+          (emacsvox-eat--last-status-spoken-at 0.0)
+          (times '(100.0 100.5 100.6))
+          submissions)
+      (cl-letf (((symbol-function 'float-time)
+                 (lambda (&optional _) (pop times)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (list content arguments) submissions))))
+        (emacsvox-eat--present-status "Progress 10%")
+        (emacsvox-eat--present-status "Progress 20%")
+        (emacsvox-eat--present-status "Progress 100%"))
+      (setq submissions (nreverse submissions))
+      (should
+       (equal (mapcar #'car submissions)
+              '("Progress 10%" "Progress 100%")))
+      (should (equal emacsvox-eat--last-status-text "Progress 100%"))
+      (let* ((oldest-arguments (cadr (car submissions)))
+             (newest-arguments (cadr (car (last submissions))))
+             (oldest-key
+              (plist-get oldest-arguments :replacement-key))
+             (newest-key
+              (plist-get newest-arguments :replacement-key)))
+        (should
+         (eq (plist-get newest-arguments :delivery-policy) 'replaceable))
+        (should (equal oldest-key newest-key))
+        (should (equal (butlast newest-key 2) '(eat status)))
+        (should (= (car (last newest-key)) 4))))))
+
+(ert-deftest emacsvox-eat-real-carriage-return-is-status-not-output ()
+  "A real EAT carriage-return rewrite is retained as a status row."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 30 3)
+            (eat-term-process-output eat-terminal "Progress 0%")
+            (eat-term-redisplay eat-terminal)
+            (let ((old (emacsvox-eat--capture-screen)))
+              (eat-term-process-output eat-terminal "\rProgress 10%")
+              (eat-term-redisplay eat-terminal)
+              (let* ((new (emacsvox-eat--capture-screen))
+                     (diff (emacsvox-eat--screen-diff old new)))
+                (should-not
+                 (emacsvox-eat--complete-output-rows diff new))
+                (should
+                 (equal (emacsvox-eat--status-row diff new)
+                        "Progress 10%")))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
 
 (ert-deftest emacsvox-eat-real-multiline-output-is-one-quiesced-transaction ()
   "A real terminal screen presents complete result rows and omits its prompt."
@@ -768,6 +853,31 @@
         (emacsvox-eat--cancel-quiescence)
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-screen-observer-has-an-absolute-burst-deadline ()
+  "Continuous repaint cannot postpone screen classification indefinitely."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 3)
+          (emacsvox-eat--update-serial 8)
+          (emacsvox-eat--quiescence-started-at 100.0)
+          scheduled-delay
+          scheduled-arguments)
+      (cl-letf (((symbol-function 'float-time)
+                 (lambda (&optional _) 100.23))
+                ((symbol-function 'run-at-time)
+                 (lambda (delay repeat function &rest arguments)
+                   (setq scheduled-delay delay
+                         scheduled-arguments
+                         (cons repeat (cons function arguments)))
+                   'test-timer)))
+        (emacsvox-eat--schedule-quiescence))
+      (should (< (abs (- scheduled-delay 0.02)) 0.000001))
+      (should
+       (equal
+        (cdr scheduled-arguments)
+        (list #'emacsvox-eat--finish-quiescence
+              (current-buffer) 3 8)))
+      (setq emacsvox-eat--quiescence-timer nil))))
 
 (ert-deftest emacsvox-eat-screen-observer-is-chunk-boundary-independent ()
   "Split text and escape sequences converge on the same final screen diff."
