@@ -2900,7 +2900,11 @@
              ("h" . emacsvox-eat-speak-likely-focus)
              ("c" . emacsvox-eat-speak-completion-output)
              ("s" . emacsvox-eat-speak-visible-screen)
-             ("r" . emacsvox-eat-review-screen)))
+             ("r" . emacsvox-eat-review-screen)
+             ("t" . emacsvox-eat-speak-retained-status)
+             ("i" . emacsvox-eat-speak-retained-metadata)
+             ("v" . emacsvox-eat-cycle-verbosity)
+             ("m" . emacsvox-eat-toggle-background-monitoring)))
     (should
      (eq (lookup-key emacsvox-eat-review-map (kbd (car binding)))
          (cdr binding)))))
@@ -3038,6 +3042,8 @@
         (emacsvox-eat-speak-last-change)
         (emacsvox-eat-speak-likely-focus)
         (emacsvox-eat-speak-completion-output)
+        (emacsvox-eat-speak-retained-status)
+        (emacsvox-eat-speak-retained-metadata)
         (emacsvox-eat-speak-visible-screen))
       (should
        (equal
@@ -3046,6 +3052,8 @@
           "No terminal screen change is retained"
           "No likely terminal focus is retained"
           "No terminal completion output is retained"
+          "No terminal status is retained"
+          "No terminal metadata change is retained"
           "No terminal screen snapshot is available"))))))
 
 (ert-deftest emacsvox-eat-review-is-blocked-during-secure-input ()
@@ -3063,6 +3071,8 @@
                    emacsvox-eat-speak-last-change
                    emacsvox-eat-speak-likely-focus
                    emacsvox-eat-speak-completion-output
+                   emacsvox-eat-speak-retained-status
+                   emacsvox-eat-speak-retained-metadata
                    emacsvox-eat-speak-visible-screen))
           (should-error (funcall command) :type 'user-error)))
       (should-not submitted))))
@@ -3292,6 +3302,108 @@
       (when (buffer-live-p review) (kill-buffer review))
       (when (buffer-live-p source) (kill-buffer source)))))
 
+(ert-deftest emacsvox-eat-verbosity-command-cycles-buffer-local-policy ()
+  "The explicit control cycles all three policies with semantic feedback."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let (submissions)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (&rest arguments) (push arguments submissions))))
+        (should (eq (emacsvox-eat-cycle-verbosity) 'verbose))
+        (should (eq emacsvox-eat-verbosity 'verbose))
+        (should (eq (emacsvox-eat-cycle-verbosity) 'terse))
+        (should (eq (emacsvox-eat-cycle-verbosity) 'normal)))
+      (should (eq emacsvox-eat-verbosity 'normal))
+      (setq submissions (nreverse submissions))
+      (should
+       (equal
+        (mapcar #'car submissions)
+        (list
+         (concat
+          "Terminal verbosity verbose; bounded output, status, title, and "
+          "directory changes are spoken")
+         "Terminal verbosity terse; routine output is retained for review"
+         "Terminal verbosity normal; bounded output and status are spoken")))
+      (dolist (submission submissions)
+        (should
+         (equal
+          (nth 1 submission)
+          '(:role command-interaction :command-interaction-kind shell
+            :events (state-changed))))
+        (should (eq (nth 2 submission) 'state-change))))))
+
+(ert-deftest emacsvox-eat-frozen-review-controls-source-and-keeps-frozen-state ()
+  "Review settings target the source while status and metadata stay frozen."
+  (let ((source (generate-new-buffer " *emacsvox-eat-review-controls*"))
+        review
+        submissions
+        status
+        title)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq status (copy-sequence "Progress 40%")
+                title (copy-sequence "Router")
+                major-mode 'eat-mode
+                emacsvox-eat--screen-snapshot
+                '(:text "Progress 40%" :rows ("Progress 40%") :styles nil
+                  :cursor-row 0 :alternate-screen nil)
+                emacsvox-eat--last-status-text status
+                emacsvox-eat--last-metadata-change
+                (list :title-changed t :title title
+                      :cwd-changed t :cwd "/srv/router/"))
+          (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                     (lambda (text &rest _)
+                       (push (substring-no-properties text) submissions))))
+            (setq review (emacsvox-eat-review-screen))
+            (setq submissions nil)
+            (with-current-buffer source
+              (aset status 0 ?X)
+              (aset title 0 ?X)
+              (setq emacsvox-eat--last-status-text "Progress 90%"
+                    emacsvox-eat--last-metadata-change
+                    '(:title-changed t :title "Changed")))
+            (with-current-buffer review
+              (emacsvox-eat-speak-retained-status)
+              (emacsvox-eat-speak-retained-metadata)
+              (should (eq (emacsvox-eat-cycle-verbosity) 'verbose))
+              (should (emacsvox-eat-toggle-background-monitoring))))
+          (should
+           (equal
+            (nreverse submissions)
+            (list
+             "Retained terminal status: Progress 40%"
+             "Terminal title: Router\nWorking directory: /srv/router/"
+             (concat
+              "Terminal verbosity verbose; bounded output, status, title, and "
+              "directory changes are spoken")
+             "Background terminal monitoring enabled")))
+          (with-current-buffer source
+            (should (eq emacsvox-eat-verbosity 'verbose))
+            (should emacsvox-eat-monitor-background-output))
+          (should (buffer-live-p review)))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p source) (kill-buffer source)))))
+
+(ert-deftest emacsvox-eat-major-mode-change-kills-frozen-review ()
+  "Leaving EAT major mode clears its content-bearing frozen screen copy."
+  (let ((source (generate-new-buffer " *emacsvox-eat-review-mode-change*"))
+        review)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq major-mode 'eat-mode
+                emacsvox-eat--screen-snapshot
+                '(:text "COPY" :rows ("COPY") :styles nil
+                  :cursor-row 0 :alternate-screen nil))
+          (emacsvox-eat-mode-setup)
+          (cl-letf (((symbol-function 'emacsvox-eat--submit) #'ignore))
+            (setq review (emacsvox-eat-review-screen)))
+          (with-current-buffer source (fundamental-mode))
+          (should-not (buffer-live-p review)))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p source) (kill-buffer source)))))
+
 (ert-deftest emacsvox-eat-frozen-review-mode-has-complete-navigation-map ()
   "The immutable review buffer exposes its row, view, anchor, and quit keys."
   (dolist
@@ -3305,6 +3417,10 @@
          ("c" . emacsvox-eat-review-show-completion)
          ("C" . emacsvox-eat-review-goto-cursor)
          ("h" . emacsvox-eat-review-goto-focus)
+         ("t" . emacsvox-eat-speak-retained-status)
+         ("i" . emacsvox-eat-speak-retained-metadata)
+         ("v" . emacsvox-eat-cycle-verbosity)
+         ("m" . emacsvox-eat-toggle-background-monitoring)
          ("q" . emacsvox-eat-review-quit)))
     (should
      (eq (lookup-key emacsvox-eat-review-mode-map (kbd (car binding)))

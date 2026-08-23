@@ -53,6 +53,7 @@
 (defvar eat-terminal)
 (defvar eat-trace-mode)
 (defvar emacsvox-eat-review-map)
+(defvar emacsvox-eat-review--source-buffer)
 
 ;;   Required modules:
 
@@ -1699,6 +1700,7 @@ Ignore a stale or duplicate exit after another process has become active."
   (add-hook 'window-selection-change-functions
             #'emacsvox-eat--window-selection-changed nil t)
   (add-hook 'kill-buffer-hook #'emacsvox-eat--kill-review-buffer nil t)
+  (add-hook 'change-major-mode-hook #'emacsvox-eat--kill-review-buffer nil t)
   (emacsvox-eat--install-bell-observer)
   (cl-loop
    for map-symbol in
@@ -1709,25 +1711,69 @@ Ignore a stale or duplicate exit after another process has become active."
 
 (add-hook 'eat-mode-hook 'emacsvox-eat-mode-setup)
 
+(defun emacsvox-eat--control-buffer ()
+  "Return the EAT source controlled by the current terminal or review buffer."
+  (cond
+   ((derived-mode-p 'eat-mode) (current-buffer))
+   ((derived-mode-p 'emacsvox-eat-review-mode)
+    (if (and (buffer-live-p emacsvox-eat-review--source-buffer)
+             (with-current-buffer emacsvox-eat-review--source-buffer
+               (derived-mode-p 'eat-mode)))
+        emacsvox-eat-review--source-buffer
+      (user-error "The source EAT terminal is no longer available")))
+   (t (user-error "This is not an EAT terminal or frozen review buffer"))))
+
 (defun emacsvox-eat-toggle-background-monitoring (&optional argument)
-  "Toggle content-free background-output monitoring in this EAT buffer.
+  "Toggle content-free background-output monitoring for this EAT terminal.
 With positive prefix ARGUMENT, enable monitoring; with zero or a negative
-prefix, disable it."
+prefix, disable it.  The command also works from its frozen review buffer."
   (interactive "P")
-  (unless (derived-mode-p 'eat-mode)
-    (user-error "This is not an EAT terminal buffer"))
-  (let ((enabled-p
-         (if argument
-             (> (prefix-numeric-value argument) 0)
-           (not emacsvox-eat-monitor-background-output))))
-    (emacsvox-eat--clear-background-monitor-state)
-    (setq-local emacsvox-eat-monitor-background-output enabled-p)
+  (let ((terminal (emacsvox-eat--control-buffer))
+        enabled-p)
+    (with-current-buffer terminal
+      (setq enabled-p
+            (if argument
+                (> (prefix-numeric-value argument) 0)
+              (not emacsvox-eat-monitor-background-output)))
+      (emacsvox-eat--clear-background-monitor-state)
+      (setq-local emacsvox-eat-monitor-background-output enabled-p))
     (emacsvox-eat--submit
      (format "Background terminal monitoring %s"
              (if enabled-p "enabled" "disabled"))
      (emacsvox-eat--facts 'command-interaction 'state-changed)
      'state-change 'button)
     enabled-p))
+
+(defun emacsvox-eat--verbosity-description (verbosity)
+  "Return a concise human description of terminal VERBOSITY."
+  (pcase verbosity
+    ('terse
+     "Terminal verbosity terse; routine output is retained for review")
+    ('verbose
+     (concat
+      "Terminal verbosity verbose; bounded output, status, title, and "
+      "directory changes are spoken"))
+    (_ "Terminal verbosity normal; bounded output and status are spoken")))
+
+(defun emacsvox-eat-cycle-verbosity ()
+  "Cycle terse, normal, and verbose policy for this EAT terminal.
+The command also works from the terminal's frozen review buffer."
+  (interactive)
+  (let ((terminal (emacsvox-eat--control-buffer))
+        verbosity)
+    (with-current-buffer terminal
+      (setq-local
+       emacsvox-eat-verbosity
+       (pcase emacsvox-eat-verbosity
+         ('terse 'normal)
+         ('normal 'verbose)
+         (_ 'terse)))
+      (setq verbosity emacsvox-eat-verbosity))
+    (emacsvox-eat--submit
+     (emacsvox-eat--verbosity-description verbosity)
+     (emacsvox-eat--facts 'command-interaction 'state-changed)
+     'state-change 'button)
+    verbosity))
 
 ;;;  Snapshot Review:
 
@@ -1742,6 +1788,12 @@ prefix, disable it."
 
 (defvar-local emacsvox-eat-review--focus nil
   "Immutable conservative focus inference copied for this review buffer.")
+
+(defvar-local emacsvox-eat-review--status nil
+  "Immutable terminal status copied for this review buffer.")
+
+(defvar-local emacsvox-eat-review--metadata nil
+  "Immutable sanitized terminal metadata change copied for this review buffer.")
 
 (defvar-local emacsvox-eat-review--view 'screen
   "Kind of frozen content currently rendered in this review buffer.")
@@ -1795,6 +1847,64 @@ prefix, disable it."
   "Submit retained terminal CONTENT for explicit OPERATION review."
   (emacsvox-eat--submit
    content (emacsvox-eat--review-facts operation) 'inspection))
+
+(defun emacsvox-eat--review-state-value (terminal-variable review-variable)
+  "Return retained TERMINAL-VARIABLE or frozen REVIEW-VARIABLE for review."
+  (cond
+   ((derived-mode-p 'emacsvox-eat-review-mode)
+    (symbol-value review-variable))
+   ((derived-mode-p 'eat-mode)
+    (emacsvox-eat--ensure-review-context)
+    (symbol-value terminal-variable))
+   (t (user-error "This is not an EAT terminal or frozen review buffer"))))
+
+(defun emacsvox-eat-speak-retained-status ()
+  "Speak the latest retained or explicitly frozen terminal status row."
+  (interactive)
+  (if-let* ((status
+             (emacsvox-eat--review-state-value
+              'emacsvox-eat--last-status-text
+              'emacsvox-eat-review--status))
+            (content (emacsvox-eat--bounded-review-output (list status))))
+      (emacsvox-eat--submit-review
+       (concat "Retained terminal status: " content) 'output-navigation)
+    (emacsvox-eat--submit-review
+     "No terminal status is retained" 'output-navigation)))
+
+(defun emacsvox-eat--retained-metadata-lines (metadata)
+  "Return explicit-review lines for sanitized retained METADATA."
+  (let (lines)
+    (when (plist-get metadata :title-changed)
+      (push
+       (if-let* ((title (plist-get metadata :title))
+                 ((not (string-empty-p title))))
+           (format "Terminal title: %s"
+                   (emacsvox-eat--sanitize-output-row title))
+         "Terminal title cleared")
+       lines))
+    (when (plist-get metadata :cwd-changed)
+      (push
+       (if-let* ((cwd (plist-get metadata :cwd))
+                 ((not (string-empty-p cwd))))
+           (format "Working directory: %s"
+                   (emacsvox-eat--sanitize-output-row cwd))
+         "Working directory unavailable")
+       lines))
+    (nreverse lines)))
+
+(defun emacsvox-eat-speak-retained-metadata ()
+  "Speak the latest retained or explicitly frozen title/directory change."
+  (interactive)
+  (let* ((metadata
+          (emacsvox-eat--review-state-value
+           'emacsvox-eat--last-metadata-change
+           'emacsvox-eat-review--metadata))
+         (lines (and metadata (emacsvox-eat--retained-metadata-lines metadata)))
+         (content (and lines (emacsvox-eat--bounded-review-output lines))))
+    (if content
+        (emacsvox-eat--submit-review content 'output-navigation)
+      (emacsvox-eat--submit-review
+       "No terminal metadata change is retained" 'output-navigation))))
 
 (defun emacsvox-eat--bounded-review-output (rows)
   "Return a bounded explicit-review representation of retained ROWS."
@@ -2298,6 +2408,10 @@ prefix, disable it."
            ("c" . emacsvox-eat-review-show-completion)
            ("C" . emacsvox-eat-review-goto-cursor)
            ("h" . emacsvox-eat-review-goto-focus)
+           ("t" . emacsvox-eat-speak-retained-status)
+           ("i" . emacsvox-eat-speak-retained-metadata)
+           ("v" . emacsvox-eat-cycle-verbosity)
+           ("m" . emacsvox-eat-toggle-background-monitoring)
            ("?" . describe-mode)
            ("q" . emacsvox-eat-review-quit)))
       (define-key map (kbd (car binding)) (cdr binding)))
@@ -2310,8 +2424,9 @@ prefix, disable it."
 The buffer is an explicit immutable copy.  n and p move by terminal row; SPC,
 RET, or period speaks the current row; C returns to the captured cursor; h
 moves to a retained likely focus; c shows retained completion/help output; s
-returns to screen rows; a speaks the bounded current view; and q kills the
-content-bearing review buffer."
+returns to screen rows; a speaks the bounded current view; t and i speak frozen
+status and metadata; v and m control source-terminal feedback without sending
+terminal input; and q kills the content-bearing review buffer."
   (setq-local emacsvox-aural-module 'eat)
   (setq-local truncate-lines t)
   (buffer-disable-undo)
@@ -2337,6 +2452,12 @@ The command never captures mutable live terminal-buffer text."
            (focus
             (emacsvox-eat-review--copy-data
              emacsvox-eat--last-likely-focus))
+           (status
+            (emacsvox-eat-review--copy-data
+             emacsvox-eat--last-status-text))
+           (metadata
+            (emacsvox-eat-review--copy-data
+             emacsvox-eat--last-metadata-change))
            (buffer
             (if (buffer-live-p emacsvox-eat--review-buffer)
                 emacsvox-eat--review-buffer
@@ -2348,7 +2469,9 @@ The command never captures mutable live terminal-buffer text."
         (setq-local emacsvox-eat-review--source-buffer source
                     emacsvox-eat-review--snapshot snapshot
                     emacsvox-eat-review--completion completion
-                    emacsvox-eat-review--focus focus)
+                    emacsvox-eat-review--focus focus
+                    emacsvox-eat-review--status status
+                    emacsvox-eat-review--metadata metadata)
         (emacsvox-eat-review--render 'screen)
         (emacsvox-eat-review--goto-row
          (or (plist-get snapshot :cursor-row) 0)))
@@ -2369,6 +2492,14 @@ The command never captures mutable live terminal-buffer text."
             #'emacsvox-eat-speak-visible-screen)
 (define-key emacsvox-eat-review-map (kbd "r")
             #'emacsvox-eat-review-screen)
+(define-key emacsvox-eat-review-map (kbd "t")
+            #'emacsvox-eat-speak-retained-status)
+(define-key emacsvox-eat-review-map (kbd "i")
+            #'emacsvox-eat-speak-retained-metadata)
+(define-key emacsvox-eat-review-map (kbd "v")
+            #'emacsvox-eat-cycle-verbosity)
+(define-key emacsvox-eat-review-map (kbd "m")
+            #'emacsvox-eat-toggle-background-monitoring)
 (define-key emacsvox-keymap (kbd "q") 'emacsvox-eat-review-map)
 
 ;;;  Interactive Commands:
