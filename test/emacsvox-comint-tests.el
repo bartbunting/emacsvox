@@ -99,20 +99,29 @@
     comint-show-maximum-output
     comint-bol-or-process-mark
     comint-copy-old-input
-    comint-next-input
-    comint-next-matching-input
-    comint-previous-input
-    comint-previous-matching-input
     comint-previous-prompt
     comint-next-prompt
     comint-get-next-from-history)
   "Comint navigation and history commands with direct after advice.")
+
+(defconst emacsvox-test--comint-history-around-targets
+  '(comint-next-input
+    comint-next-matching-input
+    comint-previous-input
+    comint-previous-matching-input)
+  "Comint history commands with direct around advice.")
 
 (ert-deftest emacsvox-comint-navigation-history-advice-is-directly-registered ()
   "Comint navigation and history advice uses native advice directly."
   (dolist (target emacsvox-test--comint-navigation-history-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))))
+  (dolist (target emacsvox-test--comint-history-around-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
       (should (fboundp target))
       (should (fboundp function))
       (should (advice-member-p function target)))))
@@ -185,7 +194,6 @@
       (case
        '((comint-history-isearch-backward select-object before)
          (comint-next-matching-input-from-input select-object after)
-         (comint-next-input item after)
          (comint-get-next-from-history item before)))
     (pcase-let ((`(,target ,icon ,phase) case))
       (let ((ems--interactive-fn-name target)
@@ -210,6 +218,107 @@
          (eq
           (plist-get (car observed) :command-operation)
           'history-navigation))))))
+
+(ert-deftest emacsvox-comint-history-navigation-silences-position-message ()
+  "Interactive history speaks input without Comint's numeric position message."
+  (with-temp-buffer
+    (shell-mode)
+    (insert "selected command")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'comint-next-input)
+          (emacsvox-speak-messages t)
+          (inhibit-message nil)
+          events)
+      (cl-letf
+          (((symbol-function 'comint-line-beginning-position)
+            (lambda () (point-min)))
+           ((symbol-function 'message)
+            (lambda (format-string &rest arguments)
+              (push
+               (list 'message format-string arguments
+                     inhibit-message emacsvox-speak-messages)
+               events)))
+           ((symbol-function 'emacsvox-comint--present-line-feedback)
+            (lambda (facts occasion icon phase &optional argument)
+              (push
+               (list 'feedback facts occasion icon phase argument
+                     inhibit-message emacsvox-speak-messages)
+               events))))
+        (should
+         (eq
+          (emacsvox--advice-comint-next-input-around
+           (lambda (&rest arguments)
+             (push
+              (list 'original arguments
+                    inhibit-message emacsvox-speak-messages)
+              events)
+             (message "History item: %d" 1)
+             (message "Input restored")
+             'stock-result)
+           3)
+          'stock-result)))
+      (setq events (nreverse events))
+      (should
+       (equal
+        (car events)
+        '(original (3) nil t)))
+      (should
+       (equal
+        (cadr events)
+        '(message "History item: %d" (1) t nil)))
+      (should
+       (equal
+        (caddr events)
+        '(message "Input restored" nil nil t)))
+      (pcase-let
+          ((`(feedback ,facts ,occasion ,icon ,phase ,argument
+                      ,messages-inhibited ,speak-messages)
+            (cadddr events)))
+        (should (eq occasion 'navigation))
+        (should (eq icon 'item))
+        (should (eq phase 'after))
+        (should (= argument 1))
+        (should-not messages-inhibited)
+        (should speak-messages)
+        (should
+         (eq
+          (plist-get facts :command-operation)
+          'history-navigation))))))
+
+(ert-deftest emacsvox-comint-history-navigation-preserves-errors ()
+  "History errors escape message silencing and do not speak stale input."
+  (let ((ems--interactive-fn-name 'comint-previous-input)
+        (emacsvox-speak-messages t)
+        (inhibit-message nil)
+        feedback)
+    (cl-letf
+        (((symbol-function 'emacsvox-comint--present-line-feedback)
+          (lambda (&rest _) (setq feedback t))))
+      (should-error
+       (emacsvox--advice-comint-previous-input-around
+        (lambda (&rest _) (user-error "No history")))
+       :type 'user-error))
+    (should-not feedback)
+    (should-not inhibit-message)
+    (should emacsvox-speak-messages)))
+
+(ert-deftest emacsvox-comint-history-navigation-leaves-internal-calls-alone ()
+  "Noninteractive history calls retain stock messages and skip feedback."
+  (let ((ems--interactive-fn-name 'other-command)
+        (emacsvox-speak-messages t)
+        (inhibit-message nil)
+        feedback)
+    (cl-letf
+        (((symbol-function 'emacsvox-comint--present-line-feedback)
+          (lambda (&rest _) (setq feedback t))))
+      (should
+       (equal
+        (emacsvox--advice-comint-next-matching-input-around
+         (lambda (&rest arguments)
+           (list arguments inhibit-message emacsvox-speak-messages))
+         "match" 2)
+        '(("match" 2) nil t))))
+    (should-not feedback)))
 
 (ert-deftest emacsvox-comint-navigation-keeps-line-cue-phases ()
   "Navigation cues enter the same physical-line submission in order."

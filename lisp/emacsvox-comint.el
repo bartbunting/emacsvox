@@ -883,6 +883,21 @@ scrolling, completion metadata, and window configuration."
  #'emacsvox--advice-comint-dynamic-list-completions-around
  '((name . emacsvox)))
 
+(defun emacsvox-comint--call-silencing-history-position
+    (original arguments)
+  "Call ORIGINAL with ARGUMENTS without Comint's numeric history message.
+Other messages from ORIGINAL remain visible and speakable."
+  (let ((message-function (symbol-function 'message)))
+    (cl-letf
+        (((symbol-function 'message)
+          (lambda (format-string &rest message-arguments)
+            (if (equal format-string "History item: %d")
+                (ems-with-messages-silenced
+                 (apply
+                  message-function format-string message-arguments))
+              (apply message-function format-string message-arguments)))))
+      (apply original arguments))))
+
 (cl-loop
  for target in
  '(comint-next-input
@@ -890,24 +905,30 @@ scrolling, completion metadata, and window configuration."
    comint-previous-input
    comint-previous-matching-input)
  for function =
- (intern (format "emacsvox--advice-%s-after" target))
+ (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
   `(progn
-     (defun ,function (&rest _)
-       "Cue and speak input selected interactively from Comint history."
-       (when (ems-interactive-p ',target)
-         (tts-with-punctuations
-          'all
-          (save-excursion
-            (goto-char (comint-line-beginning-position))
-            (emacsvox-comint--present-line-feedback
-             (emacsvox-comint-facts
-              'command-input 'focus-entered 'history-navigation
-              '(:command-input-origin history))
-             'navigation 'item 'after 1)))))
+     (defun ,function (original &rest arguments)
+       "Call ORIGINAL with ARGUMENTS, then present interactive history input.
+Routine Comint history-position messages are silenced while ORIGINAL runs."
+       (if (not (ems-interactive-p ',target))
+           (apply original arguments)
+         (let ((result
+                (emacsvox-comint--call-silencing-history-position
+                 original arguments)))
+           (tts-with-punctuations
+            'all
+            (save-excursion
+              (goto-char (comint-line-beginning-position))
+              (emacsvox-comint--present-line-feedback
+               (emacsvox-comint-facts
+                'command-input 'focus-entered 'history-navigation
+                '(:command-input-origin history))
+               'navigation 'item 'after 1)))
+           result)))
      (advice-add
-      ',target :after #',function '((name . emacsvox))))))
+      ',target :around #',function '((name . emacsvox))))))
 
 (defun emacsvox--advice-comint-send-input-after (&rest _)
   "Flush speech and cue an interactively submitted Comint input."
