@@ -122,7 +122,7 @@ Issues:
 Planned slices:
 
 1. [X] native EAT aural facts and delivery roles;
-2. bounded complete-line output;
+2. [X] bounded complete-line output;
 3. prompt-redraw and unchanged-repaint suppression;
 4. progress/status coalescing and rate limiting;
 5. selected/follow-live policy.
@@ -272,10 +272,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~093a1e9bc~ | 2.2 | Linear bounded text/row/style diff with independent cursor, resize, alternate-screen, title, CWD, and generation classification; 23 focused tests and fresh compiled verification pass. |
 | 2026-08-23 | ~a85bd7095~ | 2.3 | Buffer-local snapshots and serial-checked 60 ms quiescence transactions; lifecycle/focus loss cancels delivery, and arbitrary text/escape chunking converges; 26 focused tests and the real compiled timer pass. |
 | 2026-08-23 | ~6b9af956b~ | 2.4 | Real EAT unchanged repaint, resize-only, reflow, reset, and alternate-screen observer coverage; 29 focused tests pass. Full suite: 2377 expected passes, 1 skip, and only the pre-existing agent-shell failure. |
-| 2026-08-23 | this commit | 3.1 | Bounded, control-sanitized terminal rows use one native ~command-output~ / ~command-output-received~ transaction; no observer policy change; 31 focused tests pass and byte-code is current. |
+| 2026-08-23 | ~e13ccc283~ | 3.1 | Bounded, control-sanitized terminal rows use one native ~command-output~ / ~command-output-received~ transaction; no observer policy change; 31 focused tests pass and byte-code is current. |
+| 2026-08-23 | this commit | 3.2 | Quiesced inserted main-screen rows before the cursor are spoken once; cursor prompt is excluded, input-correlated legacy feedback remains, arbitrary async character speech is removed, and raw Tab/Return events are handled correctly. 37 focused tests and a compiled Bash PTY pass. |
 
 * Current next action
 
-Classify conservative complete output rows from a quiesced main-screen diff,
-excluding the cursor/input row and geometry or alternate-screen transitions,
-then replace the arbitrary character fallback without regressing completion.
+Strengthen prompt/redraw suppression and scrolling-screen row alignment so
+ordinary output remains singular when the visible terminal scrolls, while
+same-row progress and alternate-screen repaint remain deferred.

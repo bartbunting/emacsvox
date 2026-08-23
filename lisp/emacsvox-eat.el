@@ -93,6 +93,15 @@
 (defvar-local emacsvox-eat--update-serial 0
   "Monotonic serial number for observed EAT screen updates.")
 
+(defvar-local emacsvox-eat--recent-input nil
+  "Generation, event, and deadline for one input-correlated screen update.")
+
+(defvar-local emacsvox-eat--last-screen-diff nil
+  "Most recent quiesced screen diff retained for explicit review.")
+
+(defvar-local emacsvox-eat--last-changed-screen nil
+  "Screen snapshot belonging to `emacsvox-eat--last-screen-diff'.")
+
 (defconst emacsvox-eat--quiescence-delay 0.06
   "Seconds of quiet that finish one EAT screen update burst.")
 
@@ -379,10 +388,29 @@ Snapshots from different terminal generations are intentionally not compared."
         emacsvox-eat--pending-screen-baseline nil
         emacsvox-eat--pending-screen-diff nil))
 
-(defun emacsvox-eat--screen-quiesced (_diff _snapshot)
-  "Handle a quiesced screen DIFF ending at SNAPSHOT.
-Later phases add speech policy here; observation itself is intentionally quiet."
-  nil)
+(defun emacsvox-eat--complete-output-rows (diff snapshot)
+  "Return conservative complete output rows represented by DIFF and SNAPSHOT.
+Only newly inserted main-screen rows before the terminal cursor qualify."
+  (when (and (plist-get diff :text-changed)
+             (not (plist-get diff :size-changed))
+             (not (plist-get diff :alternate-screen-changed))
+             (not (plist-get snapshot :alternate-screen)))
+    (when-let* ((change (plist-get diff :row-change))
+                (cursor-row (plist-get snapshot :cursor-row))
+                ((null (plist-get change :old-rows))))
+      (let* ((start (plist-get change :start))
+             (rows (plist-get change :new-rows))
+             (complete-count
+              (min (length rows) (max 0 (- cursor-row start)))))
+        (when (> complete-count 0)
+          (emacsvox-eat--list-slice rows 0 complete-count))))))
+
+(defun emacsvox-eat--screen-quiesced (diff snapshot)
+  "Retain and present the selected terminal DIFF ending at SNAPSHOT."
+  (setq emacsvox-eat--last-screen-diff diff
+        emacsvox-eat--last-changed-screen snapshot)
+  (when-let* ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
+    (emacsvox-eat--present-output-rows rows)))
 
 (defun emacsvox-eat--finish-quiescence (buffer generation serial)
   "Finish BUFFER's update burst identified by GENERATION and SERIAL."
@@ -438,7 +466,10 @@ Later phases add speech policy here; observation itself is intentionally quiet."
   "Clear asynchronous EAT interaction state in the current buffer."
   (emacsvox-eat--cancel-quiescence)
   (setq emacsvox-eat--completion-snapshot nil
-        emacsvox-eat--screen-snapshot nil))
+        emacsvox-eat--screen-snapshot nil
+        emacsvox-eat--recent-input nil
+        emacsvox-eat--last-screen-diff nil
+        emacsvox-eat--last-changed-screen nil))
 
 (defun emacsvox-eat--advance-generation ()
   "Invalidate asynchronous state and advance the current EAT generation."
@@ -737,7 +768,9 @@ Ignore a stale or duplicate exit after another process has become active."
 
 (defun emacsvox-eat--tab-event-p (event)
   "Return non-nil when EVENT is a Tab key event."
-  (and event (memq (event-basic-type event) '(9 tab))))
+  (and event
+       (or (eq event 9)
+           (memq (event-basic-type event) '(9 tab)))))
 
 (defun emacsvox-eat--token-before-cursor (cursor)
   "Return the terminal token immediately before CURSOR."
@@ -756,15 +789,32 @@ Ignore a stale or duplicate exit after another process has become active."
              (cons (line-number-at-pos cursor)
                    (emacsvox-eat--token-before-cursor cursor)))))
 
+(defun emacsvox-eat--record-input (event)
+  "Record one non-completion terminal input EVENT for correlated feedback."
+  (let* ((basic (and event (event-basic-type event)))
+         (recordable-p
+          (or
+           (and (integerp event)
+                (or (= event 8) (= event 127) (>= event 32)))
+           (and (symbolp basic)
+                (not (memq basic '(tab return linefeed escape)))))))
+    (setq emacsvox-eat--recent-input
+          (when recordable-p
+            (list emacsvox-eat--generation basic
+                  (+ (float-time) 0.5))))))
+
 (defun emacsvox--advice-eat-self-input-before (_count &optional event)
   "Capture same-line completion context before EAT sends Tab EVENT."
   (let ((event (or event last-command-event)))
     (if (and eat-terminal
              (bound-and-true-p eat--semi-char-mode)
              (emacsvox-eat--tab-event-p event))
-        (emacsvox-eat--capture-completion
-         (eat-term-display-cursor eat-terminal))
-      (setq emacsvox-eat--completion-snapshot nil))))
+        (progn
+          (setq emacsvox-eat--recent-input nil)
+          (emacsvox-eat--capture-completion
+           (eat-term-display-cursor eat-terminal)))
+      (setq emacsvox-eat--completion-snapshot nil)
+      (emacsvox-eat--record-input event))))
 
 (defun emacsvox-eat--completion-label (token)
   "Return the final path component of completed TOKEN."
@@ -793,6 +843,19 @@ update feedback."
           (tts-speak (emacsvox-eat--completion-label new-token))
           t)))))
 
+(defun emacsvox-eat--speak-input-correlated-update (cursor)
+  "Provide the legacy cursor feedback for one recent terminal input at CURSOR."
+  (let ((input emacsvox-eat--recent-input))
+    (setq emacsvox-eat--recent-input nil)
+    (when (and input cursor
+               (= (car input) emacsvox-eat--generation)
+               (<= (float-time) (caddr input))
+               emacsvox-eat--pending-screen-diff)
+      (let ((char (char-before cursor)))
+        (cond
+         ((eq char ?\s) (emacsvox-speak-line) t)
+         (char (emacsvox-speak-this-char char) t))))))
+
 (defun emacsvox-eat--selected-buffer-p ()
   "Return non-nil when the current EAT buffer is selected."
   (eq (current-buffer) (window-buffer (selected-window))))
@@ -806,14 +869,12 @@ update feedback."
   "Speak an EAT update when its buffer is selected."
   (emacsvox-eat--observe-screen)
   (if (not (emacsvox-eat--selected-buffer-p))
-      (setq emacsvox-eat--completion-snapshot nil)
+      (setq emacsvox-eat--completion-snapshot nil
+            emacsvox-eat--recent-input nil)
     (let* ((emacsvox-show-point t)
-           (cursor (eat-term-display-cursor eat-terminal))
-           (char (and cursor (char-before cursor))))
+           (cursor (eat-term-display-cursor eat-terminal)))
       (unless (emacsvox-eat--speak-same-line-completion cursor)
-        (cond
-         ((eq char ?\s) (emacsvox-speak-line))
-         (char (emacsvox-speak-this-char char)))))))
+        (emacsvox-eat--speak-input-correlated-update cursor)))))
 
 (add-hook 'eat-update-hook #'emacsvox-eat-update-hook)
 (add-hook 'eat-exec-hook #'emacsvox-eat--process-started)

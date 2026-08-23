@@ -70,8 +70,8 @@
       (should-not emacsvox-eat--completion-snapshot)
       (should (equal (nreverse events) '((speak "src/")))))))
 
-(ert-deftest emacsvox-eat-multiline-completion-uses-ordinary-feedback ()
-  "A candidate listing on another line remains outside the narrow fix."
+(ert-deftest emacsvox-eat-multiline-completion-defers-to-quiesced-output ()
+  "A candidate listing does not trigger arbitrary immediate cursor speech."
   (with-temp-buffer
     (insert "$ ~/sr")
     (let ((eat-terminal 'terminal)
@@ -93,7 +93,70 @@
         (insert "src/ source/\n$ ~/src/")
         (emacsvox-eat-update-hook))
       (should-not emacsvox-eat--completion-snapshot)
-      (should (equal (nreverse events) '((char 47)))))))
+      (should-not events))))
+
+(ert-deftest emacsvox-eat-input-correlates-immediate-cursor-feedback ()
+  "Only a recent user input can trigger the legacy immediate cursor cue."
+  (with-temp-buffer
+    (insert "x")
+    (let ((eat-terminal 'terminal)
+          (emacsvox-eat--generation 2)
+          (emacsvox-eat--recent-input (list 2 ?x (+ (float-time) 1)))
+          (emacsvox-eat--pending-screen-diff '(:changes (text)))
+          events)
+      (cl-letf (((symbol-function 'emacsvox-eat--observe-screen) #'ignore)
+                ((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'eat-term-display-cursor)
+                 (lambda (_terminal) (point-marker)))
+                ((symbol-function 'emacsvox-speak-line)
+                 (lambda () (push '(line) events)))
+                ((symbol-function 'emacsvox-speak-this-char)
+                 (lambda (char) (push (list 'char char) events))))
+        (emacsvox-eat-update-hook)
+        (emacsvox-eat-update-hook))
+      (should (equal events '((char 120))))
+      (should-not emacsvox-eat--recent-input))))
+
+(ert-deftest emacsvox-eat-asynchronous-update-has-no-immediate-cursor-speech ()
+  "Process output without recent input waits for semantic quiesced delivery."
+  (with-temp-buffer
+    (insert "background result")
+    (let ((eat-terminal 'terminal)
+          (emacsvox-eat--pending-screen-diff '(:changes (text)))
+          events)
+      (cl-letf (((symbol-function 'emacsvox-eat--observe-screen) #'ignore)
+                ((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'eat-term-display-cursor)
+                 (lambda (_terminal) (point-marker)))
+                ((symbol-function 'emacsvox-speak-line)
+                 (lambda () (push '(line) events)))
+                ((symbol-function 'emacsvox-speak-this-char)
+                 (lambda (char) (push (list 'char char) events))))
+        (emacsvox-eat-update-hook))
+      (should-not events))))
+
+(ert-deftest emacsvox-eat-input-recording-excludes-submit-and-completion ()
+  "Submit and Tab clear input echo state; printable keys retain no raw history."
+  (with-temp-buffer
+    (let ((eat-terminal 'terminal)
+          (eat--semi-char-mode nil))
+      (emacsvox--advice-eat-self-input-before 1 ?x)
+      (should (= (cadr emacsvox-eat--recent-input) ?x))
+      (emacsvox--advice-eat-self-input-before 1 13)
+      (should-not emacsvox-eat--recent-input)
+      (setq eat--semi-char-mode t)
+      (cl-letf (((symbol-function 'eat-term-display-cursor)
+                 (lambda (_terminal) nil)))
+        (emacsvox--advice-eat-self-input-before 1 ?\t))
+      (should-not emacsvox-eat--recent-input))))
+
+(ert-deftest emacsvox-eat-tab-detection-accepts-raw-and-symbolic-events ()
+  "Control-character normalization does not disguise a raw Tab as `i'."
+  (should (emacsvox-eat--tab-event-p 9))
+  (should (emacsvox-eat--tab-event-p 'tab))
+  (should-not (emacsvox-eat--tab-event-p ?i)))
 
 (ert-deftest emacsvox-eat-background-update-is-silent ()
   "An EAT resize while another buffer is selected produces no speech."
@@ -357,6 +420,71 @@
                (lambda (&rest arguments) (push arguments submissions))))
       (emacsvox-eat--present-output-rows '("" "   ")))
     (should-not submissions)))
+
+(ert-deftest emacsvox-eat-output-classifier-excludes-the-prompt-row ()
+  "Only newly inserted complete main-screen rows before the cursor qualify."
+  (let* ((diff
+          '(:text-changed t :size-changed nil
+            :alternate-screen-changed nil
+            :row-change
+            (:start 1 :old-end 1 :new-end 4 :old-rows nil
+             :new-rows ("one" "two" "$ "))))
+         (snapshot '(:cursor-row 3 :alternate-screen nil)))
+    (should
+     (equal (emacsvox-eat--complete-output-rows diff snapshot)
+            '("one" "two")))
+    (dolist (change '(:size-changed :alternate-screen-changed))
+      (let ((changed (copy-tree diff)))
+        (setf (plist-get changed change) t)
+        (should-not
+         (emacsvox-eat--complete-output-rows changed snapshot))))
+    (let ((alternate (copy-tree snapshot)))
+      (setf (plist-get alternate :alternate-screen) t)
+      (should-not (emacsvox-eat--complete-output-rows diff alternate)))
+    (let ((replacement (copy-tree diff)))
+      (setf (plist-get (plist-get replacement :row-change) :old-rows)
+            '("old status"))
+      (should-not
+       (emacsvox-eat--complete-output-rows replacement snapshot)))))
+
+(ert-deftest emacsvox-eat-real-multiline-output-is-one-quiesced-transaction ()
+  "A real terminal screen presents complete result rows and omits its prompt."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions
+          pending-timer)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions))))
+            (eat-term-resize eat-terminal 40 8)
+            (eat-term-process-output eat-terminal "$ command")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (eat-term-process-output
+             eat-terminal "\r\none\r\ntwo\r\n$ ")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (setq pending-timer emacsvox-eat--quiescence-timer)
+            (emacsvox-eat--finish-quiescence
+             (current-buffer) emacsvox-eat--generation
+             emacsvox-eat--update-serial)
+            (should (= (length submissions) 1))
+            (should (equal (caar submissions) "one\ntwo"))
+            (should
+             (equal
+              (plist-get (cadar submissions) :facts)
+              '(:role command-output
+                :command-interaction-kind shell
+                :events (command-output-received))))
+            (should emacsvox-eat--last-screen-diff)
+            (should emacsvox-eat--last-changed-screen))
+        (when (timerp pending-timer) (cancel-timer pending-timer))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
 
 (ert-deftest emacsvox-eat-screen-snapshot-uses-public-visible-state ()
   "A screen snapshot captures visible text, cursor, style, and metadata."
