@@ -214,6 +214,39 @@
       (nreverse events)
       '((icon delete-object) (message "Flushed output"))))))
 
+(ert-deftest emacsvox-eshell-output-defers-to-active-eat-terminal ()
+  "Generic Eshell output never duplicates an active EAT screen observer."
+  (with-temp-buffer
+    (let ((eat-terminal 'embedded-terminal)
+          (emacsvox-eat--eshell-output-owned-p nil)
+          calls)
+      (cl-letf (((symbol-function 'eat-term-live-p)
+                 (lambda (terminal)
+                   (should (eq terminal eat-terminal))
+                   t))
+                ((symbol-function 'emacsvox-speak-region)
+                 (lambda (&rest arguments) (push arguments calls))))
+        (emacsvox-eshell-speak-output)
+        (should-not calls)
+        (setq eat-terminal nil)
+        (setq emacsvox-eat--eshell-output-owned-p t)
+        (emacsvox-eshell-speak-output)
+        (should-not calls)
+        (setq emacsvox-eat--eshell-output-owned-p nil)
+        (emacsvox-eshell-speak-output)
+        (should (= (length calls) 1))))))
+
+(ert-deftest emacsvox-eshell-dead-eat-terminal-restores-generic-output ()
+  "A stale EAT terminal value cannot suppress ordinary Eshell output."
+  (with-temp-buffer
+    (let ((eat-terminal 'dead-terminal)
+          calls)
+      (cl-letf (((symbol-function 'eat-term-live-p) (lambda (_) nil))
+                ((symbol-function 'emacsvox-speak-region)
+                 (lambda (&rest arguments) (push arguments calls))))
+        (emacsvox-eshell-speak-output))
+      (should (= (length calls) 1)))))
+
 (ert-deftest emacsvox-eshell-completion-calls-original-once ()
   "Eshell Lisp completion preserves the result and speaks inserted text."
   (with-temp-buffer

@@ -90,7 +90,12 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
   (dolist (entry emacsvox-eat--around-advice)
     (should (advice-member-p (cdr entry) (car entry))))
   (should (memq #'emacsvox-eat--process-started eat-exec-hook))
-  (should (memq #'emacsvox-eat--process-exited eat-exit-hook)))
+  (should (memq #'emacsvox-eat--process-exited eat-exit-hook))
+  (should (memq #'emacsvox-eat-update-hook eat-eshell-update-hook))
+  (should
+   (memq #'emacsvox-eat--eshell-process-started eat-eshell-exec-hook))
+  (should
+   (memq #'emacsvox-eat--eshell-process-exited eat-eshell-exit-hook)))
 
 (ert-deftest emacsvox-eat-state-facts-use-registered-vocabulary ()
   "EAT lifecycle and mode facts satisfy the native semantic contract."
@@ -1883,6 +1888,181 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             :occasion state-change
             :compatibility-actions ((icon open-object))))))))))
 
+(ert-deftest emacsvox-eat-eshell-lifecycle-is-shared-without-start-chatter ()
+  "Embedded Eshell processes share state while each command start stays quiet."
+  (with-temp-buffer
+    (setq major-mode 'eshell-mode)
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          process
+          submissions)
+      (unwind-protect
+          (progn
+            (setq process
+                  (make-pipe-process
+                   :name "emacsvox-eat-eshell-lifecycle"
+                   :buffer (current-buffer) :noquery t))
+            (eat-term-resize eat-terminal 24 4)
+            (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                       (lambda () t))
+                      ((symbol-function 'emacsvox-aural-submit)
+                       (lambda (content &rest arguments)
+                         (push (list content arguments) submissions))))
+              (emacsvox-eat--eshell-process-started)
+              (should (= emacsvox-eat--generation 1))
+              (should (eq emacsvox-eat--active-process process))
+              (should emacsvox-eat--eshell-output-owned-p)
+              (should emacsvox-eat--screen-snapshot)
+              (should-not submissions)
+              (cl-letf (((symbol-function 'process-status)
+                         (lambda (candidate)
+                           (should (eq candidate process))
+                           'exit))
+                        ((symbol-function 'process-exit-status)
+                         (lambda (candidate)
+                           (should (eq candidate process))
+                           0)))
+                (emacsvox-eat--eshell-process-exited)))
+            (should (= emacsvox-eat--generation 2))
+            (should-not emacsvox-eat--active-process)
+            (should emacsvox-eat--eshell-output-owned-p)
+            (should-not emacsvox-eat--screen-snapshot)
+            (should
+             (equal (mapcar #'car submissions)
+                    '("Terminal process exited")))
+            (emacsvox-eat--eshell-prompt-ready)
+            (should-not emacsvox-eat--eshell-output-owned-p))
+        (when (and process (process-live-p process))
+          (delete-process process))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-eshell-update-speaks-one-rendered-output-transaction ()
+  "The shared hook presents EAT-rendered Eshell output once and ignores resize."
+  (with-temp-buffer
+    (setq major-mode 'eshell-mode)
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions))))
+            (eat-term-resize eat-terminal 30 5)
+            (emacsvox-eat--setup-buffer-state)
+            (should (emacsvox-eat--terminal-buffer-p))
+            (setq emacsvox-eat--screen-snapshot
+                  (emacsvox-eat--capture-screen))
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal "\r\none\r\ntwo\r\n")
+            (should (= (length submissions) 1))
+            (should (equal (caar submissions) "one\ntwo"))
+            (should
+             (equal
+              (plist-get (cadar submissions) :facts)
+              '(:role command-output
+                :command-interaction-kind shell
+                :events (command-output-received))))
+            (eat-term-resize eat-terminal 40 6)
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat-update-hook)
+            (emacsvox-eat-test--finish-screen-burst)
+            (should (= (length submissions) 1)))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-real-eshell-process-is-singular-and-restores-generic-hook ()
+  "A disposable EAT-backed Eshell command has one output owner end to end."
+  (require 'emacsvox-eshell)
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-real-eshell*"))
+        (was-enabled eat-eshell-mode)
+        submissions
+        generic-output-calls
+        started)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer buffer)
+          (eshell-mode)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list (substring-no-properties content)
+                                   arguments)
+                             submissions)))
+                    ((symbol-function 'emacsvox-speak-region)
+                     (lambda (&rest arguments)
+                       (push arguments generic-output-calls)))
+                    ((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'tts-speak) #'ignore))
+            (unless was-enabled (eat-eshell-mode 1))
+            (goto-char (point-max))
+            (insert
+             (concat
+              "python3 -c \"import time;print(111);print(222);"
+              "time.sleep(.1)\""))
+            (eshell-send-input)
+            (setq started (not (null eat-terminal)))
+            (should
+             (emacsvox-eat-test--wait-until
+              nil
+              (lambda ()
+                (when eat-terminal (setq started t))
+                (and started (null eat-terminal)))
+              5.0))
+            (should started)
+            (should-not eat-terminal)
+            (should-not generic-output-calls)
+            (should
+             (equal
+              (mapcar #'car (nreverse submissions))
+              '("111\n222" "Terminal process exited")))
+            (should
+             (memq #'emacsvox-eshell-speak-output
+                   eshell-output-filter-functions))
+            (should (string-match-p "111\n222" (buffer-string)))
+            (should (= emacsvox-eat--generation 2))
+            (should-not emacsvox-eat--eshell-output-owned-p)
+            (should-not emacsvox-eat--active-process)))
+      (when (buffer-live-p buffer)
+        (when-let* ((process (get-buffer-process buffer))
+                    ((process-live-p process)))
+          (delete-process process))
+        (kill-buffer buffer))
+      (when (and (not was-enabled) eat-eshell-mode)
+        (eat-eshell-mode -1)))))
+
+(ert-deftest emacsvox-eat-eshell-background-update-remains-private ()
+  "An embedded terminal retains background output without speaking content."
+  (with-temp-buffer
+    (setq major-mode 'eshell-mode)
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions)
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 30 4)
+            (emacsvox-eat--setup-buffer-state)
+            (setq emacsvox-eat--screen-snapshot
+                  (emacsvox-eat--capture-screen))
+            (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                       (lambda () nil))
+                      ((symbol-function 'emacsvox-aural-submit)
+                       (lambda (&rest arguments)
+                         (push arguments submissions))))
+              (eat-term-process-output eat-terminal "private\r\n")
+              (eat-term-redisplay eat-terminal)
+              (emacsvox-eat-update-hook))
+            (should-not submissions)
+            (should
+             (string-match-p
+              "private" (plist-get emacsvox-eat--screen-snapshot :text)))
+            (should-not emacsvox-eat--quiescence-timer))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
 (ert-deftest emacsvox-eat-background-lifecycle-is-private-by-default ()
   "Background process lifecycle advances state without disclosing content."
   (with-temp-buffer
@@ -3172,7 +3352,9 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
        'emacsvox-eat-review-map))
   (dolist (map-symbol
            '(eat-line-mode-map eat-semi-char-mode-map
-             eat-char-mode-map eat-mode-map))
+             eat-char-mode-map eat-mode-map
+             eat-eshell-emacs-mode-map eat-eshell-semi-char-mode-map
+             eat-eshell-char-mode-map))
     (let ((map (symbol-value map-symbol)))
       (should (keymapp map))
       (should

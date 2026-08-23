@@ -220,6 +220,15 @@ Issue:
 
 - F-10 separate ~eat-eshell-update-hook~ is currently unwired.
 
+Planned slices:
+
+1. [X] shared observer and process-generation lifecycle for embedded EAT
+   terminals;
+2. [X] singular output ownership through EAT cleanup and the following Eshell
+   prompt;
+3. [ ] normal visual-command lifecycle and short-lived output delivery;
+4. [ ] real visual-command, resize, background, and process-exit verification.
+
 Acceptance:
 
 - shared observer handles EAT visual regions in Eshell;
@@ -281,6 +290,7 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-24 | Let a frozen review control only the source terminal's Emacsvox policy, while keeping content review frozen. | Cycling verbosity and toggling content-free monitoring do not send terminal input and are useful during review. Status and metadata must remain the deep-copied values from review-open time, so those commands cannot silently cross back into mutable live content. |
 | 2026-08-24 | Retain styled bottom-row application status for explicit review only. | A one-row alternate-screen change with conservative status syntax, selection-like styling, and a cursor elsewhere is useful evidence for a status line, but not strong enough to interrupt automatically. Main-screen progress keeps its existing rate-limited automatic policy. |
 | 2026-08-24 | Label frozen inverse/background regions “selection-like styled regions,” and bind ~[~ / ~]~ to navigate them. | Pager search matches and application highlights become directly reviewable while avoiding the incorrect assertion that every inverse or colored region is focus. The commands inspect only the frozen snapshot and preserve its voice/style properties. |
+| 2026-08-24 | Let EAT own an embedded command's rendered output through terminal cleanup and release ownership only when Eshell publishes the next prompt. | EAT temporarily replaces Eshell's output filters, but cleanup can invoke a restored generic filter once after deleting the terminal. A short buffer-local ownership boundary prevents that final duplicate while ordinary Eshell output resumes immediately at the prompt. |
 
 * Progress log
 
@@ -321,10 +331,12 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-24 | ~2a7703713~ | 6.5 | ~C-e q r~ opens a read-only deep copy of the concealed-redacted visible screen. Row navigation speaks styled frozen text and explicit boundaries; commands jump to the captured cursor or conservative focus, switch between exact screen and completion/help rows, and speak a bounded view. No command moves the live terminal point or sends input. The copy has undo disabled, cannot overwrite a same-named unrelated buffer, and is killed at secure-input, reset/process, source-buffer, or explicit quit boundaries. All 127 focused EAT tests pass; Emacs 31 byte-code rebuilt without EAT warnings, and fresh compiled real-terminal screen/style/completion/privacy verification passes. |
 | 2026-08-24 | ~7b032af97~ | 6.6 | ~C-e q v~ cycles buffer-local ~terse~ / ~normal~ / ~verbose~ feedback, ~m~ toggles content-free background monitoring, ~t~ speaks retained status, and ~i~ explicitly speaks bounded sanitized title/directory changes. The same keys work in a frozen review: policy controls target only its live source without terminal input, while status and metadata remain the deep-copied frozen values. Leaving EAT major mode now also destroys a retained review. All 130 focused EAT tests pass; Emacs 31 byte-code rebuilt without EAT warnings, and fresh compiled real-terminal frozen-state/source-control/mode-clear verification passes. |
 | 2026-08-24 | ~ea9cdd249~ | 6.7a | Deterministic real-EAT-model fixtures cover a less-shaped page repaint and search highlight, Vim-shaped cursor movement and status rewrite, a whiptail-shaped moving selection with a fixed invisible cursor, alternate-screen entry/exit, and rate-limited carriage-return progress. Captured aural transactions confirm that application boundaries, cursor rows, paired highlights, and final progress are bounded; uncertain repaints remain silent but explicitly reviewable. All 135 focused EAT tests pass. The fixtures also expose two conservative Emacsvox-only gaps: alternate-screen status is not retained by the status command, and an uninferred styled match cannot be reached directly in frozen review. |
-| 2026-08-24 | this commit | 6.7b | A styled bottom-row application status with conservative syntax is now retained for ~C-e q t~ and frozen review but never spoken automatically. In frozen screen review, ~[~ and ~]~ navigate selection-like inverse/background regions such as pager matches and menu rows, preserve their style voices, and never label them as focus. All 137 focused EAT tests pass; Emacs 31 byte-code was fully rebuilt with no EAT warnings, and a fresh process passed compiled real-EAT status and styled-review checks. The 2,487-test suite has 2,484 expected results, one existing skip, and only the two previously recorded unrelated agent-shell and installed-CIDER failures. |
+| 2026-08-24 | ~74d4cf9e0~ | 6.7b | A styled bottom-row application status with conservative syntax is now retained for ~C-e q t~ and frozen review but never spoken automatically. In frozen screen review, ~[~ and ~]~ navigate selection-like inverse/background regions such as pager matches and menu rows, preserve their style voices, and never label them as focus. All 137 focused EAT tests pass; Emacs 31 byte-code was fully rebuilt with no EAT warnings, and a fresh process passed compiled real-EAT status and styled-review checks. The 2,487-test suite has 2,484 expected results, one existing skip, and only the two previously recorded unrelated agent-shell and installed-CIDER failures. |
+| 2026-08-24 | this commit | 7.1 | EAT's separate embedded-Eshell update and lifecycle hooks now use the shared public-screen observer without per-command restart chatter. EAT owns rendered output until the next Eshell prompt, preventing the restored generic output filter from duplicating the final command output. Review controls are installed in all three embedded input maps. All 154 focused EAT and Eshell tests pass, including a real disposable two-line external command that produces exactly one output transaction and one exit transaction. |
 
 * Current next action
 
-Begin Phase 7 by tracing EAT's Eshell visual-command lifecycle and the generic
-Emacsvox Eshell advice together.  Build duplicate-speech tests before attaching
-the shared screen observer to ~eat-eshell-update-hook~.
+Finish Phase 7 by preserving selected live-follow output across a short-lived
+normal EAT visual command's exit boundary, while keeping background and
+scrollback output private.  Verify a real disposable visual command plus
+resize, background, and process-exit behavior before completing the phase.

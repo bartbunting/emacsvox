@@ -50,6 +50,9 @@
 (defvar eshell-last-input-end)
 (defvar eshell-last-output-end)
 (defvar eshell-last-output-start)
+(defvar eat-terminal)
+(defvar emacsvox-eat--eshell-output-owned-p)
+(declare-function eat-term-live-p "eat" (object))
 
 ;;  required modules
 
@@ -71,9 +74,23 @@
 
 ;; Speak command output
 
-(defun emacsvox-eshell-speak-output  ()
+(defun emacsvox-eshell--eat-owns-output-p ()
+  "Return non-nil while EAT owns output in this Eshell.
+Ownership lasts through EAT terminal cleanup until the next Eshell prompt, so
+the final generic output-filter pass cannot repeat already presented text."
+  (or (bound-and-true-p emacsvox-eat--eshell-output-owned-p)
+      (and (boundp 'eat-terminal)
+           eat-terminal
+           (fboundp 'eat-term-live-p)
+           (eat-term-live-p eat-terminal))))
+
+(defun emacsvox-eshell-speak-output ()
   "Speak eshell output."
-  (emacsvox-speak-region eshell-last-input-end eshell-last-output-end))
+  ;; EAT replaces Eshell's output-filter list while it owns a subprocess, but
+  ;; retain an explicit guard in case a user adds this function buffer-locally.
+  ;; The EAT screen observer owns that rendered output transaction.
+  (unless (emacsvox-eshell--eat-owns-output-p)
+    (emacsvox-speak-region eshell-last-input-end eshell-last-output-end)))
 
 (add-hook 
  'eshell-output-filter-functions

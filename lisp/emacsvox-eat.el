@@ -45,7 +45,13 @@
 
 (defvar eat-char-mode-map)
 (defvar eat-blink-mode)
+(defvar eat-eshell-char-mode-map)
+(defvar eat-eshell-emacs-mode-map)
+(defvar eat-eshell-exec-hook)
+(defvar eat-eshell-exit-hook)
 (defvar eat-eshell-mode)
+(defvar eat-eshell-semi-char-mode-map)
+(defvar eat-eshell-update-hook)
 (defvar eat-eshell-visual-command-mode)
 (defvar eat-line-mode-map)
 (defvar eat-mode-map)
@@ -110,6 +116,9 @@ when the terminal is selected again."
 
 (defvar-local emacsvox-eat--active-process nil
   "Process associated with the current EAT generation.")
+
+(defvar-local emacsvox-eat--eshell-output-owned-p nil
+  "Non-nil until Eshell publishes the prompt after an EAT-owned command.")
 
 (defvar-local emacsvox-eat--last-exited-process nil
   "Most recent EAT process whose exit was observed in this buffer.")
@@ -1639,7 +1648,7 @@ The terminal's original bell callback has already run."
         (setf (eat-term-parameter eat-terminal 'ring-bell-function)
               #'emacsvox-eat--ring-bell)))))
 
-(defun emacsvox-eat--process-started (process)
+(defun emacsvox-eat--process-started (process &optional quiet-start-p)
   "Start a new EAT generation for PROCESS."
   (let ((restart-p (> emacsvox-eat--generation 0)))
     (emacsvox-eat--advance-generation)
@@ -1648,7 +1657,9 @@ The terminal's original bell callback has already run."
     (emacsvox-eat--install-bell-observer)
     ;; Initial creation already has the `eat' opening announcement.  A later
     ;; exec in the same terminal needs its own lifecycle boundary.
-    (when (and restart-p (emacsvox-eat--selected-buffer-p))
+    (when (and restart-p
+               (not quiet-start-p)
+               (emacsvox-eat--selected-buffer-p))
       (emacsvox-eat--submit
        "Terminal process restarted"
        (emacsvox-eat--facts 'command-interaction 'operation-started)
@@ -1698,6 +1709,35 @@ Ignore a stale or duplicate exit after another process has become active."
          'notification
          (if normal-p 'close-object 'warn-user))))))
 
+(defun emacsvox-eat--eshell-process-started ()
+  "Initialize observation for EAT's terminal embedded in Eshell."
+  (emacsvox-eat--setup-buffer-state)
+  (setq emacsvox-eat--eshell-output-owned-p t)
+  (if-let* ((process (get-buffer-process (current-buffer))))
+      (progn
+        ;; Every external Eshell command is a new process, not a restart of
+        ;; the Eshell session, so command start remains quiet.
+        (emacsvox-eat--process-started process 'quiet)
+        ;; EAT creates the terminal before this hook.  Preserve its empty
+        ;; public screen so the first output update has a real baseline.
+        (setq emacsvox-eat--screen-snapshot
+              (emacsvox-eat--capture-screen)))
+    ;; EAT normally associates the process with the Eshell buffer before this
+    ;; hook.  If that invariant changes, invalidate stale content and let the
+    ;; first update establish a baseline without inventing process identity.
+    (emacsvox-eat--advance-generation)))
+
+(defun emacsvox-eat--eshell-process-exited ()
+  "Finish observation for EAT's terminal embedded in Eshell."
+  (if emacsvox-eat--active-process
+      (emacsvox-eat--process-exited emacsvox-eat--active-process)
+    (emacsvox-eat--advance-generation)))
+
+(defun emacsvox-eat--eshell-prompt-ready ()
+  "Release EAT's output ownership after Eshell publishes its next prompt."
+  (when (local-variable-p 'emacsvox-eat--eshell-output-owned-p)
+    (setq emacsvox-eat--eshell-output-owned-p nil)))
+
 (defun emacsvox-eat--invalidate-all-buffer-state ()
   "Advance the generation of every initialized EAT speech buffer."
   (dolist (buffer (buffer-list))
@@ -1725,9 +1765,15 @@ Ignore a stale or duplicate exit after another process has become active."
    (eat-term-italic voice-smoothen)))
 ;;; Eat Setup:
 
-(defun emacsvox-eat-mode-setup ()
-  "Placed on eat-mode-hook to do Emacsvox setup."
-  (setq-local emacsvox-aural-module 'eat)
+(defun emacsvox-eat--terminal-buffer-p ()
+  "Return non-nil for a normal or active Eshell-embedded EAT terminal."
+  (or (derived-mode-p 'eat-mode)
+      (and (derived-mode-p 'eshell-mode)
+           eat-terminal
+           (eat-term-live-p eat-terminal))))
+
+(defun emacsvox-eat--setup-buffer-state ()
+  "Initialize shared Emacsvox state for the current EAT terminal buffer."
   (unless (local-variable-p 'emacsvox-eat--generation)
     (setq-local emacsvox-eat--generation 0
                 emacsvox-eat--active-process
@@ -1740,21 +1786,28 @@ Ignore a stale or duplicate exit after another process has become active."
   (emacsvox-eat--install-bell-observer)
   (cl-loop
    for map-symbol in
-   '(eat-line-mode-map eat-semi-char-mode-map eat-mode-map eat-char-mode-map)
+   '(eat-line-mode-map eat-semi-char-mode-map eat-mode-map eat-char-mode-map
+     eat-eshell-emacs-mode-map eat-eshell-semi-char-mode-map
+     eat-eshell-char-mode-map)
    for map = (and (boundp map-symbol) (symbol-value map-symbol))
    do
-   (when (keymapp map) (define-key map emacsvox-prefix  'emacsvox-keymap))))
+   (when (keymapp map) (define-key map emacsvox-prefix 'emacsvox-keymap))))
+
+(defun emacsvox-eat-mode-setup ()
+  "Placed on eat-mode-hook to do Emacsvox setup."
+  (setq-local emacsvox-aural-module 'eat)
+  (emacsvox-eat--setup-buffer-state))
 
 (add-hook 'eat-mode-hook 'emacsvox-eat-mode-setup)
 
 (defun emacsvox-eat--control-buffer ()
   "Return the EAT source controlled by the current terminal or review buffer."
   (cond
-   ((derived-mode-p 'eat-mode) (current-buffer))
+   ((emacsvox-eat--terminal-buffer-p) (current-buffer))
    ((derived-mode-p 'emacsvox-eat-review-mode)
     (if (and (buffer-live-p emacsvox-eat-review--source-buffer)
              (with-current-buffer emacsvox-eat-review--source-buffer
-               (derived-mode-p 'eat-mode)))
+               (emacsvox-eat--terminal-buffer-p)))
         emacsvox-eat-review--source-buffer
       (user-error "The source EAT terminal is no longer available")))
    (t (user-error "This is not an EAT terminal or frozen review buffer"))))
@@ -1868,7 +1921,7 @@ The command also works from the terminal's frozen review buffer."
 
 (defun emacsvox-eat--ensure-review-context ()
   "Require a reviewable EAT terminal as the current buffer."
-  (unless (derived-mode-p 'eat-mode)
+  (unless (emacsvox-eat--terminal-buffer-p)
     (user-error "This is not an EAT terminal buffer"))
   (when emacsvox-eat--secure-input-active-p
     (user-error "Terminal review is unavailable during secure input")))
@@ -1889,7 +1942,7 @@ The command also works from the terminal's frozen review buffer."
   (cond
    ((derived-mode-p 'emacsvox-eat-review-mode)
     (symbol-value review-variable))
-   ((derived-mode-p 'eat-mode)
+   ((emacsvox-eat--terminal-buffer-p)
     (emacsvox-eat--ensure-review-context)
     (symbol-value terminal-variable))
    (t (user-error "This is not an EAT terminal or frozen review buffer"))))
@@ -3380,5 +3433,9 @@ terminal cursor accessor."
 (add-hook 'eat-update-hook #'emacsvox-eat-update-hook)
 (add-hook 'eat-exec-hook #'emacsvox-eat--process-started)
 (add-hook 'eat-exit-hook #'emacsvox-eat--process-exited)
+(add-hook 'eat-eshell-update-hook #'emacsvox-eat-update-hook)
+(add-hook 'eat-eshell-exec-hook #'emacsvox-eat--eshell-process-started)
+(add-hook 'eat-eshell-exit-hook #'emacsvox-eat--eshell-process-exited)
+(add-hook 'eshell-after-prompt-hook #'emacsvox-eat--eshell-prompt-ready)
 (provide 'emacsvox-eat)
 ;;;  end of file
