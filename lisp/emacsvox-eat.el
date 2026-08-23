@@ -81,11 +81,40 @@
   (emacsvox-eat--clear-transient-state)
   emacsvox-eat--generation)
 
+(defun emacsvox-eat--facts (role event &optional operation properties)
+  "Return terminal command-interaction facts for ROLE and EVENT.
+OPERATION and additional PROPERTIES are optional."
+  (append
+   (list :role role
+         :command-interaction-kind 'shell
+         :events (list event))
+   (when operation (list :command-operation operation))
+   properties))
+
+(defun emacsvox-eat--submit (content facts occasion &optional icon)
+  "Submit terminal CONTENT with FACTS, OCCASION, and compatibility ICON."
+  (emacsvox-aural-submit
+   content
+   :facts facts
+   :module 'eat
+   :occasion occasion
+   :compatibility-actions
+   (when icon
+     (list (emacsvox-aural-compatibility-icon icon)))))
+
 (defun emacsvox-eat--process-started (process)
   "Start a new EAT generation for PROCESS."
-  (emacsvox-eat--advance-generation)
-  (setq emacsvox-eat--active-process process
-        emacsvox-eat--last-exited-process nil))
+  (let ((restart-p (> emacsvox-eat--generation 0)))
+    (emacsvox-eat--advance-generation)
+    (setq emacsvox-eat--active-process process
+          emacsvox-eat--last-exited-process nil)
+    ;; Initial creation already has the `eat' opening announcement.  A later
+    ;; exec in the same terminal needs its own lifecycle boundary.
+    (when (and restart-p (emacsvox-eat--selected-buffer-p))
+      (emacsvox-eat--submit
+       "Terminal process restarted"
+       (emacsvox-eat--facts 'command-interaction 'operation-started)
+       'state-change 'open-object))))
 
 (defun emacsvox-eat--process-exited (process)
   "End the EAT generation belonging to PROCESS.
@@ -98,7 +127,38 @@ Ignore a stale or duplicate exit after another process has become active."
         (eq process emacsvox-eat--active-process)))
     (emacsvox-eat--advance-generation)
     (setq emacsvox-eat--active-process nil
-          emacsvox-eat--last-exited-process process)))
+          emacsvox-eat--last-exited-process process)
+    (when (emacsvox-eat--selected-buffer-p)
+      (let* ((status (process-status process))
+             (exit-status
+              (and
+               (memq status '(exit signal))
+               (process-exit-status process)))
+             (normal-p
+              (or
+               (eq status 'closed)
+               (and
+                (eq status 'exit)
+                (integerp exit-status)
+                (zerop exit-status))))
+             (content
+              (cond
+               (normal-p "Terminal process exited")
+               ((eq status 'signal)
+                (if (integerp exit-status)
+                    (format "Terminal process ended by signal %d" exit-status)
+                  "Terminal process ended by signal"))
+               ((integerp exit-status)
+                (format "Terminal process exited with status %d" exit-status))
+               (t "Terminal process ended"))))
+        (emacsvox-eat--submit
+         content
+         (emacsvox-eat--facts
+          'command-interaction 'command-process-exited 'process-exit
+          (when (integerp exit-status)
+            (list :command-exit-status exit-status)))
+         'notification
+         (if normal-p 'close-object 'warn-user))))))
 
 (defun emacsvox-eat--invalidate-all-buffer-state ()
   "Advance the generation of every initialized EAT speech buffer."
@@ -129,6 +189,7 @@ Ignore a stale or duplicate exit after another process has become active."
 
 (defun emacsvox-eat-mode-setup ()
   "Placed on eat-mode-hook to do Emacsvox setup."
+  (setq-local emacsvox-aural-module 'eat)
   (unless (local-variable-p 'emacsvox-eat--generation)
     (setq-local emacsvox-eat--generation 0
                 emacsvox-eat--active-process

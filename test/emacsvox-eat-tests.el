@@ -208,6 +208,107 @@
       (should (= emacsvox-eat--generation 9))
       (should emacsvox-eat--completion-snapshot))))
 
+(ert-deftest emacsvox-eat-process-lifecycle-is-semantic-and-singular ()
+  "Selected process exit and restart use singular native lifecycle events."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 0)
+          submissions
+          process-a process-b)
+      (setq process-a (make-symbol "process-a")
+            process-b (make-symbol "process-b"))
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'process-status)
+                 (lambda (process)
+                   (should (memq process (list process-a process-b)))
+                   'exit))
+                ((symbol-function 'process-exit-status)
+                 (lambda (_process) 0))
+                ((symbol-function 'emacsvox-aural-compatibility-icon)
+                 (lambda (icon) (list 'icon icon)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (setq submissions
+                         (append
+                          submissions
+                          (list (list content arguments)))))))
+        ;; Initial exec is already covered by the interactive `eat' opening.
+        (emacsvox-eat--process-started process-a)
+        (should-not submissions)
+        (emacsvox-eat--process-exited process-a)
+        (emacsvox-eat--process-exited process-a)
+        (emacsvox-eat--process-started process-b))
+      (should
+       (equal
+        submissions
+        '(("Terminal process exited"
+           (:facts
+            (:role command-interaction
+             :command-interaction-kind shell
+             :events (command-process-exited)
+             :command-operation process-exit
+             :command-exit-status 0)
+            :module eat
+            :occasion notification
+            :compatibility-actions ((icon close-object))))
+          ("Terminal process restarted"
+           (:facts
+            (:role command-interaction
+             :command-interaction-kind shell
+             :events (operation-started))
+            :module eat
+            :occasion state-change
+            :compatibility-actions ((icon open-object))))))))))
+
+(ert-deftest emacsvox-eat-background-lifecycle-is-private-by-default ()
+  "Background process lifecycle advances state without disclosing content."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 0)
+          submissions
+          (process (make-symbol "background-process")))
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () nil))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (&rest arguments) (push arguments submissions))))
+        (emacsvox-eat--process-started process)
+        (emacsvox-eat--process-exited process))
+      (should (= emacsvox-eat--generation 2))
+      (should-not emacsvox-eat--active-process)
+      (should-not submissions))))
+
+(ert-deftest emacsvox-eat-signalled-process-uses-warning-lifecycle ()
+  "A signalled terminal process is distinct from a normal exit."
+  (with-temp-buffer
+    (let* ((process (make-symbol "signalled-process"))
+           (emacsvox-eat--generation 1)
+           (emacsvox-eat--active-process process)
+           submission)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'process-status)
+                 (lambda (_process) 'signal))
+                ((symbol-function 'process-exit-status)
+                 (lambda (_process) 9))
+                ((symbol-function 'emacsvox-aural-compatibility-icon)
+                 (lambda (icon) (list 'icon icon)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (setq submission (list content arguments)))))
+        (emacsvox-eat--process-exited process))
+      (should
+       (equal
+        submission
+        '("Terminal process ended by signal 9"
+          (:facts
+           (:role command-interaction
+            :command-interaction-kind shell
+            :events (command-process-exited)
+            :command-operation process-exit
+            :command-exit-status 9)
+           :module eat
+           :occasion notification
+           :compatibility-actions ((icon warn-user)))))))))
+
 (ert-deftest emacsvox-eat-reset-invalidates-before-terminal-update ()
   "Reset advances its generation before EAT runs the update hook."
   (with-temp-buffer
