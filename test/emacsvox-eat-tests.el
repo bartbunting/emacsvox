@@ -426,6 +426,8 @@
   (let* ((diff
           '(:text-changed t :size-changed nil
             :alternate-screen-changed nil
+            :old-rows ("$ command")
+            :new-rows ("$ command" "one" "two" "$ ")
             :row-change
             (:start 1 :old-end 1 :new-end 4 :old-rows nil
              :new-rows ("one" "two" "$ "))))
@@ -442,10 +444,55 @@
       (setf (plist-get alternate :alternate-screen) t)
       (should-not (emacsvox-eat--complete-output-rows diff alternate)))
     (let ((replacement (copy-tree diff)))
-      (setf (plist-get (plist-get replacement :row-change) :old-rows)
-            '("old status"))
+      (setf (plist-get replacement :old-rows) '("old status")
+            (plist-get replacement :new-rows) '("new status")
+            (plist-get (plist-get replacement :row-change) :start) 0
+            (plist-get (plist-get replacement :row-change) :old-rows)
+            '("old status")
+            (plist-get (plist-get replacement :row-change) :new-rows)
+            '("new status")
+            (plist-get snapshot :cursor-row) 1)
       (should-not
        (emacsvox-eat--complete-output-rows replacement snapshot)))))
+
+(ert-deftest emacsvox-eat-output-row-overlap-is-linear-and-scroll-aware ()
+  "Row overlap recognizes the unchanged suffix shifted to the screen top."
+  (should
+   (= (emacsvox-eat--suffix-prefix-row-overlap
+       '("old" "same" "same" "$ command")
+       '("same" "same" "$ command" "output" "$ "))
+      3))
+  (should
+   (= (emacsvox-eat--suffix-prefix-row-overlap
+       '("a" "b") '("different" "rows"))
+      0))
+  (should
+   (= (emacsvox-eat--suffix-prefix-row-overlap nil '("new")) 0))
+  (should
+   (= (emacsvox-eat--suffix-prefix-row-overlap '("old") nil) 0)))
+
+(ert-deftest emacsvox-eat-output-classifier-handles-scroll-without-repetition ()
+  "A shifted visible screen presents only rows following its old suffix."
+  (let* ((diff
+          '(:text-changed t :size-changed nil
+            :alternate-screen-changed nil
+            :old-rows ("history one" "history two" "$ command")
+            :new-rows ("history two" "$ command" "result" "$ ")
+            :row-change
+            (:start 0 :old-end 3 :new-end 4
+             :old-rows ("history one" "history two" "$ command")
+             :new-rows ("history two" "$ command" "result" "$ "))))
+         (snapshot '(:cursor-row 3 :alternate-screen nil)))
+    (should
+     (equal (emacsvox-eat--complete-output-rows diff snapshot)
+            '("result")))
+    (let ((repaint (copy-tree diff)))
+      (setf (plist-get repaint :new-rows)
+            '("new heading" "new body" "$ ")
+            (plist-get (plist-get repaint :row-change) :new-rows)
+            '("new heading" "new body" "$ "))
+      (should-not
+       (emacsvox-eat--complete-output-rows repaint snapshot)))))
 
 (ert-deftest emacsvox-eat-real-multiline-output-is-one-quiesced-transaction ()
   "A real terminal screen presents complete result rows and omits its prompt."

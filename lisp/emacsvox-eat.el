@@ -361,6 +361,8 @@ Snapshots from different terminal generations are intentionally not compared."
      (and text-changed
           (emacsvox-eat--sequence-change
            (plist-get old :text) (plist-get new :text)))
+     :old-rows (and comparable-p (plist-get old :rows))
+     :new-rows (and comparable-p (plist-get new :rows))
      :row-change
      (and text-changed
           (emacsvox-eat--row-change
@@ -380,6 +382,43 @@ Snapshots from different terminal generations are intentionally not compared."
      :changes changes
      :unchanged (null changes))))
 
+(defun emacsvox-eat--row-prefix-table (rows)
+  "Return the KMP prefix table for the row sequence ROWS."
+  (let* ((sequence (vconcat rows))
+         (table (make-vector (length sequence) 0))
+         (index 1)
+         matched)
+    (while (< index (length sequence))
+      (setq matched (aref table (1- index)))
+      (while (and (> matched 0)
+                  (not (equal (aref sequence index)
+                              (aref sequence matched))))
+        (setq matched (aref table (1- matched))))
+      (when (equal (aref sequence index) (aref sequence matched))
+        (setq matched (1+ matched)))
+      (aset table index matched)
+      (setq index (1+ index)))
+    table))
+
+(defun emacsvox-eat--suffix-prefix-row-overlap (old-rows new-rows)
+  "Return how many leading NEW-ROWS are an unchanged suffix of OLD-ROWS."
+  (let* ((old (vconcat old-rows))
+         (new (vconcat new-rows))
+         (new-length (length new))
+         (table (emacsvox-eat--row-prefix-table new-rows))
+         (matched 0)
+         (index 0))
+    (while (and (> new-length 0) (< index (length old)))
+      (while (and (> matched 0)
+                  (or (= matched new-length)
+                      (not (equal (aref old index) (aref new matched)))))
+        (setq matched (aref table (1- matched))))
+      (when (and (< matched new-length)
+                 (equal (aref old index) (aref new matched)))
+        (setq matched (1+ matched)))
+      (setq index (1+ index)))
+    matched))
+
 (defun emacsvox-eat--cancel-quiescence ()
   "Cancel and clear the pending EAT quiescence transaction."
   (when (timerp emacsvox-eat--quiescence-timer)
@@ -396,14 +435,21 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
              (not (plist-get diff :alternate-screen-changed))
              (not (plist-get snapshot :alternate-screen)))
     (when-let* ((change (plist-get diff :row-change))
-                (cursor-row (plist-get snapshot :cursor-row))
-                ((null (plist-get change :old-rows))))
-      (let* ((start (plist-get change :start))
-             (rows (plist-get change :new-rows))
-             (complete-count
-              (min (length rows) (max 0 (- cursor-row start)))))
-        (when (> complete-count 0)
-          (emacsvox-eat--list-slice rows 0 complete-count))))))
+                (cursor-row (plist-get snapshot :cursor-row)))
+      (let* ((old-rows (plist-get diff :old-rows))
+             (new-rows (plist-get diff :new-rows))
+             (overlap
+              (and old-rows new-rows
+                   (emacsvox-eat--suffix-prefix-row-overlap
+                    old-rows new-rows)))
+             (start
+              (cond
+               ((and overlap (> overlap 0)) overlap)
+               ((null (plist-get change :old-rows))
+                (plist-get change :start))))
+             (end (and start (min cursor-row (length new-rows)))))
+        (when (and start end (> end start))
+          (emacsvox-eat--list-slice new-rows start end))))))
 
 (defun emacsvox-eat--screen-quiesced (diff snapshot)
   "Retain and present the selected terminal DIFF ending at SNAPSHOT."

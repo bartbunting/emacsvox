@@ -123,7 +123,7 @@ Planned slices:
 
 1. [X] native EAT aural facts and delivery roles;
 2. [X] bounded complete-line output;
-3. prompt-redraw and unchanged-repaint suppression;
+3. [X] prompt-redraw and unchanged-repaint suppression;
 4. progress/status coalescing and rate limiting;
 5. selected/follow-live policy.
 
@@ -273,10 +273,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~a85bd7095~ | 2.3 | Buffer-local snapshots and serial-checked 60 ms quiescence transactions; lifecycle/focus loss cancels delivery, and arbitrary text/escape chunking converges; 26 focused tests and the real compiled timer pass. |
 | 2026-08-23 | ~6b9af956b~ | 2.4 | Real EAT unchanged repaint, resize-only, reflow, reset, and alternate-screen observer coverage; 29 focused tests pass. Full suite: 2377 expected passes, 1 skip, and only the pre-existing agent-shell failure. |
 | 2026-08-23 | ~e13ccc283~ | 3.1 | Bounded, control-sanitized terminal rows use one native ~command-output~ / ~command-output-received~ transaction; no observer policy change; 31 focused tests pass and byte-code is current. |
-| 2026-08-23 | this commit | 3.2 | Quiesced inserted main-screen rows before the cursor are spoken once; cursor prompt is excluded, input-correlated legacy feedback remains, arbitrary async character speech is removed, and raw Tab/Return events are handled correctly. 37 focused tests and a compiled Bash PTY pass. |
+| 2026-08-23 | ~cadc1adc7~ | 3.2 | Quiesced inserted main-screen rows before the cursor are spoken once; cursor prompt is excluded, input-correlated legacy feedback remains, arbitrary async character speech is removed, and raw Tab/Return events are handled correctly. 37 focused tests and a compiled Bash PTY pass. |
+| 2026-08-23 | this commit | 3.3 | Linear suffix/prefix row alignment avoids replaying visible history after scroll; cursor prompt, unchanged repaint, conservative full replacement, resize/reflow, and alternate-screen repaint stay quiet. 39 focused tests, 2,000 randomized overlap comparisons, and compiled verification pass. |
 
 * Current next action
 
-Strengthen prompt/redraw suppression and scrolling-screen row alignment so
-ordinary output remains singular when the visible terminal scrolls, while
-same-row progress and alternate-screen repaint remain deferred.
+Add conservative same-row status/progress classification with replaceable,
+rate-limited delivery, retaining the latest value for review and ensuring
+rapid refreshing applications cannot flood or stop unrelated speech.
