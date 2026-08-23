@@ -553,11 +553,19 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
 
 (defun emacsvox-eat--screen-quiesced (diff snapshot)
   "Retain and present the selected terminal DIFF ending at SNAPSHOT."
-  (emacsvox-eat--retain-screen-change diff snapshot)
-  (if-let* ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
-      (emacsvox-eat--present-output-rows rows)
-    (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
-      (emacsvox-eat--present-status status))))
+  (if-let* ((completion
+             (emacsvox-eat--pending-inline-completion snapshot)))
+      (progn
+        (emacsvox-eat--retain-screen-change
+         (plist-get completion :diff) snapshot)
+        (emacsvox-eat--cancel-completion)
+        (emacsvox-eat--present-inline-completion
+         (plist-get completion :text)))
+    (emacsvox-eat--retain-screen-change diff snapshot)
+    (if-let* ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
+        (emacsvox-eat--present-output-rows rows)
+      (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
+        (emacsvox-eat--present-status status)))))
 
 (defun emacsvox-eat--finish-quiescence (buffer generation serial)
   "Finish BUFFER's update burst identified by GENERATION and SERIAL."
@@ -943,16 +951,6 @@ Ignore a stale or duplicate exit after another process has become active."
        (or (eq event 9)
            (memq (event-basic-type event) '(9 tab)))))
 
-(defun emacsvox-eat--token-before-cursor (cursor)
-  "Return the terminal token immediately before CURSOR."
-  (when cursor
-    (save-excursion
-      (goto-char cursor)
-      (skip-chars-backward " \t")
-      (let ((end (point)))
-        (skip-chars-backward "^ \t\n;|&<>()")
-        (buffer-substring-no-properties (point) end)))))
-
 (defun emacsvox-eat--capture-completion (cursor)
   "Start a terminal completion transaction at EAT terminal CURSOR."
   (emacsvox-eat--cancel-completion)
@@ -968,11 +966,7 @@ Ignore a stale or duplicate exit after another process has become active."
              :serial emacsvox-eat--completion-serial
              :started-at started-at
              :deadline deadline
-             :screen screen
-             ;; These two fields temporarily preserve the narrow unique
-             ;; completion presentation until screen-based classification.
-             :physical-line (line-number-at-pos cursor)
-             :token (emacsvox-eat--token-before-cursor cursor))
+             :screen screen)
             emacsvox-eat--completion-timer
             (run-at-time
              emacsvox-eat--completion-timeout nil
@@ -1035,31 +1029,128 @@ Ignore a stale or duplicate exit after another process has become active."
       (emacsvox-eat--cancel-completion)
       (emacsvox-eat--record-input event))))
 
-(defun emacsvox-eat--completion-label (token)
-  "Return the final path component of completed TOKEN."
-  (let* ((length (length token))
-         (directory-p (and (> length 0) (= (aref token (1- length)) ?/)))
-         (trimmed (if directory-p (substring token 0 -1) token))
+(defun emacsvox-eat--screen-cursor-input (snapshot)
+  "Return SNAPSHOT's wrapped visual input facts through the terminal cursor.
+Full-width rows immediately before the cursor row are treated as visual wraps.
+This is a conservative public-screen inference; no EAT wrap property is read."
+  (when-let* ((text (plist-get snapshot :text))
+              (offset (plist-get snapshot :cursor-offset))
+              (cursor-row (plist-get snapshot :cursor-row))
+              (size (plist-get snapshot :size))
+              (width (car size))
+              ((integerp offset))
+              ((<= 0 offset (length text)))
+              ((integerp cursor-row))
+              ((> width 0)))
+    (let* ((rows (plist-get snapshot :rows))
+           (prefix-rows
+            (emacsvox-eat--split-screen-rows (substring text 0 offset)))
+           (start cursor-row))
+      (when (and (< cursor-row (length rows))
+                 (= (length prefix-rows) (1+ cursor-row)))
+        (while (and (> start 0)
+                    (>= (string-width (nth (1- start) rows)) width))
+          (setq start (1- start)))
+        (list :text (mapconcat #'identity (nthcdr start prefix-rows) "")
+              :start-row start)))))
+
+(defun emacsvox-eat--screen-cursor-prefix (snapshot)
+  "Return SNAPSHOT's wrapped visual input through the terminal cursor."
+  (plist-get (emacsvox-eat--screen-cursor-input snapshot) :text))
+
+(defun emacsvox-eat--completion-leading-rows-compatible-p
+    (old old-input new new-input)
+  "Return non-nil when OLD and NEW added no rows before their cursor inputs."
+  (let* ((old-leading
+          (emacsvox-eat--list-slice
+           (plist-get old :rows) 0 (plist-get old-input :start-row)))
+         (new-leading
+          (emacsvox-eat--list-slice
+           (plist-get new :rows) 0 (plist-get new-input :start-row)))
+         (overlap
+          (emacsvox-eat--suffix-prefix-row-overlap old-leading new-leading)))
+    (or (equal old-leading new-leading)
+        (and (> overlap 0) (<= (length new-leading) overlap)))))
+
+(defun emacsvox-eat--escaped-character-p (text index)
+  "Return non-nil when the character at TEXT INDEX is backslash-escaped."
+  (let ((backslashes 0)
+        (position (1- index)))
+    (while (and (>= position 0) (= (aref text position) ?\\))
+      (setq backslashes (1+ backslashes)
+            position (1- position)))
+    (= (% backslashes 2) 1)))
+
+(defun emacsvox-eat--completion-display-field (prefix)
+  "Return a conservative final displayed field from cursor PREFIX.
+Backslash-escaped whitespace remains part of the field.  Quote-bearing input
+returns nil because recognizing its logical word would require shell grammar."
+  (unless (string-match-p "['\"]" prefix)
+    (let* ((end (string-match-p "[[:space:]]*\\'" prefix))
+           (start end))
+      (while
+          (and (> start 0)
+               (let* ((index (1- start))
+                      (character (aref prefix index)))
+                 (or (not (memq character '(?\s ?\t ?\n ?\r)))
+                     (emacsvox-eat--escaped-character-p prefix index))))
+        (setq start (1- start)))
+      (and (< start end) (substring prefix start end)))))
+
+(defun emacsvox-eat--completion-label (displayed-field)
+  "Return a concise path-aware label for DISPLAYED-FIELD."
+  (let* ((length (length displayed-field))
+         (directory-p
+          (and (> length 0) (= (aref displayed-field (1- length)) ?/)))
+         (trimmed
+          (if directory-p (substring displayed-field 0 -1) displayed-field))
          (component (file-name-nondirectory trimmed)))
     (concat (if (zerop (length component)) trimmed component)
             (if directory-p "/" ""))))
 
-(defun emacsvox-eat--speak-same-line-completion (cursor)
-  "Speak a token extended by terminal completion at CURSOR.
-Return non-nil after providing completion feedback.  Compatible intermediate
-updates leave the bounded transaction pending for later screen classification."
-  (let ((snapshot emacsvox-eat--completion-snapshot))
-    (when (and snapshot (emacsvox-eat--completion-current-p))
-      (let ((old-line (plist-get snapshot :physical-line))
-            (old-token (plist-get snapshot :token))
-            (new-token (emacsvox-eat--token-before-cursor cursor)))
-        (when (and (= old-line (line-number-at-pos cursor))
-                   (> (length old-token) 0)
-                   (> (length new-token) (length old-token))
-                   (string-prefix-p old-token new-token))
-          (emacsvox-eat--cancel-completion)
-          (tts-speak (emacsvox-eat--completion-label new-token))
-          t)))))
+(defun emacsvox-eat--inline-completion-change (old new)
+  "Return conservative inline completion facts between OLD and NEW screens."
+  (when (and old new
+             (equal (plist-get old :generation)
+                    (plist-get new :generation))
+             (not (plist-get old :alternate-screen))
+             (not (plist-get new :alternate-screen)))
+    (let* ((diff (emacsvox-eat--screen-diff old new))
+           (old-input (emacsvox-eat--screen-cursor-input old))
+           (new-input (emacsvox-eat--screen-cursor-input new))
+           (old-prefix (plist-get old-input :text))
+           (new-prefix (plist-get new-input :text))
+           (change
+            (and old-prefix new-prefix
+                 (emacsvox-eat--sequence-change old-prefix new-prefix))))
+      (when (and change
+                 (> (plist-get change :start) 0)
+                 (>= (length new-prefix) (length old-prefix))
+                 (emacsvox-eat--completion-leading-rows-compatible-p
+                  old old-input new new-input)
+                 (not (emacsvox-eat--complete-output-rows diff new)))
+        (let* ((trimmed (string-trim-right new-prefix))
+               (field (emacsvox-eat--completion-display-field new-prefix))
+               (text
+                (if field
+                    (emacsvox-eat--completion-label field)
+                  trimmed)))
+          (when (and (stringp text) (not (string-empty-p text)))
+            (list :text text :old old-prefix :new new-prefix
+                  :change change :diff (plist-put diff :user-input t))))))))
+
+(defun emacsvox-eat--pending-inline-completion (snapshot)
+  "Return inline completion facts for pending transaction at SNAPSHOT."
+  (when (emacsvox-eat--completion-current-p)
+    (emacsvox-eat--inline-completion-change
+     (plist-get emacsvox-eat--completion-snapshot :screen) snapshot)))
+
+(defun emacsvox-eat--present-inline-completion (text)
+  "Present inline terminal completion TEXT as one semantic transaction."
+  (when-let* ((content (emacsvox-eat--bounded-output (list text))))
+    (emacsvox-eat--submit
+     content '(:role candidate :events (completion-input-updated))
+     'state-change)))
 
 (defun emacsvox-eat--speak-input-correlated-update (cursor)
   "Provide the legacy cursor feedback for one recent terminal input at CURSOR."
@@ -1101,8 +1192,7 @@ terminal cursor accessor."
         (setq emacsvox-eat--recent-input nil))
     (let* ((emacsvox-show-point t)
            (cursor (eat-term-display-cursor eat-terminal)))
-      (unless (emacsvox-eat--speak-same-line-completion cursor)
-        (emacsvox-eat--speak-input-correlated-update cursor)))))
+      (emacsvox-eat--speak-input-correlated-update cursor))))
 
 (add-hook 'eat-update-hook #'emacsvox-eat-update-hook)
 (add-hook 'eat-exec-hook #'emacsvox-eat--process-started)

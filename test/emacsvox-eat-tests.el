@@ -9,6 +9,22 @@
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 
+(defun emacsvox-eat-test--screen (text &optional width generation)
+  "Return a minimal public-screen fixture ending at the cursor in TEXT."
+  (let ((rows (emacsvox-eat--split-screen-rows text)))
+    (list :generation (or generation 1)
+          :text text
+          :rows rows
+          :styles nil
+          :cursor-offset (length text)
+          :cursor-row (1- (length rows))
+          :cursor-column (string-width (car (last rows)))
+          :cursor-type :block
+          :size (cons (or width 80) 24)
+          :alternate-screen nil
+          :title nil
+          :cwd "/tmp/")))
+
 (ert-deftest emacsvox-eat-advice-is-current-and-direct ()
   "Current Eat targets use native advice directly."
   (dolist (target emacsvox-eat--advice-targets)
@@ -46,31 +62,37 @@
     (should (equal messages '("eat-line-mode ")))))
 
 (ert-deftest emacsvox-eat-speaks-same-line-directory-completion ()
-  "A terminal completion on the current line speaks its final component."
+  "A quiesced terminal completion speaks its final path component."
   (with-temp-buffer
-    (insert "$ ~/sr")
-    (let ((eat-terminal 'terminal)
-          (eat--semi-char-mode t)
-          events)
-      (cl-letf (((symbol-function 'eat-term-display-cursor)
-                 (lambda (_terminal) (point-marker)))
-                ((symbol-function 'emacsvox-eat--capture-screen)
-                 (lambda () '(:generation 0 :rows ("$ ~/sr"))))
-                ((symbol-function 'emacsvox-eat--observe-screen) #'ignore)
-                ((symbol-function 'emacsvox-eat--selected-buffer-p)
-                 (lambda () t))
-                ((symbol-function 'tts-speak)
-                 (lambda (text) (push (list 'speak text) events)))
-                ((symbol-function 'emacsvox-speak-line)
-                 (lambda () (push '(line) events)))
-                ((symbol-function 'emacsvox-speak-this-char)
-                 (lambda (char) (push (list 'char char) events))))
-        (emacsvox--advice-eat-self-input-before 1 'tab)
-        (erase-buffer)
-        (insert "$ ~/src/")
-        (emacsvox-eat-update-hook))
-      (should-not emacsvox-eat--completion-snapshot)
-      (should (equal (nreverse events) '((speak "src/")))))))
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions)
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 30 4)
+            (eat-term-process-output eat-terminal "$ ~/sr")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--capture-completion
+             (eat-term-display-cursor eat-terminal))
+            (let ((old
+                   (plist-get emacsvox-eat--completion-snapshot :screen)))
+              (eat-term-process-output eat-terminal "\r$ ~/src/")
+              (eat-term-redisplay eat-terminal)
+              (let* ((new (emacsvox-eat--capture-screen))
+                     (diff (emacsvox-eat--screen-diff old new)))
+                (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                           (lambda (content &rest arguments)
+                             (push (list content arguments) submissions))))
+                  (emacsvox-eat--screen-quiesced diff new))))
+            (should-not emacsvox-eat--completion-snapshot)
+            (should-not emacsvox-eat--completion-timer)
+            (should (equal (caar submissions) "src/"))
+            (should
+             (equal (plist-get (cadar submissions) :facts)
+                    '(:role candidate
+                      :events (completion-input-updated)))))
+        (emacsvox-eat--cancel-completion)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
 
 (ert-deftest emacsvox-eat-multiline-completion-defers-to-quiesced-output ()
   "A candidate listing does not trigger arbitrary immediate cursor speech."
@@ -201,33 +223,88 @@
               (should (= (plist-get screen :cursor-column) 6))
               (should (integerp (plist-get screen :display-beginning)))
               (should (integerp (plist-get screen :display-end)))
-              (should (equal (plist-get transaction :token) "~/sr"))
               (should (timerp emacsvox-eat--completion-timer))))
         (emacsvox-eat--cancel-completion)
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 
 (ert-deftest emacsvox-eat-completion-survives-compatible-intermediate-update ()
-  "An unchanged batch before unique expansion does not consume completion."
+  "An unchanged or resized batch before expansion does not consume completion."
   (with-temp-buffer
-    (insert "$ ~/sr")
-    (let ((emacsvox-eat--generation 2)
+    (let* ((emacsvox-eat--generation 2)
+           (old (emacsvox-eat-test--screen "$ ~/sr" 30 2))
+           (resized (emacsvox-eat-test--screen "$ ~/sr" 40 2))
+           (new (emacsvox-eat-test--screen "$ ~/src/" 40 2))
           (emacsvox-eat--completion-snapshot
            (list :generation 2 :serial 4
-                 :deadline (+ (float-time) 1)
-                 :physical-line 1 :token "~/sr"))
-          events)
-      (cl-letf (((symbol-function 'tts-speak)
-                 (lambda (text) (push text events))))
-        (should-not
-         (emacsvox-eat--speak-same-line-completion (point-marker)))
-        (should emacsvox-eat--completion-snapshot)
-        (erase-buffer)
-        (insert "$ ~/src/")
-        (should
-         (emacsvox-eat--speak-same-line-completion (point-marker))))
-      (should-not emacsvox-eat--completion-snapshot)
-      (should (equal events '("src/"))))))
+                 :deadline (+ (float-time) 1) :screen old)))
+      (should-not (emacsvox-eat--pending-inline-completion old))
+      (should emacsvox-eat--completion-snapshot)
+      (should-not (emacsvox-eat--pending-inline-completion resized))
+      (should emacsvox-eat--completion-snapshot)
+      (should
+       (equal (plist-get
+               (emacsvox-eat--pending-inline-completion new) :text)
+              "src/"))
+      (should emacsvox-eat--completion-snapshot))))
+
+(ert-deftest emacsvox-eat-inline-completion-is-screen-based-and-path-aware ()
+  "Inline labels handle wrapping, quoting, escapes, Unicode, and punctuation."
+  (dolist
+      (case
+       '(("$ ~/sr" "$ ~/src/" 30 "src/")
+         ("$ git pul" "$ git pull " 30 "pull")
+         ("$ cat alpha" "$ cat alpha\\ beta " 30 "alpha\\ beta")
+         ("$ cat \"alpha b" "$ cat \"alpha beta\" "
+          30 "$ cat \"alpha beta\"")
+         ("$ cat caf" "$ cat café " 30 "café")
+         ("$ cat foo" "$ cat foo\\(bar\\) " 30 "foo\\(bar\\)")
+         ("$ cat semi" "$ cat semi\\;colon " 30 "semi\\;colon")
+         ("$ pick foo" "$ pick bar" 30 "bar")
+         ("$ cmd | gi" "$ cmd | git " 30 "git")
+         ("$ 123~/sr" "$ 123~/src\n/" 10 "src/")))
+    (pcase-let ((`(,old-text ,new-text ,width ,expected) case))
+      (let* ((old (emacsvox-eat-test--screen old-text width))
+             (new (emacsvox-eat-test--screen new-text width))
+             (result (emacsvox-eat--inline-completion-change old new)))
+        (should (equal (plist-get result :text) expected))
+        (should (plist-get (plist-get result :diff) :user-input))))))
+
+(ert-deftest emacsvox-eat-inline-completion-rejects-output-and-unsafe-state ()
+  "Candidate rows, shorter replacements, alternate screens, and generations fail closed."
+  (let* ((old (emacsvox-eat-test--screen "$ git pu" 30 2))
+         (candidate-and-expansion
+          (emacsvox-eat-test--screen "pull  push\n$ git pul" 30 2))
+         (shorter (emacsvox-eat-test--screen "$ git p" 30 2))
+         (alternate (copy-tree (emacsvox-eat-test--screen "$ git pull" 30 2)))
+         (replacement (emacsvox-eat-test--screen "$ git pull" 30 3)))
+    (setf (plist-get alternate :alternate-screen) t)
+    (should-not
+     (emacsvox-eat--inline-completion-change old candidate-and-expansion))
+    (should-not (emacsvox-eat--inline-completion-change old shorter))
+    (should-not (emacsvox-eat--inline-completion-change old alternate))
+    (should-not (emacsvox-eat--inline-completion-change old replacement))))
+
+(ert-deftest emacsvox-eat-real-wrapped-inline-completion-is-one-result ()
+  "Public EAT rows reconstruct a completion that crosses a visual wrap."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 10 4)
+            (eat-term-process-output eat-terminal "$ 123~/sr")
+            (eat-term-redisplay eat-terminal)
+            (let ((old (emacsvox-eat--capture-screen)))
+              (eat-term-process-output eat-terminal "\r$ 123~/src/")
+              (eat-term-redisplay eat-terminal)
+              (let* ((new (emacsvox-eat--capture-screen))
+                     (result
+                      (emacsvox-eat--inline-completion-change old new)))
+                (should (equal (plist-get new :rows)
+                               '("$ 123~/src" "/")))
+                (should (equal (plist-get result :text) "src/")))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
 
 (ert-deftest emacsvox-eat-completion-timeout-is-generation-and-serial-safe ()
   "A stale timeout cannot clear a replacement completion transaction."
