@@ -92,6 +92,9 @@
 (defvar-local emacsvox-eat--pending-screen-diff nil
   "Aggregate screen diff waiting for the terminal to become quiescent.")
 
+(defvar-local emacsvox-eat--pending-alternate-screen-transitions nil
+  "Alternate-screen states crossed during the pending update burst.")
+
 (defvar-local emacsvox-eat--quiescence-timer nil
   "Timer waiting to finish the current EAT update burst.")
 
@@ -464,6 +467,7 @@ Snapshots from different terminal generations are intentionally not compared."
   (setq emacsvox-eat--quiescence-timer nil
         emacsvox-eat--pending-screen-baseline nil
         emacsvox-eat--pending-screen-diff nil
+        emacsvox-eat--pending-alternate-screen-transitions nil
         emacsvox-eat--pending-user-input-p nil
         emacsvox-eat--quiescence-started-at nil))
 
@@ -557,9 +561,40 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
   (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
     (setq emacsvox-eat--last-status-text status)))
 
+(defun emacsvox-eat--alternate-screen-transitions (diff snapshot)
+  "Return chronological alternate-screen states represented by DIFF.
+SNAPSHOT supplies the final state when DIFF was not produced by the observer."
+  (or (plist-get diff :alternate-screen-transitions)
+      (and (plist-get diff :alternate-screen-changed)
+           (list (not (null (plist-get snapshot :alternate-screen)))))))
+
+(defun emacsvox-eat--present-alternate-screen-transitions (states)
+  "Present each alternate-screen state in chronological STATES once."
+  (dolist (entered-p states)
+    (emacsvox-eat--submit
+     (if entered-p
+         "Terminal application screen entered"
+       "Terminal application screen exited")
+     (emacsvox-eat--facts
+      'command-interaction
+      (if entered-p 'operation-started 'operation-completed)
+      'terminal-application-screen)
+     'state-change
+     (if entered-p 'open-object 'close-object))))
+
 (defun emacsvox-eat--screen-quiesced (diff snapshot)
   "Retain and present the selected terminal DIFF ending at SNAPSHOT."
   (cond
+   ((when-let* ((states
+                 (emacsvox-eat--alternate-screen-transitions diff snapshot)))
+      (emacsvox-eat--cancel-completion)
+      (setq emacsvox-eat--recent-input nil
+            emacsvox-eat--last-status-text nil
+            emacsvox-eat--last-status-spoken-at 0.0
+            emacsvox-eat--last-completion-output nil)
+      (emacsvox-eat--retain-screen-change diff snapshot)
+      (emacsvox-eat--present-alternate-screen-transitions states)
+      t))
    ((when-let* ((completion
                  (emacsvox-eat--pending-inline-completion snapshot)))
       (emacsvox-eat--retain-screen-change
@@ -603,14 +638,22 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
         (setq emacsvox-eat--quiescence-timer nil)
         (let ((diff emacsvox-eat--pending-screen-diff)
               (snapshot emacsvox-eat--screen-snapshot)
+              (alternate-screen-transitions
+               (nreverse emacsvox-eat--pending-alternate-screen-transitions))
               (user-input-p emacsvox-eat--pending-user-input-p))
           (setq emacsvox-eat--pending-screen-baseline nil
                 emacsvox-eat--pending-screen-diff nil
+                emacsvox-eat--pending-alternate-screen-transitions nil
                 emacsvox-eat--pending-user-input-p nil
                 emacsvox-eat--quiescence-started-at nil)
           (when (and diff
                      (emacsvox-eat--selected-buffer-p))
             (setq diff (plist-put diff :user-input user-input-p))
+            (when alternate-screen-transitions
+              (setq diff
+                    (plist-put
+                     diff :alternate-screen-transitions
+                     alternate-screen-transitions)))
             (if (emacsvox-eat--following-live-p)
                 (emacsvox-eat--screen-quiesced diff snapshot)
               (emacsvox-eat--retain-screen-change diff snapshot))))))))
@@ -649,6 +692,17 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
         (unless emacsvox-eat--pending-screen-baseline
           (setq emacsvox-eat--pending-screen-baseline old
                 emacsvox-eat--quiescence-started-at (float-time)))
+        (when (not (eq (plist-get old :alternate-screen)
+                       (plist-get new :alternate-screen)))
+          (push (not (null (plist-get new :alternate-screen)))
+                emacsvox-eat--pending-alternate-screen-transitions)
+          ;; Terminal completion and replaceable status state cannot span a
+          ;; change to or from an application's independent screen.
+          (emacsvox-eat--cancel-completion)
+          (setq emacsvox-eat--recent-input nil
+                emacsvox-eat--last-status-text nil
+                emacsvox-eat--last-status-spoken-at 0.0
+                emacsvox-eat--last-completion-output nil))
         (setq emacsvox-eat--pending-user-input-p
               (or emacsvox-eat--pending-user-input-p
                   emacsvox-eat--recent-input
@@ -656,7 +710,8 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
         (setq emacsvox-eat--pending-screen-diff
               (emacsvox-eat--screen-diff
                emacsvox-eat--pending-screen-baseline new))
-        (if (plist-get emacsvox-eat--pending-screen-diff :unchanged)
+        (if (and (plist-get emacsvox-eat--pending-screen-diff :unchanged)
+                 (null emacsvox-eat--pending-alternate-screen-transitions))
             (emacsvox-eat--cancel-quiescence)
           (emacsvox-eat--schedule-quiescence))))))
 

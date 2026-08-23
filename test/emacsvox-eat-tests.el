@@ -971,6 +971,162 @@
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 
+(ert-deftest emacsvox-eat-alternate-screen-transitions-are-semantic ()
+  "Application-screen entry and exit are distinct singular state changes."
+  (with-temp-buffer
+    (let ((emacsvox-eat--completion-snapshot '(:generation 0))
+          (emacsvox-eat--last-completion-output '(:rows ("stale")))
+          (emacsvox-eat--last-status-text "Progress 40%")
+          submissions)
+      (cl-letf (((symbol-function 'emacsvox-aural-compatibility-icon)
+                 (lambda (icon) (list 'icon icon)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (setq submissions
+                         (append submissions (list (list content arguments))))))
+                ((symbol-function 'emacsvox-eat--present-output-rows)
+                 (lambda (&rest _)
+                   (ert-fail "alternate-screen repaint reached output speech"))))
+        (emacsvox-eat--screen-quiesced
+         '(:alternate-screen-changed t
+           :alternate-screen-transitions (t nil)
+           :text-changed t)
+         '(:alternate-screen nil)))
+      (should-not emacsvox-eat--completion-snapshot)
+      (should-not emacsvox-eat--last-completion-output)
+      (should-not emacsvox-eat--last-status-text)
+      (should
+       (equal
+        submissions
+        '(("Terminal application screen entered"
+           (:facts
+            (:role command-interaction
+             :command-interaction-kind shell
+             :events (operation-started)
+             :command-operation terminal-application-screen)
+            :module eat
+            :occasion state-change
+            :compatibility-actions ((icon open-object))))
+          ("Terminal application screen exited"
+           (:facts
+            (:role command-interaction
+             :command-interaction-kind shell
+             :events (operation-completed)
+             :command-operation terminal-application-screen)
+            :module eat
+            :occasion state-change
+            :compatibility-actions ((icon close-object))))))))))
+
+(ert-deftest emacsvox-eat-real-alternate-screen-repaint-is-one-boundary ()
+  "A real entry, repaint, and resize produce one application boundary."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions
+          pending-timer)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-compatibility-icon)
+                     (lambda (icon) (list 'icon icon)))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions))))
+            (eat-term-resize eat-terminal 20 4)
+            (eat-term-process-output eat-terminal "Main")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (setq emacsvox-eat--completion-snapshot '(:generation 0)
+                  emacsvox-eat--last-completion-output '(:rows ("stale"))
+                  emacsvox-eat--last-status-text "Progress 40%")
+
+            (eat-term-process-output eat-terminal "\e[?1049hAlt")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (eat-term-process-output eat-terminal "\rALT")
+            (eat-term-resize eat-terminal 30 5)
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (should (equal emacsvox-eat--pending-alternate-screen-transitions
+                           '(t)))
+            (should-not emacsvox-eat--completion-snapshot)
+            (should-not emacsvox-eat--last-completion-output)
+            (should-not emacsvox-eat--last-status-text)
+            (setq pending-timer emacsvox-eat--quiescence-timer)
+            (emacsvox-eat--finish-quiescence
+             (current-buffer) emacsvox-eat--generation
+             emacsvox-eat--update-serial)
+            (should
+             (equal (mapcar #'car (nreverse submissions))
+                    '("Terminal application screen entered"))))
+        (when (timerp pending-timer) (cancel-timer pending-timer))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-rapid-alternate-screen-round-trip-keeps-boundaries ()
+  "Entry and exit before quiescence are retained even if text is restored."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions
+          pending-timer)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest _)
+                       (push content submissions))))
+            (eat-term-process-output eat-terminal "Main")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (eat-term-process-output eat-terminal "\e[?1049hAlt")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (eat-term-process-output eat-terminal "\e[?1049l")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (should
+             (equal emacsvox-eat--pending-alternate-screen-transitions
+                    '(nil t)))
+            (should (timerp emacsvox-eat--quiescence-timer))
+            (setq pending-timer emacsvox-eat--quiescence-timer)
+            (emacsvox-eat--finish-quiescence
+             (current-buffer) emacsvox-eat--generation
+             emacsvox-eat--update-serial)
+            (should
+             (equal (nreverse submissions)
+                    '("Terminal application screen entered"
+                      "Terminal application screen exited"))))
+        (when (timerp pending-timer) (cancel-timer pending-timer))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-alternate-screen-focus-loss-discards-delivery ()
+  "An application boundary that loses selection stays private."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 3)
+          (emacsvox-eat--update-serial 7)
+          (emacsvox-eat--quiescence-timer t)
+          (emacsvox-eat--pending-screen-diff
+           '(:alternate-screen-changed t :text-changed t))
+          (emacsvox-eat--pending-alternate-screen-transitions '(t))
+          (emacsvox-eat--screen-snapshot '(:alternate-screen t))
+          submissions)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () nil))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (&rest arguments) (push arguments submissions))))
+        (emacsvox-eat--finish-quiescence
+         (current-buffer) emacsvox-eat--generation
+         emacsvox-eat--update-serial))
+      (should-not submissions)
+      (should-not emacsvox-eat--pending-alternate-screen-transitions)
+      (should-not emacsvox-eat--quiescence-timer))))
+
 (ert-deftest emacsvox-eat-process-generations-clear-transient-state ()
   "Process start and matching exit invalidate asynchronous EAT state."
   (with-temp-buffer
@@ -982,6 +1138,7 @@
           (emacsvox-eat--pending-screen-baseline
            '(:generation 7 :text "older"))
           (emacsvox-eat--pending-screen-diff '(:changes (text)))
+          (emacsvox-eat--pending-alternate-screen-transitions '(t))
           (emacsvox-eat--pending-user-input-p t)
           (emacsvox-eat--quiescence-started-at 10.0)
           (emacsvox-eat--last-status-text "Progress 40%")
@@ -1001,6 +1158,7 @@
       (should-not emacsvox-eat--screen-snapshot)
       (should-not emacsvox-eat--pending-screen-baseline)
       (should-not emacsvox-eat--pending-screen-diff)
+      (should-not emacsvox-eat--pending-alternate-screen-transitions)
       (should-not emacsvox-eat--pending-user-input-p)
       (should-not emacsvox-eat--quiescence-started-at)
       (should-not emacsvox-eat--quiescence-timer)
