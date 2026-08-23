@@ -1,0 +1,1720 @@
+#+title: EAT and Emacsvox EAT Speech Support: Evidence-Based Review
+#+author: Codex
+#+date: 2026-08-23
+#+options: toc:3 num:t
+
+* Executive summary
+
+This audit found that EAT itself has a capable terminal model, but the current
+Emacsvox integration does not use enough of that model to provide reliable
+terminal accessibility.  Its automatic output path is a deliberately small
+heuristic: after any selected-buffer EAT update, speak either the character
+before EAT's cursor or the whole physical line when that character is a space.
+The same hook is called for process output, reset, and resize, and supplies no
+reason or changed range.  As a result, speech can be present yet omit the useful
+content, describe an arbitrary character or row, repeat stale content, or flood
+on a refreshing display.
+
+The most important conclusions are:
+
+1. *A confirmed nil-cursor correctness bug can abort the update hook.*  An
+   empty terminal, alternate-screen transition, and interactive ~eat-reset~
+   reproduced ~wrong-type-argument number-or-marker-p nil~.  In the reset case
+   this prevents the existing after-advice from announcing success.  The direct
+   cause is ~((= char 32) ...)~ with ~char~ nil at
+   [[file:lisp/emacsvox-eat.el::270][emacsvox-eat.el:270]].
+2. *Ordinary output is not reliably conveyed.*  A real Python REPL printed
+   ~42~, but Emacsvox spoke only the redrawn ~>>> ~ prompt.  Multiline shell
+   output likewise loses all but the cursor context.  ~less~ and Vim content
+   was effectively silent; ~top~ produced noisy, arbitrary fragments.
+3. *The recent unique-completion fix works for its narrow case.*  In a real
+   Bash/readline PTY, ~~/sr<Tab>~ spoke ~src/~ and ~git pul<Tab>~ spoke ~pull~.
+   It does not handle ambiguous lists: ~git pu<Tab><Tab>~ displayed ~pull~ and
+   ~push~ in columns but spoke only the unchanged final ~u~ on each update.
+4. *Completion state is timing-fragile.*  The snapshot is cleared by the first
+   update.  Output split across two EAT batches, a resize-only update, or a bell
+   after completion can consume state or cause duplicate fallback speech.
+   Physical line-number and shell-token heuristics fail across wrapping,
+   quoting, escaped spaces, and shell metacharacters.
+5. *Terminal styling and focus are mostly inaudible.*  EAT represents bold,
+   faint, italic, underline, inverse video, crossed-out text, colors, and
+   cursor state.  Emacsvox maps only two terminal faces plus three prompt
+   annotation faces.  More importantly, inverse video, underline, strike, and
+   colors are normally folded into anonymous face property lists, which the
+   current source-face capture does not retain semantically.  A whiptail menu
+   happened to speak the selected row because EAT's cursor followed it; that is
+   incidental, not robust highlight tracking.
+6. *The selected-buffer guard fixed a real speech-interference problem*, but it
+   is not a complete focus policy.  It suppresses terminals not in the selected
+   window and also suppresses output during minibuffer use.  It cannot
+   distinguish a user reviewing scrollback from one following live output, and
+   its decision is made when a delayed EAT batch is processed, not when bytes
+   arrived.
+7. *EAT is not part of stock Emacs.*  The loaded EAT is the signed NonGNU ELPA
+   0.9.4 package at release commit ~c91451f2d174~.  Upstream master is
+   ~c8d54d649872~, six small commits past that tag.  The last upstream master
+   commit was 2025-02-06.  Issues and pull requests remain active in 2026, but
+   the maintainer says limited time and the cost of re-learning the internals
+   impede non-trivial changes.  Depending on undocumented internals is
+   therefore especially risky.
+
+The recommended direction is not to speak every update.  Emacsvox should keep a
+buffer-local snapshot of the visible terminal, cursor, size, alternate-screen
+state, title, working directory, and normalized style runs; coalesce updates
+until briefly quiescent; classify the change; and submit semantic speech with
+deduplication, priorities, and application-sensitive rate limits.  EAT's
+existing public getters are enough for a useful first version.  Exact
+classification and reliable style/bell semantics would benefit from new,
+additive public EAT events.
+
+The smallest next patch should only make the current update hook nil-safe and
+add real empty-terminal/reset regression tests.  It should not mix in the
+completion redesign.
+
+* Scope, method, and evidence vocabulary
+
+The review was performed on 2026-08-23 (Australia/Sydney).  It was read-only
+except for this report.  No source, user configuration, existing EAT buffer,
+live terminal process, or Git state was changed.  Tests used fresh Emacs
+processes, disposable EAT buffers, local pseudo-terminals, and temporary files.
+No SSH or other external network session was opened.  Calls to speech entry
+points, aural submissions, icons, and ~ding~ were captured programmatically;
+results do not depend only on listening.
+
+The report uses these evidence labels:
+
+- *Reproduced*: a controlled local experiment produced the behavior.
+- *Observed*: direct inspection of the loaded process, artifact, buffer, or
+  repository established the fact.
+- *Inferred*: the behavior follows from a traced code path but was not driven
+  end-to-end in this environment.
+- *Possible*: a plausible risk that needs a dedicated test before being called
+  a defect.
+
+“Spoken” means that a speech call or native aural transaction was submitted.  It
+does not imply that the information was useful, timely, audible at the physical
+device, or safe to disclose.
+
+* Exact baseline and loaded-artifact table
+
+| Item | Exact value | Evidence |
+|------+-------------+----------|
+| Host | Ubuntu 26.04 LTS under WSL2, x86_64; kernel ~6.18.33.2-microsoft-standard-WSL2~ | Observed locally |
+| Configured Emacs | ~/home/bart/opt/emacs-31/bin/emacs~ | [[file:local.mk::1][local.mk:1]] |
+| Emacs version | GNU Emacs 31.0.90, development commit ~1bd56ff93273f754e72e9a50cbefae3b218d2260~, build 2026-07-22 | ~emacs --version~ and live server |
+| Emacsvox branch/commit | ~master~, ~0a19bac66dfc5e0b519f0157a28d271878ea2304~ | ~git rev-parse HEAD~ |
+| EAT package | 0.9.4, package commit/tag ~c91451f2d17453c19d3fa76faa4945cbe54e14ce~ | Installed package metadata and [[https://codeberg.org/akib/emacs-eat/src/tag/v0.9.4][upstream v0.9.4 tag]] |
+| EAT artifact loaded by server | ~/home/bart/.emacs.d/elpa/eat-0.9.4/eat.elc~ | Live ~locate-library~ |
+| Emacsvox EAT artifact loaded by server | ~/home/bart/src/emacsvox/lisp/emacsvox-eat.elc~ | Live ~locate-library~ |
+| EAT source SHA-256 | ~fb0f24efb7e675e2b8beed2b48b913aa02e98fab2924c1f503ec17d4617882b6~ | ~sha256sum~ |
+| EAT byte-code SHA-256 | ~913e705bd346b87f2ca33c4f972a7b8157b46da0dca9e607f7400f71563c07a3~ | ~sha256sum~ |
+| Emacsvox EAT source SHA-256 | ~5e3aff64600730b06d2b40627ec0c05651c31d715faab6e963f0c5dd5430f465~ | ~sha256sum~ |
+| Emacsvox EAT byte-code SHA-256 | ~0fef8edad669188a471504bc1c2d566ea42982a56517cf9a57abf06c3671d56b~ | ~sha256sum~ |
+| Live normal update hook | ~(emacsvox-eat-update-hook)~ | Read-only server evaluation |
+| Live EAT-Eshell update hook | nil | Read-only server evaluation |
+| Default EAT mode after exec | semi-character | [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6940][eat.el:6940-6942]] |
+| Interactive test shell | Bash 5.3.9 | Local PTY experiment |
+| Other available shell tested | Dash 0.5.12 | Local PTY experiment |
+| User's live EAT buffer at inspection | line mode; Corfu active; CAPF ~(comint-completion-at-point t)~ | Read-only server evaluation |
+| User completion context | Vertico globally; Corfu globally and explicitly in EAT; EAT-local ~exec-path~ excludes ~/mnt/c/~ | Context-only [[file:/home/bart/emacs/site-lisp/emacsvox-config.org::131][emacsvox-config.org:131-172]] |
+
+** Installation and provenance
+
+EAT is a third-party package, not a library shipped with GNU Emacs.  The
+installed package descriptor is signed, and ~package-archive-contents~ associates
+version 0.9.4 at ~c91451f2d174~ with the ~nongnu~ archive.  Together with the
+standard ~/home/bart/.emacs.d/elpa/eat-0.9.4/~ layout, this is strong evidence of
+a ~package.el~ installation from NonGNU ELPA; it is not absolute proof that no
+one subsequently copied files into that directory.  The official
+[[https://elpa.nongnu.org/nongnu/eat.html][NonGNU ELPA package page]] lists
+0.9.4 as latest and dates its tarball 2024-03-31.  The upstream release commit
+itself is dated 2023-12-15.
+
+The live server has loaded byte-code, not source, for both EAT and
+~emacsvox-eat~.  The source and byte-code file timestamps are respectively
+2026-07-24 for EAT and 2026-08-23 for Emacsvox.  ~make bytecode-check~ confirms
+the Emacsvox byte-code matches the configured Emacs.  Source-based ERT results
+below are useful behavior checks but are not, by themselves, proof that a live
+server is using current compiled code.
+
+The inspected user configuration is relevant only to line-mode completion.  It
+explicitly starts Corfu at the prompt in EAT and removes Windows-mounted
+directories from EAT's local ~exec-path~ for responsiveness
+([[file:/home/bart/emacs/site-lisp/emacsvox-config.org::133][emacsvox-config.org:133-171]]).
+It does not alter Bash/readline completion in semi-character mode.  The audit
+did not modify or tangle that configuration.
+
+** Repository state and required checks
+
+Before creating this report, ~git status --short~ contained only these
+pre-existing untracked files:
+
+#+begin_example
+?? audit.org
+?? aural_report.org
+?? code_review_1_report.org
+?? code_review_prompt.org
+?? notes.org
+?? notes.org~
+#+end_example
+
+There were no tracked or staged modifications.  The audit did not clean, reset,
+stash, discard, or modify them.
+
+- ~make check-emacs~: passed using the Emacs selected by ~local.mk~.
+- ~make bytecode-check~: passed, reporting “Emacsvox byte-code is current.”
+- Focused EAT ERT: 6/6 passed from source.
+- Full ~make unit-test~: 2356 tests, 2354 expected passes, one skip, and one
+  unrelated failure:
+  ~emacsvox-agent-shell-live-chat-prompt-announces-editability~ at
+  [[file:test/emacsvox-agent-shell-tests.el::5757][emacsvox-agent-shell-tests.el:5757]].
+  This failure does not exercise EAT.
+
+** EAT upstream version and activity
+
+As of 2026-08-23:
+
+- Upstream ~master~ is ~c8d54d649872bfe7b2b9f49ae5c2addbf12d3b99~.
+  Its latest commit, “Allow hiding terminal title from mode line,” is dated
+  2025-02-06.  See the
+  [[https://codeberg.org/akib/emacs-eat/commit/c8d54d649872bfe7b2b9f49ae5c2addbf12d3b99][upstream commit]].
+- Six commits follow the installed 0.9.4 tag.  They are small configuration or
+  documentation changes, including the 2024-03-15 correction from the
+  nonexistent manual command ~eat-send-command~ to ~eat-send-password~
+  ([[https://codeberg.org/akib/emacs-eat/commit/25989bf714dd][commit 25989bf714dd]]).
+  None adds a richer terminal update API.
+- The repository is not archived and had 253 stars, 44 forks, 111 open issues,
+  and 28 open pull requests.  There are active 2026 reports and contributions,
+  including the wide-character freeze
+  [[https://codeberg.org/akib/emacs-eat/issues/227][issue 227]], synchronized
+  output [[https://codeberg.org/akib/emacs-eat/issues/268][issue 268]] and
+  [[https://codeberg.org/akib/emacs-eat/pulls/261][PR 261]], and
+  remote-terminfo [[https://codeberg.org/akib/emacs-eat/issues/230][issue 230]]
+  and [[https://codeberg.org/akib/emacs-eat/pulls/229][PR 229]].
+- Codeberg has no formal release objects for the repository; upstream uses Git
+  tags, while NonGNU ELPA publishes package archives.  The newest tag remains
+  v0.9.4.  Community traffic is current despite the quiet main branch:
+  [[https://codeberg.org/akib/emacs-eat/issues/269][issue 269]] was opened
+  2026-08-20, and issue 227 / its
+  [[https://codeberg.org/akib/emacs-eat/pulls/228][PR 228]] were updated
+  2026-08-22.
+- Upstream performance reports include
+  [[https://codeberg.org/akib/emacs-eat/issues/262][issue 262]], which reports an
+  O(n²) wide-character path, and issue 227's end-of-line double-width freeze.
+  This audit did not reproduce those upstream reports, so they are external
+  open risks rather than confirmed Emacsvox defects.  Any Emacsvox screen diff
+  should remain bounded by visible cells and must not amplify those paths.
+- Mainline maintenance is nevertheless low.  In
+  [[https://codeberg.org/akib/emacs-eat/issues/237][issue 237]], the maintainer
+  wrote on 2025-12-23 that EAT is used daily but there has been insufficient
+  time for new features or hard-to-reproduce bugs.  On 2026-05-04 the
+  maintainer described terminal emulation's complexity and the friction of
+  re-studying EAT before reviewing non-trivial changes, and suggested improving
+  documentation and tests when next doing major work.  This is direct upstream
+  evidence, not an inference from commit frequency alone.
+
+This status argues for an Emacsvox design that works from stable public
+snapshots and treats proposed EAT API additions as optional precision
+improvements, not hard prerequisites.
+
+* Architecture and event-flow description
+
+** Integration history
+
+Emacsvox EAT support began in commit
+~13af80b40ec938fbe995cfc9fe0407c186165a26~ on 2023-11-14.  The update hook
+arrived the next day in
+~ad02970bec5981061b447c59aab28bc71cefbae4~, whose subject accurately called it
+“simple, chatty.”  Commit
+~d587b31acfd662c431cb76dc4eda903d4397af33~ on 2023-11-16 introduced the
+preceding-character/space-line form and described it as “restored semi-working
+update handler.”  The nil-character risk dates to that shape.
+
+The advice was migrated and tests first added on 2026-07-24.  The current
+selected-buffer guard and same-line completion tracking are commit
+~199c853ea7f731bfb1cfec4437b517639e63029a~, dated 2026-08-23.  That recent
+change correctly fixed the reported narrow completion and background-speech
+cases, but its six tests deliberately do not claim general terminal output or
+ambiguous completion support.
+
+** EAT's update pipeline
+
+#+begin_example
+keyboard event
+  |-- line mode: Emacs edit/CAPF -> eat-line-send-input -> PTY
+  `-- semi/char mode: eat-self-input/eat-input-char -> PTY
+
+PTY bytes -> eat--filter
+          -> 8--33 ms EAT batching
+          -> eat-term-process-output
+          -> terminal buffer/model redisplay
+          -> eat-update-hook
+          -> Emacsvox selected-buffer guard
+          -> completion heuristic OR char-before/physical-line heuristic
+          -> mixed TTS/aural compatibility transactions
+#+end_example
+
+EAT exposes public getters for terminal bounds, visible display beginning,
+cursor position/type, size, title, and alternate-display state at
+[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4149][eat.el:4149-4247]].
+It also exposes terminal parameters/callbacks at
+[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4028][eat.el:4028-4147]].
+That is enough to take stable post-update snapshots without reading the private
+~eat--t-*~ structs.
+
+The public ~eat-update-hook~ is documented only as running after a terminal is
+updated ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::465][eat.el:465-468]]).
+In both installed 0.9.4 and current upstream master, it is called from exactly
+three normal-EAT paths:
+
+| Invocation | Origin | What Emacsvox is told |
+|------------+--------+------------------------|
+| [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5010][eat-reset, lines 5010-5017]] | Explicit terminal reset | No cause, old state, or changed range |
+| [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6769][output queue, lines 6769-6814]] | One batched group of process bytes | No byte/chunk boundary, reason, or changed cells |
+| [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6892][window resize, lines 6892-6911]] | Terminal resize/redisplay | Indistinguishable from output |
+
+EAT's Eshell path instead calls ~eat-eshell-update-hook~ at
+[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::7286][eat.el:7286-7307]].
+The live value of that hook is nil.
+
+The output filter intentionally batches bytes for at least 8 ms and at most
+33 ms by default
+([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::608][eat.el:608-628]] and
+[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6816][eat.el:6816-6839]]).
+The official [[https://elpa.nongnu.org/nongnu/doc/eat.html][EAT manual]]
+explains that the final output chunk cannot in general be identified.  Network
+delay or application flush boundaries can therefore produce several valid
+updates for one logical completion, menu redraw, or command response.
+
+** Emacsvox integration
+
+The integration has four independent mechanisms:
+
+1. Face-to-voice mappings for three shell-prompt annotation faces plus bold and
+   italic terminal faces
+   ([[file:lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]]).
+2. Installation of the Emacsvox prefix key in EAT's mode maps
+   ([[file:lisp/emacsvox-eat.el::71][emacsvox-eat.el:71-80]]).
+3. Native after-advice for two yank commands, reset/reload, mode switches, and
+   opening EAT
+   ([[file:lisp/emacsvox-eat.el::120][emacsvox-eat.el:120-184]]).
+4. Before-advice on ~eat-self-input~ to capture a Tab snapshot, and one
+   ~eat-update-hook~ implementation
+   ([[file:lisp/emacsvox-eat.el::186][emacsvox-eat.el:186-273]]).
+
+The quoted list at [[file:lisp/emacsvox-eat.el::84][emacsvox-eat.el:84-118]]
+is data, not executable advice registration.  Commands named there but absent
+from ~emacsvox-eat--advice-targets~ receive no EAT-specific speech.
+
+The current update hook:
+
+#+begin_src emacs-lisp
+(let* ((cursor (eat-term-display-cursor eat-terminal))
+       (char (and cursor (char-before cursor))))
+  (unless (emacsvox-eat--speak-same-line-completion cursor)
+    (cond
+     ((= char 32) (emacsvox-speak-line))
+     (t (emacsvox-speak-this-char char)))))
+#+end_src
+
+This samples terminal state after the update; it does not describe the update.
+No previous screen, previous cursor, changed range, output generation, or input
+correlation is retained.
+
+** Complete path trace
+
+| Path | Originating EAT event/API | Emacsvox hook/advice | Audible transaction and timing | Selection/interference result |
+|------+---------------------------+----------------------+--------------------------------+-------------------------------|
+| Open EAT | ~eat~ / ~eat--1~ creates or selects buffer, then ~eat-exec~ ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::7045][eat.el:7045-7090]]) | after ~eat~ | ~open-object~ icon, then mode line | Only for interactive ~eat~; initial terminal output later uses update hook |
+| Switch line/semi-char/char/Emacs mode | Mode commands at [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5869][eat.el:5869-5990]] | generated after-advice | ~button~ icon plus raw command symbol through ~message~, e.g. “eat-line-mode” | Interactive-only; understandable but implementation-named |
+| Ordinary character, semi/char mode | ~eat-self-input~ -> PTY ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5540][eat.el:5540]]) | before-advice only special-cases Tab; echoed bytes return through update hook | Usually character before terminal cursor; no direct typed-character semantic event | Echo may be delayed, transformed, absent, or mixed with application output |
+| Ordinary character, line mode | Emacs self insertion; EAT's local line editor | Core Emacsvox echo, not EAT update | Normal character/word echo | Better editing feedback; it edits locally, not readline remotely |
+| Process output | PTY filter/batched queue | ~eat-update-hook~ | One char, or current physical line if preceding char is ASCII space | Can miss every newly printed line and speak only a prompt |
+| Prompt display | Ordinary output; optional EAT Bash/Zsh integration marks prompt | Same update hook; face mappings if named source faces survive | Usually prompt line/last char | Prompt status annotation is visual margin content and did not enter captured source faces |
+| Command submission | ~eat-line-send-input~ in line mode; newline through ~eat-self-input~ in semi/char | No EAT-specific advice | Echo/output heuristic only | No “command sent” state; no distinction from output |
+| Unique terminal completion | Tab through ~eat-self-input~, readline sends redraw | before-advice + next update | Raw ~tts-speak~ of extended final path component | Works only for same physical line and strict prefix growth |
+| Ambiguous terminal completion | Tab/bell/list/redrawn prompt, often multiple batches | Same one-shot snapshot | Snapshot normally falls through; arbitrary char/line | Candidate rows silent; repeated Tab repeats arbitrary feedback |
+| Cursor movement | Application emits CSI cursor motion in process output | Generic update hook after batch | Character before new cursor, or line ending in space | No movement direction, row, active item, or deletion semantics |
+| Resize | ~eat--adjust-process-window-size~ | Same generic update hook | Current char/line even if screen text did not change | Selected resize produces irrelevant speech; can consume completion snapshot |
+| Background output | Same batched process output | selected-buffer guard | None when current buffer is not selected-window's buffer | Good default silence; no optional notification/monitoring |
+| Process exit | EAT sentinel drains output, deletes terminal, inserts process message, runs ~eat-exit-hook~ ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6841][eat.el:6841-6890]]) | No exit hook | Last terminal update may speak newline; inserted exit message is silent | Exit/restart state can be missed |
+| Process restart | ~eat-exec-hook~ after new process | No exec hook | Initial output only | No restart identity/state announcement |
+| Alternate-screen enter/exit | CSI switches private display at [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2192][eat.el:2192-2245]] | Generic update hook | Arbitrary char; empty entry can trigger nil error | Public predicate exists, but transition is not tracked |
+| Reset/reload | ~eat-reset~ calls update hook; ~eat-reload~ reloads library | reset/reload after-advice | Intended task-done icon + phrase | Reset can error in update hook before after-advice; reload does not reset Emacsvox snapshots/generation |
+| Yank | ~eat-yank~, ~eat-yank-from-kill-ring~ | target-aware after-advice | ~yank-object~ icon | Content intentionally not spoken; useful but only two yank paths |
+| Xterm paste / mouse paste | ~eat-xterm-paste~, mouse primary/secondary | None | Echo/output heuristic | No explicit bracketed-paste or paste-state feedback |
+| Password/no-echo input | ~eat-send-password~ or raw keys | None specific | Raw no-echo keys are normally silent; minibuffer prompt handled generically | Safe from automatic echo, but no explicit secure-input state |
+| Bell | EAT terminal callback -> ~eat--bell~ | No dedicated advice/hook | Emacs ~ding~ plus same batch's fallback speech | Can duplicate prompt/last-character feedback |
+| Title change | OSC 0/2 -> terminal title | No title hook | Usually unrelated fallback char/line | Title is queryable but not announced |
+| Working-directory change | OSC 7 or shell integration callback | No CWD hook | Usually unrelated fallback char/line | Queryable/current ~default-directory~ may change; no semantic announcement |
+| EAT in Eshell | Eshell-specific output and lifecycle hooks | No ~eat-eshell-update-hook~ | No Emacsvox-EAT transaction | Static confirmed integration gap; generic Eshell speech may still operate outside EAT visual spans |
+
+** Speech transaction behavior
+
+The fallback mixes speech paths with different semantics:
+
+- ~emacsvox-speak-this-char~ at
+  [[file:lisp/emacsvox-speak.el::1532][emacsvox-speak.el:1532]] sends character
+  feedback without an EAT-specific role or deduplication key.
+- ~emacsvox-speak-line~ at
+  [[file:lisp/emacsvox-speak.el::1291][emacsvox-speak.el:1291]] goes through
+  native source capture and a navigation occasion, which is replaceable.
+- Completion calls bare ~tts-speak~ at
+  [[file:lisp/emacsvox-eat.el::244][emacsvox-eat.el:244]].  Its default occasion
+  is continuous
+  ([[file:lisp/tts-speak.el::2816][tts-speak.el:2816-2832]]), while the
+  compatibility delivery path normally stops current speech because
+  ~tts-stop-immediately~ defaults to true
+  ([[file:lisp/tts-speak.el::1790][tts-speak.el:1790-1793]] and
+  [[file:lisp/tts-speak.el::2891][tts-speak.el:2891-2905]]).
+
+Consequently, a rapid sequence may combine queued characters, replaceable
+navigation lines, and hard-interrupting completions.  It has no common terminal
+generation, semantic role, priority, or replacement key.  Captured tests
+confirmed ordering and duplication; physical audibility remains dependent on
+the speech server and device.
+
+* Current support matrix
+
+| Capability | Status | Evidence and practical meaning |
+|------------+--------+--------------------------------|
+| Open an EAT buffer | Supported | Interactive ~eat~ produces icon and mode-line speech. |
+| Announce mode changes | Partially supported | Icon plus internal command name; no concise “line mode” policy description. |
+| Line-mode editing | Partially supported | Core Emacs echo and CAPF/Corfu work; this is local Emacs completion, not Bash/readline or router completion. |
+| Semi-char typed echo | Partially supported | Terminal echo commonly returns a useful character; editing and no-echo semantics are not classified. |
+| Character mode | Partially supported | Same output heuristic; all keys go to terminal, so review/access commands rely on the injected Emacsvox prefix. |
+| Unique Bash/readline completion | Supported narrowly | Reproduced for ~~/sr~ and ~git pul~; breaks on quoting, wrapping, timing, same-length replacement, and some trailing delimiters. |
+| Ambiguous completion/candidate lists | Actively incorrect for accessibility | Candidates are visible but silent; unchanged final character is repeated. |
+| Ordinary single-line shell output | Partially supported | Often a last character or line is spoken, but not reliably the new content. |
+| Multiline shell/REPL output | Actively incorrect for accessibility | Reproduced result and preceding lines omitted. |
+| Prompt status | Partially supported visually, missing semantically | EAT integration can mark success/failure, but Emacsvox did not capture the margin face/status. |
+| Command submission/history/prompt navigation | Missing EAT-specific support | Quoted command names in source are inert. |
+| Cursor movement/editing deletion | Actively misleading | Speaks character before cursor; backspace gave no deletion cue and arrows describe adjacent characters inconsistently. |
+| Terminal resize | Actively incorrect | Same update hook speaks unchanged context and may destroy completion state. |
+| Background terminal silence | Supported by default | Selected-window guard works, including minibuffer use, but has focus/review limitations. |
+| Optional background monitoring | Missing | No per-buffer monitor, rate-limited notice, or unread-output count. |
+| Process exit/restart | Missing | Public hooks exist but are unused; exit message can be silent. |
+| Alternate screen | Missing and sometimes erroneous | No entry/exit state; empty display can trigger nil-cursor error. |
+| Yank | Partially supported | Two keyboard yank commands play an icon; xterm/mouse paste paths are silent. |
+| Password/no-echo | Partially safe, poorly signposted | No echo avoids disclosure; no secure-input announcement or lossage warning. |
+| Bell | Partially supported | EAT calls ~ding~, but speech is not classified and may duplicate prompt feedback. |
+| Title/CWD | Missing speech | EAT tracks them, Emacsvox does not. |
+| ~less~/pager | Actively unusable automatically | Initial page/navigation/search result content was not spoken. |
+| Vim/full-screen editor | Actively unusable automatically | Initial screen and navigation were silent; empty update timer errored. |
+| Refreshing displays (~top~) | Actively disruptive | Arbitrary fragments/rows at refresh rate; no coalescing. |
+| Curses menu | Partially supported by accident | Whiptail selected rows happened to align with terminal cursor; no robust focus inference. |
+| Progress/carriage-return rewrite | Actively unhelpful | Repeated final digits, no semantic progress/status phrase. |
+| Terminal styles/highlights | Mostly missing | Bold/italic names can map; inverse, colors, underline, strike, faint and style-only changes are not reliably voiced. |
+| Hyperlinks (OSC 8) | Missing in EAT 0.9.4 | Text appears without link properties; upstream [[https://codeberg.org/akib/emacs-eat/pulls/147][PR 147]] remains open. |
+| Sixel/image content | Missing semantic access | EAT renders graphics but exposes no description and Emacsvox adds none. |
+| Remote shell/router CLI | Partially operable visually, speech incomplete | Raw terminal I/O works where TERM/terminfo works; candidates/help are unstructured screen output and currently silent. |
+| EAT-backed Eshell visual commands | Missing integration hook | EAT uses a separate hook whose live value is nil. |
+
+* Confirmed defects, ordered by severity
+
+Each entry includes impact, evidence status, references, cause, remedy, required
+regression coverage, and compatibility risk.
+
+** F-01: nil terminal cursor aborts the update path
+
+- *Severity / impact:* High correctness and accessibility severity.  A valid
+  empty terminal update signals an error; interactive reset can fail before its
+  completion announcement.
+- *Evidence status:* Reproduced in isolated EAT terminals for an initially empty
+  display, alternate-screen entry, and ~eat-reset~.
+- *Reproduction and evidence:* Create an isolated terminal with
+  ~eat-term-make~, select its buffer, capture speech calls, and run
+  ~emacsvox-eat-update-hook~ before inserting a cell.  The result is
+  ~wrong-type-argument number-or-marker-p nil~.  Calling interactive
+  ~eat-reset~ on the same terminal reaches EAT's update hook at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5010][eat.el:5010-5017]]
+  and produces the same error, so the after-advice at
+  [[file:lisp/emacsvox-eat.el::140][emacsvox-eat.el:140-143]] does not run.
+- *Exact cause:* ~cursor~ can be nil, so ~char~ is nil at
+  [[file:lisp/emacsvox-eat.el::265][emacsvox-eat.el:265-267]], but
+  [[file:lisp/emacsvox-eat.el::270][line 270]] calls numeric ~=~ on it.
+- *Upstream relevance:* EAT's public cursor getter is behaving within the state
+  observed during an empty display; this integration must tolerate nil.  The
+  getter was made public following
+  [[https://codeberg.org/akib/emacs-eat/issues/90][EAT issue 90]].
+- *Recommended remedy:* Guard ~char~ before comparison and produce no automatic
+  speech for an empty update.  Keep reset's explicit state-change announcement.
+- *Regression tests required:* Real empty ~eat-term-make~ buffer; direct update;
+  interactive reset; empty alternate-screen enter/exit; cursor at terminal
+  beginning; no speech and no error.  Run against compiled code in a fresh
+  Emacs as well as source ERT.
+- *Compatibility risk:* Low.  The change only suppresses invalid nil-character
+  feedback and lets existing advice complete.
+
+** F-02: meaningful multiline output is lost
+
+- *Severity / impact:* High.  Command results, errors, REPL values, and help can
+  be completely missed even while a prompt is spoken.
+- *Evidence status:* Reproduced with real Bash/readline, Python 3.14 REPL,
+  multiline fixtures, router-style help, and candidate displays.
+- *Reproduction and evidence:* In an isolated Bash EAT, start Python and submit
+  ~print(6 * 7)~.  The terminal displayed ~42~ followed by ~>>> ~; captured
+  Emacsvox events spoke the prompt, not ~42~.  A fixture emitting several lines
+  had the same last-cursor-context behavior.
+- *Exact references:* The sole automatic path reads only
+  ~char-before cursor~ and at most ~emacsvox-speak-line~
+  ([[file:lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]]).  It never
+  records EAT's display bounds or previous contents, although public getters
+  exist at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4166][eat.el:4166-4209]].
+- *Root cause:* A state sampler is being used as an event description.  The
+  cursor after a batch commonly sits on a redrawn prompt, not on the newly
+  emitted result.
+- *Recommended remedy:* Snapshot and diff the visible screen, coalesce related
+  batches, classify prompt redraw separately, and speak bounded complete new
+  lines.  Never read every repaint verbatim.
+- *Regression tests required:* One and multiple output lines; final prompt in
+  same/different chunks; stdout/stderr-like text; arbitrary chunk splits;
+  wrapped and Unicode lines; output followed by cursor motion only.
+- *Compatibility risk:* Medium.  Better output can become chatty without
+  deduplication, a maximum line/character policy, and prompt suppression.
+
+** F-03: cursor-driven and refreshing applications produce misleading or
+disruptive speech
+
+- *Severity / impact:* High for interactive terminal use.  Navigation may be
+  silent, while high-frequency applications can repeatedly interrupt useful
+  speech with arbitrary fragments.
+- *Evidence status:* Reproduced with ~less~, Vim, ~top~, carriage-return
+  progress, direct cursor-motion/style fixtures, and whiptail.
+- *Reproduction and evidence:* ~top -d 0.2~ generated six captured feedback
+  events in roughly one second, including newline, isolated ~d~ and ~+~, and an
+  arbitrary process row.  Vim's initial display and ~j~ movement produced no
+  useful event.  Five carriage-return progress rewrites spoke the final digit
+  repeatedly rather than “Progress N of 5.”
+- *Exact references:* All update types converge on
+  [[file:lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]].  EAT's output
+  batching is only 8--33 ms
+  ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::608][eat.el:608-628]]),
+  appropriate for visual responsiveness but not a speech quiescence policy.
+- *Root cause:* There is no screen diff, cursor-delta classification,
+  repaint suppression, rate limiter, or replaceable TUI/progress transaction.
+- *Recommended remedy:* Introduce a classifier and distinct policies for
+  cursor-only navigation, changed rows, status lines, progress, and full-screen
+  repaint.  Coalesce high-frequency changes and make navigation/progress speech
+  replaceable.
+- *Regression tests required:* Fixed-rate full repaint; cursor-only row change;
+  style-only selection; CR status update; unchanged repaint; update burst;
+  manual review during refresh.
+- *Compatibility risk:* Medium to high.  App behavior varies; conservative
+  defaults and manual review commands are required.
+
+** F-04: ambiguous completion displays candidates but speaks no candidates
+
+- *Severity / impact:* High for shell, SSH, and router workflows.  A blind user
+  cannot choose among visible alternatives.
+- *Evidence status:* Reproduced with Bash/readline columns, a 200-candidate
+  fixture, and router-like candidate/help output.
+- *Reproduction and evidence:* At a deterministic Bash prompt, type
+  ~git pu<Tab><Tab>~.  The terminal shows:
+
+  #+begin_example
+  AUDIT> git pu
+  pull   push
+  AUDIT> git pu
+  #+end_example
+
+  Captured events are the unchanged character ~u~ for each Tab.  The first Tab
+  also rings the terminal bell.  A 200-item, 32-line/3037-character fixture
+  likewise yielded only the final prompt character.  Router-style
+  ~route  routing-table~ columns and ~?~-help descriptions were silent except
+  for the redrawn prompt.
+- *Exact references:* The implementation explicitly rejects another physical
+  line at [[file:lisp/emacsvox-eat.el::229][emacsvox-eat.el:229-245]].  The
+  current test calls this expected behavior and asserts ~((char 47))~ at
+  [[file:test/emacsvox-eat-tests.el::68][emacsvox-eat-tests.el:68-90]].
+- *Root cause:* The code recognizes only strict same-line token growth and
+  immediately discards its snapshot.  It assumes ordinary fallback will make a
+  candidate display accessible, but F-02 disproves that assumption.
+- *Recommended remedy:* Use a pre-Tab screen snapshot and post-quiescence
+  screen diff.  Extract the newly inserted rows between the old prompt and
+  redrawn prompt without assuming shell grammar; preserve row/column text and
+  descriptions.  Announce count and a bounded subset, and retain a reviewable
+  candidate snapshot.
+- *Regression tests required:* Single/double Tab; no common prefix; columns;
+  descriptions; small/large lists; duplicate Tab; bell before/in/after list;
+  remote-like delay and chunking; prompt without shell integration.
+- *Compatibility risk:* Medium.  Screen layouts are unstructured.  Extraction
+  must fail closed to “N changed lines; review candidates” rather than invent
+  candidate boundaries.
+
+** F-05: the completion snapshot is consumed by the first unrelated or partial
+update
+
+- *Severity / impact:* Medium-high.  Valid completion is intermittently silent
+  under load, remote latency, bells, and resize.
+- *Evidence status:* Reproduced with split terminal updates and a resize-only
+  update; inferred for equivalent remote chunk boundaries.
+- *Reproduction and evidence:* Capture ~~/sr~ before Tab, deliver an update that
+  leaves the token unchanged, then deliver the expansion to ~~/src/~.  Events
+  are the old ~r~ then slash, never ~src/~.  Replacing the first update with a
+  terminal resize gives the same result.  Completion and BEL in one batch
+  produced bell then ~src/~; a later separate BEL produced completion, bell,
+  then duplicate slash fallback.
+- *Exact references:* The snapshot is set at
+  [[file:lisp/emacsvox-eat.el::203][emacsvox-eat.el:203-218]] and unconditionally
+  cleared before determining whether the update completes the transaction at
+  [[file:lisp/emacsvox-eat.el::234][emacsvox-eat.el:234-245]].  EAT explicitly
+  batches arbitrary process chunks at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6816][eat.el:6816-6839]]
+  and independently invokes the same hook on resize at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6892][eat.el:6892-6911]].
+- *Root cause:* A logical asynchronous interaction is represented as one
+  snapshot consumed by one callback, but EAT promises neither one callback nor
+  a reason.
+- *Recommended remedy:* Give each completion transaction an input generation,
+  pre-screen state, deadline, and quiescence timer.  Keep it through compatible
+  intermediate updates; cancel on non-Tab input, reset, exit, new process, or
+  timeout.
+- *Regression tests required:* Every byte split; empty first batch; resize;
+  focus loss/regain; bell split; unrelated output; new command; timeout;
+  process exit/restart.
+- *Compatibility risk:* Medium.  State retained too long can misclassify
+  unrelated output, so cancellation and generation tests are mandatory.
+
+** F-06: token and physical-line parsing is not shell-safe
+
+- *Severity / impact:* Medium.  Feedback becomes verbose, incomplete, or wrong
+  for normal filenames and wrapped prompts.
+- *Evidence status:* Reproduced against the pure parser and real Bash
+  programmable/file completion.
+- *Reproduction and evidence:*
+  - ~$ echo foo\ bar~ and an open quote ending in ~foo bar~ both yield parser
+    token ~bar~, not the logical shell word.
+  - A unique file ~alpha beta~ is rendered by readline as ~alpha\ beta ~; the
+    integration speaks the whole prompt instead of a concise candidate.
+  - ~foo(bar)~ becomes ~foo\(bar\) ~ and leaves an empty token;
+    ~semi;colon~ is treated as token ~colon~.
+  - Unicode ~café~ works in the simple case.
+  - At terminal width 10, ~123~/sr~ completed to a display containing EAT's
+    private wrap newline; the physical line changed and only slash was spoken.
+  - Pipes and simple separators happen to split, but quoting/redirection/
+    parentheses/semicolon combinations do not model Bash grammar.
+- *Exact references:* The separator-only parser is
+  [[file:lisp/emacsvox-eat.el::193][emacsvox-eat.el:193-201]]; snapshot identity
+  is numeric ~line-number-at-pos~ at
+  [[file:lisp/emacsvox-eat.el::203][lines 203-208]]; matching requires longer
+  strict prefix and equal physical line at
+  [[file:lisp/emacsvox-eat.el::237][lines 237-244]].  EAT marks visual wrap
+  newlines privately as ~eat--t-wrap-line~, for example
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::1018][eat.el:1018-1050]].
+- *Root cause:* Local character-class tokenization attempts to reconstruct
+  remote shell grammar and equates Emacs buffer lines with terminal input
+  lines.
+- *Recommended remedy:* Do not require shell-token parsing for the primary
+  algorithm.  Compare screen/cursor input regions and speak the smallest
+  meaningful changed suffix or logical row.  Treat token parsing only as a
+  conservative presentation hint.  Do not depend on EAT's private wrap
+  property.
+- *Regression tests required:* Spaces, all quote forms, backslashes, Unicode,
+  punctuation, trailing slash/space, variables, pipes, redirections,
+  parentheses, semicolons, same-length substitutions, multiline and reflowed
+  input, width changes.
+- *Compatibility risk:* Low for removing parser dependence; medium if a new
+  parser claims shell-specific correctness across remote CLIs.
+
+** F-07: prompt success/failure voice mappings do not reach captured speech
+
+- *Severity / impact:* Medium.  A failed command is visually marked but sounds
+  like an ordinary prompt.
+- *Evidence status:* Reproduced after explicitly sourcing EAT's Bash
+  integration in an isolated shell.  The user's current shell does not source
+  that integration, so the feature is absent there as well.
+- *Reproduction and evidence:* Run ~false~ after loading EAT's Bash integration.
+  EAT creates prompt overlays with success/failure margin glyphs.  Captured
+  Emacsvox source faces were nil and the update spoke plain ~bash-5.3$ ~.
+  The user's [[file:/home/bart/.bashrc::108][.bashrc:108-115]] loads Bash
+  completion but does not source ~$EAT_SHELL_INTEGRATION_DIR/bash~.
+- *Exact references:* Emacsvox declares prompt maps at
+  [[file:lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]].  EAT's shell
+  integration and prompt annotations are documented in the official
+  [[https://elpa.nongnu.org/nongnu/doc/eat.html][manual]].  Emacsvox source
+  capture only retains named faces or named ~:inherit~ members around
+  [[file:lisp/emacsvox-aural-source.el::225][emacsvox-aural-source.el:225-243]].
+- *Root cause:* Prompt status is a margin ~before-string~/overlay presentation,
+  not named face text on the prompt characters sampled for speech.
+- *Recommended remedy:* First enable/document EAT shell integration where its
+  Bash/Zsh features are desired.  In Emacsvox, inspect EAT's public or
+  documented prompt metadata if one becomes available; until then, treat
+  overlay parsing as optional and isolated.  Upstream semantic prompt support
+  would be preferable.
+- *Upstream request:* Contribute to
+  [[https://codeberg.org/akib/emacs-eat/issues/137][issue 137, semantic prompts
+  / OSC 133]] or request a public prompt-status accessor.
+- *Regression tests required:* success/failure/running; prompt with/without
+  integration; margin disabled; delayed correction timer; output while prompt
+  status changes; source face/fact capture.
+- *Compatibility risk:* Medium if Emacsvox reads private prompt variables;
+  lower with OSC 133 or a public accessor.
+
+** F-08: terminal highlight and style semantics are lost
+
+- *Severity / impact:* Medium-high for menus, search matches, errors, and active
+  controls.
+- *Evidence status:* Reproduced with direct SGR fixtures, less search, and
+  whiptail; confirmed statically in EAT and Emacsvox source.
+- *Reproduction and evidence:* EAT produced named inherited faces for bold,
+  faint, and italic, but anonymous property lists for underline, inverse video,
+  crossed-out text, and literal colors.  A less search match ~42~ had inverse
+  styling but the only speech was ~)~ from the ~(END)~ line.  Whiptail changed
+  its selected row from grey-on-red to neutral and the new row happened to be
+  spoken solely because the terminal cursor moved there.
+- *Exact references:* EAT parses all relevant SGR attributes at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2504][eat.el:2504-2667]]
+  and composes anonymous face plists at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2668][eat.el:2668-2706]].
+  Emacsvox maps only bold and italic terminal faces at
+  [[file:lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]].  Upstream
+  [[https://codeberg.org/akib/emacs-eat/issues/248][issue 248]] also documents
+  cursor/reverse-video highlight mismatch in ncurses applications.
+- *Root cause:* Text equality and a small named-face map cannot represent
+  style-only changes or infer UI focus.  Source-face normalization drops the
+  meaning of anonymous terminal face properties.
+- *Recommended remedy:* Snapshot normalized style signatures per run/cell
+  alongside text and cursor.  Score likely focus using style changes, cursor
+  proximity, recent navigation input, and timing; do not equate all inverse
+  video with selection.
+- *Regression tests required:* Every SGR style, style-only transition,
+  foreground/background swap, cursor invisible/visible, static inverse headers,
+  multiple highlighted regions, less match, menu row, status bar.
+- *Compatibility risk:* Medium-high.  Colors depend on themes and EAT's
+  rendering.  Normalize semantic attributes where possible and keep inference
+  conservative.
+
+** F-09: process and alternate-screen lifecycle events are missing
+
+- *Severity / impact:* Medium.  Users may not know that an app started, switched
+  screens, exited, failed, or returned to the shell.
+- *Evidence status:* Reproduced for process exit and alternate-screen
+  enter/exit; static for unused public lifecycle hooks.
+- *Reproduction and evidence:* An isolated Bash ~exit~ produced only newline
+  feedback.  EAT then deleted the terminal and inserted “Process ... finished”
+  after its last terminal update, so the message was silent.  Direct
+  alternate-screen entry produced no state announcement (and an empty-screen
+  nil error); exit restored the old main display and spoke only its final
+  character.
+- *Exact references:* EAT exposes ~eat-exec-hook~ and ~eat-exit-hook~ at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::457][eat.el:457-476]],
+  invokes exit after inserting the message at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6841][eat.el:6841-6890]],
+  and provides ~eat-term-in-alternative-display-p~ at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4245][eat.el:4245-4247]].
+  Emacsvox installs none of these hooks.
+- *Root cause:* Integration is update-centric and has no process generation or
+  alternate-screen state.
+- *Recommended remedy:* Use public exec/exit hooks and compare the public
+  alternate-screen predicate on updates.  Clear pending completion/speech state
+  on every generation transition.
+- *Regression tests required:* normal/nonzero/signal exit; immediate restart in
+  same buffer; alt enter/exit with empty and populated screen; crash while in
+  alt screen; background exit policy.
+- *Compatibility risk:* Low for lifecycle hooks; medium for deciding automatic
+  alt-screen verbosity.
+
+** F-10: EAT-backed Eshell updates bypass Emacsvox EAT support
+
+- *Severity / impact:* Medium for users of EAT's Eshell visual-command mode.
+- *Evidence status:* Observed statically and in live hook values; full
+  speech-stack impact is inferred because generic Eshell behavior may still
+  cover text outside an active EAT terminal.
+- *Reproduction and evidence:* The live server reports
+  ~eat-eshell-update-hook=nil~ while normal ~eat-update-hook~ contains
+  ~emacsvox-eat-update-hook~.
+- *Exact references:* EAT calls its separate Eshell hook at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::7286][eat.el:7286-7307]]
+  and on Eshell resize at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6907][eat.el:6907-6911]].
+  Emacsvox registers only normal EAT at
+  [[file:lisp/emacsvox-eat.el::273][emacsvox-eat.el:273]].
+- *Root cause:* EAT deliberately has parallel normal and Eshell lifecycles;
+  Emacsvox wired only one.
+- *Recommended remedy:* Share an observer/classifier between both hooks with
+  explicit Eshell coexistence tests, rather than simply adding the current
+  chatty heuristic to the Eshell hook.
+- *Regression tests required:* Eshell ordinary output, visual command enter/
+  exit, resize, background, generic Eshell speech deduplication.
+- *Compatibility risk:* Medium.  Naive hook addition may duplicate generic
+  Emacsvox Eshell announcements.
+
+** F-11: the selected-buffer guard is necessary but not a complete focus model
+
+- *Severity / impact:* Medium speech-interference risk.
+- *Evidence status:* Background and minibuffer suppression reproduced; multiple
+  windows/frames, scrollback review, and timer/focus timing inferred from code.
+- *Reproduction and evidence:* The focused regression test at
+  [[file:test/emacsvox-eat-tests.el::92][emacsvox-eat-tests.el:92-111]] passes
+  and clears completion state without speech.  Selecting a minibuffer makes its
+  window selected, so a terminal update is silent.
+- *Exact cause:* The predicate compares current buffer to
+  ~(window-buffer (selected-window))~ at
+  [[file:lisp/emacsvox-eat.el::247][emacsvox-eat.el:247-249]].  It does not ask
+  whether the selected window's point follows the live terminal cursor, whether
+  the frame has input focus, or whether output arrived before a delayed batch.
+- *Recommended remedy:* Keep the silent-by-default guard.  Add explicit
+  follow-live-output state per window/buffer, optional monitored background
+  notices, and capture focus/generation at observation and presentation time.
+- *Regression tests required:* minibuffer; two windows same buffer; two frames;
+  selected versus visible; window point in scrollback; rapid focus changes
+  before and after quiescence; background process exit.
+- *Compatibility risk:* Medium.  Frame focus can be unreliable in batch/daemon
+  configurations; selected-window behavior should remain the safe fallback.
+
+** F-12: bells, title/CWD, reset/reload, paste, and input editing are conflated
+or under-described
+
+- *Severity / impact:* Medium collectively; individual items range low to
+  medium.
+- *Evidence status:* Bell duplication and arrow/backspace behavior reproduced;
+  title/CWD/paste gaps observed statically; password risks partly possible.
+- *Reproduction and evidence:* Typing ~abc~, moving left twice, right once, and
+  backspacing yielded characters ~a/b~ but no deletion cue.  BEL invoked
+  ~ding~ and the generic update then spoke the prompt again when it ended in a
+  space.  OSC title/CWD changes had no semantic announcement.  Only
+  ~eat-yank~ and ~eat-yank-from-kill-ring~ have icon advice; ~eat-xterm-paste~
+  and mouse paste do not.
+- *Exact references:* EAT input/yank/password functions are at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5540][eat.el:5540-5770]];
+  its bell callback is configured at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6946][eat.el:6946-6960]].
+  Emacsvox advice targets are at
+  [[file:lisp/emacsvox-eat.el::120][emacsvox-eat.el:120-184]].
+- *Root cause:* Input intent and terminal callbacks are not represented in a
+  common event model.  The update hook sees only final cells.
+- *Recommended remedy:* Correlate recent input with screen change; give bell,
+  paste, secure-input, title, CWD, reset, and lifecycle their own semantic
+  facts.  Avoid speaking raw no-echo input.
+- *Regression tests required:* insertion, arrows, delete/backspace, bracketed
+  paste, mouse paste, no-echo fixture, bell with/without screen change,
+  title/CWD same batch, reset/reload state cancellation.
+- *Compatibility risk:* Medium.  Never infer password content; callback
+  wrapping must preserve EAT's original handler exactly.
+
+* Completion and multi-candidate analysis
+
+** What completion mechanism is active in each EAT mode
+
+In *line mode*, EAT binds Tab to Emacs ~completion-at-point~ and installs shell
+completion variables
+([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5813][eat.el:5813-5833]] and
+[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6700][eat.el:6700-6702]]).
+The inspected live buffer has Corfu and
+~(comint-completion-at-point t)~.  This completes local Emacs-known commands and
+files.  It does *not* invoke Bash programmable completion, remote-host
+completion, or a router CLI's ~?~/Tab behavior.  Emacsvox's Corfu integration is
+substantially richer: it submits semantic candidate facts, counts, annotations,
+selection/acceptance events, and deduplicated navigation at
+[[file:lisp/emacsvox-corfu.el::182][emacsvox-corfu.el:182-249]] and
+[[file:lisp/emacsvox-corfu.el::277][emacsvox-corfu.el:277-459]].
+
+In *semi-character and character modes*, Tab is sent through the PTY.  The
+underlying program owns completion.  Bash/readline can therefore provide
+~git pull~, SSH can use the remote shell's completion, and a router can render
+its native alternatives/help.  Corfu cannot see a structured candidate list in
+that path.  Emacsvox must interpret the terminal screen rather than pretending
+that Bash or the remote device supplied an API.
+
+In *Emacs mode*, the terminal is read-only and keys are Emacs commands; there is
+no terminal-side completion until the user switches mode.
+
+** Experiment matrix
+
+All PTY cases used a fresh local EAT buffer with a deterministic prompt and
+captured speech/icon/bell calls.  Files were disposable and removed afterward.
+
+| Case | Visible terminal result | Captured feedback | Assessment |
+|------+-------------------------+-------------------+------------|
+| ~~/sr<Tab>~ | ~AUDIT> ~/src/~ | ~src/~ | Correct narrow unique directory case |
+| ~git pul<Tab>~ | ~AUDIT> git pull ~ | ~pull~ | Correct narrow command case, assuming Bash completion is loaded |
+| ~git pu<Tab>~ | unchanged input, BEL | final ~u~ plus bell | No candidate information |
+| second Tab | ~pull   push~ then redrawn prompt | final ~u~ | Confirmed ambiguous-list failure |
+| candidates in columns | Multiple visible columns | prompt-adjacent character only | Column structure lost |
+| 200 candidates | 32 rows, 3037 characters | final ~z~ only | Large-list content silent; no count/truncation |
+| unique ~alpha beta~ | readline inserts ~alpha\ beta ~ | whole prompt/line | Concise label extraction fails |
+| unique ~café~ | inserts Unicode name | ~café~ | Simple Unicode succeeds |
+| unique ~foo(bar)~ | inserts ~foo\(bar\) ~ | whole prompt; parsed token empty | Parenthesis/escape failure |
+| unique ~semi;colon~ | inserts escaped/quoted form | whole prompt; parser sees ~colon~ | Semicolon failure |
+| quoted open word | shell word contains a space | parser sees suffix after space | Quoting not understood |
+| trailing slash | ~src/~ | ~src/~ in unwrapped case | Correct special case |
+| pipe/redirection/semicolon/parenthesis strings | simple separators split, quoting interactions do not | suffix or whole prompt | Character class is not a shell parser |
+| terminal width 10/wrapped input | completion crosses EAT wrap newline | slash only | Numeric physical line check fails |
+| expansion split across two EAT batches | unchanged batch, then ~src/~ | ~r~, slash | Snapshot cleared too early |
+| resize before expansion | resize, then ~src/~ | ~r~, slash | Resize consumes snapshot |
+| completion and BEL in one batch | expansion visible | bell, then ~src/~ | Usable but ordering policy undefined |
+| BEL in later batch | expansion then bell update | ~src/~, bell, slash | Duplicate fallback |
+| repeated Tabs | same candidate display/redraw | repeated final character | No deduplication or retained list |
+| unrelated output immediately after Tab | depends on its first same-line change | possible false completion or snapshot loss | Timing risk; inferred from state machine |
+| selection lost before update | buffer becomes background | no speech; snapshot cleared | Safe disclosure default, completion unavailable on return |
+| Dash ~ec<Tab>~ | literal tab expanded to spaces | whole ~$ ec    ~ line | No shell completion; confirms shell owns behavior |
+| simulated router columns | ~route  routing-table~ | final prompt character | Remote-style candidates silent |
+| simulated router ~?~ help | descriptive command/help rows | redrawn prompt line | Descriptions silent |
+| real SSH/router | Not attempted: external operations prohibited | N/A | Screen fixtures cover protocol shape, not latency/device quirks |
+
+The user's Bash startup file loads Bash completion, so ~git pul<Tab>~ can work
+in a normal Bash.  EAT's separate shell integration is not required for
+readline completion; it supplies CWD tracking, prompt navigation/status,
+history, and optional mode switching.  EAT 0.9.4 officially supports that
+integration for Bash and Zsh, not arbitrary router shells.  The package exports
+~EAT_SHELL_INTEGRATION_DIR~ to children at
+[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6963][eat.el:6963-6972]], but
+the child shell must source the appropriate script.
+
+** Safety of the current implementation
+
+- *Token parsing:* Not safe as a semantic shell word parser.  It is acceptable
+  only as a best-effort label for a strict, already-confirmed screen change.
+- *Line-number tracking:* Not safe.  Numeric buffer lines change with scrollback
+  growth, EAT's wrap representation, and terminal reflow.  ~line-number-at-pos~
+  also scans from the accessible beginning; with EAT's default bounded
+  scrollback this is usually tolerable but avoidable work on every Tab/update.
+- *Output timing:* Not safe.  EAT's batch is a visual latency window, not
+  logical completion quiescence.  Remote and router output makes split batches
+  more likely.
+- *Snapshot clearing:* Not safe.  First-update consumption loses valid
+  completions; longer retention without a generation and timeout would create
+  stale false positives.
+- *Nil cursor:* Unsafe independently of completion (F-01).
+- *Bash dependence:* The unique algorithm does not directly call Bash, but its
+  word assumptions resemble a small subset of shell syntax.  Dash proves that
+  the terminal peer may not complete at all; routers may print help rather than
+  insert text.
+
+** Recommended ambiguous-completion transaction
+
+1. On terminal-side Tab, capture a bounded public snapshot: visible text,
+   normalized style runs, cursor row/column, width/height, alternate-screen
+   state, process generation, and time.  Also retain the logical displayed input
+   rows, without parsing them as Bash.
+2. Mark the interaction pending and restart a short Emacsvox quiescence timer
+   after every compatible EAT update.  A practical initial window is 40--75 ms,
+   with an absolute cap near 250 ms; these values need PTY/remote-delay tests.
+3. At quiescence, compare old and new screens:
+   - If only the input was extended, speak the smallest unambiguous meaningful
+     suffix or resulting logical input.
+   - If rows appeared and the prompt/input was redrawn, retain those rows as a
+     candidate/help presentation.
+   - If the layout cannot be classified, announce a bounded changed-line count
+     and make it manually reviewable instead of fabricating candidates.
+4. Preserve rows and descriptions.  Column splitting may be offered as a
+   convenience only when spacing is consistent; router output such as
+   ~show — Display system information~ is a row with description, not two
+   unrelated candidates.
+5. For a small list (a configurable default such as at most 8), announce the
+   count and all items.  For a larger list, announce total item/row count,
+   speak the first configurable subset, say that it was truncated, and retain
+   the full snapshot for review.  Impose character and row caps before speech.
+6. Deduplicate repeated Tab against the retained normalized snapshot.  A repeat
+   can say “same 27 candidates” or open/revisit review depending on verbosity.
+7. Clear the transaction on non-Tab terminal input, reset/reload, process
+   generation change, exit, hard timeout, or buffer destruction.  A resize
+   should update coordinates and restart quiescence, not silently consume it.
+
+This design works for local Bash, delayed SSH, and router CLIs because its input
+is the terminal presentation.  Where line mode/Corfu supplies structured
+candidates, Emacsvox should continue using the Corfu semantic path instead of
+screen inference.
+
+* EAT update-model audit
+
+** What an update can mean
+
+An ~eat-update-hook~ call after process bytes may contain any combination of:
+
+- newly printed text;
+- deletion or carriage-return replacement;
+- cursor-only CSI movement;
+- full or partial repaint;
+- text with changed styling but equal characters;
+- screen clear/scroll;
+- alternate-screen entry or exit;
+- title, CWD, cursor visibility/style, mouse, or selection control;
+- bell;
+- one fragment of a longer asynchronous response.
+
+Reset and resize call the same hook independently.  EAT does not pass the raw
+output, cause, old/new cursor, changed cells, or flags.  A post-hook observer can
+infer differences but cannot know with certainty whether equal final state came
+from output, repaint, resize, or reset.
+
+EAT's terminal model is more expressive than its notification.  Its upstream
+~eat-tests.el~ contains 57 ERT tests with extensive parser coverage for cursor
+motion, scrolling, resizing, SGR colors/styles, alternate display, and bell.
+It does not test ~eat-update-hook~ causality, real PTY batching, shell
+completion, background selection, speech, or interactive application policy.
+That is not a criticism of the parser suite; it explains why Emacsvox needs its
+own integration layers.
+
+** Selected-buffer guard scenarios
+
+| Scenario | Current result | Evaluation |
+|----------+----------------+------------|
+| Another ordinary buffer selected | Silent and clears completion | Correct safe default |
+| Minibuffer active | EAT buffer not selected, so silent | Correctly prevents shell prompt leaking into minibuffer speech |
+| Two windows show same EAT buffer | Speaks if the selected window shows it | Reasonable, but no per-window follow state |
+| EAT merely visible in another window | Silent | Correct default |
+| EAT visible on another frame | Normally silent unless its window is globally selected; actual OS frame focus is not checked | Possible daemon/window-system mismatch |
+| User reviews EAT scrollback in selected window | Guard passes even when window point is not live cursor | Inferred interference defect |
+| Output arrives, then focus changes before EAT timer runs | Decision uses focus at processing time | Can silence formerly foreground output or speak output that arrived before selection |
+| Rapid buffer/minibuffer change during Emacsvox quiescence | No current quiescence; future design must recheck | Must preserve privacy at presentation time |
+
+The right rule is two-stage: capture source/focus metadata when observing, then
+recheck authorization and relevance immediately before speaking.  A terminal
+must be selected and following live output for automatic foreground output.
+Background monitoring should be an explicit per-buffer option with a separate,
+rate-limited policy.
+
+** Dependence on EAT internals
+
+The current production integration declares and reads private
+~eat--semi-char-mode~ at
+[[file:lisp/emacsvox-eat.el::50][emacsvox-eat.el:50]] and
+[[file:lisp/emacsvox-eat.el::214][line 214]].  That is the only material private
+dependency in the recent completion change.  EAT offers interactive mode
+commands but no stable mode predicate/hook; upstream
+[[https://codeberg.org/akib/emacs-eat/issues/158][issue 158]] requests public
+mode hooks.
+
+The proposed Emacsvox screen observer does not need ~eat--t-cur~,
+~eat--t-disp~, ~eat--t-face~, or ~eat--t-term~.  It should use public bounds,
+cursor, size, title, alternate-screen state, and buffer text properties.  Reading
+private wrap or prompt properties may improve heuristics, but should be kept in
+small optional adapters with feature/version tests, not made architectural.
+
+* Interactive-application compatibility matrix
+
+The harness ran only local, disposable programs.  Vim opened ~/dev/null~ and no
+user file; temporary completion fixtures were deleted.  ~top~ was used rather
+than ~htop~.  Captured events came from stubbed Emacsvox/TTS/icon functions and
+~ding~, while screen text, public cursor/type, style properties, and
+alternate-screen state came from EAT itself.
+
+| Application / fixture | Initial screen | Navigation/focus | Repaint/status behavior | Exit to shell | Overall access |
+|-----------------------+----------------+------------------+-------------------------+---------------+----------------|
+| Bash 5.3/readline | Prompt often spoken because it ends in space | Characters echo after PTY round trip; arrows speak adjacent characters without direction | Multiline results lost; prompt redraw dominates | ~exit~ message silent | Adequate for simple typing, unreliable for results/editing |
+| Python 3.14 REPL | Prompt spoken | Ordinary typed echo varies with terminal echo | ~42~ result missed; next ~>>> ~ prompt spoken | Return path not semantically announced | Poor for evaluating output |
+| ~less~ 668, ~seq 1 60~ | Alternate screen entered; only colon spoken | ~j~ again spoke colon, not current content | Screen page changes not described | Shell prompt line spoken | Unusable automatically; manual buffer review remains possible |
+| ~less~ search ~/42~ | Match 42 visibly inverse | Cursor remained at ~(END)~ context; ~)~ spoken | Highlighted match silent | Normal pager exit behavior | Search result inaccessible |
+| Vim 9.1.2141 on ~/dev/null~ | Alternate screen; no useful feedback | ~j~ produced no useful event | Status/screen silent; an empty update timer exposed F-01 | Restored screen not semantically identified | Unusable automatically |
+| whiptail 0.52.25 menu | Alternate screen; selected “One” grey-on-red | Down changed selection to “Two”; public cursor moved to row despite invisible cursor, so row was spoken | Static frame/borders suppressed by accident | No explicit exit/return announcement | Partly usable by coincidence, fragile |
+| ~top~ procps-ng 4.0.4, 0.2 s delay | Initial screen fragments, cursor invisible; this build did not use EAT alternate screen | No active-row semantics | Six events in about one second, including newline, ~d~, ~+~, and arbitrary process row | No coherent return announcement | Disruptive and misleading |
+| CR progress fixture | Initial text fragment | N/A | Five rewrites spoke repeated final digit ~5~, not progress values/state | N/A | Unhelpful; likely interrupts other speech |
+| Status-line-only fixture | Initial screen may speak last cell | No text insertion | Equal-length/style/cursor rewrites are arbitrary or silent | N/A | Important state can be missed |
+| Direct alternate-screen fixture | Empty entry triggered nil error | Inverse “Choice” spoke only final ~e~ | Transition itself silent | Restored main screen spoke final ~R~ | Missing lifecycle and focus semantics |
+| Router completion/help fixture | Prompt visible | Native-style Tab/~?~ output generated | Columns and descriptive help rows silent | N/A | Inadequate for router CLI discovery |
+
+** Interpretation
+
+The whiptail result is useful evidence but not a success criterion.  Its menu
+places EAT's terminal cursor on the selected row even though the cursor type is
+~:invisible~; the current “character before cursor/line on space” rule therefore
+happened to select the right row.  Other curses applications keep a hidden
+cursor at a fixed location, highlight several regions, or use a status row.
+Vim and less demonstrate those counterexamples.
+
+The refreshing-display result is also not solved by merely increasing EAT's
+latency.  Visual batching at 33 ms would still permit about 30 speech decisions
+per second.  Accessibility needs semantic coalescing: unchanged repaints
+produce nothing, cursor navigation replaces prior navigation speech, progress
+uses thresholds and a minimum interval, and a full-screen refresh yields at
+most a concise status summary unless explicitly reviewed.
+
+* Highlight and focus-tracking analysis
+
+** What EAT represents
+
+EAT's parser maintains private cursor, display, face, and terminal structures,
+then materializes terminal cells as Emacs buffer text with faces and private
+layout properties.  Publicly, Emacsvox can obtain:
+
+- visible display bounds and terminal bounds;
+- display cursor position and cursor type;
+- width/height;
+- title and alternate-display state;
+- final buffer text and text properties.
+
+At [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2504][eat.el:2504-2706]],
+EAT recognizes foreground/background colors, inverse video, bold, faint,
+italic, underline variants/color, slow/fast blink, conceal, crossed-out text,
+and alternate fonts.  In observed buffer properties:
+
+| Terminal attribute | EAT buffer representation | Current Emacsvox result |
+|--------------------+---------------------------+-------------------------|
+| Bold | ~:inherit (eat-term-bold eat-term-font-0)~ | Mapped to ~voice-bolden~ |
+| Italic | named inherited ~eat-term-italic~ | Mapped to ~voice-smoothen~ |
+| Faint | named inherited ~eat-term-faint~ | No EAT voice map |
+| Blink | named slow/fast face; optional timers remap it | No EAT voice map; timer changes have no update hook |
+| Underline | anonymous ~:underline~ plist | Semantic attribute lost by named-face capture |
+| Inverse video | foreground/background swapped into anonymous plist | Cannot be identified simply as “inverse” afterward |
+| Crossed-out | anonymous ~:strike-through t~ | Not voiced |
+| Foreground/background colors | literal resolved colors/anonymous plist | Not semantically voiced |
+| Conceal | rendered using background relationship | Must not be automatically disclosed as visible text |
+| Alternate font | inherited numbered EAT font face | No mapping |
+| Hyperlink OSC 8 | EAT 0.9.4 displayed plain text with nil link properties | No link semantics |
+
+EAT's blinking implementation changes face remaps on timers at
+[[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4818][eat.el:4818-4907]]
+without running ~eat-update-hook~.  This is appropriate—speech should not follow
+visual blink frames—but confirms that “every visual style change causes an
+update” is false.  EAT disables blink presentation by default and its manual
+explicitly discusses the accessibility concern.
+
+** What can and cannot identify an active item
+
+- *Terminal cursor:* Strong evidence when it moves with recent Up/Down/Tab
+  input and lands on a compact changed row.  It is not sufficient: the cursor
+  can be invisible, fixed in an input field, off by one due application or
+  rendering behavior, or unrelated to a mouse/highlight selection.
+- *Inverse video:* Useful evidence only when a small region gains it while a
+  previous nearby region loses it.  It is not sufficient: headers, status bars,
+  buttons, search matches, and entire panes may all be inverse.
+- *Background-color change:* Similar evidence to inverse, particularly for
+  whiptail, but theme resolution and application palettes make absolute colors
+  unreliable.
+- *Bold/underline/face differences:* Supporting evidence for controls,
+  highlights, links, and matches, never sufficient alone.
+- *Screen difference:* Identifies what changed but not why.  A full redraw can
+  reproduce every cell without changing semantic focus.
+- *Private EAT model:* Contains richer pre-render attributes, but directly using
+  ~eat--t-face~ or ~eat--t-disp~ would couple Emacsvox to unstable internals and
+  still would not reveal application semantics.
+
+** Robust probabilistic focus design
+
+Normalize each visible row into text plus style runs.  A style signature should
+retain semantic categories where recoverable (bold, faint, italic, underline,
+strike, inverse-like foreground/background swap, conspicuous background,
+conceal, link) without treating literal theme colors as stable identities.
+
+For every quiesced navigation generation, score compact candidate regions:
+
+1. region newly gained a selection-like style;
+2. a nearby old region simultaneously lost that style;
+3. public cursor is within or adjacent to the region;
+4. cursor moved in the direction implied by the recent input;
+5. change happened promptly after a navigation key;
+6. region is one/few rows, not a whole pane;
+7. text differs from static borders, headings, or persistent status rows;
+8. the same application pattern was consistent in recent generations.
+
+Penalize or reject large inverse areas, unchanged persistent headers, multiple
+unrelated highlights, and changes during an uncorrelated refresh.  Require a
+confidence threshold.  Below it, say “screen changed” at verbose settings or
+remain silent and let the user invoke review.  A less search match can be
+announced as a *changed highlight near the cursor*, not asserted to be a menu
+selection.  This explicitly avoids the false rule “inverse video means focus.”
+
+The retained focus object should include text, row/column bounds, style facts,
+confidence, terminal generation, and screen generation.  Navigation speech
+should be replaceable and deduplicated by that identity.
+
+** Finding HT-01: focus inference is feasible but currently absent
+
+- *Severity / user impact:* Medium-high design gap; blocks reliable menu and
+  search navigation.
+- *Evidence status:* Reproduced inputs plus inferred design; the proposed score
+  itself remains unvalidated.
+- *References:* EAT SGR composition
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2504][eat.el:2504-2706]],
+  public cursor API
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4149][eat.el:4149-4198]],
+  upstream cursor/highlight
+  [[https://codeberg.org/akib/emacs-eat/issues/248][issue 248]].
+- *Root cause:* No previous style snapshot or input correlation exists in
+  Emacsvox; EAT offers no public changed-style event.
+- *Recommended remedy:* Implement conservative scoring from public snapshots;
+  seek an upstream normalized changed-cell/style API for precision.
+- *Regression tests:* Static inverse header; whiptail selection; less match;
+  invisible/fixed cursor; two highlights; style-only move; theme change; resize.
+- *Compatibility risk:* High if treated as certainty.  Expose confidence,
+  support per-app tuning, and always provide manual review.
+
+* Security and privacy risks
+
+Terminal accessibility observes an untrusted byte stream and may verbalize
+information outside the visual user's current attention.  The design must
+therefore treat privacy and denial-of-speech as first-class policy.
+
+** S-01: password input can enter Emacs command lossage
+
+- *Severity / impact:* Medium confidentiality risk.
+- *Evidence status:* Observed in official documentation; no password was entered
+  during this audit.
+- *Evidence and references:* The installed manual warns that ordinary terminal
+  keystrokes are recorded in Emacs lossage and recommends the password command
+  at [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.texi::459][eat.texi:459]].
+  The real command is ~eat-send-password~ at
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5752][eat.el:5752-5758]].
+  Installed 0.9.4's manual uses the wrong name; upstream fixed it on 2024-03-15
+  in [[https://codeberg.org/akib/emacs-eat/commit/25989bf714dd][25989bf714dd]].
+- *Root cause:* Semi/character input is an Emacs command event before it is PTY
+  input.
+- *Recommended remedy:* Document and make ~eat-send-password~ easy to invoke;
+  announce entry/exit of its secure minibuffer without speaking content.  Do
+  not automatically echo no-echo terminal input.
+- *Regression tests:* Stub ~read-passwd~; verify only a secure-input fact/icon,
+  never secret text; verify snapshots are cleared at the boundary.
+- *Compatibility risk:* Low if implemented as additive advice/documentation.
+
+** S-02: future snapshots could retain or disclose secrets
+
+- *Severity / impact:* High if implemented carelessly; currently only a
+  possible design risk because the existing snapshot retains a short token.
+- *Evidence status:* Possible.
+- *References:* Current buffer-local completion state is defined at
+  [[file:lisp/emacsvox-eat.el::186][emacsvox-eat.el:186-187]].
+- *Root cause:* Screen snapshots necessarily include terminal text, which may
+  contain passwords, tokens, private paths, router configuration, or pasted
+  secrets.
+- *Recommended remedy:* Keep snapshots buffer-local, bounded, ephemeral, and
+  never serialized into messages, traces, history, crash reports, or debug logs
+  by default.  Release references on timeout, no-echo/secure input, process
+  generation change, and buffer death; overwrite mutable copies where feasible
+  but do not promise memory zeroization in Emacs Lisp.  Manual candidate review
+  should copy only explicitly classified completion rows.
+- *Regression tests:* Secret sentinel strings never reach speech/log/history;
+  reset/exit/timeouts clear state; large buffers remain bounded.
+- *Compatibility risk:* Low for data minimization; debugging becomes less
+  convenient and should require explicit redacted opt-in.
+
+** S-03: untrusted output can hijack or deny speech
+
+- *Severity / impact:* Medium-high availability/social-engineering risk.
+- *Evidence status:* Reproduced for speech flooding with ~top~; auditory
+  spoofing is inferred.
+- *References:* The unclassified speech path is
+  [[file:lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]] and the hard-stop
+  compatibility behavior is
+  [[file:lisp/tts-speak.el::2891][tts-speak.el:2891-2905]].
+- *Root cause:* Arbitrary terminal output can trigger high-priority-looking
+  speech and repeatedly interrupt other modules; it has no terminal source role
+  or rate budget.
+- *Recommended remedy:* Label every submission ~:module 'eat~ with terminal
+  buffer/process identity, use a distinct terminal voice/earcon, sanitize
+  nonprinting content, cap text/rate, and never allow routine refresh output to
+  interrupt urgent desktop speech.  Terminal text must not be treated as a
+  trusted Emacs message.
+- *Regression tests:* Hostile rapid repaint, very long line, control
+  characters, text mimicking security prompts, output during minibuffer and
+  urgent speech.
+- *Compatibility risk:* Medium; overly strict rate limiting can suppress real
+  errors, so retain manual review and an explicit verbose monitor.
+
+** S-04: EAT accepts terminal-controlled selection and UI metadata
+
+- *Severity / impact:* Medium upstream trust-boundary concern, not a confirmed
+  Emacsvox defect.
+- *Evidence status:* Observed statically.
+- *Evidence and references:* ~eat-enable-kill-from-terminal~ defaults true,
+  allowing OSC 52 to set Emacs selection/kill data; terminal read-back is
+  disabled by default through ~eat-enable-yank-to-terminal~
+  ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::138][eat.el:138-155]] and
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5048][eat.el:5048-5069]]).
+  EAT also parses title, CWD, UIC, and selection OSCs around
+  [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::3674][eat.el:3674-3704]].
+- *Root cause:* These are intentional terminal features crossing the child
+  process/Emacs boundary.
+- *Recommended remedy:* Document the settings for untrusted SSH/router use.
+  Emacsvox should not speak clipboard contents or execute/interpret UIC payloads
+  as accessibility commands.  Title/CWD announcements must be low-priority,
+  sanitized metadata.
+- *Regression tests:* OSC 52 set/query under both settings; hostile title/CWD;
+  UIC ignored/allowed configurations; no clipboard speech.
+- *Compatibility risk:* Changing EAT defaults belongs upstream/user policy and
+  may break workflows; Emacsvox should not silently change them.
+
+* Public EAT API gaps and suggested upstream requests
+
+The current hook is sufficient to say “something changed” and public getters
+are sufficient for conservative snapshot comparison.  Precise, efficient
+accessibility would benefit from additive APIs.  Requests should be small and
+generally useful to other observers, not Emacsvox-specific.
+
+| Need | Public status in 0.9.4/master | Belongs where | Suggested request / compatibility |
+|------+--------------------------------+---------------+-----------------------------------|
+| Terminal bounds, cursor, cursor type, size, title, alternate-screen predicate | Available at [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4149][eat.el:4149-4247]] | Use now in Emacsvox | Stable-looking public API; no upstream change required |
+| Process start/exit | ~eat-exec-hook~, ~eat-exit-hook~ available | Use now in Emacsvox | No upstream change required |
+| Public current input-mode predicate and transition hooks | Missing; Emacsvox uses ~eat--semi-char-mode~ | EAT | Extend [[https://codeberg.org/akib/emacs-eat/issues/158][issue 158]] with a public mode getter and before/after transition event; additive, low risk |
+| Structured update cause | Missing | EAT | Pass or expose an update record: generation/time, ~output/reset/resize~, old/new cursor, alt transition, size change; keep old hook for compatibility |
+| Changed text/style ranges or cells | Missing | EAT | Add normalized dirty rectangles/runs after redisplay, including text-changed/style-changed flags; avoid exporting private structs |
+| Cursor-moved event independent of text | Getter only | EAT | Add old/new position and visibility/style in update record |
+| Alternate-screen enter/exit event | Predicate only | EAT or diff in Emacsvox | Add transition flag; Emacsvox can compare predicate meanwhile |
+| Bell event | Single replaceable terminal parameter callback | EAT | Add a bell hook/event rather than asking packages to replace/wrap EAT's callback |
+| Title and CWD change events | Getters/callback slots, no additive hook | EAT | Add sanitized old/new metadata events; Emacsvox can compare snapshots meanwhile |
+| Semantic prompt begin/end/status | Private shell marks/overlays | EAT | Pursue [[https://codeberg.org/akib/emacs-eat/issues/137][issue 137]] (OSC 133) and expose status/accessors |
+| Shell mode hooks | Missing | EAT | [[https://codeberg.org/akib/emacs-eat/issues/158][issue 158]] already provides the upstream venue |
+| Synchronized-output transaction | Not in EAT; DECSET 2026 open | EAT | [[https://codeberg.org/akib/emacs-eat/issues/268][issue 268]] / [[https://codeberg.org/akib/emacs-eat/pulls/261][PR 261]] could improve repaint atomicity, but speech still needs longer quiescence |
+| OSC 8 hyperlinks | Missing in 0.9.4 | EAT | Review/finish [[https://codeberg.org/akib/emacs-eat/pulls/147][PR 147]]; expose ordinary Emacs link properties |
+| Remote TERM/terminfo setup | Known open problems | EAT/docs | [[https://codeberg.org/akib/emacs-eat/issues/230][issue 230]] / [[https://codeberg.org/akib/emacs-eat/pulls/229][PR 229]]; separate transport correctness from speech |
+| Sixel/image description | Pixels supported, semantics unavailable | Application/EAT/Emacsvox | EAT could expose image regions; descriptions require application metadata or user annotation |
+
+** Finding API-01: update cause and dirty ranges are the highest-value upstream
+addition
+
+- *Severity / user impact:* Medium performance/correctness opportunity; not a
+  current upstream bug.
+- *Evidence status:* Inferred from complete call-site trace and reproduced
+  ambiguity between output/reset/resize.
+- *Root cause:* ~eat-update-hook~ has no arguments and three heterogeneous call
+  sites.
+- *Remedy:* Add a new hook or dynamically bound documented update record while
+  retaining the existing hook.  Dirty ranges should describe the final
+  post-redisplay model, not raw PTY chunks.
+- *Regression tests:* Cause for reset/resize/output; cursor-only/style-only;
+  alt transition; multiple batches; backward-compatible old hook invocation.
+- *Compatibility risk:* Low if additive; high if changing the existing hook's
+  calling convention.
+
+** Finding API-02: style events must preserve terminal semantics
+
+- *Severity / user impact:* Medium-high opportunity for menus/search.
+- *Evidence status:* Reproduced loss at the rendered-face boundary; proposed
+  API is design work.
+- *Root cause:* EAT resolves inverse/colors into display face plists, losing the
+  original SGR category for consumers.
+- *Remedy:* Expose normalized style categories for changed cells/runs or a
+  public snapshot function.  Do not expose mutable private structs.
+- *Regression tests:* All SGR categories, combined attributes, style-only
+  changes, theme changes, conceal, blink, alternate screen.
+- *Compatibility risk:* Medium: define values semantically and version the
+  record so rendering internals can evolve.
+
+* Recommended Emacsvox architecture
+
+** Three layers
+
+1. *Observer:* On normal EAT and EAT-Eshell updates, capture only the public
+   visible terminal state plus normalized buffer properties.  Observe
+   exec/exit, input intent, reset/reload, and callbacks.  Never speak directly
+   from this layer.
+2. *Classifier:* Compare snapshots and recent input to produce semantic facts:
+   typed echo, unique completion, candidate/help rows, new output lines,
+   cursor-only navigation, likely focus/highlight, status/progress, repaint,
+   resize, alternate-screen/lifecycle, bell, title/CWD, or unknown change.
+3. *Presenter:* Apply selection/privacy, verbosity, deduplication, coalescing,
+   truncation, priority, and interruption policy; submit through
+   ~emacsvox-aural-submit~ with ~:module 'eat~ and stable roles/events.
+
+This isolates uncertain terminal inference from speech delivery and makes each
+piece testable.  The current Corfu implementation demonstrates the target
+pattern: candidate facts and lifecycle are separate from presentation at
+[[file:lisp/emacsvox-corfu.el::182][emacsvox-corfu.el:182-215]].
+
+** Buffer-local state
+
+Keep one bounded state object per EAT terminal:
+
+- terminal/process generation and lifecycle state;
+- previous visible text as logical rows, screen width/height, display bounds;
+- normalized style runs/signatures;
+- public cursor row/column/type;
+- alternate-screen state, title, and CWD;
+- recent input event/category/time, never raw secure input;
+- pending completion transaction and retained candidate/help snapshot;
+- last changed region and likely focus object;
+- quiescence timer and hard deadline;
+- per-role last presentation key/time and rate budget;
+- foreground/follow-live/monitoring and verbosity policy.
+
+Markers should not be retained where EAT's public docs say callers should query
+positions afresh
+([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4166][eat.el:4166-4182]]).
+Store row/column/generation identifiers, then resolve against a fresh snapshot.
+
+** Quiescence and generation rules
+
+EAT should remain visually responsive at its own 8--33 ms latency.  Emacsvox
+should independently restart a speech timer after related updates.  Start with
+40--75 ms idle and a 250 ms absolute cap, then tune from PTY fixtures.  A
+generation closes on:
+
+- non-compatible user input;
+- process exec/exit;
+- reset/reload;
+- buffer death;
+- hard timeout;
+- alternate-screen transition when the pending interaction cannot span it.
+
+Resize changes geometry but should not itself produce content speech.  It may
+force re-snapshot/reflow before classification.  Every pending presentation
+must recheck selected/follow state and privacy just before submission.
+
+** Coherent speech policy
+
+| Event class | Default policy | Delivery/interruption | Dedup/rate behavior |
+|-------------+----------------+-----------------------+---------------------|
+| Typed printable echo | Speak only when correlated echoed cells confirm recent input | Edit occasion; short, replace/queue according to existing echo policy | Suppress duplicate PTY echo when line mode already spoke insertion |
+| No-echo/password input | Announce secure input state, never characters | High-confidence state-change, no content | Clear snapshots; never retain raw key |
+| Unique completion | Speak concise resulting component/suffix, preserving punctuation | State-change, ordered after relevant typed echo | One per completion generation; same result on repeated Tab suppressed |
+| Ambiguous small list | “N candidates” plus bounded rows/items and descriptions | State-change/list; should not hard-stop unrelated urgent speech | Deduplicate normalized list; configurable maximum |
+| Ambiguous large list | Count, first N, “truncated; use review command” | Concise state-change | Hard row/character cap; repeated Tab says same count |
+| New ordinary output | Speak complete new/changed logical lines, excluding a pure redrawn prompt | Ordered terminal-output batch | Coalesce chunks; cap lines/chars; retain full changed region for review |
+| Cursor/focus navigation | Speak current row/control or character with direction/focus facts | Replaceable navigation | Replace earlier navigation in same terminal; boundary cue on no movement |
+| Likely highlight | Speak text plus cautious role (“highlight” unless confidence supports selection) | Replaceable navigation | Identity is region/text/style/screen generation |
+| Status line | Speak only on meaningful text change or explicit command | Low-priority replaceable status | Minimum interval and equality/threshold filtering |
+| Progress/CR rewrite | Extract changing value where conservative; otherwise periodic “progress updated” | Replaceable progress | Percentage thresholds or minimum 1--2 s interval; always announce completion/failure |
+| Full repaint | Normally silent if semantic text/style/cursor unchanged | None | Hash rows/styles; rate-limit uncertain summaries |
+| Alternate screen/app entry | Concise “alternate screen” or inferred app title at normal/verbose level | State-change | Once per transition |
+| Exit/return to shell | Process/app exited plus status when known; then prompt if useful | State-change, higher than routine output | Once per process generation |
+| Bell | Earcon/urgent fact; speak “bell” only by verbosity policy | Urgent, but do not automatically replay prompt | Deduplicate burst within short interval |
+| Title/CWD | Silent by default; announce relevant changes in verbose/monitor mode | Low-priority metadata | Equality and rate limit |
+| Background terminal | Silent by default; optional “terminal X has output”/exit count | Separate monitoring occasion; never include content unless explicitly enabled | Per-buffer debounce and unread count |
+| Unknown screen change | Silent at terse level; concise changed-row count at verbose level | Low priority | Retain for manual review |
+
+Punctuation and voices must be preserved by submitting prepared text/facts, not
+flattening everything through ~message~ or ad hoc raw ~tts-speak~.  Terminal
+content needs its own source voice so that a malicious line cannot sound like
+trusted editor UI.  Candidate annotations, status, and counts should use
+different personalities exactly as the Corfu path does.
+
+** Verbosity
+
+Offer at least three per-terminal or global modes:
+
+- *Terse:* typed echo, unique completion, focused navigation, bell, process
+  lifecycle; large output summarized.
+- *Normal:* bounded new output, small candidate lists, focus/status changes,
+  alternate-screen transitions.
+- *Verbose/monitor:* more changed rows, candidate descriptions, title/CWD and
+  uncertain change summaries, still rate-limited.
+
+A fourth “automatic output off” toggle can leave typed echo and explicit review
+available.  These settings should be buffer-local with a global default.
+
+** Manual review commands
+
+The automatic policy can never infer every TUI correctly.  Provide stable
+commands on the Emacsvox prefix:
+
+- speak terminal row at EAT's cursor;
+- speak the last changed region;
+- speak the likely active/highlighted item and confidence/role;
+- speak/review the retained completion candidate/help list;
+- enter a terminal-screen review mode and move by logical row;
+- jump between changed rows or styled regions;
+- speak status/title/CWD/process state;
+- toggle automatic output monitoring for this terminal;
+- cycle terminal verbosity;
+- repeat the last terminal announcement without recomputing it.
+
+Screen review should use a frozen snapshot by default so a repaint cannot move
+content under the reviewer.  It should offer an explicit refresh command and
+announce when the live terminal has changed since the snapshot.
+
+** Ownership: Emacsvox versus EAT
+
+| Work | Owner | Reason |
+|------+-------+--------|
+| Nil-safe update hook and tests | Emacsvox | Direct integration defect |
+| Screen snapshots/diffs, completion inference, quiescence | Emacsvox | Can be built from current public API and is speech-policy-specific |
+| Aural facts, priorities, voices, interruption, dedup/rate limits | Emacsvox | Accessibility presentation responsibility |
+| Manual review UI and verbosity/monitoring commands | Emacsvox | User-facing speech feature |
+| Exec/exit and alternate-state use | Emacsvox | Public EAT hooks/getter already sufficient |
+| Normalized rendered face-property adapter | Emacsvox initially | Enables progress without upstream dependency |
+| Public mode getter/hooks | EAT | Avoids ~eat--semi-char-mode~ dependency; broadly useful |
+| Structured update cause/dirty text/style/cursor ranges | EAT | EAT alone knows precise parser/model mutations efficiently |
+| Additive bell/title/CWD/alt events | EAT | Avoids replacing single callback slots and duplicated inference |
+| Semantic prompt API/OSC 133 | EAT and shells | Transport/model semantics, not speech-specific |
+| Remote TERM/terminfo and terminal emulation bugs | EAT | Transport/parser correctness |
+
+* Phased roadmap
+
+** Immediate low-risk fixes
+
+1. Fix F-01 only: make nil cursor/character a quiet no-op, and add real
+   empty-terminal/reset/alternate-screen ERT.
+2. Add public exec/exit observation and clear all completion state on process
+   generation changes; announce exit without parsing terminal output.
+3. Add an explicit bell aural fact while preventing the same no-change update
+   from replaying prompt/character.  If callback wrapping is judged too fragile,
+   defer until an upstream hook rather than replacing behavior.
+4. Replace raw mode command symbols with human labels.
+5. Document the distinction between line-mode Corfu completion, Bash/readline
+   completion, and EAT Bash/Zsh shell integration.  Do not silently edit the
+   user's shell startup file.
+
+Risks are low except callback wrapping.  Each patch should be separate and
+compiled with the configured Emacs.
+
+** Medium-sized improvements
+
+1. Introduce public-state visible-screen snapshots and pure text/style diffing.
+2. Replace one-update completion tracking with a generation/quiescence
+   transaction, including ambiguous rows, count/truncation, and review command.
+3. Present bounded multiline shell/REPL output while suppressing pure prompt
+   redraw and resize-only events.
+4. Add explicit selected/follow-live state and optional background monitoring.
+5. Add process/alternate-screen lifecycle and title/CWD state comparison.
+6. Wire EAT-Eshell through the shared observer only after duplicate Eshell
+   speech tests pass.
+7. Move all EAT speech to semantic native aural submissions.
+
+Risks are moderate: output verbosity, stale-state retention, and false
+candidate extraction.  Ship behind conservative defaults and measure captured
+transactions, not only buffer diffs.
+
+** Larger structural work
+
+1. Develop highlight/focus scoring and TUI navigation policy from deterministic
+   fixtures, then validate against less, Vim/nano, menus, and refreshing apps.
+2. Add progress/status classification, per-role rate budgets, and frozen screen
+   review.
+3. Work upstream on structured update records, dirty/style ranges, public mode
+   hooks, additive callbacks, and semantic prompts.
+4. Add optional application profiles only where generic evidence remains
+   insufficient.  Profiles must refine, not replace, the generic model.
+5. Add hyperlink semantics when EAT supports OSC 8 and a policy for
+   images/Sixel regions.
+
+Risks are higher because terminal applications are not semantically
+standardized.  Confidence thresholds, manual review, privacy caps, and
+versioned fixtures are non-negotiable.
+
+* Detailed automated and manual test plan
+
+** Assessment of current tests
+
+[[file:test/emacsvox-eat-tests.el::1][test/emacsvox-eat-tests.el]] contains six
+ERT tests:
+
+1. advice inventory;
+2. target-aware yank feedback;
+3. mode feedback;
+4. same-line directory completion;
+5. multiline completion falling back to slash;
+6. background update silence.
+
+They are fast and useful regression tests for commit ~199c853ea~, but all
+terminal state is mocked with a symbol and a point marker.  They do not create
+an EAT terminal, parse terminal bytes, run a PTY, wait for output batching, or
+exercise native aural facts/delivery.  The multiline test explicitly codifies
+the inaccessible result rather than testing candidates.  There is no nil
+cursor, reset, resize, exit, alternate screen, style, bell, title/CWD,
+chunk-split, wrap, Unicode, shell, or interactive-app coverage.
+
+The test file explicitly loads source at
+[[file:test/emacsvox-eat-tests.el::8][emacsvox-eat-tests.el:8-10]].  Six passing
+tests therefore do not prove the live ~emacsvox-eat.elc~ is current.  The
+project's byte-code checks and a fresh compiled Emacs verification are separate
+required layers.
+
+Upstream EAT master has 57 terminal-model ERT tests.  They deeply exercise many
+escape-sequence and SGR behaviors, cursor position, resize, alternate display,
+and bell.  They do not replace Emacsvox integration tests because they do not
+cover EAT's update-hook timing, PTY shell behavior, focus, speech, or policy.
+
+** Layer 1: pure unit tests
+
+Keep these independent of EAT and TTS processes:
+
+- logical screen snapshot and row normalization;
+- text and style-run diff under insertion, deletion, CR replacement, clear,
+  scroll, and full repaint;
+- wrap/reflow reconciliation at several widths;
+- conservative changed-suffix labeling;
+- candidate/help row extraction with columns and descriptions;
+- count/truncation and character/row caps;
+- fallback token labels for spaces, single/double quotes, backslashes,
+  variables, Unicode, punctuation, slashes, pipes, redirections, parentheses,
+  ampersands, and semicolons;
+- style signature normalization for every SGR category and anonymous plist;
+- likely-focus scoring, including static inverse headers and multiple matches;
+- quiescence/generation transitions, cancellation, deduplication, and rate
+  budgets;
+- progress value/threshold handling;
+- privacy clearing and redaction.
+
+Use table-driven tests and property-style generation where practical.  Feed
+every byte/string input split at every boundary to state machines.
+
+** Layer 2: ERT with real terminal model and mocked presentation
+
+Create ~eat-term-make~ in a temporary buffer, feed
+~eat-term-process-output~, call redisplay/update as production does, and capture
+~emacsvox-aural-submit~, compatibility icons, line/char helpers, and ~ding~.
+Cover:
+
+- empty terminal/cursor and reset;
+- cursor at beginning/end and invisible cursor;
+- single/multiline output and prompt redraw;
+- cursor-only and style-only changes;
+- all SGR attributes and combinations;
+- resize-only update and terminal-width reflow;
+- alternate screen enter/exit;
+- title, CWD, bell, and OSC 52 policy;
+- completion snapshot lifecycle through arbitrary updates;
+- normal/Eshell hook parity without duplicated generic Eshell speech;
+- selected/unselected buffer, active minibuffer, two windows, two frames,
+  visible-but-not-selected, scrollback review, and rapid focus changes;
+- process exec/exit/restart and stale timer cancellation.
+
+Do not mock ~eat-term-display-cursor~ in the nil/reset tests: the purpose is to
+exercise the real public API state that failed.
+
+** Layer 3: pseudo-terminal integration tests
+
+Run a real local Bash with deterministic environment:
+
+- fixed ~PS1~, ~TERM~, dimensions, locale, and temporary working directory;
+- shell integration both absent and explicitly sourced;
+- Bash completion absent/present;
+- ~~/sr<Tab>~, ~git pul<Tab>~, ambiguous ~git pu<Tab><Tab>~;
+- actual filenames with spaces, all quoting/escaping forms, Unicode,
+  punctuation, trailing slash, and same-length candidate substitutions;
+- candidates in columns and a generated large candidate set;
+- commands containing pipes, redirections, parentheses, and semicolons;
+- long/wrapped/multiline input;
+- repeated Tab and bell ordering;
+- output delivered in every arbitrary chunk split and with scheduled delays;
+- resize and selection changes between chunks;
+- unrelated asynchronous output during a completion;
+- command exit statuses with shell prompt integration.
+
+Test Dash as a non-readline baseline.  If Zsh or Fish is later available, add it
+as a separate capability profile rather than assuming Bash semantics.  A local
+SSH-like delay proxy may split fixture bytes without opening a network
+connection.
+
+** Layer 4: deterministic terminal-application fixtures
+
+Build small local fixtures that emit known ANSI sequences and accept named key
+inputs:
+
+- router CLI with prompt, unique insertion, columns, ~?~ help descriptions,
+  pagination, and delayed chunks;
+- menu with cursor-following selection;
+- menu with fixed invisible cursor and moving inverse/background highlight;
+- multiple simultaneous highlights;
+- alternate-screen editor with status line;
+- pager with search and highlighted match;
+- full and partial repaint at controlled frequency;
+- CR progress and a status-line-only update;
+- synchronized and unsynchronized output frames;
+- hyperlink and image-region placeholders.
+
+Fixtures make failures deterministic and safe.  Keep representative real-app
+smoke tests for ~less~, Vim or nano, whiptail/dialog, ~top~/htop, and a REPL,
+but do not make their version-specific screen layouts the sole oracle.
+
+** Layer 5: fresh-Emacs compiled-code verification
+
+For every ordinary Lisp change:
+
+1. run ~make check-emacs~;
+2. run ~make bytecode-check~ as non-mutating preflight;
+3. run the relevant source ERT and full test target;
+4. run ~make bytecode~ (or ~make bytecode-rebuild~ after macro/public-interface
+   changes, branch switches, or pulls);
+5. start a fresh Emacs 31+ process/profile that loads the resulting
+   ~emacsvox-eat.elc~ and confirm ~locate-library~, hashes/version, hooks, and
+   the representative PTY tests.
+
+Never infer compiled correctness from source-loaded ERT or from reloading one
+file into a server whose dependents are already resident.
+
+** Layer 6: manual speech acceptance
+
+With an isolated fresh profile and disposable sessions, a screen-reader user
+should verify:
+
+- typing/editing in all four EAT modes;
+- secure password entry with a harmless no-echo fixture;
+- unique/ambiguous/large completions and candidate review;
+- multiline command and error output;
+- Bash with and without EAT shell integration;
+- local router fixture and delayed-output fixture;
+- less paging/search, Vim/nano navigation/status, menu navigation, REPL,
+  progress, and refreshing display;
+- entering/leaving alternate screen and process exit/restart;
+- selected/background/minibuffer/two-window behavior;
+- every manual screen/highlight/change/candidate review command;
+- terse/normal/verbose/output-off policies;
+- interruption: terminal output must not erase urgent unrelated speech, while
+  navigation remains responsive.
+
+Record both semantic aural facts/transactions and the human judgment.  A TTS
+submission alone is not an acceptance pass.
+
+** Coverage gate
+
+Before calling the redesigned integration complete, require:
+
+- all output chunk boundaries and terminal widths produce equivalent semantic
+  results after quiescence;
+- resize-only and unchanged repaint produce no content announcement;
+- alternate-screen, reset, and nil cursor never error;
+- candidate lists remain reviewable even when automatic speech truncates;
+- style-only focus changes work without treating static inverse video as focus;
+- no background/minibuffer or secure-input leakage;
+- no unbounded snapshot, speech text, candidate count, or refresh rate;
+- fresh compiled Emacs behavior matches the source test result.
+
+* Recommended smallest next patch
+
+The next patch should address only F-01.
+
+Conceptually, change the fallback to test that a character exists before using
+numeric comparison or speaking it:
+
+#+begin_src emacs-lisp
+(cond
+ ((eq char ?\s) (emacsvox-speak-line))
+ (char (emacsvox-speak-this-char char)))
+#+end_src
+
+Using ~eq~ for a character and omitting the final unconditional branch makes an
+empty terminal a quiet no-op.  The exact spelling can follow project style.
+Add tests that use a real ~eat-term-make~ for:
+
+1. selected empty terminal update: no error, no speech;
+2. interactive ~eat-reset~ on an empty terminal: no error and the existing
+   reset state-change announcement occurs;
+3. empty alternate-screen entry/exit: no error;
+4. existing nonempty line/character, completion, and background behavior
+   remains unchanged.
+
+- *Severity addressed:* High correctness/accessibility.
+- *Evidence:* Reproduced (F-01).
+- *Root cause:* Numeric ~=~ applied to nil at
+  [[file:lisp/emacsvox-eat.el::270][emacsvox-eat.el:270]].
+- *Compatibility risk:* Low.
+- *Why this is the smallest patch:* It removes a concrete exception without
+  changing output verbosity, timing, completion classification, public APIs, or
+  user configuration.  Completion and screen-diff work should follow in
+  separately reviewable patches with the larger test harness.
+
+No implementation was made during this audit.
+
+* Audit limitations
+
+- External SSH and real router sessions were intentionally not used.  Remote
+  findings combine local delayed/router-shaped fixtures, EAT source/manual, and
+  upstream remote issues; device-specific behavior remains to be validated.
+- Physical speech-device output was not used as the sole oracle.  Programmatic
+  call/transaction capture establishes what Emacsvox requested, not what a
+  particular synthesizer/device ultimately rendered.
+- Only software available in the environment was exercised: Bash, Dash, less,
+  top, Vim, whiptail, and Python.  Nano was not needed because the requirement
+  allowed Vim or nano; htop and other shells were not available.
+- EAT 0.9.4 is the loaded target.  Current master was inspected for relevant
+  changes and update-hook call sites but was not substituted into the live
+  configuration.
+- Several focus/window results are explicitly labelled inferred because
+  headless/daemon frame focus cannot faithfully reproduce every graphical
+  desktop arrangement.
+
+* Primary upstream references
+
+- [[https://codeberg.org/akib/emacs-eat][EAT upstream repository]]
+- [[https://elpa.nongnu.org/nongnu/eat.html][NonGNU ELPA EAT package page]]
+- [[https://elpa.nongnu.org/nongnu/doc/eat.html][Official EAT manual]]
+- [[https://codeberg.org/akib/emacs-eat/src/tag/v0.9.4][EAT 0.9.4 tag]]
+- [[https://codeberg.org/akib/emacs-eat/issues/237][Maintenance-status discussion, issue 237]]
+- [[https://codeberg.org/akib/emacs-eat/issues/158][Public mode-hook request, issue 158]]
+- [[https://codeberg.org/akib/emacs-eat/issues/137][Semantic prompt request, issue 137]]
+- [[https://codeberg.org/akib/emacs-eat/issues/248][ncurses highlight/cursor issue 248]]
+- [[https://codeberg.org/akib/emacs-eat/issues/268][Synchronized-output issue 268]]
+- [[https://codeberg.org/akib/emacs-eat/issues/230][Remote-shell issue 230]]

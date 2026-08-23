@@ -1,0 +1,272 @@
+#+title: Emacsvox EAT Accessibility Implementation Plan
+#+date: 2026-08-23
+#+options: toc:2 num:nil
+
+* Objective
+
+Resolve the EAT correctness, lifecycle, accessibility, performance, privacy, and
+speech-interference issues that can be addressed inside Emacsvox without
+requiring major EAT changes.
+
+The evidence baseline and design rationale are in
+[[file:eat_review_report.org][eat_review_report.org]].  Work is delivered as
+small commits.  Source, tests, documentation, and compiled-code verification are
+kept distinct so each behavioral change remains reviewable.
+
+* Constraints
+
+- Preserve all pre-existing tracked and untracked work.
+- Do not modify the user's Emacs configuration or existing live terminal
+  sessions.
+- Use the Emacs selected by ~local.mk~.
+- Run ~make check-emacs~ and ~make bytecode-check~ before compiler diagnosis.
+- Run ~make bytecode~ after ordinary Lisp changes and verify in a fresh Emacs.
+- Use ~make bytecode-rebuild~ after macro/public-interface changes, branch
+  switches, or pulls.
+- Do not introduce dependencies or rely on unstable EAT internals without an
+  explicit decision.
+- Pause for a user decision before a broad refactor, public API change, or
+  materially different user-facing default.
+
+* Baseline
+
+| Item | Value |
+|------+-------|
+| Emacsvox starting commit | ~0a19bac66dfc5e0b519f0157a28d271878ea2304~ |
+| Emacs | GNU Emacs 31.0.90, ~1bd56ff93273~ |
+| EAT | NonGNU ELPA 0.9.4, ~c91451f2d174~ |
+| Focused EAT tests | 6 passed |
+| Full unit suite | 2354 expected passes, 1 skip, 1 unrelated agent-shell failure |
+| Byte-code | Current at start |
+
+Pre-existing untracked files at start:
+
+#+begin_example
+audit.org
+aural_report.org
+code_review_1_report.org
+code_review_prompt.org
+notes.org
+notes.org~
+#+end_example
+
+* Work breakdown
+
+** DONE Phase 0: Audit and tracked implementation plan
+
+Deliverables:
+
+- complete evidence-based audit;
+- phased implementation plan;
+- baseline and preservation record.
+
+Acceptance:
+
+- Org lint reports no issues;
+- no tracked source/configuration changes;
+- only the two scoped documentation files are committed.
+
+** TODO Phase 1: Correctness and lifecycle foundation
+
+Issues:
+
+- F-01 nil cursor on empty/reset/alternate display;
+- pending completion state surviving reset/exit/reload;
+- process exec/exit generation identity.
+
+Planned slices:
+
+1. nil-safe update fallback with real terminal-model tests;
+2. buffer-local generation/reset helpers;
+3. process lifecycle observation and stale timer/state cancellation.
+
+Acceptance:
+
+- empty terminal, reset, and empty alternate display never signal;
+- existing reset announcement completes;
+- exit/restart cannot reuse completion or screen state;
+- source tests, byte-code build, and fresh compiled verification pass.
+
+** TODO Phase 2: Public-API screen observer and pure diff
+
+Issues:
+
+- F-02 lost multiline output;
+- resize/output/reset indistinguishable;
+- no previous cursor/screen/style state;
+- bounded-performance requirement.
+
+Planned slices:
+
+1. immutable bounded visible-screen snapshot from public EAT getters;
+2. pure logical-row/text/style diff;
+3. update generations, resize/alternate-state comparison, and quiescence;
+4. deterministic unit and real-terminal ERT.
+
+Acceptance:
+
+- observer does not read ~eat--t-*~ structs or private wrap/prompt state;
+- work is bounded by visible terminal size;
+- arbitrary output chunk splits converge on the same quiesced diff;
+- unchanged repaint and resize-only events are classified without content
+  speech.
+
+** TODO Phase 3: Semantic foreground output
+
+Issues:
+
+- F-02 multiline output loss;
+- F-03 arbitrary/flooding speech;
+- mixed interruption and transaction semantics.
+
+Planned slices:
+
+1. native EAT aural facts and delivery roles;
+2. bounded complete-line output;
+3. prompt-redraw and unchanged-repaint suppression;
+4. progress/status coalescing and rate limiting;
+5. selected/follow-live policy.
+
+Acceptance:
+
+- shell/REPL results are spoken before a redrawn prompt;
+- rapid repaint cannot flood or repeatedly stop unrelated speech;
+- resize-only/unchanged repaint stays quiet;
+- selected scrollback review is not interrupted by live output;
+- punctuation and voice information survive presentation.
+
+** TODO Phase 4: Terminal-side completion transaction
+
+Issues:
+
+- F-04 ambiguous candidates silent;
+- F-05 first-update snapshot loss;
+- F-06 token/line parsing failures.
+
+Planned slices:
+
+1. pre-Tab public screen snapshot and generation/deadline;
+2. unique completion from logical screen change;
+3. quiesced candidate/help-row extraction;
+4. count, truncation, repeated-Tab deduplication, and retained review;
+5. Bash/readline PTY and router-shaped fixtures.
+
+Acceptance:
+
+- ~~/sr<Tab>~ and ~git pul<Tab>~ remain concise;
+- ~git pu<Tab><Tab>~ announces and retains ~pull~ and ~push~;
+- split chunks, bell, resize, wrapping, spaces, quoting, Unicode, punctuation,
+  and same-length changes are covered;
+- no assumption of Bash or structured remote completion is required.
+
+** TODO Phase 5: Lifecycle and interaction semantics
+
+Issues:
+
+- F-07 prompt status;
+- F-09 process/alternate-screen lifecycle;
+- F-12 bell, mode labels, paste, title/CWD, input editing, secure input;
+- optional background monitoring.
+
+Planned slices:
+
+1. process/app enter/exit and alternate-screen announcements;
+2. human mode labels and paste/yank state;
+3. bell deduplication;
+4. title/CWD comparison and verbosity policy;
+5. safe password command feedback and state clearing;
+6. optional per-buffer output monitoring.
+
+Acceptance:
+
+- semantic state changes are distinct from terminal content;
+- no password characters or retained secure snapshots reach speech/logs;
+- background content is silent by default and monitoring is rate-limited;
+- no EAT callback is replaced without preserving its behavior and testing it.
+
+** TODO Phase 6: Highlight, focus, and manual review
+
+Issues:
+
+- F-08 style semantics;
+- HT-01 active item/highlight inference;
+- missing manual access when inference is uncertain.
+
+Planned slices:
+
+1. normalized rendered style signatures;
+2. conservative cursor/style/input/timing focus score;
+3. current row, changed region, likely highlight, candidate, and frozen-screen
+   review commands;
+4. terminal verbosity/output-monitor commands;
+5. less/Vim/whiptail/status fixtures.
+
+Acceptance:
+
+- style-only selection can be spoken;
+- static inverse headers are not assumed to be focus;
+- confidence is conservative and manual review always remains available;
+- full-screen refresh is bounded and usable.
+
+** TODO Phase 7: EAT-backed Eshell
+
+Issue:
+
+- F-10 separate ~eat-eshell-update-hook~ is currently unwired.
+
+Acceptance:
+
+- shared observer handles EAT visual regions in Eshell;
+- generic Emacsvox Eshell speech is not duplicated;
+- visual command enter/exit, resize, background, and process exit are tested.
+
+** TODO Phase 8: Consolidated validation and documentation
+
+Deliverables:
+
+- pure unit, real EAT terminal, PTY Bash/readline, deterministic TUI, and
+  representative real-app tests;
+- fresh compiled Emacs verification;
+- user documentation for modes, completion ownership, review commands,
+  verbosity, monitoring, shell integration, and password safety;
+- final audit-to-implementation traceability table.
+
+Acceptance:
+
+- all scoped tests pass;
+- full suite has no new failures;
+- ~make bytecode-check~ reports current;
+- every finding is fixed, explicitly mitigated, or documented as requiring an
+  upstream EAT API/major change.
+
+* Deferred to upstream EAT
+
+These do not block conservative Emacsvox implementations:
+
+- structured update causes and dirty text/style ranges;
+- public input-mode getter/hooks;
+- additive bell/title/CWD/alternate-screen events;
+- semantic prompt/OSC 133 API;
+- OSC 8 hyperlink support;
+- remote TERM/terminfo fixes;
+- synchronized-output and terminal parser/performance fixes.
+
+* Decision log
+
+| Date | Decision | Reason |
+|------+----------+--------|
+| 2026-08-23 | Use current public EAT snapshots and small optional adapters; do not make private terminal structs architectural. | Upstream mainline is quiet and the public getters cover a conservative implementation. |
+| 2026-08-23 | Preserve silent-by-default background behavior. | It is the safer privacy and speech-interference default. |
+| 2026-08-23 | Separate the nil-cursor fix from output/completion redesign. | Lowest-risk confirmed correctness fix with an unambiguous regression oracle. |
+| 2026-08-23 | Prefer deterministic local router/TUI fixtures over external sessions. | Reproducible, safe, and independent of device/network state. |
+
+* Progress log
+
+| Date | Commit | Phase | Result / validation |
+|------+--------+-------+---------------------|
+| 2026-08-23 | pending | 0 | Audit and project plan prepared; Org lint clean. |
+
+* Current next action
+
+Commit Phase 0 documentation, then implement the Phase 1 nil-cursor patch and
+real terminal-model regression tests.
