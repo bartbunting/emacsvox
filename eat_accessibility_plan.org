@@ -87,7 +87,7 @@ Acceptance:
 - exit/restart cannot reuse completion or screen state;
 - source tests, byte-code build, and fresh compiled verification pass.
 
-** TODO Phase 2: Public-API screen observer and pure diff
+** DONE Phase 2: Public-API screen observer and pure diff
 
 Issues:
 
@@ -101,7 +101,7 @@ Planned slices:
 1. [X] immutable bounded visible-screen snapshot from public EAT getters;
 2. [X] pure logical-row/text/style diff;
 3. [X] update generations, resize/alternate-state comparison, and quiescence;
-4. deterministic unit and real-terminal ERT.
+4. [X] deterministic unit and real-terminal ERT.
 
 Acceptance:
 
@@ -270,10 +270,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~18d284a83~ | 1.3 | Native selected-buffer process exit/restart lifecycle; duplicate/stale exits and background disclosure suppressed; 15 focused tests and a fresh compiled real-process exit pass. |
 | 2026-08-23 | ~13f5836c4~ | 2.1 | Data-only visible-screen snapshot from public EAT accessors and normalized rendered style properties; no speech-policy change. |
 | 2026-08-23 | ~093a1e9bc~ | 2.2 | Linear bounded text/row/style diff with independent cursor, resize, alternate-screen, title, CWD, and generation classification; 23 focused tests and fresh compiled verification pass. |
-| 2026-08-23 | this commit | 2.3 | Buffer-local snapshots and serial-checked 60 ms quiescence transactions; lifecycle/focus loss cancels delivery, and arbitrary text/escape chunking converges; 26 focused tests and the real compiled timer pass. |
+| 2026-08-23 | ~a85bd7095~ | 2.3 | Buffer-local snapshots and serial-checked 60 ms quiescence transactions; lifecycle/focus loss cancels delivery, and arbitrary text/escape chunking converges; 26 focused tests and the real compiled timer pass. |
+| 2026-08-23 | this commit | 2.4 | Real EAT unchanged repaint, resize-only, reflow, reset, and alternate-screen observer coverage; 29 focused tests pass. Full suite: 2377 expected passes, 1 skip, and only the pre-existing agent-shell failure. |
 
 * Current next action
 
-Complete Phase 2 validation for unchanged repaint, resize/reflow, reset, and
-alternate-screen transitions through the observer, then run the full suite and
-record the phase boundary before adding semantic speech.
+Implement selected foreground shell/REPL output delivery from quiesced diffs,
+beginning with bounded complete logical lines, prompt-redraw suppression, and
+native aural transactions while retaining the existing completion behavior.

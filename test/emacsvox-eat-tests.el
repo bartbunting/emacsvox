@@ -627,6 +627,105 @@
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 
+(ert-deftest emacsvox-eat-screen-observer-classifies-repaint-and-resize ()
+  "Real unchanged, resize-only, and reflow updates remain distinguishable."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t)))
+            (eat-term-resize eat-terminal 8 4)
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (should-not emacsvox-eat--pending-screen-diff)
+            (should-not emacsvox-eat--quiescence-timer)
+            (eat-term-resize eat-terminal 12 4)
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (should
+             (equal (plist-get emacsvox-eat--pending-screen-diff :changes)
+                    '(size)))
+            (emacsvox-eat--cancel-quiescence)
+            (eat-term-resize eat-terminal 8 4)
+            (eat-term-process-output eat-terminal "abcdefghijk")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (emacsvox-eat--cancel-quiescence)
+            (eat-term-resize eat-terminal 12 4)
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (should
+             (equal (plist-get emacsvox-eat--pending-screen-diff :changes)
+                    '(text cursor size))))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-screen-observer-classifies-alternate-transitions ()
+  "Real alternate-screen entry and exit retain their semantic boundary."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t)))
+            (eat-term-resize eat-terminal 20 4)
+            (eat-term-process-output eat-terminal "Main")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (eat-term-process-output eat-terminal "\e[?1049hAlt")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (should
+             (memq
+              'alternate-screen
+              (plist-get emacsvox-eat--pending-screen-diff :changes)))
+            (should
+             (plist-get emacsvox-eat--screen-snapshot :alternate-screen))
+            (emacsvox-eat--cancel-quiescence)
+            (eat-term-process-output eat-terminal "\e[?1049l")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (should
+             (memq
+              'alternate-screen
+              (plist-get emacsvox-eat--pending-screen-diff :changes)))
+            (should-not
+             (plist-get emacsvox-eat--screen-snapshot :alternate-screen)))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-screen-observer-reset-starts-a-fresh-baseline ()
+  "A real EAT reset cancels pending delivery before observing its new screen."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (emacsvox-eat--generation 2))
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-speak-line) #'ignore)
+                    ((symbol-function 'emacsvox-speak-this-char) #'ignore))
+            (eat-term-process-output eat-terminal "prompt")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (eat-term-process-output eat-terminal "\r\npending")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--observe-screen)
+            (should (timerp emacsvox-eat--quiescence-timer))
+            (eat-reset)
+            (should (= emacsvox-eat--generation 3))
+            (should emacsvox-eat--screen-snapshot)
+            (should
+             (= (plist-get emacsvox-eat--screen-snapshot :generation) 3))
+            (should-not emacsvox-eat--pending-screen-baseline)
+            (should-not emacsvox-eat--pending-screen-diff)
+            (should-not emacsvox-eat--quiescence-timer))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
 (ert-deftest emacsvox-eat-reset-invalidates-before-terminal-update ()
   "Reset advances its generation before EAT runs the update hook."
   (with-temp-buffer
