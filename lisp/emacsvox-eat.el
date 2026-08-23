@@ -47,6 +47,8 @@
 (defvar eat-line-mode-map)
 (defvar eat-mode-map)
 (defvar eat-semi-char-mode-map)
+(defvar eat--semi-char-mode)
+(defvar eat-terminal)
 
 ;;   Required modules:
 
@@ -181,20 +183,92 @@
                  (not (advice-member-p function target)))
         (advice-add target :after function '((name . emacsvox)))))))
 
+(defvar-local emacsvox-eat--completion-snapshot nil
+  "Line and token captured before EAT sends terminal completion input.")
+
+(defun emacsvox-eat--tab-event-p (event)
+  "Return non-nil when EVENT is a Tab key event."
+  (and event (memq (event-basic-type event) '(9 tab))))
+
+(defun emacsvox-eat--token-before-cursor (cursor)
+  "Return the terminal token immediately before CURSOR."
+  (when cursor
+    (save-excursion
+      (goto-char cursor)
+      (skip-chars-backward " \t")
+      (let ((end (point)))
+        (skip-chars-backward "^ \t\n;|&<>()")
+        (buffer-substring-no-properties (point) end)))))
+
+(defun emacsvox-eat--capture-completion (cursor)
+  "Capture the line and token at EAT terminal CURSOR."
+  (setq emacsvox-eat--completion-snapshot
+        (and cursor
+             (cons (line-number-at-pos cursor)
+                   (emacsvox-eat--token-before-cursor cursor)))))
+
+(defun emacsvox--advice-eat-self-input-before (_count &optional event)
+  "Capture same-line completion context before EAT sends Tab EVENT."
+  (let ((event (or event last-command-event)))
+    (if (and eat-terminal
+             (bound-and-true-p eat--semi-char-mode)
+             (emacsvox-eat--tab-event-p event))
+        (emacsvox-eat--capture-completion
+         (eat-term-display-cursor eat-terminal))
+      (setq emacsvox-eat--completion-snapshot nil))))
+
+(defun emacsvox-eat--completion-label (token)
+  "Return the final path component of completed TOKEN."
+  (let* ((length (length token))
+         (directory-p (and (> length 0) (= (aref token (1- length)) ?/)))
+         (trimmed (if directory-p (substring token 0 -1) token))
+         (component (file-name-nondirectory trimmed)))
+    (concat (if (zerop (length component)) trimmed component)
+            (if directory-p "/" ""))))
+
+(defun emacsvox-eat--speak-same-line-completion (cursor)
+  "Speak a token extended by terminal completion at CURSOR.
+Return non-nil after providing completion feedback.  Candidate listings that
+move the cursor to another line deliberately fall through to ordinary EAT
+update feedback."
+  (let ((snapshot emacsvox-eat--completion-snapshot))
+    (setq emacsvox-eat--completion-snapshot nil)
+    (when snapshot
+      (let ((old-line (car snapshot))
+            (old-token (cdr snapshot))
+            (new-token (emacsvox-eat--token-before-cursor cursor)))
+        (when (and (= old-line (line-number-at-pos cursor))
+                   (> (length old-token) 0)
+                   (> (length new-token) (length old-token))
+                   (string-prefix-p old-token new-token))
+          (tts-speak (emacsvox-eat--completion-label new-token))
+          t)))))
+
+(defun emacsvox-eat--selected-buffer-p ()
+  "Return non-nil when the current EAT buffer is selected."
+  (eq (current-buffer) (window-buffer (selected-window))))
+
 (with-eval-after-load 'eat
-  (emacsvox-eat--install-advice))
+  (emacsvox-eat--install-advice)
+  (unless (advice-member-p
+           #'emacsvox--advice-eat-self-input-before 'eat-self-input)
+    (advice-add
+     'eat-self-input :before #'emacsvox--advice-eat-self-input-before
+     '((name . emacsvox)))))
 
 ;;; Speech-Enable Terminal Emulation:
 
 (defun emacsvox-eat-update-hook ()
-  "Eat update"
-  (cl-declaim (special eat-terminal))
-  (let* ((emacsvox-show-point  t)
-         (cursor (eat-term-display-cursor eat-terminal))
-         (char (and cursor (char-before cursor))))
-    (cond
-     ((= char 32) (emacsvox-speak-line))
-     (t (emacsvox-speak-this-char char)))))
+  "Speak an EAT update when its buffer is selected."
+  (if (not (emacsvox-eat--selected-buffer-p))
+      (setq emacsvox-eat--completion-snapshot nil)
+    (let* ((emacsvox-show-point t)
+           (cursor (eat-term-display-cursor eat-terminal))
+           (char (and cursor (char-before cursor))))
+      (unless (emacsvox-eat--speak-same-line-completion cursor)
+        (cond
+         ((= char 32) (emacsvox-speak-line))
+         (t (emacsvox-speak-this-char char)))))))
 
 (add-hook 'eat-update-hook #'emacsvox-eat-update-hook)
 (provide 'emacsvox-eat)
