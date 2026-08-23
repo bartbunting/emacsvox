@@ -75,6 +75,12 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
   (emacsvox-eat-update-hook)
   (emacsvox-eat-test--finish-screen-burst))
 
+(defun emacsvox-eat-test--prompt-before-string (face)
+  "Return an EAT-shaped margin annotation using public FACE."
+  (let ((indicator (propertize "X" 'face (list face 'default))))
+    (propertize
+     " " 'display (list '(margin left-margin) indicator))))
+
 (ert-deftest emacsvox-eat-advice-is-current-and-direct ()
   "Current Eat targets use native advice directly."
   (dolist (target emacsvox-eat--advice-targets)
@@ -108,6 +114,9 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
         (cons
          (emacsvox-eat--facts 'command-interaction 'operation-completed)
          'state-change)
+        (cons
+         (emacsvox-eat--facts 'command-interaction 'operation-failed)
+         'notification)
         (cons
          (emacsvox-eat--facts 'command-interaction 'state-changed)
          'state-change)
@@ -2491,6 +2500,179 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (setf (plist-get (plist-get ordinary :row-change) :new-rows)
             '("ordinary replacement"))
       (should-not (emacsvox-eat--status-row ordinary snapshot)))))
+
+(ert-deftest emacsvox-eat-prompt-status-recognizes-only-public-eat-faces ()
+  "Nested margin display data maps only EAT's documented prompt faces."
+  (dolist
+      (case
+       '((eat-shell-prompt-annotation-running . running)
+         (eat-shell-prompt-annotation-success . success)
+         (eat-shell-prompt-annotation-failure . failure)))
+    (should
+     (eq
+      (emacsvox-eat--prompt-status-in-display
+       (emacsvox-eat-test--prompt-before-string (car case)))
+      (cdr case))))
+  (should-not
+   (emacsvox-eat--prompt-status-in-display
+    (emacsvox-eat-test--prompt-before-string 'error)))
+  (should-not
+   (emacsvox-eat--prompt-status-in-display
+    '((margin left-margin) "untrusted X"))))
+
+(ert-deftest emacsvox-eat-screen-snapshot-captures-public-prompt-overlay ()
+  "The latest visible EAT-faced margin overlay becomes data-only status."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          overlay)
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 30 4)
+            (eat-term-process-output eat-terminal "$ ")
+            (eat-term-redisplay eat-terminal)
+            (let ((beginning
+                   (marker-position
+                    (eat-term-display-beginning eat-terminal))))
+              (setq overlay (make-overlay beginning (1+ beginning))))
+            (dolist
+                (case
+                 '((eat-shell-prompt-annotation-running . running)
+                   (eat-shell-prompt-annotation-success . success)
+                   (eat-shell-prompt-annotation-failure . failure)))
+              (overlay-put
+               overlay 'before-string
+               (emacsvox-eat-test--prompt-before-string (car case)))
+              (should
+               (eq (plist-get (emacsvox-eat--capture-screen) :prompt-status)
+                   (cdr case))))
+            (overlay-put
+             overlay 'before-string
+             (emacsvox-eat-test--prompt-before-string 'error))
+            (should-not
+             (plist-get (emacsvox-eat--capture-screen) :prompt-status))
+            (should-not
+             (emacsvox-eat--capture-prompt-status
+              (marker-position (eat-term-display-beginning eat-terminal))
+              (marker-position (eat-term-end eat-terminal))
+              (marker-position (eat-term-display-cursor eat-terminal))
+              t)))
+        (when overlay (delete-overlay overlay))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-screen-diff-classifies-prompt-status-independently ()
+  "Prompt annotation changes remain distinct from text and style changes."
+  (let* ((old (emacsvox-eat-test--screen "$ " 30 4))
+         (new (copy-tree old)))
+    (setq old (plist-put old :prompt-status 'success)
+          new (plist-put new :prompt-status 'failure))
+    (let ((diff (emacsvox-eat--screen-diff old new)))
+      (should (plist-get diff :prompt-status-changed))
+      (should (eq (plist-get diff :old-prompt-status) 'success))
+      (should (eq (plist-get diff :new-prompt-status) 'failure))
+      (should (equal (plist-get diff :changes) '(prompt-status)))
+      (should-not (plist-get diff :text-changed))
+      (should-not (plist-get diff :style-changed)))
+    (setf (plist-get old :prompt-status) 'failure)
+    (should (plist-get (emacsvox-eat--screen-diff old new) :unchanged))))
+
+(ert-deftest emacsvox-eat-prompt-status-policy-retains-all-and-bounds-speech ()
+  "Failures are automatic; success requires verbose mode and prior activity."
+  (with-temp-buffer
+    (let ((snapshot '(:cursor-row 0 :alternate-screen nil))
+          submissions)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (list content arguments) submissions))))
+        (emacsvox-eat--screen-quiesced
+         '(:prompt-status-changed t
+           :old-prompt-status success :new-prompt-status failure)
+         snapshot)
+        (should (equal emacsvox-eat--last-status-text "Shell command failed"))
+        (should (equal (caar submissions) "Shell command failed"))
+        (should
+         (equal
+          (plist-get (cadar submissions) :facts)
+          '(:role command-interaction
+            :command-interaction-kind shell
+            :events (operation-failed))))
+        (should (eq (plist-get (cadar submissions) :occasion) 'notification))
+        (setq submissions nil)
+        (emacsvox-eat--screen-quiesced
+         '(:prompt-status-changed t
+           :old-prompt-status failure :new-prompt-status running)
+         snapshot)
+        (should (equal emacsvox-eat--last-status-text "Shell command running"))
+        (should-not submissions)
+        (emacsvox-eat--screen-quiesced
+         '(:prompt-status-changed t
+           :old-prompt-status running :new-prompt-status success)
+         snapshot)
+        (should (equal emacsvox-eat--last-status-text
+                       "Shell command succeeded"))
+        (should-not submissions)
+        (setq emacsvox-eat-verbosity 'verbose)
+        (emacsvox-eat--screen-quiesced
+         '(:prompt-status-changed t
+           :old-prompt-status running :new-prompt-status success)
+         snapshot)
+        (should (equal (caar submissions) "Shell command succeeded"))
+        (should
+         (equal
+          (plist-get (cadar submissions) :facts)
+          '(:role command-interaction
+            :command-interaction-kind shell
+            :events (operation-completed))))
+        (setq submissions nil)
+        ;; Initial successful prompts do not create startup chatter.
+        (emacsvox-eat--screen-quiesced
+         '(:prompt-status-changed t
+           :old-prompt-status nil :new-prompt-status success)
+         snapshot)
+        (should-not submissions)))))
+
+(ert-deftest emacsvox-eat-real-prompt-overlay-failure-follows-observer-path ()
+  "A public EAT-faced overlay change yields one semantic failure transaction."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          overlay
+          submissions)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions))))
+            (eat-term-resize eat-terminal 30 4)
+            (eat-term-process-output eat-terminal "$ ")
+            (eat-term-redisplay eat-terminal)
+            (let ((beginning
+                   (marker-position
+                    (eat-term-display-beginning eat-terminal))))
+              (setq overlay (make-overlay beginning (1+ beginning))))
+            (overlay-put
+             overlay 'before-string
+             (emacsvox-eat-test--prompt-before-string
+              'eat-shell-prompt-annotation-success))
+            (setq emacsvox-eat--screen-snapshot
+                  (emacsvox-eat--capture-screen))
+            (overlay-put
+             overlay 'before-string
+             (emacsvox-eat-test--prompt-before-string
+              'eat-shell-prompt-annotation-failure))
+            (emacsvox-eat-update-hook)
+            (emacsvox-eat-test--finish-screen-burst)
+            (should (equal (mapcar #'car submissions)
+                           '("Shell command failed")))
+            (should
+             (eq (plist-get emacsvox-eat--screen-snapshot :prompt-status)
+                 'failure)))
+        (when overlay (delete-overlay overlay))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
 
 (ert-deftest emacsvox-eat-application-status-is-retained-but-not-automatic ()
   "Only styled bottom-row application status qualifies for explicit review."

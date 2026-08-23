@@ -294,6 +294,12 @@ when the terminal is selected again."
     mouse-highlight interactive)
   "Stable order of semantic traits in normalized EAT style signatures.")
 
+(defconst emacsvox-eat--prompt-status-faces
+  '((eat-shell-prompt-annotation-running . running)
+    (eat-shell-prompt-annotation-success . success)
+    (eat-shell-prompt-annotation-failure . failure))
+  "Public EAT prompt annotation faces and their semantic status.")
+
 (defun emacsvox-eat--normalize-face-value (value)
   "Return a stable, data-only terminal style signature for face VALUE."
   (let (faces attributes)
@@ -474,6 +480,63 @@ rendered terminal screen."
               "[[:cntrl:]]+" " " text nil 'literal)))
       (if truncated-p (concat text "…") text))))
 
+(defun emacsvox-eat--prompt-status-in-display (value &optional depth)
+  "Return an EAT prompt status represented inside display VALUE.
+DEPTH bounds traversal of standard face, string-property, list, and vector
+display data.  Only EAT's public prompt annotation faces are recognized."
+  (let ((depth (or depth 0)))
+    (when (< depth 8)
+      (cond
+       ((symbolp value)
+        (alist-get value emacsvox-eat--prompt-status-faces))
+       ((stringp value)
+        (let ((position 0)
+              (length (length value))
+              status)
+          (while (and (< position length) (null status))
+            (setq status
+                  (or
+                   (emacsvox-eat--prompt-status-in-display
+                    (get-text-property position 'face value) (1+ depth))
+                   (emacsvox-eat--prompt-status-in-display
+                    (get-text-property position 'font-lock-face value)
+                    (1+ depth))
+                   (emacsvox-eat--prompt-status-in-display
+                    (get-text-property position 'display value) (1+ depth))))
+            (setq position
+                  (or (next-property-change position value length)
+                      length)))
+          status))
+       ((consp value)
+        (or
+         (emacsvox-eat--prompt-status-in-display (car value) (1+ depth))
+         (emacsvox-eat--prompt-status-in-display (cdr value) (1+ depth))))
+       ((vectorp value)
+        (seq-some
+         (lambda (item)
+           (emacsvox-eat--prompt-status-in-display item (1+ depth)))
+         value))))))
+
+(defun emacsvox-eat--capture-prompt-status
+    (beginning end cursor alternate-screen-p)
+  "Return the latest public EAT prompt status in BEGINNING through END.
+CURSOR bounds the search to annotations at or before the terminal cursor.
+No main-screen prompt annotation is inferred on ALTERNATE-SCREEN-P."
+  (unless alternate-screen-p
+    (let ((limit (or cursor end))
+          best-position
+          best-status)
+      (dolist (overlay (overlays-in beginning end))
+        (when-let* ((position (overlay-start overlay))
+                    ((<= beginning position limit))
+                    (status
+                     (emacsvox-eat--prompt-status-in-display
+                      (overlay-get overlay 'before-string))))
+          (when (or (null best-position) (>= position best-position))
+            (setq best-position position
+                  best-status status))))
+      best-status)))
+
 (defun emacsvox-eat--capture-screen ()
   "Return a data-only snapshot of the current visible EAT display.
 Only public EAT terminal accessors and rendered buffer properties are used."
@@ -483,6 +546,8 @@ Only public EAT terminal accessors and rendered buffer properties are used."
            (end (marker-position (eat-term-end eat-terminal)))
            (cursor-marker (eat-term-display-cursor eat-terminal))
            (cursor (and cursor-marker (marker-position cursor-marker)))
+           (alternate-screen
+            (not (null (eat-term-in-alternative-display-p eat-terminal))))
            (coordinates
             (emacsvox-eat--cursor-coordinates cursor beginning end))
            (size (eat-term-size eat-terminal))
@@ -490,7 +555,10 @@ Only public EAT terminal accessors and rendered buffer properties are used."
            (styles (emacsvox-eat--style-runs beginning end))
            (text
             (emacsvox-eat--redact-concealed-text
-             (buffer-substring-no-properties beginning end) styles)))
+             (buffer-substring-no-properties beginning end) styles))
+           (prompt-status
+            (emacsvox-eat--capture-prompt-status
+             beginning end cursor alternate-screen)))
       (list
        :generation emacsvox-eat--generation
        :style-version emacsvox-eat--style-signature-version
@@ -504,8 +572,8 @@ Only public EAT terminal accessors and rendered buffer properties are used."
        :cursor-column (cdr coordinates)
        :cursor-type (eat-term-cursor-type eat-terminal)
        :size (cons (car size) (cdr size))
-       :alternate-screen
-       (not (null (eat-term-in-alternative-display-p eat-terminal)))
+       :alternate-screen alternate-screen
+       :prompt-status prompt-status
        :title (emacsvox-eat--sanitize-metadata-value title)
        :cwd (emacsvox-eat--sanitize-metadata-value default-directory)))))
 
@@ -609,6 +677,10 @@ Snapshots from different terminal generations are intentionally not compared."
           (and comparable-p
                (not (eq (plist-get old :alternate-screen)
                         (plist-get new :alternate-screen)))))
+         (prompt-status-changed
+          (and comparable-p
+               (not (eq (plist-get old :prompt-status)
+                        (plist-get new :prompt-status)))))
          (title-changed
           (and comparable-p
                (not (equal (plist-get old :title)
@@ -627,6 +699,7 @@ Snapshots from different terminal generations are intentionally not compared."
                (cursor-type . ,cursor-type-changed)
                (size . ,size-changed)
                (alternate-screen . ,alternate-screen-changed)
+               (prompt-status . ,prompt-status-changed)
                (title . ,title-changed)
                (cwd . ,cwd-changed)))
       (when (cdr change) (push (car change) changes)))
@@ -656,6 +729,9 @@ Snapshots from different terminal generations are intentionally not compared."
      :cursor-type-changed cursor-type-changed
      :size-changed size-changed
      :alternate-screen-changed alternate-screen-changed
+     :prompt-status-changed prompt-status-changed
+     :old-prompt-status (and comparable-p (plist-get old :prompt-status))
+     :new-prompt-status (and comparable-p (plist-get new :prompt-status))
      :title-changed title-changed
      :cwd-changed cwd-changed
      :changes changes
@@ -1109,6 +1185,34 @@ Unlike `emacsvox-eat--status-row', this never authorizes automatic speech."
          'continuous nil 'replaceable
          (emacsvox-eat--terminal-delivery-key 'status))))))
 
+(defun emacsvox-eat--prompt-status-text (status)
+  "Return a content-free description of EAT prompt STATUS."
+  (pcase status
+    ('running "Shell command running")
+    ('success "Shell command succeeded")
+    ('failure "Shell command failed")))
+
+(defun emacsvox-eat--present-prompt-status (diff)
+  "Present the conservative automatic shell prompt status represented by DIFF.
+Failures are always announced.  A success is announced only at verbose
+terminal verbosity and only after an observed running or failed state."
+  (when (plist-get diff :prompt-status-changed)
+    (let ((old (plist-get diff :old-prompt-status))
+          (new (plist-get diff :new-prompt-status)))
+      (cond
+       ((eq new 'failure)
+        (emacsvox-eat--submit
+         "Shell command failed"
+         (emacsvox-eat--facts 'command-interaction 'operation-failed)
+         'notification 'warn-user))
+       ((and (eq new 'success)
+             (eq emacsvox-eat-verbosity 'verbose)
+             (memq old '(running failure)))
+        (emacsvox-eat--submit
+         "Shell command succeeded"
+         (emacsvox-eat--facts 'command-interaction 'operation-completed)
+         'state-change 'task-done))))))
+
 (defun emacsvox-eat--metadata-change (diff snapshot)
   "Return bounded changed terminal metadata from DIFF and SNAPSHOT."
   (when (or (plist-get diff :title-changed)
@@ -1208,8 +1312,14 @@ Unlike `emacsvox-eat--status-row', this never authorizes automatic speech."
       (setq emacsvox-eat--last-likely-focus nil
             emacsvox-eat--last-focus-presentation-identity nil)))
   (emacsvox-eat--retain-metadata-change diff snapshot)
-  (when-let* ((status (emacsvox-eat--retained-status-row diff snapshot)))
-    (setq emacsvox-eat--last-status-text status)))
+  (cond
+   ((plist-get diff :prompt-status-changed)
+    (setq emacsvox-eat--last-status-text
+          (emacsvox-eat--prompt-status-text
+           (plist-get diff :new-prompt-status))))
+   (t
+    (when-let* ((status (emacsvox-eat--retained-status-row diff snapshot)))
+      (setq emacsvox-eat--last-status-text status)))))
 
 (defun emacsvox-eat--alternate-screen-transitions (diff snapshot)
   "Return chronological alternate-screen states represented by DIFF.
@@ -1285,7 +1395,8 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
               (emacsvox-eat--present-output-rows rows)
             (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
               (emacsvox-eat--present-status status))))))
-    (emacsvox-eat--present-metadata-change diff snapshot)))
+    (emacsvox-eat--present-metadata-change diff snapshot)
+    (emacsvox-eat--present-prompt-status diff)))
 
 (defun emacsvox-eat--finish-quiescence
     (buffer generation serial &optional terminal-exiting-p)
@@ -2126,6 +2237,12 @@ The command also works from the terminal's frozen review buffer."
       "The last terminal change returned to the main screen"))
    ((plist-get diff :generation-changed)
     "The last terminal change started a new display generation")
+   ((plist-get diff :prompt-status-changed)
+    (if-let* ((status
+               (emacsvox-eat--prompt-status-text
+                (plist-get diff :new-prompt-status))))
+        (format "The terminal prompt reports: %s" status)
+      "The terminal prompt status is no longer available"))
    ((plist-get diff :text-changed)
     (let* ((change (plist-get diff :row-change))
            (start (or (plist-get change :start) 0))
