@@ -322,6 +322,42 @@
            :occasion notification
            :compatibility-actions ((icon warn-user)))))))))
 
+(ert-deftest emacsvox-eat-output-uses-one-native-bounded-transaction ()
+  "Terminal rows use command-output semantics, sanitization, and hard caps."
+  (let ((emacsvox-eat--maximum-output-lines 2)
+        (emacsvox-eat--maximum-output-characters 20)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest arguments)
+                 (push (list content arguments) submissions))))
+      (emacsvox-eat--present-output-rows
+       (list (concat "one" (string 1) "unsafe")
+             "second line is deliberately long"
+             "third")))
+    (should (= (length submissions) 1))
+    (let ((content (caar submissions))
+          (arguments (cadar submissions)))
+      (should (equal content
+                     "one unsafe\nsecond li … output truncated\n1 additional lines not spoken"))
+      (should
+       (equal
+        arguments
+        '(:facts
+          (:role command-output
+           :command-interaction-kind shell
+           :events (command-output-received))
+          :module eat
+          :occasion continuous
+          :compatibility-actions nil))))))
+
+(ert-deftest emacsvox-eat-output-suppresses-empty-presentations ()
+  "Whitespace-only terminal changes do not submit empty speech."
+  (let (submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (&rest arguments) (push arguments submissions))))
+      (emacsvox-eat--present-output-rows '("" "   ")))
+    (should-not submissions)))
+
 (ert-deftest emacsvox-eat-screen-snapshot-uses-public-visible-state ()
   "A screen snapshot captures visible text, cursor, style, and metadata."
   (with-temp-buffer

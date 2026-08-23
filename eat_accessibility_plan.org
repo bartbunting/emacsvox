@@ -121,7 +121,7 @@ Issues:
 
 Planned slices:
 
-1. native EAT aural facts and delivery roles;
+1. [X] native EAT aural facts and delivery roles;
 2. bounded complete-line output;
 3. prompt-redraw and unchanged-repaint suppression;
 4. progress/status coalescing and rate limiting;
@@ -271,10 +271,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~13f5836c4~ | 2.1 | Data-only visible-screen snapshot from public EAT accessors and normalized rendered style properties; no speech-policy change. |
 | 2026-08-23 | ~093a1e9bc~ | 2.2 | Linear bounded text/row/style diff with independent cursor, resize, alternate-screen, title, CWD, and generation classification; 23 focused tests and fresh compiled verification pass. |
 | 2026-08-23 | ~a85bd7095~ | 2.3 | Buffer-local snapshots and serial-checked 60 ms quiescence transactions; lifecycle/focus loss cancels delivery, and arbitrary text/escape chunking converges; 26 focused tests and the real compiled timer pass. |
-| 2026-08-23 | this commit | 2.4 | Real EAT unchanged repaint, resize-only, reflow, reset, and alternate-screen observer coverage; 29 focused tests pass. Full suite: 2377 expected passes, 1 skip, and only the pre-existing agent-shell failure. |
+| 2026-08-23 | ~6b9af956b~ | 2.4 | Real EAT unchanged repaint, resize-only, reflow, reset, and alternate-screen observer coverage; 29 focused tests pass. Full suite: 2377 expected passes, 1 skip, and only the pre-existing agent-shell failure. |
+| 2026-08-23 | this commit | 3.1 | Bounded, control-sanitized terminal rows use one native ~command-output~ / ~command-output-received~ transaction; no observer policy change; 31 focused tests pass and byte-code is current. |
 
 * Current next action
 
-Implement selected foreground shell/REPL output delivery from quiesced diffs,
-beginning with bounded complete logical lines, prompt-redraw suppression, and
-native aural transactions while retaining the existing completion behavior.
+Classify conservative complete output rows from a quiesced main-screen diff,
+excluding the cursor/input row and geometry or alternate-screen transitions,
+then replace the arbitrary character fallback without regressing completion.

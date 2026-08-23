@@ -96,6 +96,12 @@
 (defconst emacsvox-eat--quiescence-delay 0.06
   "Seconds of quiet that finish one EAT screen update burst.")
 
+(defconst emacsvox-eat--maximum-output-lines 8
+  "Maximum terminal output rows spoken in one automatic presentation.")
+
+(defconst emacsvox-eat--maximum-output-characters 1000
+  "Maximum terminal content characters before a bounded truncation notice.")
+
 (defconst emacsvox-eat--face-attributes
   '(:foreground :background :weight :slant :underline :strike-through
     :inverse-video :overline :box)
@@ -460,6 +466,47 @@ OPERATION and additional PROPERTIES are optional."
    :compatibility-actions
    (when icon
      (list (emacsvox-aural-compatibility-icon icon)))))
+
+(defun emacsvox-eat--sanitize-output-row (row)
+  "Return ROW with untrusted C0 controls and DEL replaced by spaces."
+  (apply
+   #'string
+   (mapcar
+    (lambda (character)
+      (if (or (< character 32) (= character 127)) ?\s character))
+    (string-to-list (substring-no-properties row)))))
+
+(defun emacsvox-eat--bounded-output (rows)
+  "Return a bounded spoken representation of terminal output ROWS."
+  (let* ((total-lines (length rows))
+         (shown-count (min total-lines emacsvox-eat--maximum-output-lines))
+         (shown-rows
+          (mapcar
+           #'emacsvox-eat--sanitize-output-row
+           (emacsvox-eat--list-slice rows 0 shown-count)))
+         (text (string-join shown-rows "\n"))
+         (characters-truncated
+          (> (length text) emacsvox-eat--maximum-output-characters)))
+    (when characters-truncated
+      (setq text
+            (concat
+             (substring text 0 emacsvox-eat--maximum-output-characters)
+             " … output truncated")))
+    (when (> total-lines shown-count)
+      (setq text
+            (concat
+             text "\n"
+             (format "%d additional lines not spoken"
+                     (- total-lines shown-count)))))
+    (unless (string-empty-p (string-trim text)) text)))
+
+(defun emacsvox-eat--present-output-rows (rows)
+  "Present bounded terminal output ROWS as one native aural transaction."
+  (when-let* ((content (emacsvox-eat--bounded-output rows)))
+    (emacsvox-eat--submit
+     content
+     (emacsvox-eat--facts 'command-output 'command-output-received)
+     'continuous)))
 
 (defun emacsvox-eat--process-started (process)
   "Start a new EAT generation for PROCESS."
