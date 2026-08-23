@@ -283,6 +283,43 @@
       (should (equal emacsvox-vertico--prev-candidate "default"))
       (should (= emacsvox-vertico--prev-index 0)))))
 
+(ert-deftest emacsvox-vertico-initial-unselected-input-speaks-prompt ()
+  "An unrestricted prompt is spoken once before the user types."
+  (with-temp-buffer
+    (let ((vertico--index -1)
+          (vertico--base "")
+          captured)
+      (cl-letf
+          (((symbol-function 'minibuffer-prompt) (lambda () "Todo: "))
+           ((symbol-function 'vertico--candidate) (lambda (&optional _) ""))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest _) (setq captured content))))
+        (emacsvox--advice-vertico--exhibit-after))
+      (should (equal captured "Todo:"))
+      (should (equal emacsvox-vertico--prev-candidate ""))
+      (should (= emacsvox-vertico--prev-index -1)))))
+
+(ert-deftest emacsvox-vertico-unselected-input-update-is-quiet ()
+  "Raw minibuffer input is left to normal typing echo."
+  (with-temp-buffer
+    (let ((vertico--index -1)
+          (vertico--base ""))
+      (setq-local
+       emacsvox-vertico--prev-candidate "a"
+       emacsvox-vertico--prev-index -1)
+      (cl-letf
+          (((symbol-function 'vertico--candidate)
+            (lambda (&optional _) "ab"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest _)
+              (ert-fail "Raw input was submitted as candidate speech")))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest _)
+              (ert-fail "Raw input update produced a candidate cue"))))
+        (emacsvox--advice-vertico--exhibit-after))
+      (should (equal emacsvox-vertico--prev-candidate "ab"))
+      (should (= emacsvox-vertico--prev-index -1)))))
+
 (ert-deftest emacsvox-vertico-owns-initial-minibuffer-content ()
   "Generic setup leaves initial content to an active Vertico session."
   (with-temp-buffer

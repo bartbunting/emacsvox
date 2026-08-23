@@ -236,7 +236,9 @@ feedback when an attempted exit is refused."
     (when
         (and
          (not suppress-p)
-         (or initial-p changed-p navigation-icon))
+         (or initial-p
+             navigation-icon
+             (and changed-p (>= vertico--index 0))))
       (emacsvox-vertico--submit-candidate-feedback
        (emacsvox-vertico-candidate-facts)
        icon
