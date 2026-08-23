@@ -52,6 +52,7 @@
 (defvar eat-semi-char-mode-map)
 (defvar eat-terminal)
 (defvar eat-trace-mode)
+(defvar emacsvox-eat-review-map)
 
 ;;   Required modules:
 
@@ -252,6 +253,12 @@ when the terminal is selected again."
 
 (defconst emacsvox-eat--maximum-focus-characters 240
   "Maximum characters retained for one inferred terminal focus object.")
+
+(defconst emacsvox-eat--maximum-review-lines 40
+  "Maximum retained terminal rows spoken by one explicit review command.")
+
+(defconst emacsvox-eat--maximum-review-characters 4000
+  "Maximum retained terminal characters spoken by one review command.")
 
 (defconst emacsvox-eat--face-attributes
   '(:foreground :background :weight :slant :underline :strike-through
@@ -1688,10 +1695,10 @@ Ignore a stale or duplicate exit after another process has become active."
   (add-hook 'window-selection-change-functions
             #'emacsvox-eat--window-selection-changed nil t)
   (emacsvox-eat--install-bell-observer)
-  (define-key eat-semi-char-mode-map emacsvox-prefix 'emacsvox-keymap)
   (cl-loop
-   for map in
-   '(eat-line-mode-map eat-mode-map eat-char-mode-map)
+   for map-symbol in
+   '(eat-line-mode-map eat-semi-char-mode-map eat-mode-map eat-char-mode-map)
+   for map = (and (boundp map-symbol) (symbol-value map-symbol))
    do
    (when (keymapp map) (define-key map emacsvox-prefix  'emacsvox-keymap))))
 
@@ -1716,6 +1723,257 @@ prefix, disable it."
      (emacsvox-eat--facts 'command-interaction 'state-changed)
      'state-change 'button)
     enabled-p))
+
+;;;  Snapshot Review:
+
+(defun emacsvox-eat--ensure-review-context ()
+  "Require a reviewable EAT terminal as the current buffer."
+  (unless (derived-mode-p 'eat-mode)
+    (user-error "This is not an EAT terminal buffer"))
+  (when emacsvox-eat--secure-input-active-p
+    (user-error "Terminal review is unavailable during secure input")))
+
+(defun emacsvox-eat--review-facts (&optional operation)
+  "Return semantic facts for explicit terminal review of OPERATION."
+  (append
+   '(:role command-output :command-interaction-kind shell)
+   (when operation (list :command-operation operation))))
+
+(defun emacsvox-eat--submit-review (content &optional operation)
+  "Submit retained terminal CONTENT for explicit OPERATION review."
+  (emacsvox-eat--submit
+   content (emacsvox-eat--review-facts operation) 'inspection))
+
+(defun emacsvox-eat--bounded-review-output (rows)
+  "Return a bounded explicit-review representation of retained ROWS."
+  (let* ((total-lines (length rows))
+         (shown-count (min total-lines emacsvox-eat--maximum-review-lines))
+         (shown-rows
+          (mapcar
+           #'emacsvox-eat--sanitize-output-row
+           (emacsvox-eat--list-slice rows 0 shown-count)))
+         (text (string-join shown-rows "\n"))
+         (characters-truncated
+          (> (length text) emacsvox-eat--maximum-review-characters)))
+    (when characters-truncated
+      (setq text
+            (concat
+             (substring text 0 emacsvox-eat--maximum-review-characters)
+             " … review truncated")))
+    (when (> total-lines shown-count)
+      (setq text
+            (concat
+             text "\n"
+             (format "%d additional retained rows not spoken"
+                     (- total-lines shown-count)))))
+    (unless (string-empty-p (string-trim text)) text)))
+
+(defun emacsvox-eat--row-range-label (start end)
+  "Return a human one-based row label for zero-based START through END."
+  (if (= start end)
+      (format "row %d" (1+ start))
+    (format "rows %d through %d" (1+ start) (1+ end))))
+
+(defun emacsvox-eat-speak-current-row ()
+  "Speak the terminal cursor row from the latest retained screen snapshot."
+  (interactive)
+  (emacsvox-eat--ensure-review-context)
+  (let* ((snapshot emacsvox-eat--screen-snapshot)
+         (rows (plist-get snapshot :rows))
+         (row (plist-get snapshot :cursor-row)))
+    (cond
+     ((null snapshot)
+      (emacsvox-eat--submit-review
+       "No terminal screen snapshot is available" 'output-navigation))
+     ((not (and (integerp row) (< -1 row (length rows))))
+      (emacsvox-eat--submit-review
+       "The retained terminal screen has no cursor row"
+       'output-navigation))
+     (t
+      (let ((text
+             (emacsvox-eat--sanitize-output-row (nth row rows))))
+        (emacsvox-eat--submit-review
+         (if (string-empty-p (string-trim text))
+             (format "Current terminal row %d of %d is blank"
+                     (1+ row) (length rows))
+           (format "Current terminal row %d of %d: %s"
+                   (1+ row) (length rows) text))
+         'output-navigation))))))
+
+(defun emacsvox-eat--style-change-row-label (diff snapshot)
+  "Return the retained row label for a style-only DIFF at SNAPSHOT."
+  (when-let* ((change (plist-get diff :style-change))
+              (text (plist-get snapshot :text))
+              ((stringp text))
+              (start (plist-get change :start))
+              (new-end (plist-get change :new-end))
+              ((integerp start))
+              ((integerp new-end)))
+    (let* ((starts (emacsvox-eat--row-start-offsets text))
+           (first (emacsvox-eat--row-for-offset starts start))
+           (last
+            (emacsvox-eat--row-for-offset
+             starts (max start (1- new-end)))))
+      (emacsvox-eat--row-range-label first last))))
+
+(defun emacsvox-eat--last-change-description (diff snapshot)
+  "Return an explicit-review description of retained DIFF at SNAPSHOT."
+  (cond
+   ((plist-get diff :alternate-screen-changed)
+    (if (plist-get snapshot :alternate-screen)
+        "The last terminal change entered an application screen"
+      "The last terminal change returned to the main screen"))
+   ((plist-get diff :generation-changed)
+    "The last terminal change started a new display generation")
+   ((plist-get diff :text-changed)
+    (let* ((change (plist-get diff :row-change))
+           (start (or (plist-get change :start) 0))
+           (rows (plist-get change :new-rows))
+           (end (max start (+ start (length rows) -1)))
+           (label (emacsvox-eat--row-range-label start end))
+           (content (emacsvox-eat--bounded-review-output rows)))
+      (cond
+       (content
+        (format "Last terminal text change, %s:\n%s" label content))
+       (rows
+        (format "The last terminal text change left %s blank" label))
+       (t
+        (format "The last terminal text change removed content at %s"
+                label)))))
+   ((plist-get diff :style-changed)
+    (if-let* ((label
+               (emacsvox-eat--style-change-row-label diff snapshot)))
+        (format "The last terminal change affected styling on %s" label)
+      "The last terminal change affected terminal styling"))
+   ((plist-get diff :cursor-moved)
+    (let ((row (plist-get snapshot :cursor-row))
+          (column (plist-get snapshot :cursor-column)))
+      (if (and (integerp row) (integerp column))
+          (format "The terminal cursor last moved to row %d, column %d"
+                  (1+ row) (1+ column))
+        "The last terminal change moved the cursor")))
+   ((plist-get diff :size-changed)
+    (if-let* ((size (plist-get snapshot :size)))
+        (format "The terminal was resized to %d columns by %d rows"
+                (car size) (cdr size))
+      "The terminal size changed"))
+   ((or (plist-get diff :title-changed) (plist-get diff :cwd-changed))
+    (cond
+     ((and (plist-get diff :title-changed) (plist-get diff :cwd-changed))
+      "The terminal title and working directory changed")
+     ((plist-get diff :title-changed) "The terminal title changed")
+     (t "The terminal working directory changed")))
+   ((plist-get diff :cursor-type-changed)
+    "The terminal cursor style changed")
+   (t "No classified terminal screen change is retained")))
+
+(defun emacsvox-eat-speak-last-change ()
+  "Speak the most recent quiesced terminal change from retained state."
+  (interactive)
+  (emacsvox-eat--ensure-review-context)
+  (if (and emacsvox-eat--last-screen-diff
+           emacsvox-eat--last-changed-screen)
+      (emacsvox-eat--submit-review
+       (emacsvox-eat--last-change-description
+        emacsvox-eat--last-screen-diff
+        emacsvox-eat--last-changed-screen)
+       'output-navigation)
+    (emacsvox-eat--submit-review
+     "No terminal screen change is retained" 'output-navigation)))
+
+(defun emacsvox-eat-speak-likely-focus ()
+  "Speak the latest conservative terminal focus inference for review."
+  (interactive)
+  (emacsvox-eat--ensure-review-context)
+  (if-let* ((focus emacsvox-eat--last-likely-focus)
+            (text
+             (emacsvox-eat--bounded-focus-text
+              (or (plist-get focus :text) ""))))
+      (let* ((kind (plist-get focus :kind))
+             (confidence (or (plist-get focus :confidence) 'unknown))
+             (row (plist-get focus :row-start))
+             (label
+              (if (eq kind 'highlight)
+                  "Likely terminal highlight"
+                "Likely terminal cursor row")))
+        (emacsvox-eat--submit-review
+         (format "%s, %s confidence%s: %s"
+                 label confidence
+                 (if (integerp row)
+                     (format ", row %d" (1+ row))
+                   "")
+                 text)
+         'output-navigation))
+    (emacsvox-eat--submit-review
+     "No likely terminal focus is retained" 'output-navigation)))
+
+(defun emacsvox-eat-speak-completion-output ()
+  "Speak the latest retained terminal candidate or help-row presentation."
+  (interactive)
+  (emacsvox-eat--ensure-review-context)
+  (if-let* ((completion emacsvox-eat--last-completion-output))
+      (let* ((items-p (eq (plist-get completion :layout) 'items))
+             (count
+              (or (and items-p (plist-get completion :item-count))
+                  (plist-get completion :row-count)
+                  (length (plist-get completion :rows))))
+             (noun (if items-p "candidate" "completion row"))
+             (visible-p
+              (eq (plist-get completion :confidence) 'unanchored))
+             (heading
+              (format "%s%d%s %s%s retained"
+                      (if visible-p "At least " "")
+                      count
+                      (if visible-p " visible" "")
+                      noun
+                      (if (= count 1) "" "s")))
+             (content
+              (emacsvox-eat--bounded-review-output
+               (plist-get completion :rows))))
+        (emacsvox-eat--submit-review
+         (if content (concat heading ":\n" content) heading)
+         'completion))
+    (emacsvox-eat--submit-review
+     "No terminal completion output is retained" 'completion)))
+
+(defun emacsvox-eat-speak-visible-screen ()
+  "Speak a bounded frozen copy of the latest retained visible EAT screen."
+  (interactive)
+  (emacsvox-eat--ensure-review-context)
+  (if-let* ((snapshot emacsvox-eat--screen-snapshot))
+      (let* ((rows (plist-get snapshot :rows))
+             (count (length rows))
+             (cursor-row (plist-get snapshot :cursor-row))
+             (heading
+              (format "Frozen %s terminal screen, %d row%s%s"
+                      (if (plist-get snapshot :alternate-screen)
+                          "application"
+                        "main")
+                      count (if (= count 1) "" "s")
+                      (if (integerp cursor-row)
+                          (format ", cursor row %d" (1+ cursor-row))
+                        ", no cursor row")))
+             (content (emacsvox-eat--bounded-review-output rows)))
+        (emacsvox-eat--submit-review
+         (if content
+             (concat heading ":\n" content)
+           (concat heading "; screen is blank"))
+         'output-navigation))
+    (emacsvox-eat--submit-review
+     "No terminal screen snapshot is available" 'output-navigation)))
+
+(define-prefix-command 'emacsvox-eat-review-map)
+(define-key emacsvox-eat-review-map (kbd "l")
+            #'emacsvox-eat-speak-current-row)
+(define-key emacsvox-eat-review-map (kbd "d")
+            #'emacsvox-eat-speak-last-change)
+(define-key emacsvox-eat-review-map (kbd "h")
+            #'emacsvox-eat-speak-likely-focus)
+(define-key emacsvox-eat-review-map (kbd "c")
+            #'emacsvox-eat-speak-completion-output)
+(define-key emacsvox-eat-review-map (kbd "s")
+            #'emacsvox-eat-speak-visible-screen)
+(define-key emacsvox-keymap (kbd "q") 'emacsvox-eat-review-map)
 
 ;;;  Interactive Commands:
 

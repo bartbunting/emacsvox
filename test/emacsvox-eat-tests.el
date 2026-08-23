@@ -2879,6 +2879,193 @@
       (should-not emacsvox-eat--last-likely-focus)
       (should-not emacsvox-eat--last-focus-presentation-identity))))
 
+(ert-deftest emacsvox-eat-review-prefix-is-available-in-every-input-mode ()
+  "Every EAT input map reaches the shared C-e q snapshot-review map."
+  (with-temp-buffer
+    (let (eat-terminal)
+      (emacsvox-eat-mode-setup)))
+  (should
+   (eq (lookup-key emacsvox-keymap (kbd "q"))
+       'emacsvox-eat-review-map))
+  (dolist (map-symbol
+           '(eat-line-mode-map eat-semi-char-mode-map
+             eat-char-mode-map eat-mode-map))
+    (let ((map (symbol-value map-symbol)))
+      (should (keymapp map))
+      (should
+       (eq (lookup-key map emacsvox-prefix) 'emacsvox-keymap))))
+  (dolist (binding
+           '(("l" . emacsvox-eat-speak-current-row)
+             ("d" . emacsvox-eat-speak-last-change)
+             ("h" . emacsvox-eat-speak-likely-focus)
+             ("c" . emacsvox-eat-speak-completion-output)
+             ("s" . emacsvox-eat-speak-visible-screen)))
+    (should
+     (eq (lookup-key emacsvox-eat-review-map (kbd (car binding)))
+         (cdr binding)))))
+
+(ert-deftest emacsvox-eat-current-row-review-uses-only-retained-snapshot ()
+  "Current-row review cannot read later mutable terminal-buffer content."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (insert "LIVE-BUFFER-SECRET")
+    (let ((emacsvox-eat--screen-snapshot
+           '(:text "First\nSnapshot row"
+             :rows ("First" "Snapshot row")
+             :cursor-row 1 :cursor-column 4))
+          submission)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (&rest arguments) (setq submission arguments))))
+        (emacsvox-eat-speak-current-row))
+      (should
+       (equal
+        submission
+        '("Current terminal row 2 of 2: Snapshot row"
+          (:role command-output :command-interaction-kind shell
+           :command-operation output-navigation)
+          inspection)))
+      (should-not
+       (string-match-p "LIVE-BUFFER-SECRET" (format "%S" submission)))
+      (should
+       (emacsvox-aural-normalize-input
+        (nth 1 submission) '(:module eat :mode eat-mode
+                             :occasion inspection))))))
+
+(ert-deftest emacsvox-eat-last-change-review-presents-retained-row-window ()
+  "Last-change review presents all bounded new rows and their location."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let ((emacsvox-eat--last-screen-diff
+           '(:text-changed t :row-change
+             (:start 1 :old-rows nil :new-rows ("first" "second"))))
+          (emacsvox-eat--last-changed-screen
+           '(:text "$ \nfirst\nsecond\n$ "
+             :rows ("$ " "first" "second" "$ ")
+             :cursor-row 3 :cursor-column 2))
+          content)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (text &rest _) (setq content text))))
+        (emacsvox-eat-speak-last-change))
+      (should
+       (equal content
+              "Last terminal text change, rows 2 through 3:\nfirst\nsecond")))))
+
+(ert-deftest emacsvox-eat-last-change-review-locates-style-only-change ()
+  "A retained style-only change is described by its rendered row range."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let ((emacsvox-eat--last-screen-diff
+           '(:style-changed t
+             :style-change (:start 4 :old-end 7 :new-end 7)))
+          (emacsvox-eat--last-changed-screen
+           '(:text "One\nTwo" :rows ("One" "Two")))
+          content)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (text &rest _) (setq content text))))
+        (emacsvox-eat-speak-last-change))
+      (should
+       (equal content
+              "The last terminal change affected styling on row 2")))))
+
+(ert-deftest emacsvox-eat-likely-focus-review-labels-uncertainty ()
+  "Explicit focus review exposes kind, confidence, row, and retained text."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let ((emacsvox-eat--last-likely-focus
+           '(:kind highlight :text "Possible choice" :confidence medium
+             :score 8 :row-start 2 :row-end 2))
+          content)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (text &rest _) (setq content text))))
+        (emacsvox-eat-speak-likely-focus))
+      (should
+       (equal
+        content
+        "Likely terminal highlight, medium confidence, row 3: Possible choice")))))
+
+(ert-deftest emacsvox-eat-completion-review-preserves-retained-layout ()
+  "Candidate review uses exact retained rows and an honest visible count."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let ((emacsvox-eat--last-completion-output
+           '(:layout items :items ("pull" "push") :item-count 2
+             :row-count 1 :confidence unanchored :rows ("pull  push")))
+          content
+          facts)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (text semantic &rest _)
+                   (setq content text facts semantic))))
+        (emacsvox-eat-speak-completion-output))
+      (should
+       (equal content
+              "At least 2 visible candidates retained:\npull  push"))
+      (should
+       (equal facts
+              '(:role command-output :command-interaction-kind shell
+                :command-operation completion)))
+      (should
+       (emacsvox-aural-normalize-input
+        facts '(:module eat :mode eat-mode :occasion inspection))))))
+
+(ert-deftest emacsvox-eat-visible-screen-review-is-a-frozen-copy ()
+  "Visible-screen review presents retained rows, never later live text."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (insert "UNRETAINED-LIVE-CONTENT")
+    (let ((emacsvox-eat--screen-snapshot
+           '(:text "Menu\nSelected"
+             :rows ("Menu" "Selected") :cursor-row 1
+             :alternate-screen t))
+          content)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (text &rest _) (setq content text))))
+        (emacsvox-eat-speak-visible-screen))
+      (should
+       (equal
+        content
+        "Frozen application terminal screen, 2 rows, cursor row 2:\nMenu\nSelected"))
+      (should-not (string-match-p "UNRETAINED" content)))))
+
+(ert-deftest emacsvox-eat-review-reports-absent-state-accessibly ()
+  "Review commands submit an explicit no-data result instead of failing."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let (contents)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (content &rest _) (push content contents))))
+        (emacsvox-eat-speak-current-row)
+        (emacsvox-eat-speak-last-change)
+        (emacsvox-eat-speak-likely-focus)
+        (emacsvox-eat-speak-completion-output)
+        (emacsvox-eat-speak-visible-screen))
+      (should
+       (equal
+        (nreverse contents)
+        '("No terminal screen snapshot is available"
+          "No terminal screen change is retained"
+          "No likely terminal focus is retained"
+          "No terminal completion output is retained"
+          "No terminal screen snapshot is available"))))))
+
+(ert-deftest emacsvox-eat-review-is-blocked-during-secure-input ()
+  "No explicit review command can expose state inside a secure-input scope."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let ((emacsvox-eat--secure-input-active-p t)
+          (emacsvox-eat--screen-snapshot
+           '(:text "DO-NOT-SPEAK" :rows ("DO-NOT-SPEAK") :cursor-row 0))
+          submitted)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (&rest _) (setq submitted t))))
+        (dolist (command
+                 '(emacsvox-eat-speak-current-row
+                   emacsvox-eat-speak-last-change
+                   emacsvox-eat-speak-likely-focus
+                   emacsvox-eat-speak-completion-output
+                   emacsvox-eat-speak-visible-screen))
+          (should-error (funcall command) :type 'user-error)))
+      (should-not submitted))))
+
 (ert-deftest emacsvox-eat-screen-observer-coalesces-an-update-burst ()
   "Successive chunks produce one aggregate diff after quiescence."
   (with-temp-buffer
