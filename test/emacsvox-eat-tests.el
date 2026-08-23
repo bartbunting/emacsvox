@@ -101,6 +101,42 @@
     (with-temp-buffer
       (should (eq emacsvox-eat-verbosity 'normal)))))
 
+(ert-deftest emacsvox-eat-background-monitoring-is-buffer-local-and-explicit ()
+  "Background monitoring defaults off and its command clears old counts."
+  (should-not
+   (default-value 'emacsvox-eat-monitor-background-output))
+  (with-temp-buffer
+    (let ((major-mode 'eat-mode)
+          submissions)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (&rest arguments) (push arguments submissions))))
+        (should (emacsvox-eat-toggle-background-monitoring))
+        (should emacsvox-eat-monitor-background-output)
+        (setq emacsvox-eat--unread-output-count 4
+              emacsvox-eat--background-output-pending-p t)
+        (should-not (emacsvox-eat-toggle-background-monitoring -1)))
+      (should-not emacsvox-eat-monitor-background-output)
+      (should (= emacsvox-eat--unread-output-count 0))
+      (should-not emacsvox-eat--background-output-pending-p)
+      (should
+       (equal
+        (mapcar #'car (nreverse submissions))
+        '("Background terminal monitoring enabled"
+          "Background terminal monitoring disabled")))
+      (with-temp-buffer
+        (should-not emacsvox-eat-monitor-background-output)))))
+
+(ert-deftest emacsvox-eat-mode-setup-installs-selection-monitor ()
+  "EAT buffers observe selection changes for deferred unread reports."
+  (with-temp-buffer
+    (let (eat-terminal)
+      (emacsvox-eat-mode-setup)
+      (should
+       (local-variable-p 'window-selection-change-functions))
+      (should
+       (memq #'emacsvox-eat--window-selection-changed
+             window-selection-change-functions)))))
+
 (ert-deftest emacsvox-eat-yank-feedback-is-target-aware ()
   "A nested EAT yank cannot duplicate its interactive xterm paste feedback."
   (let ((ems--interactive-fn-name 'eat-xterm-paste)
@@ -1125,6 +1161,152 @@
       (should-not emacsvox-eat--completion-snapshot)
       (should-not events))))
 
+(ert-deftest emacsvox-eat-background-monitor-classifies-only-text-output ()
+  "Cursor, style, generation, and resized text changes do not count as output."
+  (let* ((old (emacsvox-eat-test--screen "$ " 20 3))
+         (text (emacsvox-eat-test--screen "$ command" 20 3))
+         (cursor (copy-tree old))
+         (style (copy-tree old))
+         (resized (emacsvox-eat-test--screen "$ command" 30 3))
+         (generation (emacsvox-eat-test--screen "$ command" 20 4)))
+    (setf (plist-get cursor :cursor-column) 1
+          (plist-get cursor :cursor-offset) 1
+          (plist-get style :styles) '((0 2 (:face bold))))
+    (should (emacsvox-eat--background-output-change-p old text))
+    (should-not (emacsvox-eat--background-output-change-p old old))
+    (should-not (emacsvox-eat--background-output-change-p old cursor))
+    (should-not (emacsvox-eat--background-output-change-p old style))
+    (should-not (emacsvox-eat--background-output-change-p old resized))
+    (should-not (emacsvox-eat--background-output-change-p old generation))))
+
+(ert-deftest emacsvox-eat-background-monitor-coalesces-counts-and-cues ()
+  "Monitored chunks form unread bursts with rate-limited content-free cues."
+  (with-temp-buffer
+    (let ((emacsvox-eat-monitor-background-output t)
+          (emacsvox-eat--generation 3)
+          (now 10.0)
+          minibuffer-active-p
+          icons)
+      (cl-letf (((symbol-function 'float-time)
+                 (lambda (&optional _) now))
+                ((symbol-function 'run-at-time)
+                 (lambda (&rest _) 'background-test-timer))
+                ((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () nil))
+                ((symbol-function 'active-minibuffer-window)
+                 (lambda () minibuffer-active-p))
+                ((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push icon icons))))
+        (emacsvox-eat--schedule-background-output-burst)
+        (let ((stale-serial emacsvox-eat--background-output-serial))
+          (emacsvox-eat--schedule-background-output-burst)
+          (emacsvox-eat--finish-background-output-burst
+           (current-buffer) 3 stale-serial)
+          (should (= emacsvox-eat--unread-output-count 0)))
+        (emacsvox-eat--finish-background-output-burst
+         (current-buffer) 3 emacsvox-eat--background-output-serial)
+        (should (= emacsvox-eat--unread-output-count 1))
+        (should (equal icons '(more)))
+        (setq now 11.0)
+        (emacsvox-eat--schedule-background-output-burst)
+        (emacsvox-eat--finish-background-output-burst
+         (current-buffer) 3 emacsvox-eat--background-output-serial)
+        (should (= emacsvox-eat--unread-output-count 2))
+        (should (= (length icons) 1))
+        (setq now 16.0
+              minibuffer-active-p t)
+        (emacsvox-eat--schedule-background-output-burst)
+        (emacsvox-eat--finish-background-output-burst
+         (current-buffer) 3 emacsvox-eat--background-output-serial)
+        (should (= emacsvox-eat--unread-output-count 3))
+        (should (= (length icons) 1))
+        (setq now 16.1
+              minibuffer-active-p nil)
+        (emacsvox-eat--schedule-background-output-burst)
+        (emacsvox-eat--finish-background-output-burst
+         (current-buffer) 3 emacsvox-eat--background-output-serial))
+      (should (= emacsvox-eat--unread-output-count 4))
+      (should (equal icons '(more more))))))
+
+(ert-deftest emacsvox-eat-background-monitor-reports-count-only-on-return ()
+  "Selecting a monitored terminal acknowledges count without name or content."
+  (with-temp-buffer
+    (rename-buffer "router-secret-host" t)
+    (let ((emacsvox-eat-monitor-background-output t)
+          (emacsvox-eat--unread-output-count 2)
+          (emacsvox-eat--background-output-pending-p t)
+          (emacsvox-eat--background-output-timer 'background-test-timer)
+          submission)
+      (cl-letf (((symbol-function 'window-live-p) (lambda (_) t))
+                ((symbol-function 'selected-window)
+                 (lambda () 'selected-test-window))
+                ((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'emacsvox-eat--submit)
+                 (lambda (&rest arguments) (setq submission arguments))))
+        (emacsvox-eat--window-selection-changed 'selected-test-window))
+      (should
+       (equal
+        submission
+        '("3 unread terminal output bursts"
+          (:role command-interaction
+           :command-interaction-kind shell
+           :events (object-changed))
+          notification)))
+      (should-not
+       (string-match-p "router-secret-host\\|secret output"
+                       (format "%S" submission)))
+      (should (= emacsvox-eat--unread-output-count 0))
+      (should-not emacsvox-eat--background-output-pending-p)
+      (should-not emacsvox-eat--background-output-timer))))
+
+(ert-deftest emacsvox-eat-real-background-monitor-never-speaks-output ()
+  "A real background EAT update cues once and reports only its burst count."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (emacsvox-eat-monitor-background-output t)
+          selected-p
+          pending-timer
+          icons
+          submissions)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () selected-p))
+                    ((symbol-function 'active-minibuffer-window)
+                     (lambda () nil))
+                    ((symbol-function 'emacsvox-icon)
+                     (lambda (icon) (push icon icons)))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions))))
+            (eat-term-resize eat-terminal 40 5)
+            (eat-term-process-output eat-terminal "$ ")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat-update-hook)
+            (eat-term-process-output
+             eat-terminal "\r\nsecret output sentinel\r\n$ ")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat-update-hook)
+            (setq pending-timer emacsvox-eat--background-output-timer)
+            (emacsvox-eat--finish-background-output-burst
+             (current-buffer) emacsvox-eat--generation
+             emacsvox-eat--background-output-serial)
+            (should (equal icons '(more)))
+            (should-not submissions)
+            (setq selected-p t)
+            (emacsvox-eat-update-hook)
+            (should (= (length submissions) 1))
+            (should (equal (caar submissions)
+                           "One unread terminal output burst"))
+            (should-not
+             (string-match-p "secret output sentinel"
+                             (format "%S" submissions))))
+        (when (timerp pending-timer) (cancel-timer pending-timer))
+        (emacsvox-eat--clear-background-monitor-state)
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
 (ert-deftest emacsvox-eat-empty-terminal-update-is-safe ()
   "An empty EAT terminal update is quiet and does not signal."
   (with-temp-buffer
@@ -1459,6 +1641,11 @@
           (emacsvox-eat--last-metadata-change
            '(:title "stale title" :cwd "/stale/"))
           (emacsvox-eat--last-metadata-spoken-at 17.0)
+          (emacsvox-eat--background-output-pending-p t)
+          (emacsvox-eat--background-output-timer
+           (run-at-time 60 nil #'ignore))
+          (emacsvox-eat--unread-output-count 6)
+          (emacsvox-eat--last-background-cue-at 16.0)
           (emacsvox-eat--quiescence-timer
            (run-at-time 60 nil #'ignore))
           process-a process-b)
@@ -1484,6 +1671,10 @@
       (should-not emacsvox-eat--last-bell-spoken-at)
       (should-not emacsvox-eat--last-metadata-change)
       (should-not emacsvox-eat--last-metadata-spoken-at)
+      (should-not emacsvox-eat--background-output-pending-p)
+      (should-not emacsvox-eat--background-output-timer)
+      (should (= emacsvox-eat--unread-output-count 0))
+      (should-not emacsvox-eat--last-background-cue-at)
       (setq emacsvox-eat--completion-snapshot '(13 . "pending"))
       (emacsvox-eat--process-exited process-b)
       (should (= emacsvox-eat--generation 8))

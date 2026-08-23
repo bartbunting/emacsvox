@@ -91,6 +91,16 @@ level.  This option may be set buffer-locally for an individual terminal."
 
 (make-variable-buffer-local 'emacsvox-eat-verbosity)
 
+(defcustom emacsvox-eat-monitor-background-output nil
+  "Whether this EAT buffer cues output received while it is unselected.
+Monitoring never speaks background terminal content or identity.  It plays a
+rate-limited cue for quiesced text changes and reports the unread burst count
+when the terminal is selected again."
+  :type 'boolean
+  :group 'emacsvox-eat)
+
+(make-variable-buffer-local 'emacsvox-eat-monitor-background-output)
+
 ;;;  Lifecycle state:
 
 (defvar-local emacsvox-eat--generation 0
@@ -168,6 +178,24 @@ level.  This option may be set buffer-locally for an individual terminal."
 (defvar-local emacsvox-eat--last-metadata-spoken-at nil
   "Time at which EAT metadata was most recently announced automatically.")
 
+(defvar-local emacsvox-eat--background-output-timer nil
+  "Timer waiting to finish one monitored background-output burst.")
+
+(defvar-local emacsvox-eat--background-output-started-at nil
+  "Time at which the pending monitored background-output burst began.")
+
+(defvar-local emacsvox-eat--background-output-serial 0
+  "Monotonic serial number for monitored background-output updates.")
+
+(defvar-local emacsvox-eat--background-output-pending-p nil
+  "Non-nil when a monitored background text change awaits quiescence.")
+
+(defvar-local emacsvox-eat--unread-output-count 0
+  "Number of quiesced background-output bursts not yet acknowledged.")
+
+(defvar-local emacsvox-eat--last-background-cue-at nil
+  "Time at which monitored background output most recently played a cue.")
+
 (defvar-local emacsvox-eat--terminal-id nil
   "Process-local integer used in replaceable EAT delivery keys.")
 
@@ -197,6 +225,9 @@ level.  This option may be set buffer-locally for an individual terminal."
 
 (defconst emacsvox-eat--metadata-minimum-interval 1.0
   "Minimum seconds between automatic EAT metadata announcements.")
+
+(defconst emacsvox-eat--background-cue-minimum-interval 5.0
+  "Minimum seconds between cues for one monitored background terminal.")
 
 (defconst emacsvox-eat--maximum-metadata-characters 256
   "Maximum characters retained from one terminal metadata value.")
@@ -835,8 +866,112 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
             (emacsvox-eat--cancel-quiescence)
           (emacsvox-eat--schedule-quiescence))))))
 
+(defun emacsvox-eat--cancel-background-output-burst ()
+  "Cancel the pending monitored background-output burst."
+  (when (timerp emacsvox-eat--background-output-timer)
+    (cancel-timer emacsvox-eat--background-output-timer))
+  (setq emacsvox-eat--background-output-timer nil
+        emacsvox-eat--background-output-started-at nil
+        emacsvox-eat--background-output-pending-p nil))
+
+(defun emacsvox-eat--clear-background-monitor-state ()
+  "Forget pending and unread monitored background-output state."
+  (emacsvox-eat--cancel-background-output-burst)
+  (setq emacsvox-eat--unread-output-count 0
+        emacsvox-eat--last-background-cue-at nil))
+
+(defun emacsvox-eat--background-output-change-p (old new)
+  "Return non-nil when OLD to NEW is monitorable terminal text output."
+  (when (and old new)
+    (let ((diff (emacsvox-eat--screen-diff old new)))
+      (and (plist-get diff :comparable)
+           (plist-get diff :text-changed)
+           (not (plist-get diff :size-changed))))))
+
+(defun emacsvox-eat--schedule-background-output-burst ()
+  "Coalesce the current monitored background-output burst."
+  (when (timerp emacsvox-eat--background-output-timer)
+    (cancel-timer emacsvox-eat--background-output-timer))
+  (let* ((now (float-time))
+         (started-at
+          (or emacsvox-eat--background-output-started-at now))
+         (elapsed (max 0.0 (- now started-at)))
+         (deadline-delay
+          (max 0.0 (- emacsvox-eat--quiescence-maximum-delay elapsed)))
+         (delay (min emacsvox-eat--quiescence-delay deadline-delay)))
+    (setq emacsvox-eat--background-output-started-at started-at
+          emacsvox-eat--background-output-pending-p t
+          emacsvox-eat--background-output-serial
+          (1+ emacsvox-eat--background-output-serial)
+          emacsvox-eat--background-output-timer
+          (run-at-time
+           delay nil #'emacsvox-eat--finish-background-output-burst
+           (current-buffer) emacsvox-eat--generation
+           emacsvox-eat--background-output-serial))))
+
+(defun emacsvox-eat--commit-background-output-burst ()
+  "Commit one pending background-output burst to the unread count."
+  (when emacsvox-eat--background-output-pending-p
+    (emacsvox-eat--cancel-background-output-burst)
+    (setq emacsvox-eat--unread-output-count
+          (min most-positive-fixnum
+               (1+ emacsvox-eat--unread-output-count)))
+    t))
+
+(defun emacsvox-eat--cue-background-output ()
+  "Play a bounded content-free cue for monitored background output."
+  (let ((now (float-time)))
+    (when (and (not (active-minibuffer-window))
+               (or (null emacsvox-eat--last-background-cue-at)
+                   (>= (- now emacsvox-eat--last-background-cue-at)
+                       emacsvox-eat--background-cue-minimum-interval)))
+      (setq emacsvox-eat--last-background-cue-at now)
+      (condition-case nil
+          (emacsvox-icon 'more)
+        (error nil)))))
+
+(defun emacsvox-eat--present-unread-output-count ()
+  "Report and acknowledge this selected terminal's unread output count."
+  (when (and emacsvox-eat-monitor-background-output
+             (not emacsvox-eat--secure-input-active-p)
+             (emacsvox-eat--selected-buffer-p)
+             (> emacsvox-eat--unread-output-count 0))
+    (let ((count emacsvox-eat--unread-output-count))
+      (emacsvox-eat--submit
+       (if (= count 1)
+           "One unread terminal output burst"
+         (format "%d unread terminal output bursts" count))
+       (emacsvox-eat--facts 'command-interaction 'object-changed)
+       'notification)
+      (setq emacsvox-eat--unread-output-count 0
+            emacsvox-eat--last-background-cue-at nil))))
+
+(defun emacsvox-eat--finish-background-output-burst
+    (buffer generation serial)
+  "Finish BUFFER's monitored background burst GENERATION and SERIAL."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when (and emacsvox-eat-monitor-background-output
+                 emacsvox-eat--background-output-timer
+                 emacsvox-eat--background-output-pending-p
+                 (= generation emacsvox-eat--generation)
+                 (= serial emacsvox-eat--background-output-serial))
+        (emacsvox-eat--commit-background-output-burst)
+        (if (emacsvox-eat--selected-buffer-p)
+            (emacsvox-eat--present-unread-output-count)
+          (emacsvox-eat--cue-background-output))))))
+
+(defun emacsvox-eat--window-selection-changed (window)
+  "Report unread terminal output when WINDOW selects this EAT buffer."
+  (when (and (window-live-p window)
+             (eq window (selected-window))
+             (emacsvox-eat--selected-buffer-p))
+    (emacsvox-eat--commit-background-output-burst)
+    (emacsvox-eat--present-unread-output-count)))
+
 (defun emacsvox-eat--clear-sensitive-screen-state ()
   "Forget content-bearing EAT observation state in the current buffer."
+  (emacsvox-eat--clear-background-monitor-state)
   (emacsvox-eat--cancel-quiescence)
   (emacsvox-eat--cancel-completion)
   (setq emacsvox-eat--screen-snapshot nil
@@ -1082,6 +1217,8 @@ Ignore a stale or duplicate exit after another process has become active."
                 emacsvox-eat--active-process
                 (get-buffer-process (current-buffer))
                 emacsvox-eat--last-exited-process nil))
+  (add-hook 'window-selection-change-functions
+            #'emacsvox-eat--window-selection-changed nil t)
   (emacsvox-eat--install-bell-observer)
   (define-key eat-semi-char-mode-map emacsvox-prefix 'emacsvox-keymap)
   (cl-loop
@@ -1091,6 +1228,26 @@ Ignore a stale or duplicate exit after another process has become active."
    (when (keymapp map) (define-key map emacsvox-prefix  'emacsvox-keymap))))
 
 (add-hook 'eat-mode-hook 'emacsvox-eat-mode-setup)
+
+(defun emacsvox-eat-toggle-background-monitoring (&optional argument)
+  "Toggle content-free background-output monitoring in this EAT buffer.
+With positive prefix ARGUMENT, enable monitoring; with zero or a negative
+prefix, disable it."
+  (interactive "P")
+  (unless (derived-mode-p 'eat-mode)
+    (user-error "This is not an EAT terminal buffer"))
+  (let ((enabled-p
+         (if argument
+             (> (prefix-numeric-value argument) 0)
+           (not emacsvox-eat-monitor-background-output))))
+    (emacsvox-eat--clear-background-monitor-state)
+    (setq-local emacsvox-eat-monitor-background-output enabled-p)
+    (emacsvox-eat--submit
+     (format "Background terminal monitoring %s"
+             (if enabled-p "enabled" "disabled"))
+     (emacsvox-eat--facts 'command-interaction 'state-changed)
+     'state-change 'button)
+    enabled-p))
 
 ;;;  Interactive Commands:
 
@@ -1744,14 +1901,23 @@ terminal cursor accessor."
   (emacsvox-eat--install-bell-observer)
   (if emacsvox-eat--secure-input-active-p
       (emacsvox-eat--clear-sensitive-screen-state)
-    (emacsvox-eat--observe-screen)
-    (if (not (emacsvox-eat--selected-buffer-p))
-        (progn
-          (emacsvox-eat--cancel-completion)
-          (setq emacsvox-eat--recent-input nil))
-      (let* ((emacsvox-show-point t)
-             (cursor (eat-term-display-cursor eat-terminal)))
-        (emacsvox-eat--speak-input-correlated-update cursor)))))
+    (let ((selected-p (emacsvox-eat--selected-buffer-p))
+          (old emacsvox-eat--screen-snapshot))
+      (when (and selected-p emacsvox-eat-monitor-background-output)
+        (emacsvox-eat--commit-background-output-burst)
+        (emacsvox-eat--present-unread-output-count))
+      (emacsvox-eat--observe-screen)
+      (if (not selected-p)
+          (progn
+            (emacsvox-eat--cancel-completion)
+            (setq emacsvox-eat--recent-input nil)
+            (when (and emacsvox-eat-monitor-background-output
+                       (emacsvox-eat--background-output-change-p
+                        old emacsvox-eat--screen-snapshot))
+              (emacsvox-eat--schedule-background-output-burst)))
+        (let* ((emacsvox-show-point t)
+               (cursor (eat-term-display-cursor eat-terminal)))
+          (emacsvox-eat--speak-input-correlated-update cursor))))))
 
 (add-hook 'eat-update-hook #'emacsvox-eat-update-hook)
 (add-hook 'eat-exec-hook #'emacsvox-eat--process-started)
