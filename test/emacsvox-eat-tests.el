@@ -588,6 +588,8 @@
       (unwind-protect
           (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
                      (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
                     ((symbol-function 'emacsvox-aural-submit)
                      (lambda (content &rest arguments)
                        (push (list content arguments) submissions))))
@@ -816,6 +818,8 @@
       (unwind-protect
           (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
                      (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
                     ((symbol-function 'emacsvox-eat--screen-quiesced)
                      (lambda (diff snapshot)
                        (push (list diff snapshot) delivered))))
@@ -853,6 +857,83 @@
         (emacsvox-eat--cancel-quiescence)
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-follow-live-uses-the-selected-window-point ()
+  "Only the selected window's point determines live-follow state."
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-follow*")))
+    (unwind-protect
+        (save-window-excursion
+          (delete-other-windows)
+          (switch-to-buffer buffer)
+          (with-current-buffer buffer
+            (let ((eat-terminal (eat-term-make buffer (point-min))))
+              (unwind-protect
+                  (progn
+                    (eat-term-resize eat-terminal 30 4)
+                    (eat-term-process-output
+                     eat-terminal "one\r\ntwo\r\n$ ")
+                    (eat-term-redisplay eat-terminal)
+                    (let* ((review-window (selected-window))
+                           (live-window (split-window-below))
+                           (cursor
+                            (eat-term-display-cursor eat-terminal)))
+                      (set-window-buffer live-window buffer)
+                      (set-window-point review-window (point-min))
+                      (set-window-point live-window cursor)
+                      (select-window review-window)
+                      (should-not (emacsvox-eat--following-live-p))
+                      (select-window live-window)
+                      (should (emacsvox-eat--following-live-p))))
+                (when (eat-term-live-p eat-terminal)
+                  (eat-term-delete eat-terminal))))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-eat-scrollback-suppresses-but-retains-output ()
+  "A selected scrollback review retains a change without presenting it."
+  (with-temp-buffer
+    (let* ((emacsvox-eat--generation 5)
+           (emacsvox-eat--update-serial 9)
+           (emacsvox-eat--quiescence-timer t)
+           (emacsvox-eat--pending-screen-diff
+            '(:text-changed t :row-change
+              (:start 0 :old-rows nil :new-rows ("private output"))))
+           (emacsvox-eat--screen-snapshot
+            '(:cursor-row 1 :alternate-screen nil))
+           presented)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'emacsvox-eat--following-live-p)
+                 (lambda () nil))
+                ((symbol-function 'emacsvox-eat--screen-quiesced)
+                 (lambda (&rest _) (setq presented t))))
+        (emacsvox-eat--finish-quiescence
+         (current-buffer) emacsvox-eat--generation
+         emacsvox-eat--update-serial))
+      (should-not presented)
+      (should (equal emacsvox-eat--last-screen-diff
+                     '(:text-changed t :row-change
+                       (:start 0 :old-rows nil
+                        :new-rows ("private output"))
+                       :user-input nil)))
+      (should (eq emacsvox-eat--last-changed-screen
+                  emacsvox-eat--screen-snapshot))
+      (should-not emacsvox-eat--pending-screen-diff)
+      (should-not emacsvox-eat--quiescence-timer))))
+
+(ert-deftest emacsvox-eat-scrollback-retains-the-latest-status ()
+  "A suppressed progress row remains available for later review."
+  (with-temp-buffer
+    (let ((diff
+           '(:text-changed t :user-input nil :size-changed nil
+             :alternate-screen-changed nil
+             :row-change
+             (:start 0 :old-rows ("Progress 10%")
+              :new-rows ("Progress 20%"))))
+          (snapshot '(:cursor-row 0 :alternate-screen nil)))
+      (emacsvox-eat--retain-screen-change diff snapshot)
+      (should (equal emacsvox-eat--last-status-text "Progress 20%"))
+      (should (eq emacsvox-eat--last-screen-diff diff))
+      (should (eq emacsvox-eat--last-changed-screen snapshot)))))
 
 (ert-deftest emacsvox-eat-screen-observer-has-an-absolute-burst-deadline ()
   "Continuous repaint cannot postpone screen classification indefinitely."

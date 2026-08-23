@@ -536,10 +536,16 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
          'continuous nil 'replaceable
          (emacsvox-eat--terminal-delivery-key 'status))))))
 
-(defun emacsvox-eat--screen-quiesced (diff snapshot)
-  "Retain and present the selected terminal DIFF ending at SNAPSHOT."
+(defun emacsvox-eat--retain-screen-change (diff snapshot)
+  "Retain terminal DIFF ending at SNAPSHOT for explicit review."
   (setq emacsvox-eat--last-screen-diff diff
         emacsvox-eat--last-changed-screen snapshot)
+  (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
+    (setq emacsvox-eat--last-status-text status)))
+
+(defun emacsvox-eat--screen-quiesced (diff snapshot)
+  "Retain and present the selected terminal DIFF ending at SNAPSHOT."
+  (emacsvox-eat--retain-screen-change diff snapshot)
   (if-let* ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
       (emacsvox-eat--present-output-rows rows)
     (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
@@ -563,7 +569,9 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
           (when (and diff
                      (emacsvox-eat--selected-buffer-p))
             (setq diff (plist-put diff :user-input user-input-p))
-            (emacsvox-eat--screen-quiesced diff snapshot)))))))
+            (if (emacsvox-eat--following-live-p)
+                (emacsvox-eat--screen-quiesced diff snapshot)
+              (emacsvox-eat--retain-screen-change diff snapshot))))))))
 
 (defun emacsvox-eat--schedule-quiescence ()
   "Restart the timer for the current selected EAT update burst."
@@ -1014,6 +1022,15 @@ update feedback."
 (defun emacsvox-eat--selected-buffer-p ()
   "Return non-nil when the current EAT buffer is selected."
   (eq (current-buffer) (window-buffer (selected-window))))
+
+(defun emacsvox-eat--following-live-p ()
+  "Return non-nil when the selected EAT window follows its live cursor.
+This mirrors EAT's window synchronization condition using only the public
+terminal cursor accessor."
+  (and (emacsvox-eat--selected-buffer-p)
+       (eat-term-live-p eat-terminal)
+       (= (eat-term-display-cursor eat-terminal)
+          (window-point (selected-window)))))
 
 (with-eval-after-load 'eat
   (emacsvox-eat--install-advice))

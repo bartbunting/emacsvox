@@ -111,7 +111,7 @@ Acceptance:
 - unchanged repaint and resize-only events are classified without content
   speech.
 
-** TODO Phase 3: Semantic foreground output
+** DONE Phase 3: Semantic foreground output
 
 Issues:
 
@@ -125,7 +125,7 @@ Planned slices:
 2. [X] bounded complete-line output;
 3. [X] prompt-redraw and unchanged-repaint suppression;
 4. [X] progress/status coalescing and rate limiting;
-5. selected/follow-live policy.
+5. [X] selected/follow-live policy.
 
 Acceptance:
 
@@ -275,10 +275,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~e13ccc283~ | 3.1 | Bounded, control-sanitized terminal rows use one native ~command-output~ / ~command-output-received~ transaction; no observer policy change; 31 focused tests pass and byte-code is current. |
 | 2026-08-23 | ~cadc1adc7~ | 3.2 | Quiesced inserted main-screen rows before the cursor are spoken once; cursor prompt is excluded, input-correlated legacy feedback remains, arbitrary async character speech is removed, and raw Tab/Return events are handled correctly. 37 focused tests and a compiled Bash PTY pass. |
 | 2026-08-23 | ~783c0ac9c~ | 3.3 | Linear suffix/prefix row alignment avoids replaying visible history after scroll; cursor prompt, unchanged repaint, conservative full replacement, resize/reflow, and alternate-screen repaint stay quiet. 39 focused tests, 2,000 randomized overlap comparisons, and compiled verification pass. |
-| 2026-08-23 | this commit | 3.4 | Conservative same-row progress/status recognition uses stable replaceable transactions, retains the latest value, rate-limits intermediate updates to 1.5 seconds, presents terminal states immediately, suppresses input/resize/alternate-screen changes, and forces classification after at most 250 ms of continuous repaint. 43 focused tests, including a real EAT carriage-return rewrite, pass. |
+| 2026-08-23 | ~d0f5f7afc~ | 3.4 | Conservative same-row progress/status recognition uses stable replaceable transactions, retains the latest value, rate-limits intermediate updates to 1.5 seconds, presents terminal states immediately, suppresses input/resize/alternate-screen changes, and forces classification after at most 250 ms of continuous repaint. 43 focused tests, including a real EAT carriage-return rewrite, pass. |
+| 2026-08-23 | this commit | 3.5 | Automatic foreground output now requires the selected EAT window to follow the public terminal cursor.  Selected scrollback review stays silent while retaining the latest diff, screen, and status; another live-follow window cannot override the selected review window. 46 focused tests pass. |
 
 * Current next action
 
-Suppress automatic output when the selected EAT window is reviewing scrollback
-instead of following the live terminal cursor.  Retain the quiesced change for
-manual review and cover minibuffer, multiple-window, and focus-transition cases.
+Replace the line-number/token-only Tab snapshot with a generation-scoped public
+screen transaction.  Preserve concise unique completion while making multiline,
+wrapped, and split-output completion safe for later candidate extraction.
