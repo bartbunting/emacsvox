@@ -40,6 +40,15 @@
   "Return the current EAT fixture's visible text."
   (or (plist-get (emacsvox-eat--capture-screen) :text) ""))
 
+(defun emacsvox-eat-test--traits-for-text (snapshot text)
+  "Return normalized style traits for the first run equal to TEXT."
+  (let ((screen-text (plist-get snapshot :text)))
+    (seq-some
+     (lambda (run)
+       (when (equal (substring screen-text (car run) (cadr run)) text)
+         (plist-get (caddr run) :traits)))
+     (plist-get snapshot :styles))))
+
 (defun emacsvox-eat-test--stop-process (process)
   "Stop disposable test PROCESS without touching any other terminal."
   (when (and process (process-live-p process))
@@ -2138,6 +2147,7 @@
                    (styles (plist-get snapshot :styles))
                    (style-data (mapcar #'caddr styles)))
               (should (= (plist-get snapshot :generation) 6))
+              (should (= (plist-get snapshot :style-version) 1))
               (should (integerp (plist-get snapshot :display-beginning)))
               (should (integerp (plist-get snapshot :display-end)))
               (should (equal (plist-get snapshot :text) "Bold Under"))
@@ -2162,7 +2172,87 @@
                    :underline
                    (plist-get
                     (plist-get style :face) :attributes)))
-                style-data))))
+                style-data))
+              (should
+               (equal (emacsvox-eat-test--traits-for-text snapshot "Bold")
+                      '(bold)))
+              (should
+               (equal (emacsvox-eat-test--traits-for-text snapshot "Under")
+                      '(underline))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal)))))))
+
+(ert-deftest emacsvox-eat-style-traits-normalize-rendered-properties ()
+  "Named and anonymous rendered faces produce stable semantic traits."
+  (cl-letf (((symbol-function 'face-foreground)
+             (lambda (&rest _) "default-fg"))
+            ((symbol-function 'face-background)
+             (lambda (&rest _) "default-bg")))
+    (should
+     (equal
+      (emacsvox-eat--style-traits
+       '(:faces (eat-term-bold eat-term-faint eat-term-italic
+                 eat-term-slow-blink eat-term-font-2)
+         :attributes
+         ((:underline :style wave) (:strike-through . t)
+          (:foreground . "default-bg") (:background . "default-fg")
+          (:overline . t) (:box . line)))
+       '(:faces (highlight)) t)
+      '(bold faint italic underline blink crossed-out inverse-like
+        foreground-color background-color alternate-font overline boxed
+        mouse-highlight interactive)))
+    (should
+     (equal
+      (emacsvox-eat--style-traits
+       '(:attributes ((:foreground . "same") (:background . "same")))
+       nil nil)
+      '(concealed foreground-color background-color)))))
+
+(ert-deftest emacsvox-eat-real-sgr-styles-have-normalized-traits ()
+  "Every recoverable EAT SGR category has a data-only semantic trait."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 120 4)
+            (eat-term-process-output
+             eat-terminal
+             (concat
+              "plain "
+              "\e[1mbold\e[0m \e[2mfaint\e[0m "
+              "\e[3mitalic\e[0m \e[4munder\e[0m "
+              "\e[5mblink\e[0m \e[6mfast\e[0m "
+              "\e[7minverse\e[0m \e[8mconceal\e[0m "
+              "\e[9mcross\e[0m \e[31mred\e[0m "
+              "\e[44mbluebg\e[0m \e[11mfont1\e[0m"))
+            (eat-term-redisplay eat-terminal)
+            (let ((snapshot (emacsvox-eat--capture-screen)))
+              (dolist
+                  (case
+                   '(("bold" bold)
+                     ("faint" faint)
+                     ("italic" italic)
+                     ("under" underline)
+                     ("blink" blink)
+                     ("fast" blink)
+                     ("inverse" inverse-like foreground-color
+                      background-color)
+                     ("conceal" concealed foreground-color)
+                     ("cross" crossed-out)
+                     ("red" foreground-color)
+                     ("bluebg" background-color)
+                     ("font1" alternate-font)))
+                (should
+                 (equal
+                  (emacsvox-eat-test--traits-for-text snapshot (car case))
+                  (cdr case))))
+              (should-not
+               (seq-some
+                (lambda (run)
+                  (memq 'eat-term-font-0
+                        (plist-get
+                         (plist-get (caddr run) :face) :faces)))
+                (plist-get snapshot :styles)))))
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 

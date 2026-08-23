@@ -240,6 +240,15 @@ when the terminal is selected again."
     :inverse-video :overline :box)
   "Rendered face attributes retained in terminal style snapshots.")
 
+(defconst emacsvox-eat--style-signature-version 1
+  "Version of normalized style signatures stored in EAT snapshots.")
+
+(defconst emacsvox-eat--style-trait-order
+  '(bold faint italic underline blink crossed-out inverse-like concealed
+    foreground-color background-color alternate-font overline boxed
+    mouse-highlight interactive)
+  "Stable order of semantic traits in normalized EAT style signatures.")
+
 (defun emacsvox-eat--normalize-face-value (value)
   "Return a stable, data-only terminal style signature for face VALUE."
   (let (faces attributes)
@@ -247,9 +256,12 @@ when the terminal is selected again."
         ((walk
           (item)
           (cond
-           ((and (symbolp item) (facep item)) (push item faces))
+           ((and (symbolp item) (facep item))
+            (unless (eq item 'eat-term-font-0) (push item faces)))
            ((and (stringp item) (facep item))
-            (when-let* ((face (intern-soft item))) (push face faces)))
+            (when-let* ((face (intern-soft item))
+                        ((not (eq face 'eat-term-font-0))))
+              (push face faces)))
            ((and (proper-list-p item) (keywordp (car item)))
             (walk (plist-get item :inherit))
             (dolist (attribute emacsvox-eat--face-attributes)
@@ -265,6 +277,68 @@ when the terminal is selected again."
        (when faces (list :faces faces))
        (when attributes (list :attributes attributes))))))
 
+(defun emacsvox-eat--style-traits (face mouse-face interactive-p)
+  "Return stable semantic traits for FACE, MOUSE-FACE, and INTERACTIVE-P."
+  (let* ((faces (plist-get face :faces))
+         (attributes (plist-get face :attributes))
+         (foreground-entry (assq :foreground attributes))
+         (background-entry (assq :background attributes))
+         (foreground (cdr foreground-entry))
+         (background (cdr background-entry))
+         (default-foreground (face-foreground 'default nil t))
+         (default-background (face-background 'default nil t))
+         traits)
+    (dolist (named-face faces)
+      (pcase named-face
+        ((or 'bold 'eat-term-bold) (push 'bold traits))
+        ('eat-term-faint (push 'faint traits))
+        ((or 'italic 'eat-term-italic) (push 'italic traits))
+        ((or 'eat-term-slow-blink 'eat-term-fast-blink)
+         (push 'blink traits))
+        ((and (pred symbolp) name)
+         (when (string-match-p
+                "\\`eat-term-font-[1-9][0-9]*\\'" (symbol-name name))
+           (push 'alternate-font traits)))))
+    (pcase (alist-get :weight attributes)
+      ((or 'semi-bold 'bold 'extra-bold 'ultra-bold) (push 'bold traits))
+      ((or 'ultra-light 'extra-light 'light 'semi-light)
+       (push 'faint traits)))
+    (when (memq (alist-get :slant attributes)
+                '(italic oblique reverse-italic reverse-oblique))
+      (push 'italic traits))
+    (when-let* ((underline (alist-get :underline attributes))
+                ((not (eq underline 'unspecified))))
+      (push 'underline traits))
+    (when-let* ((crossed (alist-get :strike-through attributes))
+                ((not (eq crossed 'unspecified))))
+      (push 'crossed-out traits))
+    (when (or
+           (let ((inverse (alist-get :inverse-video attributes)))
+             (and inverse (not (eq inverse 'unspecified))))
+           (and foreground-entry background-entry
+                (equal foreground default-background)
+                (equal background default-foreground)))
+      (push 'inverse-like traits))
+    (when (and foreground-entry
+               (or
+                (and background-entry (equal foreground background))
+                (and (null background-entry)
+                     (equal foreground default-background))))
+      (push 'concealed traits))
+    (when foreground-entry (push 'foreground-color traits))
+    (when background-entry (push 'background-color traits))
+    (when-let* ((overline (alist-get :overline attributes))
+                ((not (eq overline 'unspecified))))
+      (push 'overline traits))
+    (when-let* ((box (alist-get :box attributes))
+                ((not (eq box 'unspecified))))
+      (push 'boxed traits))
+    (when mouse-face (push 'mouse-highlight traits))
+    (when interactive-p (push 'interactive traits))
+    (setq traits (delete-dups traits))
+    (seq-filter (lambda (trait) (memq trait traits))
+                emacsvox-eat--style-trait-order)))
+
 (defun emacsvox-eat--style-at (position)
   "Return normalized terminal style facts at buffer POSITION."
   (let ((face
@@ -279,11 +353,14 @@ when the terminal is selected again."
          (or
           (get-char-property position 'keymap)
           (get-char-property position 'help-echo))))
-    (when (or face mouse-face interactive-p)
-      (append
-       (when face (list :face face))
-       (when mouse-face (list :mouse-face mouse-face))
-       (when interactive-p (list :interactive t))))))
+    (let ((traits
+           (emacsvox-eat--style-traits face mouse-face interactive-p)))
+      (when (or face mouse-face interactive-p traits)
+        (append
+         (when face (list :face face))
+         (when mouse-face (list :mouse-face mouse-face))
+         (when interactive-p (list :interactive t))
+         (when traits (list :traits traits)))))))
 
 (defun emacsvox-eat--style-runs (beginning end)
   "Return non-default style runs between BEGINNING and END.
@@ -352,6 +429,7 @@ Only public EAT terminal accessors and rendered buffer properties are used."
            (text (buffer-substring-no-properties beginning end)))
       (list
        :generation emacsvox-eat--generation
+       :style-version emacsvox-eat--style-signature-version
        :display-beginning beginning
        :display-end end
        :text text
