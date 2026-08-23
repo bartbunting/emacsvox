@@ -195,11 +195,12 @@ Issues:
 Planned slices:
 
 1. [X] normalized rendered style signatures;
-2. conservative cursor/style/input/timing focus score;
-3. current row, changed region, likely highlight, candidate, and frozen-screen
+2. [X] concealed-cell snapshot and presentation redaction;
+3. conservative cursor/style/input/timing focus score;
+4. current row, changed region, likely highlight, candidate, and frozen-screen
    review commands;
-4. terminal verbosity/output-monitor commands;
-5. less/Vim/whiptail/status fixtures.
+5. terminal verbosity/output-monitor commands;
+6. less/Vim/whiptail/status fixtures.
 
 Acceptance:
 
@@ -266,6 +267,7 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | Harden the explicit ~eat-send-password~ path; do not infer no-echo state from terminal repaint. | EAT exposes no public terminal-echo state, and silence is not proof of a password prompt. The explicit command uses Emacs's lossage-safe ~read-passwd~ path and gives Emacsvox a reliable privacy boundary without private EAT internals or content inspection. |
 | 2026-08-23 | Background monitoring uses a cue only; speak its unread burst count only after returning to that terminal. | This user-selected policy provides awareness without exposing terminal identity/content or inserting background speech. Quiescence, a five-second cue limit, and minibuffer suppression prevent refresh floods and input interference. |
 | 2026-08-23 | Normalize semantic style traits from EAT's rendered public buffer properties and version the signature. | Public properties expose the useful SGR state without private terminal structs. Dropping the default terminal font removes noise; retaining raw normalized faces beside stable traits preserves evidence. Inverse-like styling remains evidence, not proof of focus. |
+| 2026-08-23 | Redact concealed cells at the snapshot boundary with same-length blanks. | EAT correctly retains the underlying characters in its terminal buffer, but accessibility snapshots must neither retain nor speak visually concealed content. Same-length redaction preserves public cursor/style offsets and newlines while making completion and diff classifiers fail safely. |
 
 * Progress log
 
@@ -297,9 +299,10 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~e65dd63a6~ | 5.4 | The user-selected, buffer-local ~terse~ / ~normal~ / ~verbose~ policy defaults to ~normal~. Terse mode retains routine output/status without automatic speech; normal preserves existing bounded output; verbose additionally presents bounded, control-free title and working-directory changes as rate-limited replaceable state transactions. Lifecycle state clears retained metadata. All 83 focused EAT tests pass, including real long OSC-title handling, and fresh Emacs verified the compiled metadata path. |
 | 2026-08-23 | ~bd73cc29c~ | 5.5 | Around-advice on EAT's public ~eat-send-password~ command creates a reliable protected-input boundary. Existing masked ~read-passwd~ feedback provides entry; Emacsvox clears every content-bearing terminal snapshot before and after the command, suppresses update/bell speech while active, and reports only a content-free sent/cancelled result. Process lifecycle also clears the protected state. Ordinary raw no-echo typing remains intentionally uninferred because EAT exposes no public echo-mode state. All 86 focused EAT tests and fresh compiled-command verification pass. |
 | 2026-08-23 | ~27050678e~ | 5.6 | The user-selected optional monitor is buffer-local and off by default. Public-screen text changes are quiesced into unread bursts; cursor/style/repaint/resize/generation changes do not count. A terminal in the background plays only the content-free ~more~ cue, at most once per five seconds and never over an active minibuffer. Selecting it flushes any pending burst and speaks only the count, without buffer identity or output. All state clears at privacy/lifecycle boundaries. All 92 focused EAT tests and a fresh compiled real-terminal privacy check pass. |
-| 2026-08-23 | this commit | 6.1 | Versioned semantic style traits are derived from bounded rendered EAT buffer properties: bold, faint, italic, underline, blink, crossed-out, inverse-like, concealed, color, alternate font, overline, box, mouse highlight, and interaction. The default terminal font is discarded as noise, while normalized raw faces remain available. All 94 focused tests pass, including a real EAT SGR fixture, and a fresh Emacs verifies the compiled implementation. |
+| 2026-08-23 | ~8cbc33dc6~ | 6.1 | Versioned semantic style traits are derived from bounded rendered EAT buffer properties: bold, faint, italic, underline, blink, crossed-out, inverse-like, concealed, color, alternate font, overline, box, mouse highlight, and interaction. The default terminal font is discarded as noise, while normalized raw faces remain available. All 94 focused tests pass, including a real EAT SGR fixture, and a fresh Emacs verifies the compiled implementation. |
+| 2026-08-23 | this commit | 6.2 | Concealed rendered cells are replaced with same-length blanks before any snapshot text or rows are retained, compared, classified, completed, or presented. Newlines and offsets remain stable, and style traits still record that a concealed region exists. All 96 focused tests pass; a real EAT fixture proves the source buffer contains the sentinel while snapshots, retained diffs, and speech do not, and fresh compiled verification passes. |
 
 * Current next action
 
-Redact concealed terminal cells from automatic output and retained
-presentation before using style changes for conservative focus scoring.
+Implement conservative focus/highlight scoring from cursor movement, paired
+style transitions, recent navigation intent, region size, and timing.

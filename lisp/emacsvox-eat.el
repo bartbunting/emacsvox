@@ -380,6 +380,22 @@ Run bounds are offsets from BEGINNING."
         (setq position next)))
     (nreverse runs)))
 
+(defun emacsvox-eat--redact-concealed-text (text styles)
+  "Return a same-length copy of TEXT with concealed STYLE cells blanked.
+Newlines remain intact so row and cursor offsets continue to describe the
+rendered terminal screen."
+  (let ((redacted (copy-sequence text))
+        (length (length text)))
+    (dolist (run styles)
+      (when (memq 'concealed (plist-get (caddr run) :traits))
+        (let ((position (max 0 (car run)))
+              (end (min length (cadr run))))
+          (while (< position end)
+            (unless (= (aref redacted position) ?\n)
+              (aset redacted position ?\s))
+            (setq position (1+ position))))))
+    redacted))
+
 (defun emacsvox-eat--split-screen-rows (text)
   "Split terminal TEXT into rows while preserving empty rows."
   (let ((start 0)
@@ -426,7 +442,10 @@ Only public EAT terminal accessors and rendered buffer properties are used."
             (emacsvox-eat--cursor-coordinates cursor beginning end))
            (size (eat-term-size eat-terminal))
            (title (eat-term-title eat-terminal))
-           (text (buffer-substring-no-properties beginning end)))
+           (styles (emacsvox-eat--style-runs beginning end))
+           (text
+            (emacsvox-eat--redact-concealed-text
+             (buffer-substring-no-properties beginning end) styles)))
       (list
        :generation emacsvox-eat--generation
        :style-version emacsvox-eat--style-signature-version
@@ -434,7 +453,7 @@ Only public EAT terminal accessors and rendered buffer properties are used."
        :display-end end
        :text text
        :rows (emacsvox-eat--split-screen-rows text)
-       :styles (emacsvox-eat--style-runs beginning end)
+       :styles styles
        :cursor-offset (and cursor (- cursor beginning))
        :cursor-row (car coordinates)
        :cursor-column (cdr coordinates)

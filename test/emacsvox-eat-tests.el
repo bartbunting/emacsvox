@@ -2208,6 +2208,54 @@
        nil nil)
       '(concealed foreground-color background-color)))))
 
+(ert-deftest emacsvox-eat-concealed-redaction-preserves-screen-coordinates ()
+  "Concealed cells are blanked without changing offsets or row boundaries."
+  (let* ((text "shown\nsecret\nend")
+         (styles '((6 12 (:traits (concealed foreground-color)))))
+         (redacted (emacsvox-eat--redact-concealed-text text styles)))
+    (should (equal redacted "shown\n      \nend"))
+    (should (= (length redacted) (length text)))
+    (should (= (aref redacted 5) ?\n))
+    (should (= (aref redacted 12) ?\n))
+    (should-not (string-match-p "secret" redacted))
+    (should (equal text "shown\nsecret\nend"))))
+
+(ert-deftest emacsvox-eat-real-concealed-output-is-never-retained-or-spoken ()
+  "A real EAT conceal sequence cannot disclose its underlying characters."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (secret "terminal-secret-sentinel")
+          submissions)
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 50 5)
+            (eat-term-process-output eat-terminal "$ ")
+            (eat-term-redisplay eat-terminal)
+            (let ((old (emacsvox-eat--capture-screen)))
+              (eat-term-process-output
+               eat-terminal
+               (concat "\r\nvisible \e[8m" secret "\e[0m\r\n$ "))
+              (eat-term-redisplay eat-terminal)
+              (should (string-match-p secret (buffer-string)))
+              (let* ((new (emacsvox-eat--capture-screen))
+                     (diff (emacsvox-eat--screen-diff old new)))
+                (should-not (string-match-p secret (format "%S" new)))
+                (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                           (lambda (content &rest arguments)
+                             (push (list content arguments) submissions))))
+                  (emacsvox-eat--screen-quiesced diff new))
+                (should (= (length submissions) 1))
+                (should (string-match-p "visible" (caar submissions)))
+                (should-not
+                 (string-match-p
+                  secret
+                  (format
+                   "%S"
+                   (list submissions emacsvox-eat--last-screen-diff
+                         emacsvox-eat--last-changed-screen)))))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
 (ert-deftest emacsvox-eat-real-sgr-styles-have-normalized-traits ()
   "Every recoverable EAT SGR category has a data-only semantic trait."
   (with-temp-buffer
@@ -2237,7 +2285,6 @@
                      ("fast" blink)
                      ("inverse" inverse-like foreground-color
                       background-color)
-                     ("conceal" concealed foreground-color)
                      ("cross" crossed-out)
                      ("red" foreground-color)
                      ("bluebg" background-color)
@@ -2246,6 +2293,11 @@
                  (equal
                   (emacsvox-eat-test--traits-for-text snapshot (car case))
                   (cdr case))))
+              (should
+               (seq-some
+                (lambda (run)
+                  (memq 'concealed (plist-get (caddr run) :traits)))
+                (plist-get snapshot :styles)))
               (should-not
                (seq-some
                 (lambda (run)
