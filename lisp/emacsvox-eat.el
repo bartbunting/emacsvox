@@ -78,6 +78,24 @@
 (defvar-local emacsvox-eat--completion-snapshot nil
   "Line and token captured before EAT sends terminal completion input.")
 
+(defvar-local emacsvox-eat--screen-snapshot nil
+  "Most recent public-API snapshot of the visible EAT screen.")
+
+(defvar-local emacsvox-eat--pending-screen-baseline nil
+  "Screen snapshot at the beginning of the current update burst.")
+
+(defvar-local emacsvox-eat--pending-screen-diff nil
+  "Aggregate screen diff waiting for the terminal to become quiescent.")
+
+(defvar-local emacsvox-eat--quiescence-timer nil
+  "Timer waiting to finish the current EAT update burst.")
+
+(defvar-local emacsvox-eat--update-serial 0
+  "Monotonic serial number for observed EAT screen updates.")
+
+(defconst emacsvox-eat--quiescence-delay 0.06
+  "Seconds of quiet that finish one EAT screen update burst.")
+
 (defconst emacsvox-eat--face-attributes
   '(:foreground :background :weight :slant :underline :strike-through
     :inverse-video :overline :box)
@@ -347,9 +365,74 @@ Snapshots from different terminal generations are intentionally not compared."
      :changes changes
      :unchanged (null changes))))
 
+(defun emacsvox-eat--cancel-quiescence ()
+  "Cancel and clear the pending EAT quiescence transaction."
+  (when (timerp emacsvox-eat--quiescence-timer)
+    (cancel-timer emacsvox-eat--quiescence-timer))
+  (setq emacsvox-eat--quiescence-timer nil
+        emacsvox-eat--pending-screen-baseline nil
+        emacsvox-eat--pending-screen-diff nil))
+
+(defun emacsvox-eat--screen-quiesced (_diff _snapshot)
+  "Handle a quiesced screen DIFF ending at SNAPSHOT.
+Later phases add speech policy here; observation itself is intentionally quiet."
+  nil)
+
+(defun emacsvox-eat--finish-quiescence (buffer generation serial)
+  "Finish BUFFER's update burst identified by GENERATION and SERIAL."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when (and emacsvox-eat--quiescence-timer
+                 (= generation emacsvox-eat--generation)
+                 (= serial emacsvox-eat--update-serial))
+        (setq emacsvox-eat--quiescence-timer nil)
+        (let ((diff emacsvox-eat--pending-screen-diff)
+              (snapshot emacsvox-eat--screen-snapshot))
+          (setq emacsvox-eat--pending-screen-baseline nil
+                emacsvox-eat--pending-screen-diff nil)
+          (when (and diff
+                     (emacsvox-eat--selected-buffer-p))
+            (emacsvox-eat--screen-quiesced diff snapshot)))))))
+
+(defun emacsvox-eat--schedule-quiescence ()
+  "Restart the timer for the current selected EAT update burst."
+  (when (timerp emacsvox-eat--quiescence-timer)
+    (cancel-timer emacsvox-eat--quiescence-timer))
+  (setq emacsvox-eat--quiescence-timer
+        (run-at-time
+         emacsvox-eat--quiescence-delay nil
+         #'emacsvox-eat--finish-quiescence
+         (current-buffer) emacsvox-eat--generation
+         emacsvox-eat--update-serial)))
+
+(defun emacsvox-eat--observe-screen ()
+  "Capture and aggregate the current EAT screen without producing speech."
+  (when-let* ((new (emacsvox-eat--capture-screen)))
+    (let ((old emacsvox-eat--screen-snapshot))
+      (setq emacsvox-eat--update-serial
+            (1+ emacsvox-eat--update-serial)
+            emacsvox-eat--screen-snapshot new)
+      (if (or (not (emacsvox-eat--selected-buffer-p))
+              (null old)
+              (not
+               (equal
+                (plist-get old :generation)
+                (plist-get new :generation))))
+          (emacsvox-eat--cancel-quiescence)
+        (unless emacsvox-eat--pending-screen-baseline
+          (setq emacsvox-eat--pending-screen-baseline old))
+        (setq emacsvox-eat--pending-screen-diff
+              (emacsvox-eat--screen-diff
+               emacsvox-eat--pending-screen-baseline new))
+        (if (plist-get emacsvox-eat--pending-screen-diff :unchanged)
+            (emacsvox-eat--cancel-quiescence)
+          (emacsvox-eat--schedule-quiescence))))))
+
 (defun emacsvox-eat--clear-transient-state ()
   "Clear asynchronous EAT interaction state in the current buffer."
-  (setq emacsvox-eat--completion-snapshot nil))
+  (emacsvox-eat--cancel-quiescence)
+  (setq emacsvox-eat--completion-snapshot nil
+        emacsvox-eat--screen-snapshot nil))
 
 (defun emacsvox-eat--advance-generation ()
   "Invalidate asynchronous state and advance the current EAT generation."
@@ -674,6 +757,7 @@ update feedback."
 
 (defun emacsvox-eat-update-hook ()
   "Speak an EAT update when its buffer is selected."
+  (emacsvox-eat--observe-screen)
   (if (not (emacsvox-eat--selected-buffer-p))
       (setq emacsvox-eat--completion-snapshot nil)
     (let* ((emacsvox-show-point t)

@@ -100,7 +100,7 @@ Planned slices:
 
 1. [X] immutable bounded visible-screen snapshot from public EAT getters;
 2. [X] pure logical-row/text/style diff;
-3. update generations, resize/alternate-state comparison, and quiescence;
+3. [X] update generations, resize/alternate-state comparison, and quiescence;
 4. deterministic unit and real-terminal ERT.
 
 Acceptance:
@@ -269,10 +269,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~c5ad4f3a6~ | 1.2 | Buffer-local generations, process identity, and reset/reload/exec/exit invalidation; 12 focused tests and compiled real-reload verification pass. |
 | 2026-08-23 | ~18d284a83~ | 1.3 | Native selected-buffer process exit/restart lifecycle; duplicate/stale exits and background disclosure suppressed; 15 focused tests and a fresh compiled real-process exit pass. |
 | 2026-08-23 | ~13f5836c4~ | 2.1 | Data-only visible-screen snapshot from public EAT accessors and normalized rendered style properties; no speech-policy change. |
-| 2026-08-23 | this commit | 2.2 | Linear bounded text/row/style diff with independent cursor, resize, alternate-screen, title, CWD, and generation classification; 23 focused tests and fresh compiled verification pass. |
+| 2026-08-23 | ~093a1e9bc~ | 2.2 | Linear bounded text/row/style diff with independent cursor, resize, alternate-screen, title, CWD, and generation classification; 23 focused tests and fresh compiled verification pass. |
+| 2026-08-23 | this commit | 2.3 | Buffer-local snapshots and serial-checked 60 ms quiescence transactions; lifecycle/focus loss cancels delivery, and arbitrary text/escape chunking converges; 26 focused tests and the real compiled timer pass. |
 
 * Current next action
 
-Retain snapshots from the update hook, add update serials and a generation-safe
-quiescence timer, then prove split output chunks converge without changing
-automatic speech policy.
+Complete Phase 2 validation for unchanged repaint, resize/reflow, reset, and
+alternate-screen transitions through the observer, then run the full suite and
+record the phase boundary before adding semantic speech.
