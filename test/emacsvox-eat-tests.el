@@ -472,6 +472,88 @@
   (should (emacsvox-eat--tab-event-p 'tab))
   (should-not (emacsvox-eat--tab-event-p ?i)))
 
+(ert-deftest emacsvox-eat-navigation-events-have-content-free-directions ()
+  "Terminal navigation keys normalize without retaining typed content."
+  (dolist
+      (case
+       '((up . up) (prior . up) (16 . up)
+         (down . down) (next . down) (14 . down)
+         (left . left) (home . left) (2 . left)
+         (right . right) (end . right) (6 . right)
+         (9 . forward) (tab . forward)
+         (backtab . backward) (iso-lefttab . backward)))
+    (should
+     (eq (emacsvox-eat--navigation-direction (car case)) (cdr case))))
+  (should-not (emacsvox-eat--navigation-direction ?j))
+  (should-not (emacsvox-eat--navigation-direction 'return)))
+
+(ert-deftest emacsvox-eat-alternate-screen-tab-records-navigation-not-completion ()
+  "Tab on an application screen is navigation, not shell completion."
+  (with-temp-buffer
+    (let ((eat-terminal 'terminal)
+          (emacsvox-eat--generation 4)
+          (emacsvox-eat--screen-snapshot
+           '(:generation 4 :alternate-screen t
+             :cursor-row 2 :cursor-column 7)))
+      (emacsvox--advice-eat-self-input-before 1 'tab)
+      (should-not emacsvox-eat--completion-snapshot)
+      (should-not emacsvox-eat--recent-input)
+      (should
+       (equal
+        (plist-get emacsvox-eat--recent-navigation-intent :direction)
+        'forward))
+      (should
+       (= (plist-get emacsvox-eat--recent-navigation-intent :generation) 4))
+      (should
+       (= (plist-get emacsvox-eat--recent-navigation-intent :cursor-row) 2))
+      (should-not
+       (plist-member emacsvox-eat--recent-navigation-intent :event)))))
+
+(ert-deftest emacsvox-eat-navigation-intents-merge-only-one-direction ()
+  "A mixed navigation burst is marked ambiguous instead of misclassified."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 2)
+          (up (list :generation 2 :direction 'up
+                    :deadline (+ (float-time) 1) :count 1))
+          (later-up (list :generation 2 :direction 'up
+                          :deadline (+ (float-time) 2) :count 1))
+          (down (list :generation 2 :direction 'down
+                      :deadline (+ (float-time) 2) :count 1)))
+      (emacsvox-eat--merge-pending-navigation-intent up)
+      (emacsvox-eat--merge-pending-navigation-intent later-up)
+      (should
+       (= (plist-get emacsvox-eat--pending-navigation-intent :count) 2))
+      (emacsvox-eat--merge-pending-navigation-intent down)
+      (should
+       (plist-get emacsvox-eat--pending-navigation-intent :ambiguous)))))
+
+(ert-deftest emacsvox-eat-quiescence-carries-current-navigation-intent ()
+  "Quiescence passes normalized navigation to classification exactly once."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 5)
+          (emacsvox-eat--update-serial 8)
+          (emacsvox-eat--quiescence-timer t)
+          (emacsvox-eat--pending-screen-diff '(:changes (style cursor)))
+          (emacsvox-eat--screen-snapshot
+           '(:generation 5 :text "Two" :rows ("Two")))
+          (emacsvox-eat--pending-navigation-intent
+           (list :generation 5 :direction 'down
+                 :deadline (+ (float-time) 1) :count 1))
+          delivered-diff)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'emacsvox-eat--following-live-p)
+                 (lambda () t))
+                ((symbol-function 'emacsvox-eat--screen-quiesced)
+                 (lambda (diff _snapshot) (setq delivered-diff diff))))
+        (emacsvox-eat--finish-quiescence (current-buffer) 5 8))
+      (should
+       (equal
+        (plist-get (plist-get delivered-diff :navigation) :direction)
+        'down))
+      (should-not emacsvox-eat--pending-navigation-intent)
+      (should-not emacsvox-eat--quiescence-timer))))
+
 (ert-deftest emacsvox-eat-terminal-tab-does-not-require-private-mode-state ()
   "Any Tab delivered by `eat-self-input' starts terminal completion tracking."
   (with-temp-buffer
@@ -1640,6 +1722,10 @@
           (emacsvox-eat--pending-screen-diff '(:changes (text)))
           (emacsvox-eat--pending-alternate-screen-transitions '(t))
           (emacsvox-eat--pending-user-input-p t)
+          (emacsvox-eat--recent-navigation-intent
+           '(:generation 7 :direction down :deadline 9999999999.0))
+          (emacsvox-eat--pending-navigation-intent
+           '(:generation 7 :direction down :deadline 9999999999.0))
           (emacsvox-eat--quiescence-started-at 10.0)
           (emacsvox-eat--last-status-text "Progress 40%")
           (emacsvox-eat--last-status-spoken-at 20.0)
@@ -1671,6 +1757,8 @@
       (should-not emacsvox-eat--pending-screen-diff)
       (should-not emacsvox-eat--pending-alternate-screen-transitions)
       (should-not emacsvox-eat--pending-user-input-p)
+      (should-not emacsvox-eat--recent-navigation-intent)
+      (should-not emacsvox-eat--pending-navigation-intent)
       (should-not emacsvox-eat--quiescence-started-at)
       (should-not emacsvox-eat--quiescence-timer)
       (should-not emacsvox-eat--last-status-text)

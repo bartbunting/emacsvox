@@ -142,6 +142,12 @@ when the terminal is selected again."
 (defvar-local emacsvox-eat--recent-input nil
   "Generation, event, and deadline for one input-correlated screen update.")
 
+(defvar-local emacsvox-eat--recent-navigation-intent nil
+  "Content-free terminal navigation intent awaiting its first screen update.")
+
+(defvar-local emacsvox-eat--pending-navigation-intent nil
+  "Content-free terminal navigation intent for the current update burst.")
+
 (defvar-local emacsvox-eat--secure-input-active-p nil
   "Non-nil while EAT is reading and sending protected terminal input.")
 
@@ -219,6 +225,9 @@ when the terminal is selected again."
 
 (defconst emacsvox-eat--completion-timeout 2.0
   "Seconds a terminal-side completion may await compatible remote output.")
+
+(defconst emacsvox-eat--navigation-timeout 0.75
+  "Seconds terminal navigation intent may be correlated with screen changes.")
 
 (defconst emacsvox-eat--bell-minimum-interval 0.5
   "Minimum seconds between spoken bells from one EAT terminal.")
@@ -662,6 +671,7 @@ Snapshots from different terminal generations are intentionally not compared."
         emacsvox-eat--pending-screen-diff nil
         emacsvox-eat--pending-alternate-screen-transitions nil
         emacsvox-eat--pending-user-input-p nil
+        emacsvox-eat--pending-navigation-intent nil
         emacsvox-eat--quiescence-started-at nil))
 
 (defun emacsvox-eat--complete-output-rows (diff snapshot)
@@ -886,6 +896,7 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
         (setq emacsvox-eat--quiescence-timer nil)
         (let ((diff emacsvox-eat--pending-screen-diff)
               (snapshot emacsvox-eat--screen-snapshot)
+              (navigation emacsvox-eat--pending-navigation-intent)
               (alternate-screen-transitions
                (nreverse emacsvox-eat--pending-alternate-screen-transitions))
               (user-input-p emacsvox-eat--pending-user-input-p))
@@ -893,6 +904,7 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
                 emacsvox-eat--pending-screen-diff nil
                 emacsvox-eat--pending-alternate-screen-transitions nil
                 emacsvox-eat--pending-user-input-p nil
+                emacsvox-eat--pending-navigation-intent nil
                 emacsvox-eat--quiescence-started-at nil)
           (when (and diff
                      (emacsvox-eat--selected-buffer-p))
@@ -902,6 +914,9 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
                     (plist-put
                      diff :alternate-screen-transitions
                      alternate-screen-transitions)))
+            (when (and (emacsvox-eat--navigation-intent-current-p navigation)
+                       (not (plist-get navigation :ambiguous)))
+              (setq diff (plist-put diff :navigation navigation)))
             (if (emacsvox-eat--following-live-p)
                 (emacsvox-eat--screen-quiesced diff snapshot)
               (emacsvox-eat--retain-screen-change diff snapshot))))))))
@@ -926,7 +941,9 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
 (defun emacsvox-eat--observe-screen ()
   "Capture and aggregate the current EAT screen without producing speech."
   (when-let* ((new (emacsvox-eat--capture-screen)))
-    (let ((old emacsvox-eat--screen-snapshot))
+    (let ((old emacsvox-eat--screen-snapshot)
+          (navigation (emacsvox-eat--current-navigation-intent)))
+      (setq emacsvox-eat--recent-navigation-intent nil)
       (setq emacsvox-eat--update-serial
             (1+ emacsvox-eat--update-serial)
             emacsvox-eat--screen-snapshot new)
@@ -947,14 +964,20 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
           ;; Terminal completion and replaceable status state cannot span a
           ;; change to or from an application's independent screen.
           (emacsvox-eat--cancel-completion)
-          (setq emacsvox-eat--recent-input nil
+          (setq navigation nil
+                emacsvox-eat--recent-input nil
+                emacsvox-eat--recent-navigation-intent nil
+                emacsvox-eat--pending-navigation-intent nil
                 emacsvox-eat--last-status-text nil
                 emacsvox-eat--last-status-spoken-at 0.0
                 emacsvox-eat--last-completion-output nil))
         (setq emacsvox-eat--pending-user-input-p
               (or emacsvox-eat--pending-user-input-p
                   emacsvox-eat--recent-input
+                  navigation
                   emacsvox-eat--completion-snapshot))
+        (when navigation
+          (emacsvox-eat--merge-pending-navigation-intent navigation))
         (setq emacsvox-eat--pending-screen-diff
               (emacsvox-eat--screen-diff
                emacsvox-eat--pending-screen-baseline new))
@@ -1073,6 +1096,8 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
   (emacsvox-eat--cancel-completion)
   (setq emacsvox-eat--screen-snapshot nil
         emacsvox-eat--recent-input nil
+        emacsvox-eat--recent-navigation-intent nil
+        emacsvox-eat--pending-navigation-intent nil
         emacsvox-eat--last-screen-diff nil
         emacsvox-eat--last-changed-screen nil
         emacsvox-eat--last-status-text nil
@@ -1595,9 +1620,84 @@ reaches this advice."
        (or (eq event 9)
            (memq (event-basic-type event) '(9 tab)))))
 
+(defun emacsvox-eat--navigation-direction (event)
+  "Return a normalized terminal navigation direction for EVENT."
+  (or
+   (pcase event
+     (16 'up)
+     (14 'down)
+     (2 'left)
+     (6 'right)
+     (9 'forward))
+   (pcase (and event (event-basic-type event))
+     ((or 'up 'prior) 'up)
+     ((or 'down 'next) 'down)
+     ((or 'left 'home) 'left)
+     ((or 'right 'end) 'right)
+     ('tab 'forward)
+     ((or 'backtab 'iso-lefttab) 'backward))))
+
+(defun emacsvox-eat--navigation-intent-current-p (intent)
+  "Return non-nil when content-free navigation INTENT is still current."
+  (and intent
+       (= (plist-get intent :generation) emacsvox-eat--generation)
+       (<= (float-time) (plist-get intent :deadline))))
+
+(defun emacsvox-eat--current-navigation-intent ()
+  "Return current terminal navigation intent, clearing it when stale."
+  (if (emacsvox-eat--navigation-intent-current-p
+       emacsvox-eat--recent-navigation-intent)
+      emacsvox-eat--recent-navigation-intent
+    (setq emacsvox-eat--recent-navigation-intent nil)))
+
+(defun emacsvox-eat--merge-pending-navigation-intent (intent)
+  "Merge content-free navigation INTENT into the current update burst."
+  (if (null emacsvox-eat--pending-navigation-intent)
+      (setq emacsvox-eat--pending-navigation-intent (copy-sequence intent))
+    (if (eq (plist-get emacsvox-eat--pending-navigation-intent :direction)
+            (plist-get intent :direction))
+        (progn
+          (setq emacsvox-eat--pending-navigation-intent
+                (plist-put
+                 emacsvox-eat--pending-navigation-intent :count
+                 (1+
+                  (or
+                   (plist-get
+                    emacsvox-eat--pending-navigation-intent :count)
+                   1))))
+          (setq emacsvox-eat--pending-navigation-intent
+                (plist-put
+                 emacsvox-eat--pending-navigation-intent :deadline
+                 (max
+                  (plist-get
+                   emacsvox-eat--pending-navigation-intent :deadline)
+                  (plist-get intent :deadline)))))
+      (setq emacsvox-eat--pending-navigation-intent
+            (plist-put
+             emacsvox-eat--pending-navigation-intent :ambiguous t)))))
+
+(defun emacsvox-eat--record-navigation-intent (direction)
+  "Record content-free terminal navigation in DIRECTION."
+  (let* ((now (float-time))
+         (screen
+          (or emacsvox-eat--screen-snapshot
+              (ignore-errors (emacsvox-eat--capture-screen)))))
+    (setq emacsvox-eat--recent-input nil
+          emacsvox-eat--recent-navigation-intent
+          (list
+           :generation emacsvox-eat--generation
+           :direction direction
+           :started-at now
+           :deadline (+ now emacsvox-eat--navigation-timeout)
+           :count 1
+           :cursor-row (plist-get screen :cursor-row)
+           :cursor-column (plist-get screen :cursor-column)))))
+
 (defun emacsvox-eat--capture-completion (cursor)
   "Start a terminal completion transaction at EAT terminal CURSOR."
   (emacsvox-eat--cancel-completion)
+  (setq emacsvox-eat--recent-navigation-intent nil
+        emacsvox-eat--pending-navigation-intent nil)
   (setq emacsvox-eat--completion-serial
         (1+ emacsvox-eat--completion-serial))
   (when-let* ((cursor)
@@ -1657,21 +1757,31 @@ reaches this advice."
                 (or (= event 8) (= event 127) (>= event 32)))
            (and (symbolp basic)
                 (not (memq basic '(tab return linefeed escape)))))))
-    (setq emacsvox-eat--recent-input
+    (setq emacsvox-eat--recent-navigation-intent nil
+          emacsvox-eat--pending-navigation-intent nil
+          emacsvox-eat--recent-input
           (when recordable-p
             (list emacsvox-eat--generation basic
                   (+ (float-time) 0.5))))))
 
 (defun emacsvox--advice-eat-self-input-before (_count &optional event)
   "Capture terminal completion context before EAT sends Tab EVENT."
-  (let ((event (or event last-command-event)))
-    (if (and eat-terminal (emacsvox-eat--tab-event-p event))
-        (progn
-          (setq emacsvox-eat--recent-input nil)
-          (emacsvox-eat--capture-completion
-           (eat-term-display-cursor eat-terminal)))
+  (let* ((event (or event last-command-event))
+         (tab-p (emacsvox-eat--tab-event-p event))
+         (direction (emacsvox-eat--navigation-direction event))
+         (alternate-screen-p
+          (plist-get emacsvox-eat--screen-snapshot :alternate-screen)))
+    (cond
+     ((and eat-terminal tab-p (not alternate-screen-p))
+      (setq emacsvox-eat--recent-input nil)
+      (emacsvox-eat--capture-completion
+       (eat-term-display-cursor eat-terminal)))
+     (direction
       (emacsvox-eat--cancel-completion)
-      (emacsvox-eat--record-input event))))
+      (emacsvox-eat--record-navigation-intent direction))
+     (t
+      (emacsvox-eat--cancel-completion)
+      (emacsvox-eat--record-input event)))))
 
 (defun emacsvox-eat--screen-cursor-input (snapshot)
   "Return SNAPSHOT's wrapped visual input facts through the terminal cursor.
