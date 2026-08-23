@@ -58,6 +58,7 @@
 (defvar eat-semi-char-mode-map)
 (defvar eat-terminal)
 (defvar eat-trace-mode)
+(defvar eshell-parent-buffer)
 (defvar emacsvox-eat-review-map)
 (defvar emacsvox-eat-review--source-buffer)
 
@@ -117,6 +118,9 @@ when the terminal is selected again."
 (defvar-local emacsvox-eat--active-process nil
   "Process associated with the current EAT generation.")
 
+(defvar-local emacsvox-eat--visual-command-origin-p nil
+  "Non-nil when this process generation was launched by Eshell as visual.")
+
 (defvar-local emacsvox-eat--eshell-output-owned-p nil
   "Non-nil until Eshell publishes the prompt after an EAT-owned command.")
 
@@ -146,6 +150,9 @@ when the terminal is selected again."
 
 (defvar-local emacsvox-eat--quiescence-timer nil
   "Timer waiting to finish the current EAT update burst.")
+
+(defvar-local emacsvox-eat--pending-follow-live-p nil
+  "Non-nil when every update in the pending burst followed the live cursor.")
 
 (defvar-local emacsvox-eat--update-serial 0
   "Monotonic serial number for observed EAT screen updates.")
@@ -978,6 +985,7 @@ DIFF and content-free NAVIGATION provide causal evidence."
         emacsvox-eat--pending-screen-baseline nil
         emacsvox-eat--pending-screen-diff nil
         emacsvox-eat--pending-alternate-screen-transitions nil
+        emacsvox-eat--pending-follow-live-p nil
         emacsvox-eat--pending-user-input-p nil
         emacsvox-eat--pending-navigation-intent nil
         emacsvox-eat--quiescence-started-at nil))
@@ -1279,8 +1287,11 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
               (emacsvox-eat--present-status status))))))
     (emacsvox-eat--present-metadata-change diff snapshot)))
 
-(defun emacsvox-eat--finish-quiescence (buffer generation serial)
-  "Finish BUFFER's update burst identified by GENERATION and SERIAL."
+(defun emacsvox-eat--finish-quiescence
+    (buffer generation serial &optional terminal-exiting-p)
+  "Finish BUFFER's update burst identified by GENERATION and SERIAL.
+When TERMINAL-EXITING-P is non-nil, use the live-follow state recorded while
+the terminal still existed instead of consulting its deleted cursor."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
       (when (and emacsvox-eat--quiescence-timer
@@ -1293,10 +1304,12 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
               (navigation emacsvox-eat--pending-navigation-intent)
               (alternate-screen-transitions
                (nreverse emacsvox-eat--pending-alternate-screen-transitions))
+              (followed-live-p emacsvox-eat--pending-follow-live-p)
               (user-input-p emacsvox-eat--pending-user-input-p))
           (setq emacsvox-eat--pending-screen-baseline nil
                 emacsvox-eat--pending-screen-diff nil
                 emacsvox-eat--pending-alternate-screen-transitions nil
+                emacsvox-eat--pending-follow-live-p nil
                 emacsvox-eat--pending-user-input-p nil
                 emacsvox-eat--pending-navigation-intent nil
                 emacsvox-eat--quiescence-started-at nil)
@@ -1315,9 +1328,20 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
                            (emacsvox-eat--likely-focus-change
                             baseline snapshot diff navigation)))
                 (setq diff (plist-put diff :likely-focus focus))))
-            (if (emacsvox-eat--following-live-p)
+            (if (if terminal-exiting-p
+                    followed-live-p
+                  (emacsvox-eat--following-live-p))
                 (emacsvox-eat--screen-quiesced diff snapshot)
               (emacsvox-eat--retain-screen-change diff snapshot))))))))
+
+(defun emacsvox-eat--flush-quiescence-before-exit ()
+  "Finish eligible foreground output before EAT deletes its process state."
+  (when emacsvox-eat--quiescence-timer
+    (when (timerp emacsvox-eat--quiescence-timer)
+      (cancel-timer emacsvox-eat--quiescence-timer))
+    (emacsvox-eat--finish-quiescence
+     (current-buffer) emacsvox-eat--generation
+     emacsvox-eat--update-serial 'terminal-exiting)))
 
 (defun emacsvox-eat--schedule-quiescence ()
   "Restart the timer for the current selected EAT update burst."
@@ -1352,8 +1376,13 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
                 (plist-get old :generation)
                 (plist-get new :generation))))
           (emacsvox-eat--cancel-quiescence)
-        (unless emacsvox-eat--pending-screen-baseline
+        (if emacsvox-eat--pending-screen-baseline
+            (setq emacsvox-eat--pending-follow-live-p
+                  (and emacsvox-eat--pending-follow-live-p
+                       (emacsvox-eat--following-live-p)))
           (setq emacsvox-eat--pending-screen-baseline old
+                emacsvox-eat--pending-follow-live-p
+                (emacsvox-eat--following-live-p)
                 emacsvox-eat--quiescence-started-at (float-time)))
         (when (not (eq (plist-get old :alternate-screen)
                        (plist-get new :alternate-screen)))
@@ -1513,6 +1542,7 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
   "Clear asynchronous EAT interaction state in the current buffer."
   (emacsvox-eat--clear-sensitive-screen-state)
   (setq emacsvox-eat--secure-input-active-p nil
+        emacsvox-eat--visual-command-origin-p nil
         emacsvox-eat--last-bell-at nil
         emacsvox-eat--last-bell-spoken-at nil))
 
@@ -1648,22 +1678,37 @@ The terminal's original bell callback has already run."
         (setf (eat-term-parameter eat-terminal 'ring-bell-function)
               #'emacsvox-eat--ring-bell)))))
 
+(defun emacsvox-eat--eshell-visual-command-p ()
+  "Return non-nil in a normal EAT buffer launched for an Eshell visual command."
+  (and (boundp 'eshell-parent-buffer)
+       (buffer-live-p eshell-parent-buffer)))
+
 (defun emacsvox-eat--process-started (process &optional quiet-start-p)
   "Start a new EAT generation for PROCESS."
-  (let ((restart-p (> emacsvox-eat--generation 0)))
+  (let ((restart-p (> emacsvox-eat--generation 0))
+        (visual-command-p (emacsvox-eat--eshell-visual-command-p)))
     (emacsvox-eat--advance-generation)
     (setq emacsvox-eat--active-process process
+          emacsvox-eat--visual-command-origin-p visual-command-p
           emacsvox-eat--last-exited-process nil)
     (emacsvox-eat--install-bell-observer)
+    ;; EAT creates and redisplays the terminal before its exec hook.  Retain
+    ;; that empty public screen so even a command's first output is diffable.
+    (setq emacsvox-eat--screen-snapshot (emacsvox-eat--capture-screen))
     ;; Initial creation already has the `eat' opening announcement.  A later
     ;; exec in the same terminal needs its own lifecycle boundary.
-    (when (and restart-p
-               (not quiet-start-p)
-               (emacsvox-eat--selected-buffer-p))
-      (emacsvox-eat--submit
-       "Terminal process restarted"
-       (emacsvox-eat--facts 'command-interaction 'operation-started)
-       'state-change 'open-object))))
+    (when (and (not quiet-start-p) (emacsvox-eat--selected-buffer-p))
+      (cond
+       (visual-command-p
+        (emacsvox-eat--submit
+         "Eshell visual command started"
+         (emacsvox-eat--facts 'command-interaction 'operation-started)
+         'state-change 'open-object))
+       (restart-p
+        (emacsvox-eat--submit
+         "Terminal process restarted"
+         (emacsvox-eat--facts 'command-interaction 'operation-started)
+         'state-change 'open-object))))))
 
 (defun emacsvox-eat--process-exited (process)
   "End the EAT generation belonging to PROCESS.
@@ -1674,40 +1719,49 @@ Ignore a stale or duplicate exit after another process has become active."
        (or
         (null emacsvox-eat--active-process)
         (eq process emacsvox-eat--active-process)))
-    (emacsvox-eat--advance-generation)
-    (setq emacsvox-eat--active-process nil
-          emacsvox-eat--last-exited-process process)
-    (when (emacsvox-eat--selected-buffer-p)
-      (let* ((status (process-status process))
-             (exit-status
-              (and
-               (memq status '(exit signal))
-               (process-exit-status process)))
-             (normal-p
-              (or
-               (eq status 'closed)
-               (and
-                (eq status 'exit)
-                (integerp exit-status)
-                (zerop exit-status))))
-             (content
-              (cond
-               (normal-p "Terminal process exited")
-               ((eq status 'signal)
-                (if (integerp exit-status)
-                    (format "Terminal process ended by signal %d" exit-status)
-                  "Terminal process ended by signal"))
-               ((integerp exit-status)
-                (format "Terminal process exited with status %d" exit-status))
-               (t "Terminal process ended"))))
-        (emacsvox-eat--submit
-         content
-         (emacsvox-eat--facts
-          'command-interaction 'command-process-exited 'process-exit
-          (when (integerp exit-status)
-            (list :command-exit-status exit-status)))
-         'notification
-         (if normal-p 'close-object 'warn-user))))))
+    (let ((visual-command-p emacsvox-eat--visual-command-origin-p))
+      ;; EAT drains and redisplays final process output before deleting the
+      ;; terminal and running this hook.  Finish a burst observed at the live
+      ;; cursor before generation invalidation cancels it.
+      (emacsvox-eat--flush-quiescence-before-exit)
+      (emacsvox-eat--advance-generation)
+      (setq emacsvox-eat--active-process nil
+            emacsvox-eat--last-exited-process process)
+      (when (emacsvox-eat--selected-buffer-p)
+        (let* ((status (process-status process))
+               (exit-status
+                (and
+                 (memq status '(exit signal))
+                 (process-exit-status process)))
+               (normal-p
+                (or
+                 (eq status 'closed)
+                 (and
+                  (eq status 'exit)
+                  (integerp exit-status)
+                  (zerop exit-status))))
+               (subject
+                (if visual-command-p
+                    "Eshell visual command"
+                  "Terminal process"))
+               (content
+                (cond
+                 (normal-p (concat subject " exited"))
+                 ((eq status 'signal)
+                  (if (integerp exit-status)
+                      (format "%s ended by signal %d" subject exit-status)
+                    (concat subject " ended by signal")))
+                 ((integerp exit-status)
+                  (format "%s exited with status %d" subject exit-status))
+                 (t (concat subject " ended")))))
+          (emacsvox-eat--submit
+           content
+           (emacsvox-eat--facts
+            'command-interaction 'command-process-exited 'process-exit
+            (when (integerp exit-status)
+              (list :command-exit-status exit-status)))
+           'notification
+           (if normal-p 'close-object 'warn-user)))))))
 
 (defun emacsvox-eat--eshell-process-started ()
   "Initialize observation for EAT's terminal embedded in Eshell."
@@ -1717,11 +1771,7 @@ Ignore a stale or duplicate exit after another process has become active."
       (progn
         ;; Every external Eshell command is a new process, not a restart of
         ;; the Eshell session, so command start remains quiet.
-        (emacsvox-eat--process-started process 'quiet)
-        ;; EAT creates the terminal before this hook.  Preserve its empty
-        ;; public screen so the first output update has a real baseline.
-        (setq emacsvox-eat--screen-snapshot
-              (emacsvox-eat--capture-screen)))
+        (emacsvox-eat--process-started process 'quiet))
     ;; EAT normally associates the process with the Eshell buffer before this
     ;; hook.  If that invariant changes, invalidate stale content and let the
     ;; first update establish a baseline without inventing process identity.

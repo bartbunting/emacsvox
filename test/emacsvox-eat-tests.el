@@ -1758,6 +1758,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
   (with-temp-buffer
     (let ((emacsvox-eat--generation 7)
           (emacsvox-eat--secure-input-active-p t)
+          (emacsvox-eat--visual-command-origin-p t)
           (emacsvox-eat--completion-snapshot '(12 . "stale"))
           (emacsvox-eat--completion-timer
            (run-at-time 60 nil #'ignore))
@@ -1766,6 +1767,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
            '(:generation 7 :text "older"))
           (emacsvox-eat--pending-screen-diff '(:changes (text)))
           (emacsvox-eat--pending-alternate-screen-transitions '(t))
+          (emacsvox-eat--pending-follow-live-p t)
           (emacsvox-eat--pending-user-input-p t)
           (emacsvox-eat--recent-navigation-intent
            '(:generation 7 :direction down :deadline 9999999999.0))
@@ -1799,12 +1801,14 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should (= emacsvox-eat--generation 8))
       (should (eq emacsvox-eat--active-process process-a))
       (should-not emacsvox-eat--secure-input-active-p)
+      (should-not emacsvox-eat--visual-command-origin-p)
       (should-not emacsvox-eat--completion-snapshot)
       (should-not emacsvox-eat--completion-timer)
       (should-not emacsvox-eat--screen-snapshot)
       (should-not emacsvox-eat--pending-screen-baseline)
       (should-not emacsvox-eat--pending-screen-diff)
       (should-not emacsvox-eat--pending-alternate-screen-transitions)
+      (should-not emacsvox-eat--pending-follow-live-p)
       (should-not emacsvox-eat--pending-user-input-p)
       (should-not emacsvox-eat--recent-navigation-intent)
       (should-not emacsvox-eat--pending-navigation-intent)
@@ -1887,6 +1891,141 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             :module eat
             :occasion state-change
             :compatibility-actions ((icon open-object))))))))))
+
+(ert-deftest emacsvox-eat-process-start-seeds-the-first-public-screen ()
+  "A normal EAT process makes its first rendered output comparable."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (process (make-symbol "seeded-process"))
+          submissions)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions))))
+            (eat-term-resize eat-terminal 24 4)
+            (emacsvox-eat--process-started process)
+            (should
+             (equal (plist-get emacsvox-eat--screen-snapshot :rows)
+                    '("")))
+            (emacsvox-eat-test--deliver-screen eat-terminal "first\r\n")
+            (should (equal (mapcar #'car submissions) '("first"))))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-process-exit-flushes-live-output-before-lifecycle ()
+  "Selected live-follow output survives EAT's short process exit boundary."
+  (with-temp-buffer
+    (let* ((process (make-symbol "short-process"))
+           (emacsvox-eat--generation 3)
+           (emacsvox-eat--active-process process)
+           (emacsvox-eat--update-serial 7)
+           (emacsvox-eat--quiescence-timer t)
+           (emacsvox-eat--pending-follow-live-p t)
+           (emacsvox-eat--pending-screen-baseline
+            '(:generation 3 :rows ("") :text ""))
+           (emacsvox-eat--pending-screen-diff
+            '(:text-changed t :size-changed nil
+              :alternate-screen-changed nil
+              :old-rows ("") :new-rows ("final output" "")
+              :row-change
+              (:start 0 :old-end 0 :new-end 1
+               :old-rows nil :new-rows ("final output"))))
+           (emacsvox-eat--screen-snapshot
+            '(:generation 3 :cursor-row 1 :alternate-screen nil))
+           submissions)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'process-status) (lambda (_) 'exit))
+                ((symbol-function 'process-exit-status) (lambda (_) 0))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (setq submissions
+                         (append submissions (list (list content arguments)))))))
+        (emacsvox-eat--process-exited process))
+      (should
+       (equal (mapcar #'car submissions)
+              '("final output" "Terminal process exited")))
+      (should (= emacsvox-eat--generation 4))
+      (should-not emacsvox-eat--quiescence-timer)
+      (should-not emacsvox-eat--pending-screen-diff))))
+
+(ert-deftest emacsvox-eat-process-exit-does-not-flush-scrollback-output ()
+  "Exit cannot promote output observed while the selected window reviewed history."
+  (with-temp-buffer
+    (let* ((process (make-symbol "reviewed-process"))
+           (emacsvox-eat--generation 2)
+           (emacsvox-eat--active-process process)
+           (emacsvox-eat--update-serial 4)
+           (emacsvox-eat--quiescence-timer t)
+           (emacsvox-eat--pending-follow-live-p nil)
+           (emacsvox-eat--pending-screen-diff '(:text-changed t))
+           (emacsvox-eat--screen-snapshot '(:cursor-row 1))
+           submissions)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'process-status) (lambda (_) 'exit))
+                ((symbol-function 'process-exit-status) (lambda (_) 0))
+                ((symbol-function 'emacsvox-eat--screen-quiesced)
+                 (lambda (&rest _) (push "private output" submissions)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest _)
+                   (push content submissions))))
+        (emacsvox-eat--process-exited process))
+      (should (equal submissions '("Terminal process exited"))))))
+
+(ert-deftest emacsvox-eat-process-exit-discards-background-pending-output ()
+  "Exit cannot disclose a burst after its terminal loses selection."
+  (with-temp-buffer
+    (let* ((process (make-symbol "background-short-process"))
+           (emacsvox-eat--generation 2)
+           (emacsvox-eat--active-process process)
+           (emacsvox-eat--update-serial 4)
+           (emacsvox-eat--quiescence-timer t)
+           (emacsvox-eat--pending-follow-live-p t)
+           (emacsvox-eat--pending-screen-diff '(:text-changed t))
+           presented)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () nil))
+                ((symbol-function 'emacsvox-eat--screen-quiesced)
+                 (lambda (&rest _) (setq presented t)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (&rest _) (setq presented t))))
+        (emacsvox-eat--process-exited process))
+      (should-not presented)
+      (should (= emacsvox-eat--generation 3))
+      (should-not emacsvox-eat--quiescence-timer))))
+
+(ert-deftest emacsvox-eat-eshell-visual-lifecycle-is-distinct ()
+  "A normal EAT buffer linked to Eshell identifies its visual-command boundary."
+  (let ((parent (generate-new-buffer " *emacsvox-eat-visual-parent*")))
+    (unwind-protect
+        (with-temp-buffer
+          (let* ((process (make-symbol "visual-process"))
+                 submissions)
+            ;; EAT marks the parent buffer locally in the visual terminal.
+            (setq-local eshell-parent-buffer parent)
+            (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                       (lambda () t))
+                      ((symbol-function 'process-status) (lambda (_) 'exit))
+                      ((symbol-function 'process-exit-status) (lambda (_) 0))
+                      ((symbol-function 'emacsvox-aural-submit)
+                       (lambda (content &rest _)
+                         (setq submissions
+                               (append submissions (list content))))))
+              (emacsvox-eat--process-started process)
+              ;; Origin is generation state; parent loss cannot relabel exit.
+              (kill-buffer parent)
+              (emacsvox-eat--process-exited process))
+            (should
+             (equal submissions
+                    '("Eshell visual command started"
+                      "Eshell visual command exited")))))
+      (when (buffer-live-p parent) (kill-buffer parent)))))
 
 (ert-deftest emacsvox-eat-eshell-lifecycle-is-shared-without-start-chatter ()
   "Embedded Eshell processes share state while each command start stays quiet."
@@ -2033,6 +2172,82 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
         (kill-buffer buffer))
       (when (and (not was-enabled) eat-eshell-mode)
         (eat-eshell-mode -1)))))
+
+(ert-deftest emacsvox-eat-real-eshell-visual-command-flushes-short-output ()
+  "A disposable visual command speaks start, final output, and exit once."
+  (require 'em-term)
+  (let ((parent (generate-new-buffer " *emacsvox-eat-visual-eshell*"))
+        (was-enabled eat-eshell-visual-command-mode)
+        (eshell-destroy-buffer-when-process-dies nil)
+        ;; Keep the ordinary timer pending so this deterministically exercises
+        ;; the exit-time flush rather than winning a scheduling race.
+        (emacsvox-eat--quiescence-delay 5.0)
+        (emacsvox-eat--quiescence-maximum-delay 5.0)
+        visual-buffer
+        process
+        submissions)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer parent)
+          (eshell-mode)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (setq submissions
+                             (append
+                              submissions
+                              (list
+                               (list
+                                (substring-no-properties content)
+                                arguments))))))
+                    ((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'tts-speak) #'ignore))
+            (unless was-enabled (eat-eshell-visual-command-mode 1))
+            (eshell-exec-visual
+             "python3" "-c"
+             (concat
+              "import time;time.sleep(.2);print(333);"
+              "time.sleep(.02)"))
+            ;; EAT deliberately restores Lisp's current buffer to the Eshell
+            ;; parent, while leaving the selected window on the visual buffer.
+            (setq visual-buffer (window-buffer (selected-window)))
+            (should-not (eq visual-buffer parent))
+            (with-current-buffer visual-buffer
+              (setq process (get-buffer-process visual-buffer))
+              (should (process-live-p process))
+              (should (eq eshell-parent-buffer parent))
+              ;; A resize-only update is retained but remains silent.
+              (eat-term-resize eat-terminal 42 6)
+              (eat-term-redisplay eat-terminal)
+              (emacsvox-eat-update-hook)
+              (emacsvox-eat-test--finish-screen-burst))
+            (should
+             (equal (mapcar #'car submissions)
+                    '("Eshell visual command started")))
+            (should
+             (emacsvox-eat-test--wait-until
+              nil
+              (lambda ()
+                (and (buffer-live-p visual-buffer)
+                     (with-current-buffer visual-buffer
+                       (null eat-terminal))))
+              5.0))
+            (should (buffer-live-p visual-buffer))
+            (should
+             (equal
+              (mapcar #'car submissions)
+              '("Eshell visual command started"
+                "333"
+                "Eshell visual command exited")))
+            (with-current-buffer visual-buffer
+              (should (= emacsvox-eat--generation 2))
+              (should-not emacsvox-eat--quiescence-timer)
+              (should-not emacsvox-eat--pending-screen-diff))))
+      (when (and process (process-live-p process))
+        (delete-process process))
+      (when (buffer-live-p visual-buffer) (kill-buffer visual-buffer))
+      (when (buffer-live-p parent) (kill-buffer parent))
+      (when (and (not was-enabled) eat-eshell-visual-command-mode)
+        (eat-eshell-visual-command-mode -1)))))
 
 (ert-deftest emacsvox-eat-eshell-background-update-remains-private ()
   "An embedded terminal retains background output without speaking content."
