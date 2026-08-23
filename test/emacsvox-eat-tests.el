@@ -533,6 +533,8 @@
     (let ((emacsvox-eat--generation 5)
           (emacsvox-eat--update-serial 8)
           (emacsvox-eat--quiescence-timer t)
+          (emacsvox-eat--pending-screen-baseline
+           '(:generation 5 :text "One" :rows ("One")))
           (emacsvox-eat--pending-screen-diff '(:changes (style cursor)))
           (emacsvox-eat--screen-snapshot
            '(:generation 5 :text "Two" :rows ("Two")))
@@ -544,6 +546,15 @@
                  (lambda () t))
                 ((symbol-function 'emacsvox-eat--following-live-p)
                  (lambda () t))
+                ((symbol-function 'emacsvox-eat--likely-focus-change)
+                 (lambda (old new _diff navigation)
+                   (should
+                    (equal (plist-get old :text) "One"))
+                   (should
+                    (equal (plist-get new :text) "Two"))
+                   (should
+                    (eq (plist-get navigation :direction) 'down))
+                   '(:kind highlight :text "Two")))
                 ((symbol-function 'emacsvox-eat--screen-quiesced)
                  (lambda (diff _snapshot) (setq delivered-diff diff))))
         (emacsvox-eat--finish-quiescence (current-buffer) 5 8))
@@ -551,6 +562,10 @@
        (equal
         (plist-get (plist-get delivered-diff :navigation) :direction)
         'down))
+      (should
+       (equal
+        (plist-get delivered-diff :likely-focus)
+        '(:kind highlight :text "Two")))
       (should-not emacsvox-eat--pending-navigation-intent)
       (should-not emacsvox-eat--quiescence-timer))))
 
@@ -2344,6 +2359,36 @@
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 
+(ert-deftest emacsvox-eat-real-inverse-move-is-a-likely-highlight ()
+  "A real EAT SGR inverse transfer is classified from public snapshots."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 30 4)
+            (eat-term-process-output
+             eat-terminal
+             "\e[?1049h\e[2J\e[H\e[7mOne\e[0m\r\nTwo")
+            (eat-term-redisplay eat-terminal)
+            (let ((old (emacsvox-eat--capture-screen)))
+              (eat-term-process-output
+               eat-terminal
+               "\e[1;1H\e[0mOne\e[2;1H\e[7mTwo\e[0m")
+              (eat-term-redisplay eat-terminal)
+              (let* ((new (emacsvox-eat--capture-screen))
+                     (diff (emacsvox-eat--screen-diff old new))
+                     (focus
+                      (emacsvox-eat--likely-focus-change
+                       old new diff
+                       '(:generation 0 :direction down))))
+                (should-not (plist-get diff :text-changed))
+                (should (plist-get diff :style-changed))
+                (should (eq (plist-get focus :kind) 'highlight))
+                (should (equal (plist-get focus :text) "Two"))
+                (should (eq (plist-get focus :confidence) 'high)))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
 (ert-deftest emacsvox-eat-real-sgr-styles-have-normalized-traits ()
   "Every recoverable EAT SGR category has a data-only semantic trait."
   (with-temp-buffer
@@ -2576,6 +2621,122 @@
     (should (plist-get replacement :generation-changed))
     (should-not (plist-get replacement :text-changed))
     (should-not (plist-get replacement :row-change))))
+
+(ert-deftest emacsvox-eat-focus-classifier-finds-one-paired-style-move ()
+  "A compact inverse region moved by navigation is a likely highlight."
+  (let* ((text "Header\nOne\nTwo\nFooter")
+         (selected
+          '(:face
+            (:attributes
+             ((:foreground . "default-bg")
+              (:background . "default-fg")))
+            :traits
+            (inverse-like foreground-color background-color)))
+         (old
+          (list :generation 3 :text text
+                :rows '("Header" "One" "Two" "Footer")
+                :styles (list (list 0 6 selected) (list 7 10 selected))
+                :cursor-row 1 :cursor-column 1 :cursor-type nil
+                :size '(40 . 4) :alternate-screen t))
+         (new
+          (list :generation 3 :text text
+                :rows '("Header" "One" "Two" "Footer")
+                :styles (list (list 0 6 selected) (list 11 14 selected))
+                :cursor-row 2 :cursor-column 1 :cursor-type nil
+                :size '(40 . 4) :alternate-screen t))
+         (diff (emacsvox-eat--screen-diff old new))
+         (navigation '(:generation 3 :direction down))
+         (focus
+          (emacsvox-eat--likely-focus-change old new diff navigation)))
+    (should (equal (plist-get focus :kind) 'highlight))
+    (should (equal (plist-get focus :text) "Two"))
+    (should (= (plist-get focus :row-start) 2))
+    (should (memq 'inverse-like (plist-get focus :traits)))
+    (should (eq (plist-get focus :confidence) 'high))
+    (should (>= (plist-get focus :score) 8))))
+
+(ert-deftest emacsvox-eat-focus-classifier-rejects-weak-style-evidence ()
+  "Static headers, theme repaint, resize, and wrong direction fail closed."
+  (let* ((text "Header\nOne\nTwo")
+         (selected
+          '(:face (:attributes ((:background . "selected")))
+            :traits (background-color)))
+         (rethemed
+          '(:face (:attributes ((:background . "other-theme")))
+            :traits (background-color)))
+         (underline '(:face (:attributes ((:underline . t)))
+                      :traits (underline)))
+         (old
+          (list :generation 1 :text text :rows '("Header" "One" "Two")
+                :styles (list (list 0 6 selected))
+                :cursor-row 0 :cursor-column 0
+                :size '(30 . 3) :alternate-screen t))
+         (static-new (copy-tree old))
+         (theme-new (copy-tree old)))
+    (setf (plist-get static-new :styles)
+          (list (list 0 6 selected) (list 11 14 underline))
+          (plist-get theme-new :styles) (list (list 0 6 rethemed)))
+    (should-not
+     (emacsvox-eat--likely-focus-change
+      old static-new (emacsvox-eat--screen-diff old static-new)
+      '(:generation 1 :direction down)))
+    (should-not
+     (emacsvox-eat--likely-focus-change
+      old theme-new (emacsvox-eat--screen-diff old theme-new)
+      '(:generation 1 :direction down)))
+    (let* ((moved (copy-tree old))
+           (moved-styles (list (list 7 10 selected))))
+      (setf (plist-get moved :styles) moved-styles
+            (plist-get moved :cursor-row) 1)
+      (let ((diff (emacsvox-eat--screen-diff old moved)))
+        (should-not
+         (emacsvox-eat--likely-focus-change
+          old moved diff '(:generation 1 :direction up)))
+        (setf (plist-get diff :size-changed) t)
+        (should-not
+         (emacsvox-eat--likely-focus-change
+          old moved diff '(:generation 1 :direction down)))))))
+
+(ert-deftest emacsvox-eat-focus-classifier-rejects-multiple-style-moves ()
+  "Multiple simultaneous highlight transfers are not assigned one focus."
+  (let* ((text "A\nB\nC\nD")
+         (selected
+          '(:face (:attributes ((:background . "selected")))
+            :traits (background-color)))
+         (old
+          (list :generation 2 :text text :rows '("A" "B" "C" "D")
+                :styles (list (list 0 1 selected) (list 4 5 selected))
+                :cursor-row 0 :cursor-column 0
+                :size '(20 . 4) :alternate-screen t))
+         (new (copy-tree old)))
+    (setf (plist-get new :styles)
+          (list (list 2 3 selected) (list 6 7 selected))
+          (plist-get new :cursor-row) 1)
+    (should-not
+     (emacsvox-eat--likely-focus-change
+      old new (emacsvox-eat--screen-diff old new)
+      '(:generation 2 :direction down)))))
+
+(ert-deftest emacsvox-eat-focus-classifier-uses-alternate-screen-cursor-row ()
+  "Correlated vertical cursor motion can identify an unchanged TUI row."
+  (let* ((old
+          '(:generation 7 :text "One\nTwo" :rows ("One" "Two")
+            :styles nil :cursor-row 0 :cursor-column 0
+            :size (20 . 2) :alternate-screen t))
+         (new (copy-tree old)))
+    (setf (plist-get new :cursor-row) 1)
+    (let* ((diff (emacsvox-eat--screen-diff old new))
+           (focus
+            (emacsvox-eat--likely-focus-change
+             old new diff '(:generation 7 :direction down))))
+      (should (eq (plist-get focus :kind) 'cursor-row))
+      (should (equal (plist-get focus :text) "Two"))
+      (should (eq (plist-get focus :confidence) 'medium)))
+    (setf (plist-get new :alternate-screen) nil)
+    (should-not
+     (emacsvox-eat--likely-focus-change
+      old new (emacsvox-eat--screen-diff old new)
+      '(:generation 7 :direction down)))))
 
 (ert-deftest emacsvox-eat-screen-observer-coalesces-an-update-burst ()
   "Successive chunks produce one aggregate diff after quiescence."

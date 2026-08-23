@@ -244,6 +244,9 @@ when the terminal is selected again."
 (defconst emacsvox-eat--maximum-spoken-candidates 8
   "Maximum inferred terminal candidates spoken automatically at once.")
 
+(defconst emacsvox-eat--maximum-focus-characters 240
+  "Maximum characters retained for one inferred terminal focus object.")
+
 (defconst emacsvox-eat--face-attributes
   '(:foreground :background :weight :slant :underline :strike-through
     :inverse-video :overline :box)
@@ -625,6 +628,285 @@ Snapshots from different terminal generations are intentionally not compared."
      :changes changes
      :unchanged (null changes))))
 
+(defun emacsvox-eat--row-start-offsets (text)
+  "Return a vector containing each logical row start offset in TEXT."
+  (let ((position 0)
+        (starts (list 0)))
+    (while (string-match "\n" text position)
+      (setq position (match-end 0))
+      (push position starts))
+    (vconcat (nreverse starts))))
+
+(defun emacsvox-eat--row-for-offset (starts offset)
+  "Return the row in STARTS containing character OFFSET."
+  (let ((low 0)
+        (high (1- (length starts))))
+    (while (< low high)
+      (let ((middle (/ (+ low high 1) 2)))
+        (if (<= (aref starts middle) offset)
+            (setq low middle)
+          (setq high (1- middle)))))
+    low))
+
+(defun emacsvox-eat--offset-coordinates (text starts offset)
+  "Return zero-based row and display column for OFFSET in TEXT using STARTS."
+  (let* ((bounded (max 0 (min offset (length text))))
+         (row (emacsvox-eat--row-for-offset starts bounded))
+         (row-start (aref starts row)))
+    (cons row (string-width (substring text row-start bounded)))))
+
+(defun emacsvox-eat--highlight-signature (style)
+  "Return a conservative selection-like signature for rendered STYLE."
+  (let* ((traits (plist-get style :traits))
+         (attributes
+          (plist-get (plist-get style :face) :attributes))
+         (foreground (alist-get :foreground attributes))
+         (background (alist-get :background attributes)))
+    (unless (memq 'concealed traits)
+      (cond
+       ((memq 'inverse-like traits)
+        (list :inverse-like t
+              :foreground foreground :background background))
+       ((and (memq 'background-color traits) background)
+        (list :background background))))))
+
+(defun emacsvox-eat--highlight-regions (snapshot)
+  "Return compact selection-like rendered regions from SNAPSHOT."
+  (let* ((text (or (plist-get snapshot :text) ""))
+         (starts (emacsvox-eat--row-start-offsets text))
+         regions)
+    (dolist (run (plist-get snapshot :styles))
+      (let* ((start (max 0 (car run)))
+             (end (min (length text) (cadr run)))
+             (style (caddr run))
+             (signature (emacsvox-eat--highlight-signature style)))
+        (when (and signature (< start end))
+          (let* ((start-coordinates
+                  (emacsvox-eat--offset-coordinates text starts start))
+                 (end-coordinates
+                  (emacsvox-eat--offset-coordinates
+                   text starts (max start (1- end))))
+                 (region
+                  (list
+                   :start start :end end
+                   :row-start (car start-coordinates)
+                   :row-end (car end-coordinates)
+                   :column-start (cdr start-coordinates)
+                   :column-end
+                   (cdr
+                    (emacsvox-eat--offset-coordinates text starts end))
+                   :signature signature
+                   :traits (copy-sequence (plist-get style :traits)))))
+            (if-let* ((previous (car regions))
+                      ((= (plist-get previous :end) start))
+                      ((= (plist-get previous :row-end)
+                          (plist-get region :row-start)))
+                      ((equal (plist-get previous :signature) signature)))
+                (setcar
+                 regions
+                 (plist-put
+                  (plist-put
+                   (plist-put
+                    previous :end end)
+                   :column-end (plist-get region :column-end))
+                  :traits
+                  (delete-dups
+                   (append (plist-get previous :traits)
+                           (plist-get region :traits)))))
+              (push region regions))))))
+    (mapcar
+     (lambda (region)
+       (plist-put
+        region :text
+        (string-trim
+         (substring
+          text (plist-get region :start) (plist-get region :end)))))
+     (nreverse regions))))
+
+(defun emacsvox-eat--same-highlight-region-p (left right)
+  "Return non-nil when LEFT and RIGHT identify the same styled region."
+  (and (= (plist-get left :start) (plist-get right :start))
+       (= (plist-get left :end) (plist-get right :end))
+       (equal (plist-get left :signature)
+              (plist-get right :signature))))
+
+(defun emacsvox-eat--coordinate-direction-p
+    (direction old-row old-column new-row new-column)
+  "Return non-nil when OLD to NEW coordinates agree with DIRECTION."
+  (when (and (integerp old-row) (integerp old-column)
+             (integerp new-row) (integerp new-column))
+    (pcase direction
+      ('up (< new-row old-row))
+      ('down (> new-row old-row))
+      ('left (and (= new-row old-row) (< new-column old-column)))
+      ('right (and (= new-row old-row) (> new-column old-column)))
+      ('forward
+       (or (> new-row old-row)
+           (and (= new-row old-row) (> new-column old-column))))
+      ('backward
+       (or (< new-row old-row)
+           (and (= new-row old-row) (< new-column old-column)))))))
+
+(defun emacsvox-eat--bounded-focus-text (text)
+  "Return bounded, control-free terminal focus TEXT, or nil when unusable."
+  (let ((sanitized
+         (string-trim (emacsvox-eat--sanitize-output-row text))))
+    (when (and (not (string-empty-p sanitized))
+               (string-match-p "[[:alnum:]]" sanitized))
+      (if (> (length sanitized) emacsvox-eat--maximum-focus-characters)
+          (concat
+           (substring sanitized 0 emacsvox-eat--maximum-focus-characters)
+           "…")
+        sanitized))))
+
+(defun emacsvox-eat--style-focus-change (old new diff navigation)
+  "Return a conservative paired-style focus change from OLD to NEW.
+DIFF and content-free NAVIGATION provide causal evidence."
+  (when (and old new navigation
+             (plist-get diff :style-changed)
+             (not (plist-get diff :text-changed))
+             (not (plist-get diff :size-changed))
+             (not (plist-get diff :alternate-screen-changed))
+             (equal (plist-get old :generation)
+                    (plist-get new :generation)))
+    (let* ((old-regions (emacsvox-eat--highlight-regions old))
+           (new-regions (emacsvox-eat--highlight-regions new))
+           (gained
+            (cl-remove-if
+             (lambda (region)
+               (cl-some
+                (lambda (old-region)
+                  (emacsvox-eat--same-highlight-region-p
+                   region old-region))
+                old-regions))
+             new-regions))
+           (lost
+            (cl-remove-if
+             (lambda (region)
+               (cl-some
+                (lambda (new-region)
+                  (emacsvox-eat--same-highlight-region-p
+                   region new-region))
+                new-regions))
+             old-regions)))
+      (when (and (= (length gained) 1) (= (length lost) 1))
+        (let* ((new-region (car gained))
+               (old-region (car lost))
+               (direction (plist-get navigation :direction))
+               (signature (plist-get new-region :signature))
+               (text (emacsvox-eat--bounded-focus-text
+                      (plist-get new-region :text)))
+               (row-span
+                (1+ (- (plist-get new-region :row-end)
+                       (plist-get new-region :row-start))))
+               (region-direction-p
+                (emacsvox-eat--coordinate-direction-p
+                 direction
+                 (plist-get old-region :row-start)
+                 (plist-get old-region :column-start)
+                 (plist-get new-region :row-start)
+                 (plist-get new-region :column-start)))
+               (cursor-row (plist-get new :cursor-row))
+               (cursor-proximity
+                (cond
+                 ((and (integerp cursor-row)
+                       (<= (plist-get new-region :row-start) cursor-row)
+                       (<= cursor-row (plist-get new-region :row-end)))
+                  'within)
+                 ((and (integerp cursor-row)
+                       (<=
+                        (min
+                         (abs (- cursor-row
+                                 (plist-get new-region :row-start)))
+                         (abs (- cursor-row
+                                 (plist-get new-region :row-end))))
+                        1))
+                  'adjacent)))
+               (cursor-direction-p
+                (or
+                 (not (plist-get diff :cursor-moved))
+                 (emacsvox-eat--coordinate-direction-p
+                  direction
+                  (plist-get old :cursor-row)
+                  (plist-get old :cursor-column)
+                  (plist-get new :cursor-row)
+                  (plist-get new :cursor-column))))
+               (score
+                (+ 4
+                   (if (plist-get signature :inverse-like) 2 1)
+                   (if (eq cursor-proximity 'within) 2
+                     (if (eq cursor-proximity 'adjacent) 1 0))
+                   (if region-direction-p 2 0)
+                   (if (and (plist-get diff :cursor-moved)
+                            cursor-direction-p)
+                       1 0)
+                   (if (<= row-span 2) 1 0))))
+          (when (and text
+                     (<= row-span 2)
+                     region-direction-p
+                     cursor-direction-p
+                     (>= score 8))
+            (list
+             :kind 'highlight
+             :text text
+             :row-start (plist-get new-region :row-start)
+             :row-end (plist-get new-region :row-end)
+             :column-start (plist-get new-region :column-start)
+             :column-end (plist-get new-region :column-end)
+             :traits (plist-get new-region :traits)
+             :direction direction
+             :score score
+             :confidence (if (>= score 10) 'high 'medium)
+             :generation (plist-get new :generation)
+             :screen-serial emacsvox-eat--update-serial
+             :observed-at (float-time)
+             :identity
+             (list
+              'highlight (plist-get new :generation)
+              (plist-get new-region :row-start)
+              (plist-get new-region :column-start)
+              signature text))))))))
+
+(defun emacsvox-eat--cursor-row-focus-change (old new diff navigation)
+  "Return a conservative alternate-screen cursor-row change from OLD to NEW."
+  (let ((direction (plist-get navigation :direction)))
+    (when (and old new navigation
+               (plist-get new :alternate-screen)
+               (plist-get diff :cursor-moved)
+               (not (plist-get diff :text-changed))
+               (not (plist-get diff :style-changed))
+               (not (plist-get diff :size-changed))
+               (not (plist-get diff :alternate-screen-changed))
+               (memq direction '(up down forward backward))
+               (emacsvox-eat--coordinate-direction-p
+                direction
+                (plist-get old :cursor-row)
+                (plist-get old :cursor-column)
+                (plist-get new :cursor-row)
+                (plist-get new :cursor-column)))
+      (when-let* ((row (plist-get new :cursor-row))
+                  ((< -1 row (length (plist-get new :rows))))
+                  (text
+                   (emacsvox-eat--bounded-focus-text
+                    (nth row (plist-get new :rows)))))
+        (list
+         :kind 'cursor-row
+         :text text
+         :row-start row :row-end row
+         :column-start 0 :column-end (string-width text)
+         :direction direction
+         :score 8 :confidence 'medium
+         :generation (plist-get new :generation)
+         :screen-serial emacsvox-eat--update-serial
+         :observed-at (float-time)
+         :identity
+         (list 'cursor-row (plist-get new :generation) row text))))))
+
+(defun emacsvox-eat--likely-focus-change (old new diff navigation)
+  "Return the strongest conservative focus inference from OLD to NEW."
+  (or (emacsvox-eat--style-focus-change old new diff navigation)
+      (emacsvox-eat--cursor-row-focus-change old new diff navigation)))
+
 (defun emacsvox-eat--row-prefix-table (rows)
   "Return the KMP prefix table for the row sequence ROWS."
   (let* ((sequence (vconcat rows))
@@ -894,7 +1176,8 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
                  (= generation emacsvox-eat--generation)
                  (= serial emacsvox-eat--update-serial))
         (setq emacsvox-eat--quiescence-timer nil)
-        (let ((diff emacsvox-eat--pending-screen-diff)
+        (let ((baseline emacsvox-eat--pending-screen-baseline)
+              (diff emacsvox-eat--pending-screen-diff)
               (snapshot emacsvox-eat--screen-snapshot)
               (navigation emacsvox-eat--pending-navigation-intent)
               (alternate-screen-transitions
@@ -916,7 +1199,11 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
                      alternate-screen-transitions)))
             (when (and (emacsvox-eat--navigation-intent-current-p navigation)
                        (not (plist-get navigation :ambiguous)))
-              (setq diff (plist-put diff :navigation navigation)))
+              (setq diff (plist-put diff :navigation navigation))
+              (when-let* ((focus
+                           (emacsvox-eat--likely-focus-change
+                            baseline snapshot diff navigation)))
+                (setq diff (plist-put diff :likely-focus focus))))
             (if (emacsvox-eat--following-live-p)
                 (emacsvox-eat--screen-quiesced diff snapshot)
               (emacsvox-eat--retain-screen-change diff snapshot))))))))

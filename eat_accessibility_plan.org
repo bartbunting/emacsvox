@@ -198,7 +198,7 @@ Planned slices:
 2. [X] concealed-cell snapshot and presentation redaction;
 3. conservative cursor/style/input/timing focus score;
    - [X] content-free navigation intent and bounded correlation;
-   - [ ] paired-style and cursor-region confidence classifier;
+   - [X] paired-style and cursor-region confidence classifier;
    - [ ] retained and replaceable automatic presentation;
 4. current row, changed region, likely highlight, candidate, and frozen-screen
    review commands;
@@ -272,6 +272,7 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | Normalize semantic style traits from EAT's rendered public buffer properties and version the signature. | Public properties expose the useful SGR state without private terminal structs. Dropping the default terminal font removes noise; retaining raw normalized faces beside stable traits preserves evidence. Inverse-like styling remains evidence, not proof of focus. |
 | 2026-08-23 | Redact concealed cells at the snapshot boundary with same-length blanks. | EAT correctly retains the underlying characters in its terminal buffer, but accessibility snapshots must neither retain nor speak visually concealed content. Same-length redaction preserves public cursor/style offsets and newlines while making completion and diff classifiers fail safely. |
 | 2026-08-23 | Correlate only unambiguous terminal navigation keys; treat Tab as completion on the main screen and navigation on the alternate screen. | Arrow/navigation keys and control equivalents carry intent without content. Printable ~h/j/k/l~ are not inferred because EAT has no public application/input-mode signal and they may be editor text. Mixed-direction bursts fail closed. |
+| 2026-08-23 | Require one compact paired style transfer with matching direction, or cursor-only vertical movement on an unchanged alternate screen. | A static inverse header remains unchanged and is excluded. Multiple transfers, theme/style repaint, text replacement, resize, alternate transition, and direction disagreement reject automatic focus inference. Cursor-row fallback is disabled whenever style changed, so ambiguity cannot silently degrade to a weaker claim. |
 
 * Progress log
 
@@ -305,10 +306,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~27050678e~ | 5.6 | The user-selected optional monitor is buffer-local and off by default. Public-screen text changes are quiesced into unread bursts; cursor/style/repaint/resize/generation changes do not count. A terminal in the background plays only the content-free ~more~ cue, at most once per five seconds and never over an active minibuffer. Selecting it flushes any pending burst and speaks only the count, without buffer identity or output. All state clears at privacy/lifecycle boundaries. All 92 focused EAT tests and a fresh compiled real-terminal privacy check pass. |
 | 2026-08-23 | ~8cbc33dc6~ | 6.1 | Versioned semantic style traits are derived from bounded rendered EAT buffer properties: bold, faint, italic, underline, blink, crossed-out, inverse-like, concealed, color, alternate font, overline, box, mouse highlight, and interaction. The default terminal font is discarded as noise, while normalized raw faces remain available. All 94 focused tests pass, including a real EAT SGR fixture, and a fresh Emacs verifies the compiled implementation. |
 | 2026-08-23 | ~fb30b17fd~ | 6.2 | Concealed rendered cells are replaced with same-length blanks before any snapshot text or rows are retained, compared, classified, completed, or presented. Newlines and offsets remain stable, and style traits still record that a concealed region exists. All 96 focused tests pass; a real EAT fixture proves the source buffer contains the sentinel while snapshots, retained diffs, and speech do not, and fresh compiled verification passes. |
-| 2026-08-23 | this commit | 6.3a | Publicly delivered arrow/navigation keys and control equivalents create a content-free, generation/deadline-scoped intent. Same-direction bursts merge; mixed directions become ambiguous; lifecycle, selection loss, ordinary input, completion, and alternate transitions clear the state. Main-screen Tab retains completion ownership, while alternate-screen Tab becomes navigation. All 100 focused tests and fresh compiled verification pass. |
+| 2026-08-23 | ~9f2e97343~ | 6.3a | Publicly delivered arrow/navigation keys and control equivalents create a content-free, generation/deadline-scoped intent. Same-direction bursts merge; mixed directions become ambiguous; lifecycle, selection loss, ordinary input, completion, and alternate transitions clear the state. Main-screen Tab retains completion ownership, while alternate-screen Tab becomes navigation. All 100 focused tests and fresh compiled verification pass. |
+| 2026-08-23 | this commit | 6.3b | Pure bounded focus scoring detects exactly one paired inverse/background transfer that follows navigation, with cursor proximity as supporting evidence. Cursor-only vertical navigation on an unchanged alternate screen retains its reached row. Static inverse headers, multiple transfers, theme repaint, resize, text change, style ambiguity, and direction mismatch fail closed. All 105 focused tests pass, including a real public-snapshot EAT inverse transfer, and fresh compiled verification passes. |
 
 * Current next action
 
-Implement paired-style and cursor-region confidence scoring from the retained
-navigation intent, with static-header, multiple-highlight, resize, repaint,
-and direction-mismatch rejection tests.
+Retain inferred focus objects and present non-repeated high-confidence
+highlights or alternate-screen cursor rows as replaceable native navigation
+transactions, with selection/follow-live and lifecycle/privacy tests.
