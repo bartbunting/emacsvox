@@ -57,6 +57,65 @@
 (eval-when-compile (require 'eat "eat" 'no-error))
 (declare-function eat-term-display-cursor "eat" (terminal))
 
+;;;  Lifecycle state:
+
+(defvar-local emacsvox-eat--generation 0
+  "Monotonic identity for the current EAT terminal presentation.")
+
+(defvar-local emacsvox-eat--active-process nil
+  "Process associated with the current EAT generation.")
+
+(defvar-local emacsvox-eat--last-exited-process nil
+  "Most recent EAT process whose exit was observed in this buffer.")
+
+(defvar-local emacsvox-eat--completion-snapshot nil
+  "Line and token captured before EAT sends terminal completion input.")
+
+(defun emacsvox-eat--clear-transient-state ()
+  "Clear asynchronous EAT interaction state in the current buffer."
+  (setq emacsvox-eat--completion-snapshot nil))
+
+(defun emacsvox-eat--advance-generation ()
+  "Invalidate asynchronous state and advance the current EAT generation."
+  (setq emacsvox-eat--generation (1+ emacsvox-eat--generation))
+  (emacsvox-eat--clear-transient-state)
+  emacsvox-eat--generation)
+
+(defun emacsvox-eat--process-started (process)
+  "Start a new EAT generation for PROCESS."
+  (emacsvox-eat--advance-generation)
+  (setq emacsvox-eat--active-process process
+        emacsvox-eat--last-exited-process nil))
+
+(defun emacsvox-eat--process-exited (process)
+  "End the EAT generation belonging to PROCESS.
+Ignore a stale or duplicate exit after another process has become active."
+  (when
+      (and
+       (not (eq process emacsvox-eat--last-exited-process))
+       (or
+        (null emacsvox-eat--active-process)
+        (eq process emacsvox-eat--active-process)))
+    (emacsvox-eat--advance-generation)
+    (setq emacsvox-eat--active-process nil
+          emacsvox-eat--last-exited-process process)))
+
+(defun emacsvox-eat--invalidate-all-buffer-state ()
+  "Advance the generation of every initialized EAT speech buffer."
+  (dolist (buffer (buffer-list))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (when (local-variable-p 'emacsvox-eat--generation)
+          (emacsvox-eat--advance-generation))))))
+
+(defun emacsvox--advice-eat-reset-before (&rest _)
+  "Invalidate pending EAT speech state before resetting the terminal."
+  (emacsvox-eat--advance-generation))
+
+(defun emacsvox--advice-eat-reload-before (&rest _)
+  "Invalidate pending speech state in every EAT buffer before reload."
+  (emacsvox-eat--invalidate-all-buffer-state))
+
 ;;;  Map Faces:
 
 (voice-setup-add-map
@@ -70,6 +129,11 @@
 
 (defun emacsvox-eat-mode-setup ()
   "Placed on eat-mode-hook to do Emacsvox setup."
+  (unless (local-variable-p 'emacsvox-eat--generation)
+    (setq-local emacsvox-eat--generation 0
+                emacsvox-eat--active-process
+                (get-buffer-process (current-buffer))
+                emacsvox-eat--last-exited-process nil))
   (define-key eat-semi-char-mode-map emacsvox-prefix 'emacsvox-keymap)
   (cl-loop
    for map in
@@ -134,6 +198,7 @@
 
 (defun emacsvox--advice-eat-reload-after (&rest _)
   "Speak after reloading Eat."
+  (emacsvox-eat--install-advice)
   (when (ems-interactive-p 'eat-reload)
     (emacsvox-icon 'task-done) (tts-speak "Reloaded Eat")))
 
@@ -174,6 +239,11 @@
           '(eat))
   "Current Eat targets that receive native after advice.")
 
+(defconst emacsvox-eat--before-advice
+  '((eat-reset . emacsvox--advice-eat-reset-before)
+    (eat-reload . emacsvox--advice-eat-reload-before))
+  "EAT targets and native before-advice used for state invalidation.")
+
 (defun emacsvox-eat--install-advice ()
   "Install native advice after the optional Eat package loads."
   (dolist (target emacsvox-eat--advice-targets)
@@ -181,10 +251,22 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (when (and (fboundp target)
                  (not (advice-member-p function target)))
-        (advice-add target :after function '((name . emacsvox)))))))
-
-(defvar-local emacsvox-eat--completion-snapshot nil
-  "Line and token captured before EAT sends terminal completion input.")
+        (advice-add target :after function '((name . emacsvox))))))
+  (dolist (entry emacsvox-eat--before-advice)
+    (let ((target (car entry))
+          (function (cdr entry)))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :before function '((name . emacsvox-state))))))
+  (when
+      (and
+       (fboundp 'eat-self-input)
+       (not
+        (advice-member-p
+         #'emacsvox--advice-eat-self-input-before 'eat-self-input)))
+    (advice-add
+     'eat-self-input :before #'emacsvox--advice-eat-self-input-before
+     '((name . emacsvox)))))
 
 (defun emacsvox-eat--tab-event-p (event)
   "Return non-nil when EVENT is a Tab key event."
@@ -249,12 +331,7 @@ update feedback."
   (eq (current-buffer) (window-buffer (selected-window))))
 
 (with-eval-after-load 'eat
-  (emacsvox-eat--install-advice)
-  (unless (advice-member-p
-           #'emacsvox--advice-eat-self-input-before 'eat-self-input)
-    (advice-add
-     'eat-self-input :before #'emacsvox--advice-eat-self-input-before
-     '((name . emacsvox)))))
+  (emacsvox-eat--install-advice))
 
 ;;; Speech-Enable Terminal Emulation:
 
@@ -271,5 +348,7 @@ update feedback."
          (char (emacsvox-speak-this-char char)))))))
 
 (add-hook 'eat-update-hook #'emacsvox-eat-update-hook)
+(add-hook 'eat-exec-hook #'emacsvox-eat--process-started)
+(add-hook 'eat-exit-hook #'emacsvox-eat--process-exited)
 (provide 'emacsvox-eat)
 ;;;  end of file

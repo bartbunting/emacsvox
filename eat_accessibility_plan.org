@@ -265,7 +265,8 @@ These do not block conservative Emacsvox implementations:
 | Date | Commit | Phase | Result / validation |
 |------+--------+-------+---------------------|
 | 2026-08-23 | ~d1f52159f2~ | 0 | Audit and project plan committed; both Org files lint clean. |
-| 2026-08-23 | this commit | 1.1 | Nil-safe empty/reset/alternate updates; 9 focused EAT tests pass; byte-code rebuilt/current; fresh Emacs loaded ~emacsvox-eat.elc~ and passed empty/reset verification. Full 2359-test suite has only the pre-existing agent-shell failure. |
+| 2026-08-23 | ~a62ff846d~ | 1.1 | Nil-safe empty/reset/alternate updates; 9 focused EAT tests pass; byte-code rebuilt/current; fresh Emacs loaded ~emacsvox-eat.elc~ and passed empty/reset verification. Full 2359-test suite has only the pre-existing agent-shell failure. |
+| 2026-08-23 | this commit | 1.2 | Buffer-local generations, process identity, and reset/reload/exec/exit invalidation. |
 
 * Current next action
 

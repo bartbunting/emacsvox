@@ -18,7 +18,11 @@
       (should (advice-member-p function target))))
   (should
    (advice-member-p
-    #'emacsvox--advice-eat-self-input-before 'eat-self-input)))
+    #'emacsvox--advice-eat-self-input-before 'eat-self-input))
+  (dolist (entry emacsvox-eat--before-advice)
+    (should (advice-member-p (cdr entry) (car entry))))
+  (should (memq #'emacsvox-eat--process-started eat-exec-hook))
+  (should (memq #'emacsvox-eat--process-exited eat-exit-hook)))
 
 (ert-deftest emacsvox-eat-yank-feedback-is-target-aware ()
   "Only the matching interactive Eat yank command plays an icon."
@@ -178,6 +182,79 @@
             (should-not events))
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-process-generations-clear-transient-state ()
+  "Process start and matching exit invalidate asynchronous EAT state."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 7)
+          (emacsvox-eat--completion-snapshot '(12 . "stale"))
+          process-a process-b)
+      (setq process-a (make-symbol "process-a")
+            process-b (make-symbol "process-b"))
+      (emacsvox-eat--process-started process-a)
+      (should (= emacsvox-eat--generation 8))
+      (should (eq emacsvox-eat--active-process process-a))
+      (should-not emacsvox-eat--completion-snapshot)
+      (setq emacsvox-eat--completion-snapshot '(13 . "pending"))
+      (emacsvox-eat--process-exited process-b)
+      (should (= emacsvox-eat--generation 8))
+      (should emacsvox-eat--completion-snapshot)
+      (emacsvox-eat--process-exited process-a)
+      (should (= emacsvox-eat--generation 9))
+      (should-not emacsvox-eat--active-process)
+      (should-not emacsvox-eat--completion-snapshot)
+      (setq emacsvox-eat--completion-snapshot '(14 . "new"))
+      (emacsvox-eat--process-exited process-a)
+      (should (= emacsvox-eat--generation 9))
+      (should emacsvox-eat--completion-snapshot))))
+
+(ert-deftest emacsvox-eat-reset-invalidates-before-terminal-update ()
+  "Reset advances its generation before EAT runs the update hook."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (emacsvox-eat--generation 3)
+          (emacsvox-eat--completion-snapshot '(1 . "~/stale"))
+          observed-generation)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat-update-hook)
+                     (lambda ()
+                       (setq observed-generation
+                             emacsvox-eat--generation)))
+                    ((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'tts-speak) #'ignore))
+            (eat-reset)
+            (should (= observed-generation 4))
+            (should-not emacsvox-eat--completion-snapshot))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-reload-invalidates-every-initialized-buffer ()
+  "Reload invalidation advances all initialized EAT speech buffers."
+  (let ((first (generate-new-buffer " *emacsvox-eat-first*"))
+        (second (generate-new-buffer " *emacsvox-eat-second*"))
+        (ordinary (generate-new-buffer " *emacsvox-eat-ordinary*")))
+    (unwind-protect
+        (progn
+          (with-current-buffer first
+            (setq-local emacsvox-eat--generation 2
+                        emacsvox-eat--completion-snapshot '(1 . "first")))
+          (with-current-buffer second
+            (setq-local emacsvox-eat--generation 9
+                        emacsvox-eat--completion-snapshot '(1 . "second")))
+          (emacsvox-eat--invalidate-all-buffer-state)
+          (with-current-buffer first
+            (should (= emacsvox-eat--generation 3))
+            (should-not emacsvox-eat--completion-snapshot))
+          (with-current-buffer second
+            (should (= emacsvox-eat--generation 10))
+            (should-not emacsvox-eat--completion-snapshot))
+          (with-current-buffer ordinary
+            (should-not
+             (local-variable-p 'emacsvox-eat--generation))))
+      (dolist (buffer (list first second ordinary))
+        (when (buffer-live-p buffer) (kill-buffer buffer))))))
 
 (provide 'emacsvox-eat-tests)
 ;;; emacsvox-eat-tests.el ends here
