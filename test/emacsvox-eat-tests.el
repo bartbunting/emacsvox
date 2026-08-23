@@ -25,6 +25,27 @@
           :title nil
           :cwd "/tmp/")))
 
+(defun emacsvox-eat-test--wait-until (process predicate &optional timeout)
+  "Wait for PROCESS output and timers until PREDICATE or TIMEOUT seconds."
+  (let ((deadline (+ (float-time) (or timeout 3.0))))
+    (while (and (not (funcall predicate))
+                (< (float-time) deadline)
+                (or (null process) (process-live-p process)))
+      (when process (accept-process-output process 0.03))
+      (sleep-for 0.01))
+    (funcall predicate)))
+
+(defun emacsvox-eat-test--screen-text ()
+  "Return the current EAT fixture's visible text."
+  (or (plist-get (emacsvox-eat--capture-screen) :text) ""))
+
+(defun emacsvox-eat-test--stop-process (process)
+  "Stop disposable test PROCESS without touching any other terminal."
+  (when (and process (process-live-p process))
+    (process-send-string process "exit\n")
+    (accept-process-output process 0.2)
+    (when (process-live-p process) (delete-process process))))
+
 (ert-deftest emacsvox-eat-advice-is-current-and-direct ()
   "Current Eat targets use native advice directly."
   (dolist (target emacsvox-eat--advice-targets)
@@ -373,6 +394,297 @@
                 (should (eq (plist-get result :confidence) 'anchored)))))
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-bash-readline-unique-ambiguous-and-repeated-tab ()
+  "A disposable Bash PTY drives inline, list, bell, and repeat transactions."
+  (skip-unless (executable-find "bash"))
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-bash*"))
+        process submissions bells)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer buffer)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions)))
+                    ((symbol-function 'ding)
+                     (lambda (&rest _) (push 'bell bells))))
+            (unwind-protect
+                (progn
+                  (eat-mode)
+                  (let ((process-environment
+                         (cons "INPUTRC=/dev/null" process-environment)))
+                    (eat-exec
+                     buffer "emacsvox-eat-bash" (executable-find "bash") nil
+                     '("--noprofile" "--norc" "-i")))
+                  (setq process (get-buffer-process buffer))
+                  (eat-semi-char-mode)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-match-p
+                       "bash-[^ ]+[$#] "
+                       (emacsvox-eat-test--screen-text)))))
+                  (eat-term-send-string
+                   eat-terminal
+                   (concat
+                    "PS1='EATTEST> '; PROMPT_COMMAND=; "
+                    "_eat_git() { COMPREPLY=( $(compgen -W 'pull push' -- "
+                    "\"${COMP_WORDS[COMP_CWORD]}\") ); }; "
+                    "complete -F _eat_git git; "
+                    "bind 'set page-completions off'\n"))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATTEST> " (emacsvox-eat-test--screen-text)))))
+
+                  ;; Unique programmable completion.
+                  (eat-term-send-string eat-terminal "git pul")
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATTEST> git pul"
+                       (emacsvox-eat-test--screen-text)))))
+                  (setq submissions nil bells nil)
+                  (eat-self-input 1 'tab)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATTEST> git pull "
+                       (emacsvox-eat-test--screen-text)))))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (and (null emacsvox-eat--completion-snapshot)
+                           (null emacsvox-eat--quiescence-timer)))))
+                  (should
+                   (cl-find-if
+                    (lambda (submission)
+                      (and (equal (car submission) "pull")
+                           (equal
+                            (plist-get (cadr submission) :facts)
+                            '(:role candidate
+                              :events (completion-input-updated)))))
+                    submissions))
+
+                  ;; Ambiguous completion needs a second Tab to display rows.
+                  (eat-term-send-string eat-terminal (concat "\C-u" "git pu"))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATTEST> git pu"
+                       (emacsvox-eat-test--screen-text)))))
+                  (setq submissions nil bells nil
+                        emacsvox-eat--last-completion-output nil)
+                  (eat-self-input 1 'tab)
+                  (emacsvox-eat-test--wait-until
+                   process (lambda () bells) 0.4)
+                  (eat-self-input 1 'tab)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda () emacsvox-eat--last-completion-output)))
+                  (should bells)
+                  (should
+                   (equal
+                    (plist-get emacsvox-eat--last-completion-output :items)
+                    '("pull" "push")))
+                  (should
+                   (cl-find-if
+                    (lambda (submission)
+                      (string-prefix-p "2 candidates\n" (car submission)))
+                    submissions))
+
+                  ;; Repeating the same display reports its count only.
+                  (setq submissions nil)
+                  (eat-self-input 1 'tab)
+                  (unless
+                      (emacsvox-eat-test--wait-until
+                       process
+                       (lambda ()
+                         (cl-find-if
+                          (lambda (submission)
+                            (equal (car submission) "Same 2 candidates"))
+                          submissions))
+                       0.4)
+                    (eat-self-input 1 'tab))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (cl-find-if
+                       (lambda (submission)
+                         (equal (car submission) "Same 2 candidates"))
+                       submissions)))))
+              (emacsvox-eat-test--stop-process process))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-eat-bash-readline-files-preserve-visible-spelling ()
+  "Real file completion handles spaces, Unicode, punctuation, and directories."
+  (skip-unless (executable-find "bash"))
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-bash-files*"))
+        (directory (make-temp-file "emacsvox-eat-files-" t))
+        process submissions)
+    (unwind-protect
+        (progn
+          (dolist (name '("alpha beta" "café" "foo(bar)" "semi;colon"))
+            (write-region "" nil (expand-file-name name directory) nil 'silent))
+          (make-directory (expand-file-name "srcunique" directory))
+          (save-window-excursion
+            (switch-to-buffer buffer)
+            (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                       (lambda (content &rest arguments)
+                         (push (list content arguments) submissions)))
+                      ((symbol-function 'ding) #'ignore))
+              (unwind-protect
+                  (progn
+                    (eat-mode)
+                    (let ((process-environment
+                           (cons "INPUTRC=/dev/null" process-environment)))
+                      (eat-exec
+                       buffer "emacsvox-eat-bash-files"
+                       (executable-find "bash") nil
+                       '("--noprofile" "--norc" "-i")))
+                    (setq process (get-buffer-process buffer))
+                    (eat-semi-char-mode)
+                    (should
+                     (emacsvox-eat-test--wait-until
+                      process
+                      (lambda ()
+                        (string-match-p
+                         "bash-[^ ]+[$#] "
+                         (emacsvox-eat-test--screen-text)))))
+                    (eat-term-send-string
+                     eat-terminal
+                     (format
+                      "PS1='EATFILE> '; PROMPT_COMMAND=; cd -- %s\n"
+                      (shell-quote-argument directory)))
+                    (should
+                     (emacsvox-eat-test--wait-until
+                      process
+                      (lambda ()
+                        (string-suffix-p
+                         "EATFILE> " (emacsvox-eat-test--screen-text)))))
+                    (cl-labels
+                        ((complete
+                          (input expected)
+                          (eat-term-send-string
+                           eat-terminal (concat "\C-u" input))
+                          (should
+                           (emacsvox-eat-test--wait-until
+                            process
+                            (lambda ()
+                              (string-suffix-p
+                               (concat "EATFILE> " input)
+                               (emacsvox-eat-test--screen-text)))))
+                          (setq submissions nil)
+                          (eat-self-input 1 'tab)
+                          (should
+                           (emacsvox-eat-test--wait-until
+                            process
+                            (lambda ()
+                              (cl-find-if
+                               (lambda (submission)
+                                 (and (equal (car submission) expected)
+                                      (equal
+                                       (plist-get
+                                        (cadr submission) :facts)
+                                       '(:role candidate
+                                         :events
+                                         (completion-input-updated)))))
+                               submissions))))))
+                      (complete "cat alpha" "alpha\\ beta")
+                      (complete "cat caf" "café")
+                      (complete "cat foo" "foo\\(bar\\)")
+                      (complete "cat semi" "semi\\;colon")
+                      (complete "cd srcu" "srcunique/")))
+                (emacsvox-eat-test--stop-process process)))))
+      (when (buffer-live-p buffer) (kill-buffer buffer))
+      (when (file-directory-p directory) (delete-directory directory t)))))
+
+(ert-deftest emacsvox-eat-router-help-fixture-coalesces-delayed-rows-and-bell ()
+  "A local raw-terminal fixture models delayed router help without networking."
+  (skip-unless (executable-find "python3"))
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-router*"))
+        (script
+         (concat
+          "import os,sys,time,tty\n"
+          "tty.setraw(0)\n"
+          "sys.stdout.write('router# sh'); sys.stdout.flush()\n"
+          "while True:\n"
+          " c=os.read(0,1)\n"
+          " if c==b'\\t':\n"
+          "  sys.stdout.write('\\r\\nshow      Display system information\\r\\n'); sys.stdout.flush()\n"
+          "  time.sleep(0.08)\n"
+          "  sys.stdout.write('shutdown  Halt the device\\a\\r\\nrouter# sh'); sys.stdout.flush()\n"
+          " elif c in (b'\\x03',b'\\x04'):\n"
+          "  break\n"))
+        process submissions bells)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer buffer)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions)))
+                    ((symbol-function 'ding)
+                     (lambda (&rest _) (push 'bell bells))))
+            (unwind-protect
+                (progn
+                  (eat-mode)
+                  (eat-exec
+                   buffer "emacsvox-eat-router"
+                   (executable-find "python3") nil
+                   (list "-u" "-c" script))
+                  (setq process (get-buffer-process buffer))
+                  (eat-semi-char-mode)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (equal (emacsvox-eat-test--screen-text)
+                             "router# sh"))))
+                  (setq submissions nil bells nil)
+                  (eat-self-input 1 'tab)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda () emacsvox-eat--last-completion-output)))
+                  (should
+                   (equal
+                    (plist-get emacsvox-eat--last-completion-output :rows)
+                    '("show      Display system information"
+                      "shutdown  Halt the device")))
+                  (should
+                   (eq (plist-get
+                        emacsvox-eat--last-completion-output :layout)
+                       'rows))
+                  (should bells)
+                  (let ((candidate-submissions
+                         (cl-remove-if-not
+                          (lambda (submission)
+                            (eq (plist-get
+                                 (cadr submission) :occasion)
+                                'state-change))
+                          submissions)))
+                    (should (= (length candidate-submissions) 1))
+                    (should
+                     (equal
+                      (caar candidate-submissions)
+                      (concat
+                       "2 completion rows\n"
+                       "show      Display system information\n"
+                       "shutdown  Halt the device")))))
+              (emacsvox-eat-test--stop-process process))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (ert-deftest emacsvox-eat-partial-candidate-rows-do-not-speak-twice ()
   "A completed partial row waits silently for the redrawn completion input."

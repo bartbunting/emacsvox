@@ -135,7 +135,7 @@ Acceptance:
 - selected scrollback review is not interrupted by live output;
 - punctuation and voice information survive presentation.
 
-** TODO Phase 4: Terminal-side completion transaction
+** DONE Phase 4: Terminal-side completion transaction
 
 Issues:
 
@@ -149,7 +149,7 @@ Planned slices:
 2. [X] unique completion from logical screen change;
 3. [X] quiesced candidate/help-row extraction;
 4. [X] count, truncation, repeated-Tab deduplication, and retained review;
-5. Bash/readline PTY and router-shaped fixtures.
+5. [X] Bash/readline PTY and router-shaped fixtures.
 
 Acceptance:
 
@@ -259,6 +259,7 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | Preserve silent-by-default background behavior. | It is the safer privacy and speech-interference default. |
 | 2026-08-23 | Separate the nil-cursor fix from output/completion redesign. | Lowest-risk confirmed correctness fix with an unambiguous regression oracle. |
 | 2026-08-23 | Prefer deterministic local router/TUI fixtures over external sessions. | Reproducible, safe, and independent of device/network state. |
+| 2026-08-23 | Report an unanchored completion list as an “at least N visible” lower bound. | Public visible-screen state cannot recover candidates already scrolled away in one EAT output batch; reading arbitrary scrollback would retain unrelated private content and still would not provide structured item boundaries. |
 
 * Progress log
 
@@ -280,11 +281,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~d10d0653b~ | 4.1 | Terminal Tab now captures a bounded public-screen transaction with process generation, transaction serial, start/deadline, and a generation-safe two-second expiry timer. Compatible intermediate updates no longer consume it; non-Tab input, background selection, lifecycle changes, and success cancel it. The private semi-character-mode check is gone, so character-mode Tab follows the same path. 50 focused tests pass. |
 | 2026-08-23 | ~63fe396fb~ | 4.2 | Inline terminal completion is classified once at screen quiescence from the pre/post public screens. Physical line numbers and shell-token parsing are removed; public cursor offsets plus full-width visual-row inference handle wrapping, while conservative displayed-field labeling covers paths, escaped spaces, Unicode, punctuation, quotes, separators, and same-length replacement. Inserted pre-input rows, shorter changes, alternate screens, and generation changes fail closed. 53 focused tests pass, including real EAT wrap and semantic transaction cases. |
 | 2026-08-23 | ~03e660df5~ | 4.3 | Quiesced candidate/help output is anchored by suffix/prefix alignment of the old screen through its input row and the rows before the redrawn input. Prompt/history rows are stripped, columns and descriptions remain exact, scrolled-away anchors are marked uncertain, partial chunks wait silently for redraw, and the singular semantic completion transaction is retained for review instead of duplicated as command output. 59 focused tests pass, including real split EAT output. |
-| 2026-08-23 | this commit | 4.4 | Token-like cells separated by stable visual whitespace receive candidate counts; descriptive/ambiguous layouts keep completion-row counts. Automatic speech is capped at eight inferred items or eight rows plus 1,000 characters, while full visible rows remain retained. Unanchored overflow reports an honest lower bound, normalized item signatures deduplicate reflowed repeated lists, and identical repeats speak only their count. 63 focused tests pass, including a real 20-item overflow fixture. |
+| 2026-08-23 | ~33ea86c70~ | 4.4 | Token-like cells separated by stable visual whitespace receive candidate counts; descriptive/ambiguous layouts keep completion-row counts. Automatic speech is capped at eight inferred items or eight rows plus 1,000 characters, while full visible rows remain retained. Unanchored overflow reports an honest lower bound, normalized item signatures deduplicate reflowed repeated lists, and identical repeats speak only their count. 63 focused tests pass, including a real 20-item overflow fixture. |
+| 2026-08-23 | this commit | 4.5 | Disposable real Bash/readline PTYs verify programmable ~git pul<Tab>~, ambiguous ~git pu<Tab><Tab>~, BEL, normalized repeated lists, and filename completion with spaces, Unicode, parentheses, semicolons, and trailing directory slash. A local raw Python terminal emits delayed router descriptions and BEL across separate chunks. All 66 focused tests pass without network access or user-session interaction. The full suite ran 2,416 tests with only the pre-existing ~emacsvox-agent-shell-live-chat-prompt-announces-editability~ failure and one existing skip. |
 
 * Current next action
 
-Exercise the complete transaction against real Bash/readline in a disposable
-PTY plus deterministic router-shaped fixtures: unique and ambiguous Git-like
-completion, repeated Tab, arbitrary chunking, bells, quoting, Unicode,
-punctuation, resize/focus changes, and overflow.
+Add semantic alternate-screen application entry/exit boundaries, separating
+them from process lifecycle and suppressing duplicate repaint/output speech.
+Cover reset, resize, focus loss, and generation changes around each boundary.
