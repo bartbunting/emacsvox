@@ -98,7 +98,7 @@ Issues:
 
 Planned slices:
 
-1. immutable bounded visible-screen snapshot from public EAT getters;
+1. [X] immutable bounded visible-screen snapshot from public EAT getters;
 2. pure logical-row/text/style diff;
 3. update generations, resize/alternate-state comparison, and quiescence;
 4. deterministic unit and real-terminal ERT.
@@ -267,10 +267,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~d1f52159f2~ | 0 | Audit and project plan committed; both Org files lint clean. |
 | 2026-08-23 | ~a62ff846d~ | 1.1 | Nil-safe empty/reset/alternate updates; 9 focused EAT tests pass; byte-code rebuilt/current; fresh Emacs loaded ~emacsvox-eat.elc~ and passed empty/reset verification. Full 2359-test suite has only the pre-existing agent-shell failure. |
 | 2026-08-23 | ~c5ad4f3a6~ | 1.2 | Buffer-local generations, process identity, and reset/reload/exec/exit invalidation; 12 focused tests and compiled real-reload verification pass. |
-| 2026-08-23 | this commit | 1.3 | Native selected-buffer process exit/restart lifecycle; duplicate/stale exits and background disclosure suppressed; 15 focused tests and a fresh compiled real-process exit pass. |
+| 2026-08-23 | ~18d284a83~ | 1.3 | Native selected-buffer process exit/restart lifecycle; duplicate/stale exits and background disclosure suppressed; 15 focused tests and a fresh compiled real-process exit pass. |
+| 2026-08-23 | this commit | 2.1 | Data-only visible-screen snapshot from public EAT accessors and normalized rendered style properties; no speech-policy change. |
 
 * Current next action
 
-Build the bounded public-API visible-screen snapshot and pure logical-row diff,
-with resize, alternate-screen, cursor, and style signatures represented but no
-new automatic speech yet.
+Build the pure logical-row/text/style diff over retained screen snapshots, with
+resize, alternate-screen, cursor, and metadata changes classified independently
+and no new automatic speech yet.

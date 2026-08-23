@@ -309,6 +309,94 @@
            :occasion notification
            :compatibility-actions ((icon warn-user)))))))))
 
+(ert-deftest emacsvox-eat-screen-snapshot-uses-public-visible-state ()
+  "A screen snapshot captures visible text, cursor, style, and metadata."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (emacsvox-eat--generation 6))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 20 4)
+            (eat-term-process-output
+             eat-terminal
+             "\e]2;Audit title\a\e[1mBold\e[0m \e[4mUnder\e[0m")
+            (eat-term-redisplay eat-terminal)
+            (let* ((snapshot (emacsvox-eat--capture-screen))
+                   (styles (plist-get snapshot :styles))
+                   (style-data (mapcar #'caddr styles)))
+              (should (= (plist-get snapshot :generation) 6))
+              (should (integerp (plist-get snapshot :display-beginning)))
+              (should (integerp (plist-get snapshot :display-end)))
+              (should (equal (plist-get snapshot :text) "Bold Under"))
+              (should (equal (plist-get snapshot :rows) '("Bold Under")))
+              (should (equal (plist-get snapshot :size) '(20 . 4)))
+              (should (equal (plist-get snapshot :title) "Audit title"))
+              (should-not (plist-get snapshot :alternate-screen))
+              (should (= (plist-get snapshot :cursor-row) 0))
+              (should (= (plist-get snapshot :cursor-column) 10))
+              (should (= (plist-get snapshot :cursor-offset) 10))
+              (should
+               (seq-some
+                (lambda (style)
+                  (memq
+                   'eat-term-bold
+                   (plist-get (plist-get style :face) :faces)))
+                style-data))
+              (should
+               (seq-some
+                (lambda (style)
+                  (alist-get
+                   :underline
+                   (plist-get
+                    (plist-get style :face) :attributes)))
+                style-data))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-screen-snapshot-excludes-scrollback ()
+  "A screen snapshot begins at EAT's public visible-display boundary."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 12 2)
+            (eat-term-process-output
+             eat-terminal "old-one\r\nold-two\r\nvisible")
+            (eat-term-redisplay eat-terminal)
+            (let ((snapshot (emacsvox-eat--capture-screen)))
+              (should-not
+               (string-match-p "old-one" (plist-get snapshot :text)))
+              (should
+               (string-match-p "visible" (plist-get snapshot :text)))
+              (should
+               (=
+                (plist-get snapshot :display-beginning)
+                (marker-position
+                 (eat-term-display-beginning eat-terminal))))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-screen-snapshot-tracks-alternate-display ()
+  "A screen snapshot records alternate-screen state without private data."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 20 4)
+            (eat-term-process-output eat-terminal "Main")
+            (eat-term-process-output eat-terminal "\e[?1049hAlt")
+            (eat-term-redisplay eat-terminal)
+            (let ((snapshot (emacsvox-eat--capture-screen)))
+              (should (plist-get snapshot :alternate-screen))
+              (should (equal (plist-get snapshot :text) "Alt")))
+            (eat-term-process-output eat-terminal "\e[?1049l")
+            (eat-term-redisplay eat-terminal)
+            (let ((snapshot (emacsvox-eat--capture-screen)))
+              (should-not (plist-get snapshot :alternate-screen))
+              (should (equal (plist-get snapshot :text) "Main"))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
 (ert-deftest emacsvox-eat-reset-invalidates-before-terminal-update ()
   "Reset advances its generation before EAT runs the update hook."
   (with-temp-buffer

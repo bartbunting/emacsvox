@@ -55,7 +55,14 @@
 (eval-when-compile  (require 'cl-lib))
 (require 'emacsvox-preamble)
 (eval-when-compile (require 'eat "eat" 'no-error))
+(declare-function eat-term-display-beginning "eat" (terminal))
+(declare-function eat-term-cursor-type "eat" (terminal))
 (declare-function eat-term-display-cursor "eat" (terminal))
+(declare-function eat-term-end "eat" (terminal))
+(declare-function eat-term-in-alternative-display-p "eat" (terminal))
+(declare-function eat-term-live-p "eat" (object))
+(declare-function eat-term-size "eat" (terminal))
+(declare-function eat-term-title "eat" (terminal))
 
 ;;;  Lifecycle state:
 
@@ -70,6 +77,125 @@
 
 (defvar-local emacsvox-eat--completion-snapshot nil
   "Line and token captured before EAT sends terminal completion input.")
+
+(defconst emacsvox-eat--face-attributes
+  '(:foreground :background :weight :slant :underline :strike-through
+    :inverse-video :overline :box)
+  "Rendered face attributes retained in terminal style snapshots.")
+
+(defun emacsvox-eat--normalize-face-value (value)
+  "Return a stable, data-only terminal style signature for face VALUE."
+  (let (faces attributes)
+    (cl-labels
+        ((walk
+          (item)
+          (cond
+           ((and (symbolp item) (facep item)) (push item faces))
+           ((and (stringp item) (facep item))
+            (when-let* ((face (intern-soft item))) (push face faces)))
+           ((and (proper-list-p item) (keywordp (car item)))
+            (walk (plist-get item :inherit))
+            (dolist (attribute emacsvox-eat--face-attributes)
+              (when (plist-member item attribute)
+                (setf (alist-get attribute attributes)
+                      (copy-tree (plist-get item attribute))))))
+           ((proper-list-p item) (mapc #'walk item)))))
+      (walk value))
+    (setq faces (delete-dups (nreverse faces))
+          attributes (nreverse attributes))
+    (when (or faces attributes)
+      (append
+       (when faces (list :faces faces))
+       (when attributes (list :attributes attributes))))))
+
+(defun emacsvox-eat--style-at (position)
+  "Return normalized terminal style facts at buffer POSITION."
+  (let ((face
+         (emacsvox-eat--normalize-face-value
+          (list
+           (get-char-property position 'face)
+           (get-char-property position 'font-lock-face))))
+        (mouse-face
+         (emacsvox-eat--normalize-face-value
+          (get-char-property position 'mouse-face)))
+        (interactive-p
+         (or
+          (get-char-property position 'keymap)
+          (get-char-property position 'help-echo))))
+    (when (or face mouse-face interactive-p)
+      (append
+       (when face (list :face face))
+       (when mouse-face (list :mouse-face mouse-face))
+       (when interactive-p (list :interactive t))))))
+
+(defun emacsvox-eat--style-runs (beginning end)
+  "Return non-default style runs between BEGINNING and END.
+Run bounds are offsets from BEGINNING."
+  (let ((position beginning)
+        runs)
+    (while (< position end)
+      (let* ((next
+              (min
+               end
+               (or (next-char-property-change position end) end)))
+             (style (emacsvox-eat--style-at position)))
+        (when style
+          (push
+           (list (- position beginning) (- next beginning) style)
+           runs))
+        (setq position next)))
+    (nreverse runs)))
+
+(defun emacsvox-eat--split-screen-rows (text)
+  "Split terminal TEXT into rows while preserving empty rows."
+  (let ((start 0)
+        rows)
+    (while (string-match "\n" text start)
+      (push (substring text start (match-beginning 0)) rows)
+      (setq start (match-end 0)))
+    (push (substring text start) rows)
+    (nreverse rows)))
+
+(defun emacsvox-eat--cursor-coordinates (cursor beginning end)
+  "Return zero-based cursor coordinates for CURSOR in BEGINNING..END."
+  (when (and cursor (<= beginning cursor) (<= cursor end))
+    (save-restriction
+      (narrow-to-region beginning end)
+      (save-excursion
+        (goto-char cursor)
+        (cons (1- (line-number-at-pos cursor)) (current-column))))))
+
+(defun emacsvox-eat--capture-screen ()
+  "Return a data-only snapshot of the current visible EAT display.
+Only public EAT terminal accessors and rendered buffer properties are used."
+  (when (and eat-terminal (eat-term-live-p eat-terminal))
+    (let* ((beginning
+            (marker-position (eat-term-display-beginning eat-terminal)))
+           (end (marker-position (eat-term-end eat-terminal)))
+           (cursor-marker (eat-term-display-cursor eat-terminal))
+           (cursor (and cursor-marker (marker-position cursor-marker)))
+           (coordinates
+            (emacsvox-eat--cursor-coordinates cursor beginning end))
+           (size (eat-term-size eat-terminal))
+           (title (eat-term-title eat-terminal))
+           (text (buffer-substring-no-properties beginning end)))
+      (list
+       :generation emacsvox-eat--generation
+       :display-beginning beginning
+       :display-end end
+       :text text
+       :rows (emacsvox-eat--split-screen-rows text)
+       :styles (emacsvox-eat--style-runs beginning end)
+       :cursor-offset (and cursor (- cursor beginning))
+       :cursor-row (car coordinates)
+       :cursor-column (cdr coordinates)
+       :cursor-type (eat-term-cursor-type eat-terminal)
+       :size (cons (car size) (cdr size))
+       :alternate-screen
+       (not (null (eat-term-in-alternative-display-p eat-terminal)))
+       :title (and title (substring-no-properties title))
+       :cwd (and default-directory
+                 (substring-no-properties default-directory))))))
 
 (defun emacsvox-eat--clear-transient-state ()
   "Clear asynchronous EAT interaction state in the current buffer."
