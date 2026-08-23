@@ -99,7 +99,6 @@
   (with-temp-buffer
     (insert "$ ~/sr")
     (let ((eat-terminal 'terminal)
-          (eat--semi-char-mode t)
           events)
       (cl-letf (((symbol-function 'eat-term-display-cursor)
                  (lambda (_terminal) (point-marker)))
@@ -168,13 +167,11 @@
 (ert-deftest emacsvox-eat-input-recording-excludes-submit-and-completion ()
   "Submit and Tab clear input echo state; printable keys retain no raw history."
   (with-temp-buffer
-    (let ((eat-terminal 'terminal)
-          (eat--semi-char-mode nil))
+    (let ((eat-terminal 'terminal))
       (emacsvox--advice-eat-self-input-before 1 ?x)
       (should (= (cadr emacsvox-eat--recent-input) ?x))
       (emacsvox--advice-eat-self-input-before 1 13)
       (should-not emacsvox-eat--recent-input)
-      (setq eat--semi-char-mode t)
       (cl-letf (((symbol-function 'eat-term-display-cursor)
                  (lambda (_terminal) nil)))
         (emacsvox--advice-eat-self-input-before 1 ?\t))
@@ -284,6 +281,152 @@
     (should-not (emacsvox-eat--inline-completion-change old shorter))
     (should-not (emacsvox-eat--inline-completion-change old alternate))
     (should-not (emacsvox-eat--inline-completion-change old replacement))))
+
+(ert-deftest emacsvox-eat-completion-output-preserves-columns-and-help-rows ()
+  "Bash columns and router descriptions remain ordered screen rows."
+  (dolist
+      (case
+       '(("$ git pu"
+          "$ git pu\npull    push\n$ git pu"
+          ("pull    push"))
+         ("router# sh"
+          "router# sh\nshow      Display system information\nshutdown  Halt the device\nrouter# sh"
+          ("show      Display system information"
+           "shutdown  Halt the device"))))
+    (pcase-let ((`(,old-text ,new-text ,expected) case))
+      (let ((result
+             (emacsvox-eat--completion-output-change
+              (emacsvox-eat-test--screen old-text 80)
+              (emacsvox-eat-test--screen new-text 80))))
+        (should (equal (plist-get result :rows) expected))
+        (should (= (plist-get result :row-count) (length expected)))
+        (should (eq (plist-get result :confidence) 'anchored))))))
+
+(ert-deftest emacsvox-eat-completion-output-aligns-scroll-and-fails-closed ()
+  "Retained history is removed; a lost old anchor is explicitly uncertain."
+  (let* ((old
+          (emacsvox-eat-test--screen
+           "history one\nhistory two\n$ git pu" 80))
+         (scrolled
+          (emacsvox-eat-test--screen
+           "history two\n$ git pu\npull\npush\n$ git pu" 80))
+         (unanchored
+          (emacsvox-eat-test--screen
+           "candidate one\ncandidate two\n$ git pu" 80))
+         (scrolled-result
+          (emacsvox-eat--completion-output-change old scrolled))
+         (unanchored-result
+          (emacsvox-eat--completion-output-change old unanchored)))
+    (should (equal (plist-get scrolled-result :rows) '("pull" "push")))
+    (should (eq (plist-get scrolled-result :confidence) 'anchored))
+    (should
+     (equal (plist-get unanchored-result :rows)
+            '("candidate one" "candidate two")))
+    (should (eq (plist-get unanchored-result :confidence) 'unanchored))))
+
+(ert-deftest emacsvox-eat-completion-output-waits-for-redrawn-input ()
+  "Partial candidate chunks do not end the completion transaction."
+  (with-temp-buffer
+    (let* ((emacsvox-eat--generation 1)
+           (old (emacsvox-eat-test--screen "$ git pu" 80))
+           (partial
+            (emacsvox-eat-test--screen "$ git pu\npull    push" 80))
+           (final
+            (emacsvox-eat-test--screen
+             "$ git pu\npull    push\n$ git pu" 80))
+           (emacsvox-eat--completion-snapshot
+            (list :generation 1 :serial 1
+                  :deadline (+ (float-time) 1) :screen old)))
+      (should-not (emacsvox-eat--pending-completion-output partial))
+      (should emacsvox-eat--completion-snapshot)
+      (should
+       (equal
+        (plist-get (emacsvox-eat--pending-completion-output final) :rows)
+        '("pull    push")))
+      (should emacsvox-eat--completion-snapshot))))
+
+(ert-deftest emacsvox-eat-real-split-candidate-output-waits-for-prompt ()
+  "Real EAT candidate chunks classify only after the input is redrawn."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 40 6)
+            (eat-term-process-output eat-terminal "$ git pu")
+            (eat-term-redisplay eat-terminal)
+            (let ((old (emacsvox-eat--capture-screen)))
+              (eat-term-process-output eat-terminal "\r\npull")
+              (eat-term-redisplay eat-terminal)
+              (should-not
+               (emacsvox-eat--completion-output-change
+                old (emacsvox-eat--capture-screen)))
+              (eat-term-process-output
+               eat-terminal "    push\r\n$ git pu")
+              (eat-term-redisplay eat-terminal)
+              (let ((result
+                     (emacsvox-eat--completion-output-change
+                      old (emacsvox-eat--capture-screen))))
+                (should (equal (plist-get result :rows)
+                               '("pull    push")))
+                (should (eq (plist-get result :confidence) 'anchored)))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-partial-candidate-rows-do-not-speak-twice ()
+  "A completed partial row waits silently for the redrawn completion input."
+  (with-temp-buffer
+    (let* ((emacsvox-eat--generation 1)
+           (old (emacsvox-eat-test--screen "$ git pu" 80))
+           (partial
+            (emacsvox-eat-test--screen "$ git pu\npull    push\n" 80))
+           (final
+            (emacsvox-eat-test--screen
+             "$ git pu\npull    push\n$ git pu" 80))
+           (emacsvox-eat--completion-snapshot
+            (list :generation 1 :serial 1
+                  :deadline (+ (float-time) 1) :screen old))
+           submissions)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (&rest arguments) (push arguments submissions))))
+        (emacsvox-eat--screen-quiesced
+         (emacsvox-eat--screen-diff old partial) partial)
+        (should-not submissions)
+        (should emacsvox-eat--completion-snapshot)
+        (emacsvox-eat--screen-quiesced
+         (emacsvox-eat--screen-diff partial final) final))
+      (should (= (length submissions) 1))
+      (should (equal (caar submissions) "pull    push"))
+      (should-not emacsvox-eat--completion-snapshot))))
+
+(ert-deftest emacsvox-eat-candidate-output-is-semantic-retained-and-singular ()
+  "Completion rows replace ordinary output speech and remain reviewable."
+  (with-temp-buffer
+    (let* ((emacsvox-eat--generation 1)
+           (old (emacsvox-eat-test--screen "$ git pu" 80))
+           (new
+            (emacsvox-eat-test--screen
+             "$ git pu\npull    push\n$ git pu" 80))
+           (diff (emacsvox-eat--screen-diff old new))
+           (emacsvox-eat--completion-snapshot
+            (list :generation 1 :serial 1
+                  :deadline (+ (float-time) 1) :screen old))
+           submissions)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (list content arguments) submissions))))
+        (emacsvox-eat--screen-quiesced diff new))
+      (should (= (length submissions) 1))
+      (should (equal (caar submissions) "pull    push"))
+      (should
+       (equal (plist-get (cadar submissions) :facts)
+              '(:role candidate :events (operation-completed))))
+      (should-not emacsvox-eat--completion-snapshot)
+      (should
+       (equal (plist-get emacsvox-eat--last-completion-output :rows)
+              '("pull    push")))
+      (should
+       (eq (plist-get emacsvox-eat--last-completion-output :confidence)
+           'anchored)))))
 
 (ert-deftest emacsvox-eat-real-wrapped-inline-completion-is-one-result ()
   "Public EAT rows reconstruct a completion that crosses a visual wrap."
@@ -427,6 +570,8 @@
           (emacsvox-eat--quiescence-started-at 10.0)
           (emacsvox-eat--last-status-text "Progress 40%")
           (emacsvox-eat--last-status-spoken-at 20.0)
+          (emacsvox-eat--last-completion-output
+           '(:rows ("stale candidate")))
           (emacsvox-eat--quiescence-timer
            (run-at-time 60 nil #'ignore))
           process-a process-b)
@@ -445,6 +590,7 @@
       (should-not emacsvox-eat--quiescence-timer)
       (should-not emacsvox-eat--last-status-text)
       (should (= emacsvox-eat--last-status-spoken-at 0.0))
+      (should-not emacsvox-eat--last-completion-output)
       (setq emacsvox-eat--completion-snapshot '(13 . "pending"))
       (emacsvox-eat--process-exited process-b)
       (should (= emacsvox-eat--generation 8))

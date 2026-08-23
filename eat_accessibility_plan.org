@@ -147,7 +147,7 @@ Planned slices:
 
 1. [X] pre-Tab public screen snapshot and generation/deadline;
 2. [X] unique completion from logical screen change;
-3. quiesced candidate/help-row extraction;
+3. [X] quiesced candidate/help-row extraction;
 4. count, truncation, repeated-Tab deduplication, and retained review;
 5. Bash/readline PTY and router-shaped fixtures.
 
@@ -278,11 +278,12 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~d0f5f7afc~ | 3.4 | Conservative same-row progress/status recognition uses stable replaceable transactions, retains the latest value, rate-limits intermediate updates to 1.5 seconds, presents terminal states immediately, suppresses input/resize/alternate-screen changes, and forces classification after at most 250 ms of continuous repaint. 43 focused tests, including a real EAT carriage-return rewrite, pass. |
 | 2026-08-23 | ~c4eee0947~ | 3.5 | Automatic foreground output now requires the selected EAT window to follow the public terminal cursor.  Selected scrollback review stays silent while retaining the latest diff, screen, and status; another live-follow window cannot override the selected review window. 46 focused tests pass. |
 | 2026-08-23 | ~d10d0653b~ | 4.1 | Terminal Tab now captures a bounded public-screen transaction with process generation, transaction serial, start/deadline, and a generation-safe two-second expiry timer. Compatible intermediate updates no longer consume it; non-Tab input, background selection, lifecycle changes, and success cancel it. The private semi-character-mode check is gone, so character-mode Tab follows the same path. 50 focused tests pass. |
-| 2026-08-23 | this commit | 4.2 | Inline terminal completion is classified once at screen quiescence from the pre/post public screens. Physical line numbers and shell-token parsing are removed; public cursor offsets plus full-width visual-row inference handle wrapping, while conservative displayed-field labeling covers paths, escaped spaces, Unicode, punctuation, quotes, separators, and same-length replacement. Inserted pre-input rows, shorter changes, alternate screens, and generation changes fail closed. 53 focused tests pass, including real EAT wrap and semantic transaction cases. |
+| 2026-08-23 | ~63fe396fb~ | 4.2 | Inline terminal completion is classified once at screen quiescence from the pre/post public screens. Physical line numbers and shell-token parsing are removed; public cursor offsets plus full-width visual-row inference handle wrapping, while conservative displayed-field labeling covers paths, escaped spaces, Unicode, punctuation, quotes, separators, and same-length replacement. Inserted pre-input rows, shorter changes, alternate screens, and generation changes fail closed. 53 focused tests pass, including real EAT wrap and semantic transaction cases. |
+| 2026-08-23 | this commit | 4.3 | Quiesced candidate/help output is anchored by suffix/prefix alignment of the old screen through its input row and the rows before the redrawn input. Prompt/history rows are stripped, columns and descriptions remain exact, scrolled-away anchors are marked uncertain, partial chunks wait silently for redraw, and the singular semantic completion transaction is retained for review instead of duplicated as command output. 59 focused tests pass, including real split EAT output. |
 
 * Current next action
 
-Extract quiesced candidate/help rows between the pre-Tab input and its redrawn
-post-Tab input without assuming shell grammar.  Preserve rows and columns,
-retain uncertain layouts, and prevent the ordinary output presenter from
-duplicating completion speech.
+Add bounded candidate counts, small-list presentation, large-list truncation,
+normalized repeated-Tab deduplication, and retained candidate review state.
+Do not split columns into invented items when descriptions or layout are
+ambiguous.

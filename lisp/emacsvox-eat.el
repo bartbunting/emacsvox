@@ -119,6 +119,9 @@
 (defvar-local emacsvox-eat--last-status-spoken-at 0.0
   "Time at which automatic EAT status speech was most recently submitted.")
 
+(defvar-local emacsvox-eat--last-completion-output nil
+  "Latest quiesced terminal candidate/help-row presentation.")
+
 (defvar-local emacsvox-eat--terminal-id nil
   "Process-local integer used in replaceable EAT delivery keys.")
 
@@ -553,19 +556,35 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
 
 (defun emacsvox-eat--screen-quiesced (diff snapshot)
   "Retain and present the selected terminal DIFF ending at SNAPSHOT."
-  (if-let* ((completion
-             (emacsvox-eat--pending-inline-completion snapshot)))
-      (progn
-        (emacsvox-eat--retain-screen-change
-         (plist-get completion :diff) snapshot)
-        (emacsvox-eat--cancel-completion)
-        (emacsvox-eat--present-inline-completion
-         (plist-get completion :text)))
+  (cond
+   ((when-let* ((completion
+                 (emacsvox-eat--pending-inline-completion snapshot)))
+      (emacsvox-eat--retain-screen-change
+       (plist-get completion :diff) snapshot)
+      (emacsvox-eat--cancel-completion)
+      (setq emacsvox-eat--last-completion-output nil)
+      (emacsvox-eat--present-inline-completion
+       (plist-get completion :text))
+      t))
+   ((when-let* ((completion
+                 (emacsvox-eat--pending-completion-output snapshot)))
+      (emacsvox-eat--retain-screen-change
+       (plist-get completion :diff) snapshot)
+      (emacsvox-eat--cancel-completion)
+      (setq emacsvox-eat--last-completion-output completion)
+      (emacsvox-eat--present-completion-output completion)
+      t))
+   ((emacsvox-eat--completion-current-p)
+    ;; Candidate/help output can pause on a completed row before the peer
+    ;; redraws its input.  Retain that partial screen without letting the
+    ;; ordinary output path announce it and then repeat it at completion.
+    (emacsvox-eat--retain-screen-change diff snapshot))
+   (t
     (emacsvox-eat--retain-screen-change diff snapshot)
     (if-let* ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
         (emacsvox-eat--present-output-rows rows)
       (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
-        (emacsvox-eat--present-status status)))))
+        (emacsvox-eat--present-status status))))))
 
 (defun emacsvox-eat--finish-quiescence (buffer generation serial)
   "Finish BUFFER's update burst identified by GENERATION and SERIAL."
@@ -643,7 +662,8 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
         emacsvox-eat--last-screen-diff nil
         emacsvox-eat--last-changed-screen nil
         emacsvox-eat--last-status-text nil
-        emacsvox-eat--last-status-spoken-at 0.0))
+        emacsvox-eat--last-status-spoken-at 0.0
+        emacsvox-eat--last-completion-output nil))
 
 (defun emacsvox-eat--advance-generation ()
   "Invalidate asynchronous state and advance the current EAT generation."
@@ -1145,11 +1165,80 @@ returns nil because recognizing its logical word would require shell grammar."
     (emacsvox-eat--inline-completion-change
      (plist-get emacsvox-eat--completion-snapshot :screen) snapshot)))
 
+(defun emacsvox-eat--completion-input-compatible-p (old-input new-input)
+  "Return non-nil when NEW-INPUT can be a redraw of OLD-INPUT."
+  (or (equal old-input new-input)
+      (when-let* ((change
+                   (and old-input new-input
+                        (emacsvox-eat--sequence-change old-input new-input))))
+        (and (> (plist-get change :start) 0)
+             (>= (length new-input) (length old-input))))))
+
+(defun emacsvox-eat--completion-output-change (old new)
+  "Return candidate/help-row facts between OLD and NEW terminal screens.
+Rows are preserved exactly.  `:confidence' is `anchored' when the old screen
+through its input row remains as a prefix after scroll alignment, and
+`unanchored' when only the redrawn cursor input provides an association."
+  (when (and old new
+             (equal (plist-get old :generation)
+                    (plist-get new :generation))
+             (not (plist-get old :alternate-screen))
+             (not (plist-get new :alternate-screen)))
+    (when-let* ((old-input (emacsvox-eat--screen-cursor-input old))
+                (new-input (emacsvox-eat--screen-cursor-input new))
+                ((emacsvox-eat--completion-input-compatible-p
+                  (plist-get old-input :text) (plist-get new-input :text)))
+                (old-cursor-row (plist-get old :cursor-row))
+                (new-start-row (plist-get new-input :start-row))
+                ((integerp old-cursor-row))
+                ((integerp new-start-row)))
+      (let* ((old-through-input
+              (emacsvox-eat--list-slice
+               (plist-get old :rows) 0
+               (min (length (plist-get old :rows))
+                    (1+ old-cursor-row))))
+             (new-leading
+              (emacsvox-eat--list-slice
+               (plist-get new :rows) 0
+               (min (length (plist-get new :rows)) new-start-row)))
+             (overlap
+              (emacsvox-eat--suffix-prefix-row-overlap
+               old-through-input new-leading))
+             (rows
+              (if (> overlap 0)
+                  (nthcdr overlap new-leading)
+                new-leading)))
+        (when (cl-some
+               (lambda (row) (not (string-empty-p (string-trim row))))
+               rows)
+          (let ((diff (emacsvox-eat--screen-diff old new)))
+            (list
+             :rows (copy-sequence rows)
+             :row-count (length rows)
+             :confidence (if (> overlap 0) 'anchored 'unanchored)
+             :old-input (plist-get old-input :text)
+             :new-input (plist-get new-input :text)
+             :diff (plist-put diff :user-input t))))))))
+
+(defun emacsvox-eat--pending-completion-output (snapshot)
+  "Return candidate/help rows for the pending transaction at SNAPSHOT."
+  (when (emacsvox-eat--completion-current-p)
+    (emacsvox-eat--completion-output-change
+     (plist-get emacsvox-eat--completion-snapshot :screen) snapshot)))
+
 (defun emacsvox-eat--present-inline-completion (text)
   "Present inline terminal completion TEXT as one semantic transaction."
   (when-let* ((content (emacsvox-eat--bounded-output (list text))))
     (emacsvox-eat--submit
      content '(:role candidate :events (completion-input-updated))
+     'state-change)))
+
+(defun emacsvox-eat--present-completion-output (completion)
+  "Present terminal candidate/help-row COMPLETION as one transaction."
+  (when-let* ((content
+               (emacsvox-eat--bounded-output (plist-get completion :rows))))
+    (emacsvox-eat--submit
+     content '(:role candidate :events (operation-completed))
      'state-change)))
 
 (defun emacsvox-eat--speak-input-correlated-update (cursor)
