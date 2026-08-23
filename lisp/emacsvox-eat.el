@@ -132,6 +132,9 @@ level.  This option may be set buffer-locally for an individual terminal."
 (defvar-local emacsvox-eat--recent-input nil
   "Generation, event, and deadline for one input-correlated screen update.")
 
+(defvar-local emacsvox-eat--secure-input-active-p nil
+  "Non-nil while EAT is reading and sending protected terminal input.")
+
 (defvar-local emacsvox-eat--last-screen-diff nil
   "Most recent quiesced screen diff retained for explicit review.")
 
@@ -832,8 +835,8 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
             (emacsvox-eat--cancel-quiescence)
           (emacsvox-eat--schedule-quiescence))))))
 
-(defun emacsvox-eat--clear-transient-state ()
-  "Clear asynchronous EAT interaction state in the current buffer."
+(defun emacsvox-eat--clear-sensitive-screen-state ()
+  "Forget content-bearing EAT observation state in the current buffer."
   (emacsvox-eat--cancel-quiescence)
   (emacsvox-eat--cancel-completion)
   (setq emacsvox-eat--screen-snapshot nil
@@ -843,10 +846,15 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
         emacsvox-eat--last-status-text nil
         emacsvox-eat--last-status-spoken-at 0.0
         emacsvox-eat--last-completion-output nil
-        emacsvox-eat--last-bell-at nil
-        emacsvox-eat--last-bell-spoken-at nil
         emacsvox-eat--last-metadata-change nil
         emacsvox-eat--last-metadata-spoken-at nil))
+
+(defun emacsvox-eat--clear-transient-state ()
+  "Clear asynchronous EAT interaction state in the current buffer."
+  (emacsvox-eat--clear-sensitive-screen-state)
+  (setq emacsvox-eat--secure-input-active-p nil
+        emacsvox-eat--last-bell-at nil
+        emacsvox-eat--last-bell-spoken-at nil))
 
 (defun emacsvox-eat--advance-generation ()
   "Invalidate asynchronous state and advance the current EAT generation."
@@ -935,7 +943,8 @@ The terminal's original bell callback has already run."
                 ;; A bell is its own input response; do not also speak the
                 ;; adjacent prompt character through legacy echo feedback.
                 emacsvox-eat--recent-input nil)
-          (when (and (emacsvox-eat--selected-buffer-p)
+          (when (and (not emacsvox-eat--secure-input-active-p)
+                     (emacsvox-eat--selected-buffer-p)
                      (emacsvox-eat--following-live-p)
                      (or (null emacsvox-eat--last-bell-spoken-at)
                          (>= (- now emacsvox-eat--last-bell-spoken-at)
@@ -1159,6 +1168,41 @@ Ignore a stale or duplicate exit after another process has become active."
      (when (ems-interactive-p ',target)
        (emacsvox-eat--present-terminal-paste ',target)))))
 
+(defun emacsvox-eat--present-secure-input-result (completed-p)
+  "Present a content-free EAT secure-input result for COMPLETED-P."
+  (emacsvox-eat--submit
+   (if completed-p
+       "Secure terminal input sent"
+     "Secure terminal input cancelled")
+   (emacsvox-eat--facts
+    'command-interaction
+    (if completed-p 'operation-completed 'state-changed))
+   'state-change
+   (if completed-p 'task-done 'close-object)))
+
+(defun emacsvox--advice-eat-send-password-around (original &rest arguments)
+  "Protect EAT observation state while calling password command ORIGINAL.
+ARGUMENTS are passed through without inspection so password content never
+reaches this advice."
+  (let ((terminal-buffer (current-buffer))
+        (interactive-p (ems-interactive-p 'eat-send-password))
+        completed-p)
+    (with-current-buffer terminal-buffer
+      (emacsvox-eat--clear-sensitive-screen-state)
+      (setq emacsvox-eat--secure-input-active-p t))
+    (unwind-protect
+        (prog1 (apply original arguments)
+          (setq completed-p t))
+      (when (buffer-live-p terminal-buffer)
+        (with-current-buffer terminal-buffer
+          (emacsvox-eat--clear-sensitive-screen-state)
+          (setq emacsvox-eat--secure-input-active-p nil)
+          (when (and interactive-p (emacsvox-eat--selected-buffer-p))
+            ;; Feedback must not prevent a password send or mask its error.
+            (condition-case nil
+                (emacsvox-eat--present-secure-input-result completed-p)
+              (error nil))))))))
+
 (defun emacsvox--advice-eat-reload-after (&rest _)
   "Speak after reloading Eat."
   (emacsvox-eat--install-advice)
@@ -1257,6 +1301,10 @@ Ignore a stale or duplicate exit after another process has become active."
     emacsvox-eat--yank-targets))
   "EAT targets and native before-advice used for state invalidation.")
 
+(defconst emacsvox-eat--around-advice
+  '((eat-send-password . emacsvox--advice-eat-send-password-around))
+  "EAT targets and native around-advice used for protected interaction.")
+
 (defun emacsvox-eat--install-advice ()
   "Install native advice after the optional Eat package loads."
   (dolist (target emacsvox-eat--advice-targets)
@@ -1271,6 +1319,12 @@ Ignore a stale or duplicate exit after another process has become active."
       (when (and (fboundp target)
                  (not (advice-member-p function target)))
         (advice-add target :before function '((name . emacsvox-state))))))
+  (dolist (entry emacsvox-eat--around-advice)
+    (let ((target (car entry))
+          (function (cdr entry)))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :around function '((name . emacsvox-state))))))
   (when
       (and
        (fboundp 'eat-self-input)
@@ -1688,14 +1742,16 @@ terminal cursor accessor."
 (defun emacsvox-eat-update-hook ()
   "Speak an EAT update when its buffer is selected."
   (emacsvox-eat--install-bell-observer)
-  (emacsvox-eat--observe-screen)
-  (if (not (emacsvox-eat--selected-buffer-p))
-      (progn
-        (emacsvox-eat--cancel-completion)
-        (setq emacsvox-eat--recent-input nil))
-    (let* ((emacsvox-show-point t)
-           (cursor (eat-term-display-cursor eat-terminal)))
-      (emacsvox-eat--speak-input-correlated-update cursor))))
+  (if emacsvox-eat--secure-input-active-p
+      (emacsvox-eat--clear-sensitive-screen-state)
+    (emacsvox-eat--observe-screen)
+    (if (not (emacsvox-eat--selected-buffer-p))
+        (progn
+          (emacsvox-eat--cancel-completion)
+          (setq emacsvox-eat--recent-input nil))
+      (let* ((emacsvox-show-point t)
+             (cursor (eat-term-display-cursor eat-terminal)))
+        (emacsvox-eat--speak-input-correlated-update cursor)))))
 
 (add-hook 'eat-update-hook #'emacsvox-eat-update-hook)
 (add-hook 'eat-exec-hook #'emacsvox-eat--process-started)

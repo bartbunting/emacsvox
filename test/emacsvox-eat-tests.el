@@ -59,6 +59,8 @@
     #'emacsvox--advice-eat-self-input-before 'eat-self-input))
   (dolist (entry emacsvox-eat--before-advice)
     (should (advice-member-p (cdr entry) (car entry))))
+  (dolist (entry emacsvox-eat--around-advice)
+    (should (advice-member-p (cdr entry) (car entry))))
   (should (memq #'emacsvox-eat--process-started eat-exec-hook))
   (should (memq #'emacsvox-eat--process-exited eat-exit-hook)))
 
@@ -153,6 +155,115 @@
       (emacsvox-eat--before-terminal-paste "never speak this secret")
       (should-not emacsvox-eat--completion-snapshot)
       (should-not emacsvox-eat--completion-timer)
+      (should-not emacsvox-eat--recent-input))))
+
+(ert-deftest emacsvox-eat-password-command-never-presents-secret-content ()
+  "Protected EAT input clears snapshots and reports only its outcome."
+  (with-temp-buffer
+    (let ((eat-terminal 'test-terminal)
+          (ems--interactive-fn-name 'eat-send-password)
+          (secret "terminal-secret-sentinel")
+          (emacsvox-eat--screen-snapshot
+           '(:text "terminal-secret-sentinel"))
+          (emacsvox-eat--last-screen-diff
+           '(:text-change "terminal-secret-sentinel"))
+          (emacsvox-eat--last-changed-screen
+           '(:text "terminal-secret-sentinel"))
+          (emacsvox-eat--completion-snapshot
+           '(:screen (:text "terminal-secret-sentinel")))
+          (emacsvox-eat--last-completion-output
+           '(:rows ("terminal-secret-sentinel")))
+          (emacsvox-eat--last-status-text "terminal-secret-sentinel")
+          transported
+          return-input
+          submissions)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'read-passwd)
+                 (lambda (&rest _)
+                   (should emacsvox-eat--secure-input-active-p)
+                   (should-not emacsvox-eat--screen-snapshot)
+                   (should-not emacsvox-eat--completion-snapshot)
+                   secret))
+                ((symbol-function 'eat-term-send-string)
+                 (lambda (terminal content)
+                   (setq transported (list terminal content))))
+                ((symbol-function 'eat-self-input)
+                 (lambda (count event)
+                   (setq return-input (list count event))))
+                ((symbol-function 'emacsvox-aural-compatibility-icon)
+                 (lambda (icon) (list 'icon icon)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (list content arguments) submissions))))
+        (eat-send-password))
+      (should (equal transported (list 'test-terminal secret)))
+      (should (equal return-input '(1 return)))
+      (should-not emacsvox-eat--secure-input-active-p)
+      (should-not emacsvox-eat--screen-snapshot)
+      (should-not emacsvox-eat--last-screen-diff)
+      (should-not emacsvox-eat--last-changed-screen)
+      (should-not emacsvox-eat--completion-snapshot)
+      (should-not emacsvox-eat--last-completion-output)
+      (should-not emacsvox-eat--last-status-text)
+      (should
+       (equal
+        submissions
+        '(("Secure terminal input sent"
+           (:facts
+            (:role command-interaction
+             :command-interaction-kind shell
+             :events (operation-completed))
+            :module eat
+            :occasion state-change
+            :compatibility-actions ((icon task-done)))))))
+      (should-not (string-match-p secret (format "%S" submissions))))))
+
+(ert-deftest emacsvox-eat-password-cancellation-clears-secure-state ()
+  "A quit from protected input is re-signalled after content-free cleanup."
+  (with-temp-buffer
+    (let ((ems--interactive-fn-name 'eat-send-password)
+          (emacsvox-eat--screen-snapshot '(:text "stale secret"))
+          submissions
+          quit-seen)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'emacsvox-eat--submit)
+                 (lambda (&rest arguments) (push arguments submissions))))
+        (condition-case nil
+            (emacsvox--advice-eat-send-password-around
+             (lambda ()
+               (should emacsvox-eat--secure-input-active-p)
+               (signal 'quit nil)))
+          (quit (setq quit-seen t))))
+      (should quit-seen)
+      (should-not emacsvox-eat--secure-input-active-p)
+      (should-not emacsvox-eat--screen-snapshot)
+      (should
+       (equal
+        submissions
+        '(("Secure terminal input cancelled"
+           (:role command-interaction
+            :command-interaction-kind shell
+            :events (state-changed))
+           state-change close-object)))))))
+
+(ert-deftest emacsvox-eat-secure-input-suppresses-screen-observation ()
+  "Terminal updates during protected input cannot capture or speak content."
+  (with-temp-buffer
+    (let ((emacsvox-eat--secure-input-active-p t)
+          (emacsvox-eat--screen-snapshot '(:text "stale secret"))
+          (emacsvox-eat--recent-input '(0 ?s 9999999999.0)))
+      (cl-letf (((symbol-function 'emacsvox-eat--install-bell-observer)
+                 #'ignore)
+                ((symbol-function 'emacsvox-eat--observe-screen)
+                 (lambda () (ert-fail "secure update captured the screen")))
+                ((symbol-function 'emacsvox-eat--speak-input-correlated-update)
+                 (lambda (&rest _)
+                   (ert-fail "secure update reached input speech"))))
+        (emacsvox-eat-update-hook))
+      (should emacsvox-eat--secure-input-active-p)
+      (should-not emacsvox-eat--screen-snapshot)
       (should-not emacsvox-eat--recent-input))))
 
 (ert-deftest emacsvox-eat-mode-feedback-is-human-and-semantic ()
@@ -1129,6 +1240,11 @@
               (setq now 10.6)
               (eat-term-process-output eat-terminal "\a")
               (should (= original-calls 3))
+              (should (= (length submissions) 2))
+              (setq now 11.2
+                    emacsvox-eat--secure-input-active-p t)
+              (eat-term-process-output eat-terminal "\a")
+              (should (= original-calls 4))
               (should (= (length submissions) 2)))
             (should
              (equal
@@ -1323,6 +1439,7 @@
   "Process start and matching exit invalidate asynchronous EAT state."
   (with-temp-buffer
     (let ((emacsvox-eat--generation 7)
+          (emacsvox-eat--secure-input-active-p t)
           (emacsvox-eat--completion-snapshot '(12 . "stale"))
           (emacsvox-eat--completion-timer
            (run-at-time 60 nil #'ignore))
@@ -1350,6 +1467,7 @@
       (emacsvox-eat--process-started process-a)
       (should (= emacsvox-eat--generation 8))
       (should (eq emacsvox-eat--active-process process-a))
+      (should-not emacsvox-eat--secure-input-active-p)
       (should-not emacsvox-eat--completion-snapshot)
       (should-not emacsvox-eat--completion-timer)
       (should-not emacsvox-eat--screen-snapshot)

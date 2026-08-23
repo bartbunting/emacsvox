@@ -174,7 +174,7 @@ Planned slices:
 2. [X] human mode labels and paste/yank state;
 3. [X] bell deduplication;
 4. [X] title/CWD comparison and verbosity policy;
-5. safe password command feedback and state clearing;
+5. [X] safe password command feedback and state clearing;
 6. optional per-buffer output monitoring.
 
 Acceptance:
@@ -263,6 +263,7 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | Use existing registered semantic facts for EAT state changes. | Invented operation or attribute values fail Emacsvox's native fact validator; spoken content can carry the more specific human description without broadening the public vocabulary. |
 | 2026-08-23 | Wrap EAT's public terminal bell parameter and preserve its callback. | This avoids advice on private EAT functions, leaves every configured ~ding~ invocation intact, and permits Emacsvox to deduplicate only its added speech. |
 | 2026-08-23 | Use one buffer-local ~terse~ / ~normal~ / ~verbose~ terminal policy, defaulting to ~normal~; only ~verbose~ automatically announces title and directory changes. | A unified policy is easier to understand and extend than separate switches. The default preserves established bounded output while keeping potentially sensitive host/path metadata opt-in; every level retains bounded metadata for explicit review. |
+| 2026-08-23 | Harden the explicit ~eat-send-password~ path; do not infer no-echo state from terminal repaint. | EAT exposes no public terminal-echo state, and silence is not proof of a password prompt. The explicit command uses Emacs's lossage-safe ~read-passwd~ path and gives Emacsvox a reliable privacy boundary without private EAT internals or content inspection. |
 
 * Progress log
 
@@ -291,10 +292,10 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~fbab81281~ | 5.2b | Alternate-screen and mode feedback now use only registered native semantic facts: the descriptive spoken text remains, while invented ~command-operation~ values and an unknown terminal-mode attribute are removed. Focused tests load the shared workflow provider and validate these facts against the real semantic contract; all 72 focused EAT tests pass. |
 | 2026-08-23 | ~04300d63a~ | 5.2c | Keyboard, selected kill-ring, xterm clipboard, primary-selection, and secondary-selection paste paths now submit one content-free semantic command-input transaction with a yank cue. Shared before-advice clears stale completion/character state, target ownership prevents nested xterm/yank duplication, and secret sentinel arguments never enter feedback. All 74 focused EAT tests pass. |
 | 2026-08-23 | ~0a3cce7ac~ | 5.3 | Each terminal's public ~ring-bell-function~ is wrapped idempotently after EAT configures it; the original callback still runs for every BEL and observer errors cannot break escape processing. Foreground live-follow speech says “Terminal bell” at most twice per second, background speech remains private, completion survives, and adjacent legacy character echo is suppressed. All 76 focused EAT tests and fresh compiled real-BEL verification pass. |
-| 2026-08-23 | this commit | 5.4 | The user-selected, buffer-local ~terse~ / ~normal~ / ~verbose~ policy defaults to ~normal~. Terse mode retains routine output/status without automatic speech; normal preserves existing bounded output; verbose additionally presents bounded, control-free title and working-directory changes as rate-limited replaceable state transactions. Lifecycle state clears retained metadata. All 83 focused EAT tests pass, including real long OSC-title handling, and fresh Emacs verified the compiled metadata path. |
+| 2026-08-23 | ~e65dd63a6~ | 5.4 | The user-selected, buffer-local ~terse~ / ~normal~ / ~verbose~ policy defaults to ~normal~. Terse mode retains routine output/status without automatic speech; normal preserves existing bounded output; verbose additionally presents bounded, control-free title and working-directory changes as rate-limited replaceable state transactions. Lifecycle state clears retained metadata. All 83 focused EAT tests pass, including real long OSC-title handling, and fresh Emacs verified the compiled metadata path. |
+| 2026-08-23 | this commit | 5.5 | Around-advice on EAT's public ~eat-send-password~ command creates a reliable protected-input boundary. Existing masked ~read-passwd~ feedback provides entry; Emacsvox clears every content-bearing terminal snapshot before and after the command, suppresses update/bell speech while active, and reports only a content-free sent/cancelled result. Process lifecycle also clears the protected state. Ordinary raw no-echo typing remains intentionally uninferred because EAT exposes no public echo-mode state. All 86 focused EAT tests and fresh compiled-command verification pass. |
 
 * Current next action
 
-Add secure-input handling that clears pending snapshots and recent input while
-avoiding any speech, log, or retained-screen disclosure of password/no-echo
-content.
+Define the optional per-buffer background-output monitoring policy, including
+the announcement content, privacy boundary, unread counting, and rate limit.
