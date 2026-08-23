@@ -172,7 +172,7 @@ Planned slices:
 
 1. [X] process/app enter/exit and alternate-screen announcements;
 2. [X] human mode labels and paste/yank state;
-3. bell deduplication;
+3. [X] bell deduplication;
 4. title/CWD comparison and verbosity policy;
 5. safe password command feedback and state clearing;
 6. optional per-buffer output monitoring.
@@ -261,6 +261,7 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | Prefer deterministic local router/TUI fixtures over external sessions. | Reproducible, safe, and independent of device/network state. |
 | 2026-08-23 | Report an unanchored completion list as an “at least N visible” lower bound. | Public visible-screen state cannot recover candidates already scrolled away in one EAT output batch; reading arbitrary scrollback would retain unrelated private content and still would not provide structured item boundaries. |
 | 2026-08-23 | Use existing registered semantic facts for EAT state changes. | Invented operation or attribute values fail Emacsvox's native fact validator; spoken content can carry the more specific human description without broadening the public vocabulary. |
+| 2026-08-23 | Wrap EAT's public terminal bell parameter and preserve its callback. | This avoids advice on private EAT functions, leaves every configured ~ding~ invocation intact, and permits Emacsvox to deduplicate only its added speech. |
 
 * Progress log
 
@@ -287,10 +288,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~ad4b2ff2c~ | 5.1 | Public alternate-display state changes are retained across quiescence, including a rapid enter/exit round trip, and presented once as semantic application-screen boundaries only after selected/live-follow checks. Entry clears incompatible completion/status state; its repaint and resize remain silent. Focus loss and process-generation changes discard pending delivery. All 70 focused EAT tests pass, including real EAT alternate-screen transitions, and fresh compiled verification passes. |
 | 2026-08-23 | ~e515889e0~ | 5.2a | Interactive EAT input modes now announce stable human descriptions such as “Semi-character input mode” instead of Lisp command symbols. Global/local feature toggles include their resulting enabled state, and all mode feedback is a native semantic state-change transaction with the button compatibility cue. All 71 focused tests and a fresh compiled optional-load check pass. |
 | 2026-08-23 | ~fbab81281~ | 5.2b | Alternate-screen and mode feedback now use only registered native semantic facts: the descriptive spoken text remains, while invented ~command-operation~ values and an unknown terminal-mode attribute are removed. Focused tests load the shared workflow provider and validate these facts against the real semantic contract; all 72 focused EAT tests pass. |
-| 2026-08-23 | this commit | 5.2c | Keyboard, selected kill-ring, xterm clipboard, primary-selection, and secondary-selection paste paths now submit one content-free semantic command-input transaction with a yank cue. Shared before-advice clears stale completion/character state, target ownership prevents nested xterm/yank duplication, and secret sentinel arguments never enter feedback. All 74 focused EAT tests pass. |
+| 2026-08-23 | ~04300d63a~ | 5.2c | Keyboard, selected kill-ring, xterm clipboard, primary-selection, and secondary-selection paste paths now submit one content-free semantic command-input transaction with a yank cue. Shared before-advice clears stale completion/character state, target ownership prevents nested xterm/yank duplication, and secret sentinel arguments never enter feedback. All 74 focused EAT tests pass. |
+| 2026-08-23 | this commit | 5.3 | Each terminal's public ~ring-bell-function~ is wrapped idempotently after EAT configures it; the original callback still runs for every BEL and observer errors cannot break escape processing. Foreground live-follow speech says “Terminal bell” at most twice per second, background speech remains private, completion survives, and adjacent legacy character echo is suppressed. All 76 focused EAT tests and fresh compiled real-BEL verification pass. |
 
 * Current next action
 
-Capture EAT's terminal bell callback without replacing it, suppress redundant
-speech caused by the same update, and deduplicate rapid bell bursts while
-preserving one prompt auditory cue.
+Compare quiesced title and working-directory metadata under an explicit,
+configurable verbosity policy. Keep both silent by default, retain changes for
+manual review, and announce bounded values only when verbose monitoring is on.

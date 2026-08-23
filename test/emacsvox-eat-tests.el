@@ -80,7 +80,10 @@
          (emacsvox-eat--facts
           'command-input 'object-changed nil
           '(:command-input-origin copied))
-         'edit)))
+         'edit)
+        (cons
+         (emacsvox-eat--facts 'command-interaction 'object-changed)
+         'notification)))
     (should
      (emacsvox-aural-normalize-input
       (car case)
@@ -1070,6 +1073,88 @@
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 
+(ert-deftest emacsvox-eat-bell-wrapper-preserves-and-deduplicates ()
+  "EAT's public bell callback always runs while semantic speech is throttled."
+  (with-temp-buffer
+    (let* ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+           (now 10.0)
+           (original-calls 0)
+           (original
+            (lambda (terminal)
+              (should (eq terminal eat-terminal))
+              (setq original-calls (1+ original-calls))))
+           (emacsvox-eat--completion-snapshot '(:pending t))
+           (emacsvox-eat--recent-input '(0 ?x 9999999999.0))
+           submissions)
+      (unwind-protect
+          (progn
+            (setf (eat-term-parameter eat-terminal 'ring-bell-function)
+                  original)
+            (emacsvox-eat--install-bell-observer)
+            (emacsvox-eat--install-bell-observer)
+            (should
+             (eq
+              (eat-term-parameter
+               eat-terminal 'emacsvox-eat-original-ring-bell-function)
+              original))
+            (should
+             (eq (eat-term-parameter eat-terminal 'ring-bell-function)
+                 #'emacsvox-eat--ring-bell))
+            (cl-letf (((symbol-function 'float-time)
+                       (lambda (&optional _) now))
+                      ((symbol-function 'emacsvox-eat--selected-buffer-p)
+                       (lambda () t))
+                      ((symbol-function 'emacsvox-eat--following-live-p)
+                       (lambda () t))
+                      ((symbol-function 'emacsvox-eat--submit)
+                       (lambda (content facts occasion &rest arguments)
+                         (push
+                          (list content facts occasion arguments)
+                          submissions))))
+              (eat-term-process-output eat-terminal "\a\a")
+              (should (= original-calls 2))
+              (should (= (length submissions) 1))
+              (should-not emacsvox-eat--recent-input)
+              (should emacsvox-eat--completion-snapshot)
+              (setq now 10.6)
+              (eat-term-process-output eat-terminal "\a")
+              (should (= original-calls 3))
+              (should (= (length submissions) 2)))
+            (should
+             (equal
+              (car submissions)
+              '("Terminal bell"
+                (:role command-interaction
+                 :command-interaction-kind shell
+                 :events (object-changed))
+                notification nil))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-background-bell-keeps-eat-behavior-without-speech ()
+  "A background terminal still invokes EAT's bell but discloses no feedback."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          original-called
+          submissions)
+      (unwind-protect
+          (progn
+            (setf
+             (eat-term-parameter eat-terminal 'ring-bell-function)
+             (lambda (_) (setq original-called t)))
+            (emacsvox-eat--install-bell-observer)
+            (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                       (lambda () nil))
+                      ((symbol-function 'emacsvox-eat--submit)
+                       (lambda (&rest event) (push event submissions))))
+              (eat-term-process-output eat-terminal "\a"))
+            (should original-called)
+            (should-not submissions)
+            (should emacsvox-eat--last-bell-at)
+            (should-not emacsvox-eat--last-bell-spoken-at))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
 (ert-deftest emacsvox-eat-alternate-screen-transitions-are-semantic ()
   "Application-screen entry and exit are distinct singular state changes."
   (with-temp-buffer
@@ -1242,6 +1327,8 @@
           (emacsvox-eat--last-status-spoken-at 20.0)
           (emacsvox-eat--last-completion-output
            '(:rows ("stale candidate")))
+          (emacsvox-eat--last-bell-at 19.0)
+          (emacsvox-eat--last-bell-spoken-at 18.0)
           (emacsvox-eat--quiescence-timer
            (run-at-time 60 nil #'ignore))
           process-a process-b)
@@ -1262,6 +1349,8 @@
       (should-not emacsvox-eat--last-status-text)
       (should (= emacsvox-eat--last-status-spoken-at 0.0))
       (should-not emacsvox-eat--last-completion-output)
+      (should-not emacsvox-eat--last-bell-at)
+      (should-not emacsvox-eat--last-bell-spoken-at)
       (setq emacsvox-eat--completion-snapshot '(13 . "pending"))
       (emacsvox-eat--process-exited process-b)
       (should (= emacsvox-eat--generation 8))

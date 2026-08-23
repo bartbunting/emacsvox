@@ -64,6 +64,8 @@
 (declare-function eat-term-end "eat" (terminal))
 (declare-function eat-term-in-alternative-display-p "eat" (terminal))
 (declare-function eat-term-live-p "eat" (object))
+(declare-function eat-term-parameter "eat" (terminal parameter))
+(declare-function eat-term-set-parameter "eat" (terminal parameter value))
 (declare-function eat-term-size "eat" (terminal))
 (declare-function eat-term-title "eat" (terminal))
 
@@ -129,6 +131,12 @@
 (defvar-local emacsvox-eat--last-completion-output nil
   "Latest quiesced terminal candidate/help-row presentation.")
 
+(defvar-local emacsvox-eat--last-bell-at nil
+  "Time at which EAT most recently delivered a terminal bell.")
+
+(defvar-local emacsvox-eat--last-bell-spoken-at nil
+  "Time at which Emacsvox most recently announced an EAT terminal bell.")
+
 (defvar-local emacsvox-eat--terminal-id nil
   "Process-local integer used in replaceable EAT delivery keys.")
 
@@ -152,6 +160,9 @@
 
 (defconst emacsvox-eat--completion-timeout 2.0
   "Seconds a terminal-side completion may await compatible remote output.")
+
+(defconst emacsvox-eat--bell-minimum-interval 0.5
+  "Minimum seconds between spoken bells from one EAT terminal.")
 
 (defconst emacsvox-eat--maximum-spoken-candidates 8
   "Maximum inferred terminal candidates spoken automatically at once.")
@@ -728,7 +739,9 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
         emacsvox-eat--last-changed-screen nil
         emacsvox-eat--last-status-text nil
         emacsvox-eat--last-status-spoken-at 0.0
-        emacsvox-eat--last-completion-output nil))
+        emacsvox-eat--last-completion-output nil
+        emacsvox-eat--last-bell-at nil
+        emacsvox-eat--last-bell-spoken-at nil))
 
 (defun emacsvox-eat--advance-generation ()
   "Invalidate asynchronous state and advance the current EAT generation."
@@ -803,12 +816,71 @@ DELIVERY-POLICY and REPLACEMENT-KEY control whole-transaction delivery."
      (emacsvox-eat--facts 'command-output 'command-output-received)
      'continuous)))
 
+(defun emacsvox-eat--observe-bell (terminal)
+  "Record and, when appropriate, announce a bell from TERMINAL.
+The terminal's original bell callback has already run."
+  (when-let* ((buffer
+               (ignore-errors
+                 (eat-term-parameter terminal 'emacsvox-eat-buffer)))
+              ((buffer-live-p buffer)))
+    (with-current-buffer buffer
+      (when (eq terminal eat-terminal)
+        (let ((now (float-time)))
+          (setq emacsvox-eat--last-bell-at now
+                ;; A bell is its own input response; do not also speak the
+                ;; adjacent prompt character through legacy echo feedback.
+                emacsvox-eat--recent-input nil)
+          (when (and (emacsvox-eat--selected-buffer-p)
+                     (emacsvox-eat--following-live-p)
+                     (or (null emacsvox-eat--last-bell-spoken-at)
+                         (>= (- now emacsvox-eat--last-bell-spoken-at)
+                             emacsvox-eat--bell-minimum-interval)))
+            (setq emacsvox-eat--last-bell-spoken-at now)
+            ;; EAT's original callback already provides the configured bell;
+            ;; do not add a second compatibility cue.
+            (emacsvox-eat--submit
+             "Terminal bell"
+             (emacsvox-eat--facts 'command-interaction 'object-changed)
+             'notification)))))))
+
+(defun emacsvox-eat--ring-bell (terminal)
+  "Preserve TERMINAL's original bell callback, then notify Emacsvox safely."
+  (let ((original
+         (ignore-errors
+           (eat-term-parameter
+            terminal 'emacsvox-eat-original-ring-bell-function))))
+    (prog1
+        (when (and (functionp original)
+                   (not (eq original #'emacsvox-eat--ring-bell)))
+          (funcall original terminal))
+      ;; Accessibility feedback must never break terminal escape processing.
+      (condition-case nil
+          (emacsvox-eat--observe-bell terminal)
+        (error nil)))))
+
+(defun emacsvox-eat--install-bell-observer ()
+  "Wrap the current terminal's public bell callback exactly once."
+  (when (and eat-terminal (eat-term-live-p eat-terminal))
+    (let ((current
+           (eat-term-parameter eat-terminal 'ring-bell-function)))
+      (unless (eq current #'emacsvox-eat--ring-bell)
+        (setf
+         (eat-term-parameter
+          eat-terminal 'emacsvox-eat-original-ring-bell-function)
+         current)
+        (setf
+         (eat-term-parameter eat-terminal 'emacsvox-eat-buffer)
+         (current-buffer))
+        (setf (eat-term-parameter eat-terminal 'ring-bell-function)
+              #'emacsvox-eat--ring-bell)))))
+
 (defun emacsvox-eat--process-started (process)
   "Start a new EAT generation for PROCESS."
   (let ((restart-p (> emacsvox-eat--generation 0)))
     (emacsvox-eat--advance-generation)
     (setq emacsvox-eat--active-process process
           emacsvox-eat--last-exited-process nil)
+    (emacsvox-eat--install-bell-observer)
     ;; Initial creation already has the `eat' opening announcement.  A later
     ;; exec in the same terminal needs its own lifecycle boundary.
     (when (and restart-p (emacsvox-eat--selected-buffer-p))
@@ -896,6 +968,7 @@ Ignore a stale or duplicate exit after another process has become active."
                 emacsvox-eat--active-process
                 (get-buffer-process (current-buffer))
                 emacsvox-eat--last-exited-process nil))
+  (emacsvox-eat--install-bell-observer)
   (define-key eat-semi-char-mode-map emacsvox-prefix 'emacsvox-keymap)
   (cl-loop
    for map in
@@ -1509,6 +1582,7 @@ terminal cursor accessor."
 
 (defun emacsvox-eat-update-hook ()
   "Speak an EAT update when its buffer is selected."
+  (emacsvox-eat--install-bell-observer)
   (emacsvox-eat--observe-screen)
   (if (not (emacsvox-eat--selected-buffer-p))
       (progn
