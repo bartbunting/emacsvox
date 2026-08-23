@@ -71,16 +71,46 @@
       (emacsvox--advice-eat-yank-after))
     (should (equal events '(yank-object)))))
 
-(ert-deftest emacsvox-eat-mode-feedback-names-the-command ()
-  "Eat mode feedback identifies the command that ran."
+(ert-deftest emacsvox-eat-mode-feedback-is-human-and-semantic ()
+  "Eat mode feedback describes the resulting input mode without Lisp names."
   (let ((ems--interactive-fn-name 'eat-line-mode)
-        messages)
-    (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
-              ((symbol-function 'message)
-               (lambda (format-string &rest args)
-                 (push (apply #'format format-string args) messages))))
+        submission)
+    (cl-letf (((symbol-function 'emacsvox-aural-compatibility-icon)
+               (lambda (icon) (list 'icon icon)))
+              ((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest arguments)
+                 (setq submission (list content arguments)))))
       (emacsvox--advice-eat-line-mode-after))
-    (should (equal messages '("eat-line-mode ")))))
+    (should
+     (equal
+      submission
+      '("Line input mode"
+        (:facts
+         (:role command-interaction
+          :command-interaction-kind shell
+          :events (state-changed)
+          :command-operation mode-change
+          :terminal-mode eat-line-mode)
+         :module eat
+         :occasion state-change
+         :compatibility-actions ((icon button))))))))
+
+(ert-deftest emacsvox-eat-toggle-mode-feedback-includes-resulting-state ()
+  "EAT feature toggles say whether their human-readable state is enabled."
+  (let ((ems--interactive-fn-name 'eat-blink-mode)
+        (eat-blink-mode t)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest _)
+                 (push content submissions))))
+      (emacsvox--advice-eat-blink-mode-after)
+      (setq eat-blink-mode nil
+            ems--interactive-fn-name 'eat-blink-mode)
+      (emacsvox--advice-eat-blink-mode-after))
+    (should
+     (equal
+      (nreverse submissions)
+      '("Terminal blinking enabled" "Terminal blinking disabled")))))
 
 (ert-deftest emacsvox-eat-speaks-same-line-directory-completion ()
   "A quiesced terminal completion speaks its final path component."

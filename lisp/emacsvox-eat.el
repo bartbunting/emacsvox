@@ -44,10 +44,14 @@
 ;;; Forward variable declarations:
 
 (defvar eat-char-mode-map)
+(defvar eat-blink-mode)
+(defvar eat-eshell-mode)
+(defvar eat-eshell-visual-command-mode)
 (defvar eat-line-mode-map)
 (defvar eat-mode-map)
 (defvar eat-semi-char-mode-map)
 (defvar eat-terminal)
+(defvar eat-trace-mode)
 
 ;;   Required modules:
 
@@ -974,6 +978,54 @@ Ignore a stale or duplicate exit after another process has become active."
     eat-trace-mode eat-trace-replay-mode)
   "Eat mode-switching commands that receive speech feedback.")
 
+(defconst emacsvox-eat--mode-labels
+  '((eat-blink-mode . "Terminal blinking")
+    (eat-char-mode . "Character input mode")
+    (eat-emacs-mode . "Emacs input mode")
+    (eat-eshell-char-mode . "Eshell character input mode")
+    (eat-eshell-emacs-mode . "Eshell Emacs input mode")
+    (eat-eshell-mode . "EAT Eshell integration")
+    (eat-eshell-semi-char-mode . "Eshell semi-character input mode")
+    (eat-eshell-visual-command-mode . "EAT Eshell visual commands")
+    (eat-line-mode . "Line input mode")
+    (eat-mode . "EAT terminal mode")
+    (eat-semi-char-mode . "Semi-character input mode")
+    (eat-trace-mode . "EAT tracing")
+    (eat-trace-replay-mode . "EAT trace replay mode"))
+  "Human descriptions of interactive EAT mode commands.")
+
+(defun emacsvox-eat--mode-feedback (target)
+  "Return concise human feedback for EAT mode command TARGET."
+  (let ((label (or (alist-get target emacsvox-eat--mode-labels)
+                   (symbol-name target))))
+    (pcase target
+      ('eat-blink-mode
+       (format "%s %s" label
+               (if (bound-and-true-p eat-blink-mode)
+                   "enabled" "disabled")))
+      ('eat-eshell-mode
+       (format "%s %s" label
+               (if (bound-and-true-p eat-eshell-mode)
+                   "enabled" "disabled")))
+      ('eat-eshell-visual-command-mode
+       (format "%s %s" label
+               (if (bound-and-true-p eat-eshell-visual-command-mode)
+                   "enabled" "disabled")))
+      ('eat-trace-mode
+       (format "%s %s" label
+               (if (bound-and-true-p eat-trace-mode)
+                   "enabled" "disabled")))
+      (_ label))))
+
+(defun emacsvox-eat--present-mode-feedback (target)
+  "Present the human mode state produced by EAT command TARGET."
+  (emacsvox-eat--submit
+   (emacsvox-eat--mode-feedback target)
+   (emacsvox-eat--facts
+    'command-interaction 'state-changed 'mode-change
+    (list :terminal-mode target))
+   'state-change 'button))
+
 (cl-loop
  for target in emacsvox-eat--mode-targets
  for advice-function =
@@ -983,8 +1035,7 @@ Ignore a stale or duplicate exit after another process has become active."
   `(defun ,advice-function (&rest _)
      ,(format "Speak after `%s'." target)
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'button)
-       (message "%s " ,(symbol-name target))))))
+       (emacsvox-eat--present-mode-feedback ',target)))))
 
 (defun emacsvox--advice-eat-after (&rest _)
   "Speak after opening Eat."
