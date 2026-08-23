@@ -2097,6 +2097,44 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             '("ordinary replacement"))
       (should-not (emacsvox-eat--status-row ordinary snapshot)))))
 
+(ert-deftest emacsvox-eat-application-status-is-retained-but-not-automatic ()
+  "Only styled bottom-row application status qualifies for explicit review."
+  (let* ((diff
+          '(:text-changed t :user-input t :size-changed nil
+            :alternate-screen-changed nil
+            :row-change
+            (:start 1 :old-rows ("NORMAL")
+             :new-rows ("-- INSERT --"))))
+         (snapshot
+          '(:text "alpha\n-- INSERT --"
+            :rows ("alpha" "-- INSERT --")
+            :styles
+            ((6 18
+              (:face (:attributes ((:background . "selected")))
+               :traits (background-color))))
+            :cursor-row 0 :alternate-screen t)))
+    (should-not (emacsvox-eat--status-row diff snapshot))
+    (should
+     (equal (emacsvox-eat--application-status-row diff snapshot)
+            "-- INSERT --"))
+    (should
+     (equal (emacsvox-eat--retained-status-row diff snapshot)
+            "-- INSERT --"))
+    (let ((unstyled (copy-tree snapshot)))
+      (setf (plist-get unstyled :styles) nil)
+      (should-not (emacsvox-eat--application-status-row diff unstyled)))
+    (let ((cursor-status (copy-tree snapshot)))
+      (setf (plist-get cursor-status :cursor-row) 1)
+      (should-not
+       (emacsvox-eat--application-status-row diff cursor-status)))
+    (let ((ordinary (copy-tree diff)))
+      (setf (plist-get (plist-get ordinary :row-change) :new-rows)
+            '("Selected"))
+      (should-not (emacsvox-eat--application-status-row ordinary snapshot)))
+    (let ((resized (copy-tree diff)))
+      (setf (plist-get resized :size-changed) t)
+      (should-not (emacsvox-eat--application-status-row resized snapshot)))))
+
 (ert-deftest emacsvox-eat-status-is-rate-limited-and-replaceable ()
   "Intermediate progress is throttled while completion remains immediate."
   (with-temp-buffer
@@ -2599,10 +2637,12 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
              eat-terminal
              "\e[4;1H\e[7m-- INSERT --\e[K\e[0m\e[2;1H")
             (should-not submissions)
-            (should-not emacsvox-eat--last-status-text)
-            (emacsvox-eat-speak-last-change)
+            (should (equal emacsvox-eat--last-status-text "-- INSERT --"))
+            (emacsvox-eat-speak-retained-status)
             (should (= (length submissions) 1))
-            (should (string-match-p "INSERT" (caar submissions))))
+            (should
+             (equal (caar submissions)
+                    "Retained terminal status: -- INSERT --")))
         (emacsvox-eat--cancel-quiescence)
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
@@ -3407,6 +3447,62 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (when (buffer-live-p review) (kill-buffer review))
       (when (buffer-live-p source) (kill-buffer source)))))
 
+(ert-deftest emacsvox-eat-frozen-review-navigates-selection-like-styles ()
+  "Styled-region review reaches matches without asserting terminal focus."
+  (let ((source (generate-new-buffer " *emacsvox-eat-review-styles*"))
+        review
+        submissions)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq major-mode 'eat-mode
+                emacsvox-eat--screen-snapshot
+                '(:text "Header\nItem 42\nFooter"
+                  :rows ("Header" "Item 42" "Footer")
+                  :styles
+                  ((0 6
+                    (:face (:attributes ((:background . "selected")))
+                     :traits (background-color)))
+                   (12 14
+                    (:face
+                     (:attributes
+                      ((:foreground . "unspecified-bg")
+                       (:background . "unspecified-fg")))
+                     :traits
+                     (inverse-like foreground-color background-color))))
+                  :cursor-row 2 :alternate-screen t))
+          (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                     (lambda (text &rest _) (push text submissions))))
+            (setq review (emacsvox-eat-review-screen))
+            (setq submissions nil)
+            (emacsvox-eat-review-previous-styled-region)
+            (should (= (- (point) (point-min)) 12))
+            (emacsvox-eat-review-previous-styled-region)
+            (should (= (point) (point-min)))
+            (emacsvox-eat-review-next-styled-region)
+            (should (= (- (point) (point-min)) 12))
+            (emacsvox-eat-review-next-styled-region))
+          (setq submissions (nreverse submissions))
+          (should
+           (equal
+            (mapcar #'substring-no-properties submissions)
+            '("Selection-like styled region 2 of 2, row 2: 42"
+              "Selection-like styled region 1 of 2, row 1: Header"
+              "Selection-like styled region 2 of 2, row 2: 42"
+              "No later selection-like styled region is frozen")))
+          (let* ((first (car submissions))
+                 (match (string-match "42" first)))
+            (should match)
+            (should
+             (memq
+              'inverse-like
+              (get-text-property
+               match 'emacsvox-eat-style-traits first)))))
+          (with-current-buffer source
+            (should (eq major-mode 'eat-mode))))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p source) (kill-buffer source))))
+
 (ert-deftest emacsvox-eat-frozen-review-keeps-exact-completion-copy ()
   "Completion view preserves frozen columns after source state changes."
   (let ((source (generate-new-buffer " *emacsvox-eat-review-completion*"))
@@ -3660,6 +3756,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
          ("c" . emacsvox-eat-review-show-completion)
          ("C" . emacsvox-eat-review-goto-cursor)
          ("h" . emacsvox-eat-review-goto-focus)
+         ("]" . emacsvox-eat-review-next-styled-region)
+         ("[" . emacsvox-eat-review-previous-styled-region)
          ("t" . emacsvox-eat-speak-retained-status)
          ("i" . emacsvox-eat-speak-retained-metadata)
          ("v" . emacsvox-eat-cycle-verbosity)

@@ -997,8 +997,21 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
         (when (and start end (> end start))
           (emacsvox-eat--list-slice new-rows start end))))))
 
+(defun emacsvox-eat--status-text-p (text)
+  "Return non-nil when terminal TEXT has conservative status syntax."
+  (let ((case-fold-search t))
+    (or
+     (string-match-p
+      (concat
+       "[0-9]+\\(?:\\.[0-9]+\\)?%"
+       "\\|\\_<\\(?:progress\\|loading\\|downloading"
+       "\\|uploading\\|processing\\|complete\\|completed"
+       "\\|done\\|failed\\|error\\)\\_>")
+      text)
+     (string-match-p "\\`[[:space:]]*--.+--[[:space:]]*\\'" text))))
+
 (defun emacsvox-eat--status-row (diff snapshot)
-  "Return a conservative same-row status represented by DIFF and SNAPSHOT."
+  "Return a conservative automatic main-screen status from DIFF at SNAPSHOT."
   (when (and (plist-get diff :text-changed)
              (not (plist-get diff :user-input))
              (not (plist-get diff :size-changed))
@@ -1012,15 +1025,38 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
                 ((= (length new-rows) 1))
                 ((= (plist-get change :start) cursor-row))
                 (row (car new-rows))
-                ((let ((case-fold-search t))
-                   (string-match-p
-                    (concat
-                     "[0-9]+\\(?:\\.[0-9]+\\)?%"
-                     "\\|\\_<\\(?:progress\\|loading\\|downloading"
-                     "\\|uploading\\|processing\\|complete\\|completed"
-                     "\\|done\\|failed\\|error\\)\\_>")
-                    row))))
+                ((emacsvox-eat--status-text-p row)))
       row)))
+
+(defun emacsvox-eat--application-status-row (diff snapshot)
+  "Return a styled bottom-row application status retained for review.
+Unlike `emacsvox-eat--status-row', this never authorizes automatic speech."
+  (when (and (plist-get diff :text-changed)
+             (not (plist-get diff :size-changed))
+             (not (plist-get diff :alternate-screen-changed))
+             (plist-get snapshot :alternate-screen))
+    (when-let* ((change (plist-get diff :row-change))
+                (old-rows (plist-get change :old-rows))
+                (new-rows (plist-get change :new-rows))
+                ((= (length old-rows) 1))
+                ((= (length new-rows) 1))
+                (row-index (plist-get change :start))
+                ((= row-index (1- (length (plist-get snapshot :rows)))))
+                ((not (equal row-index (plist-get snapshot :cursor-row))))
+                (row (car new-rows))
+                ((emacsvox-eat--status-text-p row))
+                ((seq-some
+                  (lambda (region)
+                    (<= (plist-get region :row-start)
+                        row-index
+                        (plist-get region :row-end)))
+                  (emacsvox-eat--highlight-regions snapshot))))
+      row)))
+
+(defun emacsvox-eat--retained-status-row (diff snapshot)
+  "Return a conservative status from DIFF at SNAPSHOT for explicit review."
+  (or (emacsvox-eat--status-row diff snapshot)
+      (emacsvox-eat--application-status-row diff snapshot)))
 
 (defun emacsvox-eat--terminal-delivery-key (kind)
   "Return a stable replacement key for terminal presentation KIND."
@@ -1155,7 +1191,7 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
       (setq emacsvox-eat--last-likely-focus nil
             emacsvox-eat--last-focus-presentation-identity nil)))
   (emacsvox-eat--retain-metadata-change diff snapshot)
-  (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
+  (when-let* ((status (emacsvox-eat--retained-status-row diff snapshot)))
     (setq emacsvox-eat--last-status-text status)))
 
 (defun emacsvox-eat--alternate-screen-transitions (diff snapshot)
@@ -2362,6 +2398,87 @@ The command also works from the terminal's frozen review buffer."
      "No likely terminal focus was frozen for this review"
      'output-navigation)))
 
+(defun emacsvox-eat-review--styled-regions ()
+  "Return nonblank selection-like regions from the frozen screen."
+  (seq-filter
+   (lambda (region)
+     (emacsvox-eat--bounded-focus-text (plist-get region :text)))
+   (emacsvox-eat--highlight-regions emacsvox-eat-review--snapshot)))
+
+(defun emacsvox-eat-review--styled-region-at-offset (regions offset)
+  "Return the member of REGIONS containing frozen screen OFFSET."
+  (seq-find
+   (lambda (region)
+     (<= (plist-get region :start) offset
+         (1- (plist-get region :end))))
+   regions))
+
+(defun emacsvox-eat-review--speak-styled-region (region regions)
+  "Speak selection-like REGION and its position among REGIONS."
+  (let* ((origin (point-min))
+         (start (+ origin (plist-get region :start)))
+         (end (+ origin (plist-get region :end)))
+         (text (string-trim (buffer-substring start end)))
+         (bounded
+          (if (> (length text) emacsvox-eat--maximum-focus-characters)
+              (concat
+               (substring text 0 emacsvox-eat--maximum-focus-characters)
+               "…")
+            text))
+         (index (cl-position region regions :test #'eq))
+         (row-start (plist-get region :row-start))
+         (row-end (plist-get region :row-end)))
+    (emacsvox-eat--submit-review
+     (concat
+      (format "Selection-like styled region %d of %d, %s: "
+              (1+ index) (length regions)
+              (emacsvox-eat--row-range-label row-start row-end))
+      bounded)
+     'output-navigation)))
+
+(defun emacsvox-eat-review--move-styled-region (direction)
+  "Move to and speak a frozen selection-like region in DIRECTION."
+  (unless (derived-mode-p 'emacsvox-eat-review-mode)
+    (user-error "This is not a frozen EAT review buffer"))
+  (unless (eq emacsvox-eat-review--view 'screen)
+    (emacsvox-eat-review--render 'screen))
+  (let* ((regions (emacsvox-eat-review--styled-regions))
+         (offset (- (point) (point-min)))
+         (current
+          (emacsvox-eat-review--styled-region-at-offset regions offset))
+         (anchor (if current (plist-get current :start) offset))
+         (region
+          (if (eq direction 'next)
+              (seq-find
+               (lambda (candidate)
+                 (if current
+                     (> (plist-get candidate :start) anchor)
+                   (>= (plist-get candidate :start) anchor)))
+               regions)
+            (seq-find
+             (lambda (candidate)
+               (< (plist-get candidate :start) anchor))
+             (reverse regions)))))
+    (if region
+        (progn
+          (goto-char (+ (point-min) (plist-get region :start)))
+          (emacsvox-eat-review--speak-styled-region region regions))
+      (emacsvox-eat--submit-review
+       (if (eq direction 'next)
+           "No later selection-like styled region is frozen"
+         "No earlier selection-like styled region is frozen")
+       'output-navigation))))
+
+(defun emacsvox-eat-review-next-styled-region ()
+  "Move to and speak the next frozen selection-like styled region."
+  (interactive)
+  (emacsvox-eat-review--move-styled-region 'next))
+
+(defun emacsvox-eat-review-previous-styled-region ()
+  "Move to and speak the previous frozen selection-like styled region."
+  (interactive)
+  (emacsvox-eat-review--move-styled-region 'previous))
+
 (defun emacsvox-eat-review-speak-view ()
   "Speak a bounded overview of the current immutable review view."
   (interactive)
@@ -2408,6 +2525,8 @@ The command also works from the terminal's frozen review buffer."
            ("c" . emacsvox-eat-review-show-completion)
            ("C" . emacsvox-eat-review-goto-cursor)
            ("h" . emacsvox-eat-review-goto-focus)
+           ("]" . emacsvox-eat-review-next-styled-region)
+           ("[" . emacsvox-eat-review-previous-styled-region)
            ("t" . emacsvox-eat-speak-retained-status)
            ("i" . emacsvox-eat-speak-retained-metadata)
            ("v" . emacsvox-eat-cycle-verbosity)
@@ -2423,10 +2542,11 @@ The command also works from the terminal's frozen review buffer."
 
 The buffer is an explicit immutable copy.  n and p move by terminal row; SPC,
 RET, or period speaks the current row; C returns to the captured cursor; h
-moves to a retained likely focus; c shows retained completion/help output; s
-returns to screen rows; a speaks the bounded current view; t and i speak frozen
-status and metadata; v and m control source-terminal feedback without sending
-terminal input; and q kills the content-bearing review buffer."
+moves to a retained likely focus; [ and ] move among selection-like styled
+regions without treating them as focus; c shows retained completion/help
+output; s returns to screen rows; a speaks the bounded current view; t and i
+speak frozen status and metadata; v and m control source-terminal feedback
+without sending terminal input; and q kills the content-bearing review buffer."
   (setq-local emacsvox-aural-module 'eat)
   (setq-local truncate-lines t)
   (buffer-disable-undo)
