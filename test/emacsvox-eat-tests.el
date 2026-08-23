@@ -397,6 +397,107 @@
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 
+(ert-deftest emacsvox-eat-screen-diff-classifies-unchanged-and-cursor-only ()
+  "Screen diffs keep cursor motion separate from content changes."
+  (let* ((old '(:generation 3 :text "one\ntwo" :rows ("one" "two")
+                :styles nil :cursor-row 0 :cursor-column 1
+                :cursor-type box :size (20 . 4) :alternate-screen nil
+                :title "shell" :cwd "/tmp/"))
+         (unchanged (emacsvox-eat--screen-diff old (copy-tree old)))
+         (new (copy-tree old)))
+    (should (plist-get unchanged :comparable))
+    (should (plist-get unchanged :unchanged))
+    (should-not (plist-get unchanged :changes))
+    (setf (plist-get new :cursor-row) 1
+          (plist-get new :cursor-column) 2)
+    (let ((diff (emacsvox-eat--screen-diff old new)))
+      (should (equal (plist-get diff :changes) '(cursor)))
+      (should (plist-get diff :cursor-moved))
+      (should-not (plist-get diff :text-changed))
+      (should-not (plist-get diff :style-changed)))))
+
+(ert-deftest emacsvox-eat-screen-diff-extracts-inserted-rows ()
+  "Screen diffs retain inserted completion or help rows in display order."
+  (let* ((old '(:generation 1 :text "$ git pu" :rows ("$ git pu")
+                :styles nil :cursor-row 0 :cursor-column 8
+                :cursor-type box :size (80 . 24) :alternate-screen nil
+                :title nil :cwd "/tmp/"))
+         (new (copy-tree old)))
+    (setf (plist-get new :text) "pull  push\n$ git pu"
+          (plist-get new :rows) '("pull  push" "$ git pu")
+          (plist-get new :cursor-row) 1)
+    (let* ((diff (emacsvox-eat--screen-diff old new))
+           (rows (plist-get diff :row-change)))
+      (should (equal (plist-get diff :changes) '(text cursor)))
+      (should (equal (plist-get diff :text-change)
+                     '(:start 0 :old-end 0 :new-end 11)))
+      (should (= (plist-get rows :start) 0))
+      (should (= (plist-get rows :old-end) 0))
+      (should (= (plist-get rows :new-end) 1))
+      (should-not (plist-get rows :old-rows))
+      (should (equal (plist-get rows :new-rows) '("pull  push"))))))
+
+(ert-deftest emacsvox-eat-screen-diff-finds-same-length-and-style-changes ()
+  "Screen diffs detect carriage-return-like and style-only replacement."
+  (let* ((plain '(:generation 1 :text "progress 10%" :rows ("progress 10%")
+                  :styles nil :cursor-row 0 :cursor-column 12
+                  :cursor-type box :size (20 . 2) :alternate-screen nil
+                  :title nil :cwd "/tmp/"))
+         (progress (copy-tree plain))
+         (highlight (copy-tree plain)))
+    (setf (plist-get progress :text) "progress 20%"
+          (plist-get progress :rows) '("progress 20%")
+          (plist-get highlight :styles)
+          '((0 8 (:face (:faces (eat-term-bold))))))
+    (let ((diff (emacsvox-eat--screen-diff plain progress)))
+      (should (equal (plist-get diff :changes) '(text)))
+      (should (equal (plist-get diff :text-change)
+                     '(:start 9 :old-end 10 :new-end 10))))
+    (let ((diff (emacsvox-eat--screen-diff plain highlight)))
+      (should (equal (plist-get diff :changes) '(style)))
+      (should-not (plist-get diff :text-changed))
+      (should (plist-get diff :style-changed))
+      (should (equal (plist-get diff :style-change)
+                     '(:start 0 :old-end 8 :new-end 8))))))
+
+(ert-deftest emacsvox-eat-screen-diff-classifies-metadata-independently ()
+  "Resize, alternate display, title, CWD, and cursor type stay semantic."
+  (let* ((old '(:generation 4 :text "prompt" :rows ("prompt")
+                :styles nil :cursor-row 0 :cursor-column 6
+                :cursor-type box :size (80 . 24) :alternate-screen nil
+                :title "local" :cwd "/tmp/"))
+         (new (copy-tree old)))
+    (setf (plist-get new :cursor-type) 'bar
+          (plist-get new :size) '(100 . 30)
+          (plist-get new :alternate-screen) t
+          (plist-get new :title) "editor"
+          (plist-get new :cwd) "/tmp/project/")
+    (let ((diff (emacsvox-eat--screen-diff old new)))
+      (should
+       (equal
+        (plist-get diff :changes)
+        '(cursor-type size alternate-screen title cwd)))
+      (should-not (plist-get diff :text-changed))
+      (should-not (plist-get diff :cursor-moved)))))
+
+(ert-deftest emacsvox-eat-screen-diff-refuses-cross-generation-comparison ()
+  "Initial and replacement generations do not manufacture content diffs."
+  (let* ((old '(:generation 4 :text "old secret" :rows ("old secret")
+                :styles nil :cursor-row 0 :cursor-column 10
+                :cursor-type box :size (80 . 24) :alternate-screen nil))
+         (new '(:generation 5 :text "new prompt" :rows ("new prompt")
+                :styles nil :cursor-row 0 :cursor-column 10
+                :cursor-type box :size (80 . 24) :alternate-screen nil))
+         (initial (emacsvox-eat--screen-diff nil new))
+         (replacement (emacsvox-eat--screen-diff old new)))
+    (should (equal (plist-get initial :changes) '(initial)))
+    (should (plist-get initial :initial))
+    (should-not (plist-get initial :comparable))
+    (should (equal (plist-get replacement :changes) '(generation)))
+    (should (plist-get replacement :generation-changed))
+    (should-not (plist-get replacement :text-changed))
+    (should-not (plist-get replacement :row-change))))
+
 (ert-deftest emacsvox-eat-reset-invalidates-before-terminal-update ()
   "Reset advances its generation before EAT runs the update hook."
   (with-temp-buffer

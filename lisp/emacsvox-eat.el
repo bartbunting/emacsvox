@@ -197,6 +197,156 @@ Only public EAT terminal accessors and rendered buffer properties are used."
        :cwd (and default-directory
                  (substring-no-properties default-directory))))))
 
+(defun emacsvox-eat--sequence-change (old new)
+  "Return the smallest changed span between OLD and NEW sequences.
+The returned start and end offsets are zero-based and end-exclusive."
+  (let* ((old-sequence (if (listp old) (vconcat old) old))
+         (new-sequence (if (listp new) (vconcat new) new))
+         (old-length (length old-sequence))
+         (new-length (length new-sequence))
+         (shared-length (min old-length new-length))
+         (start 0)
+         (suffix 0))
+    (while (and (< start shared-length)
+                (equal (aref old-sequence start)
+                       (aref new-sequence start)))
+      (setq start (1+ start)))
+    (while (and (< suffix (- old-length start))
+                (< suffix (- new-length start))
+                (equal (aref old-sequence (- old-length suffix 1))
+                       (aref new-sequence (- new-length suffix 1))))
+      (setq suffix (1+ suffix)))
+    (unless (and (= start old-length) (= start new-length))
+      (list
+       :start start
+       :old-end (- old-length suffix)
+       :new-end (- new-length suffix)))))
+
+(defun emacsvox-eat--list-slice (items start end)
+  "Return the elements of ITEMS from START through END, excluding END."
+  (let ((tail (nthcdr start items))
+        (remaining (- end start))
+        result)
+    (while (> remaining 0)
+      (push (car tail) result)
+      (setq tail (cdr tail)
+            remaining (1- remaining)))
+    (nreverse result)))
+
+(defun emacsvox-eat--row-change (old-rows new-rows)
+  "Return the smallest changed row window between OLD-ROWS and NEW-ROWS."
+  (when-let* ((span (emacsvox-eat--sequence-change old-rows new-rows)))
+    (let ((start (plist-get span :start))
+          (old-end (plist-get span :old-end))
+          (new-end (plist-get span :new-end)))
+      (append
+       span
+       (list
+        :old-rows (emacsvox-eat--list-slice old-rows start old-end)
+        :new-rows (emacsvox-eat--list-slice new-rows start new-end))))))
+
+(defun emacsvox-eat--style-cells (snapshot)
+  "Expand SNAPSHOT's sparse style runs into a bounded cell vector."
+  (let* ((length (length (plist-get snapshot :text)))
+         (cells (make-vector length nil)))
+    (dolist (run (plist-get snapshot :styles))
+      (let ((start (max 0 (car run)))
+            (end (min length (cadr run)))
+            (style (caddr run)))
+        (while (< start end)
+          (aset cells start style)
+          (setq start (1+ start)))))
+    cells))
+
+(defun emacsvox-eat--screen-diff (old new)
+  "Return a pure, data-only classification of OLD and NEW screen snapshots.
+Snapshots from different terminal generations are intentionally not compared."
+  (let* ((initial-p (null old))
+         (generation-changed
+          (and old
+               (not
+                (equal
+                 (plist-get old :generation)
+                 (plist-get new :generation)))))
+         (comparable-p (and old (not generation-changed)))
+         (text-changed
+          (and comparable-p
+               (not (equal (plist-get old :text)
+                           (plist-get new :text)))))
+         (style-changed
+          (and comparable-p
+               (not (equal (plist-get old :styles)
+                           (plist-get new :styles)))))
+         (cursor-moved
+          (and comparable-p
+               (not
+                (equal
+                 (list (plist-get old :cursor-row)
+                       (plist-get old :cursor-column))
+                 (list (plist-get new :cursor-row)
+                       (plist-get new :cursor-column))))))
+         (cursor-type-changed
+          (and comparable-p
+               (not (equal (plist-get old :cursor-type)
+                           (plist-get new :cursor-type)))))
+         (size-changed
+          (and comparable-p
+               (not (equal (plist-get old :size)
+                           (plist-get new :size)))))
+         (alternate-screen-changed
+          (and comparable-p
+               (not (eq (plist-get old :alternate-screen)
+                        (plist-get new :alternate-screen)))))
+         (title-changed
+          (and comparable-p
+               (not (equal (plist-get old :title)
+                           (plist-get new :title)))))
+         (cwd-changed
+          (and comparable-p
+               (not (equal (plist-get old :cwd)
+                           (plist-get new :cwd)))))
+         changes)
+    (dolist (change
+             `((initial . ,initial-p)
+               (generation . ,generation-changed)
+               (text . ,text-changed)
+               (style . ,style-changed)
+               (cursor . ,cursor-moved)
+               (cursor-type . ,cursor-type-changed)
+               (size . ,size-changed)
+               (alternate-screen . ,alternate-screen-changed)
+               (title . ,title-changed)
+               (cwd . ,cwd-changed)))
+      (when (cdr change) (push (car change) changes)))
+    (setq changes (nreverse changes))
+    (list
+     :initial initial-p
+     :comparable comparable-p
+     :generation-changed generation-changed
+     :text-changed text-changed
+     :text-change
+     (and text-changed
+          (emacsvox-eat--sequence-change
+           (plist-get old :text) (plist-get new :text)))
+     :row-change
+     (and text-changed
+          (emacsvox-eat--row-change
+           (plist-get old :rows) (plist-get new :rows)))
+     :style-changed style-changed
+     :style-change
+     (and style-changed
+          (emacsvox-eat--sequence-change
+           (emacsvox-eat--style-cells old)
+           (emacsvox-eat--style-cells new)))
+     :cursor-moved cursor-moved
+     :cursor-type-changed cursor-type-changed
+     :size-changed size-changed
+     :alternate-screen-changed alternate-screen-changed
+     :title-changed title-changed
+     :cwd-changed cwd-changed
+     :changes changes
+     :unchanged (null changes))))
+
 (defun emacsvox-eat--clear-transient-state ()
   "Clear asynchronous EAT interaction state in the current buffer."
   (setq emacsvox-eat--completion-snapshot nil))
