@@ -56,6 +56,25 @@
     (accept-process-output process 0.2)
     (when (process-live-p process) (delete-process process))))
 
+(defun emacsvox-eat-test--finish-screen-burst ()
+  "Synchronously finish the current deterministic screen-update burst."
+  (when emacsvox-eat--quiescence-timer
+    (when (timerp emacsvox-eat--quiescence-timer)
+      (cancel-timer emacsvox-eat--quiescence-timer))
+    (emacsvox-eat--finish-quiescence
+     (current-buffer) emacsvox-eat--generation
+     emacsvox-eat--update-serial)))
+
+(defun emacsvox-eat-test--deliver-screen (terminal output &optional event)
+  "Deliver OUTPUT through TERMINAL and synchronously observe it.
+When EVENT is non-nil, record it through EAT's real input-advice path first."
+  (when event
+    (emacsvox--advice-eat-self-input-before 1 event))
+  (eat-term-process-output terminal output)
+  (eat-term-redisplay terminal)
+  (emacsvox-eat-update-hook)
+  (emacsvox-eat-test--finish-screen-burst))
+
 (ert-deftest emacsvox-eat-advice-is-current-and-direct ()
   "Current Eat targets use native advice directly."
   (dolist (target emacsvox-eat--advice-targets)
@@ -2442,6 +2461,230 @@
              (equal (plist-get emacsvox-eat--last-likely-focus :text)
                     "Two")))
         (when (timerp pending-timer) (cancel-timer pending-timer))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-pager-fixture-bounds-repaint-and-retains-review ()
+  "A less-shaped repaint stays quiet but remains explicitly reviewable."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list (substring-no-properties content)
+                                   arguments)
+                             submissions))))
+            (eat-term-resize eat-terminal 32 5)
+            (emacsvox-eat-test--deliver-screen eat-terminal "shell$ ")
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal
+             (concat
+              "\e[?1049h\e[2J\e[HPage one line 1"
+              "\e[2;1HPage one line 2\e[5;1H\e[7m(END)\e[0m"))
+            (should
+             (equal (mapcar #'car submissions)
+                    '("Terminal application screen entered")))
+            (setq submissions nil)
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal
+             (concat
+              "\e[2J\e[HPage two line 1"
+              "\e[2;1HPage two line 2\e[5;1H\e[7m(END)\e[0m")
+             'down)
+            (should-not submissions)
+            (should (plist-get emacsvox-eat--last-screen-diff :text-changed))
+            (should (plist-get emacsvox-eat--last-changed-screen
+                               :alternate-screen))
+            (emacsvox-eat-speak-last-change)
+            (emacsvox-eat-speak-visible-screen)
+            (should (= (length submissions) 2))
+            (should
+             (seq-some
+              (lambda (submission)
+                (string-match-p "Page two line 1" (car submission)))
+              submissions))
+            (setq submissions nil)
+            (emacsvox-eat-test--deliver-screen eat-terminal "\e[?1049l")
+            (should
+             (equal (mapcar #'car submissions)
+                    '("Terminal application screen exited"))))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-pager-search-fixture-retains-styled-match ()
+  "A less-shaped search match is silent automatically but frozen with style."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list (substring-no-properties content)
+                                   arguments)
+                             submissions))))
+            (eat-term-resize eat-terminal 24 4)
+            (emacsvox-eat-test--deliver-screen eat-terminal "shell$ ")
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal
+             (concat
+              "\e[?1049h\e[2J\e[HItem 41"
+              "\e[2;1HItem 42\e[4;1H(END)"))
+            (setq submissions nil)
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal "\e[2;6H\e[7m42\e[0m\e[4;1H" 'return)
+            (should-not submissions)
+            (should (plist-get emacsvox-eat--last-screen-diff :style-changed))
+            (should-not emacsvox-eat--last-likely-focus)
+            (should
+             (memq
+              'inverse-like
+              (emacsvox-eat-test--traits-for-text
+               emacsvox-eat--last-changed-screen "42")))
+            (emacsvox-eat-speak-last-change)
+            (emacsvox-eat-speak-visible-screen)
+            (should (= (length submissions) 2))
+            (should
+             (seq-some
+              (lambda (submission)
+                (string-match-p "Item 42" (car submission)))
+              submissions)))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-editor-fixture-speaks-cursor-and-retains-status ()
+  "A Vim-shaped cursor move speaks its row and retains a status rewrite."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list (substring-no-properties content)
+                                   arguments)
+                             submissions))))
+            (eat-term-resize eat-terminal 30 4)
+            (emacsvox-eat-test--deliver-screen eat-terminal "shell$ ")
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal
+             (concat
+              "\e[?1049h\e[2J\e[Halpha\e[2;1Hbeta\e[3;1Hgamma"
+              "\e[4;1H\e[7mNORMAL\e[0m\e[1;1H"))
+            (setq submissions nil)
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal "\e[2;1H" 'down)
+            (should
+             (equal (mapcar #'car submissions)
+                    '("Terminal row: beta")))
+            (setq submissions nil)
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal
+             "\e[4;1H\e[7m-- INSERT --\e[K\e[0m\e[2;1H")
+            (should-not submissions)
+            (should-not emacsvox-eat--last-status-text)
+            (emacsvox-eat-speak-last-change)
+            (should (= (length submissions) 1))
+            (should (string-match-p "INSERT" (caar submissions))))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-menu-fixture-tracks-selection-with-fixed-cursor ()
+  "A whiptail-shaped style transfer speaks one selected row."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list (substring-no-properties content)
+                                   arguments)
+                             submissions))))
+            (eat-term-resize eat-terminal 24 5)
+            (emacsvox-eat-test--deliver-screen eat-terminal "shell$ ")
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal
+             (concat
+              "\e[?1049h\e[2J\e[H\e[7mMenu\e[0m"
+              "\e[2;1H\e[7mOne\e[0m\e[3;1HTwo"
+              "\e[4;1HChoose\e[?25l"))
+            (setq submissions nil)
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal
+             "\e[2;1H\e[0mOne\e[3;1H\e[7mTwo\e[0m\e[4;7H"
+             'down)
+            (should
+             (equal (mapcar #'car submissions) '("Highlight: Two")))
+            (should
+             (equal (plist-get emacsvox-eat--last-likely-focus :text)
+                    "Two"))
+            (should
+             (eq (plist-get emacsvox-eat--last-likely-focus :confidence)
+                 'high)))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-progress-fixture-coalesces-real-rewrites ()
+  "Real carriage-return progress is replaceable, throttled, and final-aware."
+  (with-temp-buffer
+    (setq major-mode 'eat-mode)
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (now 100.0)
+          submissions)
+      (unwind-protect
+          (cl-letf (((symbol-function 'float-time) (lambda (&optional _) now))
+                    ((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list (substring-no-properties content)
+                                   arguments)
+                             submissions))))
+            (eat-term-resize eat-terminal 24 3)
+            (emacsvox-eat-test--deliver-screen eat-terminal "Progress 0%")
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal "\rProgress 10%")
+            (setq now 100.5)
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal "\rProgress 20%")
+            (should (equal emacsvox-eat--last-status-text "Progress 20%"))
+            (setq now 100.6)
+            (emacsvox-eat-test--deliver-screen
+             eat-terminal "\rProgress 100%")
+            (setq submissions (nreverse submissions))
+            (should
+             (equal (mapcar #'car submissions)
+                    '("Progress 10%" "Progress 100%")))
+            (dolist (submission submissions)
+              (should
+               (eq (plist-get (cadr submission) :delivery-policy)
+                   'replaceable))))
         (emacsvox-eat--cancel-quiescence)
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))

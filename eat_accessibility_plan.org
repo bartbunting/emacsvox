@@ -204,7 +204,8 @@ Planned slices:
    bounded frozen-screen review commands;
 5. [X] frozen line-by-line screen and candidate navigation;
 6. [X] terminal verbosity/output-monitor commands;
-7. less/Vim/whiptail/status fixtures.
+7. [X] deterministic less/Vim/whiptail/alternate-screen/progress fixtures;
+8. retained alternate-screen status and frozen styled-region navigation.
 
 Acceptance:
 
@@ -316,10 +317,12 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~316c87817~ | 6.3c | High-confidence highlights and correlated alternate-screen cursor rows are retained and presented once as native ~command-output~ / ~focus-entered~ navigation with replaceable per-terminal delivery. Medium highlights remain silent but reviewable. Repeats deduplicate; any unclassified visible change, resize, alternate transition, secure-input boundary, or process generation invalidates stale focus. All 110 focused tests pass, including a real input/update/quiescence/presentation path, and fresh compiled verification passes. |
 | 2026-08-24 | ~51ebd24d1~ | 6.4 | ~C-e q~ now provides explicit retained-snapshot review: ~l~ current row, ~d~ last changed rows or classified non-text change, ~h~ likely focus with confidence, ~c~ exact retained candidate/help layout, and ~s~ a bounded frozen visible screen. Review never reads mutable live buffer content and is unavailable during secure input. The EAT setup loop now correctly installs ~C-e~ in all four input maps. All 119 focused EAT tests pass; byte-code was rebuilt with Emacs 31, and fresh compiled real-screen verification passes. The 2,469-test suite has 2,466 expected results, one existing skip, the known agent-shell failure, and an unrelated missing installed-CIDER-command failure. |
 | 2026-08-24 | ~2a7703713~ | 6.5 | ~C-e q r~ opens a read-only deep copy of the concealed-redacted visible screen. Row navigation speaks styled frozen text and explicit boundaries; commands jump to the captured cursor or conservative focus, switch between exact screen and completion/help rows, and speak a bounded view. No command moves the live terminal point or sends input. The copy has undo disabled, cannot overwrite a same-named unrelated buffer, and is killed at secure-input, reset/process, source-buffer, or explicit quit boundaries. All 127 focused EAT tests pass; Emacs 31 byte-code rebuilt without EAT warnings, and fresh compiled real-terminal screen/style/completion/privacy verification passes. |
-| 2026-08-24 | this commit | 6.6 | ~C-e q v~ cycles buffer-local ~terse~ / ~normal~ / ~verbose~ feedback, ~m~ toggles content-free background monitoring, ~t~ speaks retained status, and ~i~ explicitly speaks bounded sanitized title/directory changes. The same keys work in a frozen review: policy controls target only its live source without terminal input, while status and metadata remain the deep-copied frozen values. Leaving EAT major mode now also destroys a retained review. All 130 focused EAT tests pass; Emacs 31 byte-code rebuilt without EAT warnings, and fresh compiled real-terminal frozen-state/source-control/mode-clear verification passes. |
+| 2026-08-24 | ~7b032af97~ | 6.6 | ~C-e q v~ cycles buffer-local ~terse~ / ~normal~ / ~verbose~ feedback, ~m~ toggles content-free background monitoring, ~t~ speaks retained status, and ~i~ explicitly speaks bounded sanitized title/directory changes. The same keys work in a frozen review: policy controls target only its live source without terminal input, while status and metadata remain the deep-copied frozen values. Leaving EAT major mode now also destroys a retained review. All 130 focused EAT tests pass; Emacs 31 byte-code rebuilt without EAT warnings, and fresh compiled real-terminal frozen-state/source-control/mode-clear verification passes. |
+| 2026-08-24 | this commit | 6.7a | Deterministic real-EAT-model fixtures cover a less-shaped page repaint and search highlight, Vim-shaped cursor movement and status rewrite, a whiptail-shaped moving selection with a fixed invisible cursor, alternate-screen entry/exit, and rate-limited carriage-return progress. Captured aural transactions confirm that application boundaries, cursor rows, paired highlights, and final progress are bounded; uncertain repaints remain silent but explicitly reviewable. All 135 focused EAT tests pass. The fixtures also expose two conservative Emacsvox-only gaps: alternate-screen status is not retained by the status command, and an uninferred styled match cannot be reached directly in frozen review. |
 
 * Current next action
 
-Add deterministic less-, editor-, menu-, alternate-screen-, and status-line
-fixtures.  Use their captured speech transactions to identify any remaining
-bounded full-screen behavior that can be fixed conservatively inside Emacsvox.
+Retain conservative styled bottom-row application status for explicit review,
+without adding automatic alternate-screen speech.  Add frozen-review navigation
+between selection-like styled regions so an uninferred pager search match or
+menu highlight can be reached without asserting that it is application focus.
