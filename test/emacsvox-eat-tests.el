@@ -89,6 +89,16 @@
       (car case)
       (list :module 'eat :mode 'eat-mode :occasion (cdr case))))))
 
+(ert-deftest emacsvox-eat-verbosity-is-buffer-local ()
+  "Terminal verbosity defaults to normal and may differ by buffer."
+  (should (eq (default-value 'emacsvox-eat-verbosity) 'normal))
+  (with-temp-buffer
+    (should (eq emacsvox-eat-verbosity 'normal))
+    (setq-local emacsvox-eat-verbosity 'verbose)
+    (should (eq emacsvox-eat-verbosity 'verbose))
+    (with-temp-buffer
+      (should (eq emacsvox-eat-verbosity 'normal)))))
+
 (ert-deftest emacsvox-eat-yank-feedback-is-target-aware ()
   "A nested EAT yank cannot duplicate its interactive xterm paste feedback."
   (let ((ems--interactive-fn-name 'eat-xterm-paste)
@@ -1329,6 +1339,9 @@
            '(:rows ("stale candidate")))
           (emacsvox-eat--last-bell-at 19.0)
           (emacsvox-eat--last-bell-spoken-at 18.0)
+          (emacsvox-eat--last-metadata-change
+           '(:title "stale title" :cwd "/stale/"))
+          (emacsvox-eat--last-metadata-spoken-at 17.0)
           (emacsvox-eat--quiescence-timer
            (run-at-time 60 nil #'ignore))
           process-a process-b)
@@ -1351,6 +1364,8 @@
       (should-not emacsvox-eat--last-completion-output)
       (should-not emacsvox-eat--last-bell-at)
       (should-not emacsvox-eat--last-bell-spoken-at)
+      (should-not emacsvox-eat--last-metadata-change)
+      (should-not emacsvox-eat--last-metadata-spoken-at)
       (setq emacsvox-eat--completion-snapshot '(13 . "pending"))
       (emacsvox-eat--process-exited process-b)
       (should (= emacsvox-eat--generation 8))
@@ -1501,6 +1516,39 @@
       (emacsvox-eat--present-output-rows '("" "   ")))
     (should-not submissions)))
 
+(ert-deftest emacsvox-eat-terse-suppresses-routine-output-but-retains-it ()
+  "Terse terminals retain output and status without automatic speech."
+  (with-temp-buffer
+    (let* ((emacsvox-eat-verbosity 'terse)
+           (output-diff
+            '(:text-changed t :size-changed nil
+              :alternate-screen-changed nil
+              :old-rows ("$ command")
+              :new-rows ("$ command" "result" "$ ")
+              :row-change
+              (:start 1 :old-end 1 :new-end 3 :old-rows nil
+               :new-rows ("result" "$ "))))
+           (output-snapshot '(:cursor-row 2 :alternate-screen nil))
+           (status-diff
+            '(:text-changed t :user-input nil :size-changed nil
+              :alternate-screen-changed nil
+              :row-change
+              (:start 0 :old-rows ("Progress 10%")
+               :new-rows ("Progress 20%"))))
+           (status-snapshot '(:cursor-row 0 :alternate-screen nil))
+           submissions)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (&rest arguments) (push arguments submissions))))
+        (emacsvox-eat--screen-quiesced output-diff output-snapshot)
+        (emacsvox-eat--screen-quiesced status-diff status-snapshot)
+        (should-not submissions)
+        (should (eq emacsvox-eat--last-screen-diff status-diff))
+        (should (equal emacsvox-eat--last-status-text "Progress 20%"))
+        (setq emacsvox-eat-verbosity 'normal)
+        (emacsvox-eat--screen-quiesced output-diff output-snapshot))
+      (should (= (length submissions) 1))
+      (should (equal (caar submissions) "result")))))
+
 (ert-deftest emacsvox-eat-output-classifier-excludes-the-prompt-row ()
   "Only newly inserted complete main-screen rows before the cursor qualify."
   (let* ((diff
@@ -1629,6 +1677,79 @@
         (should (equal (butlast newest-key 2) '(eat status)))
         (should (= (car (last newest-key)) 4))))))
 
+(ert-deftest emacsvox-eat-metadata-is-retained-below-verbose ()
+  "Normal and terse terminals retain metadata without announcing it."
+  (dolist (verbosity '(terse normal))
+    (with-temp-buffer
+      (let ((emacsvox-eat-verbosity verbosity)
+            submissions)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (&rest arguments) (push arguments submissions))))
+          (emacsvox-eat--screen-quiesced
+           '(:title-changed t :cwd-changed t)
+           '(:generation 3 :title "Router" :cwd "/srv/config/")))
+        (should-not submissions)
+        (should
+         (equal
+          (plist-get emacsvox-eat--last-metadata-change :generation) 3))
+        (should
+         (equal
+          (plist-get emacsvox-eat--last-metadata-change :title) "Router"))
+        (should
+         (equal
+          (plist-get emacsvox-eat--last-metadata-change :cwd)
+          "/srv/config/"))))))
+
+(ert-deftest emacsvox-eat-verbose-metadata-is-semantic-and-replaceable ()
+  "Verbose terminals announce one bounded title and directory transaction."
+  (with-temp-buffer
+    (let ((emacsvox-eat-verbosity 'verbose)
+          (emacsvox-eat--generation 4)
+          submissions)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (list content arguments) submissions))))
+        (emacsvox-eat--screen-quiesced
+         '(:title-changed t :cwd-changed t)
+         '(:generation 4 :title "Router" :cwd "/srv/config/")))
+      (should (= (length submissions) 1))
+      (let* ((submission (car submissions))
+             (arguments (cadr submission))
+             (key (plist-get arguments :replacement-key)))
+        (should
+         (equal
+          (car submission)
+          "Terminal title: Router\nWorking directory: /srv/config/"))
+        (should
+         (equal
+          (plist-get arguments :facts)
+          '(:role command-interaction
+            :command-interaction-kind shell
+            :events (state-changed))))
+        (should (eq (plist-get arguments :occasion) 'state-change))
+        (should (eq (plist-get arguments :delivery-policy) 'replaceable))
+        (should (equal (butlast key 2) '(eat metadata)))
+        (should (= (car (last key)) 4))))))
+
+(ert-deftest emacsvox-eat-verbose-metadata-is-rate-limited ()
+  "Rapid metadata changes retain replaceable speech bandwidth."
+  (with-temp-buffer
+    (let ((emacsvox-eat-verbosity 'verbose)
+          (emacsvox-eat--generation 2)
+          (times '(100.0 100.5 101.1))
+          submissions)
+      (cl-letf (((symbol-function 'float-time)
+                 (lambda (&optional _) (pop times)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest _)
+                   (push content submissions))))
+        (dolist (title '("one" "two" "three"))
+          (emacsvox-eat--present-metadata-change
+           '(:title-changed t) (list :title title))))
+      (should (equal (nreverse submissions)
+                     '("Terminal title: one" "Terminal title: three")))
+      (should (= emacsvox-eat--last-metadata-spoken-at 101.1)))))
+
 (ert-deftest emacsvox-eat-real-carriage-return-is-status-not-output ()
   "A real EAT carriage-return rewrite is retained as a status row."
   (with-temp-buffer
@@ -1733,6 +1854,42 @@
                    (plist-get
                     (plist-get style :face) :attributes)))
                 style-data))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-screen-metadata-is-control-free-and-bounded ()
+  "Untrusted terminal metadata loses controls, properties, and excess text."
+  (let* ((short
+          (propertize
+           (concat "  Router" (string 7) "CLI" (string 10) "  ")
+           'face 'bold))
+         (clean (emacsvox-eat--sanitize-metadata-value short))
+         (long
+          (emacsvox-eat--sanitize-metadata-value
+           (concat (make-string 300 ?x) (string 7)))))
+    (should (equal clean "Router CLI"))
+    (should-not (text-properties-at 0 clean))
+    (should-not (string-match-p "[[:cntrl:]]" clean))
+    (should (string-suffix-p "…" long))
+    (should (<= (length long)
+                (1+ emacsvox-eat--maximum-metadata-characters)))
+    (should-not (string-match-p "[[:cntrl:]]" long))))
+
+(ert-deftest emacsvox-eat-real-title-snapshot-is-bounded ()
+  "A long OSC title is bounded in the public EAT screen snapshot."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (progn
+            (eat-term-process-output
+             eat-terminal
+             (concat "\e]2;" (make-string 300 ?x) "\a"))
+            (eat-term-redisplay eat-terminal)
+            (let ((title
+                   (plist-get (emacsvox-eat--capture-screen) :title)))
+              (should (string-suffix-p "…" title))
+              (should (= (length title)
+                         (1+ emacsvox-eat--maximum-metadata-characters)))))
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 

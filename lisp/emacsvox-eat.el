@@ -69,6 +69,28 @@
 (declare-function eat-term-size "eat" (terminal))
 (declare-function eat-term-title "eat" (terminal))
 
+;;;  Customization:
+
+(defgroup emacsvox-eat nil
+  "Speech access to EAT terminals."
+  :group 'emacsvox
+  :prefix "emacsvox-eat-")
+
+(defcustom emacsvox-eat-verbosity 'normal
+  "Amount of automatic feedback produced for EAT terminals.
+At `terse', retain routine output and metadata for review but do not speak
+them automatically.  `normal' speaks bounded command output and status, while
+`verbose' additionally announces bounded terminal title and directory changes.
+Lifecycle, bell, paste, and completion feedback remains available at every
+level.  This option may be set buffer-locally for an individual terminal."
+  :type '(choice
+          (const :tag "Terse" terse)
+          (const :tag "Normal" normal)
+          (const :tag "Verbose" verbose))
+  :group 'emacsvox-eat)
+
+(make-variable-buffer-local 'emacsvox-eat-verbosity)
+
 ;;;  Lifecycle state:
 
 (defvar-local emacsvox-eat--generation 0
@@ -137,6 +159,12 @@
 (defvar-local emacsvox-eat--last-bell-spoken-at nil
   "Time at which Emacsvox most recently announced an EAT terminal bell.")
 
+(defvar-local emacsvox-eat--last-metadata-change nil
+  "Latest bounded title or working-directory change retained for review.")
+
+(defvar-local emacsvox-eat--last-metadata-spoken-at nil
+  "Time at which EAT metadata was most recently announced automatically.")
+
 (defvar-local emacsvox-eat--terminal-id nil
   "Process-local integer used in replaceable EAT delivery keys.")
 
@@ -163,6 +191,12 @@
 
 (defconst emacsvox-eat--bell-minimum-interval 0.5
   "Minimum seconds between spoken bells from one EAT terminal.")
+
+(defconst emacsvox-eat--metadata-minimum-interval 1.0
+  "Minimum seconds between automatic EAT metadata announcements.")
+
+(defconst emacsvox-eat--maximum-metadata-characters 256
+  "Maximum characters retained from one terminal metadata value.")
 
 (defconst emacsvox-eat--maximum-spoken-candidates 8
   "Maximum inferred terminal candidates spoken automatically at once.")
@@ -254,6 +288,20 @@ Run bounds are offsets from BEGINNING."
         (goto-char cursor)
         (cons (1- (line-number-at-pos cursor)) (current-column))))))
 
+(defun emacsvox-eat--sanitize-metadata-value (value)
+  "Return a bounded, control-free copy of terminal metadata VALUE."
+  (when (stringp value)
+    (let* ((length (length value))
+           (limit emacsvox-eat--maximum-metadata-characters)
+           (truncated-p (> length limit))
+           (text
+            (substring-no-properties value 0 (min length limit))))
+      (setq text
+            (string-trim
+             (replace-regexp-in-string
+              "[[:cntrl:]]+" " " text nil 'literal)))
+      (if truncated-p (concat text "…") text))))
+
 (defun emacsvox-eat--capture-screen ()
   "Return a data-only snapshot of the current visible EAT display.
 Only public EAT terminal accessors and rendered buffer properties are used."
@@ -282,9 +330,8 @@ Only public EAT terminal accessors and rendered buffer properties are used."
        :size (cons (car size) (cdr size))
        :alternate-screen
        (not (null (eat-term-in-alternative-display-p eat-terminal)))
-       :title (and title (substring-no-properties title))
-       :cwd (and default-directory
-                 (substring-no-properties default-directory))))))
+       :title (emacsvox-eat--sanitize-metadata-value title)
+       :cwd (emacsvox-eat--sanitize-metadata-value default-directory)))))
 
 (defun emacsvox-eat--sequence-change (old new)
   "Return the smallest changed span between OLD and NEW sequences.
@@ -569,10 +616,62 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
          'continuous nil 'replaceable
          (emacsvox-eat--terminal-delivery-key 'status))))))
 
+(defun emacsvox-eat--metadata-change (diff snapshot)
+  "Return bounded changed terminal metadata from DIFF and SNAPSHOT."
+  (when (or (plist-get diff :title-changed)
+            (plist-get diff :cwd-changed))
+    (list
+     :generation (plist-get snapshot :generation)
+     :observed-at (float-time)
+     :title-changed (not (null (plist-get diff :title-changed)))
+     :title (plist-get snapshot :title)
+     :cwd-changed (not (null (plist-get diff :cwd-changed)))
+     :cwd (plist-get snapshot :cwd))))
+
+(defun emacsvox-eat--metadata-lines (diff snapshot)
+  "Return human descriptions of metadata changed in DIFF at SNAPSHOT."
+  (let (lines)
+    (when (plist-get diff :title-changed)
+      (push
+       (if-let* ((title (plist-get snapshot :title))
+                 ((not (string-empty-p title))))
+           (format "Terminal title: %s" title)
+         "Terminal title cleared")
+       lines))
+    (when (plist-get diff :cwd-changed)
+      (push
+       (if-let* ((cwd (plist-get snapshot :cwd))
+                 ((not (string-empty-p cwd))))
+           (format "Working directory: %s" cwd)
+         "Working directory unavailable")
+       lines))
+    (nreverse lines)))
+
+(defun emacsvox-eat--retain-metadata-change (diff snapshot)
+  "Retain bounded terminal metadata changed in DIFF at SNAPSHOT."
+  (when-let* ((change (emacsvox-eat--metadata-change diff snapshot)))
+    (setq emacsvox-eat--last-metadata-change change)))
+
+(defun emacsvox-eat--present-metadata-change (diff snapshot)
+  "Present verbose terminal metadata changed in DIFF at SNAPSHOT when due."
+  (when (eq emacsvox-eat-verbosity 'verbose)
+    (when-let* ((lines (emacsvox-eat--metadata-lines diff snapshot)))
+      (let ((now (float-time)))
+        (when (or (null emacsvox-eat--last-metadata-spoken-at)
+                  (>= (- now emacsvox-eat--last-metadata-spoken-at)
+                      emacsvox-eat--metadata-minimum-interval))
+          (setq emacsvox-eat--last-metadata-spoken-at now)
+          (emacsvox-eat--submit
+           (string-join lines "\n")
+           (emacsvox-eat--facts 'command-interaction 'state-changed)
+           'state-change nil 'replaceable
+           (emacsvox-eat--terminal-delivery-key 'metadata)))))))
+
 (defun emacsvox-eat--retain-screen-change (diff snapshot)
   "Retain terminal DIFF ending at SNAPSHOT for explicit review."
   (setq emacsvox-eat--last-screen-diff diff
         emacsvox-eat--last-changed-screen snapshot)
+  (emacsvox-eat--retain-metadata-change diff snapshot)
   (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
     (setq emacsvox-eat--last-status-text status)))
 
@@ -598,49 +697,53 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
 
 (defun emacsvox-eat--screen-quiesced (diff snapshot)
   "Retain and present the selected terminal DIFF ending at SNAPSHOT."
-  (cond
-   ((when-let* ((states
-                 (emacsvox-eat--alternate-screen-transitions diff snapshot)))
-      (emacsvox-eat--cancel-completion)
-      (setq emacsvox-eat--recent-input nil
-            emacsvox-eat--last-status-text nil
-            emacsvox-eat--last-status-spoken-at 0.0
-            emacsvox-eat--last-completion-output nil)
-      (emacsvox-eat--retain-screen-change diff snapshot)
-      (emacsvox-eat--present-alternate-screen-transitions states)
-      t))
-   ((when-let* ((completion
-                 (emacsvox-eat--pending-inline-completion snapshot)))
-      (emacsvox-eat--retain-screen-change
-       (plist-get completion :diff) snapshot)
-      (emacsvox-eat--cancel-completion)
-      (setq emacsvox-eat--last-completion-output nil)
-      (emacsvox-eat--present-inline-completion
-       (plist-get completion :text))
-      t))
-   ((when-let* ((completion
-                 (emacsvox-eat--pending-completion-output snapshot)))
-      (setq completion
-            (plist-put
-             completion :repeated
-             (emacsvox-eat--completion-repeated-p completion)))
-      (emacsvox-eat--retain-screen-change
-       (plist-get completion :diff) snapshot)
-      (emacsvox-eat--cancel-completion)
-      (setq emacsvox-eat--last-completion-output completion)
-      (emacsvox-eat--present-completion-output completion)
-      t))
-   ((emacsvox-eat--completion-current-p)
-    ;; Candidate/help output can pause on a completed row before the peer
-    ;; redraws its input.  Retain that partial screen without letting the
-    ;; ordinary output path announce it and then repeat it at completion.
-    (emacsvox-eat--retain-screen-change diff snapshot))
-   (t
-    (emacsvox-eat--retain-screen-change diff snapshot)
-    (if-let* ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
-        (emacsvox-eat--present-output-rows rows)
-      (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
-        (emacsvox-eat--present-status status))))))
+  (prog1
+      (cond
+       ((when-let* ((states
+                     (emacsvox-eat--alternate-screen-transitions
+                      diff snapshot)))
+          (emacsvox-eat--cancel-completion)
+          (setq emacsvox-eat--recent-input nil
+                emacsvox-eat--last-status-text nil
+                emacsvox-eat--last-status-spoken-at 0.0
+                emacsvox-eat--last-completion-output nil)
+          (emacsvox-eat--retain-screen-change diff snapshot)
+          (emacsvox-eat--present-alternate-screen-transitions states)
+          t))
+       ((when-let* ((completion
+                     (emacsvox-eat--pending-inline-completion snapshot)))
+          (emacsvox-eat--retain-screen-change
+           (plist-get completion :diff) snapshot)
+          (emacsvox-eat--cancel-completion)
+          (setq emacsvox-eat--last-completion-output nil)
+          (emacsvox-eat--present-inline-completion
+           (plist-get completion :text))
+          t))
+       ((when-let* ((completion
+                     (emacsvox-eat--pending-completion-output snapshot)))
+          (setq completion
+                (plist-put
+                 completion :repeated
+                 (emacsvox-eat--completion-repeated-p completion)))
+          (emacsvox-eat--retain-screen-change
+           (plist-get completion :diff) snapshot)
+          (emacsvox-eat--cancel-completion)
+          (setq emacsvox-eat--last-completion-output completion)
+          (emacsvox-eat--present-completion-output completion)
+          t))
+       ((emacsvox-eat--completion-current-p)
+        ;; Candidate/help output can pause on a completed row before the peer
+        ;; redraws its input.  Retain that partial screen without letting the
+        ;; ordinary output path announce it and then repeat it at completion.
+        (emacsvox-eat--retain-screen-change diff snapshot))
+       (t
+        (emacsvox-eat--retain-screen-change diff snapshot)
+        (unless (eq emacsvox-eat-verbosity 'terse)
+          (if-let* ((rows (emacsvox-eat--complete-output-rows diff snapshot)))
+              (emacsvox-eat--present-output-rows rows)
+            (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
+              (emacsvox-eat--present-status status))))))
+    (emacsvox-eat--present-metadata-change diff snapshot)))
 
 (defun emacsvox-eat--finish-quiescence (buffer generation serial)
   "Finish BUFFER's update burst identified by GENERATION and SERIAL."
@@ -741,7 +844,9 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
         emacsvox-eat--last-status-spoken-at 0.0
         emacsvox-eat--last-completion-output nil
         emacsvox-eat--last-bell-at nil
-        emacsvox-eat--last-bell-spoken-at nil))
+        emacsvox-eat--last-bell-spoken-at nil
+        emacsvox-eat--last-metadata-change nil
+        emacsvox-eat--last-metadata-spoken-at nil))
 
 (defun emacsvox-eat--advance-generation ()
   "Invalidate asynchronous state and advance the current EAT generation."
