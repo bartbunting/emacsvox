@@ -944,8 +944,31 @@ Ignore a stale or duplicate exit after another process has become active."
   )
 
 (defconst emacsvox-eat--yank-targets
-  '(eat-yank eat-yank-from-kill-ring)
-  "Eat commands that yank terminal input.")
+  '(eat-yank eat-yank-from-kill-ring eat-xterm-paste
+    eat-mouse-yank-primary eat-mouse-yank-secondary)
+  "EAT commands that paste saved or selected terminal input.")
+
+(defconst emacsvox-eat--yank-labels
+  '((eat-yank . "Pasted terminal input")
+    (eat-yank-from-kill-ring . "Pasted selected kill-ring input")
+    (eat-xterm-paste . "Pasted clipboard input")
+    (eat-mouse-yank-primary . "Pasted primary selection")
+    (eat-mouse-yank-secondary . "Pasted secondary selection"))
+  "Content-free human feedback for EAT terminal paste commands.")
+
+(defun emacsvox-eat--before-terminal-paste (&rest _)
+  "Invalidate input-correlated state before sending terminal paste content."
+  (emacsvox-eat--cancel-completion)
+  (setq emacsvox-eat--recent-input nil))
+
+(defun emacsvox-eat--present-terminal-paste (target)
+  "Present a content-free terminal paste performed by EAT command TARGET."
+  (emacsvox-eat--submit
+   (or (alist-get target emacsvox-eat--yank-labels)
+       "Pasted terminal input")
+   (emacsvox-eat--facts
+    'command-input 'object-changed nil '(:command-input-origin copied))
+   'edit 'yank-object))
 
 (cl-loop
  for target in emacsvox-eat--yank-targets
@@ -954,9 +977,9 @@ Ignore a stale or duplicate exit after another process has become active."
  do
  (eval
   `(defun ,advice-function (&rest _)
-     ,(format "Play a yank icon after `%s'." target)
+     ,(format "Present content-free paste feedback after `%s'." target)
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'yank-object)))))
+       (emacsvox-eat--present-terminal-paste ',target)))))
 
 (defun emacsvox--advice-eat-reload-after (&rest _)
   "Speak after reloading Eat."
@@ -1047,8 +1070,13 @@ Ignore a stale or duplicate exit after another process has become active."
   "Current Eat targets that receive native after advice.")
 
 (defconst emacsvox-eat--before-advice
-  '((eat-reset . emacsvox--advice-eat-reset-before)
-    (eat-reload . emacsvox--advice-eat-reload-before))
+  (append
+   '((eat-reset . emacsvox--advice-eat-reset-before)
+     (eat-reload . emacsvox--advice-eat-reload-before))
+   (mapcar
+    (lambda (target)
+      (cons target #'emacsvox-eat--before-terminal-paste))
+    emacsvox-eat--yank-targets))
   "EAT targets and native before-advice used for state invalidation.")
 
 (defun emacsvox-eat--install-advice ()

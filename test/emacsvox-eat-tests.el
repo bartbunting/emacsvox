@@ -75,21 +75,72 @@
          'state-change)
         (cons
          (emacsvox-eat--facts 'command-interaction 'state-changed)
-         'state-change)))
+         'state-change)
+        (cons
+         (emacsvox-eat--facts
+          'command-input 'object-changed nil
+          '(:command-input-origin copied))
+         'edit)))
     (should
      (emacsvox-aural-normalize-input
       (car case)
       (list :module 'eat :mode 'eat-mode :occasion (cdr case))))))
 
 (ert-deftest emacsvox-eat-yank-feedback-is-target-aware ()
-  "Only the matching interactive Eat yank command plays an icon."
-  (let ((ems--interactive-fn-name 'eat-yank)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push icon events))))
-      (emacsvox--advice-eat-yank-from-kill-ring-after)
-      (emacsvox--advice-eat-yank-after))
-    (should (equal events '(yank-object)))))
+  "A nested EAT yank cannot duplicate its interactive xterm paste feedback."
+  (let ((ems--interactive-fn-name 'eat-xterm-paste)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-compatibility-icon)
+               (lambda (icon) (list 'icon icon)))
+              ((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest arguments)
+                 (push (list content arguments) submissions))))
+      ;; `eat-xterm-paste' can call `eat-yank' internally.  Only the outer
+      ;; command owns the interactive marker and may announce the operation.
+      (emacsvox--advice-eat-yank-after "never speak this secret")
+      (should (eq ems--interactive-fn-name 'eat-xterm-paste))
+      (emacsvox--advice-eat-xterm-paste-after
+       '(xterm-paste "never speak this secret")))
+    (should
+     (equal
+      submissions
+      '(("Pasted clipboard input"
+         (:facts
+          (:role command-input
+           :command-interaction-kind shell
+           :events (object-changed)
+           :command-input-origin copied)
+          :module eat
+          :occasion edit
+          :compatibility-actions ((icon yank-object)))))))
+    (should-not
+     (string-match-p "never speak this secret"
+                     (format "%S" submissions)))))
+
+(ert-deftest emacsvox-eat-paste-feedback-covers-every-public-entry-point ()
+  "Keyboard, kill-ring, xterm, and mouse paste paths have human labels."
+  (dolist (entry emacsvox-eat--yank-labels)
+    (let ((target (car entry))
+          (expected (cdr entry))
+          (ems--interactive-fn-name (car entry))
+          content)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest _) (setq content text))))
+        (funcall
+         (intern (format "emacsvox--advice-%s-after" target))))
+      (should (equal content expected)))))
+
+(ert-deftest emacsvox-eat-paste-invalidates-completion-before-content-is-sent ()
+  "Any terminal paste clears stale completion and character echo state."
+  (with-temp-buffer
+    (let ((emacsvox-eat--completion-snapshot
+           '(:screen (:text "private candidate")))
+          (emacsvox-eat--completion-timer (run-at-time 60 nil #'ignore))
+          (emacsvox-eat--recent-input '(0 ?x 9999999999.0)))
+      (emacsvox-eat--before-terminal-paste "never speak this secret")
+      (should-not emacsvox-eat--completion-snapshot)
+      (should-not emacsvox-eat--completion-timer)
+      (should-not emacsvox-eat--recent-input))))
 
 (ert-deftest emacsvox-eat-mode-feedback-is-human-and-semantic ()
   "Eat mode feedback describes the resulting input mode without Lisp names."
