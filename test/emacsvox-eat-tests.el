@@ -214,6 +214,10 @@
            '(:text-change "terminal-secret-sentinel"))
           (emacsvox-eat--last-changed-screen
            '(:text "terminal-secret-sentinel"))
+          (emacsvox-eat--last-likely-focus
+           '(:kind highlight :text "terminal-secret-sentinel"))
+          (emacsvox-eat--last-focus-presentation-identity
+           '(highlight "terminal-secret-sentinel"))
           (emacsvox-eat--completion-snapshot
            '(:screen (:text "terminal-secret-sentinel")))
           (emacsvox-eat--last-completion-output
@@ -248,6 +252,8 @@
       (should-not emacsvox-eat--screen-snapshot)
       (should-not emacsvox-eat--last-screen-diff)
       (should-not emacsvox-eat--last-changed-screen)
+      (should-not emacsvox-eat--last-likely-focus)
+      (should-not emacsvox-eat--last-focus-presentation-identity)
       (should-not emacsvox-eat--completion-snapshot)
       (should-not emacsvox-eat--last-completion-output)
       (should-not emacsvox-eat--last-status-text)
@@ -1746,6 +1752,10 @@
           (emacsvox-eat--last-status-spoken-at 20.0)
           (emacsvox-eat--last-completion-output
            '(:rows ("stale candidate")))
+          (emacsvox-eat--last-likely-focus
+           '(:kind highlight :text "stale focus"))
+          (emacsvox-eat--last-focus-presentation-identity
+           '(highlight 7 1 0 selected "stale focus"))
           (emacsvox-eat--last-bell-at 19.0)
           (emacsvox-eat--last-bell-spoken-at 18.0)
           (emacsvox-eat--last-metadata-change
@@ -1779,6 +1789,8 @@
       (should-not emacsvox-eat--last-status-text)
       (should (= emacsvox-eat--last-status-spoken-at 0.0))
       (should-not emacsvox-eat--last-completion-output)
+      (should-not emacsvox-eat--last-likely-focus)
+      (should-not emacsvox-eat--last-focus-presentation-identity)
       (should-not emacsvox-eat--last-bell-at)
       (should-not emacsvox-eat--last-bell-spoken-at)
       (should-not emacsvox-eat--last-metadata-change)
@@ -2389,6 +2401,51 @@
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 
+(ert-deftest emacsvox-eat-real-navigation-speaks-one-replaceable-highlight ()
+  "A real input/update/quiescence path presents one inferred highlight."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          submissions
+          pending-timer)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-eat--following-live-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions))))
+            (eat-term-resize eat-terminal 30 4)
+            (eat-term-process-output
+             eat-terminal
+             "\e[?1049h\e[2J\e[H\e[7mOne\e[0m\r\nTwo")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat-update-hook)
+            (should-not submissions)
+            (emacsvox--advice-eat-self-input-before 1 'down)
+            (eat-term-process-output
+             eat-terminal
+             "\e[1;1H\e[0mOne\e[2;1H\e[7mTwo\e[0m")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat-update-hook)
+            (setq pending-timer emacsvox-eat--quiescence-timer)
+            (emacsvox-eat--finish-quiescence
+             (current-buffer) emacsvox-eat--generation
+             emacsvox-eat--update-serial)
+            (should (= (length submissions) 1))
+            (should (equal (caar submissions) "Highlight: Two"))
+            (should
+             (eq
+              (plist-get (cadar submissions) :delivery-policy)
+              'replaceable))
+            (should
+             (equal (plist-get emacsvox-eat--last-likely-focus :text)
+                    "Two")))
+        (when (timerp pending-timer) (cancel-timer pending-timer))
+        (emacsvox-eat--cancel-quiescence)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
 (ert-deftest emacsvox-eat-real-sgr-styles-have-normalized-traits ()
   "Every recoverable EAT SGR category has a data-only semantic trait."
   (with-temp-buffer
@@ -2737,6 +2794,90 @@
      (emacsvox-eat--likely-focus-change
       old new (emacsvox-eat--screen-diff old new)
       '(:generation 7 :direction down)))))
+
+(ert-deftest emacsvox-eat-high-confidence-focus-is-native-and-replaceable ()
+  "A high-confidence highlight is retained and submitted only once."
+  (with-temp-buffer
+    (let* ((emacsvox-eat--generation 6)
+           (focus
+            '(:kind highlight :text "Two" :confidence high :score 11
+              :identity (highlight 6 2 0 selected "Two")))
+           (diff (list :style-changed t :likely-focus focus))
+           submissions)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (list content arguments) submissions))))
+        (emacsvox-eat--screen-quiesced diff '(:generation 6))
+        (emacsvox-eat--screen-quiesced diff '(:generation 6)))
+      (should (= (length submissions) 1))
+      (should (eq emacsvox-eat--last-likely-focus focus))
+      (should
+       (equal
+        emacsvox-eat--last-focus-presentation-identity
+        (plist-get focus :identity)))
+      (let* ((submission (car submissions))
+             (arguments (cadr submission))
+             (facts (plist-get arguments :facts))
+             (key (plist-get arguments :replacement-key)))
+        (should (equal (car submission) "Highlight: Two"))
+        (should
+         (equal
+          facts
+          '(:role command-output
+            :command-interaction-kind shell
+            :events (focus-entered)
+            :command-operation output-navigation)))
+        (should
+         (emacsvox-aural-normalize-input
+          facts '(:module eat :occasion navigation)))
+        (should (eq (plist-get arguments :occasion) 'navigation))
+        (should (eq (plist-get arguments :delivery-policy) 'replaceable))
+        (should (equal (butlast key 2) '(eat focus)))
+        (should (= (car (last key)) 6))))))
+
+(ert-deftest emacsvox-eat-medium-highlight-is-retained-but-not-automatic ()
+  "Uncertain style focus remains reviewable without automatic speech."
+  (with-temp-buffer
+    (let* ((focus
+            '(:kind highlight :text "Possible" :confidence medium :score 8
+              :identity (highlight 0 1 0 selected "Possible")))
+           submissions)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (&rest arguments) (push arguments submissions))))
+        (emacsvox-eat--screen-quiesced
+         (list :style-changed t :likely-focus focus)
+         '(:generation 0)))
+      (should-not submissions)
+      (should (eq emacsvox-eat--last-likely-focus focus))
+      (should-not emacsvox-eat--last-focus-presentation-identity))))
+
+(ert-deftest emacsvox-eat-alternate-cursor-row-is-automatic-navigation ()
+  "A correlated alternate-screen cursor row is spoken despite medium score."
+  (with-temp-buffer
+    (let* ((focus
+            '(:kind cursor-row :text "Second row" :confidence medium :score 8
+              :identity (cursor-row 0 1 "Second row")))
+           submissions)
+      (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                 (lambda (&rest arguments) (push arguments submissions))))
+        (emacsvox-eat--screen-quiesced
+         (list :cursor-moved t :likely-focus focus)
+         '(:generation 0)))
+      (should (= (length submissions) 1))
+      (should (equal (caar submissions) "Terminal row: Second row"))
+      (should (eq (nth 2 (car submissions)) 'navigation))
+      (should (eq (nth 4 (car submissions)) 'replaceable)))))
+
+(ert-deftest emacsvox-eat-unclassified-change-invalidates-retained-focus ()
+  "Any later unclassified visible change prevents stale focus review."
+  (with-temp-buffer
+    (let ((emacsvox-eat--last-likely-focus
+           '(:kind highlight :text "Old" :identity old))
+          (emacsvox-eat--last-focus-presentation-identity 'old))
+      (emacsvox-eat--retain-screen-change
+       '(:cursor-moved t) '(:generation 0))
+      (should-not emacsvox-eat--last-likely-focus)
+      (should-not emacsvox-eat--last-focus-presentation-identity))))
 
 (ert-deftest emacsvox-eat-screen-observer-coalesces-an-update-burst ()
   "Successive chunks produce one aggregate diff after quiescence."

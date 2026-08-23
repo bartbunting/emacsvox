@@ -157,6 +157,12 @@ when the terminal is selected again."
 (defvar-local emacsvox-eat--last-changed-screen nil
   "Screen snapshot belonging to `emacsvox-eat--last-screen-diff'.")
 
+(defvar-local emacsvox-eat--last-likely-focus nil
+  "Latest bounded terminal focus object retained for explicit review.")
+
+(defvar-local emacsvox-eat--last-focus-presentation-identity nil
+  "Identity of the most recently spoken terminal focus object.")
+
 (defvar-local emacsvox-eat--pending-user-input-p nil
   "Non-nil when the current update burst followed terminal input.")
 
@@ -1090,10 +1096,53 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
            'state-change nil 'replaceable
            (emacsvox-eat--terminal-delivery-key 'metadata)))))))
 
+(defun emacsvox-eat--automatic-focus-p (focus)
+  "Return non-nil when FOCUS has enough evidence for automatic speech."
+  (or (eq (plist-get focus :kind) 'cursor-row)
+      (and (eq (plist-get focus :kind) 'highlight)
+           (eq (plist-get focus :confidence) 'high))))
+
+(defun emacsvox-eat--present-likely-focus (focus)
+  "Present non-repeated FOCUS as replaceable terminal navigation."
+  (let ((identity (plist-get focus :identity)))
+    (when (and (emacsvox-eat--automatic-focus-p focus)
+               identity
+               (not
+                (equal identity
+                       emacsvox-eat--last-focus-presentation-identity)))
+      (emacsvox-eat--submit
+       (format
+        (if (eq (plist-get focus :kind) 'highlight)
+            "Highlight: %s"
+          "Terminal row: %s")
+        (plist-get focus :text))
+       (emacsvox-eat--facts
+        'command-output 'focus-entered 'output-navigation)
+       'navigation nil 'replaceable
+       (emacsvox-eat--terminal-delivery-key 'focus))
+      (setq emacsvox-eat--last-focus-presentation-identity identity)
+      t)))
+
 (defun emacsvox-eat--retain-screen-change (diff snapshot)
   "Retain terminal DIFF ending at SNAPSHOT for explicit review."
   (setq emacsvox-eat--last-screen-diff diff
         emacsvox-eat--last-changed-screen snapshot)
+  (if-let* ((focus (plist-get diff :likely-focus)))
+      (progn
+        (unless
+            (equal
+             (plist-get focus :identity)
+             emacsvox-eat--last-focus-presentation-identity)
+          (setq emacsvox-eat--last-focus-presentation-identity nil))
+        (setq emacsvox-eat--last-likely-focus focus))
+    (when (or (plist-get diff :text-changed)
+              (plist-get diff :style-changed)
+              (plist-get diff :cursor-moved)
+              (plist-get diff :size-changed)
+              (plist-get diff :alternate-screen-changed)
+              (plist-get diff :generation-changed))
+      (setq emacsvox-eat--last-likely-focus nil
+            emacsvox-eat--last-focus-presentation-identity nil)))
   (emacsvox-eat--retain-metadata-change diff snapshot)
   (when-let* ((status (emacsvox-eat--status-row diff snapshot)))
     (setq emacsvox-eat--last-status-text status)))
@@ -1129,7 +1178,9 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
           (setq emacsvox-eat--recent-input nil
                 emacsvox-eat--last-status-text nil
                 emacsvox-eat--last-status-spoken-at 0.0
-                emacsvox-eat--last-completion-output nil)
+                emacsvox-eat--last-completion-output nil
+                emacsvox-eat--last-likely-focus nil
+                emacsvox-eat--last-focus-presentation-identity nil)
           (emacsvox-eat--retain-screen-change diff snapshot)
           (emacsvox-eat--present-alternate-screen-transitions states)
           t))
@@ -1153,6 +1204,10 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
           (emacsvox-eat--cancel-completion)
           (setq emacsvox-eat--last-completion-output completion)
           (emacsvox-eat--present-completion-output completion)
+          t))
+       ((when-let* ((focus (plist-get diff :likely-focus)))
+          (emacsvox-eat--retain-screen-change diff snapshot)
+          (emacsvox-eat--present-likely-focus focus)
           t))
        ((emacsvox-eat--completion-current-p)
         ;; Candidate/help output can pause on a completed row before the peer
@@ -1257,7 +1312,9 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
                 emacsvox-eat--pending-navigation-intent nil
                 emacsvox-eat--last-status-text nil
                 emacsvox-eat--last-status-spoken-at 0.0
-                emacsvox-eat--last-completion-output nil))
+                emacsvox-eat--last-completion-output nil
+                emacsvox-eat--last-likely-focus nil
+                emacsvox-eat--last-focus-presentation-identity nil))
         (setq emacsvox-eat--pending-user-input-p
               (or emacsvox-eat--pending-user-input-p
                   emacsvox-eat--recent-input
@@ -1387,6 +1444,8 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
         emacsvox-eat--pending-navigation-intent nil
         emacsvox-eat--last-screen-diff nil
         emacsvox-eat--last-changed-screen nil
+        emacsvox-eat--last-likely-focus nil
+        emacsvox-eat--last-focus-presentation-identity nil
         emacsvox-eat--last-status-text nil
         emacsvox-eat--last-status-spoken-at 0.0
         emacsvox-eat--last-completion-output nil
