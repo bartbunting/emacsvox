@@ -76,7 +76,7 @@ Issues:
 
 Planned slices:
 
-1. nil-safe update fallback with real terminal-model tests;
+1. [X] nil-safe update fallback with real terminal-model tests;
 2. buffer-local generation/reset helpers;
 3. process lifecycle observation and stale timer/state cancellation.
 
@@ -264,9 +264,10 @@ These do not block conservative Emacsvox implementations:
 
 | Date | Commit | Phase | Result / validation |
 |------+--------+-------+---------------------|
-| 2026-08-23 | pending | 0 | Audit and project plan prepared; Org lint clean. |
+| 2026-08-23 | ~d1f52159f2~ | 0 | Audit and project plan committed; both Org files lint clean. |
+| 2026-08-23 | this commit | 1.1 | Nil-safe empty/reset/alternate updates; 9 focused EAT tests pass; byte-code rebuilt/current; fresh Emacs loaded ~emacsvox-eat.elc~ and passed empty/reset verification. Full 2359-test suite has only the pre-existing agent-shell failure. |
 
 * Current next action
 
-Commit Phase 0 documentation, then implement the Phase 1 nil-cursor patch and
-real terminal-model regression tests.
+Add buffer-local process generations and reset/exit/reload state cancellation,
+then announce process lifecycle through EAT's public hooks.

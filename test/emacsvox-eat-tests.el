@@ -110,5 +110,74 @@
       (should-not emacsvox-eat--completion-snapshot)
       (should-not events))))
 
+(ert-deftest emacsvox-eat-empty-terminal-update-is-safe ()
+  "An empty EAT terminal update is quiet and does not signal."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          events)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-speak-line)
+                     (lambda () (push '(line) events)))
+                    ((symbol-function 'emacsvox-speak-this-char)
+                     (lambda (char) (push (list 'char char) events))))
+            (emacsvox-eat-update-hook)
+            (should-not events))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-empty-terminal-reset-completes-feedback ()
+  "Resetting an empty EAT terminal reaches its explicit feedback."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (ems--interactive-fn-name 'eat-reset)
+          events)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-icon)
+                     (lambda (icon)
+                       (setq events (append events (list (list 'icon icon))))))
+                    ((symbol-function 'tts-speak)
+                     (lambda (text)
+                       (setq events
+                             (append events (list (list 'speak text))))))
+                    ((symbol-function 'emacsvox-speak-line)
+                     (lambda () (push '(unexpected-line) events)))
+                    ((symbol-function 'emacsvox-speak-this-char)
+                     (lambda (char)
+                       (push (list 'unexpected-char char) events))))
+            (eat-reset)
+            (should
+             (equal events
+                    '((icon task-done) (speak "Reset Eat")))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-empty-alternate-screen-updates-are-safe ()
+  "Empty alternate-screen entry and exit are quiet and do not signal."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          events)
+      (unwind-protect
+          (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-speak-line)
+                     (lambda () (push '(line) events)))
+                    ((symbol-function 'emacsvox-speak-this-char)
+                     (lambda (char) (push (list 'char char) events))))
+            (eat-term-process-output eat-terminal "\e[?1049h")
+            (eat-term-redisplay eat-terminal)
+            (should (eat-term-in-alternative-display-p eat-terminal))
+            (emacsvox-eat-update-hook)
+            (eat-term-process-output eat-terminal "\e[?1049l")
+            (eat-term-redisplay eat-terminal)
+            (should-not (eat-term-in-alternative-display-p eat-terminal))
+            (emacsvox-eat-update-hook)
+            (should-not events))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
 (provide 'emacsvox-eat-tests)
 ;;; emacsvox-eat-tests.el ends here

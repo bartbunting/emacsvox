@@ -267,8 +267,8 @@ update feedback."
            (char (and cursor (char-before cursor))))
       (unless (emacsvox-eat--speak-same-line-completion cursor)
         (cond
-         ((= char 32) (emacsvox-speak-line))
-         (t (emacsvox-speak-this-char char)))))))
+         ((eq char ?\s) (emacsvox-speak-line))
+         (char (emacsvox-speak-this-char char)))))))
 
 (add-hook 'eat-update-hook #'emacsvox-eat-update-hook)
 (provide 'emacsvox-eat)
