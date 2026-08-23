@@ -202,7 +202,7 @@ Planned slices:
    - [X] retained and replaceable automatic presentation;
 4. [X] current row, changed region, likely highlight, retained candidate, and
    bounded frozen-screen review commands;
-5. frozen line-by-line screen and candidate navigation;
+5. [X] frozen line-by-line screen and candidate navigation;
 6. terminal verbosity/output-monitor commands;
 7. less/Vim/whiptail/status fixtures.
 
@@ -276,6 +276,7 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | Require one compact paired style transfer with matching direction, or cursor-only vertical movement on an unchanged alternate screen. | A static inverse header remains unchanged and is excluded. Multiple transfers, theme/style repaint, text replacement, resize, alternate transition, and direction disagreement reject automatic focus inference. Cursor-row fallback is disabled whenever style changed, so ambiguity cannot silently degrade to a weaker claim. |
 | 2026-08-23 | Automatically speak only high-confidence inferred highlights; speak correlated alternate-screen cursor rows as direct navigation evidence. | Medium style inferences remain available for explicit review but cannot interrupt automatically. Accepted navigation is one native replaceable transaction, and an unclassified later screen change invalidates stale focus state. |
 | 2026-08-24 | Use ~C-e q~ as the EAT review prefix. | The user selected the recommended free Emacsvox-prefix key. Its commands inspect only concealed-redacted retained snapshots, remain explicit and bounded, and are blocked during secure input. Installing it exposed and fixed the existing setup loop's failure to dereference the line, character, and Emacs-mode keymap variables. |
+| 2026-08-24 | Make terminal screen review an explicit deep copy with no live refresh. | A read-only special buffer can preserve normalized styles, cursor/focus anchors, and completion columns while guaranteeing that navigation neither reads a later mutable terminal buffer nor sends input. Killing it on secure-input, lifecycle, source-buffer, and explicit quit boundaries bounds content retention. |
 
 * Progress log
 
@@ -312,10 +313,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~9f2e97343~ | 6.3a | Publicly delivered arrow/navigation keys and control equivalents create a content-free, generation/deadline-scoped intent. Same-direction bursts merge; mixed directions become ambiguous; lifecycle, selection loss, ordinary input, completion, and alternate transitions clear the state. Main-screen Tab retains completion ownership, while alternate-screen Tab becomes navigation. All 100 focused tests and fresh compiled verification pass. |
 | 2026-08-23 | ~e9ed10868~ | 6.3b | Pure bounded focus scoring detects exactly one paired inverse/background transfer that follows navigation, with cursor proximity as supporting evidence. Cursor-only vertical navigation on an unchanged alternate screen retains its reached row. Static inverse headers, multiple transfers, theme repaint, resize, text change, style ambiguity, and direction mismatch fail closed. All 105 focused tests pass, including a real public-snapshot EAT inverse transfer, and fresh compiled verification passes. |
 | 2026-08-23 | ~316c87817~ | 6.3c | High-confidence highlights and correlated alternate-screen cursor rows are retained and presented once as native ~command-output~ / ~focus-entered~ navigation with replaceable per-terminal delivery. Medium highlights remain silent but reviewable. Repeats deduplicate; any unclassified visible change, resize, alternate transition, secure-input boundary, or process generation invalidates stale focus. All 110 focused tests pass, including a real input/update/quiescence/presentation path, and fresh compiled verification passes. |
-| 2026-08-24 | this commit | 6.4 | ~C-e q~ now provides explicit retained-snapshot review: ~l~ current row, ~d~ last changed rows or classified non-text change, ~h~ likely focus with confidence, ~c~ exact retained candidate/help layout, and ~s~ a bounded frozen visible screen. Review never reads mutable live buffer content and is unavailable during secure input. The EAT setup loop now correctly installs ~C-e~ in all four input maps. All 119 focused EAT tests pass; byte-code was rebuilt with Emacs 31, and fresh compiled real-screen verification passes. The 2,469-test suite has 2,466 expected results, one existing skip, the known agent-shell failure, and an unrelated missing installed-CIDER-command failure. |
+| 2026-08-24 | ~51ebd24d1~ | 6.4 | ~C-e q~ now provides explicit retained-snapshot review: ~l~ current row, ~d~ last changed rows or classified non-text change, ~h~ likely focus with confidence, ~c~ exact retained candidate/help layout, and ~s~ a bounded frozen visible screen. Review never reads mutable live buffer content and is unavailable during secure input. The EAT setup loop now correctly installs ~C-e~ in all four input maps. All 119 focused EAT tests pass; byte-code was rebuilt with Emacs 31, and fresh compiled real-screen verification passes. The 2,469-test suite has 2,466 expected results, one existing skip, the known agent-shell failure, and an unrelated missing installed-CIDER-command failure. |
+| 2026-08-24 | this commit | 6.5 | ~C-e q r~ opens a read-only deep copy of the concealed-redacted visible screen. Row navigation speaks styled frozen text and explicit boundaries; commands jump to the captured cursor or conservative focus, switch between exact screen and completion/help rows, and speak a bounded view. No command moves the live terminal point or sends input. The copy has undo disabled, cannot overwrite a same-named unrelated buffer, and is killed at secure-input, reset/process, source-buffer, or explicit quit boundaries. All 127 focused EAT tests pass; Emacs 31 byte-code rebuilt without EAT warnings, and fresh compiled real-terminal screen/style/completion/privacy verification passes. |
 
 * Current next action
 
-Add a read-only frozen terminal-review buffer with line-by-line navigation,
-cursor/focus location, and retained-candidate access, without moving point or
-typing in the live EAT session.
+Add explicit commands and review bindings for cycling terminal verbosity,
+toggling private background-output monitoring, and speaking retained status and
+metadata without changing the terminal application.

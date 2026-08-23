@@ -2899,7 +2899,8 @@
              ("d" . emacsvox-eat-speak-last-change)
              ("h" . emacsvox-eat-speak-likely-focus)
              ("c" . emacsvox-eat-speak-completion-output)
-             ("s" . emacsvox-eat-speak-visible-screen)))
+             ("s" . emacsvox-eat-speak-visible-screen)
+             ("r" . emacsvox-eat-review-screen)))
     (should
      (eq (lookup-key emacsvox-eat-review-map (kbd (car binding)))
          (cdr binding)))))
@@ -3065,6 +3066,249 @@
                    emacsvox-eat-speak-visible-screen))
           (should-error (funcall command) :type 'user-error)))
       (should-not submitted))))
+
+(ert-deftest emacsvox-eat-frozen-review-copies-screen-style-and-anchors ()
+  "Opening review copies retained data and never follows later live mutation."
+  (let ((source (generate-new-buffer " *emacsvox-eat-review-source*"))
+        review
+        spoken
+        source-point)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq major-mode 'eat-mode)
+          (insert "UNRETAINED-LIVE-CONTENT")
+          (goto-char 7)
+          (setq source-point (point)
+                emacsvox-eat--screen-snapshot
+                '(:generation 4 :text "Menu\nSelected"
+                  :rows ("Menu" "Selected")
+                  :styles
+                  ((0 4 (:face (:faces (eat-term-bold)) :traits (bold))))
+                  :cursor-row 1 :cursor-column 2 :alternate-screen t)
+                emacsvox-eat--last-likely-focus
+                '(:kind highlight :text "Selected" :confidence medium
+                  :row-start 1 :row-end 1))
+          (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                     (lambda (text &rest _) (setq spoken text))))
+            (setq review (emacsvox-eat-review-screen)))
+          (should (eq (current-buffer) review))
+          (should (derived-mode-p 'emacsvox-eat-review-mode))
+          (should buffer-read-only)
+          (should truncate-lines)
+          (should (eq buffer-undo-list t))
+          (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                         "Menu\nSelected\n"))
+          (should (= (emacsvox-eat-review--row-at-point) 1))
+          (should (get-text-property (point) 'emacsvox-eat-review-cursor))
+          (should (get-text-property (point) 'emacsvox-eat-review-focus))
+          (should (eq (get-text-property (point-min) 'face) 'eat-term-bold))
+          (should
+           (equal (get-text-property (point-min) 'emacsvox-eat-style-traits)
+                  '(bold)))
+          (should
+           (string-match-p
+            "captured cursor, likely focus, medium confidence: Selected"
+            spoken))
+          (should-not (string-match-p "UNRETAINED" spoken))
+          (with-current-buffer source
+            (should (= (point) source-point))
+            (aset (car (plist-get emacsvox-eat--screen-snapshot :rows))
+                  0 ?X)
+            (setf (plist-get emacsvox-eat--screen-snapshot :rows)
+                  '("MUTATED-SOURCE"))
+            (insert "MORE-LIVE-CONTENT"))
+          (should (equal (buffer-substring-no-properties (point-min) (point-max))
+                         "Menu\nSelected\n"))
+          (should-not (string-match-p "MUTATED\|MORE-LIVE" (buffer-string))))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p source) (kill-buffer source)))))
+
+(ert-deftest emacsvox-eat-frozen-review-navigation-is-row-bounded ()
+  "Frozen navigation speaks destinations and explicit first/last boundaries."
+  (let ((source (generate-new-buffer " *emacsvox-eat-review-nav*"))
+        review
+        submissions)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq major-mode 'eat-mode
+                emacsvox-eat--screen-snapshot
+                '(:text "One\nTwo\nThree" :rows ("One" "Two" "Three")
+                  :styles nil :cursor-row 1 :alternate-screen nil))
+          (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                     (lambda (text &rest _)
+                       (push (substring-no-properties text) submissions))))
+            (setq review (emacsvox-eat-review-screen))
+            (emacsvox-eat-review-next-line)
+            (emacsvox-eat-review-next-line)
+            (emacsvox-eat-review-previous-line 2))
+          (should (= (emacsvox-eat-review--row-at-point) 0))
+          (should
+           (equal
+            (nreverse submissions)
+            '("Frozen screen review opened. Terminal row 2 of 3, captured cursor: Two"
+              "Terminal row 3 of 3: Three"
+              "Last retained row. Terminal row 3 of 3: Three"
+              "Terminal row 1 of 3: One"))))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p source) (kill-buffer source)))))
+
+(ert-deftest emacsvox-eat-frozen-review-keeps-exact-completion-copy ()
+  "Completion view preserves frozen columns after source state changes."
+  (let ((source (generate-new-buffer " *emacsvox-eat-review-completion*"))
+        review
+        spoken)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq major-mode 'eat-mode
+                emacsvox-eat--screen-snapshot
+                '(:text "$ git pu" :rows ("$ git pu") :styles nil
+                  :cursor-row 0 :alternate-screen nil)
+                emacsvox-eat--last-completion-output
+                '(:layout rows :row-count 2 :confidence anchored
+                  :rows ("pull  Update from remote"
+                         "push  Upload to remote")))
+          (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                     (lambda (text &rest _)
+                       (setq spoken (substring-no-properties text)))))
+            (setq review (emacsvox-eat-review-screen))
+            (with-current-buffer source
+              (setf (plist-get emacsvox-eat--last-completion-output :rows)
+                    '("MUTATED-CANDIDATE")))
+            (with-current-buffer review
+              (emacsvox-eat-review-show-completion)))
+          (should (eq emacsvox-eat-review--view 'completion))
+          (should
+           (equal
+            (buffer-substring-no-properties (point-min) (point-max))
+            "pull  Update from remote\npush  Upload to remote\n"))
+          (should
+           (equal
+            spoken
+            (concat
+             "2 retained completion rows. Completion row 1 of 2: "
+             "pull  Update from remote")))
+          (should-not (string-match-p "MUTATED" (buffer-string))))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p source) (kill-buffer source)))))
+
+(ert-deftest emacsvox-eat-frozen-review-never-overwrites-name-collision ()
+  "Opening an EAT review preserves an unrelated buffer with the target name."
+  (let* ((source (generate-new-buffer " *emacsvox-eat-review-collision*"))
+         (target-name (format "*EAT Review: %s*" (buffer-name source)))
+         (collision (generate-new-buffer target-name))
+         review)
+    (unwind-protect
+        (save-window-excursion
+          (with-current-buffer collision (insert "KEEP-THIS-CONTENT"))
+          (switch-to-buffer source)
+          (setq major-mode 'eat-mode
+                emacsvox-eat--screen-snapshot
+                '(:text "SCREEN" :rows ("SCREEN") :styles nil
+                  :cursor-row 0 :alternate-screen nil))
+          (cl-letf (((symbol-function 'emacsvox-eat--submit) #'ignore))
+            (setq review (emacsvox-eat-review-screen)))
+          (should-not (eq review collision))
+          (with-current-buffer collision
+            (should (equal (buffer-string) "KEEP-THIS-CONTENT")))
+          (with-current-buffer review
+            (should (equal (buffer-substring-no-properties
+                            (point-min) (point-max))
+                           "SCREEN\n"))))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p collision) (kill-buffer collision))
+      (when (buffer-live-p source) (kill-buffer source)))))
+
+(ert-deftest emacsvox-eat-frozen-review-jumps-without-touching-terminal ()
+  "Cursor and likely-focus commands navigate only the copied screen rows."
+  (let ((source (generate-new-buffer " *emacsvox-eat-review-jump*"))
+        review
+        source-point)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq major-mode 'eat-mode)
+          (insert "LIVE")
+          (goto-char 3)
+          (setq source-point (point)
+                emacsvox-eat--screen-snapshot
+                '(:text "Top\nMiddle\nBottom"
+                  :rows ("Top" "Middle" "Bottom") :styles nil
+                  :cursor-row 0 :alternate-screen t)
+                emacsvox-eat--last-likely-focus
+                '(:kind highlight :text "Bottom" :confidence high
+                  :row-start 2 :row-end 2))
+          (cl-letf (((symbol-function 'emacsvox-eat--submit) #'ignore))
+            (setq review (emacsvox-eat-review-screen))
+            (emacsvox-eat-review-goto-focus)
+            (should (= (emacsvox-eat-review--row-at-point) 2))
+            (emacsvox-eat-review-goto-cursor)
+            (should (= (emacsvox-eat-review--row-at-point) 0)))
+          (with-current-buffer source
+            (should (= (point) source-point))
+            (should (equal (buffer-string) "LIVE"))))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p source) (kill-buffer source)))))
+
+(ert-deftest emacsvox-eat-sensitive-boundary-kills-frozen-review ()
+  "Secure and lifecycle clearing cannot leave copied terminal content alive."
+  (let ((source (generate-new-buffer " *emacsvox-eat-review-private*"))
+        review)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq major-mode 'eat-mode
+                emacsvox-eat--screen-snapshot
+                '(:text "PRIVATE" :rows ("PRIVATE") :styles nil
+                  :cursor-row 0 :alternate-screen nil))
+          (cl-letf (((symbol-function 'emacsvox-eat--submit) #'ignore))
+            (setq review (emacsvox-eat-review-screen)))
+          (with-current-buffer source
+            (emacsvox-eat--clear-sensitive-screen-state)
+            (should-not emacsvox-eat--review-buffer)
+            (should-not emacsvox-eat--screen-snapshot))
+          (should-not (buffer-live-p review)))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p source) (kill-buffer source)))))
+
+(ert-deftest emacsvox-eat-killing-source-kills-frozen-review ()
+  "A source terminal cannot die while leaving its copied review buffer."
+  (let ((source (generate-new-buffer " *emacsvox-eat-review-death*"))
+        review)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq major-mode 'eat-mode
+                emacsvox-eat--screen-snapshot
+                '(:text "COPY" :rows ("COPY") :styles nil
+                  :cursor-row 0 :alternate-screen nil))
+          (emacsvox-eat-mode-setup)
+          (cl-letf (((symbol-function 'emacsvox-eat--submit) #'ignore))
+            (setq review (emacsvox-eat-review-screen)))
+          (kill-buffer source)
+          (should-not (buffer-live-p review)))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p source) (kill-buffer source)))))
+
+(ert-deftest emacsvox-eat-frozen-review-mode-has-complete-navigation-map ()
+  "The immutable review buffer exposes its row, view, anchor, and quit keys."
+  (dolist
+      (binding
+       '(("n" . emacsvox-eat-review-next-line)
+         ("p" . emacsvox-eat-review-previous-line)
+         ("SPC" . emacsvox-eat-review-speak-current-line)
+         ("RET" . emacsvox-eat-review-speak-current-line)
+         ("a" . emacsvox-eat-review-speak-view)
+         ("s" . emacsvox-eat-review-show-screen)
+         ("c" . emacsvox-eat-review-show-completion)
+         ("C" . emacsvox-eat-review-goto-cursor)
+         ("h" . emacsvox-eat-review-goto-focus)
+         ("q" . emacsvox-eat-review-quit)))
+    (should
+     (eq (lookup-key emacsvox-eat-review-mode-map (kbd (car binding)))
+         (cdr binding)))))
 
 (ert-deftest emacsvox-eat-screen-observer-coalesces-an-update-burst ()
   "Successive chunks produce one aggregate diff after quiescence."

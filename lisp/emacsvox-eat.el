@@ -209,6 +209,9 @@ when the terminal is selected again."
 (defvar-local emacsvox-eat--last-background-cue-at nil
   "Time at which monitored background output most recently played a cue.")
 
+(defvar-local emacsvox-eat--review-buffer nil
+  "Read-only buffer holding this terminal's explicitly frozen screen review.")
+
 (defvar-local emacsvox-eat--terminal-id nil
   "Process-local integer used in replaceable EAT delivery keys.")
 
@@ -1442,6 +1445,7 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
 
 (defun emacsvox-eat--clear-sensitive-screen-state ()
   "Forget content-bearing EAT observation state in the current buffer."
+  (emacsvox-eat--kill-review-buffer)
   (emacsvox-eat--clear-background-monitor-state)
   (emacsvox-eat--cancel-quiescence)
   (emacsvox-eat--cancel-completion)
@@ -1694,6 +1698,7 @@ Ignore a stale or duplicate exit after another process has become active."
                 emacsvox-eat--last-exited-process nil))
   (add-hook 'window-selection-change-functions
             #'emacsvox-eat--window-selection-changed nil t)
+  (add-hook 'kill-buffer-hook #'emacsvox-eat--kill-review-buffer nil t)
   (emacsvox-eat--install-bell-observer)
   (cl-loop
    for map-symbol in
@@ -1725,6 +1730,53 @@ prefix, disable it."
     enabled-p))
 
 ;;;  Snapshot Review:
+
+(defvar-local emacsvox-eat-review--source-buffer nil
+  "Live EAT buffer from which this frozen review was explicitly copied.")
+
+(defvar-local emacsvox-eat-review--snapshot nil
+  "Immutable concealed-redacted EAT screen copied for this review buffer.")
+
+(defvar-local emacsvox-eat-review--completion nil
+  "Immutable completion/help presentation copied for this review buffer.")
+
+(defvar-local emacsvox-eat-review--focus nil
+  "Immutable conservative focus inference copied for this review buffer.")
+
+(defvar-local emacsvox-eat-review--view 'screen
+  "Kind of frozen content currently rendered in this review buffer.")
+
+(defun emacsvox-eat--kill-review-buffer ()
+  "Kill and forget the current EAT terminal's content-bearing review buffer."
+  (when (buffer-live-p emacsvox-eat--review-buffer)
+    (let ((review emacsvox-eat--review-buffer))
+      (setq emacsvox-eat--review-buffer nil)
+      (kill-buffer review)))
+  (setq emacsvox-eat--review-buffer nil))
+
+(defun emacsvox-eat-review--forget-source ()
+  "Clear the source terminal's reference when this review buffer is killed."
+  (let ((source emacsvox-eat-review--source-buffer)
+        (review (current-buffer)))
+    (setq emacsvox-eat-review--source-buffer nil)
+    (when (buffer-live-p source)
+      (with-current-buffer source
+        (when (eq emacsvox-eat--review-buffer review)
+          (setq emacsvox-eat--review-buffer nil))))))
+
+(defun emacsvox-eat-review--copy-data (value)
+  "Return a deep mutable-container and string copy of data-only VALUE."
+  (cond
+   ((stringp value) (copy-sequence value))
+   ((consp value)
+    (cons
+     (emacsvox-eat-review--copy-data (car value))
+     (emacsvox-eat-review--copy-data (cdr value))))
+   ((vectorp value)
+    (apply
+     #'vector
+     (mapcar #'emacsvox-eat-review--copy-data (append value nil))))
+   (t value)))
 
 (defun emacsvox-eat--ensure-review-context ()
   "Require a reviewable EAT terminal as the current buffer."
@@ -1962,6 +2014,348 @@ prefix, disable it."
     (emacsvox-eat--submit-review
      "No terminal screen snapshot is available" 'output-navigation)))
 
+(defun emacsvox-eat-review--normalized-face-property (normalized)
+  "Return an Emacs face property reconstructed from NORMALIZED face data."
+  (when normalized
+    (let ((faces (copy-sequence (plist-get normalized :faces)))
+          attributes)
+      (dolist (entry (plist-get normalized :attributes))
+        (setq attributes
+              (append attributes (list (car entry) (cdr entry)))))
+      (cond
+       ((and faces attributes) (append faces (list attributes)))
+       ((cdr faces) faces)
+       ((car faces) (car faces))
+       (attributes attributes)))))
+
+(defun emacsvox-eat-review--apply-styles ()
+  "Apply normalized frozen screen styles to the current review buffer."
+  (let* ((snapshot emacsvox-eat-review--snapshot)
+         (text-length (length (or (plist-get snapshot :text) "")))
+         (origin (point-min)))
+    (dolist (run (plist-get snapshot :styles))
+      (let* ((start (+ origin (max 0 (car run))))
+             (end (+ origin (min text-length (cadr run))))
+             (style (caddr run))
+             (face
+              (emacsvox-eat-review--normalized-face-property
+               (plist-get style :face)))
+             (mouse-face
+              (emacsvox-eat-review--normalized-face-property
+               (plist-get style :mouse-face)))
+             properties)
+        (when face (setq properties (append properties (list 'face face))))
+        (when mouse-face
+          (setq properties
+                (append properties (list 'mouse-face mouse-face))))
+        (when-let* ((traits (plist-get style :traits)))
+          (setq properties
+                (append
+                 properties
+                 (list 'emacsvox-eat-style-traits
+                       (copy-sequence traits)))))
+        (when (and properties (< start end))
+          (add-text-properties start end properties))))))
+
+(defun emacsvox-eat-review--rows (&optional view)
+  "Return frozen rows for VIEW, defaulting to the current review view."
+  (pcase (or view emacsvox-eat-review--view)
+    ('completion (plist-get emacsvox-eat-review--completion :rows))
+    (_ (plist-get emacsvox-eat-review--snapshot :rows))))
+
+(defun emacsvox-eat-review--render (view)
+  "Render immutable terminal VIEW in the current read-only review buffer."
+  (let ((rows (emacsvox-eat-review--rows view))
+        (cursor-row
+         (and (eq view 'screen)
+              (plist-get emacsvox-eat-review--snapshot :cursor-row)))
+        (focus-start
+         (and (eq view 'screen)
+              (plist-get emacsvox-eat-review--focus :row-start)))
+        (focus-end
+         (and (eq view 'screen)
+              (plist-get emacsvox-eat-review--focus :row-end)))
+        (inhibit-read-only t)
+        (inhibit-modification-hooks t))
+    (setq emacsvox-eat-review--view view)
+    (erase-buffer)
+    (cl-loop
+     for row in rows
+     for index from 0
+     do
+     (let ((start (point)))
+       (insert (emacsvox-eat--sanitize-output-row row) "\n")
+       (add-text-properties
+        start (point)
+        (append
+         (list 'emacsvox-eat-review-row index
+               'emacsvox-eat-review-view view
+               'rear-nonsticky t)
+         (when (and (integerp cursor-row) (= index cursor-row))
+           '(emacsvox-eat-review-cursor t))
+         (when (and (integerp focus-start) (integerp focus-end)
+                    (<= focus-start index focus-end))
+           (list 'emacsvox-eat-review-focus
+                 emacsvox-eat-review--focus))))))
+    (when (eq view 'screen) (emacsvox-eat-review--apply-styles))
+    (goto-char (point-min))
+    (set-buffer-modified-p nil)))
+
+(defun emacsvox-eat-review--row-at-point ()
+  "Return the zero-based frozen row represented at point, or nil."
+  (get-text-property (line-beginning-position) 'emacsvox-eat-review-row))
+
+(defun emacsvox-eat-review--goto-row (row)
+  "Move point to frozen zero-based ROW in the current rendered view."
+  (let ((count (length (emacsvox-eat-review--rows))))
+    (when (> count 0)
+      (goto-char (point-min))
+      (forward-line (max 0 (min row (1- count))))
+      (emacsvox-eat-review--row-at-point))))
+
+(defun emacsvox-eat-review--current-line-description ()
+  "Return a styled spoken description of the frozen row at point."
+  (when-let* ((row (emacsvox-eat-review--row-at-point)))
+    (let* ((rows (emacsvox-eat-review--rows))
+           (text
+            (buffer-substring
+             (line-beginning-position) (line-end-position)))
+           (cursor-p
+            (get-text-property
+             (line-beginning-position) 'emacsvox-eat-review-cursor))
+           (focus
+            (get-text-property
+             (line-beginning-position) 'emacsvox-eat-review-focus))
+           (label
+            (if (eq emacsvox-eat-review--view 'completion)
+                (format "Completion row %d of %d" (1+ row) (length rows))
+              (concat
+               (format "Terminal row %d of %d" (1+ row) (length rows))
+               (when cursor-p ", captured cursor")
+               (when focus
+                 (format ", likely focus, %s confidence"
+                         (or (plist-get focus :confidence) 'unknown)))))))
+      (if (string-empty-p (string-trim text))
+          (concat label " is blank")
+        (concat label ": " text)))))
+
+(defun emacsvox-eat-review-speak-current-line (&optional introduction)
+  "Speak the current frozen terminal row after optional INTRODUCTION."
+  (interactive)
+  (unless (derived-mode-p 'emacsvox-eat-review-mode)
+    (user-error "This is not a frozen EAT review buffer"))
+  (if-let* ((description
+             (emacsvox-eat-review--current-line-description)))
+      (emacsvox-eat--submit-review
+       (concat (or introduction "") description)
+       (if (eq emacsvox-eat-review--view 'completion)
+           'completion
+         'output-navigation))
+    (emacsvox-eat--submit-review
+     "This frozen review view contains no rows" 'output-navigation)))
+
+(defun emacsvox-eat-review--move (delta)
+  "Move by DELTA frozen rows and speak the destination."
+  (let* ((rows (emacsvox-eat-review--rows))
+         (count (length rows))
+         (current (or (emacsvox-eat-review--row-at-point) 0))
+         (requested (+ current delta))
+         (target (max 0 (min requested (1- count))))
+         introduction)
+    (unless (> count 0) (user-error "This frozen view contains no rows"))
+    (when (< requested 0) (setq introduction "First retained row. "))
+    (when (>= requested count) (setq introduction "Last retained row. "))
+    (emacsvox-eat-review--goto-row target)
+    (emacsvox-eat-review-speak-current-line introduction)))
+
+(defun emacsvox-eat-review-next-line (&optional count)
+  "Move forward COUNT frozen terminal rows and speak the destination."
+  (interactive "p")
+  (emacsvox-eat-review--move (or count 1)))
+
+(defun emacsvox-eat-review-previous-line (&optional count)
+  "Move backward COUNT frozen terminal rows and speak the destination."
+  (interactive "p")
+  (emacsvox-eat-review--move (- (or count 1))))
+
+(defun emacsvox-eat-review-show-screen ()
+  "Render the frozen terminal screen and move to its captured cursor row."
+  (interactive)
+  (unless (derived-mode-p 'emacsvox-eat-review-mode)
+    (user-error "This is not a frozen EAT review buffer"))
+  (emacsvox-eat-review--render 'screen)
+  (emacsvox-eat-review--goto-row
+   (or (plist-get emacsvox-eat-review--snapshot :cursor-row) 0))
+  (emacsvox-eat-review-speak-current-line "Frozen screen view. "))
+
+(defun emacsvox-eat-review--completion-heading ()
+  "Return a count description for the frozen completion presentation."
+  (let* ((completion emacsvox-eat-review--completion)
+         (items-p (eq (plist-get completion :layout) 'items))
+         (count
+          (or (and items-p (plist-get completion :item-count))
+              (plist-get completion :row-count)
+              (length (plist-get completion :rows))))
+         (visible-p (eq (plist-get completion :confidence) 'unanchored)))
+    (format "%s%d%s retained %s%s. "
+            (if visible-p "At least " "")
+            count
+            (if visible-p " visible" "")
+            (if items-p "candidate" "completion row")
+            (if (= count 1) "" "s"))))
+
+(defun emacsvox-eat-review-show-completion ()
+  "Render and speak the frozen terminal candidate or help-row presentation."
+  (interactive)
+  (unless (derived-mode-p 'emacsvox-eat-review-mode)
+    (user-error "This is not a frozen EAT review buffer"))
+  (if (emacsvox-eat-review--rows 'completion)
+      (progn
+        (emacsvox-eat-review--render 'completion)
+        (emacsvox-eat-review--goto-row 0)
+        (emacsvox-eat-review-speak-current-line
+         (emacsvox-eat-review--completion-heading)))
+    (emacsvox-eat--submit-review
+     "No terminal completion output was frozen for this review"
+     'completion)))
+
+(defun emacsvox-eat-review-goto-cursor ()
+  "Return to the frozen screen's captured terminal cursor row."
+  (interactive)
+  (unless (derived-mode-p 'emacsvox-eat-review-mode)
+    (user-error "This is not a frozen EAT review buffer"))
+  (if-let* ((row (plist-get emacsvox-eat-review--snapshot :cursor-row))
+            ((integerp row)))
+      (progn
+        (unless (eq emacsvox-eat-review--view 'screen)
+          (emacsvox-eat-review--render 'screen))
+        (emacsvox-eat-review--goto-row row)
+        (emacsvox-eat-review-speak-current-line "Captured cursor. "))
+    (emacsvox-eat--submit-review
+     "The frozen terminal screen has no cursor row" 'output-navigation)))
+
+(defun emacsvox-eat-review-goto-focus ()
+  "Move to the frozen conservative focus row and speak it."
+  (interactive)
+  (unless (derived-mode-p 'emacsvox-eat-review-mode)
+    (user-error "This is not a frozen EAT review buffer"))
+  (if-let* ((focus emacsvox-eat-review--focus)
+            (row (plist-get focus :row-start))
+            ((integerp row))
+            ((< -1 row (length (emacsvox-eat-review--rows 'screen)))))
+      (progn
+        (unless (eq emacsvox-eat-review--view 'screen)
+          (emacsvox-eat-review--render 'screen))
+        (emacsvox-eat-review--goto-row row)
+        (emacsvox-eat-review-speak-current-line "Likely focus. "))
+    (emacsvox-eat--submit-review
+     "No likely terminal focus was frozen for this review"
+     'output-navigation)))
+
+(defun emacsvox-eat-review-speak-view ()
+  "Speak a bounded overview of the current immutable review view."
+  (interactive)
+  (unless (derived-mode-p 'emacsvox-eat-review-mode)
+    (user-error "This is not a frozen EAT review buffer"))
+  (if-let* ((content
+             (emacsvox-eat--bounded-review-output
+              (emacsvox-eat-review--rows))))
+      (emacsvox-eat--submit-review
+       (concat
+        (if (eq emacsvox-eat-review--view 'completion)
+            (emacsvox-eat-review--completion-heading)
+          "Frozen terminal screen. ")
+        content)
+       (if (eq emacsvox-eat-review--view 'completion)
+           'completion
+         'output-navigation))
+    (emacsvox-eat--submit-review
+     "This frozen review view is blank" 'output-navigation)))
+
+(defun emacsvox-eat-review-quit ()
+  "Kill the content-bearing frozen EAT review and restore its prior window."
+  (interactive)
+  (unless (derived-mode-p 'emacsvox-eat-review-mode)
+    (user-error "This is not a frozen EAT review buffer"))
+  (quit-window t))
+
+(defvar emacsvox-eat-review-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map special-mode-map)
+    (dolist
+        (binding
+         '(("n" . emacsvox-eat-review-next-line)
+           ("p" . emacsvox-eat-review-previous-line)
+           ("C-n" . emacsvox-eat-review-next-line)
+           ("C-p" . emacsvox-eat-review-previous-line)
+           ("<down>" . emacsvox-eat-review-next-line)
+           ("<up>" . emacsvox-eat-review-previous-line)
+           ("SPC" . emacsvox-eat-review-speak-current-line)
+           ("RET" . emacsvox-eat-review-speak-current-line)
+           ("." . emacsvox-eat-review-speak-current-line)
+           ("a" . emacsvox-eat-review-speak-view)
+           ("s" . emacsvox-eat-review-show-screen)
+           ("c" . emacsvox-eat-review-show-completion)
+           ("C" . emacsvox-eat-review-goto-cursor)
+           ("h" . emacsvox-eat-review-goto-focus)
+           ("?" . describe-mode)
+           ("q" . emacsvox-eat-review-quit)))
+      (define-key map (kbd (car binding)) (cdr binding)))
+    map)
+  "Keymap for immutable EAT screen review buffers.")
+
+(define-derived-mode emacsvox-eat-review-mode special-mode "EAT-Review"
+  "Review a frozen concealed-redacted EAT screen without touching its terminal.
+
+The buffer is an explicit immutable copy.  n and p move by terminal row; SPC,
+RET, or period speaks the current row; C returns to the captured cursor; h
+moves to a retained likely focus; c shows retained completion/help output; s
+returns to screen rows; a speaks the bounded current view; and q kills the
+content-bearing review buffer."
+  (setq-local emacsvox-aural-module 'eat)
+  (setq-local truncate-lines t)
+  (buffer-disable-undo)
+  (add-hook 'kill-buffer-hook #'emacsvox-eat-review--forget-source nil t))
+
+(defun emacsvox-eat-review-screen ()
+  "Open a read-only review copied from retained EAT screen state.
+The command never captures mutable live terminal-buffer text."
+  (interactive)
+  (emacsvox-eat--ensure-review-context)
+  (if (null emacsvox-eat--screen-snapshot)
+      (progn
+        (emacsvox-eat--submit-review
+         "No terminal screen snapshot is available" 'output-navigation)
+        nil)
+    (let* ((source (current-buffer))
+           (snapshot
+            (emacsvox-eat-review--copy-data
+             emacsvox-eat--screen-snapshot))
+           (completion
+            (emacsvox-eat-review--copy-data
+             emacsvox-eat--last-completion-output))
+           (focus
+            (emacsvox-eat-review--copy-data
+             emacsvox-eat--last-likely-focus))
+           (buffer
+            (if (buffer-live-p emacsvox-eat--review-buffer)
+                emacsvox-eat--review-buffer
+              (generate-new-buffer
+               (format "*EAT Review: %s*" (buffer-name source))))))
+      (setq emacsvox-eat--review-buffer buffer)
+      (with-current-buffer buffer
+        (emacsvox-eat-review-mode)
+        (setq-local emacsvox-eat-review--source-buffer source
+                    emacsvox-eat-review--snapshot snapshot
+                    emacsvox-eat-review--completion completion
+                    emacsvox-eat-review--focus focus)
+        (emacsvox-eat-review--render 'screen)
+        (emacsvox-eat-review--goto-row
+         (or (plist-get snapshot :cursor-row) 0)))
+      (pop-to-buffer buffer)
+      (emacsvox-eat-review-speak-current-line "Frozen screen review opened. ")
+      buffer)))
+
 (define-prefix-command 'emacsvox-eat-review-map)
 (define-key emacsvox-eat-review-map (kbd "l")
             #'emacsvox-eat-speak-current-row)
@@ -1973,6 +2367,8 @@ prefix, disable it."
             #'emacsvox-eat-speak-completion-output)
 (define-key emacsvox-eat-review-map (kbd "s")
             #'emacsvox-eat-speak-visible-screen)
+(define-key emacsvox-eat-review-map (kbd "r")
+            #'emacsvox-eat-review-screen)
 (define-key emacsvox-keymap (kbd "q") 'emacsvox-eat-review-map)
 
 ;;;  Interactive Commands:
