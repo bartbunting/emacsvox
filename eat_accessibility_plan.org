@@ -145,7 +145,7 @@ Issues:
 
 Planned slices:
 
-1. pre-Tab public screen snapshot and generation/deadline;
+1. [X] pre-Tab public screen snapshot and generation/deadline;
 2. unique completion from logical screen change;
 3. quiesced candidate/help-row extraction;
 4. count, truncation, repeated-Tab deduplication, and retained review;
@@ -276,10 +276,12 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-23 | ~cadc1adc7~ | 3.2 | Quiesced inserted main-screen rows before the cursor are spoken once; cursor prompt is excluded, input-correlated legacy feedback remains, arbitrary async character speech is removed, and raw Tab/Return events are handled correctly. 37 focused tests and a compiled Bash PTY pass. |
 | 2026-08-23 | ~783c0ac9c~ | 3.3 | Linear suffix/prefix row alignment avoids replaying visible history after scroll; cursor prompt, unchanged repaint, conservative full replacement, resize/reflow, and alternate-screen repaint stay quiet. 39 focused tests, 2,000 randomized overlap comparisons, and compiled verification pass. |
 | 2026-08-23 | ~d0f5f7afc~ | 3.4 | Conservative same-row progress/status recognition uses stable replaceable transactions, retains the latest value, rate-limits intermediate updates to 1.5 seconds, presents terminal states immediately, suppresses input/resize/alternate-screen changes, and forces classification after at most 250 ms of continuous repaint. 43 focused tests, including a real EAT carriage-return rewrite, pass. |
-| 2026-08-23 | this commit | 3.5 | Automatic foreground output now requires the selected EAT window to follow the public terminal cursor.  Selected scrollback review stays silent while retaining the latest diff, screen, and status; another live-follow window cannot override the selected review window. 46 focused tests pass. |
+| 2026-08-23 | ~c4eee0947~ | 3.5 | Automatic foreground output now requires the selected EAT window to follow the public terminal cursor.  Selected scrollback review stays silent while retaining the latest diff, screen, and status; another live-follow window cannot override the selected review window. 46 focused tests pass. |
+| 2026-08-23 | this commit | 4.1 | Terminal Tab now captures a bounded public-screen transaction with process generation, transaction serial, start/deadline, and a generation-safe two-second expiry timer. Compatible intermediate updates no longer consume it; non-Tab input, background selection, lifecycle changes, and success cancel it. The private semi-character-mode check is gone, so character-mode Tab follows the same path. 50 focused tests pass. |
 
 * Current next action
 
-Replace the line-number/token-only Tab snapshot with a generation-scoped public
-screen transaction.  Preserve concise unique completion while making multiline,
-wrapped, and split-output completion safe for later candidate extraction.
+Classify unique completion from the pre/post public screens at quiescence.  Speak
+a concise changed result without depending on physical line numbers or parsing
+remote shell grammar, and cover wrapping, escaping, spaces, punctuation, and
+split updates.

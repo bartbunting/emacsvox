@@ -47,7 +47,6 @@
 (defvar eat-line-mode-map)
 (defvar eat-mode-map)
 (defvar eat-semi-char-mode-map)
-(defvar eat--semi-char-mode)
 (defvar eat-terminal)
 
 ;;   Required modules:
@@ -76,7 +75,13 @@
   "Most recent EAT process whose exit was observed in this buffer.")
 
 (defvar-local emacsvox-eat--completion-snapshot nil
-  "Line and token captured before EAT sends terminal completion input.")
+  "Generation-scoped public screen state captured before terminal Tab input.")
+
+(defvar-local emacsvox-eat--completion-timer nil
+  "Timer that expires `emacsvox-eat--completion-snapshot'.")
+
+(defvar-local emacsvox-eat--completion-serial 0
+  "Monotonic identity for terminal completion transactions in this buffer.")
 
 (defvar-local emacsvox-eat--screen-snapshot nil
   "Most recent public-API snapshot of the visible EAT screen.")
@@ -134,6 +139,9 @@
 
 (defconst emacsvox-eat--quiescence-maximum-delay 0.25
   "Maximum seconds a continuous EAT update burst may postpone classification.")
+
+(defconst emacsvox-eat--completion-timeout 2.0
+  "Seconds a terminal-side completion may await compatible remote output.")
 
 (defconst emacsvox-eat--face-attributes
   '(:foreground :background :weight :slant :underline :strike-through
@@ -621,8 +629,8 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
 (defun emacsvox-eat--clear-transient-state ()
   "Clear asynchronous EAT interaction state in the current buffer."
   (emacsvox-eat--cancel-quiescence)
-  (setq emacsvox-eat--completion-snapshot nil
-        emacsvox-eat--screen-snapshot nil
+  (emacsvox-eat--cancel-completion)
+  (setq emacsvox-eat--screen-snapshot nil
         emacsvox-eat--recent-input nil
         emacsvox-eat--last-screen-diff nil
         emacsvox-eat--last-changed-screen nil
@@ -946,11 +954,61 @@ Ignore a stale or duplicate exit after another process has become active."
         (buffer-substring-no-properties (point) end)))))
 
 (defun emacsvox-eat--capture-completion (cursor)
-  "Capture the line and token at EAT terminal CURSOR."
-  (setq emacsvox-eat--completion-snapshot
-        (and cursor
-             (cons (line-number-at-pos cursor)
-                   (emacsvox-eat--token-before-cursor cursor)))))
+  "Start a terminal completion transaction at EAT terminal CURSOR."
+  (emacsvox-eat--cancel-completion)
+  (setq emacsvox-eat--completion-serial
+        (1+ emacsvox-eat--completion-serial))
+  (when-let* ((cursor)
+              (screen (emacsvox-eat--capture-screen)))
+    (let* ((started-at (float-time))
+           (deadline (+ started-at emacsvox-eat--completion-timeout)))
+      (setq emacsvox-eat--completion-snapshot
+            (list
+             :generation emacsvox-eat--generation
+             :serial emacsvox-eat--completion-serial
+             :started-at started-at
+             :deadline deadline
+             :screen screen
+             ;; These two fields temporarily preserve the narrow unique
+             ;; completion presentation until screen-based classification.
+             :physical-line (line-number-at-pos cursor)
+             :token (emacsvox-eat--token-before-cursor cursor))
+            emacsvox-eat--completion-timer
+            (run-at-time
+             emacsvox-eat--completion-timeout nil
+             #'emacsvox-eat--expire-completion
+             (current-buffer) emacsvox-eat--generation
+             emacsvox-eat--completion-serial)))))
+
+(defun emacsvox-eat--cancel-completion ()
+  "Cancel and forget the current terminal completion transaction."
+  (when (timerp emacsvox-eat--completion-timer)
+    (cancel-timer emacsvox-eat--completion-timer))
+  (setq emacsvox-eat--completion-snapshot nil
+        emacsvox-eat--completion-timer nil))
+
+(defun emacsvox-eat--expire-completion (buffer generation serial)
+  "Expire BUFFER's terminal completion identified by GENERATION and SERIAL."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when (and emacsvox-eat--completion-snapshot
+                 (= generation emacsvox-eat--generation)
+                 (= serial emacsvox-eat--completion-serial)
+                 (= serial
+                    (plist-get emacsvox-eat--completion-snapshot :serial)))
+        (setq emacsvox-eat--completion-snapshot nil
+              emacsvox-eat--completion-timer nil)))))
+
+(defun emacsvox-eat--completion-current-p ()
+  "Return non-nil when the terminal completion transaction is current."
+  (let ((snapshot emacsvox-eat--completion-snapshot))
+    (if (and snapshot
+             (= (plist-get snapshot :generation)
+                emacsvox-eat--generation)
+             (<= (float-time) (plist-get snapshot :deadline)))
+        t
+      (emacsvox-eat--cancel-completion)
+      nil)))
 
 (defun emacsvox-eat--record-input (event)
   "Record one non-completion terminal input EVENT for correlated feedback."
@@ -967,16 +1025,14 @@ Ignore a stale or duplicate exit after another process has become active."
                   (+ (float-time) 0.5))))))
 
 (defun emacsvox--advice-eat-self-input-before (_count &optional event)
-  "Capture same-line completion context before EAT sends Tab EVENT."
+  "Capture terminal completion context before EAT sends Tab EVENT."
   (let ((event (or event last-command-event)))
-    (if (and eat-terminal
-             (bound-and-true-p eat--semi-char-mode)
-             (emacsvox-eat--tab-event-p event))
+    (if (and eat-terminal (emacsvox-eat--tab-event-p event))
         (progn
           (setq emacsvox-eat--recent-input nil)
           (emacsvox-eat--capture-completion
            (eat-term-display-cursor eat-terminal)))
-      (setq emacsvox-eat--completion-snapshot nil)
+      (emacsvox-eat--cancel-completion)
       (emacsvox-eat--record-input event))))
 
 (defun emacsvox-eat--completion-label (token)
@@ -990,19 +1046,18 @@ Ignore a stale or duplicate exit after another process has become active."
 
 (defun emacsvox-eat--speak-same-line-completion (cursor)
   "Speak a token extended by terminal completion at CURSOR.
-Return non-nil after providing completion feedback.  Candidate listings that
-move the cursor to another line deliberately fall through to ordinary EAT
-update feedback."
+Return non-nil after providing completion feedback.  Compatible intermediate
+updates leave the bounded transaction pending for later screen classification."
   (let ((snapshot emacsvox-eat--completion-snapshot))
-    (setq emacsvox-eat--completion-snapshot nil)
-    (when snapshot
-      (let ((old-line (car snapshot))
-            (old-token (cdr snapshot))
+    (when (and snapshot (emacsvox-eat--completion-current-p))
+      (let ((old-line (plist-get snapshot :physical-line))
+            (old-token (plist-get snapshot :token))
             (new-token (emacsvox-eat--token-before-cursor cursor)))
         (when (and (= old-line (line-number-at-pos cursor))
                    (> (length old-token) 0)
                    (> (length new-token) (length old-token))
                    (string-prefix-p old-token new-token))
+          (emacsvox-eat--cancel-completion)
           (tts-speak (emacsvox-eat--completion-label new-token))
           t)))))
 
@@ -1041,8 +1096,9 @@ terminal cursor accessor."
   "Speak an EAT update when its buffer is selected."
   (emacsvox-eat--observe-screen)
   (if (not (emacsvox-eat--selected-buffer-p))
-      (setq emacsvox-eat--completion-snapshot nil
-            emacsvox-eat--recent-input nil)
+      (progn
+        (emacsvox-eat--cancel-completion)
+        (setq emacsvox-eat--recent-input nil))
     (let* ((emacsvox-show-point t)
            (cursor (eat-term-display-cursor eat-terminal)))
       (unless (emacsvox-eat--speak-same-line-completion cursor)

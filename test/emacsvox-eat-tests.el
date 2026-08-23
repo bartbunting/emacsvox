@@ -54,6 +54,8 @@
           events)
       (cl-letf (((symbol-function 'eat-term-display-cursor)
                  (lambda (_terminal) (point-marker)))
+                ((symbol-function 'emacsvox-eat--capture-screen)
+                 (lambda () '(:generation 0 :rows ("$ ~/sr"))))
                 ((symbol-function 'emacsvox-eat--observe-screen) #'ignore)
                 ((symbol-function 'emacsvox-eat--selected-buffer-p)
                  (lambda () t))
@@ -79,6 +81,8 @@
           events)
       (cl-letf (((symbol-function 'eat-term-display-cursor)
                  (lambda (_terminal) (point-marker)))
+                ((symbol-function 'emacsvox-eat--capture-screen)
+                 (lambda () '(:generation 0 :rows ("$ ~/sr"))))
                 ((symbol-function 'emacsvox-eat--observe-screen) #'ignore)
                 ((symbol-function 'emacsvox-eat--selected-buffer-p)
                  (lambda () t))
@@ -92,8 +96,10 @@
         (erase-buffer)
         (insert "src/ source/\n$ ~/src/")
         (emacsvox-eat-update-hook))
-      (should-not emacsvox-eat--completion-snapshot)
-      (should-not events))))
+      (should emacsvox-eat--completion-snapshot)
+      (should (timerp emacsvox-eat--completion-timer))
+      (should-not events)
+      (emacsvox-eat--cancel-completion))))
 
 (ert-deftest emacsvox-eat-input-correlates-immediate-cursor-feedback ()
   "Only a recent user input can trigger the legacy immediate cursor cue."
@@ -157,6 +163,86 @@
   (should (emacsvox-eat--tab-event-p 9))
   (should (emacsvox-eat--tab-event-p 'tab))
   (should-not (emacsvox-eat--tab-event-p ?i)))
+
+(ert-deftest emacsvox-eat-terminal-tab-does-not-require-private-mode-state ()
+  "Any Tab delivered by `eat-self-input' starts terminal completion tracking."
+  (with-temp-buffer
+    (let ((eat-terminal 'terminal)
+          captured-cursor)
+      (cl-letf (((symbol-function 'eat-term-display-cursor)
+                 (lambda (_terminal) 'cursor))
+                ((symbol-function 'emacsvox-eat--capture-completion)
+                 (lambda (cursor) (setq captured-cursor cursor))))
+        (emacsvox--advice-eat-self-input-before 1 'tab))
+      (should (eq captured-cursor 'cursor)))))
+
+(ert-deftest emacsvox-eat-completion-captures-bounded-public-screen-state ()
+  "Pre-Tab state includes generation, deadline, cursor facts, and screen data."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
+          (emacsvox-eat--generation 6))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 30 4)
+            (eat-term-process-output eat-terminal "$ ~/sr")
+            (eat-term-redisplay eat-terminal)
+            (emacsvox-eat--capture-completion
+             (eat-term-display-cursor eat-terminal))
+            (let* ((transaction emacsvox-eat--completion-snapshot)
+                   (screen (plist-get transaction :screen)))
+              (should (= (plist-get transaction :generation) 6))
+              (should (= (plist-get transaction :serial) 1))
+              (should
+               (= (- (plist-get transaction :deadline)
+                     (plist-get transaction :started-at))
+                  emacsvox-eat--completion-timeout))
+              (should (equal (plist-get screen :rows) '("$ ~/sr")))
+              (should (= (plist-get screen :cursor-row) 0))
+              (should (= (plist-get screen :cursor-column) 6))
+              (should (integerp (plist-get screen :display-beginning)))
+              (should (integerp (plist-get screen :display-end)))
+              (should (equal (plist-get transaction :token) "~/sr"))
+              (should (timerp emacsvox-eat--completion-timer))))
+        (emacsvox-eat--cancel-completion)
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-completion-survives-compatible-intermediate-update ()
+  "An unchanged batch before unique expansion does not consume completion."
+  (with-temp-buffer
+    (insert "$ ~/sr")
+    (let ((emacsvox-eat--generation 2)
+          (emacsvox-eat--completion-snapshot
+           (list :generation 2 :serial 4
+                 :deadline (+ (float-time) 1)
+                 :physical-line 1 :token "~/sr"))
+          events)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text) (push text events))))
+        (should-not
+         (emacsvox-eat--speak-same-line-completion (point-marker)))
+        (should emacsvox-eat--completion-snapshot)
+        (erase-buffer)
+        (insert "$ ~/src/")
+        (should
+         (emacsvox-eat--speak-same-line-completion (point-marker))))
+      (should-not emacsvox-eat--completion-snapshot)
+      (should (equal events '("src/"))))))
+
+(ert-deftest emacsvox-eat-completion-timeout-is-generation-and-serial-safe ()
+  "A stale timeout cannot clear a replacement completion transaction."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 3)
+          (emacsvox-eat--completion-serial 2)
+          (emacsvox-eat--completion-snapshot
+           '(:generation 3 :serial 2 :deadline 100.0)))
+      (emacsvox-eat--expire-completion (current-buffer) 3 1)
+      (should emacsvox-eat--completion-snapshot)
+      (emacsvox-eat--expire-completion (current-buffer) 2 2)
+      (should emacsvox-eat--completion-snapshot)
+      (emacsvox-eat--expire-completion (current-buffer) 3 2)
+      (should-not emacsvox-eat--completion-snapshot)
+      (should-not emacsvox-eat--completion-timer))))
 
 (ert-deftest emacsvox-eat-background-update-is-silent ()
   "An EAT resize while another buffer is selected produces no speech."
@@ -254,6 +340,8 @@
   (with-temp-buffer
     (let ((emacsvox-eat--generation 7)
           (emacsvox-eat--completion-snapshot '(12 . "stale"))
+          (emacsvox-eat--completion-timer
+           (run-at-time 60 nil #'ignore))
           (emacsvox-eat--screen-snapshot '(:generation 7 :text "stale"))
           (emacsvox-eat--pending-screen-baseline
            '(:generation 7 :text "older"))
@@ -271,6 +359,7 @@
       (should (= emacsvox-eat--generation 8))
       (should (eq emacsvox-eat--active-process process-a))
       (should-not emacsvox-eat--completion-snapshot)
+      (should-not emacsvox-eat--completion-timer)
       (should-not emacsvox-eat--screen-snapshot)
       (should-not emacsvox-eat--pending-screen-baseline)
       (should-not emacsvox-eat--pending-screen-diff)
