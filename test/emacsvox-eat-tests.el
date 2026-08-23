@@ -288,18 +288,20 @@
       (case
        '(("$ git pu"
           "$ git pu\npull    push\n$ git pu"
-          ("pull    push"))
+          ("pull    push") items ("pull" "push"))
          ("router# sh"
           "router# sh\nshow      Display system information\nshutdown  Halt the device\nrouter# sh"
           ("show      Display system information"
-           "shutdown  Halt the device"))))
-    (pcase-let ((`(,old-text ,new-text ,expected) case))
+           "shutdown  Halt the device") rows nil)))
+    (pcase-let ((`(,old-text ,new-text ,expected ,layout ,items) case))
       (let ((result
              (emacsvox-eat--completion-output-change
               (emacsvox-eat-test--screen old-text 80)
               (emacsvox-eat-test--screen new-text 80))))
         (should (equal (plist-get result :rows) expected))
         (should (= (plist-get result :row-count) (length expected)))
+        (should (eq (plist-get result :layout) layout))
+        (should (equal (plist-get result :items) items))
         (should (eq (plist-get result :confidence) 'anchored))))))
 
 (ert-deftest emacsvox-eat-completion-output-aligns-scroll-and-fails-closed ()
@@ -395,7 +397,7 @@
         (emacsvox-eat--screen-quiesced
          (emacsvox-eat--screen-diff partial final) final))
       (should (= (length submissions) 1))
-      (should (equal (caar submissions) "pull    push"))
+      (should (equal (caar submissions) "2 candidates\npull\npush"))
       (should-not emacsvox-eat--completion-snapshot))))
 
 (ert-deftest emacsvox-eat-candidate-output-is-semantic-retained-and-singular ()
@@ -416,7 +418,7 @@
                    (push (list content arguments) submissions))))
         (emacsvox-eat--screen-quiesced diff new))
       (should (= (length submissions) 1))
-      (should (equal (caar submissions) "pull    push"))
+      (should (equal (caar submissions) "2 candidates\npull\npush"))
       (should
        (equal (plist-get (cadar submissions) :facts)
               '(:role candidate :events (operation-completed))))
@@ -427,6 +429,108 @@
       (should
        (eq (plist-get emacsvox-eat--last-completion-output :confidence)
            'anchored)))))
+
+(ert-deftest emacsvox-eat-completion-presentation-counts-without-inventing-items ()
+  "Candidate cells get item counts; descriptive output keeps row counts."
+  (let ((candidates
+         '(:rows ("pull    push") :row-count 1
+           :items ("pull" "push") :item-count 2 :layout items
+           :confidence anchored))
+        (help
+         '(:rows ("show      Display system information"
+                  "shutdown  Halt the device")
+           :row-count 2 :items nil :item-count nil :layout rows
+           :confidence anchored))
+        (uncertain
+         '(:rows ("pull" "push") :row-count 2
+           :items ("pull" "push") :item-count 2 :layout items
+           :confidence unanchored))
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest _) (push content submissions))))
+      (emacsvox-eat--present-completion-output candidates)
+      (emacsvox-eat--present-completion-output help)
+      (emacsvox-eat--present-completion-output uncertain))
+    (should
+     (equal
+      (nreverse submissions)
+      '("2 candidates\npull\npush"
+        "2 completion rows\nshow      Display system information\nshutdown  Halt the device"
+        "At least 2 visible candidates\npull\npush")))))
+
+(ert-deftest emacsvox-eat-completion-presentation-bounds-large-item-lists ()
+  "A large inferred list announces its count, subset, and truncation."
+  (let* ((items
+          (mapcar (lambda (number) (format "candidate-%02d" number))
+                  (number-sequence 1 12)))
+         (completion
+          (list :rows items :row-count 12 :items items :item-count 12
+                :layout 'items :confidence 'anchored))
+         submission)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest _) (setq submission content))))
+      (emacsvox-eat--present-completion-output completion))
+    (should
+     (equal
+      submission
+      (concat
+       "12 candidates\n"
+       (string-join (emacsvox-eat--list-slice items 0 8) "\n")
+       "\n4 additional candidates not spoken")))
+    (should (= (length (plist-get completion :rows)) 12))))
+
+(ert-deftest emacsvox-eat-real-overflowing-list-reports-a-visible-lower-bound ()
+  "A list that scrolls away its anchor does not claim a false total count."
+  (with-temp-buffer
+    (let ((eat-terminal (eat-term-make (current-buffer) (point-min))))
+      (unwind-protect
+          (progn
+            (eat-term-resize eat-terminal 40 6)
+            (eat-term-process-output eat-terminal "$ c")
+            (eat-term-redisplay eat-terminal)
+            (let ((old (emacsvox-eat--capture-screen)))
+              (eat-term-process-output
+               eat-terminal
+               (concat
+                "\r\n"
+                (mapconcat
+                 (lambda (number) (format "candidate-%02d" number))
+                 (number-sequence 1 20) "\r\n")
+                "\r\n$ c"))
+              (eat-term-redisplay eat-terminal)
+              (let ((result
+                     (emacsvox-eat--completion-output-change
+                      old (emacsvox-eat--capture-screen))))
+                (should (eq (plist-get result :confidence) 'unanchored))
+                (should (= (plist-get result :item-count) 5))
+                (should
+                 (equal (emacsvox-eat--completion-count-text result)
+                        "At least 5 visible candidates")))))
+        (when (eat-term-live-p eat-terminal)
+          (eat-term-delete eat-terminal))))))
+
+(ert-deftest emacsvox-eat-repeated-completion-output-is-deduplicated ()
+  "Normalized repeated output announces only the unchanged count."
+  (with-temp-buffer
+    (let* ((signature
+           (emacsvox-eat--completion-signature
+             'items '("pull    push   ") '("pull" "push")))
+           (emacsvox-eat--last-completion-output
+            (list :signature signature))
+           (completion
+            (list :rows '("pull    push") :row-count 1
+                  :items '("pull" "push") :item-count 2 :layout 'items
+                  :confidence 'anchored
+                  :signature
+                  (emacsvox-eat--completion-signature
+                   'items '("pull" "push") '("pull" "push"))))
+           submission)
+      (should (emacsvox-eat--completion-repeated-p completion))
+      (setq completion (plist-put completion :repeated t))
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest _) (setq submission content))))
+        (emacsvox-eat--present-completion-output completion))
+      (should (equal submission "Same 2 candidates")))))
 
 (ert-deftest emacsvox-eat-real-wrapped-inline-completion-is-one-result ()
   "Public EAT rows reconstruct a completion that crosses a visual wrap."

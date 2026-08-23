@@ -146,6 +146,9 @@
 (defconst emacsvox-eat--completion-timeout 2.0
   "Seconds a terminal-side completion may await compatible remote output.")
 
+(defconst emacsvox-eat--maximum-spoken-candidates 8
+  "Maximum inferred terminal candidates spoken automatically at once.")
+
 (defconst emacsvox-eat--face-attributes
   '(:foreground :background :weight :slant :underline :strike-through
     :inverse-video :overline :box)
@@ -568,6 +571,10 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
       t))
    ((when-let* ((completion
                  (emacsvox-eat--pending-completion-output snapshot)))
+      (setq completion
+            (plist-put
+             completion :repeated
+             (emacsvox-eat--completion-repeated-p completion)))
       (emacsvox-eat--retain-screen-change
        (plist-get completion :diff) snapshot)
       (emacsvox-eat--cancel-completion)
@@ -1174,6 +1181,48 @@ returns nil because recognizing its logical word would require shell grammar."
         (and (> (plist-get change :start) 0)
              (>= (length new-input) (length old-input))))))
 
+(defun emacsvox-eat--completion-row-items (row)
+  "Return conservatively inferred candidate items from terminal ROW.
+Two or more spaces may separate columns.  A resulting cell containing any
+whitespace is treated as descriptive or ambiguous, so the row is not split."
+  (let* ((trimmed (string-trim row))
+         (items (and (not (string-empty-p trimmed))
+                     (split-string trimmed "[ \t]\\{2,\\}" t))))
+    (when (and items
+               (cl-every
+                (lambda (item) (not (string-match-p "[[:space:]]" item)))
+                items))
+      items)))
+
+(defun emacsvox-eat--completion-items (rows)
+  "Return inferred candidate items from ROWS, or nil for row-oriented output."
+  (let ((nonempty
+         (cl-remove-if
+          (lambda (row) (string-empty-p (string-trim row))) rows))
+        items
+        valid-p)
+    (setq valid-p (not (null nonempty)))
+    (dolist (row nonempty)
+      (if-let* ((row-items (emacsvox-eat--completion-row-items row)))
+          (setq items (append items row-items))
+        (setq valid-p nil)))
+    (and valid-p items)))
+
+(defun emacsvox-eat--completion-signature (layout rows &optional items)
+  "Return a stable normalized signature for completion LAYOUT, ROWS, and ITEMS."
+  (list
+   layout
+   (mapcar
+    (lambda (text)
+      (string-trim-right (emacsvox-eat--sanitize-output-row text)))
+    (if (eq layout 'items) items rows))))
+
+(defun emacsvox-eat--completion-repeated-p (completion)
+  "Return non-nil when COMPLETION repeats the retained completion output."
+  (and emacsvox-eat--last-completion-output
+       (equal (plist-get completion :signature)
+              (plist-get emacsvox-eat--last-completion-output :signature))))
+
 (defun emacsvox-eat--completion-output-change (old new)
   "Return candidate/help-row facts between OLD and NEW terminal screens.
 Rows are preserved exactly.  `:confidence' is `anchored' when the old screen
@@ -1211,10 +1260,23 @@ through its input row remains as a prefix after scroll alignment, and
         (when (cl-some
                (lambda (row) (not (string-empty-p (string-trim row))))
                rows)
-          (let ((diff (emacsvox-eat--screen-diff old new)))
+          (let* ((diff (emacsvox-eat--screen-diff old new))
+                 (retained-rows (copy-sequence rows))
+                 (content-rows
+                  (cl-remove-if
+                   (lambda (row) (string-empty-p (string-trim row)))
+                   retained-rows))
+                 (items (emacsvox-eat--completion-items retained-rows))
+                 (layout (if items 'items 'rows)))
             (list
-             :rows (copy-sequence rows)
-             :row-count (length rows)
+             :rows retained-rows
+             :row-count (length content-rows)
+             :items items
+             :item-count (and items (length items))
+             :layout layout
+             :signature
+             (emacsvox-eat--completion-signature
+              layout retained-rows items)
              :confidence (if (> overlap 0) 'anchored 'unanchored)
              :old-input (plist-get old-input :text)
              :new-input (plist-get new-input :text)
@@ -1233,13 +1295,55 @@ through its input row remains as a prefix after scroll alignment, and
      content '(:role candidate :events (completion-input-updated))
      'state-change)))
 
+(defun emacsvox-eat--completion-count-text (completion)
+  "Return an accurate count announcement for terminal COMPLETION."
+  (let* ((item-count (plist-get completion :item-count))
+         (row-count (plist-get completion :row-count))
+         (items-p (integerp item-count))
+         (count (if items-p item-count row-count))
+         (noun (if items-p "candidate" "completion row"))
+         (unanchored-p
+          (eq (plist-get completion :confidence) 'unanchored)))
+    (concat
+     (cond
+      ((plist-get completion :repeated) "Same ")
+      (unanchored-p "At least ")
+      (t ""))
+     (number-to-string count)
+     (if unanchored-p " visible " " ")
+     noun
+     (if (= count 1) "" "s"))))
+
+(defun emacsvox-eat--bounded-completion-items (items)
+  "Return bounded automatic speech for inferred candidate ITEMS."
+  (let* ((total (length items))
+         (shown-count (min total emacsvox-eat--maximum-spoken-candidates))
+         (text
+          (emacsvox-eat--bounded-output
+           (emacsvox-eat--list-slice items 0 shown-count))))
+    (when (> total shown-count)
+      (setq text
+            (concat
+             text "\n"
+             (format "%d additional candidates not spoken"
+                     (- total shown-count)))))
+    text))
+
 (defun emacsvox-eat--present-completion-output (completion)
   "Present terminal candidate/help-row COMPLETION as one transaction."
-  (when-let* ((content
-               (emacsvox-eat--bounded-output (plist-get completion :rows))))
+  (let* ((count (emacsvox-eat--completion-count-text completion))
+         (body
+          (unless (plist-get completion :repeated)
+            (if (eq (plist-get completion :layout) 'items)
+                (emacsvox-eat--bounded-completion-items
+                 (plist-get completion :items))
+              (emacsvox-eat--bounded-output
+               (plist-get completion :rows)))))
+         (content (if body (concat count "\n" body) count)))
+    (when (not (string-empty-p content))
     (emacsvox-eat--submit
      content '(:role candidate :events (operation-completed))
-     'state-change)))
+     'state-change))))
 
 (defun emacsvox-eat--speak-input-correlated-update (cursor)
   "Provide the legacy cursor feedback for one recent terminal input at CURSOR."
