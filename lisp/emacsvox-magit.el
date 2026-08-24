@@ -356,12 +356,40 @@ ICON-PHASE defaults to `before'."
        "-mode\\'" "" (symbol-name major-mode))))
     'personality voice-animate)))
 
+(defun emacsvox-magit--visual-only-display-p (display)
+  "Return non-nil when DISPLAY renders only in a margin or fringe."
+  (or
+   (and (consp display)
+        (memq (car display) '(left-fringe right-fringe margin)))
+   (and (consp display)
+        (consp (car display))
+        (eq (caar display) 'margin))))
+
+(defun emacsvox-magit--speech-display-content (content)
+  "Return speakable CONTENT without margin or fringe backing text."
+  (let ((position 0)
+        pieces)
+    (while (< position (length content))
+      (let ((next
+             (or
+              (next-single-property-change
+               position 'display content)
+              (length content))))
+        (unless
+            (emacsvox-magit--visual-only-display-p
+             (get-text-property position 'display content))
+          (push (substring content position next) pieces))
+        (setq position next)))
+    (apply #'concat (nreverse pieces))))
+
 (defun emacsvox-magit--line-content ()
   "Return the current line with speech-relevant text properties intact.
-Also include display, before-string, and after-string content at point."
+Include textual display, before-string, and after-string content at point, but
+omit backing text used only to draw Magit's margin and fringe decorations."
   (concat
    (buffer-substring (line-beginning-position) (line-end-position))
-   (ems--display-props-get)))
+   (emacsvox-magit--speech-display-content
+    (ems--display-props-get))))
 
 (defun emacsvox-magit-view-facts (kind event)
   "Return semantic facts for a Magit view of KIND undergoing EVENT."

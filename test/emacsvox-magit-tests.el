@@ -380,6 +380,32 @@
            '(:type staged :hidden nil))))
       (should (= (length calls) 1)))))
 
+(ert-deftest emacsvox-magit-line-content-omits-visual-backing-text ()
+  "Margin and fringe implementation strings never enter Magit speech."
+  (with-temp-buffer
+    (insert "abc123 Commit subject")
+    (goto-char (point-min))
+    (let* ((note (propertize " reviewed" 'personality voice-annotate))
+           (display-content
+            (concat
+             (propertize
+              "fringe" 'display '(left-fringe magit-fringe-bitmap> fringe))
+             note
+             (propertize
+              "o" 'display '((margin right-margin) "2026-08-24")))))
+      (cl-letf (((symbol-function 'ems--display-props-get)
+                 (lambda () display-content)))
+        (let ((content (emacsvox-magit--line-content)))
+          (should
+           (equal
+            (substring-no-properties content)
+            "abc123 Commit subject reviewed"))
+          (should
+           (eq
+            (get-text-property
+             (string-match-p "reviewed" content) 'personality content)
+            voice-annotate)))))))
+
 (ert-deftest emacsvox-magit-section-jumpers-are-covered ()
   "Every current generated Magit section jumper has navigation feedback."
   (should (= (length emacsvox-magit--section-jump-targets) 15))
