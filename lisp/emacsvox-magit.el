@@ -441,8 +441,9 @@ ICON-PHASE defaults to `before'."
              (margin-content
               (emacsvox-magit--margin-display-content display)))
         (cond
-         (margin-content
-          (push (concat ", " margin-content) pieces))
+         ((emacsvox-magit--margin-display-p display)
+          (when margin-content
+            (push (concat ", " margin-content) pieces)))
          ((emacsvox-magit--fringe-display-p display))
          (t
           (push (substring content position next) pieces)))

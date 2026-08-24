@@ -472,6 +472,41 @@
         (substring-no-properties (emacsvox-magit--line-content))
         "abc123 Commit subject, Ada, two days ago")))))
 
+(ert-deftest emacsvox-magit-line-content-discards-empty-margin-backing ()
+  "A section heading never speaks Magit's blank margin backing character."
+  (with-temp-buffer
+    (insert "Unmerged into origin/master (2)")
+    (let ((fringe (make-overlay (point-min) (point-max)))
+          (margin (make-overlay (1+ (point-min)) (point-max))))
+      (overlay-put
+       fringe 'before-string
+       (propertize
+        "fringe" 'display '(left-fringe magit-fringe-bitmapv fringe)))
+      (overlay-put
+       margin 'before-string
+       (propertize "o" 'display '((margin right-margin) " ")))
+      (goto-char (point-min))
+      (should
+       (equal
+        (substring-no-properties (emacsvox-magit--line-content 'expanded))
+        "Unmerged into origin/master (2), expanded")))))
+
+(ert-deftest emacsvox-magit-blank-line-discards-empty-margin-backing ()
+  "A blank row never consists of Magit's margin backing character."
+  (with-temp-buffer
+    (insert "Commit\n\n")
+    (goto-char (1- (point-max)))
+    (let ((margin (make-overlay (point) (point-max))))
+      (overlay-put
+       margin 'before-string
+       (propertize "o" 'display '((margin right-margin) " ")))
+      (should (string-empty-p (buffer-substring
+                               (line-beginning-position)
+                               (line-end-position))))
+      (should
+       (string-empty-p
+        (substring-no-properties (emacsvox-magit--line-content)))))))
+
 (ert-deftest emacsvox-magit-section-jumpers-are-covered ()
   "Every current generated Magit section jumper has navigation feedback."
   (should (= (length emacsvox-magit--section-jump-targets) 15))
