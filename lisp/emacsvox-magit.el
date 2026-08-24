@@ -356,40 +356,129 @@ ICON-PHASE defaults to `before'."
        "-mode\\'" "" (symbol-name major-mode))))
     'personality voice-animate)))
 
-(defun emacsvox-magit--visual-only-display-p (display)
-  "Return non-nil when DISPLAY renders only in a margin or fringe."
-  (or
-   (and (consp display)
-        (memq (car display) '(left-fringe right-fringe margin)))
-   (and (consp display)
-        (consp (car display))
-        (eq (caar display) 'margin))))
+(defun emacsvox-magit--fringe-display-p (display)
+  "Return non-nil when DISPLAY renders a fringe bitmap."
+  (and (consp display)
+       (memq (car display) '(left-fringe right-fringe))))
+
+(defun emacsvox-magit--margin-display-p (display)
+  "Return non-nil when DISPLAY renders content in a margin."
+  (and
+   (consp display)
+   (consp (car display))
+   (eq (caar display) 'margin)))
+
+(defun emacsvox-magit--margin-display-content (display)
+  "Return textual margin content represented by DISPLAY, if any."
+  (when
+      (and
+       (emacsvox-magit--margin-display-p display)
+       (stringp (cadr display)))
+    (let ((content (string-trim (cadr display))))
+      (unless (string-empty-p content) content))))
+
+(defun emacsvox-magit--display-content-has-fringe-p (content)
+  "Return non-nil when CONTENT contains a fringe display range."
+  (let ((position 0)
+        found)
+    (while (and (< position (length content)) (not found))
+      (setq found
+            (emacsvox-magit--fringe-display-p
+             (get-text-property position 'display content)))
+      (setq position
+            (or
+             (next-single-property-change position 'display content)
+             (length content))))
+    found))
+
+(defun emacsvox-magit--display-content-has-margin-p (content)
+  "Return non-nil when CONTENT contains a margin display range."
+  (let ((position 0)
+        found)
+    (while (and (< position (length content)) (not found))
+      (setq found
+            (emacsvox-magit--margin-display-p
+             (get-text-property position 'display content)))
+      (setq position
+            (or
+             (next-single-property-change position 'display content)
+             (length content))))
+    found))
+
+(defun emacsvox-magit--line-visual-carriers ()
+  "Return fringe and margin display strings found across the current line."
+  (let* ((start (line-beginning-position))
+         (end (line-end-position))
+         fringe
+         margin)
+    (dolist (overlay (overlays-in start end))
+      (dolist (property '(before-string display after-string))
+        (let ((value (overlay-get overlay property)))
+          (when (stringp value)
+            (when
+                (and
+                 (not fringe)
+                 (emacsvox-magit--display-content-has-fringe-p value))
+              (setq fringe value))
+            (when
+                (and
+                 (not margin)
+                 (emacsvox-magit--display-content-has-margin-p value))
+              (setq margin value))))))
+    (list fringe margin)))
 
 (defun emacsvox-magit--speech-display-content (content)
-  "Return speakable CONTENT without margin or fringe backing text."
+  "Return speakable CONTENT with visual Magit carriers interpreted."
   (let ((position 0)
         pieces)
     (while (< position (length content))
-      (let ((next
+      (let* ((next
              (or
               (next-single-property-change
                position 'display content)
-              (length content))))
-        (unless
-            (emacsvox-magit--visual-only-display-p
-             (get-text-property position 'display content))
-          (push (substring content position next) pieces))
+              (length content)))
+             (display (get-text-property position 'display content))
+             (margin-content
+              (emacsvox-magit--margin-display-content display)))
+        (cond
+         (margin-content
+          (push (concat ", " margin-content) pieces))
+         ((emacsvox-magit--fringe-display-p display))
+         (t
+          (push (substring content position next) pieces)))
         (setq position next)))
     (apply #'concat (nreverse pieces))))
 
-(defun emacsvox-magit--line-content ()
+(defun emacsvox-magit--line-content (&optional visibility)
   "Return the current line with speech-relevant text properties intact.
 Include textual display, before-string, and after-string content at point, but
-omit backing text used only to draw Magit's margin and fringe decorations."
-  (concat
-   (buffer-substring (line-beginning-position) (line-end-position))
-   (emacsvox-magit--speech-display-content
-    (ems--display-props-get))))
+interpret margin content and omit graphical backing text.  When VISIBILITY is
+`folded' or `expanded', name that state if a fringe indicator is present."
+  (pcase-let* ((point-display-content (ems--display-props-get))
+               (`(,line-fringe ,line-margin)
+                (emacsvox-magit--line-visual-carriers))
+               (display-content
+                (concat
+                 point-display-content
+                 (unless
+                     (emacsvox-magit--display-content-has-fringe-p
+                      point-display-content)
+                   line-fringe)
+                 (unless
+                     (emacsvox-magit--display-content-has-margin-p
+                      point-display-content)
+                   line-margin)))
+               (fringe-p
+                (emacsvox-magit--display-content-has-fringe-p
+                 display-content)))
+    (concat
+     (buffer-substring (line-beginning-position) (line-end-position))
+     (emacsvox-magit--speech-display-content display-content)
+     (when (and fringe-p (memq visibility '(folded expanded)))
+       (propertize
+        (format ", %s"
+                (if (eq visibility 'folded) "collapsed" "expanded"))
+        'personality voice-annotate)))))
 
 (defun emacsvox-magit-view-facts (kind event)
   "Return semantic facts for a Magit view of KIND undergoing EVENT."
@@ -474,10 +563,13 @@ EVENT and VISIBILITY override values inferred from the command and section."
 
 ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
   feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
-  (emacsvox-magit--submit-text
-   (emacsvox-magit--line-content)
-   (emacsvox-magit-section-facts target section event visibility)
-   occasion icon (and icon-after 'after)))
+  (let ((facts
+         (emacsvox-magit-section-facts
+          target section event visibility)))
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--line-content
+      (and (eq occasion 'navigation) (plist-get facts :visibility)))
+     facts occasion icon (and icon-after 'after))))
 
 ;;;  Advice navigation commands:
 

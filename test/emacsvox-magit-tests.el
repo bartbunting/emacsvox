@@ -380,31 +380,97 @@
            '(:type staged :hidden nil))))
       (should (= (length calls) 1)))))
 
-(ert-deftest emacsvox-magit-line-content-omits-visual-backing-text ()
-  "Margin and fringe implementation strings never enter Magit speech."
+(ert-deftest emacsvox-magit-line-content-presents-visual-semantics ()
+  "Margin content and fringe state replace Magit's visual carriers."
   (with-temp-buffer
     (insert "abc123 Commit subject")
     (goto-char (point-min))
     (let* ((note (propertize " reviewed" 'personality voice-annotate))
+           (margin
+            (propertize " 2026-08-24 " 'personality voice-smoothen))
            (display-content
             (concat
              (propertize
               "fringe" 'display '(left-fringe magit-fringe-bitmap> fringe))
              note
              (propertize
-              "o" 'display '((margin right-margin) "2026-08-24")))))
+              "o" 'display `((margin right-margin) ,margin)))))
       (cl-letf (((symbol-function 'ems--display-props-get)
                  (lambda () display-content)))
-        (let ((content (emacsvox-magit--line-content)))
+        (let ((content (emacsvox-magit--line-content 'folded)))
           (should
            (equal
             (substring-no-properties content)
-            "abc123 Commit subject reviewed"))
+            "abc123 Commit subject reviewed, 2026-08-24, collapsed"))
           (should
            (eq
             (get-text-property
              (string-match-p "reviewed" content) 'personality content)
-            voice-annotate)))))))
+            voice-annotate))
+          (should
+           (eq
+            (get-text-property
+             (string-match-p "2026" content) 'personality content)
+            voice-smoothen))
+          (should
+           (eq
+            (get-text-property
+             (string-match-p "collapsed" content) 'personality content)
+            voice-annotate)))
+        (should
+         (equal
+          (substring-no-properties (emacsvox-magit--line-content 'expanded))
+          "abc123 Commit subject reviewed, 2026-08-24, expanded"))
+        (should
+         (equal
+          (substring-no-properties (emacsvox-magit--line-content))
+          "abc123 Commit subject reviewed, 2026-08-24"))))))
+
+(ert-deftest emacsvox-magit-navigation-names-fringe-visibility ()
+  "Navigating to a fringe-marked section names its current visibility."
+  (with-temp-buffer
+    (insert "Unmerged into origin/master")
+    (goto-char (point-min))
+    (let (calls)
+      (cl-letf
+          (((symbol-function 'ems--display-props-get)
+            (lambda ()
+              (propertize
+               "fringe" 'display
+               '(left-fringe magit-fringe-bitmap> fringe))))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) calls))))
+        (emacsvox-magit-present-line
+         'select-object 'navigation 'magit-next-line
+         '(:type unpushed :hidden t)))
+      (pcase-let ((`((,content . ,arguments)) calls))
+        (should
+         (equal
+          (substring-no-properties content)
+          "Unmerged into origin/master, collapsed"))
+        (should
+         (equal
+          (plist-get arguments :facts)
+          '(:role vcs-section :section-kind unpushed
+            :events (focus-entered) :visibility folded)))))))
+
+(ert-deftest emacsvox-magit-line-content-finds-margin-away-from-point ()
+  "Margin metadata is presented even when point is outside its overlay."
+  (with-temp-buffer
+    (insert "abc123 Commit subject")
+    (let ((overlay (make-overlay (1+ (point-min)) (point-max) nil t)))
+      (overlay-put
+       overlay 'before-string
+       (propertize
+        "o" 'display
+        '((margin right-margin) "Ada, two days ago")))
+      (goto-char (point-min))
+      (should (string-empty-p (ems--display-props-get)))
+      (should
+       (equal
+        (substring-no-properties (emacsvox-magit--line-content))
+        "abc123 Commit subject, Ada, two days ago")))))
 
 (ert-deftest emacsvox-magit-section-jumpers-are-covered ()
   "Every current generated Magit section jumper has navigation feedback."
