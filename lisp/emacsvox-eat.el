@@ -168,6 +168,15 @@ when the terminal is selected again."
 (defvar-local emacsvox-eat--pending-navigation-intent nil
   "Content-free terminal navigation intent for the current update burst.")
 
+(defvar-local emacsvox-eat--deletion-intent nil
+  "Observed main-screen deletion awaiting its rendered terminal result.")
+
+(defvar-local emacsvox-eat--deletion-timer nil
+  "Timer that resolves an unobserved terminal deletion with a cue.")
+
+(defvar-local emacsvox-eat--deletion-serial 0
+  "Monotonic identity for terminal deletion transactions in this buffer.")
+
 (defvar-local emacsvox-eat--secure-input-active-p nil
   "Non-nil while EAT is reading and sending protected terminal input.")
 
@@ -258,6 +267,9 @@ when the terminal is selected again."
 (defconst emacsvox-eat--navigation-timeout 0.75
   "Seconds terminal navigation intent may be correlated with screen changes.")
 
+(defconst emacsvox-eat--deletion-timeout 0.75
+  "Seconds a visible terminal deletion may await a rendered result.")
+
 (defconst emacsvox-eat--bell-minimum-interval 0.5
   "Minimum seconds between spoken bells from one EAT terminal.")
 
@@ -275,6 +287,9 @@ when the terminal is selected again."
 
 (defconst emacsvox-eat--maximum-focus-characters 240
   "Maximum characters retained for one inferred terminal focus object.")
+
+(defconst emacsvox-eat--maximum-deletion-characters 32
+  "Maximum characters spoken from one observed deletion burst.")
 
 (defconst emacsvox-eat--maximum-review-lines 40
   "Maximum retained terminal rows spoken by one explicit review command.")
@@ -1018,6 +1033,70 @@ DIFF and content-free NAVIGATION provide causal evidence."
   (or (emacsvox-eat--style-focus-change old new diff navigation)
       (emacsvox-eat--cursor-row-focus-change old new diff navigation)))
 
+(defun emacsvox-eat--main-screen-navigation-text (diff snapshot)
+  "Return conservative main-screen navigation feedback for DIFF and SNAPSHOT.
+Left and right movement name the rendered character reached.  Up and down
+movement return the resulting rendered input or history row."
+  (when-let* ((navigation (plist-get diff :navigation))
+              ((not (plist-get navigation :ambiguous)))
+              ((not (plist-get snapshot :alternate-screen)))
+              ((not (plist-get diff :size-changed)))
+              ((not (plist-get diff :alternate-screen-changed)))
+              (direction (plist-get navigation :direction))
+              (old-row (plist-get navigation :cursor-row))
+              (old-column (plist-get navigation :cursor-column))
+              (new-row (plist-get snapshot :cursor-row))
+              (new-column (plist-get snapshot :cursor-column)))
+    (pcase direction
+      ((or 'left 'right 'forward 'backward)
+       (when (and
+              (plist-get diff :cursor-moved)
+              (emacsvox-eat--coordinate-direction-p
+               (if (memq direction '(left backward)) 'backward 'forward)
+               old-row old-column new-row new-column))
+         (let* ((text (plist-get snapshot :text))
+                (offset (plist-get snapshot :cursor-offset))
+                (character
+                 (and (integerp offset)
+                      (< -1 offset (length text))
+                      (aref text offset))))
+           (cond
+            (character
+             (or (tts-char-to-speech character)
+                 (char-to-string character)))
+            ((and (integerp offset) (= offset (length text)))
+             "End of terminal row")))))
+      ((or 'up 'down)
+       (when-let* ((rows (plist-get snapshot :rows))
+                   ((< -1 new-row (length rows)))
+                   (row-text (nth new-row rows))
+                   (old-rows (plist-get diff :old-rows))
+                   (old-row-text
+                    (and (integerp old-row)
+                         (< -1 old-row (length old-rows))
+                         (nth old-row old-rows)))
+                   ((or
+                     (and
+                      (plist-get diff :cursor-moved)
+                      (emacsvox-eat--coordinate-direction-p
+                       direction old-row old-column new-row new-column))
+                     (not (equal old-row-text row-text)))))
+         (or (emacsvox-eat--bounded-output (list row-text))
+             "Blank terminal row"))))))
+
+(defun emacsvox-eat--present-main-screen-navigation (diff snapshot)
+  "Present observed main-screen navigation represented by DIFF and SNAPSHOT."
+  (when-let* ((content
+               (emacsvox-eat--main-screen-navigation-text diff snapshot)))
+    (emacsvox-eat--submit
+     content
+     (emacsvox-eat--facts
+      'command-input 'focus-entered 'command-navigation
+      '(:command-input-origin current))
+     'navigation nil 'replaceable
+     (emacsvox-eat--terminal-delivery-key 'main-navigation))
+    t))
+
 (defun emacsvox-eat--row-prefix-table (rows)
   "Return the KMP prefix table for the row sequence ROWS."
   (let* ((sequence (vconcat rows))
@@ -1351,6 +1430,7 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
                      (emacsvox-eat--alternate-screen-transitions
                       diff snapshot)))
           (emacsvox-eat--cancel-completion)
+          (emacsvox-eat--cancel-deletion)
           (setq emacsvox-eat--recent-input nil
                 emacsvox-eat--last-status-text nil
                 emacsvox-eat--last-status-spoken-at 0.0
@@ -1359,6 +1439,10 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
                 emacsvox-eat--last-focus-presentation-identity nil)
           (emacsvox-eat--retain-screen-change diff snapshot)
           (emacsvox-eat--present-alternate-screen-transitions states)
+          t))
+       ((when-let* ((deletion (plist-get diff :deletion)))
+          (emacsvox-eat--retain-screen-change diff snapshot)
+          (emacsvox-eat--present-observed-deletion deletion snapshot)
           t))
        ((when-let* ((completion
                      (emacsvox-eat--pending-inline-completion snapshot)))
@@ -1385,6 +1469,10 @@ SNAPSHOT supplies the final state when DIFF was not produced by the observer."
           (emacsvox-eat--retain-screen-change diff snapshot)
           (emacsvox-eat--present-likely-focus focus)
           t))
+       ((emacsvox-eat--main-screen-navigation-text diff snapshot)
+        (emacsvox-eat--retain-screen-change diff snapshot)
+        (emacsvox-eat--present-main-screen-navigation diff snapshot)
+        t)
        ((emacsvox-eat--completion-current-p)
         ;; Candidate/help output can pause on a completed row before the peer
         ;; redraws its input.  Retain that partial screen without letting the
@@ -1415,6 +1503,7 @@ the terminal still existed instead of consulting its deleted cursor."
               (diff emacsvox-eat--pending-screen-diff)
               (snapshot emacsvox-eat--screen-snapshot)
               (navigation emacsvox-eat--pending-navigation-intent)
+              (deletion emacsvox-eat--deletion-intent)
               (alternate-screen-transitions
                (nreverse emacsvox-eat--pending-alternate-screen-transitions))
               (followed-live-p emacsvox-eat--pending-follow-live-p)
@@ -1441,6 +1530,9 @@ the terminal still existed instead of consulting its deleted cursor."
                            (emacsvox-eat--likely-focus-change
                             baseline snapshot diff navigation)))
                 (setq diff (plist-put diff :likely-focus focus))))
+            (when (and (emacsvox-eat--deletion-intent-current-p deletion)
+                       (plist-get deletion :transported))
+              (setq diff (plist-put diff :deletion deletion)))
             (if (if terminal-exiting-p
                     followed-live-p
                   (emacsvox-eat--following-live-p))
@@ -1504,6 +1596,7 @@ the terminal still existed instead of consulting its deleted cursor."
           ;; Terminal completion and replaceable status state cannot span a
           ;; change to or from an application's independent screen.
           (emacsvox-eat--cancel-completion)
+          (emacsvox-eat--cancel-deletion)
           (setq navigation nil
                 emacsvox-eat--recent-input nil
                 emacsvox-eat--recent-navigation-intent nil
@@ -1517,6 +1610,7 @@ the terminal still existed instead of consulting its deleted cursor."
               (or emacsvox-eat--pending-user-input-p
                   emacsvox-eat--recent-input
                   navigation
+                  (emacsvox-eat--current-deletion-intent)
                   emacsvox-eat--completion-snapshot))
         (when navigation
           (emacsvox-eat--merge-pending-navigation-intent navigation))
@@ -1625,11 +1719,15 @@ the terminal still existed instead of consulting its deleted cursor."
 
 (defun emacsvox-eat--window-selection-changed (window)
   "Report unread terminal output when WINDOW selects this EAT buffer."
-  (when (and (window-live-p window)
-             (eq window (selected-window))
-             (emacsvox-eat--selected-buffer-p))
-    (emacsvox-eat--commit-background-output-burst)
-    (emacsvox-eat--present-unread-output-count)))
+  (if (and (window-live-p window)
+           (eq window (selected-window))
+           (emacsvox-eat--selected-buffer-p))
+      (progn
+        (emacsvox-eat--commit-background-output-burst)
+        (emacsvox-eat--present-unread-output-count))
+    ;; A deletion result belongs only to the terminal selection in which its
+    ;; key was delivered.
+    (emacsvox-eat--cancel-deletion)))
 
 (defun emacsvox-eat--clear-sensitive-screen-state ()
   "Forget content-bearing EAT observation state in the current buffer."
@@ -1637,6 +1735,7 @@ the terminal still existed instead of consulting its deleted cursor."
   (emacsvox-eat--clear-background-monitor-state)
   (emacsvox-eat--cancel-quiescence)
   (emacsvox-eat--cancel-completion)
+  (emacsvox-eat--cancel-deletion)
   (setq emacsvox-eat--screen-snapshot nil
         emacsvox-eat--recent-input nil
         emacsvox-eat--recent-navigation-intent nil
@@ -1746,6 +1845,9 @@ The terminal's original bell callback has already run."
                 ;; A bell is its own input response; do not also speak the
                 ;; adjacent prompt character through legacy echo feedback.
                 emacsvox-eat--recent-input nil)
+          ;; A bell can be the terminal's complete response to deletion at an
+          ;; input boundary.  Do not add a later ambiguous-deletion cue.
+          (emacsvox-eat--cancel-deletion)
           (when (and (not emacsvox-eat--secure-input-active-p)
                      (emacsvox-eat--selected-buffer-p)
                      (emacsvox-eat--following-live-p)
@@ -2967,6 +3069,7 @@ The command never captures mutable live terminal-buffer text."
 
 (defun emacsvox-eat--before-terminal-paste (&rest _)
   "Invalidate input-correlated state before sending terminal paste content."
+  (emacsvox-eat--resolve-deletion-as-cue)
   (emacsvox-eat--cancel-completion)
   (setq emacsvox-eat--recent-input nil))
 
@@ -3133,11 +3236,17 @@ reaches this advice."
   "EAT targets and native before-advice used for state invalidation.")
 
 (defconst emacsvox-eat--around-advice
-  '((eat-send-password . emacsvox--advice-eat-send-password-around))
-  "EAT targets and native around-advice used for protected interaction.")
+  '((eat-send-password . emacsvox--advice-eat-send-password-around)
+    (eat-self-input . emacsvox--advice-eat-self-input-around))
+  "EAT targets and native around-advice used for bounded input state.")
 
 (defun emacsvox-eat--install-advice ()
   "Install native advice after the optional Eat package loads."
+  ;; Reloads must remove the superseded fixed-label raw-input adapter before
+  ;; installing observed deletion feedback.
+  (when (fboundp 'eat-self-input)
+    (advice-remove
+     'eat-self-input 'emacsvox--advice-eat-self-input-after))
   (dolist (target emacsvox-eat--advice-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
@@ -3164,16 +3273,7 @@ reaches this advice."
          #'emacsvox--advice-eat-self-input-before 'eat-self-input)))
     (advice-add
      'eat-self-input :before #'emacsvox--advice-eat-self-input-before
-     '((name . emacsvox))))
-  (when
-      (and
-       (fboundp 'eat-self-input)
-       (not
-        (advice-member-p
-         #'emacsvox--advice-eat-self-input-after 'eat-self-input)))
-    (advice-add
-     'eat-self-input :after #'emacsvox--advice-eat-self-input-after
-     '((name . emacsvox-raw-feedback)))))
+     '((name . emacsvox)))))
 
 (defun emacsvox-eat--tab-event-p (event)
   "Return non-nil when EVENT is a Tab key event."
@@ -3220,23 +3320,271 @@ The return value is one of `submit', `backspace', `delete', or nil."
               (not (eat-term-in-alternative-display-p eat-terminal))
               (emacsvox-eat--following-live-p)))))
 
-(defun emacsvox-eat--present-raw-input-action (action)
-  "Present content-free feedback for raw terminal input ACTION."
-  (let ((content
-         (pcase action
-           ('submit "Terminal input submitted")
-           ('backspace "Backspace sent")
-           ('delete "Delete sent")))
-        (facts
-         (if (eq action 'submit)
-             (emacsvox-eat--facts
-              'command-input 'command-submitted 'submit)
-           (emacsvox-eat--facts 'command-input 'operation-completed))))
-    (when content
-      (emacsvox-eat--submit
-       content facts 'state-change nil 'replaceable
-       (emacsvox-eat--terminal-delivery-key
-        (list 'raw-input action))))))
+(defun emacsvox-eat--cancel-deletion ()
+  "Cancel and forget the current observed terminal deletion."
+  (when (timerp emacsvox-eat--deletion-timer)
+    (cancel-timer emacsvox-eat--deletion-timer))
+  (setq emacsvox-eat--deletion-intent nil
+        emacsvox-eat--deletion-timer nil))
+
+(defun emacsvox-eat--deletion-intent-current-p (intent)
+  "Return non-nil when observed terminal deletion INTENT is current."
+  (when intent
+    (let ((generation (plist-get intent :generation))
+          (deadline (plist-get intent :deadline)))
+      (and (integerp generation)
+           (= generation emacsvox-eat--generation)
+           (numberp deadline)
+           (<= (float-time) deadline)))))
+
+(defun emacsvox-eat--current-deletion-intent ()
+  "Return the current terminal deletion intent, cueing stale ambiguity."
+  (if (emacsvox-eat--deletion-intent-current-p
+       emacsvox-eat--deletion-intent)
+      emacsvox-eat--deletion-intent
+    (emacsvox-eat--resolve-deletion-as-cue)
+    nil))
+
+(defun emacsvox-eat--present-deletion-cue ()
+  "Present an action-only cue for an ambiguous terminal deletion."
+  (emacsvox-aural-submit-actions
+   :facts
+   (append
+    (emacsvox-eat--facts
+     'command-input 'object-changed nil
+     '(:command-input-origin current))
+    '(:edit-operation deletion))
+   :module 'eat
+   :occasion 'edit
+   :delivery-policy 'replaceable
+   :replacement-key
+   (emacsvox-eat--terminal-delivery-key 'deletion)))
+
+(defun emacsvox-eat--resolve-deletion-as-cue ()
+  "Resolve a transported deletion as a cue, or clear it when ineligible."
+  (when-let* ((intent emacsvox-eat--deletion-intent))
+    (let ((present-p
+           (and (plist-get intent :transported)
+                (emacsvox-eat--raw-input-feedback-eligible-p))))
+      (emacsvox-eat--cancel-deletion)
+      (when present-p (emacsvox-eat--present-deletion-cue)))))
+
+(defun emacsvox-eat--begin-deletion (action count)
+  "Begin an observed terminal deletion for ACTION repeated COUNT times.
+Return its serial, or nil when rendered feedback would be unsafe."
+  (when (and (memq action '(backspace delete))
+             (emacsvox-eat--raw-input-feedback-eligible-p))
+    (when-let* ((screen (ignore-errors (emacsvox-eat--capture-screen))))
+      (let* ((now (float-time))
+             (old (emacsvox-eat--current-deletion-intent))
+             (merge-p (and old (eq action (plist-get old :action))))
+             (normalized-count
+              (if (integerp count) (max 1 (abs count)) 1)))
+        (unless merge-p (emacsvox-eat--resolve-deletion-as-cue))
+        (when (timerp emacsvox-eat--deletion-timer)
+          (cancel-timer emacsvox-eat--deletion-timer))
+        (setq emacsvox-eat--deletion-timer nil
+              emacsvox-eat--deletion-serial
+              (1+ emacsvox-eat--deletion-serial)
+              emacsvox-eat--deletion-intent
+              (list
+               :generation emacsvox-eat--generation
+               :serial emacsvox-eat--deletion-serial
+               :action action
+               :count
+               (+ normalized-count
+                  (if merge-p (or (plist-get old :count) 1) 0))
+               :started-at (if merge-p (plist-get old :started-at) now)
+               :deadline (+ now emacsvox-eat--deletion-timeout)
+               :screen (if merge-p (plist-get old :screen) screen)
+               :transported nil))
+        emacsvox-eat--deletion-serial))))
+
+(defun emacsvox-eat--expire-deletion (buffer generation serial)
+  "Expire BUFFER's observed deletion identified by GENERATION and SERIAL."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when (and emacsvox-eat--deletion-intent
+                 (= generation emacsvox-eat--generation)
+                 (= serial (plist-get emacsvox-eat--deletion-intent :serial)))
+        (emacsvox-eat--resolve-deletion-as-cue)))))
+
+(defun emacsvox-eat--commit-deletion (serial)
+  "Mark observed terminal deletion SERIAL as transported and arm its timer."
+  (when (and serial emacsvox-eat--deletion-intent
+             (= serial (plist-get emacsvox-eat--deletion-intent :serial)))
+    (setq emacsvox-eat--deletion-intent
+          (plist-put emacsvox-eat--deletion-intent :transported t))
+    (when (timerp emacsvox-eat--deletion-timer)
+      (cancel-timer emacsvox-eat--deletion-timer))
+    (setq emacsvox-eat--deletion-timer
+          (run-at-time
+           (max
+            0.0
+            (- (plist-get emacsvox-eat--deletion-intent :deadline)
+               (float-time)))
+           nil #'emacsvox-eat--expire-deletion
+           (current-buffer) emacsvox-eat--generation serial))))
+
+(defun emacsvox-eat--snapshot-row-start (snapshot row)
+  "Return the text offset at which ROW begins in SNAPSHOT, or nil."
+  (when-let* ((text (plist-get snapshot :text))
+              ((integerp row)))
+    (let ((starts (emacsvox-eat--row-start-offsets text)))
+      (when (< -1 row (length starts)) (aref starts row)))))
+
+(defun emacsvox-eat--snapshot-row-local-cursor (snapshot row)
+  "Return SNAPSHOT's cursor offset relative to ROW, or nil."
+  (when-let* ((offset (plist-get snapshot :cursor-offset))
+              ((integerp offset))
+              (cursor-row (plist-get snapshot :cursor-row))
+              ((integerp cursor-row))
+              ((= row cursor-row))
+              (start (emacsvox-eat--snapshot-row-start snapshot row)))
+    (- offset start)))
+
+(defun emacsvox-eat--rows-equal-except-p (old-rows new-rows row)
+  "Return non-nil when OLD-ROWS and NEW-ROWS differ, if at all, only at ROW."
+  (and (= (length old-rows) (length new-rows))
+       (cl-loop
+        for old in old-rows
+        for new in new-rows
+        for index from 0
+        always (or (= index row) (equal old new)))))
+
+(defun emacsvox-eat--snapshot-range-concealed-p (snapshot start end)
+  "Return non-nil when SNAPSHOT range START through END is concealed."
+  (cl-some
+   (lambda (run)
+     (and (< start (cadr run))
+          (< (car run) end)
+          (memq 'concealed (plist-get (caddr run) :traits))))
+   (plist-get snapshot :styles)))
+
+(defun emacsvox-eat--observed-deleted-text (intent snapshot)
+  "Return text unambiguously deleted between INTENT and rendered SNAPSHOT.
+Only a same-generation, same-row main-screen edit is inferred.  Terminal
+right-side blank padding is ignored, but unrelated rows must remain equal."
+  (when-let* ((old (plist-get intent :screen))
+              ((equal (plist-get old :generation)
+                      (plist-get snapshot :generation)))
+              ((not (plist-get old :alternate-screen)))
+              ((not (plist-get snapshot :alternate-screen)))
+              (row (plist-get old :cursor-row))
+              ((integerp row))
+              (new-row-index (plist-get snapshot :cursor-row))
+              ((integerp new-row-index))
+              ((= row new-row-index))
+              (old-rows (plist-get old :rows))
+              (new-rows (plist-get snapshot :rows))
+              ((< -1 row (length old-rows)))
+              ((emacsvox-eat--rows-equal-except-p old-rows new-rows row))
+              (old-row (nth row old-rows))
+              (new-row (nth row new-rows))
+              ((not (equal old-row new-row)))
+              (old-cursor
+               (emacsvox-eat--snapshot-row-local-cursor old row))
+              (new-cursor
+               (emacsvox-eat--snapshot-row-local-cursor snapshot row))
+              (row-start (emacsvox-eat--snapshot-row-start old row)))
+    (pcase (plist-get intent :action)
+      ('backspace
+       (when (and (< new-cursor old-cursor)
+                  (<= 0 new-cursor old-cursor (length old-row)))
+         (let* ((candidate (substring old-row new-cursor old-cursor))
+                (expected
+                 (concat
+                  (substring old-row 0 new-cursor)
+                  (substring old-row old-cursor))))
+           (when (and
+                  (not (string-empty-p candidate))
+                  (equal (string-trim-right expected)
+                         (string-trim-right new-row))
+                  (not
+                   (emacsvox-eat--snapshot-range-concealed-p
+                    old (+ row-start new-cursor) (+ row-start old-cursor))))
+             candidate))))
+      ('delete
+       (when (and (= new-cursor old-cursor)
+                  (<= 0 old-cursor (length old-row)))
+         (when-let* ((change
+                      (emacsvox-eat--sequence-change
+                       old-row (string-trim-right new-row)))
+                     (start (plist-get change :start))
+                     (old-end (plist-get change :old-end))
+                     (new-end (plist-get change :new-end))
+                     ((= start old-cursor))
+                     ((= new-end start))
+                     ((< start old-end))
+                     (candidate (substring old-row start old-end))
+                     (expected
+                      (concat
+                       (substring old-row 0 start)
+                       (substring old-row old-end)))
+                     ((equal (string-trim-right expected)
+                             (string-trim-right new-row)))
+                     ((not
+                       (emacsvox-eat--snapshot-range-concealed-p
+                        old (+ row-start start) (+ row-start old-end)))))
+           candidate))))))
+
+(defun emacsvox-eat--deleted-character-name (character)
+  "Return a nonempty spoken name for deleted CHARACTER."
+  (let ((name (and character (tts-char-to-speech character))))
+    (if (and name (not (string-empty-p (string-trim name))))
+        (string-trim name)
+      (char-to-string character))))
+
+(defun emacsvox-eat--deleted-text-content (text intent)
+  "Return bounded spoken deletion TEXT described by INTENT."
+  (let* ((length (length text))
+         (limit (min length emacsvox-eat--maximum-deletion-characters))
+         (additional (- length limit))
+         (count (or (plist-get intent :count) 1))
+         (action (plist-get intent :action))
+         (bounded
+          (if (eq action 'backspace)
+              (substring text (- length limit))
+            (substring text 0 limit)))
+         (content
+          (cond
+           ((= length 1)
+            (emacsvox-eat--deleted-character-name (aref text 0)))
+           ((> count 1)
+            (let ((characters (string-to-list bounded)))
+              (when (eq action 'backspace)
+                (setq characters (nreverse characters)))
+              (mapconcat
+               #'emacsvox-eat--deleted-character-name characters " ")))
+           (t
+            (let ((sanitized
+                   (emacsvox-eat--sanitize-output-row bounded)))
+              (if (string-empty-p (string-trim sanitized))
+                  (mapconcat
+                   #'emacsvox-eat--deleted-character-name
+                   (string-to-list sanitized) " ")
+                sanitized))))))
+    (when (> additional 0)
+      (setq content
+            (format "%s, %d additional characters deleted"
+                    content additional)))
+    content))
+
+(defun emacsvox-eat--present-observed-deletion (intent snapshot)
+  "Present deletion INTENT from its rendered result in SNAPSHOT."
+  (let* ((text (emacsvox-eat--observed-deleted-text intent snapshot))
+         (content (and text (emacsvox-eat--deleted-text-content text intent))))
+    (emacsvox-eat--cancel-deletion)
+    (if content
+        (emacsvox-eat--submit
+         content
+         (emacsvox-eat--facts
+          'command-input 'object-changed nil
+          '(:command-input-origin current))
+         'edit nil 'replaceable
+         (emacsvox-eat--terminal-delivery-key 'deletion))
+      (emacsvox-eat--present-deletion-cue))
+    t))
 
 (defun emacsvox-eat--navigation-intent-current-p (intent)
   "Return non-nil when content-free navigation INTENT is still current."
@@ -3377,10 +3725,12 @@ The return value is one of `submit', `backspace', `delete', or nil."
          (action (emacsvox-eat--raw-input-action event))
          (alternate-screen-p
           (plist-get emacsvox-eat--screen-snapshot :alternate-screen)))
+    (unless (memq action '(backspace delete))
+      (emacsvox-eat--resolve-deletion-as-cue))
     (cond
      ((and eat-terminal tab-p (not alternate-screen-p))
       (setq emacsvox-eat--recent-input nil)
-     (emacsvox-eat--capture-completion
+      (emacsvox-eat--capture-completion
        (eat-term-display-cursor eat-terminal)))
      (direction
       (emacsvox-eat--cancel-completion)
@@ -3394,13 +3744,27 @@ The return value is one of `submit', `backspace', `delete', or nil."
       (emacsvox-eat--cancel-completion)
       (emacsvox-eat--record-input event)))))
 
-(defun emacsvox--advice-eat-self-input-after (_count &optional event)
-  "Present safe content-free feedback after EAT sends raw input EVENT."
-  (when-let* ((action
-               (emacsvox-eat--raw-input-action
-                (or event last-command-event)))
-              ((emacsvox-eat--raw-input-feedback-eligible-p)))
-    (emacsvox-eat--present-raw-input-action action)))
+(defun emacsvox--advice-eat-self-input-around
+    (original count &optional event)
+  "Call ORIGINAL, observing rendered deletion for COUNT copies of EVENT.
+Return is deliberately silent.  Backspace and Delete are announced only from
+their later public-screen result, with an action cue when that is ambiguous."
+  (let* ((event (or event last-command-event))
+         (action (emacsvox-eat--raw-input-action event))
+         (serial (emacsvox-eat--begin-deletion action count))
+         completed
+         result)
+    (unwind-protect
+        (progn
+          (setq result (funcall original count event)
+                completed t))
+      (if completed
+          (emacsvox-eat--commit-deletion serial)
+        (when (and serial emacsvox-eat--deletion-intent
+                   (= serial
+                      (plist-get emacsvox-eat--deletion-intent :serial)))
+          (emacsvox-eat--cancel-deletion))))
+    result))
 
 (defun emacsvox-eat--screen-cursor-input (snapshot)
   "Return SNAPSHOT's wrapped visual input facts through the terminal cursor.
@@ -3736,6 +4100,7 @@ terminal cursor accessor."
       (if (not selected-p)
           (progn
             (emacsvox-eat--cancel-completion)
+            (emacsvox-eat--cancel-deletion)
             (setq emacsvox-eat--recent-input nil)
             (when (and emacsvox-eat-monitor-background-output
                        (emacsvox-eat--background-output-change-p

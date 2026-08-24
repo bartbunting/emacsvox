@@ -269,6 +269,33 @@ Acceptance:
 - every finding is fixed, explicitly mitigated, or documented as requiring an
   upstream EAT API/major change.
 
+** DONE Phase 9: Observed main-screen editing and navigation
+
+Live testing in a fresh Emacs exposed that the earlier fixed raw-key labels
+were not useful enough: main-screen arrows were silent, Return added chatter,
+and deletion named the key rather than the rendered edit.
+
+Planned slice:
+
+1. [X] keep Return silent;
+2. [X] correlate Left/Right with the rendered character reached;
+3. [X] correlate Up/Down with the resulting rendered input/history row;
+4. [X] infer only an unambiguous same-row Backspace/Delete removal and use a
+   content-free deletion cue otherwise;
+5. [X] preserve protected-input, alternate-screen, background, lifecycle, and
+   live-follow boundaries;
+6. [X] update tests, user documentation, byte-code, fresh-Emacs verification,
+   and load the compiled slice for live testing.
+
+Acceptance:
+
+- no key announcement precedes EAT's rendered result;
+- Return and movement at a boundary stay silent;
+- deletion never guesses adjacent screen text or no-echo content;
+- observed navigation/edit transactions are bounded, replaceable, and selected
+  live-follow only;
+- source and compiled real-terminal-model tests pass.
+
 * Deferred to upstream EAT
 
 These do not block conservative Emacsvox implementations:
@@ -306,7 +333,7 @@ risk, and requested regression coverage remain recorded in
 | F-09: process/alternate lifecycle missing | Fixed.  Public exec/exit hooks, per-process generations, final-output flushing, and alternate-screen transitions have singular semantic transactions. | [[file:lisp/emacsvox-eat.el::emacsvox-eat--process-started][start]], [[file:lisp/emacsvox-eat.el::emacsvox-eat--process-exited][exit]], and [[file:lisp/emacsvox-eat.el::emacsvox-eat--alternate-screen-transitions][alternate transition]]; lifecycle tests beginning at [[file:test/emacsvox-eat-tests.el::emacsvox-eat-process-lifecycle-is-semantic-and-singular][process lifecycle]]; Phases 1 and 5. | A final burst is flushed only with retained selected/live-follow evidence; background and scrollback content stay private by design. |
 | F-10: EAT-backed Eshell bypass | Fixed.  Normal and Eshell EAT hooks share the observer, and an ownership boundary prevents duplicate generic Eshell speech. | Shared hook registration at [[file:lisp/emacsvox-eat.el::eat-eshell-update-hook][eat-eshell-update-hook]] and Eshell lifecycle functions; real [[file:test/emacsvox-eat-tests.el::emacsvox-eat-real-eshell-process-is-singular-and-restores-generic-hook][singular output test]] plus [[file:test/emacsvox-eshell-tests.el::emacsvox-eshell-output-defers-to-active-eat-terminal][generic ownership test]]; Phase 7. | EAT's own Eshell buffer-return/destruction policy is unchanged. |
 | F-11: incomplete focus guard | Mitigated with a safe fallback.  Capture and delivery both require the selected EAT buffer and selected window's live cursor; focus loss cancels timers, and optional background monitoring is content-free. | [[file:lisp/emacsvox-eat.el::emacsvox-eat--selected-buffer-p][selection]], [[file:lisp/emacsvox-eat.el::emacsvox-eat--following-live-p][live-follow]], and selection monitor; [[file:test/emacsvox-eat-tests.el::emacsvox-eat-follow-live-uses-the-selected-window-point][multi-window point]] and focus-loss tests; ~c4eee094~, ~27050678~, and ~316c8781~. | Window-system/daemon frame focus is not a dependable portable authority.  Selected-window behavior remains the conservative fallback. |
-| F-12: conflated interaction events | Fixed for the concrete Emacsvox paths: bell, title/CWD, reset/reload, all public paste entries, secure input, modes, history/prompt navigation, and content-free raw Return/deletion are distinct transactions. | Bell observer, metadata policy, paste/history/raw handlers in [[file:lisp/emacsvox-eat.el][emacsvox-eat.el]]; focused tests from [[file:test/emacsvox-eat-tests.el::emacsvox-eat-yank-feedback-is-target-aware][paste]] through [[file:test/emacsvox-eat-tests.el::emacsvox-eat-real-raw-input-feedback-follows-transport][real raw transport]]; Phase 5 and ~d9240251~/~af1c9e4a~. | Raw no-echo state and application interpretation of keys cannot be inferred.  Exact submitted/deleted content is intentionally neither retained nor spoken. |
+| F-12: conflated interaction events | Fixed for the concrete Emacsvox paths: bell, title/CWD, reset/reload, all public paste entries, secure input, modes, history/prompt navigation, observed main-screen navigation/editing, and intentionally silent raw Return are distinct policies. | Bell observer, metadata policy, and paste/history/input handlers in [[file:lisp/emacsvox-eat.el][emacsvox-eat.el]]; [[file:test/emacsvox-eat-tests.el::emacsvox-eat-real-main-screen-arrows-speak-rendered-result][real arrow]], [[file:test/emacsvox-eat-tests.el::emacsvox-eat-real-backspace-speaks-rendered-deletion][Backspace]], and [[file:test/emacsvox-eat-tests.el::emacsvox-eat-real-delete-speaks-rendered-deletion][Delete]] tests; Phases 5 and 9. | Raw no-echo state and application interpretation of keys cannot be inferred. Submitted content is not spoken; deleted content is named only after one unambiguous visible removal, otherwise an action-only cue is used. |
 | HT-01: focus inference absent | Mitigated conservatively.  Navigation intent, cursor proximity, paired style transfer, timing, and ambiguity rejection yield high/medium confidence; only high confidence speaks automatically. | [[file:lisp/emacsvox-eat.el::emacsvox-eat--likely-focus-change][focus classifier]] and [[file:lisp/emacsvox-eat.el::emacsvox-eat--present-likely-focus][presentation]]; positive and rejection tests beginning at [[file:test/emacsvox-eat-tests.el::emacsvox-eat-focus-classifier-finds-one-paired-style-move][focus classifier]]; Phase 6. | Exact focused-control identity needs application semantics or API-02.  Static/multiple/uncertain highlights remain explicit-review only. |
 | S-01: password lossage | Mitigated.  The public ~eat-send-password~ command creates a secure boundary, clears content state, suppresses observation, and speaks only sent/cancelled state. | Protected-input advice and [[file:lisp/emacsvox-eat.el::emacsvox-eat--clear-sensitive-screen-state][state clearing]]; tests beginning at [[file:test/emacsvox-eat-tests.el::emacsvox-eat-password-command-never-presents-secret-content][password privacy]]; ~bd73cc29~. | Ordinary raw terminal keystrokes still enter Emacs lossage.  Users must invoke ~eat-send-password~; automatic no-echo inference needs a reliable EAT API. |
 | S-02: retained snapshot secrets | Mitigated through bounded buffer-local ephemeral state, lifecycle/timeout/privacy clearing, concealed-cell redaction, and explicit frozen review. | Snapshot bounds and [[file:lisp/emacsvox-eat.el::emacsvox-eat--clear-sensitive-screen-state][sensitive clearing]]; concealed, password, lifecycle, and review-destruction tests; Phases 2, 5, and 6. | Emacs Lisp cannot promise memory zeroization.  Visible non-concealed terminal content remains reviewable by explicit design and is never serialized by this integration. |
@@ -325,7 +352,7 @@ risk, and requested regression coverage remain recorded in
 | Images/Sixel | Screen review can describe only exposed text and style. | Image-region exposure and useful alternative descriptions; EAT and originating application. |
 | Remote TERM/terminfo | Emacsvox speaks the display EAT successfully renders and handles unstructured router help conservatively. | Transport capability negotiation and remote terminfo installation; EAT, remote host, and user configuration. |
 | Synchronized output/parser performance | Emacsvox adds bounded 60--250 ms speech quiescence independent of PTY chunking. | Atomic terminal transactions and parser/render performance; EAT. |
-| Raw no-echo input | Explicit ~eat-send-password~ is protected; ordinary raw input is not guessed. | Public echo/privacy state or a protected-input event; EAT/application. |
+| Raw no-echo input | Explicit ~eat-send-password~ is protected. An unambiguous visible deletion can be named, but a nonvisible deletion receives only a content-free cue and is never guessed. | Public echo/privacy state or a protected-input event; EAT/application. |
 | OSC 52 and UIC trust | Safe configuration is documented; payloads do not become accessibility commands or speech. | Terminal feature defaults and execution policy; EAT/user. |
 
 ** Final validation record
@@ -335,22 +362,21 @@ It produced these results:
 
 - ~make check-emacs~ and ~make bytecode-check~ pass; all live Emacsvox
   byte-code is current for the selected Emacs;
-- all 163 EAT tests pass even when ~tts-initialize~ is replaced by a deliberate
-  error, proving that the isolated terminal fixtures cannot start or retain a
-  real speech server;
-- all 176 combined EAT and Eshell tests pass, including real terminal-model,
-  Bash/readline, router-help, completion, lifecycle, prompt, raw transport,
-  OSC 52, deterministic TUI, and visual-command fixtures;
-- the full 2,515-test suite has 2,512 expected results, one existing skip, and
+- all 170 EAT tests pass from source and again after explicitly reloading
+  ~emacsvox-eat.elc~, including real terminal-model navigation and deletion,
+  Bash/readline, router-help, completion, lifecycle, prompt, OSC 52,
+  deterministic TUI, and visual-command fixtures;
+- the full 2,530-test suite has 2,527 expected results, one existing skip, and
   only the two previously recorded unrelated failures:
   ~emacsvox-agent-shell-live-chat-prompt-announces-editability~ and
   ~emacsvox-cider-advice-is-current-and-direct~ (the installed CIDER lacks
   ~cider-inspect-last-sexp~);
 - compiled aural parity, normal build-tree aural startup, and all 27 semantic
   traces pass;
-- a fresh Emacs loads ~emacsvox-eat.elc~ rather than source and passes compiled
-  advice registration, public prompt-face capture, real raw byte transport,
-  content-free Return/Backspace/Delete feedback, and alternate-screen safety;
+- a fresh Emacs reloads ~emacsvox-eat.elc~ after defining the test fixtures,
+  verifies the defining file is compiled, and passes advice registration,
+  silent Return, observed Left/Up, real Backspace/Delete byte transport and
+  redisplay, timeout fallback, privacy, and alternate-screen safety;
 - split and no-split manuals build, and Emacs Info loads the generated
   ~EAT Terminal Access~ node;
 - Org lint and whitespace checks are clean, and a source scan finds no private
@@ -400,6 +426,7 @@ work.
 | 2026-08-24 | Automatically announce failed shell commands, announce successful commands only at verbose terminal verbosity, and retain running/success/failure for ~C-e q t~. | Failure is actionable at normal verbosity, while routine success would add prompt chatter. EAT's public prompt annotation faces provide bounded content-free evidence when shell integration is active; the adapter scans standard rendered overlay data and does not read EAT's private prompt variables or infer status from prompt text. |
 | 2026-08-24 | Give modern EAT access its own Info chapter instead of folding it into the historical Term/eterm chapter. | EAT is a separately installed terminal with four input modes, terminal-side completion, Eshell integration, and snapshot review semantics that differ materially from stock Term. A dedicated chapter can state ownership and limitations without rewriting the preserved legacy guidance. |
 | 2026-08-24 | Confirm raw main-screen Return, Backspace, and Delete with fixed content-free labels; keep alternate screens and protected input application-owned and silent. | The user selected this policy. It confirms transport without retaining or speaking submitted/deleted terminal content, avoids claiming what a full-screen application did, and removes the misleading adjacent-character echo previously caused by deletion cursor movement. |
+| 2026-08-24 | Supersede the fixed raw-key labels after fresh-Emacs live testing: keep Return silent, speak only an observed main-screen arrow destination or deletion, and use a deletion tone when the edit is ambiguous. | “Terminal input submitted” added routine chatter, “Backspace sent” did not identify the edit, and silent shell-arrow navigation made semi-character mode unnecessarily opaque. Waiting for EAT's public rendered result gives useful feedback without guessing no-echo content or application semantics. |
 
 * Progress log
 
@@ -452,10 +479,13 @@ work.
 | 2026-08-24 | ~229f29ae7~ | 8.5 | Every audit finding now has an explicit fixed, bounded, mitigated, documented, or upstream disposition tied to implementation commits and regression evidence.  The residual table separates EAT/application/configuration capabilities from Emacsvox work; a source scan confirms the integration no longer references private ~eat--…~ symbols. |
 | 2026-08-24 | ~ce1b33f78~ | 8.6 | Final validation exposed test-only leakage: two real Eshell fixtures initialized Omnivox while creating their parent buffer, causing five later TTS/voice false failures.  Speech and icons are now suppressed only around the unrelated Eshell banner.  All 163 EAT tests pass with real TTS initialization forcibly rejected, and the 2,515-test suite returns to its exact two-failure baseline. |
 | 2026-08-24 | ~0298cb890~ | 8.7 | Final validation passes all 163 EAT and 176 combined EAT/Eshell tests, compiled aural parity, normal build-tree startup, 27 semantic traces, fresh compiled EAT transport/prompt/advice checks, both manual layouts, Info loading, byte-code currency, Org lint, and private-API/worktree checks.  The full suite has only its two pre-existing unrelated failures and one existing skip.  Phase 8 and all Emacsvox-only audit work are complete. |
+| 2026-08-24 | ~this commit~ | 9.1 | Fresh-Emacs live feedback is replaced by an observed-screen transaction: Return is silent; main-screen Left/Right names the rendered character reached; Up/Down speaks the resulting input/history row; Backspace/Delete speaks only an unambiguous same-row removal and otherwise emits the semantic deletion tone. Protected input, background/scrollback, alternate-screen, bell, timeout, transport-failure, and lifecycle boundaries clear the transaction. All 170 source and explicitly compiled EAT tests pass; the 2,530-test suite has exactly its two known unrelated failures and one existing skip. Byte-code, compiled aural parity, build-tree startup, 27 traces, both manual layouts, Info loading, Org lint, and whitespace checks pass. |
 
 * Current next action
 
-No further Emacsvox-only change is justified by the current evidence.  Future
-work should be separately scoped as an upstream EAT API request (especially
-API-01 or API-02), shell/device configuration, or an explicit decision to
-relax the documented privacy and conservative-speech boundaries.
+Load the validated Phase 9 compiled support into the user's fresh Emacsvox
+session without touching the existing EAT terminal, and collect live feedback.
+Beyond this explicitly requested refinement, future work should be
+separately scoped as an upstream EAT API request (especially API-01 or API-02),
+shell/device configuration, or an explicit decision to relax the documented
+privacy and conservative-speech boundaries.

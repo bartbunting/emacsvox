@@ -91,7 +91,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
   (should
    (advice-member-p
     #'emacsvox--advice-eat-self-input-before 'eat-self-input))
-  (should
+  (should-not
    (advice-member-p
     #'emacsvox--advice-eat-self-input-after 'eat-self-input))
   (dolist (entry emacsvox-eat--before-advice)
@@ -130,11 +130,16 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
          'edit)
         (cons
          (emacsvox-eat--facts
-          'command-input 'command-submitted 'submit)
-         'state-change)
+          'command-input 'focus-entered 'command-navigation
+          '(:command-input-origin current))
+         'navigation)
         (cons
-         (emacsvox-eat--facts 'command-input 'operation-completed)
-         'state-change)
+         (append
+          (emacsvox-eat--facts
+           'command-input 'object-changed nil
+           '(:command-input-origin current))
+          '(:edit-operation deletion))
+         'edit)
         (cons
          (emacsvox-eat--facts 'command-interaction 'object-changed)
          'notification)))
@@ -382,6 +387,11 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
            '(highlight "terminal-secret-sentinel"))
           (emacsvox-eat--completion-snapshot
            '(:screen (:text "terminal-secret-sentinel")))
+          (emacsvox-eat--deletion-intent
+           '(:generation 0 :serial 1 :transported t
+             :screen (:text "terminal-secret-sentinel")))
+          (emacsvox-eat--deletion-timer
+           (run-at-time 60 nil #'ignore))
           (emacsvox-eat--last-completion-output
            '(:rows ("terminal-secret-sentinel")))
           (emacsvox-eat--last-status-text "terminal-secret-sentinel")
@@ -395,6 +405,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                    (should emacsvox-eat--secure-input-active-p)
                    (should-not emacsvox-eat--screen-snapshot)
                    (should-not emacsvox-eat--completion-snapshot)
+                   (should-not emacsvox-eat--deletion-intent)
+                   (should-not emacsvox-eat--deletion-timer)
                    secret))
                 ((symbol-function 'eat-term-send-string)
                  (lambda (terminal content)
@@ -417,6 +429,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should-not emacsvox-eat--last-likely-focus)
       (should-not emacsvox-eat--last-focus-presentation-identity)
       (should-not emacsvox-eat--completion-snapshot)
+      (should-not emacsvox-eat--deletion-intent)
+      (should-not emacsvox-eat--deletion-timer)
       (should-not emacsvox-eat--last-completion-output)
       (should-not emacsvox-eat--last-status-text)
       (should
@@ -756,46 +770,47 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should-not emacsvox-eat--recent-input)
       (should-not events))))
 
-(ert-deftest emacsvox-eat-raw-input-feedback-is-content-free-and-semantic ()
-  "Eligible raw main-screen actions produce one replaceable fixed label."
-  (dolist
-      (case
-       '((return submit "Terminal input submitted" command-submitted submit)
-         (backspace backspace "Backspace sent" operation-completed nil)
-         (delete delete "Delete sent" operation-completed nil)))
-    (pcase-let ((`(,event ,action ,expected ,fact-event ,operation) case))
-      (with-temp-buffer
-        (let ((emacsvox-eat--generation 7)
-              submission)
-          (cl-letf (((symbol-function
-                      'emacsvox-eat--raw-input-feedback-eligible-p)
-                     (lambda () t))
-                    ((symbol-function 'emacsvox-aural-submit)
-                     (lambda (content &rest arguments)
-                       (setq submission (list content arguments)))))
-            (emacsvox--advice-eat-self-input-after 1 event))
-          (should (equal (car submission) expected))
-          (should
-           (equal
-            (plist-get (cadr submission) :facts)
-            (append
-             (list :role 'command-input
-                   :command-interaction-kind 'shell
-                   :events (list fact-event))
-             (when operation (list :command-operation operation)))))
-          (should (eq (plist-get (cadr submission) :occasion)
-                      'state-change))
-          (should (eq (plist-get (cadr submission) :delivery-policy)
-                      'replaceable))
-          (let ((key (plist-get (cadr submission) :replacement-key)))
-            (should (eq (car key) 'eat))
-            (should (equal (cadr key) (list 'raw-input action)))
-            (should (integerp (nth 2 key)))
-            (should (= (nth 3 key) 7)))
-          (should-not
-           (string-match-p
-            (regexp-opt '("secret" "password"))
-            (format "%S" submission))))))))
+(ert-deftest emacsvox-eat-ambiguous-deletion-is-action-only-and-semantic ()
+  "An ambiguous rendered deletion produces a replaceable tone transaction."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 7)
+          (emacsvox-eat--deletion-intent
+           '(:generation 7 :serial 3 :action backspace
+             :transported t :deadline 9999999999.0))
+          submission)
+      (cl-letf (((symbol-function 'emacsvox-eat--raw-input-feedback-eligible-p)
+                 (lambda () t))
+                ((symbol-function 'emacsvox-aural-submit-actions)
+                 (lambda (&rest arguments) (setq submission arguments))))
+        (emacsvox-eat--expire-deletion (current-buffer) 7 3))
+      (should-not emacsvox-eat--deletion-intent)
+      (should-not emacsvox-eat--deletion-timer)
+      (should
+       (equal
+        (plist-get submission :facts)
+        '(:role command-input
+          :command-interaction-kind shell
+          :events (object-changed)
+          :command-input-origin current
+          :edit-operation deletion)))
+      (should (eq (plist-get submission :module) 'eat))
+      (should (eq (plist-get submission :occasion) 'edit))
+      (should (eq (plist-get submission :delivery-policy) 'replaceable))
+      (let ((key (plist-get submission :replacement-key)))
+        (should (eq (car key) 'eat))
+        (should (eq (cadr key) 'deletion))
+        (should (integerp (nth 2 key)))
+        (should (= (nth 3 key) 7)))
+      (setq emacsvox-eat--deletion-intent
+            '(:generation 7 :serial 4 :action delete
+              :transported t :deadline 9999999999.0)
+            submission nil)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+                 (lambda (&rest arguments) (setq submission arguments))))
+        (emacsvox-eat--expire-deletion (current-buffer) 7 3))
+      (should (= (plist-get emacsvox-eat--deletion-intent :serial) 4))
+      (should-not submission)
+      (emacsvox-eat--cancel-deletion))))
 
 (ert-deftest emacsvox-eat-raw-input-feedback-requires-safe-main-screen ()
   "Raw key feedback requires selected live-follow, main, and nonsecure state."
@@ -827,18 +842,98 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
 
 (ert-deftest emacsvox-eat-ineligible-raw-input-stays-silent ()
   "Alternate, background, scrollback, and protected raw input is app-owned."
-  (cl-letf (((symbol-function 'emacsvox-eat--raw-input-feedback-eligible-p)
-             (lambda () nil))
-            ((symbol-function 'emacsvox-eat--present-raw-input-action)
-             (lambda (&rest _)
-               (ert-fail "ineligible raw input produced feedback"))))
-    (dolist (event '(return backspace delete))
-      (emacsvox--advice-eat-self-input-after 1 event))))
+  (let (transported)
+    (cl-letf (((symbol-function 'emacsvox-eat--raw-input-feedback-eligible-p)
+               (lambda () nil))
+              ((symbol-function 'emacsvox-eat--capture-screen)
+               (lambda () (ert-fail "ineligible input captured the screen")))
+              ((symbol-function 'emacsvox-aural-submit)
+               (lambda (&rest _) (ert-fail "ineligible input spoke")))
+              ((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest _) (ert-fail "ineligible input cued"))))
+      (dolist (event '(return backspace delete))
+        (emacsvox--advice-eat-self-input-around
+         (lambda (count delivered-event)
+           (push (list count delivered-event) transported))
+         1 event)))
+    (should
+     (equal
+      (nreverse transported)
+      '((1 return) (1 backspace) (1 delete))))))
 
-(ert-deftest emacsvox-eat-real-raw-input-feedback-follows-transport ()
-  "Real EAT transport completes before fixed main-screen feedback is sent."
-  (let ((buffer (generate-new-buffer " *emacsvox-eat-raw-input*"))
-        terminal sent submissions)
+(ert-deftest emacsvox-eat-deletion-arms-only-after-successful-transport ()
+  "Deletion observation is silent until transport and cancels on failure."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 4)
+          transported)
+      (cl-letf (((symbol-function 'emacsvox-eat--raw-input-feedback-eligible-p)
+                 (lambda () t))
+                ((symbol-function 'emacsvox-eat--capture-screen)
+                 (lambda () (emacsvox-eat-test--screen "$ abc" 30 4)))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (&rest _) (ert-fail "transport spoke early")))
+                ((symbol-function 'emacsvox-aural-submit-actions)
+                 (lambda (&rest _) (ert-fail "transport cued early"))))
+        (should
+         (eq
+          (emacsvox--advice-eat-self-input-around
+           (lambda (count event)
+             (should emacsvox-eat--deletion-intent)
+             (should-not
+              (plist-get emacsvox-eat--deletion-intent :transported))
+             (setq transported (list count event))
+             'sent)
+           1 'backspace)
+          'sent))
+      (should (equal transported '(1 backspace)))
+      (should (plist-get emacsvox-eat--deletion-intent :transported))
+      (should (timerp emacsvox-eat--deletion-timer))
+      (emacsvox-eat--cancel-deletion)
+      (cl-letf (((symbol-function 'emacsvox-eat--raw-input-feedback-eligible-p)
+                 (lambda () t))
+                ((symbol-function 'emacsvox-eat--capture-screen)
+                 (lambda () (emacsvox-eat-test--screen "$ abc" 30 4))))
+        (should-error
+         (emacsvox--advice-eat-self-input-around
+          (lambda (&rest _) (error "transport failed"))
+          1 'delete)))
+      (should-not emacsvox-eat--deletion-intent)
+      (should-not emacsvox-eat--deletion-timer)))))
+
+(ert-deftest emacsvox-eat-observed-deletion-fails-closed ()
+  "No echo, unrelated row changes, and concealed cells are never guessed."
+  (let* ((old
+          '(:generation 2 :text "$ x" :rows ("$ x") :styles nil
+            :cursor-offset 3 :cursor-row 0 :cursor-column 3
+            :alternate-screen nil))
+         (intent (list :action 'backspace :count 1 :screen old)))
+    (should-not (emacsvox-eat--observed-deleted-text intent old))
+    (should-not
+     (emacsvox-eat--observed-deleted-text
+      intent
+      '(:generation 2 :text "changed\n$  " :rows ("changed" "$  ")
+        :styles nil :cursor-offset 11 :cursor-row 1 :cursor-column 2
+        :alternate-screen nil)))
+    (setf (plist-get old :styles) '((2 3 (:traits (concealed)))))
+    (should-not
+     (emacsvox-eat--observed-deleted-text
+      intent
+      '(:generation 2 :text "$  " :rows ("$  ") :styles nil
+        :cursor-offset 2 :cursor-row 0 :cursor-column 2
+        :alternate-screen nil)))))
+
+(ert-deftest emacsvox-eat-repeated-backspace-names-rendered-order ()
+  "A repeated Backspace names bounded characters in deletion order."
+  (should
+   (equal
+    (emacsvox-eat--deleted-text-content
+     "abc" '(:action backspace :count 3))
+    "c b a")))
+
+(ert-deftest emacsvox-eat-real-backspace-speaks-rendered-deletion ()
+  "Real EAT Backspace speaks the deleted cell after its rendered update."
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-backspace*"))
+        terminal sent submissions action-submissions)
     (unwind-protect
         (save-window-excursion
           (switch-to-buffer buffer)
@@ -853,26 +948,93 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (eat-term-redisplay terminal))
           (goto-char (eat-term-display-cursor terminal))
           (set-window-point (selected-window) (point))
-          (cl-letf (((symbol-function 'emacsvox-aural-submit)
-                     (lambda (content &rest arguments)
-                       (push (list content arguments) submissions))))
-            (eat-self-input 1 'backspace)
-            (eat-self-input 1 'delete)
-            (eat-self-input 1 'return)
-            (should
-             (equal
-              (mapcar #'car (nreverse submissions))
-              '("Backspace sent" "Delete sent"
-                "Terminal input submitted")))
-            (should (equal (nreverse sent) '("\177" "\e[3~" "\r")))
-            (setq sent nil submissions nil)
-            (let ((inhibit-read-only t))
-              (eat-term-process-output terminal "\e[?1049h")
-              (eat-term-redisplay terminal))
-            (should (eat-term-in-alternative-display-p terminal))
+          (setq emacsvox-eat--screen-snapshot
+                (emacsvox-eat--capture-screen))
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push (list content arguments) submissions)))
+               ((symbol-function 'emacsvox-aural-submit-actions)
+                (lambda (&rest arguments)
+                  (push arguments action-submissions))))
             (eat-self-input 1 'return)
             (should (equal sent '("\r")))
-            (should-not submissions)))
+            (should-not submissions)
+            (setq sent nil)
+            (eat-self-input 1 'backspace)
+            (should (equal sent '("\177")))
+            (should-not submissions)
+            (should
+             (plist-get emacsvox-eat--deletion-intent :transported))
+            (let ((inhibit-read-only t))
+              (eat-term-process-output terminal "\b \b")
+              (eat-term-redisplay terminal))
+            (goto-char (eat-term-display-cursor terminal))
+            (set-window-point (selected-window) (point))
+            (emacsvox-eat-update-hook)
+            (emacsvox-eat-test--finish-screen-burst))
+          (should-not action-submissions)
+          (should-not emacsvox-eat--deletion-intent)
+          (should-not emacsvox-eat--deletion-timer)
+          (should (equal (mapcar #'car submissions) '("c")))
+          (should
+           (equal
+            (plist-get (cadar submissions) :facts)
+            '(:role command-input
+              :command-interaction-kind shell
+              :events (object-changed)
+              :command-input-origin current)))
+          (should (eq (plist-get (cadar submissions) :occasion) 'edit)))
+      (with-current-buffer buffer
+        (emacsvox-eat--cancel-quiescence)
+        (emacsvox-eat--cancel-deletion))
+      (when (and terminal (eat-term-live-p terminal))
+        (let ((inhibit-read-only t)) (eat-term-delete terminal)))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-eat-real-delete-speaks-rendered-deletion ()
+  "Real EAT Delete speaks the cell removed at the rendered cursor."
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-delete*"))
+        terminal sent submissions action-submissions)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer buffer)
+          (eat-mode)
+          (setq terminal (eat-term-make buffer (point-min))
+                eat-terminal terminal)
+          (eat-term-set-parameter
+           terminal 'input-function
+           (lambda (_terminal text) (push text sent)))
+          (let ((inhibit-read-only t))
+            (eat-term-process-output terminal "$ abc\e[2D")
+            (eat-term-redisplay terminal))
+          (goto-char (eat-term-display-cursor terminal))
+          (set-window-point (selected-window) (point))
+          (setq emacsvox-eat--screen-snapshot
+                (emacsvox-eat--capture-screen))
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push (list content arguments) submissions)))
+               ((symbol-function 'emacsvox-aural-submit-actions)
+                (lambda (&rest arguments)
+                  (push arguments action-submissions))))
+            (eat-self-input 1 'delete)
+            (should (equal sent '("\e[3~")))
+            (should-not submissions)
+            (let ((inhibit-read-only t))
+              (eat-term-process-output terminal "\e[P")
+              (eat-term-redisplay terminal))
+            (goto-char (eat-term-display-cursor terminal))
+            (set-window-point (selected-window) (point))
+            (emacsvox-eat-update-hook)
+            (emacsvox-eat-test--finish-screen-burst))
+          (should-not action-submissions)
+          (should-not emacsvox-eat--deletion-intent)
+          (should (equal (mapcar #'car submissions) '("b"))))
+      (with-current-buffer buffer
+        (emacsvox-eat--cancel-quiescence)
+        (emacsvox-eat--cancel-deletion))
       (when (and terminal (eat-term-live-p terminal))
         (let ((inhibit-read-only t)) (eat-term-delete terminal)))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
@@ -897,6 +1059,120 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
      (eq (emacsvox-eat--navigation-direction (car case)) (cdr case))))
   (should-not (emacsvox-eat--navigation-direction ?j))
   (should-not (emacsvox-eat--navigation-direction 'return)))
+
+(ert-deftest emacsvox-eat-main-screen-navigation-requires-rendered-change ()
+  "Main-screen arrows report only a compatible rendered destination."
+  (let* ((snapshot
+          '(:generation 1 :text "$ abc" :rows ("$ abc")
+            :cursor-offset 4 :cursor-row 0 :cursor-column 4
+            :alternate-screen nil))
+         (left
+          '(:cursor-moved t :old-rows ("$ abc")
+            :navigation
+            (:generation 1 :direction left :cursor-row 0 :cursor-column 5))))
+    (should
+     (equal
+      (string-trim
+       (emacsvox-eat--main-screen-navigation-text left snapshot))
+      "c"))
+    (setf (plist-get left :cursor-moved) nil)
+    (should-not
+     (emacsvox-eat--main-screen-navigation-text left snapshot))
+    (setf (plist-get left :cursor-moved) t
+          (plist-get snapshot :alternate-screen) t)
+    (should-not
+     (emacsvox-eat--main-screen-navigation-text left snapshot))))
+
+(ert-deftest emacsvox-eat-main-screen-history-speaks-resulting-row ()
+  "Up and Down report redrawn input rows, including an explicit blank row."
+  (let ((diff
+         '(:text-changed t :old-rows ("$ current")
+           :navigation
+           (:generation 1 :direction up :cursor-row 0 :cursor-column 9)))
+        (snapshot
+         '(:generation 1 :text "$ git status" :rows ("$ git status")
+           :cursor-offset 12 :cursor-row 0 :cursor-column 12
+           :alternate-screen nil)))
+    (should
+     (equal
+      (emacsvox-eat--main-screen-navigation-text diff snapshot)
+      "$ git status"))
+    (setf (plist-get snapshot :text) "   "
+          (plist-get snapshot :rows) '("   ")
+          (plist-get snapshot :cursor-offset) 3
+          (plist-get snapshot :cursor-column) 3)
+    (should
+     (equal
+      (emacsvox-eat--main-screen-navigation-text diff snapshot)
+      "Blank terminal row"))))
+
+(ert-deftest emacsvox-eat-real-main-screen-arrows-speak-rendered-result ()
+  "Real EAT Left and shell-history Up speak after terminal redisplay."
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-main-arrows*"))
+        terminal sent submissions)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer buffer)
+          (eat-mode)
+          (setq terminal (eat-term-make buffer (point-min))
+                eat-terminal terminal)
+          (eat-term-set-parameter
+           terminal 'input-function
+           (lambda (_terminal text) (push text sent)))
+          (let ((inhibit-read-only t))
+            (eat-term-process-output terminal "$ abc")
+            (eat-term-redisplay terminal))
+          (goto-char (eat-term-display-cursor terminal))
+          (set-window-point (selected-window) (point))
+          (setq emacsvox-eat--screen-snapshot
+                (emacsvox-eat--capture-screen))
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions))))
+            (eat-self-input 1 'left)
+            (should (equal sent '("\e[D")))
+            (should-not submissions)
+            (let ((inhibit-read-only t))
+              (eat-term-process-output terminal "\e[D")
+              (eat-term-redisplay terminal))
+            (goto-char (eat-term-display-cursor terminal))
+            (set-window-point (selected-window) (point))
+            (emacsvox-eat-update-hook)
+            (emacsvox-eat-test--finish-screen-burst)
+            (should (equal (string-trim (caar submissions)) "c"))
+            (should
+             (equal
+              (plist-get (cadar submissions) :facts)
+              '(:role command-input
+                :command-interaction-kind shell
+                :events (focus-entered)
+                :command-operation command-navigation
+                :command-input-origin current)))
+            (setq submissions nil sent nil)
+            (let ((inhibit-read-only t))
+              (eat-term-process-output terminal "\r\e[2K$ current")
+              (eat-term-redisplay terminal))
+            (goto-char (eat-term-display-cursor terminal))
+            (set-window-point (selected-window) (point))
+            (setq emacsvox-eat--screen-snapshot
+                  (emacsvox-eat--capture-screen))
+            (eat-self-input 1 'up)
+            (should (equal sent '("\e[A")))
+            (should-not submissions)
+            (let ((inhibit-read-only t))
+              (eat-term-process-output terminal "\r\e[2K$ git status")
+              (eat-term-redisplay terminal))
+            (goto-char (eat-term-display-cursor terminal))
+            (set-window-point (selected-window) (point))
+            (emacsvox-eat-update-hook)
+            (emacsvox-eat-test--finish-screen-burst)
+            (should (equal (mapcar #'car submissions) '("$ git status")))))
+      (with-current-buffer buffer
+        (emacsvox-eat--cancel-quiescence)
+        (emacsvox-eat--cancel-deletion))
+      (when (and terminal (eat-term-live-p terminal))
+        (let ((inhibit-read-only t)) (eat-term-delete terminal)))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (ert-deftest emacsvox-eat-alternate-screen-tab-records-navigation-not-completion ()
   "Tab on an application screen is navigation, not shell completion."
@@ -1662,6 +1938,9 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (insert "shell-prompt$ ")
     (let ((eat-terminal 'terminal)
           (emacsvox-eat--completion-snapshot '(1 . "~/sr"))
+          (emacsvox-eat--deletion-intent
+           '(:generation 0 :serial 1 :transported t))
+          (emacsvox-eat--deletion-timer (run-at-time 60 nil #'ignore))
           events)
       (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
                  (lambda () nil))
@@ -1676,6 +1955,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                  (lambda (char) (push (list 'char char) events))))
         (emacsvox-eat-update-hook))
       (should-not emacsvox-eat--completion-snapshot)
+      (should-not emacsvox-eat--deletion-intent)
+      (should-not emacsvox-eat--deletion-timer)
       (should-not events))))
 
 (ert-deftest emacsvox-eat-background-monitor-classifies-only-text-output ()
@@ -2046,6 +2327,11 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (eat-term-redisplay eat-terminal)
             (emacsvox-eat--observe-screen)
             (setq emacsvox-eat--completion-snapshot '(:generation 0)
+                  emacsvox-eat--deletion-intent
+                  '(:generation 0 :serial 1 :transported t
+                    :deadline 9999999999.0)
+                  emacsvox-eat--deletion-timer
+                  (run-at-time 60 nil #'ignore)
                   emacsvox-eat--last-completion-output '(:rows ("stale"))
                   emacsvox-eat--last-status-text "Progress 40%")
 
@@ -2059,6 +2345,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (should (equal emacsvox-eat--pending-alternate-screen-transitions
                            '(t)))
             (should-not emacsvox-eat--completion-snapshot)
+            (should-not emacsvox-eat--deletion-intent)
+            (should-not emacsvox-eat--deletion-timer)
             (should-not emacsvox-eat--last-completion-output)
             (should-not emacsvox-eat--last-status-text)
             (setq pending-timer emacsvox-eat--quiescence-timer)
@@ -2144,6 +2432,11 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
           (emacsvox-eat--completion-snapshot '(12 . "stale"))
           (emacsvox-eat--completion-timer
            (run-at-time 60 nil #'ignore))
+          (emacsvox-eat--deletion-intent
+           '(:generation 7 :serial 2 :transported t
+             :screen (:text "stale deletion")))
+          (emacsvox-eat--deletion-timer
+           (run-at-time 60 nil #'ignore))
           (emacsvox-eat--screen-snapshot '(:generation 7 :text "stale"))
           (emacsvox-eat--pending-screen-baseline
            '(:generation 7 :text "older"))
@@ -2186,6 +2479,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should-not emacsvox-eat--visual-command-origin-p)
       (should-not emacsvox-eat--completion-snapshot)
       (should-not emacsvox-eat--completion-timer)
+      (should-not emacsvox-eat--deletion-intent)
+      (should-not emacsvox-eat--deletion-timer)
       (should-not emacsvox-eat--screen-snapshot)
       (should-not emacsvox-eat--pending-screen-baseline)
       (should-not emacsvox-eat--pending-screen-diff)
