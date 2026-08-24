@@ -1428,6 +1428,97 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
               (emacsvox-eat-test--stop-process process))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
+(ert-deftest emacsvox-eat-bash-command-error-is-spoken ()
+  "A real semi-char Bash command error is presented before its next prompt."
+  (skip-unless (executable-find "bash"))
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-bash-error*"))
+        process submissions)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer buffer)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions)))
+                    ((symbol-function 'ding) #'ignore))
+            (unwind-protect
+                (progn
+                  (eat-mode)
+                  (let ((process-environment
+                         (cons "INPUTRC=/dev/null" process-environment)))
+                    (eat-exec
+                     buffer "emacsvox-eat-bash-error"
+                     (executable-find "bash") nil
+                     '("--noprofile" "--norc" "-i")))
+                  (setq process (get-buffer-process buffer))
+                  (eat-semi-char-mode)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-match-p
+                       "bash-[^ ]+[$#] "
+                       (emacsvox-eat-test--screen-text)))))
+                  (eat-term-send-string
+                   eat-terminal "PS1='EATERR> '; PROMPT_COMMAND=\n")
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATERR> " (emacsvox-eat-test--screen-text)))))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda () (null emacsvox-eat--quiescence-timer))))
+                  (setq submissions nil)
+                  (let ((typed ""))
+                    (dolist
+                        (character
+                         (string-to-list "emacsvox-no-such-comman"))
+                      (setq typed (concat typed (string character)))
+                      (eat-self-input 1 character)
+                      (should
+                       (emacsvox-eat-test--wait-until
+                        process
+                        (lambda ()
+                          (string-suffix-p
+                           (concat "EATERR> " typed)
+                           (emacsvox-eat-test--screen-text)))))))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda () (null emacsvox-eat--quiescence-timer))))
+                  (setq submissions nil)
+                  ;; Submit immediately after the final echoed character, as a
+                  ;; person normally does when finishing a command.
+                  (eat-self-input 1 ?d)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATERR> emacsvox-no-such-command"
+                       (emacsvox-eat-test--screen-text)))))
+                  (eat-self-input 1 'return)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (and
+                       (string-suffix-p
+                        "EATERR> " (emacsvox-eat-test--screen-text))
+                       (null emacsvox-eat--quiescence-timer)))))
+                  (should (emacsvox-eat--following-live-p))
+                  (should
+                   (cl-find-if
+                    (lambda (submission)
+                      (string-match-p
+                       "emacsvox-no-such-command: command not found"
+                       (car submission)))
+                    submissions)))
+              (emacsvox-eat-test--stop-process process))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
 (ert-deftest emacsvox-eat-alternate-screen-tab-records-navigation-not-completion ()
   "Tab on an application screen is navigation, not shell completion."
   (with-temp-buffer
@@ -3371,6 +3462,33 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (plist-get snapshot :cursor-row) 1)
       (should-not
        (emacsvox-eat--complete-output-rows replacement snapshot)))))
+
+(ert-deftest emacsvox-eat-output-classifier-skips-final-input-echo ()
+  "A final echoed character does not hide output submitted in the same burst."
+  (let* ((diff
+          '(:text-changed t :user-input (1 100 200.0)
+            :size-changed nil :alternate-screen-changed nil
+            :old-rows ("earlier" "$ no-such-comman")
+            :new-rows
+            ("earlier" "$ no-such-command"
+             "no-such-command: command not found" "$ ")
+            :row-change
+            (:start 1 :old-end 2 :new-end 4
+             :old-rows ("$ no-such-comman")
+             :new-rows
+             ("$ no-such-command"
+              "no-such-command: command not found" "$ "))))
+         (snapshot '(:cursor-row 3 :alternate-screen nil)))
+    (should
+     (equal
+      (emacsvox-eat--complete-output-rows diff snapshot)
+      '("no-such-command: command not found")))
+    (setf (plist-get diff :user-input) nil)
+    (should-not (emacsvox-eat--complete-output-rows diff snapshot))
+    (setf (plist-get diff :user-input) '(1 100 200.0)
+          (car (plist-get (plist-get diff :row-change) :new-rows))
+          "$ unrelated repaint")
+    (should-not (emacsvox-eat--complete-output-rows diff snapshot))))
 
 (ert-deftest emacsvox-eat-output-row-overlap-is-linear-and-scroll-aware ()
   "Row overlap recognizes the unchanged suffix shifted to the screen top."

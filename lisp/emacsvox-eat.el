@@ -1211,6 +1211,8 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
                 (cursor-row (plist-get snapshot :cursor-row)))
       (let* ((old-rows (plist-get diff :old-rows))
              (new-rows (plist-get diff :new-rows))
+             (changed-old-rows (plist-get change :old-rows))
+             (changed-new-rows (plist-get change :new-rows))
              (overlap
               (and old-rows new-rows
                    (emacsvox-eat--suffix-prefix-row-overlap
@@ -1219,7 +1221,17 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
               (cond
                ((and overlap (> overlap 0)) overlap)
                ((null (plist-get change :old-rows))
-                (plist-get change :start))))
+                (plist-get change :start))
+               ;; A final echoed input character and the command output can
+               ;; arrive in the same burst.  Skip only that continued row.
+               ((and
+                 (plist-get diff :user-input)
+                 (= (length changed-old-rows) 1)
+                 (> (length changed-new-rows) 1)
+                 (not (string-empty-p (car changed-old-rows)))
+                 (string-prefix-p
+                  (car changed-old-rows) (car changed-new-rows)))
+                (1+ (plist-get change :start)))))
              (end (and start (min cursor-row (length new-rows)))))
         (when (and start end (> end start))
           (emacsvox-eat--list-slice new-rows start end))))))
