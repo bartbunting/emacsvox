@@ -3576,18 +3576,31 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
   "Return the innermost semantic block containing POSITION or point.
 Rendered tables and source blocks win ties with enclosing transcript blocks."
   (setq position (or position (point)))
-  (or
-   (emacsvox-agent-shell--innermost-block-location
-    (list
-     (emacsvox-agent-shell--table-location-at-position position)
-     (emacsvox-agent-shell--source-block-location-at-position position)
-     (emacsvox-agent-shell--fragment-location-at-position position t)
-     (emacsvox-agent-shell--prompt-location-at-position position)))
-   (when-let* ((fallback
-                (emacsvox-agent-shell--viewport-response-location))
-               ((<= (plist-get fallback :position) position))
-               ((< position (plist-get fallback :end))))
-     fallback)))
+  (let* ((table
+          (emacsvox-agent-shell--table-location-at-position position))
+         (source-block
+          (emacsvox-agent-shell--source-block-location-at-position position))
+         (fragment
+          (emacsvox-agent-shell--fragment-location-at-position position t))
+         (location
+          (emacsvox-agent-shell--innermost-block-location
+           (if fragment
+               ;; Current Agent Shell transcripts describe prompts and
+               ;; responses with authoritative fragment metadata.  Avoid a
+               ;; transcript-wide search through legacy prompt face runs once
+               ;; that local metadata has identified the enclosing block.
+               (list table source-block fragment)
+             (list
+              table source-block
+              (emacsvox-agent-shell--prompt-location-at-position
+               position))))))
+    (or
+     location
+     (when-let* ((fallback
+                  (emacsvox-agent-shell--viewport-response-location))
+                 ((<= (plist-get fallback :position) position))
+                 ((< position (plist-get fallback :end))))
+       fallback))))
 
 (defun emacsvox-agent-shell--fragment-toggle-target ()
   "Return the fragment targeted by the public toggle command at point."

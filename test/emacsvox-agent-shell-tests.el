@@ -4336,6 +4336,29 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (plist-get (emacsvox-agent-shell--block-location-at-point) :type)
         'agent-response)))))
 
+(ert-deftest emacsvox-agent-shell-local-block-lookup-skips-prompt-scan ()
+  "Fragment metadata should prevent a transcript-wide legacy prompt scan."
+  (with-temp-buffer
+    (insert
+     (propertize
+      "Current response"
+      'agent-shell-ui-state
+      '((:qualified-id . "1-agent_message_chunk"))
+      'agent-shell-ui-section 'body))
+    (setq major-mode 'agent-shell-mode)
+    (goto-char (point-min))
+    (cl-letf
+        (((symbol-function
+           'emacsvox-agent-shell--prompt-location-at-position)
+          (lambda (&rest _)
+            (ert-fail "Local lookup searched legacy prompt properties"))))
+      (should
+       (eq
+        (plist-get
+         (emacsvox-agent-shell--block-location-at-point)
+         :type)
+        'agent-response)))))
+
 (ert-deftest emacsvox-agent-shell-block-navigation-keeps-adjacent-fragments ()
   "Directional search should not skip adjacent matching property runs."
   (with-temp-buffer
