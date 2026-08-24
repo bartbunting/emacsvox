@@ -235,7 +235,7 @@ Acceptance:
 - generic Emacsvox Eshell speech is not duplicated;
 - visual command enter/exit, resize, background, and process exit are tested.
 
-** TODO Phase 8: Consolidated validation and documentation
+** DONE Phase 8: Consolidated validation and documentation
 
 Planned slices:
 
@@ -250,6 +250,7 @@ Planned slices:
    - [X] raw Return and deletion-key policy decision and implementation;
    - [X] terminal-controlled selection/trust-setting documentation;
 5. [X] final audit-to-implementation traceability and residual-risk review.
+6. [X] final shared-suite isolation fix and consolidated rerun.
 
 Deliverables:
 
@@ -326,6 +327,48 @@ risk, and requested regression coverage remain recorded in
 | Synchronized output/parser performance | Emacsvox adds bounded 60--250 ms speech quiescence independent of PTY chunking. | Atomic terminal transactions and parser/render performance; EAT. |
 | Raw no-echo input | Explicit ~eat-send-password~ is protected; ordinary raw input is not guessed. | Public echo/privacy state or a protected-input event; EAT/application. |
 | OSC 52 and UIC trust | Safe configuration is documented; payloads do not become accessibility commands or speech. | Terminal feature defaults and execution policy; EAT/user. |
+
+** Final validation record
+
+The final 2026-08-24 validation used GNU Emacs 31.0.90 selected by ~local.mk~.
+It produced these results:
+
+- ~make check-emacs~ and ~make bytecode-check~ pass; all live Emacsvox
+  byte-code is current for the selected Emacs;
+- all 163 EAT tests pass even when ~tts-initialize~ is replaced by a deliberate
+  error, proving that the isolated terminal fixtures cannot start or retain a
+  real speech server;
+- all 176 combined EAT and Eshell tests pass, including real terminal-model,
+  Bash/readline, router-help, completion, lifecycle, prompt, raw transport,
+  OSC 52, deterministic TUI, and visual-command fixtures;
+- the full 2,515-test suite has 2,512 expected results, one existing skip, and
+  only the two previously recorded unrelated failures:
+  ~emacsvox-agent-shell-live-chat-prompt-announces-editability~ and
+  ~emacsvox-cider-advice-is-current-and-direct~ (the installed CIDER lacks
+  ~cider-inspect-last-sexp~);
+- compiled aural parity, normal build-tree aural startup, and all 27 semantic
+  traces pass;
+- a fresh Emacs loads ~emacsvox-eat.elc~ rather than source and passes compiled
+  advice registration, public prompt-face capture, real raw byte transport,
+  content-free Return/Backspace/Delete feedback, and alternate-screen safety;
+- split and no-split manuals build, and Emacs Info loads the generated
+  ~EAT Terminal Access~ node;
+- Org lint and whitespace checks are clean, and a source scan finds no private
+  ~eat--…~ reference in the integration.
+
+During the final full-suite run, the two real Eshell fixtures initially started
+Omnivox while ~eshell-mode~ emitted its unrelated banner.  That leaked a live
+speech-process capability into five later TTS/voice tests.  Running the full
+suite without EAT tests reduced it to the two baseline failures; the isolated
+EAT, TTS, and voice suites also passed.  Commit ~ce1b33f78~ now suppresses only
+banner speech/icons during fixture setup.  The full suite again has exactly the
+baseline result, and production behavior is unchanged.
+
+No unresolved defect supported by the audit evidence remains solely actionable
+inside Emacsvox without relaxing a privacy/conservatism decision or inventing
+terminal semantics.  The residual capability table above and API-01/API-02
+identify the remaining EAT, application, shell/device, and user-configuration
+work.
 
 * Decision log
 
@@ -406,10 +449,13 @@ risk, and requested regression coverage remain recorded in
 | 2026-08-24 | ~d9240251c~ | 8.4a | Explicit public EAT line-history commands now present the bounded editable input they select, history Isearch waits until its public end hook, and shell-prompt navigation presents the reached line without reacting to noninteractive or unselected-buffer calls. Reset and reload feedback now use singular semantic transactions instead of separate legacy icon and speech calls. All 156 EAT tests pass; Emacs 31 byte-code is current, and a fresh process loaded ~emacsvox-eat.elc~ and exercised compiled history feedback. |
 | 2026-08-24 | ~af1c9e4a1~ | 8.4b | The user-selected raw-key policy gives fixed, content-free main-screen feedback after EAT successfully transports Return, Backspace, or Delete. Feedback requires selected live-follow state, stays silent on alternate screens and during protected input, is replaceable under repeats, and never retains submitted/deleted content. Deletion and ambiguous C-h input also clear the legacy correlation that previously spoke an adjacent screen character. All 162 EAT tests pass, including real byte transport and alternate-screen silence; byte-code is current, and a fresh process loaded ~emacsvox-eat.elc~ and passed compiled transport/feedback verification. |
 | 2026-08-24 | ~aabda01c4~ | 8.4c | The EAT manual now explains both OSC 52 trust directions, the audited 0.9.4 defaults, global versus buffer-local control, and the recommendation to disable both directions for untrusted SSH/router output. Emacsvox does not change EAT policy or speak/retain terminal-originated selection payloads. A real disposable EAT process verifies write blocking/permission, read-back blocking/permission, unchanged screen state, and silent payload handling. Split and no-split manuals build, the generated EAT chapter loads through Info, all 163 EAT tests pass, and byte-code remains current. |
-| 2026-08-24 | this commit | 8.5 | Every audit finding now has an explicit fixed, bounded, mitigated, documented, or upstream disposition tied to implementation commits and regression evidence.  The residual table separates EAT/application/configuration capabilities from Emacsvox work; a source scan confirms the integration no longer references private ~eat--…~ symbols. |
+| 2026-08-24 | ~229f29ae7~ | 8.5 | Every audit finding now has an explicit fixed, bounded, mitigated, documented, or upstream disposition tied to implementation commits and regression evidence.  The residual table separates EAT/application/configuration capabilities from Emacsvox work; a source scan confirms the integration no longer references private ~eat--…~ symbols. |
+| 2026-08-24 | ~ce1b33f78~ | 8.6 | Final validation exposed test-only leakage: two real Eshell fixtures initialized Omnivox while creating their parent buffer, causing five later TTS/voice false failures.  Speech and icons are now suppressed only around the unrelated Eshell banner.  All 163 EAT tests pass with real TTS initialization forcibly rejected, and the 2,515-test suite returns to its exact two-failure baseline. |
+| 2026-08-24 | this commit | 8.7 | Final validation passes all 163 EAT and 176 combined EAT/Eshell tests, compiled aural parity, normal build-tree startup, 27 semantic traces, fresh compiled EAT transport/prompt/advice checks, both manual layouts, Info loading, byte-code currency, Org lint, and private-API/worktree checks.  The full suite has only its two pre-existing unrelated failures and one existing skip.  Phase 8 and all Emacsvox-only audit work are complete. |
 
 * Current next action
 
-Run consolidated final source, integration, compiled, manual, and clean-state
-checks.  Record exact results, close Phase 8, and commit the final project-plan
-state if no new in-scope defect is found.
+No further Emacsvox-only change is justified by the current evidence.  Future
+work should be separately scoped as an upstream EAT API request (especially
+API-01 or API-02), shell/device configuration, or an explicit decision to
+relax the documented privacy and conservative-speech boundaries.
