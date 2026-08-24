@@ -1510,12 +1510,9 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                        (null emacsvox-eat--quiescence-timer)))))
                   (should (emacsvox-eat--following-live-p))
                   (should
-                   (cl-find-if
-                    (lambda (submission)
-                      (string-match-p
-                       "emacsvox-no-such-command: command not found"
-                       (car submission)))
-                    submissions)))
+                   (equal
+                    (mapcar #'car submissions)
+                    '("bash: emacsvox-no-such-command: command not found"))))
               (emacsvox-eat-test--stop-process process))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
@@ -3489,6 +3486,34 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
           (car (plist-get (plist-get diff :row-change) :new-rows))
           "$ unrelated repaint")
     (should-not (emacsvox-eat--complete-output-rows diff snapshot))))
+
+(ert-deftest emacsvox-eat-output-classifier-replaces-empty-placeholder ()
+  "Output replacing a trailing empty row does not replay earlier output."
+  (let* ((prompt "$ ")
+         (old-rows
+          (list "" prompt "$ first" "first: command not found"
+                "$ second" ""))
+         (new-rows
+          (list "" prompt "$ first" "first: command not found"
+                "$ second" "second: command not found" prompt))
+         (diff
+          (list
+           :text-changed t :user-input nil
+           :size-changed nil :alternate-screen-changed nil
+           :old-rows old-rows :new-rows new-rows
+           :row-change
+           (list :start 5 :old-end 6 :new-end 7
+                 :old-rows '("")
+                 :new-rows
+                 (list "second: command not found" prompt))))
+         (snapshot '(:cursor-row 6 :alternate-screen nil)))
+    ;; The shared empty row is not evidence that the whole screen scrolled.
+    (should
+     (= (emacsvox-eat--suffix-prefix-row-overlap old-rows new-rows) 1))
+    (should
+     (equal
+      (emacsvox-eat--complete-output-rows diff snapshot)
+      '("second: command not found")))))
 
 (ert-deftest emacsvox-eat-output-row-overlap-is-linear-and-scroll-aware ()
   "Row overlap recognizes the unchanged suffix shifted to the screen top."

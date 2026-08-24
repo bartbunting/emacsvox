@@ -1219,8 +1219,15 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
                     old-rows new-rows)))
              (start
               (cond
-               ((and overlap (> overlap 0)) overlap)
-               ((null (plist-get change :old-rows))
+               ((null changed-old-rows)
+                (plist-get change :start))
+               ;; Some terminals append output by replacing one trailing
+               ;; empty placeholder.  Its match with a leading empty screen
+               ;; row is not useful evidence of scrolling.
+               ((and
+                 (= (length changed-old-rows) 1)
+                 (> (length changed-new-rows) 1)
+                 (string-empty-p (car changed-old-rows)))
                 (plist-get change :start))
                ;; A final echoed input character and the command output can
                ;; arrive in the same burst.  Skip only that continued row.
@@ -1231,7 +1238,8 @@ Only newly inserted main-screen rows before the terminal cursor qualify."
                  (not (string-empty-p (car changed-old-rows)))
                  (string-prefix-p
                   (car changed-old-rows) (car changed-new-rows)))
-                (1+ (plist-get change :start)))))
+                (1+ (plist-get change :start)))
+               ((and overlap (> overlap 0)) overlap)))
              (end (and start (min cursor-row (length new-rows)))))
         (when (and start end (> end start))
           (emacsvox-eat--list-slice new-rows start end))))))

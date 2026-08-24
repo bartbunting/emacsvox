@@ -85,11 +85,11 @@ active minibuffer is silent by default.
 
 On the main screen, Emacsvox coalesces a burst before classifying it.  Complete
 new output rows are spoken once, with an automatic limit of eight rows and
-1,000 characters.  When a final echoed input character and command output
-arrive together, the continued input row is omitted without hiding the output.
-The redrawn prompt is not repeated.  Carriage-return progress and status
-rewrites use rate-limited replaceable speech.  Unchanged repaint and resize-only
-updates remain silent.  Terminal bells, paste actions, input-mode changes,
+1,000 characters.  Continued input rows and empty terminal placeholders are
+omitted without hiding the output or replaying earlier screen rows.  The
+redrawn prompt is not repeated.  Carriage-return progress and status rewrites
+use rate-limited replaceable speech.  Unchanged repaint and resize-only updates
+remain silent.  Terminal bells, paste actions, input-mode changes,
 application-screen boundaries, and process exit are content-free semantic
 events rather than arbitrary screen speech.
 
