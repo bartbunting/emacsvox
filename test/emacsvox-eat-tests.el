@@ -5,9 +5,17 @@
 (require 'package)
 (package-initialize)
 (require 'eat)
-(load (expand-file-name "../lisp/emacsvox-eat.el"
-                        (file-name-directory (or load-file-name buffer-file-name)))
-      nil nil)
+(let ((lisp-directory
+       (expand-file-name
+        "../lisp/"
+        (file-name-directory (or load-file-name buffer-file-name)))))
+  ;; Load every implementation source explicitly.  Requiring the facade alone
+  ;; could otherwise select a stale internal .elc during source test runs.
+  (dolist (file '("emacsvox-eat-core.el"
+                  "emacsvox-eat-input.el"
+                  "emacsvox-eat-review.el"
+                  "emacsvox-eat.el"))
+    (load (expand-file-name file lisp-directory) nil nil t)))
 (require 'emacsvox-aural-provider-workflows)
 
 (defun emacsvox-eat-test--screen (text &optional width generation)

@@ -170,6 +170,9 @@ emacsvox-dictionary.elc \
 emacsvox-diff-mode.elc \
 emacsvox-dired.elc \
 emacsvox-dumb-jump.elc \
+emacsvox-eat-core.elc \
+emacsvox-eat-input.elc \
+emacsvox-eat-review.elc \
 emacsvox-eat.elc \
 emacsvox-embark.elc \
 emacsvox-ebuku.elc \
@@ -348,6 +351,11 @@ all: $(OBJECTS)
 
 aural: $(AURAL_RUNTIME_OBJECTS) emacsvox-keymap.elc \
 $(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc
+
+emacsvox-eat-input.elc: emacsvox-eat-core.elc
+emacsvox-eat-review.elc: emacsvox-eat-core.elc emacsvox-eat-input.elc
+emacsvox-eat.elc: \
+emacsvox-eat-core.elc emacsvox-eat-input.elc emacsvox-eat-review.elc
 
 emacsvox-aural-spatial.elc: emacsvox-aural.elc
 emacsvox-aural-rules.elc: emacsvox-aural.elc emacsvox-aural-spatial.elc
