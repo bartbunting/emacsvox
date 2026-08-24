@@ -2507,7 +2507,13 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (unwind-protect
         (save-window-excursion
           (switch-to-buffer buffer)
-          (eshell-mode)
+          ;; Eshell's banner is outside this test's output transaction.  Keep
+          ;; its ordinary speech path from starting a real server and leaking
+          ;; that process into later tests in the shared ERT run.
+          (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'emacsvox-speak-region) #'ignore)
+                    ((symbol-function 'tts-speak) #'ignore))
+            (eshell-mode))
           (cl-letf (((symbol-function 'emacsvox-aural-submit)
                      (lambda (content &rest arguments)
                        (push (list (substring-no-properties content)
@@ -2571,7 +2577,12 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (unwind-protect
         (save-window-excursion
           (switch-to-buffer parent)
-          (eshell-mode)
+          ;; Do not let the unrelated Eshell banner initialize a real speech
+          ;; process which would contaminate later capability tests.
+          (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'emacsvox-speak-region) #'ignore)
+                    ((symbol-function 'tts-speak) #'ignore))
+            (eshell-mode))
           (cl-letf (((symbol-function 'emacsvox-aural-submit)
                      (lambda (content &rest arguments)
                        (setq submissions
