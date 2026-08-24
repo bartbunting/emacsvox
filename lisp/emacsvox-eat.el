@@ -2209,6 +2209,9 @@ The command also works from the terminal's frozen review buffer."
 (defvar-local emacsvox-eat-review--view 'screen
   "Kind of frozen content currently rendered in this review buffer.")
 
+(defvar-local emacsvox-eat-review--navigation-delivery-key nil
+  "Replacement key used to interrupt stale frozen-row announcements.")
+
 (defun emacsvox-eat--kill-review-buffer ()
   "Kill and forget the current EAT terminal's content-bearing review buffer."
   (when (buffer-live-p emacsvox-eat--review-buffer)
@@ -2666,18 +2669,26 @@ The command also works from the terminal's frozen review buffer."
           (concat label " is blank")
         (concat label ": " text)))))
 
-(defun emacsvox-eat-review-speak-current-line (&optional introduction)
-  "Speak the current frozen terminal row after optional INTRODUCTION."
+(defun emacsvox-eat-review-speak-current-line
+    (&optional introduction replaceable-p)
+  "Speak the current frozen terminal row after optional INTRODUCTION.
+When REPLACEABLE-P is non-nil, interrupt an older row announcement from this
+review because only the newly reached row remains useful."
   (interactive)
   (unless (derived-mode-p 'emacsvox-eat-review-mode)
     (user-error "This is not a frozen EAT review buffer"))
   (if-let* ((description
              (emacsvox-eat-review--current-line-description)))
-      (emacsvox-eat--submit-review
-       (concat (or introduction "") description)
-       (if (eq emacsvox-eat-review--view 'completion)
-           'completion
-         'output-navigation))
+      (let ((content (concat (or introduction "") description))
+            (operation
+             (if (eq emacsvox-eat-review--view 'completion)
+                 'completion
+               'output-navigation)))
+        (if replaceable-p
+            (emacsvox-eat--submit
+             content (emacsvox-eat--review-facts operation) 'inspection
+             nil 'replaceable emacsvox-eat-review--navigation-delivery-key)
+          (emacsvox-eat--submit-review content operation)))
     (emacsvox-eat--submit-review
      "This frozen review view contains no rows" 'output-navigation)))
 
@@ -2693,7 +2704,7 @@ The command also works from the terminal's frozen review buffer."
     (when (< requested 0) (setq introduction "First retained row. "))
     (when (>= requested count) (setq introduction "Last retained row. "))
     (emacsvox-eat-review--goto-row target)
-    (emacsvox-eat-review-speak-current-line introduction)))
+    (emacsvox-eat-review-speak-current-line introduction t)))
 
 (defun emacsvox-eat-review-next-line (&optional count)
   "Move forward COUNT frozen terminal rows and speak the destination."
@@ -2885,6 +2896,10 @@ The command also works from the terminal's frozen review buffer."
   (interactive)
   (unless (derived-mode-p 'emacsvox-eat-review-mode)
     (user-error "This is not a frozen EAT review buffer"))
+  (emacsvox-eat--submit
+   "Frozen screen review closed"
+   (emacsvox-eat--facts 'command-interaction 'operation-completed)
+   'state-change 'close-object 'urgent)
   (quit-window t))
 
 (defvar emacsvox-eat-review-mode-map
@@ -2959,6 +2974,8 @@ The command never captures mutable live terminal-buffer text."
            (metadata
             (emacsvox-eat-review--copy-data
              emacsvox-eat--last-metadata-change))
+           (navigation-delivery-key
+            (emacsvox-eat--terminal-delivery-key 'review-navigation))
            (buffer
             (if (buffer-live-p emacsvox-eat--review-buffer)
                 emacsvox-eat--review-buffer
@@ -2972,12 +2989,20 @@ The command never captures mutable live terminal-buffer text."
                     emacsvox-eat-review--completion completion
                     emacsvox-eat-review--focus focus
                     emacsvox-eat-review--status status
-                    emacsvox-eat-review--metadata metadata)
+                    emacsvox-eat-review--metadata metadata
+                    emacsvox-eat-review--navigation-delivery-key
+                    navigation-delivery-key)
         (emacsvox-eat-review--render 'screen)
         (emacsvox-eat-review--goto-row
          (or (plist-get snapshot :cursor-row) 0)))
       (pop-to-buffer buffer)
-      (emacsvox-eat-review-speak-current-line "Frozen screen review opened. ")
+      (emacsvox-eat--submit
+       (concat
+        "Frozen screen review opened. "
+        (or (emacsvox-eat-review--current-line-description)
+            "The frozen review contains no rows"))
+       (emacsvox-eat--facts 'command-interaction 'operation-started)
+       'state-change 'open-object 'urgent)
       buffer)))
 
 (define-prefix-command 'emacsvox-eat-review-map)

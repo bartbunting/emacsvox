@@ -206,11 +206,13 @@ retained, not arbitrary scrollback.
 @kbd{C-e q r} opens an immutable copy of the latest visible screen.  It does
 not refresh and navigation cannot move the live terminal cursor or send input.
 The copy preserves normalized terminal styling, cursor and likely-focus
-anchors, and the exact retained completion rows.
+anchors, and the exact retained completion rows.  Opening and closing review
+play distinct object cues and announce the transition.
 
 @table @kbd
 @item n, p; C-n, C-p; down, up
-Move by captured terminal row and speak the destination.
+Move by captured terminal row and speak the destination, interrupting the
+previous row announcement when navigation continues.
 @item SPC, RET, .
 Speak the current captured row.
 @item a

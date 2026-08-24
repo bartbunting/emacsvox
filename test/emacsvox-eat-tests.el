@@ -4930,7 +4930,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (when (buffer-live-p source) (kill-buffer source)))))
 
 (ert-deftest emacsvox-eat-frozen-review-navigation-is-row-bounded ()
-  "Frozen navigation speaks destinations and explicit first/last boundaries."
+  "Frozen navigation interrupts stale rows and reports explicit boundaries."
   (let ((source (generate-new-buffer " *emacsvox-eat-review-nav*"))
         review
         submissions)
@@ -4942,20 +4942,66 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                 '(:text "One\nTwo\nThree" :rows ("One" "Two" "Three")
                   :styles nil :cursor-row 1 :alternate-screen nil))
           (cl-letf (((symbol-function 'emacsvox-eat--submit)
-                     (lambda (text &rest _)
-                       (push (substring-no-properties text) submissions))))
+                     (lambda (&rest arguments)
+                       (push arguments submissions))))
             (setq review (emacsvox-eat-review-screen))
             (emacsvox-eat-review-next-line)
             (emacsvox-eat-review-next-line)
             (emacsvox-eat-review-previous-line 2))
           (should (= (emacsvox-eat-review--row-at-point) 0))
+          (setq submissions (nreverse submissions))
           (should
            (equal
-            (nreverse submissions)
+            (mapcar
+             (lambda (submission)
+               (substring-no-properties (car submission)))
+             submissions)
             '("Frozen screen review opened. Terminal row 2 of 3, captured cursor: Two"
               "Terminal row 3 of 3: Three"
               "Last retained row. Terminal row 3 of 3: Three"
               "Terminal row 1 of 3: One"))))
+          (should (eq (nth 2 (car submissions)) 'state-change))
+          (should (eq (nth 3 (car submissions)) 'open-object))
+          (should (eq (nth 4 (car submissions)) 'urgent))
+          (let ((navigation-key (nth 5 (cadr submissions))))
+            (should (equal (list (car navigation-key) (cadr navigation-key))
+                           '(eat review-navigation)))
+            (dolist (submission (cdr submissions))
+              (should (eq (nth 2 submission) 'inspection))
+              (should (eq (nth 4 submission) 'replaceable))
+              (should (equal (nth 5 submission) navigation-key))))
+      (when (buffer-live-p review) (kill-buffer review))
+      (when (buffer-live-p source) (kill-buffer source)))))
+
+(ert-deftest emacsvox-eat-frozen-review-quit-announces-close-boundary ()
+  "Quitting frozen review immediately cues and announces its closure."
+  (let ((source (generate-new-buffer " *emacsvox-eat-review-quit*"))
+        review
+        submissions)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq major-mode 'eat-mode
+                emacsvox-eat--screen-snapshot
+                '(:text "One" :rows ("One") :styles nil
+                  :cursor-row 0 :alternate-screen nil))
+          (cl-letf (((symbol-function 'emacsvox-eat--submit)
+                     (lambda (&rest arguments)
+                       (push arguments submissions))))
+            (setq review (emacsvox-eat-review-screen)
+                  submissions nil)
+            (emacsvox-eat-review-quit))
+          (should-not (buffer-live-p review))
+          (should (= (length submissions) 1))
+          (let ((submission (car submissions)))
+            (should (equal (car submission) "Frozen screen review closed"))
+            (should
+             (equal
+              (plist-get (nth 1 submission) :events)
+              '(operation-completed)))
+            (should (eq (nth 2 submission) 'state-change))
+            (should (eq (nth 3 submission) 'close-object))
+            (should (eq (nth 4 submission) 'urgent))))
       (when (buffer-live-p review) (kill-buffer review))
       (when (buffer-live-p source) (kill-buffer source)))))
 
