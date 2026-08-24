@@ -91,6 +91,16 @@ repaint and resize-only updates remain silent.  Terminal bells, paste actions,
 input-mode changes, application-screen boundaries, and process exit are
 content-free semantic events rather than arbitrary screen speech.
 
+In semi-character and character mode on the main screen, Emacsvox confirms
+successful transport of @key{RET}, @key{BACKSPACE}, and @key{DELETE} with the
+fixed labels ``Terminal input submitted'', ``Backspace sent'', and ``Delete
+sent''.  Repeated labels are replaceable and never include the submitted input
+or a deleted screen character.  Ambiguous @kbd{C-h} input also cannot trigger
+adjacent-character echo.  The fixed labels require the selected window to
+follow the live cursor, and are silent during protected password input, in an
+unselected terminal, and on an alternate screen where the application owns the
+keys.
+
 On a full-screen or alternate-screen application, Emacsvox does not read every
 refresh.  A cursor row reached by correlated arrow-style navigation, or one
 compact high-confidence transfer of selection-like styling, can be announced.
@@ -300,6 +310,46 @@ spoken.  A frozen review is a real in-memory copy until it is killed, although
 visually concealed cells are redacted at snapshot time.  Verbose title and
 directory speech can disclose host or path metadata.  Background monitoring,
 by contrast, never speaks content or terminal identity.
+
+@section Terminal-Controlled Clipboard Trust
+
+@cindex clipboard security, EAT
+@cindex OSC 52, EAT
+@cindex remote terminal trust
+@vindex eat-enable-kill-from-terminal
+@vindex eat-enable-yank-to-terminal
+EAT supports terminal selection control sequences, commonly called OSC 52.
+Consequently, trust applies not only to a local shell but also to an SSH peer,
+router CLI, or any program whose output reaches EAT's terminal parser.  Even
+displaying an untrusted file can pass terminal control sequences through a
+program that does not sanitize them.
+
+In the audited EAT 0.9.4 release, @code{eat-enable-kill-from-terminal} defaults
+to non-@code{nil}.  Despite the potentially confusing name, this is the
+terminal-to-Emacs direction: it permits a terminal program to place text in
+Emacs's kill ring.  @code{eat-enable-yank-to-terminal} defaults to @code{nil}
+for security.  Enabling it permits a terminal program to request the current
+Emacs kill-ring text.  Verify these defaults after upgrading EAT.
+
+For terminals connected to an endpoint whose output is not fully trusted,
+disable both directions.  They can be customized globally, or disabled only
+in the current EAT buffer with:
+
+@lisp
+(setq-local eat-enable-kill-from-terminal nil
+            eat-enable-yank-to-terminal nil)
+@end lisp
+
+Run that expression with @kbd{M-:} in the EAT buffer before processing
+untrusted output.  Enabling kill-ring read-back should be reserved for terminal
+programs and remote endpoints that are trusted with whatever Emacs currently
+holds in its kill ring.
+
+Emacsvox deliberately changes neither EAT option.  A terminal-originated
+selection payload is not an accessibility command: Emacsvox does not speak its
+contents or retain it as terminal screen text.  The content-free paste
+announcements described elsewhere apply to explicit user paste commands, not
+to terminal-originated selection control sequences.
 
 @section Full-screen Applications And Limitations
 

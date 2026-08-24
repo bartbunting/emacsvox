@@ -243,12 +243,12 @@ Planned slices:
 2. [X] consolidated source, PTY, real-terminal, full-suite, and compiled
    validation;
 3. [X] user documentation for EAT operation and accessibility controls;
-4. [ ] residual public-command and raw-input interaction feedback found during
+4. [X] residual public-command and raw-input interaction feedback found during
    audit reconciliation;
    - [X] line-history, history-Isearch, prompt-navigation, reset, and reload
      transactions;
    - [X] raw Return and deletion-key policy decision and implementation;
-   - [ ] terminal-controlled selection/trust-setting documentation;
+   - [X] terminal-controlled selection/trust-setting documentation;
 5. [ ] final audit-to-implementation traceability and residual-risk review.
 
 Deliverables:
@@ -357,10 +357,11 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-24 | ~368cad0e3~ | 8.2 | Consolidated validation passes all 152 EAT tests and all 165 combined EAT/Eshell tests, including real terminal-model, disposable Bash/readline PTY, delayed router, completion, lifecycle, deterministic pager/editor/menu/progress, and Eshell visual-command fixtures. The 2,504-test unit suite has 2,501 expected results, one existing skip, and only the two recorded unrelated agent-shell and installed-CIDER failures. Compiled aural parity, normal build-tree startup, all 27 semantic traces, current Emacs 31 byte-code, and a fresh compiled prompt observer path pass. |
 | 2026-08-24 | ~06706a6c0~ | 8.3 | A dedicated EAT Info chapter documents third-party installation status, all four input modes, Corfu versus terminal-side completion ownership, Bash/readline and remote/router behavior, bounded automatic feedback, every ~C-e q~ and frozen-review command, verbosity, content-free monitoring, Bash/Zsh prompt integration, command status, secure password input, conservative full-screen access, limitations, and both Eshell integrations. Split and no-split Texinfo builds pass, the generated node loads through Emacs Info, all 152 EAT tests pass, byte-code is current, and a fresh Emacs loads the compiled updated customization documentation. |
 | 2026-08-24 | ~d9240251c~ | 8.4a | Explicit public EAT line-history commands now present the bounded editable input they select, history Isearch waits until its public end hook, and shell-prompt navigation presents the reached line without reacting to noninteractive or unselected-buffer calls. Reset and reload feedback now use singular semantic transactions instead of separate legacy icon and speech calls. All 156 EAT tests pass; Emacs 31 byte-code is current, and a fresh process loaded ~emacsvox-eat.elc~ and exercised compiled history feedback. |
-| 2026-08-24 | this commit | 8.4b | The user-selected raw-key policy gives fixed, content-free main-screen feedback after EAT successfully transports Return, Backspace, or Delete. Feedback requires selected live-follow state, stays silent on alternate screens and during protected input, is replaceable under repeats, and never retains submitted/deleted content. Deletion and ambiguous C-h input also clear the legacy correlation that previously spoke an adjacent screen character. All 162 EAT tests pass, including real byte transport and alternate-screen silence; byte-code is current, and a fresh process loaded ~emacsvox-eat.elc~ and passed compiled transport/feedback verification. |
+| 2026-08-24 | ~af1c9e4a1~ | 8.4b | The user-selected raw-key policy gives fixed, content-free main-screen feedback after EAT successfully transports Return, Backspace, or Delete. Feedback requires selected live-follow state, stays silent on alternate screens and during protected input, is replaceable under repeats, and never retains submitted/deleted content. Deletion and ambiguous C-h input also clear the legacy correlation that previously spoke an adjacent screen character. All 162 EAT tests pass, including real byte transport and alternate-screen silence; byte-code is current, and a fresh process loaded ~emacsvox-eat.elc~ and passed compiled transport/feedback verification. |
+| 2026-08-24 | this commit | 8.4c | The EAT manual now explains both OSC 52 trust directions, the audited 0.9.4 defaults, global versus buffer-local control, and the recommendation to disable both directions for untrusted SSH/router output. Emacsvox does not change EAT policy or speak/retain terminal-originated selection payloads. A real disposable EAT process verifies write blocking/permission, read-back blocking/permission, unchanged screen state, and silent payload handling. Split and no-split manuals build, the generated EAT chapter loads through Info, all 163 EAT tests pass, and byte-code remains current. |
 
 * Current next action
 
-Commit the selected raw-key policy.  Then document EAT's terminal-controlled
-selection trust settings and complete the audit traceability table and final
+Commit the terminal-controlled selection trust documentation and regression.
+Then complete the audit traceability table, consolidated validation, and final
 state checks.

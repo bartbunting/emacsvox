@@ -479,6 +479,99 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should-not emacsvox-eat--screen-snapshot)
       (should-not emacsvox-eat--recent-input))))
 
+(ert-deftest emacsvox-eat-terminal-selection-policy-never-speaks-payloads ()
+  "Real EAT OSC 52 policy stays independent from speech and screen retention."
+  (skip-unless (executable-find "cat"))
+  (should (default-value 'eat-enable-kill-from-terminal))
+  (should-not (default-value 'eat-enable-yank-to-terminal))
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-selection*"))
+        (remote-text "emacsvox-remote-selection-sentinel")
+        (local-text "emacsvox-local-kill-sentinel")
+        process terminal outgoing submissions)
+    (unwind-protect
+        (with-current-buffer buffer
+          (eat-mode)
+          (eat-exec
+           buffer "emacsvox-eat-selection" (executable-find "cat") nil nil)
+          (setq process (get-buffer-process buffer)
+                terminal eat-terminal)
+          ;; Preserve EAT's configured selection callback while capturing only
+          ;; bytes that a permitted OSC 52 read sends back to the peer.
+          (eat-term-set-parameter
+           terminal 'input-function
+           (lambda (_terminal text) (push text outgoing)))
+          (let ((inhibit-read-only t))
+            (eat-term-process-output terminal "$ ready")
+            (eat-term-redisplay terminal))
+          (setq emacsvox-eat--screen-snapshot
+                (emacsvox-eat--capture-screen))
+          (let ((kill-ring '("original kill"))
+                (kill-ring-yank-pointer nil))
+            (setq kill-ring-yank-pointer kill-ring)
+            (cl-labels
+                ((deliver
+                  (payload)
+                  (let ((inhibit-read-only t))
+                    (eat-term-process-output terminal payload)
+                    (eat-term-redisplay terminal))
+                  (emacsvox-eat-update-hook)))
+              (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                         (lambda () t))
+                        ((symbol-function 'emacsvox-eat--following-live-p)
+                         (lambda () t))
+                        ((symbol-function 'emacsvox-aural-submit)
+                         (lambda (content &rest arguments)
+                           (push (list content arguments) submissions))))
+                (let ((eat-enable-kill-from-terminal nil))
+                  (deliver
+                   (format
+                    "\e]52;c;%s\e\\"
+                    (base64-encode-string remote-text t)))
+                  (should (equal kill-ring '("original kill"))))
+                (let ((eat-enable-kill-from-terminal t))
+                  (deliver
+                   (format
+                    "\e]52;c;%s\e\\"
+                    (base64-encode-string remote-text t)))
+                  (should (equal (car kill-ring) remote-text)))
+                (setq outgoing nil)
+                (let ((eat-enable-yank-to-terminal nil))
+                  (deliver "\e]52;c;?\e\\")
+                  (should (equal outgoing '("\e]52;c;\e\\"))))
+                (kill-new local-text)
+                (setq outgoing nil)
+                (let ((eat-enable-yank-to-terminal t))
+                  (deliver "\e]52;c;?\e\\")
+                  (should
+                   (equal
+                    outgoing
+                    (list
+                     (format
+                      "\e]52;c;%s\e\\"
+                      (base64-encode-string local-text t))))))))
+            (should-not submissions)
+            (let ((retained
+                   (format
+                    "%S"
+                    (list emacsvox-eat--screen-snapshot
+                          emacsvox-eat--last-screen-diff
+                          emacsvox-eat--last-changed-screen
+                          emacsvox-eat--last-completion-output
+                          emacsvox-eat--last-status-text))))
+              (should-not (string-match-p (regexp-quote remote-text) retained))
+              (should-not (string-match-p (regexp-quote local-text) retained)))
+            (should-not
+             (string-match-p
+              (regexp-opt (list remote-text local-text))
+              (buffer-substring-no-properties (point-min) (point-max))))))
+      (when (and process (process-live-p process))
+        (delete-process process)
+        (accept-process-output process 0.1))
+      (when (and terminal (eat-term-live-p terminal))
+        (with-current-buffer buffer
+          (let ((inhibit-read-only t)) (eat-term-delete terminal))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
 (ert-deftest emacsvox-eat-mode-feedback-is-human-and-semantic ()
   "Eat mode feedback describes the resulting input mode without Lisp names."
   (let ((ems--interactive-fn-name 'eat-line-mode)

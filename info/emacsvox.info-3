@@ -5235,6 +5235,16 @@ silent.  Terminal bells, paste actions, input-mode changes,
 application-screen boundaries, and process exit are content-free
 semantic events rather than arbitrary screen speech.
 
+   In semi-character and character mode on the main screen, Emacsvox
+confirms successful transport of <RET>, <BACKSPACE>, and <DELETE> with
+the fixed labels "Terminal input submitted", "Backspace sent", and
+"Delete sent".  Repeated labels are replaceable and never include the
+submitted input or a deleted screen character.  Ambiguous ‘C-h’ input
+also cannot trigger adjacent-character echo.  The fixed labels require
+the selected window to follow the live cursor, and are silent during
+protected password input, in an unselected terminal, and on an alternate
+screen where the application owns the keys.
+
    On a full-screen or alternate-screen application, Emacsvox does not
 read every refresh.  A cursor row reached by correlated arrow-style
 navigation, or one compact high-confidence transfer of selection-like
@@ -5423,7 +5433,43 @@ Verbose title and directory speech can disclose host or path metadata.
 Background monitoring, by contrast, never speaks content or terminal
 identity.
 
-13.8 Full-screen Applications And Limitations
+13.8 Terminal-Controlled Clipboard Trust
+========================================
+
+EAT supports terminal selection control sequences, commonly called OSC
+52.  Consequently, trust applies not only to a local shell but also to
+an SSH peer, router CLI, or any program whose output reaches EAT's
+terminal parser.  Even displaying an untrusted file can pass terminal
+control sequences through a program that does not sanitize them.
+
+   In the audited EAT 0.9.4 release, ‘eat-enable-kill-from-terminal’
+defaults to non-‘nil’.  Despite the potentially confusing name, this is
+the terminal-to-Emacs direction: it permits a terminal program to place
+text in Emacs's kill ring.  ‘eat-enable-yank-to-terminal’ defaults to
+‘nil’ for security.  Enabling it permits a terminal program to request
+the current Emacs kill-ring text.  Verify these defaults after upgrading
+EAT.
+
+   For terminals connected to an endpoint whose output is not fully
+trusted, disable both directions.  They can be customized globally, or
+disabled only in the current EAT buffer with:
+
+     (setq-local eat-enable-kill-from-terminal nil
+                 eat-enable-yank-to-terminal nil)
+
+   Run that expression with ‘M-:’ in the EAT buffer before processing
+untrusted output.  Enabling kill-ring read-back should be reserved for
+terminal programs and remote endpoints that are trusted with whatever
+Emacs currently holds in its kill ring.
+
+   Emacsvox deliberately changes neither EAT option.  A
+terminal-originated selection payload is not an accessibility command:
+Emacsvox does not speak its contents or retain it as terminal screen
+text.  The content-free paste announcements described elsewhere apply to
+explicit user paste commands, not to terminal-originated selection
+control sequences.
+
+13.9 Full-screen Applications And Limitations
 =============================================
 
 Programs such as pagers, editors, menus, and refreshing dashboards
@@ -5446,8 +5492,8 @@ Broken cursor addressing or screen layout caused by missing remote
 terminfo cannot be repaired by speech classification; consult EAT's
 manual when the visual terminal itself renders incorrectly.
 
-13.9 EAT In Eshell
-==================
+13.10 EAT In Eshell
+===================
 
 When EAT's global ‘eat-eshell-mode’ is enabled, Emacsvox uses the same
 screen observer for the terminal region embedded in Eshell.  Rendered
@@ -6781,7 +6827,7 @@ File: emacsvox.info,  Node: Concept Index,  Next: Key Index,  Prev: Acknowledgme
  [index ]
 * Menu:
 
-* alternate screen, EAT:                 EAT Terminal Access. (line 270)
+* alternate screen, EAT:                 EAT Terminal Access. (line 316)
 * AUCTeX:                                Creating Well-formatted Documents.
                                                               (line  42)
 * Audio Desktop:                         Audio Desktop.       (line   6)
@@ -6789,12 +6835,13 @@ File: emacsvox.info,  Node: Concept Index,  Next: Key Index,  Prev: Acknowledgme
                                                               (line  24)
 * Browsing Structure:                    Browsing Structure.  (line   6)
 * character echo:                        Controlling Echo.    (line   6)
-* completion candidates, terminal:       EAT Terminal Access. (line  89)
+* clipboard security, EAT:               EAT Terminal Access. (line 280)
+* completion candidates, terminal:       EAT Terminal Access. (line  99)
 * completion, EAT:                       EAT Terminal Access. (line  21)
 * Context-Sensitive Interaction:         Context-Sensitive Interaction.
                                                               (line   6)
 * Corfu, EAT:                            EAT Terminal Access. (line  21)
-* curses applications, EAT:              EAT Terminal Access. (line 270)
+* curses applications, EAT:              EAT Terminal Access. (line 316)
 * Desktop:                               Desktop Management.  (line   6)
 * Desktop Applications:                  Desktop Applications.
                                                               (line   5)
@@ -6806,34 +6853,36 @@ File: emacsvox.info,  Node: Concept Index,  Next: Key Index,  Prev: Acknowledgme
                                                               (line   6)
 * EAT automatic speech:                  EAT Terminal Access. (line  65)
 * EAT input modes:                       EAT Terminal Access. (line  21)
-* EAT review commands:                   EAT Terminal Access. (line 124)
-* EAT shell integration:                 EAT Terminal Access. (line 219)
+* EAT review commands:                   EAT Terminal Access. (line 134)
+* EAT shell integration:                 EAT Terminal Access. (line 229)
 * EAT terminal emulator:                 EAT Terminal Access. (line   6)
 * Emacs Keyboard Commands:               Emacsvox Keyboard Commands.
                                                               (line   6)
 * Emacs Packages:                        Emacs Packages.      (line   6)
-* Eshell, EAT accessibility:             EAT Terminal Access. (line 293)
+* Eshell, EAT accessibility:             EAT Terminal Access. (line 339)
 * Finding:                               Context-Sensitive Interaction.
                                                               (line  64)
-* frozen EAT review:                     EAT Terminal Access. (line 157)
+* frozen EAT review:                     EAT Terminal Access. (line 167)
 * Introduction:                          Introduction.        (line   6)
 * line echo:                             Controlling Echo.    (line   6)
 * Messaging:                             Messaging.           (line   6)
 * Object-Oriented Desktop:               Object Oriented Desktop.
                                                               (line   6)
 * Online Help:                           Using Online Help.   (line   6)
-* password input, EAT:                   EAT Terminal Access. (line 247)
+* OSC 52, EAT:                           EAT Terminal Access. (line 280)
+* password input, EAT:                   EAT Terminal Access. (line 257)
 * Personal Information Management:       Personal Information Management.
                                                               (line   6)
 * Programming:                           Editing Code.        (line   6)
+* remote terminal trust:                 EAT Terminal Access. (line 280)
 * Replace:                               Search replace and spell check.
                                                               (line   6)
-* router completion:                     EAT Terminal Access. (line  89)
+* router completion:                     EAT Terminal Access. (line  99)
 * Search:                                Search replace and spell check.
                                                               (line   6)
 * Searching:                             Context-Sensitive Interaction.
                                                               (line  64)
-* shell command status:                  EAT Terminal Access. (line 219)
+* shell command status:                  EAT Terminal Access. (line 229)
 * Software Development:                  Development Environment.
                                                               (line   6)
 * speech access, terminal:               EAT Terminal Access. (line   6)
@@ -6845,8 +6894,8 @@ File: emacsvox.info,  Node: Concept Index,  Next: Key Index,  Prev: Acknowledgme
                                                               (line  34)
 * terminal accessibility:                EAT Terminal Access. (line   6)
 * terminal output, speech policy:        EAT Terminal Access. (line  65)
-* terminal privacy:                      EAT Terminal Access. (line 247)
-* terminal screen review:                EAT Terminal Access. (line 124)
+* terminal privacy:                      EAT Terminal Access. (line 257)
+* terminal screen review:                EAT Terminal Access. (line 134)
 * TTS:                                   Speech System.       (line   6)
 * Web Browsing:                          Web Browsing.        (line   6)
 * word echo:                             Controlling Echo.    (line   6)
@@ -7251,7 +7300,7 @@ File: emacsvox.info,  Node: Key Index,  Next: Function Index,  Prev: Concept Ind
 * C-e p <1>:                             emacsvox-speak.     (line   35)
 * C-e P:                                 emacsvox-speak.     (line  718)
 * C-e q (EAT review):                    EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * C-e r:                                 Reading.            (line   63)
 * C-e R:                                 emacsvox-speak.     (line  770)
 * C-e r <1>:                             emacsvox-speak.     (line  782)
@@ -7418,7 +7467,7 @@ File: emacsvox.info,  Node: Key Index,  Next: Function Index,  Prev: Concept Ind
 * s-n:                                   emacsvox-muggles.   (line  133)
 * s-o:                                   emacsvox-dbus.      (line   92)
 * <TAB> (EAT terminal completion):       EAT Terminal Access.
-                                                             (line   89)
+                                                             (line   99)
 
 
 File: emacsvox.info,  Node: Function Index,  Next: Variable Index,  Prev: Key Index,  Up: Top
@@ -7452,15 +7501,15 @@ Function Index
 * eat-emacs-mode:                        EAT Terminal Access.
                                                              (line   21)
 * eat-eshell-mode:                       EAT Terminal Access.
-                                                             (line  293)
+                                                             (line  339)
 * eat-eshell-visual-command-mode:        EAT Terminal Access.
-                                                             (line  293)
+                                                             (line  339)
 * eat-line-mode:                         EAT Terminal Access.
                                                              (line   21)
 * eat-semi-char-mode:                    EAT Terminal Access.
                                                              (line   21)
 * eat-send-password:                     EAT Terminal Access.
-                                                             (line  247)
+                                                             (line  257)
 * emacsvox--advice-global-set-key-before: emacsvox-advice.   (line   19)
 * emacsvox--advice-global-set-key-before <1>: emacsvox-advice.
                                                              (line   20)
@@ -9097,25 +9146,25 @@ Function Index
 * emacsvox-dired-speak-symlink-target:   emacsvox-dired.     (line  156)
 * emacsvox-dired-speak-symlink-target <1>: emacsvox-dired.   (line  157)
 * emacsvox-eat-cycle-verbosity:          EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * emacsvox-eat-review-screen:            EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * emacsvox-eat-speak-completion-output:  EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * emacsvox-eat-speak-current-row:        EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * emacsvox-eat-speak-last-change:        EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * emacsvox-eat-speak-likely-focus:       EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * emacsvox-eat-speak-retained-metadata:  EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * emacsvox-eat-speak-retained-status:    EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * emacsvox-eat-speak-visible-screen:     EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * emacsvox-eat-toggle-background-monitoring: EAT Terminal Access.
-                                                             (line  124)
+                                                             (line  134)
 * emacsvox-ediff-speak-current-difference: emacsvox-ediff.   (line   25)
 * emacsvox-ediff-speak-current-difference <1>: emacsvox-ediff.
                                                              (line   26)
