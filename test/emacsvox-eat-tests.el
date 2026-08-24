@@ -235,6 +235,125 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should-not emacsvox-eat--completion-timer)
       (should-not emacsvox-eat--recent-input))))
 
+(ert-deftest emacsvox-eat-line-history-navigation-is-native-and-target-aware ()
+  "Explicit EAT line-history movement presents bounded editable input once."
+  (with-temp-buffer
+    (insert "prompt> ")
+    (let ((input-start (point))
+          (eat-terminal 'terminal)
+          (selected-p t)
+          submissions)
+      (insert "git status")
+      (cl-letf (((symbol-function 'eat-term-end)
+                 (lambda (_terminal) input-start))
+                ((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () selected-p))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (list content arguments) submissions))))
+        (emacsvox--advice-eat-line-previous-input-after)
+        (should-not submissions)
+        (setq ems--interactive-fn-name 'eat-line-previous-input)
+        (emacsvox--advice-eat-line-previous-input-after)
+        (should (= (length submissions) 1))
+        (should (equal (caar submissions) "git status"))
+        (should
+         (equal
+          (plist-get (cadar submissions) :facts)
+          '(:role command-input
+            :command-interaction-kind shell
+            :events (focus-entered)
+            :command-operation history-navigation
+            :command-input-origin history)))
+        (should (eq (plist-get (cadar submissions) :occasion) 'navigation))
+        (should
+         (eq (plist-get (cadar submissions) :delivery-policy) 'replaceable))
+        (setq selected-p nil
+              ems--interactive-fn-name 'eat-line-previous-input)
+        (emacsvox--advice-eat-line-previous-input-after)
+        (should (= (length submissions) 1))))))
+
+(ert-deftest emacsvox-eat-history-isearch-presents-only-when-it-ends ()
+  "EAT input-history Isearch defers feedback until its public end hook."
+  (with-temp-buffer
+    (insert "prompt> ")
+    (let ((input-start (point))
+          (eat-terminal 'terminal)
+          (ems--interactive-fn-name 'eat-line-history-isearch-backward)
+          submissions)
+      (insert "selected history")
+      (cl-letf (((symbol-function 'eat-term-end)
+                 (lambda (_terminal) input-start))
+                ((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () t))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (list content arguments) submissions))))
+        (emacsvox--advice-eat-line-history-isearch-backward-after)
+        (should-not submissions)
+        (should (memq #'emacsvox-eat--history-isearch-ended
+                      isearch-mode-end-hook))
+        (emacsvox-eat--history-isearch-ended)
+        (should (equal (mapcar #'car submissions) '("selected history")))
+        (should-not
+         (memq #'emacsvox-eat--history-isearch-ended
+               isearch-mode-end-hook))))))
+
+(ert-deftest emacsvox-eat-prompt-navigation-presents-reached-line-once ()
+  "Explicit EAT prompt navigation presents its reached buffer line."
+  (with-temp-buffer
+    (insert "old prompt> command\nresult\nnew prompt> ")
+    (goto-char (point-min))
+    (let ((eat-terminal 'terminal)
+          (ems--interactive-fn-name 'eat-previous-shell-prompt)
+          (selected-p t)
+          submissions)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () selected-p))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (list content arguments) submissions))))
+        (emacsvox--advice-eat-previous-shell-prompt-after)
+        (should (equal (mapcar #'car submissions)
+                       '("old prompt> command")))
+        (should
+         (equal
+          (plist-get (cadar submissions) :facts)
+          '(:role command-prompt
+            :command-interaction-kind shell
+            :events (focus-entered)
+            :command-operation prompt-navigation)))
+        (should (eq (plist-get (cadar submissions) :occasion) 'navigation))
+        (emacsvox--advice-eat-previous-shell-prompt-after)
+        (should (= (length submissions) 1))
+        (setq selected-p nil
+              ems--interactive-fn-name 'eat-previous-shell-prompt)
+        (emacsvox--advice-eat-previous-shell-prompt-after)
+        (should (= (length submissions) 1))))))
+
+(ert-deftest emacsvox-eat-reset-and-reload-feedback-is-semantic ()
+  "Successful explicit reset and reload feedback use native transactions."
+  (dolist (case
+           '((eat-reset emacsvox--advice-eat-reset-after "Reset EAT")
+             (eat-reload emacsvox--advice-eat-reload-after "Reloaded EAT")))
+    (pcase-let ((`(,target ,advice ,expected) case))
+      (let ((ems--interactive-fn-name target)
+            submissions)
+        (cl-letf (((symbol-function 'emacsvox-eat--install-advice) #'ignore)
+                  ((symbol-function 'emacsvox-aural-submit)
+                   (lambda (content &rest arguments)
+                     (push (list content arguments) submissions))))
+          (funcall advice)
+          (should (equal (mapcar #'car submissions) (list expected)))
+          (should
+           (equal
+            (plist-get (cadar submissions) :facts)
+            '(:role command-interaction
+              :command-interaction-kind shell
+              :events (operation-completed))))
+          (should (eq (plist-get (cadar submissions) :occasion)
+                      'state-change)))))))
+
 (ert-deftest emacsvox-eat-password-command-never-presents-secret-content ()
   "Protected EAT input clears snapshots and reports only its outcome."
   (with-temp-buffer
@@ -1474,26 +1593,27 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
   (with-temp-buffer
     (let ((eat-terminal (eat-term-make (current-buffer) (point-min)))
           (ems--interactive-fn-name 'eat-reset)
-          events)
+          submissions)
       (unwind-protect
           (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
                      (lambda () t))
-                    ((symbol-function 'emacsvox-icon)
-                     (lambda (icon)
-                       (setq events (append events (list (list 'icon icon))))))
-                    ((symbol-function 'tts-speak)
-                     (lambda (text)
-                       (setq events
-                             (append events (list (list 'speak text))))))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions)))
                     ((symbol-function 'emacsvox-speak-line)
-                     (lambda () (push '(unexpected-line) events)))
+                     (lambda () (push '(unexpected-line) submissions)))
                     ((symbol-function 'emacsvox-speak-this-char)
                      (lambda (char)
-                       (push (list 'unexpected-char char) events))))
+                       (push (list 'unexpected-char char) submissions))))
             (eat-reset)
             (should
-             (equal events
-                    '((icon task-done) (speak "Reset Eat")))))
+             (equal (mapcar #'car submissions) '("Reset EAT")))
+            (should
+             (equal
+              (plist-get (cadar submissions) :facts)
+              '(:role command-interaction
+                :command-interaction-kind shell
+                :events (operation-completed)))))
         (when (eat-term-live-p eat-terminal)
           (eat-term-delete eat-terminal))))))
 

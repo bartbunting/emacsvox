@@ -2846,41 +2846,111 @@ The command never captures mutable live terminal-buffer text."
 
 ;;;  Interactive Commands:
 
-'(
+(defconst emacsvox-eat--history-navigation-targets
+  '(eat-line-find-input
+    eat-line-next-input
+    eat-line-next-matching-input
+    eat-line-next-matching-input-from-input
+    eat-line-previous-input
+    eat-line-previous-matching-input
+    eat-line-previous-matching-input-from-input)
+  "Public EAT line-history commands that replace the editable input.")
 
-  eat-input-char
-  eat-kill-process
-  eat-line-delchar-or-eof
-  eat-line-find-input
-  eat-line-history-isearch-backward
-  eat-line-history-isearch-backward-regexp
-  eat-line-load-input-history-from-file
-  eat-line-next-input
-  eat-line-next-matching-input
-  eat-line-next-matching-input-from-input
-  eat-line-previous-input
-  eat-line-previous-matching-input
-  eat-line-previous-matching-input-from-input
-  eat-line-restore-input
-  eat-line-send-input
-  eat-line-send-interrupt
-  eat-mouse-yank-primary
-  eat-mouse-yank-secondary
-  eat-narrow-to-shell-prompt
-  eat-next-shell-prompt
-  eat-other-window
-  eat-previous-shell-prompt
-  eat-project
-  eat-project-other-window
-  eat-quoted-input
-  eat-reload
-  eat-reset
-  eat-self-input
-  eat-send-password
-  eat-trace-replay
-  eat-trace-replay-next-frame
-  eat-xterm-paste
-  )
+(defconst emacsvox-eat--history-isearch-targets
+  '(eat-line-history-isearch-backward
+    eat-line-history-isearch-backward-regexp)
+  "Public EAT commands that start an input-history Isearch.")
+
+(defconst emacsvox-eat--prompt-navigation-targets
+  '(eat-next-shell-prompt eat-previous-shell-prompt)
+  "Public EAT commands that move point between shell prompts.")
+
+(defun emacsvox-eat--line-input-content ()
+  "Return bounded editable EAT line input, or nil when none is available."
+  (when-let* ((eat-terminal)
+              (terminal-end (ignore-errors (eat-term-end eat-terminal)))
+              (start
+               (if (markerp terminal-end)
+                   (marker-position terminal-end)
+                 terminal-end))
+              ((integerp start))
+              ((<= (point-min) start (point-max))))
+    (let ((text
+           (string-trim-right
+            (buffer-substring-no-properties start (point-max)))))
+      (unless (string-empty-p text)
+        (emacsvox-eat--bounded-output
+         (emacsvox-eat--split-screen-rows text))))))
+
+(defun emacsvox-eat--present-history-input ()
+  "Present the editable input selected by explicit EAT history navigation."
+  (emacsvox-eat--submit
+   (or (emacsvox-eat--line-input-content)
+       "Empty terminal history input")
+   (emacsvox-eat--facts
+    'command-input 'focus-entered 'history-navigation
+    '(:command-input-origin history))
+   'navigation 'select-object 'replaceable
+   (emacsvox-eat--terminal-delivery-key 'history-navigation)))
+
+(defun emacsvox-eat--present-prompt-navigation ()
+  "Present the line reached by explicit EAT shell-prompt navigation."
+  (let* ((line
+          (buffer-substring-no-properties
+           (line-beginning-position) (line-end-position)))
+         (content (emacsvox-eat--bounded-output (list line))))
+    (emacsvox-eat--submit
+     (if (and content (not (string-empty-p (string-trim content))))
+         content
+       "Blank terminal prompt line")
+     (emacsvox-eat--facts
+      'command-prompt 'focus-entered 'prompt-navigation)
+     'navigation 'item 'replaceable
+     (emacsvox-eat--terminal-delivery-key 'prompt-navigation))))
+
+(cl-loop
+ for target in emacsvox-eat--history-navigation-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(defun ,advice-function (&rest _)
+     ,(format "Present input after interactive `%s'." target)
+     (when (and (ems-interactive-p ',target)
+                (emacsvox-eat--selected-buffer-p))
+       (emacsvox-eat--present-history-input)))))
+
+(defun emacsvox-eat--history-isearch-ended ()
+  "Present EAT history input when an explicitly started Isearch ends."
+  (remove-hook 'isearch-mode-end-hook
+               #'emacsvox-eat--history-isearch-ended t)
+  (when (and eat-terminal (emacsvox-eat--selected-buffer-p))
+    (emacsvox-eat--present-history-input)))
+
+(cl-loop
+ for target in emacsvox-eat--history-isearch-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(defun ,advice-function (&rest _)
+     ,(format "Arrange feedback after interactive `%s'." target)
+     (when (and (ems-interactive-p ',target)
+                (emacsvox-eat--selected-buffer-p))
+       (add-hook 'isearch-mode-end-hook
+                 #'emacsvox-eat--history-isearch-ended nil t)))))
+
+(cl-loop
+ for target in emacsvox-eat--prompt-navigation-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(defun ,advice-function (&rest _)
+     ,(format "Present the prompt reached by interactive `%s'." target)
+     (when (and (ems-interactive-p ',target)
+                (emacsvox-eat--selected-buffer-p))
+       (emacsvox-eat--present-prompt-navigation)))))
 
 (defconst emacsvox-eat--yank-targets
   '(eat-yank eat-yank-from-kill-ring eat-xterm-paste
@@ -2959,12 +3029,18 @@ reaches this advice."
   "Speak after reloading Eat."
   (emacsvox-eat--install-advice)
   (when (ems-interactive-p 'eat-reload)
-    (emacsvox-icon 'task-done) (tts-speak "Reloaded Eat")))
+    (emacsvox-eat--submit
+     "Reloaded EAT"
+     (emacsvox-eat--facts 'command-interaction 'operation-completed)
+     'state-change 'task-done)))
 
 (defun emacsvox--advice-eat-reset-after (&rest _)
   "Speak after resetting Eat."
   (when (ems-interactive-p 'eat-reset)
-    (emacsvox-icon 'task-done) (tts-speak "Reset Eat")))
+    (emacsvox-eat--submit
+     "Reset EAT"
+     (emacsvox-eat--facts 'command-interaction 'operation-completed)
+     'state-change 'task-done)))
 
 (defconst emacsvox-eat--mode-targets
   '(eat-blink-mode eat-char-mode eat-emacs-mode
@@ -3037,7 +3113,10 @@ reaches this advice."
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (defconst emacsvox-eat--advice-targets
-  (append emacsvox-eat--yank-targets
+  (append emacsvox-eat--history-navigation-targets
+          emacsvox-eat--history-isearch-targets
+          emacsvox-eat--prompt-navigation-targets
+          emacsvox-eat--yank-targets
           '(eat-reload eat-reset)
           emacsvox-eat--mode-targets
           '(eat))
