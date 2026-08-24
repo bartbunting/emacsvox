@@ -233,12 +233,38 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
      (string-match-p "never speak this secret"
                      (format "%S" submissions)))))
 
+(ert-deftest emacsvox-eat-keyboard-yank-speaks-yanked-content ()
+  "An interactive EAT keyboard yank presents the selected kill-ring text."
+  (let ((ems--interactive-fn-name 'eat-yank)
+        (kill-ring-yank-pointer
+         (list (propertize "echo first\necho second" 'face 'bold)))
+        submission)
+    (cl-letf (((symbol-function 'emacsvox-aural-compatibility-icon)
+               (lambda (icon) (list 'icon icon)))
+              ((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest arguments)
+                 (setq submission (list content arguments)))))
+      (emacsvox--advice-eat-yank-after))
+    (should
+     (equal
+      submission
+      '("echo first\necho second"
+        (:facts
+         (:role command-input
+          :command-interaction-kind shell
+          :events (object-changed)
+          :command-input-origin copied)
+         :module eat
+         :occasion edit
+         :compatibility-actions ((icon yank-object))))))))
+
 (ert-deftest emacsvox-eat-paste-feedback-covers-every-public-entry-point ()
   "Keyboard, kill-ring, xterm, and mouse paste paths have human labels."
   (dolist (entry emacsvox-eat--yank-labels)
     (let ((target (car entry))
           (expected (cdr entry))
           (ems--interactive-fn-name (car entry))
+          (kill-ring-yank-pointer nil)
           content)
       (cl-letf (((symbol-function 'emacsvox-aural-submit)
                  (lambda (text &rest _) (setq content text))))

@@ -155,7 +155,7 @@
     (eat-xterm-paste . "Pasted clipboard input")
     (eat-mouse-yank-primary . "Pasted primary selection")
     (eat-mouse-yank-secondary . "Pasted secondary selection"))
-  "Content-free human feedback for EAT terminal paste commands.")
+  "Human fallback feedback for EAT terminal paste commands.")
 
 (defun emacsvox-eat--before-terminal-paste (&rest _)
   "Invalidate input-correlated state before sending terminal paste content."
@@ -164,10 +164,19 @@
   (emacsvox-eat--remember-input-row-offset)
   (setq emacsvox-eat--recent-input nil))
 
+(defun emacsvox-eat--keyboard-yank-content ()
+  "Return bounded content most recently yanked by `eat-yank'."
+  (when-let* ((text (car-safe kill-ring-yank-pointer))
+              ((stringp text)))
+    (emacsvox-eat--bounded-output
+     (split-string (substring-no-properties text) "\n" nil))))
+
 (defun emacsvox-eat--present-terminal-paste (target)
-  "Present a content-free terminal paste performed by EAT command TARGET."
+  "Present a terminal paste performed by EAT command TARGET."
   (emacsvox-eat--submit
-   (or (alist-get target emacsvox-eat--yank-labels)
+   (or (and (eq target 'eat-yank)
+            (emacsvox-eat--keyboard-yank-content))
+       (alist-get target emacsvox-eat--yank-labels)
        "Pasted terminal input")
    (emacsvox-eat--facts
     'command-input 'object-changed nil '(:command-input-origin copied))
@@ -180,7 +189,7 @@
  do
  (eval
   `(defun ,advice-function (&rest _)
-     ,(format "Present content-free paste feedback after `%s'." target)
+     ,(format "Present paste feedback after `%s'." target)
      (when (ems-interactive-p ',target)
        (emacsvox-eat--present-terminal-paste ',target)))))
 
