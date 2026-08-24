@@ -2384,13 +2384,64 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (cl-letf
           (((symbol-function 'emacsvox-speak--present-physical-line)
             (lambda (&rest _)
-              (setq spoken
-                    (buffer-substring-no-properties
-                     (line-beginning-position) (line-end-position))))))
+              (ert-fail "Folded navigation used physical-line speech"))))
         (emacsvox-agent-shell--speak-visual-line-around
          (lambda (&rest _)
-           (ert-fail "Folded navigation used the complete visual span"))))
+           (setq spoken
+                 (buffer-substring-no-properties
+                  (point-min) (point-max))))))
       (should (equal spoken "Thought heading")))))
+
+(ert-deftest emacsvox-agent-shell-folded-wrapped-heading-speaks-current-row ()
+  "Wrapped folded headings should not repeat their complete physical line."
+  (with-temp-buffer
+    (let* ((row-width 20)
+           (command (concat "command " (make-string 80 ?x)))
+           (range
+            (agent-shell-ui-update-fragment
+             (agent-shell-ui-make-fragment-model
+              :namespace-id "1" :block-id "tool-1"
+              :label-left "completed" :label-right command
+              :body "hidden tool output")
+             :expanded nil))
+           (heading-start (map-nested-elt range '(:block :start)))
+           spoken narrowed-end)
+      (setq major-mode 'agent-shell-mode
+            buffer-invisibility-spec t)
+      (goto-char heading-start)
+      (let ((heading-end (line-end-position)))
+        ;; Model the second display row deterministically.  Batch frames do
+        ;; not reliably expose terminal wrapping to `vertical-motion'.
+        (goto-char (+ heading-start row-width))
+        (should
+         (eq (get-text-property (point) 'agent-shell-ui-section)
+             'label-right))
+        (cl-letf
+            (((symbol-function 'beginning-of-visual-line)
+              (lambda (&rest _)
+                (goto-char
+                 (+ heading-start
+                    (* row-width
+                       (/ (- (point) heading-start) row-width))))))
+             ((symbol-function 'end-of-visual-line)
+              (lambda (&rest _)
+                (goto-char (min heading-end (+ (point) row-width)))))
+             ((symbol-function 'emacsvox-speak--present-physical-line)
+              (lambda (&rest _)
+                (ert-fail "Wrapped heading used physical-line speech"))))
+          (emacsvox-agent-shell--speak-visual-line-around
+           (lambda (&rest _)
+             (let ((bounds
+                    (emacsvox-agent-shell--visual-line-source-bounds)))
+               (setq
+                narrowed-end (point-max)
+                spoken
+                (buffer-substring-no-properties
+                 (car bounds) (cdr bounds)))))))
+        (should (= narrowed-end heading-end))
+        (should-not (string-match-p "completed" spoken))
+        (should (string-match-p "x" spoken))
+        (should (<= (length spoken) row-width))))))
 
 (ert-deftest emacsvox-agent-shell-collapsed-body-keeps-visual-line-presenter ()
   "Collapsed fragment metadata on body text must not force physical lines."

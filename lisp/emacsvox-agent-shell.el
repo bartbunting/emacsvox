@@ -2241,37 +2241,50 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
   "Add semantic block-entry context to Agent Shell visual-line speech.
 
 Core visual-line presentation owns blank-line semantics and interruption."
-  (let* ((source-bounds
-          (emacsvox-agent-shell--visual-line-source-bounds))
+  (let* ((state (get-text-property (point) 'agent-shell-ui-state))
+         (section (get-text-property (point) 'agent-shell-ui-section))
+         (folded-heading-bounds
+          (when (and state
+                     (map-elt state :collapsed)
+                     (memq section '(indicator label-left label-right)))
+            (cons (line-beginning-position) (line-end-position))))
+         (source-bounds
+          (if folded-heading-bounds
+              ;; Invisible bodies can make the display engine treat a complete
+              ;; folded fragment as one source span.  Narrowing to its visible
+              ;; physical heading retains visual wrapping without copying the
+              ;; hidden body or repeating the complete heading on every row.
+              (save-restriction
+                (narrow-to-region
+                 (car folded-heading-bounds)
+                 (cdr folded-heading-bounds))
+                (emacsvox-agent-shell--visual-line-source-bounds))
+            (emacsvox-agent-shell--visual-line-source-bounds)))
          (source-start (car source-bounds))
          (source-end (cdr source-bounds))
          (emacsvox-agent-shell--chat-label-context
           (emacsvox-agent-shell--chat-label-context-between
            source-start source-end))
-        (state (get-text-property (point) 'agent-shell-ui-state))
-        (section (get-text-property (point) 'agent-shell-ui-section))
-        (emacsvox-agent-shell--line-navigation-speech-p t)
-        (ems--speak-max-length
-         (if (and
-              (integerp emacsvox-agent-shell-line-speech-max-characters)
-              (> emacsvox-agent-shell-line-speech-max-characters 0))
-             most-positive-fixnum
-           ems--speak-max-length)))
-    (let ((collapsed-heading-p
-           (and state
-                (map-elt state :collapsed)
-                (memq section '(indicator label-left label-right)))))
-      (unless
-          (emacsvox-agent-shell--synthetic-agent-row-p
-           source-start source-end)
-        (emacsvox-agent-shell--call-with-vertical-block-entry
-         (if collapsed-heading-p
-             ;; Invisible fragment bodies occupy no display width, so core
-             ;; visual bounds can span the complete folded body.  Present the
-             ;; visible physical heading instead of copying that interval.
-             #'emacsvox-speak--present-physical-line
-           original-function)
-         (if collapsed-heading-p nil arguments))))))
+         (emacsvox-agent-shell--line-navigation-speech-p t)
+         (ems--speak-max-length
+          (if (and
+               (integerp emacsvox-agent-shell-line-speech-max-characters)
+               (> emacsvox-agent-shell-line-speech-max-characters 0))
+              most-positive-fixnum
+            ems--speak-max-length)))
+    (unless
+        (emacsvox-agent-shell--synthetic-agent-row-p
+         source-start source-end)
+      (emacsvox-agent-shell--call-with-vertical-block-entry
+       (if folded-heading-bounds
+           (lambda (&rest call-arguments)
+             (save-restriction
+               (narrow-to-region
+                (car folded-heading-bounds)
+                (cdr folded-heading-bounds))
+               (apply original-function call-arguments)))
+         original-function)
+       arguments))))
 
 (defun emacsvox-agent-shell--speak-line-around
     (original-function &rest arguments)
