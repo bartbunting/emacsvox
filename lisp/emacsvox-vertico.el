@@ -40,6 +40,7 @@
 (defvar vertico--base)
 (defvar vertico--index)
 (defvar vertico--input)
+(defvar emacsvox-flyspell--suggestion-count)
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -127,13 +128,21 @@ currently highlighted candidate."
 (defun emacsvox-vertico--initial-candidate-content (candidate)
   "Return one utterance containing the minibuffer prompt and CANDIDATE."
   (let* ((raw-prompt (minibuffer-prompt))
-         (prompt (and raw-prompt (string-trim raw-prompt))))
+         (prompt (and raw-prompt (string-trim raw-prompt)))
+         (suggestion-count
+          (and (boundp 'emacsvox-flyspell--suggestion-count)
+               (numberp emacsvox-flyspell--suggestion-count)
+               emacsvox-flyspell--suggestion-count)))
     (mapconcat
      #'identity
      (delq
       nil
       (list
        (and prompt (not (string-empty-p prompt)) prompt)
+       (when suggestion-count
+         (format "%d suggestion%s"
+                 suggestion-count
+                 (if (= suggestion-count 1) "" "s")))
        (and candidate (not (string-empty-p candidate)) candidate)))
      " ")))
 

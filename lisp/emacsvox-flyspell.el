@@ -41,9 +41,9 @@
 ;;; Commentary:
 
 ;; This module speech enables flyspell.
-;; it loads flyspell-correct if available,
-;; And when loading flyspell-correct sets up that module
-;; to use  one of   three supported correction styles:
+;; It loads flyspell-correct if available and uses its native completion
+;; interface by default, allowing the active completion frontend (such as
+;; Vertico) to present corrections.  Three alternate styles remain available:
 ;; @itemize @bullet
 ;; @item ido: IDO-like completion with C-s and C-r moving through choices.
 ;; @item popup:Use  up and down arrows to move through  corrections.
@@ -52,8 +52,8 @@
 ;; See documentation for package flyspell-correct for additional
 ;; details.
 ;;
-;; Use Customization emacsvox-flyspell-correct to pick
-;; between ido, popup and helm.
+;; Use Customization emacsvox-flyspell-correct to choose native completion or
+;; an explicit IDO, Popup, or Helm interface.
 
 ;;; Code:
 
@@ -130,15 +130,35 @@ fly spell checking."
      (unless (eq p 'doublon) (emacsvox-icon 'help))
      nil))
 
-;;;  use flyspell-correct if available:
+;;;  Use flyspell-correct if available:
+
+(defvar flyspell-correct-interface)
+(declare-function flyspell-correct-completing-read
+                  "flyspell-correct" (candidates word))
+
+(defvar emacsvox-flyspell--suggestion-count nil
+  "Number of suggestions in the active native Flyspell correction.")
+
+(defun emacsvox-flyspell-correct-completing-read (candidates word)
+  "Correct WORD from CANDIDATES through native completion.
+Publish the suggestion count dynamically so a speech-enabled completion
+frontend can include it in the initial presentation."
+  (let ((emacsvox-flyspell--suggestion-count (length candidates)))
+    (flyspell-correct-completing-read candidates word)))
+
 (defcustom emacsvox-flyspell-correct
-  (cond
-   ((locate-library "flyspell-correct-ido") 'flyspell-correct-ido)
-   ((locate-library "flyspell-correct-popup") 'flyspell-correct-popup)
-   ((locate-library "flyspell-correct-helm") 'flyspell-correct-helm)
-   (t nil))
-  "Correction style to use with flyspell."
-  :type 'symbol)
+  (and (locate-library "flyspell-correct") 'flyspell-correct)
+  "Correction interface module to use with Flyspell.
+The default `flyspell-correct' value uses standard completion and therefore
+honors the active completion frontend.  Alternate IDO, Popup, and Helm modules
+remain available for explicit selection."
+  :type
+  '(choice
+    (const :tag "Native completion" flyspell-correct)
+    (const :tag "IDO" flyspell-correct-ido)
+    (const :tag "Popup" flyspell-correct-popup)
+    (const :tag "Helm" flyspell-correct-helm)
+    (const :tag "Disabled" nil)))
 
 ;; flyspell-correct is available on melpa:
 (cl-declaim (special flyspell-mode-map))
@@ -150,13 +170,28 @@ fly spell checking."
   (define-key flyspell-mode-map (kbd "C-x .") 'flyspell-correct-at-point)
   (define-key flyspell-mode-map (kbd "C-'") 'flyspell-correct-previous)
   (define-key flyspell-mode-map (kbd "C-;") 'flyspell-correct-wrapper)
-  (require emacsvox-flyspell-correct))
+  (require emacsvox-flyspell-correct)
+  (when (eq emacsvox-flyspell-correct 'flyspell-correct)
+    (setq flyspell-correct-interface
+          #'emacsvox-flyspell-correct-completing-read)))
 
 (defconst emacsvox-flyspell--correct-targets
   '(flyspell-correct-next
     flyspell-correct-previous
-    flyspell-correct-at-point)
+    flyspell-correct-at-point
+    flyspell-correct-wrapper
+    flyspell-correct-region)
   "Commands supplied by the optional flyspell-correct package.")
+
+(defun emacsvox-flyspell--completion-owns-feedback-p ()
+  "Return non-nil when Vertico owns native correction feedback."
+  (and
+   (bound-and-true-p vertico-mode)
+   (boundp 'flyspell-correct-interface)
+   (memq
+    flyspell-correct-interface
+    '(emacsvox-flyspell-correct-completing-read
+      flyspell-correct-completing-read))))
 
 (defmacro emacsvox-flyspell--define-correct-feedback (targets)
   "Define feedback functions for flyspell-correct TARGETS."
@@ -167,23 +202,31 @@ fly spell checking."
           (let ((function
                  (intern (format "emacsvox--advice-%s-after" target))))
             `(defun ,function (&rest _)
-               "Speak the corrected word."
-               (when (ems-interactive-p ',target)
-                 (tts-speak (car (flyspell-get-word nil)))))))
+               "Speak the corrected word when completion did not own feedback."
+               (when (and (ems-interactive-p ',target)
+                          (not
+                           (emacsvox-flyspell--completion-owns-feedback-p)))
+                 (when-let* ((details (ignore-errors (flyspell-get-word nil)))
+                             (word (car-safe details))
+                             ((stringp word)))
+                   (tts-speak word))))))
         targets)))
 
 (emacsvox-flyspell--define-correct-feedback
     (flyspell-correct-next
      flyspell-correct-previous
-     flyspell-correct-at-point))
+     flyspell-correct-at-point
+     flyspell-correct-wrapper
+     flyspell-correct-region))
 
 (defun emacsvox-flyspell--install-correct-advice ()
   "Attach feedback to available flyspell-correct commands."
   (dolist (target emacsvox-flyspell--correct-targets)
     (when (fboundp target)
-      (advice-add
-       target :after
-       (intern (format "emacsvox--advice-%s-after" target))))))
+      (let ((function
+             (intern (format "emacsvox--advice-%s-after" target))))
+        (unless (advice-member-p function target)
+          (advice-add target :after function))))))
 
 (with-eval-after-load 'flyspell-correct
   (emacsvox-flyspell--install-correct-advice))

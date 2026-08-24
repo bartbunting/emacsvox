@@ -283,6 +283,26 @@
       (should (equal emacsvox-vertico--prev-candidate "default"))
       (should (= emacsvox-vertico--prev-index 0)))))
 
+(ert-deftest emacsvox-vertico-flyspell-entry-includes-suggestion-count ()
+  "Flyspell correction enters with its word, count, and first suggestion."
+  (with-temp-buffer
+    (let ((vertico--index 0)
+          (vertico--base "")
+          (emacsvox-flyspell--suggestion-count 2)
+          submission)
+      (cl-letf (((symbol-function 'minibuffer-prompt)
+                 (lambda () "Suggestions for \"mispeled\": "))
+                ((symbol-function 'vertico--candidate)
+                 (lambda (&optional _) "misspelled"))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (setq submission (list content arguments)))))
+        (emacsvox--advice-vertico--exhibit-after))
+      (should
+       (equal
+        (car submission)
+        "Suggestions for \"mispeled\": 2 suggestions misspelled")))))
+
 (ert-deftest emacsvox-vertico-initial-unselected-input-speaks-prompt ()
   "An unrestricted prompt is spoken once before the user types."
   (with-temp-buffer

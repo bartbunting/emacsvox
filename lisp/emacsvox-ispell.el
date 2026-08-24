@@ -47,9 +47,9 @@
 ;; corrections, install package flyspell-correct from MELPA
 ;; (package-install "flyspell-correct") Then use M-x flyspell-mode.
 ;; Package flyspell is speech-enabled by Emacsvox module
-;; emacsvox-flyspell And that module sets up flyspell-correct to use
-;; IDO-style completion, i.e. you can move through corrections with
-;; C-r and C-s.
+;; emacsvox-flyspell.  That module uses standard completion by default, so
+;; Vertico or another active completion frontend presents correction choices.
+;; IDO, Popup, and Helm remain available as explicit alternatives.
 
 ;;; Code:
 
