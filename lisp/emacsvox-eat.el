@@ -3164,7 +3164,16 @@ reaches this advice."
          #'emacsvox--advice-eat-self-input-before 'eat-self-input)))
     (advice-add
      'eat-self-input :before #'emacsvox--advice-eat-self-input-before
-     '((name . emacsvox)))))
+     '((name . emacsvox))))
+  (when
+      (and
+       (fboundp 'eat-self-input)
+       (not
+        (advice-member-p
+         #'emacsvox--advice-eat-self-input-after 'eat-self-input)))
+    (advice-add
+     'eat-self-input :after #'emacsvox--advice-eat-self-input-after
+     '((name . emacsvox-raw-feedback)))))
 
 (defun emacsvox-eat--tab-event-p (event)
   "Return non-nil when EVENT is a Tab key event."
@@ -3188,6 +3197,46 @@ reaches this advice."
      ((or 'right 'end) 'right)
      ('tab 'forward)
      ((or 'backtab 'iso-lefttab) 'backward))))
+
+(defun emacsvox-eat--raw-input-action (event)
+  "Return the content-free main-screen action represented by EVENT.
+The return value is one of `submit', `backspace', `delete', or nil."
+  (when event
+    (let ((basic (event-basic-type event)))
+      (cond
+       ((or (memq event '(10 13))
+            (memq basic '(linefeed return)))
+        'submit)
+       ((or (eq event 127) (eq basic 'backspace)) 'backspace)
+       ((memq basic '(delete deletechar)) 'delete)))))
+
+(defun emacsvox-eat--raw-input-feedback-eligible-p ()
+  "Return non-nil when raw main-screen input feedback is safe and useful."
+  (and eat-terminal
+       (not emacsvox-eat--secure-input-active-p)
+       (emacsvox-eat--selected-buffer-p)
+       (ignore-errors
+         (and (eat-term-live-p eat-terminal)
+              (not (eat-term-in-alternative-display-p eat-terminal))
+              (emacsvox-eat--following-live-p)))))
+
+(defun emacsvox-eat--present-raw-input-action (action)
+  "Present content-free feedback for raw terminal input ACTION."
+  (let ((content
+         (pcase action
+           ('submit "Terminal input submitted")
+           ('backspace "Backspace sent")
+           ('delete "Delete sent")))
+        (facts
+         (if (eq action 'submit)
+             (emacsvox-eat--facts
+              'command-input 'command-submitted 'submit)
+           (emacsvox-eat--facts 'command-input 'operation-completed))))
+    (when content
+      (emacsvox-eat--submit
+       content facts 'state-change nil 'replaceable
+       (emacsvox-eat--terminal-delivery-key
+        (list 'raw-input action))))))
 
 (defun emacsvox-eat--navigation-intent-current-p (intent)
   "Return non-nil when content-free navigation INTENT is still current."
@@ -3304,11 +3353,15 @@ reaches this advice."
   "Record one non-completion terminal input EVENT for correlated feedback."
   (let* ((basic (and event (event-basic-type event)))
          (recordable-p
-          (or
-           (and (integerp event)
-                (or (= event 8) (= event 127) (>= event 32)))
-           (and (symbolp basic)
-                (not (memq basic '(tab return linefeed escape)))))))
+          (and
+           (not (emacsvox-eat--raw-input-action event))
+           ;; C-h is terminal erase on some peers and cursor movement on
+           ;; others.  Either way, adjacent screen text is not typed echo.
+           (not (eq event 8))
+           (or
+            (and (integerp event) (>= event 32))
+            (and (symbolp basic)
+                 (not (memq basic '(tab return linefeed escape))))))))
     (setq emacsvox-eat--recent-navigation-intent nil
           emacsvox-eat--pending-navigation-intent nil
           emacsvox-eat--recent-input
@@ -3321,19 +3374,33 @@ reaches this advice."
   (let* ((event (or event last-command-event))
          (tab-p (emacsvox-eat--tab-event-p event))
          (direction (emacsvox-eat--navigation-direction event))
+         (action (emacsvox-eat--raw-input-action event))
          (alternate-screen-p
           (plist-get emacsvox-eat--screen-snapshot :alternate-screen)))
     (cond
      ((and eat-terminal tab-p (not alternate-screen-p))
       (setq emacsvox-eat--recent-input nil)
-      (emacsvox-eat--capture-completion
+     (emacsvox-eat--capture-completion
        (eat-term-display-cursor eat-terminal)))
      (direction
       (emacsvox-eat--cancel-completion)
       (emacsvox-eat--record-navigation-intent direction))
+     (action
+      (emacsvox-eat--cancel-completion)
+      (setq emacsvox-eat--recent-input nil
+            emacsvox-eat--recent-navigation-intent nil
+            emacsvox-eat--pending-navigation-intent nil))
      (t
       (emacsvox-eat--cancel-completion)
       (emacsvox-eat--record-input event)))))
+
+(defun emacsvox--advice-eat-self-input-after (_count &optional event)
+  "Present safe content-free feedback after EAT sends raw input EVENT."
+  (when-let* ((action
+               (emacsvox-eat--raw-input-action
+                (or event last-command-event)))
+              ((emacsvox-eat--raw-input-feedback-eligible-p)))
+    (emacsvox-eat--present-raw-input-action action)))
 
 (defun emacsvox-eat--screen-cursor-input (snapshot)
   "Return SNAPSHOT's wrapped visual input facts through the terminal cursor.

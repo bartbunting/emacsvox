@@ -247,7 +247,7 @@ Planned slices:
    audit reconciliation;
    - [X] line-history, history-Isearch, prompt-navigation, reset, and reload
      transactions;
-   - [ ] raw Return and deletion-key policy decision and implementation;
+   - [X] raw Return and deletion-key policy decision and implementation;
    - [ ] terminal-controlled selection/trust-setting documentation;
 5. [ ] final audit-to-implementation traceability and residual-risk review.
 
@@ -309,6 +309,7 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-24 | Identify an Eshell visual command at process start and retain that identity for its generation. | EAT's standard ~eshell-parent-buffer~ marker is available at start but the parent can disappear before exit. Retained origin gives stable start/error/exit feedback without depending on EAT private state. Emacsvox does not change Eshell's independent buffer-destruction policy. |
 | 2026-08-24 | Automatically announce failed shell commands, announce successful commands only at verbose terminal verbosity, and retain running/success/failure for ~C-e q t~. | Failure is actionable at normal verbosity, while routine success would add prompt chatter. EAT's public prompt annotation faces provide bounded content-free evidence when shell integration is active; the adapter scans standard rendered overlay data and does not read EAT's private prompt variables or infer status from prompt text. |
 | 2026-08-24 | Give modern EAT access its own Info chapter instead of folding it into the historical Term/eterm chapter. | EAT is a separately installed terminal with four input modes, terminal-side completion, Eshell integration, and snapshot review semantics that differ materially from stock Term. A dedicated chapter can state ownership and limitations without rewriting the preserved legacy guidance. |
+| 2026-08-24 | Confirm raw main-screen Return, Backspace, and Delete with fixed content-free labels; keep alternate screens and protected input application-owned and silent. | The user selected this policy. It confirms transport without retaining or speaking submitted/deleted terminal content, avoids claiming what a full-screen application did, and removes the misleading adjacent-character echo previously caused by deletion cursor movement. |
 
 * Progress log
 
@@ -356,10 +357,10 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-24 | ~368cad0e3~ | 8.2 | Consolidated validation passes all 152 EAT tests and all 165 combined EAT/Eshell tests, including real terminal-model, disposable Bash/readline PTY, delayed router, completion, lifecycle, deterministic pager/editor/menu/progress, and Eshell visual-command fixtures. The 2,504-test unit suite has 2,501 expected results, one existing skip, and only the two recorded unrelated agent-shell and installed-CIDER failures. Compiled aural parity, normal build-tree startup, all 27 semantic traces, current Emacs 31 byte-code, and a fresh compiled prompt observer path pass. |
 | 2026-08-24 | ~06706a6c0~ | 8.3 | A dedicated EAT Info chapter documents third-party installation status, all four input modes, Corfu versus terminal-side completion ownership, Bash/readline and remote/router behavior, bounded automatic feedback, every ~C-e q~ and frozen-review command, verbosity, content-free monitoring, Bash/Zsh prompt integration, command status, secure password input, conservative full-screen access, limitations, and both Eshell integrations. Split and no-split Texinfo builds pass, the generated node loads through Emacs Info, all 152 EAT tests pass, byte-code is current, and a fresh Emacs loads the compiled updated customization documentation. |
 | 2026-08-24 | ~d9240251c~ | 8.4a | Explicit public EAT line-history commands now present the bounded editable input they select, history Isearch waits until its public end hook, and shell-prompt navigation presents the reached line without reacting to noninteractive or unselected-buffer calls. Reset and reload feedback now use singular semantic transactions instead of separate legacy icon and speech calls. All 156 EAT tests pass; Emacs 31 byte-code is current, and a fresh process loaded ~emacsvox-eat.elc~ and exercised compiled history feedback. |
+| 2026-08-24 | this commit | 8.4b | The user-selected raw-key policy gives fixed, content-free main-screen feedback after EAT successfully transports Return, Backspace, or Delete. Feedback requires selected live-follow state, stays silent on alternate screens and during protected input, is replaceable under repeats, and never retains submitted/deleted content. Deletion and ambiguous C-h input also clear the legacy correlation that previously spoke an adjacent screen character. All 162 EAT tests pass, including real byte transport and alternate-screen silence; byte-code is current, and a fresh process loaded ~emacsvox-eat.elc~ and passed compiled transport/feedback verification. |
 
 * Current next action
 
-Obtain the user-selected policy for raw Return and deletion keys.  Implement
-and commit that policy, document EAT's terminal-controlled selection trust
-settings, and only then complete the audit traceability table and final state
-checks.
+Commit the selected raw-key policy.  Then document EAT's terminal-controlled
+selection trust settings and complete the audit traceability table and final
+state checks.

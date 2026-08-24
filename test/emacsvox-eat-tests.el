@@ -91,6 +91,9 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
   (should
    (advice-member-p
     #'emacsvox--advice-eat-self-input-before 'eat-self-input))
+  (should
+   (advice-member-p
+    #'emacsvox--advice-eat-self-input-after 'eat-self-input))
   (dolist (entry emacsvox-eat--before-advice)
     (should (advice-member-p (cdr entry) (car entry))))
   (dolist (entry emacsvox-eat--around-advice)
@@ -125,6 +128,13 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
           'command-input 'object-changed nil
           '(:command-input-origin copied))
          'edit)
+        (cons
+         (emacsvox-eat--facts
+          'command-input 'command-submitted 'submit)
+         'state-change)
+        (cons
+         (emacsvox-eat--facts 'command-input 'operation-completed)
+         'state-change)
         (cons
          (emacsvox-eat--facts 'command-interaction 'object-changed)
          'notification)))
@@ -612,17 +622,167 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should-not events))))
 
 (ert-deftest emacsvox-eat-input-recording-excludes-submit-and-completion ()
-  "Submit and Tab clear input echo state; printable keys retain no raw history."
+  "Raw actions and Tab clear echo state; printable input remains correlated."
   (with-temp-buffer
     (let ((eat-terminal 'terminal))
       (emacsvox--advice-eat-self-input-before 1 ?x)
       (should (= (cadr emacsvox-eat--recent-input) ?x))
-      (emacsvox--advice-eat-self-input-before 1 13)
-      (should-not emacsvox-eat--recent-input)
+      (dolist (event '(8 10 13 127 linefeed return backspace delete deletechar))
+        (setq emacsvox-eat--recent-input '(0 ?x 9999999999.0))
+        (emacsvox--advice-eat-self-input-before 1 event)
+        (should-not emacsvox-eat--recent-input))
       (cl-letf (((symbol-function 'eat-term-display-cursor)
                  (lambda (_terminal) nil)))
         (emacsvox--advice-eat-self-input-before 1 ?\t))
       (should-not emacsvox-eat--recent-input))))
+
+(ert-deftest emacsvox-eat-raw-input-actions-normalize-without-content ()
+  "Return and deletion events normalize without retaining their raw event."
+  (dolist (event '(10 13 linefeed return))
+    (should (eq (emacsvox-eat--raw-input-action event) 'submit)))
+  (dolist (event '(127 backspace C-backspace M-backspace))
+    (should (eq (emacsvox-eat--raw-input-action event) 'backspace)))
+  (dolist (event '(delete deletechar C-delete M-deletechar))
+    (should (eq (emacsvox-eat--raw-input-action event) 'delete)))
+  (dolist (event '(nil 8 tab escape ?x))
+    (should-not (emacsvox-eat--raw-input-action event))))
+
+(ert-deftest emacsvox-eat-raw-deletion-cannot-speak-adjacent-screen-text ()
+  "A deletion key clears the legacy character-correlation path."
+  (with-temp-buffer
+    (insert "secret-adjacent-text")
+    (let ((emacsvox-eat--generation 3)
+          (emacsvox-eat--pending-screen-diff '(:changes (text)))
+          events)
+      (emacsvox--advice-eat-self-input-before 1 'backspace)
+      (cl-letf (((symbol-function 'emacsvox-speak-line)
+                 (lambda () (push 'line events)))
+                ((symbol-function 'emacsvox-speak-this-char)
+                 (lambda (character) (push character events))))
+        (emacsvox-eat--speak-input-correlated-update (point)))
+      (should-not emacsvox-eat--recent-input)
+      (should-not events))))
+
+(ert-deftest emacsvox-eat-raw-input-feedback-is-content-free-and-semantic ()
+  "Eligible raw main-screen actions produce one replaceable fixed label."
+  (dolist
+      (case
+       '((return submit "Terminal input submitted" command-submitted submit)
+         (backspace backspace "Backspace sent" operation-completed nil)
+         (delete delete "Delete sent" operation-completed nil)))
+    (pcase-let ((`(,event ,action ,expected ,fact-event ,operation) case))
+      (with-temp-buffer
+        (let ((emacsvox-eat--generation 7)
+              submission)
+          (cl-letf (((symbol-function
+                      'emacsvox-eat--raw-input-feedback-eligible-p)
+                     (lambda () t))
+                    ((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (setq submission (list content arguments)))))
+            (emacsvox--advice-eat-self-input-after 1 event))
+          (should (equal (car submission) expected))
+          (should
+           (equal
+            (plist-get (cadr submission) :facts)
+            (append
+             (list :role 'command-input
+                   :command-interaction-kind 'shell
+                   :events (list fact-event))
+             (when operation (list :command-operation operation)))))
+          (should (eq (plist-get (cadr submission) :occasion)
+                      'state-change))
+          (should (eq (plist-get (cadr submission) :delivery-policy)
+                      'replaceable))
+          (let ((key (plist-get (cadr submission) :replacement-key)))
+            (should (eq (car key) 'eat))
+            (should (equal (cadr key) (list 'raw-input action)))
+            (should (integerp (nth 2 key)))
+            (should (= (nth 3 key) 7)))
+          (should-not
+           (string-match-p
+            (regexp-opt '("secret" "password"))
+            (format "%S" submission))))))))
+
+(ert-deftest emacsvox-eat-raw-input-feedback-requires-safe-main-screen ()
+  "Raw key feedback requires selected live-follow, main, and nonsecure state."
+  (with-temp-buffer
+    (let ((eat-terminal 'terminal)
+          selected-p live-p alternate-p following-p)
+      (cl-letf (((symbol-function 'emacsvox-eat--selected-buffer-p)
+                 (lambda () selected-p))
+                ((symbol-function 'eat-term-live-p)
+                 (lambda (_terminal) live-p))
+                ((symbol-function 'eat-term-in-alternative-display-p)
+                 (lambda (_terminal) alternate-p))
+                ((symbol-function 'emacsvox-eat--following-live-p)
+                 (lambda () following-p)))
+        (setq selected-p t live-p t alternate-p nil following-p t)
+        (should (emacsvox-eat--raw-input-feedback-eligible-p))
+        (setq emacsvox-eat--secure-input-active-p t)
+        (should-not (emacsvox-eat--raw-input-feedback-eligible-p))
+        (setq emacsvox-eat--secure-input-active-p nil selected-p nil)
+        (should-not (emacsvox-eat--raw-input-feedback-eligible-p))
+        (setq selected-p t live-p nil)
+        (should-not (emacsvox-eat--raw-input-feedback-eligible-p))
+        (setq live-p t alternate-p t)
+        (should-not (emacsvox-eat--raw-input-feedback-eligible-p))
+        (setq alternate-p nil following-p nil)
+        (should-not (emacsvox-eat--raw-input-feedback-eligible-p))
+        (setq eat-terminal nil following-p t)
+        (should-not (emacsvox-eat--raw-input-feedback-eligible-p))))))
+
+(ert-deftest emacsvox-eat-ineligible-raw-input-stays-silent ()
+  "Alternate, background, scrollback, and protected raw input is app-owned."
+  (cl-letf (((symbol-function 'emacsvox-eat--raw-input-feedback-eligible-p)
+             (lambda () nil))
+            ((symbol-function 'emacsvox-eat--present-raw-input-action)
+             (lambda (&rest _)
+               (ert-fail "ineligible raw input produced feedback"))))
+    (dolist (event '(return backspace delete))
+      (emacsvox--advice-eat-self-input-after 1 event))))
+
+(ert-deftest emacsvox-eat-real-raw-input-feedback-follows-transport ()
+  "Real EAT transport completes before fixed main-screen feedback is sent."
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-raw-input*"))
+        terminal sent submissions)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer buffer)
+          (eat-mode)
+          (setq terminal (eat-term-make buffer (point-min))
+                eat-terminal terminal)
+          (eat-term-set-parameter
+           terminal 'input-function
+           (lambda (_terminal text) (push text sent)))
+          (let ((inhibit-read-only t))
+            (eat-term-process-output terminal "$ abc")
+            (eat-term-redisplay terminal))
+          (goto-char (eat-term-display-cursor terminal))
+          (set-window-point (selected-window) (point))
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions))))
+            (eat-self-input 1 'backspace)
+            (eat-self-input 1 'delete)
+            (eat-self-input 1 'return)
+            (should
+             (equal
+              (mapcar #'car (nreverse submissions))
+              '("Backspace sent" "Delete sent"
+                "Terminal input submitted")))
+            (should (equal (nreverse sent) '("\177" "\e[3~" "\r")))
+            (setq sent nil submissions nil)
+            (let ((inhibit-read-only t))
+              (eat-term-process-output terminal "\e[?1049h")
+              (eat-term-redisplay terminal))
+            (should (eat-term-in-alternative-display-p terminal))
+            (eat-self-input 1 'return)
+            (should (equal sent '("\r")))
+            (should-not submissions)))
+      (when (and terminal (eat-term-live-p terminal))
+        (let ((inhibit-read-only t)) (eat-term-delete terminal)))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (ert-deftest emacsvox-eat-tab-detection-accepts-raw-and-symbolic-events ()
   "Control-character normalization does not disguise a raw Tab as `i'."
