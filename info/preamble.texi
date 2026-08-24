@@ -26,6 +26,7 @@ The manual is divided into the following chapters:
 * Emacs Packages:  Emacs Packages.
 * Emacsvox Keymaps: Emacsvox Keymaps.
 * Emacsvox Commands And Options:  Emacsvox Commands And Options.
+* EAT Terminal Access: EAT Terminal Access.
 * Running Terminal Based Applications: Running Terminal Based Applications.
 * Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
 * TTS Servers:  TTS Servers.

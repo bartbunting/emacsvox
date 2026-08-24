@@ -12,7 +12,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 This manual documents *Emacsvox, The Complete Audio Desktop* and was
-last updated on August 16, 2026.
+last updated on August 24, 2026.
 
 
 File: emacsvox.info,  Node: Top,  Next: Copyright,  Up: (dir)
@@ -43,6 +43,7 @@ details, also consult ‘Readme.org’ and
 * Emacs Packages:  Emacs Packages.
 * Emacsvox Keymaps: Emacsvox Keymaps.
 * Emacsvox Commands And Options:  Emacsvox Commands And Options.
+* EAT Terminal Access: EAT Terminal Access.
 * Running Terminal Based Applications: Running Terminal Based Applications.
 * Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
 * TTS Servers:  TTS Servers.
@@ -2986,7 +2987,7 @@ File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-z-keymap,  Prev: Em
 ‘z suspend-frame’
 
 
-File: emacsvox.info,  Node: Emacsvox Commands And Options,  Next: Running Terminal Based Applications,  Prev: Emacsvox Keymaps,  Up: Top
+File: emacsvox.info,  Node: Emacsvox Commands And Options,  Next: EAT Terminal Access,  Prev: Emacsvox Keymaps,  Up: Top
 
 12 Emacsvox Commands And Options
 ********************************
@@ -8373,4 +8374,4 @@ Assuming you have correctly setup your API key:
 
      Default Value:
 
-    "~/books/book-share"
+     "~/books/book-share"

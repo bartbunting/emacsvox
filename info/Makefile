@@ -12,8 +12,9 @@ BATCH = -batch -q -no-site-file     \
 FILES=*.texi
 INCLUDES= style.texi preamble.texi copyright.texi announce.texi emacspeak-significance.texi \
 introduction.texi install.texi using.texi audio-desktop.texi voices.texi online-help.texi \
-packages.texi eterm.texi docs.texi keyboard.texi tts-server.texi inc-turning-twenty.texi \
-acknowledge.texi intro-docs.texi documents.texi structure.texi web-browsing.texi tts.texi
+packages.texi eat.texi eterm.texi docs.texi keyboard.texi tts-server.texi \
+inc-turning-twenty.texi acknowledge.texi intro-docs.texi documents.texi structure.texi \
+web-browsing.texi tts.texi
 
 MAKEINFO = makeinfo 
 STRIP_TRAILING_WHITESPACE = perl -pi -e 's/[ \t]+$$//'

@@ -89,9 +89,11 @@
   "Amount of automatic feedback produced for EAT terminals.
 At `terse', retain routine output and metadata for review but do not speak
 them automatically.  `normal' speaks bounded command output and status, while
-`verbose' additionally announces bounded terminal title and directory changes.
-Lifecycle, bell, paste, and completion feedback remains available at every
-level.  This option may be set buffer-locally for an individual terminal."
+`verbose' additionally announces bounded terminal title and directory changes
+and successful shell-command status when EAT shell integration provides it.
+Failure, lifecycle, bell, paste, and completion feedback remains available at
+every level.  This option may be set buffer-locally for an individual
+terminal."
   :type '(choice
           (const :tag "Terse" terse)
           (const :tag "Normal" normal)

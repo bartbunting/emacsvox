@@ -12,7 +12,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 This manual documents *Emacsvox, The Complete Audio Desktop* and was
-last updated on August 16, 2026.
+last updated on August 24, 2026.
 
 
 File: emacsvox.info,  Node: emacsvox-tabulate,  Next: emacsvox-tabulated-list,  Prev: emacsvox-table-ui,  Up: Emacsvox Commands And Options
@@ -5157,9 +5157,315 @@ following steps:
      News From Yahoo As RSS.
 
 
-File: emacsvox.info,  Node: Running Terminal Based Applications,  Next: Emacsvox Keyboard Commands,  Prev: Emacsvox Commands And Options,  Up: Top
+File: emacsvox.info,  Node: EAT Terminal Access,  Next: Running Terminal Based Applications,  Prev: Emacsvox Commands And Options,  Up: Top
 
-13 Running Terminal Based Applications.
+13 Speech Access To EAT
+***********************
+
+EAT (Emulate A Terminal) is a third-party terminal emulator; it is not
+part of stock Emacs.  It is commonly installed from NonGNU ELPA. Start
+it with ‘M-x eat’; use a prefix argument to create or select another EAT
+terminal.  See the EAT manual for terminal setup and EAT's complete
+command reference (*note (eat)Top::).
+
+   Emacsvox observes EAT's bounded rendered screen.  It does not parse a
+shell's private state and it does not generate shell or router
+completion candidates.  This distinction is important: EAT owns terminal
+emulation, the program on the other end owns terminal-side input and
+completion, and Emacsvox presents the visible result.
+
+13.1 Input Modes And Completion Ownership
+=========================================
+
+EAT provides four input modes.  Emacsvox announces a human-readable mode
+name whenever you switch modes.
+
+Semi-character mode
+     This is EAT's default.  Most keys, including <TAB>, go to the
+     terminal, while Emacs prefixes such as ‘C-x’, ‘C-c’, and ‘M-x’
+     remain available.  Use ‘C-q’ before a normally reserved key to send
+     it to the terminal.  Switch here with ‘C-c C-j’.
+
+Character mode
+     All supported keys go to the terminal, which is useful for
+     applications that need Emacs-like keys.  Switch here with ‘C-c
+     M-d’; return to semi-character mode with ‘C-M-m’ or ‘M-<RET>’.
+
+Emacs mode
+     Keys remain in Emacs and no input is sent to the terminal.  Use
+     this for normal Emacs buffer motion and inspection.  Switch here
+     with ‘C-c C-e’.
+
+Line mode
+     The pending input line is edited locally and sent on <RET>.  <TAB>
+     runs Emacs's ‘completion-at-point’, so a configured Emacs
+     completion front end such as Corfu can display its result.  Switch
+     here from semi-character or Emacs mode with ‘C-c C-l’.  Line mode
+     is not available in EAT's embedded Eshell terminal.
+
+   In semi-character and character mode, <TAB> belongs to Bash Readline,
+a remote shell, a router CLI, or whichever terminal application is
+running.  Corfu is not involved.  In line mode, <TAB> belongs to Emacs
+completion and does not ask a remote CLI for candidates.  Therefore
+semi-character mode is usually the right choice for SSH sessions and
+network-device CLIs.  If an Emacs completion backend blocks in line
+mode, ‘C-g’ cancels that Emacs operation; switch to semi-character mode
+if terminal-side completion was intended.
+
+   Shell completion must itself be configured.  For example, Bash can
+complete ‘git pul’ to ‘git pull’ only when the shell has suitable
+programmable completion definitions, often supplied by a system
+‘bash-completion’ package.  Emacsvox observes the result but neither
+installs nor substitutes for those definitions.
+
+13.2 Automatic Terminal Feedback
+================================
+
+Automatic speech is restricted to the selected EAT buffer while its
+selected window follows the live terminal cursor.  Moving into
+scrollback prevents new output from interrupting review.  Output in
+another terminal or behind an active minibuffer is silent by default.
+
+   On the main screen, Emacsvox coalesces a burst before classifying it.
+Complete new output rows are spoken once, with an automatic limit of
+eight rows and 1,000 characters.  The redrawn prompt is not repeated.
+Carriage-return progress and status rewrites use rate-limited
+replaceable speech.  Unchanged repaint and resize-only updates remain
+silent.  Terminal bells, paste actions, input-mode changes,
+application-screen boundaries, and process exit are content-free
+semantic events rather than arbitrary screen speech.
+
+   On a full-screen or alternate-screen application, Emacsvox does not
+read every refresh.  A cursor row reached by correlated arrow-style
+navigation, or one compact high-confidence transfer of selection-like
+styling, can be announced.  Ambiguous repaint remains silent and
+available through explicit review.  In particular, inverse video or a
+colored row alone is not treated as proof of the active item.
+
+13.3 Terminal-side Completion
+=============================
+
+On the main terminal screen, Emacsvox takes a public screen snapshot
+before a terminal-side <TAB> and waits briefly for EAT output to settle.
+
+   • A unique inline completion speaks the newly displayed field.  For
+     example, ‘~/sr<TAB>’ can speak ‘src slash’ after the shell displays
+     ‘~/src/’.
+
+   • An ambiguous completion that prints columns or help rows is
+     presented as one candidate transaction after the input line is
+     redrawn.  Small inferred lists speak up to eight candidates.
+     Descriptive router-style rows retain their layout instead of being
+     forced into a shell-token model.
+
+   • Large lists are counted and truncated for automatic speech.  If
+     candidates have already scrolled beyond the bounded visible screen,
+     Emacsvox reports an honest lower bound such as "at least N visible"
+     rather than inventing a total.
+
+   • Repeated identical lists, split output chunks, terminal bells,
+     wrapping, and screen resize are coalesced without replaying the
+     same candidate text.
+
+   The completion result is derived from the rendered screen, so the
+same design works with local Readline, SSH, and unstructured router
+help.  If the peer makes no visible change, there is nothing reliable to
+announce.  On an alternate screen, <TAB> is treated as navigation rather
+than shell completion.
+
+   Use ‘C-e q c’ to speak the latest retained candidate or help layout,
+or open frozen review with ‘C-e q r’ and press ‘c’.  These commands are
+especially useful after a large or multi-column result.
+
+13.4 Explicit Review Commands
+=============================
+
+The default Emacsvox prefix is ‘C-e’.  In every EAT input mode, ‘C-e q’
+opens the terminal review prefix:
+
+‘C-e q l’
+     Speak the cursor row from the latest retained screen.
+‘C-e q d’
+     Speak the last classified screen change.
+‘C-e q h’
+     Speak the latest conservative likely-focus inference and its
+     confidence.
+‘C-e q c’
+     Speak the retained completion candidates or help rows.
+‘C-e q s’
+     Speak a bounded copy of the retained visible screen.
+‘C-e q r’
+     Open a read-only frozen copy for line-by-line review.
+‘C-e q t’
+     Speak the retained progress, application, or shell-prompt status.
+‘C-e q i’
+     Speak the retained sanitized title or working-directory change.
+‘C-e q v’
+     Cycle terse, normal, and verbose automatic feedback for this
+     terminal.
+‘C-e q m’
+     Toggle content-free background-output monitoring for this terminal.
+
+   These commands inspect concealed-redacted retained snapshots; they do
+not send terminal input.  Content is bounded when spoken.  The visible
+screen is retained, not arbitrary scrollback.
+
+13.4.1 Frozen Screen Review
+---------------------------
+
+‘C-e q r’ opens an immutable copy of the latest visible screen.  It does
+not refresh and navigation cannot move the live terminal cursor or send
+input.  The copy preserves normalized terminal styling, cursor and
+likely-focus anchors, and the exact retained completion rows.
+
+‘n, p; C-n, C-p; down, up’
+     Move by captured terminal row and speak the destination.
+‘SPC, RET, .’
+     Speak the current captured row.
+‘a’
+     Speak a bounded form of the current screen or completion view.
+‘s, c’
+     Show captured screen rows or retained completion/help rows.
+‘C’
+     Go to the captured terminal cursor.
+‘h’
+     Go to the retained likely focus, when one exists.
+‘[, ]’
+     Move among selection-like inverse/background styled regions.  These
+     regions are deliberately not labelled as focus.
+‘t, i’
+     Speak status or metadata copied when review was opened.
+‘v, m’
+     Change verbosity or background monitoring in the source terminal
+     without sending terminal input.  The copied content itself remains
+     frozen.
+‘?’
+     Describe frozen review mode.
+‘q’
+     Kill the content-bearing review buffer and restore its window.
+
+   Starting secure input, resetting or restarting the terminal, killing
+the source, or leaving EAT mode also destroys its frozen review.  This
+bounds the lifetime of copied terminal content.
+
+13.5 Verbosity And Background Monitoring
+========================================
+
+‘emacsvox-eat-verbosity’ is buffer-local:
+
+‘terse’
+     Retain routine output and metadata for explicit review without
+     speaking them automatically.  Actionable failures and content-free
+     lifecycle feedback remain available.
+‘normal’
+     The default.  Speak bounded command output, progress/status,
+     completion, and actionable failures.
+‘verbose’
+     Also speak bounded terminal title and working-directory changes and
+     successful shell-command status when EAT shell integration provides
+     it.
+
+   Background monitoring is off by default.  When enabled with ‘C-e q
+m’, an unselected terminal plays only a rate-limited content-free cue.
+On returning, Emacsvox reports only the unread burst count, never the
+terminal's identity or output.  Cursor movement, style changes, repaint,
+resize, and process generation changes do not count as background
+output.
+
+13.6 Shell Integration And Command Status
+=========================================
+
+EAT's Bash or Zsh shell integration is required for prompt annotation,
+directory tracking, and per-command running/success/failure status.  For
+Bash, EAT documents this initialization:
+
+     [ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
+       source "$EAT_SHELL_INTEGRATION_DIR/bash"
+
+   For Zsh, source the ‘zsh’ script instead:
+
+     [ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
+       source "$EAT_SHELL_INTEGRATION_DIR/zsh"
+
+   With shell integration and ‘eat-enable-shell-prompt-annotation’
+enabled, Emacsvox retains running, successful, and failed command
+status.  A failure is announced automatically at every verbosity.
+Success is automatic only in verbose mode and only after observed
+command activity; the initial successful prompt does not chatter.
+Running state remains silent.  Use ‘C-e q t’ for the retained current
+state.
+
+   This status is not guessed from prompt characters.  A remote shell or
+router normally does not provide EAT's per-command integration, so
+remote commands can still have accessible screen output and completion
+while their individual exit status remains unavailable.
+
+13.7 Passwords And Sensitive Content
+====================================
+
+Use ‘M-x eat-send-password’ for a terminal password.  EAT reads it with
+Emacs's protected password reader instead of recording the keystrokes in
+command lossage.  During this command Emacsvox suppresses terminal
+observation and bell speech, clears content-bearing retained state
+before and after, and announces only whether secure input was sent or
+cancelled.
+
+   Emacsvox intentionally does not guess that arbitrary no-echo terminal
+input is a password: EAT exposes no public echo-state signal, and a
+quiet repaint is not proof.  Typing a secret through ordinary terminal
+input can leave keystrokes in Emacs lossage and does not establish the
+same privacy boundary.
+
+   Selected foreground output can contain sensitive information and may
+be spoken.  A frozen review is a real in-memory copy until it is killed,
+although visually concealed cells are redacted at snapshot time.
+Verbose title and directory speech can disclose host or path metadata.
+Background monitoring, by contrast, never speaks content or terminal
+identity.
+
+13.8 Full-screen Applications And Limitations
+=============================================
+
+Programs such as pagers, editors, menus, and refreshing dashboards
+frequently rewrite existing cells instead of printing lines.  Emacsvox
+uses conservative cursor, style-change, input-direction, and timing
+evidence.  Arrow-key movement and clear paired highlight movement work
+best.  Printable navigation keys such as ‘h’, ‘j’, ‘k’, and ‘l’ are not
+assumed to be navigation, because they may instead be application text.
+
+   Use ‘C-e q l’, ‘C-e q d’, and ‘C-e q h’ after a silent update.  For
+systematic review use ‘C-e q r’, then navigate rows and selection-like
+styled regions.  Rapid dashboards are intentionally not read on every
+refresh.  Hyperlink targets, sixel/image semantics, an application's
+true accessibility focus, and exact update causes are not exposed by
+EAT's current public API, so Emacsvox cannot infer them reliably from
+pixels and faces alone.
+
+   Remote programs also need terminal information compatible with EAT.
+Broken cursor addressing or screen layout caused by missing remote
+terminfo cannot be repaired by speech classification; consult EAT's
+manual when the visual terminal itself renders incorrectly.
+
+13.9 EAT In Eshell
+==================
+
+When EAT's global ‘eat-eshell-mode’ is enabled, Emacsvox uses the same
+screen observer for the terminal region embedded in Eshell.  Rendered
+command output is owned by one speech path, so it is not repeated by
+generic Eshell output feedback.
+
+   With ‘eat-eshell-visual-command-mode’, an Eshell visual command runs
+in a separate EAT buffer.  Emacsvox announces its start, delivers
+eligible final output before the process-exit event, and labels its exit
+as an Eshell visual command.  EAT and Eshell still own the window-return
+policy.  In particular, ‘eshell-destroy-buffer-when-process-dies’
+determines whether a successful visual-command buffer is killed and
+Eshell is restored; Emacsvox does not change that option.
+
+
+File: emacsvox.info,  Node: Running Terminal Based Applications,  Next: Emacsvox Keyboard Commands,  Prev: EAT Terminal Access,  Up: Top
+
+14 Running Terminal Based Applications.
 ***************************************
 
 You can use the terminal emulator mode to run arbitrary terminal-based
@@ -5195,7 +5501,7 @@ sub-mode with ‘C-c C-k’ (think of character spelled with a K).
 screen-oriented programs like Lynx or Pine.  For regular shell
 interaction just use ‘M-x shell’ instead of using the terminal emulator.
 
-13.1 Char Sub-mode of Term Mode
+14.1 Char Sub-mode of Term Mode
 ===============================
 
 In char sub-mode of term, each character you type is sent directly to
@@ -5278,7 +5584,7 @@ typing ‘C-c C-h’ while in this sub-mode.  Some of those commands are
 only available in the char sub-mode, while others are generally
 available.
 
-13.2 Line Sub-mode of Term Mode
+14.2 Line Sub-mode of Term Mode
 ===============================
 
 In line sub-mode of term mode, emacs editing commands work normally,
@@ -5336,7 +5642,7 @@ typing ‘C-c C-h’ while in this sub-mode.  Some of those commands are
 only available in the line sub-mode, while others are generally
 available.
 
-13.3 Eterm Mode Commands
+14.3 Eterm Mode Commands
 ========================
 
 The eterm mode maintains a pointer, which is not necessarily the same as
@@ -5369,7 +5675,7 @@ terminal cursor.  Return to normal term mode by typing ‘q’.
 
 File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: TTS Servers,  Prev: Running Terminal Based Applications,  Up: Top
 
-14 Emacsvox Keyboard Commands.
+15 Emacsvox Keyboard Commands.
 ******************************
 
 This chapter gives an overview of all the keymaps used by Emacsvox.  For
@@ -5422,7 +5728,7 @@ get a ‘*Help*’ buffer that displays all keys bound in
 
 File: emacsvox.info,  Node: TTS Servers,  Next: Emacspeak At Twenty,  Prev: Emacsvox Keyboard Commands,  Up: Top
 
-15 Speech Server Protocols
+16 Speech Server Protocols
 **************************
 
 Emacsvox produces spoken output by communicating with one of several
@@ -5444,7 +5750,7 @@ legacy line protocol.
 developing a speech server, see the historical Emacspeak article at
 <http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html>.
 
-15.1 Omnivox Structured Protocol
+16.1 Omnivox Structured Protocol
 ================================
 
 At process startup the Emacsvox adapter requests capabilities and live
@@ -5482,7 +5788,7 @@ therefore not proof of acoustic onset.
    • Omnivox Helper Protocol
      (https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md)
 
-15.2 Legacy Line Protocol
+16.2 Legacy Line Protocol
 =========================
 
 The TTS server reads commands from standard input.  Script
@@ -5522,7 +5828,7 @@ responsive; Client applications can queue large amounts of text
 the TTS server to start speaking, and interrupt the spoken output at any
 time.
 
-15.2.1 Commands That Queue Output.
+16.2.1 Commands That Queue Output.
 ----------------------------------
 
 This section documents commands that either produce spoken output, or
@@ -5602,7 +5908,7 @@ specified in milliseconds.
    Queues the specified duration of silence.  Silence is specified in
 milliseconds.
 
-15.2.2 Commands That Set State
+16.2.2 Commands That Set State
 ------------------------------
 
      tts_reset
@@ -5688,7 +5994,7 @@ to "en_GB". This can later be used by set_lang.
 
 File: emacsvox.info,  Node: Emacspeak At Twenty,  Next: Acknowledgments,  Prev: TTS Servers,  Up: Top
 
-16 Emacspeak At Twenty.
+17 Emacspeak At Twenty.
 ***********************
 
 This article was originally published to mark the 20th anniversary of
@@ -5719,7 +6025,7 @@ emacspeak distribution.
 
 File: emacsvox.info,  Node: Turning Twenty,  Next: Using UNIX With Speech Output --- 1994,  Up: Emacspeak At Twenty
 
-16.1 Turning Twenty
+17.1 Turning Twenty
 ===================
 
 One afternoon in the third week of September 1994, I started writing
@@ -5734,7 +6040,7 @@ Peter Norvig for some of its inspiration.
 
 File: emacsvox.info,  Node: Using UNIX With Speech Output --- 1994,  Next: Key Enabler --- Emacs And Lisp Advice,  Prev: Turning Twenty,  Up: Emacspeak At Twenty
 
-16.2 Using UNIX With Speech Output -- 1994
+17.2 Using UNIX With Speech Output -- 1994
 ==========================================
 
 As a graduate student at Cornell
@@ -5769,7 +6075,7 @@ of Emacspeak was up and running.
 
 File: emacsvox.info,  Node: Key Enabler --- Emacs And Lisp Advice,  Next: Key Component --- Text To Speech (TTS),  Prev: Using UNIX With Speech Output --- 1994,  Up: Emacspeak At Twenty
 
-16.3 Key Enabler -- Emacs And Lisp Advice
+17.3 Key Enabler -- Emacs And Lisp Advice
 =========================================
 
 It took me a couple of weeks to fully recognize the potential of what I
@@ -5789,7 +6095,7 @@ from O'Reilly.
 
 File: emacsvox.info,  Node: Key Component --- Text To Speech (TTS),  Next: Emacspeak And Software Development,  Prev: Key Enabler --- Emacs And Lisp Advice,  Up: Emacspeak At Twenty
 
-16.4 Key Component -- Text To Speech (TTS)
+17.4 Key Component -- Text To Speech (TTS)
 ==========================================
 
 Emacspeak is a speech-subsystem for Emacs; it depends on an external
@@ -5832,7 +6138,7 @@ DECTalk!
 
 File: emacsvox.info,  Node: Emacspeak And Software Development,  Next: Emacspeak And Authoring Documents,  Prev: Key Component --- Text To Speech (TTS),  Up: Emacspeak At Twenty
 
-16.5 Emacspeak And Software Development
+17.5 Emacspeak And Software Development
 =======================================
 
 Version 0.01 of Emacspeak was written using IBM Screen-Reader on a PC
@@ -5885,7 +6191,7 @@ content being accessed.
 
 File: emacsvox.info,  Node: Programming Defensively,  Up: Emacspeak And Software Development
 
-16.5.1 Programming Defensively
+17.5.1 Programming Defensively
 ------------------------------
 
 As an aside, note that all of Emacspeak has been developed over the last
@@ -5911,7 +6217,7 @@ other key features of the Emacspeak code-base:
 
 File: emacsvox.info,  Node: Emacspeak And Authoring Documents,  Next: Emacspeak And The Early Days Of The Web,  Prev: Emacspeak And Software Development,  Up: Emacspeak At Twenty
 
-16.6 Emacspeak And Authoring Documents
+17.6 Emacspeak And Authoring Documents
 ======================================
 
 In 1994, my preferred environment for authoring *all* documents was
@@ -5941,7 +6247,7 @@ created by me using Emacs.
 
 File: emacsvox.info,  Node: Emacspeak And The Early Days Of The Web,  Next: Audio Formatting --- Generalizing Aural CSS,  Prev: Emacspeak And Authoring Documents,  Up: Emacspeak At Twenty
 
-16.7 Emacspeak And The Early Days Of The Web
+17.7 Emacspeak And The Early Days Of The Web
 ============================================
 
 Right around the time that I was writing version 0.01 of emacspeak, a
@@ -5997,7 +6303,7 @@ with support for DOM filtering and quick content navigation.
 
 File: emacsvox.info,  Node: Audio Formatting --- Generalizing Aural CSS,  Next: Conversational Gestures For The Audio Desktop,  Prev: Emacspeak And The Early Days Of The Web,  Up: Emacspeak At Twenty
 
-16.8 Audio Formatting -- Generalizing Aural CSS
+17.8 Audio Formatting -- Generalizing Aural CSS
 ===============================================
 
 A key idea in Audio System For Technical Readings (AsTeR)
@@ -6048,7 +6354,7 @@ correctly write *else if* vs *elsif* in various programming languages!
 
 File: emacsvox.info,  Node: Conversational Gestures For The Audio Desktop,  Next: Accessing Media Streams,  Prev: Audio Formatting --- Generalizing Aural CSS,  Up: Emacspeak At Twenty
 
-16.9 Conversational Gestures For The Audio Desktop
+17.9 Conversational Gestures For The Audio Desktop
 ==================================================
 
 By 1996, Emacspeak was the only piece of adaptive technology I used; in
@@ -6106,7 +6412,7 @@ with two-dimensional data.
 
 File: emacsvox.info,  Node: Speech-Enabling Interactive Games,  Up: Conversational Gestures For The Audio Desktop
 
-16.9.1 Speech-Enabling Interactive Games
+17.9.1 Speech-Enabling Interactive Games
 ----------------------------------------
 
 So in 1997, I went the next step in asking -- given access to the
@@ -6138,7 +6444,7 @@ the rest of the environment.
 
 File: emacsvox.info,  Node: Accessing Media Streams,  Next: EBooks --- Ubiquitous Access To Books,  Prev: Conversational Gestures For The Audio Desktop,  Up: Emacspeak At Twenty
 
-16.10 Accessing Media Streams
+17.10 Accessing Media Streams
 =============================
 
 Streaming real-time audio on the Internet became a reality with the
@@ -6173,7 +6479,7 @@ package *ido*, these types of actions become even more efficient!
 
 File: emacsvox.info,  Node: EBooks --- Ubiquitous Access To Books,  Next: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Prev: Accessing Media Streams,  Up: Emacspeak At Twenty
 
-16.11 EBooks -- Ubiquitous Access To Books
+17.11 EBooks -- Ubiquitous Access To Books
 ==========================================
 
 AsTeR -- was motivated by the increasing availability of technical
@@ -6218,7 +6524,7 @@ books.
 
 File: emacsvox.info,  Node: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Next: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Prev: EBooks --- Ubiquitous Access To Books,  Up: Emacspeak At Twenty
 
-16.12 Leveraging Computational Tools -- From SQL And R To IPython Notebooks
+17.12 Leveraging Computational Tools -- From SQL And R To IPython Notebooks
 ===========================================================================
 
 The ability to invoke external processes and interface with them via a
@@ -6249,7 +6555,7 @@ smoother in Emacs than in a browser-based editor.
 
 File: emacsvox.info,  Node: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Next: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Prev: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Up: Emacspeak At Twenty
 
-16.13 Social Web -- EMail, Instant Messaging, Blogging And Tweeting Using Open Protocols
+17.13 Social Web -- EMail, Instant Messaging, Blogging And Tweeting Using Open Protocols
 ========================================================================================
 
 The ability to process large amounts of email and electronic news has
@@ -6303,7 +6609,7 @@ RESTful API.
 
 File: emacsvox.info,  Node: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Next: Mashing It Up --- Leveraging Evolving Web APIs,  Prev: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Up: Emacspeak At Twenty
 
-16.14 The RESTful Web -- Web Wizards And URL Templates For Faster Access
+17.14 The RESTful Web -- Web Wizards And URL Templates For Faster Access
 ========================================================================
 
 Today, the Web, based on URLs and HTTP-style protocols is widely
@@ -6369,7 +6675,7 @@ user's collection of subscribed feeds.
 
 File: emacsvox.info,  Node: Mashing It Up --- Leveraging Evolving Web APIs,  Next: Conclusion --- Turning Twenty,  Prev: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Up: Emacspeak At Twenty
 
-16.15 Mashing It Up -- Leveraging Evolving Web APIs
+17.15 Mashing It Up -- Leveraging Evolving Web APIs
 ===================================================
 
 The next step in this evolution came with the arrival of richer Web APIs
@@ -6413,7 +6719,7 @@ today's tight association of the Web to the Web Browser.
 
 File: emacsvox.info,  Node: Conclusion --- Turning Twenty,  Next: References,  Prev: Mashing It Up --- Leveraging Evolving Web APIs,  Up: Emacspeak At Twenty
 
-16.16 Conclusion -- Turning Twenty
+17.16 Conclusion -- Turning Twenty
 ==================================
 
 In 1996, I wrote an article entitled User Interface -- A Means To An End
@@ -6438,7 +6744,7 @@ alongside visual interaction when this comes to pass.
 
 File: emacsvox.info,  Node: References,  Prev: Conclusion --- Turning Twenty,  Up: Emacspeak At Twenty
 
-16.17 References
+17.17 References
 ================
 
    • Auditory User Interfaces
@@ -6461,7 +6767,7 @@ File: emacsvox.info,  Node: References,  Prev: Conclusion --- Turning Twenty,  U
 
 File: emacsvox.info,  Node: Acknowledgments,  Next: Concept Index,  Prev: Emacspeak At Twenty,  Up: Top
 
-17 Acknowledgments
+18 Acknowledgments
 ******************
 
 Thanks.
@@ -6469,65 +6775,86 @@ Thanks.
 
 File: emacsvox.info,  Node: Concept Index,  Next: Key Index,  Prev: Acknowledgments,  Up: Top
 
-18 Concept Index
+19 Concept Index
 ****************
 
  [index ]
 * Menu:
 
+* alternate screen, EAT:                 EAT Terminal Access. (line 270)
 * AUCTeX:                                Creating Well-formatted Documents.
-                                                               (line 42)
-* Audio Desktop:                         Audio Desktop.        (line  6)
+                                                              (line  42)
+* Audio Desktop:                         Audio Desktop.       (line   6)
 * Audio Formatting:                      Context-Sensitive Interaction.
-                                                               (line 24)
-* Browsing Structure:                    Browsing Structure.   (line  6)
-* character echo:                        Controlling Echo.     (line  6)
+                                                              (line  24)
+* Browsing Structure:                    Browsing Structure.  (line   6)
+* character echo:                        Controlling Echo.    (line   6)
+* completion candidates, terminal:       EAT Terminal Access. (line  89)
+* completion, EAT:                       EAT Terminal Access. (line  21)
 * Context-Sensitive Interaction:         Context-Sensitive Interaction.
-                                                               (line  6)
-* Desktop:                               Desktop Management.   (line  6)
-* Desktop Applications:                  Desktop Applications. (line  5)
+                                                              (line   6)
+* Corfu, EAT:                            EAT Terminal Access. (line  21)
+* curses applications, EAT:              EAT Terminal Access. (line 270)
+* Desktop:                               Desktop Management.  (line   6)
+* Desktop Applications:                  Desktop Applications.
+                                                              (line   5)
 * Desktop Navigation:                    Context-Sensitive Interaction.
-                                                               (line 54)
-* Desktop Objects:                       Desktop Objects.      (line  6)
-* Document Authoring:                    Document Authoring.   (line  6)
+                                                              (line  54)
+* Desktop Objects:                       Desktop Objects.     (line   6)
+* Document Authoring:                    Document Authoring.  (line   6)
 * Document Creation:                     Creating Well-formatted Documents.
-                                                               (line  6)
+                                                              (line   6)
+* EAT automatic speech:                  EAT Terminal Access. (line  65)
+* EAT input modes:                       EAT Terminal Access. (line  21)
+* EAT review commands:                   EAT Terminal Access. (line 124)
+* EAT shell integration:                 EAT Terminal Access. (line 219)
+* EAT terminal emulator:                 EAT Terminal Access. (line   6)
 * Emacs Keyboard Commands:               Emacsvox Keyboard Commands.
-                                                               (line  6)
-* Emacs Packages:                        Emacs Packages.       (line  6)
+                                                              (line   6)
+* Emacs Packages:                        Emacs Packages.      (line   6)
+* Eshell, EAT accessibility:             EAT Terminal Access. (line 293)
 * Finding:                               Context-Sensitive Interaction.
-                                                               (line 64)
-* Introduction:                          Introduction.         (line  6)
-* line echo:                             Controlling Echo.     (line  6)
-* Messaging:                             Messaging.            (line  6)
+                                                              (line  64)
+* frozen EAT review:                     EAT Terminal Access. (line 157)
+* Introduction:                          Introduction.        (line   6)
+* line echo:                             Controlling Echo.    (line   6)
+* Messaging:                             Messaging.           (line   6)
 * Object-Oriented Desktop:               Object Oriented Desktop.
-                                                               (line  6)
-* Online Help:                           Using Online Help.    (line  6)
+                                                              (line   6)
+* Online Help:                           Using Online Help.   (line   6)
+* password input, EAT:                   EAT Terminal Access. (line 247)
 * Personal Information Management:       Personal Information Management.
-                                                               (line  6)
-* Programming:                           Editing Code.         (line  6)
+                                                              (line   6)
+* Programming:                           Editing Code.        (line   6)
 * Replace:                               Search replace and spell check.
-                                                               (line  6)
+                                                              (line   6)
+* router completion:                     EAT Terminal Access. (line  89)
 * Search:                                Search replace and spell check.
-                                                               (line  6)
+                                                              (line   6)
 * Searching:                             Context-Sensitive Interaction.
-                                                               (line 64)
+                                                              (line  64)
+* shell command status:                  EAT Terminal Access. (line 219)
 * Software Development:                  Development Environment.
-                                                               (line  6)
-* speech settings:                       Speech System.        (line  6)
-* speech system:                         Speech System.        (line  6)
+                                                              (line   6)
+* speech access, terminal:               EAT Terminal Access. (line   6)
+* speech settings:                       Speech System.       (line   6)
+* speech system:                         Speech System.       (line   6)
 * Spell Check:                           Search replace and spell check.
-                                                               (line 52)
+                                                              (line  52)
 * Structured Navigation:                 Context-Sensitive Interaction.
-                                                               (line 34)
-* TTS:                                   Speech System.        (line  6)
-* Web Browsing:                          Web Browsing.         (line  6)
-* word echo:                             Controlling Echo.     (line  6)
+                                                              (line  34)
+* terminal accessibility:                EAT Terminal Access. (line   6)
+* terminal output, speech policy:        EAT Terminal Access. (line  65)
+* terminal privacy:                      EAT Terminal Access. (line 247)
+* terminal screen review:                EAT Terminal Access. (line 124)
+* TTS:                                   Speech System.       (line   6)
+* Web Browsing:                          Web Browsing.        (line   6)
+* word echo:                             Controlling Echo.    (line   6)
 
 
 File: emacsvox.info,  Node: Key Index,  Next: Function Index,  Prev: Concept Index,  Up: Top
 
-19 Key Index
+20 Key Index
 ************
 
  [index ]
@@ -6622,12 +6949,18 @@ File: emacsvox.info,  Node: Key Index,  Next: Function Index,  Prev: Concept Ind
                                                              (line   80)
 * C-c C-d <1>:                           Running Terminal Based Applications.
                                                              (line  171)
+* C-c C-e (EAT):                         EAT Terminal Access.
+                                                             (line   21)
 * C-c C-f:                               Running Terminal Based Applications.
                                                              (line   63)
 * C-c C-j:                               Running Terminal Based Applications.
                                                              (line   52)
+* C-c C-j (EAT):                         EAT Terminal Access.
+                                                             (line   21)
 * C-c C-k:                               Running Terminal Based Applications.
                                                              (line  135)
+* C-c C-l (EAT):                         EAT Terminal Access.
+                                                             (line   21)
 * C-c C-u:                               Running Terminal Based Applications.
                                                              (line  161)
 * C-c C-w:                               Running Terminal Based Applications.
@@ -6640,6 +6973,8 @@ File: emacsvox.info,  Node: Key Index,  Next: Function Index,  Prev: Concept Ind
                                                              (line  112)
 * C-c k:                                 Running Terminal Based Applications.
                                                              (line   72)
+* C-c M-d (EAT):                         EAT Terminal Access.
+                                                             (line   21)
 * C-c o:                                 emacsvox-muggles.   (line  183)
 * C-c o <1>:                             Running Terminal Based Applications.
                                                              (line   56)
@@ -6915,6 +7250,8 @@ File: emacsvox.info,  Node: Key Index,  Next: Function Index,  Prev: Concept Ind
 * C-e p:                                 Reading.            (line   55)
 * C-e p <1>:                             emacsvox-speak.     (line   35)
 * C-e P:                                 emacsvox-speak.     (line  718)
+* C-e q (EAT review):                    EAT Terminal Access.
+                                                             (line  124)
 * C-e r:                                 Reading.            (line   63)
 * C-e R:                                 emacsvox-speak.     (line  770)
 * C-e r <1>:                             emacsvox-speak.     (line  782)
@@ -7080,6 +7417,8 @@ File: emacsvox.info,  Node: Key Index,  Next: Function Index,  Prev: Concept Ind
 * s-m:                                   extra-muggles.      (line   53)
 * s-n:                                   emacsvox-muggles.   (line  133)
 * s-o:                                   emacsvox-dbus.      (line   92)
+* <TAB> (EAT terminal completion):       EAT Terminal Access.
+                                                             (line   89)
 
 
 File: emacsvox.info,  Node: Function Index,  Next: Variable Index,  Prev: Key Index,  Up: Top
@@ -7106,6 +7445,22 @@ Function Index
 * dectalk <1>:                           dectalk-voices.     (line   18)
 * dectalk-soft:                          dectalk-voices.     (line   23)
 * dectalk-soft <1>:                      dectalk-voices.     (line   26)
+* eat:                                   EAT Terminal Access.
+                                                             (line    6)
+* eat-char-mode:                         EAT Terminal Access.
+                                                             (line   21)
+* eat-emacs-mode:                        EAT Terminal Access.
+                                                             (line   21)
+* eat-eshell-mode:                       EAT Terminal Access.
+                                                             (line  293)
+* eat-eshell-visual-command-mode:        EAT Terminal Access.
+                                                             (line  293)
+* eat-line-mode:                         EAT Terminal Access.
+                                                             (line   21)
+* eat-semi-char-mode:                    EAT Terminal Access.
+                                                             (line   21)
+* eat-send-password:                     EAT Terminal Access.
+                                                             (line  247)
 * emacsvox--advice-global-set-key-before: emacsvox-advice.   (line   19)
 * emacsvox--advice-global-set-key-before <1>: emacsvox-advice.
                                                              (line   20)
@@ -8741,6 +9096,26 @@ Function Index
 * emacsvox-dired-speak-header-line <1>:  emacsvox-dired.     (line  150)
 * emacsvox-dired-speak-symlink-target:   emacsvox-dired.     (line  156)
 * emacsvox-dired-speak-symlink-target <1>: emacsvox-dired.   (line  157)
+* emacsvox-eat-cycle-verbosity:          EAT Terminal Access.
+                                                             (line  124)
+* emacsvox-eat-review-screen:            EAT Terminal Access.
+                                                             (line  124)
+* emacsvox-eat-speak-completion-output:  EAT Terminal Access.
+                                                             (line  124)
+* emacsvox-eat-speak-current-row:        EAT Terminal Access.
+                                                             (line  124)
+* emacsvox-eat-speak-last-change:        EAT Terminal Access.
+                                                             (line  124)
+* emacsvox-eat-speak-likely-focus:       EAT Terminal Access.
+                                                             (line  124)
+* emacsvox-eat-speak-retained-metadata:  EAT Terminal Access.
+                                                             (line  124)
+* emacsvox-eat-speak-retained-status:    EAT Terminal Access.
+                                                             (line  124)
+* emacsvox-eat-speak-visible-screen:     EAT Terminal Access.
+                                                             (line  124)
+* emacsvox-eat-toggle-background-monitoring: EAT Terminal Access.
+                                                             (line  124)
 * emacsvox-ediff-speak-current-difference: emacsvox-ediff.   (line   25)
 * emacsvox-ediff-speak-current-difference <1>: emacsvox-ediff.
                                                              (line   26)
