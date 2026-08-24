@@ -53,6 +53,17 @@
 (require 'emacsvox-preamble)
 (require 'outline)
 
+;;; Emacsvox source setup:
+
+(defun emacsvox-outline--enable-for-source ()
+  "Enable Outline minor mode in Emacsvox Emacs Lisp source buffers."
+  (when (and buffer-file-name
+             (not (file-remote-p buffer-file-name))
+             (file-in-directory-p buffer-file-name emacsvox-directory))
+    (outline-minor-mode 1)))
+
+(add-hook 'emacs-lisp-mode-hook #'emacsvox-outline--enable-for-source)
+
 ;;;   Navigating through an outline:
 
 (cl-loop

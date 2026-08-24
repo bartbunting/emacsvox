@@ -36,6 +36,25 @@
   '(foldout-zoom-subtree foldout-exit-fold)
   "Foldout commands expected to use direct native after advice.")
 
+(ert-deftest emacsvox-outline-enables-only-for-emacsvox-source ()
+  "Emacsvox Lisp sources automatically use Outline minor mode."
+  (should
+   (memq #'emacsvox-outline--enable-for-source emacs-lisp-mode-hook))
+  (let ((emacs-lisp-mode-hook
+         '(emacsvox-outline--enable-for-source)))
+    (with-temp-buffer
+      (setq buffer-file-name
+            (expand-file-name "lisp/emacsvox-test-source.el"
+                              emacsvox-directory))
+      (emacs-lisp-mode)
+      (should outline-minor-mode))
+    (with-temp-buffer
+      (setq buffer-file-name
+            (expand-file-name "emacsvox-test-outside.el"
+                              temporary-file-directory))
+      (emacs-lisp-mode)
+      (should-not outline-minor-mode))))
+
 (ert-deftest emacsvox-outline-advice-is-directly-registered ()
   "Outline advice uses native advice directly."
   (dolist (target emacsvox-test--outline-after-targets)
