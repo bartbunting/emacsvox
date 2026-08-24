@@ -240,7 +240,7 @@ Acceptance:
 Planned slices:
 
 1. [X] public-face shell prompt status capture and bounded feedback policy;
-2. [ ] consolidated source, PTY, real-terminal, full-suite, and compiled
+2. [X] consolidated source, PTY, real-terminal, full-suite, and compiled
    validation;
 3. [ ] user documentation for EAT operation and accessibility controls;
 4. [ ] final audit-to-implementation traceability and residual-risk review.
@@ -345,13 +345,12 @@ These do not block conservative Emacsvox implementations:
 | 2026-08-24 | ~74d4cf9e0~ | 6.7b | A styled bottom-row application status with conservative syntax is now retained for ~C-e q t~ and frozen review but never spoken automatically. In frozen screen review, ~[~ and ~]~ navigate selection-like inverse/background regions such as pager matches and menu rows, preserve their style voices, and never label them as focus. All 137 focused EAT tests pass; Emacs 31 byte-code was fully rebuilt with no EAT warnings, and a fresh process passed compiled real-EAT status and styled-review checks. The 2,487-test suite has 2,484 expected results, one existing skip, and only the two previously recorded unrelated agent-shell and installed-CIDER failures. |
 | 2026-08-24 | ~3f795eb80~ | 7.1 | EAT's separate embedded-Eshell update and lifecycle hooks now use the shared public-screen observer without per-command restart chatter. EAT owns rendered output until the next Eshell prompt, preventing the restored generic output filter from duplicating the final command output. Review controls are installed in all three embedded input maps. All 154 focused EAT and Eshell tests pass, including a real disposable two-line external command that produces exactly one output transaction and one exit transaction. |
 | 2026-08-24 | ~dc7663b84~ | 7.2 | Every normal EAT process now starts from its empty public screen, so first output is comparable. A final selected live-follow burst is synchronously classified before process-generation invalidation; background and scrollback bursts remain silent. Eshell visual commands receive stable start/exit labels without changing Eshell's buffer-return policy. All 160 focused EAT and Eshell tests pass, including a real disposable visual command with a silent resize and a deliberately pending timer that yields exactly “started”, final output, then “exited”. |
-| 2026-08-24 | this commit | 8.1 | Public EAT prompt annotation faces are captured from the bounded rendered main screen as data-only running, success, or failure state. Failures produce one semantic warning; success is automatic only in verbose mode after observed command activity; every state is retained for ~C-e q t~. Initial successful prompts and alternate screens stay quiet, and no private EAT prompt variable is read. All 152 EAT tests and all 165 combined EAT/Eshell tests pass. Emacs 31 byte-code is current, and a fresh process loaded ~emacsvox-eat.elc~ and passed the real terminal-model observer path. |
+| 2026-08-24 | ~438d9f3d7~ | 8.1 | Public EAT prompt annotation faces are captured from the bounded rendered main screen as data-only running, success, or failure state. Failures produce one semantic warning; success is automatic only in verbose mode after observed command activity; every state is retained for ~C-e q t~. Initial successful prompts and alternate screens stay quiet, and no private EAT prompt variable is read. All 152 EAT tests and all 165 combined EAT/Eshell tests pass. Emacs 31 byte-code is current, and a fresh process loaded ~emacsvox-eat.elc~ and passed the real terminal-model observer path. |
+| 2026-08-24 | this commit | 8.2 | Consolidated validation passes all 152 EAT tests and all 165 combined EAT/Eshell tests, including real terminal-model, disposable Bash/readline PTY, delayed router, completion, lifecycle, deterministic pager/editor/menu/progress, and Eshell visual-command fixtures. The 2,504-test unit suite has 2,501 expected results, one existing skip, and only the two recorded unrelated agent-shell and installed-CIDER failures. Compiled aural parity, normal build-tree startup, all 27 semantic traces, current Emacs 31 byte-code, and a fresh compiled prompt observer path pass. |
 
 * Current next action
 
-Compile and verify Phase 8.1 in a fresh Emacs, then commit it.  Continue with
-consolidated validation and user documentation for terminal modes, completion
-ownership, review commands, verbosity, monitoring, shell integration, Eshell
-visual-buffer return behavior, and password safety.  Finish with an
-audit-finding traceability table that distinguishes Emacsvox fixes from
-remaining upstream EAT API work.
+Finish and commit user documentation for terminal modes, completion ownership,
+review commands, verbosity, monitoring, shell integration, Eshell visual-buffer
+return behavior, and password safety.  Then add the audit-finding traceability
+table and close the plan only after final generated-manual and Git-state checks.
