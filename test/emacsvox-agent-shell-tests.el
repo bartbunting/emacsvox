@@ -4410,6 +4410,120 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          :type)
         'agent-response)))))
 
+(ert-deftest emacsvox-agent-shell-live-prompt-lookup-uses-local-fields ()
+  "Live Comint prompts and multiline input should not scan the transcript."
+  (with-temp-buffer
+    (insert
+     (propertize
+      (concat (make-string 100000 ?x) "\n")
+      'field 'output
+      'rear-nonsticky '(field)))
+    (let ((prompt-start (point)))
+      (insert
+       (propertize
+        "Codex> "
+        'font-lock-face
+        '(comint-highlight-prompt comint-highlight-prompt)
+        'face '(comint-highlight-prompt comint-highlight-prompt)
+        'field 'output
+        'rear-nonsticky '(field font-lock-face face)))
+      (let ((input-start (point)))
+        (insert
+         (propertize
+          "first line\n\nsecond line"
+          'font-lock-face 'comint-highlight-input
+          'face 'comint-highlight-input))
+        (let ((marker-start (point))
+              positions)
+          (insert
+           (propertize
+            "<shell-maker-end-of-prompt>"
+            'shell-maker--marker t
+            'field 'output
+            'invisible t))
+          (setq major-mode 'agent-shell-mode)
+          (setq positions
+                (list
+                 prompt-start
+                 input-start
+                 (save-excursion
+                   (goto-char input-start)
+                   (forward-line 2)
+                   (point))
+                 (1- marker-start)))
+          (should-not (get-text-property input-start 'field))
+          (cl-letf
+              (((symbol-function
+                 'emacsvox-agent-shell--prompt-location-at-position)
+                (lambda (&rest _)
+                  (ert-fail "Local prompt lookup scanned the transcript"))))
+            (dolist (position positions)
+              (let ((location
+                     (emacsvox-agent-shell--block-location-at-point
+                      position)))
+                (should (eq (plist-get location :type) 'user-prompt))
+                (should (= (plist-get location :position) prompt-start))
+                (should (= (plist-get location :end) marker-start))))))))))
+
+(ert-deftest emacsvox-agent-shell-output-blank-skips-prompt-scan ()
+  "An unclassified Shell Maker output blank should be locally conclusive."
+  (with-temp-buffer
+    (insert
+     (propertize
+      (concat (make-string 100000 ?x) "\n\n")
+      'field 'output))
+    (setq major-mode 'agent-shell-mode)
+    (goto-char (point-min))
+    (forward-line 1)
+    (should (= (line-beginning-position) (line-end-position)))
+    (cl-letf
+        (((symbol-function
+           'emacsvox-agent-shell--prompt-location-at-position)
+          (lambda (&rest _)
+            (ert-fail "Output blank searched legacy prompt properties"))))
+      (should-not (emacsvox-agent-shell--block-location-at-point))
+      (should-not
+       (emacsvox-agent-shell--block-location-at-point (point-max))))))
+
+(ert-deftest emacsvox-agent-shell-unclassified-input-keeps-prompt-fallback ()
+  "Plain nil-field text should retain legacy prompt containment lookup."
+  (with-temp-buffer
+    (insert "legacy input")
+    (setq major-mode 'agent-shell-mode)
+    (let (called)
+      (cl-letf
+          (((symbol-function
+             'emacsvox-agent-shell--prompt-location-at-position)
+            (lambda (&rest _)
+              (setq called t)
+              nil)))
+        (should-not (emacsvox-agent-shell--block-location-at-point)))
+      (should called))))
+
+(ert-deftest emacsvox-agent-shell-prompt-search-recognizes-comint-face ()
+  "Legacy directional lookup should recognize Shell Maker's live face."
+  (with-temp-buffer
+    (let ((prompt-start (point)))
+      (insert
+       (propertize
+        "Codex> "
+        'font-lock-face
+        '(comint-highlight-prompt comint-highlight-prompt)))
+      (insert "request")
+      (let ((marker-start (point)))
+        (insert
+         (propertize
+          "<shell-maker-end-of-prompt>"
+          'shell-maker--marker t
+          'invisible t))
+        (setq major-mode 'agent-shell-mode)
+        (let ((location
+               (emacsvox-agent-shell--prompt-location-at-position
+                prompt-start)))
+          (should (eq (plist-get location :type) 'user-prompt))
+          (should (= (plist-get location :position) prompt-start))
+          (should (= (plist-get location :end) marker-start)))))))
+
 (ert-deftest emacsvox-agent-shell-block-navigation-keeps-adjacent-fragments ()
   "Directional search should not skip adjacent matching property runs."
   (with-temp-buffer

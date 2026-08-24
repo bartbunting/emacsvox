@@ -2903,6 +2903,16 @@ PREDICATE receives TEXT and the start position of each property run."
   (or (eq value face)
       (and (listp value) (memq face value))))
 
+(defun emacsvox-agent-shell--prompt-face-p (value)
+  "Return non-nil when face specification VALUE marks a shell prompt.
+Live Shell Maker prompts use `comint-highlight-prompt'; restored Agent Shell
+prompts use `agent-shell-prompt'.  Either face may occur more than once in a
+face list."
+  (or (emacsvox-agent-shell--face-includes-p
+       value 'comint-highlight-prompt)
+      (emacsvox-agent-shell--face-includes-p
+       value 'agent-shell-prompt)))
+
 (defun emacsvox-agent-shell--prompt-locations ()
   "Return semantic user-prompt locations in the current buffer."
   (let (locations)
@@ -2917,8 +2927,7 @@ PREDICATE receives TEXT and the start position of each property run."
                  (prompt-p
                   (if (eq property 'agent-shell-viewport-prompt)
                       value
-                    (emacsvox-agent-shell--face-includes-p
-                     value 'agent-shell-prompt)))
+                    (emacsvox-agent-shell--prompt-face-p value)))
                  (body-end
                   (when prompt-p
                     (if (eq property 'agent-shell-viewport-prompt)
@@ -3271,12 +3280,9 @@ END-BOUNDARY is non-nil."
             (setq location candidate))))
       location)))
 
-(defun emacsvox-agent-shell--prompt-location-from-match (property match)
-  "Return a user-prompt location for PROPERTY search MATCH."
-  (when-let* ((range
-               (emacsvox-agent-shell--property-range-at-position
-                property (prop-match-beginning match)))
-              (start (car range))
+(defun emacsvox-agent-shell--prompt-location-from-range (property range)
+  "Return a user-prompt location for PROPERTY spanning RANGE."
+  (when-let* ((start (car range))
               (end
                (if (eq property 'agent-shell-viewport-prompt)
                    (cdr range)
@@ -3288,6 +3294,13 @@ END-BOUNDARY is non-nil."
           :type 'user-prompt
           :body
           (emacsvox-agent-shell--visible-block-text start end))))
+
+(defun emacsvox-agent-shell--prompt-location-from-match (property match)
+  "Return a user-prompt location for PROPERTY search MATCH."
+  (when-let* ((range
+               (emacsvox-agent-shell--property-range-at-position
+                property (prop-match-beginning match))))
+    (emacsvox-agent-shell--prompt-location-from-range property range)))
 
 (defun emacsvox-agent-shell--prompt-property-location-in-direction
     (property direction origin)
@@ -3307,8 +3320,7 @@ END-BOUNDARY is non-nil."
                   (if (eq property 'agent-shell-viewport-prompt)
                       (lambda (_value value) value)
                     (lambda (_value value)
-                      (emacsvox-agent-shell--face-includes-p
-                       value 'agent-shell-prompt))))))
+                      (emacsvox-agent-shell--prompt-face-p value))))))
         (let ((candidate
                (emacsvox-agent-shell--prompt-location-from-match
                 property match)))
@@ -3427,6 +3439,79 @@ END-BOUNDARY is non-nil."
                 ((<= start position))
                 ((< position end)))
       candidate)))
+
+(defun emacsvox-agent-shell--local-prompt-property-range
+    (property position)
+  "Return a prompt PROPERTY range containing POSITION, or nil.
+For face properties, accept either the live Comint prompt face or Agent
+Shell's restored-prompt face."
+  (when (and (<= (point-min) position)
+             (< position (point-max)))
+    (let ((value (get-text-property position property)))
+      (when (if (eq property 'agent-shell-viewport-prompt)
+                value
+              (emacsvox-agent-shell--prompt-face-p value))
+        (emacsvox-agent-shell--property-range-at-position
+         property position)))))
+
+(defun emacsvox-agent-shell--prompt-input-face-position (position)
+  "Return the prompt-face position starting POSITION's input field.
+Shell Maker gives submitted input a nil `field' property immediately after
+the output-field prompt prefix.  This property boundary permits constant-local
+prompt discovery on every line of a multiline input."
+  (let ((probe
+         (cond
+          ((and (< position (point-max))
+                (null (get-text-property position 'field)))
+           position)
+          ((and (> position (point-min))
+                (null (get-text-property (1- position) 'field)))
+           (1- position)))))
+    (when probe
+      (let ((input-start
+             (or (previous-single-property-change
+                  (min (1+ probe) (point-max))
+                  'field nil (point-min))
+                 (point-min))))
+        (when (> input-start (point-min))
+          (1- input-start))))))
+
+(defun emacsvox-agent-shell--local-prompt-location-at-position (position)
+  "Return a prompt containing POSITION using only local buffer metadata."
+  (let ((probes
+         (delete-dups
+          (delq
+           nil
+           (list
+            (and (< position (point-max)) position)
+            (and (> position (point-min)) (1- position))
+            (emacsvox-agent-shell--prompt-input-face-position
+             position))))))
+    (catch 'location
+      (dolist (property
+               '(agent-shell-viewport-prompt font-lock-face face))
+        (dolist (probe probes)
+          (when-let* ((range
+                      (emacsvox-agent-shell--local-prompt-property-range
+                       property probe))
+                     (location
+                      (emacsvox-agent-shell--prompt-location-from-range
+                       property range))
+                     ((<= (plist-get location :position) position))
+                     ((< position (plist-get location :end))))
+            (throw 'location location))))
+      nil)))
+
+(defun emacsvox-agent-shell--output-field-position-p (position)
+  "Return non-nil when POSITION is ordinary Shell Maker output.
+Prompt prefixes are output fields too, but local prompt discovery runs before
+this predicate.  User input has a nil field and therefore remains eligible for
+the legacy fallback when its local boundary metadata is incomplete."
+  (or (and (< position (point-max))
+           (eq (get-text-property position 'field) 'output))
+      (and (= position (point-max))
+           (> position (point-min))
+           (eq (get-text-property (1- position) 'field) 'output))))
 
 (defun emacsvox-agent-shell--innermost-block-location (locations)
   "Return the innermost semantic block from LOCATIONS."
@@ -3595,6 +3680,10 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
           (emacsvox-agent-shell--source-block-location-at-position position))
          (fragment
           (emacsvox-agent-shell--fragment-location-at-position position t))
+         (local-prompt
+          (and (not fragment)
+               (emacsvox-agent-shell--local-prompt-location-at-position
+                position)))
          (location
           (emacsvox-agent-shell--innermost-block-location
            (if fragment
@@ -3605,8 +3694,12 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
                (list table source-block fragment)
              (list
               table source-block
-              (emacsvox-agent-shell--prompt-location-at-position
-               position))))))
+              (or
+               local-prompt
+               (unless
+                   (emacsvox-agent-shell--output-field-position-p position)
+                 (emacsvox-agent-shell--prompt-location-at-position
+                  position))))))))
     (or
      location
      (when-let* ((fallback
