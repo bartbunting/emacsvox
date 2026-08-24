@@ -240,6 +240,18 @@ not truncated."
                  (integer :tag "Characters"))
   :group 'emacsvox-agent-shell)
 
+(defcustom emacsvox-agent-shell-block-navigation-max-characters 4096
+  "Maximum body characters spoken after Agent Shell block navigation.
+
+When a normalized block body is longer, navigation stops at a word boundary
+where possible and announces the number of omitted characters.  Set this to
+nil, or to a non-positive value, to speak the complete body.  This option does
+not change concise block labels or the specialized table and source-block
+navigation presentations."
+  :type '(choice (const :tag "Speak complete block body" nil)
+                 (integer :tag "Body characters"))
+  :group 'emacsvox-agent-shell)
+
 ;;;  Speech Setup
 
 ;;;###autoload
@@ -2787,6 +2799,33 @@ PREDICATE receives TEXT and the start position of each property run."
             (concat (substring plain 0 77) "...")
           plain)))))
 
+(defun emacsvox-agent-shell--block-navigation-body-text (text)
+  "Return normalized block body TEXT for semantic navigation speech."
+  (when text
+    (let ((plain
+           (string-trim
+            (replace-regexp-in-string
+             "[[:space:]]+" " " (substring-no-properties text)))))
+      (unless (string-empty-p plain)
+        (let ((limit
+               emacsvox-agent-shell-block-navigation-max-characters))
+          (if (and (integerp limit)
+                   (> limit 0)
+                   (> (length plain) limit))
+              (let* ((prefix (substring plain 0 limit))
+                     (word-start
+                      (unless (eq (aref plain limit) ?\s)
+                        (string-match
+                         "[[:space:]][^[:space:]]*\\'" prefix)))
+                     (cut (or word-start limit))
+                     (preview
+                      (string-trim-right (substring prefix 0 cut))))
+                (concat
+                 preview
+                 (format " [block truncated; %d characters omitted]"
+                         (- (length plain) (length preview)))))
+            plain))))))
+
 (defun emacsvox-agent-shell--block-section-text (start end section)
   "Return semantic speech text for fragment SECTION between START and END."
   (let ((position start)
@@ -3605,7 +3644,7 @@ the legacy fallback when its local boundary metadata is incomplete."
   (let* ((type (plist-get location :type))
          (label (plist-get location :label))
          (body
-          (emacsvox-agent-shell--concise-block-text
+          (emacsvox-agent-shell--block-navigation-body-text
            (plist-get location :body)))
          (fallback
           (or label

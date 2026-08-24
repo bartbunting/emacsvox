@@ -46,6 +46,7 @@
 (defvar emacsvox-agent-shell--vertical-navigation-origin)
 (defvar emacsvox-agent-shell--line-navigation-speech-p)
 (defvar emacsvox-agent-shell-line-speech-max-characters)
+(defvar emacsvox-agent-shell-block-navigation-max-characters)
 (defvar emacsvox-agent-shell-foreground-speech-level)
 (defvar emacsvox-agent-shell--table-navigation-active)
 (defvar emacsvox-agent-shell--table-navigation-map)
@@ -3883,11 +3884,12 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               1)))))))
 
 (ert-deftest emacsvox-agent-shell-block-jumps-bound-body-previews ()
-  "Semantic navigation should never submit a complete large block body."
+  "Semantic navigation should bound large bodies at the configured limit."
   (with-temp-buffer
     (setq major-mode 'agent-shell-mode)
     (insert "target")
-    (let ((target
+    (let ((emacsvox-agent-shell-block-navigation-max-characters 32)
+          (target
            (list :position 1 :end 7 :type 'agent-response
                  :body (make-string 50000 ?x)))
           spoken)
@@ -3902,8 +3904,29 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            ((symbol-function 'tts-stop) #'ignore))
         (emacsvox-agent-shell--jump-block-of-type
          'agent-response 'forward))
-      (should (= (length spoken) 80))
-      (should (string-suffix-p "..." spoken)))))
+      (should
+       (equal spoken
+              (concat
+               (make-string 32 ?x)
+               " [block truncated; 49968 characters omitted]"))))))
+
+(ert-deftest emacsvox-agent-shell-block-body-limit-uses-word-boundary ()
+  "Bounded block navigation should avoid cutting an ordinary word."
+  (let ((emacsvox-agent-shell-block-navigation-max-characters 18))
+    (should
+     (equal
+      (emacsvox-agent-shell--block-navigation-body-text
+       "alpha beta gamma delta")
+      "alpha beta gamma [block truncated; 6 characters omitted]"))))
+
+(ert-deftest emacsvox-agent-shell-block-body-limit-can-be-disabled ()
+  "A nil navigation limit should retain the complete normalized body."
+  (let ((emacsvox-agent-shell-block-navigation-max-characters nil))
+    (should
+     (equal
+      (emacsvox-agent-shell--block-navigation-body-text
+       " first line\nsecond line ")
+      "first line second line"))))
 
 (ert-deftest emacsvox-agent-shell-expansion-speech-excludes-body ()
   "Expansion feedback should report state without copying body content."
