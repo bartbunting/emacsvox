@@ -168,6 +168,12 @@ when the terminal is selected again."
 (defvar-local emacsvox-eat--pending-navigation-intent nil
   "Content-free terminal navigation intent for the current update burst.")
 
+(defvar-local emacsvox-eat--input-row-offset nil
+  "Character offset where editable input starts on its prompt row.")
+
+(defvar-local emacsvox-eat--input-start-row nil
+  "Screen row on which the current editable input starts.")
+
 (defvar-local emacsvox-eat--deletion-intent nil
   "Observed main-screen deletion awaiting its rendered terminal result.")
 
@@ -763,6 +769,25 @@ Snapshots from different terminal generations are intentionally not compared."
       (push position starts))
     (vconcat (nreverse starts))))
 
+(defun emacsvox-eat--remember-input-row-offset (&optional snapshot)
+  "Remember the input start at the cursor in main-screen SNAPSHOT.
+Do nothing when an input start is already known for the current prompt."
+  (unless emacsvox-eat--input-row-offset
+    (let* ((snapshot (or snapshot emacsvox-eat--screen-snapshot))
+           (text (plist-get snapshot :text))
+           (offset (plist-get snapshot :cursor-offset))
+           (row (plist-get snapshot :cursor-row)))
+      (when (and text
+                 (integerp offset)
+                 (integerp row)
+                 (not (plist-get snapshot :alternate-screen)))
+        (let ((starts (emacsvox-eat--row-start-offsets text)))
+          (when (< -1 row (length starts))
+            (setq emacsvox-eat--input-row-offset
+                  (- offset (aref starts row))
+                  emacsvox-eat--input-start-row row))))))
+  emacsvox-eat--input-row-offset)
+
 (defun emacsvox-eat--row-for-offset (starts offset)
   "Return the row in STARTS containing character OFFSET."
   (let ((low 0)
@@ -1035,8 +1060,9 @@ DIFF and content-free NAVIGATION provide causal evidence."
 
 (defun emacsvox-eat--main-screen-navigation-text (diff snapshot)
   "Return conservative main-screen navigation feedback for DIFF and SNAPSHOT.
-Left and right movement name the rendered character reached.  Up and down
-movement return the resulting rendered input or history row."
+Left and right movement name the rendered character reached.  Word movement
+returns the exact rendered span crossed.  Up and down movement return the
+resulting rendered input or history row without its observed prompt prefix."
   (when-let* ((navigation (plist-get diff :navigation))
               ((not (plist-get navigation :ambiguous)))
               ((not (plist-get snapshot :alternate-screen)))
@@ -1056,11 +1082,27 @@ movement return the resulting rendered input or history row."
                old-row old-column new-row new-column))
          (let* ((text (plist-get snapshot :text))
                 (offset (plist-get snapshot :cursor-offset))
+                (old-offset (plist-get navigation :cursor-offset))
+                (word-movement-p (eq (plist-get navigation :unit) 'word))
+                (word
+                 (and word-movement-p
+                      (integerp old-offset)
+                      (integerp offset)
+                      (<= 0 old-offset (length text))
+                      (<= 0 offset (length text))
+                      (< (min old-offset offset) (max old-offset offset))
+                      (string-trim
+                       (substring
+                        text (min old-offset offset) (max old-offset offset)))))
                 (character
                  (and (integerp offset)
                       (< -1 offset (length text))
                       (aref text offset))))
            (cond
+            ((and word (not (string-empty-p word)))
+             (emacsvox-eat--bounded-output
+              (emacsvox-eat--split-screen-rows word)))
+            (word-movement-p nil)
             (character
              (or (tts-char-to-speech character)
                  (char-to-string character)))
@@ -1075,14 +1117,25 @@ movement return the resulting rendered input or history row."
                     (and (integerp old-row)
                          (< -1 old-row (length old-rows))
                          (nth old-row old-rows)))
+                   (input-row-offset
+                    (plist-get navigation :input-row-offset))
+                   (input-start-row
+                    (plist-get navigation :input-start-row))
                    ((or
                      (and
                       (plist-get diff :cursor-moved)
                       (emacsvox-eat--coordinate-direction-p
                        direction old-row old-column new-row new-column))
                      (not (equal old-row-text row-text)))))
-         (or (emacsvox-eat--bounded-output (list row-text))
-             "Blank terminal row"))))))
+         (let ((input
+                (if (and (integerp input-start-row)
+                         (= input-start-row old-row new-row)
+                         (integerp input-row-offset)
+                         (<= 0 input-row-offset (length row-text)))
+                    (substring row-text input-row-offset)
+                  row-text)))
+           (or (emacsvox-eat--bounded-output (list input))
+               "Empty terminal input")))))))
 
 (defun emacsvox-eat--present-main-screen-navigation (diff snapshot)
   "Present observed main-screen navigation represented by DIFF and SNAPSHOT."
@@ -1601,6 +1654,8 @@ the terminal still existed instead of consulting its deleted cursor."
                 emacsvox-eat--recent-input nil
                 emacsvox-eat--recent-navigation-intent nil
                 emacsvox-eat--pending-navigation-intent nil
+                emacsvox-eat--input-row-offset nil
+                emacsvox-eat--input-start-row nil
                 emacsvox-eat--last-status-text nil
                 emacsvox-eat--last-status-spoken-at 0.0
                 emacsvox-eat--last-completion-output nil
@@ -1740,6 +1795,8 @@ the terminal still existed instead of consulting its deleted cursor."
         emacsvox-eat--recent-input nil
         emacsvox-eat--recent-navigation-intent nil
         emacsvox-eat--pending-navigation-intent nil
+        emacsvox-eat--input-row-offset nil
+        emacsvox-eat--input-start-row nil
         emacsvox-eat--last-screen-diff nil
         emacsvox-eat--last-changed-screen nil
         emacsvox-eat--last-likely-focus nil
@@ -3071,6 +3128,7 @@ The command never captures mutable live terminal-buffer text."
   "Invalidate input-correlated state before sending terminal paste content."
   (emacsvox-eat--resolve-deletion-as-cue)
   (emacsvox-eat--cancel-completion)
+  (emacsvox-eat--remember-input-row-offset)
   (setq emacsvox-eat--recent-input nil))
 
 (defun emacsvox-eat--present-terminal-paste (target)
@@ -3283,32 +3341,57 @@ reaches this advice."
 
 (defun emacsvox-eat--navigation-direction (event)
   "Return a normalized terminal navigation direction for EVENT."
-  (or
-   (pcase event
-     (16 'up)
-     (14 'down)
-     (2 'left)
-     (6 'right)
-     (9 'forward))
-   (pcase (and event (event-basic-type event))
-     ((or 'up 'prior) 'up)
-     ((or 'down 'next) 'down)
-     ((or 'left 'home) 'left)
-     ((or 'right 'end) 'right)
-     ('tab 'forward)
-     ((or 'backtab 'iso-lefttab) 'backward))))
+  (when event
+    (let ((basic (event-basic-type event))
+          (modifiers (event-modifiers event)))
+      (or
+       (and (or (memq 'meta modifiers)
+                (and (memq 'control modifiers)
+                     (memq basic '(left right))))
+            (pcase basic
+              ((or ?b 'left) 'backward)
+              ((or ?f 'right) 'forward)))
+       (pcase event
+         (16 'up)
+         (14 'down)
+         (2 'left)
+         (6 'right)
+         (9 'forward))
+       (pcase basic
+         ((or 'up 'prior) 'up)
+         ((or 'down 'next) 'down)
+         ((or 'left 'home) 'left)
+         ((or 'right 'end) 'right)
+         ('tab 'forward)
+         ((or 'backtab 'iso-lefttab) 'backward))))))
+
+(defun emacsvox-eat--navigation-unit (event)
+  "Return `word' when EVENT conventionally moves by a terminal word."
+  (when event
+    (let ((basic (event-basic-type event))
+          (modifiers (event-modifiers event)))
+      (when (or (and (memq 'meta modifiers)
+                     (memq basic '(?b ?f left right)))
+                (and (memq 'control modifiers)
+                     (memq basic '(left right))))
+        'word))))
 
 (defun emacsvox-eat--raw-input-action (event)
   "Return the content-free main-screen action represented by EVENT.
-The return value is one of `submit', `backspace', `delete', or nil."
+The return value is one of `submit', `backspace', `delete', `kill', or nil."
   (when event
-    (let ((basic (event-basic-type event)))
+    (let ((basic (event-basic-type event))
+          (modifiers (event-modifiers event)))
       (cond
        ((or (memq event '(10 13))
             (memq basic '(linefeed return)))
         'submit)
        ((or (eq event 127) (eq basic 'backspace)) 'backspace)
-       ((memq basic '(delete deletechar)) 'delete)))))
+       ((memq basic '(delete deletechar)) 'delete)
+       ((or (eq event 11)
+            (and (memq 'control modifiers) (eq basic ?k))
+            (and (memq 'meta modifiers) (eq basic ?d)))
+        'kill)))))
 
 (defun emacsvox-eat--raw-input-feedback-eligible-p ()
   "Return non-nil when raw main-screen input feedback is safe and useful."
@@ -3372,7 +3455,7 @@ The return value is one of `submit', `backspace', `delete', or nil."
 (defun emacsvox-eat--begin-deletion (action count)
   "Begin an observed terminal deletion for ACTION repeated COUNT times.
 Return its serial, or nil when rendered feedback would be unsafe."
-  (when (and (memq action '(backspace delete))
+  (when (and (memq action '(backspace delete kill))
              (emacsvox-eat--raw-input-feedback-eligible-p))
     (when-let* ((screen (ignore-errors (emacsvox-eat--capture-screen))))
       (let* ((now (float-time))
@@ -3504,12 +3587,17 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
                    (emacsvox-eat--snapshot-range-concealed-p
                     old (+ row-start new-cursor) (+ row-start old-cursor))))
              candidate))))
-      ('delete
+      ((or 'delete 'kill)
        (when (and (= new-cursor old-cursor)
                   (<= 0 old-cursor (length old-row)))
-         (when-let* ((change
-                      (emacsvox-eat--sequence-change
-                       old-row (string-trim-right new-row)))
+         (let ((effective-new-row
+                (concat
+                 (substring new-row 0 (min new-cursor (length new-row)))
+                 (string-trim-right
+                  (substring new-row (min new-cursor (length new-row)))))))
+           (when-let* ((change
+                       (emacsvox-eat--sequence-change
+                        old-row effective-new-row))
                      (start (plist-get change :start))
                      (old-end (plist-get change :old-end))
                      (new-end (plist-get change :new-end))
@@ -3521,12 +3609,11 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
                       (concat
                        (substring old-row 0 start)
                        (substring old-row old-end)))
-                     ((equal (string-trim-right expected)
-                             (string-trim-right new-row)))
+                     ((equal expected effective-new-row))
                      ((not
                        (emacsvox-eat--snapshot-range-concealed-p
                         old (+ row-start start) (+ row-start old-end)))))
-           candidate))))))
+             candidate)))))))
 
 (defun emacsvox-eat--deleted-character-name (character)
   "Return a nonempty spoken name for deleted CHARACTER."
@@ -3550,7 +3637,7 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
           (cond
            ((= length 1)
             (emacsvox-eat--deleted-character-name (aref text 0)))
-           ((> count 1)
+           ((and (> count 1) (memq action '(backspace delete)))
             (let ((characters (string-to-list bounded)))
               (when (eq action 'backspace)
                 (setq characters (nreverse characters)))
@@ -3603,8 +3690,11 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
   "Merge content-free navigation INTENT into the current update burst."
   (if (null emacsvox-eat--pending-navigation-intent)
       (setq emacsvox-eat--pending-navigation-intent (copy-sequence intent))
-    (if (eq (plist-get emacsvox-eat--pending-navigation-intent :direction)
-            (plist-get intent :direction))
+    (if (and
+         (eq (plist-get emacsvox-eat--pending-navigation-intent :direction)
+             (plist-get intent :direction))
+         (eq (plist-get emacsvox-eat--pending-navigation-intent :unit)
+             (plist-get intent :unit)))
         (progn
           (setq emacsvox-eat--pending-navigation-intent
                 (plist-put
@@ -3625,8 +3715,8 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
             (plist-put
              emacsvox-eat--pending-navigation-intent :ambiguous t)))))
 
-(defun emacsvox-eat--record-navigation-intent (direction)
-  "Record content-free terminal navigation in DIRECTION."
+(defun emacsvox-eat--record-navigation-intent (direction &optional unit)
+  "Record content-free terminal navigation in DIRECTION and optional UNIT."
   (let* ((now (float-time))
          (screen
           (or emacsvox-eat--screen-snapshot
@@ -3636,11 +3726,15 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
           (list
            :generation emacsvox-eat--generation
            :direction direction
+           :unit unit
            :started-at now
            :deadline (+ now emacsvox-eat--navigation-timeout)
            :count 1
+           :cursor-offset (plist-get screen :cursor-offset)
            :cursor-row (plist-get screen :cursor-row)
-           :cursor-column (plist-get screen :cursor-column)))))
+           :cursor-column (plist-get screen :cursor-column)
+           :input-row-offset emacsvox-eat--input-row-offset
+           :input-start-row emacsvox-eat--input-start-row))))
 
 (defun emacsvox-eat--capture-completion (cursor)
   "Start a terminal completion transaction at EAT terminal CURSOR."
@@ -3710,6 +3804,7 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
             (and (integerp event) (>= event 32))
             (and (symbolp basic)
                  (not (memq basic '(tab return linefeed escape))))))))
+    (when recordable-p (emacsvox-eat--remember-input-row-offset))
     (setq emacsvox-eat--recent-navigation-intent nil
           emacsvox-eat--pending-navigation-intent nil
           emacsvox-eat--recent-input
@@ -3722,21 +3817,29 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
   (let* ((event (or event last-command-event))
          (tab-p (emacsvox-eat--tab-event-p event))
          (direction (emacsvox-eat--navigation-direction event))
+         (unit (emacsvox-eat--navigation-unit event))
          (action (emacsvox-eat--raw-input-action event))
          (alternate-screen-p
           (plist-get emacsvox-eat--screen-snapshot :alternate-screen)))
-    (unless (memq action '(backspace delete))
+    (unless (memq action '(backspace delete kill))
       (emacsvox-eat--resolve-deletion-as-cue))
     (cond
      ((and eat-terminal tab-p (not alternate-screen-p))
       (setq emacsvox-eat--recent-input nil)
+      (emacsvox-eat--remember-input-row-offset)
       (emacsvox-eat--capture-completion
        (eat-term-display-cursor eat-terminal)))
      (direction
       (emacsvox-eat--cancel-completion)
-      (emacsvox-eat--record-navigation-intent direction))
+      (when (and (memq direction '(up down))
+                 (not alternate-screen-p))
+        (emacsvox-eat--remember-input-row-offset))
+      (emacsvox-eat--record-navigation-intent direction unit))
      (action
       (emacsvox-eat--cancel-completion)
+      (when (eq action 'submit)
+        (setq emacsvox-eat--input-row-offset nil
+              emacsvox-eat--input-start-row nil))
       (setq emacsvox-eat--recent-input nil
             emacsvox-eat--recent-navigation-intent nil
             emacsvox-eat--pending-navigation-intent nil))
@@ -3747,8 +3850,9 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
 (defun emacsvox--advice-eat-self-input-around
     (original count &optional event)
   "Call ORIGINAL, observing rendered deletion for COUNT copies of EVENT.
-Return is deliberately silent.  Backspace and Delete are announced only from
-their later public-screen result, with an action cue when that is ambiguous."
+Return is deliberately silent.  Backspace, Delete, and forward kills are
+announced only from their later public-screen result, with an action cue when
+that is ambiguous."
   (let* ((event (or event last-command-event))
          (action (emacsvox-eat--raw-input-action event))
          (serial (emacsvox-eat--begin-deletion action count))
@@ -4064,9 +4168,9 @@ through its input row remains as a prefix after scroll alignment, and
                (<= (float-time) (caddr input))
                emacsvox-eat--pending-screen-diff)
       (let ((char (char-before cursor)))
-        (cond
-         ((eq char ?\s) (emacsvox-speak-line) t)
-         (char (emacsvox-speak-this-char char) t))))))
+        (when char
+          (emacsvox-speak-this-char char)
+          t)))))
 
 (defun emacsvox-eat--selected-buffer-p ()
   "Return non-nil when the current EAT buffer is selected."

@@ -93,17 +93,21 @@ content-free semantic events rather than arbitrary screen speech.
 
 In semi-character and character mode on the main screen, @key{RET} is silent.
 After a rendered Left or Right movement, Emacsvox names the character reached;
-after Up or Down, it speaks the resulting input or history row.  A boundary key
-that produces no movement stays silent.
+after Up or Down, it speaks the resulting input or history row without the
+observed shell prompt.  @kbd{M-b}, @kbd{M-f}, and modified Left or Right word
+movement speak the exact rendered text crossed.  A boundary key that produces
+no movement stays silent.
 
-For @key{BACKSPACE} and @key{DELETE}, Emacsvox compares bounded public screen
-snapshots before and after the key.  When one same-row removal is unambiguous,
-it speaks the character or text actually removed.  Otherwise it gives only a
-deletion tone; it never guesses from adjacent prompt or screen text.  This also
-handles a no-echo peer safely: without a visible deletion there is no content
-to announce.  Feedback requires the selected window to follow the live cursor,
-and is silent during protected password input, in an unselected terminal, and
-on an alternate screen where the application owns the keys.
+An echoed Space is named without reading the prompt or the rest of the line.
+For @key{BACKSPACE}, @key{DELETE}, @kbd{M-d}, and @kbd{C-k}, Emacsvox compares
+bounded public screen snapshots before and after the key.  When one same-row
+removal is unambiguous, it speaks the character or text actually removed.
+Otherwise it gives only a deletion tone; it never guesses from adjacent prompt
+or screen text.  This also handles a no-echo peer safely: without a visible
+deletion there is no content to announce.  Feedback requires the selected
+window to follow the live cursor, and is silent during protected password
+input, in an unselected terminal, and on an alternate screen where the
+application owns the keys.
 
 On a full-screen or alternate-screen application, Emacsvox does not read every
 refresh.  A cursor row reached by correlated arrow-style navigation, or one

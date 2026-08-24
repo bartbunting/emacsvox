@@ -709,6 +709,22 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
       (should (equal events '((char 120))))
       (should-not emacsvox-eat--recent-input))))
 
+(ert-deftest emacsvox-eat-space-speaks-only-the-character ()
+  "A correlated Space never falls back to speaking the prompt and line."
+  (with-temp-buffer
+    (insert "prompt> command ")
+    (let ((emacsvox-eat--generation 2)
+          (emacsvox-eat--recent-input (list 2 ?\s (+ (float-time) 1)))
+          (emacsvox-eat--pending-screen-diff '(:changes (text)))
+          events)
+      (cl-letf (((symbol-function 'emacsvox-speak-line)
+                 (lambda () (ert-fail "Space spoke the whole line")))
+                ((symbol-function 'emacsvox-speak-this-char)
+                 (lambda (character) (push (list 'char character) events))))
+        (emacsvox-eat--speak-input-correlated-update (point)))
+      (should (equal events '((char 32))))
+      (should-not emacsvox-eat--recent-input))))
+
 (ert-deftest emacsvox-eat-asynchronous-update-has-no-immediate-cursor-speech ()
   "Process output without recent input waits for semantic quiesced delivery."
   (with-temp-buffer
@@ -734,7 +750,9 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (let ((eat-terminal 'terminal))
       (emacsvox--advice-eat-self-input-before 1 ?x)
       (should (= (cadr emacsvox-eat--recent-input) ?x))
-      (dolist (event '(8 10 13 127 linefeed return backspace delete deletechar))
+      (dolist (event
+               `(8 10 11 13 127 linefeed return backspace delete deletechar
+                 ,(aref (kbd "M-d") 0)))
         (setq emacsvox-eat--recent-input '(0 ?x 9999999999.0))
         (emacsvox--advice-eat-self-input-before 1 event)
         (should-not emacsvox-eat--recent-input))
@@ -751,6 +769,8 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (eq (emacsvox-eat--raw-input-action event) 'backspace)))
   (dolist (event '(delete deletechar C-delete M-deletechar))
     (should (eq (emacsvox-eat--raw-input-action event) 'delete)))
+  (dolist (event `(11 ,(aref (kbd "C-k") 0) ,(aref (kbd "M-d") 0)))
+    (should (eq (emacsvox-eat--raw-input-action event) 'kill)))
   (dolist (event '(nil 8 tab escape ?x))
     (should-not (emacsvox-eat--raw-input-action event))))
 
@@ -922,6 +942,32 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
         :cursor-offset 2 :cursor-row 0 :cursor-column 2
         :alternate-screen nil)))))
 
+(ert-deftest emacsvox-eat-observed-forward-kills-speak-only-removed-text ()
+  "Observed M-d and C-k edits return their exact same-row removals."
+  (let ((old
+         '(:generation 2 :text "$ echo alpha beta"
+           :rows ("$ echo alpha beta") :styles nil
+           :cursor-offset 13 :cursor-row 0 :cursor-column 13
+           :alternate-screen nil)))
+    (should
+     (equal
+      (emacsvox-eat--observed-deleted-text
+       (list :action 'kill :count 1 :screen old)
+       '(:generation 2 :text "$ echo alpha " :rows ("$ echo alpha ")
+         :styles nil :cursor-offset 13 :cursor-row 0 :cursor-column 13
+         :alternate-screen nil))
+      "beta"))
+    (setf (plist-get old :cursor-offset) 7
+          (plist-get old :cursor-column) 7)
+    (should
+     (equal
+      (emacsvox-eat--observed-deleted-text
+       (list :action 'kill :count 1 :screen old)
+       '(:generation 2 :text "$ echo " :rows ("$ echo ") :styles nil
+         :cursor-offset 7 :cursor-row 0 :cursor-column 7
+         :alternate-screen nil))
+      "alpha beta"))))
+
 (ert-deftest emacsvox-eat-repeated-backspace-names-rendered-order ()
   "A repeated Backspace names bounded characters in deletion order."
   (should
@@ -1057,8 +1103,58 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
          (backtab . backward) (iso-lefttab . backward)))
     (should
      (eq (emacsvox-eat--navigation-direction (car case)) (cdr case))))
+  (dolist
+      (case
+       `((,(aref (kbd "M-b") 0) backward word)
+         (,(aref (kbd "M-f") 0) forward word)
+         (,(aref (kbd "M-<left>") 0) backward word)
+         (,(aref (kbd "C-<right>") 0) forward word)))
+    (should (eq (emacsvox-eat--navigation-direction (car case)) (cadr case)))
+    (should (eq (emacsvox-eat--navigation-unit (car case)) (caddr case))))
   (should-not (emacsvox-eat--navigation-direction ?j))
   (should-not (emacsvox-eat--navigation-direction 'return)))
+
+(ert-deftest emacsvox-eat-meta-word-navigation-speaks-rendered-span ()
+  "Meta-word motion is navigation and speaks its exact rendered span."
+  (let* ((snapshot
+          '(:generation 1 :text "$ git status" :rows ("$ git status")
+            :cursor-offset 6 :cursor-row 0 :cursor-column 6
+            :alternate-screen nil))
+         (backward
+          '(:cursor-moved t :old-rows ("$ git status")
+            :navigation
+            (:generation 1 :direction backward :unit word
+             :cursor-offset 12 :cursor-row 0 :cursor-column 12))))
+    (should
+     (equal
+      (emacsvox-eat--main-screen-navigation-text backward snapshot)
+      "status"))
+    (setf (plist-get snapshot :cursor-offset) 12
+          (plist-get snapshot :cursor-column) 12
+          (plist-get (plist-get backward :navigation) :direction) 'forward
+          (plist-get (plist-get backward :navigation) :cursor-offset) 6
+          (plist-get (plist-get backward :navigation) :cursor-column) 6)
+    (should
+     (equal
+      (emacsvox-eat--main-screen-navigation-text backward snapshot)
+      "status"))))
+
+(ert-deftest emacsvox-eat-meta-word-input-bypasses-legacy-line-speech ()
+  "Meta-word keys record navigation instead of legacy character input."
+  (with-temp-buffer
+    (let ((emacsvox-eat--generation 3)
+          (emacsvox-eat--screen-snapshot
+           '(:generation 3 :text "$ git status" :rows ("$ git status")
+             :cursor-offset 12 :cursor-row 0 :cursor-column 12
+             :alternate-screen nil)))
+      (emacsvox--advice-eat-self-input-before 1 (aref (kbd "M-b") 0))
+      (should-not emacsvox-eat--recent-input)
+      (should
+       (equal
+        (plist-get emacsvox-eat--recent-navigation-intent :direction)
+        'backward))
+      (should
+       (eq (plist-get emacsvox-eat--recent-navigation-intent :unit) 'word)))))
 
 (ert-deftest emacsvox-eat-main-screen-navigation-requires-rendered-change ()
   "Main-screen arrows report only a compatible rendered destination."
@@ -1084,11 +1180,12 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
      (emacsvox-eat--main-screen-navigation-text left snapshot))))
 
 (ert-deftest emacsvox-eat-main-screen-history-speaks-resulting-row ()
-  "Up and Down report redrawn input rows, including an explicit blank row."
+  "Up and Down report redrawn input without repeating the observed prompt."
   (let ((diff
          '(:text-changed t :old-rows ("$ current")
            :navigation
-           (:generation 1 :direction up :cursor-row 0 :cursor-column 9)))
+           (:generation 1 :direction up :cursor-row 0 :cursor-column 9
+            :input-row-offset 2 :input-start-row 0)))
         (snapshot
          '(:generation 1 :text "$ git status" :rows ("$ git status")
            :cursor-offset 12 :cursor-row 0 :cursor-column 12
@@ -1096,15 +1193,29 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should
      (equal
       (emacsvox-eat--main-screen-navigation-text diff snapshot)
-      "$ git status"))
-    (setf (plist-get snapshot :text) "   "
-          (plist-get snapshot :rows) '("   ")
-          (plist-get snapshot :cursor-offset) 3
-          (plist-get snapshot :cursor-column) 3)
+      "git status"))
+    (setf (plist-get snapshot :text) "$ "
+          (plist-get snapshot :rows) '("$ ")
+          (plist-get snapshot :cursor-offset) 2
+          (plist-get snapshot :cursor-column) 2)
     (should
      (equal
       (emacsvox-eat--main-screen-navigation-text diff snapshot)
-      "Blank terminal row"))))
+      "Empty terminal input"))))
+
+(ert-deftest emacsvox-eat-input-start-is-recorded-and-reset-at-submit ()
+  "Typed input records the prompt boundary and Return starts a new input."
+  (with-temp-buffer
+    (let ((emacsvox-eat--screen-snapshot
+           '(:text "prompt> " :rows ("prompt> ")
+             :cursor-offset 8 :cursor-row 0 :cursor-column 8
+             :alternate-screen nil)))
+      (emacsvox--advice-eat-self-input-before 1 ?g)
+      (should (= emacsvox-eat--input-row-offset 8))
+      (should (= emacsvox-eat--input-start-row 0))
+      (emacsvox--advice-eat-self-input-before 1 'return)
+      (should-not emacsvox-eat--input-row-offset)
+      (should-not emacsvox-eat--input-start-row))))
 
 (ert-deftest emacsvox-eat-real-main-screen-arrows-speak-rendered-result ()
   "Real EAT Left and shell-history Up speak after terminal redisplay."
@@ -1150,7 +1261,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                 :command-input-origin current)))
             (setq submissions nil sent nil)
             (let ((inhibit-read-only t))
-              (eat-term-process-output terminal "\r\e[2K$ current")
+              (eat-term-process-output terminal "\r\e[2K$ ")
               (eat-term-redisplay terminal))
             (goto-char (eat-term-display-cursor terminal))
             (set-window-point (selected-window) (point))
@@ -1166,12 +1277,155 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
             (set-window-point (selected-window) (point))
             (emacsvox-eat-update-hook)
             (emacsvox-eat-test--finish-screen-burst)
-            (should (equal (mapcar #'car submissions) '("$ git status")))))
+            (should (equal (mapcar #'car submissions) '("git status")))))
       (with-current-buffer buffer
         (emacsvox-eat--cancel-quiescence)
         (emacsvox-eat--cancel-deletion))
       (when (and terminal (eat-term-live-p terminal))
         (let ((inhibit-read-only t)) (eat-term-delete terminal)))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-eat-bash-navigation-and-kills-omit-prompt ()
+  "A real semi-char Bash speaks navigation and kills without its prompt."
+  (skip-unless (executable-find "bash"))
+  (let ((buffer (generate-new-buffer " *emacsvox-eat-bash-navigation*"))
+        process submissions)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer buffer)
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (list content arguments) submissions)))
+                    ((symbol-function 'ding) #'ignore))
+            (unwind-protect
+                (progn
+                  (eat-mode)
+                  (let ((process-environment
+                         (cons "INPUTRC=/dev/null" process-environment)))
+                    (eat-exec
+                     buffer "emacsvox-eat-bash-navigation"
+                     (executable-find "bash") nil
+                     '("--noprofile" "--norc" "-i")))
+                  (setq process (get-buffer-process buffer))
+                  (eat-semi-char-mode)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-match-p
+                       "bash-[^ ]+[$#] "
+                       (emacsvox-eat-test--screen-text)))))
+                  (eat-term-send-string
+                   eat-terminal "PS1='EATNAV> '; PROMPT_COMMAND=\n")
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATNAV> " (emacsvox-eat-test--screen-text)))))
+                  (dolist (character (string-to-list "echo alpha beta"))
+                    (eat-self-input 1 character))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATNAV> echo alpha beta"
+                       (emacsvox-eat-test--screen-text)))))
+                  (setq submissions nil)
+                  (eat-self-input 1 (aref (kbd "M-b") 0))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (cl-find-if
+                       (lambda (submission)
+                         (equal (car submission) "beta"))
+                       submissions))))
+                  (setq submissions nil)
+                  (eat-self-input 1 (aref (kbd "M-d") 0))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (cl-find-if
+                       (lambda (submission)
+                         (equal (car submission) "beta"))
+                       submissions))))
+                  (dolist (character (string-to-list "beta"))
+                    (eat-self-input 1 character))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATNAV> echo alpha beta"
+                       (emacsvox-eat-test--screen-text)))))
+                  (eat-self-input 1 1)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (= (plist-get (emacsvox-eat--capture-screen)
+                                    :cursor-column)
+                         8))))
+                  (setq submissions nil)
+                  (eat-self-input 1 11)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (cl-find-if
+                       (lambda (submission)
+                         (equal (car submission) "echo alpha beta"))
+                       submissions))))
+                  (dolist (character (string-to-list "echo alpha beta"))
+                    (eat-self-input 1 character))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATNAV> echo alpha beta"
+                       (emacsvox-eat-test--screen-text)))))
+                  ;; Return to the end without creating another classified
+                  ;; navigation transaction, then execute the command.
+                  (eat-self-input 1 5)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (= (plist-get (emacsvox-eat--capture-screen)
+                                    :cursor-offset)
+                         (length (emacsvox-eat-test--screen-text))))))
+                  (eat-self-input 1 'return)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (string-suffix-p
+                       "EATNAV> " (emacsvox-eat-test--screen-text)))))
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process (lambda () (null emacsvox-eat--quiescence-timer))))
+                  (setq submissions nil)
+                  (eat-self-input 1 'up)
+                  (should
+                   (emacsvox-eat-test--wait-until
+                    process
+                    (lambda ()
+                      (cl-find-if
+                       (lambda (submission)
+                         (equal (car submission) "echo alpha beta"))
+                       submissions))))
+                  (should-not
+                   (cl-find-if
+                    (lambda (submission)
+                      (string-match-p "EATNAV>" (car submission)))
+                    submissions)))
+              (when (and eat-terminal (eat-term-live-p eat-terminal))
+                (eat-term-send-string eat-terminal "\C-u"))
+              (emacsvox-eat-test--stop-process process))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (ert-deftest emacsvox-eat-alternate-screen-tab-records-navigation-not-completion ()
