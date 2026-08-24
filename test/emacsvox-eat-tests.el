@@ -945,15 +945,15 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
 (ert-deftest emacsvox-eat-observed-forward-kills-speak-only-removed-text ()
   "Observed M-d and C-k edits return their exact same-row removals."
   (let ((old
-         '(:generation 2 :text "$ echo alpha beta"
-           :rows ("$ echo alpha beta") :styles nil
+         '(:generation 2 :text "$ echo alpha beta "
+           :rows ("$ echo alpha beta ") :styles nil
            :cursor-offset 13 :cursor-row 0 :cursor-column 13
            :alternate-screen nil)))
     (should
      (equal
       (emacsvox-eat--observed-deleted-text
        (list :action 'kill :count 1 :screen old)
-       '(:generation 2 :text "$ echo alpha " :rows ("$ echo alpha ")
+       '(:generation 2 :text "$ echo alpha  " :rows ("$ echo alpha  ")
          :styles nil :cursor-offset 13 :cursor-row 0 :cursor-column 13
          :alternate-screen nil))
       "beta"))
@@ -1323,14 +1323,14 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                     (lambda ()
                       (string-suffix-p
                        "EATNAV> " (emacsvox-eat-test--screen-text)))))
-                  (dolist (character (string-to-list "echo alpha beta"))
+                  (dolist (character (string-to-list "echo alpha beta "))
                     (eat-self-input 1 character))
                   (should
                    (emacsvox-eat-test--wait-until
                     process
                     (lambda ()
                       (string-suffix-p
-                       "EATNAV> echo alpha beta"
+                       "EATNAV> echo alpha beta "
                        (emacsvox-eat-test--screen-text)))))
                   (setq submissions nil)
                   (eat-self-input 1 (aref (kbd "M-b") 0))
@@ -1359,7 +1359,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                     process
                     (lambda ()
                       (string-suffix-p
-                       "EATNAV> echo alpha beta"
+                       "EATNAV> echo alpha beta "
                        (emacsvox-eat-test--screen-text)))))
                   (eat-self-input 1 1)
                   (should

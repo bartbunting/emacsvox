@@ -3615,25 +3615,28 @@ right-side blank padding is ignored, but unrelated rows must remain equal."
       ((or 'delete 'kill)
        (when (and (= new-cursor old-cursor)
                   (<= 0 old-cursor (length old-row)))
-         (let ((effective-new-row
+         (let ((effective-old-row (string-trim-right old-row))
+               (effective-new-row
                 (concat
                  (substring new-row 0 (min new-cursor (length new-row)))
                  (string-trim-right
                   (substring new-row (min new-cursor (length new-row)))))))
            (when-let* ((change
                        (emacsvox-eat--sequence-change
-                        old-row effective-new-row))
+                        effective-old-row effective-new-row))
                      (start (plist-get change :start))
                      (old-end (plist-get change :old-end))
                      (new-end (plist-get change :new-end))
+                     ((<= 0 old-cursor (length effective-old-row)))
                      ((= start old-cursor))
                      ((= new-end start))
                      ((< start old-end))
-                     (candidate (substring old-row start old-end))
+                     (candidate
+                      (substring effective-old-row start old-end))
                      (expected
                       (concat
-                       (substring old-row 0 start)
-                       (substring old-row old-end)))
+                       (substring effective-old-row 0 start)
+                       (substring effective-old-row old-end)))
                      ((equal expected effective-new-row))
                      ((not
                        (emacsvox-eat--snapshot-range-concealed-p

@@ -103,11 +103,12 @@ For @key{BACKSPACE}, @key{DELETE}, @kbd{M-d}, and @kbd{C-k}, Emacsvox compares
 bounded public screen snapshots before and after the key.  When one same-row
 removal is unambiguous, it speaks the character or text actually removed.
 Otherwise it gives only a deletion tone; it never guesses from adjacent prompt
-or screen text.  This also handles a no-echo peer safely: without a visible
-deletion there is no content to announce.  Feedback requires the selected
-window to follow the live cursor, and is silent during protected password
-input, in an unselected terminal, and on an alternate screen where the
-application owns the keys.
+or screen text.  Terminal padding and trailing input blanks do not prevent an
+otherwise unambiguous word deletion from being announced.  This also handles a
+no-echo peer safely: without a visible deletion there is no content to
+announce.  Feedback requires the selected window to follow the live cursor,
+and is silent during protected password input, in an unselected terminal, and
+on an alternate screen where the application owns the keys.
 
 On a full-screen or alternate-screen application, Emacsvox does not read every
 refresh.  A cursor row reached by correlated arrow-style navigation, or one
