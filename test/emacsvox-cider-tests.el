@@ -26,8 +26,12 @@
                      cider-close-nrepl-session
                      cider-connection-browser
                      cider-connections-goto-connection
+                     cider-debug-defun-at-point
                      cider-display-connection-info
+                     cider-insert-last-sexp-in-repl
+                     cider-inspect-defun-at-point
                      cider-inspect-read-and-inspect
+                     cider-inspect-last-sexp
                      -repl-clear-banners))
     (should-not (fboundp removed))))
 

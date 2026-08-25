@@ -295,7 +295,7 @@
   (emacsvox-speak-line)
   (emacsvox-icon 'button))
 (emacsvox-cider--register-after-group
- '(cider-debug-defun-at-point cider-debug-move-here cider-debug-toggle-locals)
+ '(cider-debug-defun cider-debug-move-here cider-debug-toggle-locals)
  #'emacsvox-cider--debug-feedback)
 
 (defun emacsvox-cider--insert-feedback ()
@@ -304,7 +304,7 @@
   (emacsvox-icon 'yank-object))
 (emacsvox-cider--register-after-group
  '(cider-insert-defun-in-repl
-   cider-insert-last-sexp-in-repl
+   cider-insert-form-in-repl
    cider-insert-ns-form-in-repl
    cider-insert-region-in-repl)
  #'emacsvox-cider--insert-feedback)
@@ -316,10 +316,10 @@
 (emacsvox-cider--register-after-group
  '(cider-inspector-refresh
    cider-inspect
-   cider-inspect-defun-at-point
+   cider-inspect-defun
    cider-inspect-expr
    cider-inspect-last-result
-   cider-inspect-last-sexp
+   cider-inspect-form
    cider-inspector-pop)
  #'emacsvox-cider--inspect-feedback)
 
