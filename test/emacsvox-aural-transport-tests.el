@@ -5396,6 +5396,73 @@ is the default inherited by a newly created TTS scratch buffer."
         (should (equal (plist-get span :text) "value"))
         (should (equal (plist-get wire-tone :mode) "insert"))))))
 
+(ert-deftest emacsvox-aural-transport-indentation-presents-once-across-runs ()
+  "Indentation presents once inside a whole-line, multi-face object."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme nil)
+    (dolist
+        (case
+         '((spoken (speech))
+           (duration-tone (tone))
+           (pitch-tone (tone))
+           (spoken-duration-tone (speech tone))
+           (spoken-pitch-tone (speech tone))))
+      (let* ((presentation (car case))
+             (line (copy-sequence "        self.hass = hass"))
+             prepared
+             leading-plan
+             plans)
+        (add-text-properties
+         0 (length line)
+         (list emacsvox-aural-object-property 'native-line)
+         line)
+        (add-text-properties 8 12 '(face font-lock-keyword-face) line)
+        (add-text-properties 13 17 '(face font-lock-variable-name-face) line)
+        (emacsvox-speak--annotate-indentation
+         line
+         (list
+          :events '(indentation-located)
+          :indentation-columns 8
+          :indentation-presentation presentation
+          :indentation-tone-pitch 500.0
+          :indentation-tone-duration 150))
+        (setq
+         prepared
+         (emacsvox-aural-prepare-text
+          line nil
+          '(:mode python-mode :occasion navigation
+            :voice-lock-enabled nil)))
+        (setq
+         leading-plan
+         (get-text-property
+          0 emacsvox-aural-concrete-plan-property prepared))
+        (setq
+         plans
+         (mapcar
+          (lambda (position)
+            (get-text-property
+             position emacsvox-aural-concrete-plan-property prepared))
+          '(8 12 13)))
+        (should (not (eq (nth 0 plans) (nth 1 plans))))
+        (should (not (eq (nth 1 plans) (nth 2 plans))))
+        (should-not (emacsvox-aural-concrete-plan-before leading-plan))
+        (should
+         (equal
+          (substring-no-properties prepared)
+          "        self.hass = hass"))
+        (should (eq (get-text-property 8 'face prepared)
+                    'font-lock-keyword-face))
+        (should (eq (get-text-property 13 'face prepared)
+                    'font-lock-variable-name-face))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-kind
+           (emacsvox-aural-concrete-plan-before (car plans)))
+          (cadr case)))
+        (dolist (plan (cdr plans))
+          (should-not (emacsvox-aural-concrete-plan-before plan)))))))
+
 (ert-deftest emacsvox-aural-transport-notification-captures-before-logging ()
   "Notification logging cannot replace the source buffer context."
   (let ((destination (generate-new-buffer " *notification-log*"))
@@ -5680,9 +5747,9 @@ is the default inherited by a newly created TTS scratch buffer."
     (let ((text (copy-sequence "abcdef"))
           (voice-lock-mode t))
       (add-text-properties
-       0 2 '(face font-lock-warning-face personality first) text)
+       1 3 '(face font-lock-warning-face personality first) text)
       (add-text-properties
-       2 4 '(face font-lock-warning-face personality second) text)
+       3 5 '(face font-lock-warning-face personality second) text)
       (cl-letf
           (((symbol-function 'tts-get-voice-command)
             (lambda (voice) (format "<%s>" voice))))
@@ -5704,7 +5771,7 @@ is the default inherited by a newly created TTS scratch buffer."
                     #'emacsvox-aural-concrete-action-id
                     (emacsvox-aural-concrete-plan-after plan)))
                  plans)))
-          (should (= (length plans) 3))
+          (should (= (length plans) 4))
           (should (equal before '(warning-enter)))
           (should (equal after '(warning-leave))))))))
 

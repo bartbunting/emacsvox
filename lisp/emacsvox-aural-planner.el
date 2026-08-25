@@ -504,7 +504,7 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
        for run-render in run-renders
        for transition-render in transition-renders
        for index from 0
-       for previous-render = nil then transition-render
+       for previous-render in (cons nil transition-renders)
        for next-render = (nth (1+ index) transition-renders)
        for first-p = (zerop index)
        for last-p = (= index (1- count))

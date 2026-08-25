@@ -350,7 +350,7 @@
             (mapcar #'emacsvox-aural-action-kind actions)
             (cadr case)))
           (dolist (action actions)
-            (should (eq (emacsvox-aural-action-anchor action) 'run))
+            (should (eq (emacsvox-aural-action-anchor action) 'transition))
             (pcase (emacsvox-aural-action-kind action)
               ('speech
                (should
