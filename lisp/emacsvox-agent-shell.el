@@ -94,6 +94,7 @@
                   "emacsvox-speak" (&optional arg compatibility-actions))
 
 (defvar emacsvox-comint-autospeak)
+(defvar comint-last-prompt)
 (defvar emacsvox-pronounce-date-mm-dd-yyyy-pattern)
 (defvar emacsvox-pronounce-date-yyyy-mm-dd-pattern)
 (defvar emacsvox-pronounce-rfc-3339-datetime-pattern)
@@ -2278,6 +2279,92 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
             'continuous)))
     (emacsvox-agent-shell--present-content
      content block-type facts occasion)))
+
+(defun emacsvox-agent-shell--live-input-bounds ()
+  "Return the current live Agent Shell input bounds, or nil.
+
+The chat-mode prompt overlay confirms that `comint-last-prompt' names the
+visible live prompt rather than historical output.  User input begins at the
+prompt's end and extends to `point-max'."
+  (when (and (derived-mode-p 'agent-shell-mode)
+             (consp comint-last-prompt))
+    (let* ((end-marker (cdr comint-last-prompt))
+           (start (and (markerp end-marker)
+                       (eq (marker-buffer end-marker) (current-buffer))
+                       (marker-position end-marker)))
+           (end (point-max)))
+      (when (and start
+                 (< (point-min) start)
+                 (<= start end)
+                 (not (text-property-any start end 'field 'output))
+                 (seq-some
+                  (lambda (overlay)
+                    (and (= (overlay-end overlay) start)
+                         (emacsvox-agent-shell--live-chat-prompt-overlay-p
+                          overlay)))
+                  (overlays-in (1- start) start)))
+        (cons start end)))))
+
+(defun emacsvox-agent-shell--input-boundary-feedback (boundary)
+  "Speak the live prompt input BOUNDARY without a decorative cue."
+  (emacsvox-agent-shell--submit-text-feedback
+   (if (eq boundary 'beginning)
+       "Beginning of input"
+     "End of input")
+   (emacsvox-agent-shell--presentation-facts
+    'agent-user-prompt 'boundary-entered)
+   'navigation))
+
+(defun emacsvox-agent-shell--horizontal-motion-around
+    (original-function nominal-direction arguments)
+  "Keep interactive horizontal motion inside the live input field.
+
+ORIGINAL-FUNCTION receives ARGUMENTS when motion does not cross a prompt
+boundary.  NOMINAL-DIRECTION is the positive-argument direction of the
+advised command."
+  (let* ((target ems--interactive-fn-name)
+         (interactive-p
+          (memq target '(left-char right-char backward-char forward-char)))
+         (count (prefix-numeric-value (car arguments)))
+         (direction
+          (if (< count 0)
+              (if (eq nominal-direction 'forward) 'backward 'forward)
+            nominal-direction))
+         (steps (abs count))
+         (bounds (and interactive-p
+                      (> steps 0)
+                      (emacsvox-agent-shell--live-input-bounds)))
+         (start (car-safe bounds))
+         (end (cdr-safe bounds))
+         boundary)
+    (when (and bounds (<= start (point)) (<= (point) end))
+      (setq boundary
+            (pcase direction
+              ('backward
+               (and (> steps (- (point) start)) 'beginning))
+              ('forward
+               (and (>= steps (- end (point))) 'end)))))
+    (if (not boundary)
+        (apply original-function arguments)
+      ;; Consume the interactive marker so core character advice cannot add
+      ;; ellipses, "control at", or an end-of-buffer warning if its advice is
+      ;; outside this adapter in the current advice order.
+      (ems-interactive-p target)
+      (goto-char (if (eq boundary 'beginning) start end))
+      (emacsvox-agent-shell--input-boundary-feedback boundary)
+      nil)))
+
+(defun emacsvox-agent-shell--backward-char-around
+    (original-function &rest arguments)
+  "Keep interactive backward character motion inside live prompt input."
+  (emacsvox-agent-shell--horizontal-motion-around
+   original-function 'backward arguments))
+
+(defun emacsvox-agent-shell--forward-char-around
+    (original-function &rest arguments)
+  "Keep interactive forward character motion inside live prompt input."
+  (emacsvox-agent-shell--horizontal-motion-around
+   original-function 'forward arguments))
 
 ;;;  Advice Agent-Shell Functions
 
@@ -5457,6 +5544,10 @@ Return nil when the configured verbosity requests status cues only."
      emacsvox-agent-shell--speak-visual-line-around)
     (emacsvox-speak-line :around
      emacsvox-agent-shell--speak-line-around)
+    (left-char :around emacsvox-agent-shell--backward-char-around)
+    (backward-char :around emacsvox-agent-shell--backward-char-around)
+    (right-char :around emacsvox-agent-shell--forward-char-around)
+    (forward-char :around emacsvox-agent-shell--forward-char-around)
     (tts-speak :around emacsvox-agent-shell--tts-speak-around)
     (emacsvox-speak-mode-line :around
      emacsvox-agent-shell--speak-mode-line-around)

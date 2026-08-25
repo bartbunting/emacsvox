@@ -445,6 +445,30 @@
            ,@body
            (nreverse ,presentations))))))
 
+(defun emacsvox-agent-shell-test--insert-live-chat-input (draft)
+  "Insert a labeled live prompt containing DRAFT and return its bounds."
+  (setq major-mode 'agent-shell-mode)
+  (set-syntax-table (copy-syntax-table (syntax-table)))
+  (modify-syntax-entry ?\n ">" (syntax-table))
+  (setq-local
+   agent-shell--state
+   '((:agent-config . ((:mode-line-name . "Codex"))))
+   agent-shell-chat--labeled t)
+  (insert "Earlier response\n\n")
+  (let ((prompt-start (copy-marker (point) nil)))
+    (insert
+     (propertize
+      "Codex> "
+      'font-lock-face '(comint-highlight-prompt comint-highlight-prompt)
+      'field 'output))
+    (let ((input-start (copy-marker (point) nil)))
+      (setq-local comint-last-prompt
+                  (cons prompt-start (copy-marker input-start nil)))
+      (insert draft)
+      (let ((agent-shell-prompt-bar-mode nil))
+        (agent-shell-chat--relabel))
+      (cons (marker-position input-start) (point-max)))))
+
 (defun emacsvox-agent-shell-test--face-at-text (string text)
   "Return STRING's face at the first occurrence of TEXT."
   (when-let* ((position (string-match (regexp-quote text) string)))
@@ -6056,6 +6080,118 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not (string-match-p "❯" spoken))
           (should (eq (get-text-property 0 'face spoken)
                       'agent-shell-chat-me-label)))))))
+
+(ert-deftest emacsvox-agent-shell-live-input-horizontal-boundaries-are-semantic ()
+  "Character motion should stop at live input edges without core artifacts."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (dolist (draft '("" "draft"))
+    (with-temp-buffer
+      (pcase-let* ((`(,start . ,end)
+                    (emacsvox-agent-shell-test--insert-live-chat-input draft))
+                   (forward-origin (if (< start end) (1- end) end)))
+        (should (equal (emacsvox-agent-shell--live-input-bounds)
+                       (cons start end)))
+        (dolist
+            (case
+             `((left-char
+                emacsvox-agent-shell--backward-char-around
+                ,start ,start "Beginning of input")
+               (backward-char
+                emacsvox-agent-shell--backward-char-around
+                ,start ,start "Beginning of input")
+               (right-char
+                emacsvox-agent-shell--forward-char-around
+                ,forward-origin ,end "End of input")
+               (forward-char
+                emacsvox-agent-shell--forward-char-around
+                ,forward-origin ,end "End of input")))
+          (pcase-let ((`(,target ,wrapper ,origin ,destination ,message)
+                       case))
+            (goto-char origin)
+            (let ((ems--interactive-fn-name target)
+                  original-called submission artifacts)
+              (cl-letf
+                  (((symbol-function
+                     'emacsvox-agent-shell--submit-text-feedback)
+                    (lambda (&rest arguments)
+                      (setq submission arguments)))
+                   ((symbol-function 'emacsvox-icon)
+                    (lambda (&rest arguments)
+                      (push (cons 'icon arguments) artifacts)))
+                   ((symbol-function 'tts-speak)
+                    (lambda (&rest arguments)
+                      (push (cons 'speak arguments) artifacts)))
+                   ((symbol-function 'message)
+                    (lambda (&rest arguments)
+                      (push (cons 'message arguments) artifacts))))
+                (funcall wrapper
+                         (lambda (&rest _)
+                           (setq original-called t))))
+              (should-not original-called)
+              (should (= (point) destination))
+              (should-not ems--interactive-fn-name)
+              (should-not artifacts)
+              (should (= (length submission) 3))
+              (should (equal (car submission) message))
+              (should
+               (equal
+                (cadr submission)
+                (list :role 'agent-user-prompt
+                      :events (list 'boundary-entered))))
+              (should (eq (nth 2 submission) 'navigation)))))))))
+
+(ert-deftest emacsvox-agent-shell-horizontal-motion-keeps-normal-scope ()
+  "The live-input guard should leave ordinary horizontal motion untouched."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (with-temp-buffer
+    (pcase-let* ((`(,start . ,end)
+                  (emacsvox-agent-shell-test--insert-live-chat-input "draft")))
+      (dolist
+          (case
+           `((left-char emacsvox-agent-shell--backward-char-around ,(1+ start))
+             (backward-char
+              emacsvox-agent-shell--backward-char-around ,(1+ start))
+             (right-char emacsvox-agent-shell--forward-char-around ,start)
+             (forward-char emacsvox-agent-shell--forward-char-around ,start)))
+        (pcase-let ((`(,target ,wrapper ,origin) case))
+          (goto-char origin)
+          (let ((ems--interactive-fn-name target)
+                original-called submission)
+            (cl-letf
+                (((symbol-function
+                   'emacsvox-agent-shell--submit-text-feedback)
+                  (lambda (&rest arguments)
+                    (setq submission arguments))))
+              (should
+               (eq
+                (funcall wrapper
+                         (lambda (&rest _)
+                           (setq original-called t)
+                           'moved))
+                'moved)))
+            (should original-called)
+            (should-not submission)
+            ;; Leave the marker for core character speech to consume.
+            (should (eq ems--interactive-fn-name target)))))
+      ;; A point in the historical transcript is outside the live input.
+      (goto-char (point-min))
+      (let ((ems--interactive-fn-name 'left-char)
+            original-called)
+        (emacsvox-agent-shell--backward-char-around
+         (lambda (&rest _) (setq original-called t)))
+        (should original-called)
+        (should (eq ems--interactive-fn-name 'left-char)))
+      (should (< start end))))
+  ;; The same advice is globally installed, so mode scoping is essential.
+  (with-temp-buffer
+    (insert "ordinary")
+    (goto-char (point-max))
+    (let ((ems--interactive-fn-name 'right-char)
+          original-called)
+      (emacsvox-agent-shell--forward-char-around
+       (lambda (&rest _) (setq original-called t)))
+      (should original-called)
+      (should (eq ems--interactive-fn-name 'right-char)))))
 
 (ert-deftest emacsvox-agent-shell-chat-navigation-is-directionally-symmetric ()
   "Synthetic chat rows should not duplicate or mislabel upward speech."
