@@ -4074,10 +4074,26 @@ Markdown renderer."
               (region (emacsvox-agent-shell--markdown-table-region-at-point))
               (starts
                (emacsvox-agent-shell--markdown-table-cell-starts region)))
-    (let ((cell-index -1)
+    (let* ((position (point))
+           (line-start (line-beginning-position))
+           (line-end (line-end-position))
+           (first-cell-on-line
+            (seq-find
+             (lambda (start)
+               (and (<= line-start start) (<= start line-end)))
+             starts))
+           ;; Ordinary line motion can land on a row's leading border or
+           ;; padding, before that row's first navigable cell marker.  Resolve
+           ;; that prefix as the first cell on the same rendered row instead
+           ;; of retaining the final cell from the preceding row.
+           (effective-position
+            (if (and first-cell-on-line (< position first-cell-on-line))
+                first-cell-on-line
+              position))
+           (cell-index -1)
           (index 0))
       (dolist (start starts)
-        (when (<= start (point))
+        (when (<= start effective-position)
           (setq cell-index index))
         (setq index (1+ index)))
       (when (>= cell-index 0)

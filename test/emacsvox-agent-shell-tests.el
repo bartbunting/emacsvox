@@ -5441,6 +5441,49 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (call-interactively #'emacsvox-agent-shell-table-previous-row))
           '((icon item) (speak "Engineer, Alice, Role."))))))))
 
+(ert-deftest emacsvox-agent-shell-table-grid-navigation-accepts-leading-border ()
+  "Grid movement should accept ordinary line entry on the leading border."
+  (let ((emacsvox-agent-shell-table-titles '(column))
+        (emacsvox-agent-shell-table-data-position 'first))
+    (emacsvox-agent-shell-test--with-rendered-table
+        "before\n| A | B |\n|---|---|\n| 1 | 2 |\nafter\n"
+      (goto-char (point-min))
+      (goto-char
+       (next-single-property-change
+        (point) 'agent-shell-markdown-table-source nil (point-max)))
+      (should
+       (get-text-property (point) 'agent-shell-markdown-table-source))
+      (should-not
+       (get-text-property (point) 'agent-shell-markdown-table-cell-start))
+      (should
+       (equal
+        (emacsvox-agent-shell-test--capture-events
+          (call-interactively #'emacsvox-agent-shell-table-next-row))
+        '((icon item) (speak "1, A.")))))))
+
+(ert-deftest emacsvox-agent-shell-table-grid-navigation-accepts-bottom-entry ()
+  "Grid movement should accept upward entry on the final row's border."
+  (let ((emacsvox-agent-shell-table-titles '(column))
+        (emacsvox-agent-shell-table-data-position 'first))
+    (emacsvox-agent-shell-test--with-rendered-table
+        "before\n| A | B |\n|---|---|\n| 1 | 2 |\nafter\n"
+      (goto-char (point-min))
+      (goto-char
+       (next-single-property-change
+        (point) 'agent-shell-markdown-table-source nil (point-max)))
+      (let ((region (emacsvox-agent-shell--markdown-table-region-at-point)))
+        (goto-char (1- (cdr region)))
+        (beginning-of-line))
+      (should
+       (get-text-property (point) 'agent-shell-markdown-table-source))
+      (should-not
+       (get-text-property (point) 'agent-shell-markdown-table-cell-start))
+      (should
+       (equal
+        (emacsvox-agent-shell-test--capture-events
+          (call-interactively #'emacsvox-agent-shell-table-previous-row))
+        '((icon item) (speak "A.")))))))
+
 (ert-deftest emacsvox-agent-shell-table-grid-navigation-handles-edges ()
   "Horizontal edges should warn; vertical edges should leave the table."
   (let ((emacsvox-agent-shell-table-titles '(column))
