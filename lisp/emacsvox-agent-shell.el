@@ -439,14 +439,17 @@ The car is the first nonblank display line, preserving its properties.  The
 cdr is non-nil when later nonblank content belongs to the same rendering, as
 with Agent Shell's live input marker."
   (when (stringp rendered)
-    (when-let* ((start (string-match "[^[:space:]]" rendered)))
+    ;; Agent Shell gives newline comment syntax, so POSIX `space' character
+    ;; classes are not stable in its buffers.  Match display whitespace
+    ;; explicitly to keep overlay parsing independent of the syntax table.
+    (when-let* ((start (string-match "[^ \t\n\r]" rendered)))
       (let* ((length (length rendered))
              (line-end (or (string-match "[\n\r]" rendered start) length))
              (label (string-trim (substring rendered start line-end)))
              (trailing-p
               (and (< line-end length)
                    (string-match-p
-                    "[^[:space:]]" rendered (1+ line-end)))))
+                    "[^ \t\n\r]" rendered (1+ line-end)))))
         (unless (string-empty-p label)
           (cons label trailing-p))))))
 

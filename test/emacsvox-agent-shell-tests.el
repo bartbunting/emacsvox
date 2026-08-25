@@ -6015,6 +6015,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                   ("draft" "Me. draft")))
     (with-temp-buffer
       (setq major-mode 'agent-shell-mode)
+      ;; Agent Shell gives newline comment-end syntax; preserve that detail so
+      ;; label parsing cannot accidentally depend on the default syntax table.
+      (set-syntax-table (copy-syntax-table (syntax-table)))
+      (modify-syntax-entry ?\n ">" (syntax-table))
       (setq-local
        agent-shell--state
        '((:agent-config . ((:mode-line-name . "Codex"))))
