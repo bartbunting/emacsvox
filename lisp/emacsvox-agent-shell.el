@@ -450,6 +450,34 @@ with Agent Shell's live input marker."
         (unless (string-empty-p label)
           (cons label trailing-p))))))
 
+(defun emacsvox-agent-shell--chat-overlay-category (overlay)
+  "Return the semantic chat category represented by OVERLAY."
+  (let ((category (overlay-get overlay 'category)))
+    (if (eq category 'agent-shell-chat-me-label)
+        'agent-shell-chat-me
+      (and (memq category '(agent-shell-chat-me agent-shell-chat-agent))
+           category))))
+
+(defun emacsvox-agent-shell--chat-overlay-rendering (overlay)
+  "Return the visible label rendering supplied by chat OVERLAY."
+  (seq-find
+   (lambda (candidate)
+     (and (stringp candidate)
+          (not (string-empty-p (string-trim candidate)))))
+   (list (overlay-get overlay 'before-string)
+         (overlay-get overlay 'display))))
+
+(defun emacsvox-agent-shell--live-chat-prompt-overlay-p (overlay)
+  "Return non-nil when OVERLAY carries Agent Shell's live prompt marker."
+  (and
+   (eq (overlay-get overlay 'category) 'agent-shell-chat-me)
+   (seq-some
+    (lambda (candidate)
+      (and (stringp candidate)
+           (not (string-empty-p (string-trim candidate)))))
+    (list (overlay-get overlay 'line-prefix)
+          (overlay-get overlay 'wrap-prefix)))))
+
 (defun emacsvox-agent-shell--chat-label-context-between
     (source-start source-end)
   "Return the visible chat label context between SOURCE-START and SOURCE-END.
@@ -476,8 +504,7 @@ ending at SOURCE-START labels the content that follows it."
          (chat-overlays
           (seq-filter
            (lambda (candidate)
-             (memq (overlay-get candidate 'category)
-                   '(agent-shell-chat-me agent-shell-chat-agent)))
+             (emacsvox-agent-shell--chat-overlay-category candidate))
            overlays))
          (preferred-category
           (and
@@ -496,19 +523,19 @@ ending at SOURCE-START labels the content that follows it."
            (and preferred-category
                 (seq-find
                  (lambda (candidate)
-                   (eq (overlay-get candidate 'category)
+                   (eq (emacsvox-agent-shell--chat-overlay-category candidate)
                        preferred-category))
-                 chat-overlays))
-           (car chat-overlays))))
+                 (seq-filter
+                  #'emacsvox-agent-shell--chat-overlay-rendering
+                  chat-overlays)))
+           (seq-find
+            #'emacsvox-agent-shell--chat-overlay-rendering
+            chat-overlays))))
     (when overlay
-      (let* ((category (overlay-get overlay 'category))
+      (let* ((category
+              (emacsvox-agent-shell--chat-overlay-category overlay))
              (rendered
-              (seq-find
-               (lambda (candidate)
-                 (and (stringp candidate)
-                      (not (string-empty-p (string-trim candidate)))))
-               (list (overlay-get overlay 'before-string)
-                     (overlay-get overlay 'display))))
+              (emacsvox-agent-shell--chat-overlay-rendering overlay))
              (label-rendering
               (emacsvox-agent-shell--chat-label-rendering rendered))
              (label (car label-rendering)))
@@ -517,7 +544,10 @@ ending at SOURCE-START labels the content that follows it."
            (list :category category :text label)
            (when (and
                   (eq category 'agent-shell-chat-me)
-                  (cdr label-rendering))
+                  (or (cdr label-rendering)
+                      (seq-some
+                       #'emacsvox-agent-shell--live-chat-prompt-overlay-p
+                       chat-overlays)))
              '(:editable t))))))))
 
 (defun emacsvox-agent-shell--chat-label-context-at-point ()

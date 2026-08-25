@@ -6019,29 +6019,39 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        agent-shell--state
        '((:agent-config . ((:mode-line-name . "Codex"))))
        agent-shell-chat--labeled t)
-      (insert
-       (propertize
-        "Codex> " 'font-lock-face
-        '(comint-highlight-prompt comint-highlight-prompt))
-       (car case))
-      (let ((agent-shell-prompt-bar-mode nil))
-        (agent-shell-chat--relabel))
-      (let* ((emacsvox-agent-shell--chat-label-context
-              (emacsvox-agent-shell--chat-label-context-between
-               (point-min) (point-max)))
-             (spoken
-              (emacsvox-agent-shell--prepare-speech-text
-               (buffer-substring (point-min) (point-max)))))
+      ;; Leave a completed content line and blank separator so current Agent
+      ;; Shell carries the visible label on the newline before the prompt.
+      (insert "Earlier response\n\n")
+      (let ((prompt-start (point)))
+        (insert
+         (propertize
+          "Codex> " 'font-lock-face
+          '(comint-highlight-prompt comint-highlight-prompt))
+         (car case))
+        (let ((agent-shell-prompt-bar-mode nil))
+          (agent-shell-chat--relabel))
         (should
-         (equal
-          (plist-get emacsvox-agent-shell--chat-label-context :text)
-          "Me"))
-        (should
-         (plist-get emacsvox-agent-shell--chat-label-context :editable))
-        (should (equal (substring-no-properties spoken) (cadr case)))
-        (should-not (string-match-p "❯" spoken))
-        (should (eq (get-text-property 0 'face spoken)
-                    'agent-shell-chat-me-label))))))
+         (seq-find
+          (lambda (overlay)
+            (eq (overlay-get overlay 'category)
+                'agent-shell-chat-me-label))
+          (overlays-in (1- prompt-start) prompt-start)))
+        (let* ((emacsvox-agent-shell--chat-label-context
+                (emacsvox-agent-shell--chat-label-context-between
+                 prompt-start (point-max)))
+               (spoken
+                (emacsvox-agent-shell--prepare-speech-text
+                 (buffer-substring prompt-start (point-max)))))
+          (should
+           (equal
+            (plist-get emacsvox-agent-shell--chat-label-context :text)
+            "Me"))
+          (should
+           (plist-get emacsvox-agent-shell--chat-label-context :editable))
+          (should (equal (substring-no-properties spoken) (cadr case)))
+          (should-not (string-match-p "❯" spoken))
+          (should (eq (get-text-property 0 'face spoken)
+                      'agent-shell-chat-me-label)))))))
 
 (ert-deftest emacsvox-agent-shell-chat-navigation-is-directionally-symmetric ()
   "Synthetic chat rows should not duplicate or mislabel upward speech."
