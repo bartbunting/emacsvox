@@ -175,9 +175,11 @@
   (let ((diary-buffer (generate-new-buffer "*Fancy Diary Entries*"))
         (ems--interactive-fn-name 'diary-view-entries)
         (tts-punctuation-mode 'all)
+        (tts-speaker-process 'speaker)
         events)
     (unwind-protect
-        (cl-letf (((symbol-function 'tts--protocol-set-punctuations)
+        (cl-letf (((symbol-function 'process-live-p) (lambda (_process) t))
+                  ((symbol-function 'tts--protocol-set-punctuations)
                    (lambda (setting)
                      (push (list 'punctuation setting) events)))
                   ((symbol-function 'emacsvox-speak-buffer)

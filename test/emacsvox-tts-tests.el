@@ -2213,6 +2213,42 @@
       (speaker "tts_set_punctuations some\nd\n")
       (speaker "tts_reset \n")))))
 
+(ert-deftest emacsvox-tts-punctuation-state-survives-a-stopped-server ()
+  "A local punctuation choice is retained while the speech server is down."
+  (with-temp-buffer
+    (let ((tts-speaker-process nil))
+      (setq-local tts-punctuation-mode 'all)
+      (tts-set-punctuations 'some)
+      (should (local-variable-p 'tts-punctuation-mode))
+      (should (eq tts-punctuation-mode 'some)))))
+
+(ert-deftest emacsvox-tts-global-punctuation-survives-a-stopped-server ()
+  "A global punctuation choice is retained while the speech server is down."
+  (let ((saved-default (default-value 'tts-punctuation-mode)))
+    (unwind-protect
+        (with-temp-buffer
+          (let ((tts-speaker-process nil))
+            (setq-local tts-punctuation-mode 'all)
+            (tts-set-punctuations 'none t)
+            (should (eq tts-punctuation-mode 'none))
+            (should (eq (default-value 'tts-punctuation-mode) 'none))))
+      (set-default 'tts-punctuation-mode saved-default))))
+
+(ert-deftest emacsvox-tts-temporary-punctuation-restores-after-error ()
+  "A failed temporary speech operation restores punctuation state and protocol."
+  (let ((tts-punctuation-mode 'all)
+        (tts-speaker-process 'speaker)
+        events)
+    (cl-letf (((symbol-function 'process-live-p) (lambda (_process) t))
+              ((symbol-function 'tts--protocol-set-punctuations)
+               (lambda (mode) (push mode events))))
+      (should-error
+       (tts-with-punctuations 'some
+         (should (eq tts-punctuation-mode 'some))
+         (error "punctuation test failure")))
+      (should (eq tts-punctuation-mode 'all))
+      (should (equal (nreverse events) '(some all))))))
+
 (ert-deftest emacsvox-tts-voice-capabilities-are-adapter-owned-and-copied ()
   "The generic interface returns an isolated adapter descriptor."
   (let* ((descriptor

@@ -96,14 +96,20 @@ mac for MAC TTS (default on Mac)")
 (defmacro tts-with-punctuations (setting &rest body)
   "Set punctuation  and exec   body."
   (declare (indent 1) (debug t))
-  `(let ((save-punctuation-mode tts-punctuation-mode))
-     (unless (eq ,setting save-punctuation-mode)
-       (tts--protocol-set-punctuations ,setting)
-       (setq tts-punctuation-mode ,setting))
-     ,@body
-     (unless (eq ,setting save-punctuation-mode)
-       (setq tts-punctuation-mode save-punctuation-mode)
-       (tts--protocol-set-punctuations save-punctuation-mode))))
+  (let ((requested-mode (make-symbol "requested-punctuation-mode")))
+    `(let ((save-punctuation-mode tts-punctuation-mode)
+           (,requested-mode ,setting))
+       (unwind-protect
+           (progn
+             (unless (eq ,requested-mode save-punctuation-mode)
+               (setq tts-punctuation-mode ,requested-mode)
+               (when (process-live-p tts-speaker-process)
+                 (tts--protocol-set-punctuations ,requested-mode)))
+             ,@body)
+         (unless (eq ,requested-mode save-punctuation-mode)
+           (setq tts-punctuation-mode save-punctuation-mode)
+           (when (process-live-p tts-speaker-process)
+             (tts--protocol-set-punctuations save-punctuation-mode)))))))
 
 ;;;;  silence
 
@@ -1733,18 +1739,18 @@ current local  value to the result."
                       nil
                       t))
     current-prefix-arg))
+  (cond
+   (prefix
+    (setq tts-punctuation-mode mode)
+    (setq-default tts-punctuation-mode mode))
+   (t (make-local-variable 'tts-punctuation-mode)
+      (setq tts-punctuation-mode mode)))
   (when (process-live-p tts-speaker-process)
-    (cond
-     (prefix
-      (setq tts-punctuation-mode mode)
-      (setq-default tts-punctuation-mode mode))
-     (t (make-local-variable 'tts-punctuation-mode)
-        (setq tts-punctuation-mode mode)))
-    (tts--protocol-set-punctuations mode)
-    (when (called-interactively-p 'interactive)
-      (message "set punctuation mode to %s %s"
-               mode
-               (if prefix "" "locally")))))
+    (tts--protocol-set-punctuations mode))
+  (when (called-interactively-p 'interactive)
+    (message "set punctuation mode to %s %s"
+             mode
+             (if prefix "" "locally"))))
 
 (defun tts-set-punctuations-to-all (&optional prefix)
   "Set punctuation  mode to all.
