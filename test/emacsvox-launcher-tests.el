@@ -224,14 +224,47 @@
             (insert "#!/bin/sh\nprintf 'native:%s\\n' \"$*\"\n"))
           (dolist (file (list launcher filter program))
             (set-file-modes file #o700))
-          (setenv "PATH"
+         (setenv "PATH"
                   (concat binary-directory path-separator (getenv "PATH")))
+          (setenv "OMNIVOX_PROGRAM" nil)
           (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
           (with-temp-buffer
             (should
              (zerop
               (call-process launcher nil t nil "--test-argument")))
             (should (equal (buffer-string) "native:--test-argument\n"))))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-launcher-honors-configured-omnivox-program ()
+  "A configured binary supports a Windows executable outside the staged tree."
+  (let* ((directory (make-temp-file "emacsvox configured launcher-" t))
+         (server-directory (expand-file-name "servers" directory))
+         (launcher (expand-file-name "omnivox" server-directory))
+         (filter (expand-file-name "omnivox-log-filter" server-directory))
+         (program (expand-file-name "custom-omnivox.Exe" directory))
+         (log-directory (expand-file-name "logs" directory))
+         (process-environment (copy-sequence process-environment)))
+    (unwind-protect
+        (progn
+          (make-directory server-directory t)
+          (copy-file
+           (expand-file-name
+            "servers/omnivox" emacsvox-launcher-tests--root)
+           launcher)
+          (copy-file
+           (expand-file-name
+            "servers/omnivox-log-filter" emacsvox-launcher-tests--root)
+           filter)
+          (with-temp-file program
+            (insert "#!/bin/sh\nprintf 'configured:%s\\n' \"$*\"\n"))
+          (dolist (file (list launcher filter program))
+            (set-file-modes file #o700))
+          (setenv "OMNIVOX_PROGRAM" program)
+          (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
+          (with-temp-buffer
+            (should
+             (zerop (call-process launcher nil t nil "--configured")))
+            (should (equal (buffer-string) "configured:--configured\n"))))
       (delete-directory directory t))))
 
 (ert-deftest emacsvox-launcher-uses-bundled-windows-runtime ()

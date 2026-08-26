@@ -44,10 +44,21 @@ if [ -x "$program" ]; then
         fi
     fi
 else
-    resolved_program=$(command -v omnivox 2>/dev/null || :)
-    if [ -z "$resolved_program" ] || [ "$resolved_program" -ef "$0" ]; then
-        echo "Omnivox executable not found on PATH; install Omnivox, or under WSL2 run 'make windows-omnivox' from the repository root" >&2
-        exit 127
+    resolved_program=${OMNIVOX_PROGRAM-}
+    if [ -n "$resolved_program" ]; then
+        if [ ! -x "$resolved_program" ]; then
+            echo "Configured Omnivox executable is not runnable: $resolved_program" >&2
+            exit 127
+        fi
+        case $resolved_program in
+            *.[eE][xX][eE]) windows_runtime=true ;;
+        esac
+    else
+        resolved_program=$(command -v omnivox 2>/dev/null || :)
+        if [ -z "$resolved_program" ] || [ "$resolved_program" -ef "$0" ]; then
+            echo "Omnivox executable not found on PATH; set OMNIVOX_PROGRAM, install Omnivox, or under WSL2 run 'make windows-omnivox' from the repository root" >&2
+            exit 127
+        fi
     fi
 fi
 
