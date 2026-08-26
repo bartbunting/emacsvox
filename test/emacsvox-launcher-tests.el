@@ -63,7 +63,6 @@
                  (expand-file-name
                   "omnivox-20260101T000004Z-900004-part000001.log"
                   directory)))
-            (setenv "FILE" current)
             (setenv "OMNIVOX_LOG_FILTER_DIRECTORY" directory)
             (setenv "OMNIVOX_LOG_RETAINED_FILES" "2")
             (setenv "OMNIVOX_LOG_RETAINED_BYTES" "100")
@@ -72,7 +71,11 @@
               (should
                (zerop
                 (call-process-region
-                 (point-min) (point-max) filter nil nil nil))))
+                 (point-min) (point-max) filter nil nil nil
+                 "--stream"
+                 (expand-file-name
+                  "omnivox-20260101T000004Z-900004-part" directory)
+                 "64"))))
             (let ((logs
                    (emacsvox-launcher-tests--omnivox-log-files directory)))
               (should (= (length logs) 2))
@@ -95,6 +98,8 @@
     (unwind-protect
         (progn
           (make-directory runtime-directory t)
+          (make-directory log-directory t)
+          (set-file-modes log-directory #o755)
           (copy-file
            (expand-file-name
             "servers/omnivox" emacsvox-launcher-tests--root)
@@ -110,6 +115,7 @@
              "index=0\n"
              "while [ \"$index\" -lt 30 ]; do\n"
              "  printf 'diagnostic-%02d %064d\\n' \"$index\" \"$index\" >&2\n"
+             "  if [ \"$index\" -eq 0 ]; then sleep 0.5; fi\n"
              "  index=$((index + 1))\n"
              "done\n"))
           (dolist (file (list launcher filter program))
@@ -118,34 +124,75 @@
           (setenv "OMNIVOX_LOG_MAX_FILE_BYTES" "512")
           (setenv "OMNIVOX_LOG_RETAINED_FILES" "16")
           (setenv "OMNIVOX_LOG_RETAINED_BYTES" "8192")
-          (with-temp-buffer
-            (should (zerop (call-process launcher nil t nil)))
-            (should (equal (buffer-string) "protocol-ready\n")))
-          (let ((deadline (+ (float-time) 2.0))
-                logs combined)
-            (while
-                (and
-                 (< (float-time) deadline)
-                 (progn
-                   (setq logs
-                         (emacsvox-launcher-tests--omnivox-log-files
-                          log-directory))
-                   (setq combined
-                         (mapconcat
-                          (lambda (file)
-                            (with-temp-buffer
-                              (insert-file-contents file)
-                              (buffer-string)))
-                          logs ""))
-                   (not (string-search "diagnostic-29" combined))))
-              (sleep-for 0.02))
-            (should (> (length logs) 1))
-            (should (string-search "session_start session_id=" combined))
-            (should (string-search "diagnostic-00" combined))
-            (should (string-search "diagnostic-29" combined))
-            (dolist (log logs)
-              (should (<= (file-attribute-size (file-attributes log)) 512))
-              (should (= (file-modes log) #o600)))))
+          (let ((output (generate-new-buffer " *omnivox-launcher-output*"))
+                process logs combined saw-live-diagnostic)
+            (unwind-protect
+                (progn
+                  (setq process
+                        (make-process
+                         :name "omnivox-launcher-test"
+                         :buffer output
+                         :command (list launcher)
+                         :connection-type 'pipe
+                         :noquery t
+                         :sentinel #'ignore))
+                  (let ((deadline (+ (float-time) 0.4)))
+                    (while
+                        (and (< (float-time) deadline)
+                             (not saw-live-diagnostic))
+                      (setq logs
+                            (emacsvox-launcher-tests--omnivox-log-files
+                             log-directory))
+                      (setq combined
+                            (mapconcat
+                             (lambda (file)
+                               (with-temp-buffer
+                                 (insert-file-contents file)
+                                 (buffer-string)))
+                             logs ""))
+                      (setq saw-live-diagnostic
+                            (string-search "diagnostic-00" combined))
+                      (unless saw-live-diagnostic
+                        (accept-process-output process 0.02))))
+                  (should saw-live-diagnostic)
+                  (should (process-live-p process))
+                  (let ((deadline (+ (float-time) 2.0)))
+                    (while (and (< (float-time) deadline)
+                                (process-live-p process))
+                      (accept-process-output process 0.02)))
+                  (should (eq (process-status process) 'exit))
+                  (should (zerop (process-exit-status process)))
+                  (with-current-buffer output
+                    (should (equal (buffer-string) "protocol-ready\n")))
+                  (let ((deadline (+ (float-time) 2.0)))
+                    (while
+                        (progn
+                          (setq logs
+                                (emacsvox-launcher-tests--omnivox-log-files
+                                 log-directory))
+                          (setq combined
+                                (mapconcat
+                                 (lambda (file)
+                                   (with-temp-buffer
+                                     (insert-file-contents file)
+                                     (buffer-string)))
+                                 logs ""))
+                          (and (< (float-time) deadline)
+                               (not (string-search
+                                     "diagnostic-29" combined))))
+                      (sleep-for 0.02)))
+                  (should (> (length logs) 1))
+                  (should (string-search "session_start session_id=" combined))
+                  (should (string-search "diagnostic-00" combined))
+                  (should (string-search "diagnostic-29" combined))
+                  (should (= (file-modes log-directory) #o700))
+                  (dolist (log logs)
+                    (should
+                     (<= (file-attribute-size (file-attributes log)) 512))
+                    (should (= (file-modes log) #o600))))
+              (when (and process (process-live-p process))
+                (delete-process process))
+              (kill-buffer output))))
       (delete-directory directory t))))
 
 (ert-deftest emacsvox-launcher-uses-bundled-windows-runtime ()

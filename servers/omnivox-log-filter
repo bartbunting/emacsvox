@@ -1,5 +1,5 @@
 #!/bin/sh
-# Bound and secure Omnivox launcher diagnostics streamed through GNU split.
+# Stream, rotate, and retain private Omnivox launcher diagnostics.
 
 set -eu
 
@@ -19,27 +19,19 @@ esac
 
 umask 077
 
-if [ "${1-}" = "--prune-only" ]; then
-    unset FILE
-else
-    : "${FILE:?}"
-    cat >"$FILE"
-    chmod 600 -- "$FILE"
-fi
-
-# GNU split invokes this helper only after closing a completed part.  Protect
-# the part just written and the newest part of every other live split session.
-# Legacy unsplit logs remain protected while their launcher PID is live.
+# Protect the current stream part and the newest part of every other live
+# session.  Legacy unsplit logs remain protected while their launcher PID is
+# live.
 omnivox_pid_is_live()
 {
-    pid=$1
-    case $pid in
+    omnivox_checked_pid=$1
+    case $omnivox_checked_pid in
         ''|*[!0-9]*) return 1 ;;
     esac
-    kill -0 "$pid" 2>/dev/null || return 1
-    [ -r "/proc/$pid/cmdline" ] || return 1
-    command_line=$(tr '\0' ' ' <"/proc/$pid/cmdline")
-    case $command_line in
+    kill -0 "$omnivox_checked_pid" 2>/dev/null || return 1
+    [ -r "/proc/$omnivox_checked_pid/cmdline" ] || return 1
+    omnivox_command_line=$(tr '\0' ' ' <"/proc/$omnivox_checked_pid/cmdline")
+    case $omnivox_command_line in
         *omnivox.exe*) return 0 ;;
         *) return 1 ;;
     esac
@@ -47,60 +39,143 @@ omnivox_pid_is_live()
 
 omnivox_log_is_live_target()
 {
-    candidate=$1
-    name=${candidate##*/}
+    omnivox_live_candidate=$1
+    omnivox_live_name=${omnivox_live_candidate##*/}
 
-    if [ "${FILE-}" = "$candidate" ]; then
+    if [ "${FILE-}" = "$omnivox_live_candidate" ]; then
         return 0
     fi
 
-    case $name in
+    case $omnivox_live_name in
         omnivox-*-part[0-9][0-9][0-9][0-9][0-9][0-9].log)
-            session=${name%-part[0-9][0-9][0-9][0-9][0-9][0-9].log}
-            pid=${session##*-}
-            omnivox_pid_is_live "$pid" || return 1
-            latest=
-            for part in \
-                "$log_directory/$session"-part[0-9][0-9][0-9][0-9][0-9][0-9].log
+            omnivox_live_session=${omnivox_live_name%-part[0-9][0-9][0-9][0-9][0-9][0-9].log}
+            omnivox_live_pid=${omnivox_live_session##*-}
+            omnivox_pid_is_live "$omnivox_live_pid" || return 1
+            omnivox_live_latest=
+            for omnivox_existing_part in \
+                "$log_directory/$omnivox_live_session"-part[0-9][0-9][0-9][0-9][0-9][0-9].log
             do
-                [ -f "$part" ] || continue
-                latest=$part
+                [ -f "$omnivox_existing_part" ] || continue
+                omnivox_live_latest=$omnivox_existing_part
             done
-            [ "$candidate" = "$latest" ]
+            [ "$omnivox_live_candidate" = "$omnivox_live_latest" ]
             ;;
         omnivox-*.log)
-            session=${name%.log}
-            pid=${session##*-}
-            omnivox_pid_is_live "$pid"
+            omnivox_live_session=${omnivox_live_name%.log}
+            omnivox_live_pid=${omnivox_live_session##*-}
+            omnivox_pid_is_live "$omnivox_live_pid"
             ;;
         *) return 1 ;;
     esac
 }
 
-retention_list=$(mktemp "$log_directory/.omnivox-retention.XXXXXX") || exit 0
-trap 'unlink -- "$retention_list" 2>/dev/null || :' 0 1 2 15
+omnivox_retention_list=
+omnivox_cleanup()
+{
+    if [ -n "$omnivox_retention_list" ]; then
+        unlink -- "$omnivox_retention_list" 2>/dev/null || :
+    fi
+}
+trap omnivox_cleanup 0 1 2 15
 
-if find "$log_directory" -maxdepth 1 -type f -name 'omnivox-*.log' \
-    -printf '%T@\t%p\n' | sort -nr >"$retention_list"
-then
-    kept_files=0
-    kept_bytes=0
-    tab=$(printf '\t')
-    while IFS="$tab" read -r _modified candidate; do
-        [ -f "$candidate" ] || continue
-        chmod 600 -- "$candidate" 2>/dev/null || :
-        size=$(stat -c %s -- "$candidate" 2>/dev/null) || continue
-        next_bytes=$((kept_bytes + size))
-        if omnivox_log_is_live_target "$candidate" ||
-           { [ "$kept_files" -lt "$retained_files" ] &&
-             [ "$next_bytes" -le "$retained_bytes" ]; }
-        then
-            kept_files=$((kept_files + 1))
-            kept_bytes=$next_bytes
-        else
-            unlink -- "$candidate" 2>/dev/null || :
+omnivox_prune_logs()
+{
+    omnivox_retention_list=$(mktemp \
+        "$log_directory/.omnivox-retention.XXXXXX") || return 0
+
+    if find "$log_directory" -maxdepth 1 -type f -name 'omnivox-*.log' \
+        -printf '%T@\t%p\n' | sort -nr >"$omnivox_retention_list"
+    then
+        omnivox_kept_files=0
+        omnivox_kept_bytes=0
+        omnivox_tab=$(printf '\t')
+        while IFS="$omnivox_tab" read -r _omnivox_modified \
+            omnivox_retention_candidate
+        do
+            [ -f "$omnivox_retention_candidate" ] || continue
+            chmod 600 -- "$omnivox_retention_candidate" 2>/dev/null || :
+            omnivox_size=$(stat -c %s -- \
+                "$omnivox_retention_candidate" 2>/dev/null) || continue
+            omnivox_next_bytes=$((omnivox_kept_bytes + omnivox_size))
+            if omnivox_log_is_live_target "$omnivox_retention_candidate" ||
+               { [ "$omnivox_kept_files" -lt "$retained_files" ] &&
+                 [ "$omnivox_next_bytes" -le "$retained_bytes" ]; }
+            then
+                omnivox_kept_files=$((omnivox_kept_files + 1))
+                omnivox_kept_bytes=$omnivox_next_bytes
+            else
+                unlink -- "$omnivox_retention_candidate" 2>/dev/null || :
+            fi
+        done <"$omnivox_retention_list"
+    fi
+
+    unlink -- "$omnivox_retention_list" 2>/dev/null || :
+    omnivox_retention_list=
+}
+
+omnivox_open_stream_part()
+{
+    while :; do
+        FILE=$(printf '%s%06d.log' \
+            "$omnivox_stream_prefix" "$omnivox_stream_part")
+        if (set -C; : >"$FILE") 2>/dev/null; then
+            break
         fi
-    done <"$retention_list"
-fi
+        omnivox_stream_part=$((omnivox_stream_part + 1))
+    done
+    chmod 600 -- "$FILE"
+    exec 3>>"$FILE"
+}
+
+omnivox_stream_logs()
+{
+    omnivox_stream_prefix=$1
+    omnivox_stream_max_bytes=$2
+    case $omnivox_stream_max_bytes in
+        ''|*[!0-9]*|0) omnivox_stream_max_bytes=16777216 ;;
+    esac
+
+    omnivox_stream_part=1
+    omnivox_stream_bytes=0
+    omnivox_open_stream_part
+
+    while IFS= read -r omnivox_stream_line ||
+        [ -n "$omnivox_stream_line" ]
+    do
+        omnivox_stream_line_bytes=$((${#omnivox_stream_line} + 1))
+        omnivox_stream_next_bytes=$((
+            omnivox_stream_bytes + omnivox_stream_line_bytes))
+        if [ "$omnivox_stream_bytes" -gt 0 ] &&
+           [ "$omnivox_stream_next_bytes" -gt "$omnivox_stream_max_bytes" ]
+        then
+            exec 3>&-
+            omnivox_prune_logs
+            omnivox_stream_part=$((omnivox_stream_part + 1))
+            omnivox_stream_bytes=0
+            omnivox_open_stream_part
+        fi
+        printf '%s\n' "$omnivox_stream_line" >&3
+        omnivox_stream_bytes=$((
+            omnivox_stream_bytes + omnivox_stream_line_bytes))
+    done
+
+    exec 3>&-
+    omnivox_prune_logs
+}
+
+case ${1-} in
+    --prune-only)
+        unset FILE
+        omnivox_prune_logs
+        ;;
+    --stream)
+        [ "$#" -eq 3 ] || exit 64
+        omnivox_stream_logs "$2" "$3"
+        ;;
+    *)
+        echo "usage: $0 --prune-only | --stream LOG-PREFIX MAX-BYTES" >&2
+        exit 64
+        ;;
+esac
 
 exit 0

@@ -48,9 +48,10 @@ if [ -z "${ESPEAK_NG_DATA-}" ] && [ -r "$espeak_data_path_file" ]; then
 fi
 
 # Preserve diagnostics outside Emacs: speech servers normally have no process
-# buffer, so stderr would otherwise be discarded.  Each launch uses line-aware
-# bounded parts.  Closed logs are retained within both aggregate file-count and
-# byte limits; live write targets remain protected when they exceed either cap.
+# buffer, so stderr would otherwise be discarded.  Each launch streams into
+# line-aware bounded parts.  Closed logs are retained within both aggregate
+# file-count and byte limits; live write targets remain protected when they
+# exceed either cap.
 omnivox_state_directory=${XDG_STATE_HOME:-"$HOME/.local/state"}
 omnivox_log_directory=${OMNIVOX_LOG_DIRECTORY:-"$omnivox_state_directory/emacsvox/omnivox"}
 omnivox_log_max_file_bytes=${OMNIVOX_LOG_MAX_FILE_BYTES:-16777216}
@@ -68,7 +69,8 @@ case $omnivox_log_retained_bytes in
     ''|*[!0-9]*|0) omnivox_log_retained_bytes=268435456 ;;
 esac
 
-if mkdir -p -- "$omnivox_log_directory"; then
+if (umask 077 && mkdir -p -- "$omnivox_log_directory"); then
+    chmod 700 -- "$omnivox_log_directory" 2>/dev/null || :
     log_filter="$server_directory/omnivox-log-filter"
     export OMNIVOX_LOG_FILTER_DIRECTORY="$omnivox_log_directory"
     export OMNIVOX_LOG_RETAINED_FILES="$omnivox_log_retained_files"
@@ -78,22 +80,13 @@ if mkdir -p -- "$omnivox_log_directory"; then
     fi
 
     log_fifo="$omnivox_log_directory/.omnivox-$omnivox_session_id.pipe"
-    if [ -x "$log_filter" ] && command -v split >/dev/null 2>&1 &&
-       split --help 2>&1 | grep -q -- '--filter' &&
-       mkfifo -m 600 -- "$log_fifo"
+    if [ -x "$log_filter" ] && mkfifo -m 600 -- "$log_fifo"
     then
         log_prefix="$omnivox_log_directory/omnivox-$omnivox_session_id-part"
-        export OMNIVOX_LOG_FILTER_PROGRAM="$log_filter"
         (
             umask 077
-            # split's child shell expands the filter program variable.
-            # shellcheck disable=SC2016
-            exec split \
-                --line-bytes="$omnivox_log_max_file_bytes" \
-                --numeric-suffixes=1 --suffix-length=6 \
-                --additional-suffix=.log \
-                --filter='"$OMNIVOX_LOG_FILTER_PROGRAM"' \
-                - "$log_prefix"
+            exec "$log_filter" --stream \
+                "$log_prefix" "$omnivox_log_max_file_bytes"
         ) <"$log_fifo" >/dev/null 2>/dev/null &
         trap 'unlink -- "$log_fifo" 2>/dev/null || :' 0 1 2 15
         exec 2>"$log_fifo"
