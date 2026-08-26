@@ -1020,7 +1020,7 @@ are available are cued by an auditory icon on the header line."
        
        (setq emacsvox-we-xpath-filter
              emacsvox-we-paragraphs-xpath-filter)
-       (tts-set-punctuations-to-some)
+       (tts-apply-punctuation-mode-policy)
        (emacsvox-speak-windowful))
    'at-end))
 

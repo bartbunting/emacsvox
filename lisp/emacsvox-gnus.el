@@ -78,9 +78,10 @@
   :prefix "emacsvox-gnus-")
 
 (defcustom emacsvox-gnus-punctuation-mode  'all
-  "Pronunciation mode to use for gnus buffers."
+  "Punctuation mode to use for Gnus buffers.
+When nil, use the general punctuation policy."
   :type '(choice
-          (const  :tag "Ignore" nil)
+          (const  :tag "Use General Policy" nil)
           (const  :tag "some" some)
           (const  :tag "all" all))
   :group 'emacsvox-gnus)
@@ -937,21 +938,30 @@ Helps to prevent words from being spelled instead of spoken."
     'body 'modify 'operation-completed)
    'state-change 'modified-object #'tts-speak "Downcased article body"))
 
-;;;  refreshing the pronunciation  and punctuation mode
+;;;  Refresh pronunciation and punctuation mode
 
-(cl-loop
- for hook  in 
- '(
-   gnus-article-mode-hook gnus-group-mode-hook gnus-summary-mode-hook
-   gnus-agent-mode-hook  gnus-article-edit-mode-hook
-   gnus-server-mode-hook gnus-category-mode-hook
-   )
- do
- (add-hook
-  hook 
-  #'(lambda ()
-      (tts-set-punctuations emacsvox-gnus-punctuation-mode)
-      (emacsvox-pronounce-refresh-pronunciations))))
+(defconst emacsvox-gnus--mode-hooks
+  '(gnus-article-mode-hook gnus-group-mode-hook gnus-summary-mode-hook
+    gnus-agent-mode-hook gnus-article-edit-mode-hook
+    gnus-server-mode-hook gnus-category-mode-hook)
+  "Gnus mode hooks that receive Emacsvox speech setup.")
+
+(defun emacsvox-gnus-mode-setup ()
+  "Apply Gnus punctuation policy and refresh pronunciations."
+  (if emacsvox-gnus-punctuation-mode
+      (setq-local
+       tts-punctuation-mode-policy-alist
+       (cons
+        (cons major-mode emacsvox-gnus-punctuation-mode)
+        (assq-delete-all
+         major-mode
+         (copy-tree tts-punctuation-mode-policy-alist))))
+    (kill-local-variable 'tts-punctuation-mode-policy-alist))
+  (tts-apply-punctuation-mode-policy)
+  (emacsvox-pronounce-refresh-pronunciations))
+
+(dolist (hook emacsvox-gnus--mode-hooks)
+  (add-hook hook #'emacsvox-gnus-mode-setup))
 
 ;;;  rdc: mapping font faces to personalities 
 

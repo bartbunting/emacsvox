@@ -1151,7 +1151,7 @@ template."
       'emacsvox-eww-post-hook
       #'(lambda nil
           (search-forward "\n\n")
-          (tts-set-punctuations-to-some)
+          (tts-apply-punctuation-mode-policy)
           (emacsvox-speak-rest-of-buffer))
       'at-end)
      (browse-url

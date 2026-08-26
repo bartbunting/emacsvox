@@ -99,6 +99,27 @@
         (icon news)
         (message "Gnus is ready "))))))
 
+(ert-deftest emacsvox-gnus-mode-setup-uses-local-automatic-policy ()
+  "Gnus setup preserves its preference without creating an override."
+  (with-temp-buffer
+    (setq major-mode 'gnus-summary-mode)
+    (let ((emacsvox-gnus-punctuation-mode 'some)
+          (tts-speaker-process nil))
+      (cl-letf
+          (((symbol-function 'emacsvox-pronounce-refresh-pronunciations)
+            #'ignore))
+        (emacsvox-gnus-mode-setup))
+      (should (local-variable-p 'tts-punctuation-mode-policy-alist))
+      (should
+       (equal
+        (tts-punctuation-mode-state)
+        '(:mode some :source-kind mode-policy :source gnus-summary-mode)))
+      (should-not tts-punctuation-mode-override)
+      (tts-set-punctuations 'all)
+      (emacsvox-gnus-mode-setup)
+      (should (eq tts-punctuation-mode 'all))
+      (should (eq tts-punctuation-mode-override 'all)))))
+
 (ert-deftest emacsvox-gnus-refresh-calls-original-once ()
   "Refreshing Gnus silences one call and preserves its result."
   (let ((emacsvox-speak-messages t)

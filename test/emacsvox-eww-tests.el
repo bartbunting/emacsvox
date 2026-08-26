@@ -63,6 +63,23 @@
      (eq (default-value 'shr-external-rendering-functions)
          default-renderers))))
 
+(ert-deftest emacsvox-eww-autospeak-uses-automatic-punctuation-policy ()
+  "EWW autospeak applies prose policy without creating an override."
+  (let (post-action)
+    (cl-letf (((symbol-function 'add-hook)
+               (lambda (hook function &rest _)
+                 (when (eq hook 'emacsvox-eww-post-hook)
+                   (setq post-action function)))))
+      (emacsvox-eww-autospeak))
+    (should post-action)
+    (with-temp-buffer
+      (setq major-mode 'eww-mode)
+      (let ((tts-speaker-process nil))
+        (cl-letf (((symbol-function 'emacsvox-speak-windowful) #'ignore))
+          (funcall post-action))
+        (should (eq tts-punctuation-mode 'some))
+        (should-not tts-punctuation-mode-override)))))
+
 (ert-deftest emacsvox-eww-url-navigation-feedback-is-target-aware ()
   "Only matching EWW URL navigation cues and speaks the header."
   (let ((ems--interactive-fn-name 'eww-forward-url)

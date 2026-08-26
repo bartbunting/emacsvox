@@ -16,5 +16,18 @@
       (should (fboundp target))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-sudoku-entry-uses-automatic-punctuation-policy ()
+  "Sudoku entry applies its mode policy without creating an override."
+  (with-temp-buffer
+    (setq major-mode 'sudoku-mode)
+    (let ((ems--interactive-fn-name 'sudoku)
+          (tts-speaker-process nil))
+      (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                ((symbol-function 'emacsvox-sudoku-speak-current-cell-value)
+                 #'ignore))
+        (emacsvox--advice-sudoku-after))
+      (should (eq tts-punctuation-mode 'some))
+      (should-not tts-punctuation-mode-override))))
+
 (provide 'emacsvox-sudoku-tests)
 ;;; emacsvox-sudoku-tests.el ends here
