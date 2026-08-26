@@ -1,0 +1,97 @@
+#!/bin/sh
+# Bound and secure Omnivox launcher diagnostics streamed through GNU split.
+
+set -eu
+
+LC_ALL=C
+export LC_ALL
+
+log_directory=${OMNIVOX_LOG_FILTER_DIRECTORY:?}
+retained_files=${OMNIVOX_LOG_RETAINED_FILES:-16}
+retained_bytes=${OMNIVOX_LOG_RETAINED_BYTES:-268435456}
+
+case $retained_files in
+    ''|*[!0-9]*|0) retained_files=16 ;;
+esac
+case $retained_bytes in
+    ''|*[!0-9]*|0) retained_bytes=268435456 ;;
+esac
+
+umask 077
+
+if [ "${1-}" = "--prune-only" ]; then
+    unset FILE
+else
+    : "${FILE:?}"
+    cat >"$FILE"
+    chmod 600 -- "$FILE"
+fi
+
+# GNU split invokes this helper only after closing a completed part.  Protect
+# the part just written and the newest part of every other live split session.
+# Legacy unsplit logs remain protected while their launcher PID is live.
+omnivox_log_is_live_target()
+{
+    candidate=$1
+    name=${candidate##*/}
+
+    if [ "${FILE-}" = "$candidate" ]; then
+        return 0
+    fi
+
+    case $name in
+        omnivox-*-part[0-9][0-9][0-9][0-9][0-9][0-9].log)
+            session=${name%-part[0-9][0-9][0-9][0-9][0-9][0-9].log}
+            pid=${session##*-}
+            case $pid in
+                ''|*[!0-9]*) return 1 ;;
+            esac
+            kill -0 "$pid" 2>/dev/null || return 1
+            latest=
+            for part in \
+                "$log_directory/$session"-part[0-9][0-9][0-9][0-9][0-9][0-9].log
+            do
+                [ -f "$part" ] || continue
+                latest=$part
+            done
+            [ "$candidate" = "$latest" ]
+            ;;
+        omnivox-*.log)
+            session=${name%.log}
+            pid=${session##*-}
+            case $pid in
+                ''|*[!0-9]*) return 1 ;;
+            esac
+            kill -0 "$pid" 2>/dev/null
+            ;;
+        *) return 1 ;;
+    esac
+}
+
+retention_list=$(mktemp "$log_directory/.omnivox-retention.XXXXXX") || exit 0
+trap 'unlink -- "$retention_list" 2>/dev/null || :' 0 1 2 15
+
+if find "$log_directory" -maxdepth 1 -type f -name 'omnivox-*.log' \
+    -printf '%T@\t%p\n' | sort -nr >"$retention_list"
+then
+    kept_files=0
+    kept_bytes=0
+    tab=$(printf '\t')
+    while IFS="$tab" read -r _modified candidate; do
+        [ -f "$candidate" ] || continue
+        chmod 600 -- "$candidate" 2>/dev/null || :
+        size=$(stat -c %s -- "$candidate" 2>/dev/null) || continue
+        next_bytes=$((kept_bytes + size))
+        if omnivox_log_is_live_target "$candidate" ||
+           { [ "$kept_files" -lt "$retained_files" ] &&
+             [ "$next_bytes" -le "$retained_bytes" ]; }
+        then
+            kept_files=$((kept_files + 1))
+            kept_bytes=$next_bytes
+        else
+            unlink -- "$candidate" 2>/dev/null || :
+        fi
+    done <"$retention_list"
+fi
+
+exit 0

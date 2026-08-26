@@ -48,16 +48,63 @@ if [ -z "${ESPEAK_NG_DATA-}" ] && [ -r "$espeak_data_path_file" ]; then
 fi
 
 # Preserve diagnostics outside Emacs: speech servers normally have no process
-# buffer, so stderr would otherwise be discarded.  A distinct file per launch
-# keeps concurrent Emacs instances and restarts separate.
+# buffer, so stderr would otherwise be discarded.  Each launch uses line-aware
+# bounded parts.  Closed logs are retained within both aggregate file-count and
+# byte limits; live write targets remain protected when they exceed either cap.
 omnivox_state_directory=${XDG_STATE_HOME:-"$HOME/.local/state"}
 omnivox_log_directory=${OMNIVOX_LOG_DIRECTORY:-"$omnivox_state_directory/emacsvox/omnivox"}
+omnivox_log_max_file_bytes=${OMNIVOX_LOG_MAX_FILE_BYTES:-16777216}
+omnivox_log_retained_files=${OMNIVOX_LOG_RETAINED_FILES:-16}
+omnivox_log_retained_bytes=${OMNIVOX_LOG_RETAINED_BYTES:-268435456}
 omnivox_session_id=$(date -u +%Y%m%dT%H%M%SZ)-$$
+
+case $omnivox_log_max_file_bytes in
+    ''|*[!0-9]*|0) omnivox_log_max_file_bytes=16777216 ;;
+esac
+case $omnivox_log_retained_files in
+    ''|*[!0-9]*|0) omnivox_log_retained_files=16 ;;
+esac
+case $omnivox_log_retained_bytes in
+    ''|*[!0-9]*|0) omnivox_log_retained_bytes=268435456 ;;
+esac
+
 if mkdir -p -- "$omnivox_log_directory"; then
-    omnivox_log_file="$omnivox_log_directory/omnivox-$omnivox_session_id.log"
-    (umask 077 && : >>"$omnivox_log_file")
-    chmod 600 -- "$omnivox_log_file"
-    exec 2>>"$omnivox_log_file"
+    log_filter="$server_directory/omnivox-log-filter"
+    export OMNIVOX_LOG_FILTER_DIRECTORY="$omnivox_log_directory"
+    export OMNIVOX_LOG_RETAINED_FILES="$omnivox_log_retained_files"
+    export OMNIVOX_LOG_RETAINED_BYTES="$omnivox_log_retained_bytes"
+    if [ -x "$log_filter" ]; then
+        "$log_filter" --prune-only || :
+    fi
+
+    log_fifo="$omnivox_log_directory/.omnivox-$omnivox_session_id.pipe"
+    if [ -x "$log_filter" ] && command -v split >/dev/null 2>&1 &&
+       split --help 2>&1 | grep -q -- '--filter' &&
+       mkfifo -m 600 -- "$log_fifo"
+    then
+        log_prefix="$omnivox_log_directory/omnivox-$omnivox_session_id-part"
+        export OMNIVOX_LOG_FILTER_PROGRAM="$log_filter"
+        (
+            umask 077
+            # split's child shell expands the filter program variable.
+            # shellcheck disable=SC2016
+            exec split \
+                --line-bytes="$omnivox_log_max_file_bytes" \
+                --numeric-suffixes=1 --suffix-length=6 \
+                --additional-suffix=.log \
+                --filter='"$OMNIVOX_LOG_FILTER_PROGRAM"' \
+                - "$log_prefix"
+        ) <"$log_fifo" >/dev/null 2>/dev/null &
+        trap 'unlink -- "$log_fifo" 2>/dev/null || :' 0 1 2 15
+        exec 2>"$log_fifo"
+        unlink -- "$log_fifo"
+        trap - 0 1 2 15
+    else
+        omnivox_log_file="$omnivox_log_directory/omnivox-$omnivox_session_id.log"
+        (umask 077 && : >>"$omnivox_log_file")
+        chmod 600 -- "$omnivox_log_file"
+        exec 2>>"$omnivox_log_file"
+    fi
     printf '%s session_start session_id=%s launcher_pid=%s program=%s\n' \
         "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$omnivox_session_id" "$$" \
         "$resolved_program" >&2
