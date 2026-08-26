@@ -160,16 +160,16 @@ emacsvox: check-emacs config
 	@make install
 
 swiftmac:
-	@cd servers/mac-swiftmac && $(MAKE) $(MAKEFLAGS) || echo "Can't build swiftmac server!"
+	$(MAKE) -C servers/mac-swiftmac
 
 outloud: 
-	@cd servers/linux-outloud && $(MAKE) $(MAKEFLAGS) || echo "Can't build Outloud server!"
+	$(MAKE) -C servers/linux-outloud
 
 espeak: 
-	@cd servers/native-espeak && $(MAKE) $(MAKEFLAGS)  || echo "Can't build espeak server!"
+	$(MAKE) -C servers/native-espeak
 
 dtk: 
-	@cd servers/software-dtk && $(MAKE) $(MAKEFLAGS)  || echo "Can't build DTK server!"
+	$(MAKE) -C servers/software-dtk
 
 windows-speech: windows-audio windows-outloud windows-dtk
 

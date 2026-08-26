@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bootstrap a talking Emacsvox checkout from Git.
+# Bootstrap a talking Emacsvox checkout with eSpeak on GNU/Linux.
 # Usage: ./bootstrap.sh [git-ref] [destination]
 # Prerequisites: Git, Emacs 31+, make, eSpeak NG, and its development headers.
 
@@ -7,7 +7,7 @@ set -euo pipefail
 
 ref=${1:-master}
 destination=${2:-emacsvox}
-repository=${EMACSVOX_REPOSITORY:-https://github.com/robertmeta/emacsvox.git}
+repository=${EMACSVOX_REPOSITORY:-https://github.com/bartbunting/emacsvox.git}
 emacs=${EMACS:-emacs}
 
 if [ ! -d "$destination/.git" ]; then
@@ -22,9 +22,8 @@ cd "$destination"
     exit 1
   }
 
-make config EMACS="$emacs"
-make EMACS="$emacs"
-make espeak
+make bytecode EMACS="$emacs"
+make espeak EMACS="$emacs"
 
 export EMACSVOX_DIR=$PWD
 export TTS_PROGRAM=${TTS_PROGRAM:-espeak}
