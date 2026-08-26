@@ -2220,7 +2220,8 @@
       (setq-local tts-punctuation-mode 'all)
       (tts-set-punctuations 'some)
       (should (local-variable-p 'tts-punctuation-mode))
-      (should (eq tts-punctuation-mode 'some)))))
+      (should (eq tts-punctuation-mode 'some))
+      (should (eq tts-punctuation-mode-override 'some)))))
 
 (ert-deftest emacsvox-tts-global-punctuation-survives-a-stopped-server ()
   "A global punctuation choice is retained while the speech server is down."
@@ -2231,8 +2232,77 @@
             (setq-local tts-punctuation-mode 'all)
             (tts-set-punctuations 'none t)
             (should (eq tts-punctuation-mode 'none))
+            (should (eq tts-punctuation-mode-override 'none))
             (should (eq (default-value 'tts-punctuation-mode) 'none))))
       (set-default 'tts-punctuation-mode saved-default))))
+
+(ert-deftest emacsvox-tts-punctuation-policy-resolves-derived-modes ()
+  "Automatic punctuation distinguishes prose, code, shells, and fallback."
+  (dolist
+      (case '((text-mode some mode-policy text-mode)
+              (prog-mode all mode-policy prog-mode)
+              (comint-mode all mode-policy comint-mode)))
+    (pcase-let ((`(,mode ,punctuation ,kind ,source) case))
+      (with-temp-buffer
+        (setq major-mode mode)
+        (let ((state (tts-punctuation-mode-state)))
+          (should (eq (plist-get state :mode) punctuation))
+          (should (eq (plist-get state :source-kind) kind))
+          (should (eq (plist-get state :source) source))))))
+  (with-temp-buffer
+    (let ((tts-punctuation-mode-policy-alist nil))
+      (should
+       (equal
+        (tts-punctuation-mode-state)
+        (list :mode (default-value 'tts-punctuation-mode)
+              :source-kind 'global-default
+              :source 'global))))))
+
+(ert-deftest emacsvox-tts-punctuation-policy-does-not-create-an-override ()
+  "Applying a mode policy should leave the buffer in automatic mode."
+  (with-temp-buffer
+    (setq major-mode 'text-mode)
+    (let ((tts-speaker-process nil))
+      (should
+       (equal
+        (tts-apply-punctuation-mode-policy)
+        '(:mode some :source-kind mode-policy :source text-mode)))
+      (should (eq tts-punctuation-mode 'some))
+      (should-not tts-punctuation-mode-override))))
+
+(ert-deftest emacsvox-tts-punctuation-reset-restores-mode-policy ()
+  "Resetting should discard the override and report the automatic source."
+  (with-temp-buffer
+    (setq major-mode 'text-mode)
+    (let ((tts-speaker-process nil))
+      (tts-set-punctuations 'all)
+      (should
+       (equal
+        (tts-punctuation-mode-state)
+        '(:mode all :source-kind buffer-override :source buffer)))
+      (should
+       (equal
+        (tts-reset-punctuation-mode)
+        '(:mode some :source-kind mode-policy :source text-mode)))
+      (should (eq tts-punctuation-mode 'some))
+      (should-not tts-punctuation-mode-override)
+      (should
+       (equal
+        (tts--punctuation-mode-description)
+        "Punctuation some, text-mode policy")))))
+
+(ert-deftest emacsvox-tts-punctuation-override-survives-major-mode-change ()
+  "A buffer choice should take precedence after changing major mode."
+  (with-temp-buffer
+    (let ((tts-speaker-process nil))
+      (tts-set-punctuations 'none)
+      (prog-mode)
+      (should (eq tts-punctuation-mode-override 'none))
+      (should (eq tts-punctuation-mode 'none))
+      (should
+       (equal
+        (tts-punctuation-mode-state)
+        '(:mode none :source-kind buffer-override :source buffer))))))
 
 (ert-deftest emacsvox-tts-temporary-punctuation-restores-after-error ()
   "A failed temporary speech operation restores punctuation state and protocol."

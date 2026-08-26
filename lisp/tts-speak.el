@@ -811,6 +811,34 @@ also set the global default and use it in the current buffer."
   '("some" "all" "none")
   "List of  punctuation modes.")
 
+(defcustom tts-punctuation-mode-policy-alist
+  '((agent-shell-mode . all)
+    (eshell-mode . all)
+    (prog-mode . all)
+    (comint-mode . all)
+    (text-mode . some))
+  "Automatic punctuation modes, ordered from specific to general.
+
+Each entry maps a major mode to `all', `some', or `none'.  The first entry
+for which `derived-mode-p' succeeds supplies the buffer policy.  A buffer
+override set through `tts-set-punctuations' takes precedence.  When no entry
+matches, the default value of `tts-punctuation-mode' is used."
+  :type '(alist
+          :key-type (symbol :tag "Major mode")
+          :value-type
+          (choice (const all) (const some) (const none)))
+  :group 'tts)
+
+(defvar-local tts-punctuation-mode-override nil
+  "Explicit punctuation mode for this buffer, or nil for automatic policy.")
+
+;; An explicit per-buffer choice should survive a major-mode transition.  The
+;; automatic policy hook reapplies it after the mode has reset other locals.
+(put 'tts-punctuation-mode-override 'permanent-local t)
+
+(defvar tts--applying-punctuation-mode-policy nil
+  "Non-nil while applying automatic punctuation state.")
+
 (defvar-local tts-speech-rate
   100
   "Speech rate. Default rate is set via
@@ -1726,6 +1754,53 @@ value, and then set the current local value to the result.")
 Interactive PREFIX arg means toggle the global default
 value, and then set the current local value to the result.")
 
+(defun tts--punctuation-mode-policy-entry ()
+  "Return the first automatic punctuation policy matching this buffer."
+  (cl-find-if
+   (lambda (entry) (derived-mode-p (car entry)))
+   tts-punctuation-mode-policy-alist))
+
+(defun tts-punctuation-mode-state ()
+  "Return the effective punctuation mode and its source for this buffer.
+
+The result is a plist containing `:mode', `:source-kind', and `:source'."
+  (let ((entry (tts--punctuation-mode-policy-entry)))
+    (cond
+     (tts-punctuation-mode-override
+      (list :mode tts-punctuation-mode-override
+            :source-kind 'buffer-override
+            :source 'buffer))
+     (entry
+      (list :mode (cdr entry)
+            :source-kind 'mode-policy
+            :source (car entry)))
+     (t
+      (list :mode (default-value 'tts-punctuation-mode)
+            :source-kind 'global-default
+            :source 'global)))))
+
+(defun tts--punctuation-mode-description (&optional state)
+  "Describe punctuation STATE, defaulting to the current buffer state."
+  (let* ((state (or state (tts-punctuation-mode-state)))
+         (mode (plist-get state :mode))
+         (kind (plist-get state :source-kind))
+         (source (plist-get state :source)))
+    (format
+     "Punctuation %s, %s"
+     mode
+     (pcase kind
+       ('buffer-override "buffer override")
+       ('mode-policy (format "%s policy" source))
+       (_ "global default")))))
+
+(defun tts-apply-punctuation-mode-policy ()
+  "Apply this buffer's punctuation override, mode policy, or global default."
+  (let* ((state (tts-punctuation-mode-state))
+         (mode (plist-get state :mode))
+         (tts--applying-punctuation-mode-policy t))
+    (tts-set-punctuations mode)
+    state))
+
 (defun tts-set-punctuations (mode &optional prefix)
   "Set punctuation mode to MODE.
 Possible values are `some', `all', or `none'.
@@ -1745,12 +1820,15 @@ current local  value to the result."
     (setq-default tts-punctuation-mode mode))
    (t (make-local-variable 'tts-punctuation-mode)
       (setq tts-punctuation-mode mode)))
+  (unless tts--applying-punctuation-mode-policy
+    (setq-local tts-punctuation-mode-override mode))
   (when (process-live-p tts-speaker-process)
     (tts--protocol-set-punctuations mode))
   (when (called-interactively-p 'interactive)
-    (message "set punctuation mode to %s %s"
-             mode
-             (if prefix "" "locally"))))
+    (message
+     "%s%s"
+     (tts--punctuation-mode-description)
+     (if prefix "; global default also changed" ""))))
 
 (defun tts-set-punctuations-to-all (&optional prefix)
   "Set punctuation  mode to all.
@@ -1776,9 +1854,20 @@ Interactive PREFIX arg makes the new setting global."
     (tts-set-punctuations-to-all prefix)))
   (when (called-interactively-p 'interactive)
     (emacsvox-icon 'button)
-    (message "set punctuation mode to %s %s"
-             tts-punctuation-mode
-             (if prefix "" "locally"))))
+    (message
+     "%s%s"
+     (tts--punctuation-mode-description)
+     (if prefix "; global default also changed" ""))))
+
+(defun tts-reset-punctuation-mode ()
+  "Clear the buffer override and restore automatic punctuation policy."
+  (interactive)
+  (kill-local-variable 'tts-punctuation-mode-override)
+  (let ((state (tts-apply-punctuation-mode-policy)))
+    (when (called-interactively-p 'interactive)
+      (emacsvox-icon 'button)
+      (message "%s" (tts--punctuation-mode-description state)))
+    state))
 
 (defun tts-reset-state ()
   "Reset TTS engine."
@@ -3432,6 +3521,9 @@ When called interactively, CHAR defaults to the character after point."
             (set-text-properties pos (point) props)))))))
 
 ;;; tts-speak.el ends here
+
+(add-hook 'after-change-major-mode-hook
+          #'tts-apply-punctuation-mode-policy)
 
 (provide 'tts-speak)
 
