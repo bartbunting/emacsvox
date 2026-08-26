@@ -30,6 +30,21 @@ fi
 # GNU split invokes this helper only after closing a completed part.  Protect
 # the part just written and the newest part of every other live split session.
 # Legacy unsplit logs remain protected while their launcher PID is live.
+omnivox_pid_is_live()
+{
+    pid=$1
+    case $pid in
+        ''|*[!0-9]*) return 1 ;;
+    esac
+    kill -0 "$pid" 2>/dev/null || return 1
+    [ -r "/proc/$pid/cmdline" ] || return 1
+    command_line=$(tr '\0' ' ' <"/proc/$pid/cmdline")
+    case $command_line in
+        *omnivox.exe*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 omnivox_log_is_live_target()
 {
     candidate=$1
@@ -43,10 +58,7 @@ omnivox_log_is_live_target()
         omnivox-*-part[0-9][0-9][0-9][0-9][0-9][0-9].log)
             session=${name%-part[0-9][0-9][0-9][0-9][0-9][0-9].log}
             pid=${session##*-}
-            case $pid in
-                ''|*[!0-9]*) return 1 ;;
-            esac
-            kill -0 "$pid" 2>/dev/null || return 1
+            omnivox_pid_is_live "$pid" || return 1
             latest=
             for part in \
                 "$log_directory/$session"-part[0-9][0-9][0-9][0-9][0-9][0-9].log
@@ -59,10 +71,7 @@ omnivox_log_is_live_target()
         omnivox-*.log)
             session=${name%.log}
             pid=${session##*-}
-            case $pid in
-                ''|*[!0-9]*) return 1 ;;
-            esac
-            kill -0 "$pid" 2>/dev/null
+            omnivox_pid_is_live "$pid"
             ;;
         *) return 1 ;;
     esac

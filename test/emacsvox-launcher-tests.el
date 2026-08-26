@@ -49,6 +49,16 @@
                 (insert (make-string 40 (+ ?a index))))
               (set-file-modes file #o644)
               (set-file-times file (time-add base-time (1+ index)))))
+          ;; A recycled PID belonging to this Emacs is not a live Omnivox log.
+          (let ((recycled
+                 (expand-file-name
+                  (format
+                   "omnivox-20200101T000000Z-%d.log" (emacs-pid))
+                  directory)))
+            (with-temp-file recycled
+              (insert (make-string 40 ?z)))
+            (set-file-modes recycled #o644)
+            (set-file-times recycled (time-subtract base-time 1)))
           (let ((current
                  (expand-file-name
                   "omnivox-20260101T000004Z-900004-part000001.log"
