@@ -6146,6 +6146,94 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                       :events (list 'boundary-entered))))
               (should (eq (nth 2 submission) 'navigation)))))))))
 
+(ert-deftest emacsvox-agent-shell-historical-input-skips-hidden-prompt-source ()
+  "Character motion should cross a displayed Me prompt without artifacts."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local
+     agent-shell--state
+     '((:agent-config . ((:mode-line-name . "Codex"))))
+     agent-shell-chat--labeled t)
+    (insert "Earlier response\n\n")
+    (let ((prompt-start (point)))
+      (insert
+       (propertize
+        "Codex> " 'font-lock-face
+        '(comint-highlight-prompt comint-highlight-prompt)))
+      (let ((input-start (point)))
+        (insert "yes\n")
+        (insert
+         (propertize
+          "<shell-maker-end-of-prompt>"
+          'invisible t 'shell-maker--marker t)
+         "\nAgent response")
+        (agent-shell-chat--relabel)
+        (let ((prompt-overlay
+               (seq-find
+                (lambda (overlay)
+                  (eq (overlay-get overlay 'category)
+                      'agent-shell-chat-me))
+                (overlays-at prompt-start))))
+          (should prompt-overlay)
+          (should (equal (overlay-get prompt-overlay 'display) ""))
+          (should (= (overlay-end prompt-overlay) input-start)))
+        (cl-labels
+            ((move
+              (wrapper command origin destination)
+              (goto-char origin)
+              (let ((ems--interactive-fn-name command)
+                    (tts-stop-immediately t)
+                    original-called events)
+                (cl-letf
+                    (((symbol-function 'tts-stop)
+                      (lambda (&rest _) (push '(stop) events)))
+                     ((symbol-function 'tts-letter)
+                      (lambda (&rest arguments)
+                        (push (cons 'letter arguments) events)))
+                     ((symbol-function 'tts-speak)
+                      (lambda (&rest arguments)
+                        (push (cons 'speak arguments) events)))
+                     ((symbol-function 'tts-dispatch)
+                      (lambda (&rest arguments)
+                        (push (cons 'dispatch arguments) events)))
+                     ((symbol-function 'emacsvox-icon)
+                      (lambda (&rest arguments)
+                        (push (cons 'icon arguments) events))))
+                  (funcall
+                   wrapper
+                   (lambda (&rest _)
+                     (setq original-called t))))
+                (should-not original-called)
+                (should (= (point) destination))
+                (should-not ems--interactive-fn-name)
+                (should-not (assq 'icon events))
+                (should-not (member '(speak "") events))
+                (nreverse events))))
+          ;; Going back from `y' skips the hidden "Codex> " source and lands
+          ;; on its preceding newline.  Reversing direction reaches and speaks
+          ;; `y' in one step rather than emitting an ellipses earcon.
+          (dolist
+              (case
+               `((emacsvox-agent-shell--backward-char-around
+                  left-char ,input-start ,(1- prompt-start))
+                 (emacsvox-agent-shell--backward-char-around
+                  backward-char ,input-start ,(1- prompt-start))))
+            (pcase-let ((`(,wrapper ,command ,origin ,destination) case))
+              (should
+               (assq 'dispatch
+                     (move wrapper command origin destination)))))
+          (dolist
+              (case
+               `((emacsvox-agent-shell--forward-char-around
+                  right-char ,(1- prompt-start) ,input-start)
+                 (emacsvox-agent-shell--forward-char-around
+                  forward-char ,(1- prompt-start) ,input-start)))
+            (pcase-let ((`(,wrapper ,command ,origin ,destination) case))
+              (should
+               (member '(letter "y")
+                       (move wrapper command origin destination))))))))))
+
 (ert-deftest emacsvox-agent-shell-horizontal-motion-keeps-normal-scope ()
   "The live-input guard should leave ordinary horizontal motion untouched."
   (skip-unless (require 'agent-shell-chat-mode nil t))
@@ -6357,8 +6445,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               (substring-no-properties spoken)
               "Codex. ▶ Thought"))))))))
 
-(ert-deftest emacsvox-agent-shell-chat-navigation-skips-repeated-me-row ()
-  "A chat label display alias should not repeat a wrapped Me prompt."
+(ert-deftest emacsvox-agent-shell-chat-navigation-preserves-prompt-rows ()
+  "Skip a repeated Me alias without skipping wrapped or explicit rows."
   (skip-unless (require 'agent-shell-chat-mode nil t))
   (with-temp-buffer
     (setq major-mode 'agent-shell-mode)
@@ -6367,26 +6455,34 @@ Return speech events plus the target character.  DIRECTION is `forward' or
      '((:agent-config . ((:mode-line-name . "Codex"))))
      agent-shell-chat--labeled t)
     (insert "Earlier response\n\n")
-    (let (prompt-start question-start question-end alias-point
-          thought-start thought-end)
+    (let (prompt-start question-start first-row-end continuation-start
+          question-end second-line-start second-line-end alias-point
+          marker-start marker-end thought-start thought-end)
       (setq prompt-start (point))
       (insert
        (propertize
         "Codex> " 'font-lock-face
         '(comint-highlight-prompt comint-highlight-prompt)))
       (setq question-start (point))
-      (insert
-       (concat
-        "please do so and also rename the devices to shelly3 and shelly6 "
-        "as they are direct replacements for the failed devices"))
+      (insert "first visual row")
+      (setq first-row-end (point))
+      (insert " ")
+      (setq continuation-start (point))
+      (insert "wrapped continuation")
       (setq question-end (point)
-            alias-point (+ question-start 100))
+            alias-point (+ question-start 5))
       (insert "\n")
+      (setq second-line-start (point))
+      (insert "explicit second line")
+      (setq second-line-end (point))
+      (insert "\n")
+      (setq marker-start (point))
       (insert
        (propertize
         "<shell-maker-end-of-prompt>"
-        'invisible t 'shell-maker--marker t)
-       "\n")
+        'invisible t 'shell-maker--marker t))
+      (setq marker-end (point))
+      (insert "\n")
       (setq thought-start (point))
       (insert "▶ Thought")
       (setq thought-end (point))
@@ -6397,71 +6493,92 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (eq (overlay-get overlay 'category)
               'agent-shell-chat-me-label))
         (overlays-in (1- prompt-start) prompt-start)))
-      ;; Model the observed display geometry deterministically: the Me label
-      ;; row and the first wrapped content row have different point values but
-      ;; resolve to the same underlying source span.
+      ;; Model the live geometry: the display alias and first content row share
+      ;; source bounds, followed by a distinct short continuation and another
+      ;; explicit input line before the hidden prompt marker.
       (let ((visual-line-mode t)
-            (line-move-visual t)
-            line-moves spoken)
-        (cl-letf
-            (((symbol-function 'beginning-of-visual-line)
-              (lambda (&rest _)
-                (goto-char
-                 (if (<= (point) question-end)
-                     prompt-start
-                   thought-start))))
-             ((symbol-function 'end-of-visual-line)
-              (lambda (&rest _)
-                (goto-char
-                 (if (< (point) thought-start)
-                     question-end
-                   thought-end))))
-             ((symbol-function 'line-move)
-              (lambda (count &rest _)
-                (push count line-moves)
-                (goto-char thought-start)))
-             ((symbol-function 'emacsvox-aural-submit)
-              (lambda (text &rest _)
-                (push
-                 (substring-no-properties
-                  (emacsvox-agent-shell--prepare-speech-text text))
-                 spoken))))
-          (goto-char prompt-start)
-          (let ((ems--interactive-fn-name 'next-line)
-                core-spoke)
+            (line-move-visual t))
+        (cl-labels
+            ((visual-bounds
+              (position)
+              (cond
+               ((<= position first-row-end)
+                (cons prompt-start first-row-end))
+               ((<= position question-end)
+                (cons continuation-start question-end))
+               ((<= position second-line-end)
+                (cons second-line-start second-line-end))
+               ((< position thought-start)
+                (cons marker-start marker-end))
+               (t
+                (cons thought-start thought-end))))
+             (move-and-speak
+              (wrapper command origin destination)
+              (goto-char origin)
+              (let ((ems--interactive-fn-name command)
+                    spoken)
+                (cl-letf
+                    (((symbol-function 'emacsvox-aural-submit)
+                      (lambda (text &rest _)
+                        (setq spoken
+                              (substring-no-properties
+                               (emacsvox-agent-shell--prepare-speech-text
+                                text))))))
+                  (should
+                   (eq
+                    (funcall
+                     wrapper
+                     (lambda (&rest _)
+                       (goto-char destination)
+                       'moved)
+                     1)
+                    'moved)))
+                (list (point) spoken))))
+          (cl-letf
+              (((symbol-function 'beginning-of-visual-line)
+                (lambda (&rest _)
+                  (goto-char (car (visual-bounds (point))))))
+               ((symbol-function 'end-of-visual-line)
+                (lambda (&rest _)
+                  (goto-char (cdr (visual-bounds (point)))))))
+            ;; Down visits the wrapped continuation, explicit line, then agent.
             (should
-             (eq
-              (emacsvox-agent-shell--next-line-around
-               (lambda (&rest _)
-                 (goto-char alias-point)
-                 (when (ems-interactive-p 'next-line)
-                   (setq core-spoke t))
-                 'moved)
-               1)
-              'moved))
-            (should-not core-spoke))
-          (should (= (point) thought-start))
-          (should (equal line-moves '(1)))
-          (should (equal spoken '("Codex. ▶ Thought")))
-          (setq line-moves nil
-                spoken nil)
-          (goto-char thought-start)
-          (let ((ems--interactive-fn-name 'previous-line))
-            (emacsvox-agent-shell--previous-line-around
-             (lambda (&rest _)
-               (goto-char alias-point)
-               'moved)
-             1))
-          (should (= (point) alias-point))
-          (should-not line-moves)
-          (should
-           (equal
-            spoken
-            (list
-             (concat
-              "Me. please do so and also rename the devices to shelly3 and "
-              "shelly6 as they are direct replacements for the failed "
-              "devices")))))))))
+             (equal
+              (move-and-speak
+               #'emacsvox-agent-shell--next-line-around
+               'next-line prompt-start alias-point)
+              (list continuation-start "wrapped continuation")))
+            (should
+             (equal
+              (move-and-speak
+               #'emacsvox-agent-shell--next-line-around
+               'next-line continuation-start second-line-start)
+              (list second-line-start "explicit second line")))
+            (should
+             (equal
+              (move-and-speak
+               #'emacsvox-agent-shell--next-line-around
+               'next-line second-line-start marker-start)
+              (list thought-start "Codex. ▶ Thought")))
+            ;; Up returns through the same rows in reverse order.
+            (should
+             (equal
+              (move-and-speak
+               #'emacsvox-agent-shell--previous-line-around
+               'previous-line thought-start marker-start)
+              (list second-line-end "explicit second line")))
+            (should
+             (equal
+              (move-and-speak
+               #'emacsvox-agent-shell--previous-line-around
+               'previous-line second-line-start question-end)
+              (list question-end "wrapped continuation")))
+            (should
+             (equal
+              (move-and-speak
+               #'emacsvox-agent-shell--previous-line-around
+               'previous-line continuation-start alias-point)
+              (list alias-point "Me. first visual row")))))))))
 
 (ert-deftest emacsvox-agent-shell-chat-label-lookup-scales-by-property-run ()
   "Chat label discovery should not inspect every character on long lines."

@@ -869,6 +869,29 @@ after that response row was already visited directly."
              (car bounds) (cdr bounds))
         bounds))))
 
+(defun emacsvox-agent-shell--move-beyond-visual-source-row
+    (direction bounds)
+  "Move in DIRECTION beyond visual source BOUNDS.
+Use source positions rather than `line-move', whose retained goal column can
+skip a short wrapped continuation after Agent Shell's displayed Me label."
+  (goto-char
+   (pcase direction
+     ('forward
+      (min (point-max) (1+ (cdr bounds))))
+     ('backward
+      (max (point-min) (1- (car bounds)))))))
+
+(defun emacsvox-agent-shell--move-through-prompt-marker (direction)
+  "Move in DIRECTION through the current hidden prompt-marker line.
+Forward movement uses the next logical line.  Backward movement lands on the
+last source position of the preceding line, which preserves its final wrapped
+visual row instead of inheriting a goal column that can skip it."
+  (pcase direction
+    ('forward
+     (forward-line 1))
+    ('backward
+     (goto-char (max (point-min) (1- (line-beginning-position)))))))
+
 (defun emacsvox-agent-shell--present-current-navigation-line ()
   "Present the current line after Agent Shell normalizes vertical motion."
   (let* ((facts (copy-tree emacsvox-aural-submission-facts))
@@ -913,8 +936,7 @@ a positive argument to the advised command."
                 (apply original-function arguments))
             (apply original-function arguments)))
     (when normalize-p
-      (let ((delta (if (eq direction 'forward) 1 -1))
-            previous)
+      (let (previous)
         (while (and (or
                      (emacsvox-agent-shell--end-of-prompt-marker-line-p)
                      (and
@@ -925,7 +947,10 @@ a positive argument to the advised command."
                        (emacsvox-agent-shell--chat-navigation-source-bounds))))
                     (not (eq previous (point))))
           (setq previous (point))
-          (line-move delta)))
+          (if (emacsvox-agent-shell--end-of-prompt-marker-line-p)
+              (emacsvox-agent-shell--move-through-prompt-marker direction)
+            (emacsvox-agent-shell--move-beyond-visual-source-row
+             direction origin-source-bounds))))
       (emacsvox-agent-shell--present-current-navigation-line))
     result))
 
@@ -2407,13 +2432,64 @@ prompt's end and extends to `point-max'."
     'agent-user-prompt 'boundary-entered)
    'navigation))
 
+(defun emacsvox-agent-shell--hidden-chat-overlay-at (position direction)
+  "Return the hidden chat overlay to cross at POSITION in DIRECTION."
+  (let (best)
+    (dolist (overlay (overlays-at position))
+      (when (and
+             (memq (overlay-get overlay 'category)
+                   '(agent-shell-chat-me
+                     agent-shell-chat-me-surplus
+                     agent-shell-chat-agent))
+             (equal (overlay-get overlay 'display) "")
+             (< (overlay-start overlay) (overlay-end overlay))
+             (or
+              (null best)
+              (if (eq direction 'forward)
+                  (> (overlay-end overlay) (overlay-end best))
+                (< (overlay-start overlay) (overlay-start best)))))
+        (setq best overlay)))
+    best))
+
+(defun emacsvox-agent-shell--horizontal-chat-destination (direction steps)
+  "Return a DIRECTION destination STEPS away across hidden chat source.
+
+Return nil when ordinary character motion would not cross a hidden chat
+overlay.  Each hidden overlay counts as no source characters, so a step into
+one lands on the next real character in DIRECTION."
+  (when (derived-mode-p 'agent-shell-mode)
+    (let ((position (point))
+          (delta (if (eq direction 'forward) 1 -1))
+          crossed
+          valid)
+      (setq valid t)
+      (dotimes (_ steps)
+        (let ((next (+ position delta)))
+          (if (not (<= (point-min) next (point-max)))
+              (setq valid nil)
+            (setq position next)
+            (let (overlay)
+              (while (and valid
+                          (setq overlay
+                                (emacsvox-agent-shell--hidden-chat-overlay-at
+                                 position direction)))
+                (setq crossed t
+                      position
+                      (if (eq direction 'forward)
+                          (overlay-end overlay)
+                        (1- (overlay-start overlay))))
+                (unless (<= (point-min) position (point-max))
+                  (setq valid nil)))))))
+      (and valid crossed position))))
+
 (defun emacsvox-agent-shell--horizontal-motion-around
     (original-function nominal-direction arguments)
-  "Keep interactive horizontal motion inside the live input field.
+  "Normalize interactive horizontal motion through Agent Shell chat UI.
 
 ORIGINAL-FUNCTION receives ARGUMENTS when motion does not cross a prompt
 boundary.  NOMINAL-DIRECTION is the positive-argument direction of the
-advised command."
+advised command.  Live input boundaries remain semantic, while display-only
+chat source is crossed as one unit before core character speech runs."
   (let* ((target ems--interactive-fn-name)
          (interactive-p
           (memq target '(left-char right-char backward-char forward-char)))
@@ -2428,7 +2504,8 @@ advised command."
                       (emacsvox-agent-shell--live-input-bounds)))
          (start (car-safe bounds))
          (end (cdr-safe bounds))
-         boundary)
+         boundary
+         chat-destination)
     (when (and bounds (<= start (point)) (<= (point) end))
       (setq boundary
             (pcase direction
@@ -2436,15 +2513,32 @@ advised command."
                (and (> steps (- (point) start)) 'beginning))
               ('forward
                (and (>= steps (- end (point))) 'end)))))
-    (if (not boundary)
-        (apply original-function arguments)
+    (unless boundary
+      (setq chat-destination
+            (and interactive-p
+                 (> steps 0)
+                 (emacsvox-agent-shell--horizontal-chat-destination
+                  direction steps))))
+    (cond
+     (boundary
       ;; Consume the interactive marker so core character advice cannot add
       ;; ellipses, "control at", or an end-of-buffer warning if its advice is
       ;; outside this adapter in the current advice order.
       (ems-interactive-p target)
       (goto-char (if (eq boundary 'beginning) start end))
       (emacsvox-agent-shell--input-boundary-feedback boundary)
-      nil)))
+      nil)
+     (chat-destination
+      ;; The source replaced by a chat label has `display' "".  Bypass it so
+      ;; core character presentation cannot emit one ellipses icon per hidden
+      ;; prompt character, then provide the same destination feedback here.
+      (ems-interactive-p target)
+      (goto-char chat-destination)
+      (and tts-stop-immediately (tts-stop))
+      (emacsvox-speak-char t)
+      nil)
+     (t
+      (apply original-function arguments)))))
 
 (defun emacsvox-agent-shell--backward-char-around
     (original-function &rest arguments)
