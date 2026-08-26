@@ -651,6 +651,128 @@ write.  State synchronization lines in a combined write are ignored."
       1 1 (list (list plan "Bounded" nil)))
      :type 'error)))
 
+(ert-deftest emacsvox-aural-structured-timeline-bounds-total-actions ()
+  "V3 accepts 4,096 distributed actions and rejects the next action."
+  (let* ((spans
+          (vconcat
+           (cl-loop
+            for span-id from 1 to 9
+            collect
+            (list
+             :id span-id :text "test" :logical_voice_id :null
+             :acss nil :effects '(:mode "retain")))))
+         (actions
+          (vconcat
+           (cl-loop
+            for index below emacsvox-aural--timeline-max-actions
+            for span-id = (1+ (/ index 512))
+            collect
+            (list
+             :id (format "semantic.%d" index)
+             :position
+             (emacsvox-aural--timeline-position span-id 'after)
+             :lifecycle_anchor "run"
+             :type "semantic_event"))))
+         (envelope
+          (list
+           :protocol_version 3 :generation 1 :dispatch_id 1
+           :delivery_policy "ordered"
+           :spans spans :actions actions)))
+    (should (= emacsvox-aural--timeline-max-actions 4096))
+    (should (eq (emacsvox-aural--validate-structured-timeline envelope) envelope))
+    (setq
+     envelope
+     (plist-put
+      envelope :actions
+      (vconcat
+       actions
+       (vector
+        (list
+         :id "overflow"
+         :position (emacsvox-aural--timeline-position 9 'after)
+         :lifecycle_anchor "run"
+         :type "semantic_event")))))
+    (should-error
+     (emacsvox-aural--validate-structured-timeline envelope)
+     :type 'emacsvox-aural-transport-error)))
+
+(ert-deftest emacsvox-aural-structured-timeline-bounds-source-action-window ()
+  "The sender accepts 512 actions in one source window and rejects 513."
+  (let* ((actions
+          (vconcat
+           (cl-loop
+            for index below emacsvox-aural--timeline-max-actions-per-speech-window
+            collect
+            (list
+             :id (format "semantic.%d" index)
+             :position (emacsvox-aural--timeline-position 1 'after)
+             :lifecycle_anchor "run"
+             :type "semantic_event"))))
+         (envelope
+          (list
+           :protocol_version 3 :generation 1 :dispatch_id 1
+           :delivery_policy "ordered"
+           :spans
+           [(:id 1 :text "test" :logical_voice_id :null
+             :acss nil :effects (:mode "retain"))]
+           :actions actions)))
+    (should (= emacsvox-aural--timeline-max-actions-per-speech-window 512))
+    (should (eq (emacsvox-aural--validate-structured-timeline envelope) envelope))
+    (setq
+     envelope
+     (plist-put
+      envelope :actions
+      (vconcat
+       actions
+       (vector
+        (list
+         :id "overflow"
+         :position (emacsvox-aural--timeline-position 1 'after)
+         :lifecycle_anchor "run"
+         :type "semantic_event")))))
+    (should-error
+     (emacsvox-aural--validate-structured-timeline envelope)
+     :type 'emacsvox-aural-transport-error)))
+
+(ert-deftest emacsvox-aural-structured-timeline-allows-distributed-window-actions ()
+  "More than 512 span actions remain valid when separate windows own them."
+  (let* ((text
+          (mapconcat
+           (lambda (index) (format "word%d" index))
+           (number-sequence 1 30) " "))
+         (second-window (string-match-p "word16" text))
+         (actions
+          (vconcat
+           (cl-loop
+            for index below 513
+            collect
+            (list
+             :id (format "semantic.%d" index)
+             :position
+             (if (< index 256)
+                 (emacsvox-aural--timeline-position 1 'before)
+               (emacsvox-aural--timeline-text-offset-position
+                1 second-window 'before))
+             :lifecycle_anchor "run"
+             :type "semantic_event"))))
+         (envelope
+          (list
+           :protocol_version 3 :generation 1 :dispatch_id 1
+           :delivery_policy "ordered"
+           :spans
+           (vector
+            (list
+             :id 1 :text text :logical_voice_id :null
+             :acss nil :effects '(:mode "retain")))
+           :actions actions)))
+    (should
+     (equal
+      (append
+       (emacsvox-aural--timeline-source-word-spans "one[*]two three")
+       nil)
+      '((0 . 3) (6 . 9) (10 . 15))))
+    (should (eq (emacsvox-aural--validate-structured-timeline envelope) envelope))))
+
 (ert-deftest emacsvox-aural-structured-timeline-matches-interop-fixtures ()
   "The documented V1/V2 Base64 vectors match Emacs UTF-8 JSON encoding."
   (dolist

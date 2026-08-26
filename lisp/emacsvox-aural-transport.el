@@ -155,8 +155,14 @@ Each function receives the failure plist stored in
 (defconst emacsvox-aural--timeline-max-spans (* 4096 64)
   "Maximum speech spans in one logical V3 timeline.")
 
-(defconst emacsvox-aural--timeline-max-actions (* 4096 64)
-  "Maximum non-speech actions in one logical V3 timeline.")
+(defconst emacsvox-aural--timeline-max-actions 4096
+  "Maximum non-speech actions in one complete V3 timeline.")
+
+(defconst emacsvox-aural--timeline-max-actions-per-speech-window 512
+  "Maximum actions in one prepared Omnivox speech window.")
+
+(defconst emacsvox-aural--timeline-speech-window-words 15
+  "Maximum words synthesized in one prepared Omnivox speech window.")
 
 (defun emacsvox-aural-enable-framed-delivery (process)
   "Enable complete replaceable transaction framing for PROCESS."
@@ -1174,6 +1180,109 @@ recorded plans contain no speech span and therefore require legacy lowering."
      "%s must contain 1 to %d UTF-8 bytes"
      kind emacsvox-aural--timeline-id-max-bytes)))
 
+(defun emacsvox-aural--timeline-source-word-spans (text)
+  "Return source word spans in TEXT, treating legacy separators as whitespace.
+
+Omnivox punctuation expansion and split-caps can subdivide these words but do
+not join them, so every prepared 15-word window fits within one corresponding
+source-word window."
+  (let ((separator "\\(?:[[:space:]]+\\|\\[\\*\\]\\)")
+        (position 0)
+        spans)
+    (while (string-match separator text position)
+      (when (< position (match-beginning 0))
+        (push (cons position (match-beginning 0)) spans))
+      (setq position (match-end 0)))
+    (when (< position (length text))
+      (push (cons position (length text)) spans))
+    (vconcat (nreverse spans))))
+
+(defun emacsvox-aural--timeline-source-word-index
+    (spans position affinity)
+  "Locate POSITION with AFFINITY in source word SPANS.
+
+This mirrors Omnivox chunk affinity conservatively: before positions select
+the next source word at a boundary, and after positions select the previous
+source word."
+  (let ((low 0)
+        (high (length spans)))
+    (unless (> high 0)
+      (emacsvox-aural--transport-error
+       "Cannot locate a timeline action in speech with no source words"))
+    (cond
+     ((equal affinity "before")
+      (while (< low high)
+        (let ((middle (/ (+ low high) 2)))
+          (if (> (cdr (aref spans middle)) position)
+              (setq high middle)
+            (setq low (1+ middle)))))
+      (min low (1- (length spans))))
+     ((equal affinity "after")
+      (while (< low high)
+        (let ((middle (/ (+ low high) 2)))
+          (if (< (car (aref spans middle)) position)
+              (setq low (1+ middle))
+            (setq high middle))))
+      (max 0 (1- low)))
+     (t
+      (emacsvox-aural--transport-error
+       "Structured action has invalid affinity %S" affinity)))))
+
+(defun emacsvox-aural--validate-span-action-windows
+    (span-id text actions offset-positions)
+  "Validate ACTIONS against bounded speech windows in span SPAN-ID.
+
+TEXT is the source speech and OFFSET-POSITIONS maps validated UTF-8 offsets to
+character positions.  The source-side check is conservative; Omnivox repeats
+the authoritative check after punctuation and split-cap preprocessing."
+  (when
+      (> (length actions)
+         emacsvox-aural--timeline-max-actions-per-speech-window)
+    (let* ((word-spans (emacsvox-aural--timeline-source-word-spans text))
+           (word-count (length word-spans)))
+      (if (zerop word-count)
+          (emacsvox-aural--transport-error
+           "Structured timeline span %S contains %d actions in one speech window; limit is %d"
+           span-id (length actions)
+           emacsvox-aural--timeline-max-actions-per-speech-window)
+        (let ((counts (make-vector word-count 0))
+              (window-total 0))
+          (dolist (action actions)
+            (let* ((wire-position (plist-get action :position))
+                   (kind (plist-get wire-position :position))
+                   (affinity (plist-get wire-position :affinity))
+                   (position
+                    (cond
+                     ((equal kind "text_offset")
+                      (gethash
+                       (plist-get wire-position :utf8_offset)
+                       offset-positions))
+                     ((equal kind "span_boundary")
+                      (if (equal affinity "before") 0 (length text)))
+                     (t
+                      (emacsvox-aural--transport-error
+                       "Structured action has invalid position %S" kind))))
+                   (word-index
+                    (emacsvox-aural--timeline-source-word-index
+                     word-spans position affinity)))
+              (aset counts word-index (1+ (aref counts word-index)))))
+          (dotimes (word-index word-count)
+            (cl-incf window-total (aref counts word-index))
+            (when
+                (>= word-index emacsvox-aural--timeline-speech-window-words)
+              (cl-decf
+               window-total
+               (aref
+                counts
+                (- word-index emacsvox-aural--timeline-speech-window-words))))
+            (when
+                (> window-total
+                   emacsvox-aural--timeline-max-actions-per-speech-window)
+              (emacsvox-aural--transport-error
+               "Structured timeline span %S contains %d actions in one speech window; limit is %d"
+               span-id window-total
+               emacsvox-aural--timeline-max-actions-per-speech-window))))))))
+
 (defun emacsvox-aural--validate-structured-timeline (envelope)
   "Validate V3 timeline ENVELOPE before any transport write."
   (unless
@@ -1193,6 +1302,8 @@ recorded plans contain no speech span and therefore require legacy lowering."
          (actions (append (plist-get envelope :actions) nil))
          (span-texts (make-hash-table :test #'eql))
          (span-offsets (make-hash-table :test #'eql))
+         (span-offset-positions (make-hash-table :test #'eql))
+         (span-actions (make-hash-table :test #'eql))
          (action-ids (make-hash-table :test #'equal)))
     (unless
         (and
@@ -1237,6 +1348,8 @@ recorded plans contain no speech span and therefore require legacy lowering."
         (unless span-text
           (emacsvox-aural--transport-error
            "Structured action %S references unknown span %S" id span-id))
+        (puthash
+         span-id (cons action (gethash span-id span-actions)) span-actions)
         (when (equal (plist-get position :position) "text_offset")
           (puthash
            span-id
@@ -1258,9 +1371,22 @@ recorded plans contain no speech span and therefore require legacy lowering."
                 id emacsvox-aural--timeline-resource-path-max-bytes))))))
     (maphash
      (lambda (span-id offsets)
-       (emacsvox-aural--utf8-offset-position-table
-        (gethash span-id span-texts) offsets))
-     span-offsets))
+       (puthash
+        span-id
+        (emacsvox-aural--utf8-offset-position-table
+         (gethash span-id span-texts) offsets)
+        span-offset-positions))
+     span-offsets)
+    (maphash
+     (lambda (span-id actions)
+       (emacsvox-aural--validate-span-action-windows
+        span-id
+        (gethash span-id span-texts)
+        actions
+        (or
+         (gethash span-id span-offset-positions)
+         (make-hash-table :test #'eql))))
+     span-actions))
   envelope)
 
 (defun emacsvox-aural--structured-timeline-payload (envelope)
