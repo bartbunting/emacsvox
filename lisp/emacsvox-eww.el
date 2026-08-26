@@ -835,27 +835,44 @@ are available are cued by an auditory icon on the header line."
 
 ;; Check cache if URL already open, otherwise cache.
 
+(defun emacsvox-eww--restore-reading-settings
+    (rate punctuation-override)
+  "Restore RATE and explicit PUNCTUATION-OVERRIDE after EWW reconstruction."
+  (if punctuation-override
+      (tts-set-punctuations punctuation-override)
+    (tts-apply-punctuation-mode-policy))
+  (tts-set-rate rate))
+
+(defun emacsvox-eww--queue-reading-settings-restore
+    (rate punctuation-override)
+  "Restore RATE and PUNCTUATION-OVERRIDE after the next EWW render."
+  (add-hook
+   'emacsvox-eww-post-hook
+   (apply-partially
+    #'emacsvox-eww--restore-reading-settings
+    rate punctuation-override)
+   'at-end))
+
 (defun emacsvox--advice-eww-reload-around (original &rest arguments)
-  "Check buffer local settings for feed buffers.\nIf buffer was result of displaying a feed, reload feed.\nIf we came from a url-template, reload that template.\nRetain previously set punctuations  mode."
+  "Reload EWW while preserving feed, template, and speech settings.
+If the buffer displays a feed or URL template, reconstruct it and retain its
+speech rate and any explicit punctuation override."
   (add-hook 'emacsvox-eww-post-hook
             'emacsvox-eww-post-render-actions)
   (cond
    ((and (eww-current-url) emacsvox-eww-feed emacsvox-eww-style)
     (let
         ((r tts-speech-rate) (u (eww-current-url))
-         (s emacsvox-eww-style))
+         (s emacsvox-eww-style)
+         (p tts-punctuation-mode-override))
       (kill-buffer)
-      (add-hook 'emacsvox-eww-post-hook
-                #'(lambda nil (tts-set-punctuations 'all)
-                    (tts-set-rate r))
-                'at-end)
+      (emacsvox-eww--queue-reading-settings-restore r p)
       (emacsvox-feeds-feed-display u s 'speak)))
    ((and (eww-current-url) emacsvox-eww-url-template)
-    (let ((n emacsvox-eww-url-template) (r tts-speech-rate))
-      (add-hook 'emacsvox-eww-post-hook
-                #'(lambda nil (tts-set-punctuations 'all)
-                    (tts-set-rate r))
-                'at-end)
+    (let ((n emacsvox-eww-url-template)
+          (r tts-speech-rate)
+          (p tts-punctuation-mode-override))
+      (emacsvox-eww--queue-reading-settings-restore r p)
       (kill-buffer)
       (emacsvox-url-template-open (emacsvox-url-template-get n))))
    (t
@@ -2340,7 +2357,7 @@ via command `org-insert-link' bound to \\[org-insert-link]."
   (interactive)
   
   (tts-set-rate (+ tts-speech-rate-base (* tts-speech-rate-step  3)))
-  (tts-set-punctuations 'all)
+  (tts-set-punctuations 'some)
   (when tts-split-caps(tts-toggle-split-caps))
   (emacsvox-speak-rest-of-buffer))
 

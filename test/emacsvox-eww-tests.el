@@ -461,6 +461,59 @@
       '((original t encode)
         (sox 0.5 "%-2:%-1" "fade h .1 .5 .4 gain -8 "))))))
 
+(ert-deftest emacsvox-eww-reload-preserves-explicit-punctuation ()
+  "Feed reload carries an explicit punctuation override to its new buffer."
+  (let ((emacsvox-eww-feed t)
+        (emacsvox-eww-style 'feed-style)
+        (emacsvox-eww-url-template nil)
+        (tts-speech-rate 180)
+        (tts-punctuation-mode-override 'none)
+        restore-action)
+    (cl-letf
+        (((symbol-function 'eww-current-url)
+          (lambda () "https://example.test/feed"))
+         ((symbol-function 'kill-buffer) #'ignore)
+         ((symbol-function 'emacsvox-feeds-feed-display) #'ignore)
+         ((symbol-function 'add-hook)
+          (lambda (hook function &rest _)
+            (when (and (eq hook 'emacsvox-eww-post-hook)
+                       (not (eq function 'emacsvox-eww-post-render-actions)))
+              (setq restore-action function)))))
+      (emacsvox--advice-eww-reload-around #'ignore))
+    (should restore-action)
+    (with-temp-buffer
+      (setq major-mode 'eww-mode)
+      (let ((tts-speaker-process nil)
+            restored-rate)
+        (cl-letf (((symbol-function 'tts-set-rate)
+                   (lambda (rate &rest _) (setq restored-rate rate))))
+          (funcall restore-action))
+        (should (= restored-rate 180))
+        (should (eq tts-punctuation-mode 'none))
+        (should (eq tts-punctuation-mode-override 'none))))))
+
+(ert-deftest emacsvox-eww-reload-recomputes-automatic-punctuation ()
+  "Reload without an override applies EWW's automatic prose policy."
+  (with-temp-buffer
+    (setq major-mode 'eww-mode)
+    (let ((tts-speaker-process nil))
+      (cl-letf (((symbol-function 'tts-set-rate) #'ignore))
+        (emacsvox-eww--restore-reading-settings 180 nil))
+      (should (eq tts-punctuation-mode 'some))
+      (should-not tts-punctuation-mode-override))))
+
+(ert-deftest emacsvox-eww-reading-settings-use-prose-punctuation ()
+  "The explicit EWW reading preset selects `some' punctuation."
+  (with-temp-buffer
+    (setq major-mode 'eww-mode)
+    (let ((tts-speaker-process nil)
+          (tts-split-caps nil))
+      (cl-letf (((symbol-function 'tts-set-rate) #'ignore)
+                ((symbol-function 'emacsvox-speak-rest-of-buffer) #'ignore))
+        (emacsvox-eww-reading-settings))
+      (should (eq tts-punctuation-mode 'some))
+      (should (eq tts-punctuation-mode-override 'some)))))
+
 (ert-deftest emacsvox-eww-readable-calls-original-once ()
   "Readable conversion preserves result and emits feedback afterwards."
   (let ((calls 0)
