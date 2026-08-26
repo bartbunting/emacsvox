@@ -849,6 +849,98 @@ after that response row was already visited directly."
       (emacsvox-agent-shell--block-location-facts
        location 'focus-entered))))
 
+(defun emacsvox-agent-shell--end-of-prompt-marker-line-p ()
+  "Return non-nil when the current line is only a hidden prompt marker."
+  (let ((inhibit-field-text-motion t))
+    (let ((start (line-beginning-position))
+          (end (line-end-position)))
+      (and
+       (< start end)
+       (text-property-any start end 'shell-maker--marker t)
+       (string-match-p
+        "\\`[ \t]*<shell-maker-end-of-prompt>[ \t]*\\'"
+        (buffer-substring-no-properties start end))))))
+
+(defun emacsvox-agent-shell--chat-navigation-source-bounds ()
+  "Return the current visual source bounds when they carry a chat label."
+  (when (or line-move-visual visual-line-mode)
+    (let ((bounds (emacsvox-agent-shell--visual-line-source-bounds)))
+      (when (emacsvox-agent-shell--chat-label-context-between
+             (car bounds) (cdr bounds))
+        bounds))))
+
+(defun emacsvox-agent-shell--present-current-navigation-line ()
+  "Present the current line after Agent Shell normalizes vertical motion."
+  (let* ((facts (copy-tree emacsvox-aural-submission-facts))
+         (events
+          (append
+           (copy-sequence (plist-get facts :events))
+           '(focus-entered)))
+         (emacsvox-aural-submission-facts
+          (plist-put facts :events (delete-dups events)))
+         (emacsvox-aural-submission-occasion 'navigation))
+    (if (or line-move-visual visual-line-mode)
+        (emacsvox-speak-visual-line)
+      (emacsvox-speak-line))))
+
+(defun emacsvox-agent-shell--vertical-motion-around
+    (original-function nominal-direction arguments)
+  "Normalize presentational chat rows during interactive vertical motion.
+
+ORIGINAL-FUNCTION receives ARGUMENTS.  NOMINAL-DIRECTION is the direction of
+a positive argument to the advised command."
+  (let* ((target ems--interactive-fn-name)
+         (interactive-p (memq target '(next-line previous-line)))
+         (count (prefix-numeric-value (car arguments)))
+         (normalize-p
+          (and interactive-p
+               (/= count 0)
+               (derived-mode-p 'agent-shell-mode)))
+         (direction
+          (if (< count 0)
+              (if (eq nominal-direction 'forward) 'backward 'forward)
+            nominal-direction))
+         (origin-point (point))
+         (origin-source-bounds
+          (and normalize-p
+               (emacsvox-agent-shell--chat-navigation-source-bounds)))
+         result)
+    ;; Agent Shell may need to move again after the command reaches a display
+    ;; alias.  Defer core line speech until that final destination is known.
+    (setq result
+          (if normalize-p
+              (let ((ems--interactive-fn-name nil))
+                (apply original-function arguments))
+            (apply original-function arguments)))
+    (when normalize-p
+      (let ((delta (if (eq direction 'forward) 1 -1))
+            previous)
+        (while (and (or
+                     (emacsvox-agent-shell--end-of-prompt-marker-line-p)
+                     (and
+                      origin-source-bounds
+                      (/= origin-point (point))
+                      (equal
+                       origin-source-bounds
+                       (emacsvox-agent-shell--chat-navigation-source-bounds))))
+                    (not (eq previous (point))))
+          (setq previous (point))
+          (line-move delta)))
+      (emacsvox-agent-shell--present-current-navigation-line))
+    result))
+
+(defun emacsvox-agent-shell--next-line-around
+    (original-function &rest arguments)
+  "Normalize Agent Shell presentational rows during downward motion."
+  (emacsvox-agent-shell--vertical-motion-around
+   original-function 'forward arguments))
+
+(defun emacsvox-agent-shell--previous-line-around
+    (original-function &rest arguments)
+  "Normalize Agent Shell presentational rows during upward motion."
+  (emacsvox-agent-shell--vertical-motion-around
+   original-function 'backward arguments))
+
 (defun emacsvox-agent-shell--call-with-vertical-block-entry
     (original-function arguments)
   "Call ORIGINAL-FUNCTION with ARGUMENTS and authoritative entry facts."
@@ -5548,6 +5640,8 @@ Return nil when the configured verbosity requests status cues only."
     (backward-char :around emacsvox-agent-shell--backward-char-around)
     (right-char :around emacsvox-agent-shell--forward-char-around)
     (forward-char :around emacsvox-agent-shell--forward-char-around)
+    (next-line :around emacsvox-agent-shell--next-line-around)
+    (previous-line :around emacsvox-agent-shell--previous-line-around)
     (tts-speak :around emacsvox-agent-shell--tts-speak-around)
     (emacsvox-speak-mode-line :around
      emacsvox-agent-shell--speak-mode-line-around)

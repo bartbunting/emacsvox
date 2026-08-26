@@ -175,6 +175,12 @@
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--vertical-navigation-post-command
                   "emacsvox-agent-shell" ())
+(declare-function emacsvox-agent-shell--next-line-around
+                  "emacsvox-agent-shell"
+                  (original-function &rest arguments))
+(declare-function emacsvox-agent-shell--previous-line-around
+                  "emacsvox-agent-shell"
+                  (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--speak-line-around
                   "emacsvox-agent-shell" (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--toggle-fragment-around
@@ -6268,6 +6274,194 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (emacsvox-agent-shell--speak-visual-line-around
            (lambda (&rest _) (setq called t))))
         (should-not called)))))
+
+(ert-deftest emacsvox-agent-shell-chat-navigation-skips-hidden-marker-row ()
+  "One vertical command should cross the hidden prompt marker and speak."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local
+     agent-shell--state
+     '((:agent-config . ((:mode-line-name . "Codex"))))
+     agent-shell-chat--labeled t)
+    (let (prompt-start question-start question-end marker-start thought-start)
+      (setq prompt-start (point))
+      (insert
+       (propertize
+        "Codex> "
+        'font-lock-face '(comint-highlight-prompt comint-highlight-prompt)
+        'field 'output
+        'inhibit-line-move-field-capture t))
+      (setq question-start (point))
+      (insert "where were we?")
+      (setq question-end (point))
+      (insert (propertize "\n" 'field 'boundary))
+      (setq marker-start (point))
+      (insert
+       (propertize
+        "<shell-maker-end-of-prompt>"
+        'field 'output
+        'inhibit-line-move-field-capture t
+        'invisible t
+        'shell-maker--marker t)
+       (propertize
+        "\n"
+        'field 'output
+        'inhibit-line-move-field-capture t))
+      (setq thought-start (point))
+      (insert (propertize "▶ Thought" 'field 'output))
+      (agent-shell-chat--relabel)
+      (let ((visual-line-mode nil)
+            (line-move-visual nil))
+        (cl-labels
+            ((move-through-marker
+              (wrapper direction origin)
+              (goto-char origin)
+              (let ((ems--interactive-fn-name
+                     (if (eq direction 'backward)
+                         'previous-line
+                       'next-line))
+                    result spoken)
+                (cl-letf
+                    (((symbol-function 'emacsvox-aural-submit)
+                      (lambda (text &rest _)
+                        (setq spoken
+                              (emacsvox-agent-shell--prepare-speech-text
+                               text)))))
+                  (setq result
+                        (funcall
+                         wrapper
+                         (lambda (&rest _)
+                           (goto-char marker-start)
+                           'moved)
+                         1)))
+                (list result (point) spoken))))
+          (pcase-let ((`(,result ,destination ,spoken)
+                       (move-through-marker
+                        #'emacsvox-agent-shell--previous-line-around
+                        'backward thought-start)))
+            (should (eq result 'moved))
+            (should (<= prompt-start destination question-end))
+            (should
+             (equal
+              (substring-no-properties spoken)
+              "Me. where were we?")))
+          (pcase-let ((`(,result ,destination ,spoken)
+                       (move-through-marker
+                        #'emacsvox-agent-shell--next-line-around
+                        'forward question-start)))
+            (should (eq result 'moved))
+            (should (= destination thought-start))
+            (should
+             (equal
+              (substring-no-properties spoken)
+              "Codex. ▶ Thought"))))))))
+
+(ert-deftest emacsvox-agent-shell-chat-navigation-skips-repeated-me-row ()
+  "A chat label display alias should not repeat a wrapped Me prompt."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local
+     agent-shell--state
+     '((:agent-config . ((:mode-line-name . "Codex"))))
+     agent-shell-chat--labeled t)
+    (insert "Earlier response\n\n")
+    (let (prompt-start question-start question-end alias-point
+          thought-start thought-end)
+      (setq prompt-start (point))
+      (insert
+       (propertize
+        "Codex> " 'font-lock-face
+        '(comint-highlight-prompt comint-highlight-prompt)))
+      (setq question-start (point))
+      (insert
+       (concat
+        "please do so and also rename the devices to shelly3 and shelly6 "
+        "as they are direct replacements for the failed devices"))
+      (setq question-end (point)
+            alias-point (+ question-start 100))
+      (insert "\n")
+      (insert
+       (propertize
+        "<shell-maker-end-of-prompt>"
+        'invisible t 'shell-maker--marker t)
+       "\n")
+      (setq thought-start (point))
+      (insert "▶ Thought")
+      (setq thought-end (point))
+      (agent-shell-chat--relabel)
+      (should
+       (seq-find
+        (lambda (overlay)
+          (eq (overlay-get overlay 'category)
+              'agent-shell-chat-me-label))
+        (overlays-in (1- prompt-start) prompt-start)))
+      ;; Model the observed display geometry deterministically: the Me label
+      ;; row and the first wrapped content row have different point values but
+      ;; resolve to the same underlying source span.
+      (let ((visual-line-mode t)
+            (line-move-visual t)
+            line-moves spoken)
+        (cl-letf
+            (((symbol-function 'beginning-of-visual-line)
+              (lambda (&rest _)
+                (goto-char
+                 (if (<= (point) question-end)
+                     prompt-start
+                   thought-start))))
+             ((symbol-function 'end-of-visual-line)
+              (lambda (&rest _)
+                (goto-char
+                 (if (< (point) thought-start)
+                     question-end
+                   thought-end))))
+             ((symbol-function 'line-move)
+              (lambda (count &rest _)
+                (push count line-moves)
+                (goto-char thought-start)))
+             ((symbol-function 'emacsvox-aural-submit)
+              (lambda (text &rest _)
+                (push
+                 (substring-no-properties
+                  (emacsvox-agent-shell--prepare-speech-text text))
+                 spoken))))
+          (goto-char prompt-start)
+          (let ((ems--interactive-fn-name 'next-line)
+                core-spoke)
+            (should
+             (eq
+              (emacsvox-agent-shell--next-line-around
+               (lambda (&rest _)
+                 (goto-char alias-point)
+                 (when (ems-interactive-p 'next-line)
+                   (setq core-spoke t))
+                 'moved)
+               1)
+              'moved))
+            (should-not core-spoke))
+          (should (= (point) thought-start))
+          (should (equal line-moves '(1)))
+          (should (equal spoken '("Codex. ▶ Thought")))
+          (setq line-moves nil
+                spoken nil)
+          (goto-char thought-start)
+          (let ((ems--interactive-fn-name 'previous-line))
+            (emacsvox-agent-shell--previous-line-around
+             (lambda (&rest _)
+               (goto-char alias-point)
+               'moved)
+             1))
+          (should (= (point) alias-point))
+          (should-not line-moves)
+          (should
+           (equal
+            spoken
+            (list
+             (concat
+              "Me. please do so and also rename the devices to shelly3 and "
+              "shelly6 as they are direct replacements for the failed "
+              "devices")))))))))
 
 (ert-deftest emacsvox-agent-shell-chat-label-lookup-scales-by-property-run ()
   "Chat label discovery should not inspect every character on long lines."
