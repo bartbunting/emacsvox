@@ -1004,8 +1004,8 @@ write.  State synchronization lines in a combined write are ignored."
          (span (aref (plist-get envelope :spans) 0)))
     (should (eq (plist-get span :logical_voice_id) :null))))
 
-(ert-deftest emacsvox-aural-delivers-one-negotiated-structured-timeline ()
-  "A complete direct Aural presentation replaces its legacy wire packet."
+(ert-deftest emacsvox-aural-delivers-negotiated-structured-timelines-once ()
+  "Each direct Aural presentation is built once and replaces its legacy packet."
   (let* ((process
           (make-pipe-process
            :name "emacsvox-structured-delivery-test" :buffer nil :noquery t))
@@ -1024,7 +1024,10 @@ write.  State synchronization lines in a combined write are ignored."
             :text "structured" :speak t :voice-request 'comment
             :voice-command "[[logical_voice comment]]")
            :context '(:occasion navigation)))
-         writes identifier)
+         (builder
+          (symbol-function 'emacsvox-aural--build-structured-timeline))
+         (build-count 0)
+         writes identifiers)
     (unwind-protect
         (progn
           (process-put
@@ -1035,39 +1038,52 @@ write.  State synchronization lines in a combined write are ignored."
               (((symbol-function 'process-send-string)
                 (lambda (owner command)
                   (push (list owner command) writes)))
+               ((symbol-function 'emacsvox-aural--build-structured-timeline)
+                (lambda (&rest arguments)
+                  (cl-incf build-count)
+                  (apply builder arguments)))
                ((symbol-function 'tts-voice-reset-code)
                 (lambda () "")))
-            (setq
-             identifier
-             (emacsvox-aural-call-with-delivery-transaction
-              process
-              (lambda ()
-                (emacsvox-aural-queue-concrete-plan plan "structured")
-                (tts--protocol-dispatch)))))
-          (should (= identifier 41))
-          (should (= (length writes) 1))
-          (let ((wire (cadar writes)))
-            (should
-             (string-match
-              "\\`emacsvox_timeline {\\([^}]+\\)}\n\\'" wire))
-            (let* ((decoded
-                    (decode-coding-string
-                     (base64-decode-string (match-string 1 wire)) 'utf-8))
-                   (envelope
-                    (json-parse-string
-                     decoded :object-type 'plist :array-type 'list)))
-              (should (= (plist-get envelope :protocol_version) 3))
-              (should (equal (plist-get envelope :delivery_policy) "ordered"))
-              (should-not (plist-member envelope :replacement_key))
-              (should (= (plist-get envelope :generation) 1))
-              (should (= (plist-get envelope :dispatch_id) identifier))
-              (should
-               (equal
-                (plist-get (car (plist-get envelope :spans)) :text)
-                "structured"))))
-          (should (gethash identifier tts--tracked-dispatches))
-          (should (gethash identifier tts--marker-dispatches)))
-      (tts-cancel-tracked-dispatch identifier)
+            (dotimes (_ 2)
+              (push
+               (emacsvox-aural-call-with-delivery-transaction
+                process
+                (lambda ()
+                  (emacsvox-aural-queue-concrete-plan plan "structured")
+                  (tts--protocol-dispatch)))
+               identifiers)))
+          (setq identifiers (nreverse identifiers)
+                writes (nreverse writes))
+          (should (equal identifiers '(41 42)))
+          (should (= build-count 2))
+          (should (= (length writes) 2))
+          (cl-mapc
+           (lambda (identifier generation write)
+             (let ((wire (cadr write)))
+               (should
+                (string-match
+                 "\\`emacsvox_timeline {\\([^}]+\\)}\n\\'" wire))
+               (let* ((decoded
+                       (decode-coding-string
+                        (base64-decode-string (match-string 1 wire)) 'utf-8))
+                      (envelope
+                       (json-parse-string
+                        decoded :object-type 'plist :array-type 'list)))
+                 (should (= (plist-get envelope :protocol_version) 3))
+                 (should
+                  (equal (plist-get envelope :delivery_policy) "ordered"))
+                 (should-not (plist-member envelope :replacement_key))
+                 (should (= (plist-get envelope :generation) generation))
+                 (should (= (plist-get envelope :dispatch_id) identifier))
+                 (should
+                  (equal
+                   (plist-get (car (plist-get envelope :spans)) :text)
+                   "structured"))))
+             (should (gethash identifier tts--tracked-dispatches))
+             (should (gethash identifier tts--marker-dispatches)))
+           identifiers '(1 2) writes))
+      (dolist (identifier identifiers)
+        (tts-cancel-tracked-dispatch identifier))
       (delete-process process))))
 
 (ert-deftest emacsvox-aural-delivers-multipart-timeline-as-one-tracked-write ()

@@ -1333,11 +1333,7 @@ recorded plans contain no speech span and therefore require legacy lowering."
                  bindings))
                (actual-id (car registration)))
           (unless (= actual-id 1)
-            (setq
-             envelope
-             (car
-              (emacsvox-aural--build-structured-timeline
-               generation actual-id runs))))
+            (setq envelope (plist-put envelope :dispatch_id actual-id)))
           (list
            (append
             (cl-remove-if
