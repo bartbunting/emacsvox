@@ -185,6 +185,9 @@
                   (should (string-search "session_start session_id=" combined))
                   (should (string-search "diagnostic-00" combined))
                   (should (string-search "diagnostic-29" combined))
+                  ;; Let the orphaned writer observe EOF before removing its
+                  ;; temporary log directory.
+                  (sleep-for 0.05)
                   (should (= (file-modes log-directory) #o700))
                   (dolist (log logs)
                     (should

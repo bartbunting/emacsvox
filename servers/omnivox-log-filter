@@ -76,7 +76,10 @@ omnivox_cleanup()
         unlink -- "$omnivox_retention_list" 2>/dev/null || :
     fi
 }
-trap omnivox_cleanup 0 1 2 15
+trap omnivox_cleanup 0
+trap 'exit 129' 1
+trap 'exit 130' 2
+trap 'exit 143' 15
 
 omnivox_prune_logs()
 {
@@ -121,7 +124,12 @@ omnivox_open_stream_part()
         if (set -C; : >"$FILE") 2>/dev/null; then
             break
         fi
-        omnivox_stream_part=$((omnivox_stream_part + 1))
+        if [ -e "$FILE" ]; then
+            omnivox_stream_part=$((omnivox_stream_part + 1))
+        else
+            echo "Could not create Omnivox log part: $FILE" >&2
+            return 1
+        fi
     done
     chmod 600 -- "$FILE"
     exec 3>>"$FILE"
@@ -137,6 +145,7 @@ omnivox_stream_logs()
 
     omnivox_stream_part=1
     omnivox_stream_bytes=0
+    omnivox_stream_line=
     omnivox_open_stream_part
 
     while IFS= read -r omnivox_stream_line ||
