@@ -100,6 +100,26 @@ The active log is additional to this number."
         (set-default-file-modes previous-modes))))
   (set-file-modes file #o600))
 
+(defun emacsvox-aural--diagnostic-readable-command (command)
+  "Return COMMAND, or a readable printed string when COMMAND is unreadable."
+  (let ((print-circle t))
+    (let ((printed (prin1-to-string command)))
+      (condition-case nil
+          (let ((parsed (read-from-string printed)))
+            (if (= (cdr parsed) (length printed)) command printed))
+        (error printed)))))
+
+(defun emacsvox-aural--diagnostic-fields (fields)
+  "Return a readable copy of diagnostic FIELDS."
+  (let ((result (copy-sequence fields)))
+    (when (plist-member result :command)
+      (setq result
+            (plist-put
+             result :command
+             (emacsvox-aural--diagnostic-readable-command
+              (plist-get result :command)))))
+    result))
+
 (defun emacsvox-aural--diagnostic-archive-files (file)
   "Return session-tagged archives belonging to diagnostic log FILE."
   (let* ((directory (file-name-directory file))
@@ -179,12 +199,13 @@ Logging never prevents presentation; a write failure is retained in
                   :session-id emacsvox-aural--diagnostic-session-id
                   :emacs-pid (emacs-pid)
                   :event event)
-                 fields))
+                 (emacsvox-aural--diagnostic-fields fields)))
                (coding-system-for-write 'utf-8-unix))
           (when directory (make-directory directory t))
           (emacsvox-aural--secure-diagnostic-log-file file)
           (with-temp-buffer
             (let ((print-circle t)
+                  (print-escape-newlines t)
                   (print-length nil)
                   (print-level nil))
               (prin1 record (current-buffer)))

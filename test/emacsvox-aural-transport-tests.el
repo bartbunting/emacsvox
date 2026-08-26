@@ -2372,7 +2372,7 @@ write.  State synchronization lines in a combined write are ignored."
            (emacsvox-aural-diagnostic-log-file file)
            (emacsvox-aural--diagnostic-session-id "test-session-42")
            (emacsvox-aural-command-start-time (- (float-time) 0.05))
-           (this-command 'next-line)
+           (this-command (symbol-function 'forward-char))
            (context
             '(:module agent-shell
               :mode agent-shell-mode
@@ -2386,9 +2386,10 @@ write.  State synchronization lines in a combined write are ignored."
           (progn
             (cl-letf (((symbol-function 'tts-speak) #'ignore))
               (emacsvox-aural-submit
-               "sensitive diagnostic text" :context context))
+               "sensitive\ndiagnostic text" :context context))
             (with-temp-buffer
               (insert-file-contents file)
+              (should (= (count-lines (point-min) (point-max)) 2))
               (goto-char (point-min))
               (condition-case nil
                   (while t (push (read (current-buffer)) records))
@@ -2401,7 +2402,9 @@ write.  State synchronization lines in a combined write are ignored."
             (should
              (equal
               (plist-get (car records) :content)
-              "sensitive diagnostic text"))
+              "sensitive\ndiagnostic text"))
+            (dolist (record records)
+              (should (stringp (plist-get record :command))))
             (should
              (equal
               (mapcar (lambda (record) (plist-get record :session-id)) records)
