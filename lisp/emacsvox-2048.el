@@ -326,7 +326,7 @@ Optional interactive prefix arg prompts for a filename."
   (tts-set-rate
    (+ tts-speech-rate-base
       (* tts-speech-rate-step  3)))
-  (tts-set-punctuations 'some)
+  (tts-apply-punctuation-mode-policy)
   (emacsvox-icon 'open-object)
   (emacsvox-pronounce-add-local-entry "0" "o")
   (emacsvox-2048-speak-board))

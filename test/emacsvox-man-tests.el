@@ -43,8 +43,8 @@
   "Man mode setup runs for normal internal mode initialization."
   (with-temp-buffer
     (let (events)
-      (cl-letf (((symbol-function 'tts-set-punctuations)
-                 (lambda (value) (push (list 'punctuations value) events)))
+      (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy)
+                 (lambda () (push 'punctuation-policy events)))
                 ((symbol-function
                   'emacsvox-pronounce-refresh-pronunciations)
                  (lambda () (push 'pronunciations events)))
@@ -56,7 +56,7 @@
       (should
        (equal
         (nreverse events)
-        '((punctuations all) pronunciations (icon help)))))))
+        '(punctuation-policy pronunciations (icon help)))))))
 
 (ert-deftest emacsvox-man-section-feedback-is-target-aware ()
   "Only the matching Man section command produces feedback."

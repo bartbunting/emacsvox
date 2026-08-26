@@ -1342,8 +1342,11 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
   (with-temp-buffer
     (comint-mode)
     (setq buffer-undo-list nil)
+    (tts-set-punctuations 'some)
     (emacsvox-comint-speech-setup)
     (should-not buffer-undo-list)
+    (should (eq tts-punctuation-mode 'some))
+    (should (eq tts-punctuation-mode-override 'some))
     (should
      (eq
       (lookup-key comint-mode-map (kbd "C-o"))

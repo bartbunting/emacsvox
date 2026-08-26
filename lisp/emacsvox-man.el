@@ -74,7 +74,7 @@
   (setq imenu-generic-expression
         '((nil "\n\\([A-Z].*\\)" 1)
           ("*Subsections*" "^   \\([A-Z].*\\)" 1)))
-  (tts-set-punctuations 'all)
+  (tts-apply-punctuation-mode-policy)
   (emacsvox-pronounce-refresh-pronunciations) (emacsvox-icon 'help))
 
 (advice-add 'Man-mode :after #'emacsvox--advice-Man-mode-after)

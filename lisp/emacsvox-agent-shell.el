@@ -263,7 +263,7 @@ navigation presentations."
   ;; Enable autospeak by default for agent-shell buffers
   (unless (local-variable-p 'emacsvox-comint-autospeak)
     (setq-local emacsvox-comint-autospeak t))
-  (tts-set-punctuations 'all)
+  (tts-apply-punctuation-mode-policy)
   (emacsvox-pronounce-add-dictionary-entry
    'agent-shell-mode
    emacsvox-pronounce-uuid-pattern
@@ -2674,7 +2674,7 @@ does an interactive call with a prefix argument for buffer information."
   "Announce switching to agent-shell mode.
 Provide an auditory icon if possible."
   (when (ems-interactive-p 'agent-shell)
-    (tts-set-punctuations 'all)
+    (tts-apply-punctuation-mode-policy)
     (or tts-split-caps
         (tts-toggle-split-caps))
     (emacsvox-pronounce-refresh-pronunciations)

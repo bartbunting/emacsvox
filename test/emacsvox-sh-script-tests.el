@@ -41,8 +41,8 @@
   "Entering Sh mode configures speech and announces the mode."
   (let ((emacsvox-audio-indentation nil)
         events)
-    (cl-letf (((symbol-function 'tts-set-punctuations)
-               (lambda (value) (push (list 'punctuation value) events)))
+    (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy)
+               (lambda () (push 'punctuation-policy events)))
               ((symbol-function 'emacsvox-toggle-audio-indentation)
                (lambda ()
                  (setq emacsvox-audio-indentation t)
@@ -54,7 +54,7 @@
     (should
      (equal
       (nreverse events)
-      '((punctuation all) indentation mode-line)))))
+      '(punctuation-policy indentation mode-line)))))
 
 (ert-deftest emacsvox-sh-script-navigation-is-target-aware ()
   "Only the matching Sh command-navigation advice produces feedback."

@@ -94,8 +94,8 @@
         (emacsvox-audio-indentation t)
         events)
     (cl-letf
-        (((symbol-function 'tts-set-punctuations)
-          (lambda (mode) (push (list 'punctuations mode) events)))
+        (((symbol-function 'tts-apply-punctuation-mode-policy)
+          (lambda () (push 'punctuation-policy events)))
          ((symbol-function 'tts-toggle-split-caps)
           (lambda () (push 'split-caps events)))
          ((symbol-function 'tts-toggle-caps)
@@ -108,7 +108,23 @@
     (should
      (equal
       (nreverse events)
-      '((punctuations all) split-caps caps pronunciations)))))
+      '(punctuation-policy split-caps caps pronunciations)))))
+
+(ert-deftest emacsvox-programming-mode-preserves-punctuation-override ()
+  "Programming setup should not replace an explicit buffer punctuation mode."
+  (with-temp-buffer
+    (setq major-mode 'prog-mode)
+    (let ((tts-speaker-process nil)
+          (tts-split-caps t)
+          (tts-caps t)
+          (emacsvox-audio-indentation t))
+      (tts-set-punctuations 'some)
+      (cl-letf
+          (((symbol-function 'emacsvox-pronounce-refresh-pronunciations)
+            #'ignore))
+        (emacsvox-setup-programming-mode))
+      (should (eq tts-punctuation-mode 'some))
+      (should (eq tts-punctuation-mode-override 'some)))))
 
 (ert-deftest emacsvox-startup-applies-the-selected-presentation-profile ()
   "Startup restores the complete selected profile rather than only its ID."

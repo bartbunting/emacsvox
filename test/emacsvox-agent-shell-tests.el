@@ -1180,7 +1180,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   "Speech setup should not replace agent-shell's semantic header."
   (with-temp-buffer
     (let ((header-line-format "Agent semantic header"))
-      (cl-letf (((symbol-function 'tts-set-punctuations) #'ignore)
+      (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy) #'ignore)
                 ((symbol-function
                   'emacsvox-pronounce-add-dictionary-entry)
                  #'ignore)
@@ -1189,6 +1189,21 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                  #'ignore))
         (emacsvox-agent-shell-speech-setup))
       (should (equal header-line-format "Agent semantic header")))))
+
+(ert-deftest emacsvox-agent-shell-speech-setup-preserves-punctuation-override ()
+  "Agent Shell setup should honor an explicit buffer punctuation mode."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (let ((tts-speaker-process nil))
+      (tts-set-punctuations 'some)
+      (cl-letf
+          (((symbol-function 'emacsvox-pronounce-add-dictionary-entry)
+            #'ignore)
+           ((symbol-function 'emacsvox-pronounce-refresh-pronunciations)
+            #'ignore))
+        (emacsvox-agent-shell-speech-setup))
+      (should (eq tts-punctuation-mode 'some))
+      (should (eq tts-punctuation-mode-override 'some)))))
 
 (ert-deftest emacsvox-agent-shell-header-formatters-separate-detail-levels ()
   "Focus speech should be concise while explicit speech exposes full state."
@@ -1527,7 +1542,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (lambda (&rest _) (push 'mode-line direct-output)))
          ((symbol-function 'message)
           (lambda (&rest _) (push 'message direct-output)))
-         ((symbol-function 'tts-set-punctuations) #'ignore)
+         ((symbol-function 'tts-apply-punctuation-mode-policy) #'ignore)
          ((symbol-function 'tts-toggle-split-caps) #'ignore)
          ((symbol-function 'emacsvox-pronounce-refresh-pronunciations)
           #'ignore))

@@ -473,7 +473,7 @@ events.  Carriage-return chunks replace pending progress output."
            (when (> (length (window-list)) 1)
              (format "%s windows" (length (window-list))))))
          " ")))))
-  (tts-set-punctuations 'all)
+  (tts-apply-punctuation-mode-policy)
   (emacsvox-pronounce-add-dictionary-entry
    'comint-mode
    emacsvox-pronounce-uuid-pattern

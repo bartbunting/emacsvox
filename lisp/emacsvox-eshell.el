@@ -102,7 +102,8 @@ the final generic output-filter pass cannot repeat already presented text."
 (defun emacsvox--advice-eshell-after (&rest _)
   "Announce switching to shell mode.\nProvide an auditory icon if possible."
   (when (ems-interactive-p 'eshell)
-    (emacsvox-icon 'open-object) (tts-set-punctuations 'all)
+    (emacsvox-icon 'open-object)
+    (tts-apply-punctuation-mode-policy)
     (or tts-split-caps (tts-toggle-split-caps))
     (emacsvox-pronounce-refresh-pronunciations)
     (emacsvox-speak-line)))

@@ -51,7 +51,8 @@
 ;;;   advice interactive commands
 
 (defun emacsvox--advice-sh-mode-after (&rest _)
-  "Speech-enable sh-script editing." (tts-set-punctuations 'all)
+  "Speech-enable sh-script editing."
+  (tts-apply-punctuation-mode-policy)
   (unless emacsvox-audio-indentation
     (emacsvox-toggle-audio-indentation))
   (emacsvox-speak-mode-line))

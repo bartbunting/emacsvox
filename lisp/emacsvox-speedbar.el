@@ -247,7 +247,7 @@ An automatically updating speedbar consumes resources.")
   )
 (defun emacsvox-speedbar-enter-hook ()
   "Actions taken when we enter the Speedbar"
-  (tts-set-punctuations 'all)
+  (tts-apply-punctuation-mode-policy)
   (setq speedbar-hide-button-brackets-flag t)
   (define-key speedbar-mode-map "f"
               'emacsvox-speedbar-click)

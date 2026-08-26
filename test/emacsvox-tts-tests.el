@@ -2239,7 +2239,15 @@
 (ert-deftest emacsvox-tts-punctuation-policy-resolves-derived-modes ()
   "Automatic punctuation distinguishes prose, code, shells, and fallback."
   (dolist
-      (case '((text-mode some mode-policy text-mode)
+      (case '((2048-mode some mode-policy 2048-mode)
+              (agent-shell-mode all mode-policy agent-shell-mode)
+              (eat-mode all mode-policy eat-mode)
+              (Man-mode all mode-policy Man-mode)
+              (org-mode some mode-policy org-mode)
+              (markdown-mode all mode-policy markdown-mode)
+              (speedbar-mode all mode-policy speedbar-mode)
+              (texinfo-mode all mode-policy texinfo-mode)
+              (text-mode some mode-policy text-mode)
               (prog-mode all mode-policy prog-mode)
               (comint-mode all mode-policy comint-mode)))
     (pcase-let ((`(,mode ,punctuation ,kind ,source) case))

@@ -53,7 +53,7 @@
 (defun emacsvox-texinfo-mode-hook ()
   "Setup Emacsvox extensions"
   
-  (tts-set-punctuations 'all)
+  (tts-apply-punctuation-mode-policy)
   (or tts-split-caps
       (tts-toggle-split-caps))
   (or emacsvox-audio-indentation

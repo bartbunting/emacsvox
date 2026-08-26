@@ -306,7 +306,7 @@
 (defsubst emacsvox-setup-programming-mode ()
   "Setup programming mode."
   
-  (tts-set-punctuations 'all)
+  (tts-apply-punctuation-mode-policy)
   (or tts-split-caps (tts-toggle-split-caps))
   (or tts-caps (tts-toggle-caps))
   (emacsvox-pronounce-refresh-pronunciations)

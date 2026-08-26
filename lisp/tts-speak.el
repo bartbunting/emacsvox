@@ -813,7 +813,28 @@ also set the global default and use it in the current buffer."
 
 (defcustom tts-punctuation-mode-policy-alist
   '((agent-shell-mode . all)
+    (2048-mode . some)
+    (eat-mode . all)
     (eshell-mode . all)
+    (Man-mode . all)
+    (speedbar-mode . all)
+    (term-mode . all)
+    (vterm-mode . all)
+    (org-mode . some)
+    ;; Preserve the established structured-text defaults until their
+    ;; prose-versus-markup policy is chosen explicitly.
+    (conf-unix-mode . all)
+    (html-helper-mode . all)
+    (markdown-mode . all)
+    (muse-mode . all)
+    (sgml-mode . all)
+    (xml-mode . all)
+    (nxml-mode . all)
+    (xsl-mode . all)
+    (TeX-mode . all)
+    (LaTeX-mode . all)
+    (bibtex-mode . all)
+    (texinfo-mode . all)
     (prog-mode . all)
     (comint-mode . all)
     (text-mode . some))
