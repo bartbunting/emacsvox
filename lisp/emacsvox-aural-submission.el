@@ -47,9 +47,17 @@
 
 When non-nil, Emacsvox appends one Lisp plist per line with command timing,
 submission timing, and complete submitted text.  The log can therefore contain
-sensitive material and is disabled by default."
+sensitive material and is disabled by default.  Emacsvox creates the file with
+owner-only permissions and tightens an existing file before appending to it."
   :type '(choice (const :tag "Disabled" nil) file)
   :group 'emacsvox-aural)
+
+(defvar emacsvox-aural--diagnostic-session-id
+  (format
+   "%s-%d"
+   (format-time-string "%Y%m%dT%H%M%SZ" nil t)
+   (emacs-pid))
+  "Stable identifier for this Emacs diagnostic logging session.")
 
 (defvar-local emacsvox-aural-command-start-time nil
   "Floating-point time when a diagnosed interactive command started.")
@@ -61,6 +69,17 @@ sensitive material and is disabled by default."
   "Return milliseconds elapsed from numeric START through END."
   (when (numberp start)
     (* 1000.0 (- (or end (float-time)) start))))
+
+(defun emacsvox-aural--secure-diagnostic-log-file (file)
+  "Ensure diagnostic log FILE exists and is readable only by its owner."
+  (unless (file-exists-p file)
+    (let ((previous-modes (default-file-modes)))
+      (unwind-protect
+          (progn
+            (set-default-file-modes #o600)
+            (write-region "" nil file 'append 'silent))
+        (set-default-file-modes previous-modes))))
+  (set-file-modes file #o600))
 
 (defun emacsvox-aural-diagnostic-log-event (event &rest fields)
   "Append opt-in diagnostic EVENT and FIELDS to the configured log.
@@ -78,10 +97,13 @@ Logging never prevents presentation; a write failure is retained in
                   :time (float-time now)
                   :utc (format-time-string
                         "%Y-%m-%dT%H:%M:%S.%3NZ" now t)
+                  :session-id emacsvox-aural--diagnostic-session-id
+                  :emacs-pid (emacs-pid)
                   :event event)
                  fields))
                (coding-system-for-write 'utf-8-unix))
           (when directory (make-directory directory t))
+          (emacsvox-aural--secure-diagnostic-log-file file)
           (with-temp-buffer
             (let ((print-circle t)
                   (print-length nil)
@@ -89,6 +111,7 @@ Logging never prevents presentation; a write failure is retained in
               (prin1 record (current-buffer)))
             (insert "\n")
             (write-region (point-min) (point-max) file 'append 'silent))
+          (emacsvox-aural--secure-diagnostic-log-file file)
           (setq emacsvox-aural-last-diagnostic-log-error nil)
           record)
       (error

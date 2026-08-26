@@ -2367,8 +2367,10 @@ write.  State synchronization lines in a combined write are ignored."
 (ert-deftest emacsvox-aural-submission-opt-in-diagnostics-record-timing-and-text ()
   "Sensitive submission diagnostics should be complete and disabled by default."
   (emacsvox-test--with-transport-scheme
-    (let* ((file (make-temp-file "emacsvox-aural-diagnostics-"))
+    (let* ((directory (make-temp-file "emacsvox-aural-diagnostics-" t))
+           (file (expand-file-name "submissions.log" directory))
            (emacsvox-aural-diagnostic-log-file file)
+           (emacsvox-aural--diagnostic-session-id "test-session-42")
            (emacsvox-aural-command-start-time (- (float-time) 0.05))
            (this-command 'next-line)
            (context
@@ -2401,13 +2403,33 @@ write.  State synchronization lines in a combined write are ignored."
               (plist-get (car records) :content)
               "sensitive diagnostic text"))
             (should
+             (equal
+              (mapcar (lambda (record) (plist-get record :session-id)) records)
+              '("test-session-42" "test-session-42")))
+            (should
+             (equal
+              (mapcar (lambda (record) (plist-get record :emacs-pid)) records)
+              (list (emacs-pid) (emacs-pid))))
+            (should (= (file-modes file) #o600))
+            (should
              (> (plist-get (car records) :command-elapsed-ms) 0))
             (should
              (numberp
               (plist-get (cadr records) :submission-elapsed-ms)))
             (should
              (eq (plist-get (cadr records) :status) 'completed)))
-        (when (file-exists-p file) (delete-file file))))))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-diagnostics-tighten-existing-log-permissions ()
+  "Appending sensitive diagnostics should first secure an existing log."
+  (let* ((file (make-temp-file "emacsvox-aural-diagnostics-"))
+         (emacsvox-aural-diagnostic-log-file file))
+    (unwind-protect
+        (progn
+          (set-file-modes file #o644)
+          (emacsvox-aural-diagnostic-log-event 'test-event :content "private")
+          (should (= (file-modes file) #o600)))
+      (when (file-exists-p file) (delete-file file)))))
 
 (ert-deftest emacsvox-aural-submission-records-one-exact-history-transaction ()
   "Clause and formatting runs remain exact inside one history transaction."
