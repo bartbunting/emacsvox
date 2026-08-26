@@ -61,7 +61,8 @@ plain-voices.elc \
 espeak-voices.elc \
 outloud-voices.elc \
 mac-voices.elc \
-swiftmac-voices.elc
+swiftmac-voices.elc \
+omnivox-voices.elc
 
 TTS_OBJECTS = \
 emacsvox-preamble.elc \

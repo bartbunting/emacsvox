@@ -89,6 +89,14 @@ outloud     For IBM ViaVoice Outloud
 espeak      For eSpeak (default on Linux)
 mac for MAC TTS (default on Mac)")
 
+(defun tts--omnivox-program-p (&optional program)
+  "Return non-nil when PROGRAM names the Omnivox server executable."
+  (and
+   (stringp (or program tts-program))
+   (string-match-p
+    "\\`omnivox\\(?:\\.exe\\)?\\'"
+    (file-name-nondirectory (downcase (or program tts-program))))))
+
 ;;; Speech-server protocol:
 
 ;;;;  macros
@@ -2745,7 +2753,9 @@ then select the first entry advertising that generic characteristic."
   
   (and
    (not (string= tts-notification-device "default"))
-   (cl-find-if #'(lambda (e) (string-match e engine)) tts-multi-engines)))
+   (or
+    (tts--omnivox-program-p engine)
+    (cl-find-if #'(lambda (e) (string-match e engine)) tts-multi-engines))))
 
 (defun tts-cloud ()
   "Select  Cloud TTS server."
@@ -2816,13 +2826,29 @@ notifications on the main process and its route."
   :group 'tts)
 
 ;; Helper: tts-make-process:
+(defun tts--resolve-program (program)
+  "Return the executable used for speech-server PROGRAM, or nil.
+
+Absolute paths are used as supplied.  Native Windows prefers an executable
+found on `exec-path', because the bundled launchers are POSIX scripts.  Other
+platforms prefer a bundled launcher and fall back to `exec-path'."
+  (let ((bundled (expand-file-name program emacsvox-servers-directory)))
+    (cond
+     ((file-name-absolute-p program) (expand-file-name program))
+     ((eq system-type 'windows-nt)
+      (executable-find program))
+     ((file-executable-p bundled) bundled)
+     ((executable-find program)))))
+
 (defun tts-make-process (name)
   "Make a  TTS process called name."
   
   (let ((process-connection-type nil)
         (default-directory (expand-file-name "~/"))
-        (program (expand-file-name tts-program emacsvox-servers-directory))
+        (program (tts--resolve-program tts-program))
         (process nil))
+    (unless program
+      (error "Could not find speech server executable `%s'" tts-program))
     (setq process
           (start-process name nil program))
     (unless (process-live-p process) (error "Fail: Speech Server"))
@@ -3240,9 +3266,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
 (defun tts--notification-omnivox-audio-target ()
   "Return a validated Omnivox channel target for the notification process."
   (and
-   (stringp tts-program)
-   (string-match-p
-    "\\`omnivox\\(?:\\.exe\\)?\\'" (file-name-nondirectory tts-program))
+   (tts--omnivox-program-p)
    (stringp tts-notification-device)
    (member tts-notification-device '("left" "right" "both"))
    tts-notification-device))

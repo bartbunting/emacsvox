@@ -2159,13 +2159,13 @@
 (ert-deftest emacsvox-tts-omnivox-notification-routing-is-process-based ()
   "Omnivox supports a second process without inventing an in-process stream."
   (let ((tts-notification-device nil))
-    (should (tts-multistream-p "omnivox")))
+    (should (tts-multistream-p "C:/Omnivox/Omnivox.EXE")))
   (let ((tts-notification-device "default"))
     (should-not (tts-multistream-p "omnivox")))
   (let ((tts-program "omnivox")
         (tts-notification-device "named-device"))
     (should-not (tts--notification-omnivox-audio-target)))
-  (let ((tts-program "omnivox")
+  (let ((tts-program "C:/Omnivox/Omnivox.EXE")
         (tts-notification-device "left"))
     (should
      (equal (tts--notification-omnivox-audio-target) "left")))
@@ -2801,6 +2801,60 @@
     (setenv "TTS_PROGRAM" nil)
     (should-not (equal (tts--default-program) "legacy"))))
 
+(ert-deftest emacsvox-tts-resolves-bundled-server-on-posix ()
+  "POSIX Emacs prefers the bundled launcher over a program on PATH."
+  (let ((system-type 'gnu/linux)
+        (emacsvox-servers-directory "/tmp/emacsvox/servers"))
+    (cl-letf (((symbol-function 'file-executable-p) (lambda (_) t))
+              ((symbol-function 'executable-find)
+               (lambda (_) "/usr/bin/omnivox")))
+      (should
+       (equal
+        (tts--resolve-program "omnivox")
+        "/tmp/emacsvox/servers/omnivox")))))
+
+(ert-deftest emacsvox-tts-resolves-path-server-on-native-windows ()
+  "Native Windows Emacs prefers its executable PATH over POSIX launchers."
+  (let ((system-type 'windows-nt)
+        (emacsvox-servers-directory "C:/emacsvox/servers"))
+    (cl-letf (((symbol-function 'executable-find)
+               (lambda (program)
+                 (and (equal program "omnivox")
+                      "C:/Omnivox/omnivox.exe"))))
+      (should
+       (equal
+        (tts--resolve-program "omnivox")
+        "C:/Omnivox/omnivox.exe")))))
+
+(ert-deftest emacsvox-tts-does-not-run-posix-launcher-on-native-windows ()
+  "Native Windows reports a missing executable instead of running shell code."
+  (let ((system-type 'windows-nt)
+        (emacsvox-servers-directory "C:/emacsvox/servers"))
+    (cl-letf (((symbol-function 'executable-find) (lambda (_) nil)))
+      (should-not (tts--resolve-program "omnivox")))))
+
+(ert-deftest emacsvox-tts-preserves-absolute-server-program ()
+  "An explicitly configured server path does not depend on platform lookup."
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (_) (ert-fail "Unexpected executable lookup"))))
+    (should
+     (equal
+      (tts--resolve-program "/opt/omnivox/bin/omnivox")
+      "/opt/omnivox/bin/omnivox"))))
+
+(ert-deftest emacsvox-tts-omnivox-discovery-uses-active-program ()
+  "Omnivox discovery and speech startup resolve the same executable."
+  (let ((tts-program "C:/Omnivox/omnivox.exe"))
+    (cl-letf (((symbol-function 'tts--resolve-program)
+               (lambda (program)
+                 (should (equal program tts-program))
+                 "C:/Omnivox/omnivox.exe"))
+              ((symbol-function 'file-executable-p) (lambda (_) t)))
+      (should
+       (equal
+        (omnivox--server-program)
+        "C:/Omnivox/omnivox.exe")))))
+
 (defun emacsvox-test--tts-server-player (emacsvox-player emacspeak-player)
   "Return the Tcl TTS player selected from the supplied environment.
 
@@ -3398,6 +3452,7 @@ variables; nil removes the variable."
          ("swiftmac" swiftmac-voices swiftmac)
          ("mac" mac-voices mac)
          ("espeak" espeak-voices espeak)
+         ("C:/Omnivox/Omnivox.EXE" omnivox-voices omnivox)
          ("unknown" plain-voices plain)))
     (let ((tts-program (nth 0 case))
           required
@@ -3417,6 +3472,8 @@ variables; nil removes the variable."
                  (lambda () (setq configured 'mac)))
                 ((symbol-function 'espeak-configure-tts)
                  (lambda () (setq configured 'espeak)))
+                ((symbol-function 'omnivox-configure-tts)
+                 (lambda () (setq configured 'omnivox)))
                 ((symbol-function 'plain-configure-tts)
                  (lambda () (setq configured 'plain)))
                 ((symbol-function 'ems--fastload)

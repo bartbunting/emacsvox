@@ -1534,10 +1534,8 @@ logical registry is replaced, so partial failure is explicit and retryable."
 
 (defun omnivox--server-program ()
   "Return the Omnivox server program used for discovery, or nil."
-  (let ((server (expand-file-name "omnivox" emacsvox-servers-directory)))
-    (cond
-     ((file-executable-p server) server)
-     ((executable-find "omnivox")))))
+  (let ((program (tts--resolve-program tts-program)))
+    (and program (file-executable-p program) program)))
 
 (defun omnivox--voice-entry-p (entry)
   "Return non-nil when ENTRY is a valid discovered voice record."
