@@ -52,12 +52,31 @@ owner-only permissions and tightens an existing file before appending to it."
   :type '(choice (const :tag "Disabled" nil) file)
   :group 'emacsvox-aural)
 
+(defcustom emacsvox-aural-diagnostic-log-max-bytes (* 16 1024 1024)
+  "Soft size limit for one aural diagnostic log file.
+
+Before appending a record that would cross this limit, Emacsvox renames the
+current log to a session-tagged archive.  A single oversized record remains
+intact and may exceed the limit.  Set this to nil to disable rotation."
+  :type '(choice (const :tag "Do not rotate" nil) integer)
+  :group 'emacsvox-aural)
+
+(defcustom emacsvox-aural-diagnostic-log-retained-files 4
+  "Number of rotated aural diagnostic log files to retain.
+
+The active log is additional to this number."
+  :type 'integer
+  :group 'emacsvox-aural)
+
 (defvar emacsvox-aural--diagnostic-session-id
   (format
    "%s-%d"
    (format-time-string "%Y%m%dT%H%M%SZ" nil t)
    (emacs-pid))
   "Stable identifier for this Emacs diagnostic logging session.")
+
+(defvar emacsvox-aural--diagnostic-rotation-sequence 0
+  "Sequence making diagnostic archive names unique within this Emacs.")
 
 (defvar-local emacsvox-aural-command-start-time nil
   "Floating-point time when a diagnosed interactive command started.")
@@ -80,6 +99,66 @@ owner-only permissions and tightens an existing file before appending to it."
             (write-region "" nil file 'append 'silent))
         (set-default-file-modes previous-modes))))
   (set-file-modes file #o600))
+
+(defun emacsvox-aural--diagnostic-archive-files (file)
+  "Return session-tagged archives belonging to diagnostic log FILE."
+  (let* ((directory (file-name-directory file))
+         (prefix
+          (concat (file-name-nondirectory file) ".archive-")))
+    (directory-files
+     directory t
+     (concat "\\`" (regexp-quote prefix) ".+\\'")
+     t)))
+
+(defun emacsvox-aural--prune-diagnostic-archives (file)
+  "Remove excess session-tagged archives belonging to FILE."
+  (let* ((retained
+          (if (and
+               (integerp emacsvox-aural-diagnostic-log-retained-files)
+               (> emacsvox-aural-diagnostic-log-retained-files 0))
+              emacsvox-aural-diagnostic-log-retained-files
+            0))
+         (archives
+          (sort
+           (emacsvox-aural--diagnostic-archive-files file)
+           (lambda (first second)
+             (time-less-p
+              (file-attribute-modification-time (file-attributes second))
+              (file-attribute-modification-time
+               (file-attributes first)))))))
+    (dolist (archive (nthcdr retained archives))
+      (condition-case nil
+          (delete-file archive)
+        (file-missing nil)))))
+
+(defun emacsvox-aural--rotate-diagnostic-log-if-needed
+    (file incoming-bytes)
+  "Rotate FILE before appending INCOMING-BYTES when it would cross its limit.
+
+Return non-nil when this call rotated the active file."
+  (when
+      (and
+       (integerp emacsvox-aural-diagnostic-log-max-bytes)
+       (> emacsvox-aural-diagnostic-log-max-bytes 0)
+       (file-exists-p file)
+       (when-let* ((attributes (file-attributes file)))
+         (let ((size (file-attribute-size attributes)))
+           (and
+            (> size 0)
+            (> (+ size incoming-bytes)
+               emacsvox-aural-diagnostic-log-max-bytes)))))
+    (let ((archive
+           (format
+            "%s.archive-%s-%06d"
+            file emacsvox-aural--diagnostic-session-id
+            (cl-incf emacsvox-aural--diagnostic-rotation-sequence))))
+      (condition-case nil
+          (progn
+            (rename-file file archive nil)
+            (set-file-modes archive #o600)
+            t)
+        ;; Another Emacs may have rotated the shared path after our size check.
+        (file-missing nil)))))
 
 (defun emacsvox-aural-diagnostic-log-event (event &rest fields)
   "Append opt-in diagnostic EVENT and FIELDS to the configured log.
@@ -110,7 +189,18 @@ Logging never prevents presentation; a write failure is retained in
                   (print-level nil))
               (prin1 record (current-buffer)))
             (insert "\n")
-            (write-region (point-min) (point-max) file 'append 'silent))
+            (let* ((encoded
+                    (encode-coding-string
+                     (buffer-string) coding-system-for-write t))
+                   (rotated
+                    (emacsvox-aural--rotate-diagnostic-log-if-needed
+                     file (string-bytes encoded))))
+              (when rotated
+                (emacsvox-aural--secure-diagnostic-log-file file))
+              (write-region
+               (point-min) (point-max) file 'append 'silent)
+              (when rotated
+                (emacsvox-aural--prune-diagnostic-archives file))))
           (emacsvox-aural--secure-diagnostic-log-file file)
           (setq emacsvox-aural-last-diagnostic-log-error nil)
           record)

@@ -2431,6 +2431,36 @@ write.  State synchronization lines in a combined write are ignored."
           (should (= (file-modes file) #o600)))
       (when (file-exists-p file) (delete-file file)))))
 
+(ert-deftest emacsvox-aural-diagnostics-rotate-and-bound-archives ()
+  "Sensitive diagnostics should retain only the configured recent archives."
+  (let* ((directory (make-temp-file "emacsvox-aural-diagnostics-" t))
+         (file (expand-file-name "submissions.log" directory))
+         (emacsvox-aural-diagnostic-log-file file)
+         (emacsvox-aural-diagnostic-log-max-bytes 1)
+         (emacsvox-aural-diagnostic-log-retained-files 2)
+         (emacsvox-aural--diagnostic-session-id "rotation-test")
+         (emacsvox-aural--diagnostic-rotation-sequence 0))
+    (unwind-protect
+        (progn
+          (dotimes (index 4)
+            (emacsvox-aural-diagnostic-log-event
+             'rotation-test :index index :content "sensitive"))
+          (let ((archives
+                 (emacsvox-aural--diagnostic-archive-files file)))
+            (should (= (length archives) 2))
+            (should
+             (equal
+              (sort (mapcar #'file-name-nondirectory archives) #'string<)
+              '("submissions.log.archive-rotation-test-000002"
+                "submissions.log.archive-rotation-test-000003")))
+            (should (= (file-modes file) #o600))
+            (dolist (archive archives)
+              (should (= (file-modes archive) #o600)))
+            (with-temp-buffer
+              (insert-file-contents file)
+              (should (search-forward ":index 3" nil t)))))
+      (delete-directory directory t))))
+
 (ert-deftest emacsvox-aural-submission-records-one-exact-history-transaction ()
   "Clause and formatting runs remain exact inside one history transaction."
   (emacsvox-test--with-transport-scheme
