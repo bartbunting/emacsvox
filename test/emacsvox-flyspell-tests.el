@@ -30,10 +30,10 @@
       (should
        (equal
         (emacsvox-flyspell-correct-completing-read
-         '("first" "second") "incorect")
+         '("first" "second") "incorect") ; codespell:ignore incorect
         "corrected")))
     (should
-     (equal observed '(("first" "second") "incorect" 2)))))
+     (equal observed '(("first" "second") "incorect" 2))))) ; codespell:ignore incorect
 
 (ert-deftest emacsvox-flyspell-advice-is-directly-registered ()
   (dolist

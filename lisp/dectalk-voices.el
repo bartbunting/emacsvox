@@ -183,8 +183,8 @@
      :variant 3)
     (dennis
      :label "Doctor Dennis"
-     :command "[:nd ]"
-     :family-code ":nd"
+     :command "[:nd ]"                 ; codespell:ignore nd
+     :family-code ":nd"                ; codespell:ignore nd
      :generic (male)
      :gender male
      :age adult

@@ -1703,7 +1703,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
          ("$ cat alpha" "$ cat alpha\\ beta " 30 "alpha\\ beta")
          ("$ cat \"alpha b" "$ cat \"alpha beta\" "
           30 "$ cat \"alpha beta\"")
-         ("$ cat caf" "$ cat café " 30 "café")
+         ("$ cat caf" "$ cat café " 30 "café") ; codespell:ignore caf
          ("$ cat foo" "$ cat foo\\(bar\\) " 30 "foo\\(bar\\)")
          ("$ cat semi" "$ cat semi\\;colon " 30 "semi\\;colon")
          ("$ pick foo" "$ pick bar" 30 "bar")
@@ -2031,7 +2031,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
                                          (completion-input-updated)))))
                                submissions))))))
                       (complete "cat alpha" "alpha\\ beta")
-                      (complete "cat caf" "café")
+                      (complete "cat caf" "café") ; codespell:ignore caf
                       (complete "cat foo" "foo\\(bar\\)")
                       (complete "cat semi" "semi\\;colon")
                       (complete "cd srcu" "srcunique/")))
@@ -5684,7 +5684,7 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should
      (equal
       (observe-chunks '("\e[1mBold\e[0m\r\nsecond"))
-      (observe-chunks '("\e[1" "mBo" "ld\e[0" "m\r" "\nsec" "ond"))))))
+      (observe-chunks '("\e[1" "mBo" "ld\e[0" "m\r" "\nsec" "ond")))))) ; codespell:ignore ond
 
 (ert-deftest emacsvox-eat-screen-observer-discards-focus-lost-delivery ()
   "A selected update that loses focus before quiescence stays silent."

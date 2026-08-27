@@ -5601,7 +5601,7 @@ is the default inherited by a newly created TTS scratch buffer."
            (spoken-duration-tone (speech tone))
            (spoken-pitch-tone (speech tone))))
       (let* ((presentation (car case))
-             (line (copy-sequence "        self.hass = hass"))
+             (line (copy-sequence "        self.hash = hash"))
              prepared
              leading-plan
              plans)
@@ -5642,7 +5642,7 @@ is the default inherited by a newly created TTS scratch buffer."
         (should
          (equal
           (substring-no-properties prepared)
-          "        self.hass = hass"))
+          "        self.hash = hash"))
         (should (eq (get-text-property 8 'face prepared)
                     'font-lock-keyword-face))
         (should (eq (get-text-property 13 'face prepared)
