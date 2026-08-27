@@ -92,9 +92,12 @@
 (declare-function shell-maker-point-at-last-prompt-p "shell-maker" ())
 (declare-function emacsvox-speak--present-physical-line
                   "emacsvox-speak" (&optional arg compatibility-actions))
+(declare-function emacsvox-speak-region
+                  "emacsvox-speak" (start end))
 
 (defvar emacsvox-comint-autospeak)
 (defvar comint-last-prompt)
+(defvar emacsvox-show-point)
 (defvar emacsvox-pronounce-date-mm-dd-yyyy-pattern)
 (defvar emacsvox-pronounce-date-yyyy-mm-dd-pattern)
 (defvar emacsvox-pronounce-rfc-3339-datetime-pattern)
@@ -746,6 +749,9 @@ the original characters in the buffer."
 
 (defvar emacsvox-agent-shell--line-navigation-speech-p nil
   "Non-nil while Agent Shell is preparing line-navigation speech.")
+
+(defvar emacsvox-agent-shell--visual-line-kill-p nil
+  "Non-nil while an interactive Agent Shell visual-line kill is running.")
 
 (defun emacsvox-agent-shell--limit-line-navigation-speech (text)
   "Return bounded line-navigation speech TEXT for Agent Shell."
@@ -2552,57 +2558,131 @@ chat source is crossed as one unit before core character speech runs."
   (emacsvox-agent-shell--horizontal-motion-around
    original-function 'forward arguments))
 
+(defun emacsvox-agent-shell--speak-live-input-visual-line
+    (input-bounds boundary)
+  "Speak the editable visual line within INPUT-BOUNDS.
+BOUNDARY is `beginning' or `end' and supplies feedback for empty input."
+  (pcase-let ((`(,visual-start . ,visual-end)
+               (emacsvox-agent-shell--visual-line-source-bounds)))
+    (let ((start (max (car input-bounds) visual-start))
+          (end (min (cdr input-bounds) visual-end)))
+      (if (< start end)
+          (let ((emacsvox-agent-shell--chat-label-context nil)
+                (emacsvox-agent-shell--line-navigation-speech-p t)
+                (emacsvox-show-point nil))
+            (emacsvox-speak-region start end))
+        (emacsvox-agent-shell--input-boundary-feedback boundary)))))
+
+(defun emacsvox-agent-shell--visual-line-input-around
+    (original-function target boundary arguments)
+  "Present an interactive live-input visual-line TARGET concisely.
+ORIGINAL-FUNCTION receives ARGUMENTS unchanged.  BOUNDARY names the endpoint
+selected by TARGET."
+  (let* ((interactive-p (eq ems--interactive-fn-name target))
+         (ordinary-motion-p
+          (= 1 (prefix-numeric-value (car arguments))))
+         (bounds (and interactive-p
+                      ordinary-motion-p
+                      (emacsvox-agent-shell--live-input-bounds)))
+         (in-input-p
+          (and bounds
+               (<= (car bounds) (point))
+               (<= (point) (cdr bounds)))))
+    (if (not in-input-p)
+        (apply original-function arguments)
+      ;; Consume the marker before core after-advice runs; this adapter speaks
+      ;; the editable visual line without the prompt label or point highlight.
+      (ems-interactive-p target)
+      (let ((result (apply original-function arguments)))
+        (emacsvox-agent-shell--speak-live-input-visual-line bounds boundary)
+        result))))
+
+(defun emacsvox-agent-shell--beginning-of-visual-line-around
+    (original-function &rest arguments)
+  "Read live prompt input after interactive visual-line beginning motion."
+  (emacsvox-agent-shell--visual-line-input-around
+   original-function 'beginning-of-visual-line 'beginning arguments))
+
+(defun emacsvox-agent-shell--end-of-visual-line-around
+    (original-function &rest arguments)
+  "Read live prompt input after interactive visual-line end motion."
+  (emacsvox-agent-shell--visual-line-input-around
+   original-function 'end-of-visual-line 'end arguments))
+
 ;;;  Advice Agent-Shell Functions
+
+(defun emacsvox-agent-shell--kill-visual-line-around
+    (original-function &rest arguments)
+  "Mark an interactive Agent Shell visual-line kill.
+Call ORIGINAL-FUNCTION with ARGUMENTS unchanged.  The marker lets the nested
+`kill-region' announce its exact bounds instead of repeating the whole prompt
+line."
+  (let ((emacsvox-agent-shell--visual-line-kill-p
+         (and (derived-mode-p 'agent-shell-mode)
+              (eq ems--interactive-fn-name 'kill-visual-line))))
+    (apply original-function arguments)))
+
+(defun emacsvox-agent-shell--kill-region-around
+    (original-function beginning end &rest arguments)
+  "Speak an Agent Shell visual-line kill, then call ORIGINAL-FUNCTION.
+BEGINNING and END are the exact bounds selected by `kill-visual-line'.
+ARGUMENTS are passed to ORIGINAL-FUNCTION unchanged."
+  (when emacsvox-agent-shell--visual-line-kill-p
+    (let ((emacsvox-agent-shell--chat-label-context nil)
+          (emacsvox-agent-shell--line-navigation-speech-p nil))
+      (emacsvox-speak-region (min beginning end) (max beginning end))))
+  (apply original-function beginning end arguments))
 
 (defun emacsvox-agent-shell--speak-visual-line-around
     (original-function &rest arguments)
   "Add semantic block-entry context to Agent Shell visual-line speech.
 
 Core visual-line presentation owns blank-line semantics and interruption."
-  (let* ((state (get-text-property (point) 'agent-shell-ui-state))
-         (section (get-text-property (point) 'agent-shell-ui-section))
-         (folded-heading-bounds
-          (when (and state
-                     (map-elt state :collapsed)
-                     (memq section '(indicator label-left label-right)))
-            (cons (line-beginning-position) (line-end-position))))
-         (source-bounds
-          (if folded-heading-bounds
-              ;; Invisible bodies can make the display engine treat a complete
-              ;; folded fragment as one source span.  Narrowing to its visible
-              ;; physical heading retains visual wrapping without copying the
-              ;; hidden body or repeating the complete heading on every row.
-              (save-restriction
-                (narrow-to-region
-                 (car folded-heading-bounds)
-                 (cdr folded-heading-bounds))
-                (emacsvox-agent-shell--visual-line-source-bounds))
-            (emacsvox-agent-shell--visual-line-source-bounds)))
-         (source-start (car source-bounds))
-         (source-end (cdr source-bounds))
-         (emacsvox-agent-shell--chat-label-context
-          (emacsvox-agent-shell--chat-label-context-between
-           source-start source-end))
-         (emacsvox-agent-shell--line-navigation-speech-p t)
-         (ems--speak-max-length
-          (if (and
-               (integerp emacsvox-agent-shell-line-speech-max-characters)
-               (> emacsvox-agent-shell-line-speech-max-characters 0))
-              most-positive-fixnum
-            ems--speak-max-length)))
-    (unless
-        (emacsvox-agent-shell--synthetic-agent-row-p
-         source-start source-end)
-      (emacsvox-agent-shell--call-with-vertical-block-entry
-       (if folded-heading-bounds
-           (lambda (&rest call-arguments)
-             (save-restriction
-               (narrow-to-region
-                (car folded-heading-bounds)
-                (cdr folded-heading-bounds))
-               (apply original-function call-arguments)))
-         original-function)
-       arguments))))
+  (unless emacsvox-agent-shell--visual-line-kill-p
+    (let* ((state (get-text-property (point) 'agent-shell-ui-state))
+           (section (get-text-property (point) 'agent-shell-ui-section))
+           (folded-heading-bounds
+            (when (and state
+                       (map-elt state :collapsed)
+                       (memq section '(indicator label-left label-right)))
+              (cons (line-beginning-position) (line-end-position))))
+           (source-bounds
+            (if folded-heading-bounds
+                ;; Invisible bodies can make the display engine treat a complete
+                ;; folded fragment as one source span.  Narrowing to its visible
+                ;; physical heading retains visual wrapping without copying the
+                ;; hidden body or repeating the complete heading on every row.
+                (save-restriction
+                  (narrow-to-region
+                   (car folded-heading-bounds)
+                   (cdr folded-heading-bounds))
+                  (emacsvox-agent-shell--visual-line-source-bounds))
+              (emacsvox-agent-shell--visual-line-source-bounds)))
+           (source-start (car source-bounds))
+           (source-end (cdr source-bounds))
+           (emacsvox-agent-shell--chat-label-context
+            (emacsvox-agent-shell--chat-label-context-between
+             source-start source-end))
+           (emacsvox-agent-shell--line-navigation-speech-p t)
+           (ems--speak-max-length
+            (if (and
+                 (integerp emacsvox-agent-shell-line-speech-max-characters)
+                 (> emacsvox-agent-shell-line-speech-max-characters 0))
+                most-positive-fixnum
+              ems--speak-max-length)))
+      (unless
+          (emacsvox-agent-shell--synthetic-agent-row-p
+           source-start source-end)
+        (emacsvox-agent-shell--call-with-vertical-block-entry
+         (if folded-heading-bounds
+             (lambda (&rest call-arguments)
+               (save-restriction
+                 (narrow-to-region
+                  (car folded-heading-bounds)
+                  (cdr folded-heading-bounds))
+                 (apply original-function call-arguments)))
+           original-function)
+         arguments)))))
 
 (defun emacsvox-agent-shell--speak-line-around
     (original-function &rest arguments)
@@ -5730,6 +5810,14 @@ Return nil when the configured verbosity requests status cues only."
      emacsvox-agent-shell--speak-visual-line-around)
     (emacsvox-speak-line :around
      emacsvox-agent-shell--speak-line-around)
+    (beginning-of-visual-line :around
+     emacsvox-agent-shell--beginning-of-visual-line-around)
+    (end-of-visual-line :around
+     emacsvox-agent-shell--end-of-visual-line-around)
+    (kill-visual-line :around
+     emacsvox-agent-shell--kill-visual-line-around)
+    (kill-region :around
+     emacsvox-agent-shell--kill-region-around)
     (left-char :around emacsvox-agent-shell--backward-char-around)
     (backward-char :around emacsvox-agent-shell--backward-char-around)
     (right-char :around emacsvox-agent-shell--forward-char-around)

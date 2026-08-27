@@ -181,6 +181,12 @@
 (declare-function emacsvox-agent-shell--previous-line-around
                   "emacsvox-agent-shell"
                   (original-function &rest arguments))
+(declare-function emacsvox-agent-shell--beginning-of-visual-line-around
+                  "emacsvox-agent-shell"
+                  (original-function &rest arguments))
+(declare-function emacsvox-agent-shell--end-of-visual-line-around
+                  "emacsvox-agent-shell"
+                  (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--speak-line-around
                   "emacsvox-agent-shell" (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--toggle-fragment-around
@@ -2407,6 +2413,32 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                (emacsvox-agent-shell--prepare-speech-text "abcdefghij"))))
       (should
        (equal spoken "abcde [line truncated; 5 characters omitted]")))))
+
+(ert-deftest emacsvox-agent-shell-visual-line-kill-speaks-only-killed-input ()
+  "A visual-line kill should omit the prompt and its visible chat label."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert
+     (propertize
+      "Codex> " 'font-lock-face
+      '(comint-highlight-prompt comint-highlight-prompt))
+     "this ")
+    (goto-char (+ (point-min) (length "Codex> ")))
+    (let ((emacsvox-agent-shell--chat-label-context
+           '(:category agent-shell-chat-me :text "Me" :editable t))
+          spoken)
+      (cl-letf (;; Batch frames do not provide reliable visual-line geometry.
+                ((symbol-function 'end-of-visual-line)
+                 (lambda (&optional _)
+                   (goto-char (line-end-position))))
+                ((symbol-function 'emacsvox-icon)
+                 (lambda (&rest _) nil))
+                ((symbol-function 'tts-speak)
+                 (lambda (text)
+                   (push (substring-no-properties text) spoken))))
+        (funcall-interactively #'kill-visual-line))
+      (should (equal (nreverse spoken) '("this ")))
+      (should (equal (buffer-string) "Codex> ")))))
 
 (ert-deftest emacsvox-agent-shell-folded-visual-line-uses-visible-heading ()
   "Folded visual-line speech should not extract its invisible body."
@@ -6160,6 +6192,84 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 (list :role 'agent-user-prompt
                       :events (list 'boundary-entered))))
               (should (eq (nth 2 submission) 'navigation)))))))))
+
+(ert-deftest emacsvox-agent-shell-live-input-visual-boundaries-read-only-input ()
+  "Visual-line boundary motion should omit the prompt and point highlight."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (with-temp-buffer
+    (pcase-let* ((`(,start . ,end)
+                  (emacsvox-agent-shell-test--insert-live-chat-input
+                   "when editing"))
+                 (visual-start (- start (length "Codex> "))))
+      (dolist
+          (case
+           `((beginning-of-visual-line
+              emacsvox-agent-shell--beginning-of-visual-line-around
+              ,end ,start)
+             (end-of-visual-line
+              emacsvox-agent-shell--end-of-visual-line-around
+              ,start ,end)))
+        (pcase-let ((`(,target ,wrapper ,origin ,destination) case))
+          (goto-char origin)
+          (let ((ems--interactive-fn-name target)
+                (emacsvox-show-point t)
+                original-called
+                submissions)
+            (cl-letf
+                (((symbol-function
+                   'emacsvox-agent-shell--visual-line-source-bounds)
+                  (lambda () (cons visual-start end)))
+                 ((symbol-function 'tts-speak)
+                  (lambda (text)
+                    (push
+                     (list (substring-no-properties text)
+                           emacsvox-show-point
+                           emacsvox-agent-shell--chat-label-context)
+                     submissions))))
+              (should
+               (eq
+                (funcall
+                 wrapper
+                 (lambda (&rest _)
+                   (setq original-called t)
+                   (goto-char destination)
+                   'moved)
+                 1)
+                'moved)))
+            (should original-called)
+            (should (= (point) destination))
+            (should-not ems--interactive-fn-name)
+            (should
+             (equal submissions '(("when editing" nil nil))))))))))
+
+(ert-deftest emacsvox-agent-shell-visual-input-boundaries-keep-normal-scope ()
+  "Visual-line boundary adapters should leave other buffers to core speech."
+  (with-temp-buffer
+    (insert "ordinary text")
+    (dolist
+        (case
+         '((beginning-of-visual-line
+            emacsvox-agent-shell--beginning-of-visual-line-around)
+           (end-of-visual-line
+            emacsvox-agent-shell--end-of-visual-line-around)))
+      (pcase-let ((`(,target ,wrapper) case))
+        (let ((ems--interactive-fn-name target)
+              original-called
+              manually-spoken)
+          (cl-letf (((symbol-function 'tts-speak)
+                     (lambda (&rest _)
+                       (setq manually-spoken t))))
+            (should
+             (eq
+              (funcall wrapper
+                       (lambda (&rest _)
+                         (setq original-called t)
+                         'moved)
+                       1)
+              'moved)))
+          (should original-called)
+          (should-not manually-spoken)
+          (should (eq ems--interactive-fn-name target)))))))
 
 (ert-deftest emacsvox-agent-shell-historical-input-skips-hidden-prompt-source ()
   "Character motion should cross a displayed Me prompt without artifacts."
