@@ -12,7 +12,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 This manual documents *Emacsvox, The Complete Audio Desktop* and was
-last updated on August 24, 2026.
+last updated on August 27, 2026.
 
 
 File: emacsvox.info,  Node: Top,  Next: Copyright,  Up: (dir)
@@ -3021,7 +3021,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1474 commands and 177 options.
+   This chapter documents a total of 1462 commands and 183 options.
 
 * Menu:
 
@@ -3114,6 +3114,9 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-dired:: Speech enable Dired Mode.
 * emacsvox-dumb-jump:: DUMB-JUMP.
 * emacsvox-eat:: Speech-enable EAT.
+* emacsvox-eat-core:: EAT speech observation core.
+* emacsvox-eat-input:: EAT interactive input feedback.
+* emacsvox-eat-review:: Frozen EAT screen review.
 * emacsvox-ebuku:: Speech-enable EBUKU.
 * emacsvox-ediff:: Speech enable  ediff.
 * emacsvox-eglot:: Speech-enable EGLOT.
@@ -3152,7 +3155,6 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-forge:: Speech-enable FORGE.
 * emacsvox-forms:: Speech enable  forms mode.
 * emacsvox-geiser:: Speech-enable GEISER.
-* emacsvox-github-explorer:: GitHub Explorer.
 * emacsvox-gnuplot:: speech-enable gnuplot.
 * emacsvox-gnus:: Speech enable Gnus.
 * emacsvox-go-mode:: Speech-enable GO-MODE.
@@ -3191,9 +3193,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-message:: Speech enable Message.
 * emacsvox-mines:: Speech-enable MINES.
 * emacsvox-mu4e:: Speech-enable MU4E.
-* emacsvox-muggles:: Convenience Hydras.
 * emacsvox-multiple-cursors:: Speech-enable MULTIPLE-CURSORS.
-* emacsvox-muse:: Speech-enable Muse.
 * emacsvox-net-utils:: net-utils.
 * emacsvox-newsticker:: newsticker.
 * emacsvox-nm:: NM using  D-Bus..
@@ -3206,7 +3206,6 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-orgalist:: Speech-enable ORGALIST.
 * emacsvox-outline:: Speech enable Outline.
 * emacsvox-package:: Speech-enable PACKAGE.
-* emacsvox-paradox:: Speech-enable PARADOX.
 * emacsvox-perl:: Speech enable Perl Mode.
 * emacsvox-pipewire:: Speech-enable PIPEWIRE.
 * emacsvox-popup:: Speech-enable POPUP.
@@ -3254,7 +3253,6 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-tempo:: Speech enable tempo.
 * emacsvox-tetris:: Tetris.
 * emacsvox-texinfo:: Speech enable texinfo.
-* emacsvox-threes:: Speech-enable THREES.
 * emacsvox-todo-mode:: speech-enable todo.
 * emacsvox-transient:: TRANSIENT.
 * emacsvox-treesit:: Speech-enable TREESIT.
@@ -3280,7 +3278,6 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-yaml:: Speech-enable YAML.
 * emacsvox-yasnippet:: YASNIPPET.
 * espeak-voices:: Define  Espeak tags.
-* extra-muggles:: Additional Hydras.
 * g-utils:: Google Client Utilities.
 * gm-nnir:: Searching GMail Using NNIR.
 * gmaps:: Google Maps.
@@ -4012,6 +4009,21 @@ itself.
      Default Value:
 
      notify
+
+
+ -- Variable: User Option
+          emacsvox-agent-shell-block-navigation-max-characters
+     Maximum body characters spoken after Agent Shell block navigation.
+
+     When a normalized block body is longer, navigation stops at a word boundary
+     where possible and announces the number of omitted characters.  Set this to
+     nil, or to a non-positive value, to speak the complete body.  This option does
+     not change concise block labels or the specialized table and source-block
+     navigation presentations.
+
+     Default Value:
+
+     4096
 
 
  -- Variable: User Option emacsvox-agent-shell-foreground-speech-level
@@ -6616,11 +6628,34 @@ adapters until their callers migrate to this service.
 
      When non-nil, Emacsvox appends one Lisp plist per line with command timing,
      submission timing, and complete submitted text.  The log can therefore contain
-     sensitive material and is disabled by default.
+     sensitive material and is disabled by default.  Emacsvox creates the file with
+     owner-only permissions and tightens an existing file before appending to it.
 
      Default Value:
 
      nil
+
+
+ -- Variable: User Option emacsvox-aural-diagnostic-log-max-bytes
+     Soft size limit for one aural diagnostic log file.
+
+     Before appending a record that would cross this limit, Emacsvox renames the
+     current log to a session-tagged archive.  A single oversized record remains
+     intact and may exceed the limit.  Set this to nil to disable rotation.
+
+     Default Value:
+
+     16777216
+
+
+ -- Variable: User Option emacsvox-aural-diagnostic-log-retained-files
+     Number of rotated aural diagnostic log files to retain.
+
+     The active log is additional to this number.
+
+     Default Value:
+
+     4
 
 
 

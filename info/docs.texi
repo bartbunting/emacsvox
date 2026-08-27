@@ -5,7 +5,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1474 commands and 177 options.
+This chapter documents a total of 1462 commands and 183 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -97,6 +97,9 @@ This chapter documents a total of 1474 commands and 177 options.
 * emacsvox-dired:: Speech enable Dired Mode.
 * emacsvox-dumb-jump:: DUMB-JUMP.
 * emacsvox-eat:: Speech-enable EAT.
+* emacsvox-eat-core:: EAT speech observation core.
+* emacsvox-eat-input:: EAT interactive input feedback.
+* emacsvox-eat-review:: Frozen EAT screen review.
 * emacsvox-ebuku:: Speech-enable EBUKU.
 * emacsvox-ediff:: Speech enable  ediff.
 * emacsvox-eglot:: Speech-enable EGLOT.
@@ -135,7 +138,6 @@ This chapter documents a total of 1474 commands and 177 options.
 * emacsvox-forge:: Speech-enable FORGE.
 * emacsvox-forms:: Speech enable  forms mode.
 * emacsvox-geiser:: Speech-enable GEISER.
-* emacsvox-github-explorer:: GitHub Explorer.
 * emacsvox-gnuplot:: speech-enable gnuplot.
 * emacsvox-gnus:: Speech enable Gnus.
 * emacsvox-go-mode:: Speech-enable GO-MODE.
@@ -174,9 +176,7 @@ This chapter documents a total of 1474 commands and 177 options.
 * emacsvox-message:: Speech enable Message.
 * emacsvox-mines:: Speech-enable MINES.
 * emacsvox-mu4e:: Speech-enable MU4E.
-* emacsvox-muggles:: Convenience Hydras.
 * emacsvox-multiple-cursors:: Speech-enable MULTIPLE-CURSORS.
-* emacsvox-muse:: Speech-enable Muse.
 * emacsvox-net-utils:: net-utils.
 * emacsvox-newsticker:: newsticker.
 * emacsvox-nm:: NM using  D-Bus..
@@ -189,7 +189,6 @@ This chapter documents a total of 1474 commands and 177 options.
 * emacsvox-orgalist:: Speech-enable ORGALIST.
 * emacsvox-outline:: Speech enable Outline.
 * emacsvox-package:: Speech-enable PACKAGE.
-* emacsvox-paradox:: Speech-enable PARADOX.
 * emacsvox-perl:: Speech enable Perl Mode.
 * emacsvox-pipewire:: Speech-enable PIPEWIRE.
 * emacsvox-popup:: Speech-enable POPUP.
@@ -237,7 +236,6 @@ This chapter documents a total of 1474 commands and 177 options.
 * emacsvox-tempo:: Speech enable tempo.
 * emacsvox-tetris:: Tetris.
 * emacsvox-texinfo:: Speech enable texinfo.
-* emacsvox-threes:: Speech-enable THREES.
 * emacsvox-todo-mode:: speech-enable todo.
 * emacsvox-transient:: TRANSIENT.
 * emacsvox-treesit:: Speech-enable TREESIT.
@@ -263,7 +261,6 @@ This chapter documents a total of 1474 commands and 177 options.
 * emacsvox-yaml:: Speech-enable YAML.
 * emacsvox-yasnippet:: YASNIPPET.
 * espeak-voices:: Define  Espeak tags.
-* extra-muggles:: Additional Hydras.
 * g-utils:: Google Client Utilities.
 * gm-nnir:: Searching GMail Using NNIR.
 * gmaps:: Google Maps.
@@ -1163,6 +1160,26 @@ Default Value:
 @verbatim
 
 notify
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-agent-shell-block-navigation-max-characters
+@verbatim
+Maximum body characters spoken after Agent Shell block navigation.
+
+When a normalized block body is longer, navigation stops at a word boundary
+where possible and announces the number of omitted characters.  Set this to
+nil, or to a non-positive value, to speak the complete body.  This option does
+not change concise block labels or the specialized table and source-block
+navigation presentations.
+@end verbatim
+
+Default Value:
+@verbatim
+
+4096
 
 @end verbatim
 
@@ -3397,7 +3414,6 @@ integration is loaded.
 One explicit runtime selection boundary for sound packs and voice
 palettes.  This preserves precedence while exposing which configuration
 layer supplied the effective provider.
-
 @node emacsvox-aural-recent-feedback
 @section emacsvox-aural-recent-feedback
 
@@ -4231,13 +4247,48 @@ File receiving opt-in aural submission diagnostics.
 
 When non-nil, Emacsvox appends one Lisp plist per line with command timing,
 submission timing, and complete submitted text.  The log can therefore contain
-sensitive material and is disabled by default.
+sensitive material and is disabled by default.  Emacsvox creates the file with
+owner-only permissions and tightens an existing file before appending to it.
 @end verbatim
 
 Default Value:
 @verbatim
 
 nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-diagnostic-log-max-bytes
+@verbatim
+Soft size limit for one aural diagnostic log file.
+
+Before appending a record that would cross this limit, Emacsvox renames the
+current log to a session-tagged archive.  A single oversized record remains
+intact and may exceed the limit.  Set this to nil to disable rotation.
+@end verbatim
+
+Default Value:
+@verbatim
+
+16777216
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-aural-diagnostic-log-retained-files
+@verbatim
+Number of rotated aural diagnostic log files to retain.
+
+The active log is additional to this number.
+@end verbatim
+
+Default Value:
+@verbatim
+
+4
 
 @end verbatim
 
@@ -7464,7 +7515,332 @@ This module speech-enables dumb-jump
 @node emacsvox-eat
 @section emacsvox-eat
 
-EAT ==  Emacs Terminal Emulator
+Public entry point for Emacsvox speech access to EAT terminals.
+The implementation is split by responsibility:
+- `emacsvox-eat-core' owns screen observation, lifecycle, and output.
+- `emacsvox-eat-input' owns input, deletion, navigation, and completion.
+- `emacsvox-eat-review' owns frozen screen review and inspection.
+
+Keep requiring `emacsvox-eat'; the internal features are load-order details.
+
+@node emacsvox-eat-core
+@section emacsvox-eat-core
+
+Internal screen observation, lifecycle, and presentation core for EAT.
+Load `emacsvox-eat' rather than requiring this module directly.
+
+@subsection Emacsvox-Eat-Core Commands
+
+@subsubsection emacsvox-eat-cycle-verbosity
+@deffn {Command} emacsvox-eat-cycle-verbosity
+@findex emacsvox-eat-cycle-verbosity
+
+@format
+Cycle terse, normal, and verbose policy for this EAT terminal.
+The command also works from the terminal’s frozen review buffer.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-toggle-background-monitoring
+@deffn {Command} emacsvox-eat-toggle-background-monitoring  (&optional argument)
+@findex emacsvox-eat-toggle-background-monitoring
+
+@format
+Toggle content-free background-output monitoring for this EAT terminal.
+With positive prefix ARGUMENT, enable monitoring; with zero or a negative
+prefix, disable it.  The command also works from its frozen review buffer.
+
+(fn &optional ARGUMENT)
+@end format
+@end deffn
+
+@subsection emacsvox-eat-core Options
+
+@defvar {User Option} emacsvox-eat-monitor-background-output
+@verbatim
+Whether this EAT buffer cues output received while it is unselected.
+Monitoring never speaks background terminal content or identity.  It plays a
+rate-limited cue for quiesced text changes and reports the unread burst count
+when the terminal is selected again.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-eat-verbosity
+@verbatim
+Amount of automatic feedback produced for EAT terminals.
+At ‘terse’, retain routine output and metadata for review but do not speak
+them automatically.  ‘normal’ speaks bounded command output and status, while
+‘verbose’ additionally announces bounded terminal title and directory changes
+and successful shell-command status when EAT shell integration provides it.
+Failure, lifecycle, bell, paste, and completion feedback remains available at
+every level.  This option may be set buffer-locally for an individual
+terminal.
+@end verbatim
+
+Default Value:
+@verbatim
+
+normal
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-eat-input
+@section emacsvox-eat-input
+
+Input, navigation, deletion, paste, mode, and completion feedback for EAT.
+Load `emacsvox-eat' rather than requiring this module directly.
+
+@node emacsvox-eat-review
+@section emacsvox-eat-review
+
+Frozen, read-only review and explicit inspection for EAT screen state.
+Load `emacsvox-eat' rather than requiring this module directly.
+
+@subsection Emacsvox-Eat-Review Commands
+
+@subsubsection emacsvox-eat-review-goto-cursor
+@deffn {Command} emacsvox-eat-review-goto-cursor
+@findex emacsvox-eat-review-goto-cursor
+
+@format
+Return to the frozen screen’s captured terminal cursor row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-goto-focus
+@deffn {Command} emacsvox-eat-review-goto-focus
+@findex emacsvox-eat-review-goto-focus
+
+@format
+Move to the frozen conservative focus row and speak it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-mode
+@deffn {Command} emacsvox-eat-review-mode
+@findex emacsvox-eat-review-mode
+
+@format
+Review a frozen concealed-redacted EAT screen without touching its terminal.
+
+The buffer is an explicit immutable copy.  n and p move by terminal row; SPC,
+RET, or period speaks the current row; C returns to the captured cursor; h
+moves to a retained likely focus; [ and ] move among selection-like styled
+regions without treating them as focus; c shows retained completion/help
+output; s returns to screen rows; a speaks the bounded current view; t and i
+speak frozen status and metadata; v and m control source-terminal feedback
+without sending terminal input; and q kills the content-bearing review buffer.
+
+In addition to any hooks its parent mode ‘special-mode’ might have
+run, this mode runs the hook ‘emacsvox-eat-review-mode-hook’, as the
+final or penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-eat-review-speak-current-line
+C-n		emacsvox-eat-review-next-line
+C-p		emacsvox-eat-review-previous-line
+SPC		emacsvox-eat-review-speak-current-line
+-		negative-argument
+.		emacsvox-eat-review-speak-current-line
+0 .. 9		digit-argument
+<		beginning-of-buffer
+>		end-of-buffer
+?		describe-mode
+C		emacsvox-eat-review-goto-cursor
+[		emacsvox-eat-review-previous-styled-region
+]		emacsvox-eat-review-next-styled-region
+a		emacsvox-eat-review-speak-view
+c		emacsvox-eat-review-show-completion
+g		revert-buffer
+h		emacsvox-eat-review-goto-focus
+i		emacsvox-eat-speak-retained-metadata
+m		emacsvox-eat-toggle-background-monitoring
+n		emacsvox-eat-review-next-line
+p		emacsvox-eat-review-previous-line
+q		emacsvox-eat-review-quit
+s		emacsvox-eat-review-show-screen
+t		emacsvox-eat-speak-retained-status
+v		emacsvox-eat-cycle-verbosity
+DEL		scroll-down-command
+S-SPC		scroll-down-command
+<down>		emacsvox-eat-review-next-line
+<up>		emacsvox-eat-review-previous-line
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-next-line
+@deffn {Command} emacsvox-eat-review-next-line  (&optional count)
+@findex emacsvox-eat-review-next-line
+
+@format
+Move forward COUNT frozen terminal rows and speak the destination.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-next-styled-region
+@deffn {Command} emacsvox-eat-review-next-styled-region
+@findex emacsvox-eat-review-next-styled-region
+
+@format
+Move to and speak the next frozen selection-like styled region.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-previous-line
+@deffn {Command} emacsvox-eat-review-previous-line  (&optional count)
+@findex emacsvox-eat-review-previous-line
+
+@format
+Move backward COUNT frozen terminal rows and speak the destination.
+
+(fn &optional COUNT)
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-previous-styled-region
+@deffn {Command} emacsvox-eat-review-previous-styled-region
+@findex emacsvox-eat-review-previous-styled-region
+
+@format
+Move to and speak the previous frozen selection-like styled region.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-quit
+@deffn {Command} emacsvox-eat-review-quit
+@findex emacsvox-eat-review-quit
+
+@format
+Kill the content-bearing frozen EAT review and restore its prior window.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-screen
+@deffn {Command} emacsvox-eat-review-screen
+@findex emacsvox-eat-review-screen
+
+@format
+Open a read-only review copied from retained EAT screen state.
+The command never captures mutable live terminal-buffer text.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-show-completion
+@deffn {Command} emacsvox-eat-review-show-completion
+@findex emacsvox-eat-review-show-completion
+
+@format
+Render and speak the frozen terminal candidate or help-row presentation.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-show-screen
+@deffn {Command} emacsvox-eat-review-show-screen
+@findex emacsvox-eat-review-show-screen
+
+@format
+Render the frozen terminal screen and move to its captured cursor row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-speak-current-line
+@deffn {Command} emacsvox-eat-review-speak-current-line  (&optional introduction replaceable-p)
+@findex emacsvox-eat-review-speak-current-line
+
+@format
+Speak the current frozen terminal row after optional INTRODUCTION.
+When REPLACEABLE-P is non-nil, interrupt an older row announcement from this
+review because only the newly reached row remains useful.
+
+(fn &optional INTRODUCTION REPLACEABLE-P)
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-review-speak-view
+@deffn {Command} emacsvox-eat-review-speak-view
+@findex emacsvox-eat-review-speak-view
+
+@format
+Speak a bounded overview of the current immutable review view.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-speak-completion-output
+@deffn {Command} emacsvox-eat-speak-completion-output
+@findex emacsvox-eat-speak-completion-output
+
+@format
+Speak the latest retained terminal candidate or help-row presentation.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-speak-current-row
+@deffn {Command} emacsvox-eat-speak-current-row
+@findex emacsvox-eat-speak-current-row
+
+@format
+Speak the terminal cursor row from the latest retained screen snapshot.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-speak-last-change
+@deffn {Command} emacsvox-eat-speak-last-change
+@findex emacsvox-eat-speak-last-change
+
+@format
+Speak the most recent quiesced terminal change from retained state.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-speak-likely-focus
+@deffn {Command} emacsvox-eat-speak-likely-focus
+@findex emacsvox-eat-speak-likely-focus
+
+@format
+Speak the latest conservative terminal focus inference for review.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-speak-retained-metadata
+@deffn {Command} emacsvox-eat-speak-retained-metadata
+@findex emacsvox-eat-speak-retained-metadata
+
+@format
+Speak the latest retained or explicitly frozen title/directory change.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-speak-retained-status
+@deffn {Command} emacsvox-eat-speak-retained-status
+@findex emacsvox-eat-speak-retained-status
+
+@format
+Speak the latest retained or explicitly frozen terminal status row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-eat-speak-visible-screen
+@deffn {Command} emacsvox-eat-speak-visible-screen
+@findex emacsvox-eat-speak-visible-screen
+
+@format
+Speak a bounded frozen copy of the latest retained visible EAT screen.
+@end format
+@end deffn
 
 @node emacsvox-ebuku
 @section emacsvox-ebuku
@@ -11131,9 +11507,9 @@ Speech-enable flymake
 @section emacsvox-flyspell
 
 This module speech enables flyspell.
-it loads flyspell-correct if available,
-And when loading flyspell-correct sets up that module
-to use  one of   three supported correction styles:
+It loads flyspell-correct if available and uses its native completion
+interface by default, allowing the active completion frontend (such as
+Vertico) to present corrections.  Three alternate styles remain available:
 @itemize @bullet
 @item ido: IDO-like completion with C-s and C-r moving through choices.
 @item popup:Use  up and down arrows to move through  corrections.
@@ -11142,20 +11518,23 @@ to use  one of   three supported correction styles:
 See documentation for package flyspell-correct for additional
 details.
 
-Use Customization emacsvox-flyspell-correct to pick
-between ido, popup and helm.
+Use Customization emacsvox-flyspell-correct to choose native completion or
+an explicit IDO, Popup, or Helm interface.
 
 @subsection emacsvox-flyspell Options
 
 @defvar {User Option} emacsvox-flyspell-correct
 @verbatim
-Correction style to use with flyspell.
+Correction interface module to use with Flyspell.
+The default ‘flyspell-correct’ value uses standard completion and therefore
+honors the active completion frontend.  Alternate IDO, Popup, and Helm modules
+remain available for explicit selection.
 @end verbatim
 
 Default Value:
 @verbatim
 
-flyspell-correct-ido
+flyspell-correct
 
 @end verbatim
 
@@ -11249,32 +11628,6 @@ including the geiser->scheme REPL.
 This is used by racket-mode for racket interaction,
 And also for interacting with Guile.
 
-@node emacsvox-github-explorer
-@section emacsvox-github-explorer
-
-GH-EXPLORER ==  GitHub Explorer
-This module speech-enables Github Explorer.
-
-@subsection Emacsvox-Github-Explorer Commands
-
-@subsubsection emacsvox-github-explorer-next
-@deffn {Command} emacsvox-github-explorer-next
-@findex emacsvox-github-explorer-next
-
-@format
-Move forward and speak current entry.
-@end format
-@end deffn
-
-@subsubsection emacsvox-github-explorer-previous
-@deffn {Command} emacsvox-github-explorer-previous
-@findex emacsvox-github-explorer-previous
-
-@format
-Moveback and speak current entry.
-@end format
-@end deffn
-
 @node emacsvox-gnuplot
 @section emacsvox-gnuplot
 
@@ -11344,7 +11697,8 @@ Default Value:
 
 @defvar {User Option} emacsvox-gnus-punctuation-mode
 @verbatim
-Pronunciation mode to use for gnus buffers.
+Punctuation mode to use for Gnus buffers.
+When nil, use the general punctuation policy.
 @end verbatim
 
 Default Value:
@@ -12043,9 +12397,9 @@ correction choices are few.  For interactively moving through
 corrections, install package flyspell-correct from MELPA
 (package-install "flyspell-correct") Then use M-x flyspell-mode.
 Package flyspell is speech-enabled by Emacsvox module
-emacsvox-flyspell And that module sets up flyspell-correct to use
-IDO-style completion, i.e. you can move through corrections with
-C-r and C-s.
+emacsvox-flyspell.  That module uses standard completion by default, so
+Vertico or another active completion frontend presents correction choices.
+IDO, Popup, and Helm remain available as explicit alternatives.
 
 @subsection emacsvox-ispell Options
 
@@ -14037,295 +14391,12 @@ It covers the four main mu4e views:
 - Message view (reading a message)
 - Compose view (writing a message)
 
-@node emacsvox-muggles
-@section emacsvox-muggles
-
-MUGGLES ==  Emacsvox spells for power-users.
-This module implements no new functionality --- contrast with
-emacsvox-wizards.  Instead, it uses package hydra to provide
-convenience key-bindings that access existing Emacsvox
-functionality.
-You need to install package Hydra first:
-@samp{M-x package-install  hydra}.
-
-Note that on newer versions of Emacs, loading this module will
-attempt to automatically install package hydra if it is not found.
-@subsection Using Hydras
-See the high-level documentation for the Hydra package by executing
-@kbd {C-h C-j } hydra @kbd{RET}.
-The documentation in this section uses the same terminology as
-shown in the hydra package documentation.
-
-@subsection Implemented Muggles
-
-@itemize
-@item Brightness: @kbd{print} Control display brightness using light.
-@item Navigate: @kbd{s-n} Navigate with ease.
-@item  org-mode tables: @kbd{C-c t} Table UI for org-mode tables.
-@item hideshow: C-, h Provide HideShow bindings.
-@item toggle-option:  @kbd{C-c o} Single binding for toggling options.
-@item Repeatable-Yank: @kbd{C-y} Smart yank
-@item undo-only/undo-redo: @kbd{C-/ } Undo-only on @kbd{/} and
-undo-redo on @kbd{\}
-@item emacsvox-maths @kbd{s-SPC} Speak and browse math.
-@end itemize
-
-Emacsvox automatically speaks Hydra hints when displayed.
-To silence all Hydra hints, set hydra-is-helpful to nil.  To
-temporarily silence speaking of Hydra hints, Muggles can bind
-command @code{emacsvox-hydra-toggle-talkative}.  As an
-example, Muggle @samp{ViewMode} binds @code{s} to this command.
-
-@subsection Emacsvox-Muggles Commands
-
-@subsubsection emacsvox-muggles-brightness/body
-@deffn {Command} emacsvox-muggles-brightness/body
-@table @kbd
-@item s-.
-@kindex s-.
-@item <print>
-@kindex <print>
-@end table
-
-@findex emacsvox-muggles-brightness/body
-
-@format
-Call the body in the "emacsvox-muggles-brightness" hydra.
-
-The heads for the associated hydra are:
-
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-brightness")’,
-"s":    ‘light-set’,
-"g":    ‘light-get’,
-"t":    ‘emacsvox-hydra-toggle-talkative’,
-"<print>":    ‘light-black’,
-"s-.":    ‘light-black’,
-".":    ‘light-black’,
-"0":    ‘light-black’,
-"1":    ‘light-white’,
-"d":    ‘light-decrement’,
-"i":    ‘light-increment’,
-"SPC":    ‘light-increment’
-
-The body can be accessed via ‘emacsvox-muggles-brightness/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-hideshow/body
-@deffn {Command} emacsvox-muggles-hideshow/body
-@table @kbd
-@item C-, h
-@kindex C-, h
-@item C-x @@ a h
-@kindex C-x @@ a h
-@end table
-
-@findex emacsvox-muggles-hideshow/body
-
-@format
-Call the body in the "emacsvox-muggles-hideshow" hydra.
-
-The heads for the associated hydra are:
-
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-hideshow")’,
-"h":    ‘hs-hide-block’,
-"s":    ‘hs-show-block’,
-"H":    ‘hs-hide-all’,
-"S":    ‘hs-show-all’,
-"a":    ‘hs-show-all’,
-"l":    ‘hs-hide-level’,
-"i":    ‘hs-hide-initial-comment-block’
-
-The body can be accessed via ‘emacsvox-muggles-hideshow/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-ido-yank
-@deffn {Command} emacsvox-muggles-ido-yank
-@table @kbd
-@item C-M-y
-@kindex C-M-y
-@end table
-
-@findex emacsvox-muggles-ido-yank
-
-@format
-Pick what to yank using ido completion.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-lispy-or-sp
-@deffn {Command} emacsvox-muggles-lispy-or-sp
-@findex emacsvox-muggles-lispy-or-sp
-
-@format
-Toggle between lispy and smartparens.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-maths-navigator/body
-@deffn {Command} emacsvox-muggles-maths-navigator/body
-@findex emacsvox-muggles-maths-navigator/body
-
-@format
-Call the body in the "emacsvox-muggles-maths-navigator" hydra.
-
-The heads for the associated hydra are:
-
-"o":    ‘emacsvox-maths-switch-to-output’,
-"RET":    ‘emacsvox-maths-enter-guess’,
-"SPC":    ‘emacsvox-maths-enter’,
-"a":    ‘emacsvox-maths-speak-alt’,
-"d":    ‘emacsvox-maths-depth’,
-"r":    ‘emacsvox-maths-root’,
-"<up>":    ‘emacsvox-maths-up’,
-"<down>":    ‘emacsvox-maths-down’,
-"<left>":    ‘emacsvox-maths-left’,
-"<right>":    ‘emacsvox-maths-right’
-
-The body can be accessed via ‘emacsvox-muggles-maths-navigator/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-navigate/body
-@deffn {Command} emacsvox-muggles-navigate/body
-@table @kbd
-@item s-n
-@kindex s-n
-@end table
-
-@findex emacsvox-muggles-navigate/body
-
-@format
-Call the body in the "emacsvox-muggles-navigate" hydra.
-
-The heads for the associated hydra are:
-
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-navigate")’,
-"s":    ‘emacsvox-hydra-toggle-talkative’,
-"n":    ‘next-line’,
-"p":    ‘previous-line’,
-"f":    ‘forward-char’,
-"b":    ‘backward-char’,
-"a":    ‘beginning-of-line’,
-"e":    ‘move-end-of-line’,
-"j":    ‘next-line’,
-"k":    ‘previous-line’,
-"v":    ‘scroll-up-command’,
-"V":    ‘scroll-down-command’,
-"l":    ‘recenter-top-bottom’,
-"<":    ‘beginning-of-buffer’,
-">":    ‘end-of-buffer’
-
-The body can be accessed via ‘emacsvox-muggles-navigate/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-org-table/body
-@deffn {Command} emacsvox-muggles-org-table/body
-@findex emacsvox-muggles-org-table/body
-
-@format
-Call the body in the "emacsvox-muggles-org-table" hydra.
-
-The heads for the associated hydra are:
-
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-org-table")’,
-"j":    ‘org-table-next-row’,
-"k":    ‘org-table-previous-row’,
-"h":    ‘org-table-previous-field’,
-"l":    ‘org-table-next-field’,
-"SPC":    ‘emacsvox-org-table-speak-current-element’,
-".":    ‘emacsvox-org-table-speak-coordinates’,
-"b":    ‘emacsvox-org-table-speak-both-headers-and-element’,
-"r":    ‘emacsvox-org-table-speak-row-header-and-element’,
-"c":    ‘emacsvox-org-table-speak-column-header-and-element’
-
-The body can be accessed via ‘emacsvox-muggles-org-table/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-toggle-option/body
-@deffn {Command} emacsvox-muggles-toggle-option/body
-@table @kbd
-@item C-c o
-@kindex C-c o
-@end table
-
-@findex emacsvox-muggles-toggle-option/body
-
-@format
-Call the body in the "emacsvox-muggles-toggle-option" hydra.
-
-The heads for the associated hydra are:
-
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-toggle-option")’,
-"a":    ‘(call-interactively #’abbrev-mode)’,
-"d":    ‘(call-interactively #’toggle-debug-on-error)’,
-"g":    ‘(call-interactively #’toggle-debug-on-quit)’,
-"h":    ‘(setq hydra-is-helpful (not hydra-is-helpful))’,
-"p":    ‘emacsvox-muggles-lispy-or-sp’,
-"q":    nil
-
-The body can be accessed via ‘emacsvox-muggles-toggle-option/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-undo-only/undo-redo/body
-@deffn {Command} emacsvox-muggles-undo-only/undo-redo/body
-@table @kbd
-@item s-/
-@kindex s-/
-@end table
-
-@findex emacsvox-muggles-undo-only/undo-redo/body
-
-@format
-Call the body in the "emacsvox-muggles-undo-only/undo-redo" hydra.
-
-The heads for the associated hydra are:
-
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-undo-only/undo-redo")’,
-"/":    ‘undo-only’,
-"\":    ‘undo-redo’
-
-The body can be accessed via ‘emacsvox-muggles-undo-only/undo-redo/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-yank-pop/body
-@deffn {Command} emacsvox-muggles-yank-pop/body
-@findex emacsvox-muggles-yank-pop/body
-
-@format
-Call the body in the "emacsvox-muggles-yank-pop" hydra.
-
-The heads for the associated hydra are:
-
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-yank-pop")’,
-"C-y":    ‘yank’,
-"M-y":    ‘yank-pop’,
-"y":    ‘(funcall-interactively #’yank-pop 1)’,
-"Y":    ‘(funcall-interactively #’yank-pop -1)’,
-"i":    ‘emacsvox-muggles-ido-yank’,
-"s":    ‘emacsvox-muggles-ido-yank’,
-"l":    ‘browse-kill-ring’
-
-The body can be accessed via ‘emacsvox-muggles-yank-pop/body’.
-@end format
-@end deffn
-
 @node emacsvox-multiple-cursors
 @section emacsvox-multiple-cursors
 
 MULTIPLE-CURSORS == multiple-cursors
 Speech-enable multiple-cursors for editing with multiple cursors.
 Provides auditory feedback when adding, removing, and skipping cursors.
-
-@node emacsvox-muse
-@section emacsvox-muse
-
-Speech enable Muse
 
 @node emacsvox-net-utils
 @section emacsvox-net-utils
@@ -15399,26 +15470,6 @@ Move to next line and speak it.
 @subsubsection emacsvox-package-summarize-line
 @deffn {Command} emacsvox-package-summarize-line
 @findex emacsvox-package-summarize-line
-
-@format
-Succinct Summary.
-@end format
-@end deffn
-
-@node emacsvox-paradox
-@section emacsvox-paradox
-
-PARADOX == paradox.el Improved package management interface
-Manage Emacs packages.
-This module speech-enables paradox.el with a few convenience commands.
-
-  Required modules:
-
-@subsection Emacsvox-Paradox Commands
-
-@subsubsection emacsvox-paradox-summarize-line
-@deffn {Command} emacsvox-paradox-summarize-line
-@findex emacsvox-paradox-summarize-line
 
 @format
 Succinct Summary.
@@ -16736,9 +16787,9 @@ Speak the current column.
 
 @format
 Speak the current kill.
-This is what will be yanked by the next <paste>. Prefix numeric
+This is what will be yanked by the next C-y. Prefix numeric
 arg, COUNT, specifies that the text that will be yanked as a
-result of a <paste> followed by count-1 M-x yank-pop be
+result of a C-y followed by count-1 M-y be
 spoken. The kill number that is spoken says what numeric prefix
 arg to give to command yank.
 
@@ -16955,7 +17006,6 @@ any other key to speak entire line.
 @item C-e |
 @kindex C-e |
 @end table
-
 @findex emacsvox-speak-line-set-column-filter
 
 @format
@@ -19159,182 +19209,6 @@ Speak current position
 @section emacsvox-texinfo
 
 This module speech enables net-texinfo mode
-
-@node emacsvox-threes
-@section emacsvox-threes
-
-THREES == threes game. This module speech-enable the
-game. @url{https://en.wikipedia.org/wiki/Threes} for history of the
-game and details of game play. This module adds additional
-convenience keybindings to the default arrow-key bindings
-implemented in threes.el. In addition, this module implements
-commands that speak the board as well as getting a column-specific
-view of the board.
-
-@table @kbd
-@item  f
-Move right
-@item b
-Move left
-@item n
-Move down
-@item p
-Move up
-@item SPC
-Speak the board
-@item /
-Speak board by column.
-@item .
-Speak current score.
-@item ,
-Speak  number of zeros on the board.
-@item s
-Save current state
-@item u
-Pop state from stack
-@item ?
-Speak next tile
-@end table
-The updated board is spoken after each turn.
-The next upcoming tile is spoken after the  current state of the board.
-You can use @kbd{SPC} and @kbd{/} to review the board.
-
-@subsection Emacsvox-Threes Commands
-
-@subsubsection emacsvox-threes-0
-@deffn {Command} emacsvox-threes-0
-@findex emacsvox-threes-0
-
-@format
-Set next tile.
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-1
-@deffn {Command} emacsvox-threes-1
-@findex emacsvox-threes-1
-
-@format
-Set next tile.
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-2
-@deffn {Command} emacsvox-threes-2
-@findex emacsvox-threes-2
-
-@format
-Set next tile.
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-3
-@deffn {Command} emacsvox-threes-3
-@findex emacsvox-threes-3
-
-@format
-Set next tile.
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-export
-@deffn {Command} emacsvox-threes-export  (&optional prompt)
-@findex emacsvox-threes-export
-
-@format
-Exports game stack to a file.
-Optional interactive prefix arg prompts for a file.
-Note that the file is overwritten silently.
-
-(fn &optional PROMPT)
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-import
-@deffn {Command} emacsvox-threes-import  (&optional prompt)
-@findex emacsvox-threes-import
-
-@format
-Import game.
-Optional interactive prefix arg prompts for a filename.
-
-(fn &optional PROMPT)
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-pop-state
-@deffn {Command} emacsvox-threes-pop-state
-@findex emacsvox-threes-pop-state
-
-@format
-Reset state from stack.
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-prune-stack
-@deffn {Command} emacsvox-threes-prune-stack  (drop)
-@findex emacsvox-threes-prune-stack
-
-@format
-Prune game stack to specified length.
-
-(fn DROP)
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-push-state
-@deffn {Command} emacsvox-threes-push-state
-@findex emacsvox-threes-push-state
-
-@format
-Push current game state on stack.
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-score
-@deffn {Command} emacsvox-threes-score
-@findex emacsvox-threes-score
-
-@format
-Speak the score.
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-speak-board
-@deffn {Command} emacsvox-threes-speak-board
-@findex emacsvox-threes-speak-board
-
-@format
-Speak the board.
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-speak-empty-count
-@deffn {Command} emacsvox-threes-speak-empty-count
-@findex emacsvox-threes-speak-empty-count
-
-@format
-Speak number of cells that are non-empty.
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-speak-next
-@deffn {Command} emacsvox-threes-speak-next
-@findex emacsvox-threes-speak-next
-
-@format
-Speak upcoming tile.
-@end format
-@end deffn
-
-@subsubsection emacsvox-threes-speak-transposed-board
-@deffn {Command} emacsvox-threes-speak-transposed-board
-@findex emacsvox-threes-speak-transposed-board
-
-@format
-Speak the board by columns.
-@end format
-@end deffn
 
 @node emacsvox-todo-mode
 @section emacsvox-todo-mode
@@ -22656,385 +22530,6 @@ Default Value:
 
 @end defvar
 
-@node extra-muggles
-@section extra-muggles
-
-MUGGLES ==  Emacsvox spells for power-users.
-These are extra hydras that I dont use very often,
-And are being moved here from emacsvox-muggles to save time at
-startup.
-
-This module implements no new functionality --- contrast with
-emacsvox-wizards.  Instead, it uses package hydra to provide
-convenience key-bindings that access existing Emacsvox
-functionality.
-You need to install package Hydra first:
-@samp{M-x package-install  hydra}.
-
-Note that on newer versions of Emacs, loading this module will
-attempt to automatically install package hydra if it is not found.
-@subsection Using Hydras
-See the high-level documentation for the Hydra package by executing
-@kbd {C-h C-j } hydra @kbd{RET}.
-The documentation in this section uses the same terminology as
-shown in the hydra package documentation.
-
-@subsection Extra Muggles
-
-@itemize
-@item  org-mode structure nav: @kbd{C-c C-SPC}  Navigation  for org-mode.
-@item View-Mode: @kbd{C-. v} Temporarily behave like view-mode.
-@item SmartParens: @kbd{C-c ,} Smart Parens
-@item m-player: @kbd{s-m} Emacsvox-M-Player Commands
-@item m-player: @kbd{s-;} Emacsvox-M-Player muggle
-@item pianobar: @kbd{s-'} Emacsvox-M-pianobar Commands
-@item origami: C-, / Origami   bindings.
-@item outliner: <C-c .> Bindings from outline-minor-mode.
-@item Info-Summary: <?> in Info Info Summary Muggle
-@item Vuiet Explorer: @kbd{C-; v} Vuiet Music Explorer and Player
-@end itemize
-
-Emacsvox automatically speaks Hydra hints when displayed.
-To silence all Hydra hints, set hydra-is-helpful to nil.  To
-temporarily silence speaking of Hydra hints, Muggles can bind
-command @code{emacsvox-hydra-toggle-talkative}.  As an
-example, Muggle @samp{ViewMode} binds @code{s} to this command.
-
-@subsection Extra-Muggles Commands
-
-@subsubsection emacsvox-muggles-emacsvox-m-player-mode-map-cmd
-@deffn {Command} emacsvox-muggles-emacsvox-m-player-mode-map-cmd
-@table @kbd
-@item s-m
-@kindex s-m
-@end table
-
-@findex emacsvox-muggles-emacsvox-m-player-mode-map-cmd
-
-@format
-Temporarily use keymap emacsvox-m-player-mode-map
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-info-summary/body
-@deffn {Command} emacsvox-muggles-info-summary/body
-@findex emacsvox-muggles-info-summary/body
-
-@format
-Call the body in the "emacsvox-muggles-info-summary" hydra.
-
-The heads for the associated hydra are:
-
-"]":    ‘Info-forward-node’,
-"[":    ‘Info-backward-node’,
-"n":    ‘Info-next’,
-"p":    ‘Info-prev’,
-"s":    ‘Info-search’,
-"S":    ‘Info-search-case-sensitively’,
-"l":    ‘Info-history-back’,
-"r":    ‘Info-history-forward’,
-"H":    ‘Info-history’,
-"t":    ‘Info-top-node’,
-"<":    ‘Info-top-node’,
-">":    ‘Info-final-node’,
-"u":    ‘Info-up’,
-"^":    ‘Info-up’,
-"m":    ‘Info-menu’,
-"g":    ‘Info-goto-node’,
-"b":    ‘beginning-of-buffer’,
-"e":    ‘end-of-buffer’,
-"f":    ‘Info-follow-reference’,
-"i":    ‘Info-index’,
-",":    ‘Info-index-next’,
-"I":    ‘Info-virtual-index’,
-"T":    ‘Info-toc’,
-"d":    ‘Info-directory’,
-"c":    ‘Info-copy-current-node-name’,
-"C":    ‘clone-buffer’,
-"a":    ‘info-apropos’,
-"1":    ‘Info-nth-menu-item’,
-"2":    ‘Info-nth-menu-item’,
-"3":    ‘Info-nth-menu-item’,
-"4":    ‘Info-nth-menu-item’,
-"5":    ‘Info-nth-menu-item’,
-"6":    ‘Info-nth-menu-item’,
-"7":    ‘Info-nth-menu-item’,
-"8":    ‘Info-nth-menu-item’,
-"9":    ‘Info-nth-menu-item’,
-"?":    ‘Info-summary’,
-"h":    ‘Info-help’,
-"q":    ‘quit-window’,
-"C-g":    nil
-
-The body can be accessed via ‘emacsvox-muggles-info-summary/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-m-player/body
-@deffn {Command} emacsvox-muggles-m-player/body
-@table @kbd
-@item s-;
-@kindex s-;
-@end table
-
-@findex emacsvox-muggles-m-player/body
-
-@format
-Call the body in the "emacsvox-muggles-m-player" hydra.
-
-The heads for the associated hydra are:
-
-";":    ‘emacsvox-m-player’,
-"+":    ‘emacsvox-m-player-volume-up’,
-",":    ‘emacsvox-m-player-backward-10s’,
-"%":    ‘emacsvox-m-player-display-percent’,
-"-":    ‘emacsvox-m-player-volume-down’,
-".":    ‘emacsvox-m-player-forward-10s’,
-"<":    ‘emacsvox-m-player-backward-1min’,
-"<down>":    ‘emacsvox-m-player-forward-1min’,
-"<left>":    ‘emacsvox-m-player-backward-10s’,
-"<next>":    ‘emacsvox-m-player-forward-10min’,
-"<prior>":    ‘emacsvox-m-player-backward-10min’,
-"<right>":    ‘emacsvox-m-player-forward-10s’,
-"<up>":    ‘emacsvox-m-player-backward-1min’,
-"=":    ‘emacsvox-m-player-volume-up’,
-">":    ‘emacsvox-m-player-forward-1min’,
-"C":    ‘emacsvox-m-player-clear-filters’,
-"DEL":    ‘emacsvox-m-player-reset-speed’,
-"Q":    ‘emacsvox-m-player-quit’,
-"R":    ‘emacsvox-m-player-edit-reverb’,
-"S":    ‘emacsvox-amark-save’,
-"SPC":    ‘emacsvox-m-player-pause’,
-"[":    ‘emacsvox-m-player-slower’,
-"]":    ‘emacsvox-m-player-faster’,
-"a":    ‘emacsvox-m-player-amark-add’,
-"b":    ‘emacsvox-m-player-balance’,
-"c":    ‘emacsvox-m-player-slave-command’,
-"d":    ‘emacsvox-m-player-delete-filter’,
-"e":    ‘emacsvox-m-player-add-equalizer’,
-"f":    ‘emacsvox-m-player-add-filter’,
-"g":    ‘emacsvox-m-player-seek-absolute’,
-"j":    ‘emacsvox-m-player-amark-jump’,
-"l":    ‘emacsvox-m-player-get-length’,
-"m":    ‘emacsvox-m-player-mode-line’,
-"n":    ‘emacsvox-m-player-next-track’,
-"p":    ‘emacsvox-m-player-previous-track’,
-"q":    ‘bury-buffer’,
-"r":    ‘emacsvox-m-player-seek-relative’,
-"s":    ‘emacsvox-m-player-scale-speed’,
-"u":    ‘emacsvox-m-player-url’,
-"v":    ‘emacsvox-m-player-volume-change’,
-"(":    ‘emacsvox-m-player-left-channel’,
-")":    ‘emacsvox-m-player-right-channel’,
-"@{":    ‘emacsvox-m-player-half-speed’,
-"@}":    ‘emacsvox-m-player-double-speed’
-
-The body can be accessed via ‘emacsvox-muggles-m-player/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-org-nav/body
-@deffn {Command} emacsvox-muggles-org-nav/body
-@findex emacsvox-muggles-org-nav/body
-
-@format
-Call the body in the "emacsvox-muggles-org-nav" hydra.
-
-The heads for the associated hydra are:
-
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-org-nav")’,
-"SPC":    ‘emacsvox-outline-speak-this-heading’,
-"n":    ‘emacsvox-outline-speak-next-heading’,
-"p":    ‘emacsvox-outline-speak-previous-heading’,
-"f":    ‘org-forward-heading-same-level’,
-"b":    ‘org-backward-heading-same-level’,
-"u":    ‘outline-up-heading’,
-"g":    ‘org-goto’
-
-The body can be accessed via ‘emacsvox-muggles-org-nav/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-outliner/body
-@deffn {Command} emacsvox-muggles-outliner/body
-@table @kbd
-@item C-. o
-@kindex C-. o
-@item C-x @@ s o
-@kindex C-x @@ s o
-@end table
-
-@findex emacsvox-muggles-outliner/body
-
-@format
-Call the body in the "emacsvox-muggles-outliner" hydra.
-
-The heads for the associated hydra are:
-
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-outliner")’,
-"q":    ‘outline-hide-sublevels’,
-"t":    ‘outline-hide-body’,
-"o":    ‘outline-hide-other’,
-"c":    ‘outline-hide-entry’,
-"l":    ‘outline-hide-leaves’,
-"d":    ‘outline-hide-subtree’,
-"a":    ‘outline-show-all’,
-"e":    ‘outline-show-entry’,
-"i":    ‘outline-show-children’,
-"k":    ‘outline-show-branches’,
-"s":    ‘outline-show-subtree’,
-"u":    ‘outline-up-heading’,
-"n":    ‘outline-next-visible-heading’,
-"p":    ‘outline-previous-visible-heading’,
-"f":    ‘outline-forward-same-level’,
-"b":    ‘outline-backward-same-level’,
-"z":    nil
-
-The body can be accessed via ‘emacsvox-muggles-outliner/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-smartparens/body
-@deffn {Command} emacsvox-muggles-smartparens/body
-@table @kbd
-@item C-c ,
-@kindex C-c ,
-@end table
-
-@findex emacsvox-muggles-smartparens/body
-
-@format
-Call the body in the "emacsvox-muggles-smartparens" hydra.
-
-The heads for the associated hydra are:
-
-"’":    ‘#’(lambda (_) (interactive "P") (sp-wrap-with-pair "’"))’,
-"(":    ‘#’(lambda (_) (interactive "P") (sp-wrap-with-pair "("))’,
-"<down>":    ‘sp-splice-sexp-killing-forward’,
-"<left>":    ‘sp-forward-barf-sexp’,
-"<right>":    ‘sp-forward-slurp-sexp’,
-"<up>":    ‘sp-splice-sexp-killing-backward’,
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-smartparens")’,
-"C-<left>":    ‘sp-backward-barf-sexp’,
-"C-<right>":    ‘sp-backward-slurp-sexp’,
-"R":    ‘sp-splice-sexp’,
-""":    ‘#’(lambda (_) (interactive "P") (sp-wrap-with-pair "\""))’,
-"a":    ‘beginning-of-defun’,
-"b":    ‘sp-backward-sexp’,
-"c":    ‘sp-convolute-sexp’,
-"d":    ‘sp-down-sexp’,
-"e":    ‘end-of-defun’,
-"f":    ‘sp-forward-sexp’,
-"i":    ‘sp-indent-defun’,
-"j":    ‘sp-join-sexp’,
-"k":    ‘sp-kill-sexp’,
-"n":    ‘sp-next-sexp’,
-"p":    ‘sp-previous-sexp’,
-"r":    ‘sp-splice-sexp-killing-around’,
-"s":    ‘sp-split-sexp’,
-"t":    ‘sp-transpose-sexp’,
-"u":    ‘sp-backward-up-sexp’,
-"w":    ‘sp-copy-sexp’,
-"@{":    ‘#’(lambda (_) (interactive "P") (sp-wrap-with-pair "@{"))’
-
-The body can be accessed via ‘emacsvox-muggles-smartparens/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-muggles-view/body
-@deffn {Command} emacsvox-muggles-view/body
-@table @kbd
-@item C-. v
-@kindex C-. v
-@item C-x @@ s v
-@kindex C-x @@ s v
-@end table
-
-@findex emacsvox-muggles-view/body
-
-@format
-Call the body in the "emacsvox-muggles-view" hydra.
-
-The heads for the associated hydra are:
-
-"?":    ‘(emacsvox-hydra-self-help "emacsvox-muggles-view")’,
-"$":    ‘set-selective-display’,
-"%":    ‘View-goto-percent’,
-"’":    ‘register-to-point’,
-"(":    ‘backward-sexp’,
-")":    ‘forward-sexp’,
-".":    ‘set-mark-command’,
-"/":    ‘View-search-regexp-forward’,
-"<":    ‘beginning-of-buffer’,
-"<return>":    nil,
-"=":    ‘what-line’,
-">":    ‘end-of-buffer’,
-"@@":    ‘View-back-to-mark’,
-"A":    ‘beginning-of-defun’,
-"DEL":    ‘View-scroll-page-backward’,
-"E":    ‘end-of-defun’,
-"J":    ‘(emacsvox-hide-or-expose-block ’all)’,
-"SPC":    ‘View-scroll-page-forward’,
-"[":    ‘backward-page’,
-"\":    ‘View-search-regexp-backward’,
-"]":    ‘forward-page’,
-"a":    ‘move-beginning-of-line’,
-"b":    ‘backward-word’,
-"c":    ‘emacsvox-speak-char’,
-"d":    ‘View-scroll-half-page-forward’,
-"e":    ‘move-end-of-line’,
-"f":    ‘forward-word’,
-"g":    ‘goto-line’,
-"h":    ‘backward-char’,
-"i":    ‘emacsvox-speak-mode-line’,
-"j":    ‘next-line’,
-"k":    ‘previous-line’,
-"l":    ‘forward-char’,
-"m":    ‘point-to-register’,
-"n":    ‘View-search-last-regexp-forward’,
-"p":    ‘View-search-last-regexp-backward’,
-"q":    nil,
-"r":    ‘copy-to-register’,
-"s":    ‘emacsvox-hydra-toggle-talkative’,
-"t":    ‘(recenter 0)’,
-"u":    ‘View-scroll-half-page-backward’,
-"w":    ‘emacsvox-speak-word’,
-"x":    ‘exchange-point-and-mark’,
-"y":    ‘kill-ring-save’,
-"@{":    ‘backward-paragraph’,
-"@}":    ‘forward-paragraph’
-
-The body can be accessed via ‘emacsvox-muggles-view/body’.
-@end format
-@end deffn
-
-@subsubsection emacsvox-origami/body
-@deffn {Command} emacsvox-origami/body
-@table @kbd
-@item C-, /
-@kindex C-, /
-@item C-x @@ a /
-@kindex C-x @@ a /
-@end table
-
-@findex emacsvox-origami/body
-
-@format
-Call the body in the "emacsvox-origami" hydra.
-
-The heads for the associated hydra are:
-
-"o":    ‘origami-open-node’,
-"c":    ‘origami-close-node’,
-"n":    ‘origami-next-fold’,
-"p":    ‘origami-previous-fold’,
-"f":    ‘origami-forward-toggle-node’,
-"a":    ‘origami-toggle-all-nodes’
-
-The body can be accessed via ‘emacsvox-origami/body’.
-@end format
-@end deffn
-
 @node g-utils
 @section g-utils
 
@@ -24179,6 +23674,15 @@ the speech rate.  Call when on a non-blank line to preview the effectt
 @end format
 @end deffn
 
+@subsubsection tts-reset-punctuation-mode
+@deffn {Command} tts-reset-punctuation-mode
+@findex tts-reset-punctuation-mode
+
+@format
+Clear the buffer override and restore automatic punctuation policy.
+@end format
+@end deffn
+
 @subsubsection tts-reset-state
 @deffn {Command} tts-reset-state
 @table @kbd
@@ -24657,6 +24161,51 @@ Default Value:
 @verbatim
 
 nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} tts-punctuation-mode-policy-alist
+@verbatim
+Automatic punctuation modes, ordered from specific to general.
+
+Each entry maps a major mode to ‘all’, ‘some’, or ‘none’.  The first entry
+for which ‘derived-mode-p’ succeeds supplies the buffer policy.  A buffer
+override set through ‘tts-set-punctuations’ takes precedence.  When no entry
+matches, the default value of ‘tts-punctuation-mode’ is used.
+@end verbatim
+
+Default Value:
+@verbatim
+
+((agent-shell-mode . all)
+ (2048-mode . some)
+ (eat-mode . all)
+ (eshell-mode . all)
+ (eww-mode . some)
+ (Man-mode . all)
+ (speedbar-mode . all)
+ (sudoku-mode . some)
+ (term-mode . all)
+ (vterm-mode . all)
+ (org-mode . some)
+ (markdown-mode . some)
+ (muse-mode . some)
+ (LaTeX-mode . some)
+ (TeX-mode . some)
+ (texinfo-mode . some)
+ (conf-unix-mode . all)
+ (html-helper-mode . all)
+ (sgml-mode . all)
+ (xml-mode . all)
+ (nxml-mode . all)
+ (xsl-mode . all)
+ (bibtex-mode . all)
+ (prog-mode
+  . all)
+ (comint-mode . all)
+ (text-mode . some))
 
 @end verbatim
 

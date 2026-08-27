@@ -213,7 +213,6 @@ emacsvox-folding.elc \
 emacsvox-forge.elc \
 emacsvox-forms.elc \
 emacsvox-geiser.elc \
-emacsvox-github-explorer.elc \
 emacsvox-gnuplot.elc \
 emacsvox-gnus.elc\
 emacsvox-go-mode.elc \
@@ -253,7 +252,6 @@ emacsvox-message.elc \
 emacsvox-mines.elc \
 emacsvox-mu4e.elc \
 emacsvox-multiple-cursors.elc \
-emacsvox-muse.elc \
 emacsvox-net-utils.elc \
 emacsvox-newsticker.elc \
 emacsvox-notmuch.elc \
@@ -265,7 +263,6 @@ emacsvox-org-srs.elc \
 emacsvox-orgalist.elc \
 emacsvox-outline.elc \
 emacsvox-package.elc \
-emacsvox-paradox.elc \
 emacsvox-perl.elc \
 emacsvox-pipewire.elc \
 emacsvox-popup.elc \
@@ -308,7 +305,6 @@ emacsvox-tcl.elc \
 emacsvox-tempo.elc \
 emacsvox-tetris.elc \
 emacsvox-texinfo.elc \
-emacsvox-threes.elc \
 emacsvox-todo-mode.elc \
 emacsvox-transient.elc \
 emacsvox-treesit.elc \
