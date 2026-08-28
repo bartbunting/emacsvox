@@ -181,6 +181,20 @@ Emacsvox's notification stream and includes the session buffer name."
                  (const :tag "Quiet" quiet))
   :group 'emacsvox-agent-shell)
 
+(defcustom emacsvox-agent-shell-automatic-content-max-characters 2000
+  "Maximum characters submitted for automatic Agent Shell speech.
+
+Long responses, tool output, errors, permissions, and other unsolicited
+content are shortened before Aural compiles them.  The spoken preview includes
+exact omitted character and line counts plus an appropriate inspection hint.
+This limit does not apply to explicit inspection commands such as
+`emacsvox-agent-shell-speak-last-response'.  Set this to nil, or to a
+non-positive value, to allow complete automatic response and output bodies;
+provider-controlled permission fields and tool labels remain concise."
+  :type '(choice (const :tag "Speak complete automatic content" nil)
+                 (integer :tag "Characters"))
+  :group 'emacsvox-agent-shell)
+
 (defvar-local emacsvox-agent-shell-speech-level 'auto
   "Per-session override for automatic agent-shell speech.
 The value `auto' follows the foreground and background defaults.  The values
@@ -1306,21 +1320,108 @@ ATTRIBUTES is a property list of registered semantic attributes."
    (when states (list :states (copy-sequence states)))
    (copy-tree attributes)))
 
+(defun emacsvox-agent-shell--omitted-span-counts (text cut)
+  "Return omitted character and affected-line counts for TEXT after CUT."
+  (cons (- (length text) cut)
+        (1+ (cl-count ?\n text :start cut))))
+
+(defun emacsvox-agent-shell--bounded-text-with-notice
+    (text limit notice-function)
+  "Bound TEXT to LIMIT, appending NOTICE-FUNCTION's omission description.
+
+NOTICE-FUNCTION receives omitted character and affected-line counts.  Keep a
+word boundary when one is available without discarding the entire opening."
+  (if (or (not (integerp limit))
+          (<= limit 0)
+          (<= (length text) limit))
+      text
+    (let* ((initial-counts
+            (emacsvox-agent-shell--omitted-span-counts text 0))
+           (initial-notice
+            (funcall notice-function
+                     (car initial-counts) (cdr initial-counts))))
+      (if (>= (length initial-notice) limit)
+          (substring initial-notice 0 limit)
+        (let* ((available (- limit (length initial-notice)))
+               (prefix (substring text 0 available))
+               (next-character (aref text available))
+               (word-start
+                (unless
+                    (string-match-p
+                     "\\`[[:space:]]\\'" (char-to-string next-character))
+                  (string-match
+                   "[[:space:]][^[:space:]]*\\'" prefix)))
+               (preview
+                (string-trim-right
+                 (substring prefix 0 (or word-start available))))
+               (cut (length preview))
+               (counts
+                (emacsvox-agent-shell--omitted-span-counts text cut))
+               (notice
+                (funcall notice-function (car counts) (cdr counts))))
+          (concat preview notice))))))
+
+(defun emacsvox-agent-shell--automatic-inspection-hint (facts)
+  "Return an explicit inspection hint appropriate for semantic FACTS."
+  (pcase (plist-get facts :role)
+    ('agent-response "Use C-c r for the complete response.")
+    ('agent-tool "Inspect the tool block for complete output.")
+    ('agent-error "Inspect the error block for complete details.")
+    ('permission-request
+     "Review the permission prompt for complete details.")
+    (_ "Inspect the Agent Shell buffer for complete content.")))
+
+(defun emacsvox-agent-shell--limit-automatic-content
+    (text facts &optional inspection-hint)
+  "Return TEXT bounded for automatic speech under FACTS.
+
+INSPECTION-HINT overrides the role-sensitive route to complete content."
+  (emacsvox-agent-shell--bounded-text-with-notice
+   text emacsvox-agent-shell-automatic-content-max-characters
+   (lambda (characters lines)
+     (format
+      " [automatic speech shortened: %d %s omitted across %d %s. %s]"
+      characters (if (= characters 1) "character" "characters")
+      lines (if (= lines 1) "line" "lines")
+      (or inspection-hint
+          (emacsvox-agent-shell--automatic-inspection-hint facts))))))
+
+(defconst emacsvox-agent-shell--permission-field-max-characters 160
+  "Maximum untrusted characters retained in one permission speech field.")
+
+(defun emacsvox-agent-shell--permission-field-text (text label)
+  "Return bounded permission TEXT identified by LABEL, or nil."
+  (when (stringp text)
+    (let ((trimmed
+           (string-trim (substring-no-properties text))))
+      (unless (string-empty-p trimmed)
+        (emacsvox-agent-shell--bounded-text-with-notice
+         trimmed emacsvox-agent-shell--permission-field-max-characters
+         (lambda (characters lines)
+           (format
+            " [%s shortened: %d %s omitted across %d %s]"
+            label characters
+            (if (= characters 1) "character" "characters")
+            lines (if (= lines 1) "line" "lines"))))))))
+
 (defun emacsvox-agent-shell--notify-background
     (facts occasion icon text &optional separator)
   "Notify the background session with FACTS, OCCASION, ICON, and TEXT.
 SEPARATOR defaults to a sentence boundary between the session label and TEXT."
-  (emacsvox-aural-call-with-submission
-   (lambda ()
-     (tts-notify-icon icon)
-     (tts-notify
-      (format "%s%s%s"
-              (emacsvox-agent-shell--session-label)
-              (or separator ". ")
-              text)))
-   :facts facts
-   :module 'agent-shell
-   :occasion occasion))
+  (let ((speech
+         (emacsvox-agent-shell--limit-automatic-content
+          (format "%s%s%s"
+                  (emacsvox-agent-shell--session-label)
+                  (or separator ". ")
+                  text)
+          facts)))
+    (emacsvox-aural-call-with-submission
+     (lambda ()
+       (tts-notify-icon icon)
+       (tts-notify speech))
+     :facts facts
+     :module 'agent-shell
+     :occasion occasion)))
 
 (defun emacsvox-agent-shell--deliver-announcement
     (facts occasion icon text &optional delivery-policy)
@@ -1331,7 +1432,7 @@ background transaction."
          (deliver
           (lambda ()
             (if focused
-                (emacsvox-agent-shell--submit-text-feedback
+                (emacsvox-agent-shell--submit-automatic-text-feedback
                  text facts occasion icon)
               (emacsvox-agent-shell--notify-background
                facts occasion icon text)))))
@@ -1872,8 +1973,9 @@ the body retains semantic faces and omits markup that is no longer displayed."
       (cond
        ((and focused
              (emacsvox-agent-shell--speech-level-at-least-p 'response))
-        (emacsvox-agent-shell--submit-text-feedback
-         (concat "Agent update: " body) facts occasion 'item))
+        (emacsvox-agent-shell--submit-automatic-text-feedback
+         (concat "Agent update: " body) facts occasion 'item
+         "Inspect the Agent Shell buffer for the complete update."))
        ((and (not focused)
              (emacsvox-agent-shell--speech-level-at-least-p 'notify))
         (emacsvox-agent-shell--notify-background
@@ -2114,20 +2216,25 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
          (tool-call (map-elt data :tool-call))
          (tool-call-id (map-elt data :tool-call-id))
          (title (map-elt tool-call :title))
+         (spoken-title
+          (emacsvox-agent-shell--permission-field-text
+           title "permission description"))
+         (spoken-tool-call-id
+          (emacsvox-agent-shell--permission-field-text
+           tool-call-id "tool identifier"))
          (description
           (cond
-           ((and (stringp title) (not (string-empty-p title)))
-            (substring-no-properties title))
-           ((and (stringp tool-call-id)
-                 (not (string-empty-p tool-call-id)))
-            (format "Tool %s" tool-call-id))
+           (spoken-title)
+           (spoken-tool-call-id (format "Tool %s" spoken-tool-call-id))
            (t "Unknown tool")))
          (choices
           (cl-loop
            for action in (append (map-elt tool-call :permission-actions) nil)
            for option = (map-elt action :option)
-           when (and (stringp option) (not (string-empty-p option)))
-           collect (substring-no-properties option))))
+           for spoken-option =
+           (emacsvox-agent-shell--permission-field-text
+            option "permission choice")
+           when spoken-option collect spoken-option)))
     (concat
      (format "Permission request. %s." description)
      (when choices
@@ -2512,6 +2619,18 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
    (when icon
      (list (emacsvox-aural-compatibility-icon icon)))))
 
+(defun emacsvox-agent-shell--submit-automatic-text-feedback
+    (text facts occasion &optional icon inspection-hint)
+  "Submit bounded automatic TEXT with semantic and compatibility context.
+
+FACTS, OCCASION, and ICON have the same meanings as in
+`emacsvox-agent-shell--submit-text-feedback'.  INSPECTION-HINT overrides the
+role-sensitive route announced when content is shortened."
+  (emacsvox-agent-shell--submit-text-feedback
+   (emacsvox-agent-shell--limit-automatic-content
+    text facts inspection-hint)
+   facts occasion icon))
+
 (defun emacsvox-agent-shell--present-content
     (content block-type facts occasion)
   "Present CONTENT of BLOCK-TYPE under explicit FACTS and OCCASION."
@@ -2519,17 +2638,17 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
     (pcase block-type
       ('agent-message
        (when (emacsvox-agent-shell--speech-level-at-least-p 'response)
-         (emacsvox-agent-shell--submit-text-feedback
+         (emacsvox-agent-shell--submit-automatic-text-feedback
           trimmed-content facts occasion)))
       ('user-message
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
-         (emacsvox-agent-shell--submit-text-feedback
+         (emacsvox-agent-shell--submit-automatic-text-feedback
           (concat "User: " trimmed-content) facts occasion 'item)))
       ('thought
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
          (pcase emacsvox-agent-shell-speak-thought-process
            ('speak
-            (emacsvox-agent-shell--submit-text-feedback
+            (emacsvox-agent-shell--submit-automatic-text-feedback
              (concat "Thinking: " trimmed-content) facts occasion))
            ('icon
             (emacsvox-agent-shell--submit-icon-feedback
@@ -2544,15 +2663,15 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
                   (emacsvox-agent-shell--speech-level-at-least-p 'full))
          (pcase emacsvox-agent-shell-tool-output-verbosity
            ('full
-            (emacsvox-agent-shell--submit-text-feedback
+            (emacsvox-agent-shell--submit-automatic-text-feedback
              trimmed-content facts occasion))
            ('summary
             ;; Extract just the first few lines or a summary
             (let ((lines (split-string trimmed-content "\n" t)))
               (if (<= (length lines) 3)
-                  (emacsvox-agent-shell--submit-text-feedback
+                  (emacsvox-agent-shell--submit-automatic-text-feedback
                    trimmed-content facts occasion)
-                (emacsvox-agent-shell--submit-text-feedback
+                (emacsvox-agent-shell--submit-automatic-text-feedback
                  (string-join (seq-take lines 3) " ")
                  facts occasion))))
            ('status
@@ -2561,7 +2680,7 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
              facts occasion 'task-done)))))
       ('plan
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
-         (emacsvox-agent-shell--submit-text-feedback
+         (emacsvox-agent-shell--submit-automatic-text-feedback
           (concat "Plan: " trimmed-content) facts occasion 'item)))
       ('error
        (emacsvox-agent-shell--deliver-announcement
@@ -2569,16 +2688,16 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
       ('unknown
        (cond
         ((emacsvox-agent-shell--speech-level-at-least-p 'full)
-         (emacsvox-agent-shell--submit-text-feedback
+         (emacsvox-agent-shell--submit-automatic-text-feedback
           trimmed-content facts occasion))
         ((emacsvox-agent-shell--speech-level-at-least-p 'response)
-         (emacsvox-agent-shell--submit-text-feedback
+         (emacsvox-agent-shell--submit-automatic-text-feedback
           "Additional agent content available." facts occasion))))
       (_
        ;; Fallback: speak if content is substantial
        (when (and (> (length trimmed-content) 0)
                   (emacsvox-agent-shell--speech-level-at-least-p 'response))
-         (emacsvox-agent-shell--submit-text-feedback
+         (emacsvox-agent-shell--submit-automatic-text-feedback
           trimmed-content facts occasion))))))
 
 (defun emacsvox-agent-shell-content-facts (block-type)
@@ -6083,11 +6202,8 @@ Return nil when the configured verbosity requests status cues only."
                        output
                      (map-elt tool-call :content)))))
             (if text
-                (emacsvox-aural-submit
-                 text
-                 :facts facts
-                 :module 'agent-shell
-                 :occasion 'notification)
+                (emacsvox-agent-shell--submit-automatic-text-feedback
+                 text facts 'notification)
               (emacsvox-aural-submit-actions
                :facts facts
                :module 'agent-shell

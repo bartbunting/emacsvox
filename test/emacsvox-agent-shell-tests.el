@@ -50,6 +50,7 @@
 (defvar emacsvox-agent-shell--line-navigation-speech-p)
 (defvar emacsvox-agent-shell-line-speech-max-characters)
 (defvar emacsvox-agent-shell-block-navigation-max-characters)
+(defvar emacsvox-agent-shell-automatic-content-max-characters)
 (defvar emacsvox-agent-shell-foreground-speech-level)
 (defvar emacsvox-agent-shell--table-navigation-active)
 (defvar emacsvox-agent-shell--table-navigation-map)
@@ -517,6 +518,24 @@
       (setq position
             (next-single-property-change position 'face string end)))
     (nreverse voices)))
+
+(defun emacsvox-agent-shell-test--assert-automatic-preview
+    (source spoken limit)
+  "Assert SPOKEN is an exact bounded automatic preview of SOURCE under LIMIT."
+  (should (<= (length spoken) limit))
+  (should
+   (string-match
+    (concat
+     " \\[automatic speech shortened: \\([0-9]+\\) "
+     "character\\(?:s\\)? omitted across \\([0-9]+\\) "
+     "line\\(?:s\\)?\\.")
+    spoken))
+  (let* ((cut (match-beginning 0))
+         (characters (string-to-number (match-string 1 spoken)))
+         (lines (string-to-number (match-string 2 spoken))))
+    (should (equal (substring source 0 cut) (substring spoken 0 cut)))
+    (should (= characters (- (length source) cut)))
+    (should (= lines (1+ (cl-count ?\n source :start cut))))))
 
 (defun emacsvox-agent-shell-test--speak-pending (entries)
   "Speak pending ENTRIES and return captured events.
@@ -1019,6 +1038,202 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          (equal
           (mapcar #'emacsvox-aural-compatibility-action-value actions)
           (and icon (list icon))))))))
+
+(ert-deftest emacsvox-agent-shell-automatic-response-is-bounded-before-aural ()
+  "A completed large response should reach Aural only as a bounded preview."
+  (let* ((emacsvox-agent-shell-automatic-content-max-characters 320)
+         (emacsvox-agent-shell-signal-processing nil)
+         (line (concat "λ " (make-string 500 ?x)))
+         (answer
+          (concat
+           "Résumé λ opening.\n"
+           (mapconcat #'identity (make-list 200 line) "\n"))))
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-mode)
+      (setq-local emacsvox-comint-autospeak t)
+      (setq-local emacsvox-agent-shell-speech-level 'response)
+      (setq-local agent-shell-section-functions
+                  '(emacsvox-agent-shell--record-response-section))
+      (let ((presentations
+             (emacsvox-agent-shell-test--capture-presentations
+               (emacsvox-agent-shell--handle-lifecycle-event
+                '((:event . input-submitted)))
+               (emacsvox-agent-shell-test--render-response-section
+                :namespace-id "bounded" :block-id "agent_message_chunk"
+                :body answer)
+               (emacsvox-agent-shell--handle-lifecycle-event
+                '((:event . turn-complete)
+                  (:data (:stop-reason . "end_turn")))))))
+        (should (= 1 (length presentations)))
+        (pcase-let ((`(submit ,spoken ,facts ,module ,occasion ,_context)
+                     (car presentations)))
+          (emacsvox-agent-shell-test--assert-automatic-preview
+           answer spoken
+           emacsvox-agent-shell-automatic-content-max-characters)
+          (should (string-match-p
+                   "Use C-c r for the complete response" spoken))
+          (should (eq (plist-get facts :role) 'agent-response))
+          (should (eq module 'agent-shell))
+          (should (eq occasion 'continuous))))
+      (should
+       (equal
+        (substring-no-properties emacsvox-agent-shell--last-completed-answer)
+        answer)))))
+
+(ert-deftest emacsvox-agent-shell-automatic-tool-output-is-bounded-before-aural ()
+  "Structured tool events should preserve status before bounded full output."
+  (let* ((emacsvox-agent-shell-automatic-content-max-characters 300)
+         (emacsvox-agent-shell-speak-tool-calls t)
+         (emacsvox-agent-shell-tool-output-verbosity 'full)
+         (emacsvox-agent-shell-speech-level 'full)
+         (line (concat "工具 λ " (make-string 400 ?o)))
+         (output (mapconcat #'identity (make-list 250 line) "\n"))
+         (source
+          (concat "Tool completed: Compile project. Output: " output)))
+    (with-temp-buffer
+      (let ((presentations
+             (emacsvox-agent-shell-test--capture-presentations
+               (emacsvox-agent-shell--handle-tool-call-update
+                (emacsvox-agent-shell-test--tool-call-event
+                 "large-tool" "completed" "Compile project"
+                 nil nil output)))))
+        (should (= 1 (length presentations)))
+        (pcase-let ((`(submit ,spoken ,facts ,module ,occasion ,_context)
+                     (car presentations)))
+          (emacsvox-agent-shell-test--assert-automatic-preview
+           source spoken
+           emacsvox-agent-shell-automatic-content-max-characters)
+          (should (string-prefix-p "Tool completed: Compile project." spoken))
+          (should (string-match-p
+                   "Inspect the tool block for complete output" spoken))
+          (should (eq (plist-get facts :role) 'agent-tool))
+          (should (eq (plist-get facts :agent-tool-status) 'completed))
+          (should (eq module 'agent-shell))
+          (should (eq occasion 'notification)))))))
+
+(ert-deftest emacsvox-agent-shell-background-errors-are-bounded-before-aural ()
+  "Large multibyte lifecycle errors should be bounded with the session label."
+  (let* ((buffer (generate-new-buffer "Agent background"))
+         (emacsvox-agent-shell-automatic-content-max-characters 280)
+         (emacsvox-agent-shell-signal-processing t)
+         (line (concat "ошибка λ " (make-string 400 ?e)))
+         (message-text (mapconcat #'identity (make-list 180 line) "\n"))
+         (source (concat "Agent background. Agent error: " message-text))
+         spoken facts)
+    (unwind-protect
+        (with-current-buffer buffer
+          (cl-letf
+              (((symbol-function 'emacsvox-agent-shell--session-focused-p)
+                (lambda (&optional _) nil))
+               ((symbol-function 'tts-notify-icon) #'ignore)
+               ((symbol-function 'tts-notify)
+                (lambda (text &optional _)
+                  (setq spoken text
+                        facts (copy-tree emacsvox-aural-submission-facts)))))
+            (emacsvox-agent-shell--handle-lifecycle-event
+             (list (cons :event 'error)
+                   (cons :data (list (cons :message message-text)))))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer)))
+    (emacsvox-agent-shell-test--assert-automatic-preview
+     source spoken emacsvox-agent-shell-automatic-content-max-characters)
+    (should (string-prefix-p "Agent background. Agent error:" spoken))
+    (should (string-match-p
+             "Inspect the error block for complete details" spoken))
+    (should (eq (plist-get facts :role) 'agent-error))))
+
+(ert-deftest emacsvox-agent-shell-permission-fields-retain-bounded-actions ()
+  "Huge permission values should retain urgent identity and choice access."
+  (let* ((emacsvox-agent-shell-automatic-content-max-characters 512)
+         (title
+          (mapconcat
+           #'identity (make-list 80 (concat "operation λ " (make-string 80 ?t)))
+           "\n"))
+         (choice
+          (mapconcat
+           #'identity (make-list 80 (concat "allow λ " (make-string 80 ?c)))
+           "\n"))
+         (event
+          `((:event . permission-request)
+            (:data
+             (:request-id . "large-permission")
+             (:tool-call-id . "large-tool")
+             (:tool-call
+              (:title . ,title)
+              (:permission-actions ((:option . ,choice)))))))
+         (presentations
+          (emacsvox-agent-shell-test--capture-presentations
+            (emacsvox-agent-shell--handle-permission-request event))))
+    (should (= 1 (length presentations)))
+    (pcase-let ((`(submit ,spoken ,facts ,module ,occasion ,_context)
+                 (car presentations)))
+      (should (<= (length spoken)
+                  emacsvox-agent-shell-automatic-content-max-characters))
+      (should (string-prefix-p "Permission request." spoken))
+      (should (string-match-p "permission description shortened" spoken))
+      (should (string-match-p "Choice 1:" spoken))
+      (should (string-match-p "permission choice shortened" spoken))
+      (should (string-match-p "characters? omitted across [0-9]+ lines?" spoken))
+      (should (eq (plist-get facts :role) 'permission-request))
+      (should (equal (plist-get facts :events)
+                     '(agent-permission-requested)))
+      (should (eq module 'agent-shell))
+      (should (eq occasion 'notification)))))
+
+(ert-deftest emacsvox-agent-shell-urgent-permission-follows-bounded-response ()
+  "Urgent permission delivery should remain available after a bounded answer."
+  (let ((emacsvox-agent-shell-automatic-content-max-characters 220)
+        (emacsvox-agent-shell-speech-level 'response)
+        submissions)
+    (with-temp-buffer
+      (cl-letf
+          (((symbol-function 'emacsvox-agent-shell--session-focused-p)
+            (lambda (&optional _) t))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (text &rest arguments)
+              (push
+               (list text
+                     emacsvox-aural-submission-delivery-policy
+                     (copy-tree (plist-get arguments :facts)))
+               submissions))))
+        (emacsvox-agent-shell--speak-content
+         (concat "Bounded opening. " (make-string 10000 ?r))
+         'agent-message)
+        (emacsvox-agent-shell--handle-permission-request
+         '((:event . permission-request)
+           (:data (:request-id . "urgent")
+                  (:tool-call-id . "shell")
+                  (:tool-call
+                   (:title . "Run command")
+                   (:permission-actions ((:option . "Allow once")))))))))
+    (setq submissions (nreverse submissions))
+    (should (= 2 (length submissions)))
+    (should (<= (length (caar submissions))
+                emacsvox-agent-shell-automatic-content-max-characters))
+    (should-not (nth 1 (car submissions)))
+    (should (string-prefix-p "Permission request." (car (cadr submissions))))
+    (should (eq (nth 1 (cadr submissions)) 'urgent))
+    (should (eq (plist-get (nth 2 (car submissions)) :role)
+                'agent-response))
+    (should (eq (plist-get (nth 2 (cadr submissions)) :role)
+                'permission-request))))
+
+(ert-deftest emacsvox-agent-shell-explicit-response-reading-remains-complete ()
+  "The automatic budget should not truncate deliberate last-response reading."
+  (let ((emacsvox-agent-shell-automatic-content-max-characters 128)
+        (answer (concat "Complete response. " (make-string 10000 ?x)))
+        spoken)
+    (cl-letf
+        (((symbol-function 'emacsvox-agent-shell--latest-agent-answer-state)
+          (lambda () (list :answer answer :in-progress nil)))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (text &rest _) (setq spoken text)))
+         ((symbol-function 'tts-stop) #'ignore))
+      (emacsvox-agent-shell-speak-last-response))
+    (should (equal spoken answer))
+    (should (> (length spoken)
+               emacsvox-agent-shell-automatic-content-max-characters))
+    (should-not (string-match-p "automatic speech shortened" spoken))))
 
 (ert-deftest emacsvox-agent-shell-thought-methods-use-native-submissions ()
   "Thought speech and cue modes should use one native transaction each."
