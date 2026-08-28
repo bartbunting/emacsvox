@@ -258,6 +258,107 @@ navigation presentations."
 
 ;;;  Speech Setup
 
+(defconst emacsvox-agent-shell--unbound-local-value
+  'emacsvox-agent-shell--unbound
+  "Sentinel recording that an activation variable was unbound.")
+
+(defconst emacsvox-agent-shell--buffer-activation-variables
+  '(emacsvox-aural-module
+    tts-punctuation-mode
+    emacsvox-pronounce-table
+    emacsvox-aural-source-transform-function)
+  "Buffer-local values assigned while Agent Shell support is active.")
+
+(defvar-local emacsvox-agent-shell--buffer-activation-active-p nil
+  "Non-nil when Emacsvox has activated the current Agent Shell buffer.")
+
+(defvar-local emacsvox-agent-shell--buffer-activation-values nil
+  "Local values owned by the current Agent Shell activation.
+Each entry records the variable, its prior locality and value, and the value
+assigned by Emacsvox.  Cleanup restores only assignments that remain intact.")
+
+(defun emacsvox-agent-shell--copy-owned-local-value (value)
+  "Return a comparison snapshot of owned local VALUE."
+  (cond
+   ((hash-table-p value) (copy-hash-table value))
+   ((consp value) (copy-tree value))
+   ((stringp value) (copy-sequence value))
+   (t value)))
+
+(defun emacsvox-agent-shell--owned-local-value-unchanged-p
+    (current assigned snapshot)
+  "Return non-nil when CURRENT still matches owned ASSIGNED and SNAPSHOT."
+  (and
+   (eq current assigned)
+   (if (hash-table-p current)
+       (and
+        (hash-table-p snapshot)
+        (eq (hash-table-test current) (hash-table-test snapshot))
+        (= (hash-table-count current) (hash-table-count snapshot))
+        (let ((missing (make-symbol "missing"))
+              (unchanged t))
+          (maphash
+           (lambda (key value)
+             (unless (equal value (gethash key snapshot missing))
+               (setq unchanged nil)))
+           current)
+          unchanged))
+     (equal current snapshot))))
+
+(defun emacsvox-agent-shell--local-value-state (variable)
+  "Return VARIABLE with its current locality and value."
+  (list variable
+        (local-variable-p variable)
+        (if (boundp variable)
+            (symbol-value variable)
+          emacsvox-agent-shell--unbound-local-value)))
+
+(defun emacsvox-agent-shell--activate-buffer-values ()
+  "Apply and record speech values owned by this Agent Shell activation."
+  (unless emacsvox-agent-shell--buffer-activation-active-p
+    (let* ((variables
+            (if (local-variable-p 'emacsvox-comint-autospeak)
+                emacsvox-agent-shell--buffer-activation-variables
+              (cons 'emacsvox-comint-autospeak
+                    emacsvox-agent-shell--buffer-activation-variables)))
+           (previous
+            (mapcar #'emacsvox-agent-shell--local-value-state variables)))
+      (emacsvox-agent-shell-speech-setup)
+      (setq-local
+       emacsvox-aural-source-transform-function
+       #'emacsvox-agent-shell--prepare-speech-text)
+      (setq-local
+       emacsvox-agent-shell--buffer-activation-values
+       (mapcar
+        (lambda (state)
+          (let ((assigned (symbol-value (car state))))
+            (append
+             state
+             (list assigned
+                   (emacsvox-agent-shell--copy-owned-local-value assigned)))))
+        previous))
+      (setq-local emacsvox-agent-shell--buffer-activation-active-p t))))
+
+(defun emacsvox-agent-shell--restore-buffer-values ()
+  "Restore unchanged local values owned by this Agent Shell activation."
+  (when emacsvox-agent-shell--buffer-activation-active-p
+    (dolist (state emacsvox-agent-shell--buffer-activation-values)
+      (pcase-let ((`(,variable ,previously-local-p ,previous
+                      ,assigned ,assigned-snapshot)
+                   state))
+        (when (and (local-variable-p variable)
+                   (emacsvox-agent-shell--owned-local-value-unchanged-p
+                    (symbol-value variable) assigned assigned-snapshot))
+          (if previously-local-p
+              (if (eq previous emacsvox-agent-shell--unbound-local-value)
+                  (progn
+                    (make-local-variable variable)
+                    (makunbound variable))
+                (set (make-local-variable variable) previous))
+            (kill-local-variable variable)))))
+    (setq emacsvox-agent-shell--buffer-activation-values nil
+          emacsvox-agent-shell--buffer-activation-active-p nil)))
+
 ;;;###autoload
 (defun emacsvox-agent-shell-speech-setup ()
   "Speech setup for agent-shell."
@@ -1114,6 +1215,12 @@ available so a timer created by an older loaded version can finish safely.")
 
 (defvar-local emacsvox-agent-shell--table-navigation-origin nil
   "Point before the command most recently tracked for table entry.")
+
+(defvar-local emacsvox-agent-shell--table-navigation-owns-aural-module-p nil
+  "Non-nil when table navigation assigned the local Aural module.")
+
+(defvar-local emacsvox-agent-shell--table-navigation-saved-aural-module nil
+  "Locality and value preceding table navigation's Aural module.")
 
 (defvar-local emacsvox-agent-shell--speech-control-active nil
   "Non-nil when agent-shell speech-level keys are active.")
@@ -4982,7 +5089,14 @@ Return nil when that logical cell does not exist."
 
 (defun emacsvox-agent-shell--table-navigation-setup ()
   "Install contextual Markdown table navigation in the current buffer."
-  (setq-local emacsvox-aural-module 'agent-shell)
+  (unless (or emacsvox-agent-shell--table-navigation-owns-aural-module-p
+              (and (local-variable-p 'emacsvox-aural-module)
+                   (eq emacsvox-aural-module 'agent-shell)))
+    (setq emacsvox-agent-shell--table-navigation-saved-aural-module
+          (cons (local-variable-p 'emacsvox-aural-module)
+                emacsvox-aural-module)
+          emacsvox-agent-shell--table-navigation-owns-aural-module-p t)
+    (setq-local emacsvox-aural-module 'agent-shell))
   (setq emacsvox-agent-shell--speech-control-active t)
   (emacsvox-agent-shell--vertical-toggle-hint-setup)
   (add-hook 'pre-command-hook
@@ -5014,7 +5128,16 @@ Return nil when that logical cell does not exist."
                #'emacsvox-agent-shell--table-navigation-cleanup t)
   (remove-hook 'change-major-mode-hook
                #'emacsvox-agent-shell--table-navigation-cleanup t)
-  (kill-local-variable 'emacsvox-aural-module))
+  (when emacsvox-agent-shell--table-navigation-owns-aural-module-p
+    (when (and (local-variable-p 'emacsvox-aural-module)
+               (eq emacsvox-aural-module 'agent-shell))
+      (if (car emacsvox-agent-shell--table-navigation-saved-aural-module)
+          (setq-local
+           emacsvox-aural-module
+           (cdr emacsvox-agent-shell--table-navigation-saved-aural-module))
+        (kill-local-variable 'emacsvox-aural-module)))
+    (setq emacsvox-agent-shell--table-navigation-owns-aural-module-p nil
+          emacsvox-agent-shell--table-navigation-saved-aural-module nil)))
 
 (defun emacsvox-agent-shell--table-settings-speech ()
   "Return a complete spoken summary of the table speech settings."
@@ -5772,11 +5895,8 @@ Return nil when the configured verbosity requests status cues only."
                #'emacsvox-agent-shell--tool-call-event-cleanup t))
 
 (defun emacsvox-agent-shell--buffer-setup ()
-  "Install event support and centralized cleanup in this shell buffer."
-  (setq-local emacsvox-aural-module 'agent-shell)
-  (setq-local
-   emacsvox-aural-source-transform-function
-   #'emacsvox-agent-shell--prepare-speech-text)
+  "Activate speech, event support, and centralized cleanup in this shell."
+  (emacsvox-agent-shell--activate-buffer-values)
   (add-hook 'kill-buffer-hook
             #'emacsvox-agent-shell--buffer-cleanup nil t)
   (add-hook 'change-major-mode-hook
@@ -5796,7 +5916,7 @@ Return nil when the configured verbosity requests status cues only."
   (emacsvox-agent-shell--lifecycle-event-cleanup)
   (emacsvox-agent-shell--tool-call-event-cleanup)
   (emacsvox-agent-shell--table-navigation-cleanup)
-  (kill-local-variable 'emacsvox-aural-source-transform-function)
+  (emacsvox-agent-shell--restore-buffer-values)
   (remove-hook 'kill-buffer-hook
                #'emacsvox-agent-shell--buffer-cleanup t)
   (remove-hook 'change-major-mode-hook
@@ -5903,9 +6023,9 @@ Return nil when the configured verbosity requests status cues only."
   (interactive)
   (emacsvox-agent-shell--upgrade-response-monitoring)
   (emacsvox-agent-shell--install-advice)
-  (add-hook 'agent-shell-mode-hook #'emacsvox-agent-shell-speech-setup)
   ;; Remove hooks installed by earlier versions before installing the
   ;; centralized setup path.
+  (remove-hook 'agent-shell-mode-hook #'emacsvox-agent-shell-speech-setup)
   (remove-hook 'agent-shell-mode-hook
                #'emacsvox-agent-shell--permission-event-setup)
   (remove-hook 'agent-shell-mode-hook

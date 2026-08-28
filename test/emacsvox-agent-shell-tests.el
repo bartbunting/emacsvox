@@ -51,6 +51,8 @@
 (defvar emacsvox-agent-shell--table-navigation-active)
 (defvar emacsvox-agent-shell--table-navigation-map)
 (defvar emacsvox-agent-shell--table-navigation-table-start)
+(defvar emacsvox-agent-shell--buffer-activation-active-p)
+(defvar emacsvox-agent-shell--buffer-activation-values)
 (defvar emacsvox-agent-shell--speech-control-active)
 (defvar emacsvox-agent-shell--speech-control-map)
 (defvar emacsvox-agent-shell-processing-end-icon)
@@ -2235,6 +2237,114 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (list (list 'icon 'item)
             (list 'speak (concat "User: " text)))))))
 
+(ert-deftest emacsvox-agent-shell-enable-activates-existing-shells-symmetrically ()
+  "Enable should fully activate existing shells and disable should restore them."
+  (let ((automatic (generate-new-buffer " *agent-shell-automatic-test*"))
+        (override (generate-new-buffer " *agent-shell-override-test*"))
+        (agent-shell-mode-hook nil)
+        (agent-shell-viewport-edit-mode-hook nil)
+        (agent-shell-viewport-view-mode-hook nil)
+        automatic-pronunciations
+        override-pronunciations)
+    (unwind-protect
+        (progn
+          (with-current-buffer automatic
+            (setq major-mode 'agent-shell-mode)
+            (setq-local
+             agent-shell--state
+             (list (cons :buffer automatic)
+                   (cons :event-subscriptions nil)))
+            (setq-local emacsvox-aural-module 'comint)
+            (setq-local emacsvox-aural-source-transform-function #'identity)
+            (setq-local emacsvox-agent-shell-speech-level 'response)
+            (kill-local-variable 'emacsvox-comint-autospeak)
+            (kill-local-variable 'tts-punctuation-mode)
+            (setq automatic-pronunciations
+                  (make-hash-table :test #'equal))
+            (puthash "custom" "pronunciation" automatic-pronunciations)
+            (setq-local emacsvox-pronounce-table automatic-pronunciations))
+          (with-current-buffer override
+            (setq major-mode 'agent-shell-mode)
+            (setq-local
+             agent-shell--state
+             (list (cons :buffer override)
+                   (cons :event-subscriptions nil)))
+            (setq-local emacsvox-agent-shell-speech-level 'response)
+            (setq-local emacsvox-comint-autospeak nil))
+          (cl-letf (((symbol-function
+                      'emacsvox-agent-shell--upgrade-response-monitoring)
+                     #'ignore)
+                    ((symbol-function 'emacsvox-agent-shell--install-advice)
+                     #'ignore)
+                    ((symbol-function 'emacsvox-agent-shell--remove-advice)
+                     #'ignore)
+                    ((symbol-function 'buffer-list)
+                     (lambda () (list automatic override))))
+            (emacsvox-agent-shell-enable)
+            (emacsvox-agent-shell-enable)
+            (with-current-buffer automatic
+              (should emacsvox-agent-shell--buffer-activation-active-p)
+              (should (eq emacsvox-aural-module 'agent-shell))
+              (should
+               (eq emacsvox-aural-source-transform-function
+                   #'emacsvox-agent-shell--prepare-speech-text))
+              (should (local-variable-p 'emacsvox-comint-autospeak))
+              (should emacsvox-comint-autospeak)
+              (should (emacsvox-agent-shell--should-speak-p automatic))
+              (should (local-variable-p 'tts-punctuation-mode))
+              (should-not (eq emacsvox-pronounce-table
+                              automatic-pronunciations))
+              (should (= 4 (length (map-elt
+                                    agent-shell--state
+                                    :event-subscriptions)))))
+            (with-current-buffer override
+              (should (local-variable-p 'emacsvox-comint-autospeak))
+              (should-not emacsvox-comint-autospeak)
+              (should-not (emacsvox-agent-shell--should-speak-p override))
+              (should (= 4 (length (map-elt
+                                    agent-shell--state
+                                    :event-subscriptions))))
+              ;; Changes made after activation belong to the user.
+              (setq-local emacsvox-aural-module 'custom-agent)
+              (setq-local emacsvox-aural-source-transform-function #'ignore)
+              (puthash "session" "override" emacsvox-pronounce-table)
+              (setq override-pronunciations emacsvox-pronounce-table))
+            ;; Cleaning one owner must not affect another live session.
+            (with-current-buffer automatic
+              (emacsvox-agent-shell--buffer-cleanup)
+              (should-not emacsvox-agent-shell--buffer-activation-active-p)
+              (should-not emacsvox-agent-shell--buffer-activation-values)
+              (should (eq emacsvox-aural-module 'comint))
+              (should (eq emacsvox-aural-source-transform-function #'identity))
+              (should-not (local-variable-p 'emacsvox-comint-autospeak))
+              (should-not (local-variable-p 'tts-punctuation-mode))
+              (should (eq emacsvox-pronounce-table
+                          automatic-pronunciations))
+              (should-not (map-elt agent-shell--state
+                                   :event-subscriptions)))
+            (with-current-buffer override
+              (should emacsvox-agent-shell--buffer-activation-active-p)
+              (should (= 4 (length (map-elt
+                                    agent-shell--state
+                                    :event-subscriptions)))))
+            (emacsvox-agent-shell-disable)
+            (emacsvox-agent-shell-disable)
+            (with-current-buffer override
+              (should-not emacsvox-agent-shell--buffer-activation-active-p)
+              (should (local-variable-p 'emacsvox-comint-autospeak))
+              (should-not emacsvox-comint-autospeak)
+              (should (eq emacsvox-aural-module 'custom-agent))
+              (should (eq emacsvox-aural-source-transform-function #'ignore))
+              (should (eq emacsvox-pronounce-table override-pronunciations))
+              (should (equal (gethash "session" emacsvox-pronounce-table)
+                             "override"))
+              (should-not (map-elt agent-shell--state
+                                   :event-subscriptions)))))
+      (when (buffer-live-p automatic)
+        (kill-buffer automatic))
+      (when (buffer-live-p override)
+        (kill-buffer override)))))
+
 (ert-deftest emacsvox-agent-shell-enable-disable-manages-current-targets ()
   "Enable and disable should manage the hook and existing advice targets."
   (let ((saved-hook agent-shell-mode-hook)
@@ -2244,8 +2354,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (unwind-protect
         (progn
           (emacsvox-agent-shell-enable)
-          (should (memq #'emacsvox-agent-shell-speech-setup
-                        agent-shell-mode-hook))
+          (should-not (memq #'emacsvox-agent-shell-speech-setup
+                            agent-shell-mode-hook))
           (should (memq #'emacsvox-agent-shell--buffer-setup
                         agent-shell-mode-hook))
           (should
@@ -5650,7 +5760,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (emacsvox-agent-shell-test--with-rendered-table
         "before\n| Name | Role |\n|---|---|\n| Alice | Engineer |\nafter\n"
       (goto-char (point-min))
+      (setq-local emacsvox-aural-module 'viewport)
       (emacsvox-agent-shell--table-navigation-setup)
+      (should (eq emacsvox-aural-module 'agent-shell))
       (should-not emacsvox-agent-shell--table-navigation-active)
       (emacsvox-agent-shell--table-navigation-pre-command)
       (search-forward "Engineer")
@@ -5689,6 +5801,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (emacsvox-agent-shell--table-navigation-post-command)
       (should-not emacsvox-agent-shell--table-navigation-active)
       (emacsvox-agent-shell--table-navigation-cleanup)
+      (should (eq emacsvox-aural-module 'viewport))
       (should-not
        (memq #'emacsvox-agent-shell--table-navigation-post-command
              post-command-hook)))))
