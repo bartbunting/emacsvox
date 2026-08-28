@@ -31,6 +31,7 @@
 (defvar emacsvox-agent-shell--latest-turn-outcome)
 (defvar emacsvox-agent-shell--out-of-turn-bodies)
 (defvar emacsvox-agent-shell--out-of-turn-delivered-ids)
+(defvar emacsvox-agent-shell--out-of-turn-delivered-order)
 (defvar emacsvox-agent-shell--out-of-turn-pending-ids)
 (defvar emacsvox-agent-shell--out-of-turn-section-markers)
 (defvar emacsvox-agent-shell--out-of-turn-speech-timer)
@@ -153,6 +154,10 @@
                   "emacsvox-agent-shell" (text))
 (declare-function emacsvox-agent-shell--record-response-section
                   "emacsvox-agent-shell" (range))
+(declare-function emacsvox-agent-shell--record-out-of-turn-snapshot
+                  "emacsvox-agent-shell" (snapshot))
+(declare-function emacsvox-agent-shell--deliver-out-of-turn-pending
+                  "emacsvox-agent-shell" (buffer))
 (declare-function emacsvox-agent-shell--section-marker-snapshot
                   "emacsvox-agent-shell" (qualified-id pair))
 (declare-function emacsvox-agent-shell--response-overview
@@ -1949,10 +1954,11 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (let ((emacsvox-agent-shell-speak-thought-process nil))
          (emacsvox-agent-shell--speak-content "Reasoning" 'thought))))))
 
-(ert-deftest emacsvox-agent-shell-out-of-turn-message-speaks-latest-once ()
-  "A focused out-of-turn message should speak its latest rendered body once."
+(ert-deftest emacsvox-agent-shell-out-of-turn-message-resumes-after-pause ()
+  "A resumed out-of-turn message should announce each changed latest body."
   (let ((emacsvox-agent-shell-speech-delay 0.001)
         (snapshot-count 0)
+        (qualified-id "out-of-turn-message-1-agent_message_chunk")
         (original-snapshot
          (symbol-function
           'emacsvox-agent-shell--section-marker-snapshot)))
@@ -1983,7 +1989,26 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (sit-for 0.01))
           '((icon item)
             (speak "Agent update: Partial update"))))
-        (should (= snapshot-count 1)))
+        (should (= snapshot-count 1))
+        (should
+         (equal
+          (emacsvox-agent-shell-test--capture-events
+            (emacsvox-agent-shell-test--render-response-section
+             :namespace-id "out-of-turn"
+             :block-id "message-1-agent_message_chunk"
+             :body " completed" :append t)
+            (sit-for 0.01))
+          '((icon item)
+            (speak "Agent update: Partial update completed"))))
+        (should (= snapshot-count 2))
+        (should-not
+         (emacsvox-agent-shell-test--capture-events
+           (emacsvox-agent-shell-test--render-response-section
+            :namespace-id "out-of-turn"
+            :block-id "message-1-agent_message_chunk"
+            :body "Partial update completed")
+           (sit-for 0.01)))
+        (should (= snapshot-count 3)))
       (should-not emacsvox-agent-shell--out-of-turn-speech-timer)
       (should-not emacsvox-agent-shell--out-of-turn-pending-ids)
       (should
@@ -1991,15 +2016,105 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (hash-table-count
            emacsvox-agent-shell--out-of-turn-section-markers)))
       (should
-       (gethash "out-of-turn-message-1-agent_message_chunk"
-                emacsvox-agent-shell--out-of-turn-delivered-ids))
+       (stringp
+        (gethash qualified-id
+                 emacsvox-agent-shell--out-of-turn-delivered-ids)))
+      (should
+       (equal emacsvox-agent-shell--out-of-turn-delivered-order
+              (list qualified-id))))))
+
+(ert-deftest emacsvox-agent-shell-out-of-turn-versions-handle-interleaving ()
+  "Interleaved IDs should suppress unchanged bodies and retain changed ones."
+  (let ((emacsvox-agent-shell-speech-delay 60))
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-mode)
+      (setq-local emacsvox-comint-autospeak t)
+      (setq-local emacsvox-agent-shell-speech-level 'response)
+      (should
+       (equal
+        (emacsvox-agent-shell-test--capture-events
+          (emacsvox-agent-shell--record-out-of-turn-snapshot
+           '("message-a" . "First A"))
+          (emacsvox-agent-shell--record-out-of-turn-snapshot
+           '("message-b" . "First B"))
+          (cancel-timer emacsvox-agent-shell--out-of-turn-speech-timer)
+          (emacsvox-agent-shell--deliver-out-of-turn-pending
+           (current-buffer))
+          (emacsvox-agent-shell--record-out-of-turn-snapshot
+           '("message-b" . "First B"))
+          (emacsvox-agent-shell--record-out-of-turn-snapshot
+           '("message-a" . "First A, resumed"))
+          (cancel-timer emacsvox-agent-shell--out-of-turn-speech-timer)
+          (emacsvox-agent-shell--deliver-out-of-turn-pending
+           (current-buffer)))
+        '((icon item)
+          (speak "Agent update: First A")
+          (icon item)
+          (speak "Agent update: First B")
+          (icon item)
+          (speak "Agent update: First A, resumed"))))
+      (should
+       (equal emacsvox-agent-shell--out-of-turn-delivered-order
+              '("message-a" "message-b"))))))
+
+(ert-deftest emacsvox-agent-shell-out-of-turn-version-cache-is-bounded ()
+  "Out-of-turn message digests should retain only the 64 most recent IDs."
+  (let ((emacsvox-agent-shell-speech-delay 60))
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-mode)
+      (dotimes (index 65)
+        (emacsvox-agent-shell--record-out-of-turn-snapshot
+         (cons (format "message-%d" index)
+               (format "Body %d" index))))
+      (cancel-timer emacsvox-agent-shell--out-of-turn-speech-timer)
+      (emacsvox-agent-shell--deliver-out-of-turn-pending (current-buffer))
+      (should-not emacsvox-agent-shell--out-of-turn-speech-timer)
+      (should
+       (= (hash-table-count
+           emacsvox-agent-shell--out-of-turn-delivered-ids)
+          64))
+      (should
+       (= (length emacsvox-agent-shell--out-of-turn-delivered-order)
+          64))
       (should-not
-       (emacsvox-agent-shell-test--capture-events
-         (emacsvox-agent-shell-test--render-response-section
-         :namespace-id "out-of-turn"
-         :block-id "message-1-agent_message_chunk"
-         :body " ignored" :append t)
-         (sit-for 0.01))))))
+       (gethash "message-0"
+                emacsvox-agent-shell--out-of-turn-delivered-ids))
+      (should
+       (gethash "message-64"
+                emacsvox-agent-shell--out-of-turn-delivered-ids)))))
+
+(ert-deftest emacsvox-agent-shell-out-of-turn-versions-are-session-local ()
+  "Selecting a session should prevent prior message versions suppressing it."
+  (let ((emacsvox-agent-shell-speech-delay 60)
+        (snapshot '("shared-message" . "Same body")))
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-mode)
+      (setq-local emacsvox-comint-autospeak t)
+      (setq-local emacsvox-agent-shell-speech-level 'response)
+      (should
+       (equal
+        (emacsvox-agent-shell-test--capture-events
+          (emacsvox-agent-shell--record-out-of-turn-snapshot snapshot)
+          (cancel-timer emacsvox-agent-shell--out-of-turn-speech-timer)
+          (emacsvox-agent-shell--deliver-out-of-turn-pending
+           (current-buffer))
+          (emacsvox-agent-shell--handle-lifecycle-event
+           '((:event . session-selected)))
+          (emacsvox-agent-shell--record-out-of-turn-snapshot snapshot)
+          (cancel-timer emacsvox-agent-shell--out-of-turn-speech-timer)
+          (emacsvox-agent-shell--deliver-out-of-turn-pending
+           (current-buffer)))
+        '((icon item)
+          (speak "Agent update: Same body")
+          (icon item)
+          (speak "Agent update: Same body"))))
+      (should
+       (= (hash-table-count
+           emacsvox-agent-shell--out-of-turn-delivered-ids)
+          1))
+      (should
+       (equal emacsvox-agent-shell--out-of-turn-delivered-order
+              '("shared-message"))))))
 
 (ert-deftest emacsvox-agent-shell-focused-out-of-turn-is-one-submission ()
   "A focused out-of-turn cue and response use one native transaction."
@@ -2139,6 +2254,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should-not emacsvox-agent-shell--out-of-turn-section-markers)
       (should-not emacsvox-agent-shell--out-of-turn-bodies)
       (should-not emacsvox-agent-shell--out-of-turn-delivered-ids)
+      (should-not emacsvox-agent-shell--out-of-turn-delivered-order)
       (should-not (marker-buffer (car marker-pair)))
       (should-not (marker-buffer (cdr marker-pair))))))
 

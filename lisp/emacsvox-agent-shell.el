@@ -1193,7 +1193,10 @@ available so a timer created by an older loaded version can finish safely.")
   "Hash table mapping out-of-turn qualified IDs to body marker pairs.")
 
 (defvar-local emacsvox-agent-shell--out-of-turn-delivered-ids nil
-  "Hash table of out-of-turn qualified IDs already delivered once.")
+  "Hash table mapping recent out-of-turn IDs to delivered body digests.")
+
+(defvar-local emacsvox-agent-shell--out-of-turn-delivered-order nil
+  "Recent out-of-turn delivered IDs in most-recently-used order.")
 
 (defvar-local emacsvox-agent-shell--permission-subscription nil
   "Subscription token for permission request events in this shell.")
@@ -1237,6 +1240,9 @@ Normal response completion follows agent-shell's public `turn-complete' event,
 so this value never determines when a submitted turn is spoken."
   :type 'number
   :group 'emacsvox-agent-shell)
+
+(defconst emacsvox-agent-shell--out-of-turn-version-limit 64
+  "Maximum delivered out-of-turn message versions retained per shell.")
 
 (defconst emacsvox-agent-shell--speech-level-values
   '((quiet . 0) (notify . 1) (response . 2) (full . 3))
@@ -1872,45 +1878,77 @@ the body retains semantic faces and omits markup that is no longer displayed."
         (emacsvox-agent-shell--notify-background
          facts occasion 'item "Agent update available."))))))
 
+(defun emacsvox-agent-shell--out-of-turn-body-changed-p
+    (qualified-id body)
+  "Remember QUALIFIED-ID's BODY version and return non-nil when it changed."
+  (unless (hash-table-p emacsvox-agent-shell--out-of-turn-delivered-ids)
+    (setq emacsvox-agent-shell--out-of-turn-delivered-ids
+          (make-hash-table :test #'equal)))
+  ;; A cache created by the previous implementation contains permanent t
+  ;; sentinels but has no LRU order.  Drop it once so live reload cannot retain
+  ;; unbounded legacy IDs or suppress the next changed snapshot.
+  (when (and (null emacsvox-agent-shell--out-of-turn-delivered-order)
+             (> (hash-table-count
+                 emacsvox-agent-shell--out-of-turn-delivered-ids)
+                0))
+    (clrhash emacsvox-agent-shell--out-of-turn-delivered-ids))
+  (let* ((digest (secure-hash 'sha256 body))
+         (changed-p
+          (not (equal
+                digest
+                (gethash
+                 qualified-id
+                 emacsvox-agent-shell--out-of-turn-delivered-ids)))))
+    (puthash qualified-id digest
+             emacsvox-agent-shell--out-of-turn-delivered-ids)
+    (setq emacsvox-agent-shell--out-of-turn-delivered-order
+          (cons
+           qualified-id
+           (delete qualified-id
+                   emacsvox-agent-shell--out-of-turn-delivered-order)))
+    (while (> (length emacsvox-agent-shell--out-of-turn-delivered-order)
+              emacsvox-agent-shell--out-of-turn-version-limit)
+      (let ((evicted
+             (car
+              (last emacsvox-agent-shell--out-of-turn-delivered-order))))
+        (setq emacsvox-agent-shell--out-of-turn-delivered-order
+              (butlast
+               emacsvox-agent-shell--out-of-turn-delivered-order))
+        (remhash evicted
+                 emacsvox-agent-shell--out-of-turn-delivered-ids)))
+    changed-p))
+
 (defun emacsvox-agent-shell--deliver-out-of-turn-pending (buffer)
-  "Deliver and clear coalesced out-of-turn messages for live BUFFER."
+  "Deliver changed out-of-turn snapshots and clear pending state for BUFFER."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
       (setq emacsvox-agent-shell--out-of-turn-speech-timer nil)
       (let ((qualified-ids emacsvox-agent-shell--out-of-turn-pending-ids))
         (setq emacsvox-agent-shell--out-of-turn-pending-ids nil)
-        (unless (hash-table-p
-                 emacsvox-agent-shell--out-of-turn-delivered-ids)
-          (setq emacsvox-agent-shell--out-of-turn-delivered-ids
-                (make-hash-table :test #'equal)))
         (dolist (qualified-id qualified-ids)
-          (unless (gethash
-                   qualified-id
-                   emacsvox-agent-shell--out-of-turn-delivered-ids)
-            (when-let* ((body
-                         (or
-                          (when-let*
-                              ((pair
-                                (and
-                                 (hash-table-p
-                                  emacsvox-agent-shell--out-of-turn-section-markers)
-                                 (gethash
-                                  qualified-id
-                                  emacsvox-agent-shell--out-of-turn-section-markers)))
-                               (snapshot
-                                (emacsvox-agent-shell--section-marker-snapshot
-                                 qualified-id pair)))
-                            (cdr snapshot))
-                          (and
-                           (hash-table-p
-                            emacsvox-agent-shell--out-of-turn-bodies)
-                           (gethash
-                            qualified-id
-                            emacsvox-agent-shell--out-of-turn-bodies)))))
-              (puthash
-               qualified-id t
-               emacsvox-agent-shell--out-of-turn-delivered-ids)
-              (emacsvox-agent-shell--deliver-out-of-turn-body body)))
+          (when-let* ((body
+                       (or
+                        (when-let*
+                            ((pair
+                              (and
+                               (hash-table-p
+                                emacsvox-agent-shell--out-of-turn-section-markers)
+                               (gethash
+                                qualified-id
+                                emacsvox-agent-shell--out-of-turn-section-markers)))
+                             (snapshot
+                              (emacsvox-agent-shell--section-marker-snapshot
+                               qualified-id pair)))
+                          (cdr snapshot))
+                        (and
+                         (hash-table-p
+                          emacsvox-agent-shell--out-of-turn-bodies)
+                         (gethash
+                          qualified-id
+                          emacsvox-agent-shell--out-of-turn-bodies))))
+                      ((emacsvox-agent-shell--out-of-turn-body-changed-p
+                        qualified-id body)))
+            (emacsvox-agent-shell--deliver-out-of-turn-body body))
           (emacsvox-agent-shell--forget-section-markers
            emacsvox-agent-shell--out-of-turn-section-markers
            qualified-id)
@@ -1937,36 +1975,26 @@ the body retains semantic faces and omits markup that is no longer displayed."
   "Coalesce legacy rendered out-of-turn message SNAPSHOT for speech."
   (let ((qualified-id (car snapshot))
         (body (cdr snapshot)))
-    (unless (and (hash-table-p
-                  emacsvox-agent-shell--out-of-turn-delivered-ids)
-                 (gethash
-                  qualified-id
-                  emacsvox-agent-shell--out-of-turn-delivered-ids))
-      (unless (hash-table-p emacsvox-agent-shell--out-of-turn-bodies)
-        (setq emacsvox-agent-shell--out-of-turn-bodies
-              (make-hash-table :test #'equal)))
-      (puthash qualified-id body
-               emacsvox-agent-shell--out-of-turn-bodies)
-      (emacsvox-agent-shell--schedule-out-of-turn-delivery
-       qualified-id))))
+    (unless (hash-table-p emacsvox-agent-shell--out-of-turn-bodies)
+      (setq emacsvox-agent-shell--out-of-turn-bodies
+            (make-hash-table :test #'equal)))
+    (puthash qualified-id body
+             emacsvox-agent-shell--out-of-turn-bodies)
+    (emacsvox-agent-shell--schedule-out-of-turn-delivery
+     qualified-id)))
 
 (defun emacsvox-agent-shell--record-out-of-turn-section
     (qualified-id body-start body-end)
   "Coalesce QUALIFIED-ID's rendered BODY-START to BODY-END for later speech."
-  (unless (and (hash-table-p
-                emacsvox-agent-shell--out-of-turn-delivered-ids)
-               (gethash
-                qualified-id
-                emacsvox-agent-shell--out-of-turn-delivered-ids))
-    (unless (hash-table-p
-             emacsvox-agent-shell--out-of-turn-section-markers)
-      (setq emacsvox-agent-shell--out-of-turn-section-markers
-            (make-hash-table :test #'equal)))
-    (emacsvox-agent-shell--remember-section-markers
-     emacsvox-agent-shell--out-of-turn-section-markers
-     qualified-id body-start body-end)
-    (emacsvox-agent-shell--schedule-out-of-turn-delivery
-     qualified-id)))
+  (unless (hash-table-p
+           emacsvox-agent-shell--out-of-turn-section-markers)
+    (setq emacsvox-agent-shell--out-of-turn-section-markers
+          (make-hash-table :test #'equal)))
+  (emacsvox-agent-shell--remember-section-markers
+   emacsvox-agent-shell--out-of-turn-section-markers
+   qualified-id body-start body-end)
+  (emacsvox-agent-shell--schedule-out-of-turn-delivery
+   qualified-id))
 
 (defun emacsvox-agent-shell--record-response-section (range)
   "Remember semantic turn content or an out-of-turn message in RANGE.
@@ -2021,7 +2049,8 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
     (clrhash emacsvox-agent-shell--out-of-turn-delivered-ids))
   (setq emacsvox-agent-shell--out-of-turn-section-markers nil
         emacsvox-agent-shell--out-of-turn-bodies nil
-        emacsvox-agent-shell--out-of-turn-delivered-ids nil))
+        emacsvox-agent-shell--out-of-turn-delivered-ids nil
+        emacsvox-agent-shell--out-of-turn-delivered-order nil))
 
 (defun emacsvox-agent-shell--response-section-setup ()
   "Install semantic rendered turn-content capture in the current shell."
@@ -2300,6 +2329,7 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
     ;; allowed to deliver a partial response.
     (pcase event-type
       ('session-selected
+       (emacsvox-agent-shell--out-of-turn-cleanup)
        (setq emacsvox-agent-shell--response-turn-active-p nil
              emacsvox-agent-shell--last-completed-answer nil
              emacsvox-agent-shell--latest-turn-outcome nil))
