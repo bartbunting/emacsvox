@@ -1196,6 +1196,37 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (emacsvox-agent-shell-speech-setup))
       (should (equal header-line-format "Agent semantic header")))))
 
+(ert-deftest emacsvox-agent-shell-speech-setup-preserves-live-prompt-undo ()
+  "Speech setup should leave Agent Shell's live prompt undoable."
+  (with-temp-buffer
+    (buffer-enable-undo)
+    (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy) #'ignore)
+              ((symbol-function
+                'emacsvox-pronounce-add-dictionary-entry)
+               #'ignore)
+              ((symbol-function
+                'emacsvox-pronounce-refresh-pronunciations)
+               #'ignore))
+      (emacsvox-agent-shell-speech-setup))
+    (insert "draft α")
+    (undo-boundary)
+    (undo-only)
+    (should (equal (buffer-string) ""))))
+
+(ert-deftest emacsvox-agent-shell-speech-setup-preserves-disabled-undo ()
+  "Speech setup should respect an explicitly disabled undo policy."
+  (with-temp-buffer
+    (buffer-disable-undo)
+    (cl-letf (((symbol-function 'tts-apply-punctuation-mode-policy) #'ignore)
+              ((symbol-function
+                'emacsvox-pronounce-add-dictionary-entry)
+               #'ignore)
+              ((symbol-function
+                'emacsvox-pronounce-refresh-pronunciations)
+               #'ignore))
+      (emacsvox-agent-shell-speech-setup))
+    (should (eq buffer-undo-list t))))
+
 (ert-deftest emacsvox-agent-shell-speech-setup-preserves-punctuation-override ()
   "Agent Shell setup should honor an explicit buffer punctuation mode."
   (with-temp-buffer

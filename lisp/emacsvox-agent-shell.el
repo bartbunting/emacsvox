@@ -262,7 +262,6 @@ navigation presentations."
 (defun emacsvox-agent-shell-speech-setup ()
   "Speech setup for agent-shell."
   (setq-local emacsvox-aural-module 'agent-shell)
-  (setq buffer-undo-list t)
   ;; Enable autospeak by default for agent-shell buffers
   (unless (local-variable-p 'emacsvox-comint-autospeak)
     (setq-local emacsvox-comint-autospeak t))
