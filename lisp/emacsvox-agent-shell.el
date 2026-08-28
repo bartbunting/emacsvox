@@ -771,7 +771,8 @@ the `agent-shell-section-heading' face.  Restrict this compatibility inference
 to a semantic thought fragment so ordinary faced text is never suppressed."
   (let* ((state (get-text-property start 'agent-shell-ui-state text))
          (qualified-id (and state (map-elt state :qualified-id))))
-    (when (eq (emacsvox-agent-shell--semantic-block-type qualified-id state)
+    (when (eq (emacsvox-agent-shell--semantic-block-type
+               qualified-id state start text)
               'thought)
       (let ((position start))
         (while
@@ -1841,10 +1842,10 @@ the body retains semantic faces and omits markup that is no longer displayed."
               (state
                (get-text-property body-start 'agent-shell-ui-state))
               (qualified-id (map-elt state :qualified-id))
-              ((and (stringp qualified-id)
-                    (string-match-p
-                     "\\(?:agent_message_chunk\\|agent_thought_chunk\\|-plan\\)\\'"
-                     qualified-id)))
+              (semantic-type
+               (emacsvox-agent-shell--semantic-block-type
+                qualified-id state body-start))
+              ((memq semantic-type '(agent-response thought plan)))
               (body-end
                (or (next-single-property-change
                     body-start 'agent-shell-ui-section nil (point-max))
@@ -2012,14 +2013,17 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
               (state
                (get-text-property body-start 'agent-shell-ui-state))
               (qualified-id (map-elt state :qualified-id))
-              ((and (stringp qualified-id)
-                    (string-match-p
-                     "\\(?:agent_message_chunk\\|agent_thought_chunk\\|-plan\\)\\'"
-                     qualified-id)))
+              (semantic-type
+               (emacsvox-agent-shell--semantic-block-type
+                qualified-id state body-start))
+              ((memq semantic-type '(agent-response thought plan)))
               ((or emacsvox-agent-shell--response-turn-active-p
-                   (emacsvox-agent-shell--out-of-turn-message-id-p
-                    qualified-id))))
-    (if (emacsvox-agent-shell--out-of-turn-message-id-p qualified-id)
+                   (and
+                    (eq semantic-type 'agent-response)
+                    (emacsvox-agent-shell--out-of-turn-message-id-p
+                     qualified-id)))))
+    (if (and (eq semantic-type 'agent-response)
+             (emacsvox-agent-shell--out-of-turn-message-id-p qualified-id))
         (emacsvox-agent-shell--record-out-of-turn-section
          qualified-id body-start body-end)
       (unless (hash-table-p
@@ -2395,38 +2399,49 @@ Clear the stored bodies after taking their final rendered snapshots."
       (let ((speak-p (emacsvox-agent-shell--should-speak-p buffer))
             answer-bodies)
         (dolist (qualified-id qualified-ids)
-          (when-let* ((content
-                       (or
-                        (when-let*
-                            ((pair
-                              (and
-                               (hash-table-p
-                                emacsvox-agent-shell--pending-section-markers)
-                               (gethash
-                                qualified-id
-                                emacsvox-agent-shell--pending-section-markers)))
-                             (snapshot
-                              (emacsvox-agent-shell--section-marker-snapshot
-                               qualified-id pair)))
-                          (cdr snapshot))
-                        (and
-                         (hash-table-p emacsvox-agent-shell--pending-bodies)
-                         (gethash
-                          qualified-id
-                          emacsvox-agent-shell--pending-bodies))))
-                      (block-id
-                       (if (string-match "-\\([^-]+\\)$" qualified-id)
-                           (match-string 1 qualified-id)
-                         qualified-id))
-                      (block-type
-                       (emacsvox-agent-shell--classify-block block-id))
-                      (trimmed (string-trim content)))
-            (when (not (string-empty-p trimmed))
-              (when (eq block-type 'agent-message)
-                (push trimmed answer-bodies))
-              (when speak-p
-                (emacsvox-agent-shell--speak-content
-                 trimmed block-type)))))
+          (let* ((pair
+                  (and
+                   (hash-table-p
+                    emacsvox-agent-shell--pending-section-markers)
+                   (gethash
+                    qualified-id
+                    emacsvox-agent-shell--pending-section-markers)))
+                 (snapshot
+                  (and pair
+                       (emacsvox-agent-shell--section-marker-snapshot
+                        qualified-id pair)))
+                 (content
+                  (or
+                   (cdr-safe snapshot)
+                   (and
+                    (hash-table-p emacsvox-agent-shell--pending-bodies)
+                    (gethash
+                     qualified-id
+                     emacsvox-agent-shell--pending-bodies))))
+                 (body-start
+                  (and (markerp (car-safe pair))
+                       (eq (marker-buffer (car pair)) (current-buffer))
+                       (marker-position (car pair))))
+                 (state
+                  (and body-start
+                       (< body-start (point-max))
+                       (get-text-property
+                        body-start 'agent-shell-ui-state)))
+                 (block-id
+                  (if (string-match "-\\([^-]+\\)$" qualified-id)
+                      (match-string 1 qualified-id)
+                    qualified-id))
+                 (block-type
+                  (emacsvox-agent-shell--classify-block
+                   block-id qualified-id state body-start)))
+            (when content
+              (let ((trimmed (string-trim content)))
+                (when (not (string-empty-p trimmed))
+                  (when (eq block-type 'agent-message)
+                    (push trimmed answer-bodies))
+                  (when speak-p
+                    (emacsvox-agent-shell--speak-content
+                     trimmed block-type)))))))
         (emacsvox-agent-shell--clear-section-markers
          emacsvox-agent-shell--pending-section-markers)
         (when emacsvox-agent-shell--pending-bodies
@@ -2443,20 +2458,38 @@ Retained so a timer created by a previously loaded pause-based implementation
 can finish safely while support is being reloaded."
   (emacsvox-agent-shell--deliver-pending-blocks buffer qualified-ids))
 
-(defun emacsvox-agent-shell--classify-block (block-id)
+(defun emacsvox-agent-shell--classify-block
+    (block-id &optional qualified-id state position)
   "Classify BLOCK-ID to determine content type.
+When renderer STATE is present, QUALIFIED-ID and POSITION provide authoritative
+group provenance; ID-only inference remains for legacy pending-body timers.
 Returns one of: \\='agent-message, \\='user-message, \\='thought,
 \\='tool-call, \\='permission, \\='plan, \\='error, or \\='unknown."
-  (cond
-   ((string-match-p "agent_message_chunk" block-id) 'agent-message)
-   ((string-match-p "user_message_chunk" block-id) 'user-message)
-   ((string-match-p "agent_thought_chunk" block-id) 'thought)
-   ((string-match-p "^permission-" block-id) 'permission)
-   ((string-equal block-id "plan") 'plan)
-   ((string-match-p "^failed-\\|^Error" block-id) 'error)
-   ((and (not (string-match-p "-chunk\\|^permission-\\|^plan\\|^Error\\|^failed-" block-id))
-         (> (length block-id) 10)) 'tool-call)
-   (t 'unknown)))
+  (if state
+      (let ((semantic-type
+             (emacsvox-agent-shell--semantic-block-type
+              (or qualified-id block-id) state position)))
+        (cond
+         ((eq semantic-type 'agent-response) 'agent-message)
+         ((eq semantic-type 'user-prompt) 'user-message)
+         ((memq semantic-type '(thought tool-call permission plan error))
+          semantic-type)
+         (t 'unknown)))
+    (cond
+     ((string-match-p "agent_message_chunk" block-id) 'agent-message)
+     ((string-match-p "user_message_chunk" block-id) 'user-message)
+     ((string-match-p "agent_thought_chunk" block-id) 'thought)
+     ((string-match-p "^permission-" block-id) 'permission)
+     ((string-equal block-id "plan") 'plan)
+     ((string-match-p "^failed-\\|^Error" block-id) 'error)
+     ((and
+       (not
+        (string-match-p
+         "-chunk\\|^permission-\\|^plan\\|^Error\\|^failed-"
+         block-id))
+       (> (length block-id) 10))
+      'tool-call)
+     (t 'unknown))))
 
 (defun emacsvox-agent-shell--submit-icon-feedback (facts occasion icon)
   "Submit compatibility ICON under FACTS and OCCASION without text."
@@ -3106,11 +3139,74 @@ When ACCEPT-KEY is non-nil, let it accept the default on empty input."
            (assoc-string
             selection emacsvox-agent-shell--block-type-choices t)))))
 
-(defun emacsvox-agent-shell--semantic-block-type (qualified-id state)
-  "Classify QUALIFIED-ID and fragment STATE for navigation.
-Agent-shell currently exposes fragment identity but no public semantic type;
-keep that compatibility inference isolated here."
+(defun emacsvox-agent-shell--fragment-has-renderer-thought-face-p
+    (qualified-id position &optional text)
+  "Return non-nil when QUALIFIED-ID has renderer-owned thought styling.
+POSITION identifies the fragment in the current buffer, or in TEXT when that
+string is non-nil.  ACP content cannot manufacture these Emacs text properties."
+  (let* ((object text)
+         (minimum (if text 0 (point-min)))
+         (maximum (if text (length text) (point-max))))
+    (when (and (integer-or-marker-p position)
+               (< position maximum)
+               (equal
+                qualified-id
+                (map-elt
+                 (get-text-property
+                  position 'agent-shell-ui-state object)
+                 :qualified-id)))
+      (let* ((start
+              (or
+               (previous-single-property-change
+                (min (1+ position) maximum)
+                'agent-shell-ui-state object minimum)
+               minimum))
+             (end
+              (or
+               (next-single-property-change
+                position 'agent-shell-ui-state object maximum)
+               maximum))
+             (cursor start)
+             found)
+        (while (and (< cursor end) (not found))
+          (setq found
+                (seq-some
+                 (lambda (face)
+                   (or
+                    (emacsvox-agent-shell--face-spec-includes-p
+                     (get-text-property cursor 'face object) face)
+                    (emacsvox-agent-shell--face-spec-includes-p
+                     (get-text-property cursor 'font-lock-face object) face)))
+                 '(agent-shell-thought-body agent-shell-section-heading)))
+          (setq cursor
+                (min
+                 (or (next-single-property-change
+                      cursor 'face object end)
+                     end)
+                 (or (next-single-property-change
+                      cursor 'font-lock-face object end)
+                     end))))
+        found))))
+
+(defun emacsvox-agent-shell--semantic-block-type
+    (qualified-id state &optional position text)
+  "Classify QUALIFIED-ID and renderer STATE for navigation.
+POSITION identifies the fragment in the current buffer, or in TEXT.  Agent
+Shell currently exposes no public semantic type, so keep compatibility
+inference isolated here and let renderer-owned group provenance beat IDs."
   (cond
+   ;; Group headers and members are renderer-owned structure.  A provider can
+   ;; choose a tool ID that resembles any reserved suffix, so grouped members
+   ;; default to tools.  Thoughts are the one legitimate grouped content type;
+   ;; accept those only when Agent Shell applied its own thought styling.
+   ((eq (map-elt state :kind) 'group) 'activity-group)
+   ((map-elt state :group-id)
+    (if (and (stringp qualified-id)
+             (string-match-p "agent_thought_chunk\\'" qualified-id)
+             (emacsvox-agent-shell--fragment-has-renderer-thought-face-p
+              qualified-id position text))
+        'thought
+      'tool-call))
    ((and (stringp qualified-id)
          (string-match-p "agent_message_chunk\\'" qualified-id))
     'agent-response)
@@ -3123,10 +3219,6 @@ keep that compatibility inference isolated here."
    ((and (stringp qualified-id)
          (string-match-p "permission-" qualified-id))
     'permission)
-   ;; Both old `tool-calls-N' headers and current `activity-N' headers use
-   ;; agent-shell-ui's stable generic group kind.
-   ((eq (map-elt state :kind) 'group) 'activity-group)
-   ((map-elt state :group-id) 'tool-call)
    ((and (stringp qualified-id)
          (string-match-p "-plan\\'" qualified-id))
     'plan)
@@ -3177,7 +3269,7 @@ fallback only when RESPONSE has no agent-shell semantic fragment properties."
             (when
                 (eq
                  (emacsvox-agent-shell--semantic-block-type
-                  (map-elt state :qualified-id) state)
+                  (map-elt state :qualified-id) state position response)
                  'agent-response)
               (when-let* ((body-range
                            (emacsvox-agent-shell--string-section-range
@@ -3490,7 +3582,8 @@ PREDICATE receives TEXT and the start position of each property run."
   "Return a semantic location for fragment STATE from START to END."
   (let* ((qualified-id (map-elt state :qualified-id))
          (type
-          (emacsvox-agent-shell--semantic-block-type qualified-id state))
+          (emacsvox-agent-shell--semantic-block-type
+           qualified-id state start))
          (left
           (emacsvox-agent-shell--block-section-text
            start end 'label-left))
@@ -3648,7 +3741,7 @@ When METADATA-ONLY is non-nil, do not copy its labels or body."
          :end (cdr range)
          :type
          (emacsvox-agent-shell--semantic-block-type
-          (map-elt state :qualified-id) state)
+          (map-elt state :qualified-id) state position)
          :state state
          :visibility
          (emacsvox-agent-shell--fragment-visibility
@@ -3876,21 +3969,28 @@ When METADATA-ONLY is non-nil, do not copy its labels or body."
            (if (eq direction 'forward)
                (plist-get current :end)
              (plist-get current :position))))
-        (when-let* ((match
+        (let (match)
+          (while
+              (and
+               (setq match
                      (funcall
                       (if (eq direction 'forward)
                           #'text-property-search-forward
                         #'text-property-search-backward)
                       'agent-shell-ui-state nil
-                      (lambda (_value state)
-                        (eq
-                         (emacsvox-agent-shell--semantic-block-type
-                          (map-elt state :qualified-id) state)
-                         type)))))
-          (emacsvox-agent-shell--fragment-location
-           (prop-match-beginning match)
-           (prop-match-end match)
-           (prop-match-value match)))))))
+                      (lambda (_value state) state)))
+               (not
+                (eq
+                 (emacsvox-agent-shell--semantic-block-type
+                  (map-elt (prop-match-value match) :qualified-id)
+                  (prop-match-value match)
+                  (prop-match-beginning match))
+                 type))))
+          (when match
+            (emacsvox-agent-shell--fragment-location
+             (prop-match-beginning match)
+             (prop-match-end match)
+             (prop-match-value match))))))))
 
 (defun emacsvox-agent-shell--property-location-in-direction
     (property location-function direction origin &optional end-boundary)
@@ -4003,13 +4103,22 @@ END-BOUNDARY is non-nil."
   "Return non-nil when the buffer contains a UI fragment of TYPE."
   (save-excursion
     (goto-char (point-min))
-    (text-property-search-forward
-     'agent-shell-ui-state nil
-     (lambda (_value state)
-       (eq
-        (emacsvox-agent-shell--semantic-block-type
-         (map-elt state :qualified-id) state)
-        type)))))
+    (let (found match)
+      (while
+          (and
+           (not found)
+           (setq match
+                 (text-property-search-forward
+                  'agent-shell-ui-state nil
+                  (lambda (_value state) state))))
+        (setq found
+              (eq
+               (emacsvox-agent-shell--semantic-block-type
+                (map-elt (prop-match-value match) :qualified-id)
+                (prop-match-value match)
+                (prop-match-beginning match))
+               type)))
+      found)))
 
 (defun emacsvox-agent-shell--viewport-response-location ()
   "Return the plain restored-viewport response fallback, if present."
@@ -4198,7 +4307,8 @@ the legacy fallback when its local boundary metadata is incomplete."
               :type
               (emacsvox-agent-shell--semantic-block-type
                (map-elt (prop-match-value match) :qualified-id)
-               (prop-match-value match))
+               (prop-match-value match)
+               (prop-match-beginning match))
               :state (prop-match-value match))))))
 
 (defun emacsvox-agent-shell--expand-block-parent (location)

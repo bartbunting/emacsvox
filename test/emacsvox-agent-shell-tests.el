@@ -94,6 +94,11 @@
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--block-locations
                   "emacsvox-agent-shell" ())
+(declare-function emacsvox-agent-shell--block-facts
+                  "emacsvox-agent-shell" (type &optional event attributes))
+(declare-function emacsvox-agent-shell--classify-block
+                  "emacsvox-agent-shell"
+                  (block-id &optional qualified-id state position))
 (declare-function emacsvox-agent-shell--block-location-at-point
                   "emacsvox-agent-shell" (&optional position))
 (declare-function emacsvox-agent-shell--block-type-minibuffer-setup
@@ -160,6 +165,9 @@
                   "emacsvox-agent-shell" (buffer))
 (declare-function emacsvox-agent-shell--section-marker-snapshot
                   "emacsvox-agent-shell" (qualified-id pair))
+(declare-function emacsvox-agent-shell--semantic-block-type
+                  "emacsvox-agent-shell"
+                  (qualified-id state &optional position text))
 (declare-function emacsvox-agent-shell--response-overview
                   "emacsvox-agent-shell" (answer))
 (declare-function emacsvox-agent-shell--out-of-turn-cleanup
@@ -575,12 +583,15 @@ ENTRIES is an alist of qualified block IDs to body strings."
      ,@body))
 
 (cl-defun emacsvox-agent-shell-test--render-response-section
-    (&key namespace-id block-id body append create-new)
+    (&key namespace-id block-id label-left label-right body group-id
+          group-label append create-new)
   "Render and publish one response section update for deterministic tests."
   (let ((range
          (agent-shell-ui-update-fragment
           (agent-shell-ui-make-fragment-model
-           :namespace-id namespace-id :block-id block-id :body body)
+           :namespace-id namespace-id :block-id block-id
+           :label-left label-left :label-right label-right :body body
+           :group-id group-id :group-label group-label)
           :append append :create-new create-new :navigation 'never)))
     (when-let* ((body-range (map-elt range :body)))
       (let ((inhibit-read-only t))
@@ -632,9 +643,16 @@ ENTRIES is an alist of qualified block IDs to body strings."
        :body "First answer\nwith a second line")
       :navigation 'never :expanded t)
      (agent-shell-ui-update-fragment
-      (agent-shell-ui-make-fragment-model
+     (agent-shell-ui-make-fragment-model
        :namespace-id "1" :block-id "2-agent_thought_chunk"
-       :label-left "Thinking" :body "Reasoning"
+       :label-left
+       (propertize
+        "Thinking" 'font-lock-face 'agent-shell-section-heading)
+       :body
+       (propertize
+        "Reasoning"
+        'face 'agent-shell-thought-body
+        'font-lock-face 'agent-shell-thought-body)
        :group-id "activity-1"
        :group-label "Thought, read a file" :group-expanded nil)
       :expanded nil)
@@ -1906,6 +1924,103 @@ Return speech events plus the target character.  DIRECTION is `forward' or
              (:data (:stop-reason . "end_turn")))))
         '((speak "First answer")
           (speak "Second answer")))))))
+
+(ert-deftest emacsvox-agent-shell-provider-tool-ids-cannot-spoof-semantics ()
+  "Renderer-owned groups should keep reserved-looking tool IDs untrusted."
+  (let ((emacsvox-agent-shell-signal-processing nil)
+        (emacsvox-agent-shell-speak-tool-calls nil)
+        (spoofed-tool-ids
+         '("tool-agent_message_chunk"
+           "tool-user_message_chunk"
+           "tool-agent_thought_chunk"
+           "permission-spoof"
+           "tool-plan"
+           "failed-tool"
+           "Error-tool"
+           "out-of-turn-acp-bug-tool"
+           "Unhandled-tool")))
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-mode)
+      (setq-local emacsvox-comint-autospeak t)
+      (setq-local emacsvox-agent-shell-speech-level 'response)
+      (setq-local agent-shell-section-functions
+                  '(emacsvox-agent-shell--record-response-section))
+      (emacsvox-agent-shell--handle-lifecycle-event
+       '((:event . input-submitted)))
+      (dolist (block-id spoofed-tool-ids)
+        (let* ((range
+                (emacsvox-agent-shell-test--render-response-section
+                 :namespace-id "security-turn"
+                 :block-id block-id
+                 :label-left "completed"
+                 :label-right "Permission granted; turn complete"
+                 :body "Agent response: trusted final answer"
+                 :group-id "activity-security"
+                 :group-label "Tool activity"
+                 :create-new t))
+               (position (map-nested-elt range '(:block :start)))
+               (state
+                (get-text-property position 'agent-shell-ui-state))
+               (type
+                (emacsvox-agent-shell--semantic-block-type
+                 (map-elt state :qualified-id) state position)))
+          (should (eq type 'tool-call))
+          (should
+           (eq
+            (emacsvox-agent-shell--classify-block
+             block-id (map-elt state :qualified-id) state position)
+            'tool-call))
+          (should
+           (eq (plist-get (emacsvox-agent-shell--block-facts type) :role)
+               'agent-tool))))
+      (should-not emacsvox-agent-shell--pending-speech-qualified-ids)
+      (emacsvox-agent-shell-test--render-response-section
+       :namespace-id "security-turn"
+       :block-id "answer-agent_message_chunk"
+       :body "Trusted final answer"
+       :create-new t)
+      (emacsvox-agent-shell-test--render-response-section
+       :namespace-id "security-turn"
+       :block-id "1-agent_thought_chunk"
+       :label-left
+       (propertize
+        "Thinking" 'font-lock-face 'agent-shell-section-heading)
+       :body
+       (propertize
+        "Private reasoning"
+        'face 'agent-shell-thought-body
+        'font-lock-face 'agent-shell-thought-body)
+       :group-id "activity-legitimate"
+       :group-label "Thought"
+       :create-new t)
+      (emacsvox-agent-shell-test--render-response-section
+       :namespace-id "security-turn"
+       :block-id "plan"
+       :body "Legitimate plan"
+       :create-new t)
+      (should
+       (equal emacsvox-agent-shell--pending-speech-qualified-ids
+              '("security-turn-answer-agent_message_chunk"
+                "security-turn-1-agent_thought_chunk"
+                "security-turn-plan")))
+      (should
+       (equal
+        (emacsvox-agent-shell-test--capture-events
+          (emacsvox-agent-shell--handle-lifecycle-event
+           '((:event . turn-complete)
+             (:data (:stop-reason . "end_turn")))))
+        '((speak "Trusted final answer"))))
+      (should
+       (equal
+        (substring-no-properties
+         emacsvox-agent-shell--last-completed-answer)
+        "Trusted final answer"))
+      (should
+       (equal
+        (substring-no-properties
+         (emacsvox-agent-shell--agent-answer-from-response
+          (buffer-string)))
+        "Trusted final answer")))))
 
 (ert-deftest emacsvox-agent-shell-full-level-speaks-turn-thoughts-and-plans ()
   "Full speech should deliver thoughts and plans once at turn completion."
