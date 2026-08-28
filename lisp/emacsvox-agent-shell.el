@@ -1174,6 +1174,12 @@ available so a timer created by an older loaded version can finish safely.")
 (defvar-local emacsvox-agent-shell--response-turn-active-p nil
   "Non-nil while a submitted agent turn can produce semantic sections.")
 
+(defvar-local emacsvox-agent-shell--last-completed-answer nil
+  "Most recent answer captured at an authoritative completed-turn boundary.")
+
+(defvar-local emacsvox-agent-shell--latest-turn-outcome nil
+  "Observed latest turn state: `active', `completed', `failed', or nil.")
+
 (defvar-local emacsvox-agent-shell--out-of-turn-speech-timer nil
   "Timer coalescing the latest rendered out-of-turn message updates.")
 
@@ -2031,31 +2037,43 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
     (setq emacsvox-agent-shell--response-turn-active-p
           (condition-case nil
               (memq (agent-shell-status) '(busy blocked))
-            (error nil)))))
+            (error nil))))
+  (when emacsvox-agent-shell--response-turn-active-p
+    (setq emacsvox-agent-shell--latest-turn-outcome 'active)))
 
 (defun emacsvox-agent-shell--response-section-cleanup ()
   "Remove semantic rendered turn-content capture from the current shell."
   (remove-hook 'agent-shell-section-functions
                #'emacsvox-agent-shell--record-response-section t)
-  (setq emacsvox-agent-shell--response-turn-active-p nil)
+  (setq emacsvox-agent-shell--response-turn-active-p nil
+        emacsvox-agent-shell--last-completed-answer nil
+        emacsvox-agent-shell--latest-turn-outcome nil)
   (emacsvox-agent-shell--out-of-turn-cleanup))
 
 (defun emacsvox-agent-shell--begin-response-turn ()
   "Start collecting rendered turn content for a newly submitted turn."
   (emacsvox-agent-shell--cancel-pending-speech)
-  (setq emacsvox-agent-shell--response-turn-active-p t))
+  (setq emacsvox-agent-shell--response-turn-active-p t
+        emacsvox-agent-shell--latest-turn-outcome 'active))
 
 (defun emacsvox-agent-shell--discard-response-turn ()
   "Discard collected turn content and finish the current turn."
-  (setq emacsvox-agent-shell--response-turn-active-p nil)
+  (setq emacsvox-agent-shell--response-turn-active-p nil
+        emacsvox-agent-shell--latest-turn-outcome 'failed)
   (emacsvox-agent-shell--cancel-pending-speech))
 
 (defun emacsvox-agent-shell--finish-response-turn ()
   "Speak collected rendered turn content once and finish the current turn."
-  (setq emacsvox-agent-shell--response-turn-active-p nil)
-  (emacsvox-agent-shell--deliver-pending-blocks
-   (current-buffer)
-   (copy-sequence emacsvox-agent-shell--pending-speech-qualified-ids)))
+  (setq emacsvox-agent-shell--response-turn-active-p nil
+        emacsvox-agent-shell--latest-turn-outcome 'completed)
+  (when-let* ((answer
+               (or
+                (emacsvox-agent-shell--deliver-pending-blocks
+                 (current-buffer)
+                 (copy-sequence
+                  emacsvox-agent-shell--pending-speech-qualified-ids))
+                (emacsvox-agent-shell--rendered-latest-agent-answer))))
+    (setq emacsvox-agent-shell--last-completed-answer answer)))
 
 (defun emacsvox-agent-shell--permission-announcement (event)
   "Return a semantic announcement for permission request EVENT."
@@ -2281,6 +2299,17 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
     ;; `turn-complete' is the semantic boundary: no network-pause timer is
     ;; allowed to deliver a partial response.
     (pcase event-type
+      ('session-selected
+       (setq emacsvox-agent-shell--response-turn-active-p nil
+             emacsvox-agent-shell--last-completed-answer nil
+             emacsvox-agent-shell--latest-turn-outcome nil))
+      ('session-restored
+       (setq emacsvox-agent-shell--response-turn-active-p nil
+             emacsvox-agent-shell--last-completed-answer
+             (emacsvox-agent-shell--rendered-latest-agent-answer)
+             emacsvox-agent-shell--latest-turn-outcome
+             (and emacsvox-agent-shell--last-completed-answer
+                  'completed)))
       ('input-submitted
        (emacsvox-agent-shell--begin-response-turn))
       ('turn-complete
@@ -2329,10 +2358,12 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
                #'emacsvox-agent-shell--lifecycle-event-cleanup t))
 
 (defun emacsvox-agent-shell--deliver-pending-blocks (buffer qualified-ids)
-  "Deliver pending QUALIFIED-IDS from BUFFER and clear their stored bodies."
+  "Deliver pending QUALIFIED-IDS from BUFFER and return its agent answer.
+Clear the stored bodies after taking their final rendered snapshots."
   (when (and buffer (buffer-live-p buffer))
     (with-current-buffer buffer
-      (when (emacsvox-agent-shell--should-speak-p buffer)
+      (let ((speak-p (emacsvox-agent-shell--should-speak-p buffer))
+            answer-bodies)
         (dolist (qualified-id qualified-ids)
           (when-let* ((content
                        (or
@@ -2361,15 +2392,20 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
                        (emacsvox-agent-shell--classify-block block-id))
                       (trimmed (string-trim content)))
             (when (not (string-empty-p trimmed))
-              (emacsvox-agent-shell--speak-content
-               trimmed block-type)))))
-      (emacsvox-agent-shell--clear-section-markers
-       emacsvox-agent-shell--pending-section-markers)
-      (when emacsvox-agent-shell--pending-bodies
-        (clrhash emacsvox-agent-shell--pending-bodies))
-      (setq emacsvox-agent-shell--pending-section-markers nil
-            emacsvox-agent-shell--pending-speech-qualified-ids nil
-            emacsvox-agent-shell--pending-speech-timer nil))))
+              (when (eq block-type 'agent-message)
+                (push trimmed answer-bodies))
+              (when speak-p
+                (emacsvox-agent-shell--speak-content
+                 trimmed block-type)))))
+        (emacsvox-agent-shell--clear-section-markers
+         emacsvox-agent-shell--pending-section-markers)
+        (when emacsvox-agent-shell--pending-bodies
+          (clrhash emacsvox-agent-shell--pending-bodies))
+        (setq emacsvox-agent-shell--pending-section-markers nil
+              emacsvox-agent-shell--pending-speech-qualified-ids nil
+              emacsvox-agent-shell--pending-speech-timer nil)
+        (when answer-bodies
+          (string-join (nreverse answer-bodies) "\n"))))))
 
 (defun emacsvox-agent-shell--execute-delayed-speech (buffer qualified-ids)
   "Deliver pending QUALIFIED-IDS left by an older timer in BUFFER.
@@ -3130,20 +3166,51 @@ fallback only when RESPONSE has no agent-shell semantic fragment properties."
         (let ((plain (string-trim response)))
           (unless (string-empty-p plain) plain)))))))
 
-(defun emacsvox-agent-shell--latest-agent-answer ()
-  "Return the latest rendered answer for the current agent-shell session."
+(defun emacsvox-agent-shell--rendered-latest-agent-answer ()
+  "Return the latest rendered answer from the current Agent Shell buffer."
+  (save-excursion
+    (condition-case nil
+        (progn
+          (agent-shell-goto-last-interaction)
+          (when-let* ((interaction
+                       (agent-shell-interaction-at-point))
+                      (response (map-elt interaction :response)))
+            (emacsvox-agent-shell--agent-answer-from-response response)))
+      (error nil))))
+
+(defun emacsvox-agent-shell--response-in-progress-p (shell-buffer)
+  "Return non-nil when SHELL-BUFFER has an incomplete agent turn."
+  (with-current-buffer shell-buffer
+    (let ((status
+           (condition-case nil
+               (agent-shell-status :shell-buffer shell-buffer)
+             (error nil))))
+      (or emacsvox-agent-shell--response-turn-active-p
+          (memq status '(busy blocked))))))
+
+(defun emacsvox-agent-shell--latest-agent-answer-state ()
+  "Return the completed answer and progress state for the current session."
   (let ((shell-buffer (emacsvox-agent-shell--session-buffer)))
     (with-current-buffer shell-buffer
-      (save-excursion
-        (condition-case nil
-            (progn
-              (agent-shell-goto-last-interaction)
-              (when-let* ((interaction
-                           (agent-shell-interaction-at-point))
-                          (response (map-elt interaction :response)))
-                (emacsvox-agent-shell--agent-answer-from-response
-                 response)))
-          (error nil))))))
+      (let* ((in-progress
+              (emacsvox-agent-shell--response-in-progress-p shell-buffer))
+             (answer
+              (cond
+               ((or in-progress
+                    (eq emacsvox-agent-shell--latest-turn-outcome 'failed))
+                emacsvox-agent-shell--last-completed-answer)
+               (emacsvox-agent-shell--last-completed-answer)
+               (t
+                (when-let* ((rendered
+                             (emacsvox-agent-shell--rendered-latest-agent-answer)))
+                  (setq emacsvox-agent-shell--last-completed-answer rendered
+                        emacsvox-agent-shell--latest-turn-outcome 'completed)
+                  rendered)))))
+        (list :answer answer :in-progress in-progress)))))
+
+(defun emacsvox-agent-shell--latest-agent-answer ()
+  "Return the latest completed answer for the current Agent Shell session."
+  (plist-get (emacsvox-agent-shell--latest-agent-answer-state) :answer))
 
 (defconst emacsvox-agent-shell--response-overview-preview-limit 120
   "Maximum characters used for a response overview's opening phrase.")
@@ -3241,43 +3308,58 @@ PREDICATE receives TEXT and the start position of each property run."
                 (format "%d %s%s"
                         (car entry) (cdr entry)
                         (if (= (car entry) 1) "" "s")))))))
-    (format "Last response: %s. Begins: %s"
+    (format "Last completed response: %s. Begins: %s"
             (string-join parts ", ")
             (emacsvox-agent-shell--response-overview-preview answer))))
 
 (defun emacsvox-agent-shell-speak-last-response ()
-  "Speak the latest agent answer in full without moving point."
+  "Speak the latest completed agent answer in full without moving point."
   (interactive)
-  (if-let* ((answer (emacsvox-agent-shell--latest-agent-answer)))
+  (let* ((state (emacsvox-agent-shell--latest-agent-answer-state))
+         (answer (plist-get state :answer))
+         (in-progress (plist-get state :in-progress)))
+    (if answer
       (progn
         (tts-stop)
         (emacsvox-agent-shell--submit-text-feedback
-         answer
+         (if in-progress
+             (concat "Agent is still working. Last completed response: "
+                     answer)
+           answer)
          (emacsvox-agent-shell--presentation-facts
           'agent-response 'agent-content-inspected)
          'inspection 'item))
-    (emacsvox-agent-shell--submit-text-feedback
-     "No agent response available."
-     (emacsvox-agent-shell--presentation-facts
-      'agent-response 'operation-failed)
-     'inspection 'warn-user)))
+      (emacsvox-agent-shell--submit-text-feedback
+       (if in-progress
+           "Agent response in progress; no completed response available."
+         "No agent response available.")
+       (emacsvox-agent-shell--presentation-facts
+        'agent-response 'operation-failed)
+       'inspection 'warn-user))))
 
 (defun emacsvox-agent-shell-speak-response-overview ()
-  "Speak a concise structural overview of the latest agent answer."
+  "Speak a concise overview of the latest completed agent answer."
   (interactive)
-  (if-let* ((answer (emacsvox-agent-shell--latest-agent-answer)))
+  (let* ((state (emacsvox-agent-shell--latest-agent-answer-state))
+         (answer (plist-get state :answer))
+         (in-progress (plist-get state :in-progress)))
+    (if answer
       (progn
         (tts-stop)
         (emacsvox-agent-shell--submit-text-feedback
-         (emacsvox-agent-shell--response-overview answer)
+         (concat
+          (when in-progress "Agent is still working. ")
+          (emacsvox-agent-shell--response-overview answer))
          (emacsvox-agent-shell--presentation-facts
           'agent-response 'agent-content-inspected)
          'inspection 'item))
-    (emacsvox-agent-shell--submit-text-feedback
-     "No agent response available."
-     (emacsvox-agent-shell--presentation-facts
-      'agent-response 'operation-failed)
-     'inspection 'warn-user)))
+      (emacsvox-agent-shell--submit-text-feedback
+       (if in-progress
+           "Agent response in progress; no completed response available."
+         "No agent response available.")
+       (emacsvox-agent-shell--presentation-facts
+        'agent-response 'operation-failed)
+       'inspection 'warn-user))))
 
 (defun emacsvox-agent-shell--concise-block-text (text)
   "Return a concise single-line version of block TEXT."

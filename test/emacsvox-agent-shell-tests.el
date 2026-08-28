@@ -27,6 +27,8 @@
 (defvar emacsvox-agent-shell--pending-speech-qualified-ids)
 (defvar emacsvox-agent-shell--pending-speech-timer)
 (defvar emacsvox-agent-shell--response-turn-active-p)
+(defvar emacsvox-agent-shell--last-completed-answer)
+(defvar emacsvox-agent-shell--latest-turn-outcome)
 (defvar emacsvox-agent-shell--out-of-turn-bodies)
 (defvar emacsvox-agent-shell--out-of-turn-delivered-ids)
 (defvar emacsvox-agent-shell--out-of-turn-pending-ids)
@@ -99,6 +101,8 @@
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--agent-answer-from-response
                   "emacsvox-agent-shell" (response))
+(declare-function emacsvox-agent-shell--latest-agent-answer-state
+                  "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--source-block-locations
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--source-block-summary
@@ -1149,8 +1153,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (let ((answer "Complete answer")
         captured)
     (cl-letf
-        (((symbol-function 'emacsvox-agent-shell--latest-agent-answer)
-          (lambda () answer))
+        (((symbol-function 'emacsvox-agent-shell--latest-agent-answer-state)
+          (lambda () (list :answer answer :in-progress nil)))
          ((symbol-function 'emacsvox-agent-shell--response-overview)
           (lambda (_text) "Response overview"))
          ((symbol-function 'emacsvox-aural-submit)
@@ -1183,6 +1187,111 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                       '("Complete answer" "Response overview"))
               '(item)
             '(warn-user))))))))
+
+(ert-deftest emacsvox-agent-shell-response-inspection-keeps-completed-while-busy ()
+  "Busy inspection should identify and retain the prior completed answer."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local
+     emacsvox-agent-shell--last-completed-answer
+     (propertize "Completed answer" 'face 'agent-shell-markdown-bold))
+    (setq-local emacsvox-agent-shell--response-turn-active-p t
+                emacsvox-agent-shell--latest-turn-outcome 'active)
+    (let (events
+          (status-calls 0)
+          (rendered-calls 0))
+      (cl-letf
+          (((symbol-function 'emacsvox-agent-shell--session-buffer)
+            (lambda (&optional _) (current-buffer)))
+           ((symbol-function 'agent-shell-status)
+            (lambda (&rest arguments)
+              (should (eq (plist-get arguments :shell-buffer)
+                          (current-buffer)))
+              (cl-incf status-calls)
+              'busy))
+           ((symbol-function
+             'emacsvox-agent-shell--rendered-latest-agent-answer)
+            (lambda ()
+              (cl-incf rendered-calls)
+              "Partial current answer")))
+        (setq events
+              (emacsvox-agent-shell-test--capture-events
+                (emacsvox-agent-shell-speak-last-response)
+                (emacsvox-agent-shell-speak-response-overview))))
+      (should (= status-calls 2))
+      (should (= rendered-calls 0))
+      (should
+       (equal
+        (mapcar
+         (lambda (event)
+           (if (stringp (cadr event))
+               (list (car event) (substring-no-properties (cadr event)))
+             event))
+         events)
+        '((stop nil)
+          (icon item)
+          (speak
+           "Agent is still working. Last completed response: Completed answer")
+          (stop nil)
+          (icon item)
+          (speak
+           "Agent is still working. Last completed response: 1 line. Begins: Completed answer"))))
+      (let ((spoken (cadr (nth 2 events))))
+        (should
+         (eq (emacsvox-agent-shell-test--face-at-text spoken "Completed answer")
+             'agent-shell-markdown-bold))))))
+
+(ert-deftest emacsvox-agent-shell-response-inspection-identifies-first-partial ()
+  "Busy inspection should not call a first partial response completed."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local emacsvox-agent-shell--response-turn-active-p t
+                emacsvox-agent-shell--latest-turn-outcome 'active)
+    (let ((rendered-calls 0))
+      (cl-letf
+          (((symbol-function 'emacsvox-agent-shell--session-buffer)
+            (lambda (&optional _) (current-buffer)))
+           ((symbol-function 'agent-shell-status)
+            (lambda (&rest _) 'busy))
+           ((symbol-function
+             'emacsvox-agent-shell--rendered-latest-agent-answer)
+            (lambda ()
+              (cl-incf rendered-calls)
+              "Partial current answer")))
+        (should
+         (equal
+          (emacsvox-agent-shell-test--capture-events
+            (emacsvox-agent-shell-speak-last-response)
+            (emacsvox-agent-shell-speak-response-overview))
+          '((icon warn-user)
+            (speak
+             "Agent response in progress; no completed response available.")
+            (icon warn-user)
+            (speak
+             "Agent response in progress; no completed response available.")))))
+      (should (= rendered-calls 0)))))
+
+(ert-deftest emacsvox-agent-shell-failed-turn-retains-completed-answer ()
+  "A failed latest turn should not replace its prior completed answer."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local emacsvox-agent-shell--last-completed-answer "Safe answer"
+                emacsvox-agent-shell--latest-turn-outcome 'failed)
+    (let ((rendered-calls 0))
+      (cl-letf
+          (((symbol-function 'emacsvox-agent-shell--session-buffer)
+            (lambda (&optional _) (current-buffer)))
+           ((symbol-function 'agent-shell-status)
+            (lambda (&rest _) 'ready))
+           ((symbol-function
+             'emacsvox-agent-shell--rendered-latest-agent-answer)
+            (lambda ()
+              (cl-incf rendered-calls)
+              "Discarded partial")))
+        (should
+         (equal (emacsvox-agent-shell--latest-agent-answer-state)
+                '(:answer "Safe answer" :in-progress nil))))
+      (should (= rendered-calls 0)))))
 
 (ert-deftest emacsvox-agent-shell-speech-setup-preserves-package-header ()
   "Speech setup should not replace agent-shell's semantic header."
@@ -1678,6 +1787,16 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (eq (emacsvox-agent-shell-test--face-at-text speech "response")
            'agent-shell-markdown-bold)))
     (should-not emacsvox-agent-shell--response-turn-active-p)
+    (should (eq emacsvox-agent-shell--latest-turn-outcome 'completed))
+    (should
+     (equal (substring-no-properties
+             emacsvox-agent-shell--last-completed-answer)
+            "Complete response"))
+    (should
+     (eq
+      (emacsvox-agent-shell-test--face-at-text
+       emacsvox-agent-shell--last-completed-answer "response")
+      'agent-shell-markdown-bold))
     (should-not emacsvox-agent-shell--pending-speech-qualified-ids)
     (should-not emacsvox-agent-shell--pending-section-markers)
     (should-not emacsvox-agent-shell--pending-bodies)
@@ -2078,12 +2197,13 @@ Return speech events plus the target character.  DIRECTION is `forward' or
      (equal
       (emacsvox-agent-shell--response-overview answer)
       (concat
-       "Last response: 4 lines, 1 heading, 1 code block, 1 table. "
+       "Last completed response: 4 lines, 1 heading, 1 code block, 1 table. "
        "Begins: Summary Implemented the completion fix."))))
   (let ((overview
          (emacsvox-agent-shell--response-overview
           (make-string 200 ?x))))
-    (should (string-prefix-p "Last response: 1 line. Begins: " overview))
+    (should
+     (string-prefix-p "Last completed response: 1 line. Begins: " overview))
     (should (string-suffix-p ", continued" overview))
     (should-not (string-match-p (make-string 121 ?x) overview)))
   (let ((answer
@@ -2103,7 +2223,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
      (equal
       (emacsvox-agent-shell--response-overview answer)
       (concat
-       "Last response: 9 lines, 2 headings, 2 code blocks, 2 tables. "
+       "Last completed response: 9 lines, 2 headings, 2 code blocks, 2 tables. "
        "Begins: One Intro.")))))
 
 (ert-deftest emacsvox-agent-shell-response-overview-counts-rendered-markdown ()
@@ -2123,7 +2243,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (emacsvox-agent-shell--agent-answer-from-response
         (buffer-string)))
       (concat
-       "Last response: 13 lines, 1 heading, 1 code block, 1 table. "
+       "Last completed response: 13 lines, 1 heading, 1 code block, 1 table. "
        "Begins: Result Implemented the fix.")))))
 
 (ert-deftest emacsvox-agent-shell-speak-response-overview-is-explicit ()
@@ -2134,8 +2254,11 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (setq-local emacsvox-agent-shell-speech-level 'quiet)
     (let ((position (point)))
       (cl-letf
-          (((symbol-function 'emacsvox-agent-shell--latest-agent-answer)
-            (lambda () "Implemented the fix. Unspoken detail follows.")))
+          (((symbol-function
+             'emacsvox-agent-shell--latest-agent-answer-state)
+            (lambda ()
+              '(:answer "Implemented the fix. Unspoken detail follows."
+                :in-progress nil))))
         (should
          (equal
           (emacsvox-agent-shell-test--capture-events
@@ -2143,7 +2266,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           '((stop nil)
             (icon item)
             (speak
-             "Last response: 1 line. Begins: Implemented the fix.")))))
+             "Last completed response: 1 line. Begins: Implemented the fix.")))))
       (should (= (point) position)))))
 
 (ert-deftest emacsvox-agent-shell-speak-last-response-works-in-session-views ()
@@ -3585,6 +3708,35 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (when (buffer-live-p buffer)
         (kill-buffer buffer)))))
 
+(ert-deftest emacsvox-agent-shell-session-restore-reseeds-completed-answer ()
+  "Selecting and restoring a session should replace the prior answer cache."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local emacsvox-agent-shell--last-completed-answer "Old session"
+                emacsvox-agent-shell--latest-turn-outcome 'completed)
+    (let ((restored-answer "Restored session answer"))
+      (cl-letf
+          (((symbol-function
+             'emacsvox-agent-shell--rendered-latest-agent-answer)
+            (lambda () restored-answer)))
+        (emacsvox-agent-shell--handle-lifecycle-event
+         '((:event . session-selected)))
+        (should-not emacsvox-agent-shell--last-completed-answer)
+        (should-not emacsvox-agent-shell--latest-turn-outcome)
+        (emacsvox-agent-shell--handle-lifecycle-event
+         '((:event . session-restored)))
+        (should
+         (equal emacsvox-agent-shell--last-completed-answer
+                "Restored session answer"))
+        (should (eq emacsvox-agent-shell--latest-turn-outcome 'completed))
+        (setq restored-answer nil)
+        (emacsvox-agent-shell--handle-lifecycle-event
+         '((:event . session-selected)))
+        (emacsvox-agent-shell--handle-lifecycle-event
+         '((:event . session-restored)))
+        (should-not emacsvox-agent-shell--last-completed-answer)
+        (should-not emacsvox-agent-shell--latest-turn-outcome)))))
+
 (ert-deftest emacsvox-agent-shell-error-discards-partial-response ()
   "Public error feedback should not leave partial response speech pending."
   (let ((emacsvox-agent-shell-signal-processing t))
@@ -3614,6 +3766,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (let ((emacsvox-agent-shell-signal-processing t))
     (with-temp-buffer
       (setq-local emacsvox-comint-autospeak t)
+      (setq-local emacsvox-agent-shell--last-completed-answer
+                  "Previous completed answer")
       (setq-local emacsvox-agent-shell--response-turn-active-p t)
       (setq-local emacsvox-agent-shell--pending-bodies
                   (make-hash-table :test #'equal))
@@ -3630,6 +3784,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         '((icon close-object)
           (speak "Agent turn cancelled."))))
       (should-not emacsvox-agent-shell--response-turn-active-p)
+      (should (eq emacsvox-agent-shell--latest-turn-outcome 'failed))
+      (should
+       (equal emacsvox-agent-shell--last-completed-answer
+              "Previous completed answer"))
       (should-not emacsvox-agent-shell--pending-speech-qualified-ids)
       (should (= 0 (hash-table-count
                     emacsvox-agent-shell--pending-bodies))))))
