@@ -138,14 +138,16 @@
   "Global count of commands.")
 
 (defsubst self-document-command-p (f)
-  "Predicate to check if  this command it to be documented."
-  (when (and (fboundp f) (commandp f)
-             (string-match self-document-patterns (symbol-name f)) ; candidate
-             (if  (string-match  "/" (symbol-name f)) ; filter repeat muggles
-                 (string-match "/body$" (symbol-name f))
-               f))
-    (cl-incf self-document-command-count)
-    f))
+  "Return F when it is a public command for the generated reference."
+  (let ((name (symbol-name f)))
+    (when (and (fboundp f) (commandp f)
+               (string-match self-document-patterns name) ; candidate
+               (not (string-match-p "--" name)) ; internal by Lisp convention
+               (if  (string-match  "/" (symbol-name f)) ; filter repeat muggles
+                   (string-match "/body$" (symbol-name f))
+                 f))
+      (cl-incf self-document-command-count)
+      f)))
 
 (defvar self-document-option-count 0
   "Global count of options.")

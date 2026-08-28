@@ -1,0 +1,254 @@
+@node Agent Shell
+@chapter Agent Shell
+@cindex Agent Shell
+@cindex artificial intelligence agents
+
+Agent Shell is a separately installed Emacs package for interactive AI-agent
+sessions.  Emacsvox adds speech and semantic presentation without replacing
+Agent Shell's provider setup, session management, prompt editor, or permission
+controls.  See @uref{https://github.com/xenodium/agent-shell,Agent Shell} for
+provider installation and configuration.
+
+The generated @ref{emacsvox-agent-shell} section is the exhaustive Emacsvox
+command and option reference.  This chapter follows the tasks a user performs
+in a session.
+
+@section Start and control a session
+
+Load Emacsvox and start Agent Shell with @code{M-x agent-shell}.  Emacsvox loads
+its integration after Agent Shell and activates both new and already existing
+shell buffers.  Run @code{M-x emacsvox-agent-shell-enable} only when manually
+re-enabling support after it was disabled or while diagnosing a live reload.
+
+Compose and submit prompts with Agent Shell's normal editing commands.  The
+live prompt retains Emacs undo.  Submitted transcript text is history rather
+than editable prompt input.  Press @kbd{C-c C-c} to ask Agent Shell to interrupt
+an active request; its normal confirmation setting still applies.
+
+Emacsvox speaks routine content only at complete turn boundaries.  A network
+pause does not make a partial answer sound complete.  A cancelled, refused, or
+failed turn reports its outcome without replacing the last successfully
+completed response.
+
+@section Choose automatic speech and privacy
+
+The focused session defaults to @code{response}: completed answers and routine
+completion feedback are presented, while thought, plan, and tool chatter is
+suppressed.  An unfocused session defaults to @code{notify}: its notification
+names the session but does not disclose response or tool content.
+
+@table @code
+@item full
+Speak responses plus configured thought, plan, and tool detail.  Full tool
+output can contain commands, file contents, or other sensitive provider data.
+@item response
+Speak completed agent responses while suppressing routine thought, plan, and
+tool content.
+@item notify
+Present routine completion without reading the response body.
+@item quiet
+Suppress routine automatic feedback.  Explicit inspection remains available.
+@item auto
+Use @code{emacsvox-agent-shell-foreground-speech-level} or
+@code{emacsvox-agent-shell-background-speech-level} according to focus.
+@end table
+
+Press @kbd{C-c C-q} to run
+@code{emacsvox-agent-shell-select-speech-level} and choose the current
+session's level, including @code{auto}.  Press @kbd{C-c C-S-q} to run
+@code{emacsvox-agent-shell-select-background-speech-level} and change the
+shared background default.
+@code{M-x emacsvox-agent-shell-cycle-speech-level} cycles toward less routine
+speech; use a prefix argument to restore @code{auto}.
+
+Thought content defaults to an icon under
+@code{emacsvox-agent-shell-speak-thought-process}.  Tool feedback is separately
+controlled by @code{emacsvox-agent-shell-speak-tool-calls} and
+@code{emacsvox-agent-shell-tool-output-verbosity}.  Selecting background
+@code{response} or @code{full}, thought @code{speak}, or full tool output is an
+explicit disclosure choice.
+
+Automatic response, tool, error, permission, and similar text is limited by
+@code{emacsvox-agent-shell-automatic-content-max-characters}, which defaults to
+2,000 characters.  A shortened presentation gives exact omitted character and
+line counts and tells you where to inspect the full content.  The complete text
+stays in the Agent Shell buffer; the limit is applied before Aural compiles the
+automatic speech copy.
+
+@section Respond to urgent permissions
+
+Permission requests are separate from routine speech levels because they can
+block the agent and require a decision.  With
+@code{emacsvox-agent-shell-speak-permissions} enabled, a request interrupts the
+appropriate speech stream, identifies the session and requested operation, and
+announces its choices.  Provider-controlled descriptions and choice labels are
+bounded, but the actual permission controls remain in Agent Shell.
+
+If the request belongs to another session, switch to the named buffer.  Use
+@code{M-x agent-shell-jump-to-latest-permission-button-row} to find its latest
+permission row, or use Agent Shell's @kbd{TAB} and @kbd{S-TAB} item navigation.
+Move among the buttons and press @kbd{RET}, or use a direct choice key displayed
+by Agent Shell.  Choice keys are supplied by Agent Shell and the provider, so
+the visible permission row is authoritative.
+
+Error blocks remain exceptional feedback rather than routine transcript
+chatter.  Lifecycle error announcements follow
+@code{emacsvox-agent-shell-signal-processing}; rendered error content remains
+available in the transcript even when routine response speech is quiet.
+
+@section Inspect a response on demand
+
+These commands work from the shell and its associated viewports:
+
+@table @kbd
+@item C-c r
+Run @code{emacsvox-agent-shell-speak-last-response}.  It reads the latest
+successfully completed response in full without moving point.  This deliberate
+operation does not inherit the automatic 2,000-character limit.  While a new
+turn is busy it explicitly identifies and reads the prior completed response.
+@item C-c R
+Run @code{emacsvox-agent-shell-speak-response-overview}.  It reports line,
+heading, source-block, and table counts plus a bounded opening preview.
+@end table
+
+These commands remain usable at @code{notify} and @code{quiet}.  If no turn has
+completed, they say that no completed response is available rather than
+presenting a streaming partial or failed answer.
+
+@section Navigate transcript blocks
+
+Agent Shell responses contain semantic prompt, response, thought, activity,
+tool, plan, permission, error, source-block, and table locations.  Emacsvox
+navigation reports the block type, visibility, and a bounded body preview.
+
+@table @kbd
+@item ]
+Run @code{emacsvox-agent-shell-next-block-at-point} to find the next block of
+the current semantic type.
+@item [
+Run @code{emacsvox-agent-shell-previous-block-at-point} to find the preceding
+block of the current semantic type.
+@item C-c ]
+Run @code{emacsvox-agent-shell-next-block-of-type}, choose a type, and move to
+its next occurrence.
+@item C-c [
+Run @code{emacsvox-agent-shell-previous-block-of-type}, choose a type, and move
+to its preceding occurrence.
+@end table
+
+After a successful typed jump, @kbd{]} and @kbd{[} repeat in that direction.
+At an editable live prompt, bare brackets insert themselves instead of taking
+over prompt editing.
+
+@section Read and copy source blocks
+
+Use typed block navigation to reach a source block, then:
+
+@table @kbd
+@item C-c C-b
+Run @code{emacsvox-agent-shell-speak-source-block} to read the complete rendered
+source block with its language and line count.
+@item C-c C-y
+Run @code{emacsvox-agent-shell-copy-source-block} to copy the logical source
+through Agent Shell's public copy operation.
+@end table
+
+The source commands are explicit operations and do not use the automatic
+content limit.  Ordinary line navigation retains its separate bounded speech
+policy.
+
+@section Navigate and copy rendered tables
+
+Moving into a rendered Markdown table activates a contextual table map.  It
+announces the table dimensions and current cell.  Leaving the table restores
+the ordinary Agent Shell keys.
+
+@table @kbd
+@item <right>
+Run @code{emacsvox-agent-shell-table-next-column}.
+@item <left>
+Run @code{emacsvox-agent-shell-table-previous-column}.
+@item <down>
+Run @code{emacsvox-agent-shell-table-next-row}.
+@item <up>
+Run @code{emacsvox-agent-shell-table-previous-row}.
+@item M-<down>
+Run @code{emacsvox-agent-shell-table-exit-forward}.
+@item M-<up>
+Run @code{emacsvox-agent-shell-table-exit-backward}.
+@item SPC
+Run @code{emacsvox-agent-shell-table-speak-cell}.
+@item r
+Run @code{emacsvox-agent-shell-table-speak-row}.
+@item c
+Run @code{emacsvox-agent-shell-table-speak-column}.
+@item .
+Run @code{emacsvox-agent-shell-table-speak-context} for row, column, and table
+position.
+@item =
+Run @code{emacsvox-agent-shell-table-speak-dimensions}.
+@item w
+Run @code{emacsvox-agent-shell-table-copy-cell}.
+@item k k
+Also run @code{emacsvox-agent-shell-table-copy-cell}.
+@item k r
+Run @code{emacsvox-agent-shell-table-copy-row}; copied cells are tab-separated.
+@item k c
+Run @code{emacsvox-agent-shell-table-copy-column}; copied cells are separated by
+newlines.
+@item a
+Run @code{emacsvox-agent-shell-table-select-speaking-method} to toggle column
+titles, row titles, or whether data is spoken before titles.
+@end table
+
+Copy commands use logical cell values, excluding renderer padding and Markdown
+borders.  Wrapped cell contents remain complete.
+
+@section Recover from interruption or failure
+
+If a request is taking the wrong path, press @kbd{C-c C-c} and confirm the
+Agent Shell interrupt.  A failed or interrupted partial response is not cached
+as complete.  Press @kbd{C-c r} for the preceding completed response, or
+@kbd{C-c R} for its overview.  Read the error block in the transcript for the
+provider's details and edit the live prompt before resubmitting.
+
+Use @code{M-x agent-shell-restart} when Agent Shell itself needs a fresh process
+for the same project.  Use @code{M-x emacsvox-agent-shell-enable} to reinstall
+speech hooks after deliberately disabling them or during live integration
+development.  Neither recovery command discards transcript files or project
+work.
+
+@section Integration ownership for maintainers
+
+The integration uses three deliberately different contract layers:
+
+@multitable @columnfractions .18 .37 .45
+@headitem Layer @tab Agent Shell owner @tab Emacsvox rule
+@item Public structured API
+@tab @code{agent-shell-subscribe-to}, @code{agent-shell-unsubscribe}, and
+@code{agent-shell-status}; lifecycle, permission, and tool events
+@tab Primary authority for processing, completion, errors, permission urgency,
+and tool status.  The public turn boundary triggers inspection of renderer-owned
+response sections.  Event and response data is treated as untrusted content and
+bounded before automatic Aural submission.
+@item Experimental renderer metadata
+@tab @code{agent-shell-ui-state}, @code{agent-shell-ui-section}, rendered
+Markdown table/source properties, and renderer-owned faces
+@tab Feature-detected navigation and presentation input.  Renderer group
+provenance outranks provider-controlled IDs; prose and IDs cannot manufacture
+structured permission or lifecycle authority.
+@item Private compatibility fallback
+@tab The aggregate @code{agent-shell--state}, viewport position helpers, and
+legacy face, prompt, or ID inference
+@tab Kept in narrow adapter functions for older or incomplete renderers.  A
+missing optional detail may reduce header or navigation richness but must not
+create a permission action or completed response.
+@end multitable
+
+The lifecycle subscription currently consumes @code{init-started},
+@code{init-finished}, @code{session-selected}, @code{session-restored},
+@code{input-submitted}, @code{turn-complete}, and @code{error}.  Dedicated
+subscriptions consume @code{permission-request}, @code{permission-response},
+and @code{tool-call-update}.  Add new semantic behavior at the public event
+layer when Agent Shell exposes it; keep renderer and private fallbacks isolated
+and covered by compatibility tests.

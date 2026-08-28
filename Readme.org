@@ -335,6 +335,11 @@ permission, source-block, table, viewport, and prompt-editor intent.  Agent
 Shell's visual chat glyphs are normalized to semantic labels: item speech uses
 the selected voice, visibility is announced after the item, and an empty live
 prompt says =Me. Ready for input.= without speaking decorative button names.
+The [[file:info/agent-shell.texi][Agent Shell workflow chapter]] covers setup,
+speech and privacy policy, urgent permissions, response inspection, transcript
+navigation, tables, source blocks, and recovery.  The generated
+=emacsvox-agent-shell= manual section remains the exhaustive command and option
+reference.
 Markdown exposes headings, task state, lists, links, code blocks, tables,
 footnotes, separators, visibility, and document operations, with the same
 heading intent whether movement is by line or structural command.

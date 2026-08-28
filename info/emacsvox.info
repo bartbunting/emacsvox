@@ -12,393 +12,394 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 This manual documents *Emacsvox, The Complete Audio Desktop* and was
-last updated on August 27, 2026.
+last updated on August 29, 2026.
 
 
 Indirect:
 emacsvox.info-1: 424
-emacsvox.info-2: 302348
-emacsvox.info-3: 600641
-emacsvox.info-4: 1161647
+emacsvox.info-2: 300490
+emacsvox.info-3: 604909
+emacsvox.info-4: 1172311
 
 Tag Table:
 (Indirect)
 Node: Top424
-Node: Copyright1808
-Node: Announce2361
-Node: Contributing2974
-Node: Authoring Guidelines3779
-Node: Credits4297
-Node: Background4658
-Node: Speech-Enabling Applications5403
-Node: Audio Formatting And Aural CSS6900
-Node: Auditory Icons8082
-Node: Summary8782
-Node: Introduction9269
-Node: Installation12328
-Node: Obtaining Emacsvox12827
-Node: Quick Installation13125
-Node: Building And Testing The Speech Server16830
-Node: Basic Usage18032
-Node: Overview19373
-Node: Working21820
-Ref: Working-Footnote-124037
-Ref: Working-Footnote-224130
-Node: Reading24231
-Node: Speech System30939
-Node: Controlling Echo31489
-Node: Speech Output Control32952
-Node: Miscellaneous36368
-Node: Voice-lock39892
-Node: Status Information41441
-Node: Audio Desktop44049
-Node: Desktop Objects46049
-Node: Object Oriented Desktop46876
-Node: Context-Sensitive Interaction47646
-Node: Voice Lock52773
-Node: How It All Works.55052
-Node: What this gives.56092
-Node: Using Online Help56815
-Node: Emacs Packages60812
-Node: Document Authoring62426
-Node: Creating Well-formatted Documents63114
-Node: Search replace and spell check66552
-Node: Structured Editing71748
-Node: Outline Editing73757
-Node: Template-based Authoring77461
-Node: Maintaining Structured Data79085
-Node: Browsing Structure80542
-Node: Web Browsing80972
-Node: Intro81971
-Node: emacs-w384384
-Ref: w3 transcode93551
-Ref: xsl-transform95911
-Node: Add-ons100090
-Ref: emacsvox url template100302
-Ref: rss101310
-Ref: bmk-mgr102771
-Node: Conclusion103423
-Node: Messaging104216
-Node: Editing Code104754
-Node: Development Environment105721
-Node: Desktop Management106267
-Node: Personal Information Management107037
-Node: Desktop Applications107386
-Node: Emacsvox Keymaps114122
-Node: Emacsvox Keybindings On emacsvox-keymap114766
-Node: Emacsvox Keybindings On emacsvox-tts-submap117534
-Node: Emacsvox Keybindings On emacsvox-hyper-keymap119322
-Node: Emacsvox Keybindings On emacsvox-super-keymap120277
-Node: Emacsvox Keybindings On emacsvox-alt-keymap121133
-Node: Emacsvox Keybindings On emacsvox-multi-keymap121891
-Node: Emacsvox Keybindings On emacsvox-v-keymap122408
-Node: Emacsvox Keybindings On emacsvox-x-keymap122913
-Node: Emacsvox Keybindings On emacsvox-y-keymap124445
-Node: Emacsvox Keybindings On emacsvox-z-keymap124980
-Node: Emacsvox Commands And Options125600
-Node: amixer138864
-Node: dectalk-voices141171
-Node: dom-addons141912
-Node: emacsvox142103
-Node: emacsvox-2048143801
-Node: emacsvox-abc-mode146255
-Node: emacsvox-ace-window146606
-Node: emacsvox-add-log146961
-Node: emacsvox-advice147172
-Node: emacsvox-agent-shell148814
-Node: emacsvox-amark163871
-Node: emacsvox-annotate167417
-Node: emacsvox-arc167685
-Node: emacsvox-auctex168771
-Node: emacsvox-aural169893
-Node: emacsvox-aural-compatibility-voice171270
-Node: emacsvox-aural-compiler173731
-Node: emacsvox-aural-concrete174580
-Node: emacsvox-aural-description174991
-Node: emacsvox-aural-doctor175354
-Node: emacsvox-aural-editor179050
-Node: emacsvox-aural-explanation185426
-Node: emacsvox-aural-feature-fragments189644
-Node: emacsvox-aural-history201108
-Node: emacsvox-aural-home202394
-Node: emacsvox-aural-inspection207223
-Node: emacsvox-aural-overrides207718
-Node: emacsvox-aural-planner212441
-Node: emacsvox-aural-preview212875
-Node: emacsvox-aural-profile-service213380
-Node: emacsvox-aural-profiles213776
-Node: emacsvox-aural-provider-markdown218553
-Node: emacsvox-aural-provider-notmuch218951
-Node: emacsvox-aural-provider-org219404
-Node: emacsvox-aural-provider-org-srs219901
-Node: emacsvox-aural-provider-workflows220300
-Node: emacsvox-aural-providers220873
-Node: emacsvox-aural-recent-feedback221287
-Node: emacsvox-aural-resources225822
-Node: emacsvox-aural-routing-profiles227381
-Node: emacsvox-aural-rules228365
-Node: emacsvox-aural-schemes228896
-Node: emacsvox-aural-semantics229731
-Node: emacsvox-aural-sound-packs233343
-Node: emacsvox-aural-source241197
-Node: emacsvox-aural-spatial241629
-Node: emacsvox-aural-submission243839
-Node: emacsvox-aural-tools245479
-Node: emacsvox-aural-transport248104
-Node: emacsvox-aural-ui248874
-Node: emacsvox-aural-validation254820
-Node: emacsvox-aural-voice-palettes255238
-Node: emacsvox-aural-voice-workbench271845
-Node: emacsvox-avy286848
-Node: emacsvox-bbdb287144
-Node: emacsvox-bibtex287410
-Node: emacsvox-bookmark287622
-Node: emacsvox-bookshare287832
-Node: emacsvox-browse-kill-ring302348
-Node: emacsvox-bs302645
-Node: emacsvox-buff-menu303244
-Node: emacsvox-c304313
-Node: emacsvox-calc304790
-Node: emacsvox-calculator305145
-Node: emacsvox-calendar305367
-Node: emacsvox-calibredb306756
-Node: emacsvox-chess307374
-Node: emacsvox-cider315453
-Node: emacsvox-clojure315662
-Node: emacsvox-cmuscheme315900
-Node: emacsvox-combobulate316121
-Node: emacsvox-comint316440
-Node: emacsvox-company318574
-Node: emacsvox-compile319314
-Node: emacsvox-consult319818
-Node: emacsvox-corfu320210
-Node: emacsvox-cperl320464
-Node: emacsvox-custom320677
-Node: emacsvox-dbus321400
-Node: emacsvox-deadgrep324929
-Node: emacsvox-debugger325146
-Node: emacsvox-denote325440
-Node: emacsvox-desktop325795
-Node: emacsvox-devdocs326288
-Node: emacsvox-dictionary326499
-Node: emacsvox-diff-mode326769
-Node: emacsvox-dired326977
-Node: emacsvox-dumb-jump331835
-Node: emacsvox-eat332117
-Node: emacsvox-eat-core332694
-Node: emacsvox-eat-input334932
-Node: emacsvox-eat-review335264
-Node: emacsvox-ebuku342230
-Node: emacsvox-ediff342458
-Node: emacsvox-eglot343590
-Node: emacsvox-ein343791
-Node: emacsvox-elfeed344315
-Node: emacsvox-elisp-refs345535
-Node: emacsvox-ellama345773
-Node: emacsvox-elpher346052
-Node: emacsvox-elpy346312
-Node: emacsvox-embark346551
-Node: emacsvox-emms346939
-Node: emacsvox-empv347615
-Node: emacsvox-enriched355460
-Node: emacsvox-entertain356001
-Node: emacsvox-enwc356620
-Node: emacsvox-epa356855
-Node: emacsvox-epub357125
-Node: emacsvox-erc371207
-Node: emacsvox-eshell373898
-Node: emacsvox-ess374222
-Node: emacsvox-etable374452
-Node: emacsvox-eterm374925
-Node: emacsvox-eudc386301
-Node: emacsvox-evil386846
-Node: emacsvox-eww387299
-Node: emacsvox-extras425398
-Node: emacsvox-exwm430259
-Node: emacsvox-feeds430779
-Node: emacsvox-ffap433802
-Node: emacsvox-ffip434011
-Node: emacsvox-filtertext434215
-Node: emacsvox-flycheck435956
-Node: emacsvox-flymake436179
-Node: emacsvox-flyspell436387
-Node: emacsvox-folding437673
-Node: emacsvox-forge438074
-Node: emacsvox-forms438348
-Node: emacsvox-geiser439806
-Node: emacsvox-gnuplot440224
-Node: emacsvox-gnus440591
-Node: emacsvox-go-mode442396
-Node: emacsvox-gomoku442616
-Node: emacsvox-google444838
-Node: emacsvox-gptel449797
-Node: emacsvox-gridtext450496
-Node: emacsvox-gud452112
-Node: emacsvox-haskell452349
-Node: emacsvox-helm452561
-Node: emacsvox-helpful452975
-Node: emacsvox-hide453301
-Node: emacsvox-hide-lines454561
-Node: emacsvox-hideshow454793
-Node: emacsvox-hydra455007
-Node: emacsvox-ibuffer455500
-Node: emacsvox-ido455996
-Node: emacsvox-iedit456821
-Node: emacsvox-info457057
-Node: emacsvox-ispell458543
-Node: emacsvox-ivy459786
-Node: emacsvox-journalctl460084
-Node: emacsvox-js2460365
-Node: emacsvox-keymap460681
-Node: emacsvox-kmacro466535
-Node: emacsvox-librivox466797
-Node: emacsvox-lispy469375
-Node: emacsvox-lua470314
-Node: emacsvox-m-player470525
-Node: emacsvox-magit494842
-Node: emacsvox-make-mode495120
-Node: emacsvox-man495341
-Node: emacsvox-marginalia495961
-Node: emacsvox-markdown496457
-Node: emacsvox-maths498236
-Node: emacsvox-message503577
-Node: emacsvox-mines504089
-Node: emacsvox-mu4e506675
-Node: emacsvox-multiple-cursors507157
-Node: emacsvox-net-utils507543
-Node: emacsvox-newsticker507782
-Node: emacsvox-nm508123
-Node: emacsvox-notmuch508831
-Node: emacsvox-nov512978
-Node: emacsvox-nxml513516
-Node: emacsvox-ocr514053
-Node: emacsvox-org524239
-Node: emacsvox-org-srs527806
-Node: emacsvox-orgalist530911
-Node: emacsvox-outline531158
-Node: emacsvox-package532658
-Node: emacsvox-perl533530
-Node: emacsvox-pipewire533745
-Node: emacsvox-popup533972
-Node: emacsvox-preamble534181
-Node: emacsvox-proced534525
-Node: emacsvox-project536532
-Node: emacsvox-projectile536743
-Node: emacsvox-pronounce537020
-Node: emacsvox-py542289
-Node: emacsvox-pydoc542524
-Node: emacsvox-python542733
-Node: emacsvox-racket542962
-Node: emacsvox-re-builder543208
-Node: emacsvox-reftex543524
-Node: emacsvox-related543848
-Node: emacsvox-rg544112
-Node: emacsvox-rmail544318
-Node: emacsvox-rpm-spec544987
-Node: emacsvox-rst545224
-Node: emacsvox-ruby545476
-Node: emacsvox-rust-mode545688
-Node: emacsvox-sage545896
-Node: emacsvox-sdcv546975
-Node: emacsvox-ses547470
-Node: emacsvox-setup548997
-Node: emacsvox-sgml-mode549803
-Node: emacsvox-sh-script550026
-Node: emacsvox-slime550256
-Node: emacsvox-smartparens550663
-Node: emacsvox-solitaire551163
-Node: emacsvox-sounds552604
-Node: emacsvox-speak556860
-Node: emacsvox-speedbar592530
-Node: emacsvox-sql593505
-Node: emacsvox-sudoku593890
-Node: emacsvox-supercite599047
-Node: emacsvox-syslog599260
-Node: emacsvox-tab-bar599531
-Node: emacsvox-table599955
-Node: emacsvox-table-ui600641
-Node: emacsvox-tabulate615535
-Node: emacsvox-tabulated-list615840
-Node: emacsvox-tar616892
-Node: emacsvox-tcl617678
-Node: emacsvox-tempo617882
-Node: emacsvox-tetris618250
-Node: emacsvox-texinfo620448
-Node: emacsvox-todo-mode620677
-Node: emacsvox-transient621004
-Node: emacsvox-treesit623854
-Node: emacsvox-typo624336
-Node: emacsvox-url-template624668
-Node: emacsvox-vdiff626979
-Node: emacsvox-vertico628322
-Node: emacsvox-view628618
-Node: emacsvox-vterm629123
-Node: emacsvox-wdired629638
-Node: emacsvox-we629881
-Node: emacsvox-websearch642638
-Node: emacsvox-webspace646710
-Node: emacsvox-which-key649494
-Node: emacsvox-widget650379
-Node: emacsvox-windmove651871
-Node: emacsvox-windows-speech652198
-Node: emacsvox-wizards656388
-Node: emacsvox-woman688642
-Node: emacsvox-xkcd688862
-Node: emacsvox-xref689468
-Node: emacsvox-xslt689759
-Node: emacsvox-yaml691461
-Node: emacsvox-yasnippet691709
-Node: espeak-voices691945
-Node: g-utils692562
-Node: gm-nnir693010
-Node: gmaps693649
-Node: ladspa698994
-Node: light700878
-Node: mac-voices701970
-Node: omaps702373
-Node: omnivox-voices702589
-Node: outloud-voices702899
-Node: pip703495
-Node: plain-voices704724
-Node: soundscape705074
-Node: sox707313
-Node: sox-gen709987
-Node: swiftmac-voices716316
-Node: tetris716554
-Node: tts-speak716699
-Node: voice-defs731387
-Node: voice-setup737036
-Node: xbacklight740183
-Node: URL Templates741364
-Node: EAT Terminal Access746655
-Node: Running Terminal Based Applications763902
-Node: Emacsvox Keyboard Commands772423
-Node: TTS Servers774464
-Node: Emacspeak At Twenty784377
-Node: Turning Twenty786071
-Node: Using UNIX With Speech Output --- 1994786758
-Node: Key Enabler --- Emacs And Lisp Advice788587
-Node: Key Component --- Text To Speech (TTS)789626
-Node: Emacspeak And Software Development792165
-Node: Programming Defensively794767
-Node: Emacspeak And Authoring Documents796022
-Node: Emacspeak And The Early Days Of The Web797592
-Node: Audio Formatting --- Generalizing Aural CSS801028
-Node: Conversational Gestures For The Audio Desktop804083
-Node: Speech-Enabling Interactive Games807425
-Node: Accessing Media Streams809198
-Node: EBooks --- Ubiquitous Access To Books811290
-Node: Leveraging Computational Tools --- From SQL And R To IPython Notebooks813822
-Node: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols815678
-Node: The RESTful Web --- Web Wizards And URL Templates For Faster Access819150
-Node: Mashing It Up --- Leveraging Evolving Web APIs822681
-Node: Conclusion --- Turning Twenty825180
-Node: References826554
-Node: Acknowledgments827483
-Node: Concept Index827638
-Node: Key Index833021
-Node: Function Index872654
-Node: Variable Index1161647
+Node: Copyright1836
+Node: Announce2389
+Node: Contributing3002
+Node: Authoring Guidelines3807
+Node: Credits4325
+Node: Background4686
+Node: Speech-Enabling Applications5431
+Node: Audio Formatting And Aural CSS6928
+Node: Auditory Icons8110
+Node: Summary8810
+Node: Introduction9297
+Node: Installation12356
+Node: Obtaining Emacsvox12855
+Node: Quick Installation13153
+Node: Building And Testing The Speech Server16858
+Node: Basic Usage18060
+Node: Overview19401
+Node: Working21848
+Ref: Working-Footnote-124065
+Ref: Working-Footnote-224158
+Node: Reading24259
+Node: Speech System30967
+Node: Controlling Echo31517
+Node: Speech Output Control32980
+Node: Miscellaneous36396
+Node: Voice-lock39920
+Node: Status Information41469
+Node: Audio Desktop44077
+Node: Desktop Objects46077
+Node: Object Oriented Desktop46904
+Node: Context-Sensitive Interaction47674
+Node: Voice Lock52801
+Node: How It All Works.55080
+Node: What this gives.56120
+Node: Using Online Help56843
+Node: Emacs Packages60840
+Node: Document Authoring62449
+Node: Creating Well-formatted Documents63137
+Node: Search replace and spell check66575
+Node: Structured Editing71771
+Node: Outline Editing73780
+Node: Template-based Authoring77484
+Node: Maintaining Structured Data79108
+Node: Browsing Structure80565
+Node: Web Browsing80995
+Node: Intro81994
+Node: emacs-w384407
+Ref: w3 transcode93574
+Ref: xsl-transform95934
+Node: Add-ons100113
+Ref: emacsvox url template100325
+Ref: rss101333
+Ref: bmk-mgr102794
+Node: Conclusion103446
+Node: Messaging104239
+Node: Editing Code104777
+Node: Development Environment105744
+Node: Desktop Management106290
+Node: Personal Information Management107060
+Node: Desktop Applications107409
+Node: Agent Shell114145
+Node: Emacsvox Keymaps126589
+Node: Emacsvox Keybindings On emacsvox-keymap127230
+Node: Emacsvox Keybindings On emacsvox-tts-submap129998
+Node: Emacsvox Keybindings On emacsvox-hyper-keymap131786
+Node: Emacsvox Keybindings On emacsvox-super-keymap132741
+Node: Emacsvox Keybindings On emacsvox-alt-keymap133597
+Node: Emacsvox Keybindings On emacsvox-multi-keymap134355
+Node: Emacsvox Keybindings On emacsvox-v-keymap134872
+Node: Emacsvox Keybindings On emacsvox-x-keymap135377
+Node: Emacsvox Keybindings On emacsvox-y-keymap136909
+Node: Emacsvox Keybindings On emacsvox-z-keymap137444
+Node: Emacsvox Commands And Options138064
+Node: amixer151328
+Node: dectalk-voices153635
+Node: dom-addons154376
+Node: emacsvox154567
+Node: emacsvox-2048156265
+Node: emacsvox-abc-mode158719
+Node: emacsvox-ace-window159070
+Node: emacsvox-add-log159425
+Node: emacsvox-advice159636
+Node: emacsvox-agent-shell160583
+Node: emacsvox-amark176265
+Node: emacsvox-annotate179811
+Node: emacsvox-arc180079
+Node: emacsvox-auctex181165
+Node: emacsvox-aural182287
+Node: emacsvox-aural-compatibility-voice183664
+Node: emacsvox-aural-compiler185965
+Node: emacsvox-aural-concrete186814
+Node: emacsvox-aural-description187225
+Node: emacsvox-aural-doctor187588
+Node: emacsvox-aural-editor191284
+Node: emacsvox-aural-explanation197660
+Node: emacsvox-aural-feature-fragments201878
+Node: emacsvox-aural-history213342
+Node: emacsvox-aural-home214628
+Node: emacsvox-aural-inspection219457
+Node: emacsvox-aural-overrides219952
+Node: emacsvox-aural-planner224675
+Node: emacsvox-aural-preview225109
+Node: emacsvox-aural-profile-service225614
+Node: emacsvox-aural-profiles226010
+Node: emacsvox-aural-provider-markdown230787
+Node: emacsvox-aural-provider-notmuch231185
+Node: emacsvox-aural-provider-org231638
+Node: emacsvox-aural-provider-org-srs232135
+Node: emacsvox-aural-provider-workflows232534
+Node: emacsvox-aural-providers233107
+Node: emacsvox-aural-recent-feedback233521
+Node: emacsvox-aural-resources238056
+Node: emacsvox-aural-routing-profiles239615
+Node: emacsvox-aural-rules240599
+Node: emacsvox-aural-schemes241130
+Node: emacsvox-aural-semantics241965
+Node: emacsvox-aural-sound-packs245577
+Node: emacsvox-aural-source253431
+Node: emacsvox-aural-spatial253863
+Node: emacsvox-aural-submission256073
+Node: emacsvox-aural-tools257713
+Node: emacsvox-aural-transport260338
+Node: emacsvox-aural-ui261108
+Node: emacsvox-aural-validation267054
+Node: emacsvox-aural-voice-palettes267472
+Node: emacsvox-aural-voice-workbench284079
+Node: emacsvox-avy299082
+Node: emacsvox-bbdb299378
+Node: emacsvox-bibtex299644
+Node: emacsvox-bookmark299856
+Node: emacsvox-bookshare300490
+Node: emacsvox-browse-kill-ring314582
+Node: emacsvox-bs314879
+Node: emacsvox-buff-menu315478
+Node: emacsvox-c316547
+Node: emacsvox-calc317024
+Node: emacsvox-calculator317379
+Node: emacsvox-calendar317601
+Node: emacsvox-calibredb318990
+Node: emacsvox-chess319608
+Node: emacsvox-cider327687
+Node: emacsvox-clojure327896
+Node: emacsvox-cmuscheme328134
+Node: emacsvox-combobulate328355
+Node: emacsvox-comint328674
+Node: emacsvox-company330808
+Node: emacsvox-compile331548
+Node: emacsvox-consult332052
+Node: emacsvox-corfu332444
+Node: emacsvox-cperl332698
+Node: emacsvox-custom332911
+Node: emacsvox-dbus333634
+Node: emacsvox-deadgrep337163
+Node: emacsvox-debugger337380
+Node: emacsvox-denote337674
+Node: emacsvox-desktop338029
+Node: emacsvox-devdocs338522
+Node: emacsvox-dictionary338733
+Node: emacsvox-diff-mode339003
+Node: emacsvox-dired339211
+Node: emacsvox-dumb-jump344069
+Node: emacsvox-eat344351
+Node: emacsvox-eat-core344928
+Node: emacsvox-eat-input347166
+Node: emacsvox-eat-review347498
+Node: emacsvox-ebuku354464
+Node: emacsvox-ediff354692
+Node: emacsvox-eglot355824
+Node: emacsvox-ein356025
+Node: emacsvox-elfeed356549
+Node: emacsvox-elisp-refs357769
+Node: emacsvox-ellama358007
+Node: emacsvox-elpher358286
+Node: emacsvox-elpy358546
+Node: emacsvox-embark358785
+Node: emacsvox-emms359173
+Node: emacsvox-empv359849
+Node: emacsvox-enriched367694
+Node: emacsvox-entertain368235
+Node: emacsvox-enwc368854
+Node: emacsvox-epa369089
+Node: emacsvox-epub369359
+Node: emacsvox-erc383441
+Node: emacsvox-eshell386132
+Node: emacsvox-ess386456
+Node: emacsvox-etable386686
+Node: emacsvox-eterm387159
+Node: emacsvox-eudc398535
+Node: emacsvox-evil399080
+Node: emacsvox-eww399533
+Node: emacsvox-extras437632
+Node: emacsvox-exwm442493
+Node: emacsvox-feeds443013
+Node: emacsvox-ffap446036
+Node: emacsvox-ffip446245
+Node: emacsvox-filtertext446449
+Node: emacsvox-flycheck448190
+Node: emacsvox-flymake448413
+Node: emacsvox-flyspell448621
+Node: emacsvox-folding449907
+Node: emacsvox-forge450308
+Node: emacsvox-forms450582
+Node: emacsvox-geiser452040
+Node: emacsvox-gnuplot452458
+Node: emacsvox-gnus452825
+Node: emacsvox-go-mode454630
+Node: emacsvox-gomoku454850
+Node: emacsvox-google457072
+Node: emacsvox-gptel462031
+Node: emacsvox-gridtext462730
+Node: emacsvox-gud464346
+Node: emacsvox-haskell464583
+Node: emacsvox-helm464795
+Node: emacsvox-helpful465209
+Node: emacsvox-hide465535
+Node: emacsvox-hide-lines466795
+Node: emacsvox-hideshow467027
+Node: emacsvox-hydra467241
+Node: emacsvox-ibuffer467730
+Node: emacsvox-ido468226
+Node: emacsvox-iedit469051
+Node: emacsvox-info469287
+Node: emacsvox-ispell470773
+Node: emacsvox-ivy472016
+Node: emacsvox-journalctl472314
+Node: emacsvox-js2472595
+Node: emacsvox-keymap472911
+Node: emacsvox-kmacro478765
+Node: emacsvox-librivox479027
+Node: emacsvox-lispy481605
+Node: emacsvox-lua482544
+Node: emacsvox-m-player482755
+Node: emacsvox-magit507072
+Node: emacsvox-make-mode507350
+Node: emacsvox-man507571
+Node: emacsvox-marginalia508191
+Node: emacsvox-markdown508687
+Node: emacsvox-maths510466
+Node: emacsvox-message515807
+Node: emacsvox-mines516319
+Node: emacsvox-mu4e518905
+Node: emacsvox-multiple-cursors519387
+Node: emacsvox-net-utils519773
+Node: emacsvox-newsticker520012
+Node: emacsvox-nm520353
+Node: emacsvox-notmuch521061
+Node: emacsvox-nov525208
+Node: emacsvox-nxml525746
+Node: emacsvox-ocr526283
+Node: emacsvox-org536469
+Node: emacsvox-org-srs540036
+Node: emacsvox-orgalist543141
+Node: emacsvox-outline543388
+Node: emacsvox-package544888
+Node: emacsvox-perl545760
+Node: emacsvox-pipewire545975
+Node: emacsvox-popup546202
+Node: emacsvox-preamble546411
+Node: emacsvox-proced546755
+Node: emacsvox-project548762
+Node: emacsvox-projectile548973
+Node: emacsvox-pronounce549250
+Node: emacsvox-py554519
+Node: emacsvox-pydoc554754
+Node: emacsvox-python554963
+Node: emacsvox-racket555192
+Node: emacsvox-re-builder555438
+Node: emacsvox-reftex555754
+Node: emacsvox-related556078
+Node: emacsvox-rg556342
+Node: emacsvox-rmail556548
+Node: emacsvox-rpm-spec557217
+Node: emacsvox-rst557454
+Node: emacsvox-ruby557706
+Node: emacsvox-rust-mode557918
+Node: emacsvox-sage558126
+Node: emacsvox-sdcv559205
+Node: emacsvox-ses559700
+Node: emacsvox-setup561227
+Node: emacsvox-sgml-mode562033
+Node: emacsvox-sh-script562256
+Node: emacsvox-slime562486
+Node: emacsvox-smartparens562893
+Node: emacsvox-solitaire563393
+Node: emacsvox-sounds564834
+Node: emacsvox-speak569090
+Node: emacsvox-speedbar604909
+Node: emacsvox-sql605884
+Node: emacsvox-sudoku606269
+Node: emacsvox-supercite611426
+Node: emacsvox-syslog611639
+Node: emacsvox-tab-bar611910
+Node: emacsvox-table612334
+Node: emacsvox-table-ui612596
+Node: emacsvox-tabulate627490
+Node: emacsvox-tabulated-list627795
+Node: emacsvox-tar628847
+Node: emacsvox-tcl629633
+Node: emacsvox-tempo629837
+Node: emacsvox-tetris630205
+Node: emacsvox-texinfo632403
+Node: emacsvox-todo-mode632632
+Node: emacsvox-transient632959
+Node: emacsvox-treesit635809
+Node: emacsvox-typo636291
+Node: emacsvox-url-template636623
+Node: emacsvox-vdiff638934
+Node: emacsvox-vertico640277
+Node: emacsvox-view640573
+Node: emacsvox-vterm641078
+Node: emacsvox-wdired641593
+Node: emacsvox-we641836
+Node: emacsvox-websearch654593
+Node: emacsvox-webspace658665
+Node: emacsvox-which-key661449
+Node: emacsvox-widget662334
+Node: emacsvox-windmove663826
+Node: emacsvox-windows-speech664153
+Node: emacsvox-wizards668343
+Node: emacsvox-woman700597
+Node: emacsvox-xkcd700817
+Node: emacsvox-xref701423
+Node: emacsvox-xslt701714
+Node: emacsvox-yaml703416
+Node: emacsvox-yasnippet703664
+Node: espeak-voices703900
+Node: g-utils704517
+Node: gm-nnir704965
+Node: gmaps705604
+Node: ladspa710949
+Node: light712833
+Node: mac-voices713925
+Node: omaps714328
+Node: omnivox-voices714544
+Node: outloud-voices714854
+Node: pip715450
+Node: plain-voices716679
+Node: soundscape717029
+Node: sox719268
+Node: sox-gen721942
+Node: swiftmac-voices728271
+Node: tetris728509
+Node: tts-speak728654
+Node: voice-defs743342
+Node: voice-setup748991
+Node: xbacklight752138
+Node: URL Templates753319
+Node: EAT Terminal Access758610
+Node: Running Terminal Based Applications775857
+Node: Emacsvox Keyboard Commands784378
+Node: TTS Servers786419
+Node: Emacspeak At Twenty796332
+Node: Turning Twenty798026
+Node: Using UNIX With Speech Output --- 1994798713
+Node: Key Enabler --- Emacs And Lisp Advice800542
+Node: Key Component --- Text To Speech (TTS)801581
+Node: Emacspeak And Software Development804120
+Node: Programming Defensively806722
+Node: Emacspeak And Authoring Documents807977
+Node: Emacspeak And The Early Days Of The Web809547
+Node: Audio Formatting --- Generalizing Aural CSS812983
+Node: Conversational Gestures For The Audio Desktop816038
+Node: Speech-Enabling Interactive Games819380
+Node: Accessing Media Streams821153
+Node: EBooks --- Ubiquitous Access To Books823245
+Node: Leveraging Computational Tools --- From SQL And R To IPython Notebooks825777
+Node: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols827633
+Node: The RESTful Web --- Web Wizards And URL Templates For Faster Access831105
+Node: Mashing It Up --- Leveraging Evolving Web APIs834636
+Node: Conclusion --- Turning Twenty837135
+Node: References838509
+Node: Acknowledgments839438
+Node: Concept Index839593
+Node: Key Index845122
+Node: Function Index884755
+Node: Variable Index1172311
 
 End Tag Table
 

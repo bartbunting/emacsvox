@@ -317,6 +317,12 @@
     (file-name-directory (or load-file-name buffer-file-name))))
   "Directory containing deterministic Agent Shell traffic fixtures.")
 
+(defconst emacsvox-agent-shell-test--repository-directory
+  (file-name-as-directory
+   (expand-file-name
+    "../" (file-name-directory (or load-file-name buffer-file-name))))
+  "Repository root used by Agent Shell documentation checks.")
+
 (defmacro emacsvox-agent-shell-test--capture-events (&rest body)
   "Run BODY and return ordered speech, stop, icon, and message events."
   (declare (indent 0) (debug t))
@@ -536,6 +542,28 @@
     (should (equal (substring source 0 cut) (substring spoken 0 cut)))
     (should (= characters (- (length source) cut)))
     (should (= lines (1+ (cl-count ?\n source :start cut))))))
+
+(defun emacsvox-agent-shell-test--public-key-bindings (keymap)
+  "Return public Emacsvox Agent Shell bindings reachable from KEYMAP."
+  (cl-labels
+      ((walk
+        (map prefix)
+        (let (bindings)
+          (map-keymap
+           (lambda (event binding)
+             (let ((key (vconcat prefix (vector event))))
+               (cond
+                ((keymapp binding)
+                 (setq bindings (nconc bindings (walk binding key))))
+                ((and
+                  (symbolp binding)
+                  (string-prefix-p
+                   "emacsvox-agent-shell-" (symbol-name binding))
+                  (not (string-match-p "--" (symbol-name binding))))
+                 (push (cons (key-description key) binding) bindings)))))
+           map)
+          bindings)))
+    (walk keymap [])))
 
 (defun emacsvox-agent-shell-test--speak-pending (entries)
   "Speak pending ENTRIES and return captured events.
@@ -945,6 +973,59 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (original &rest arguments)
   "Call ORIGINAL with ARGUMENTS as test Agent Shell advice."
   (apply original arguments))
+
+(ert-deftest emacsvox-agent-shell-task-guide-covers-live-public-keymaps ()
+  "The task guide should name every public integration key and command."
+  (let ((guide
+         (with-temp-buffer
+           (insert-file-contents
+            (expand-file-name
+             "info/agent-shell.texi"
+             emacsvox-agent-shell-test--repository-directory))
+           (buffer-string))))
+    (dolist
+        (entry
+         (append
+          (emacsvox-agent-shell-test--public-key-bindings
+           emacsvox-agent-shell--speech-control-map)
+          (emacsvox-agent-shell-test--public-key-bindings
+           emacsvox-agent-shell--table-navigation-map)))
+      (should
+       (or
+        (string-match-p
+         (regexp-quote (format "@kbd{%s}" (car entry))) guide)
+        (string-match-p
+         (regexp-quote (format "@item %s\n" (car entry))) guide)))
+      (should
+       (string-match-p
+        (regexp-quote (format "@code{%s}" (cdr entry))) guide)))
+    (dolist
+        (option
+         '(emacsvox-agent-shell-foreground-speech-level
+           emacsvox-agent-shell-background-speech-level
+           emacsvox-agent-shell-automatic-content-max-characters
+           emacsvox-agent-shell-speak-permissions
+           emacsvox-agent-shell-speak-thought-process
+           emacsvox-agent-shell-speak-tool-calls
+           emacsvox-agent-shell-tool-output-verbosity))
+      (should
+       (string-match-p
+        (regexp-quote (format "@code{%s}" option)) guide)))
+    (dolist (topic '("urgent permissions" "notify" "quiet" "failure"))
+      (should (string-match-p (regexp-quote topic) (downcase guide))))))
+
+(ert-deftest emacsvox-agent-shell-generated-reference-excludes-internals ()
+  "The exhaustive appendix should list public commands, not -- helpers."
+  (with-temp-buffer
+    (insert-file-contents
+     (expand-file-name
+      "info/docs.texi" emacsvox-agent-shell-test--repository-directory))
+    (should-not
+     (re-search-forward
+      "^@deffn {Command} [^[:space:]\n]*--" nil t))
+    (should
+     (re-search-forward
+      "^@deffn {Command} emacsvox-agent-shell-speak-last-response" nil t))))
 
 (ert-deftest emacsvox-agent-shell-advice-name-preserves-other-modules ()
   "Agent Shell advice should coexist with advice from another module."

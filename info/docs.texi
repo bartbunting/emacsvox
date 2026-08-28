@@ -5,7 +5,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1462 commands and 183 options.
+This chapter documents a total of 1456 commands and 184 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -747,41 +747,6 @@ Emacs 20 than we do for Emacs 21 and Emacs 22.
 As of August 2007, this file is being purged of advice forms
 not needed in Emacs 22.
 
-@subsection Emacsvox-Advice Commands
-
-@subsubsection emacsvox--advice-global-set-key-before
-@deffn {Command} emacsvox--advice-global-set-key-before  (&rest _)
-@findex emacsvox--advice-global-set-key-before
-
-@format
-Provide spoken prompts.
-
-(fn &rest _)
-@end format
-@end deffn
-
-@subsubsection emacsvox--advice-local-set-key-before
-@deffn {Command} emacsvox--advice-local-set-key-before  (&rest _)
-@findex emacsvox--advice-local-set-key-before
-
-@format
-Prompt using speech.
-
-(fn &rest _)
-@end format
-@end deffn
-
-@subsubsection emacsvox--advice-modify-syntax-entry-before
-@deffn {Command} emacsvox--advice-modify-syntax-entry-before  (&rest _)
-@findex emacsvox--advice-modify-syntax-entry-before
-
-@format
-Provide spoken prompts.
-
-(fn &rest _)
-@end format
-@end deffn
-
 @subsection emacsvox-advice Options
 
 @defvar {User Option} emacsvox-speak-messages-filter
@@ -830,20 +795,13 @@ This module speech-enables agent-shell, providing:
 - Viewport mode integration and reload-safe buffer teardown
 
 Customize `emacsvox-agent-shell' for speech levels, table feedback, and
-lifecycle announcements.  The interactive commands document their keys.
+lifecycle announcements.  See the Agent Shell chapter in the Emacsvox
+manual for setup, keys, privacy boundaries, inspection, and recovery; the
+generated emacsvox-agent-shell section is the exhaustive command and option
+reference.
 See https://github.com/xenodium/agent-shell for agent-shell itself.
 
 @subsection Emacsvox-Agent-Shell Commands
-
-@subsubsection emacsvox-agent-shell--accept-block-type-default
-@deffn {Command} emacsvox-agent-shell--accept-block-type-default
-@findex emacsvox-agent-shell--accept-block-type-default
-
-@format
-Accept the default block type when the minibuffer is empty.
-Otherwise insert the invoking character normally.
-@end format
-@end deffn
 
 @subsubsection emacsvox-agent-shell-copy-source-block
 @deffn {Command} emacsvox-agent-shell-copy-source-block
@@ -974,7 +932,7 @@ Speak the full semantic header for the current agent-shell session.
 @findex emacsvox-agent-shell-speak-last-response
 
 @format
-Speak the latest agent answer in full without moving point.
+Speak the latest completed agent answer in full without moving point.
 @end format
 @end deffn
 
@@ -983,7 +941,7 @@ Speak the latest agent answer in full without moving point.
 @findex emacsvox-agent-shell-speak-response-overview
 
 @format
-Speak a concise structural overview of the latest agent answer.
+Speak a concise overview of the latest completed agent answer.
 @end format
 @end deffn
 
@@ -1147,6 +1105,28 @@ Speak the logical Markdown table row at point.
 @end deffn
 
 @subsection emacsvox-agent-shell Options
+
+@defvar {User Option} emacsvox-agent-shell-automatic-content-max-characters
+@verbatim
+Maximum characters submitted for automatic Agent Shell speech.
+
+Long responses, tool output, errors, permissions, and other unsolicited
+content are shortened before Aural compiles them.  The spoken preview includes
+exact omitted character and line counts plus an appropriate inspection hint.
+This limit does not apply to explicit inspection commands such as
+‘emacsvox-agent-shell-speak-last-response’.  Set this to nil, or to a
+non-positive value, to allow complete automatic response and output bodies;
+provider-controlled permission fields and tool labels remain concise.
+@end verbatim
+
+Default Value:
+@verbatim
+
+2000
+
+@end verbatim
+
+@end defvar
 
 @defvar {User Option} emacsvox-agent-shell-background-speech-level
 @verbatim
@@ -1729,15 +1709,6 @@ The mode’s hook is called both when the mode is enabled and when it is
 disabled.
 
 (fn &optional ARG)
-@end format
-@end deffn
-
-@subsubsection voice-lock-mode--turn-on
-@deffn {Command} voice-lock-mode--turn-on
-@findex voice-lock-mode--turn-on
-
-@format
-Turn on the Voice Lock compatibility adapter.
 @end format
 @end deffn
 
@@ -3414,6 +3385,7 @@ integration is loaded.
 One explicit runtime selection boundary for sound packs and voice
 palettes.  This preserves precedence while exposing which configuration
 layer supplied the effective provider.
+
 @node emacsvox-aural-recent-feedback
 @section emacsvox-aural-recent-feedback
 
@@ -12257,8 +12229,8 @@ speech-enable hideshow.el
 @node emacsvox-hydra
 @section emacsvox-hydra
 
-Speech-enable package hydra:
-For  uses of hydra see module @xref{emacsvox-muggles}.
+Speech-enable package hydra.  Convenience hydras live in
+`emacsvox-muggles.el'.
 
 @subsection Emacsvox-Hydra Commands
 
@@ -16261,18 +16233,6 @@ from becoming dependent on the speech server modules
 
 @subsection Emacsvox-Speak Commands
 
-@subsubsection emacsvox--persist-variable
-@deffn {Command} emacsvox--persist-variable  (var file)
-@findex emacsvox--persist-variable
-
-@format
-Persist variable  ‘var’ to file ‘FILE’.
-Arranges for ‘VAR’ to be restored when ‘file’ is loaded.
-
-(fn VAR FILE)
-@end format
-@end deffn
-
 @subsubsection emacsvox-beginning-or-end
 @deffn {Command} emacsvox-beginning-or-end
 @findex emacsvox-beginning-or-end
@@ -17006,6 +16966,7 @@ any other key to speak entire line.
 @item C-e |
 @kindex C-e |
 @end table
+
 @findex emacsvox-speak-line-set-column-filter
 
 @format
@@ -23863,7 +23824,6 @@ Switch to previous legacy language.
 Signal a user error when logical voices own language routing.
 @end format
 @end deffn
-
 @subsubsection tts-set-punctuations
 @deffn {Command} tts-set-punctuations  (mode &optional prefix)
 @table @kbd

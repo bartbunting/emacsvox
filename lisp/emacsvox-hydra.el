@@ -36,8 +36,8 @@
 
 
 ;;; Commentary:
-;; Speech-enable package hydra:
-;; For  uses of hydra see module @xref{emacsvox-muggles}.
+;; Speech-enable package hydra.  Convenience hydras live in
+;; `emacsvox-muggles.el'.
 ;;; Code:
 
 ;;   Required modules:

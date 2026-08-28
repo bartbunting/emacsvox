@@ -54,7 +54,10 @@
 ;; - Viewport mode integration and reload-safe buffer teardown
 ;;
 ;; Customize `emacsvox-agent-shell' for speech levels, table feedback, and
-;; lifecycle announcements.  The interactive commands document their keys.
+;; lifecycle announcements.  See the Agent Shell chapter in the Emacsvox
+;; manual for setup, keys, privacy boundaries, inspection, and recovery; the
+;; generated emacsvox-agent-shell section is the exhaustive command and option
+;; reference.
 ;; See https://github.com/xenodium/agent-shell for agent-shell itself.
 
 ;;; Code:

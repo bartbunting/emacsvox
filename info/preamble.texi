@@ -24,6 +24,7 @@ The manual is divided into the following chapters:
 * Voice Lock: Voice Lock.
 * Using Online Help: Using Online Help.
 * Emacs Packages:  Emacs Packages.
+* Agent Shell: Agent Shell.
 * Emacsvox Keymaps: Emacsvox Keymaps.
 * Emacsvox Commands And Options:  Emacsvox Commands And Options.
 * EAT Terminal Access: EAT Terminal Access.
