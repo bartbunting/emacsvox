@@ -17,9 +17,9 @@ manual.  The
 [[https://bartbunting.github.io/emacsvox/Installation.html][Getting Started manual]]
 owns the complete explanations and recovery procedure; its checked-in source
 is [[file:info/install.texi][info/install.texi]].  Texinfo remains the canonical
-manual source.  GitHub Pages rebuilds it as browser-readable HTML after each
-successful update to =master=; the checked-in Info files provide the same
-manual inside Emacs.
+manual source.  GitHub Pages serves browser-readable HTML generated from a
+committed =master= revision and committed separately on =gh-pages=; the
+checked-in Info files provide the same manual inside Emacs.
 
 1. Install Git, Make, GNU Texinfo (which provides =makeinfo=), and
    [[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].

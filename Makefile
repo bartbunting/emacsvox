@@ -52,7 +52,7 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: compiled-aural-test build-aural-test trace trace-test
 .PHONY: reference-test advice-audit name-audit tts-audit
 .PHONY: check-emacs bytecode bytecode-check bytecode-rebuild generated-reference
-.PHONY: docs-generate docs-check docs-check-external docs-publish
+.PHONY: docs-generate docs-check docs-check-external docs-publish docs-publish-pages
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
 .PHONY: windows-omnivox-dev
 .PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers verify-windows-omnivox-runtime
@@ -138,6 +138,16 @@ docs-publish: docs-check
 	EMACSVOX_DOCS_PUBLISH_DIR="$(DOCS_PUBLISH_DIR)" \
 	$(EMACS) -Q --batch -L utils -l utils/emacsvox-docs-check.el \
 		-f emacsvox-docs-publish-batch
+
+docs-publish-pages: docs-check
+	@if test -z "$(DOCS_PUBLISH_DIR)"; then \
+		echo "Set DOCS_PUBLISH_DIR to an existing gh-pages worktree." >&2; \
+		exit 2; \
+	fi
+	EMACSVOX_MAKEINFO="$(MAKEINFO)" \
+	EMACSVOX_DOCS_PUBLISH_DIR="$(DOCS_PUBLISH_DIR)" \
+	$(EMACS) -Q --batch -L utils -l utils/emacsvox-docs-check.el \
+		-f emacsvox-docs-publish-pages-batch
 
 compiled-aural-test:
 	$(EMACS) -Q --batch -l test/run-compiled-aural-tests.el

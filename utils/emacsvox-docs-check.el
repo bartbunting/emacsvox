@@ -35,6 +35,10 @@
   ".emacsvox-generated-html"
   "Manifest of HTML files managed by `emacsvox-docs-publish'.")
 
+(defconst emacsvox-docs-check--pages-metadata
+  '(".nojekyll" "emacsvox-source.txt")
+  "Metadata files managed by `emacsvox-docs-publish-pages'.")
+
 (defun emacsvox-docs-check--program (environment fallback)
   "Return the program named by ENVIRONMENT, or FALLBACK when it is unset."
   (let ((value (getenv environment)))
@@ -83,6 +87,33 @@ ACCEPTED-DIAGNOSTICS may name one exact successful output pattern."
               t
             (emacsvox-docs-check--validate-process-result
              label status diagnostics)))))))
+
+(defun emacsvox-docs-check--capture-process
+    (label program directory &rest arguments)
+  "Run PROGRAM with ARGUMENTS in DIRECTORY and return output for LABEL."
+  (let ((default-directory (file-name-as-directory directory))
+        (process-environment
+         (append
+          '("LC_ALL=C" "TZ=UTC")
+          (cl-remove-if
+           (lambda (entry)
+             (or (string-prefix-p "LC_ALL=" entry)
+                 (string-prefix-p "TZ=" entry)))
+           process-environment))))
+    (with-temp-buffer
+      (let ((status
+             (condition-case condition
+                 (apply #'process-file
+                        program nil (list (current-buffer) t) nil arguments)
+               (file-missing
+                (error "%s could not run %s: %s"
+                       label program (error-message-string condition))))))
+        (let ((output (string-trim (buffer-string))))
+          (unless (and (integerp status) (zerop status))
+            (error "%s failed (exit %s)%s"
+                   label status
+                   (if (string-empty-p output) "" (format ":\n%s" output))))
+          output)))))
 
 (defun emacsvox-docs-check--file-hash (file)
   "Return the SHA-256 digest of FILE's literal contents."
@@ -354,6 +385,58 @@ ROOT defaults to `emacsvox-docs-check--root'."
       (dolist (name (sort (copy-sequence names) #'string-lessp))
         (insert name "\n")))))
 
+(defun emacsvox-docs-check--validate-pages-metadata (destination)
+  "Refuse symbolic-link Pages metadata below DESTINATION."
+  (dolist (name emacsvox-docs-check--pages-metadata)
+    (let ((target (expand-file-name name destination)))
+      (when (file-symlink-p target)
+        (error "Refusing symlinked Pages metadata file: %s" target)))))
+
+(defun emacsvox-docs-check--write-pages-metadata
+    (destination name contents)
+  "Atomically write CONTENTS to Pages metadata NAME below DESTINATION."
+  (let ((target (expand-file-name name destination))
+        (temporary
+         (make-temp-file (expand-file-name ".emacsvox-pages-" destination))))
+    (unwind-protect
+        (progn
+          (when (file-symlink-p target)
+            (error "Refusing symlinked Pages metadata file: %s" target))
+          (let ((coding-system-for-write 'utf-8-unix))
+            (with-temp-file temporary
+              (insert contents)))
+          (rename-file temporary target t)
+          (setq temporary nil))
+      (when (and temporary (file-exists-p temporary))
+        (delete-file temporary)))))
+
+(defun emacsvox-docs-check--source-revision (root)
+  "Return ROOT's committed revision, refusing any uncommitted files."
+  (let ((status
+         (emacsvox-docs-check--capture-process
+          "Source status" "git" root
+          "status" "--porcelain=v1" "--untracked-files=all")))
+    (unless (string-empty-p status)
+      (error "Refusing Pages publication from an uncommitted source tree:\n%s"
+             status)))
+  (let ((revision
+         (emacsvox-docs-check--capture-process
+          "Source revision" "git" root
+          "rev-parse" "--verify" "HEAD^{commit}")))
+    (unless (string-match-p "\\`[0-9a-f]\\{40,64\\}\\'" revision)
+      (error "Git returned an invalid source revision: %s" revision))
+    revision))
+
+(defun emacsvox-docs-check--makeinfo-version (root makeinfo)
+  "Return MAKEINFO's first version line when run below ROOT."
+  (let* ((output
+          (emacsvox-docs-check--capture-process
+           "Texinfo version" makeinfo root "--version"))
+         (line (car (split-string output "\n" t))))
+    (unless line
+      (error "Texinfo version command returned no output"))
+    line))
+
 (defun emacsvox-docs-publish
     (destination &optional root makeinfo)
   "Render current HTML into explicit DESTINATION without committing or pushing."
@@ -393,6 +476,37 @@ ROOT defaults to `emacsvox-docs-check--root'."
       (when (file-directory-p temporary-directory)
         (delete-directory temporary-directory t)))))
 
+(defun emacsvox-docs-publish-pages
+    (destination &optional root makeinfo)
+  "Publish committed documentation and Pages metadata to DESTINATION.
+ROOT must be a clean Git worktree.  This function never commits or pushes."
+  (let* ((root
+          (file-name-as-directory
+           (expand-file-name (or root emacsvox-docs-check--root))))
+         (makeinfo
+          (or makeinfo
+              (emacsvox-docs-check--program "EMACSVOX_MAKEINFO" "makeinfo")))
+         (destination
+          (emacsvox-docs-check--validated-publish-directory root destination)))
+    (emacsvox-docs-check--validate-pages-metadata destination)
+    (let* ((revision (emacsvox-docs-check--source-revision root))
+           (texinfo-version
+            (emacsvox-docs-check--makeinfo-version root makeinfo))
+           (result (emacsvox-docs-publish destination root makeinfo))
+           (provenance
+            (format
+             (concat
+              "Emacsvox browser manual provenance\n"
+              "Source commit: %s\n"
+              "Emacs: %s\n"
+              "Texinfo: %s\n")
+             revision emacs-version texinfo-version)))
+      (emacsvox-docs-check--write-pages-metadata destination ".nojekyll" "")
+      (emacsvox-docs-check--write-pages-metadata
+       destination "emacsvox-source.txt" provenance)
+      (append result
+              (list :source revision :texinfo-version texinfo-version)))))
+
 (defun emacsvox-docs-publish-batch ()
   "Publish HTML to `EMACSVOX_DOCS_PUBLISH_DIR' as a batch command."
   (condition-case condition
@@ -405,6 +519,29 @@ ROOT defaults to `emacsvox-docs-check--root'."
     (error
      (princ
       (format "Documentation publication failed: %s\n"
+              (error-message-string condition))
+      'external-debugging-output)
+     (let ((kill-emacs-hook nil)
+           (kill-emacs-query-functions nil))
+       (kill-emacs 1)))))
+
+(defun emacsvox-docs-publish-pages-batch ()
+  "Publish committed Pages output to `EMACSVOX_DOCS_PUBLISH_DIR'."
+  (condition-case condition
+      (let* ((destination (getenv "EMACSVOX_DOCS_PUBLISH_DIR"))
+             (result (emacsvox-docs-publish-pages destination)))
+        (princ
+         (format
+          (concat
+           "Published %d HTML files from %s to %s; "
+           "removed %d stale HTML files.\n")
+          (plist-get result :written)
+          (plist-get result :source)
+          destination
+          (plist-get result :removed))))
+    (error
+     (princ
+      (format "Pages publication failed: %s\n"
               (error-message-string condition))
       'external-debugging-output)
      (let ((kill-emacs-hook nil)

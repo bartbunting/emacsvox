@@ -120,9 +120,44 @@ File: emacsvox.info,  Node: Authoring Guidelines,  Next: Credits,  Prev: Contrib
 Keep current operating instructions separate from historical accounts.
 State which back end or platform a procedure applies to, avoid
 duplicating detailed protocol contracts across repositories, and link to
-the owning document.  Validate Texinfo changes with ‘makeinfo’;
-regenerate and commit the installed ‘emacsvox.info’ files when the
-manual changes.
+the owning document.  Run ‘make docs-generate’ after editing Texinfo,
+then run ‘make docs-check’.  Commit the regenerated ‘emacsvox.info’
+files with their source changes.
+
+2.2.1 Publishing The Browser Manual
+-----------------------------------
+
+Texinfo on ‘master’ is the canonical manual source.  GitHub Pages serves
+the generated static files committed on the separate ‘gh-pages’ branch;
+never edit those HTML files as source.  Publishing is deliberately
+explicit:
+
+  1. Finish the manual change, run the generation and validation targets
+     above, and commit the complete source-side change on ‘master’.
+
+  2. Check out that exact commit in a clean source worktree.  Build its
+     local, ignored byte-code with the Emacs selected by ‘local.mk’ or
+     an ‘EMACS=’ override.  Use a separate sibling worktree checked out
+     on ‘gh-pages’ as the publication directory.
+
+  3. From the clean source worktree, run:
+
+          make docs-publish-pages DOCS_PUBLISH_DIR=/path/to/emacsvox-pages
+
+     The target validates the manual, replaces only its managed HTML
+     files, writes ‘.nojekyll’, and records the source commit, Emacs
+     version, and Texinfo version in ‘emacsvox-source.txt’.  It refuses
+     an uncommitted source tree.
+
+  4. Inspect the ‘gh-pages’ worktree, including the provenance file and
+     the main browser entry points.  Commit the generated site with the
+     source commit in the commit message, then push ‘master’ and
+     ‘gh-pages’.  The GitHub Pages source setting must name the root of
+     ‘gh-pages’.
+
+   No documentation target creates a commit or pushes a branch.  This
+keeps the published bytes reviewable and makes publication a distinct
+maintainer action.
 
 
 File: emacsvox.info,  Node: Credits,  Prev: Authoring Guidelines,  Up: Announce

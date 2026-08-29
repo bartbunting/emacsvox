@@ -191,5 +191,76 @@
               (buffer-string))
             "protected\n")))))))
 
+(ert-deftest emacsvox-docs-pages-publish-rejects-dirty-source ()
+  "Pages publication must identify and reject uncommitted source files."
+  (cl-letf
+      (((symbol-function 'emacsvox-docs-check--capture-process)
+        (lambda (_label _program _directory &rest arguments)
+          (if (member "status" arguments)
+              " M Readme.org"
+            (make-string 40 ?a)))))
+    (let ((condition
+           (should-error
+            (emacsvox-docs-check--source-revision default-directory))))
+      (should
+       (string-match-p
+        "Refusing Pages publication from an uncommitted source tree"
+        (error-message-string condition))))))
+
+(ert-deftest emacsvox-docs-pages-publish-writes-provenance ()
+  "Pages publication should identify the exact source and local toolchain."
+  (emacsvox-docs-check-tests--with-directory (root)
+    (emacsvox-docs-check-tests--with-directory (destination)
+      (let ((revision (make-string 40 ?a)))
+        (cl-letf
+            (((symbol-function 'emacsvox-docs-check--source-revision)
+              (lambda (_root) revision))
+             ((symbol-function 'emacsvox-docs-check--makeinfo-version)
+              (lambda (_root _makeinfo) "texi2any (GNU texinfo) 7.2"))
+             ((symbol-function 'emacsvox-docs-publish)
+              (lambda (_destination _root _makeinfo)
+                '(:written 387 :removed 0))))
+          (let ((result
+                 (emacsvox-docs-publish-pages
+                  destination root "makeinfo")))
+            (should (= (plist-get result :written) 387))
+            (should (equal (plist-get result :source) revision))))
+        (let ((marker (expand-file-name ".nojekyll" destination))
+              (provenance
+               (expand-file-name "emacsvox-source.txt" destination)))
+          (should (file-exists-p marker))
+          (should (zerop (file-attribute-size (file-attributes marker))))
+          (with-temp-buffer
+            (insert-file-contents provenance)
+            (should (search-forward revision nil t))
+            (should (search-forward emacs-version nil t))
+            (should
+             (search-forward "texi2any (GNU texinfo) 7.2" nil t))))))))
+
+(ert-deftest emacsvox-docs-pages-publish-rejects-symlinked-metadata ()
+  "Pages publication must not replace metadata through a symbolic link."
+  (emacsvox-docs-check-tests--with-directory (root)
+    (emacsvox-docs-check-tests--with-directory (destination)
+      (emacsvox-docs-check-tests--with-directory (outside)
+        (let ((protected (expand-file-name "protected" outside)))
+          (with-temp-file protected
+            (insert "protected\n"))
+          (make-symbolic-link
+           protected (expand-file-name ".nojekyll" destination))
+          (let ((condition
+                 (should-error
+                  (emacsvox-docs-publish-pages
+                   destination root "makeinfo"))))
+            (should
+             (string-match-p
+              "Refusing symlinked Pages metadata file"
+              (error-message-string condition))))
+          (should
+           (equal
+            (with-temp-buffer
+              (insert-file-contents protected)
+              (buffer-string))
+            "protected\n")))))))
+
 (provide 'emacsvox-docs-check-tests)
 ;;; emacsvox-docs-check-tests.el ends here

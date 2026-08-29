@@ -18,10 +18,13 @@
 - Local `.elc` files are build and preflight inputs only. They are ignored and
   never distributed; releases contain the `.el` sources.
 - Use `make docs-generate` to update tracked Texinfo and Info output, then run
-  the non-mutating `make docs-check`. Publish HTML only with an explicit
-  `make docs-publish DOCS_PUBLISH_DIR=/path/to/manual`; documentation targets
-  never commit or push. Run `make docs-check-external` only when network link
-  checking is intended.
+  the non-mutating `make docs-check`. Use `make docs-publish` only for an
+  explicit preview directory. Publish the public manual from a clean,
+  committed source worktree with `make docs-publish-pages
+  DOCS_PUBLISH_DIR=/path/to/gh-pages-worktree`; it records source and toolchain
+  provenance. Documentation targets never commit or push: inspect and commit
+  the `gh-pages` worktree separately. Run `make docs-check-external` only when
+  network link checking is intended.
 - `make windows-omnivox` is the reproducible clean-release path. For local
   testing from dirty Emacsvox or Omnivox worktrees, use
   `make windows-omnivox-dev`; it records both tracked-diff hashes in provenance.
