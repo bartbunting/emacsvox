@@ -1523,14 +1523,9 @@ the selected message changes; otherwise speak the visible window."
   (let ((at-thread-end
          (and (eq major-mode 'notmuch-show-mode) (eobp))))
     (if at-thread-end
-        (let ((will-archive notmuch-archive-tags)
-              (result (apply original arguments)))
-          (when (ems-interactive-p 'notmuch-show-advance-and-archive)
-            (if will-archive
-                (emacsvox-notmuch--show-archive-feedback
-                 'thread nil t)
-              (emacsvox-notmuch--speak-current-item)))
-          result)
+        (emacsvox-notmuch--archive-state-around
+         'notmuch-show-advance-and-archive
+         'thread original arguments t nil)
       (emacsvox-notmuch--show-reading-around
        'notmuch-show-advance-and-archive original arguments))))
 
@@ -1721,8 +1716,10 @@ search result."
        :id (plist-get message :id)
        :tags (copy-sequence (plist-get message :tags))))))
 
-(defun emacsvox-notmuch--capture-tag-snapshot (target arguments)
-  "Capture the items whose tags TARGET will change using ARGUMENTS."
+(defun emacsvox-notmuch--capture-tag-snapshot
+    (target arguments &optional all-show-messages)
+  "Capture the items whose tags TARGET will change using ARGUMENTS.
+When ALL-SHOW-MESSAGES is non-nil, capture every message in a Show buffer."
   (pcase major-mode
     ('notmuch-search-mode
      (pcase-let ((`(,beginning . ,end)
@@ -1743,7 +1740,8 @@ search result."
         :entries entries)))
     ('notmuch-show-mode
      (let (entries)
-       (if (eq target 'notmuch-show-tag-all)
+       (if (or all-show-messages
+               (eq target 'notmuch-show-tag-all))
            (notmuch-show-mapc
             (lambda ()
               (when-let* ((entry
@@ -1899,49 +1897,103 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
    :around emacsvox--advice-notmuch-show-mark-read-around)
  emacsvox-notmuch--advice)
 
-(defun emacsvox-notmuch--speak-current-item ()
-  "Speak the current structured item in a Notmuch Show or search buffer."
-  (pcase major-mode
-    ('notmuch-show-mode
-     (emacsvox-notmuch-speak-show-message))
-    ('notmuch-search-mode
-     (emacsvox-notmuch-speak-search-result))))
+(defvar emacsvox-notmuch--archive-context nil
+  "Dynamically bound state for one user-owned archive operation.")
 
-(defun emacsvox-notmuch--show-archive-feedback
-    (object unarchive speak-destination)
-  "Confirm archiving OBJECT and optionally SPEAK-DESTINATION.
-When UNARCHIVE is non-nil, confirm the reverse operation."
+(defun emacsvox-notmuch--archive-location ()
+  "Return the current Notmuch location for movement comparison."
+  (let ((mode major-mode))
+    (list
+     :buffer (current-buffer)
+     :mode mode
+     :id
+     (ignore-errors
+       (pcase mode
+         ('notmuch-show-mode
+          (plist-get (notmuch-show-get-message-properties) :id))
+         ('notmuch-search-mode
+          (plist-get (notmuch-search-get-result) :thread))))
+     :point (point))))
+
+(defun emacsvox-notmuch--archive-location-changed-p (before after)
+  "Return non-nil when archive locations BEFORE and AFTER differ."
+  (or
+   (not (eq (plist-get before :buffer) (plist-get after :buffer)))
+   (not (eq (plist-get before :mode) (plist-get after :mode)))
+   (let ((before-id (plist-get before :id))
+         (after-id (plist-get after :id)))
+     (if (or before-id after-id)
+         (not (equal before-id after-id))
+       (/= (plist-get before :point) (plist-get after :point))))))
+
+(defun emacsvox-notmuch--record-archive-snapshot (snapshot)
+  "Record the actual result of SNAPSHOT in the active archive context."
+  (when (and emacsvox-notmuch--archive-context snapshot)
+    (let ((outcome (emacsvox-notmuch--tag-snapshot-result snapshot)))
+      (setf (alist-get 'observed emacsvox-notmuch--archive-context) t)
+      (unless (plist-get outcome :available)
+        (setf (alist-get 'complete emacsvox-notmuch--archive-context) nil))
+      (when (plist-get outcome :changes)
+        (setf (alist-get 'changed emacsvox-notmuch--archive-context) t)))))
+
+(defun emacsvox-notmuch--archive-outcome (context)
+  "Return the truthful archive outcome represented by CONTEXT."
+  (cond
+   ((not (alist-get 'configured context)) 'not-configured)
+   ((alist-get 'changed context) 'changed)
+   ((and (alist-get 'observed context)
+         (alist-get 'complete context))
+    'unchanged)))
+
+(defun emacsvox-notmuch--archive-feedback
+    (object unarchive outcome moved)
+  "Report OUTCOME for archiving OBJECT and any destination MOVED to.
+When UNARCHIVE is non-nil, report the reverse operation."
   (let* ((show-message-p (eq major-mode 'notmuch-show-mode))
          (item
           (and
-           speak-destination
+           (or (eq outcome 'changed) moved)
            (pcase major-mode
              ('notmuch-show-mode
               (notmuch-show-get-message-properties))
              ('notmuch-search-mode
               (notmuch-search-get-result)))))
          (confirmation
-          (format
-           "%s %s"
-           (if unarchive "Unarchived" "Archived")
-           (symbol-name object)))
+          (pcase outcome
+            ('changed
+             (format
+              "%s %s"
+              (if unarchive "Unarchived" "Archived")
+              (symbol-name object)))
+            ('unchanged "Archive tags unchanged")
+            ('not-configured "Archive tags are not configured")))
          (item-summary
           (and
            item
            (if show-message-p
                (emacsvox-notmuch-format-show-message item)
              (emacsvox-notmuch-format-search-result item))))
+         (destination-summary
+          (or
+           item-summary
+           (and moved
+                (if (eq major-mode 'notmuch-search-mode)
+                    "End of search results"
+                  (emacsvox-notmuch--view-summary)))))
          (facts
           (append
            (if (eq object 'thread)
                '(:role message-thread)
              '(:role message))
-           '(:mail-action-kind archive
-             :events (operation-completed))))
+           '(:mail-action-kind archive)
+           (and (eq outcome 'changed)
+                '(:events (operation-completed)))))
          (actions
           (append
-           (emacsvox-notmuch--leading-compatibility-actions
-            (if unarchive 'open-object 'close-object))
+           (and
+            (eq outcome 'changed)
+            (emacsvox-notmuch--leading-compatibility-actions
+             (if unarchive 'open-object 'close-object)))
            (and
             item
             (emacsvox-notmuch--status-compatibility-actions
@@ -1951,69 +2003,103 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
                emacsvox-notmuch-search-status-icons)
              'state-change
              show-message-p)))))
-    (emacsvox-notmuch--submit-content
-     (string-join
-      (delq nil (list confirmation item-summary))
-      "\n")
-     facts 'state-change actions)))
+    (when (or confirmation destination-summary)
+      (emacsvox-notmuch--submit-content
+       (string-join
+        (delq nil (list confirmation destination-summary))
+        "\n")
+       facts 'state-change actions))))
 
-(defun emacsvox--advice-notmuch-show-archive-message-after
-    (&optional unarchive &rest _)
-  "Confirm an interactive message archive operation."
-  (when (ems-interactive-p 'notmuch-show-archive-message)
-    (emacsvox-notmuch--show-archive-feedback
-     'message unarchive t)))
+(defun emacsvox-notmuch--archive-state-around
+    (target object original arguments all-show-messages observe-state)
+  "Report the actual archive state change made by TARGET on OBJECT.
+Call ORIGINAL once with ARGUMENTS.  ALL-SHOW-MESSAGES means OBJECT spans the
+whole Show buffer.  When OBSERVE-STATE is non-nil, compare the targeted tags.
+Nested archive commands contribute state to the outer interactive owner
+instead of producing their own feedback."
+  (let* ((owner
+          (and
+           (null emacsvox-notmuch--archive-context)
+           (eq ems--interactive-fn-name target)))
+         (context
+          (or
+           emacsvox-notmuch--archive-context
+           (and
+            owner
+            (list
+             (cons 'configured (and notmuch-archive-tags t))
+             (cons 'observed nil)
+             (cons 'complete t)
+             (cons 'changed nil))))))
+    (if (not context)
+        (apply original arguments)
+      (let* ((configured (alist-get 'configured context))
+             (snapshot
+              (and
+               configured observe-state
+               (emacsvox-notmuch--capture-tag-snapshot
+                target arguments all-show-messages)))
+             (before-location
+              (and owner (emacsvox-notmuch--archive-location)))
+             (emacsvox-notmuch--archive-context context)
+             (result (apply original arguments)))
+        (when
+            (and
+             configured snapshot
+             (or
+              (not owner)
+              (not (alist-get 'observed context))))
+          (emacsvox-notmuch--record-archive-snapshot snapshot))
+        (when (and owner (ems-interactive-p target))
+          (emacsvox-notmuch--archive-feedback
+           object (car arguments)
+           (emacsvox-notmuch--archive-outcome context)
+           (emacsvox-notmuch--archive-location-changed-p
+            before-location (emacsvox-notmuch--archive-location))))
+        result))))
 
-(defun emacsvox--advice-notmuch-show-archive-thread-after
-    (&optional unarchive &rest _)
-  "Confirm an interactive thread archive operation."
-  (when (ems-interactive-p 'notmuch-show-archive-thread)
-    (emacsvox-notmuch--show-archive-feedback
-     'thread unarchive t)))
-
-(push
- '(notmuch-show-archive-message
-   :after emacsvox--advice-notmuch-show-archive-message-after)
- emacsvox-notmuch--advice)
-
-(push
- '(notmuch-show-archive-thread
-   :after emacsvox--advice-notmuch-show-archive-thread-after)
- emacsvox-notmuch--advice)
-
-(defun emacsvox-notmuch--register-show-archive-group (targets object)
-  "Register archive feedback for TARGETS operating on OBJECT."
+(defun emacsvox-notmuch--register-show-archive-group
+    (targets object observe-state)
+  "Register archive feedback for TARGETS operating on OBJECT.
+When OBSERVE-STATE is non-nil, each target directly changes tags."
   (dolist (target targets)
     (let ((advice-function
-           (intern (format "emacsvox--advice-%s-after" target))))
+           (intern (format "emacsvox--advice-%s-around" target))))
       (eval
-       `(defun ,advice-function (&rest _)
-          ,(format "Confirm archiving after `%s'." target)
-          (when (ems-interactive-p ',target)
-            (emacsvox-notmuch--show-archive-feedback
-             ',object nil t))))
-      (push (list target :after advice-function) emacsvox-notmuch--advice))))
+       `(defun ,advice-function (original &rest arguments)
+          ,(format "Report actual archive state around `%s'." target)
+          (emacsvox-notmuch--archive-state-around
+           ',target ',object original arguments ,(eq object 'thread)
+           ,observe-state)))
+      (push (list target :around advice-function) emacsvox-notmuch--advice))))
+
+(emacsvox-notmuch--register-show-archive-group
+ '(notmuch-show-archive-message)
+ 'message t)
 
 (emacsvox-notmuch--register-show-archive-group
  '(notmuch-show-archive-message-then-next-or-exit
    notmuch-show-archive-message-then-next-or-next-thread)
- 'message)
+ 'message nil)
+
+(emacsvox-notmuch--register-show-archive-group
+ '(notmuch-show-archive-thread)
+ 'thread t)
 
 (emacsvox-notmuch--register-show-archive-group
  '(notmuch-show-archive-thread-then-next
    notmuch-show-archive-thread-then-exit)
- 'thread)
+ 'thread nil)
 
-(defun emacsvox--advice-notmuch-search-archive-thread-after
-    (&optional unarchive &rest _)
-  "Confirm an archive operation and speak the current result."
-  (when (ems-interactive-p 'notmuch-search-archive-thread)
-    (emacsvox-notmuch--show-archive-feedback
-     'thread unarchive t)))
+(defun emacsvox--advice-notmuch-search-archive-thread-around
+    (original &rest arguments)
+  "Report actual Search archive state around ORIGINAL with ARGUMENTS."
+  (emacsvox-notmuch--archive-state-around
+   'notmuch-search-archive-thread 'thread original arguments nil t))
 
 (push
  '(notmuch-search-archive-thread
-   :after emacsvox--advice-notmuch-search-archive-thread-after)
+   :around emacsvox--advice-notmuch-search-archive-thread-around)
  emacsvox-notmuch--advice)
 
 (defconst emacsvox-notmuch--search-process-property

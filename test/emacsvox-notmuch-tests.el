@@ -1689,19 +1689,19 @@ Return the beginning of the inserted row."
          (nth 3 captured))
         '(scroll))))))
 
-(ert-deftest emacsvox-notmuch-space-confirms-end-of-thread-archive ()
-  "Space confirms archiving when invoked at the end of a thread."
+(ert-deftest emacsvox-notmuch-space-delegates-end-of-thread-archive-state ()
+  "Space delegates its end-of-thread operation to the archive owner."
   (with-temp-buffer
     (setq major-mode 'notmuch-show-mode)
     (let ((ems--interactive-fn-name 'notmuch-show-advance-and-archive)
-          (notmuch-archive-tags '("-inbox"))
           (calls 0)
-          feedback)
+          lifecycle)
       (cl-letf
-          (((symbol-function 'emacsvox-notmuch--show-archive-feedback)
-            (lambda (object unarchive destination)
-              (setq feedback
-                    (list object unarchive destination)))))
+          (((symbol-function 'emacsvox-notmuch--archive-state-around)
+            (lambda (target object original arguments all-show observe-state)
+              (setq lifecycle
+                    (list target object arguments all-show observe-state))
+              (apply original arguments))))
         (should
          (eq
           (emacsvox--advice-notmuch-show-advance-and-archive-around
@@ -1710,7 +1710,10 @@ Return the beginning of the inserted row."
              'archived))
           'archived)))
       (should (= calls 1))
-      (should (equal feedback '(thread nil t))))))
+      (should
+       (equal
+        lifecycle
+        '(notmuch-show-advance-and-archive thread nil t nil))))))
 
 (ert-deftest emacsvox-notmuch-show-opening-message-cues-and-speaks ()
   "Opening a message body plays an opening cue and identifies it."
@@ -2174,115 +2177,398 @@ Return the beginning of the inserted row."
          (lambda () 'read)))
       (should (equal feedback '("-unread"))))))
 
-(ert-deftest emacsvox-notmuch-show-archive-message-confirms-and-speaks ()
-  "A direct message archive confirms completion and identifies the result."
-  (let ((major-mode 'notmuch-show-mode)
-        (message (copy-tree emacsvox-notmuch-test--show-message))
-        (ems--interactive-fn-name 'notmuch-show-archive-message)
-        (submissions 0)
-        captured)
-    (cl-letf
-        (((symbol-function 'notmuch-show-get-message-properties)
-          (lambda () message))
-         ((symbol-function 'emacsvox-aural-submit)
-          (lambda (content &rest arguments)
-            (cl-incf submissions)
-            (setq captured (cons content arguments)))))
-      (emacsvox--advice-notmuch-show-archive-message-after))
-    (should (= submissions 1))
-    (pcase-let* ((`(,content . ,arguments) captured)
-                 (facts (plist-get arguments :facts))
-                 (actions
-                  (plist-get arguments :compatibility-actions)))
+(ert-deftest emacsvox-notmuch-show-archive-message-reports-actual-change ()
+  "Public message archive and unarchive report actual mutations."
+  (dolist
+      (case
+       '((nil ("inbox" "work") "Archived message" close-object nil)
+         (t ("work") "Unarchived message" open-object t)))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-show-mode)
+      (let* ((unarchive (nth 0 case))
+             (message (copy-tree emacsvox-notmuch-test--show-message))
+             (notmuch-archive-tags '("-inbox"))
+             (ems--interactive-fn-name 'notmuch-show-archive-message)
+             backend-calls submissions)
+        (setf (plist-get message :id) "message:one"
+              (plist-get message :tags) (copy-sequence (nth 1 case))
+              (plist-get message :orig-tags) (copy-sequence (nth 1 case)))
+        (emacsvox-notmuch-test--insert-show-message "message" message)
+        (goto-char (point-min))
+        (emacsvox-notmuch-test--with-synthetic-show-tags
+          (cl-letf
+              (((symbol-function 'notmuch-tag)
+                (lambda (&rest arguments)
+                  (push arguments backend-calls)))
+               ((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push
+                   (cons (substring-no-properties content) arguments)
+                   submissions))))
+            (should
+             (eq (notmuch-show-archive-message unarchive) 'updated))))
+        (should (= (length backend-calls) 1))
+        (should
+         (eq
+          (and (member "inbox" (plist-get message :tags)) t)
+          (nth 4 case)))
+        (should (= (length submissions) 1))
+        (pcase-let* ((`(,content . ,arguments) (car submissions))
+                     (facts (plist-get arguments :facts))
+                     (actions
+                      (mapcar
+                       #'emacsvox-aural-compatibility-action-value
+                       (plist-get arguments :compatibility-actions))))
+          (should (string-prefix-p (nth 2 case) content))
+          (should
+           (equal
+            facts
+            '(:role message :mail-action-kind archive
+              :events (operation-completed))))
+          (should (eq (car actions) (nth 3 case))))))))
+
+(ert-deftest emacsvox-notmuch-show-archive-no-ops-are-truthful ()
+  "Configured and disabled message archive no-ops have distinct outcomes."
+  (dolist
+      (case
+       '((("-inbox") ("work") "Archive tags unchanged")
+         (nil ("inbox") "Archive tags are not configured")))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-show-mode)
+      (let* ((notmuch-archive-tags (nth 0 case))
+             (message (copy-tree emacsvox-notmuch-test--show-message))
+             (ems--interactive-fn-name 'notmuch-show-archive-message)
+             backend-calls submissions)
+        (setf (plist-get message :id) "message:one"
+              (plist-get message :tags) (copy-sequence (nth 1 case))
+              (plist-get message :orig-tags) (copy-sequence (nth 1 case)))
+        (emacsvox-notmuch-test--insert-show-message "message" message)
+        (goto-char (point-min))
+        (emacsvox-notmuch-test--with-synthetic-show-tags
+          (cl-letf
+              (((symbol-function 'notmuch-tag)
+                (lambda (&rest arguments)
+                  (push arguments backend-calls)))
+               ((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push
+                   (cons (substring-no-properties content) arguments)
+                   submissions))))
+            (should-not (notmuch-show-archive-message))))
+        (should-not backend-calls)
+        (should (equal (plist-get message :tags) (nth 1 case)))
+        (should (= (length submissions) 1))
+        (pcase-let* ((`(,content . ,arguments) (car submissions))
+                     (facts (plist-get arguments :facts)))
+          (should (equal content (nth 2 case)))
+          (should
+           (equal facts '(:role message :mail-action-kind archive)))
+          (should-not (plist-get facts :events))
+          (should-not
+           (plist-get arguments :compatibility-actions)))))))
+
+(ert-deftest emacsvox-notmuch-show-archive-thread-observes-every-message ()
+  "A public thread archive derives success from all shown messages."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let* ((first (copy-tree emacsvox-notmuch-test--show-message))
+           (second (copy-tree emacsvox-notmuch-test--show-message))
+           (notmuch-archive-tags '("-inbox"))
+           (ems--interactive-fn-name 'notmuch-show-archive-thread)
+           backend-calls submissions)
+      (setf (plist-get first :id) "message:one"
+            (plist-get first :tags) '("inbox")
+            (plist-get first :orig-tags) '("inbox")
+            (plist-get second :id) "message:two"
+            (plist-get second :tags) nil
+            (plist-get second :orig-tags) nil)
+      (emacsvox-notmuch-test--insert-show-message "first" first)
+      (emacsvox-notmuch-test--insert-show-message "second" second)
+      (goto-char (point-min))
+      (emacsvox-notmuch-test--with-synthetic-show-tags
+        (cl-letf
+            (((symbol-function 'notmuch-tag)
+              (lambda (&rest arguments)
+                (push arguments backend-calls)))
+             ((symbol-function 'emacsvox-aural-submit)
+              (lambda (content &rest arguments)
+                (push
+                 (cons (substring-no-properties content) arguments)
+                 submissions))))
+          (should-not (notmuch-show-archive-thread))))
+      (should (= (length backend-calls) 1))
+      (should-not (member "inbox" (plist-get first :tags)))
+      (should-not (plist-get second :tags))
+      (should (= (length submissions) 1))
       (should
-       (string-prefix-p
-        "Archived message\nAlice Smith"
-        (substring-no-properties content)))
+       (string-prefix-p "Archived thread\n" (caar submissions)))
       (should
        (equal
-        facts
-        '(:role message :mail-action-kind archive
-          :events (operation-completed))))
-      (should
-       (equal
-        (mapcar
-         (lambda (action)
-           (list
-            (emacsvox-aural-compatibility-action-value action)
-            (emacsvox-aural-compatibility-action-phase action)))
-         actions)
-        '((close-object before)
-          (mail-unread before)
-          (mark-object before)
-          (mail-has-attachment after)))))))
+        (plist-get (cdar submissions) :facts)
+        '(:role message-thread :mail-action-kind archive
+          :events (operation-completed)))))))
 
-(ert-deftest emacsvox-notmuch-show-unarchive-thread-uses-opening-cue ()
-  "Reversing a thread archive uses an opening cue and clear confirmation."
-  (let ((major-mode 'notmuch-show-mode)
-        (ems--interactive-fn-name 'notmuch-show-archive-thread)
-        (submissions 0)
-        captured)
-    (cl-letf
-        (((symbol-function 'notmuch-show-get-message-properties)
-          (lambda () nil))
-         ((symbol-function 'emacsvox-aural-submit)
-          (lambda (content &rest arguments)
-            (cl-incf submissions)
-            (setq captured (cons content arguments)))))
-      (emacsvox--advice-notmuch-show-archive-thread-after t))
-    (should (= submissions 1))
-    (should (equal (substring-no-properties (car captured))
-                   "Unarchived thread"))
-    (should
-     (equal
-      (mapcar
-       #'emacsvox-aural-compatibility-action-value
-       (plist-get (cdr captured) :compatibility-actions))
-      '(open-object)))))
+(ert-deftest emacsvox-notmuch-show-archive-wrapper-has-one-owner ()
+  "Archive-and-move wrappers report one outcome followed by the destination."
+  (dolist
+      (case
+       '((("inbox") "Archived message" t)
+         (("work") "Archive tags unchanged" nil)))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-show-mode)
+      (let* ((first (copy-tree emacsvox-notmuch-test--show-message))
+             (second (copy-tree emacsvox-notmuch-test--show-message))
+             (notmuch-archive-tags '("-inbox"))
+             (ems--interactive-fn-name
+              'notmuch-show-archive-message-then-next-or-exit)
+             backend-calls submissions)
+        (setf (plist-get first :id) "message:one"
+              (plist-get first :tags) (copy-sequence (nth 0 case))
+              (plist-get first :orig-tags) (copy-sequence (nth 0 case))
+              (plist-get second :id) "message:two"
+              (plist-get second :tags) '("work")
+              (plist-get second :orig-tags) '("work")
+              (plist-get (plist-get second :headers) :From)
+              "Bob Jones <bob@example.com>")
+        (emacsvox-notmuch-test--insert-show-message "first" first)
+        (emacsvox-notmuch-test--insert-show-message "second" second)
+        (goto-char (point-min))
+        (emacsvox-notmuch-test--with-synthetic-show-tags
+          (cl-letf
+              (((symbol-function 'notmuch-tag)
+                (lambda (&rest arguments)
+                  (push arguments backend-calls)))
+               ((symbol-function 'notmuch-show-next-open-message)
+                (lambda (&optional _)
+                  (forward-line 1)
+                  'moved))
+               ((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push
+                   (cons (substring-no-properties content) arguments)
+                   submissions))))
+            (should
+             (eq
+              (notmuch-show-archive-message-then-next-or-exit)
+              'moved))))
+        (should (= (length backend-calls) (if (nth 2 case) 1 0)))
+        (should (= (length submissions) 1))
+        (pcase-let* ((`(,content . ,arguments) (car submissions))
+                     (facts (plist-get arguments :facts))
+                     (actions
+                      (mapcar
+                       #'emacsvox-aural-compatibility-action-value
+                       (plist-get arguments :compatibility-actions))))
+          (should
+           (string-prefix-p
+            (concat (nth 1 case) "\nBob Jones") content))
+          (if (nth 2 case)
+              (progn
+                (should
+                 (equal (plist-get facts :events)
+                        '(operation-completed)))
+                (should (eq (car actions) 'close-object)))
+            (should-not (plist-get facts :events))
+            (should-not (memq 'close-object actions))
+            (should-not (memq 'open-object actions))))))))
 
-(ert-deftest emacsvox-notmuch-show-archive-wrapper-reports-once ()
-  "An archive-and-move wrapper owns feedback from its nested operations."
-  (let
-      ((ems--interactive-fn-name
-        'notmuch-show-archive-message-then-next-or-exit)
-       events)
-    (cl-letf
-        (((symbol-function 'emacsvox-notmuch--show-archive-feedback)
-          (lambda (object unarchive destination)
-            (push (list object unarchive destination) events))))
-      (emacsvox--advice-notmuch-show-archive-message-after)
-      (emacsvox--advice-notmuch-show-archive-message-then-next-or-exit-after))
-    (should (equal events '((message nil t))))))
+(ert-deftest emacsvox-notmuch-search-archive-reports-state-and-destination ()
+  "Search archive distinguishes changed, reversed, unchanged, and disabled."
+  (dolist
+      (case
+       '((:config ("-inbox") :unarchive nil :tags ("inbox" "work")
+          :inbox-after nil :text "Archived thread" :cue close-object
+          :backend 1)
+         (:config ("-inbox") :unarchive t :tags ("work")
+          :inbox-after t :text "Unarchived thread" :cue open-object
+          :backend 1)
+         (:config ("-inbox") :unarchive nil :tags ("work")
+          :inbox-after nil :text "Archive tags unchanged" :backend 1)
+         (:config nil :unarchive nil :tags ("inbox" "work")
+          :inbox-after t :text "Archive tags are not configured"
+          :backend 0)))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-search-mode)
+      (let* ((first (copy-tree emacsvox-notmuch-test--search-result))
+             (second (copy-tree emacsvox-notmuch-test--search-result))
+             (notmuch-archive-tags (plist-get case :config))
+             (ems--interactive-fn-name 'notmuch-search-archive-thread)
+             backend-calls submissions)
+        (setf (plist-get first :thread) "thread:one"
+              (plist-get first :tags) (copy-sequence (plist-get case :tags))
+              (plist-get first :orig-tags)
+              (copy-sequence (plist-get case :tags))
+              (plist-get second :thread) "thread:two"
+              (plist-get second :authors) "Bob Jones"
+              (plist-get second :subject) "Destination"
+              (plist-get second :tags) '("work")
+              (plist-get second :orig-tags) '("work"))
+        (let ((first-start
+               (emacsvox-notmuch-test--insert-rendered-search-result first)))
+          (emacsvox-notmuch-test--insert-rendered-search-result second)
+          (goto-char first-start)
+          (cl-letf
+              (((symbol-function 'notmuch-search-find-stable-query-region)
+                (lambda (&rest _) "thread:one"))
+               ((symbol-function 'notmuch-tag)
+                (lambda (&rest arguments)
+                  (push arguments backend-calls)))
+               ((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push
+                   (cons (substring-no-properties content) arguments)
+                   submissions))))
+            (let ((result
+                   (notmuch-search-archive-thread
+                    (plist-get case :unarchive) first-start first-start)))
+              (should (integerp result))
+              (should (= result (point))))))
+        (should
+         (equal
+          (plist-get (notmuch-search-get-result) :thread)
+          "thread:two"))
+        (should
+         (eq
+          (and
+           (member
+            "inbox"
+            (plist-get (notmuch-search-get-result (point-min)) :tags))
+           t)
+          (plist-get case :inbox-after)))
+        (should (= (length backend-calls) (plist-get case :backend)))
+        (should (= (length submissions) 1))
+        (pcase-let* ((`(,content . ,arguments) (car submissions))
+                     (facts (plist-get arguments :facts))
+                     (actions
+                      (mapcar
+                       #'emacsvox-aural-compatibility-action-value
+                       (plist-get arguments :compatibility-actions))))
+          (should
+           (string-prefix-p
+            (concat (plist-get case :text) "\nBob Jones") content))
+          (if-let* ((cue (plist-get case :cue)))
+              (progn
+                (should
+                 (equal (plist-get facts :events)
+                        '(operation-completed)))
+                (should (eq (car actions) cue)))
+            (should-not (plist-get facts :events))
+            (should-not (memq 'close-object actions))
+            (should-not (memq 'open-object actions))))))))
 
-(ert-deftest emacsvox-notmuch-archive-confirms-then-speaks-next-result ()
-  "Archive feedback acknowledges completion before speaking the new row."
-  (dolist (case '((nil close-object "Archived")
-                  (t open-object "Unarchived")))
-    (let ((major-mode 'notmuch-search-mode)
-          (result (copy-tree emacsvox-notmuch-test--search-result))
-          (ems--interactive-fn-name 'notmuch-search-archive-thread)
-          (submissions 0)
-          captured)
-      (cl-letf
-          (((symbol-function 'notmuch-search-get-result)
-            (lambda (&optional _) result))
-           ((symbol-function 'emacsvox-aural-submit)
-            (lambda (content &rest arguments)
-              (cl-incf submissions)
-              (setq captured (cons content arguments)))))
-        (emacsvox--advice-notmuch-search-archive-thread-after
-         (nth 0 case)))
-      (should (= submissions 1))
-      (should
-       (string-prefix-p
-        (format "%s thread\nAlice Smith" (nth 2 case))
-        (substring-no-properties (car captured))))
-      (should
-       (equal
-        (mapcar
-         #'emacsvox-aural-compatibility-action-value
-         (plist-get (cdr captured) :compatibility-actions))
-        (list (nth 1 case) 'mail-unread 'mark-object))))))
+(ert-deftest emacsvox-notmuch-space-archive-reports-state-before-destination ()
+  "Space reports a real thread change or disabled configuration before moving."
+  (dolist
+      (case
+       '((("-inbox") "Archived thread" 1 t)
+         (nil "Archive tags are not configured" 0 nil)))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-show-mode)
+      (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
+             (destination (copy-tree emacsvox-notmuch-test--search-result))
+             (notmuch-archive-tags (nth 0 case))
+             (ems--interactive-fn-name 'notmuch-show-advance-and-archive)
+             backend-calls submissions)
+        (setf (plist-get message :id) "message:one"
+              (plist-get message :tags) '("inbox")
+              (plist-get message :orig-tags) '("inbox")
+              (plist-get destination :thread) "thread:two"
+              (plist-get destination :authors) "Bob Jones"
+              (plist-get destination :subject) "Destination"
+              (plist-get destination :tags) '("work")
+              (plist-get destination :orig-tags) '("work"))
+        (emacsvox-notmuch-test--insert-show-message "message" message)
+        (goto-char (point-max))
+        (emacsvox-notmuch-test--with-synthetic-show-tags
+          (cl-letf
+              (((symbol-function 'notmuch-show-advance) (lambda () t))
+               ((symbol-function 'notmuch-tag)
+                (lambda (&rest arguments)
+                  (push arguments backend-calls)))
+               ((symbol-function 'notmuch-show-next-thread)
+                (lambda (&rest _)
+                  (let ((inhibit-read-only t))
+                    (erase-buffer)
+                    (setq major-mode 'notmuch-search-mode)
+                    (emacsvox-notmuch-test--insert-rendered-search-result
+                     destination)
+                    (goto-char (point-min)))
+                  'moved))
+               ((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push
+                   (cons (substring-no-properties content) arguments)
+                   submissions))))
+            (should
+             (eq (notmuch-show-advance-and-archive) 'moved))))
+        (should (= (length backend-calls) (nth 2 case)))
+        (should
+         (eq (and (member "inbox" (plist-get message :tags)) t)
+             (not (nth 3 case))))
+        (should (= (length submissions) 1))
+        (pcase-let* ((`(,content . ,arguments) (car submissions))
+                     (facts (plist-get arguments :facts))
+                     (actions
+                      (mapcar
+                       #'emacsvox-aural-compatibility-action-value
+                       (plist-get arguments :compatibility-actions))))
+          (should
+           (string-prefix-p (concat (nth 1 case) "\nBob Jones") content))
+          (if (nth 3 case)
+              (progn
+                (should
+                 (equal (plist-get facts :events)
+                        '(operation-completed)))
+                (should (eq (car actions) 'close-object)))
+            (should-not (plist-get facts :events))
+            (should-not (memq 'close-object actions))))))))
+
+(ert-deftest emacsvox-notmuch-archive-errors-do-not-announce ()
+  "A failed public archive re-signals without changing tags or announcing."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
+           (notmuch-archive-tags '("-inbox"))
+           (ems--interactive-fn-name 'notmuch-show-archive-message)
+           submissions)
+      (setf (plist-get message :id) "message:one"
+            (plist-get message :tags) '("inbox")
+            (plist-get message :orig-tags) '("inbox"))
+      (emacsvox-notmuch-test--insert-show-message "message" message)
+      (goto-char (point-min))
+      (emacsvox-notmuch-test--with-synthetic-show-tags
+        (cl-letf
+            (((symbol-function 'notmuch-tag)
+              (lambda (&rest _) (error "Synthetic archive failure")))
+             ((symbol-function 'emacsvox-aural-submit)
+              (lambda (&rest arguments) (push arguments submissions))))
+          (should-error (notmuch-show-archive-message) :type 'error)))
+      (should (equal (plist-get message :tags) '("inbox")))
+      (should-not submissions))))
+
+(ert-deftest emacsvox-notmuch-programmatic-archive-remains-silent ()
+  "Programmatic archive calls still mutate without user feedback."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
+           (notmuch-archive-tags '("-inbox"))
+           backend-calls submissions)
+      (setf (plist-get message :id) "message:one"
+            (plist-get message :tags) '("inbox")
+            (plist-get message :orig-tags) '("inbox"))
+      (emacsvox-notmuch-test--insert-show-message "message" message)
+      (goto-char (point-min))
+      (emacsvox-notmuch-test--with-synthetic-show-tags
+        (cl-letf
+            (((symbol-function 'notmuch-tag)
+              (lambda (&rest arguments)
+                (push arguments backend-calls)))
+             ((symbol-function 'emacsvox-aural-submit)
+              (lambda (&rest arguments) (push arguments submissions))))
+          (should (eq (notmuch-show-archive-message) 'updated))))
+      (should (= (length backend-calls) 1))
+      (should-not (member "inbox" (plist-get message :tags)))
+      (should-not submissions))))
 
 (ert-deftest emacsvox-notmuch-search-completion-style-is-customizable ()
   "Search completion defaults to the approved interaction-aware policy."
