@@ -3,11 +3,22 @@
 ;;; Code:
 (require 'ert)
 (require 'package)
+(require 'emacsvox-optional-module-test-utils)
 (package-initialize)
 (require 'ebuku)
 (load (expand-file-name "../lisp/emacsvox-ebuku.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
+
+(ert-deftest emacsvox-ebuku-loads-without-ebuku ()
+  "The integration module should load before optional Ebuku is installed."
+  (emacsvox-optional-module-test-load
+   "emacsvox-ebuku.el"
+   '(when (locate-library "ebuku")
+      (error "Ebuku unexpectedly available in clean Emacs"))
+   '(unless (and (featurep 'emacsvox-ebuku)
+                 (not (featurep 'ebuku)))
+      (error "Emacsvox Ebuku did not load independently"))))
 
 (ert-deftest emacsvox-ebuku-advice-is-current-and-direct ()
   "Current Ebuku targets use native advice directly."

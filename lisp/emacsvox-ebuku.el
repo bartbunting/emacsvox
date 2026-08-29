@@ -39,7 +39,7 @@
 
 (eval-when-compile  (require 'cl-lib))
 (require 'emacsvox-preamble)
-(require 'ebuku nil "ebuku")
+(require 'ebuku nil t)
 ;;;  Map Faces:
 
 (voice-setup-add-map
@@ -145,21 +145,25 @@
                  (not (advice-member-p function target)))
         (advice-add target where function '((name . emacsvox)))))))
 
-(with-eval-after-load 'ebuku
-  (emacsvox-ebuku--install-advice))
-
 ;;; Additional Keybindings:
 
 (cl-declaim (special ebuku-mode-map))
-(cl-loop
- for b in
- '(
-   ("/" ebuku-search-on-any)
-   ("l" ebuku-search-on-all)
-   ("r" ebuku-search-on-reg)
-   ("t" ebuku-search-on-tag))
- do
- (emacsvox-keymap-update ebuku-mode-map b))
+
+(defun emacsvox-ebuku--install-keys ()
+  "Install Emacsvox bindings in `ebuku-mode-map'."
+  (cl-loop
+   for b in
+   '(
+     ("/" ebuku-search-on-any)
+     ("l" ebuku-search-on-all)
+     ("r" ebuku-search-on-reg)
+     ("t" ebuku-search-on-tag))
+   do
+   (emacsvox-keymap-update ebuku-mode-map b)))
+
+(with-eval-after-load 'ebuku
+  (emacsvox-ebuku--install-advice)
+  (emacsvox-ebuku--install-keys))
 
 (provide 'emacsvox-ebuku)
 ;;;  end of file
