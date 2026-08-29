@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Persistent Startup (Emacsvox User Manual)</title>
+
+<meta name="description" content="Persistent Startup (Emacsvox User Manual)">
+<meta name="keywords" content="Persistent Startup (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Installation.html" rel="up" title="Installation">
+<link href="Building-And-Testing-The-Speech-Server.html" rel="next" title="Building And Testing The Speech Server">
+<link href="Recovering-From-No-Speech.html" rel="prev" title="Recovering From No Speech">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Persistent-Startup">
+<div class="nav-panel">
+<p>
+Next: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="n" rel="next">Building And Testing The Speech Server</a>, Previous: <a href="Recovering-From-No-Speech.html" accesskey="p" rel="prev">Recovering From No Speech</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Persistent-Startup-1"><span>5.5 Persistent Startup<a class="copiable-link" href="#Persistent-Startup-1"> &para;</a></span></h3>
+
+<p>Configure a normal customized start only after <a class="ref" href="Confirming-First-Speech.html">Confirming First Speech</a>
+passes.  Add these forms to the user&rsquo;s Emacs init file, replacing the example
+path with the absolute path of the checkout:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(setenv &quot;TTS_PROGRAM&quot; &quot;omnivox&quot;)
+(load-file &quot;/path/to/emacsvox/lisp/emacsvox-setup.el&quot;)
+</pre></div>
+
+<p>The order is significant: Emacsvox selects and starts the speech server while
+loading setup.  A shell alternative is to export the server name before
+launching Emacs:
+</p>
+<div class="example">
+<pre class="example-preformatted">export TTS_PROGRAM=omnivox
+</pre></div>
+
+<p>Keep the explicit <code class="code">load-file</code> form for a changing source checkout.  Its
+setup entry point can warn and prefer source when newer Lisp would otherwise
+be hidden by stale local byte-code.  A customized startup should speak the
+same acceptance sentence as the isolated launcher.  If it does not, remove or
+comment out the two init forms and return to the isolated launcher before
+trying another change.
+</p>
+<p>Emacsvox distributions contain the <samp class="file">.el</samp> sources.  <code class="command">make all</code>
+generates ignored <samp class="file">.elc</samp> files locally in the checkout; those build
+outputs are not distributed.  After an ordinary Lisp edit, run
+<code class="command">make bytecode</code>.  After switching branches, pulling, or changing Lisp
+macros or public interfaces, run <code class="command">make bytecode-rebuild</code>.  The
+non-mutating <code class="command">make bytecode-check</code> verifies that local byte-code is
+current and was produced by the selected Emacs.
+</p>
+</div>
+
+
+
+</body>
+</html>

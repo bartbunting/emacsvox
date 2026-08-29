@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Backend Diagnostics And Ownership (Emacsvox User Manual)</title>
+
+<meta name="description" content="Backend Diagnostics And Ownership (Emacsvox User Manual)">
+<meta name="keywords" content="Backend Diagnostics And Ownership (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Speech-Backends.html" rel="up" title="Speech Backends">
+<link href="Compatibility-Speech-Servers.html" rel="prev" title="Compatibility Speech Servers">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Backend-Diagnostics-And-Ownership">
+<div class="nav-panel">
+<p>
+Previous: <a href="Compatibility-Speech-Servers.html" accesskey="p" rel="prev">Compatibility Speech Servers</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Backend-Diagnostics-And-Ownership-1"><span>6.6 Backend Diagnostics And Ownership<a class="copiable-link" href="#Backend-Diagnostics-And-Ownership-1"> &para;</a></span></h3>
+
+<p>Use the boundary at which speech failed to choose the next diagnostic:
+</p>
+<dl class="table">
+<dt><code class="command">omnivox</code> is not found</dt>
+<dd><p>Check <code class="env">PATH</code>; on POSIX, an absolute <code class="env">OMNIVOX_PROGRAM</code> can identify the
+installed executable.  Keep its adjacent <samp class="file">espeak-ng-data</samp> and
+<samp class="file">third-party-licenses</samp> directories with it.
+</p></dd>
+<dt><code class="command">omnivox --check</code> reports an error or is inaudible</dt>
+<dd><p>The failure is below Emacsvox.  Consult Omnivox&rsquo;s
+<a class="url" href="https://github.com/bartbunting/omnivox/blob/main/README.md">build guide</a>,
+<a class="url" href="https://github.com/bartbunting/omnivox/blob/main/STATUS.md">platform status</a>,
+and
+<a class="url" href="https://github.com/bartbunting/omnivox/blob/main/docs/DIAGNOSTICS.md">diagnostics guide</a>.  Do not diagnose Emacs configuration until the tone and
+speech check passes.
+</p></dd>
+<dt>The check passes but Emacsvox is silent</dt>
+<dd><p>Confirm that <code class="env">TTS_PROGRAM=omnivox</code> was present before Emacsvox loaded, then
+use <code class="code">M-x tts-speak-version</code>.  Under WSL2, also run
+<code class="command">make verify-windows-omnivox-runtime</code> and restart the speech process
+after restaging.
+</p></dd>
+<dt>A process starts and later fails</dt>
+<dd><p>The Emacsvox POSIX/WSL launcher writes private, bounded stderr logs below
+<samp class="file">$XDG_STATE_HOME/emacsvox/omnivox</samp>, defaulting to
+<samp class="file">~/.local/state/emacsvox/omnivox</samp>.  Spoken text is excluded unless
+<code class="env">OMNIVOX_LOG_SYNTHESIS_TEXT</code> is explicitly enabled; enabling it can expose
+passwords, messages, and document contents.
+</p></dd>
+</dl>
+
+<p>Emacsvox owns server selection, its POSIX/WSL launcher, Windows staging, and
+the bundled Lisp adapter.  Omnivox owns its native builds, engines, command
+line, runtime data layout, and protocol specifications.  Backend-local
+READMEs own licensed-runtime and compatibility-adapter details.  Cross-link
+these owners rather than copying their versioned contracts into installation
+instructions.
+</p></div>
+
+
+
+</body>
+</html>

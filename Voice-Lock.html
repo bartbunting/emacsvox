@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Voice Lock (Emacsvox User Manual)</title>
+
+<meta name="description" content="Voice Lock (Emacsvox User Manual)">
+<meta name="keywords" content="Voice Lock (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="index.html" rel="up" title="Top">
+<link href="Using-Online-Help.html" rel="next" title="Using Online Help">
+<link href="Audio-Desktop.html" rel="prev" title="Audio Desktop">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="chapter-level-extent" id="Voice-Lock">
+<div class="nav-panel">
+<p>
+Next: <a href="Using-Online-Help.html" accesskey="n" rel="next">Using Online Help With Emacsvox.</a>, Previous: <a href="Audio-Desktop.html" accesskey="p" rel="prev">The Emacsvox Audio Desktop.</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h2 class="chapter" id="Voice-Lock-1"><span>9 Voice Lock<a class="copiable-link" href="#Voice-Lock-1"> &para;</a></span></h2>
+
+
+<p>See
+<a class="url" href="http://tvraman.github.io/emacspeak/blog/voice-lock-refreshed.html">http://tvraman.github.io/emacspeak/blog/voice-lock-refreshed.html</a>
+for a high-level overview of how Emacsvox Voice-Lock has evolved over
+the years.
+</p>
+<ol class="enumerate">
+<li> Emacsvox defines a number of voice overlays such as
+<code class="code">voice-bolden</code>, and <code class="code">voice-lighten</code> that can be applied to a
+given voice to change what it sounds like.
+
+</li><li> Voice overlays are defined in terms of Aural CSS
+(<a class="uref" href="http://www.w3.org/tr/css2/aural.html">ACSS</a>) to keep them
+independent of a specific TTS engine.
+
+</li><li> For each such overlay there is a corresponding
+<code class="code"><var class="var">&lt;overlay-name&gt;</var>-settings</code> variable that can be customized via
+custom.
+
+</li><li> The numbers in <code class="code">voice-bolden-settings</code> as an example:
+</li></ol>
+
+<table class="multitable">
+<tbody><tr><td width="50%">Setting</td><td width="50%">Value</td></tr>
+<tr><td width="50%">family</td><td width="50%">nil</td></tr>
+<tr><td width="50%">average-pitch</td><td width="50%">1</td></tr>
+<tr><td width="50%">pitch-range</td><td width="50%">6</td></tr>
+<tr><td width="50%">stress</td><td width="50%">6</td></tr>
+<tr><td width="50%">richness</td><td width="50%">nil</td></tr>
+<tr><td width="50%">punctuation</td><td width="50%">nil</td></tr>
+</tbody>
+</table>
+
+<p>Unset values (<code class="code">nil</code>) show up as &ldquo;unspecified&rdquo; in the customize
+interface.
+</p>
+<ol class="enumerate">
+<li> Do not directly customize <code class="code">voice-bolden</code> and friends, instead
+customize the corresponding <code class="code">voice-bolden-settings</code>, since that
+ensures that all voices that are defined in terms of
+<code class="code">voice-bolden</code> get correctly updated.
+
+</li><li> Discovering what to customize:
+</li></ol>
+
+<p>Command <code class="code">emacsvox-show-personality-at-point</code> (bound by default
+to C-e M-v) will show you the value of properties personality and
+face at point.  Describe-variable on these names should tell you
+what to customize; so as an example:
+</p>
+<p>Put point on a comment line, and hit <kbd class="kbd">C-e M-v</kbd>: you will hear
+</p>
+<div class="example">
+<pre class="example-preformatted">Personality emacsvox-voice-lock-comment-personality
+Face font-lock-comment-delimiter-face
+</pre></div>
+
+<p>Describe-variable of <code class="code">emacsvox-voice-lock-comment-personality</code> gives:
+</p>
+<div class="example">
+<pre class="example-preformatted">emacsvox-voice-lock-comment-personality's value is acss-p0-s0-all
+
+Documentation: Personality used for font-lock-comment-face This
+personality uses voice-monotone whose effect can be changed globally
+by customizing voice-monotone-settings.
+</pre></div>
+
+
+
+<ul class="mini-toc">
+<li><a href="How-It-All-Works_002e.html" accesskey="1">How It All Works</a></li>
+<li><a href="What-this-gives_002e.html" accesskey="2">What this gives</a></li>
+</ul>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Using-Online-Help.html">Using Online Help With Emacsvox.</a>, Previous: <a href="Audio-Desktop.html">The Emacsvox Audio Desktop.</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-submission (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-aural-submission (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-aural-submission (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dtools.html" rel="next" title="emacsvox-aural-tools">
+<link href="emacsvox_002daural_002dspatial.html" rel="prev" title="emacsvox-aural-spatial">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002dsubmission">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dtools.html" accesskey="n" rel="next">emacsvox-aural-tools</a>, Previous: <a href="emacsvox_002daural_002dspatial.html" accesskey="p" rel="prev">emacsvox-aural-spatial</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002dsubmission-1"><span>15.47 emacsvox-aural-submission<a class="copiable-link" href="#emacsvox_002daural_002dsubmission-1"> &para;</a></span></h3>
+
+<p>Combine semantic content and explicitly ordered compatibility actions at
+one frozen source boundary.  Legacy entry points remain independent
+adapters until their callers migrate to this service.
+</p>
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dsubmission-Options" accesskey="1">emacsvox-aural-submission Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="emacsvox_002daural_002dsubmission-Options">
+<h4 class="subsection"><span>15.47.1 emacsvox-aural-submission Options<a class="copiable-link" href="#emacsvox_002daural_002dsubmission-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-39"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-diagnostic-log-file</var><a class="copiable-link" href="#index-User-Option-39"> &para;</a></span></dt>
+<dd><pre class="verbatim">File receiving opt-in aural submission diagnostics.
+
+When non-nil, Emacsvox appends one Lisp plist per line with command timing,
+submission timing, and complete submitted text.  The log can therefore contain
+sensitive material and is disabled by default.  Emacsvox creates the file with
+owner-only permissions and tightens an existing file before appending to it.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-40"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-diagnostic-log-max-bytes</var><a class="copiable-link" href="#index-User-Option-40"> &para;</a></span></dt>
+<dd><pre class="verbatim">Soft size limit for one aural diagnostic log file.
+
+Before appending a record that would cross this limit, Emacsvox renames the
+current log to a session-tagged archive.  A single oversized record remains
+intact and may exceed the limit.  Set this to nil to disable rotation.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+16777216
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-41"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-diagnostic-log-retained-files</var><a class="copiable-link" href="#index-User-Option-41"> &para;</a></span></dt>
+<dd><pre class="verbatim">Number of rotated aural diagnostic log files to retain.
+
+The active log is additional to this number.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+4
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-doctor (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-aural-doctor (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-aural-doctor (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002deditor.html" rel="next" title="emacsvox-aural-editor">
+<link href="emacsvox_002daural_002ddescription.html" rel="prev" title="emacsvox-aural-description">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002ddoctor">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002deditor.html" accesskey="n" rel="next">emacsvox-aural-editor</a>, Previous: <a href="emacsvox_002daural_002ddescription.html" accesskey="p" rel="prev">emacsvox-aural-description</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002ddoctor-1"><span>15.20 emacsvox-aural-doctor<a class="copiable-link" href="#emacsvox_002daural_002ddoctor-1"> &para;</a></span></h3>
+
+<p>Diagnose the running aural installation and configuration without starting
+a speech server or changing presentation state.  Safe, deterministic repairs
+are explicit commands from the spoken report.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dDoctor-Commands" accesskey="1">Emacsvox-Aural-Doctor Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dDoctor-Commands">
+<h4 class="subsection"><span>15.20.1 Emacsvox-Aural-Doctor Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dDoctor-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002ddoctor-2" accesskey="1">emacsvox-aural-doctor</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002dhelp" accesskey="2">emacsvox-aural-doctor-help</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002dmode" accesskey="3">emacsvox-aural-doctor-mode</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002dnext" accesskey="4">emacsvox-aural-doctor-next</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002dnext_002dcolumn" accesskey="5">emacsvox-aural-doctor-next-column</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002dprevious" accesskey="6">emacsvox-aural-doctor-previous</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002dprevious_002dcolumn" accesskey="7">emacsvox-aural-doctor-previous-column</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002drefresh" accesskey="8">emacsvox-aural-doctor-refresh</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002drefresh_002dsound_002dpacks" accesskey="9">emacsvox-aural-doctor-refresh-sound-packs</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002dreload_002dpersonal_002ddata">emacsvox-aural-doctor-reload-personal-data</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002drepair_002dcurrent">emacsvox-aural-doctor-repair-current</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002drestore_002dbindings">emacsvox-aural-doctor-restore-bindings</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002dspeak_002dcurrent">emacsvox-aural-doctor-speak-current</a></li>
+<li><a href="#emacsvox_002daural_002ddoctor_002dspeak_002dcurrent_002dcell">emacsvox-aural-doctor-speak-current-cell</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor-2">
+<h4 class="subsubsection"><span>15.20.1.1 emacsvox-aural-doctor<a class="copiable-link" href="#emacsvox_002daural_002ddoctor-2"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open the spoken Aural Doctor and announce its overall result.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002dhelp">
+<h4 class="subsubsection"><span>15.20.1.2 emacsvox-aural-doctor-help<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002dhelp"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002dhelp"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002dhelp-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display and speak Aural Doctor help.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002dmode">
+<h4 class="subsubsection"><span>15.20.1.3 emacsvox-aural-doctor-mode<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Spoken diagnostics for aural presentation.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-doctor-mode-hook’, as the final or penultimate
+step during initialization.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+?		emacsvox-aural-doctor-help
+h		emacsvox-aural
+r		emacsvox-aural-doctor-repair-current
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002dnext">
+<h4 class="subsubsection"><span>15.20.1.4 emacsvox-aural-doctor-next<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002dnext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-next</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002dnext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002dnext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to and speak the next diagnostic finding.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002dnext_002dcolumn">
+<h4 class="subsubsection"><span>15.20.1.5 emacsvox-aural-doctor-next-column<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002dnext_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-next-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002dnext_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002dnext_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move right and speak the next diagnostic column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002dprevious">
+<h4 class="subsubsection"><span>15.20.1.6 emacsvox-aural-doctor-previous<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002dprevious"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-previous</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002dprevious"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002dprevious-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to and speak the previous diagnostic finding.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002dprevious_002dcolumn">
+<h4 class="subsubsection"><span>15.20.1.7 emacsvox-aural-doctor-previous-column<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002dprevious_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-previous-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002dprevious_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002dprevious_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move left and speak the previous diagnostic column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002drefresh">
+<h4 class="subsubsection"><span>15.20.1.8 emacsvox-aural-doctor-refresh<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-refresh</strong> <var class="def-var-arguments">(&amp;optional id)</var><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Rerun diagnostics, preserving row ID and the current column.
+
+(fn &amp;optional ID)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002drefresh_002dsound_002dpacks">
+<h4 class="subsubsection"><span>15.20.1.9 emacsvox-aural-doctor-refresh-sound-packs<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002drefresh_002dsound_002dpacks"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002drefresh_002dsound_002dpacks"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-refresh-sound-packs</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002drefresh_002dsound_002dpacks"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002drefresh_002dsound_002dpacks-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Refresh dynamically discovered and registered sound packs.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002dreload_002dpersonal_002ddata">
+<h4 class="subsubsection"><span>15.20.1.10 emacsvox-aural-doctor-reload-personal-data<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002dreload_002dpersonal_002ddata"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002dreload_002dpersonal_002ddata"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-reload-personal-data</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002dreload_002dpersonal_002ddata"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002dreload_002dpersonal_002ddata-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Reload the validated personal aural data file.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002drepair_002dcurrent">
+<h4 class="subsubsection"><span>15.20.1.11 emacsvox-aural-doctor-repair-current<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002drepair_002dcurrent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002drepair_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-repair-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002drepair_002dcurrent"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002drepair_002dcurrent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Run the deterministic repair offered by the finding at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002drestore_002dbindings">
+<h4 class="subsubsection"><span>15.20.1.12 emacsvox-aural-doctor-restore-bindings<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002drestore_002dbindings"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002drestore_002dbindings"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-restore-bindings</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002drestore_002dbindings"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002drestore_002dbindings-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Restore the documented aural home and point-explanation bindings.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002dspeak_002dcurrent">
+<h4 class="subsubsection"><span>15.20.1.13 emacsvox-aural-doctor-speak-current<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002dspeak_002dcurrent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002dspeak_002dcurrent"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002dspeak_002dcurrent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the complete diagnostic finding at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002ddoctor_002dspeak_002dcurrent_002dcell">
+<h4 class="subsubsection"><span>15.20.1.14 emacsvox-aural-doctor-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002ddoctor_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002ddoctor_002dspeak_002dcurrent_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-doctor-speak-current-cell</strong><a class="copiable-link" href="#index-emacsvox_002daural_002ddoctor_002dspeak_002dcurrent_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002ddoctor_002dspeak_002dcurrent_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current diagnostic column title and value.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002deditor.html">emacsvox-aural-editor</a>, Previous: <a href="emacsvox_002daural_002ddescription.html">emacsvox-aural-description</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

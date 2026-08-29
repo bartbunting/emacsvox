@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-librivox (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-librivox (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-librivox (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dlispy.html" rel="next" title="emacsvox-lispy">
+<link href="emacsvox_002dkmacro.html" rel="prev" title="emacsvox-kmacro">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dlibrivox">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dlispy.html" accesskey="n" rel="next">emacsvox-lispy</a>, Previous: <a href="emacsvox_002dkmacro.html" accesskey="p" rel="prev">emacsvox-kmacro</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dlibrivox-1"><span>15.156 emacsvox-librivox<a class="copiable-link" href="#emacsvox_002dlibrivox-1"> &para;</a></span></h3>
+
+<p>LIBRIVOX == <a class="url" href="http://www.librivox.org">http://www.librivox.org</a> &mdash; Free Audio Books.
+API Info: <a class="url" href="https://librivox.org/api/info">https://librivox.org/api/info</a>
+It provides a simple Web  API
+This module implements an Emacsvox Librivox client.
+</p>
+<ul class="mini-toc">
+<li><a href="#Usage-1" accesskey="1">Usage</a></li>
+<li><a href="#Emacsvox_002dLibrivox-Commands" accesskey="2">Emacsvox-Librivox Commands</a></li>
+<li><a href="#emacsvox_002dlibrivox-Options" accesskey="3">emacsvox-librivox Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Usage-1">
+<h4 class="subsection"><span>15.156.1 Usage<a class="copiable-link" href="#Usage-1"> &para;</a></span></h4>
+
+<p>main entry point is command <code class="code">emacsvox-librivox</code> bound to <kbd class="kbd">C-; l</kbd>.
+This prompts with the following choices:
+</p><ul class="itemize mark-bullet">
+<li><kbd class="kbd">a</kbd> Author &mdash; Search  by Author.
+</li><li><kbd class="kbd">t</kbd> Title &mdash; Search  by Title.
+</li><li><kbd class="kbd">g</kbd> Genre &mdash; Search  by Genre &mdash; with minibuffer completion.
+</li><li><kbd class="kbd">p</kbd> Play &mdash; Play a  book.
+</li><li><kbd class="kbd">d</kbd> Directory &mdash; Browse local cache.
+</li></ul>
+
+<p>Search results are displayed in a Web page that provides controls
+for accessing the book.
+</p>
+</div>
+<div class="subsection-level-extent" id="Emacsvox_002dLibrivox-Commands">
+<h4 class="subsection"><span>15.156.2 Emacsvox-Librivox Commands<a class="copiable-link" href="#Emacsvox_002dLibrivox-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dlibrivox-2" accesskey="1">emacsvox-librivox</a></li>
+<li><a href="#emacsvox_002dlibrivox_002dplay" accesskey="2">emacsvox-librivox-play</a></li>
+<li><a href="#emacsvox_002dlibrivox_002dsearch_002dby_002dauthor" accesskey="3">emacsvox-librivox-search-by-author</a></li>
+<li><a href="#emacsvox_002dlibrivox_002dsearch_002dby_002dgenre" accesskey="4">emacsvox-librivox-search-by-genre</a></li>
+<li><a href="#emacsvox_002dlibrivox_002dsearch_002dby_002dtitle" accesskey="5">emacsvox-librivox-search-by-title</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dlibrivox-2">
+<h4 class="subsubsection"><span>15.156.2.1 emacsvox-librivox<a class="copiable-link" href="#emacsvox_002dlibrivox-2"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dlibrivox"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-librivox</strong> <var class="def-var-arguments">(search-type)</var><a class="copiable-link" href="#index-emacsvox_002dlibrivox"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_003b-C_002dl"></a><span><kbd class="kbd">C-; C-l</kbd><a class="copiable-link" href="#index-C_002d_003b-C_002dl"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-h-C_002dl"></a><span><kbd class="kbd">C-x @ h C-l</kbd><a class="copiable-link" href="#index-C_002dx-_0040-h-C_002dl"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dlibrivox-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Launch a Librivox Search.
+
+(fn SEARCH-TYPE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dlibrivox_002dplay">
+<h4 class="subsubsection"><span>15.156.2.2 emacsvox-librivox-play<a class="copiable-link" href="#emacsvox_002dlibrivox_002dplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dlibrivox_002dplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-librivox-play</strong> <var class="def-var-arguments">(rss-url)</var><a class="copiable-link" href="#index-emacsvox_002dlibrivox_002dplay"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dlibrivox_002dplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play book stream
+
+(fn RSS-URL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dlibrivox_002dsearch_002dby_002dauthor">
+<h4 class="subsubsection"><span>15.156.2.3 emacsvox-librivox-search-by-author<a class="copiable-link" href="#emacsvox_002dlibrivox_002dsearch_002dby_002dauthor"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dlibrivox_002dsearch_002dby_002dauthor"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-librivox-search-by-author</strong> <var class="def-var-arguments">(author &amp;optional offset)</var><a class="copiable-link" href="#index-emacsvox_002dlibrivox_002dsearch_002dby_002dauthor"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dlibrivox_002dsearch_002dby_002dauthor-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search by author. Both exact and partial matches for
+‘author’. Optional interactive prefix arg ‘offset’ prompts for offset
+&mdash; use this for retrieving next set of results.
+
+(fn AUTHOR &amp;optional OFFSET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dlibrivox_002dsearch_002dby_002dgenre">
+<h4 class="subsubsection"><span>15.156.2.4 emacsvox-librivox-search-by-genre<a class="copiable-link" href="#emacsvox_002dlibrivox_002dsearch_002dby_002dgenre"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dlibrivox_002dsearch_002dby_002dgenre"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-librivox-search-by-genre</strong> <var class="def-var-arguments">(genre &amp;optional offset)</var><a class="copiable-link" href="#index-emacsvox_002dlibrivox_002dsearch_002dby_002dgenre"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dlibrivox_002dsearch_002dby_002dgenre-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search by genre.
+Optional prefix arg ‘offset’ prompts for offset.
+
+(fn GENRE &amp;optional OFFSET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dlibrivox_002dsearch_002dby_002dtitle">
+<h4 class="subsubsection"><span>15.156.2.5 emacsvox-librivox-search-by-title<a class="copiable-link" href="#emacsvox_002dlibrivox_002dsearch_002dby_002dtitle"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dlibrivox_002dsearch_002dby_002dtitle"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-librivox-search-by-title</strong> <var class="def-var-arguments">(title &amp;optional offset)</var><a class="copiable-link" href="#index-emacsvox_002dlibrivox_002dsearch_002dby_002dtitle"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dlibrivox_002dsearch_002dby_002dtitle-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search by title. Both exact and partial matches for ‘title’. Optional
+prefix arg ‘offset’ prompts for offset &mdash; use this for retrieving
+more results.
+
+(fn TITLE &amp;optional OFFSET)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dlibrivox-Options">
+<h4 class="subsection"><span>15.156.3 emacsvox-librivox Options<a class="copiable-link" href="#emacsvox_002dlibrivox-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-80"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-librivox-local-cache</var><a class="copiable-link" href="#index-User-Option-80"> &para;</a></span></dt>
+<dd><pre class="verbatim">Location where we cache LIBRIVOX playlists.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;~/.emacsvox/librivox&quot;
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dlispy.html">emacsvox-lispy</a>, Previous: <a href="emacsvox_002dkmacro.html">emacsvox-kmacro</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

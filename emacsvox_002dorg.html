@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-org (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-org (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-org (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dorg_002dsrs.html" rel="next" title="emacsvox-org-srs">
+<link href="emacsvox_002docr.html" rel="prev" title="emacsvox-ocr">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dorg">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dorg_002dsrs.html" accesskey="n" rel="next">emacsvox-org-srs</a>, Previous: <a href="emacsvox_002docr.html" accesskey="p" rel="prev">emacsvox-ocr</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dorg-1"><span>15.177 emacsvox-org<a class="copiable-link" href="#emacsvox_002dorg-1"> &para;</a></span></h3>
+
+<p>Speech-enable org &mdash;
+ Org allows you to keep organized notes and todo lists.
+Homepage: http://www.astro.uva.nl/~dominik/Tools/org/
+or http://orgmode.org/
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dOrg-Commands" accesskey="1">Emacsvox-Org Commands</a></li>
+<li><a href="#emacsvox_002dorg-Options" accesskey="2">emacsvox-org Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dOrg-Commands">
+<h4 class="subsection"><span>15.177.1 Emacsvox-Org Commands<a class="copiable-link" href="#Emacsvox_002dOrg-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dorg_002damarks_002dplay" accesskey="1">emacsvox-org-amarks-play</a></li>
+<li><a href="#emacsvox_002dorg_002dcapture_002dlink" accesskey="2">emacsvox-org-capture-link</a></li>
+<li><a href="#emacsvox_002dorg_002dpopup_002dinput" accesskey="3">emacsvox-org-popup-input</a></li>
+<li><a href="#emacsvox_002dorg_002dpopup_002dinput_002dbuffer" accesskey="4">emacsvox-org-popup-input-buffer</a></li>
+<li><a href="#emacsvox_002dorg_002dspeak_002ditem" accesskey="5">emacsvox-org-speak-item</a></li>
+<li><a href="#emacsvox_002dorg_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement" accesskey="6">emacsvox-org-table-speak-both-headers-and-element</a></li>
+<li><a href="#emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader" accesskey="7">emacsvox-org-table-speak-column-header</a></li>
+<li><a href="#emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement" accesskey="8">emacsvox-org-table-speak-column-header-and-element</a></li>
+<li><a href="#emacsvox_002dorg_002dtable_002dspeak_002dcoordinates" accesskey="9">emacsvox-org-table-speak-coordinates</a></li>
+<li><a href="#emacsvox_002dorg_002dtable_002dspeak_002dcurrent_002delement">emacsvox-org-table-speak-current-element</a></li>
+<li><a href="#emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader">emacsvox-org-table-speak-row-header</a></li>
+<li><a href="#emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader_002dand_002delement">emacsvox-org-table-speak-row-header-and-element</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002damarks_002dplay">
+<h4 class="subsubsection"><span>15.177.1.1 emacsvox-org-amarks-play<a class="copiable-link" href="#emacsvox_002dorg_002damarks_002dplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002damarks_002dplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-amarks-play</strong><a class="copiable-link" href="#index-emacsvox_002dorg_002damarks_002dplay"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002damarks_002dplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Loop through and play list of Amarks from org buffer.
+Hit C-g to break out of the loop.
+Press ‘y’ to play to next amark.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dcapture_002dlink">
+<h4 class="subsubsection"><span>15.177.1.2 emacsvox-org-capture-link<a class="copiable-link" href="#emacsvox_002dorg_002dcapture_002dlink"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dcapture_002dlink"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-capture-link</strong> <var class="def-var-arguments">(&amp;optional open)</var><a class="copiable-link" href="#index-emacsvox_002dorg_002dcapture_002dlink"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_002e-h"></a><span><kbd class="kbd">C-. h</kbd><a class="copiable-link" href="#index-C_002d_002e-h"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-s-h"></a><span><kbd class="kbd">C-x @ s h</kbd><a class="copiable-link" href="#index-C_002dx-_0040-s-h"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dorg_002dcapture_002dlink-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Capture hyperlink to current context.
+To use this command, first do ‘customize-variable’
+‘org-capture-template’ and assign letter ‘h’ to a template that
+creates the hyperlink on capture.  Optional interactive prefix
+arg just opens the file
+
+(fn &amp;optional OPEN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dpopup_002dinput">
+<h4 class="subsubsection"><span>15.177.1.3 emacsvox-org-popup-input<a class="copiable-link" href="#emacsvox_002dorg_002dpopup_002dinput"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dpopup_002dinput"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-popup-input</strong><a class="copiable-link" href="#index-emacsvox_002dorg_002dpopup_002dinput"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002dpopup_002dinput-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Pops up an org input area.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dpopup_002dinput_002dbuffer">
+<h4 class="subsubsection"><span>15.177.1.4 emacsvox-org-popup-input-buffer<a class="copiable-link" href="#emacsvox_002dorg_002dpopup_002dinput_002dbuffer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dpopup_002dinput_002dbuffer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-popup-input-buffer</strong> <var class="def-var-arguments">(mode)</var><a class="copiable-link" href="#index-emacsvox_002dorg_002dpopup_002dinput_002dbuffer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002dpopup_002dinput_002dbuffer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Provide an input buffer in a specified mode.
+
+(fn MODE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dspeak_002ditem">
+<h4 class="subsubsection"><span>15.177.1.5 emacsvox-org-speak-item<a class="copiable-link" href="#emacsvox_002dorg_002dspeak_002ditem"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dspeak_002ditem"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-speak-item</strong><a class="copiable-link" href="#index-emacsvox_002dorg_002dspeak_002ditem"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002dspeak_002ditem-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current Org item through one semantic presentation.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement">
+<h4 class="subsubsection"><span>15.177.1.6 emacsvox-org-table-speak-both-headers-and-element<a class="copiable-link" href="#emacsvox_002dorg_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-table-speak-both-headers-and-element</strong><a class="copiable-link" href="#index-emacsvox_002dorg_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak both headers and the current Org table cell.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader">
+<h4 class="subsubsection"><span>15.177.1.7 emacsvox-org-table-speak-column-header<a class="copiable-link" href="#emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-table-speak-column-header</strong><a class="copiable-link" href="#index-emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current Org table column header.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement">
+<h4 class="subsubsection"><span>15.177.1.8 emacsvox-org-table-speak-column-header-and-element<a class="copiable-link" href="#emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-table-speak-column-header-and-element</strong><a class="copiable-link" href="#index-emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the column header and current Org table cell.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dtable_002dspeak_002dcoordinates">
+<h4 class="subsubsection"><span>15.177.1.9 emacsvox-org-table-speak-coordinates<a class="copiable-link" href="#emacsvox_002dorg_002dtable_002dspeak_002dcoordinates"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dtable_002dspeak_002dcoordinates"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-table-speak-coordinates</strong><a class="copiable-link" href="#index-emacsvox_002dorg_002dtable_002dspeak_002dcoordinates"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002dtable_002dspeak_002dcoordinates-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current Org table coordinates.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dtable_002dspeak_002dcurrent_002delement">
+<h4 class="subsubsection"><span>15.177.1.10 emacsvox-org-table-speak-current-element<a class="copiable-link" href="#emacsvox_002dorg_002dtable_002dspeak_002dcurrent_002delement"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dtable_002dspeak_002dcurrent_002delement"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-table-speak-current-element</strong><a class="copiable-link" href="#index-emacsvox_002dorg_002dtable_002dspeak_002dcurrent_002delement"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002dtable_002dspeak_002dcurrent_002delement-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current Org table cell.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader">
+<h4 class="subsubsection"><span>15.177.1.11 emacsvox-org-table-speak-row-header<a class="copiable-link" href="#emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-table-speak-row-header</strong><a class="copiable-link" href="#index-emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current Org table row header.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader_002dand_002delement">
+<h4 class="subsubsection"><span>15.177.1.12 emacsvox-org-table-speak-row-header-and-element<a class="copiable-link" href="#emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader_002dand_002delement"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader_002dand_002delement"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-org-table-speak-row-header-and-element</strong><a class="copiable-link" href="#index-emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader_002dand_002delement"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dorg_002dtable_002dspeak_002drow_002dheader_002dand_002delement-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the row header and current Org table cell.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dorg-Options">
+<h4 class="subsection"><span>15.177.2 emacsvox-org Options<a class="copiable-link" href="#emacsvox_002dorg-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-110"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-org-hotlist</var><a class="copiable-link" href="#index-User-Option-110"> &para;</a></span></dt>
+<dd><pre class="verbatim">Emacsvox org hotlist location.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;~/.org/hotlist.org&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-111"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-org-table-after-movement-function</var><a class="copiable-link" href="#index-User-Option-111"> &para;</a></span></dt>
+<dd><pre class="verbatim">The function to call after moving in a table
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+emacsvox-org-table-speak-current-element
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dorg_002dsrs.html">emacsvox-org-srs</a>, Previous: <a href="emacsvox_002docr.html">emacsvox-ocr</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

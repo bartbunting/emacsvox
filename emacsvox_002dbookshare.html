@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-bookshare (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-bookshare (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-bookshare (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dbrowse_002dkill_002dring.html" rel="next" title="emacsvox-browse-kill-ring">
+<link href="emacsvox_002dbookmark.html" rel="prev" title="emacsvox-bookmark">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dbookshare">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dbrowse_002dkill_002dring.html" accesskey="n" rel="next">emacsvox-browse-kill-ring</a>, Previous: <a href="emacsvox_002dbookmark.html" accesskey="p" rel="prev">emacsvox-bookmark</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dbookshare-1"><span>15.58 emacsvox-bookshare<a class="copiable-link" href="#emacsvox_002dbookshare-1"> &para;</a></span></h3>
+
+<p>BOOKSHARE == http://www.bookshare.org
+provides book access to print-disabled users.
+It provides a simple Web  API http://developer.bookshare.org
+This module implements an Emacsvox Bookshare client.
+</p><ul class="mini-toc">
+<li><a href="#requirements" accesskey="1">requirements</a></li>
+<li><a href="#Usage" accesskey="2">Usage</a></li>
+<li><a href="#Sample-Interaction" accesskey="3">Sample Interaction</a></li>
+<li><a href="#Emacsvox_002dBookshare-Commands" accesskey="4">Emacsvox-Bookshare Commands</a></li>
+<li><a href="#emacsvox_002dbookshare-Options" accesskey="5">emacsvox-bookshare Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="requirements">
+<h4 class="subsection"><span>15.58.1 requirements<a class="copiable-link" href="#requirements"> &para;</a></span></h4>
+<ul class="itemize mark-bullet">
+<li>You need to get your own API key
+</li><li>You need Emacs built with libxml2 support
+</li></ul>
+
+</div>
+<div class="subsection-level-extent" id="Usage">
+<h4 class="subsection"><span>15.58.2 Usage<a class="copiable-link" href="#Usage"> &para;</a></span></h4>
+<p>The main entry point is command
+<code class="code">emacsvox-bookshare</code> bound to <kbd class="kbd">C-e C-b</kbd>.
+This creates a special <strong class="strong">Bookshare Interaction</strong> buffer that is
+placed in <strong class="strong">emacsvox-bookshare-mode</strong>.
+Se the help for that mode on detailed usage instructions and key-bindings.
+</p>
+</div>
+<div class="subsection-level-extent" id="Sample-Interaction">
+<h4 class="subsection"><span>15.58.3 Sample Interaction<a class="copiable-link" href="#Sample-Interaction"> &para;</a></span></h4>
+
+<p>Assuming you have correctly setup your API key:
+</p><ul class="itemize mark-bullet">
+<li>Customize group <code class="code">emacsvox-bookshare</code> by pressing <kbd class="kbd">C-h G</kbd>.
+</li><li>Press <kbd class="kbd">C-e C-b</kbd> to open or switch to the Bookshare buffer.
+</li><li>Perform a search <kbd class="kbd">a</kbd> or <kbd class="kbd">t</kbd> for author or title search.
+</li><li>You will be prompted for your Bookshare password if this is
+the first time.
+</li><li>The password will be saved to your configured
+<code class="code">auth-source</code> &mdash; usually <code class="code">~/.authinfo.gpg</code>.
+You can also use <code class="code">password-store[.]</code>
+</li><li>The results of the search appear in the Bookshare buffer.
+Audio formatting and auditory icons convey
+if  a result is already available locally.
+</li><li>If not available locally, press <kbd class="kbd">D</kbd> to download the content.
+</li><li>Press <kbd class="kbd">U</kbd> to unpack the downloaded content.
+</li><li>Press <kbd class="kbd">e</kbd> to  display the entire book.
+</li><li>Press <kbd class="kbd">c</kbd> to display the table of contents.
+</li><li>Now, use all of EWW  See <a class="xref" href="emacsvox_002deww.html">emacsvox-eww</a> extensions  and profit!
+</li></ul>
+
+</div>
+<div class="subsection-level-extent" id="Emacsvox_002dBookshare-Commands">
+<h4 class="subsection"><span>15.58.4 Emacsvox-Bookshare Commands<a class="copiable-link" href="#Emacsvox_002dBookshare-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dbookshare-2" accesskey="1">emacsvox-bookshare</a></li>
+<li><a href="#emacsvox_002dbookshare_002daction" accesskey="2">emacsvox-bookshare-action</a></li>
+<li><a href="#emacsvox_002dbookshare_002dauthor_002dsearch" accesskey="3">emacsvox-bookshare-author-search</a></li>
+<li><a href="#emacsvox_002dbookshare_002dbrowse" accesskey="4">emacsvox-bookshare-browse</a></li>
+<li><a href="#emacsvox_002dbookshare_002dbrowse_002dlatest" accesskey="5">emacsvox-bookshare-browse-latest</a></li>
+<li><a href="#emacsvox_002dbookshare_002dbrowse_002dpopular" accesskey="6">emacsvox-bookshare-browse-popular</a></li>
+<li><a href="#emacsvox_002dbookshare_002ddebugInfo_002dhandler" accesskey="7">emacsvox-bookshare-debugInfo-handler</a></li>
+<li><a href="#emacsvox_002dbookshare_002ddownload_002daudio" accesskey="8">emacsvox-bookshare-download-audio</a></li>
+<li><a href="#emacsvox_002dbookshare_002ddownload_002daudio_002dat_002dpoint" accesskey="9">emacsvox-bookshare-download-audio-at-point</a></li>
+<li><a href="#emacsvox_002dbookshare_002ddownload_002dbrf">emacsvox-bookshare-download-brf</a></li>
+<li><a href="#emacsvox_002dbookshare_002ddownload_002dbrf_002dat_002dpoint">emacsvox-bookshare-download-brf-at-point</a></li>
+<li><a href="#emacsvox_002dbookshare_002ddownload_002ddaisy">emacsvox-bookshare-download-daisy</a></li>
+<li><a href="#emacsvox_002dbookshare_002ddownload_002ddaisy_002dat_002dpoint">emacsvox-bookshare-download-daisy-at-point</a></li>
+<li><a href="#emacsvox_002dbookshare_002ddownload_002depub_002d3">emacsvox-bookshare-download-epub-3</a></li>
+<li><a href="#emacsvox_002dbookshare_002ddownload_002depub_002d3_002dat_002dpoint">emacsvox-bookshare-download-epub-3-at-point</a></li>
+<li><a href="#emacsvox_002dbookshare_002ddownload_002dinternal">emacsvox-bookshare-download-internal</a></li>
+<li><a href="#emacsvox_002dbookshare_002deww">emacsvox-bookshare-eww</a></li>
+<li><a href="#emacsvox_002dbookshare_002dexpand_002dat_002dpoint">emacsvox-bookshare-expand-at-point</a></li>
+<li><a href="#emacsvox_002dbookshare_002dextract_002dand_002dview">emacsvox-bookshare-extract-and-view</a></li>
+<li><a href="#emacsvox_002dbookshare_002dextract_002dxml">emacsvox-bookshare-extract-xml</a></li>
+<li><a href="#emacsvox_002dbookshare_002dflush_002dlines">emacsvox-bookshare-flush-lines</a></li>
+<li><a href="#emacsvox_002dbookshare_002dfulltext">emacsvox-bookshare-fulltext</a></li>
+<li><a href="#emacsvox_002dbookshare_002dfulltext_002dsearch">emacsvox-bookshare-fulltext-search</a></li>
+<li><a href="#emacsvox_002dbookshare_002dget_002dmore_002dresults">emacsvox-bookshare-get-more-results</a></li>
+<li><a href="#emacsvox_002dbookshare_002did_002dsearch">emacsvox-bookshare-id-search</a></li>
+<li><a href="#emacsvox_002dbookshare_002disbn_002dsearch">emacsvox-bookshare-isbn-search</a></li>
+<li><a href="#emacsvox_002dbookshare_002dlist_002dpreferences">emacsvox-bookshare-list-preferences</a></li>
+<li><a href="#emacsvox_002dbookshare_002dmode">emacsvox-bookshare-mode</a></li>
+<li><a href="#emacsvox_002dbookshare_002dnext_002dresult">emacsvox-bookshare-next-result</a></li>
+<li><a href="#emacsvox_002dbookshare_002dperiodical_002dlist">emacsvox-bookshare-periodical-list</a></li>
+<li><a href="#emacsvox_002dbookshare_002dprevious_002dresult">emacsvox-bookshare-previous-result</a></li>
+<li><a href="#emacsvox_002dbookshare_002dset_002dpreference">emacsvox-bookshare-set-preference</a></li>
+<li><a href="#emacsvox_002dbookshare_002dsince_002dsearch">emacsvox-bookshare-since-search</a></li>
+<li><a href="#emacsvox_002dbookshare_002dtitle_002dsearch">emacsvox-bookshare-title-search</a></li>
+<li><a href="#emacsvox_002dbookshare_002dtoc">emacsvox-bookshare-toc</a></li>
+<li><a href="#emacsvox_002dbookshare_002dtoc_002dat_002dpoint">emacsvox-bookshare-toc-at-point</a></li>
+<li><a href="#emacsvox_002dbookshare_002dunpack_002dat_002dpoint">emacsvox-bookshare-unpack-at-point</a></li>
+<li><a href="#emacsvox_002dbookshare_002durl_002dexecutor">emacsvox-bookshare-url-executor</a></li>
+<li><a href="#emacsvox_002dbookshare_002dversion_002dhandler">emacsvox-bookshare-version-handler</a></li>
+<li><a href="#emacsvox_002dbookshare_002dview">emacsvox-bookshare-view</a></li>
+<li><a href="#emacsvox_002dbookshare_002dview_002dat_002dpoint">emacsvox-bookshare-view-at-point</a></li>
+<li><a href="#emacsvox_002dbookshare_002dview_002dpage_002drange">emacsvox-bookshare-view-page-range</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare-2">
+<h4 class="subsubsection"><span>15.58.4.1 emacsvox-bookshare<a class="copiable-link" href="#emacsvox_002dbookshare-2"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002db"></a><span><kbd class="kbd">C-e C-b</kbd><a class="copiable-link" href="#index-C_002de-C_002db"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dbookshare-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Bookshare  Interaction.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002daction">
+<h4 class="subsubsection"><span>15.58.4.2 emacsvox-bookshare-action<a class="copiable-link" href="#emacsvox_002dbookshare_002daction"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002daction"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-action</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002daction"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002daction-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Call action specified by  invoking key.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dauthor_002dsearch">
+<h4 class="subsubsection"><span>15.58.4.3 emacsvox-bookshare-author-search<a class="copiable-link" href="#emacsvox_002dbookshare_002dauthor_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dauthor_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-author-search</strong> <var class="def-var-arguments">(query &amp;optional category)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dauthor_002dsearch"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dauthor_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform a Bookshare author search.
+Interactive prefix arg filters search by category.
+
+(fn QUERY &amp;optional CATEGORY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dbrowse">
+<h4 class="subsubsection"><span>15.58.4.4 emacsvox-bookshare-browse<a class="copiable-link" href="#emacsvox_002dbookshare_002dbrowse"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dbrowse"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-browse</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dbrowse"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dbrowse-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse Bookshare.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dbrowse_002dlatest">
+<h4 class="subsubsection"><span>15.58.4.5 emacsvox-bookshare-browse-latest<a class="copiable-link" href="#emacsvox_002dbookshare_002dbrowse_002dlatest"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dbrowse_002dlatest"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-browse-latest</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dbrowse_002dlatest"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dbrowse_002dlatest-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return latest books.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dbrowse_002dpopular">
+<h4 class="subsubsection"><span>15.58.4.6 emacsvox-bookshare-browse-popular<a class="copiable-link" href="#emacsvox_002dbookshare_002dbrowse_002dpopular"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dbrowse_002dpopular"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-browse-popular</strong> <var class="def-var-arguments">(&amp;optional category)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dbrowse_002dpopular"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dbrowse_002dpopular-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse popular books.
+Optional interactive prefix arg prompts for a category to use as a filter.
+
+(fn &amp;optional CATEGORY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002ddebugInfo_002dhandler">
+<h4 class="subsubsection"><span>15.58.4.7 emacsvox-bookshare-debugInfo-handler<a class="copiable-link" href="#emacsvox_002dbookshare_002ddebugInfo_002dhandler"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002ddebugInfo_002dhandler"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-debugInfo-handler</strong> <var class="def-var-arguments">(&amp;rest arguments)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002ddebugInfo_002dhandler"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002ddebugInfo_002dhandler-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Ignore ARGUMENTS, do nothing, and return nil.
+This function accepts any number of arguments in ARGUMENTS.
+Also see ‘always’.
+
+(fn &amp;rest ARGUMENTS)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002ddownload_002daudio">
+<h4 class="subsubsection"><span>15.58.4.8 emacsvox-bookshare-download-audio<a class="copiable-link" href="#emacsvox_002dbookshare_002ddownload_002daudio"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002ddownload_002daudio"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-download-audio</strong> <var class="def-var-arguments">(id target)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002ddownload_002daudio"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002ddownload_002daudio-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Download audio format of specified book to target location.
+
+(fn ID TARGET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002ddownload_002daudio_002dat_002dpoint">
+<h4 class="subsubsection"><span>15.58.4.9 emacsvox-bookshare-download-audio-at-point<a class="copiable-link" href="#emacsvox_002dbookshare_002ddownload_002daudio_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002ddownload_002daudio_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-download-audio-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002ddownload_002daudio_002dat_002dpoint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002ddownload_002daudio_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Download audio version of book under point.
+Target location is generated from author and title.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002ddownload_002dbrf">
+<h4 class="subsubsection"><span>15.58.4.10 emacsvox-bookshare-download-brf<a class="copiable-link" href="#emacsvox_002dbookshare_002ddownload_002dbrf"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002ddownload_002dbrf"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-download-brf</strong> <var class="def-var-arguments">(id target)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002ddownload_002dbrf"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002ddownload_002dbrf-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Download Daisy format of specified book to target location.
+
+(fn ID TARGET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002ddownload_002dbrf_002dat_002dpoint">
+<h4 class="subsubsection"><span>15.58.4.11 emacsvox-bookshare-download-brf-at-point<a class="copiable-link" href="#emacsvox_002dbookshare_002ddownload_002dbrf_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002ddownload_002dbrf_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-download-brf-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002ddownload_002dbrf_002dat_002dpoint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002ddownload_002dbrf_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Download Braille version of book under point.
+Target location is generated from author and title.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002ddownload_002ddaisy">
+<h4 class="subsubsection"><span>15.58.4.12 emacsvox-bookshare-download-daisy<a class="copiable-link" href="#emacsvox_002dbookshare_002ddownload_002ddaisy"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002ddownload_002ddaisy"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-download-daisy</strong> <var class="def-var-arguments">(id target)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002ddownload_002ddaisy"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002ddownload_002ddaisy-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Download Daisy format of specified book to target location.
+
+(fn ID TARGET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002ddownload_002ddaisy_002dat_002dpoint">
+<h4 class="subsubsection"><span>15.58.4.13 emacsvox-bookshare-download-daisy-at-point<a class="copiable-link" href="#emacsvox_002dbookshare_002ddownload_002ddaisy_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002ddownload_002ddaisy_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-download-daisy-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002ddownload_002ddaisy_002dat_002dpoint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002ddownload_002ddaisy_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Download Daisy version of book under point.
+Target location is generated from author and title.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002ddownload_002depub_002d3">
+<h4 class="subsubsection"><span>15.58.4.14 emacsvox-bookshare-download-epub-3<a class="copiable-link" href="#emacsvox_002dbookshare_002ddownload_002depub_002d3"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002ddownload_002depub_002d3"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-download-epub-3</strong> <var class="def-var-arguments">(id target)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002ddownload_002depub_002d3"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002ddownload_002depub_002d3-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Download epub-3 format of specified book to target location.
+
+(fn ID TARGET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002ddownload_002depub_002d3_002dat_002dpoint">
+<h4 class="subsubsection"><span>15.58.4.15 emacsvox-bookshare-download-epub-3-at-point<a class="copiable-link" href="#emacsvox_002dbookshare_002ddownload_002depub_002d3_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002ddownload_002depub_002d3_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-download-epub-3-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002ddownload_002depub_002d3_002dat_002dpoint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002ddownload_002depub_002d3_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Download epub-3 version of book under point.
+Target location is generated from author and title.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002ddownload_002dinternal">
+<h4 class="subsubsection"><span>15.58.4.16 emacsvox-bookshare-download-internal<a class="copiable-link" href="#emacsvox_002dbookshare_002ddownload_002dinternal"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002ddownload_002dinternal"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-download-internal</strong> <var class="def-var-arguments">(url target)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002ddownload_002dinternal"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002ddownload_002dinternal-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Download content  to target location.
+
+(fn URL TARGET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002deww">
+<h4 class="subsubsection"><span>15.58.4.17 emacsvox-bookshare-eww<a class="copiable-link" href="#emacsvox_002dbookshare_002deww"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002deww"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-eww</strong> <var class="def-var-arguments">(directory)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002deww"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-y-b"></a><span><kbd class="kbd">C-e y b</kbd><a class="copiable-link" href="#index-C_002de-y-b"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dbookshare_002deww-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Render  book using EWW
+
+(fn DIRECTORY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dexpand_002dat_002dpoint">
+<h4 class="subsubsection"><span>15.58.4.18 emacsvox-bookshare-expand-at-point<a class="copiable-link" href="#emacsvox_002dbookshare_002dexpand_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dexpand_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-expand-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dexpand_002dat_002dpoint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dexpand_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Expand entry at point by retrieving metadata.
+Once retrieved, memoize to avoid multiple retrievals.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dextract_002dand_002dview">
+<h4 class="subsubsection"><span>15.58.4.19 emacsvox-bookshare-extract-and-view<a class="copiable-link" href="#emacsvox_002dbookshare_002dextract_002dand_002dview"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dextract_002dand_002dview"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-extract-and-view</strong> <var class="def-var-arguments">(url)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dextract_002dand_002dview"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dextract_002dand_002dview-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Extract content referred to by link under point, and render via the browser.
+
+(fn URL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dextract_002dxml">
+<h4 class="subsubsection"><span>15.58.4.20 emacsvox-bookshare-extract-xml<a class="copiable-link" href="#emacsvox_002dbookshare_002dextract_002dxml"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dextract_002dxml"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-extract-xml</strong> <var class="def-var-arguments">(url)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dextract_002dxml"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dextract_002dxml-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Extract content referred to by link under point, and return an XML buffer.
+
+(fn URL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dflush_002dlines">
+<h4 class="subsubsection"><span>15.58.4.21 emacsvox-bookshare-flush-lines<a class="copiable-link" href="#emacsvox_002dbookshare_002dflush_002dlines"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dflush_002dlines"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-flush-lines</strong> <var class="def-var-arguments">(regexp)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dflush_002dlines"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dflush_002dlines-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Flush lines matching regexp in Bookshare buffer.
+
+(fn REGEXP)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dfulltext">
+<h4 class="subsubsection"><span>15.58.4.22 emacsvox-bookshare-fulltext<a class="copiable-link" href="#emacsvox_002dbookshare_002dfulltext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dfulltext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-fulltext</strong> <var class="def-var-arguments">(directory)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dfulltext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dfulltext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display fulltext contents of  book in specified directory.
+Useful for fulltext search in a book.
+
+(fn DIRECTORY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dfulltext_002dsearch">
+<h4 class="subsubsection"><span>15.58.4.23 emacsvox-bookshare-fulltext-search<a class="copiable-link" href="#emacsvox_002dbookshare_002dfulltext_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dfulltext_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-fulltext-search</strong> <var class="def-var-arguments">(query)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dfulltext_002dsearch"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dfulltext_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform a Bookshare fulltext search.
+
+(fn QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dget_002dmore_002dresults">
+<h4 class="subsubsection"><span>15.58.4.24 emacsvox-bookshare-get-more-results<a class="copiable-link" href="#emacsvox_002dbookshare_002dget_002dmore_002dresults"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dget_002dmore_002dresults"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-get-more-results</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dget_002dmore_002dresults"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dget_002dmore_002dresults-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Get next page of results for last query.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002did_002dsearch">
+<h4 class="subsubsection"><span>15.58.4.25 emacsvox-bookshare-id-search<a class="copiable-link" href="#emacsvox_002dbookshare_002did_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002did_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-id-search</strong> <var class="def-var-arguments">(query)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002did_002dsearch"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002did_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform a Bookshare id search.
+
+(fn QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002disbn_002dsearch">
+<h4 class="subsubsection"><span>15.58.4.26 emacsvox-bookshare-isbn-search<a class="copiable-link" href="#emacsvox_002dbookshare_002disbn_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002disbn_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-isbn-search</strong> <var class="def-var-arguments">(query)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002disbn_002dsearch"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002disbn_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform a Bookshare isbn search.
+
+(fn QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dlist_002dpreferences">
+<h4 class="subsubsection"><span>15.58.4.27 emacsvox-bookshare-list-preferences<a class="copiable-link" href="#emacsvox_002dbookshare_002dlist_002dpreferences"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dlist_002dpreferences"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-list-preferences</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dlist_002dpreferences"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dlist_002dpreferences-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return preference list.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dmode">
+<h4 class="subsubsection"><span>15.58.4.28 emacsvox-bookshare-mode<a class="copiable-link" href="#emacsvox_002dbookshare_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-mode</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">A Bookshare front-end for the Emacsvox desktop.
+
+The Emacsvox Bookshare front-end is launched by command
+emacsvox-bookshare bound to C-e C-b
+
+This command switches to a special buffer that has Bookshare
+commands bounds to single keystrokes&ndash; see the key-binding list at
+the end of this description. Use Emacs online help facility to
+look up help on these commands.
+
+emacsvox-bookshare-mode provides the necessary functionality to
+Search and download Bookshare material, Manage a local library of
+downloaded Bookshare content, And commands to easily read newer
+Daisy books from Bookshare.
+
+Here is a list of all emacsvox Bookshare commands  with their key-bindings:
+a Author Search
+A Author/Title Search
+t Title Search
+s Full Text Search
+d Date Search
+b Browse
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+RET		emacsvox-bookshare-toc-at-point
+SPC		emacsvox-bookshare-expand-at-point
++		emacsvox-bookshare-action
+/		emacsvox-bookshare-action
+3		emacsvox-bookshare-download-epub-3-at-point
+A		emacsvox-bookshare-download-audio-at-point
+B		emacsvox-bookshare-download-brf-at-point
+C		emacsvox-bookshare-fulltext
+D		emacsvox-bookshare-download-daisy-at-point
+E		emacsvox-bookshare-eww
+I		emacsvox-bookshare-action
+P		emacsvox-bookshare-action
+S		emacsvox-bookshare-action
+U		emacsvox-bookshare-unpack-at-point
+V		emacsvox-bookshare-view-at-point
+[		backward-page
+]		forward-page
+a		emacsvox-bookshare-action
+b		emacsvox-bookshare-browse
+c		emacsvox-bookshare-toc-at-point
+d		emacsvox-bookshare-action
+e		emacsvox-bookshare-eww
+f		emacsvox-bookshare-flush-lines
+i		emacsvox-bookshare-action
+j		next-line
+k		previous-line
+l .. m		emacsvox-bookshare-action
+n		emacsvox-bookshare-next-result
+p		emacsvox-bookshare-previous-result
+q		bury-buffer
+s .. t		emacsvox-bookshare-action
+v		emacsvox-bookshare-view
+
+M-n		emacsvox-bookshare-next-result
+M-p		emacsvox-bookshare-previous-result
+
+In addition to any hooks its parent mode ‘special-mode’ might have
+run, this mode runs the hook ‘emacsvox-bookshare-mode-hook’, as the
+final or penultimate step during initialization.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dnext_002dresult">
+<h4 class="subsubsection"><span>15.58.4.29 emacsvox-bookshare-next-result<a class="copiable-link" href="#emacsvox_002dbookshare_002dnext_002dresult"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dnext_002dresult"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-next-result</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dnext_002dresult"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dnext_002dresult-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to next result.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dperiodical_002dlist">
+<h4 class="subsubsection"><span>15.58.4.30 emacsvox-bookshare-periodical-list<a class="copiable-link" href="#emacsvox_002dbookshare_002dperiodical_002dlist"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dperiodical_002dlist"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-periodical-list</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dperiodical_002dlist"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dperiodical_002dlist-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return list of periodicals.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dprevious_002dresult">
+<h4 class="subsubsection"><span>15.58.4.31 emacsvox-bookshare-previous-result<a class="copiable-link" href="#emacsvox_002dbookshare_002dprevious_002dresult"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dprevious_002dresult"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-previous-result</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dprevious_002dresult"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dprevious_002dresult-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to previous result.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dset_002dpreference">
+<h4 class="subsubsection"><span>15.58.4.32 emacsvox-bookshare-set-preference<a class="copiable-link" href="#emacsvox_002dbookshare_002dset_002dpreference"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dset_002dpreference"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-set-preference</strong> <var class="def-var-arguments">(preference-id value)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dset_002dpreference"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dset_002dpreference-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set preference preference-id to value.
+
+(fn PREFERENCE-ID VALUE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dsince_002dsearch">
+<h4 class="subsubsection"><span>15.58.4.33 emacsvox-bookshare-since-search<a class="copiable-link" href="#emacsvox_002dbookshare_002dsince_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dsince_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-since-search</strong> <var class="def-var-arguments">(query &amp;optional category)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dsince_002dsearch"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dsince_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform a Bookshare date  search.
+Optional interactive prefix arg filters by category.
+
+(fn QUERY &amp;optional CATEGORY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dtitle_002dsearch">
+<h4 class="subsubsection"><span>15.58.4.34 emacsvox-bookshare-title-search<a class="copiable-link" href="#emacsvox_002dbookshare_002dtitle_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dtitle_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-title-search</strong> <var class="def-var-arguments">(query &amp;optional category)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dtitle_002dsearch"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dtitle_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform a Bookshare title search.
+Interactive prefix arg filters search by category.
+
+(fn QUERY &amp;optional CATEGORY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dtoc">
+<h4 class="subsubsection"><span>15.58.4.35 emacsvox-bookshare-toc<a class="copiable-link" href="#emacsvox_002dbookshare_002dtoc"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dtoc"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-toc</strong> <var class="def-var-arguments">(directory)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dtoc"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dtoc-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">View TOC for book in specified directory.
+
+(fn DIRECTORY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dtoc_002dat_002dpoint">
+<h4 class="subsubsection"><span>15.58.4.36 emacsvox-bookshare-toc-at-point<a class="copiable-link" href="#emacsvox_002dbookshare_002dtoc_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dtoc_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-toc-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dtoc_002dat_002dpoint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dtoc_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">View TOC for book at point.
+Make sure it’s downloaded and unpacked first.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dunpack_002dat_002dpoint">
+<h4 class="subsubsection"><span>15.58.4.37 emacsvox-bookshare-unpack-at-point<a class="copiable-link" href="#emacsvox_002dbookshare_002dunpack_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dunpack_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-unpack-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dunpack_002dat_002dpoint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dunpack_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Unpack downloaded content if necessary.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002durl_002dexecutor">
+<h4 class="subsubsection"><span>15.58.4.38 emacsvox-bookshare-url-executor<a class="copiable-link" href="#emacsvox_002dbookshare_002durl_002dexecutor"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002durl_002dexecutor"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-url-executor</strong> <var class="def-var-arguments">(url)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002durl_002dexecutor"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002durl_002dexecutor-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Custom URL executor for use in Bookshare TOC.
+
+(fn URL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dversion_002dhandler">
+<h4 class="subsubsection"><span>15.58.4.39 emacsvox-bookshare-version-handler<a class="copiable-link" href="#emacsvox_002dbookshare_002dversion_002dhandler"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dversion_002dhandler"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-version-handler</strong> <var class="def-var-arguments">(&amp;rest arguments)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dversion_002dhandler"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dversion_002dhandler-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Ignore ARGUMENTS, do nothing, and return nil.
+This function accepts any number of arguments in ARGUMENTS.
+Also see ‘always’.
+
+(fn &amp;rest ARGUMENTS)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dview">
+<h4 class="subsubsection"><span>15.58.4.40 emacsvox-bookshare-view<a class="copiable-link" href="#emacsvox_002dbookshare_002dview"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dview"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-view</strong> <var class="def-var-arguments">(directory)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dview"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dview-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">View book in specified directory.
+
+(fn DIRECTORY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dview_002dat_002dpoint">
+<h4 class="subsubsection"><span>15.58.4.41 emacsvox-bookshare-view-at-point<a class="copiable-link" href="#emacsvox_002dbookshare_002dview_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dview_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-view-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dview_002dat_002dpoint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dview_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">View book at point.
+Make sure it’s downloaded and unpacked first.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbookshare_002dview_002dpage_002drange">
+<h4 class="subsubsection"><span>15.58.4.42 emacsvox-bookshare-view-page-range<a class="copiable-link" href="#emacsvox_002dbookshare_002dview_002dpage_002drange"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbookshare_002dview_002dpage_002drange"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-bookshare-view-page-range</strong> <var class="def-var-arguments">(url)</var><a class="copiable-link" href="#index-emacsvox_002dbookshare_002dview_002dpage_002drange"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbookshare_002dview_002dpage_002drange-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play pages in specified page range from URL.
+
+(fn URL)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dbookshare-Options">
+<h4 class="subsection"><span>15.58.5 emacsvox-bookshare Options<a class="copiable-link" href="#emacsvox_002dbookshare-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-46"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-bookshare-api-key</var><a class="copiable-link" href="#index-User-Option-46"> &para;</a></span></dt>
+<dd><pre class="verbatim">Web API  key for this application.
+See http://developer.bookshare.org/docs for details on how to get
+  an API key.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-47"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-bookshare-directory</var><a class="copiable-link" href="#index-User-Option-47"> &para;</a></span></dt>
+<dd><pre class="verbatim">Customize this to the root of where books are organized.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;~/books/book-share&quot;
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dbrowse_002dkill_002dring.html">emacsvox-browse-kill-ring</a>, Previous: <a href="emacsvox_002dbookmark.html">emacsvox-bookmark</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

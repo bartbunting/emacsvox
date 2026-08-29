@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-editor (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-aural-editor (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-aural-editor (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dexplanation.html" rel="next" title="emacsvox-aural-explanation">
+<link href="emacsvox_002daural_002ddoctor.html" rel="prev" title="emacsvox-aural-doctor">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002deditor">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dexplanation.html" accesskey="n" rel="next">emacsvox-aural-explanation</a>, Previous: <a href="emacsvox_002daural_002ddoctor.html" accesskey="p" rel="prev">emacsvox-aural-doctor</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002deditor-1"><span>15.21 emacsvox-aural-editor<a class="copiable-link" href="#emacsvox_002daural_002deditor-1"> &para;</a></span></h3>
+
+<p>A completion-driven special-mode editor for Presentation Options and
+personal, session, or buffer-local rule layers.  The buffer remains plain
+text and predictable for speech access.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dEditor-Commands" accesskey="1">Emacsvox-Aural-Editor Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dEditor-Commands">
+<h4 class="subsection"><span>15.21.1 Emacsvox-Aural-Editor Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dEditor-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dedit_002dfeature_002dfragment" accesskey="1">emacsvox-aural-edit-feature-fragment</a></li>
+<li><a href="#emacsvox_002daural_002dedit_002drules" accesskey="2">emacsvox-aural-edit-rules</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dadd_002drule" accesskey="3">emacsvox-aural-editor-add-rule</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dcopy_002drule" accesskey="4">emacsvox-aural-editor-copy-rule</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002ddelete_002drule" accesskey="5">emacsvox-aural-editor-delete-rule</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dedit_002dmetadata" accesskey="6">emacsvox-aural-editor-edit-metadata</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dedit_002drule" accesskey="7">emacsvox-aural-editor-edit-rule</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dexplain_002drule" accesskey="8">emacsvox-aural-editor-explain-rule</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dhelp" accesskey="9">emacsvox-aural-editor-help</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dmove_002drule_002ddown">emacsvox-aural-editor-move-rule-down</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dmove_002drule_002dup">emacsvox-aural-editor-move-rule-up</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dpreview_002drule">emacsvox-aural-editor-preview-rule</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dquit">emacsvox-aural-editor-quit</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002drefresh">emacsvox-aural-editor-refresh</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dsave">emacsvox-aural-editor-save</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dtoggle_002drule">emacsvox-aural-editor-toggle-rule</a></li>
+<li><a href="#emacsvox_002daural_002deditor_002dvalidate">emacsvox-aural-editor-validate</a></li>
+<li><a href="#emacsvox_002daural_002dscheme_002deditor_002dmode">emacsvox-aural-scheme-editor-mode</a></li>
+<li><a href="#emacsvox_002dedit_002daural_002dfeature_002dfragment">emacsvox-edit-aural-feature-fragment</a></li>
+<li><a href="#emacsvox_002dedit_002daural_002drules">emacsvox-edit-aural-rules</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dedit_002dfeature_002dfragment">
+<h4 class="subsubsection"><span>15.21.1.1 emacsvox-aural-edit-feature-fragment<a class="copiable-link" href="#emacsvox_002daural_002dedit_002dfeature_002dfragment"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dedit_002dfeature_002dfragment"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-edit-feature-fragment</strong> <var class="def-var-arguments">(&amp;optional fragment)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dedit_002dfeature_002dfragment"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dedit_002dfeature_002dfragment-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open the declarative editor for personal feature FRAGMENT.
+
+(fn &amp;optional FRAGMENT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dedit_002drules">
+<h4 class="subsubsection"><span>15.21.1.2 emacsvox-aural-edit-rules<a class="copiable-link" href="#emacsvox_002daural_002dedit_002drules"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dedit_002drules"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-edit-rules</strong> <var class="def-var-arguments">(scope &amp;optional fragment source-buffer)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dedit_002drules"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dedit_002drules-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open an accessible rule editor for SCOPE.
+
+SCOPE is ‘personal’, ‘session’, ‘buffer’, or ‘fragment’.  FRAGMENT identifies
+a personal Presentation Option.  SOURCE-BUFFER defaults to
+the ordinary source associated with the current buffer for buffer scope.
+
+(fn SCOPE &amp;optional FRAGMENT SOURCE-BUFFER)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dadd_002drule">
+<h4 class="subsubsection"><span>15.21.1.3 emacsvox-aural-editor-add-rule<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dadd_002drule"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dadd_002drule"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-add-rule</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dadd_002drule"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dadd_002drule-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add a guided rule after the selected rule or at the end.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dcopy_002drule">
+<h4 class="subsubsection"><span>15.21.1.4 emacsvox-aural-editor-copy-rule<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dcopy_002drule"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dcopy_002drule"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-copy-rule</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dcopy_002drule"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dcopy_002drule-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy the selected rule and request a new stable identifier.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002ddelete_002drule">
+<h4 class="subsubsection"><span>15.21.1.5 emacsvox-aural-editor-delete-rule<a class="copiable-link" href="#emacsvox_002daural_002deditor_002ddelete_002drule"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002ddelete_002drule"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-delete-rule</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002ddelete_002drule"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002ddelete_002drule-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Delete the selected working rule after confirmation.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dedit_002dmetadata">
+<h4 class="subsubsection"><span>15.21.1.6 emacsvox-aural-editor-edit-metadata<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dedit_002dmetadata"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dedit_002dmetadata"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-edit-metadata</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dedit_002dmetadata"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dedit_002dmetadata-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Edit metadata for the current personal Presentation Option.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dedit_002drule">
+<h4 class="subsubsection"><span>15.21.1.7 emacsvox-aural-editor-edit-rule<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dedit_002drule"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dedit_002drule"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-edit-rule</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dedit_002drule"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dedit_002drule-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Edit the selected rule through guided prompts.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dexplain_002drule">
+<h4 class="subsubsection"><span>15.21.1.8 emacsvox-aural-editor-explain-rule<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dexplain_002drule"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dexplain_002drule"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-explain-rule</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dexplain_002drule"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dexplain_002drule-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Explain the selected unsaved working rule against representative facts.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dhelp">
+<h4 class="subsubsection"><span>15.21.1.9 emacsvox-aural-editor-help<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dhelp"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dhelp"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dhelp-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display aural editor commands and workflow.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dmove_002drule_002ddown">
+<h4 class="subsubsection"><span>15.21.1.10 emacsvox-aural-editor-move-rule-down<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dmove_002drule_002ddown"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dmove_002drule_002ddown"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-move-rule-down</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dmove_002drule_002ddown"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dmove_002drule_002ddown-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the selected rule later in its scope.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dmove_002drule_002dup">
+<h4 class="subsubsection"><span>15.21.1.11 emacsvox-aural-editor-move-rule-up<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dmove_002drule_002dup"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dmove_002drule_002dup"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-move-rule-up</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dmove_002drule_002dup"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dmove_002drule_002dup-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the selected rule earlier in its scope.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dpreview_002drule">
+<h4 class="subsubsection"><span>15.21.1.12 emacsvox-aural-editor-preview-rule<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dpreview_002drule"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dpreview_002drule"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-preview-rule</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dpreview_002drule"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dpreview_002drule-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Preview the selected unsaved working rule.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dquit">
+<h4 class="subsubsection"><span>15.21.1.13 emacsvox-aural-editor-quit<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dquit"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dquit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-quit</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dquit"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dquit-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Quit the editor, asking before discarding working changes.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002drefresh">
+<h4 class="subsubsection"><span>15.21.1.14 emacsvox-aural-editor-refresh<a class="copiable-link" href="#emacsvox_002daural_002deditor_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-refresh</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Render the current working Presentation Option or rule layer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dsave">
+<h4 class="subsubsection"><span>15.21.1.15 emacsvox-aural-editor-save<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dsave"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dsave"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-save</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dsave"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dsave-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Validate and atomically save or apply current working rules.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dtoggle_002drule">
+<h4 class="subsubsection"><span>15.21.1.16 emacsvox-aural-editor-toggle-rule<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dtoggle_002drule"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dtoggle_002drule"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-toggle-rule</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dtoggle_002drule"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dtoggle_002drule-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enable or disable the selected working rule without discarding it.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002deditor_002dvalidate">
+<h4 class="subsubsection"><span>15.21.1.17 emacsvox-aural-editor-validate<a class="copiable-link" href="#emacsvox_002daural_002deditor_002dvalidate"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002deditor_002dvalidate"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-editor-validate</strong><a class="copiable-link" href="#index-emacsvox_002daural_002deditor_002dvalidate"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002deditor_002dvalidate-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Validate all working rules and display diagnostics.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dscheme_002deditor_002dmode">
+<h4 class="subsubsection"><span>15.21.1.18 emacsvox-aural-scheme-editor-mode<a class="copiable-link" href="#emacsvox_002daural_002dscheme_002deditor_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dscheme_002deditor_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-scheme-editor-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dscheme_002deditor_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dscheme_002deditor_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Accessible editor for declarative Presentation Options and rule layers.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-interface-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-scheme-editor-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+RET		emacsvox-aural-editor-edit-rule
+SPC		scroll-up-command
+-		negative-argument
+0 .. 9		digit-argument
+&lt;		beginning-of-buffer
+&gt;		end-of-buffer
+?		emacsvox-aural-editor-help
+c		emacsvox-aural-editor-copy-rule
+d		emacsvox-aural-editor-delete-rule
+e		emacsvox-aural-editor-edit-rule
+g		emacsvox-aural-editor-refresh
+h		emacsvox-aural
+m		emacsvox-aural-editor-edit-metadata
+n		emacsvox-aural-editor-add-rule
+p		emacsvox-aural-editor-preview-rule
+q		emacsvox-aural-editor-quit
+t		emacsvox-aural-editor-toggle-rule
+v		emacsvox-aural-editor-validate
+w		emacsvox-aural-editor-save
+x		emacsvox-aural-editor-explain-rule
+DEL		scroll-down-command
+S-SPC		scroll-down-command
+M-&lt;down&gt;	emacsvox-aural-editor-move-rule-down
+M-&lt;up&gt;		emacsvox-aural-editor-move-rule-up
+
+C-c C-c		emacsvox-aural-editor-save
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dedit_002daural_002dfeature_002dfragment">
+<h4 class="subsubsection"><span>15.21.1.19 emacsvox-edit-aural-feature-fragment<a class="copiable-link" href="#emacsvox_002dedit_002daural_002dfeature_002dfragment"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dedit_002daural_002dfeature_002dfragment"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-edit-aural-feature-fragment</strong> <var class="def-var-arguments">(&amp;optional fragment)</var><a class="copiable-link" href="#index-emacsvox_002dedit_002daural_002dfeature_002dfragment"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dedit_002daural_002dfeature_002dfragment-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open the declarative editor for personal feature FRAGMENT.
+
+(fn &amp;optional FRAGMENT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dedit_002daural_002drules">
+<h4 class="subsubsection"><span>15.21.1.20 emacsvox-edit-aural-rules<a class="copiable-link" href="#emacsvox_002dedit_002daural_002drules"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dedit_002daural_002drules"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-edit-aural-rules</strong> <var class="def-var-arguments">(scope &amp;optional fragment source-buffer)</var><a class="copiable-link" href="#index-emacsvox_002dedit_002daural_002drules"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dedit_002daural_002drules-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open an accessible rule editor for SCOPE.
+
+SCOPE is ‘personal’, ‘session’, ‘buffer’, or ‘fragment’.  FRAGMENT identifies
+a personal Presentation Option.  SOURCE-BUFFER defaults to
+the ordinary source associated with the current buffer for buffer scope.
+
+(fn SCOPE &amp;optional FRAGMENT SOURCE-BUFFER)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dexplanation.html">emacsvox-aural-explanation</a>, Previous: <a href="emacsvox_002daural_002ddoctor.html">emacsvox-aural-doctor</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-websearch (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-websearch (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-websearch (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dwebspace.html" rel="next" title="emacsvox-webspace">
+<link href="emacsvox_002dwe.html" rel="prev" title="emacsvox-we">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dwebsearch">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dwebspace.html" accesskey="n" rel="next">emacsvox-webspace</a>, Previous: <a href="emacsvox_002dwe.html" accesskey="p" rel="prev">emacsvox-we</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dwebsearch-1"><span>15.240 emacsvox-websearch<a class="copiable-link" href="#emacsvox_002dwebsearch-1"> &para;</a></span></h3>
+
+<p>This module provides utility functions for searching the WWW
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dWebsearch-Commands" accesskey="1">Emacsvox-Websearch Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dWebsearch-Commands">
+<h4 class="subsection"><span>15.240.1 Emacsvox-Websearch Commands<a class="copiable-link" href="#Emacsvox_002dWebsearch-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dwebsearch_002damazon_002dsearch" accesskey="1">emacsvox-websearch-amazon-search</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dask_002djeeves" accesskey="2">emacsvox-websearch-ask-jeeves</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dfoldoc_002dsearch" accesskey="3">emacsvox-websearch-foldoc-search</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dgoogle" accesskey="4">emacsvox-websearch-google</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dgoogle_002dfeeling_002dlucky" accesskey="5">emacsvox-websearch-google-feeling-lucky</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dgoogle_002dlite" accesskey="6">emacsvox-websearch-google-lite</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dgoogle_002dnews" accesskey="7">emacsvox-websearch-google-news</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dgoogle_002dsearch_002din_002ddate_002drange" accesskey="8">emacsvox-websearch-google-search-in-date-range</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dgoogle_002dwith_002dtoolbelt" accesskey="9">emacsvox-websearch-google-with-toolbelt</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dgutenberg">emacsvox-websearch-gutenberg</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dhelp">emacsvox-websearch-help</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dweb_002dfilter_002dgoogle">emacsvox-websearch-web-filter-google</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dwikipedia_002dsearch">emacsvox-websearch-wikipedia-search</a></li>
+<li><a href="#emacsvox_002dwebsearch_002dyoutube_002dsearch">emacsvox-websearch-youtube-search</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002damazon_002dsearch">
+<h4 class="subsubsection"><span>15.240.1.1 emacsvox-websearch-amazon-search<a class="copiable-link" href="#emacsvox_002dwebsearch_002damazon_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002damazon_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-amazon-search</strong><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002damazon_002dsearch"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-C_002da"></a><span><kbd class="kbd">C-e ? C-a</kbd><a class="copiable-link" href="#index-C_002de-_003f-C_002da"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-C_002da"></a><span><kbd class="kbd">C-e / C-a</kbd><a class="copiable-link" href="#index-C_002de-_002f-C_002da"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002damazon_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Amazon search.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dask_002djeeves">
+<h4 class="subsubsection"><span>15.240.1.2 emacsvox-websearch-ask-jeeves<a class="copiable-link" href="#emacsvox_002dwebsearch_002dask_002djeeves"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dask_002djeeves"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-ask-jeeves</strong> <var class="def-var-arguments">(query)</var><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dask_002djeeves"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-j"></a><span><kbd class="kbd">C-e ? j</kbd><a class="copiable-link" href="#index-C_002de-_003f-j"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-j"></a><span><kbd class="kbd">C-e / j</kbd><a class="copiable-link" href="#index-C_002de-_002f-j"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dask_002djeeves-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Ask Jeeves for the answer.
+
+(fn QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dfoldoc_002dsearch">
+<h4 class="subsubsection"><span>15.240.1.3 emacsvox-websearch-foldoc-search<a class="copiable-link" href="#emacsvox_002dwebsearch_002dfoldoc_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dfoldoc_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-foldoc-search</strong> <var class="def-var-arguments">(query)</var><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dfoldoc_002dsearch"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-f"></a><span><kbd class="kbd">C-e ? f</kbd><a class="copiable-link" href="#index-C_002de-_003f-f"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-f"></a><span><kbd class="kbd">C-e / f</kbd><a class="copiable-link" href="#index-C_002de-_002f-f"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dfoldoc_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform a FolDoc search.
+
+(fn QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dgoogle">
+<h4 class="subsubsection"><span>15.240.1.4 emacsvox-websearch-google<a class="copiable-link" href="#emacsvox_002dwebsearch_002dgoogle"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dgoogle"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-google</strong> <var class="def-var-arguments">(query &amp;optional flag)</var><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dgoogle"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-RET"></a><span><kbd class="kbd">C-e RET</kbd><a class="copiable-link" href="#index-C_002de-RET"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_003f-g"></a><span><kbd class="kbd">C-e ? g</kbd><a class="copiable-link" href="#index-C_002de-_003f-g"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-g"></a><span><kbd class="kbd">C-e / g</kbd><a class="copiable-link" href="#index-C_002de-_002f-g"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dgoogle-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform a Google search.  First optional interactive prefix arg
+‘flag’ prompts for additional search options. Second interactive
+prefix arg is equivalent to hitting the I’m Feeling Lucky button on Google.
+
+(fn QUERY &amp;optional FLAG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dgoogle_002dfeeling_002dlucky">
+<h4 class="subsubsection"><span>15.240.1.5 emacsvox-websearch-google-feeling-lucky<a class="copiable-link" href="#emacsvox_002dwebsearch_002dgoogle_002dfeeling_002dlucky"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dgoogle_002dfeeling_002dlucky"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-google-feeling-lucky</strong> <var class="def-var-arguments">(query)</var><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dgoogle_002dfeeling_002dlucky"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-SPC"></a><span><kbd class="kbd">C-e ? SPC</kbd><a class="copiable-link" href="#index-C_002de-_003f-SPC"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-SPC"></a><span><kbd class="kbd">C-e / SPC</kbd><a class="copiable-link" href="#index-C_002de-_002f-SPC"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dgoogle_002dfeeling_002dlucky-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Do a I’m Feeling Lucky Google search.
+
+(fn QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dgoogle_002dlite">
+<h4 class="subsubsection"><span>15.240.1.6 emacsvox-websearch-google-lite<a class="copiable-link" href="#emacsvox_002dwebsearch_002dgoogle_002dlite"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dgoogle_002dlite"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-google-lite</strong> <var class="def-var-arguments">(query &amp;optional options)</var><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dgoogle_002dlite"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-a"></a><span><kbd class="kbd">C-e ? a</kbd><a class="copiable-link" href="#index-C_002de-_003f-a"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-a"></a><span><kbd class="kbd">C-e / a</kbd><a class="copiable-link" href="#index-C_002de-_002f-a"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dgoogle_002dlite-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Use Google Lite.
+Optional prefix arg prompts for toolbelt options.
+
+(fn QUERY &amp;optional OPTIONS)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dgoogle_002dnews">
+<h4 class="subsubsection"><span>15.240.1.7 emacsvox-websearch-google-news<a class="copiable-link" href="#emacsvox_002dwebsearch_002dgoogle_002dnews"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dgoogle_002dnews"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-google-news</strong><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dgoogle_002dnews"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-n"></a><span><kbd class="kbd">C-e ? n</kbd><a class="copiable-link" href="#index-C_002de-_003f-n"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-n"></a><span><kbd class="kbd">C-e / n</kbd><a class="copiable-link" href="#index-C_002de-_002f-n"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dgoogle_002dnews-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Invoke Google News url template.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dgoogle_002dsearch_002din_002ddate_002drange">
+<h4 class="subsubsection"><span>15.240.1.8 emacsvox-websearch-google-search-in-date-range<a class="copiable-link" href="#emacsvox_002dwebsearch_002dgoogle_002dsearch_002din_002ddate_002drange"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dgoogle_002dsearch_002din_002ddate_002drange"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-google-search-in-date-range</strong><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dgoogle_002dsearch_002din_002ddate_002drange"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dgoogle_002dsearch_002din_002ddate_002drange-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Use this from inside the calendar to do Google date-range searches.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dgoogle_002dwith_002dtoolbelt">
+<h4 class="subsubsection"><span>15.240.1.9 emacsvox-websearch-google-with-toolbelt<a class="copiable-link" href="#emacsvox_002dwebsearch_002dgoogle_002dwith_002dtoolbelt"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dgoogle_002dwith_002dtoolbelt"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-google-with-toolbelt</strong> <var class="def-var-arguments">(query)</var><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dgoogle_002dwith_002dtoolbelt"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-i"></a><span><kbd class="kbd">C-e ? i</kbd><a class="copiable-link" href="#index-C_002de-_003f-i"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-i"></a><span><kbd class="kbd">C-e / i</kbd><a class="copiable-link" href="#index-C_002de-_002f-i"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dgoogle_002dwith_002dtoolbelt-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Launch Google search with toolbelt.
+
+(fn QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dgutenberg">
+<h4 class="subsubsection"><span>15.240.1.10 emacsvox-websearch-gutenberg<a class="copiable-link" href="#emacsvox_002dwebsearch_002dgutenberg"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dgutenberg"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-gutenberg</strong> <var class="def-var-arguments">(type query)</var><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dgutenberg"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-G"></a><span><kbd class="kbd">C-e ? G</kbd><a class="copiable-link" href="#index-C_002de-_003f-G"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-G"></a><span><kbd class="kbd">C-e / G</kbd><a class="copiable-link" href="#index-C_002de-_002f-G"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dgutenberg-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform an Gutenberg search
+
+(fn TYPE QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dhelp">
+<h4 class="subsubsection"><span>15.240.1.11 emacsvox-websearch-help<a class="copiable-link" href="#emacsvox_002dwebsearch_002dhelp"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-help</strong><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dhelp"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-_003f"></a><span><kbd class="kbd">C-e ? ?</kbd><a class="copiable-link" href="#index-C_002de-_003f-_003f"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-_003f"></a><span><kbd class="kbd">C-e / ?</kbd><a class="copiable-link" href="#index-C_002de-_002f-_003f"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dhelp-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Displays key mapping used by Emacsvox Websearch.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dweb_002dfilter_002dgoogle">
+<h4 class="subsubsection"><span>15.240.1.12 emacsvox-websearch-web-filter-google<a class="copiable-link" href="#emacsvox_002dwebsearch_002dweb_002dfilter_002dgoogle"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dweb_002dfilter_002dgoogle"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-web-filter-google</strong> <var class="def-var-arguments">(query &amp;optional options)</var><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dweb_002dfilter_002dgoogle"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-u"></a><span><kbd class="kbd">C-e ? u</kbd><a class="copiable-link" href="#index-C_002de-_003f-u"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-u"></a><span><kbd class="kbd">C-e / u</kbd><a class="copiable-link" href="#index-C_002de-_002f-u"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dweb_002dfilter_002dgoogle-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Use Google Lite with Web filter.
+Optional prefix arg prompts for toolbelt options.
+
+(fn QUERY &amp;optional OPTIONS)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dwikipedia_002dsearch">
+<h4 class="subsubsection"><span>15.240.1.13 emacsvox-websearch-wikipedia-search<a class="copiable-link" href="#emacsvox_002dwebsearch_002dwikipedia_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dwikipedia_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-wikipedia-search</strong> <var class="def-var-arguments">(query)</var><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dwikipedia_002dsearch"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-w"></a><span><kbd class="kbd">C-e ? w</kbd><a class="copiable-link" href="#index-C_002de-_003f-w"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-w"></a><span><kbd class="kbd">C-e / w</kbd><a class="copiable-link" href="#index-C_002de-_002f-w"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dwikipedia_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search Wikipedia using Google.
+Use URL Template ‘wikipedia at point’ to advantage in the results buffer.
+
+(fn QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwebsearch_002dyoutube_002dsearch">
+<h4 class="subsubsection"><span>15.240.1.14 emacsvox-websearch-youtube-search<a class="copiable-link" href="#emacsvox_002dwebsearch_002dyoutube_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwebsearch_002dyoutube_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-websearch-youtube-search</strong> <var class="def-var-arguments">(query)</var><a class="copiable-link" href="#index-emacsvox_002dwebsearch_002dyoutube_002dsearch"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003f-y"></a><span><kbd class="kbd">C-e ? y</kbd><a class="copiable-link" href="#index-C_002de-_003f-y"> &para;</a></span></dt>
+<dt><a id="index-C_002de-_002f-y"></a><span><kbd class="kbd">C-e / y</kbd><a class="copiable-link" href="#index-C_002de-_002f-y"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwebsearch_002dyoutube_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">YouTube search.
+
+(fn QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dwebspace.html">emacsvox-webspace</a>, Previous: <a href="emacsvox_002dwe.html">emacsvox-we</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

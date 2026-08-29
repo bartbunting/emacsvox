@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-recent-feedback (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-aural-recent-feedback (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-aural-recent-feedback (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dresources.html" rel="next" title="emacsvox-aural-resources">
+<link href="emacsvox_002daural_002dproviders.html" rel="prev" title="emacsvox-aural-providers">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002drecent_002dfeedback">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dresources.html" accesskey="n" rel="next">emacsvox-aural-resources</a>, Previous: <a href="emacsvox_002daural_002dproviders.html" accesskey="p" rel="prev">emacsvox-aural-providers</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002drecent_002dfeedback-1"><span>15.38 emacsvox-aural-recent-feedback<a class="copiable-link" href="#emacsvox_002daural_002drecent_002dfeedback-1"> &para;</a></span></h3>
+
+<p>Spoken browsing, replay, inspection, and remapping of bounded retained aural
+presentations.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dRecent_002dFeedback-Commands" accesskey="1">Emacsvox-Aural-Recent-Feedback Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dRecent_002dFeedback-Commands">
+<h4 class="subsection"><span>15.38.1 Emacsvox-Aural-Recent-Feedback Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dRecent_002dFeedback-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dlist_002drecent_002dfeedback" accesskey="1">emacsvox-aural-list-recent-feedback</a></li>
+<li><a href="#emacsvox_002daural_002drecent_002dfeedback_002daudition_002dcues" accesskey="2">emacsvox-aural-recent-feedback-audition-cues</a></li>
+<li><a href="#emacsvox_002daural_002drecent_002dfeedback_002dexplain" accesskey="3">emacsvox-aural-recent-feedback-explain</a></li>
+<li><a href="#emacsvox_002daural_002drecent_002dfeedback_002dhelp" accesskey="4">emacsvox-aural-recent-feedback-help</a></li>
+<li><a href="#emacsvox_002daural_002drecent_002dfeedback_002dmode" accesskey="5">emacsvox-aural-recent-feedback-mode</a></li>
+<li><a href="#emacsvox_002daural_002drecent_002dfeedback_002drefresh" accesskey="6">emacsvox-aural-recent-feedback-refresh</a></li>
+<li><a href="#emacsvox_002daural_002drecent_002dfeedback_002dremap_002dearcon" accesskey="7">emacsvox-aural-recent-feedback-remap-earcon</a></li>
+<li><a href="#emacsvox_002daural_002drecent_002dfeedback_002dremap_002dvoice" accesskey="8">emacsvox-aural-recent-feedback-remap-voice</a></li>
+<li><a href="#emacsvox_002daural_002drecent_002dfeedback_002dreplay" accesskey="9">emacsvox-aural-recent-feedback-replay</a></li>
+<li><a href="#emacsvox_002daural_002drecent_002dfeedback_002dspeak_002dcurrent">emacsvox-aural-recent-feedback-speak-current</a></li>
+<li><a href="#emacsvox_002daural_002dset_002dhistory_002dlimit">emacsvox-aural-set-history-limit</a></li>
+<li><a href="#emacsvox_002daural_002dtoggle_002dinterface_002dhistory_002drecording">emacsvox-aural-toggle-interface-history-recording</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dlist_002drecent_002dfeedback">
+<h4 class="subsubsection"><span>15.38.1.1 emacsvox-aural-list-recent-feedback<a class="copiable-link" href="#emacsvox_002daural_002dlist_002drecent_002dfeedback"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dlist_002drecent_002dfeedback"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-list-recent-feedback</strong> <var class="def-var-arguments">(&amp;optional source-buffer)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dlist_002drecent_002dfeedback"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dlist_002drecent_002dfeedback-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open the spoken browser for bounded retained aural feedback.
+
+SOURCE-BUFFER supplies the ordinary source to retain for navigation and
+possible buffer-local remapping.  History itself contains only frozen data,
+buffer names, and positions.
+
+(fn &amp;optional SOURCE-BUFFER)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecent_002dfeedback_002daudition_002dcues">
+<h4 class="subsubsection"><span>15.38.1.2 emacsvox-aural-recent-feedback-audition-cues<a class="copiable-link" href="#emacsvox_002daural_002drecent_002dfeedback_002daudition_002dcues"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecent_002dfeedback_002daudition_002dcues"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-recent-feedback-audition-cues</strong><a class="copiable-link" href="#index-emacsvox_002daural_002drecent_002dfeedback_002daudition_002dcues"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecent_002dfeedback_002daudition_002dcues-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Audition only the exact earcons in the feedback record at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecent_002dfeedback_002dexplain">
+<h4 class="subsubsection"><span>15.38.1.3 emacsvox-aural-recent-feedback-explain<a class="copiable-link" href="#emacsvox_002daural_002drecent_002dfeedback_002dexplain"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecent_002dfeedback_002dexplain"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-recent-feedback-explain</strong><a class="copiable-link" href="#index-emacsvox_002daural_002drecent_002dfeedback_002dexplain"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecent_002dfeedback_002dexplain-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Explain the retained frozen feedback record at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecent_002dfeedback_002dhelp">
+<h4 class="subsubsection"><span>15.38.1.4 emacsvox-aural-recent-feedback-help<a class="copiable-link" href="#emacsvox_002daural_002drecent_002dfeedback_002dhelp"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecent_002dfeedback_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-recent-feedback-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002drecent_002dfeedback_002dhelp"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecent_002dfeedback_002dhelp-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display and speak recent aural feedback help.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecent_002dfeedback_002dmode">
+<h4 class="subsubsection"><span>15.38.1.5 emacsvox-aural-recent-feedback-mode<a class="copiable-link" href="#emacsvox_002daural_002drecent_002dfeedback_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecent_002dfeedback_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-recent-feedback-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002drecent_002dfeedback_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecent_002dfeedback_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Spoken browser for bounded recently queued aural presentations.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-recent-feedback-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+RET		emacsvox-aural-recent-feedback-explain
+?		emacsvox-aural-recent-feedback-help
+L		emacsvox-aural-set-history-limit
+P		emacsvox-aural-recent-feedback-replay
+R		emacsvox-aural-recent-feedback-remap-earcon
+c		emacsvox-aural-recent-feedback-audition-cues
+e		emacsvox-aural-recent-feedback-explain
+h		emacsvox-aural
+i		emacsvox-aural-toggle-interface-history-recording
+r		emacsvox-aural-recent-feedback-remap-voice
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecent_002dfeedback_002drefresh">
+<h4 class="subsubsection"><span>15.38.1.6 emacsvox-aural-recent-feedback-refresh<a class="copiable-link" href="#emacsvox_002daural_002drecent_002dfeedback_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecent_002dfeedback_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-recent-feedback-refresh</strong> <var class="def-var-arguments">(&amp;optional id)</var><a class="copiable-link" href="#index-emacsvox_002daural_002drecent_002dfeedback_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecent_002dfeedback_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Refresh recent feedback, preserving optional record ID.
+
+(fn &amp;optional ID)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecent_002dfeedback_002dremap_002dearcon">
+<h4 class="subsubsection"><span>15.38.1.7 emacsvox-aural-recent-feedback-remap-earcon<a class="copiable-link" href="#emacsvox_002daural_002drecent_002dfeedback_002dremap_002dearcon"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecent_002dfeedback_002dremap_002dearcon"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-recent-feedback-remap-earcon</strong><a class="copiable-link" href="#index-emacsvox_002daural_002drecent_002dfeedback_002dremap_002dearcon"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecent_002dfeedback_002dremap_002dearcon-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prepare an earcon override from the frozen feedback record at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecent_002dfeedback_002dremap_002dvoice">
+<h4 class="subsubsection"><span>15.38.1.8 emacsvox-aural-recent-feedback-remap-voice<a class="copiable-link" href="#emacsvox_002daural_002drecent_002dfeedback_002dremap_002dvoice"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecent_002dfeedback_002dremap_002dvoice"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-recent-feedback-remap-voice</strong><a class="copiable-link" href="#index-emacsvox_002daural_002drecent_002dfeedback_002dremap_002dvoice"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecent_002dfeedback_002dremap_002dvoice-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prepare a voice override from the frozen feedback record at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecent_002dfeedback_002dreplay">
+<h4 class="subsubsection"><span>15.38.1.9 emacsvox-aural-recent-feedback-replay<a class="copiable-link" href="#emacsvox_002daural_002drecent_002dfeedback_002dreplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecent_002dfeedback_002dreplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-recent-feedback-replay</strong><a class="copiable-link" href="#index-emacsvox_002daural_002drecent_002dfeedback_002dreplay"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecent_002dfeedback_002dreplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Replay the complete frozen presentation at point when it was retained.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002drecent_002dfeedback_002dspeak_002dcurrent">
+<h4 class="subsubsection"><span>15.38.1.10 emacsvox-aural-recent-feedback-speak-current<a class="copiable-link" href="#emacsvox_002daural_002drecent_002dfeedback_002dspeak_002dcurrent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002drecent_002dfeedback_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-recent-feedback-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002drecent_002dfeedback_002dspeak_002dcurrent"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002drecent_002dfeedback_002dspeak_002dcurrent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak all useful fields for the feedback record at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dset_002dhistory_002dlimit">
+<h4 class="subsubsection"><span>15.38.1.11 emacsvox-aural-set-history-limit<a class="copiable-link" href="#emacsvox_002daural_002dset_002dhistory_002dlimit"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dset_002dhistory_002dlimit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-set-history-limit</strong> <var class="def-var-arguments">(limit)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dset_002dhistory_002dlimit"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dset_002dhistory_002dlimit-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set the retained presentation history LIMIT for this Emacs session.
+
+LIMIT may be any natural number.  Zero disables history.  Lowering the limit
+immediately discards the oldest excess records; increasing it affects future
+recording.  Customize ‘emacsvox-aural-presentation-history-limit’ to persist
+the value across sessions.
+
+(fn LIMIT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dtoggle_002dinterface_002dhistory_002drecording">
+<h4 class="subsubsection"><span>15.38.1.12 emacsvox-aural-toggle-interface-history-recording<a class="copiable-link" href="#emacsvox_002daural_002dtoggle_002dinterface_002dhistory_002drecording"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dtoggle_002dinterface_002dhistory_002drecording"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-toggle-interface-history-recording</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dtoggle_002dinterface_002dhistory_002drecording"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dtoggle_002dinterface_002dhistory_002drecording-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle retention of presentations originating inside Aural interfaces.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dresources.html">emacsvox-aural-resources</a>, Previous: <a href="emacsvox_002daural_002dproviders.html">emacsvox-aural-providers</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

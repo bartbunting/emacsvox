@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-extras (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-extras (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-extras (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dexwm.html" rel="next" title="emacsvox-exwm">
+<link href="emacsvox_002deww.html" rel="prev" title="emacsvox-eww">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dextras">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dexwm.html" accesskey="n" rel="next">emacsvox-exwm</a>, Previous: <a href="emacsvox_002deww.html" accesskey="p" rel="prev">emacsvox-eww</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dextras-1"><span>15.118 emacsvox-extras<a class="copiable-link" href="#emacsvox_002dextras-1"> &para;</a></span></h3>
+
+<p>Infrequently used wizards archived for posterity.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dExtras-Commands" accesskey="1">Emacsvox-Extras Commands</a></li>
+<li><a href="#emacsvox_002dextras-Options" accesskey="2">emacsvox-extras Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dExtras-Commands">
+<h4 class="subsection"><span>15.118.1 Emacsvox-Extras Commands<a class="copiable-link" href="#Emacsvox_002dExtras-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dannotate_002dadd_002dannotation" accesskey="1">emacsvox-annotate-add-annotation</a></li>
+<li><a href="#emacsvox_002dclipfile_002dcopy" accesskey="2">emacsvox-clipfile-copy</a></li>
+<li><a href="#emacsvox_002dclipfile_002dpaste" accesskey="3">emacsvox-clipfile-paste</a></li>
+<li><a href="#emacsvox_002dcurl" accesskey="4">emacsvox-curl</a></li>
+<li><a href="#emacsvox_002dwizards_002dadd_002dautoload_002dcookies" accesskey="5">emacsvox-wizards-add-autoload-cookies</a></li>
+<li><a href="#emacsvox_002dwizards_002dbindings_002dfrom_002dorg" accesskey="6">emacsvox-wizards-bindings-from-org</a></li>
+<li><a href="#emacsvox_002dwizards_002dbindings_002dto_002dorg" accesskey="7">emacsvox-wizards-bindings-to-org</a></li>
+<li><a href="#emacsvox_002dwizards_002ddisplay_002dpod_002das_002dmanpage" accesskey="8">emacsvox-wizards-display-pod-as-manpage</a></li>
+<li><a href="#emacsvox_002dwizards_002dfind_002dgrep" accesskey="9">emacsvox-wizards-find-grep</a></li>
+<li><a href="#emacsvox_002dwizards_002dfix_002dread_002donly_002dtext">emacsvox-wizards-fix-read-only-text</a></li>
+<li><a href="#emacsvox_002dwizards_002dgenerate_002dvoice_002dsampler">emacsvox-wizards-generate-voice-sampler</a></li>
+<li><a href="#emacsvox_002dwizards_002dlist_002dvoices">emacsvox-wizards-list-voices</a></li>
+<li><a href="#emacsvox_002dwizards_002dmidi_002dusing_002dm_002dscore">emacsvox-wizards-midi-using-m-score</a></li>
+<li><a href="#emacsvox_002dwizards_002dshow_002dvoices">emacsvox-wizards-show-voices</a></li>
+<li><a href="#emacsvox_002dwizards_002dvoice_002dsampler">emacsvox-wizards-voice-sampler</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dannotate_002dadd_002dannotation">
+<h4 class="subsubsection"><span>15.118.1.1 emacsvox-annotate-add-annotation<a class="copiable-link" href="#emacsvox_002dannotate_002dadd_002dannotation"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dannotate_002dadd_002dannotation"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-annotate-add-annotation</strong> <var class="def-var-arguments">(&amp;optional reset)</var><a class="copiable-link" href="#index-emacsvox_002dannotate_002dadd_002dannotation"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dannotate_002dadd_002dannotation-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add annotation to the annotation working buffer.
+Prompt for annotation buffer if not already set.
+Interactive prefix arg ‘reset’ prompts for the annotation
+buffer even if one is already set.
+Annotation is entered in a temporary buffer and the
+annotation is inserted into the working buffer when complete.
+
+(fn &amp;optional RESET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dclipfile_002dcopy">
+<h4 class="subsubsection"><span>15.118.1.2 emacsvox-clipfile-copy<a class="copiable-link" href="#emacsvox_002dclipfile_002dcopy"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dclipfile_002dcopy"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-clipfile-copy</strong> <var class="def-var-arguments">(start end &amp;optional prompt)</var><a class="copiable-link" href="#index-emacsvox_002dclipfile_002dcopy"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dM_002dc"></a><span><kbd class="kbd">C-e C-M-c</kbd><a class="copiable-link" href="#index-C_002de-C_002dM_002dc"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dclipfile_002dcopy-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Use file-based Emacsvox Clipboard &mdash;
+dis a convenient way of sharing information between independent
+Emacsvox sessions running on  different machines.
+
+(fn START END &amp;optional PROMPT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dclipfile_002dpaste">
+<h4 class="subsubsection"><span>15.118.1.3 emacsvox-clipfile-paste<a class="copiable-link" href="#emacsvox_002dclipfile_002dpaste"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dclipfile_002dpaste"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-clipfile-paste</strong> <var class="def-var-arguments">(&amp;optional paste-table)</var><a class="copiable-link" href="#index-emacsvox_002dclipfile_002dpaste"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dM_002dy"></a><span><kbd class="kbd">C-e C-M-y</kbd><a class="copiable-link" href="#index-C_002de-C_002dM_002dy"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dclipfile_002dpaste-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Yank contents of the Emacsvox clipboard at point.
+
+(fn &amp;optional PASTE-TABLE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dcurl">
+<h4 class="subsubsection"><span>15.118.1.4 emacsvox-curl<a class="copiable-link" href="#emacsvox_002dcurl"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dcurl"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-curl</strong> <var class="def-var-arguments">(url)</var><a class="copiable-link" href="#index-emacsvox_002dcurl"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dcurl-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Grab URL using Curl, and preview it with a browser .
+
+(fn URL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dadd_002dautoload_002dcookies">
+<h4 class="subsubsection"><span>15.118.1.5 emacsvox-wizards-add-autoload-cookies<a class="copiable-link" href="#emacsvox_002dwizards_002dadd_002dautoload_002dcookies"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dadd_002dautoload_002dcookies"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-add-autoload-cookies</strong> <var class="def-var-arguments">(&amp;optional f)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dadd_002dautoload_002dcookies"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dadd_002dautoload_002dcookies-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add autoload cookies to file f.
+Default is to add autoload cookies to current file.
+
+(fn &amp;optional F)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dbindings_002dfrom_002dorg">
+<h4 class="subsubsection"><span>15.118.1.6 emacsvox-wizards-bindings-from-org<a class="copiable-link" href="#emacsvox_002dwizards_002dbindings_002dfrom_002dorg"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dbindings_002dfrom_002dorg"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-bindings-from-org</strong> <var class="def-var-arguments">(variable filename)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dbindings_002dfrom_002dorg"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dbindings_002dfrom_002dorg-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Load bindings from a specified file.
+
+(fn VARIABLE FILENAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dbindings_002dto_002dorg">
+<h4 class="subsubsection"><span>15.118.1.7 emacsvox-wizards-bindings-to-org<a class="copiable-link" href="#emacsvox_002dwizards_002dbindings_002dto_002dorg"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dbindings_002dto_002dorg"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-bindings-to-org</strong> <var class="def-var-arguments">(variable filename)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dbindings_002dto_002dorg"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dbindings_002dto_002dorg-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Persists mapping to org file.
+
+(fn VARIABLE FILENAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002ddisplay_002dpod_002das_002dmanpage">
+<h4 class="subsubsection"><span>15.118.1.8 emacsvox-wizards-display-pod-as-manpage<a class="copiable-link" href="#emacsvox_002dwizards_002ddisplay_002dpod_002das_002dmanpage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002ddisplay_002dpod_002das_002dmanpage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-display-pod-as-manpage</strong> <var class="def-var-arguments">(filename)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002ddisplay_002dpod_002das_002dmanpage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002ddisplay_002dpod_002das_002dmanpage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Create a virtual manpage in Emacs from the Perl Online Documentation.
+
+(fn FILENAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dfind_002dgrep">
+<h4 class="subsubsection"><span>15.118.1.9 emacsvox-wizards-find-grep<a class="copiable-link" href="#emacsvox_002dwizards_002dfind_002dgrep"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dfind_002dgrep"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-find-grep</strong> <var class="def-var-arguments">(glob pattern)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dfind_002dgrep"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dfind_002dgrep-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Run compile using find and grep.
+Interactive  arguments specify filename pattern and search pattern.
+
+(fn GLOB PATTERN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dfix_002dread_002donly_002dtext">
+<h4 class="subsubsection"><span>15.118.1.10 emacsvox-wizards-fix-read-only-text<a class="copiable-link" href="#emacsvox_002dwizards_002dfix_002dread_002donly_002dtext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dfix_002dread_002donly_002dtext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-fix-read-only-text</strong> <var class="def-var-arguments">(start end)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dfix_002dread_002donly_002dtext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dfix_002dread_002donly_002dtext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Nuke read-only property on text range.
+
+(fn START END)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dgenerate_002dvoice_002dsampler">
+<h4 class="subsubsection"><span>15.118.1.11 emacsvox-wizards-generate-voice-sampler<a class="copiable-link" href="#emacsvox_002dwizards_002dgenerate_002dvoice_002dsampler"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dgenerate_002dvoice_002dsampler"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-generate-voice-sampler</strong> <var class="def-var-arguments">(step)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dgenerate_002dvoice_002dsampler"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dgenerate_002dvoice_002dsampler-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Generate a buffer that shows a sample line in all the ACSS settings
+for the current voice family.
+
+(fn STEP)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dlist_002dvoices">
+<h4 class="subsubsection"><span>15.118.1.12 emacsvox-wizards-list-voices<a class="copiable-link" href="#emacsvox_002dwizards_002dlist_002dvoices"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dlist_002dvoices"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-list-voices</strong> <var class="def-var-arguments">(pattern)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dlist_002dvoices"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dh-_0022"></a><span><kbd class="kbd">C-h &quot;</kbd><a class="copiable-link" href="#index-C_002dh-_0022"> &para;</a></span></dt>
+<dt><a id="index-_003cf1_003e-_0022"></a><span><kbd class="kbd">&lt;f1&gt; &quot;</kbd><a class="copiable-link" href="#index-_003cf1_003e-_0022"> &para;</a></span></dt>
+<dt><a id="index-_003chelp_003e-_0022"></a><span><kbd class="kbd">&lt;help&gt; &quot;</kbd><a class="copiable-link" href="#index-_003chelp_003e-_0022"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dlist_002dvoices-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Show all defined voice-face mappings  in a help buffer.
+Sample text to use comes from variable
+  ‘ems&ndash;wizards-sampler-text
+
+(fn PATTERN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dmidi_002dusing_002dm_002dscore">
+<h4 class="subsubsection"><span>15.118.1.13 emacsvox-wizards-midi-using-m-score<a class="copiable-link" href="#emacsvox_002dwizards_002dmidi_002dusing_002dm_002dscore"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dmidi_002dusing_002dm_002dscore"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-midi-using-m-score</strong> <var class="def-var-arguments">(midi-file)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dmidi_002dusing_002dm_002dscore"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dmidi_002dusing_002dm_002dscore-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play midi file using mscore from musescore package.
+
+(fn MIDI-FILE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshow_002dvoices">
+<h4 class="subsubsection"><span>15.118.1.14 emacsvox-wizards-show-voices<a class="copiable-link" href="#emacsvox_002dwizards_002dshow_002dvoices"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshow_002dvoices"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-show-voices</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshow_002dvoices"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dshow_002dvoices-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display a buffer with sample text in the defined voices.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dvoice_002dsampler">
+<h4 class="subsubsection"><span>15.118.1.15 emacsvox-wizards-voice-sampler<a class="copiable-link" href="#emacsvox_002dwizards_002dvoice_002dsampler"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dvoice_002dsampler"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-voice-sampler</strong> <var class="def-var-arguments">(personality)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dvoice_002dsampler"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dvoice_002dsampler-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Read a personality  and apply it to the current line.
+
+(fn PERSONALITY)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dextras-Options">
+<h4 class="subsection"><span>15.118.2 emacsvox-extras Options<a class="copiable-link" href="#emacsvox_002dextras-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-62"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-clipfile-file</var><a class="copiable-link" href="#index-User-Option-62"> &para;</a></span></dt>
+<dd><pre class="verbatim">File used to save Emacsvox clipboard.
+The emacsvox clipboard provides a convenient mechanism for exchanging
+information between different Emacs sessions.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;~/.emacsvox/clipboard&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-63"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-curl-cookie-store</var><a class="copiable-link" href="#index-User-Option-63"> &para;</a></span></dt>
+<dd><pre class="verbatim">Cookie store used by Curl.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;~/.curl-cookies&quot;
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dexwm.html">emacsvox-exwm</a>, Previous: <a href="emacsvox_002deww.html">emacsvox-eww</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

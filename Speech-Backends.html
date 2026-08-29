@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Speech Backends (Emacsvox User Manual)</title>
+
+<meta name="description" content="Speech Backends (Emacsvox User Manual)">
+<meta name="keywords" content="Speech Backends (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="index.html" rel="up" title="Top">
+<link href="Basic-Usage.html" rel="next" title="Basic Usage">
+<link href="Installation.html" rel="prev" title="Installation">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="chapter-level-extent" id="Speech-Backends">
+<div class="nav-panel">
+<p>
+Next: <a href="Basic-Usage.html" accesskey="n" rel="next">Basic Usage.</a>, Previous: <a href="Installation.html" accesskey="p" rel="prev">Getting Started: Installation and First Speech</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h2 class="chapter" id="Speech-Backends-1"><span>6 Speech Backends<a class="copiable-link" href="#Speech-Backends-1"> &para;</a></span></h2>
+
+<p>Emacsvox needs a speech-server process.  For a new installation, use
+<strong class="strong">Omnivox</strong>.  Omnivox is the server that Emacsvox talks to; the engine
+that produces speech underneath it is platform-specific.  The normal engine
+is eSpeak NG on GNU/Linux, AVSpeechSynthesizer on macOS, and WinRT
+SpeechSynthesizer on Windows.
+</p>
+<p>This chapter owns Emacsvox&rsquo;s platform recommendation and first backend smoke
+test.  Omnivox owns its build internals, engine behavior, and versioned
+protocols.  The maintained Omnivox source and current status are at
+<a class="url" href="https://github.com/bartbunting/omnivox">the Omnivox repository</a>.
+</p>
+
+<ul class="mini-toc">
+<li><a href="Supported-Platform-Routes.html" accesskey="1">Supported Platform Routes</a></li>
+<li><a href="Installing-Omnivox-From-Source.html" accesskey="2">Installing Omnivox From Source</a></li>
+<li><a href="Building-Omnivox-For-WSL2.html" accesskey="3">Building Omnivox For WSL2</a></li>
+<li><a href="Selecting-And-Checking-Omnivox.html" accesskey="4">Selecting And Checking Omnivox</a></li>
+<li><a href="Compatibility-Speech-Servers.html" accesskey="5">Compatibility Speech Servers</a></li>
+<li><a href="Backend-Diagnostics-And-Ownership.html" accesskey="6">Backend Diagnostics And Ownership</a></li>
+</ul>
+</div>
+
+
+
+</body>
+</html>

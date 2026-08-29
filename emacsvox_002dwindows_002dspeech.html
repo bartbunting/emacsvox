@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-windows-speech (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-windows-speech (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-windows-speech (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dwizards.html" rel="next" title="emacsvox-wizards">
+<link href="emacsvox_002dwindmove.html" rel="prev" title="emacsvox-windmove">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dwindows_002dspeech">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dwizards.html" accesskey="n" rel="next">emacsvox-wizards</a>, Previous: <a href="emacsvox_002dwindmove.html" accesskey="p" rel="prev">emacsvox-windmove</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dwindows_002dspeech-1"><span>15.245 emacsvox-windows-speech<a class="copiable-link" href="#emacsvox_002dwindows_002dspeech-1"> &para;</a></span></h3>
+
+<p>Register the native Windows speech servers bundled with Emacsvox.  Friendly
+names shown by &lsquo;tts-select-server&rsquo; are translated to paths below the
+configured server directory.  This module also configures native auditory
+icons, notification streams, stereo positioning, and dependency diagnosis.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dWindows_002dSpeech-Commands" accesskey="1">Emacsvox-Windows-Speech Commands</a></li>
+<li><a href="#emacsvox_002dwindows_002dspeech-Options" accesskey="2">emacsvox-windows-speech Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dWindows_002dSpeech-Commands">
+<h4 class="subsection"><span>15.245.1 Emacsvox-Windows-Speech Commands<a class="copiable-link" href="#Emacsvox_002dWindows_002dSpeech-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dwindows_002dspeech_002dconfigure_002daudio" accesskey="1">emacsvox-windows-speech-configure-audio</a></li>
+<li><a href="#emacsvox_002dwindows_002dspeech_002ddiagnose" accesskey="2">emacsvox-windows-speech-diagnose</a></li>
+<li><a href="#emacsvox_002dwindows_002dspeech_002ddisable" accesskey="3">emacsvox-windows-speech-disable</a></li>
+<li><a href="#emacsvox_002dwindows_002dspeech_002denable" accesskey="4">emacsvox-windows-speech-enable</a></li>
+<li><a href="#emacsvox_002dwindows_002dspeech_002drestore_002daudio" accesskey="5">emacsvox-windows-speech-restore-audio</a></li>
+<li><a href="#emacsvox_002dwindows_002dspeech_002dselect_002ddectalk" accesskey="6">emacsvox-windows-speech-select-dectalk</a></li>
+<li><a href="#emacsvox_002dwindows_002dspeech_002dselect_002deloquence" accesskey="7">emacsvox-windows-speech-select-eloquence</a></li>
+<li><a href="#emacsvox_002dwindows_002dspeech_002dselect_002dserver" accesskey="8">emacsvox-windows-speech-select-server</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dwindows_002dspeech_002dconfigure_002daudio">
+<h4 class="subsubsection"><span>15.245.1.1 emacsvox-windows-speech-configure-audio<a class="copiable-link" href="#emacsvox_002dwindows_002dspeech_002dconfigure_002daudio"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwindows_002dspeech_002dconfigure_002daudio"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-windows-speech-configure-audio</strong> <var class="def-var-arguments">(&amp;optional restart)</var><a class="copiable-link" href="#index-emacsvox_002dwindows_002dspeech_002dconfigure_002daudio"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwindows_002dspeech_002dconfigure_002daudio-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Route auditory icons and generated SoX cues through Windows.
+With prefix argument RESTART, restart the active speech server afterward.
+
+(fn &amp;optional RESTART)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwindows_002dspeech_002ddiagnose">
+<h4 class="subsubsection"><span>15.245.1.2 emacsvox-windows-speech-diagnose<a class="copiable-link" href="#emacsvox_002dwindows_002dspeech_002ddiagnose"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwindows_002dspeech_002ddiagnose"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-windows-speech-diagnose</strong><a class="copiable-link" href="#index-emacsvox_002dwindows_002dspeech_002ddiagnose"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwindows_002dspeech_002ddiagnose-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display native Windows speech dependency and build status.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwindows_002dspeech_002ddisable">
+<h4 class="subsubsection"><span>15.245.1.3 emacsvox-windows-speech-disable<a class="copiable-link" href="#emacsvox_002dwindows_002dspeech_002ddisable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwindows_002dspeech_002ddisable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-windows-speech-disable</strong><a class="copiable-link" href="#index-emacsvox_002dwindows_002dspeech_002ddisable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwindows_002dspeech_002ddisable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Disable friendly selection of native Windows speech servers.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwindows_002dspeech_002denable">
+<h4 class="subsubsection"><span>15.245.1.4 emacsvox-windows-speech-enable<a class="copiable-link" href="#emacsvox_002dwindows_002dspeech_002denable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwindows_002dspeech_002denable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-windows-speech-enable</strong><a class="copiable-link" href="#index-emacsvox_002dwindows_002dspeech_002denable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwindows_002dspeech_002denable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enable friendly selection of native Windows speech servers.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwindows_002dspeech_002drestore_002daudio">
+<h4 class="subsubsection"><span>15.245.1.5 emacsvox-windows-speech-restore-audio<a class="copiable-link" href="#emacsvox_002dwindows_002dspeech_002drestore_002daudio"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwindows_002dspeech_002drestore_002daudio"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-windows-speech-restore-audio</strong> <var class="def-var-arguments">(&amp;optional restart)</var><a class="copiable-link" href="#index-emacsvox_002dwindows_002dspeech_002drestore_002daudio"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwindows_002dspeech_002drestore_002daudio-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Restore audio settings saved before native Windows configuration.
+With prefix argument RESTART, restart the active speech server afterward.
+
+(fn &amp;optional RESTART)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwindows_002dspeech_002dselect_002ddectalk">
+<h4 class="subsubsection"><span>15.245.1.6 emacsvox-windows-speech-select-dectalk<a class="copiable-link" href="#emacsvox_002dwindows_002dspeech_002dselect_002ddectalk"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwindows_002dspeech_002dselect_002ddectalk"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-windows-speech-select-dectalk</strong><a class="copiable-link" href="#index-emacsvox_002dwindows_002dspeech_002dselect_002ddectalk"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwindows_002dspeech_002dselect_002ddectalk-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select the native Windows DECtalk server.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwindows_002dspeech_002dselect_002deloquence">
+<h4 class="subsubsection"><span>15.245.1.7 emacsvox-windows-speech-select-eloquence<a class="copiable-link" href="#emacsvox_002dwindows_002dspeech_002dselect_002deloquence"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwindows_002dspeech_002dselect_002deloquence"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-windows-speech-select-eloquence</strong><a class="copiable-link" href="#index-emacsvox_002dwindows_002dspeech_002dselect_002deloquence"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwindows_002dspeech_002dselect_002deloquence-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select the native Windows Eloquence server.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwindows_002dspeech_002dselect_002dserver">
+<h4 class="subsubsection"><span>15.245.1.8 emacsvox-windows-speech-select-server<a class="copiable-link" href="#emacsvox_002dwindows_002dspeech_002dselect_002dserver"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwindows_002dspeech_002dselect_002dserver"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-windows-speech-select-server</strong> <var class="def-var-arguments">(server)</var><a class="copiable-link" href="#index-emacsvox_002dwindows_002dspeech_002dselect_002dserver"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwindows_002dspeech_002dselect_002dserver-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select friendly Windows speech SERVER and restart speech.
+
+(fn SERVER)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dwindows_002dspeech-Options">
+<h4 class="subsection"><span>15.245.2 emacsvox-windows-speech Options<a class="copiable-link" href="#emacsvox_002dwindows_002dspeech-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-135"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-windows-speech-enable-notification-stream</var><a class="copiable-link" href="#index-User-Option-135"> &para;</a></span></dt>
+<dd><pre class="verbatim">Whether Windows speech servers use a separate notification stream.
+The notification stream uses a second server and native bridge process, so
+notifications can speak independently of the main speech stream.  Changes
+take effect the next time the speech server is selected or restarted.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+t
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-136"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-windows-speech-main-pan</var><a class="copiable-link" href="#index-User-Option-136"> &para;</a></span></dt>
+<dd><pre class="verbatim">Stereo position of the main Windows speech stream.
+-1.0 is fully left, 0.0 is centered, and 1.0 is fully right.  Values
+outside that range are clamped when the speech process starts.  Changes
+take effect the next time the speech server is selected or restarted.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+0.0
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-137"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-windows-speech-notification-pan</var><a class="copiable-link" href="#index-User-Option-137"> &para;</a></span></dt>
+<dd><pre class="verbatim">Stereo position of the Windows notification speech stream.
+-1.0 is fully left, 0.0 is centered, and 1.0 is fully right.  Values
+outside that range are clamped when the notification process starts.
+Changes take effect when the speech server is selected or restarted.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+0.65
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-138"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-windows-speech-servers-directory</var><a class="copiable-link" href="#index-User-Option-138"> &para;</a></span></dt>
+<dd><pre class="verbatim">Directory containing native Windows speech server launchers.
+
+Set this directly or set ‘EMACSVOX_WINDOWS_SPEECH_SERVERS’ in the
+environment.  The bundled Emacsvox server directory is the default.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;&lt;emacsvox-root&gt;/servers/&quot;
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dwizards.html">emacsvox-wizards</a>, Previous: <a href="emacsvox_002dwindmove.html">emacsvox-windmove</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

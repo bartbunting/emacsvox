@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Audio Formatting  ---  Generalizing Aural CSS (Emacsvox User Manual)</title>
+
+<meta name="description" content="Audio Formatting  ---  Generalizing Aural CSS (Emacsvox User Manual)">
+<meta name="keywords" content="Audio Formatting  ---  Generalizing Aural CSS (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacspeak-At-Twenty.html" rel="up" title="Emacspeak At Twenty">
+<link href="Conversational-Gestures-For-The-Audio-Desktop.html" rel="next" title="Conversational Gestures For The Audio Desktop">
+<link href="Emacspeak-And-The-Early-Days-Of-The-Web.html" rel="prev" title="Emacspeak And The Early Days Of The Web">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Audio-Formatting-_002d_002d_002d-Generalizing-Aural-CSS">
+<div class="nav-panel">
+<p>
+Next: <a href="Conversational-Gestures-For-The-Audio-Desktop.html" accesskey="n" rel="next">Conversational Gestures For The Audio Desktop</a>, Previous: <a href="Emacspeak-And-The-Early-Days-Of-The-Web.html" accesskey="p" rel="prev">Emacspeak And The Early Days Of The Web</a>, Up: <a href="Emacspeak-At-Twenty.html" accesskey="u" rel="up">Emacspeak At Twenty.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Audio-Formatting-_002d_002d_002d-Generalizing-Aural-CSS-1"><span>20.8 Audio Formatting  &mdash;   Generalizing Aural CSS<a class="copiable-link" href="#Audio-Formatting-_002d_002d_002d-Generalizing-Aural-CSS-1"> &para;</a></span></h3>
+
+<p>A key idea in Audio System For Technical Readings <a class="url" href="http://www.cs.cornell.edu/home/raman/aster/aster-toplevel.html">(AsTeR)</a> was the
+use of various voice properties in combination with non-speech
+auditory icons to create rich aural renderings. When I
+implemented Emacspeak, I brought over the notion of audio
+formatting to all buffers in Emacs by creating a <strong class="strong">voice-lock</strong>
+module that paralleled Emacs&rsquo; <strong class="strong">font-lock</strong> module. The visual
+medium is far richer in terms of available fonts and colors as
+compared to voice parameters available on TTS engines  &mdash; 
+consequently, it did not make sense to directly map Emacs&rsquo; <strong class="strong">face</strong>
+properties to voice parameters. To aid in projecting visual
+formatting onto auditory space, I created property <strong class="strong">personality</strong>
+analogous to Emacs&rsquo; <strong class="strong">face</strong> property that could be applied to
+content displayed in Emacs; module <strong class="strong">voice-lock</strong> applied that
+property appropriately, and the Emacspeak core handled the
+details of mapping personality values to the underlying TTS
+engine.
+</p>
+<p>The values used in property <strong class="strong">personality</strong> were abstract, i.e.,
+they were independent of any given speech engine. Later in the
+fall of 1995, I re-expressed these set of abstract voice
+properties in terms of Aural CSS; the work was published as a
+first draft toward the end of 1995, and implemented in Emacs-W3
+in early 1996. Aural CSS was an appendix in the CSS-1.0
+specification; later, it graduated to being its own module within
+CSS-2.0.
+</p>
+<p>Later in 1996, all of Emacs&rsquo; <strong class="strong">voice-lock</strong> functionality was
+re-implemented in terms of Aural CSS; the implementation has
+stood the test of time in that as I added support for more TTS
+engines, I was able to implement engine-specific mappings of
+Aural-CSS values. This meant that the rest of Emacspeak could
+define various types of voices for use in specific contexts
+without having to worry about individual TTS
+engines. Conceptually, property <strong class="strong">personality</strong> can be thought of
+as holding an <strong class="strong">aural display list</strong>  &mdash;  various parts of the system
+can annotate pieces of text with relevant properties that finally
+get rendered in the aggregate. This model also works well with
+the notion of Emacs overlays where a moving overlay is used to
+temporarily highlight text that has other context-specific
+properties applied to it.
+</p>
+
+<p>Audio formatting as implemented in Emacspeak is extremely
+effective when working with all types of content ranging from
+richly structured mark-up documents (LaTeX, org-mode) and
+formatted Web pages to program source code. Perceptually,
+switching to audio formatted output feels like switching from a
+black-and-white monitor to a rich color display. Today,
+Emacspeak&rsquo;s audio formatted output is the only way I can
+correctly write <strong class="strong">else if</strong> vs <strong class="strong">elsif</strong> in various programming
+languages!
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Conversational-Gestures-For-The-Audio-Desktop.html">Conversational Gestures For The Audio Desktop</a>, Previous: <a href="Emacspeak-And-The-Early-Days-Of-The-Web.html">Emacspeak And The Early Days Of The Web</a>, Up: <a href="Emacspeak-At-Twenty.html">Emacspeak At Twenty.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

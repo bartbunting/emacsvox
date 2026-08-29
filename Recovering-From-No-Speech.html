@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Recovering From No Speech (Emacsvox User Manual)</title>
+
+<meta name="description" content="Recovering From No Speech (Emacsvox User Manual)">
+<meta name="keywords" content="Recovering From No Speech (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Installation.html" rel="up" title="Installation">
+<link href="Persistent-Startup.html" rel="next" title="Persistent Startup">
+<link href="Confirming-First-Speech.html" rel="prev" title="Confirming First Speech">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Recovering-From-No-Speech">
+<div class="nav-panel">
+<p>
+Next: <a href="Persistent-Startup.html" accesskey="n" rel="next">Persistent Startup</a>, Previous: <a href="Confirming-First-Speech.html" accesskey="p" rel="prev">Confirming First Speech</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Recovering-From-No-Speech-1"><span>5.4 Recovering From No Speech<a class="copiable-link" href="#Recovering-From-No-Speech-1"> &para;</a></span></h3>
+
+<p>Do not add Emacsvox to a personal init file while recovering.  Start at the
+first failing boundary:
+</p>
+<dl class="table">
+<dt><code class="command">./bin/emacsvox --diagnose</code> fails</dt>
+<dd><p>No audio or interactive Emacs has started.  Follow the reported selection:
+set <code class="env">EMACS</code>, correct <code class="code">EMACS=</code> in <samp class="file">local.mk</samp>, or install Emacs 31
+or newer when the Emacs check fails.  When the speech backend is not
+executable, finish installing Omnivox, put it on <code class="env">PATH</code>, or set
+<code class="env">OMNIVOX_PROGRAM</code> to its absolute executable.  Under WSL2, rebuild or
+verify the staged runtime described in <a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
+</p>
+</dd>
+<dt>The diagnostic passes, but <code class="command">--check</code> errors or is inaudible</dt>
+<dd><p>The failure is below Emacsvox.  Do not edit the Emacs init file.  Follow
+<a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend Diagnostics And Ownership</a> until the check produces both its tone
+and speech.  A zero exit status without both audible signals is not success.
+</p>
+</dd>
+<dt>The audible check passes, but the isolated startup sentence is absent</dt>
+<dd><p>Run <code class="command">./bin/emacsvox --diagnose</code> again from the same checkout and shell.
+Remove an unintended <code class="env">TTS_PROGRAM</code> override if the report does not select
+<code class="code">omnivox</code>.  Then request an Emacs startup backtrace with:
+</p>
+<div class="example">
+<pre class="example-preformatted">./bin/emacsvox -- --debug-init
+</pre></div>
+
+<p>An error saying &lsquo;<samp class="samp">Could not find speech server executable</samp>&rsquo; means the
+backend visible during that start cannot be executed.  Correct the reported
+backend path rather than adding more init-file configuration.  For an Omnivox
+process error, inspect the private log directory described below.
+</p>
+</dd>
+<dt>The startup sentence is heard, but speech later stops</dt>
+<dd><p>If Emacs reports that an Emacsvox speech server exited, inspect the Omnivox
+session log and type <kbd class="kbd">M-x tts-restart RET</kbd> after correcting the backend
+problem.  Logs are below <samp class="file">$XDG_STATE_HOME/emacsvox/omnivox</samp>, defaulting to
+<samp class="file">~/.local/state/emacsvox/omnivox</samp>.  Spoken text is omitted unless explicit
+text logging is enabled.
+</p>
+</dd>
+<dt>The isolated launcher works, but a customized Emacs start does not</dt>
+<dd><p>Remove or comment out the Emacsvox environment and <code class="code">load-file</code> forms from
+the personal init file.  This is the rollback: it leaves the checkout and the
+known-good <code class="command">./bin/emacsvox</code> path intact.  Re-add the forms in the order
+shown in <a class="ref" href="Persistent-Startup.html">Persistent Startup</a>; backend selection must happen before setup
+is loaded.
+</p></dd>
+</dl>
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Persistent-Startup.html">Persistent Startup</a>, Previous: <a href="Confirming-First-Speech.html">Confirming First Speech</a>, Up: <a href="Installation.html">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

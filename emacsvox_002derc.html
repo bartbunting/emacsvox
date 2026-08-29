@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-erc (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-erc (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-erc (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002deshell.html" rel="next" title="emacsvox-eshell">
+<link href="emacsvox_002depub.html" rel="prev" title="emacsvox-epub">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002derc">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002deshell.html" accesskey="n" rel="next">emacsvox-eshell</a>, Previous: <a href="emacsvox_002depub.html" accesskey="p" rel="prev">emacsvox-epub</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002derc-1"><span>15.110 emacsvox-erc<a class="copiable-link" href="#emacsvox_002derc-1"> &para;</a></span></h3>
+
+<p>erc.el is a modern Emacs client for IRC including color
+and font locking support.
+erc.el - an Emacs IRC client (by Alexander L. Belikoff)
+http://www.cs.cmu.edu/~berez/irc/erc.el
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dErc-Commands" accesskey="1">Emacsvox-Erc Commands</a></li>
+<li><a href="#emacsvox_002derc-Options" accesskey="2">emacsvox-erc Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dErc-Commands">
+<h4 class="subsection"><span>15.110.1 Emacsvox-Erc Commands<a class="copiable-link" href="#Emacsvox_002dErc-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002derc_002dadd_002dname_002dto_002dmonitor" accesskey="1">emacsvox-erc-add-name-to-monitor</a></li>
+<li><a href="#emacsvox_002derc_002ddelete_002dname_002dfrom_002dmonitor" accesskey="2">emacsvox-erc-delete-name-from-monitor</a></li>
+<li><a href="#emacsvox_002derc_002dsetup_002dcricket_002drules" accesskey="3">emacsvox-erc-setup-cricket-rules</a></li>
+<li><a href="#emacsvox_002derc_002dtoggle_002dmy_002dmonitor" accesskey="4">emacsvox-erc-toggle-my-monitor</a></li>
+<li><a href="#emacsvox_002derc_002dtoggle_002droom_002dmonitor" accesskey="5">emacsvox-erc-toggle-room-monitor</a></li>
+<li><a href="#emacsvox_002derc_002dtoggle_002dspeak_002dall_002dparticipants" accesskey="6">emacsvox-erc-toggle-speak-all-participants</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002derc_002dadd_002dname_002dto_002dmonitor">
+<h4 class="subsubsection"><span>15.110.1.1 emacsvox-erc-add-name-to-monitor<a class="copiable-link" href="#emacsvox_002derc_002dadd_002dname_002dto_002dmonitor"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002derc_002dadd_002dname_002dto_002dmonitor"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-erc-add-name-to-monitor</strong> <var class="def-var-arguments">(name &amp;optional quiten-pronunciation)</var><a class="copiable-link" href="#index-emacsvox_002derc_002dadd_002dname_002dto_002dmonitor"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002derc_002dadd_002dname_002dto_002dmonitor-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add people to monitor in this room.
+Optional interactive prefix  arg defines a pronunciation that
+  silences speaking of this perso’s name.
+
+(fn NAME &amp;optional QUITEN-PRONUNCIATION)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002derc_002ddelete_002dname_002dfrom_002dmonitor">
+<h4 class="subsubsection"><span>15.110.1.2 emacsvox-erc-delete-name-from-monitor<a class="copiable-link" href="#emacsvox_002derc_002ddelete_002dname_002dfrom_002dmonitor"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002derc_002ddelete_002dname_002dfrom_002dmonitor"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-erc-delete-name-from-monitor</strong> <var class="def-var-arguments">(name)</var><a class="copiable-link" href="#index-emacsvox_002derc_002ddelete_002dname_002dfrom_002dmonitor"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002derc_002ddelete_002dname_002dfrom_002dmonitor-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Remove name to monitor in this room.
+
+(fn NAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002derc_002dsetup_002dcricket_002drules">
+<h4 class="subsubsection"><span>15.110.1.3 emacsvox-erc-setup-cricket-rules<a class="copiable-link" href="#emacsvox_002derc_002dsetup_002dcricket_002drules"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002derc_002dsetup_002dcricket_002drules"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-erc-setup-cricket-rules</strong><a class="copiable-link" href="#index-emacsvox_002derc_002dsetup_002dcricket_002drules"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002derc_002dsetup_002dcricket_002drules-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set up #cricket channels.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002derc_002dtoggle_002dmy_002dmonitor">
+<h4 class="subsubsection"><span>15.110.1.4 emacsvox-erc-toggle-my-monitor<a class="copiable-link" href="#emacsvox_002derc_002dtoggle_002dmy_002dmonitor"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002derc_002dtoggle_002dmy_002dmonitor"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-erc-toggle-my-monitor</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002derc_002dtoggle_002dmy_002dmonitor"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002derc_002dtoggle_002dmy_002dmonitor-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle state of ERC  monitor of my messages.
+Interactive PREFIX arg means toggle the global default value, and then
+set the current local value to the result.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002derc_002dtoggle_002droom_002dmonitor">
+<h4 class="subsubsection"><span>15.110.1.5 emacsvox-erc-toggle-room-monitor<a class="copiable-link" href="#emacsvox_002derc_002dtoggle_002droom_002dmonitor"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002derc_002dtoggle_002droom_002dmonitor"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-erc-toggle-room-monitor</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002derc_002dtoggle_002droom_002dmonitor"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002derc_002dtoggle_002droom_002dmonitor-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle state of ERC room monitor.
+Interactive
+PREFIX arg means toggle the global default value, and then
+set the current local value to the result.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002derc_002dtoggle_002dspeak_002dall_002dparticipants">
+<h4 class="subsubsection"><span>15.110.1.6 emacsvox-erc-toggle-speak-all-participants<a class="copiable-link" href="#emacsvox_002derc_002dtoggle_002dspeak_002dall_002dparticipants"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002derc_002dtoggle_002dspeak_002dall_002dparticipants"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-erc-toggle-speak-all-participants</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002derc_002dtoggle_002dspeak_002dall_002dparticipants"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002derc_002dtoggle_002dspeak_002dall_002dparticipants-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle state of ERC speak all participants..
+Interactive
+PREFIX arg means toggle the global default value, and then
+set the current local value to the result.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002derc-Options">
+<h4 class="subsection"><span>15.110.2 emacsvox-erc Options<a class="copiable-link" href="#emacsvox_002derc-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-57"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-erc-ignore-notices</var><a class="copiable-link" href="#index-User-Option-57"> &para;</a></span></dt>
+<dd><pre class="verbatim">Set to T if you dont want to see notification  messages from the
+server.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+t
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-58"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-erc-my-nick</var><a class="copiable-link" href="#index-User-Option-58"> &para;</a></span></dt>
+<dd><pre class="verbatim">My IRC nick.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-59"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-erc-speak-all-participants</var><a class="copiable-link" href="#index-User-Option-59"> &para;</a></span></dt>
+<dd><pre class="verbatim">Speak all things said if t.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002deshell.html">emacsvox-eshell</a>, Previous: <a href="emacsvox_002depub.html">emacsvox-epub</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-ocr (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-ocr (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-ocr (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dorg.html" rel="next" title="emacsvox-org">
+<link href="emacsvox_002dnxml.html" rel="prev" title="emacsvox-nxml">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002docr">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dorg.html" accesskey="n" rel="next">emacsvox-org</a>, Previous: <a href="emacsvox_002dnxml.html" accesskey="p" rel="prev">emacsvox-nxml</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002docr-1"><span>15.176 emacsvox-ocr<a class="copiable-link" href="#emacsvox_002docr-1"> &para;</a></span></h3>
+
+<p>This module defines Emacsvox front-end to OCR.
+This module assumes that sane is installed and working
+for image acquisition,
+and that there is an OCR engine that can take acquired
+images and produce text.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dOcr-Commands" accesskey="1">Emacsvox-Ocr Commands</a></li>
+<li><a href="#emacsvox_002docr-Options" accesskey="2">emacsvox-ocr Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dOcr-Commands">
+<h4 class="subsection"><span>15.176.1 Emacsvox-Ocr Commands<a class="copiable-link" href="#Emacsvox_002dOcr-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002docr-2" accesskey="1">emacsvox-ocr</a></li>
+<li><a href="#emacsvox_002docr_002dbackward_002dpage" accesskey="2">emacsvox-ocr-backward-page</a></li>
+<li><a href="#emacsvox_002docr_002dcustomize" accesskey="3">emacsvox-ocr-customize</a></li>
+<li><a href="#emacsvox_002docr_002dflipflop_002dand_002drecognize_002dimage" accesskey="4">emacsvox-ocr-flipflop-and-recognize-image</a></li>
+<li><a href="#emacsvox_002docr_002dforward_002dpage" accesskey="5">emacsvox-ocr-forward-page</a></li>
+<li><a href="#emacsvox_002docr_002dmode" accesskey="6">emacsvox-ocr-mode</a></li>
+<li><a href="#emacsvox_002docr_002dname_002ddocument" accesskey="7">emacsvox-ocr-name-document</a></li>
+<li><a href="#emacsvox_002docr_002dopen_002dworking_002ddirectory" accesskey="8">emacsvox-ocr-open-working-directory</a></li>
+<li><a href="#emacsvox_002docr_002dpage" accesskey="9">emacsvox-ocr-page</a></li>
+<li><a href="#emacsvox_002docr_002dread_002dcurrent_002dpage">emacsvox-ocr-read-current-page</a></li>
+<li><a href="#emacsvox_002docr_002drecognize_002dimage">emacsvox-ocr-recognize-image</a></li>
+<li><a href="#emacsvox_002docr_002dsave_002dcurrent_002dpage">emacsvox-ocr-save-current-page</a></li>
+<li><a href="#emacsvox_002docr_002dscan_002dand_002drecognize">emacsvox-ocr-scan-and-recognize</a></li>
+<li><a href="#emacsvox_002docr_002dscan_002dimage">emacsvox-ocr-scan-image</a></li>
+<li><a href="#emacsvox_002docr_002dscan_002dphoto">emacsvox-ocr-scan-photo</a></li>
+<li><a href="#emacsvox_002docr_002dset_002dcompress_002dimage_002doptions">emacsvox-ocr-set-compress-image-options</a></li>
+<li><a href="#emacsvox_002docr_002dset_002dscan_002dimage_002doptions">emacsvox-ocr-set-scan-image-options</a></li>
+<li><a href="#emacsvox_002docr_002dwrite_002ddocument">emacsvox-ocr-write-document</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002docr-2">
+<h4 class="subsubsection"><span>15.176.1.1 emacsvox-ocr<a class="copiable-link" href="#emacsvox_002docr-2"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr</strong><a class="copiable-link" href="#index-emacsvox_002docr"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002do"></a><span><kbd class="kbd">C-e C-o</kbd><a class="copiable-link" href="#index-C_002de-C_002do"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002docr-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">An OCR front-end for the Emacsvox desktop.
+
+Page image is acquired using tools from the SANE package.
+The acquired image is run through the OCR engine if one is
+available, and the results placed in a buffer that is
+suitable for browsing the results.
+
+For detailed help, invoke command emacsvox-ocr bound to
+C-e C-o to launch emacsvox-ocr-mode, and press
+‘?’ to display mode-specific help for emacsvox-ocr-mode.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dbackward_002dpage">
+<h4 class="subsubsection"><span>15.176.1.2 emacsvox-ocr-backward-page<a class="copiable-link" href="#emacsvox_002docr_002dbackward_002dpage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dbackward_002dpage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-backward-page</strong> <var class="def-var-arguments">(&amp;optional count-ignored)</var><a class="copiable-link" href="#index-emacsvox_002docr_002dbackward_002dpage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dbackward_002dpage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Like backward page, but tracks page number of current document.
+
+(fn &amp;optional COUNT-IGNORED)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dcustomize">
+<h4 class="subsubsection"><span>15.176.1.3 emacsvox-ocr-customize<a class="copiable-link" href="#emacsvox_002docr_002dcustomize"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dcustomize"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-customize</strong><a class="copiable-link" href="#index-emacsvox_002docr_002dcustomize"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dcustomize-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Customize OCR settings.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dflipflop_002dand_002drecognize_002dimage">
+<h4 class="subsubsection"><span>15.176.1.4 emacsvox-ocr-flipflop-and-recognize-image<a class="copiable-link" href="#emacsvox_002docr_002dflipflop_002dand_002drecognize_002dimage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dflipflop_002dand_002drecognize_002dimage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-flipflop-and-recognize-image</strong><a class="copiable-link" href="#index-emacsvox_002docr_002dflipflop_002dand_002drecognize_002dimage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dflipflop_002dand_002drecognize_002dimage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Run OCR engine on current image after flip-flopping it.
+Useful if you’ve scanned a page upside down and are using an
+engine that does not automatically flip the image for you.  You
+need the imagemagik family of tools &mdash; we use mogrify to
+transform the image.  Prompts for image file if file
+corresponding to the expected ‘current page’ is not found.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dforward_002dpage">
+<h4 class="subsubsection"><span>15.176.1.5 emacsvox-ocr-forward-page<a class="copiable-link" href="#emacsvox_002docr_002dforward_002dpage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dforward_002dpage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-forward-page</strong> <var class="def-var-arguments">(&amp;optional count-ignored)</var><a class="copiable-link" href="#index-emacsvox_002docr_002dforward_002dpage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dforward_002dpage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Like forward page, but tracks page number of current document.
+
+(fn &amp;optional COUNT-IGNORED)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dmode">
+<h4 class="subsubsection"><span>15.176.1.6 emacsvox-ocr-mode<a class="copiable-link" href="#emacsvox_002docr_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-mode</strong><a class="copiable-link" href="#index-emacsvox_002docr_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted"> An OCR front-end for the Emacsvox desktop.
+
+Pre-requisites:
+
+1) A working scanner back-end like SANE on Linux.
+
+2) An OCR engine.
+
+1: Make sure your scanner back-end works, and that you have
+the utilities to scan a document and acquire an image as a
+tiff file.  Then set variable
+emacsvox-ocr-scan-image-program to point at this utility.
+By default, this is set to ‘scanimage’ which is the image
+scanning utility provided by SANE.
+
+By default, this front-end attempts to compress the acquired
+tiff image; make sure you have a utility like tiffcp.
+Variable emacsvox-ocr-compress-image is set to ‘tiffcp’ by
+default; if you use something else, you should customize
+this variable.
+
+2: Next, make sure you have an OCR engine installed and
+working.  By default this front-end assumes that OCR is
+available as /usr/bin/ocr.
+
+Once you have ensured that acquiring an image and applying
+OCR to it work independently of Emacs, you can use this
+Emacsvox front-end to enable easy OCR access from within
+Emacsvox.
+
+The Emacsvox OCR front-end is launched by command
+emacsvox-ocr bound to C-e C-o.
+
+This command switches to a special buffer that has OCR
+commands bounds to single keystrokes&ndash; see the key-binding
+list at the end of this description.  Use Emacs online help
+facility to look up help on these commands.
+
+emacsvox-ocr-mode provides the necessary functionality to
+scan, OCR, read and save documents.  By default, scanned
+images and the resulting text are saved under directory
+~/ocr; see variable emacsvox-ocr-working-directory.
+Invoking command emacsvox-ocr-open-working-directory bound
+to M-x emacsvox-ocr-open-working-directory will open this directory.
+
+By default, the document being scanned is named ‘untitled’.
+You can name the document by using command
+emacsvox-ocr-name-document bound to
+M-x emacsvox-ocr-name-document.  The document name is used
+in constructing the name of the image and text files.
+
+Key Bindings:
+
+See
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+RET		emacsvox-ocr-scan-and-recognize
+SPC		emacsvox-ocr-read-current-page
+1 .. 9		emacsvox-ocr-page
+?		describe-mode
+C		emacsvox-ocr-set-compress-image-options
+I		emacsvox-ocr-set-scan-image-options
+[		emacsvox-ocr-backward-page
+]		emacsvox-ocr-forward-page
+c		emacsvox-ocr-customize
+d		emacsvox-ocr-open-working-directory
+f		emacsvox-ocr-flipflop-and-recognize-image
+i		emacsvox-ocr-scan-image
+j		emacsvox-ocr-scan-photo
+n		emacsvox-ocr-name-document
+o		emacsvox-ocr-recognize-image
+p		emacsvox-ocr-page
+q		bury-buffer
+s		emacsvox-ocr-save-current-page
+w		emacsvox-ocr-write-document
+.
+
+In addition to any hooks its parent mode ‘text-mode’ might have run,
+this mode runs the hook ‘emacsvox-ocr-mode-hook’, as the final or
+penultimate step during initialization.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dname_002ddocument">
+<h4 class="subsubsection"><span>15.176.1.7 emacsvox-ocr-name-document<a class="copiable-link" href="#emacsvox_002docr_002dname_002ddocument"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dname_002ddocument"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-name-document</strong> <var class="def-var-arguments">(name)</var><a class="copiable-link" href="#index-emacsvox_002docr_002dname_002ddocument"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dname_002ddocument-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Name document being scanned in the current OCR buffer.
+Pick a short but meaningful name.
+
+(fn NAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dopen_002dworking_002ddirectory">
+<h4 class="subsubsection"><span>15.176.1.8 emacsvox-ocr-open-working-directory<a class="copiable-link" href="#emacsvox_002docr_002dopen_002dworking_002ddirectory"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dopen_002dworking_002ddirectory"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-open-working-directory</strong><a class="copiable-link" href="#index-emacsvox_002docr_002dopen_002dworking_002ddirectory"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dopen_002dworking_002ddirectory-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Launch dired on OCR working directory.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dpage">
+<h4 class="subsubsection"><span>15.176.1.9 emacsvox-ocr-page<a class="copiable-link" href="#emacsvox_002docr_002dpage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dpage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-page</strong><a class="copiable-link" href="#index-emacsvox_002docr_002dpage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dpage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to specified page.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dread_002dcurrent_002dpage">
+<h4 class="subsubsection"><span>15.176.1.10 emacsvox-ocr-read-current-page<a class="copiable-link" href="#emacsvox_002docr_002dread_002dcurrent_002dpage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dread_002dcurrent_002dpage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-read-current-page</strong><a class="copiable-link" href="#index-emacsvox_002docr_002dread_002dcurrent_002dpage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dread_002dcurrent_002dpage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speaks current page.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002drecognize_002dimage">
+<h4 class="subsubsection"><span>15.176.1.11 emacsvox-ocr-recognize-image<a class="copiable-link" href="#emacsvox_002docr_002drecognize_002dimage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002drecognize_002dimage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-recognize-image</strong><a class="copiable-link" href="#index-emacsvox_002docr_002drecognize_002dimage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002drecognize_002dimage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Run OCR engine on current image.
+Prompts for image file if file corresponding to the expected
+‘current page’ is not found.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dsave_002dcurrent_002dpage">
+<h4 class="subsubsection"><span>15.176.1.12 emacsvox-ocr-save-current-page<a class="copiable-link" href="#emacsvox_002docr_002dsave_002dcurrent_002dpage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dsave_002dcurrent_002dpage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-save-current-page</strong><a class="copiable-link" href="#index-emacsvox_002docr_002dsave_002dcurrent_002dpage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dsave_002dcurrent_002dpage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Writes out recognized text from current page
+to an appropriately named file.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dscan_002dand_002drecognize">
+<h4 class="subsubsection"><span>15.176.1.13 emacsvox-ocr-scan-and-recognize<a class="copiable-link" href="#emacsvox_002docr_002dscan_002dand_002drecognize"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dscan_002dand_002drecognize"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-scan-and-recognize</strong><a class="copiable-link" href="#index-emacsvox_002docr_002dscan_002dand_002drecognize"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dscan_002dand_002drecognize-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Scan in a page and run OCR engine on it.
+Use this command once you’ve verified that the separate
+steps of acquiring an image and running the OCR engine work
+correctly by themselves.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dscan_002dimage">
+<h4 class="subsubsection"><span>15.176.1.14 emacsvox-ocr-scan-image<a class="copiable-link" href="#emacsvox_002docr_002dscan_002dimage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dscan_002dimage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-scan-image</strong><a class="copiable-link" href="#index-emacsvox_002docr_002dscan_002dimage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dscan_002dimage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Acquire page image.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dscan_002dphoto">
+<h4 class="subsubsection"><span>15.176.1.15 emacsvox-ocr-scan-photo<a class="copiable-link" href="#emacsvox_002docr_002dscan_002dphoto"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dscan_002dphoto"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-scan-photo</strong> <var class="def-var-arguments">(&amp;optional metadata)</var><a class="copiable-link" href="#index-emacsvox_002docr_002dscan_002dphoto"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dscan_002dphoto-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Scan in a photograph.
+The scanned image is converted to JPEG.
+
+(fn &amp;optional METADATA)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dset_002dcompress_002dimage_002doptions">
+<h4 class="subsubsection"><span>15.176.1.16 emacsvox-ocr-set-compress-image-options<a class="copiable-link" href="#emacsvox_002docr_002dset_002dcompress_002dimage_002doptions"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dset_002dcompress_002dimage_002doptions"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-set-compress-image-options</strong> <var class="def-var-arguments">(setting)</var><a class="copiable-link" href="#index-emacsvox_002docr_002dset_002dcompress_002dimage_002doptions"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dset_002dcompress_002dimage_002doptions-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Interactively update  image compression options.
+Prompts with current setting in the minibuffer.
+Setting persists for current Emacs session.
+
+(fn SETTING)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dset_002dscan_002dimage_002doptions">
+<h4 class="subsubsection"><span>15.176.1.17 emacsvox-ocr-set-scan-image-options<a class="copiable-link" href="#emacsvox_002docr_002dset_002dscan_002dimage_002doptions"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dset_002dscan_002dimage_002doptions"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-set-scan-image-options</strong> <var class="def-var-arguments">(setting)</var><a class="copiable-link" href="#index-emacsvox_002docr_002dset_002dscan_002dimage_002doptions"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dset_002dscan_002dimage_002doptions-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Interactively update scan image options.
+Prompts with current setting in the minibuffer.
+Setting persists for current Emacs session.
+
+(fn SETTING)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002docr_002dwrite_002ddocument">
+<h4 class="subsubsection"><span>15.176.1.18 emacsvox-ocr-write-document<a class="copiable-link" href="#emacsvox_002docr_002dwrite_002ddocument"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002docr_002dwrite_002ddocument"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-ocr-write-document</strong><a class="copiable-link" href="#index-emacsvox_002docr_002dwrite_002ddocument"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002docr_002dwrite_002ddocument-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Writes out recognized text from all pages in current document.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002docr-Options">
+<h4 class="subsection"><span>15.176.2 emacsvox-ocr Options<a class="copiable-link" href="#emacsvox_002docr-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-98"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-compress-image</var><a class="copiable-link" href="#index-User-Option-98"> &para;</a></span></dt>
+<dd><pre class="verbatim">Command used to compress the scanned tiff file.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-99"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-compress-image-options</var><a class="copiable-link" href="#index-User-Option-99"> &para;</a></span></dt>
+<dd><pre class="verbatim">Options used for compressing tiff image.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;-c g3 &quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-100"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-compress-photo-options</var><a class="copiable-link" href="#index-User-Option-100"> &para;</a></span></dt>
+<dd><pre class="verbatim">Options used when created JPEG from  scanned photographs.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;-optimize -progressive&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-101"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-engine</var><a class="copiable-link" href="#index-User-Option-101"> &para;</a></span></dt>
+<dd><pre class="verbatim">OCR engine to process acquired image.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;&lt;emacsvox-root&gt;/etc/tesseract.pl&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-102"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-engine-options</var><a class="copiable-link" href="#index-User-Option-102"> &para;</a></span></dt>
+<dd><pre class="verbatim">Command line options to pass to OCR engine.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-103"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-image-extension</var><a class="copiable-link" href="#index-User-Option-103"> &para;</a></span></dt>
+<dd><pre class="verbatim">Filename extension used for acquired image.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;.tif&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-104"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-jpeg-metadata-writer</var><a class="copiable-link" href="#index-User-Option-104"> &para;</a></span></dt>
+<dd><pre class="verbatim">Program to add metadata to JPEG files.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;wrjpgcom&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-105"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-keep-uncompressed-image</var><a class="copiable-link" href="#index-User-Option-105"> &para;</a></span></dt>
+<dd><pre class="verbatim">If set to T, uncompressed image is not removed.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-106"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-photo-compress</var><a class="copiable-link" href="#index-User-Option-106"> &para;</a></span></dt>
+<dd><pre class="verbatim">Program to create JPEG compressed images.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;cjpeg&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-107"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-scan-image-options</var><a class="copiable-link" href="#index-User-Option-107"> &para;</a></span></dt>
+<dd><pre class="verbatim">Command line options to pass to image acquisition program.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;--resolution 300 --mode lineart --format=tiff&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-108"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-scan-photo-options</var><a class="copiable-link" href="#index-User-Option-108"> &para;</a></span></dt>
+<dd><pre class="verbatim">Options  used when scanning in photographs.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;--mode color --format=pnm&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-109"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ocr-working-directory</var><a class="copiable-link" href="#index-User-Option-109"> &para;</a></span></dt>
+<dd><pre class="verbatim">Directory where images and OCR results
+will be placed.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;~/.emacsvox/ocr/&quot;
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dorg.html">emacsvox-org</a>, Previous: <a href="emacsvox_002dnxml.html">emacsvox-nxml</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

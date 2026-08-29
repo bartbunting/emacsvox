@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Installing Omnivox From Source (Emacsvox User Manual)</title>
+
+<meta name="description" content="Installing Omnivox From Source (Emacsvox User Manual)">
+<meta name="keywords" content="Installing Omnivox From Source (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Speech-Backends.html" rel="up" title="Speech Backends">
+<link href="Building-Omnivox-For-WSL2.html" rel="next" title="Building Omnivox For WSL2">
+<link href="Supported-Platform-Routes.html" rel="prev" title="Supported Platform Routes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Installing-Omnivox-From-Source">
+<div class="nav-panel">
+<p>
+Next: <a href="Building-Omnivox-For-WSL2.html" accesskey="n" rel="next">Building Omnivox For WSL2</a>, Previous: <a href="Supported-Platform-Routes.html" accesskey="p" rel="prev">Supported Platform Routes</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Installing-Omnivox-From-Source-1"><span>6.2 Installing Omnivox From Source<a class="copiable-link" href="#Installing-Omnivox-From-Source-1"> &para;</a></span></h3>
+
+<p>Use this route on GNU/Linux and macOS.  It requires network access for the
+initial clone, Rust toolchain, and locked dependency downloads.
+</p>
+<p>Install these prerequisite classes before building:
+</p>
+<ul class="itemize mark-bullet">
+<li><a class="url" href="https://rustup.rs/">rustup</a>; the checked-in
+<samp class="file">rust-toolchain.toml</samp> selects the supported Rust release.
+</li><li>Python 3, a C and C++ toolchain, CMake, and Clang with libclang.  The supported
+build wrapper uses these to build and stage eSpeak NG and its generated data.
+</li><li>On GNU/Linux, <code class="command">pkg-config</code> and ALSA development headers.  The ALSA
+package is commonly named <code class="code">libasound2-dev</code> on Debian or Ubuntu and
+<code class="code">alsa-lib-devel</code> on Fedora.
+</li><li>On macOS, the Xcode command-line tools.  Install them with
+<code class="command">xcode-select --install</code> if they are absent.
+</li></ul>
+
+<p>Keep the two repositories beside one another; this also matches the WSL2
+release layout:
+</p>
+<div class="example">
+<pre class="example-preformatted">cd /path/containing/emacsvox
+git clone https://github.com/bartbunting/omnivox
+cd omnivox
+make build
+make install
+</pre></div>
+
+<p><code class="command">make build</code> performs the locked release build and stages the matching
+eSpeak data and third-party notices.  <code class="command">make install</code> installs the
+binary and those adjacent directories, normally below <samp class="file">~/.cargo/bin</samp>.
+Set <code class="env">OMNIVOX_INSTALL_BIN</code> before <code class="command">make install</code> only when the Cargo
+binary directory is elsewhere.  Do not use a bare <code class="command">cargo build</code> as the
+installation procedure; it does not create the complete staged payload.
+</p>
+<p>Make the install directory visible on <code class="env">PATH</code> before continuing.  No
+proprietary speech runtime is needed for the recommended Linux or macOS path.
+</p>
+</div>
+
+
+
+</body>
+</html>

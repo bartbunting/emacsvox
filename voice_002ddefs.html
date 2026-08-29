@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>voice-defs (Emacsvox User Manual)</title>
+
+<meta name="description" content="voice-defs (Emacsvox User Manual)">
+<meta name="keywords" content="voice-defs (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="voice_002dsetup.html" rel="next" title="voice-setup">
+<link href="tts_002dspeak.html" rel="prev" title="tts-speak">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="voice_002ddefs">
+<div class="nav-panel">
+<p>
+Next: <a href="voice_002dsetup.html" accesskey="n" rel="next">voice-setup</a>, Previous: <a href="tts_002dspeak.html" accesskey="p" rel="prev">tts-speak</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="voice_002ddefs-1"><span>15.271 voice-defs<a class="copiable-link" href="#voice_002ddefs-1"> &para;</a></span></h3>
+
+<p>Contains just the voice definitions. Voices are defined using the
+macro <code class="code">defvoice</code> from  module voice-setup.
+</p><ul class="mini-toc">
+<li><a href="#An-Overview-Of-Voice-Design" accesskey="1">An Overview Of Voice Design</a></li>
+<li><a href="#Creating-Distinct-Voices-Via-Aural-CSS" accesskey="2">Creating  Distinct Voices  Via Aural CSS</a></li>
+<li><a href="#Things-to-note" accesskey="3">Things to note</a></li>
+<li><a href="#voice_002ddefs-Options" accesskey="4">voice-defs Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="An-Overview-Of-Voice-Design">
+<h4 class="subsection"><span>15.271.1 An Overview Of Voice Design<a class="copiable-link" href="#An-Overview-Of-Voice-Design"> &para;</a></span></h4>
+
+<p>Aural CSS defines 4 primary device-independent dimensions.
+Average-Pitch, Pitch-Range, Stress, and Richness. There are ten
+possible values along each dimension (0..9), giving a total of
+10,000 possible settings.
+</p>
+<p>Engine-specific modules such as dectalk-voices and outloud-voices
+map these dimensions to device-specific parameters and are
+responsible for generating the final device-specific codes.
+</p></div>
+<div class="subsection-level-extent" id="Creating-Distinct-Voices-Via-Aural-CSS">
+<h4 class="subsection"><span>15.271.2 Creating  Distinct Voices  Via Aural CSS<a class="copiable-link" href="#Creating-Distinct-Voices-Via-Aural-CSS"> &para;</a></span></h4>
+<p>Along each dimension, a setting of 5 is mapped to the default
+setting for the voice as implemented by a given engine. Values on
+either side of  5 produce opposing effects.
+This module  defines the following effects, which can be
+conceptualized as pairs.
+</p><ol class="enumerate" type="A" start="1">
+<li> bolden , lighten
+</li><li> animate, monotone
+</li><li> brighten, smoothen
+</li></ol>
+<p>In addition, we define <code class="code">bolden-and-animate</code> as an auditory
+analog of <code class="code">bold-italic</code>.
+The two additional voices <code class="code">indent</code> and <code class="code">annotate</code>
+predate the above and are retained  as two <strong class="strong">softer</strong> voices.
+Finally, there are 4 <strong class="strong">overlay</strong> voices, corresponding  to the
+4 dimensions; these each set one of the dimensions to <code class="code">8</code>.
+Thus, we have a total of 25 unique voices defined in this module.
+</p></div>
+<div class="subsection-level-extent" id="Things-to-note">
+<h4 class="subsection"><span>15.271.3 Things to note<a class="copiable-link" href="#Things-to-note"> &para;</a></span></h4>
+<ul class="itemize mark-bullet">
+<li>These voices are designed to be distinctive when used in  a given
+utterance.
+</li><li>Non-goal &mdash;  to be able to identify each distinct voice in
+isolation.
+</li><li>Audio-formatting is designed to set apart different types of
+content so that when used in context, one can easily pick-out
+distinct parts of the utterance.
+</li></ul>
+
+</div>
+<div class="subsection-level-extent" id="voice_002ddefs-Options">
+<h4 class="subsection"><span>15.271.4 voice-defs Options<a class="copiable-link" href="#voice_002ddefs-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-167"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-animate-extra-settings</var><a class="copiable-link" href="#index-User-Option-167"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-animate-extra
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil 8 8 8)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-168"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-animate-medium-settings</var><a class="copiable-link" href="#index-User-Option-168"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-animate-medium
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil 7 7 7)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-169"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-animate-settings</var><a class="copiable-link" href="#index-User-Option-169"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-animate
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil 6 6 6)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-170"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-annotate-settings</var><a class="copiable-link" href="#index-User-Option-170"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-annotate
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil 4 0 4)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-171"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-bolden-and-animate-settings</var><a class="copiable-link" href="#index-User-Option-171"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-bolden-and-animate
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil 3 8 8 8)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-172"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-bolden-extra-settings</var><a class="copiable-link" href="#index-User-Option-172"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-bolden-extra
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil 1 nil 8)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-173"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-bolden-medium-settings</var><a class="copiable-link" href="#index-User-Option-173"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-bolden-medium
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil 2 nil 3)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-174"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-bolden-settings</var><a class="copiable-link" href="#index-User-Option-174"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-bolden
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil 4 nil 6)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-175"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-brighten-extra-settings</var><a class="copiable-link" href="#index-User-Option-175"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-brighten-extra
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil nil 3 8)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-176"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-brighten-medium-settings</var><a class="copiable-link" href="#index-User-Option-176"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-brighten-medium
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil nil 4 7)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-177"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-brighten-settings</var><a class="copiable-link" href="#index-User-Option-177"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-brighten
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil nil 5 6)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-178"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-indent-settings</var><a class="copiable-link" href="#index-User-Option-178"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-indent
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil 3 1 3)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-179"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-lighten-extra-settings</var><a class="copiable-link" href="#index-User-Option-179"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-lighten-extra
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil 9 nil 4)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-180"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-lighten-medium-settings</var><a class="copiable-link" href="#index-User-Option-180"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-lighten-medium
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil 7 nil 3)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-181"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-lighten-settings</var><a class="copiable-link" href="#index-User-Option-181"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-lighten
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil 6 nil 2)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-182"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-monotone-extra-settings</var><a class="copiable-link" href="#index-User-Option-182"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-monotone-extra
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil 0 0)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-183"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-monotone-medium-settings</var><a class="copiable-link" href="#index-User-Option-183"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-monotone-medium
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil 1 2)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-184"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-monotone-settings</var><a class="copiable-link" href="#index-User-Option-184"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-monotone
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil 2 4)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-185"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-overlay-0-settings</var><a class="copiable-link" href="#index-User-Option-185"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-overlay-0
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil 8 nil nil nil nil)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-186"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-overlay-1-settings</var><a class="copiable-link" href="#index-User-Option-186"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-overlay-1
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil 8 nil nil nil)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-187"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-overlay-2-settings</var><a class="copiable-link" href="#index-User-Option-187"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-overlay-2
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil nil 8 nil nil)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-188"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-overlay-3-settings</var><a class="copiable-link" href="#index-User-Option-188"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-overlay-3
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil nil nil 8 nil)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-189"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-smoothen-extra-settings</var><a class="copiable-link" href="#index-User-Option-189"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-smoothen-extra
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil nil 0 2)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-190"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-smoothen-medium-settings</var><a class="copiable-link" href="#index-User-Option-190"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-smoothen-medium
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil nil 2 4)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-191"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">voice-smoothen-settings</var><a class="copiable-link" href="#index-User-Option-191"> &para;</a></span></dt>
+<dd><pre class="verbatim">Settings for voice-smoothen
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(nil nil nil 4 6)
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="voice_002dsetup.html">voice-setup</a>, Previous: <a href="tts_002dspeak.html">tts-speak</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

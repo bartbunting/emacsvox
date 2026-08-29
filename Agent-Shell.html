@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Agent Shell (Emacsvox User Manual)</title>
+
+<meta name="description" content="Agent Shell (Emacsvox User Manual)">
+<meta name="keywords" content="Agent Shell (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="index.html" rel="up" title="Top">
+<link href="Emacsvox-Keymaps.html" rel="next" title="Emacsvox Keymaps">
+<link href="Notmuch-Mail.html" rel="prev" title="Notmuch Mail">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="chapter-level-extent" id="Agent-Shell">
+<div class="nav-panel">
+<p>
+Next: <a href="Emacsvox-Keymaps.html" accesskey="n" rel="next">Emacsvox Keymaps</a>, Previous: <a href="Notmuch-Mail.html" accesskey="p" rel="prev">Notmuch Mail</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h2 class="chapter" id="Agent-Shell-1"><span>13 Agent Shell<a class="copiable-link" href="#Agent-Shell-1"> &para;</a></span></h2>
+<a class="index-entry-id" id="index-Agent-Shell"></a>
+<a class="index-entry-id" id="index-artificial-intelligence-agents"></a>
+
+<p>Agent Shell is a separately installed Emacs package for interactive AI-agent
+sessions.  Emacsvox adds speech and semantic presentation without replacing
+Agent Shell&rsquo;s provider setup, session management, prompt editor, or permission
+controls.  See <a class="uref" href="https://github.com/xenodium/agent-shell">Agent Shell</a> for
+provider installation and configuration.
+</p>
+<p>The generated <a class="ref" href="emacsvox_002dagent_002dshell.html">emacsvox-agent-shell</a> section is the exhaustive Emacsvox
+command and option reference.  This chapter follows the tasks a user performs
+in a session.
+</p>
+<ul class="mini-toc">
+<li><a href="#Start-and-control-a-session" accesskey="1">Start and control a session</a></li>
+<li><a href="#Choose-automatic-speech-and-privacy" accesskey="2">Choose automatic speech and privacy</a></li>
+<li><a href="#Respond-to-urgent-permissions" accesskey="3">Respond to urgent permissions</a></li>
+<li><a href="#Inspect-a-response-on-demand" accesskey="4">Inspect a response on demand</a></li>
+<li><a href="#Navigate-transcript-blocks" accesskey="5">Navigate transcript blocks</a></li>
+<li><a href="#Read-and-copy-source-blocks" accesskey="6">Read and copy source blocks</a></li>
+<li><a href="#Navigate-and-copy-rendered-tables" accesskey="7">Navigate and copy rendered tables</a></li>
+<li><a href="#Recover-from-interruption-or-failure" accesskey="8">Recover from interruption or failure</a></li>
+<li><a href="#Integration-ownership-for-maintainers" accesskey="9">Integration ownership for maintainers</a></li>
+</ul>
+<div class="section-level-extent" id="Start-and-control-a-session">
+<h3 class="section"><span>13.1 Start and control a session<a class="copiable-link" href="#Start-and-control-a-session"> &para;</a></span></h3>
+
+<p>Load Emacsvox and start Agent Shell with <code class="code">M-x agent-shell</code>.  Emacsvox loads
+its integration after Agent Shell and activates both new and already existing
+shell buffers.  Run <code class="code">M-x emacsvox-agent-shell-enable</code> only when manually
+re-enabling support after it was disabled or while diagnosing a live reload.
+</p>
+<p>Compose and submit prompts with Agent Shell&rsquo;s normal editing commands.  The
+live prompt retains Emacs undo.  Submitted transcript text is history rather
+than editable prompt input.  Press <kbd class="kbd">C-c C-c</kbd> to ask Agent Shell to interrupt
+an active request; its normal confirmation setting still applies.
+</p>
+<p>Emacsvox speaks routine content only at complete turn boundaries.  A network
+pause does not make a partial answer sound complete.  A cancelled, refused, or
+failed turn reports its outcome without replacing the last successfully
+completed response.
+</p>
+</div>
+<div class="section-level-extent" id="Choose-automatic-speech-and-privacy">
+<h3 class="section"><span>13.2 Choose automatic speech and privacy<a class="copiable-link" href="#Choose-automatic-speech-and-privacy"> &para;</a></span></h3>
+
+<p>The focused session defaults to <code class="code">response</code>: completed answers and routine
+completion feedback are presented, while thought, plan, and tool chatter is
+suppressed.  An unfocused session defaults to <code class="code">notify</code>: its notification
+names the session but does not disclose response or tool content.
+</p>
+<dl class="table">
+<dt><code class="code">full</code></dt>
+<dd><p>Speak responses plus configured thought, plan, and tool detail.  Full tool
+output can contain commands, file contents, or other sensitive provider data.
+</p></dd>
+<dt><code class="code">response</code></dt>
+<dd><p>Speak completed agent responses while suppressing routine thought, plan, and
+tool content.
+</p></dd>
+<dt><code class="code">notify</code></dt>
+<dd><p>Present routine completion without reading the response body.
+</p></dd>
+<dt><code class="code">quiet</code></dt>
+<dd><p>Suppress routine automatic feedback.  Explicit inspection remains available.
+</p></dd>
+<dt><code class="code">auto</code></dt>
+<dd><p>Use <code class="code">emacsvox-agent-shell-foreground-speech-level</code> or
+<code class="code">emacsvox-agent-shell-background-speech-level</code> according to focus.
+</p></dd>
+</dl>
+
+<p>Press <kbd class="kbd">C-c C-q</kbd> to run
+<code class="code">emacsvox-agent-shell-select-speech-level</code> and choose the current
+session&rsquo;s level, including <code class="code">auto</code>.  Press <kbd class="kbd">C-c C-S-q</kbd> to run
+<code class="code">emacsvox-agent-shell-select-background-speech-level</code> and change the
+shared background default.
+<code class="code">M-x emacsvox-agent-shell-cycle-speech-level</code> cycles toward less routine
+speech; use a prefix argument to restore <code class="code">auto</code>.
+</p>
+<p>Thought content defaults to an icon under
+<code class="code">emacsvox-agent-shell-speak-thought-process</code>.  Tool feedback is separately
+controlled by <code class="code">emacsvox-agent-shell-speak-tool-calls</code> and
+<code class="code">emacsvox-agent-shell-tool-output-verbosity</code>.  Selecting background
+<code class="code">response</code> or <code class="code">full</code>, thought <code class="code">speak</code>, or full tool output is an
+explicit disclosure choice.
+</p>
+<p>Automatic response, tool, error, permission, and similar text is limited by
+<code class="code">emacsvox-agent-shell-automatic-content-max-characters</code>, which defaults to
+2,000 characters.  A shortened presentation gives exact omitted character and
+line counts and tells you where to inspect the full content.  The complete text
+stays in the Agent Shell buffer; the limit is applied before Aural compiles the
+automatic speech copy.
+</p>
+</div>
+<div class="section-level-extent" id="Respond-to-urgent-permissions">
+<h3 class="section"><span>13.3 Respond to urgent permissions<a class="copiable-link" href="#Respond-to-urgent-permissions"> &para;</a></span></h3>
+
+<p>Permission requests are separate from routine speech levels because they can
+block the agent and require a decision.  With
+<code class="code">emacsvox-agent-shell-speak-permissions</code> enabled, a request interrupts the
+appropriate speech stream, identifies the session and requested operation, and
+announces its choices.  Provider-controlled descriptions and choice labels are
+bounded, but the actual permission controls remain in Agent Shell.
+</p>
+<p>If the request belongs to another session, switch to the named buffer.  Use
+<code class="code">M-x agent-shell-jump-to-latest-permission-button-row</code> to find its latest
+permission row, or use Agent Shell&rsquo;s <kbd class="kbd">TAB</kbd> and <kbd class="kbd">S-TAB</kbd> item navigation.
+Move among the buttons and press <kbd class="kbd">RET</kbd>, or use a direct choice key displayed
+by Agent Shell.  Choice keys are supplied by Agent Shell and the provider, so
+the visible permission row is authoritative.
+</p>
+<p>Error blocks remain exceptional feedback rather than routine transcript
+chatter.  Lifecycle error announcements follow
+<code class="code">emacsvox-agent-shell-signal-processing</code>; rendered error content remains
+available in the transcript even when routine response speech is quiet.
+</p>
+</div>
+<div class="section-level-extent" id="Inspect-a-response-on-demand">
+<h3 class="section"><span>13.4 Inspect a response on demand<a class="copiable-link" href="#Inspect-a-response-on-demand"> &para;</a></span></h3>
+
+<p>These commands work from the shell and its associated viewports:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">C-c r</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-speak-last-response</code>.  It reads the latest
+successfully completed response in full without moving point.  This deliberate
+operation does not inherit the automatic 2,000-character limit.  While a new
+turn is busy it explicitly identifies and reads the prior completed response.
+</p></dd>
+<dt><kbd class="kbd">C-c R</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-speak-response-overview</code>.  It reports line,
+heading, source-block, and table counts plus a bounded opening preview.
+</p></dd>
+</dl>
+
+<p>These commands remain usable at <code class="code">notify</code> and <code class="code">quiet</code>.  If no turn has
+completed, they say that no completed response is available rather than
+presenting a streaming partial or failed answer.
+</p>
+</div>
+<div class="section-level-extent" id="Navigate-transcript-blocks">
+<h3 class="section"><span>13.5 Navigate transcript blocks<a class="copiable-link" href="#Navigate-transcript-blocks"> &para;</a></span></h3>
+
+<p>Agent Shell responses contain semantic prompt, response, thought, activity,
+tool, plan, permission, error, source-block, and table locations.  Emacsvox
+navigation reports the block type, visibility, and a bounded body preview.
+</p>
+<dl class="table">
+<dt><kbd class="kbd">]</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-next-block-at-point</code> to find the next block of
+the current semantic type.
+</p></dd>
+<dt><kbd class="kbd">[</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-previous-block-at-point</code> to find the preceding
+block of the current semantic type.
+</p></dd>
+<dt><kbd class="kbd">C-c ]</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-next-block-of-type</code>, choose a type, and move to
+its next occurrence.
+</p></dd>
+<dt><kbd class="kbd">C-c [</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-previous-block-of-type</code>, choose a type, and move
+to its preceding occurrence.
+</p></dd>
+</dl>
+
+<p>After a successful typed jump, <kbd class="kbd">]</kbd> and <kbd class="kbd">[</kbd> repeat in that direction.
+At an editable live prompt, bare brackets insert themselves instead of taking
+over prompt editing.
+</p>
+</div>
+<div class="section-level-extent" id="Read-and-copy-source-blocks">
+<h3 class="section"><span>13.6 Read and copy source blocks<a class="copiable-link" href="#Read-and-copy-source-blocks"> &para;</a></span></h3>
+
+<p>Use typed block navigation to reach a source block, then:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">C-c C-b</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-speak-source-block</code> to read the complete rendered
+source block with its language and line count.
+</p></dd>
+<dt><kbd class="kbd">C-c C-y</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-copy-source-block</code> to copy the logical source
+through Agent Shell&rsquo;s public copy operation.
+</p></dd>
+</dl>
+
+<p>The source commands are explicit operations and do not use the automatic
+content limit.  Ordinary line navigation retains its separate bounded speech
+policy.
+</p>
+</div>
+<div class="section-level-extent" id="Navigate-and-copy-rendered-tables">
+<h3 class="section"><span>13.7 Navigate and copy rendered tables<a class="copiable-link" href="#Navigate-and-copy-rendered-tables"> &para;</a></span></h3>
+
+<p>Moving into a rendered Markdown table activates a contextual table map.  It
+announces the table dimensions and current cell.  Leaving the table restores
+the ordinary Agent Shell keys.
+</p>
+<dl class="table">
+<dt><kbd class="kbd">&lt;right&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-next-column</code>.
+</p></dd>
+<dt><kbd class="kbd">&lt;left&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-previous-column</code>.
+</p></dd>
+<dt><kbd class="kbd">&lt;down&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-next-row</code>.
+</p></dd>
+<dt><kbd class="kbd">&lt;up&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-previous-row</code>.
+</p></dd>
+<dt><kbd class="kbd">M-&lt;down&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-exit-forward</code>.
+</p></dd>
+<dt><kbd class="kbd">M-&lt;up&gt;</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-exit-backward</code>.
+</p></dd>
+<dt><kbd class="kbd">SPC</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-speak-cell</code>.
+</p></dd>
+<dt><kbd class="kbd">r</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-speak-row</code>.
+</p></dd>
+<dt><kbd class="kbd">c</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-speak-column</code>.
+</p></dd>
+<dt><kbd class="kbd">.</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-speak-context</code> for row, column, and table
+position.
+</p></dd>
+<dt><kbd class="kbd">=</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-speak-dimensions</code>.
+</p></dd>
+<dt><kbd class="kbd">w</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-copy-cell</code>.
+</p></dd>
+<dt><kbd class="kbd">k k</kbd></dt>
+<dd><p>Also run <code class="code">emacsvox-agent-shell-table-copy-cell</code>.
+</p></dd>
+<dt><kbd class="kbd">k r</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-copy-row</code>; copied cells are tab-separated.
+</p></dd>
+<dt><kbd class="kbd">k c</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-copy-column</code>; copied cells are separated by
+newlines.
+</p></dd>
+<dt><kbd class="kbd">a</kbd></dt>
+<dd><p>Run <code class="code">emacsvox-agent-shell-table-select-speaking-method</code> to toggle column
+titles, row titles, or whether data is spoken before titles.
+</p></dd>
+</dl>
+
+<p>Copy commands use logical cell values, excluding renderer padding and Markdown
+borders.  Wrapped cell contents remain complete.
+</p>
+</div>
+<div class="section-level-extent" id="Recover-from-interruption-or-failure">
+<h3 class="section"><span>13.8 Recover from interruption or failure<a class="copiable-link" href="#Recover-from-interruption-or-failure"> &para;</a></span></h3>
+
+<p>If a request is taking the wrong path, press <kbd class="kbd">C-c C-c</kbd> and confirm the
+Agent Shell interrupt.  A failed or interrupted partial response is not cached
+as complete.  Press <kbd class="kbd">C-c r</kbd> for the preceding completed response, or
+<kbd class="kbd">C-c R</kbd> for its overview.  Read the error block in the transcript for the
+provider&rsquo;s details and edit the live prompt before resubmitting.
+</p>
+<p>Use <code class="code">M-x agent-shell-restart</code> when Agent Shell itself needs a fresh process
+for the same project.  Use <code class="code">M-x emacsvox-agent-shell-enable</code> to reinstall
+speech hooks after deliberately disabling them or during live integration
+development.  Neither recovery command discards transcript files or project
+work.
+</p>
+</div>
+<div class="section-level-extent" id="Integration-ownership-for-maintainers">
+<h3 class="section"><span>13.9 Integration ownership for maintainers<a class="copiable-link" href="#Integration-ownership-for-maintainers"> &para;</a></span></h3>
+
+<p>The integration uses three deliberately different contract layers:
+</p>
+<table class="multitable">
+<thead><tr><th width="18%">Layer</th><th width="37%">Agent Shell owner</th><th width="45%">Emacsvox rule</th></tr></thead>
+<tbody><tr><td width="18%">Public structured API</td><td width="37%"><code class="code">agent-shell-subscribe-to</code>, <code class="code">agent-shell-unsubscribe</code>,
+<code class="code">agent-shell-status</code>, and <code class="code">agent-shell-shell-buffer</code>; lifecycle,
+permission, and tool events</td><td width="45%">Primary authority for processing, completion, errors, permission urgency,
+and tool status.  The public turn boundary triggers inspection of renderer-owned
+response sections.  Event and response data is treated as untrusted content and
+bounded before automatic Aural submission.</td></tr>
+<tr><td width="18%">Experimental renderer metadata</td><td width="37%"><code class="code">agent-shell-ui-state</code>, <code class="code">agent-shell-ui-section</code>, rendered
+Markdown table/source properties, and renderer-owned faces</td><td width="45%">Feature-detected navigation and presentation input.  Renderer group
+provenance outranks provider-controlled IDs; prose and IDs cannot manufacture
+structured permission or lifecycle authority.</td></tr>
+<tr><td width="18%">Private compatibility fallback</td><td width="37%">The aggregate <code class="code">agent-shell--state</code>, the legacy viewport ownership
+resolver, viewport position helpers, and legacy face, prompt, or ID inference</td><td width="45%">Kept in narrow adapter functions for older Agent Shell releases or
+incomplete renderers.  A missing optional detail may reduce header or navigation
+richness but must not create a permission action or completed response.</td></tr>
+</tbody>
+</table>
+
+<p>The lifecycle subscription currently consumes <code class="code">init-started</code>,
+<code class="code">init-finished</code>, <code class="code">session-selected</code>, <code class="code">session-restored</code>,
+<code class="code">input-submitted</code>, <code class="code">turn-complete</code>, and <code class="code">error</code>.  Dedicated
+subscriptions consume <code class="code">permission-request</code>, <code class="code">permission-response</code>,
+and <code class="code">tool-call-update</code>.  Add new semantic behavior at the public event
+layer when Agent Shell exposes it; keep renderer and private fallbacks isolated
+and covered by compatibility tests.
+</p></div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Emacsvox-Keymaps.html">Emacsvox Keymaps</a>, Previous: <a href="Notmuch-Mail.html">Notmuch Mail</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

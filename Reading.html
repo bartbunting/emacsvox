@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reading (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reading (Emacsvox User Manual)">
+<meta name="keywords" content="Reading (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Basic-Usage.html" rel="up" title="Basic Usage">
+<link href="Speech-System.html" rel="next" title="Speech System">
+<link href="Working.html" rel="prev" title="Working">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Reading">
+<div class="nav-panel">
+<p>
+Next: <a href="Speech-System.html" accesskey="n" rel="next">Speech System Commands</a>, Previous: <a href="Working.html" accesskey="p" rel="prev">Using Emacs Buffers</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Reading-and-Navigating"><span>7.3 Reading and Navigating<a class="copiable-link" href="#Reading-and-Navigating"> &para;</a></span></h3>
+
+<p>Ordinary Emacs movement speaks the text crossed by point: moving by a
+character, word, line, or paragraph presents the corresponding unit.
+The commands below let you inspect useful units without first moving.
+They use the default <kbd class="kbd">C-e</kbd> prefix.
+</p>
+<p>This is deliberately a starter set, not a second complete key reference.
+If a binding below differs in your session, use <kbd class="kbd">C-h k</kbd> on that key
+and check your customizations.  The complete generated defaults are in
+<a class="ref" href="Emacsvox-Keymaps.html">Emacsvox Keymaps</a>.
+</p>
+<dl class="table">
+<dt><a class="index-entry-id" id="index-C_002de-c"></a>
+<a id="index-emacsvox_002dspeak_002dchar"></a><span><kbd class="kbd">C-e c</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dchar"> &para;</a></span></dt>
+<dd><p><code class="code">emacsvox-speak-char</code>
+speaks the character at point.
+</p>
+</dd>
+<dt><a class="index-entry-id" id="index-C_002de-w"></a>
+<a id="index-emacsvox_002dspeak_002dword"></a><span><kbd class="kbd">C-e w</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dword"> &para;</a></span></dt>
+<dd><p><code class="code">emacsvox-speak-word</code>
+speaks the current word.  Repeating it at the same position spells the
+word.
+</p>
+</dd>
+<dt><a class="index-entry-id" id="index-C_002de-l"></a>
+<a id="index-emacsvox_002dspeak_002dline"></a><span><kbd class="kbd">C-e l</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dline"> &para;</a></span></dt>
+<dd><p><code class="code">emacsvox-speak-line</code>
+speaks the current line.
+</p>
+</dd>
+<dt><a class="index-entry-id" id="index-C_002de-_005b"></a>
+<a id="index-emacsvox_002dspeak_002dparagraph"></a><span><kbd class="kbd">C-e [</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dparagraph"> &para;</a></span></dt>
+<dd><p><code class="code">emacsvox-speak-paragraph</code>
+speaks the current paragraph.
+</p>
+</dd>
+<dt><a class="index-entry-id" id="index-C_002de-_005d"></a>
+<a id="index-emacsvox_002dspeak_002dpage"></a><span><kbd class="kbd">C-e ]</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dpage"> &para;</a></span></dt>
+<dd><p><code class="code">emacsvox-speak-page</code>
+speaks the current page.
+</p>
+</dd>
+<dt><a class="index-entry-id" id="index-C_002de-r"></a>
+<a id="index-emacsvox_002dspeak_002dregion"></a><span><kbd class="kbd">C-e r</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dregion"> &para;</a></span></dt>
+<dd><p><code class="code">emacsvox-speak-region</code>
+speaks the active region between point and mark.
+</p>
+</dd>
+<dt><a class="index-entry-id" id="index-C_002de-i"></a>
+<a id="index-emacsvox_002dspeak_002drest_002dof_002dbuffer"></a><span><kbd class="kbd">C-e i</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002drest_002dof_002dbuffer"> &para;</a></span></dt>
+<dd><p><code class="code">emacsvox-speak-rest-of-buffer</code>
+speaks from point to the end of the buffer.
+</p>
+</dd>
+<dt><a class="index-entry-id" id="index-C_002de-b"></a>
+<a id="index-emacsvox_002dspeak_002dbuffer"></a><span><kbd class="kbd">C-e b</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dbuffer"> &para;</a></span></dt>
+<dd><p><code class="code">emacsvox-speak-buffer</code>
+speaks the entire current buffer.
+</p>
+</dd>
+<dt><a class="index-entry-id" id="index-C_002de-s"></a>
+<a id="index-tts_002dstop"></a><span><kbd class="kbd">C-e s</kbd><a class="copiable-link" href="#index-tts_002dstop"> &para;</a></span></dt>
+<dd><p><code class="code">tts-stop</code>
+stops current speech.
+</p>
+</dd>
+<dt><a class="index-entry-id" id="index-C_002de-C_002dd"></a>
+<a id="index-emacsvox_002dtoggle_002dshow_002dpoint"></a><span><kbd class="kbd">C-e C-d</kbd><a class="copiable-link" href="#index-emacsvox_002dtoggle_002dshow_002dpoint"> &para;</a></span></dt>
+<dd><p><code class="code">emacsvox-toggle-show-point</code>
+toggles the aural indication of point within spoken text.
+</p>
+</dd>
+</dl>
+
+<p>Many speaking commands accept a prefix argument to limit speech to the
+text before or after point.  Use <kbd class="kbd">C-h k</kbd> on a command before relying
+on those variants, because their exact argument behavior is documented
+with the command.
+</p></div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Speech-System.html">Speech System Commands</a>, Previous: <a href="Working.html">Using Emacs Buffers</a>, Up: <a href="Basic-Usage.html">Basic Usage.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

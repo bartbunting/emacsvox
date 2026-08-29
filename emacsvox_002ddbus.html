@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-dbus (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-dbus (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-dbus (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002ddeadgrep.html" rel="next" title="emacsvox-deadgrep">
+<link href="emacsvox_002dcustom.html" rel="prev" title="emacsvox-custom">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002ddbus">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002ddeadgrep.html" accesskey="n" rel="next">emacsvox-deadgrep</a>, Previous: <a href="emacsvox_002dcustom.html" accesskey="p" rel="prev">emacsvox-custom</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002ddbus-1"><span>15.79 emacsvox-dbus<a class="copiable-link" href="#emacsvox_002ddbus-1"> &para;</a></span></h3>
+
+<p>Loading this module sets  up Emacsvox to respond to DBus notifications.
+This module needs to be loaded explicitly from the user&rsquo;s init file
+after emacsvox has been started.
+</p>
+<ul class="mini-toc">
+<li><a href="#Overview-1" accesskey="1">Overview</a></li>
+<li><a href="#Emacsvox_002dDbus-Commands" accesskey="2">Emacsvox-Dbus Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Overview-1">
+<h4 class="subsection"><span>15.79.1 Overview<a class="copiable-link" href="#Overview-1"> &para;</a></span></h4>
+
+<p>This module provides integration via DBus  for the following:
+</p><ul class="itemize mark-bullet">
+<li>Respond to network coming up or going down
+&mdash; <code class="code">(nm-enable)</code>.
+</li><li>Respond to screen getting locked/unlocked by gnome-screen-saver
+&mdash; <code class="code">(emacsvox-dbus-watch-screen-lock)</code>.
+</li><li>Respond to laptop  going to sleep or waking up
+&mdash;  <code class="code">(emacsvox-dbus-sleep-enable)</code>.
+</li><li>Respond to insertion/ejection of removable storage
+&mdash; <code class="code">(emacsvox-dbus-udisks-enable)</code>.
+</li><li>Watch for power devices
+&mdash; <code class="code">(emacsvox-dbus-upower-enable)</code>.
+</li><li>An interactive command  <code class="command">emacsvox-dbus-lock-screen</code>
+bound to <kbd class="kbd">C-, C-d</kbd> to lock the screen using DBus.
+Note: this key-binding is available only if this module is loaded.
+</li></ul>
+<p>Add calls to the desired functions from the above list
+to the emacs startup file after  this module has been loaded.
+To enable all of them, add (emacsvox-dbus-setup).
+See relevant hooks for customizing behavior.
+Note that each of the  sleep/wake-up, UDisks2   and network/up-down
+can be separately enabled/disabled, and the actions customized
+via appropriately named hook functions.
+</p>
+</div>
+<div class="subsection-level-extent" id="Emacsvox_002dDbus-Commands">
+<h4 class="subsection"><span>15.79.2 Emacsvox-Dbus Commands<a class="copiable-link" href="#Emacsvox_002dDbus-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002ddbus_002dlock_002dscreen" accesskey="1">emacsvox-dbus-lock-screen</a></li>
+<li><a href="#emacsvox_002ddbus_002dsleep_002ddisable" accesskey="2">emacsvox-dbus-sleep-disable</a></li>
+<li><a href="#emacsvox_002ddbus_002dsleep_002denable" accesskey="3">emacsvox-dbus-sleep-enable</a></li>
+<li><a href="#emacsvox_002ddbus_002dudisks_002ddisable" accesskey="4">emacsvox-dbus-udisks-disable</a></li>
+<li><a href="#emacsvox_002ddbus_002dudisks_002denable" accesskey="5">emacsvox-dbus-udisks-enable</a></li>
+<li><a href="#emacsvox_002ddbus_002dupower_002ddisable" accesskey="6">emacsvox-dbus-upower-disable</a></li>
+<li><a href="#emacsvox_002ddbus_002dupower_002denable" accesskey="7">emacsvox-dbus-upower-enable</a></li>
+<li><a href="#emacsvox_002dorca_002dtoggle" accesskey="8">emacsvox-orca-toggle</a></li>
+<li><a href="#emacsvox_002dscreen_002dsaver_002dmode" accesskey="9">emacsvox-screen-saver-mode</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002ddbus_002dlock_002dscreen">
+<h4 class="subsubsection"><span>15.79.2.1 emacsvox-dbus-lock-screen<a class="copiable-link" href="#emacsvox_002ddbus_002dlock_002dscreen"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002ddbus_002dlock_002dscreen"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-dbus-lock-screen</strong><a class="copiable-link" href="#index-emacsvox_002ddbus_002dlock_002dscreen"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002ddbus_002dlock_002dscreen-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Lock screen using DBus.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002ddbus_002dsleep_002ddisable">
+<h4 class="subsubsection"><span>15.79.2.2 emacsvox-dbus-sleep-disable<a class="copiable-link" href="#emacsvox_002ddbus_002dsleep_002ddisable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002ddbus_002dsleep_002ddisable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-dbus-sleep-disable</strong><a class="copiable-link" href="#index-emacsvox_002ddbus_002dsleep_002ddisable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002ddbus_002dsleep_002ddisable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Disable integration with login1 daemon. Does nothing if
+already disabled.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002ddbus_002dsleep_002denable">
+<h4 class="subsubsection"><span>15.79.2.3 emacsvox-dbus-sleep-enable<a class="copiable-link" href="#emacsvox_002ddbus_002dsleep_002denable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002ddbus_002dsleep_002denable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-dbus-sleep-enable</strong><a class="copiable-link" href="#index-emacsvox_002ddbus_002dsleep_002denable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002ddbus_002dsleep_002denable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enable integration with Login1. Does nothing if already enabled.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002ddbus_002dudisks_002ddisable">
+<h4 class="subsubsection"><span>15.79.2.4 emacsvox-dbus-udisks-disable<a class="copiable-link" href="#emacsvox_002ddbus_002dudisks_002ddisable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002ddbus_002dudisks_002ddisable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-dbus-udisks-disable</strong><a class="copiable-link" href="#index-emacsvox_002ddbus_002dudisks_002ddisable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002ddbus_002dudisks_002ddisable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Disable integration with UDisks2 daemon. Does nothing if
+already disabled.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002ddbus_002dudisks_002denable">
+<h4 class="subsubsection"><span>15.79.2.5 emacsvox-dbus-udisks-enable<a class="copiable-link" href="#emacsvox_002ddbus_002dudisks_002denable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002ddbus_002dudisks_002denable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-dbus-udisks-enable</strong><a class="copiable-link" href="#index-emacsvox_002ddbus_002dudisks_002denable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002ddbus_002dudisks_002denable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enable integration with UDisks2. Does nothing if already enabled.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002ddbus_002dupower_002ddisable">
+<h4 class="subsubsection"><span>15.79.2.6 emacsvox-dbus-upower-disable<a class="copiable-link" href="#emacsvox_002ddbus_002dupower_002ddisable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002ddbus_002dupower_002ddisable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-dbus-upower-disable</strong><a class="copiable-link" href="#index-emacsvox_002ddbus_002dupower_002ddisable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002ddbus_002dupower_002ddisable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Disable integration with UPower daemon. Does nothing if
+already disabled.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002ddbus_002dupower_002denable">
+<h4 class="subsubsection"><span>15.79.2.7 emacsvox-dbus-upower-enable<a class="copiable-link" href="#emacsvox_002ddbus_002dupower_002denable"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002ddbus_002dupower_002denable"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-dbus-upower-enable</strong><a class="copiable-link" href="#index-emacsvox_002ddbus_002dupower_002denable"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002ddbus_002dupower_002denable-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enable integration with UPower. Does nothing if already enabled.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dorca_002dtoggle">
+<h4 class="subsubsection"><span>15.79.2.8 emacsvox-orca-toggle<a class="copiable-link" href="#emacsvox_002dorca_002dtoggle"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dorca_002dtoggle"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-orca-toggle</strong><a class="copiable-link" href="#index-emacsvox_002dorca_002dtoggle"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-s_002do"></a><span><kbd class="kbd">s-o</kbd><a class="copiable-link" href="#index-s_002do"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dorca_002dtoggle-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle state of orca.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dscreen_002dsaver_002dmode">
+<h4 class="subsubsection"><span>15.79.2.9 emacsvox-screen-saver-mode<a class="copiable-link" href="#emacsvox_002dscreen_002dsaver_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dscreen_002dsaver_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-screen-saver-mode</strong><a class="copiable-link" href="#index-emacsvox_002dscreen_002dsaver_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dscreen_002dsaver_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">A light-weight mode for the ‘*Emacsvox Screen Saver *’ buffer.
+This is a hidden buffer that is made current so we automatically
+switch to a screen-saver soundscape.
+
+In addition to any hooks its parent mode ‘special-mode’ might have
+run, this mode runs the hook ‘emacsvox-screen-saver-mode-hook’, as the
+final or penultimate step during initialization.
+
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002ddeadgrep.html">emacsvox-deadgrep</a>, Previous: <a href="emacsvox_002dcustom.html">emacsvox-custom</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

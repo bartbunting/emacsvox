@@ -1,0 +1,4 @@
+Emacsvox browser manual provenance
+Source commit: 8d92d1b655410b0a092e56d95efaade93efae549
+Emacs: 31.0.90
+Texinfo: texi2any (GNU texinfo) 7.2

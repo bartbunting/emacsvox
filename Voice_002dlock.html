@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Voice-lock (Emacsvox User Manual)</title>
+
+<meta name="description" content="Voice-lock (Emacsvox User Manual)">
+<meta name="keywords" content="Voice-lock (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Basic-Usage.html" rel="up" title="Basic Usage">
+<link href="Status-Information.html" rel="next" title="Status Information">
+<link href="Speech-System.html" rel="prev" title="Speech System">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Voice_002dlock">
+<div class="nav-panel">
+<p>
+Next: <a href="Status-Information.html" accesskey="n" rel="next">Status  Commands</a>, Previous: <a href="Speech-System.html" accesskey="p" rel="prev">Speech System Commands</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Voice-Lock-Mode"><span>7.5 Voice Lock Mode<a class="copiable-link" href="#Voice-Lock-Mode"> &para;</a></span></h3>
+
+<p>Toggle voice lock globally with <kbd class="kbd">M-x</kbd>
+<code class="code">global-voice-lock-mode</code>.  Its current default binding is in
+<a class="ref" href="Emacsvox-Keymaps.html">Emacsvox Keymaps</a>.
+</p>
+<p>Voice-lock is turned on automatically in all buffers that support it
+when Emacsvox is started.
+</p>
+<p>Emacsvox can be set to disable voice lock in all of the major modes
+that support it. To do so, insert the following statement into your
+Emacs initialization file:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(global-voice-lock-mode -1)
+</pre></div>
+
+
+<p>The characteristics of the different voice personalities used by voice
+lock mode vary according to the capabilities of the speech
+synthesizer. The definitions applicable to the Dectalk family of
+synthesizers are contained in <samp class="file">dectalk-voices.el</samp>, which is
+supplied as part of the Emacsvox distribution. The Emacsvox
+distribution also contains voice definitions for many other
+synthesizers.
+</p>
+<p>Using voice lock mode, Emacsvox also supports many of the aural style
+properties defined in level 2 of the World Wide Web Consortium&rsquo;s
+Cascading Style Sheet specification (see
+<a class="url" href="http://www.w3.org/TR/REC-CSS2/">http://www.w3.org/TR/REC-CSS2/</a>. Thus, when Emacsvox is running
+in conjunction with a cooperating user agent, such as William Perry&rsquo;s
+Emacsvox/W3 web browser, the rendering of HTML documents can be
+regulated by style sheets. Examples of style rules which employ the
+CSS audio properties can be found in the default style sheet which is
+supplied in the Emacs/W3 distribution.
+</p>
+
+</div>
+
+
+
+</body>
+</html>

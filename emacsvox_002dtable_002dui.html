@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-table-ui (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-table-ui (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-table-ui (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dtabulate.html" rel="next" title="emacsvox-tabulate">
+<link href="emacsvox_002dtable.html" rel="prev" title="emacsvox-table">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dtable_002dui">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dtabulate.html" accesskey="n" rel="next">emacsvox-tabulate</a>, Previous: <a href="emacsvox_002dtable.html" accesskey="p" rel="prev">emacsvox-table</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dtable_002dui-1"><span>15.221 emacsvox-table-ui<a class="copiable-link" href="#emacsvox_002dtable_002dui-1"> &para;</a></span></h3>
+
+<p>User interface to tables
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dTable_002dUi-Commands" accesskey="1">Emacsvox-Table-Ui Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dTable_002dUi-Commands">
+<h4 class="subsection"><span>15.221.1 Emacsvox-Table-Ui Commands<a class="copiable-link" href="#Emacsvox_002dTable_002dUi-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dkill_002dring" accesskey="1">emacsvox-table-copy-current-element-to-kill-ring</a></li>
+<li><a href="#emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dregister" accesskey="2">emacsvox-table-copy-current-element-to-register</a></li>
+<li><a href="#emacsvox_002dtable_002dcopy_002dto_002dclipboard" accesskey="3">emacsvox-table-copy-to-clipboard</a></li>
+<li><a href="#emacsvox_002dtable_002dfind_002dcsv_002dfile" accesskey="4">emacsvox-table-find-csv-file</a></li>
+<li><a href="#emacsvox_002dtable_002dfind_002dfile" accesskey="5">emacsvox-table-find-file</a></li>
+<li><a href="#emacsvox_002dtable_002dgoto" accesskey="6">emacsvox-table-goto</a></li>
+<li><a href="#emacsvox_002dtable_002dgoto_002dbottom" accesskey="7">emacsvox-table-goto-bottom</a></li>
+<li><a href="#emacsvox_002dtable_002dgoto_002dleft" accesskey="8">emacsvox-table-goto-left</a></li>
+<li><a href="#emacsvox_002dtable_002dgoto_002dright" accesskey="9">emacsvox-table-goto-right</a></li>
+<li><a href="#emacsvox_002dtable_002dgoto_002dtop">emacsvox-table-goto-top</a></li>
+<li><a href="#emacsvox_002dtable_002dmode">emacsvox-table-mode</a></li>
+<li><a href="#emacsvox_002dtable_002dnext_002dcolumn">emacsvox-table-next-column</a></li>
+<li><a href="#emacsvox_002dtable_002dnext_002drow">emacsvox-table-next-row</a></li>
+<li><a href="#emacsvox_002dtable_002dpaste_002dfrom_002dclipboard">emacsvox-table-paste-from-clipboard</a></li>
+<li><a href="#emacsvox_002dtable_002dprevious_002dcolumn">emacsvox-table-previous-column</a></li>
+<li><a href="#emacsvox_002dtable_002dprevious_002drow">emacsvox-table-previous-row</a></li>
+<li><a href="#emacsvox_002dtable_002dsearch">emacsvox-table-search</a></li>
+<li><a href="#emacsvox_002dtable_002dsearch_002dcolumn">emacsvox-table-search-column</a></li>
+<li><a href="#emacsvox_002dtable_002dsearch_002dheaders">emacsvox-table-search-headers</a></li>
+<li><a href="#emacsvox_002dtable_002dsearch_002drow">emacsvox-table-search-row</a></li>
+<li><a href="#emacsvox_002dtable_002dselect_002dautomatic_002dspeaking_002dmethod">emacsvox-table-select-automatic-speaking-method</a></li>
+<li><a href="#emacsvox_002dtable_002dsort_002don_002dcurrent_002dcolumn">emacsvox-table-sort-on-current-column</a></li>
+<li><a href="#emacsvox_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement">emacsvox-table-speak-both-headers-and-element</a></li>
+<li><a href="#emacsvox_002dtable_002dspeak_002dcolumn_002dfiltered">emacsvox-table-speak-column-filtered</a></li>
+<li><a href="#emacsvox_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement">emacsvox-table-speak-column-header-and-element</a></li>
+<li><a href="#emacsvox_002dtable_002dspeak_002dcoordinates">emacsvox-table-speak-coordinates</a></li>
+<li><a href="#emacsvox_002dtable_002dspeak_002dcurrent_002delement">emacsvox-table-speak-current-element</a></li>
+<li><a href="#emacsvox_002dtable_002dspeak_002ddimensions">emacsvox-table-speak-dimensions</a></li>
+<li><a href="#emacsvox_002dtable_002dspeak_002drow_002dfiltered">emacsvox-table-speak-row-filtered</a></li>
+<li><a href="#emacsvox_002dtable_002dspeak_002drow_002dheader_002dand_002delement">emacsvox-table-speak-row-header-and-element</a></li>
+<li><a href="#emacsvox_002dtable_002dui_002dfilter_002dload">emacsvox-table-ui-filter-load</a></li>
+<li><a href="#emacsvox_002dtable_002dui_002dfilter_002dsave">emacsvox-table-ui-filter-save</a></li>
+<li><a href="#emacsvox_002dtable_002dview_002dcsv_002dbuffer">emacsvox-table-view-csv-buffer</a></li>
+<li><a href="#emacsvox_002dtable_002dview_002dcsv_002durl">emacsvox-table-view-csv-url</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dkill_002dring">
+<h4 class="subsubsection"><span>15.221.1.1 emacsvox-table-copy-current-element-to-kill-ring<a class="copiable-link" href="#emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dkill_002dring"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dkill_002dring"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-copy-current-element-to-kill-ring</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dkill_002dring"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-w"></a><span><kbd class="kbd">C-e C-t w</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-w"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dkill_002dring-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy current table element to kill ring.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dregister">
+<h4 class="subsubsection"><span>15.221.1.2 emacsvox-table-copy-current-element-to-register<a class="copiable-link" href="#emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dregister"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dregister"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-copy-current-element-to-register</strong> <var class="def-var-arguments">(register)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dregister"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-x"></a><span><kbd class="kbd">C-e C-t x</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-x"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dcopy_002dcurrent_002delement_002dto_002dregister-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy current table element to specified register.
+
+(fn REGISTER)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dcopy_002dto_002dclipboard">
+<h4 class="subsubsection"><span>15.221.1.3 emacsvox-table-copy-to-clipboard<a class="copiable-link" href="#emacsvox_002dtable_002dcopy_002dto_002dclipboard"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dcopy_002dto_002dclipboard"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-copy-to-clipboard</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dcopy_002dto_002dclipboard"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-k"></a><span><kbd class="kbd">C-e C-t k</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-k"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dcopy_002dto_002dclipboard-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy table in current buffer to the table clipboard.
+Current buffer must be in emacsvox-table mode.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dfind_002dcsv_002dfile">
+<h4 class="subsubsection"><span>15.221.1.4 emacsvox-table-find-csv-file<a class="copiable-link" href="#emacsvox_002dtable_002dfind_002dcsv_002dfile"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dfind_002dcsv_002dfile"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-find-csv-file</strong> <var class="def-var-arguments">(filename)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dfind_002dcsv_002dfile"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-_002c"></a><span><kbd class="kbd">C-e C-t ,</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_002c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dfind_002dcsv_002dfile-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Process a csv (comma separated values) file.
+The processed  data is presented using emacsvox table navigation.
+
+(fn FILENAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dfind_002dfile">
+<h4 class="subsubsection"><span>15.221.1.5 emacsvox-table-find-file<a class="copiable-link" href="#emacsvox_002dtable_002dfind_002dfile"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dfind_002dfile"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-find-file</strong> <var class="def-var-arguments">(filename)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dfind_002dfile"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dfind_002dfile-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open a file containing table data and display it in table mode.
+emacsvox table mode is designed to let you browse tabular data using
+all the power of the two-dimensional spatial layout while giving you
+sufficient contextual information.  The etc/tables subdirectory of the
+emacsvox distribution contains some sample tables &ndash;these are the
+CalTrain schedules.  Execute command ‘describe-mode’ bound to
+C-h m in a buffer that is in emacsvox table mode to read
+the documentation on the table browser.
+
+(fn FILENAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dgoto">
+<h4 class="subsubsection"><span>15.221.1.6 emacsvox-table-goto<a class="copiable-link" href="#emacsvox_002dtable_002dgoto"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dgoto"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-goto</strong> <var class="def-var-arguments">(row column)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dgoto"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-j"></a><span><kbd class="kbd">C-e C-t j</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-j"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dgoto-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prompt for a table cell coordinates and jump to it.
+
+(fn ROW COLUMN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dgoto_002dbottom">
+<h4 class="subsubsection"><span>15.221.1.7 emacsvox-table-goto-bottom<a class="copiable-link" href="#emacsvox_002dtable_002dgoto_002dbottom"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dgoto_002dbottom"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-goto-bottom</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dgoto_002dbottom"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-B"></a><span><kbd class="kbd">C-e C-t B</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-B"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-M_002d_003e"></a><span><kbd class="kbd">C-e C-t M-&gt;</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-M_002d_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dgoto_002dbottom-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Goes to the bottom of the current column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dgoto_002dleft">
+<h4 class="subsubsection"><span>15.221.1.8 emacsvox-table-goto-left<a class="copiable-link" href="#emacsvox_002dtable_002dgoto_002dleft"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dgoto_002dleft"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-goto-left</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dgoto_002dleft"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-A"></a><span><kbd class="kbd">C-e C-t A</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-A"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-_003c"></a><span><kbd class="kbd">C-e C-t &lt;</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_003c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dgoto_002dleft-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Goes to the left of the current row.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dgoto_002dright">
+<h4 class="subsubsection"><span>15.221.1.9 emacsvox-table-goto-right<a class="copiable-link" href="#emacsvox_002dtable_002dgoto_002dright"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dgoto_002dright"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-goto-right</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dgoto_002dright"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-E"></a><span><kbd class="kbd">C-e C-t E</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-E"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-_003e"></a><span><kbd class="kbd">C-e C-t &gt;</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dgoto_002dright-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Goes to the right of the current row.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dgoto_002dtop">
+<h4 class="subsubsection"><span>15.221.1.10 emacsvox-table-goto-top<a class="copiable-link" href="#emacsvox_002dtable_002dgoto_002dtop"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dgoto_002dtop"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-goto-top</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dgoto_002dtop"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-T"></a><span><kbd class="kbd">C-e C-t T</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-T"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-M_002d_003c"></a><span><kbd class="kbd">C-e C-t M-&lt;</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-M_002d_003c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dgoto_002dtop-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Goes to the top of the current column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dmode">
+<h4 class="subsubsection"><span>15.221.1.11 emacsvox-table-mode<a class="copiable-link" href="#emacsvox_002dtable_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-mode</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Major mode for browsing tables.
+Table mode is designed to allow speech users to browse tabular
+data with full contextual feedback while retaining all the power
+of the two-dimensional spatial layout of tables.
+
+In table mode, the arrow keys move between cells of the table.
+Emacsvox speaks the cell contents in a user-customizable way.  The
+visual display is kept in sync with the speech you hear; however
+Emacsvox is examining the entire table in order to speak the current
+cell content intelligently.
+
+You can interactively specify that emacsvox should speak either the row or
+column header (or both) while speaking each cell.  You can also specify a row
+or column filter that should be applied when speaking entire rows or columns
+&ndash;this lets you view slices of a table.  You can move to a specific row or
+column by searching the cell contents or by searching the row or column
+headers to locate items of interest.
+
+Here is a short description of the special commands provided in this mode.
+
+The next four commands help you move to the edges of the table:
+
+E               emacsvox-table-goto-right
+A               emacsvox-table-goto-left
+B               emacsvox-table-goto-bottom
+T               emacsvox-table-goto-top
+
+The next two commands let you search the table.
+The commands ask you if you want to search rows or columns.
+When searching headers remember that row 0 is the column header,
+and that column 0 is the row header.
+
+h               emacsvox-table-search-headers
+s               emacsvox-table-search
+
+The next command lets you specify how cell contents should be spoken.  Specify
+one of: ‘b’ for both, ‘c’ for column, ‘r’ for row, ‘f’ for row filtering and
+‘g’ for column filtering. &ndash;table cells with then be spoken with both (or
+either)row and column headers, or with the filter applied.
+
+a               emacsvox-table-select-automatic-speaking-method
+
+The next set of commands speak the current table cell:
+
+.               emacsvox-table-speak-coordinates
+b               emacsvox-table-speak-both-headers-and-element
+SPC             emacsvox-table-speak-current-element
+c               emacsvox-table-speak-column-header-and-element
+r               e macspeak-table-speak-row-header-and-element
+
+The next set of commands navigate the table:
+
+right               emacsvox-table-next-column
+left               emacsvox-table-previous-column
+down               emacsvox-table-next-row
+up               emacsvox-table-previous-row
+j               emacsvox-table-goto
+S-tab               emacsvox-table-previous-column
+TAB               emacsvox-table-next-column
+
+Row and Column Filtering
+
+Filtering is designed to let you view slices of a table.
+They are specified as lists of numbers and strings.
+The concept is best explained with an example.
+
+A row filter specifies which of the entries in the current row should be
+spoken.Entries are numbered starting with 0.  Thus, when working with a table
+having 8 columns, a row filter of (1 2 3) will speak only entries 1 2 and 3.
+Use the sample tables in etc/tables   to familiarize yourself with this
+feature. Note that you can intersperse meaningful strings in the list that
+specifies the filter.
+
+Full List Of Keybindings:
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+C-b		emacsvox-table-previous-column
+C-f		emacsvox-table-next-column
+TAB		emacsvox-table-next-column
+C-n		emacsvox-table-next-row
+C-p		emacsvox-table-previous-row
+SPC		emacsvox-table-speak-current-element
+#		emacsvox-table-sort-on-current-column
+,		emacsvox-table-find-csv-file
+.		emacsvox-table-speak-coordinates
+&lt;		emacsvox-table-goto-left
+=		emacsvox-table-speak-dimensions
+&gt;		emacsvox-table-goto-right
+A		emacsvox-table-goto-left
+B		emacsvox-table-goto-bottom
+C		emacsvox-table-search-column
+E		emacsvox-table-goto-right
+Q		emacsvox-kill-buffer-quietly
+R		emacsvox-table-search-row
+T		emacsvox-table-goto-top
+a		emacsvox-table-select-automatic-speaking-method
+b		emacsvox-table-speak-both-headers-and-element
+c		emacsvox-table-speak-column-header-and-element
+f		emacsvox-table-speak-row-filtered
+g		emacsvox-table-speak-column-filtered
+h		emacsvox-table-search-headers
+j		emacsvox-table-goto
+k		emacsvox-table-copy-to-clipboard
+n		emacsvox-table-next-row
+p		emacsvox-table-previous-row
+q		quit-window
+r		emacsvox-table-speak-row-header-and-element
+s		emacsvox-table-search
+v		emacsvox-table-view-csv-buffer
+w		emacsvox-table-copy-current-element-to-kill-ring
+x		emacsvox-table-copy-current-element-to-register
+S-&lt;tab&gt;		emacsvox-table-previous-column
+&lt;down&gt;		emacsvox-table-next-row
+&lt;left&gt;		emacsvox-table-previous-column
+&lt;right&gt;		emacsvox-table-next-column
+&lt;up&gt;		emacsvox-table-previous-row
+
+M-&lt;		emacsvox-table-goto-top
+M-&gt;		emacsvox-table-goto-bottom
+M-l		emacsvox-table-ui-filter-load
+M-s		emacsvox-table-ui-filter-save
+
+In addition to any hooks its parent mode ‘special-mode’ might have
+run, this mode runs the hook ‘emacsvox-table-mode-hook’, as the final
+or penultimate step during initialization.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dnext_002dcolumn">
+<h4 class="subsubsection"><span>15.221.1.12 emacsvox-table-next-column<a class="copiable-link" href="#emacsvox_002dtable_002dnext_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-next-column</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dnext_002dcolumn"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-TAB"></a><span><kbd class="kbd">C-e C-t TAB</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-TAB"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-C_002df"></a><span><kbd class="kbd">C-e C-t C-f</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-C_002df"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-_003cright_003e"></a><span><kbd class="kbd">C-e C-t &lt;right&gt;</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_003cright_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dnext_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next column if possible
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dnext_002drow">
+<h4 class="subsubsection"><span>15.221.1.13 emacsvox-table-next-row<a class="copiable-link" href="#emacsvox_002dtable_002dnext_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dnext_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-next-row</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dnext_002drow"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-n"></a><span><kbd class="kbd">C-e C-t n</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-n"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-C_002dn"></a><span><kbd class="kbd">C-e C-t C-n</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-C_002dn"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-_003cdown_003e"></a><span><kbd class="kbd">C-e C-t &lt;down&gt;</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_003cdown_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dnext_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the next row if possible
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dpaste_002dfrom_002dclipboard">
+<h4 class="subsubsection"><span>15.221.1.14 emacsvox-table-paste-from-clipboard<a class="copiable-link" href="#emacsvox_002dtable_002dpaste_002dfrom_002dclipboard"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dpaste_002dfrom_002dclipboard"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-paste-from-clipboard</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dpaste_002dfrom_002dclipboard"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dpaste_002dfrom_002dclipboard-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Paste the emacsvox table clipboard into the current buffer.
+Use the major  mode of this buffer to  decide what kind of table
+markup to use.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dprevious_002dcolumn">
+<h4 class="subsubsection"><span>15.221.1.15 emacsvox-table-previous-column<a class="copiable-link" href="#emacsvox_002dtable_002dprevious_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-previous-column</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dprevious_002dcolumn"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-C_002db"></a><span><kbd class="kbd">C-e C-t C-b</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-C_002db"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-_003cleft_003e"></a><span><kbd class="kbd">C-e C-t &lt;left&gt;</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_003cleft_003e"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-S_002d_003ctab_003e"></a><span><kbd class="kbd">C-e C-t S-&lt;tab&gt;</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-S_002d_003ctab_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dprevious_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the previous column  if possible
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dprevious_002drow">
+<h4 class="subsubsection"><span>15.221.1.16 emacsvox-table-previous-row<a class="copiable-link" href="#emacsvox_002dtable_002dprevious_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dprevious_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-previous-row</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dprevious_002drow"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-p"></a><span><kbd class="kbd">C-e C-t p</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-p"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-C_002dp"></a><span><kbd class="kbd">C-e C-t C-p</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-C_002dp"> &para;</a></span></dt>
+<dt><a id="index-C_002de-C_002dt-_003cup_003e"></a><span><kbd class="kbd">C-e C-t &lt;up&gt;</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_003cup_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dprevious_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the previous row if possible
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dsearch">
+<h4 class="subsubsection"><span>15.221.1.17 emacsvox-table-search<a class="copiable-link" href="#emacsvox_002dtable_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-search</strong> <var class="def-var-arguments">(&amp;optional what)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dsearch"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-s"></a><span><kbd class="kbd">C-e C-t s</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-s"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search the table for matching elements.  Interactively prompts for
+row or column to search and pattern to look for.    If there is a match, makes
+the matching cell current. When called from a program, ‘what’ can
+  be either ‘row’ or ‘column’.
+
+(fn &amp;optional WHAT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dsearch_002dcolumn">
+<h4 class="subsubsection"><span>15.221.1.18 emacsvox-table-search-column<a class="copiable-link" href="#emacsvox_002dtable_002dsearch_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dsearch_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-search-column</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dsearch_002dcolumn"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-C"></a><span><kbd class="kbd">C-e C-t C</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-C"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dsearch_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search in current table column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dsearch_002dheaders">
+<h4 class="subsubsection"><span>15.221.1.19 emacsvox-table-search-headers<a class="copiable-link" href="#emacsvox_002dtable_002dsearch_002dheaders"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dsearch_002dheaders"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-search-headers</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dsearch_002dheaders"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-h"></a><span><kbd class="kbd">C-e C-t h</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-h"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dsearch_002dheaders-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search the table row or column headers.  Interactively prompts for
+row or column to search and pattern to look for.  If there is a
+match, makes the matching row or column current.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dsearch_002drow">
+<h4 class="subsubsection"><span>15.221.1.20 emacsvox-table-search-row<a class="copiable-link" href="#emacsvox_002dtable_002dsearch_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dsearch_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-search-row</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dsearch_002drow"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-R"></a><span><kbd class="kbd">C-e C-t R</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-R"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dsearch_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search in current table row.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dselect_002dautomatic_002dspeaking_002dmethod">
+<h4 class="subsubsection"><span>15.221.1.21 emacsvox-table-select-automatic-speaking-method<a class="copiable-link" href="#emacsvox_002dtable_002dselect_002dautomatic_002dspeaking_002dmethod"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dselect_002dautomatic_002dspeaking_002dmethod"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-select-automatic-speaking-method</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dselect_002dautomatic_002dspeaking_002dmethod"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-a"></a><span><kbd class="kbd">C-e C-t a</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-a"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dselect_002dautomatic_002dspeaking_002dmethod-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Interactively select the kind of automatic speech to produce when
+browsing table elements
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dsort_002don_002dcurrent_002dcolumn">
+<h4 class="subsubsection"><span>15.221.1.22 emacsvox-table-sort-on-current-column<a class="copiable-link" href="#emacsvox_002dtable_002dsort_002don_002dcurrent_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dsort_002don_002dcurrent_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-sort-on-current-column</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dsort_002don_002dcurrent_002dcolumn"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-_0023"></a><span><kbd class="kbd">C-e C-t #</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_0023"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dsort_002don_002dcurrent_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Sort table on current column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement">
+<h4 class="subsubsection"><span>15.221.1.23 emacsvox-table-speak-both-headers-and-element<a class="copiable-link" href="#emacsvox_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-speak-both-headers-and-element</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-b"></a><span><kbd class="kbd">C-e C-t b</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-b"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dspeak_002dboth_002dheaders_002dand_002delement-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak  both row and column header and table element
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dspeak_002dcolumn_002dfiltered">
+<h4 class="subsubsection"><span>15.221.1.24 emacsvox-table-speak-column-filtered<a class="copiable-link" href="#emacsvox_002dtable_002dspeak_002dcolumn_002dfiltered"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dspeak_002dcolumn_002dfiltered"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-speak-column-filtered</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dspeak_002dcolumn_002dfiltered"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-g"></a><span><kbd class="kbd">C-e C-t g</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-g"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dspeak_002dcolumn_002dfiltered-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speaks a table column after applying a specified column filter.
+Optional prefix arg prompts for a new filter.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement">
+<h4 class="subsubsection"><span>15.221.1.25 emacsvox-table-speak-column-header-and-element<a class="copiable-link" href="#emacsvox_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-speak-column-header-and-element</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-c"></a><span><kbd class="kbd">C-e C-t c</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dspeak_002dcolumn_002dheader_002dand_002delement-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak  column header and table element
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dspeak_002dcoordinates">
+<h4 class="subsubsection"><span>15.221.1.26 emacsvox-table-speak-coordinates<a class="copiable-link" href="#emacsvox_002dtable_002dspeak_002dcoordinates"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dspeak_002dcoordinates"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-speak-coordinates</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dspeak_002dcoordinates"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-_002e"></a><span><kbd class="kbd">C-e C-t .</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_002e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dspeak_002dcoordinates-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak current table coordinates.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dspeak_002dcurrent_002delement">
+<h4 class="subsubsection"><span>15.221.1.27 emacsvox-table-speak-current-element<a class="copiable-link" href="#emacsvox_002dtable_002dspeak_002dcurrent_002delement"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dspeak_002dcurrent_002delement"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-speak-current-element</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dspeak_002dcurrent_002delement"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-SPC"></a><span><kbd class="kbd">C-e C-t SPC</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-SPC"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dspeak_002dcurrent_002delement-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak current table element
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dspeak_002ddimensions">
+<h4 class="subsubsection"><span>15.221.1.28 emacsvox-table-speak-dimensions<a class="copiable-link" href="#emacsvox_002dtable_002dspeak_002ddimensions"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dspeak_002ddimensions"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-speak-dimensions</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dspeak_002ddimensions"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-_003d"></a><span><kbd class="kbd">C-e C-t =</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-_003d"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dspeak_002ddimensions-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak current table dimensions.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dspeak_002drow_002dfiltered">
+<h4 class="subsubsection"><span>15.221.1.29 emacsvox-table-speak-row-filtered<a class="copiable-link" href="#emacsvox_002dtable_002dspeak_002drow_002dfiltered"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dspeak_002drow_002dfiltered"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-speak-row-filtered</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dspeak_002drow_002dfiltered"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-f"></a><span><kbd class="kbd">C-e C-t f</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-f"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dspeak_002drow_002dfiltered-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speaks a table row after applying a specified row filter.
+Optional prefix arg prompts for a new filter.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dspeak_002drow_002dheader_002dand_002delement">
+<h4 class="subsubsection"><span>15.221.1.30 emacsvox-table-speak-row-header-and-element<a class="copiable-link" href="#emacsvox_002dtable_002dspeak_002drow_002dheader_002dand_002delement"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dspeak_002drow_002dheader_002dand_002delement"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-speak-row-header-and-element</strong><a class="copiable-link" href="#index-emacsvox_002dtable_002dspeak_002drow_002dheader_002dand_002delement"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-r"></a><span><kbd class="kbd">C-e C-t r</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-r"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dspeak_002drow_002dheader_002dand_002delement-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak  row header and table element
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dui_002dfilter_002dload">
+<h4 class="subsubsection"><span>15.221.1.31 emacsvox-table-ui-filter-load<a class="copiable-link" href="#emacsvox_002dtable_002dui_002dfilter_002dload"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dui_002dfilter_002dload"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-ui-filter-load</strong> <var class="def-var-arguments">(file)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dui_002dfilter_002dload"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-M_002dl"></a><span><kbd class="kbd">C-e C-t M-l</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-M_002dl"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dui_002dfilter_002dload-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Load saved filter settings.
+
+(fn FILE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dui_002dfilter_002dsave">
+<h4 class="subsubsection"><span>15.221.1.32 emacsvox-table-ui-filter-save<a class="copiable-link" href="#emacsvox_002dtable_002dui_002dfilter_002dsave"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dui_002dfilter_002dsave"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-ui-filter-save</strong> <var class="def-var-arguments">(file)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dui_002dfilter_002dsave"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-M_002ds"></a><span><kbd class="kbd">C-e C-t M-s</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-M_002ds"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dui_002dfilter_002dsave-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Save out filter settings.
+
+(fn FILE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dview_002dcsv_002dbuffer">
+<h4 class="subsubsection"><span>15.221.1.33 emacsvox-table-view-csv-buffer<a class="copiable-link" href="#emacsvox_002dtable_002dview_002dcsv_002dbuffer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dview_002dcsv_002dbuffer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-view-csv-buffer</strong> <var class="def-var-arguments">(&amp;optional buffer-name)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dview_002dcsv_002dbuffer"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-v"></a><span><kbd class="kbd">C-e C-t v</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-v"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtable_002dview_002dcsv_002dbuffer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Process a csv (comma separated values) data.
+The processed  data is  presented using emacsvox table navigation.
+
+(fn &amp;optional BUFFER-NAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtable_002dview_002dcsv_002durl">
+<h4 class="subsubsection"><span>15.221.1.34 emacsvox-table-view-csv-url<a class="copiable-link" href="#emacsvox_002dtable_002dview_002dcsv_002durl"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtable_002dview_002dcsv_002durl"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-table-view-csv-url</strong> <var class="def-var-arguments">(url &amp;optional buffer-name)</var><a class="copiable-link" href="#index-emacsvox_002dtable_002dview_002dcsv_002durl"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtable_002dview_002dcsv_002durl-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Process a csv (comma separated values) data at  ‘URL’.
+The processed  data is  presented using emacsvox table navigation.
+
+(fn URL &amp;optional BUFFER-NAME)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dtabulate.html">emacsvox-tabulate</a>, Previous: <a href="emacsvox_002dtable.html">emacsvox-table</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

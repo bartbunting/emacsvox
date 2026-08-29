@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-home (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-aural-home (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-aural-home (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dinspection.html" rel="next" title="emacsvox-aural-inspection">
+<link href="emacsvox_002daural_002dhistory.html" rel="prev" title="emacsvox-aural-history">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002dhome">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dinspection.html" accesskey="n" rel="next">emacsvox-aural-inspection</a>, Previous: <a href="emacsvox_002daural_002dhistory.html" accesskey="p" rel="prev">emacsvox-aural-history</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002dhome-1"><span>15.25 emacsvox-aural-home<a class="copiable-link" href="#emacsvox_002daural_002dhome-1"> &para;</a></span></h3>
+
+<p>Status and routing home for aural presentation discovery, management,
+diagnosis, and contextual remapping.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dHome-Commands" accesskey="1">Emacsvox-Aural-Home Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dHome-Commands">
+<h4 class="subsection"><span>15.25.1 Emacsvox-Aural-Home Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dHome-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural-2" accesskey="1">emacsvox-aural</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dactivate" accesskey="2">emacsvox-aural-home-activate</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dexplain" accesskey="3">emacsvox-aural-home-explain</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dhelp" accesskey="4">emacsvox-aural-home-help</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dmode" accesskey="5">emacsvox-aural-home-mode</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dnext" accesskey="6">emacsvox-aural-home-next</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dnext_002dcolumn" accesskey="7">emacsvox-aural-home-next-column</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002doverrides" accesskey="8">emacsvox-aural-home-overrides</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dprevious" accesskey="9">emacsvox-aural-home-previous</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dprevious_002dcolumn">emacsvox-aural-home-previous-column</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dprofiles">emacsvox-aural-home-profiles</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002drecent_002dfeedback">emacsvox-aural-home-recent-feedback</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002drefresh">emacsvox-aural-home-refresh</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dremap_002dearcon">emacsvox-aural-home-remap-earcon</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dremap_002dvoice">emacsvox-aural-home-remap-voice</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dspeak_002dcurrent">emacsvox-aural-home-speak-current</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dspeak_002dcurrent_002dcell">emacsvox-aural-home-speak-current-cell</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dvoice_002dpalettes">emacsvox-aural-home-voice-palettes</a></li>
+<li><a href="#emacsvox_002daural_002dhome_002dvoice_002dworkbench">emacsvox-aural-home-voice-workbench</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural-2">
+<h4 class="subsubsection"><span>15.25.1.1 emacsvox-aural<a class="copiable-link" href="#emacsvox_002daural-2"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural</strong> <var class="def-var-arguments">(&amp;optional source-buffer)</var><a class="copiable-link" href="#index-emacsvox_002daural"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-H"></a><span><kbd class="kbd">C-e H</kbd><a class="copiable-link" href="#index-C_002de-H"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002daural-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open the spoken aural home using SOURCE-BUFFER for contextual operations.
+
+(fn &amp;optional SOURCE-BUFFER)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dactivate">
+<h4 class="subsubsection"><span>15.25.1.2 emacsvox-aural-home-activate<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dactivate"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dactivate"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-activate</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dactivate"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dactivate-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform the primary operation for the aural home row at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dexplain">
+<h4 class="subsubsection"><span>15.25.1.3 emacsvox-aural-home-explain<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dexplain"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dexplain"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-explain</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dexplain"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dexplain-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Explain presentation at point in the remembered source buffer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dhelp">
+<h4 class="subsubsection"><span>15.25.1.4 emacsvox-aural-home-help<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dhelp"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dhelp"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dhelp-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display and speak aural home commands and discovery guidance.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dmode">
+<h4 class="subsubsection"><span>15.25.1.5 emacsvox-aural-home-mode<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Spoken home mode for aural presentation discovery and interaction.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-home-mode-hook’, as the final or penultimate step
+during initialization.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+RET		emacsvox-aural-home-activate
+?		emacsvox-aural-home-help
+D		emacsvox-aural-doctor
+H		emacsvox-aural-home-recent-feedback
+O		emacsvox-aural-home-overrides
+P		emacsvox-aural-home-profiles
+R		emacsvox-aural-home-remap-earcon
+V		emacsvox-aural-home-voice-palettes
+W		emacsvox-aural-home-voice-workbench
+r		emacsvox-aural-home-remap-voice
+x		emacsvox-aural-home-explain
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dnext">
+<h4 class="subsubsection"><span>15.25.1.6 emacsvox-aural-home-next<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dnext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-next</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dnext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dnext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to and speak the next aural home row.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dnext_002dcolumn">
+<h4 class="subsubsection"><span>15.25.1.7 emacsvox-aural-home-next-column<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dnext_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-next-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dnext_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dnext_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move right and speak the next aural home column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002doverrides">
+<h4 class="subsubsection"><span>15.25.1.8 emacsvox-aural-home-overrides<a class="copiable-link" href="#emacsvox_002daural_002dhome_002doverrides"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002doverrides"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-overrides</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002doverrides"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002doverrides-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open unified presentation overrides from Aural Home.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dprevious">
+<h4 class="subsubsection"><span>15.25.1.9 emacsvox-aural-home-previous<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dprevious"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-previous</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dprevious"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dprevious-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to and speak the previous aural home row.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dprevious_002dcolumn">
+<h4 class="subsubsection"><span>15.25.1.10 emacsvox-aural-home-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dprevious_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-previous-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dprevious_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dprevious_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move left and speak the previous aural home column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dprofiles">
+<h4 class="subsubsection"><span>15.25.1.11 emacsvox-aural-home-profiles<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dprofiles"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dprofiles"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-profiles</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dprofiles"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dprofiles-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open the complete presentation-profile manager.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002drecent_002dfeedback">
+<h4 class="subsubsection"><span>15.25.1.12 emacsvox-aural-home-recent-feedback<a class="copiable-link" href="#emacsvox_002daural_002dhome_002drecent_002dfeedback"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002drecent_002dfeedback"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-recent-feedback</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002drecent_002dfeedback"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002drecent_002dfeedback-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open bounded retained presentations from Aural Home.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002drefresh">
+<h4 class="subsubsection"><span>15.25.1.13 emacsvox-aural-home-refresh<a class="copiable-link" href="#emacsvox_002daural_002dhome_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-refresh</strong> <var class="def-var-arguments">(&amp;optional id)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Refresh aural home status, preserving row ID and the current column.
+
+(fn &amp;optional ID)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dremap_002dearcon">
+<h4 class="subsubsection"><span>15.25.1.14 emacsvox-aural-home-remap-earcon<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dremap_002dearcon"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dremap_002dearcon"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-remap-earcon</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dremap_002dearcon"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dremap_002dearcon-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prepare an earcon override for the remembered source item.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dremap_002dvoice">
+<h4 class="subsubsection"><span>15.25.1.15 emacsvox-aural-home-remap-voice<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dremap_002dvoice"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dremap_002dvoice"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-remap-voice</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dremap_002dvoice"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dremap_002dvoice-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prepare a voice override for the remembered source item.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dspeak_002dcurrent">
+<h4 class="subsubsection"><span>15.25.1.16 emacsvox-aural-home-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dspeak_002dcurrent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dspeak_002dcurrent"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dspeak_002dcurrent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the complete aural home row at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dspeak_002dcurrent_002dcell">
+<h4 class="subsubsection"><span>15.25.1.17 emacsvox-aural-home-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dspeak_002dcurrent_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-speak-current-cell</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dspeak_002dcurrent_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dspeak_002dcurrent_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current aural home column title and value.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dvoice_002dpalettes">
+<h4 class="subsubsection"><span>15.25.1.18 emacsvox-aural-home-voice-palettes<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dvoice_002dpalettes"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dvoice_002dpalettes"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-voice-palettes</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dvoice_002dpalettes"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dvoice_002dpalettes-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open the accessible voice-palette manager.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dhome_002dvoice_002dworkbench">
+<h4 class="subsubsection"><span>15.25.1.19 emacsvox-aural-home-voice-workbench<a class="copiable-link" href="#emacsvox_002daural_002dhome_002dvoice_002dworkbench"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dhome_002dvoice_002dworkbench"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-home-voice-workbench</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dhome_002dvoice_002dworkbench"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dhome_002dvoice_002dworkbench-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open cross-synth voice routing and style management.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dinspection.html">emacsvox-aural-inspection</a>, Previous: <a href="emacsvox_002daural_002dhistory.html">emacsvox-aural-history</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

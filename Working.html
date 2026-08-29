@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Working (Emacsvox User Manual)</title>
+
+<meta name="description" content="Working (Emacsvox User Manual)">
+<meta name="keywords" content="Working (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Basic-Usage.html" rel="up" title="Basic Usage">
+<link href="Reading.html" rel="next" title="Reading">
+<link href="Overview.html" rel="prev" title="Overview">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Working">
+<div class="nav-panel">
+<p>
+Next: <a href="Reading.html" accesskey="n" rel="next">Reading and Navigating</a>, Previous: <a href="Overview.html" accesskey="p" rel="prev">Emacsvox Overview</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Using-Emacs-Buffers"><span>7.2 Using Emacs Buffers<a class="copiable-link" href="#Using-Emacs-Buffers"> &para;</a></span></h3>
+
+<p>While typing in an Emacs buffer, hitting space speaks the recently
+typed word.  I use completion all the time; so Emacsvox will speak
+the completion just inserted as well as the next possible completion.
+In Emacs, use <kbd class="kbd">M-x load-library <kbd class="key">RETURN</kbd> completion
+<kbd class="key">RETURN</kbd></kbd> for loading the completion package.
+</p>
+<p>The standard Emacs prompting functions have also been speech-enabled.
+Emacs prompts with available lists of completions in response to partial
+input wherever appropriate   &mdash; all forms of completion provide speech
+feedback.
+</p>
+<p>In addition, Emacsvox provides a number of commands for reading
+portions of the current buffer, getting status information, and
+modifying Emacsvox&rsquo;s state.
+</p>
+<p>All of the commands are documented in the subsequent sections.
+They can be classified into types:
+</p>
+<ul class="itemize mark-bullet">
+<li>Emacsvox commands for listening to chunks of information.  Most of
+these command names start with <code class="code">emacsvox-speak-</code>.  Their default
+bindings are grouped under the main Emacsvox prefix <kbd class="kbd">C-e</kbd><a class="footnote" id="DOCF1" href="#FOOT1"><sup>1</sup></a>.  The starter bindings are introduced in <a class="ref" href="Reading.html">Reading and Navigating</a>;
+the live Help system and generated key reference remain authoritative
+when bindings are customized.
+
+</li><li>The second category manipulates the speech engine.  These commands
+normally start with <code class="code">tts-</code> and are grouped under <kbd class="kbd">C-e d</kbd>
+<a class="footnote" id="DOCF2" href="#FOOT2"><sup>2</sup></a>.
+</li></ul>
+
+<p>Emacs and Emacsvox both expose their current commands through Emacs Help.
+Use the small set below to get oriented, then use Help or the generated
+reference instead of relying on a copied exhaustive list.
+</p>
+</div>
+<div class="footnotes-segment">
+<hr>
+<h4 class="footnotes-heading">Footnotes</h4>
+
+<h5 class="footnote-body-heading"><a id="FOOT1" href="#DOCF1">(1)</a></h5>
+<p>The
+prefix is inherited from Emacspeak, where C-e was mnemonic for the
+project name.</p>
+<h5 class="footnote-body-heading"><a id="FOOT2" href="#DOCF2">(2)</a></h5>
+<p>Historically, d was mnemonic for DECtalk; the prefix now
+contains engine-independent speech controls.</p>
+</div>
+
+
+
+</body>
+</html>

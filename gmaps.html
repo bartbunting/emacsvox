@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>gmaps (Emacsvox User Manual)</title>
+
+<meta name="description" content="gmaps (Emacsvox User Manual)">
+<meta name="keywords" content="gmaps (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="ladspa.html" rel="next" title="ladspa">
+<link href="gm_002dnnir.html" rel="prev" title="gm-nnir">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="gmaps">
+<div class="nav-panel">
+<p>
+Next: <a href="ladspa.html" accesskey="n" rel="next">ladspa</a>, Previous: <a href="gm_002dnnir.html" accesskey="p" rel="prev">gm-nnir</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="gmaps-1"><span>15.256 gmaps<a class="copiable-link" href="#gmaps-1"> &para;</a></span></h3>
+
+<p>Implements the Google Maps API
+</p>
+<ul class="mini-toc">
+<li><a href="#Gmaps-Commands" accesskey="1">Gmaps Commands</a></li>
+<li><a href="#gmaps-Options" accesskey="2">gmaps Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Gmaps-Commands">
+<h4 class="subsection"><span>15.256.1 Gmaps Commands<a class="copiable-link" href="#Gmaps-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#gmaps-2" accesskey="1">gmaps</a></li>
+<li><a href="#gmaps_002dbicycling_002ddirections" accesskey="2">gmaps-bicycling-directions</a></li>
+<li><a href="#gmaps_002ddirections" accesskey="3">gmaps-directions</a></li>
+<li><a href="#gmaps_002ddriving_002ddirections" accesskey="4">gmaps-driving-directions</a></li>
+<li><a href="#gmaps_002dlocations_002dload" accesskey="5">gmaps-locations-load</a></li>
+<li><a href="#gmaps_002dlocations_002dsave" accesskey="6">gmaps-locations-save</a></li>
+<li><a href="#gmaps_002dmode" accesskey="7">gmaps-mode</a></li>
+<li><a href="#gmaps_002dplace_002ddetails" accesskey="8">gmaps-place-details</a></li>
+<li><a href="#gmaps_002dplace_002dreviews" accesskey="9">gmaps-place-reviews</a></li>
+<li><a href="#gmaps_002dplaces_002dnearby">gmaps-places-nearby</a></li>
+<li><a href="#gmaps_002dplaces_002dsearch">gmaps-places-search</a></li>
+<li><a href="#gmaps_002dset_002dcurrent_002dfilter">gmaps-set-current-filter</a></li>
+<li><a href="#gmaps_002dset_002dcurrent_002dlocation">gmaps-set-current-location</a></li>
+<li><a href="#gmaps_002dset_002dcurrent_002dradius">gmaps-set-current-radius</a></li>
+<li><a href="#gmaps_002dtransit_002ddirections">gmaps-transit-directions</a></li>
+<li><a href="#gmaps_002dwalking_002ddirections">gmaps-walking-directions</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="gmaps-2">
+<h4 class="subsubsection"><span>15.256.1.1 gmaps<a class="copiable-link" href="#gmaps-2"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps"><span class="category-def">Command: </span><span><strong class="def-name">gmaps</strong><a class="copiable-link" href="#index-gmaps"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Google Maps Interaction.
+
+This function has :after advice: ‘emacsvox&ndash;advice-gmaps-after’.
+
+(fn)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dbicycling_002ddirections">
+<h4 class="subsubsection"><span>15.256.1.2 gmaps-bicycling-directions<a class="copiable-link" href="#gmaps_002dbicycling_002ddirections"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dbicycling_002ddirections"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-bicycling-directions</strong> <var class="def-var-arguments">(origin destination)</var><a class="copiable-link" href="#index-gmaps_002dbicycling_002ddirections"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dbicycling_002ddirections-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Biking directions from Google Maps.
+
+This function has :after advice: ‘emacsvox&ndash;advice-gmaps-bicycling-directions-after’.
+
+(fn ORIGIN DESTINATION)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002ddirections">
+<h4 class="subsubsection"><span>15.256.1.3 gmaps-directions<a class="copiable-link" href="#gmaps_002ddirections"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002ddirections"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-directions</strong> <var class="def-var-arguments">(origin destination mode)</var><a class="copiable-link" href="#index-gmaps_002ddirections"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002ddirections-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display  directions obtained from Google Maps.
+
+(fn ORIGIN DESTINATION MODE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002ddriving_002ddirections">
+<h4 class="subsubsection"><span>15.256.1.4 gmaps-driving-directions<a class="copiable-link" href="#gmaps_002ddriving_002ddirections"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002ddriving_002ddirections"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-driving-directions</strong> <var class="def-var-arguments">(origin destination)</var><a class="copiable-link" href="#index-gmaps_002ddriving_002ddirections"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002ddriving_002ddirections-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Driving directions from Google Maps.
+
+This function has :after advice: ‘emacsvox&ndash;advice-gmaps-driving-directions-after’.
+
+(fn ORIGIN DESTINATION)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dlocations_002dload">
+<h4 class="subsubsection"><span>15.256.1.5 gmaps-locations-load<a class="copiable-link" href="#gmaps_002dlocations_002dload"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dlocations_002dload"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-locations-load</strong><a class="copiable-link" href="#index-gmaps_002dlocations_002dload"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dlocations_002dload-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Load saved GMaps locations.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dlocations_002dsave">
+<h4 class="subsubsection"><span>15.256.1.6 gmaps-locations-save<a class="copiable-link" href="#gmaps_002dlocations_002dsave"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dlocations_002dsave"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-locations-save</strong><a class="copiable-link" href="#index-gmaps_002dlocations_002dsave"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dlocations_002dsave-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Save GMaps Locations.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dmode">
+<h4 class="subsubsection"><span>15.256.1.7 gmaps-mode<a class="copiable-link" href="#gmaps_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-mode</strong><a class="copiable-link" href="#index-gmaps_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">A Google Maps front-end for the Emacsvox desktop.
+
+In addition to any hooks its parent mode ‘special-mode’ might have
+run, this mode runs the hook ‘gmaps-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+TAB		forward-button
+SPC		gmaps-place-details
+[		backward-page
+]		forward-page
+b		gmaps-bicycling-directions
+c		gmaps-set-current-location
+d		gmaps-driving-directions
+f		gmaps-set-current-filter
+n		gmaps-places-nearby
+r		gmaps-set-current-radius
+s		gmaps-places-search
+t		gmaps-transit-directions
+w		gmaps-walking-directions
+
+M-i		backward-button
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dplace_002ddetails">
+<h4 class="subsubsection"><span>15.256.1.8 gmaps-place-details<a class="copiable-link" href="#gmaps_002dplace_002ddetails"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dplace_002ddetails"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-place-details</strong><a class="copiable-link" href="#index-gmaps_002dplace_002ddetails"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dplace_002ddetails-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display details for place at point.
+Insert reviews if already displaying details.
+
+This function has :around advice: ‘emacsvox&ndash;advice-gmaps-place-details-around’.
+
+(fn)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dplace_002dreviews">
+<h4 class="subsubsection"><span>15.256.1.9 gmaps-place-reviews<a class="copiable-link" href="#gmaps_002dplace_002dreviews"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dplace_002dreviews"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-place-reviews</strong><a class="copiable-link" href="#index-gmaps_002dplace_002dreviews"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dplace_002dreviews-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display reviews for place at point.
+Place details need to have been expanded first.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dplaces_002dnearby">
+<h4 class="subsubsection"><span>15.256.1.10 gmaps-places-nearby<a class="copiable-link" href="#gmaps_002dplaces_002dnearby"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dplaces_002dnearby"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-places-nearby</strong> <var class="def-var-arguments">(&amp;optional clear-filter)</var><a class="copiable-link" href="#index-gmaps_002dplaces_002dnearby"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dplaces_002dnearby-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Find places near current location.
+Uses default radius. optional interactive prefix arg clears any active filters.
+
+This function has :after advice: ‘emacsvox&ndash;advice-gmaps-places-nearby-after’.
+
+(fn &amp;optional CLEAR-FILTER)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dplaces_002dsearch">
+<h4 class="subsubsection"><span>15.256.1.11 gmaps-places-search<a class="copiable-link" href="#gmaps_002dplaces_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dplaces_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-places-search</strong> <var class="def-var-arguments">(query &amp;optional clear-filter)</var><a class="copiable-link" href="#index-gmaps_002dplaces_002dsearch"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dplaces_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Perform a places search.
+Use this only if you dont know the locality  of the place you’re looking for.
+Optional  prefix arg clears any active filters.
+
+This function has :after advice: ‘emacsvox&ndash;advice-gmaps-places-search-after’.
+
+(fn QUERY &amp;optional CLEAR-FILTER)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dset_002dcurrent_002dfilter">
+<h4 class="subsubsection"><span>15.256.1.12 gmaps-set-current-filter<a class="copiable-link" href="#gmaps_002dset_002dcurrent_002dfilter"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dset_002dcurrent_002dfilter"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-set-current-filter</strong> <var class="def-var-arguments">(&amp;optional all)</var><a class="copiable-link" href="#index-gmaps_002dset_002dcurrent_002dfilter"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dset_002dcurrent_002dfilter-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set up filter in current buffer.
+Optional interactive prefix arg prompts for all filter fields.
+
+(fn &amp;optional ALL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dset_002dcurrent_002dlocation">
+<h4 class="subsubsection"><span>15.256.1.13 gmaps-set-current-location<a class="copiable-link" href="#gmaps_002dset_002dcurrent_002dlocation"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dset_002dcurrent_002dlocation"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-set-current-location</strong> <var class="def-var-arguments">(address)</var><a class="copiable-link" href="#index-gmaps_002dset_002dcurrent_002dlocation"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dset_002dcurrent_002dlocation-1"></a>
+
+<div class="format">
+<pre class="format-preformatted"> Set current location.
+
+This function has :after advice: ‘emacsvox&ndash;advice-gmaps-set-current-location-after’.
+
+(fn ADDRESS)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dset_002dcurrent_002dradius">
+<h4 class="subsubsection"><span>15.256.1.14 gmaps-set-current-radius<a class="copiable-link" href="#gmaps_002dset_002dcurrent_002dradius"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dset_002dcurrent_002dradius"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-set-current-radius</strong> <var class="def-var-arguments">(radius)</var><a class="copiable-link" href="#index-gmaps_002dset_002dcurrent_002dradius"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dset_002dcurrent_002dradius-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set current radius
+
+This function has :after advice: ‘emacsvox&ndash;advice-gmaps-set-current-radius-after’.
+
+(fn RADIUS)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dtransit_002ddirections">
+<h4 class="subsubsection"><span>15.256.1.15 gmaps-transit-directions<a class="copiable-link" href="#gmaps_002dtransit_002ddirections"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dtransit_002ddirections"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-transit-directions</strong> <var class="def-var-arguments">(origin destination)</var><a class="copiable-link" href="#index-gmaps_002dtransit_002ddirections"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dtransit_002ddirections-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Transit directions from Google Maps.
+
+This function has :after advice: ‘emacsvox&ndash;advice-gmaps-transit-directions-after’.
+
+(fn ORIGIN DESTINATION)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="gmaps_002dwalking_002ddirections">
+<h4 class="subsubsection"><span>15.256.1.16 gmaps-walking-directions<a class="copiable-link" href="#gmaps_002dwalking_002ddirections"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-gmaps_002dwalking_002ddirections"><span class="category-def">Command: </span><span><strong class="def-name">gmaps-walking-directions</strong> <var class="def-var-arguments">(origin destination)</var><a class="copiable-link" href="#index-gmaps_002dwalking_002ddirections"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-gmaps_002dwalking_002ddirections-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Walking directions from Google Maps.
+
+This function has :after advice: ‘emacsvox&ndash;advice-gmaps-walking-directions-after’.
+
+(fn ORIGIN DESTINATION)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="gmaps-Options">
+<h4 class="subsection"><span>15.256.2 gmaps Options<a class="copiable-link" href="#gmaps-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-147"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">gmaps-api-key</var><a class="copiable-link" href="#index-User-Option-147"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maps  API  key --- goto  https://code.google.com/apis/console to get one.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-148"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">gmaps-my-address</var><a class="copiable-link" href="#index-User-Option-148"> &para;</a></span></dt>
+<dd><pre class="verbatim">Location address. Setting this updates gmaps-my-location
+coordinates via geocoding.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="ladspa.html">ladspa</a>, Previous: <a href="gm_002dnnir.html">gm-nnir</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

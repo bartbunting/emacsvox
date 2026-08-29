@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Selecting And Checking Omnivox (Emacsvox User Manual)</title>
+
+<meta name="description" content="Selecting And Checking Omnivox (Emacsvox User Manual)">
+<meta name="keywords" content="Selecting And Checking Omnivox (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Speech-Backends.html" rel="up" title="Speech Backends">
+<link href="Compatibility-Speech-Servers.html" rel="next" title="Compatibility Speech Servers">
+<link href="Building-Omnivox-For-WSL2.html" rel="prev" title="Building Omnivox For WSL2">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Selecting-And-Checking-Omnivox">
+<div class="nav-panel">
+<p>
+Next: <a href="Compatibility-Speech-Servers.html" accesskey="n" rel="next">Compatibility Speech Servers</a>, Previous: <a href="Building-Omnivox-For-WSL2.html" accesskey="p" rel="prev">Building Omnivox For WSL2</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Selecting-And-Checking-Omnivox-1"><span>6.4 Selecting And Checking Omnivox<a class="copiable-link" href="#Selecting-And-Checking-Omnivox-1"> &para;</a></span></h3>
+
+<p>First test Omnivox without Emacs.  On GNU/Linux or macOS, run the installed
+binary:
+</p>
+<div class="example">
+<pre class="example-preformatted">omnivox --version
+omnivox --check
+omnivox --list-voices
+</pre></div>
+
+<p>Under WSL2, test the content-addressed launcher instead:
+</p>
+<div class="example">
+<pre class="example-preformatted">./servers/omnivox --check
+</pre></div>
+
+<p>The check initializes the selected engine and audio output, then plays a tone
+and speech.  Success ends with a message saying that everything is working if
+both were heard.  Do not continue merely because the command exited zero:
+hearing both signals is the backend acceptance condition.
+</p>
+<p>Next select the server before loading Emacsvox:
+</p>
+<div class="example">
+<pre class="example-preformatted">export TTS_PROGRAM=omnivox
+</pre></div>
+
+<p>Make that setting visible in the shell used to launch Emacs.  An
+<code class="command">export</code> affects only that shell and its children; placing it in a
+shell startup file makes the choice persistent for later sessions.  On POSIX
+systems, Emacsvox&rsquo;s <samp class="file">servers/omnivox</samp> launcher finds an installed
+<code class="command">omnivox</code> on <code class="env">PATH</code>; <code class="env">OMNIVOX_PROGRAM</code> can instead name its
+absolute executable.  Native Windows Emacs resolves <code class="command">omnivox.exe</code>
+directly through <code class="code">exec-path</code>, but that route remains preview.
+</p>
+<p>Inside a running Emacsvox session, <code class="code">M-x omnivox</code> selects the same server
+temporarily.  Use <code class="code">M-x tts-speak-version</code> to identify the live adapter
+and <code class="code">M-x tts-restart</code> after changing server configuration.  This backend
+contract stops at a proven speech server; the complete isolated Emacs start,
+expected startup speech, and no-speech recovery belong to the first-use
+procedure.
+</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-tools (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-aural-tools (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-aural-tools (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dtransport.html" rel="next" title="emacsvox-aural-transport">
+<link href="emacsvox_002daural_002dsubmission.html" rel="prev" title="emacsvox-aural-submission">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002dtools">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dtransport.html" accesskey="n" rel="next">emacsvox-aural-transport</a>, Previous: <a href="emacsvox_002daural_002dsubmission.html" accesskey="p" rel="prev">emacsvox-aural-submission</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002dtools-1"><span>15.48 emacsvox-aural-tools<a class="copiable-link" href="#emacsvox_002daural_002dtools-1"> &para;</a></span></h3>
+
+<p>Contextual voice and earcon remapping plus override reset commands.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dTools-Commands" accesskey="1">Emacsvox-Aural-Tools Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dTools-Commands">
+<h4 class="subsection"><span>15.48.1 Emacsvox-Aural-Tools Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dTools-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dpreview_002drule" accesskey="1">emacsvox-aural-preview-rule</a></li>
+<li><a href="#emacsvox_002daural_002dremap_002dearcon_002dat_002dpoint" accesskey="2">emacsvox-aural-remap-earcon-at-point</a></li>
+<li><a href="#emacsvox_002daural_002dremap_002dvoice_002dat_002dpoint" accesskey="3">emacsvox-aural-remap-voice-at-point</a></li>
+<li><a href="#emacsvox_002daural_002dreset_002doverrides" accesskey="4">emacsvox-aural-reset-overrides</a></li>
+<li><a href="#emacsvox_002dpreview_002daural_002drule" accesskey="5">emacsvox-preview-aural-rule</a></li>
+<li><a href="#emacsvox_002dreset_002daural_002doverrides" accesskey="6">emacsvox-reset-aural-overrides</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dpreview_002drule">
+<h4 class="subsubsection"><span>15.48.1.1 emacsvox-aural-preview-rule<a class="copiable-link" href="#emacsvox_002daural_002dpreview_002drule"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dpreview_002drule"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-preview-rule</strong> <var class="def-var-arguments">(arg1 &amp;rest rest)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dpreview_002drule"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dpreview_002drule-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Resolve, compile, and play RULE-ID against FACTS and CONTEXT.
+
+(fn RULE-ID &amp;optional FACTS (CONTEXT nil CONTEXT-SUPPLIED-P))
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dremap_002dearcon_002dat_002dpoint">
+<h4 class="subsubsection"><span>15.48.1.2 emacsvox-aural-remap-earcon-at-point<a class="copiable-link" href="#emacsvox_002daural_002dremap_002dearcon_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dremap_002dearcon_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-remap-earcon-at-point</strong> <var class="def-var-arguments">(&amp;optional record)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dremap_002dearcon_002dat_002dpoint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dremap_002dearcon_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prepare a scoped override for one earcon in RECORD or at point.
+
+Audition the exact selected earcon before asking whether to replace, suppress,
+or restore it.  Replacement also auditions the newly resolved cue.  The
+generated change opens unsaved in the advanced editor for review.
+
+(fn &amp;optional RECORD)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dremap_002dvoice_002dat_002dpoint">
+<h4 class="subsubsection"><span>15.48.1.3 emacsvox-aural-remap-voice-at-point<a class="copiable-link" href="#emacsvox_002daural_002dremap_002dvoice_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dremap_002dvoice_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-remap-voice-at-point</strong> <var class="def-var-arguments">(&amp;optional record)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dremap_002dvoice_002dat_002dpoint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dremap_002dvoice_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prepare a scoped named-voice override for RECORD or presentation at point.
+
+When RECORD is non-nil, use that frozen presentation from recent feedback.
+Otherwise the latest presentation heard in the source buffer supplies exact
+facts and context.  The generated rule ignores transient events and
+occasions, but retains object kind, state, and provider identity.  It opens
+unsaved in the advanced rule editor so the selector can be reviewed or
+  refined before ‘s’ saves it.
+
+(fn &amp;optional RECORD)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dreset_002doverrides">
+<h4 class="subsubsection"><span>15.48.1.4 emacsvox-aural-reset-overrides<a class="copiable-link" href="#emacsvox_002daural_002dreset_002doverrides"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dreset_002doverrides"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-reset-overrides</strong> <var class="def-var-arguments">(scope)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dreset_002doverrides"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dreset_002doverrides-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Remove aural override rules from SCOPE.
+
+SCOPE is ‘personal’, ‘session’, or ‘buffer’.
+
+(fn SCOPE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dpreview_002daural_002drule">
+<h4 class="subsubsection"><span>15.48.1.5 emacsvox-preview-aural-rule<a class="copiable-link" href="#emacsvox_002dpreview_002daural_002drule"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dpreview_002daural_002drule"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-preview-aural-rule</strong> <var class="def-var-arguments">(arg1 &amp;rest rest)</var><a class="copiable-link" href="#index-emacsvox_002dpreview_002daural_002drule"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dpreview_002daural_002drule-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Resolve, compile, and play RULE-ID against FACTS and CONTEXT.
+
+(fn RULE-ID &amp;optional FACTS (CONTEXT nil CONTEXT-SUPPLIED-P))
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dreset_002daural_002doverrides">
+<h4 class="subsubsection"><span>15.48.1.6 emacsvox-reset-aural-overrides<a class="copiable-link" href="#emacsvox_002dreset_002daural_002doverrides"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dreset_002daural_002doverrides"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-reset-aural-overrides</strong> <var class="def-var-arguments">(scope)</var><a class="copiable-link" href="#index-emacsvox_002dreset_002daural_002doverrides"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dreset_002daural_002doverrides-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Remove aural override rules from SCOPE.
+
+SCOPE is ‘personal’, ‘session’, or ‘buffer’.
+
+(fn SCOPE)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dtransport.html">emacsvox-aural-transport</a>, Previous: <a href="emacsvox_002daural_002dsubmission.html">emacsvox-aural-submission</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

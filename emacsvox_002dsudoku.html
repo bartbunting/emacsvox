@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-sudoku (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-sudoku (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-sudoku (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dsupercite.html" rel="next" title="emacsvox-supercite">
+<link href="emacsvox_002dsql.html" rel="prev" title="emacsvox-sql">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dsudoku">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dsupercite.html" accesskey="n" rel="next">emacsvox-supercite</a>, Previous: <a href="emacsvox_002dsql.html" accesskey="p" rel="prev">emacsvox-sql</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dsudoku-1"><span>15.216 emacsvox-sudoku<a class="copiable-link" href="#emacsvox_002dsudoku-1"> &para;</a></span></h3>
+
+<p>Playing SuDoku using speech output.
+Written to discover what type of feedback one needs for  this
+task.
+</p>
+<p>Required modules:
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dSudoku-Commands" accesskey="1">Emacsvox-Sudoku Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dSudoku-Commands">
+<h4 class="subsection"><span>15.216.1 Emacsvox-Sudoku Commands<a class="copiable-link" href="#Emacsvox_002dSudoku-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dsudoku_002dboard_002dcolumns_002dsummarize" accesskey="1">emacsvox-sudoku-board-columns-summarize</a></li>
+<li><a href="#emacsvox_002dsudoku_002dboard_002ddistribution_002dsummarize" accesskey="2">emacsvox-sudoku-board-distribution-summarize</a></li>
+<li><a href="#emacsvox_002dsudoku_002dboard_002drows_002dsummarize" accesskey="3">emacsvox-sudoku-board-rows-summarize</a></li>
+<li><a href="#emacsvox_002dsudoku_002dboard_002dsub_002dsquares_002dsummarize" accesskey="4">emacsvox-sudoku-board-sub-squares-summarize</a></li>
+<li><a href="#emacsvox_002dsudoku_002dboard_002dsummarizer" accesskey="5">emacsvox-sudoku-board-summarizer</a></li>
+<li><a href="#emacsvox_002dsudoku_002ddown_002dsub_002dsquare" accesskey="6">emacsvox-sudoku-down-sub-square</a></li>
+<li><a href="#emacsvox_002dsudoku_002derase_002dcurrent_002dcolumn" accesskey="7">emacsvox-sudoku-erase-current-column</a></li>
+<li><a href="#emacsvox_002dsudoku_002derase_002dcurrent_002drow" accesskey="8">emacsvox-sudoku-erase-current-row</a></li>
+<li><a href="#emacsvox_002dsudoku_002derase_002dcurrent_002dsub_002dsquare" accesskey="9">emacsvox-sudoku-erase-current-sub-square</a></li>
+<li><a href="#emacsvox_002dsudoku_002dhint">emacsvox-sudoku-hint</a></li>
+<li><a href="#emacsvox_002dsudoku_002dhistory_002dpop">emacsvox-sudoku-history-pop</a></li>
+<li><a href="#emacsvox_002dsudoku_002dhistory_002dpush">emacsvox-sudoku-history-push</a></li>
+<li><a href="#emacsvox_002dsudoku_002dhow_002dmany_002dremaining">emacsvox-sudoku-how-many-remaining</a></li>
+<li><a href="#emacsvox_002dsudoku_002dnext_002dsub_002dsquare">emacsvox-sudoku-next-sub-square</a></li>
+<li><a href="#emacsvox_002dsudoku_002dprevious_002dsub_002dsquare">emacsvox-sudoku-previous-sub-square</a></li>
+<li><a href="#emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dcoordinates">emacsvox-sudoku-speak-current-cell-coordinates</a></li>
+<li><a href="#emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dvalue">emacsvox-sudoku-speak-current-cell-value</a></li>
+<li><a href="#emacsvox_002dsudoku_002dspeak_002dcurrent_002dcolumn">emacsvox-sudoku-speak-current-column</a></li>
+<li><a href="#emacsvox_002dsudoku_002dspeak_002dcurrent_002drow">emacsvox-sudoku-speak-current-row</a></li>
+<li><a href="#emacsvox_002dsudoku_002dspeak_002dcurrent_002dsub_002dsquare">emacsvox-sudoku-speak-current-sub-square</a></li>
+<li><a href="#emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dcolumn">emacsvox-sudoku-speak-remaining-in-column</a></li>
+<li><a href="#emacsvox_002dsudoku_002dspeak_002dremaining_002din_002drow">emacsvox-sudoku-speak-remaining-in-row</a></li>
+<li><a href="#emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dsub_002dsquare">emacsvox-sudoku-speak-remaining-in-sub-square</a></li>
+<li><a href="#emacsvox_002dsudoku_002dup_002dsub_002dsquare">emacsvox-sudoku-up-sub-square</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dboard_002dcolumns_002dsummarize">
+<h4 class="subsubsection"><span>15.216.1.1 emacsvox-sudoku-board-columns-summarize<a class="copiable-link" href="#emacsvox_002dsudoku_002dboard_002dcolumns_002dsummarize"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dboard_002dcolumns_002dsummarize"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-board-columns-summarize</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dboard_002dcolumns_002dsummarize"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dboard_002dcolumns_002dsummarize-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Summarize columns &mdash; speaks number of remaining cells.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dboard_002ddistribution_002dsummarize">
+<h4 class="subsubsection"><span>15.216.1.2 emacsvox-sudoku-board-distribution-summarize<a class="copiable-link" href="#emacsvox_002dsudoku_002dboard_002ddistribution_002dsummarize"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dboard_002ddistribution_002dsummarize"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-board-distribution-summarize</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dboard_002ddistribution_002dsummarize"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dboard_002ddistribution_002dsummarize-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Shows distribution of filled numbers.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dboard_002drows_002dsummarize">
+<h4 class="subsubsection"><span>15.216.1.3 emacsvox-sudoku-board-rows-summarize<a class="copiable-link" href="#emacsvox_002dsudoku_002dboard_002drows_002dsummarize"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dboard_002drows_002dsummarize"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-board-rows-summarize</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dboard_002drows_002dsummarize"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dboard_002drows_002dsummarize-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Summarize rows &mdash; speaks number of remaining cells.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dboard_002dsub_002dsquares_002dsummarize">
+<h4 class="subsubsection"><span>15.216.1.4 emacsvox-sudoku-board-sub-squares-summarize<a class="copiable-link" href="#emacsvox_002dsudoku_002dboard_002dsub_002dsquares_002dsummarize"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dboard_002dsub_002dsquares_002dsummarize"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-board-sub-squares-summarize</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dboard_002dsub_002dsquares_002dsummarize"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dboard_002dsub_002dsquares_002dsummarize-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Summarize sub-squares &mdash; speaks number of remaining cells.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dboard_002dsummarizer">
+<h4 class="subsubsection"><span>15.216.1.5 emacsvox-sudoku-board-summarizer<a class="copiable-link" href="#emacsvox_002dsudoku_002dboard_002dsummarizer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dboard_002dsummarizer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-board-summarizer</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dboard_002dsummarizer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dboard_002dsummarizer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Dispatch to  appropriate summarizer.
+
+d   Number Distribution
+r   Row Distribution
+c   Column Distribution
+s   Sub-square Distribution.
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002ddown_002dsub_002dsquare">
+<h4 class="subsubsection"><span>15.216.1.6 emacsvox-sudoku-down-sub-square<a class="copiable-link" href="#emacsvox_002dsudoku_002ddown_002dsub_002dsquare"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002ddown_002dsub_002dsquare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-down-sub-square</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002ddown_002dsub_002dsquare"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002ddown_002dsub_002dsquare-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to top-left corner of  sub-square below current one.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002derase_002dcurrent_002dcolumn">
+<h4 class="subsubsection"><span>15.216.1.7 emacsvox-sudoku-erase-current-column<a class="copiable-link" href="#emacsvox_002dsudoku_002derase_002dcurrent_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002derase_002dcurrent_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-erase-current-column</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002derase_002dcurrent_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002derase_002dcurrent_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Erase current column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002derase_002dcurrent_002drow">
+<h4 class="subsubsection"><span>15.216.1.8 emacsvox-sudoku-erase-current-row<a class="copiable-link" href="#emacsvox_002dsudoku_002derase_002dcurrent_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002derase_002dcurrent_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-erase-current-row</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002derase_002dcurrent_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002derase_002dcurrent_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Erase current row.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002derase_002dcurrent_002dsub_002dsquare">
+<h4 class="subsubsection"><span>15.216.1.9 emacsvox-sudoku-erase-current-sub-square<a class="copiable-link" href="#emacsvox_002dsudoku_002derase_002dcurrent_002dsub_002dsquare"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002derase_002dcurrent_002dsub_002dsquare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-erase-current-sub-square</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002derase_002dcurrent_002dsub_002dsquare"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002derase_002dcurrent_002dsub_002dsquare-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Erase current sub-square.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dhint">
+<h4 class="subsubsection"><span>15.216.1.10 emacsvox-sudoku-hint<a class="copiable-link" href="#emacsvox_002dsudoku_002dhint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dhint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-hint</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dhint"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dhint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Provide hint for current cell.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dhistory_002dpop">
+<h4 class="subsubsection"><span>15.216.1.11 emacsvox-sudoku-history-pop<a class="copiable-link" href="#emacsvox_002dsudoku_002dhistory_002dpop"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dhistory_002dpop"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-history-pop</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dhistory_002dpop"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dhistory_002dpop-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Pop saved state off stack and redraw board.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dhistory_002dpush">
+<h4 class="subsubsection"><span>15.216.1.12 emacsvox-sudoku-history-push<a class="copiable-link" href="#emacsvox_002dsudoku_002dhistory_002dpush"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dhistory_002dpush"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-history-push</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dhistory_002dpush"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dhistory_002dpush-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Push current state on to history stack.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dhow_002dmany_002dremaining">
+<h4 class="subsubsection"><span>15.216.1.13 emacsvox-sudoku-how-many-remaining<a class="copiable-link" href="#emacsvox_002dsudoku_002dhow_002dmany_002dremaining"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dhow_002dmany_002dremaining"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-how-many-remaining</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dhow_002dmany_002dremaining"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dhow_002dmany_002dremaining-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak number of remaining squares to fill.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dnext_002dsub_002dsquare">
+<h4 class="subsubsection"><span>15.216.1.14 emacsvox-sudoku-next-sub-square<a class="copiable-link" href="#emacsvox_002dsudoku_002dnext_002dsub_002dsquare"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dnext_002dsub_002dsquare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-next-sub-square</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dnext_002dsub_002dsquare"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dnext_002dsub_002dsquare-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to top-left corner of next sub-square.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dprevious_002dsub_002dsquare">
+<h4 class="subsubsection"><span>15.216.1.15 emacsvox-sudoku-previous-sub-square<a class="copiable-link" href="#emacsvox_002dsudoku_002dprevious_002dsub_002dsquare"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dprevious_002dsub_002dsquare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-previous-sub-square</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dprevious_002dsub_002dsquare"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dprevious_002dsub_002dsquare-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to top-left corner of previous sub-square.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dcoordinates">
+<h4 class="subsubsection"><span>15.216.1.16 emacsvox-sudoku-speak-current-cell-coordinates<a class="copiable-link" href="#emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dcoordinates"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dcoordinates"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-speak-current-cell-coordinates</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dcoordinates"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dcoordinates-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">speak current cell coordinates.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dvalue">
+<h4 class="subsubsection"><span>15.216.1.17 emacsvox-sudoku-speak-current-cell-value<a class="copiable-link" href="#emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dvalue"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dvalue"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-speak-current-cell-value</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dvalue"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dcell_002dvalue-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak value in current cell.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dspeak_002dcurrent_002dcolumn">
+<h4 class="subsubsection"><span>15.216.1.18 emacsvox-sudoku-speak-current-column<a class="copiable-link" href="#emacsvox_002dsudoku_002dspeak_002dcurrent_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-speak-current-column</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak current column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dspeak_002dcurrent_002drow">
+<h4 class="subsubsection"><span>15.216.1.19 emacsvox-sudoku-speak-current-row<a class="copiable-link" href="#emacsvox_002dsudoku_002dspeak_002dcurrent_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dspeak_002dcurrent_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-speak-current-row</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dspeak_002dcurrent_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dspeak_002dcurrent_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak current row.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dspeak_002dcurrent_002dsub_002dsquare">
+<h4 class="subsubsection"><span>15.216.1.20 emacsvox-sudoku-speak-current-sub-square<a class="copiable-link" href="#emacsvox_002dsudoku_002dspeak_002dcurrent_002dsub_002dsquare"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dsub_002dsquare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-speak-current-sub-square</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dsub_002dsquare"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dspeak_002dcurrent_002dsub_002dsquare-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak current sub-square.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dcolumn">
+<h4 class="subsubsection"><span>15.216.1.21 emacsvox-sudoku-speak-remaining-in-column<a class="copiable-link" href="#emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-speak-remaining-in-column</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speaks number of remaining cells in current column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dspeak_002dremaining_002din_002drow">
+<h4 class="subsubsection"><span>15.216.1.22 emacsvox-sudoku-speak-remaining-in-row<a class="copiable-link" href="#emacsvox_002dsudoku_002dspeak_002dremaining_002din_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dspeak_002dremaining_002din_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-speak-remaining-in-row</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dspeak_002dremaining_002din_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dspeak_002dremaining_002din_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speaks number of remaining cells in current row.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dsub_002dsquare">
+<h4 class="subsubsection"><span>15.216.1.23 emacsvox-sudoku-speak-remaining-in-sub-square<a class="copiable-link" href="#emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dsub_002dsquare"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dsub_002dsquare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-speak-remaining-in-sub-square</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dsub_002dsquare"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dspeak_002dremaining_002din_002dsub_002dsquare-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speaks number of remaining cells in current sub-square.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsudoku_002dup_002dsub_002dsquare">
+<h4 class="subsubsection"><span>15.216.1.24 emacsvox-sudoku-up-sub-square<a class="copiable-link" href="#emacsvox_002dsudoku_002dup_002dsub_002dsquare"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsudoku_002dup_002dsub_002dsquare"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sudoku-up-sub-square</strong><a class="copiable-link" href="#index-emacsvox_002dsudoku_002dup_002dsub_002dsquare"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dsudoku_002dup_002dsub_002dsquare-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to top-left corner of  sub-square above current one.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dsupercite.html">emacsvox-supercite</a>, Previous: <a href="emacsvox_002dsql.html">emacsvox-sql</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

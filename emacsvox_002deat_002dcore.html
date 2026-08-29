@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-eat-core (Emacsvox User Manual)</title>
+
+<meta name="description" content="emacsvox-eat-core (Emacsvox User Manual)">
+<meta name="keywords" content="emacsvox-eat-core (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002deat_002dinput.html" rel="next" title="emacsvox-eat-input">
+<link href="emacsvox_002deat.html" rel="prev" title="emacsvox-eat">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002deat_002dcore">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002deat_002dinput.html" accesskey="n" rel="next">emacsvox-eat-input</a>, Previous: <a href="emacsvox_002deat.html" accesskey="p" rel="prev">emacsvox-eat</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002deat_002dcore-1"><span>15.90 emacsvox-eat-core<a class="copiable-link" href="#emacsvox_002deat_002dcore-1"> &para;</a></span></h3>
+
+<p>Internal screen observation, lifecycle, and presentation core for EAT.
+Load &lsquo;emacsvox-eat&rsquo; rather than requiring this module directly.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dEat_002dCore-Commands" accesskey="1">Emacsvox-Eat-Core Commands</a></li>
+<li><a href="#emacsvox_002deat_002dcore-Options" accesskey="2">emacsvox-eat-core Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dEat_002dCore-Commands">
+<h4 class="subsection"><span>15.90.1 Emacsvox-Eat-Core Commands<a class="copiable-link" href="#Emacsvox_002dEat_002dCore-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002deat_002dcycle_002dverbosity" accesskey="1">emacsvox-eat-cycle-verbosity</a></li>
+<li><a href="#emacsvox_002deat_002dtoggle_002dbackground_002dmonitoring" accesskey="2">emacsvox-eat-toggle-background-monitoring</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002deat_002dcycle_002dverbosity">
+<h4 class="subsubsection"><span>15.90.1.1 emacsvox-eat-cycle-verbosity<a class="copiable-link" href="#emacsvox_002deat_002dcycle_002dverbosity"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002deat_002dcycle_002dverbosity"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eat-cycle-verbosity</strong><a class="copiable-link" href="#index-emacsvox_002deat_002dcycle_002dverbosity"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002deat_002dcycle_002dverbosity-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Cycle terse, normal, and verbose policy for this EAT terminal.
+The command also works from the terminal’s frozen review buffer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002deat_002dtoggle_002dbackground_002dmonitoring">
+<h4 class="subsubsection"><span>15.90.1.2 emacsvox-eat-toggle-background-monitoring<a class="copiable-link" href="#emacsvox_002deat_002dtoggle_002dbackground_002dmonitoring"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002deat_002dtoggle_002dbackground_002dmonitoring"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eat-toggle-background-monitoring</strong> <var class="def-var-arguments">(&amp;optional argument)</var><a class="copiable-link" href="#index-emacsvox_002deat_002dtoggle_002dbackground_002dmonitoring"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002deat_002dtoggle_002dbackground_002dmonitoring-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle content-free background-output monitoring for this EAT terminal.
+With positive prefix ARGUMENT, enable monitoring; with zero or a negative
+prefix, disable it.  The command also works from its frozen review buffer.
+
+(fn &amp;optional ARGUMENT)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002deat_002dcore-Options">
+<h4 class="subsection"><span>15.90.2 emacsvox-eat-core Options<a class="copiable-link" href="#emacsvox_002deat_002dcore-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-49"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-eat-monitor-background-output</var><a class="copiable-link" href="#index-User-Option-49"> &para;</a></span></dt>
+<dd><pre class="verbatim">Whether this EAT buffer cues output received while it is unselected.
+Monitoring never speaks background terminal content or identity.  It plays a
+rate-limited cue for quiesced text changes and reports the unread burst count
+when the terminal is selected again.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-50"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-eat-verbosity</var><a class="copiable-link" href="#index-User-Option-50"> &para;</a></span></dt>
+<dd><pre class="verbatim">Amount of automatic feedback produced for EAT terminals.
+At ‘terse’, retain routine output and metadata for review but do not speak
+them automatically.  ‘normal’ speaks bounded command output and status, while
+‘verbose’ additionally announces bounded terminal title and directory changes
+and successful shell-command status when EAT shell integration provides it.
+Failure, lifecycle, bell, paste, and completion feedback remains available at
+every level.  This option may be set buffer-locally for an individual
+terminal.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+normal
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002deat_002dinput.html">emacsvox-eat-input</a>, Previous: <a href="emacsvox_002deat.html">emacsvox-eat</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

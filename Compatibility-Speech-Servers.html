@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Compatibility Speech Servers (Emacsvox User Manual)</title>
+
+<meta name="description" content="Compatibility Speech Servers (Emacsvox User Manual)">
+<meta name="keywords" content="Compatibility Speech Servers (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Speech-Backends.html" rel="up" title="Speech Backends">
+<link href="Backend-Diagnostics-And-Ownership.html" rel="next" title="Backend Diagnostics And Ownership">
+<link href="Selecting-And-Checking-Omnivox.html" rel="prev" title="Selecting And Checking Omnivox">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Compatibility-Speech-Servers">
+<div class="nav-panel">
+<p>
+Next: <a href="Backend-Diagnostics-And-Ownership.html" accesskey="n" rel="next">Backend Diagnostics And Ownership</a>, Previous: <a href="Selecting-And-Checking-Omnivox.html" accesskey="p" rel="prev">Selecting And Checking Omnivox</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Compatibility-Speech-Servers-1"><span>6.5 Compatibility Speech Servers<a class="copiable-link" href="#Compatibility-Speech-Servers-1"> &para;</a></span></h3>
+
+<p>Emacsvox retains direct speech servers for existing installations.  They are
+not the recommended first setup and are outside the initial-user platform
+matrix above:
+</p>
+<dl class="table">
+<dt><code class="code">espeak</code></dt>
+<dd><p>The direct GNU/Linux Tcl server.  Building it with <code class="command">make espeak</code>
+requires Tclx at runtime, Tcl 8.6 development headers, eSpeak NG development
+libraries, and a C++ compiler.  It remains useful for compatibility testing,
+but new users should install Omnivox instead.
+</p></dd>
+<dt><code class="code">swiftmac</code></dt>
+<dd><p>The direct Swift macOS server.  It requires Swift 5.9 or newer and is built
+with <code class="command">make swiftmac</code>.  It remains a compatibility alternative to
+Omnivox&rsquo;s AVSpeechSynthesizer engine; see
+<samp class="file">servers/mac-swiftmac/Readme.org</samp>.
+</p></dd>
+<dt><code class="code">mac</code></dt>
+<dd><p>The legacy Python/PyObjC macOS server.  The unset runtime selector still names
+it as a compatibility default on Darwin, but it is not the recommended or
+documented initial-user route.  It depends on Foundation, AppKit, and
+PyObjCTools availability.
+</p></dd>
+<dt><code class="code">outloud</code></dt>
+<dd><p>The direct GNU/Linux IBM TTS or Eloquence adapter.  It requires a separately
+licensed compatible runtime, which Emacsvox does not distribute.  Voxin
+availability is documented at <a class="url" href="https://voxin.oralux.net">https://voxin.oralux.net</a>.
+</p></dd>
+<dt><code class="code">dtk-soft</code></dt>
+<dd><p>The direct Software DECtalk adapter.  Install its runtime separately and see
+<samp class="file">servers/software-dtk/Readme.org</samp>.  Emacsvox does not distribute licensed
+speech runtimes.
+</p></dd>
+</dl>
+
+<p>The native Windows audio, standalone Eloquence, and standalone DECtalk bridges
+under <samp class="file">servers/</samp> are advanced WSL-specific compatibility paths.  Piper is
+an optional Omnivox engine and model workflow, not a primary Emacsvox server.
+</p>
+</div>
+
+
+
+</body>
+</html>
