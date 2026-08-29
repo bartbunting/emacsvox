@@ -38,6 +38,9 @@ MAKE=make
 MAKEFLAGS=--no-print-directory
 -include local.mk
 EMACS ?= emacs
+MAKEINFO ?= makeinfo
+INSTALL_INFO ?= install-info
+DOCS_PUBLISH_DIR ?=
 README = README
 
 ### Tests
@@ -49,6 +52,7 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: compiled-aural-test build-aural-test trace trace-test
 .PHONY: reference-test advice-audit name-audit tts-audit
 .PHONY: check-emacs bytecode bytecode-check bytecode-rebuild generated-reference
+.PHONY: docs-generate docs-check docs-check-external docs-publish
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
 .PHONY: windows-omnivox-dev
 .PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers verify-windows-omnivox-runtime
@@ -68,9 +72,7 @@ compiled-notmuch-test: bytecode-check
 
 check-emacs:
 	@$(EMACS) -Q --batch --eval \
-		'(unless (version<= "31" emacs-version) \
-		   (error "Emacsvox requires Emacs 31 or newer; got %s from %s" \
-		          emacs-version invocation-directory))'
+		'(unless (version<= "31" emacs-version) (error "Emacsvox requires Emacs 31 or newer; got %s from %s" emacs-version invocation-directory))'
 
 # Keep ignored in-tree byte-code explicit: ordinary edits can use the
 # incremental target, while branch changes should discard every old .elc.
@@ -112,6 +114,30 @@ generated-reference: bytecode-check
 	cd info && $(EMACS) -Q --batch \
 		--eval '(setq file-name-handler-alist nil gc-cons-threshold 128000000)' \
 		-l ../utils/self-document.el -f self-document-all-modules-batch
+
+# Documentation generation, validation, and publication are deliberately
+# separate.  Neither validation nor publication creates Git commits.
+docs-generate: generated-reference
+	$(MAKE) -C info MAKEINFO="$(MAKEINFO)" all
+
+docs-check: bytecode-check
+	EMACSVOX_MAKEINFO="$(MAKEINFO)" \
+	EMACSVOX_INSTALL_INFO="$(INSTALL_INFO)" \
+	$(EMACS) -Q --batch -L utils -l utils/emacsvox-docs-check.el \
+		-f emacsvox-docs-check-batch
+
+docs-check-external: docs-check
+	utils/check-required-doc-links.sh etc/docs-required-links.txt
+
+docs-publish: docs-check
+	@if test -z "$(DOCS_PUBLISH_DIR)"; then \
+		echo "Set DOCS_PUBLISH_DIR to an existing publication directory." >&2; \
+		exit 2; \
+	fi
+	EMACSVOX_MAKEINFO="$(MAKEINFO)" \
+	EMACSVOX_DOCS_PUBLISH_DIR="$(DOCS_PUBLISH_DIR)" \
+	$(EMACS) -Q --batch -L utils -l utils/emacsvox-docs-check.el \
+		-f emacsvox-docs-publish-batch
 
 compiled-aural-test:
 	$(EMACS) -Q --batch -l test/run-compiled-aural-tests.el
@@ -560,11 +586,6 @@ q:
 	@cd lisp && make muggles $(MAKEFLAGS)
 	@cd lisp && make extra-muggles $(MAKEFLAGS)
 	@test -d tvr && cd	 tvr && make $(MAKEFLAGS)
-
-i:
-	cd info && make && git ci docs || true
-	cd info && make man
-	cd ../gh-pages-emacsvox  && make && git ci docs || true
 
 ###   user level target-- clean
 

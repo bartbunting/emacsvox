@@ -1,25 +1,20 @@
 #$Id$
-# Note: Building the info pages requires package hydra to be installed.
-# Built info pages are checked into GitHub.
-# You should need to rebuild info files
-#*only* if you change the Emacsvox Lisp sources.
+# Built Info pages are checked into GitHub.  Run `make docs-generate` from the
+# repository root after changing public Lisp documentation or manual sources.
 # Historical Emacspeak documents retain their original names.
 SF_HOME= raman,emacspeak@web.sourceforge.net:/home/groups/e/em/emacspeak/htdocs/info
-# Emacsvox manual publication checkout.
-GH_PAGES=../../gh-pages-emacsvox/manual
-BATCH = -batch -q -no-site-file     \
---eval '(setq file-name-handler-alist nil gc-cons-threshold 128000000)'
+# Compatibility input for the old info-level publication target.  Prefer the
+# root `docs-publish` target; this path is intentionally not defaulted.
+GH_PAGES ?=
 FILES=*.texi
 INCLUDES= style.texi preamble.texi copyright.texi announce.texi emacspeak-significance.texi \
 introduction.texi install.texi using.texi audio-desktop.texi voices.texi online-help.texi \
-packages.texi notmuch.texi agent-shell.texi eat.texi eterm.texi docs.texi keyboard.texi tts-server.texi \
+packages.texi notmuch.texi agent-shell.texi eat.texi eterm.texi docs.texi keys.texi keyboard.texi tts-server.texi \
 inc-turning-twenty.texi acknowledge.texi intro-docs.texi documents.texi structure.texi \
 web-browsing.texi tts.texi
 
-MAKEINFO = makeinfo 
+MAKEINFO ?= makeinfo
 STRIP_TRAILING_WHITESPACE = perl -pi -e 's/[ \t]+$$//'
-CSS=--css-ref="http://www.w3.org/StyleSheets/Core/Modernist"
-EMACS=emacs
 
 all: info  introducing-emacspeak.info turning-twenty.info #emacsvox.pdf
 
@@ -36,29 +31,32 @@ introducing-emacspeak.info: introducing-emacspeak.texi
 turning-twenty.info: turning-twenty.texi
 	$(MAKEINFO) turning-twenty.texi
 	$(STRIP_TRAILING_WHITESPACE) turning-twenty.info
-force:
-
-docs.texi:force
-	$(EMACS) $(BATCH) -l ../utils/self-document.el -f self-document-all-modules
-pdf: emacsvox.pdf
+pdf:
+	@if test -z "$(GH_PAGES)"; then \
+		echo "Set GH_PAGES to an existing publication directory." >&2; \
+		exit 2; \
+	fi
+	$(MAKE) emacsvox.pdf
 	cp emacsvox.pdf $(GH_PAGES)/
 emacsvox.pdf: emacsvox.texi $(INCLUDES)
-	makeinfo --pdf emacsvox.texi
+	$(MAKEINFO) --pdf emacsvox.texi
 	\rm emacsvox.aux emacsvox.cp emacsvox.cps emacsvox.fn \
 emacsvox.fns emacsvox.ky emacsvox.kys emacsvox.log \
 emacsvox.toc emacsvox.vr emacsvox.vrs
 
 man:
-	makeinfo -o ${GH_PAGES} --html ${CSS} emacsvox.texi
-	tidy -q -utf8 -mic -asxml  ${GH_PAGES}/*.html 2>&1 > /dev/null  || echo tidy
-	@echo "Commit and push updated HTML files from gh-pages!"
+	@if test -z "$(GH_PAGES)"; then \
+		echo "Use root target docs-publish with DOCS_PUBLISH_DIR=/path/to/manual." >&2; \
+		exit 2; \
+	fi
+	@destination=$$(cd "$(GH_PAGES)" && pwd -P) && \
+		$(MAKE) -C .. DOCS_PUBLISH_DIR="$$destination" docs-publish
 
-publish:
-	cd ../../gh-pages-emacsvox && make
+publish: man
 
 introducing-emacspeak.html: introducing-emacspeak.texi
-	makeinfo --no-split --html  introducing-emacspeak.texi
-#For publishing to SF
+	$(MAKEINFO) --no-split --html introducing-emacspeak.texi
+# Historical Emacspeak SourceForge publication target.
 pub:  html/index.html introducing-emacspeak.html
 	rsync introducing-emacspeak.html ${SF_HOME}
 	rsync -avz  html ${SF_HOME}/info/

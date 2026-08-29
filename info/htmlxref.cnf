@@ -1,0 +1,5 @@
+# Complete cross-manual mappings used by reproducible Emacsvox HTML builds.
+
+emacs	mono	https://www.gnu.org/software/emacs/manual/html_mono/emacs.html
+emacs	node	https://www.gnu.org/software/emacs/manual/html_node/emacs/
+eat	mono	https://elpa.nongnu.org/nongnu/doc/eat.html

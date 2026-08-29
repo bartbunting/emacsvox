@@ -18,7 +18,6 @@
 @title Emacsvox@*The Complete Audio Desktop
 @subtitle User Manual
 @author T. V. Raman
-Last Updated: @today{}
 
 @page
 @vskip 0pt plus 1filll
@@ -30,8 +29,7 @@ notice are preserved on all copies.
 
 @end titlepage
 
-This manual documents @strong{Emacsvox, The Complete Audio Desktop}
-and  was last updated on @today{}.
+This manual documents @strong{Emacsvox, The Complete Audio Desktop}.
 
 @summarycontents
 @contents

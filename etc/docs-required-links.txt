@@ -1,0 +1,17 @@
+# Primary external links required for installation and current user workflows.
+https://github.com/bartbunting/emacsvox
+https://www.gnu.org/software/emacs/download.html
+https://www.gnu.org/software/emacs/history.html
+https://github.com/espeak-ng/espeak-ng/blob/master/docs/building.md
+https://voxin.oralux.net/
+https://voxin.oralux.net/rss.xml
+https://github.com/xenodium/agent-shell
+https://notmuchmail.org/doc/latest/notmuch-emacs.html
+https://elpa.nongnu.org/nongnu/eat.html
+https://elpa.nongnu.org/nongnu/doc/eat.html
+https://github.com/bartbunting/omnivox
+https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md
+https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md
+https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md
+https://github.com/intelligrit/swiftmac
+https://github.com/dectalk/dectalk/releases/tag/2023-10-30
