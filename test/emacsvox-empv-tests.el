@@ -3,11 +3,31 @@
 ;;; Code:
 (require 'ert)
 (require 'package)
+(require 'emacsvox-optional-module-test-utils)
 (package-initialize)
 (require 'empv)
 (load (expand-file-name "../lisp/emacsvox-empv.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
+
+(ert-deftest emacsvox-empv-loads-without-empv ()
+  "The integration module should load before optional EMPV is installed."
+  (emacsvox-optional-module-test-load
+   "emacsvox-empv.el"
+   '(when (locate-library "empv")
+      (error "EMPV unexpectedly available in clean Emacs"))
+   '(unless (and (featurep 'emacsvox-empv)
+                 (not (featurep 'empv)))
+      (error "Emacsvox EMPV did not load independently"))))
+
+(ert-deftest emacsvox-empv-setup-installs-keymaps ()
+  "Loading EMPV should install Emacsvox's integration bindings."
+  (should
+   (eq (lookup-key empv-youtube-results-mode-map (kbd "t"))
+       'emacsvox-empv-current-title))
+  (should
+   (eq (lookup-key empv-map (kbd "%"))
+       'emacsvox-empv-percentage-seek)))
 
 (ert-deftest emacsvox-empv-advice-is-current-and-direct ()
   "Current EMPV targets use native advice directly."

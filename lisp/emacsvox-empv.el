@@ -453,8 +453,6 @@ If already playing, then read an empv key and invoke its command."
    do
    (emacsvox-keymap-update empv-map b)))
 
-(emacsvox-empv-setup)
-
 ;; Repeat:
 (mapc
  #'(lambda (c) (put c 'repeat-map 'empv-map))
@@ -592,6 +590,7 @@ The default value is suitable for classical instrumental music."
         (advice-add target where function '((name . emacsvox)))))))
 
 (with-eval-after-load 'empv
+  (emacsvox-empv-setup)
   (emacsvox-empv--install-advice))
 
 (provide 'emacsvox-empv)
