@@ -2915,8 +2915,78 @@ Return the beginning of the inserted row."
             (should (equal (nreverse events) (nth 1 case)))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
+(ert-deftest emacsvox-notmuch-killed-search-owner-cancels-silently ()
+  "Killing a real search owner produces no late failure notification."
+  (let* ((owner
+          (generate-new-buffer " *emacsvox-notmuch-cancelled-owner*"))
+         (parse-buffer
+          (generate-new-buffer " *emacsvox-notmuch-cancelled-parse*"))
+         (emacs-program
+          (expand-file-name invocation-name invocation-directory))
+         process events)
+    (unwind-protect
+        (progn
+          (setq process
+                (make-process
+                 :name "emacsvox-notmuch-cancelled-search"
+                 :buffer owner
+                 :command
+                 (list emacs-program "-Q" "--batch" "--eval"
+                       "(sleep-for 60)")
+                 :connection-type 'pipe
+                 :noquery t
+                 :sentinel #'notmuch-start-notmuch-sentinel))
+          (process-put process 'sub-sentinel #'notmuch-search-process-sentinel)
+          (process-put process 'parse-buf parse-buffer)
+          (process-put
+           process emacsvox-notmuch--search-process-property
+           '(:kind refresh :interacted nil))
+          (with-current-buffer owner
+            (setq-local emacsvox-notmuch--tracked-search-process process)
+            (add-hook
+             'pre-command-hook
+             #'emacsvox-notmuch--note-search-interaction nil t))
+          (should (process-live-p process))
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-submit)
+                (lambda (&rest arguments)
+                  (push (cons 'submit arguments) events)))
+               ((symbol-function 'emacsvox-aural-submit-actions)
+                (lambda (&rest arguments)
+                  (push (cons 'actions arguments) events)))
+               ((symbol-function 'tts-notify-icon)
+                (lambda (&rest arguments)
+                  (push (cons 'icon arguments) events)))
+               ((symbol-function 'tts-notify)
+                (lambda (&rest arguments)
+                  (push (cons 'notify arguments) events))))
+            (should (kill-buffer owner))
+            (let ((deadline (+ (float-time) 2.0)))
+              (while (and (process-live-p process)
+                          (< (float-time) deadline))
+                (accept-process-output process 0.05)))
+            (accept-process-output process 0.05)
+            (should-not (buffer-live-p owner))
+            (should-not (process-live-p process))
+            (should (memq (process-status process) '(exit signal)))
+            (should-not
+             (process-get
+              process emacsvox-notmuch--search-process-property))
+            (should-not (buffer-live-p parse-buffer))
+            (should-not events)
+            ;; A duplicate terminal callback must remain silent too.
+            (notmuch-start-notmuch-sentinel process "killed\n")
+            (should-not events)))
+      (when process
+        (process-put
+         process emacsvox-notmuch--search-process-property nil)
+        (set-process-sentinel process #'ignore)
+        (when (process-live-p process) (delete-process process)))
+      (when (buffer-live-p owner) (kill-buffer owner))
+      (when (buffer-live-p parse-buffer) (kill-buffer parse-buffer)))))
+
 (ert-deftest emacsvox-notmuch-refresh-failure-uses-notification-stream ()
-  "Failed user-owned searches warn even when success feedback is silent."
+  "A failed live, undisplayed owner warns even when success is silent."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-failure-test*"))
         (properties
          `((,emacsvox-notmuch--search-process-property
@@ -2926,6 +2996,8 @@ Return the beginning of the inserted row."
     (unwind-protect
         (emacsvox-notmuch-test--with-fake-search-process
             ('process buffer properties 'signal 1)
+          (should (buffer-live-p buffer))
+          (should-not (get-buffer-window buffer t))
           (cl-letf
               (((symbol-function 'tts-notify-icon)
                 (lambda (icon) (push (list 'icon icon) events)))

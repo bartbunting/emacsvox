@@ -2263,18 +2263,20 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
     (let ((buffer (process-buffer process))
           (status (process-status process)))
       (emacsvox-notmuch--clear-tracked-search process buffer)
-      (if (and
-           (eq status 'exit)
-           (zerop (process-exit-status process))
-           (buffer-live-p buffer))
-          (emacsvox-notmuch--announce-search-complete state buffer)
+      (cond
+       ((not (buffer-live-p buffer)) nil)
+       ((and
+         (eq status 'exit)
+         (zerop (process-exit-status process)))
+        (emacsvox-notmuch--announce-search-complete state buffer))
+       (t
         (emacsvox-notmuch--notify-search-feedback
          (emacsvox-notmuch--search-completion-facts
           (plist-get state :kind) 'refresh-failed)
          'warn-user
          (if (eq (plist-get state :kind) 'refresh)
              "Search refresh failed"
-           "Search failed"))))))
+           "Search failed")))))))
 
 (defun emacsvox-notmuch--track-search-process (kind)
   "Track the current buffer's user-owned Notmuch process as KIND."
