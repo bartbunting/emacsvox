@@ -9,6 +9,42 @@
 (require 'ert)
 (require 'emacsvox-keymap)
 
+(defconst emacsvox-keymap-test--repository-directory
+  (file-name-as-directory
+   (expand-file-name
+    "../" (file-name-directory (or load-file-name buffer-file-name))))
+  "Repository root used by keymap documentation checks.")
+
+(defun emacsvox-keymap-test--basic-usage-bindings ()
+  "Return key/command pairs published by the Basic Usage starter tables."
+  (with-temp-buffer
+    (insert-file-contents
+     (expand-file-name
+      "info/using.texi" emacsvox-keymap-test--repository-directory))
+    (goto-char (point-min))
+    (let (bindings)
+      (while
+          (re-search-forward
+           "^@c basic-usage-live-keys-begin$" nil t)
+        (let ((start (line-beginning-position 2)))
+          (unless
+              (re-search-forward
+               "^@c basic-usage-live-keys-end$" nil t)
+            (ert-fail "Unterminated Basic Usage live-key table"))
+          (let ((end (match-beginning 0)))
+            (save-excursion
+              (goto-char start)
+              (while
+                  (re-search-forward
+                   "^@item \\([^\n]+\\)\n@code{\\([^}\n]+\\)}"
+                   end t)
+                (push
+                 (cons
+                  (match-string-no-properties 1)
+                  (intern (match-string-no-properties 2)))
+                 bindings))))))
+      (nreverse bindings))))
+
 (ert-deftest emacsvox-keymap-uses-canonical-tts-prefix ()
   "The Emacsvox speech prefix selects the canonical TTS submap."
   (should (keymapp emacsvox-tts-submap))
@@ -30,6 +66,44 @@
    (eq
     (lookup-key emacsvox-keymap (kbd "C-M-y"))
     'emacsvox-clipfile-paste)))
+
+(ert-deftest emacsvox-basic-usage-key-bindings-match-the-live-keymap ()
+  "Every key/command pair in the starter guide should match the live map."
+  (let ((bindings (emacsvox-keymap-test--basic-usage-bindings))
+        documented-commands)
+    (should bindings)
+    (dolist (binding bindings)
+      (pcase-let ((`(,key . ,command) binding))
+        (should (commandp command))
+        (should (eq (key-binding (kbd key)) command))
+        (push command documented-commands)))
+    (dolist
+        (essential
+         '(emacsvox-speak-char
+           emacsvox-speak-word
+           emacsvox-speak-line
+           emacsvox-speak-paragraph
+           emacsvox-speak-page
+           emacsvox-speak-region
+           emacsvox-speak-rest-of-buffer
+           emacsvox-speak-buffer
+           tts-stop
+           emacsvox-toggle-show-point
+           what-line))
+      (should (memq essential documented-commands)))))
+
+(ert-deftest emacsvox-basic-usage-points-to-live-and-generated-help ()
+  "Conceptual key guidance should lead to current, authoritative bindings."
+  (dolist (relative-name '("info/using.texi" "info/keyboard.texi"))
+    (let ((guide
+           (with-temp-buffer
+             (insert-file-contents
+              (expand-file-name
+               relative-name emacsvox-keymap-test--repository-directory))
+             (buffer-string))))
+      (should (string-match-p "@ref{Emacsvox Keymaps}" guide))
+      (should (string-match-p (regexp-quote "@kbd{C-h m}") guide))
+      (should (string-match-p (regexp-quote "@kbd{C-h k}") guide)))))
 
 (ert-deftest emacsvox-keymap-exposes-aural-home-and-explanation ()
   "Aural discovery and point diagnosis have stable prefix bindings."

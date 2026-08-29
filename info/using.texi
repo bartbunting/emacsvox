@@ -2,13 +2,12 @@
 @node Basic Usage
 @chapter Basic Usage.
 
-This chapter gives an overview of how to use Emacsvox; for a full
-listing of Emacsvox keybindings, see @xref{emacsvox}.  Note: This
-documentation should be used in conjunction with the online Emacs info
-pages that extensively document Emacs itself.  These sections briefly
-describe the speech-enabling extensions.  However, they should not be
-considered a substitute for reading the Emacs manual.  How successfully
-you use Emacsvox will depend on how well you learn your Emacs.
+This chapter gives a short, task-oriented introduction to Emacsvox.
+For the complete generated key reference, see @ref{Emacsvox Keymaps}.
+Use @kbd{C-h m} to inspect the modes and bindings active in the current
+buffer, or @kbd{C-h k} followed by a key to ask Emacs what that key does.
+These sections describe the speech-enabling extensions, but are not a
+substitute for the Emacs manual.
 
 All Emacs navigation and editing commands have been speech enabled.
 Thus, moving to the next or previous word, line or paragraph results
@@ -94,267 +93,109 @@ They can be classified into types:
 
 @itemize @bullet
 @item
-Emacsvox commands for listening to chunks of information.  The names
-of these commands all start with the common prefix
-@code{emacsvox-speak-}.  All Emacsvox commands are bound to the
-keymap @var{emacsvox-keymap} and are accessed with the key
-@kbd{C-e}@footnote{The prefix is inherited from Emacspeak, where
-C-e was mnemonic for the project name.}.  Thus,
-the Emacsvox command @dfn{emacsvox-speak-line} is bound to @kbd{l} in
-keymap @var{emacsvox-keymap} and can be accessed with the keystroke
-@kbd{C-e l}.  If for some reason you wish to use some key other
-than @kbd{C-e} as the common keyboard prefix for all Emacsvox
-commands, set the variable @var{emacsvox-prefix}.
+Emacsvox commands for listening to chunks of information.  Most of
+these command names start with @code{emacsvox-speak-}.  Their default
+bindings are grouped under the main Emacsvox prefix @kbd{C-e}@footnote{The
+prefix is inherited from Emacspeak, where C-e was mnemonic for the
+project name.}.  The starter bindings are introduced in @ref{Reading};
+the live Help system and generated key reference remain authoritative
+when bindings are customized.
 
 @item
-The second category of commands provided by Emacsvox manipulate the
-state of the speech device.  The names of these commands start with
-the common prefix @code{tts-} and are bound in keymap
-@var{emacsvox-tts-submap}.
-
-You can access these commands via the prefix @kbd{C-e d}
-@footnote{Historically, d was mnemonic for Dectalk; note that nothing
-in Emacsvox is DECTalk specific.}.  Thus, the command
-@dfn{tts-set-rate} is bound to @kbd{r} in keymap
-@var{emacsvox-tts-submap} and can be executed by pressing
-@kbd{C-e d r}.
+The second category manipulates the speech engine.  These commands
+normally start with @code{tts-} and are grouped under @kbd{C-e d}
+@footnote{Historically, d was mnemonic for DECtalk; the prefix now
+contains engine-independent speech controls.}.
 @end itemize
 
-Emacs has extensive online help; so does emacsvox.  Please use it.
-
-This info manual is only to get you started.  You can get a summary of
-Emacsvox's features by pressing @kbd{C-h C-e}
+Emacs and Emacsvox both expose their current commands through Emacs Help.
+Use the small set below to get oriented, then use Help or the generated
+reference instead of relying on a copied exhaustive list.
 
 @node Reading
-@section Reading Without Moving
+@section Reading and Navigating
 
-Emacsvox speaks information as you move around within a buffer.  How
-much text is spoken depends on how you move, thus, when you move by
-words, you hear the current word; when you move by paragraphs, you
-hear the current paragraph spoken.  In addition, the following
-commands allow you to listen to information without moving point
-(point is emacs terminology for the editing cursor).
+Ordinary Emacs movement speaks the text crossed by point: moving by a
+character, word, line, or paragraph presents the corresponding unit.
+The commands below let you inspect useful units without first moving.
+They use the default @kbd{C-e} prefix.
 
-Reading without moving point:
+This is deliberately a starter set, not a second complete key reference.
+If a binding below differs in your session, use @kbd{C-h k} on that key
+and check your customizations.  The complete generated defaults are in
+@ref{Emacsvox Keymaps}.
 
+@c basic-usage-live-keys-begin
 @table @kbd
 
 @findex emacsvox-speak-char
 @kindex C-e c
 @item C-e c
 @code{emacsvox-speak-char}
-
-Speak character under point.  Pronounces character phonetically unless
-called with a PREFIX arg.
+speaks the character at point.
 
 @findex emacsvox-speak-word
 @kindex C-e w
 @item C-e w
 @code{emacsvox-speak-word}
-
-Speak current word.  With prefix ARG, speaks the rest of the word from
-point.  Negative prefix arg speaks from start of word to point.  If
-executed on the same buffer position a second time, the word is
-spelled instead of being spoken.
+speaks the current word.  Repeating it at the same position spells the
+word.
 
 @findex emacsvox-speak-line
 @kindex C-e l
 @item C-e l
 @code{emacsvox-speak-line}
-
-Speaks current line.  With prefix ARG, speaks the rest of the line
-from point.  Negative prefix optional arg speaks from start of line to
-point.  Voicifies if option `voice-lock-mode' is on.  Indicates
-indentation with a tone or a spoken cue if audio indentation is in
-use.  Indicates position of point with an aural highlight if option
-`emacsvox-show-point' is turned on @MDash{} see command
-@code{emacsvox-show-point} bound to @kbd{C-e C-d}.  Lines that start
-hidden blocks of text, e.g.  outline header lines, or header lines of
-blocks created by command `emacsvox-hide-or-expose-block' are
-indicated with auditory icon ellipses.
-
-@findex emacsvox-read-previous-line
-@kindex C-e @key{UP}
-@item C-e @key{UP}
-@code{emacsvox-read-previous-line}
-
-Read previous line, specified by an offset, without moving.  Default
-is to read the previous line.
-
-@findex emacsvox-read-next-line
-@kindex C-e @key{DOWN}
-@item C-e @key{DOWN}
-@code{emacsvox-read-next-line}
-
-Read next line, specified by an offset, without moving.  Default is to
-read the next line.
+speaks the current line.
 
 @findex emacsvox-speak-paragraph
-@kindex C-e p
-@item C-e p
+@kindex C-e [
+@item C-e [
 @code{emacsvox-speak-paragraph}
+speaks the current paragraph.
 
-Speak paragraph.  With prefix arg, speaks rest of current paragraph.
-Negative prefix arg will read from start of current paragraph to
-point.  If voice-lock-mode is on, then it will use any defined
-personality.
+@findex emacsvox-speak-page
+@kindex C-e ]
+@item C-e ]
+@code{emacsvox-speak-page}
+speaks the current page.
 
 @findex emacsvox-speak-region
 @kindex C-e r
 @item C-e r
 @code{emacsvox-speak-region}
+speaks the active region between point and mark.
 
-Speak current region delimited by @dfn{point} and @dfn{mark}.  When
-called from a program, argument START and END specify region to speak.
-
-@findex emacsvox-speak-rectangle
-@kindex C-e  cap R
-@item C-e  cap R
-@code{emacsvox-speak-rectangle}
-
-Speak a rectangle of text.  Rectangle is delimited by point and mark.
-When call from a program, arguments specify the START and END of the
-rectangle.
+@findex emacsvox-speak-rest-of-buffer
+@kindex C-e i
+@item C-e i
+@code{emacsvox-speak-rest-of-buffer}
+speaks from point to the end of the buffer.
 
 @findex emacsvox-speak-buffer
 @kindex C-e b
 @item C-e b
 @code{emacsvox-speak-buffer}
+speaks the entire current buffer.
 
-Speak current buffer contents.  With prefix ARG, speaks the rest of
-the buffer from point.  Negative prefix arg speaks from start of
-buffer to point.  If voice lock mode is on, the paragraphs in the
-buffer are voice annotated first, see command
-@code{emacsvox-speak-voice-annotate-paragraphs}.  This provides the
-auditory equivalent of @strong{dropped caps} from visual typography.
+@findex tts-stop
+@kindex C-e s
+@item C-e s
+@code{tts-stop}
+stops current speech.
 
-@findex emacsvox-speak-rest-of-buffer
-@kindex C-e n
-@item C-e n
-@code{emacsvox-speak-rest-of-buffer}
-
-Speak remainder of the buffer starting at point
-
-@findex emacsvox-speak-this-buffer-other-window-display
-@kindex C-e /
-@item C-e /
-@code{emacsvox-speak-this-buffer-other-window-display}
-
-Speak this buffer as displayed in a different frame.  Emacs allows you
-to display the same buffer in multiple windows or frames.  These
-different windows can display different portions of the buffer.  This
-is equivalent to leaving a book open at places at once.  This command
-allows you to listen to the places where you have left the book open.
-The number used to invoke this command specifies which of the displays
-you wish to speak.  Typically you will have two or at most three such
-displays open.  The current display is 0, the next is 1, and so on.
-Optional argument ARG specifies the display to speak.
-
-@findex emacsvox-speak-this-buffer-previous-display
-@kindex C-e @key{LEFT}
-@item C-e @key{LEFT}
-@code{emacsvox-speak-this-buffer-previous-display}
-
-Speak this buffer as displayed in a `previous' window.  See
-documentation for command
-@code{emacsvox-speak-this-buffer-other-window-display} for the meaning of
-`previous'.
-
-@findex emacsvox-speak-this-buffer-next-display
-@kindex C-e @key{RIGHT}
-@item C-e @key{RIGHT}
-@code{emacsvox-speak-this-buffer-next-display}
-
-Speak this buffer as displayed in a `previous' window.
-See documentation for command
-@code{emacsvox-speak-this-buffer-other-window-display} for the
-meaning of `previous'.
-
-@findex emacsvox-speak-page
-@kindex C-e [
-@item C-e [
-@code{emacsvox-speak-page}
-
-Speak a page.  With prefix ARG, speaks rest of current page.  Negative
-prefix arg will read from start of current page to point.  If option
-`voice-lock-mode' is on, then it will use any defined personality.
-
-@findex emacsvox-speak-predefined-window
-@kindex C-e DIGIT
-@item C-e DIGIT
-@code{emacsvox-speak-predefined-window}
-
-Speak one of the first 10 windows on the screen.  In general, you'll
-never have Emacs split the screen into more than two or three.
-Argument ARG determines the 'other' window to speak.  Speaks entire
-window irrespective of point.  Semantics of `other' is the same as for
-the builtin Emacs command `other-window'.
-
-@findex emacsvox-speak-next-window
-@kindex C-e C-n
-@item C-e C-n
-@code{emacsvox-speak-next-window}
-
-Speak the next window.
-
-@findex emacsvox-speak-previous-window
-@kindex C-e C-p
-@item C-e C-p
-@code{emacsvox-speak-previous-window}
-
-Speak the previous window.
-
-@findex emacsvox-speak-other-window
-@item emacsvox-speak-other-window
-Speak contents of `other' window.  Speaks entire window irrespective
-of point.  Semantics of `other' is the same as for the builtin Emacs
-command `other-window'.  Optional argument ARG specifies `other'
-window to speak.
-
-@findex emacsvox-owindow-previous-line
-@kindex @key{ESCAPE} @key{UP}
-@item @key{ESCAPE} @key{UP}
-@code{emacsvox-owindow-previous-line}
-
-Move to the next line in the other window and speak it.
-Numeric prefix arg COUNT specifies number of lines to move.
-
-@findex emacsvox-owindow-next-line
-@kindex @key{ESCAPE} @key{DOWN}
-@item @key{ESCAPE} @key{DOWN}
-@code{emacsvox-owindow-next-line}
-
-Move to the next line in the other window and speak it.
-Numeric prefix arg COUNT can specify number of lines to move.
-
-@findex emacsvox-owindow-scroll-up
-@kindex @key{ESCAPE} next
-@item @key{ESCAPE} next
-@code{emacsvox-owindow-scroll-up}
-
-Scroll up the window that command `other-window' would move to.
-Speak the window contents after scrolling.
-
-@findex emacsvox-owindow-scroll-down
-@kindex @key{ESCAPE} prior
-@item @key{ESCAPE} prior
-@code{emacsvox-owindow-scroll-down}
-
-Scroll down  the window that command `other-window' would move to.
-Speak the window contents after scrolling.
-
-@findex emacsvox-speak-sexp
-@item emacsvox-speak-sexp
-Speak current sexp.  With prefix ARG, speaks the rest of the sexp from
-point.  Negative prefix arg speaks from start of sexp to point.
-
-@findex emacsvox-speak-spaces-at-point
-@kindex C-e meta C-@@
-@item C-e meta C-@@
-@code{emacsvox-speak-spaces-at-point}
-Speak the white space at point.
+@findex emacsvox-toggle-show-point
+@kindex C-e C-d
+@item C-e C-d
+@code{emacsvox-toggle-show-point}
+toggles the aural indication of point within spoken text.
 
 @end table
+@c basic-usage-live-keys-end
+
+Many speaking commands accept a prefix argument to limit speech to the
+text before or after point.  Use @kbd{C-h k} on a command before relying
+on those variants, because their exact argument behavior is documented
+with the command.
 @node Speech System
 
 
@@ -364,8 +205,9 @@ Speak the white space at point.
 @node Voice-lock
 @section Voice Lock Mode
 
-The status of voice lock mode can be toggled on and off in the current
-buffer by issuing the command @kbd{C-e d v} (M-x voice-lock-toggle).
+Toggle voice lock globally with @kbd{M-x}
+@code{global-voice-lock-mode}.  Its current default binding is in
+@ref{Emacsvox Keymaps}.
 
 Voice-lock is turned on automatically in all buffers that support it
 when Emacsvox is started.
@@ -402,7 +244,10 @@ supplied in the Emacs/W3 distribution.
 @section Status  Commands
 
 
-The following commands provide miscellaneous information.
+These common commands answer frequent orientation questions.  Less common
+status commands are listed in @ref{Emacsvox Keymaps}.
+
+@c basic-usage-live-keys-begin
 @table @kbd
 
 @findex emacsvox-speak-message-again
@@ -420,15 +265,15 @@ Speak the last message from Emacs once again.
 Speak the mode-line.
 
 @findex emacsvox-speak-minor-mode-line
-@kindex C-e  cap M
-@item C-e  cap M
+@kindex C-e M
+@item C-e M
 @code{emacsvox-speak-minor-mode-line}
 
 Speak the minor mode-information.
 
 @findex emacsvox-speak-header-line
-@kindex C-e SPC
-@item C-e SPC
+@kindex C-e C-x
+@item C-e C-x
 @code{emacsvox-speak-header-line}
 
 Speak the header-line.
@@ -441,20 +286,6 @@ Speak the header-line.
 
 Speaks information about current windows.
 
-@findex emacsvox-speak-time
-@kindex C-e t
-@item C-e t
-@code{emacsvox-speak-time}
-
-Speak the time.
-
-@findex emacsvox-speak-version
-@kindex C-e cap V
-@item C-e cap V
-@code{emacsvox-speak-version}
-
-Announce version information for running Emacsvox.
-
 @findex emacsvox-speak-buffer-filename
 @kindex C-e f
 @item C-e f
@@ -464,52 +295,12 @@ Speak name of file being visited in current buffer.
 Speak default directory if invoked in a dired buffer,
 or when the buffer is not visiting any file.
 
-@findex emacsvox-speak-help
-@kindex C-e h
-@item C-e h
-@code{emacsvox-speak-help}
-
-Speak help buffer if one present.
-With prefix arg, speaks the rest of the buffer from point.
-Negative prefix arg speaks from start of buffer to point.
-
-@findex emacsvox-speak-current-kill
-@kindex C-e k
-@item C-e k
-@code{emacsvox-speak-current-kill}
-
-Speak the current kill entry.  This is the text that will be yanked in
-by the next @kbd{C-y}.  Prefix numeric arg, COUNT, specifies that the text
-that will be yanked as a result of a @kbd{C-y} followed by count-1 @kbd{M-y} be
-spoken.  The kill number that is spoken says what numeric prefix arg
-to give to command @code{yank}.
-
-@findex emacsvox-view-register
-@kindex C-e v
-@item C-e v
-@code{emacsvox-view-register}
-
-Display the contents of a register, and then speak it.
-
-@findex emacsvox-speak-current-mark
-@kindex C-e C-@@
-@item C-e C-@@
-@code{emacsvox-speak-current-mark}
-
-Speak the line containing the mark.  With no argument, speaks the line
-containing the mark @MDash{} this is where `exchange-point-and-mark'
-C-x C-x would jump.  Numeric prefix arg 'COUNT' speaks line containing
-mark 'n' where 'n' is one less than the number of times one has to
-jump using `set-mark-command' to get to this marked position.  The
-location of the mark is indicated by an aural highlight achieved by a
-change in voice personality.
-
-@findex emacsvox-speak-line-number
+@findex what-line
 @kindex C-e C-l
 @item C-e C-l
-@code{emacsvox-speak-line-number}
+@code{what-line}
 
-Speak the line number of the current line.
+reports the current line number and position in the buffer.
 
 @findex emacsvox-speak-current-column
 @kindex C-e =
@@ -527,3 +318,4 @@ Speak the current column.
 Announce the percentage into the current buffer.
 
 @end table
+@c basic-usage-live-keys-end

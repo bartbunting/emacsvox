@@ -462,13 +462,12 @@ File: emacsvox.info,  Node: Basic Usage,  Next: Audio Desktop,  Prev: Installati
 6 Basic Usage.
 **************
 
-This chapter gives an overview of how to use Emacsvox; for a full
-listing of Emacsvox keybindings, see *Note emacsvox::.  Note: This
-documentation should be used in conjunction with the online Emacs info
-pages that extensively document Emacs itself.  These sections briefly
-describe the speech-enabling extensions.  However, they should not be
-considered a substitute for reading the Emacs manual.  How successfully
-you use Emacsvox will depend on how well you learn your Emacs.
+This chapter gives a short, task-oriented introduction to Emacsvox.  For
+the complete generated key reference, see *note Emacsvox Keymaps::.  Use
+‘C-h m’ to inspect the modes and bindings active in the current buffer,
+or ‘C-h k’ followed by a key to ask Emacs what that key does.  These
+sections describe the speech-enabling extensions, but are not a
+substitute for the Emacs manual.
 
    All Emacs navigation and editing commands have been speech enabled.
 Thus, moving to the next or previous word, line or paragraph results in
@@ -557,223 +556,82 @@ modifying Emacsvox's state.
    All of the commands are documented in the subsequent sections.  They
 can be classified into types:
 
-   • Emacsvox commands for listening to chunks of information.  The
-     names of these commands all start with the common prefix
-     ‘emacsvox-speak-’.  All Emacsvox commands are bound to the keymap
-     EMACSVOX-KEYMAP and are accessed with the key ‘C-e’(1).  Thus, the
-     Emacsvox command “emacsvox-speak-line” is bound to ‘l’ in keymap
-     EMACSVOX-KEYMAP and can be accessed with the keystroke ‘C-e l’.  If
-     for some reason you wish to use some key other than ‘C-e’ as the
-     common keyboard prefix for all Emacsvox commands, set the variable
-     EMACSVOX-PREFIX.
+   • Emacsvox commands for listening to chunks of information.  Most of
+     these command names start with ‘emacsvox-speak-’.  Their default
+     bindings are grouped under the main Emacsvox prefix ‘C-e’(1).  The
+     starter bindings are introduced in *note Reading::; the live Help
+     system and generated key reference remain authoritative when
+     bindings are customized.
 
-   • The second category of commands provided by Emacsvox manipulate the
-     state of the speech device.  The names of these commands start with
-     the common prefix ‘tts-’ and are bound in keymap
-     EMACSVOX-TTS-SUBMAP.
+   • The second category manipulates the speech engine.  These commands
+     normally start with ‘tts-’ and are grouped under ‘C-e d’ (2).
 
-     You can access these commands via the prefix ‘C-e d’ (2).  Thus,
-     the command “tts-set-rate” is bound to ‘r’ in keymap
-     EMACSVOX-TTS-SUBMAP and can be executed by pressing ‘C-e d r’.
-
-   Emacs has extensive online help; so does emacsvox.  Please use it.
-
-   This info manual is only to get you started.  You can get a summary
-of Emacsvox's features by pressing ‘C-h C-e’
+   Emacs and Emacsvox both expose their current commands through Emacs
+Help.  Use the small set below to get oriented, then use Help or the
+generated reference instead of relying on a copied exhaustive list.
 
    ---------- Footnotes ----------
 
    (1) The prefix is inherited from Emacspeak, where C-e was mnemonic
 for the project name.
 
-   (2) Historically, d was mnemonic for Dectalk; note that nothing in
-Emacsvox is DECTalk specific.
+   (2) Historically, d was mnemonic for DECtalk; the prefix now contains
+engine-independent speech controls.
 
 
 File: emacsvox.info,  Node: Reading,  Next: Speech System,  Prev: Working,  Up: Basic Usage
 
-6.3 Reading Without Moving
+6.3 Reading and Navigating
 ==========================
 
-Emacsvox speaks information as you move around within a buffer.  How
-much text is spoken depends on how you move, thus, when you move by
-words, you hear the current word; when you move by paragraphs, you hear
-the current paragraph spoken.  In addition, the following commands allow
-you to listen to information without moving point (point is emacs
-terminology for the editing cursor).
+Ordinary Emacs movement speaks the text crossed by point: moving by a
+character, word, line, or paragraph presents the corresponding unit.
+The commands below let you inspect useful units without first moving.
+They use the default ‘C-e’ prefix.
 
-   Reading without moving point:
+   This is deliberately a starter set, not a second complete key
+reference.  If a binding below differs in your session, use ‘C-h k’ on
+that key and check your customizations.  The complete generated defaults
+are in *note Emacsvox Keymaps::.
 
 ‘C-e c’
-     ‘emacsvox-speak-char’
-
-     Speak character under point.  Pronounces character phonetically
-     unless called with a PREFIX arg.
+     ‘emacsvox-speak-char’ speaks the character at point.
 
 ‘C-e w’
-     ‘emacsvox-speak-word’
-
-     Speak current word.  With prefix ARG, speaks the rest of the word
-     from point.  Negative prefix arg speaks from start of word to
-     point.  If executed on the same buffer position a second time, the
-     word is spelled instead of being spoken.
+     ‘emacsvox-speak-word’ speaks the current word.  Repeating it at the
+     same position spells the word.
 
 ‘C-e l’
-     ‘emacsvox-speak-line’
-
-     Speaks current line.  With prefix ARG, speaks the rest of the line
-     from point.  Negative prefix optional arg speaks from start of line
-     to point.  Voicifies if option 'voice-lock-mode' is on.  Indicates
-     indentation with a tone or a spoken cue if audio indentation is in
-     use.  Indicates position of point with an aural highlight if option
-     'emacsvox-show-point' is turned on -- see command
-     ‘emacsvox-show-point’ bound to ‘C-e C-d’.  Lines that start hidden
-     blocks of text, e.g.  outline header lines, or header lines of
-     blocks created by command 'emacsvox-hide-or-expose-block' are
-     indicated with auditory icon ellipses.
-
-‘C-e <UP>’
-     ‘emacsvox-read-previous-line’
-
-     Read previous line, specified by an offset, without moving.
-     Default is to read the previous line.
-
-‘C-e <DOWN>’
-     ‘emacsvox-read-next-line’
-
-     Read next line, specified by an offset, without moving.  Default is
-     to read the next line.
-
-‘C-e p’
-     ‘emacsvox-speak-paragraph’
-
-     Speak paragraph.  With prefix arg, speaks rest of current
-     paragraph.  Negative prefix arg will read from start of current
-     paragraph to point.  If voice-lock-mode is on, then it will use any
-     defined personality.
-
-‘C-e r’
-     ‘emacsvox-speak-region’
-
-     Speak current region delimited by “point” and “mark”.  When called
-     from a program, argument START and END specify region to speak.
-
-‘C-e cap R’
-     ‘emacsvox-speak-rectangle’
-
-     Speak a rectangle of text.  Rectangle is delimited by point and
-     mark.  When call from a program, arguments specify the START and
-     END of the rectangle.
-
-‘C-e b’
-     ‘emacsvox-speak-buffer’
-
-     Speak current buffer contents.  With prefix ARG, speaks the rest of
-     the buffer from point.  Negative prefix arg speaks from start of
-     buffer to point.  If voice lock mode is on, the paragraphs in the
-     buffer are voice annotated first, see command
-     ‘emacsvox-speak-voice-annotate-paragraphs’.  This provides the
-     auditory equivalent of *dropped caps* from visual typography.
-
-‘C-e n’
-     ‘emacsvox-speak-rest-of-buffer’
-
-     Speak remainder of the buffer starting at point
-
-‘C-e /’
-     ‘emacsvox-speak-this-buffer-other-window-display’
-
-     Speak this buffer as displayed in a different frame.  Emacs allows
-     you to display the same buffer in multiple windows or frames.
-     These different windows can display different portions of the
-     buffer.  This is equivalent to leaving a book open at places at
-     once.  This command allows you to listen to the places where you
-     have left the book open.  The number used to invoke this command
-     specifies which of the displays you wish to speak.  Typically you
-     will have two or at most three such displays open.  The current
-     display is 0, the next is 1, and so on.  Optional argument ARG
-     specifies the display to speak.
-
-‘C-e <LEFT>’
-     ‘emacsvox-speak-this-buffer-previous-display’
-
-     Speak this buffer as displayed in a 'previous' window.  See
-     documentation for command
-     ‘emacsvox-speak-this-buffer-other-window-display’ for the meaning
-     of 'previous'.
-
-‘C-e <RIGHT>’
-     ‘emacsvox-speak-this-buffer-next-display’
-
-     Speak this buffer as displayed in a 'previous' window.  See
-     documentation for command
-     ‘emacsvox-speak-this-buffer-other-window-display’ for the meaning
-     of 'previous'.
+     ‘emacsvox-speak-line’ speaks the current line.
 
 ‘C-e [’
-     ‘emacsvox-speak-page’
+     ‘emacsvox-speak-paragraph’ speaks the current paragraph.
 
-     Speak a page.  With prefix ARG, speaks rest of current page.
-     Negative prefix arg will read from start of current page to point.
-     If option 'voice-lock-mode' is on, then it will use any defined
-     personality.
+‘C-e ]’
+     ‘emacsvox-speak-page’ speaks the current page.
 
-‘C-e DIGIT’
-     ‘emacsvox-speak-predefined-window’
+‘C-e r’
+     ‘emacsvox-speak-region’ speaks the active region between point and
+     mark.
 
-     Speak one of the first 10 windows on the screen.  In general,
-     you'll never have Emacs split the screen into more than two or
-     three.  Argument ARG determines the 'other' window to speak.
-     Speaks entire window irrespective of point.  Semantics of 'other'
-     is the same as for the builtin Emacs command 'other-window'.
+‘C-e i’
+     ‘emacsvox-speak-rest-of-buffer’ speaks from point to the end of the
+     buffer.
 
-‘C-e C-n’
-     ‘emacsvox-speak-next-window’
+‘C-e b’
+     ‘emacsvox-speak-buffer’ speaks the entire current buffer.
 
-     Speak the next window.
+‘C-e s’
+     ‘tts-stop’ stops current speech.
 
-‘C-e C-p’
-     ‘emacsvox-speak-previous-window’
+‘C-e C-d’
+     ‘emacsvox-toggle-show-point’ toggles the aural indication of point
+     within spoken text.
 
-     Speak the previous window.
-
-‘emacsvox-speak-other-window’
-     Speak contents of 'other' window.  Speaks entire window
-     irrespective of point.  Semantics of 'other' is the same as for the
-     builtin Emacs command 'other-window'.  Optional argument ARG
-     specifies 'other' window to speak.
-
-‘<ESCAPE> <UP>’
-     ‘emacsvox-owindow-previous-line’
-
-     Move to the next line in the other window and speak it.  Numeric
-     prefix arg COUNT specifies number of lines to move.
-
-‘<ESCAPE> <DOWN>’
-     ‘emacsvox-owindow-next-line’
-
-     Move to the next line in the other window and speak it.  Numeric
-     prefix arg COUNT can specify number of lines to move.
-
-‘<ESCAPE> next’
-     ‘emacsvox-owindow-scroll-up’
-
-     Scroll up the window that command 'other-window' would move to.
-     Speak the window contents after scrolling.
-
-‘<ESCAPE> prior’
-     ‘emacsvox-owindow-scroll-down’
-
-     Scroll down the window that command 'other-window' would move to.
-     Speak the window contents after scrolling.
-
-‘emacsvox-speak-sexp’
-     Speak current sexp.  With prefix ARG, speaks the rest of the sexp
-     from point.  Negative prefix arg speaks from start of sexp to
-     point.
-
-‘C-e meta C-@’
-     ‘emacsvox-speak-spaces-at-point’ Speak the white space at point.
+   Many speaking commands accept a prefix argument to limit speech to
+the text before or after point.  Use ‘C-h k’ on a command before relying
+on those variants, because their exact argument behavior is documented
+with the command.
 
 
 File: emacsvox.info,  Node: Speech System,  Next: Voice-lock,  Prev: Reading,  Up: Basic Usage
@@ -1017,8 +875,8 @@ File: emacsvox.info,  Node: Voice-lock,  Next: Status Information,  Prev: Speech
 6.5 Voice Lock Mode
 ===================
 
-The status of voice lock mode can be toggled on and off in the current
-buffer by issuing the command ‘C-e d v’ (M-x voice-lock-toggle).
+Toggle voice lock globally with ‘M-x’ ‘global-voice-lock-mode’.  Its
+current default binding is in *note Emacsvox Keymaps::.
 
    Voice-lock is turned on automatically in all buffers that support it
 when Emacsvox is started.
@@ -1052,7 +910,8 @@ File: emacsvox.info,  Node: Status Information,  Prev: Voice-lock,  Up: Basic Us
 6.6 Status Commands
 ===================
 
-The following commands provide miscellaneous information.
+These common commands answer frequent orientation questions.  Less
+common status commands are listed in *note Emacsvox Keymaps::.
 
 ‘C-e a’
      ‘emacsvox-speak-message-again’
@@ -1064,12 +923,12 @@ The following commands provide miscellaneous information.
 
      Speak the mode-line.
 
-‘C-e cap M’
+‘C-e M’
      ‘emacsvox-speak-minor-mode-line’
 
      Speak the minor mode-information.
 
-‘C-e SPC’
+‘C-e C-x’
      ‘emacsvox-speak-header-line’
 
      Speak the header-line.
@@ -1079,16 +938,6 @@ The following commands provide miscellaneous information.
 
      Speaks information about current windows.
 
-‘C-e t’
-     ‘emacsvox-speak-time’
-
-     Speak the time.
-
-‘C-e cap V’
-     ‘emacsvox-speak-version’
-
-     Announce version information for running Emacsvox.
-
 ‘C-e f’
      ‘emacsvox-speak-buffer-filename’
 
@@ -1096,42 +945,10 @@ The following commands provide miscellaneous information.
      directory if invoked in a dired buffer, or when the buffer is not
      visiting any file.
 
-‘C-e h’
-     ‘emacsvox-speak-help’
-
-     Speak help buffer if one present.  With prefix arg, speaks the rest
-     of the buffer from point.  Negative prefix arg speaks from start of
-     buffer to point.
-
-‘C-e k’
-     ‘emacsvox-speak-current-kill’
-
-     Speak the current kill entry.  This is the text that will be yanked
-     in by the next ‘C-y’.  Prefix numeric arg, COUNT, specifies that
-     the text that will be yanked as a result of a ‘C-y’ followed by
-     count-1 ‘M-y’ be spoken.  The kill number that is spoken says what
-     numeric prefix arg to give to command ‘yank’.
-
-‘C-e v’
-     ‘emacsvox-view-register’
-
-     Display the contents of a register, and then speak it.
-
-‘C-e C-@’
-     ‘emacsvox-speak-current-mark’
-
-     Speak the line containing the mark.  With no argument, speaks the
-     line containing the mark -- this is where 'exchange-point-and-mark'
-     C-x C-x would jump.  Numeric prefix arg 'COUNT' speaks line
-     containing mark 'n' where 'n' is one less than the number of times
-     one has to jump using 'set-mark-command' to get to this marked
-     position.  The location of the mark is indicated by an aural
-     highlight achieved by a change in voice personality.
-
 ‘C-e C-l’
-     ‘emacsvox-speak-line-number’
+     ‘what-line’
 
-     Speak the line number of the current line.
+     reports the current line number and position in the buffer.
 
 ‘C-e =’
      ‘emacsvox-speak-current-column’
@@ -8097,5 +7914,423 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      Default Value:
 
      "The quick brown fox jumps over the lazy dog. Numbers one, two, three."
+
+
+
+File: emacsvox.info,  Node: emacsvox-aural-voice-workbench,  Next: emacsvox-avy,  Prev: emacsvox-aural-voice-palettes,  Up: Emacsvox Commands And Options
+
+14.53 emacsvox-aural-voice-workbench
+====================================
+
+A single accessible workbench presents logical voices, physical
+inventory, engines, and portable style/effect information.
+Transactional previews use the same sample text without changing saved
+palettes or routing profiles.
+
+14.53.1 Emacsvox-Aural-Voice-Workbench Commands
+-----------------------------------------------
+
+14.53.1.1 emacsvox-aural-prefer-engine
+......................................
+
+ -- Command: emacsvox-aural-prefer-engine (engine-id &optional save)
+     ‘C-e d e’
+
+     Prefer ENGINE-ID globally while preserving explicit voice routes.
+
+     By default the change lasts for this Emacs session.  With prefix argument
+     SAVE, atomically save it in the active routing profile.  Remaining engines
+     keep their relative order; explicit logical-voice routes and fallback policy
+     are unchanged.  The command does not stop speech already playing.
+
+     (fn ENGINE-ID &optional SAVE)
+
+14.53.1.2 emacsvox-aural-restore-saved-engine-order
+...................................................
+
+ -- Command: emacsvox-aural-restore-saved-engine-order
+
+     Clear the temporary engine preference and reapply the saved order.
+
+14.53.1.3 emacsvox-aural-voice-workbench
+........................................
+
+ -- Command: emacsvox-aural-voice-workbench (&optional view)
+
+     Open the accessible Voice Workbench in VIEW.
+
+     (fn &optional VIEW)
+
+14.53.1.4 emacsvox-aural-voice-workbench-apply-preset
+.....................................................
+
+ -- Command: emacsvox-aural-voice-workbench-apply-preset
+
+     Review and stage one routing-policy or portability preset.
+
+14.53.1.5 emacsvox-aural-voice-workbench-assign
+...............................................
+
+ -- Command: emacsvox-aural-voice-workbench-assign
+
+     Begin or complete quick logical-voice assignment for the current view.
+
+14.53.1.6 emacsvox-aural-voice-workbench-begin-assignment
+.........................................................
+
+ -- Command: emacsvox-aural-voice-workbench-begin-assignment
+
+     Open the filtered physical browser for the current logical voice.
+
+14.53.1.7 emacsvox-aural-voice-workbench-bind-unmapped
+......................................................
+
+ -- Command: emacsvox-aural-voice-workbench-bind-unmapped
+
+     Bind every explicitly unmapped logical voice to one engine default.
+
+14.53.1.8 emacsvox-aural-voice-workbench-cancel-assignment
+..........................................................
+
+ -- Command: emacsvox-aural-voice-workbench-cancel-assignment
+
+     Cancel the active physical assignment browser without changing routes.
+
+14.53.1.9 emacsvox-aural-voice-workbench-cancel-staged
+......................................................
+
+ -- Command: emacsvox-aural-voice-workbench-cancel-staged
+
+     Restore the exact profile snapshot from when the workbench opened.
+
+14.53.1.10 emacsvox-aural-voice-workbench-clear-filters
+.......................................................
+
+ -- Command: emacsvox-aural-voice-workbench-clear-filters
+
+     Clear all physical-voice filters and refresh.
+
+14.53.1.11 emacsvox-aural-voice-workbench-compare
+.................................................
+
+ -- Command: emacsvox-aural-voice-workbench-compare
+
+     A/B two installed physical voices with identical text and settings.
+
+14.53.1.12 emacsvox-aural-voice-workbench-complete-assignment
+.............................................................
+
+ -- Command: emacsvox-aural-voice-workbench-complete-assignment
+
+     Append a selector from the current physical row to the assignment target.
+
+14.53.1.13 emacsvox-aural-voice-workbench-copy-route
+....................................................
+
+ -- Command: emacsvox-aural-voice-workbench-copy-route
+
+     Replace the current logical route with a staged copy of another route.
+
+14.53.1.14 emacsvox-aural-voice-workbench-delete-selector
+.........................................................
+
+ -- Command: emacsvox-aural-voice-workbench-delete-selector
+
+     Delete one explicit selector from the current logical route.
+
+14.53.1.15 emacsvox-aural-voice-workbench-describe
+..................................................
+
+ -- Command: emacsvox-aural-voice-workbench-describe
+
+     Display and speak exact Workbench row and configuration details.
+
+14.53.1.16 emacsvox-aural-voice-workbench-edit-preview-text
+...........................................................
+
+ -- Command: emacsvox-aural-voice-workbench-edit-preview-text
+
+     Edit the common Voice Workbench comparison text.
+
+14.53.1.17 emacsvox-aural-voice-workbench-engine-view
+.....................................................
+
+ -- Command: emacsvox-aural-voice-workbench-engine-view
+
+     Show speech engines and their capabilities.
+
+14.53.1.18 emacsvox-aural-voice-workbench-export-profile
+........................................................
+
+ -- Command: emacsvox-aural-voice-workbench-export-profile
+
+     Export the staged routing profile without activating it.
+
+14.53.1.19 emacsvox-aural-voice-workbench-help
+..............................................
+
+ -- Command: emacsvox-aural-voice-workbench-help
+
+     Display and speak Voice Workbench navigation help.
+
+14.53.1.20 emacsvox-aural-voice-workbench-import-profile
+........................................................
+
+ -- Command: emacsvox-aural-voice-workbench-import-profile
+
+     Read one data-only routing profile into the staged workbench copy.
+
+14.53.1.21 emacsvox-aural-voice-workbench-logical-view
+......................................................
+
+ -- Command: emacsvox-aural-voice-workbench-logical-view
+
+     Show logical voices.
+
+14.53.1.22 emacsvox-aural-voice-workbench-migrate
+.................................................
+
+ -- Command: emacsvox-aural-voice-workbench-migrate
+
+     Stage an explicit migration from a legacy voice configuration source.
+
+14.53.1.23 emacsvox-aural-voice-workbench-mode
+..............................................
+
+ -- Command: emacsvox-aural-voice-workbench-mode
+
+     Spoken workbench for logical styles and physical voice routing.
+
+     In addition to any hooks its parent mode
+     ‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+     hook ‘emacsvox-aural-voice-workbench-mode-hook’, as the final or
+     penultimate step during initialization.
+
+     Key             Binding
+     -----------------------------------------------------
+     RET		emacsvox-aural-voice-workbench-describe
+     ?		emacsvox-aural-voice-workbench-help
+     A		emacsvox-aural-voice-workbench-preview-all
+     B		emacsvox-aural-voice-workbench-compare
+     C		emacsvox-aural-voice-workbench-clear-filters
+     D		emacsvox-aural-voice-workbench-toggle-disabled-engine
+     E		emacsvox-aural-voice-workbench-export-profile
+     F		emacsvox-aural-voice-workbench-set-filter
+     I		emacsvox-aural-voice-workbench-import-profile
+     K		emacsvox-aural-voice-workbench-request-recovery-probe
+     M		emacsvox-aural-voice-workbench-bind-unmapped
+     N		emacsvox-aural-voice-workbench-apply-preset
+     O		emacsvox-aural-voice-workbench-toggle-preferred-engine
+     P		emacsvox-aural-voice-workbench-preview
+     R		emacsvox-aural-voice-workbench-refresh-inventory
+     S		emacsvox-aural-voice-workbench-stop-preview
+     T		emacsvox-aural-voice-workbench-edit-preview-text
+     U		emacsvox-aural-voice-workbench-undo-applied
+     X		emacsvox-aural-voice-workbench-replace-engine
+     [		emacsvox-aural-voice-workbench-move-selector-up
+     ]		emacsvox-aural-voice-workbench-move-selector-down
+     a		emacsvox-aural-voice-workbench-assign
+     c		emacsvox-aural-voice-workbench-cancel-assignment
+     d		emacsvox-aural-voice-workbench-delete-selector
+     e		emacsvox-aural-voice-workbench-engine-view
+     f		emacsvox-aural-voice-workbench-toggle-fallback-engine
+     h		emacsvox-aural
+     j		emacsvox-aural-voice-workbench-suggest-route
+     l		emacsvox-aural-voice-workbench-logical-view
+     m		emacsvox-aural-voice-workbench-migrate
+     q		emacsvox-aural-quit
+     r		emacsvox-aural-voice-workbench-retry-apply
+     s		emacsvox-aural-voice-workbench-style-view
+     t		emacsvox-aural-voice-workbench-tune
+     u		emacsvox-aural-voice-workbench-undo
+     v		emacsvox-aural-voice-workbench-physical-view
+     w		emacsvox-aural-voice-workbench-save-and-apply
+     x		emacsvox-aural-voice-workbench-describe
+     y		emacsvox-aural-voice-workbench-copy-route
+     {		emacsvox-aural-voice-workbench-move-fallback-engine-up
+     }		emacsvox-aural-voice-workbench-move-fallback-engine-down
+
+     C-c C-c		emacsvox-aural-voice-workbench-save-and-apply
+     C-c C-k		emacsvox-aural-voice-workbench-cancel-staged
+
+14.53.1.24 emacsvox-aural-voice-workbench-move-fallback-engine-down
+...................................................................
+
+ -- Command: emacsvox-aural-voice-workbench-move-fallback-engine-down
+
+     Move the current engine later in global fallback order.
+
+14.53.1.25 emacsvox-aural-voice-workbench-move-fallback-engine-up
+.................................................................
+
+ -- Command: emacsvox-aural-voice-workbench-move-fallback-engine-up
+
+     Move the current engine earlier in global fallback order.
+
+14.53.1.26 emacsvox-aural-voice-workbench-move-selector-down
+............................................................
+
+ -- Command: emacsvox-aural-voice-workbench-move-selector-down
+
+     Move the current selector or preferred engine later.
+
+14.53.1.27 emacsvox-aural-voice-workbench-move-selector-up
+..........................................................
+
+ -- Command: emacsvox-aural-voice-workbench-move-selector-up
+
+     Move the current selector or preferred engine earlier.
+
+14.53.1.28 emacsvox-aural-voice-workbench-physical-view
+.......................................................
+
+ -- Command: emacsvox-aural-voice-workbench-physical-view
+
+     Show discovered physical voices.
+
+14.53.1.29 emacsvox-aural-voice-workbench-preview
+.................................................
+
+ -- Command: emacsvox-aural-voice-workbench-preview
+
+     Preview the current logical, physical, engine, or style row once.
+
+14.53.1.30 emacsvox-aural-voice-workbench-preview-all
+.....................................................
+
+ -- Command: emacsvox-aural-voice-workbench-preview-all
+
+     Preview every currently visible physical voice using identical text.
+
+14.53.1.31 emacsvox-aural-voice-workbench-refresh
+.................................................
+
+ -- Command: emacsvox-aural-voice-workbench-refresh (&optional id)
+
+     Refresh the Workbench quietly, preserving row ID and column.
+
+     (fn &optional ID)
+
+14.53.1.32 emacsvox-aural-voice-workbench-refresh-inventory
+...........................................................
+
+ -- Command: emacsvox-aural-voice-workbench-refresh-inventory
+
+     Request fresh adapter inventory and quietly rebuild the current view.
+
+14.53.1.33 emacsvox-aural-voice-workbench-replace-engine
+........................................................
+
+ -- Command: emacsvox-aural-voice-workbench-replace-engine
+
+     Replace one engine in selected staged logical mappings.
+
+14.53.1.34 emacsvox-aural-voice-workbench-request-recovery-probe
+................................................................
+
+ -- Command: emacsvox-aural-voice-workbench-request-recovery-probe
+
+     Request a live recovery probe for the current failed engine.
+
+14.53.1.35 emacsvox-aural-voice-workbench-retry-apply
+.....................................................
+
+ -- Command: emacsvox-aural-voice-workbench-retry-apply
+
+     Idempotently retry the committed profile on all live speech streams.
+
+14.53.1.36 emacsvox-aural-voice-workbench-save-and-apply
+........................................................
+
+ -- Command: emacsvox-aural-voice-workbench-save-and-apply
+
+     Atomically save the staged profile and apply it to every speech stream.
+
+14.53.1.37 emacsvox-aural-voice-workbench-set-filter
+....................................................
+
+ -- Command: emacsvox-aural-voice-workbench-set-filter
+
+     Set or clear one physical-voice inventory filter.
+
+14.53.1.38 emacsvox-aural-voice-workbench-speak-current
+.......................................................
+
+ -- Command: emacsvox-aural-voice-workbench-speak-current
+
+     Speak the complete current Workbench row with titled values.
+
+14.53.1.39 emacsvox-aural-voice-workbench-stop-preview
+......................................................
+
+ -- Command: emacsvox-aural-voice-workbench-stop-preview
+
+     Stop the active preview immediately.
+
+14.53.1.40 emacsvox-aural-voice-workbench-style-view
+....................................................
+
+ -- Command: emacsvox-aural-voice-workbench-style-view
+
+     Show portable styles, routes, and advertised effects.
+
+14.53.1.41 emacsvox-aural-voice-workbench-suggest-route
+.......................................................
+
+ -- Command: emacsvox-aural-voice-workbench-suggest-route
+
+     Review and stage one inferred route for the current logical voice.
+
+14.53.1.42 emacsvox-aural-voice-workbench-toggle-disabled-engine
+................................................................
+
+ -- Command: emacsvox-aural-voice-workbench-toggle-disabled-engine
+
+     Disable or restore the current engine in the staged policy.
+
+14.53.1.43 emacsvox-aural-voice-workbench-toggle-fallback-engine
+................................................................
+
+ -- Command: emacsvox-aural-voice-workbench-toggle-fallback-engine
+
+     Add or remove the current engine from global fallback order.
+
+14.53.1.44 emacsvox-aural-voice-workbench-toggle-preferred-engine
+.................................................................
+
+ -- Command: emacsvox-aural-voice-workbench-toggle-preferred-engine
+
+     Add or remove the current engine from global preferred order.
+
+14.53.1.45 emacsvox-aural-voice-workbench-tune
+..............................................
+
+ -- Command: emacsvox-aural-voice-workbench-tune
+
+     Tune the current logical voice against its effective preview route.
+
+14.53.1.46 emacsvox-aural-voice-workbench-undo
+..............................................
+
+ -- Command: emacsvox-aural-voice-workbench-undo
+
+     Undo the most recent staged routing edit without changing saved state.
+
+14.53.1.47 emacsvox-aural-voice-workbench-undo-applied
+......................................................
+
+ -- Command: emacsvox-aural-voice-workbench-undo-applied
+
+     Restore and apply the previous known-good profile revision.
+
+14.53.2 emacsvox-aural-voice-workbench Options
+----------------------------------------------
+
+ -- Variable: User Option emacsvox-aural-voice-workbench-preview-text
+     Common text used for Voice Workbench preview and A/B comparison.
+
+     Default Value:
+
+     "The quick brown fox jumps over the lazy dog."
 
 

@@ -3,52 +3,35 @@
 
 @cindex Emacs Keyboard Commands
 
-This chapter gives an overview of all the keymaps used by Emacsvox.  For
-a complete reference, see @xref{emacsvox}.  For basic usage, see
-@xref{Basic Usage}.
+This chapter explains how to discover the bindings that are current in
+your Emacs session.  For the small starter set, see @ref{Basic Usage}.
+For the complete generated default bindings, see @ref{Emacsvox Keymaps}.
 
-Emacsvox uses the following keymaps, each of which are invoked by a
-specific prefix key.
+Most Emacsvox commands use one of these two default prefixes:
 @table @kbd
 @item C-e
 The main Emacsvox keymap.
 @item C-e d
 The text-to-speech keymap.
-@item C-;
-The Emacsvox hyper keymap.
-@item C-'
-The emacsvox super keymap.
-@item C-,
-The Emacsvox alt keymap.
-@item C-.
-The Emacsvox super keymap.
-@item C-e x
-The emacsvox @kbd{x} keymap.
-@item C-e C-x
-The Emacsvox @kbd{C-x} keymap.
 @end table
 
-Primary Emacsvox commands start with @kbd{C-e}.  Following @kbd{C-e}
-with @kbd{d} invokes commands that control the text-to-speech engine.
-Note that silencing speech is an exception to this rule @MDash{} Speech
-silence commands are placed directly on the primary emacsvox-keymap
-(@kbd{C-e s} and @kbd{C-e .}).
+Emacsvox also defines integration-specific and optional convenience
+maps.  Which of those keys are available depends on the current major
+and minor modes, your window system or terminal, and your configuration;
+therefore this conceptual chapter does not duplicate their inventories.
 
-In addition, Emacsvox introduces five additional keymaps for binding
-its extensive set of facilities to convenient keystrokes.
+Use Emacs Help to inspect the effective result:
 
-When running under a windowing system, Emacs automatically receives
-keys @kbd{C-;}, @kbd{C-'}, @kbd{C-,} and @kbd{C-.}.  When running on
-the Linux console, these keys become available after loading the
-custom Linux keymap found in @code{emacsvox/tvr/console-keymaps}
-after checking out the emacsvox repository from
-@url{https://github.com/bartbunting/emacsvox}.
+@itemize @bullet
+@item
+@kbd{C-h m} describes the modes and their bindings in the current buffer.
+@item
+@kbd{C-h k}, followed by a key, describes the command that key invokes.
+@item
+After typing a prefix such as @kbd{C-e}, type @kbd{C-h} to display that
+prefix's current bindings.
+@end itemize
 
-Emacsvox defines personal keymaps accessible via @kbd{C-e x} and
-@kbd{C-e C-x}.  For now, emacsvox does not bind any commands in keymap
-@kbd{C-e C-x} @MDash{} this keymap is left for end-user personalization.
-
-Note that the information presented in the following subsections can
-also be viewed via Emacs' built-in Help system; e.g., Press @kbd{C-; 
-C-h} to get a @code{*Help*} buffer that displays all keys bound in
-@code{emacsvox-hyper-keymap}.
+If live Help and this manual differ, live Help describes your running
+session.  Check customizations first, then compare the generated defaults
+in @ref{Emacsvox Keymaps}.
