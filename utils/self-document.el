@@ -222,6 +222,8 @@ generator always skips the declared module instead of probing the host.")
                (if  (string-match  "/" (symbol-name f)) ; filter repeat muggles
                    (string-match "/body$" (symbol-name f))
                  f))
+      (when (autoloadp (symbol-function f))
+        (error "Generated-reference command is still autoloaded: %s" f))
       (cl-incf self-document-command-count)
       f)))
 

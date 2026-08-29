@@ -66,6 +66,21 @@
     (should (string-match-p "<system-mail-spool>/<login>" rendered))
     (should-not (string-match-p "private-login" rendered))))
 
+(ert-deftest emacsvox-self-document-rejects-unresolved-autoload-commands ()
+  "A documented command should have a loaded function definition."
+  (let ((command 'emacsvox-self-document-autoload-fixture))
+    (unwind-protect
+        (progn
+          (autoload command "missing-emacsvox-fixture" "Fixture command." t)
+          (let ((condition
+                 (should-error
+                  (self-document-command-p command) :type 'error)))
+            (should
+             (string-match-p
+              "command is still autoloaded: emacsvox-self-document-autoload-fixture"
+              (error-message-string condition)))))
+      (fmakunbound command))))
+
 (ert-deftest emacsvox-self-document-failure-preserves-destination ()
   "A staged generation failure should not overwrite either tracked output."
   (let ((directory (make-temp-file "emacsvox-self-document-output-" t)))
