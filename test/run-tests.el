@@ -262,6 +262,7 @@
   (require 'emacsvox-nov-tests)
   (require 'emacsvox-orgalist-tests)
   (require 'emacsvox-pipewire-tests)
+  (require 'emacsvox-pip-tests)
   (require 'emacsvox-popup-tests)
   (require 'emacsvox-projectile-tests)
   (require 'emacsvox-racket-tests)

@@ -55,7 +55,6 @@
 ;;; Code:
 
 ;;   Required modules
-(unless (executable-find "piper") (error "Piper not installed."))
 (require 'cl-lib)
 
 (defvar pip-data-dir
@@ -63,7 +62,7 @@
   "Where voice models live.")
 
 (defvar pip-voices
-  (directory-files pip-data-dir 'full "\\.onnx$")
+  nil
   "Available voices.")
 
 (defvar pip-pip
@@ -73,14 +72,36 @@
 
 (defvar pip-piper nil "process handle")
 
-(defvar pip-model (cl-first pip-voices)
+(defvar pip-model nil
   "Current voice model.")
+
+(defun pip--refresh-voices ()
+  "Refresh `pip-voices' from `pip-data-dir'."
+  (setq pip-voices
+        (and (file-directory-p pip-data-dir)
+             (directory-files pip-data-dir 'full "\\.onnx\\'")))
+  (unless (and (stringp pip-model) (file-readable-p pip-model))
+    (setq pip-model (cl-first pip-voices)))
+  pip-voices)
+
+(defun pip--ensure-ready ()
+  "Signal a useful error unless Piper is ready to start."
+  (unless (executable-find "piper")
+    (user-error "Install Piper and put the piper executable on Emacs's PATH"))
+  (unless (file-executable-p pip-pip)
+    (user-error "Piper wrapper is not executable: %s" pip-pip))
+  (pip--refresh-voices)
+  (unless (and (stringp pip-model) (file-readable-p pip-model))
+    (user-error
+     "No Piper voice model found; set pip-model or add an .onnx file to %s"
+     pip-data-dir)))
 
 (defun pip-model-select (voice)
   "Select default from available choices.
 Restarts piper pipeline if already running."
   (interactive
-   (list (completing-read "Voice Model:" pip-voices nil t)))
+   (list
+    (completing-read "Voice Model:" (pip--refresh-voices) nil t)))
   
   (setq pip-model voice)
   (when (process-live-p pip-piper) (pip-stop))
@@ -106,13 +127,14 @@ Restarts piper pipeline if already running."
   (setq pip-device device )
   (when (process-live-p pip-piper) (pip-stop))
   (when (called-interactively-p 'interactive)
-    (pip-speak (format "Selected voice %s" (file-name-base pip-model)))))
+    (pip-speak (format "Selected device %s" pip-device))))
 
 (defun pip-start ()
   "Start the Piper process"
   (interactive)
   
   (unless (process-live-p pip-piper)
+    (pip--ensure-ready)
     (let ((process-connection-type nil))
       (setq  pip-piper
              (start-process  "pip" nil  pip-pip pip-model pip-device))))
