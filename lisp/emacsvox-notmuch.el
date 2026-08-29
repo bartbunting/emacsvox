@@ -52,6 +52,8 @@
 (require 'wid-edit)
 
 (declare-function notmuch-sanitize "notmuch-lib" (str))
+(declare-function notmuch-interactive-region "notmuch-lib" ())
+(declare-function notmuch-search-foreach-result "notmuch" (beg end fn))
 (declare-function notmuch-search-get-result "notmuch" (&optional pos))
 (declare-function notmuch-search-next-thread "notmuch" ())
 (declare-function notmuch-search-previous-thread "notmuch" ())
@@ -1669,32 +1671,6 @@ search result."
     (notmuch-show-get-message-properties))
    t))
 
-(defun emacsvox-notmuch--register-tag-group (targets feedback)
-  "Register tag-operation FEEDBACK for TARGETS."
-  (dolist (target targets)
-    (let ((advice-function
-           (intern (format "emacsvox--advice-%s-after" target))))
-      (eval
-       `(defun ,advice-function (tag-changes &rest _)
-          ,(format "Confirm tag changes after `%s'." target)
-          (when (ems-interactive-p ',target)
-            (,feedback tag-changes))))
-      (push (list target :after advice-function) emacsvox-notmuch--advice))))
-
-(emacsvox-notmuch--register-tag-group
- '(notmuch-search-tag
-   notmuch-search-add-tag
-   notmuch-search-remove-tag
-   notmuch-search-tag-all)
- #'emacsvox-notmuch--tag-feedback)
-
-(emacsvox-notmuch--register-tag-group
- '(notmuch-show-tag
-   notmuch-show-add-tag
-   notmuch-show-remove-tag
-   notmuch-show-tag-all)
- #'emacsvox-notmuch--show-tag-feedback)
-
 (defun emacsvox-notmuch--current-tags ()
   "Return a copy of the tags at point in a Notmuch search or Show buffer."
   (let ((tags
@@ -1716,6 +1692,171 @@ search result."
    (mapcar
     (lambda (tag) (concat "-" tag))
     (cl-remove-if (lambda (tag) (member tag after)) before))))
+
+(defun emacsvox-notmuch--search-tag-bounds (target arguments)
+  "Return the Search bounds targeted by TARGET with ARGUMENTS."
+  (if (eq target 'notmuch-search-tag-all)
+      (cons (point-min) (point-max))
+    (let ((beginning (nth 1 arguments))
+          (end (nth 2 arguments)))
+      (if (and beginning end)
+          (cons beginning end)
+        (pcase-let ((`(,region-beginning ,region-end)
+                      (notmuch-interactive-region)))
+          (cons region-beginning region-end))))))
+
+(defun emacsvox-notmuch--search-tag-snapshot-entry (position)
+  "Capture the Search result at POSITION for tag-state comparison."
+  (when-let* ((result (notmuch-search-get-result position)))
+    (list
+     :id (plist-get result :thread)
+     :tags (copy-sequence (plist-get result :tags)))))
+
+(defun emacsvox-notmuch--show-tag-snapshot-entry ()
+  "Capture the current Show message for tag-state comparison."
+  (save-excursion
+    (notmuch-show-move-to-message-top)
+    (when-let* ((message (notmuch-show-get-message-properties)))
+      (list
+       :id (plist-get message :id)
+       :tags (copy-sequence (plist-get message :tags))))))
+
+(defun emacsvox-notmuch--capture-tag-snapshot (target arguments)
+  "Capture the items whose tags TARGET will change using ARGUMENTS."
+  (pcase major-mode
+    ('notmuch-search-mode
+     (pcase-let ((`(,beginning . ,end)
+                   (emacsvox-notmuch--search-tag-bounds target arguments))
+                  (entries nil))
+       (notmuch-search-foreach-result beginning end
+         (lambda (position)
+           (when-let* ((entry
+                        (emacsvox-notmuch--search-tag-snapshot-entry
+                         position)))
+             (push entry entries))))
+       (setq entries (nreverse entries))
+       (list
+        :buffer (current-buffer)
+        :kind 'search
+        :identifiable
+        (cl-every (lambda (entry) (plist-get entry :id)) entries)
+        :entries entries)))
+    ('notmuch-show-mode
+     (let (entries)
+       (if (eq target 'notmuch-show-tag-all)
+           (notmuch-show-mapc
+            (lambda ()
+              (when-let* ((entry
+                           (emacsvox-notmuch--show-tag-snapshot-entry)))
+                (push entry entries))))
+         (when-let* ((entry (emacsvox-notmuch--show-tag-snapshot-entry)))
+           (push entry entries)))
+       (setq entries (nreverse entries))
+       (list
+        :buffer (current-buffer)
+        :kind 'show
+        :identifiable
+        (cl-every (lambda (entry) (plist-get entry :id)) entries)
+        :entries entries)))))
+
+(defun emacsvox-notmuch--current-tag-state (snapshot)
+  "Return an ID-to-tags table for the buffer in SNAPSHOT."
+  (when-let* ((buffer (plist-get snapshot :buffer))
+              ((buffer-live-p buffer)))
+    (with-current-buffer buffer
+      (let ((state (make-hash-table :test #'equal)))
+        (pcase (plist-get snapshot :kind)
+          ('search
+           (notmuch-search-foreach-result (point-min) (point-max)
+             (lambda (position)
+               (when-let* ((result (notmuch-search-get-result position))
+                           (id (plist-get result :thread)))
+                 (puthash
+                  id (copy-sequence (plist-get result :tags)) state)))))
+          ('show
+           (notmuch-show-mapc
+            (lambda ()
+              (when-let* ((message (notmuch-show-get-message-properties))
+                          (id (plist-get message :id)))
+                (puthash
+                 id (copy-sequence (plist-get message :tags)) state))))))
+        state))))
+
+(defun emacsvox-notmuch--tag-snapshot-result (snapshot)
+  "Return authoritative tag differences and availability for SNAPSHOT."
+  (let ((state
+         (and
+          (plist-get snapshot :identifiable)
+          (emacsvox-notmuch--current-tag-state snapshot)))
+        (missing (make-symbol "missing-tag-target"))
+        (available t)
+        changes)
+    (if (not state)
+        (setq available nil)
+      (dolist (entry (plist-get snapshot :entries))
+        (let ((current (gethash (plist-get entry :id) state missing)))
+          (if (eq current missing)
+              (setq available nil)
+            (setq changes
+                  (append
+                   changes
+                   (emacsvox-notmuch--tag-differences
+                    (plist-get entry :tags) current)))))))
+    (list :available available :changes (delete-dups changes))))
+
+(defun emacsvox-notmuch--tag-unchanged-feedback ()
+  "Report that an interactive Notmuch tag command changed no tags."
+  (emacsvox-notmuch--submit-text-feedback
+   '(:role message :mail-action-kind tag)
+   'state-change nil "Tags unchanged"))
+
+(defun emacsvox-notmuch--direct-tag-state-around
+    (target original arguments)
+  "Report actual tag changes made by direct TARGET.
+Call ORIGINAL once with ARGUMENTS and preserve its result."
+  (if (not (eq ems--interactive-fn-name target))
+      (apply original arguments)
+    (let ((mode major-mode)
+          (snapshot (emacsvox-notmuch--capture-tag-snapshot target arguments)))
+      (let ((result (apply original arguments)))
+        (when (ems-interactive-p target)
+          (when snapshot
+            (let* ((outcome
+                    (emacsvox-notmuch--tag-snapshot-result snapshot))
+                   (changes (plist-get outcome :changes)))
+              (when (plist-get outcome :available)
+                (if changes
+                    (pcase mode
+                      ('notmuch-search-mode
+                       (emacsvox-notmuch--tag-feedback changes))
+                      ('notmuch-show-mode
+                       (emacsvox-notmuch--show-tag-feedback changes)))
+                  (emacsvox-notmuch--tag-unchanged-feedback))))))
+        result))))
+
+(defun emacsvox-notmuch--register-direct-tag-group (targets)
+  "Register actual-state tag feedback around direct TARGETS."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (eval
+       `(defun ,advice-function (original &rest arguments)
+          ,(format "Report actual tag changes made by `%s'." target)
+          (emacsvox-notmuch--direct-tag-state-around
+           ',target original arguments)))
+      (push (list target :around advice-function) emacsvox-notmuch--advice))))
+
+(emacsvox-notmuch--register-direct-tag-group
+ '(notmuch-search-tag
+   notmuch-search-add-tag
+   notmuch-search-remove-tag
+   notmuch-search-tag-all))
+
+(emacsvox-notmuch--register-direct-tag-group
+ '(notmuch-show-tag
+   notmuch-show-add-tag
+   notmuch-show-remove-tag
+   notmuch-show-tag-all))
 
 (defun emacsvox-notmuch--tag-state-around (target original arguments)
   "Report structured tag changes made by TARGET.

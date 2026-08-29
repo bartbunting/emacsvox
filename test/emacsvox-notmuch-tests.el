@@ -53,6 +53,61 @@ Return the beginning of the inserted row."
     (put-text-property start (point) 'notmuch-search-result result)
     start))
 
+(defun emacsvox-notmuch-test--insert-rendered-search-result (result)
+  "Render synthetic Notmuch search RESULT and return its beginning."
+  (let ((start (point-max)))
+    (notmuch-search-show-result result start)
+    start))
+
+(defun emacsvox-notmuch-test--insert-show-message (label message)
+  "Insert a synthetic Show MESSAGE row named LABEL and return its start."
+  (let ((start (point)))
+    (insert label "\n")
+    (put-text-property
+     start (1+ start) :notmuch-message-properties message)
+    start))
+
+(cl-defmacro emacsvox-notmuch-test--with-synthetic-show-tags (&rest body)
+  "Run BODY with Show tag accessors backed by message properties per line."
+  (declare (indent 0) (debug t))
+  `(cl-letf
+       (((symbol-function 'notmuch-show-move-to-message-top)
+         (lambda () (beginning-of-line)))
+        ((symbol-function 'notmuch-show-get-message-properties)
+         (lambda ()
+           (get-text-property
+            (line-beginning-position) :notmuch-message-properties)))
+        ((symbol-function 'notmuch-show-get-tags)
+         (lambda ()
+           (plist-get
+            (get-text-property
+             (line-beginning-position) :notmuch-message-properties)
+            :tags)))
+        ((symbol-function 'notmuch-show-get-message-id)
+         (lambda (&optional _)
+           (plist-get
+            (get-text-property
+             (line-beginning-position) :notmuch-message-properties)
+            :id)))
+        ((symbol-function 'notmuch-show-set-tags)
+         (lambda (tags)
+           (let ((message
+                  (get-text-property
+                   (line-beginning-position)
+                   :notmuch-message-properties)))
+             (setf (plist-get message :tags) tags)
+             'updated)))
+        ((symbol-function 'notmuch-show-mapc)
+         (lambda (function)
+           (save-excursion
+             (goto-char (point-min))
+             (while (< (point) (point-max))
+               (funcall function)
+               (forward-line 1)))))
+        ((symbol-function 'notmuch-show-get-messages-ids-search)
+         (lambda () "id:synthetic")))
+     ,@body))
+
 (ert-deftest emacsvox-notmuch-advice-is-current-and-direct ()
   "Current Notmuch targets use native advice directly."
   (dolist (entry emacsvox-notmuch--advice)
@@ -1715,56 +1770,306 @@ Return the beginning of the inserted row."
      '("+work" "+urgent" "-inbox"))
     "Added work, urgent; Removed inbox")))
 
-(ert-deftest emacsvox-notmuch-tag-feedback-runs-once ()
-  "An interactive tag wrapper confirms once and speaks the updated row."
-  (let* ((result (copy-tree emacsvox-notmuch-test--search-result))
-         (ems--interactive-fn-name 'notmuch-search-add-tag)
-        events)
-    (setf (plist-get result :tags) '("inbox" "work")
-          (plist-get result :orig-tags) '("inbox" "work"))
-    (cl-letf
-        (((symbol-function 'notmuch-search-get-result)
-          (lambda (&optional _) result))
-         ((symbol-function 'emacsvox-aural-submit)
-          (emacsvox-test--notmuch-submission-recorder
-           (lambda (event) (push event events)))))
-      ;; `notmuch-search-add-tag' delegates to this command internally.
-      (emacsvox--advice-notmuch-search-tag-after
-       '("+work" "-inbox"))
-      (emacsvox--advice-notmuch-search-add-tag-after
-       '("+work" "-inbox")))
-    (setq events (nreverse events))
-    (should (equal (car events) '(icon task-done)))
-    (should (= (length events) 2))
-    (should
-     (string-prefix-p
-      "Added work; Removed inbox\nAlice Smith"
-      (cadr (cadr events))))))
+(ert-deftest emacsvox-notmuch-search-tag-reports-actual-change-once ()
+  "A public interactive Search tag wrapper reports its actual delta once."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-search-mode)
+    (let* ((result (copy-tree emacsvox-notmuch-test--search-result))
+           (ems--interactive-fn-name 'notmuch-search-add-tag)
+           backend-calls
+           events)
+      (setf (plist-get result :thread) "thread:one"
+            (plist-get result :tags) '("inbox")
+            (plist-get result :orig-tags) '("inbox"))
+      (let ((start
+             (emacsvox-notmuch-test--insert-rendered-search-result result)))
+        (goto-char start)
+        (let ((initial-point (point)))
+          (cl-letf
+              (((symbol-function 'notmuch-search-find-stable-query-region)
+                (lambda (&rest _) "thread:one"))
+               ((symbol-function 'notmuch-tag)
+                (lambda (&rest arguments)
+                  (push arguments backend-calls)))
+               ((symbol-function 'emacsvox-aural-submit)
+                (emacsvox-test--notmuch-submission-recorder
+                 (lambda (event) (push event events)))))
+            (should-not
+             (notmuch-search-add-tag
+              '("+work" "-inbox") start start)))
+          (should (= (point) initial-point))
+          (should
+           (equal (plist-get (notmuch-search-get-result) :tags) '("work")))
+          (should (= (length backend-calls) 1))
+          (setq events (nreverse events))
+          (should (equal (car events) '(icon task-done)))
+          (should (= (length events) 2))
+          (should
+           (string-prefix-p
+            "Added work; Removed inbox\nAlice Smith"
+            (cadr (cadr events)))))))))
 
-(ert-deftest emacsvox-notmuch-show-tag-feedback-runs-once ()
-  "An interactive Show tag wrapper confirms once and speaks the message."
-  (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
-         (major-mode 'notmuch-show-mode)
-         (ems--interactive-fn-name 'notmuch-show-add-tag)
-         events)
-    (setf (plist-get message :tags) '("inbox" "work")
-          (plist-get message :orig-tags) '("inbox" "work"))
-    (cl-letf
-        (((symbol-function 'notmuch-show-get-message-properties)
-          (lambda () message))
-         ((symbol-function 'emacsvox-aural-submit)
-          (emacsvox-test--notmuch-submission-recorder
-           (lambda (event) (push event events)))))
-      (emacsvox--advice-notmuch-show-tag-after '("+work"))
-      (emacsvox--advice-notmuch-show-add-tag-after '("+work")))
-    (setq events (nreverse events))
-    (should (equal (car events) '(icon task-done)))
-    (should (= (length events) 3))
-    (should (equal (cadr events) '(icon mail-has-attachment)))
-    (should
-     (string-prefix-p
-      "Added work\nAlice Smith"
-      (cadr (nth 2 events))))))
+(ert-deftest emacsvox-notmuch-search-tag-no-ops-are-explicit ()
+  "Adding an existing or removing an absent Search tag says it is unchanged."
+  (dolist
+      (case
+       '((notmuch-search-add-tag "+work")
+         (notmuch-search-remove-tag "-absent")))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-search-mode)
+      (let* ((target (car case))
+             (change (cadr case))
+             (result (copy-tree emacsvox-notmuch-test--search-result))
+             (ems--interactive-fn-name target)
+             backend-calls
+             submissions)
+        (setf (plist-get result :thread) "thread:one"
+              (plist-get result :tags) '("work")
+              (plist-get result :orig-tags) '("work"))
+        (let ((start
+               (emacsvox-notmuch-test--insert-rendered-search-result result)))
+          (goto-char start)
+          (let ((initial-point (point)))
+            (cl-letf
+                (((symbol-function 'notmuch-search-find-stable-query-region)
+                  (lambda (&rest _) "thread:one"))
+                 ((symbol-function 'notmuch-tag)
+                  (lambda (&rest arguments)
+                    (push arguments backend-calls)))
+                 ((symbol-function 'emacsvox-aural-submit)
+                  (lambda (content &rest arguments)
+                    (push
+                     (cons (substring-no-properties content) arguments)
+                     submissions))))
+              (should-not (funcall target (list change) start start)))
+            (should (= (point) initial-point))
+            (should
+             (equal
+              (plist-get (notmuch-search-get-result) :tags)
+              '("work")))
+            (should (= (length backend-calls) 1))
+            (should (= (length submissions) 1))
+            (pcase-let* ((`(,content . ,arguments) (car submissions))
+                         (facts (plist-get arguments :facts)))
+              (should (equal content "Tags unchanged"))
+              (should
+               (equal facts '(:role message :mail-action-kind tag)))
+              (should-not (plist-get facts :events))
+              (should-not
+               (plist-get arguments :compatibility-actions)))))))))
+
+(ert-deftest emacsvox-notmuch-search-region-reports-only-actual-tag-delta ()
+  "A mixed Search region reports tags changed on at least one target."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-search-mode)
+    (let* ((first (copy-tree emacsvox-notmuch-test--search-result))
+           (second (copy-tree emacsvox-notmuch-test--search-result))
+           (ems--interactive-fn-name 'notmuch-search-add-tag)
+           backend-calls
+           events)
+      (setf (plist-get first :thread) "thread:one"
+            (plist-get first :tags) '("work")
+            (plist-get first :orig-tags) '("work")
+            (plist-get second :thread) "thread:two"
+            (plist-get second :authors) "Bob Jones"
+            (plist-get second :subject) "Second result"
+            (plist-get second :tags) '("inbox")
+            (plist-get second :orig-tags) '("inbox"))
+      (let ((first-start
+             (emacsvox-notmuch-test--insert-rendered-search-result first))
+            (second-start
+             (emacsvox-notmuch-test--insert-rendered-search-result second)))
+        (goto-char second-start)
+        (cl-letf
+            (((symbol-function 'notmuch-search-find-stable-query-region)
+              (lambda (&rest _) "thread:one or thread:two"))
+             ((symbol-function 'notmuch-tag)
+              (lambda (&rest arguments)
+                (push arguments backend-calls)))
+             ((symbol-function 'emacsvox-aural-submit)
+              (emacsvox-test--notmuch-submission-recorder
+               (lambda (event) (push event events)))))
+          (should-not
+           (notmuch-search-add-tag '("+work") first-start (point-max))))
+        (should (= (length backend-calls) 1))
+        (should
+         (member
+          "work"
+          (plist-get (notmuch-search-get-result first-start) :tags)))
+        (should
+         (member
+          "work"
+          (plist-get (notmuch-search-get-result second-start) :tags)))
+        (setq events (nreverse events))
+        (should (equal (car events) '(icon task-done)))
+        (should (= (length events) 2))
+        (should
+         (string-prefix-p
+          "Added work\nBob Jones"
+          (cadr (cadr events))))))))
+
+(ert-deftest emacsvox-notmuch-show-tag-reports-actual-change-once ()
+  "A public interactive Show tag wrapper preserves and reports its result."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
+           (ems--interactive-fn-name 'notmuch-show-add-tag)
+           backend-calls
+           events)
+      (setf (plist-get message :id) "message:one"
+            (plist-get message :tags) '("inbox")
+            (plist-get message :orig-tags) '("inbox"))
+      (let ((start
+             (emacsvox-notmuch-test--insert-show-message "Message" message)))
+        (goto-char start)
+        (let ((initial-point (point)))
+          (emacsvox-notmuch-test--with-synthetic-show-tags
+            (cl-letf
+                (((symbol-function 'notmuch-tag)
+                  (lambda (&rest arguments)
+                    (push arguments backend-calls)))
+                 ((symbol-function 'emacsvox-aural-submit)
+                  (emacsvox-test--notmuch-submission-recorder
+                   (lambda (event) (push event events)))))
+              (should
+               (eq (notmuch-show-add-tag '("+work")) 'updated))))
+          (should (= (point) initial-point))
+          (should (equal (plist-get message :tags) '("inbox" "work")))
+          (should (= (length backend-calls) 1))
+          (setq events (nreverse events))
+          (should (equal (car events) '(icon task-done)))
+          (should (= (length events) 3))
+          (should (equal (cadr events) '(icon mail-has-attachment)))
+          (should
+           (string-prefix-p
+            "Added work\nAlice Smith"
+            (cadr (nth 2 events)))))))))
+
+(ert-deftest emacsvox-notmuch-show-tag-no-op-is-explicit ()
+  "A public Show tag no-op speaks no success cue or message summary."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
+           (ems--interactive-fn-name 'notmuch-show-add-tag)
+           backend-calls
+           events)
+      (setf (plist-get message :id) "message:one"
+            (plist-get message :tags) '("work")
+            (plist-get message :orig-tags) '("work"))
+      (let ((start
+             (emacsvox-notmuch-test--insert-show-message "Message" message)))
+        (goto-char start)
+        (let ((initial-point (point)))
+          (emacsvox-notmuch-test--with-synthetic-show-tags
+            (cl-letf
+                (((symbol-function 'notmuch-tag)
+                  (lambda (&rest arguments)
+                    (push arguments backend-calls)))
+                 ((symbol-function 'emacsvox-aural-submit)
+                  (emacsvox-test--notmuch-submission-recorder
+                   (lambda (event) (push event events)))))
+              (should-not (notmuch-show-add-tag '("+work")))))
+          (should (= (point) initial-point))
+          (should (equal (plist-get message :tags) '("work")))
+          (should (= (length backend-calls) 1))
+          (should
+           (equal (nreverse events) '((speak "Tags unchanged")))))))))
+
+(ert-deftest emacsvox-notmuch-show-tag-all-compares-every-message ()
+  "Thread-wide Show tagging reports a change made to any message."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let* ((first (copy-tree emacsvox-notmuch-test--show-message))
+           (second (copy-tree emacsvox-notmuch-test--show-message))
+           (ems--interactive-fn-name 'notmuch-show-tag-all)
+           backend-calls
+           events)
+      (setf (plist-get first :id) "message:one"
+            (plist-get first :tags) '("work")
+            (plist-get first :orig-tags) '("work")
+            (plist-get second :id) "message:two"
+            (plist-get second :tags) '("inbox")
+            (plist-get second :orig-tags) '("inbox")
+            (plist-get (plist-get second :headers) :From) "Bob Jones")
+      (let ((first-start
+             (emacsvox-notmuch-test--insert-show-message "First" first))
+            (second-start
+             (emacsvox-notmuch-test--insert-show-message "Second" second)))
+        (goto-char second-start)
+        (emacsvox-notmuch-test--with-synthetic-show-tags
+          (cl-letf
+              (((symbol-function 'notmuch-tag)
+                (lambda (&rest arguments)
+                  (push arguments backend-calls)))
+               ((symbol-function 'emacsvox-aural-submit)
+                (emacsvox-test--notmuch-submission-recorder
+                 (lambda (event) (push event events)))))
+            (should-not (notmuch-show-tag-all '("+work")))))
+        (should (= (length backend-calls) 1))
+        (should (member "work" (plist-get first :tags)))
+        (should (member "work" (plist-get second :tags)))
+        (should (= (point) second-start))
+        (should (= first-start (point-min)))
+        (setq events (nreverse events))
+        (should (equal (car events) '(icon task-done)))
+        (should (= (length events) 3))
+        (should
+         (string-prefix-p
+          "Added work\nBob Jones"
+          (cadr (nth 2 events))))))))
+
+(ert-deftest emacsvox-notmuch-direct-tag-errors-do-not-announce ()
+  "A failed public tag command re-signals without feedback."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-search-mode)
+    (let* ((result (copy-tree emacsvox-notmuch-test--search-result))
+           (ems--interactive-fn-name 'notmuch-search-add-tag)
+           events)
+      (setf (plist-get result :thread) "thread:one"
+            (plist-get result :tags) '("inbox")
+            (plist-get result :orig-tags) '("inbox"))
+      (let ((start
+             (emacsvox-notmuch-test--insert-rendered-search-result result)))
+        (goto-char start)
+        (cl-letf
+            (((symbol-function 'notmuch-search-find-stable-query-region)
+              (lambda (&rest _) "thread:one"))
+             ((symbol-function 'notmuch-tag)
+              (lambda (&rest _) (error "Synthetic tag failure")))
+             ((symbol-function 'emacsvox-aural-submit)
+              (lambda (&rest arguments) (push arguments events))))
+          (should-error
+           (notmuch-search-add-tag '("+work") start start)
+           :type 'error))
+        (should-not events)
+        (should
+         (equal
+          (plist-get (notmuch-search-get-result) :tags)
+          '("inbox")))))))
+
+(ert-deftest emacsvox-notmuch-programmatic-direct-tag-remains-silent ()
+  "Programmatic public tag calls still change state without feedback."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-search-mode)
+    (let ((result (copy-tree emacsvox-notmuch-test--search-result))
+          events)
+      (setf (plist-get result :thread) "thread:one"
+            (plist-get result :tags) '("inbox")
+            (plist-get result :orig-tags) '("inbox"))
+      (let ((start
+             (emacsvox-notmuch-test--insert-rendered-search-result result)))
+        (goto-char start)
+        (cl-letf
+            (((symbol-function 'notmuch-search-find-stable-query-region)
+              (lambda (&rest _) "thread:one"))
+             ((symbol-function 'notmuch-tag) (lambda (&rest _) nil))
+             ((symbol-function 'emacsvox-aural-submit)
+              (lambda (&rest arguments) (push arguments events))))
+          (notmuch-search-add-tag '("+work") start start))
+        (should
+         (member
+          "work" (plist-get (notmuch-search-get-result) :tags)))
+        (should-not events)))))
 
 (ert-deftest emacsvox-notmuch-status-tag-changes-remain-nonverbal ()
   "Status changes use cues without speaking status names."
