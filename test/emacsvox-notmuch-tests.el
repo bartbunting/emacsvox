@@ -6,9 +6,61 @@
 (require 'package)
 (package-initialize)
 (require 'notmuch)
-(load (expand-file-name "../lisp/emacsvox-notmuch.el"
-                        (file-name-directory (or load-file-name buffer-file-name)))
-      nil nil)
+
+(defconst emacsvox-notmuch-test--module-load-kind
+  (let ((requested (getenv "EMACSVOX_NOTMUCH_TEST_LOAD")))
+    (cond
+     ((or (null requested) (string= requested "")
+          (string= requested "source"))
+      'source)
+     ((string= requested "compiled") 'compiled)
+     (t
+      (error
+       "EMACSVOX_NOTMUCH_TEST_LOAD must be source or compiled, not %S"
+       requested))))
+  "Whether this test file explicitly loaded source or compiled Notmuch code.")
+
+(defun emacsvox-notmuch-test--compiled-file-version (file)
+  "Return the Emacs version recorded in compiled FILE, or nil."
+  (with-temp-buffer
+    (insert-file-contents-literally file nil 0 256)
+    (goto-char (point-min))
+    (when (re-search-forward
+           "^;;; in Emacs version \\([^\n]+\\)$" nil t)
+      (match-string-no-properties 1))))
+
+(defconst emacsvox-notmuch-test--loaded-module-path
+  (let* ((test-directory
+          (file-name-directory (or load-file-name buffer-file-name)))
+         (source
+          (expand-file-name "../lisp/emacsvox-notmuch.el" test-directory))
+         (module
+          (if (eq emacsvox-notmuch-test--module-load-kind 'compiled)
+              (concat source "c")
+            source)))
+    (unless (file-readable-p module)
+      (error "Requested Notmuch test module is unavailable: %s" module))
+    (when (eq emacsvox-notmuch-test--module-load-kind 'compiled)
+      (when (file-newer-than-file-p source module)
+        (error "Compiled Notmuch test module is stale: %s" module))
+      (let ((compiled-version
+             (emacsvox-notmuch-test--compiled-file-version module)))
+        (unless (equal compiled-version emacs-version)
+          (error
+           "Compiled Notmuch test module uses Emacs %s, running %s: %s"
+           (or compiled-version "unknown") emacs-version module))))
+    (load module nil nil)
+    (let ((loaded
+           (symbol-file 'emacsvox-notmuch--bounded-source-range 'defun)))
+      (unless loaded
+        (error "Cannot identify the loaded Notmuch test module"))
+      (setq loaded (file-truename loaded))
+      (unless (equal loaded (file-truename module))
+        (error
+         "Loaded unexpected Notmuch test module: expected %s, got %s"
+         module loaded))
+      loaded))
+  "Canonical path of the Notmuch module exercised by this test file.")
 
 (defun emacsvox-test--notmuch-submission-recorder (record)
   "Return a native submission stub that passes logical events to RECORD."
@@ -96,6 +148,52 @@ Return the beginning of the inserted row."
          (notmuch-show-get-message-properties) :message-visible)
         values)))
     (nreverse values)))
+
+(defun emacsvox-notmuch-test--displayed-scroll-feedback (target advice)
+  "Exercise TARGET through ADVICE after scrolling a displayed Show buffer."
+  (save-window-excursion
+    (with-temp-buffer
+      (setq major-mode 'notmuch-show-mode)
+      (dotimes (index 80)
+        (insert (format "visible %02d\n" (1+ index))))
+      (goto-char (point-min))
+      (forward-line 30)
+      (let ((scroll-start (point))
+            (window (selected-window))
+            (ems--interactive-fn-name target)
+            (calls 0)
+            captured
+            result)
+        (goto-char (point-min))
+        (set-window-buffer window (current-buffer))
+        (set-window-point window (point))
+        (set-window-start window (point))
+        (cl-letf
+            (((symbol-function 'emacsvox-notmuch--current-show-message-id)
+              (lambda () "same"))
+             ((symbol-function 'emacsvox-notmuch--submit-content)
+              (lambda (&rest arguments) (setq captured arguments))))
+          (setq
+           result
+           (funcall
+            advice
+            (lambda ()
+              (cl-incf calls)
+              (goto-char scroll-start)
+              (set-window-point window scroll-start)
+              (set-window-start window scroll-start)
+              'scrolled))))
+        (let* ((visible-start (window-start window))
+               (visible-end (window-end window 'update))
+               (expected
+                (buffer-substring-no-properties visible-start visible-end)))
+          (list
+           :result result
+           :calls calls
+           :captured captured
+           :expected expected
+           :visible-start visible-start
+           :scroll-start scroll-start))))))
 
 (cl-defmacro emacsvox-notmuch-test--with-synthetic-show-tags (&rest body)
   "Run BODY with Show tag accessors backed by message properties per line."
@@ -2020,39 +2118,29 @@ Return the beginning of the inserted row."
 
 (ert-deftest emacsvox-notmuch-show-advance-speaks-window-after-scroll ()
   "Space speaks the visible window when it scrolls within one message."
-  (with-temp-buffer
-    (setq major-mode 'notmuch-show-mode)
-    (let ((ems--interactive-fn-name 'notmuch-show-advance)
-          (calls 0)
-          captured)
-      (insert "message body")
-      (goto-char (point-min))
-      (cl-letf
-          (((symbol-function 'emacsvox-notmuch--current-show-message-id)
-            (lambda () "same"))
-           ((symbol-function 'emacsvox-notmuch--bounded-source-range)
-            (lambda (&rest _) "visible window"))
-           ((symbol-function 'emacsvox-notmuch--submit-content)
-            (lambda (&rest arguments) (setq captured arguments))))
-        (should
-         (eq
-          (emacsvox--advice-notmuch-show-advance-around
-           (lambda ()
-             (cl-incf calls)
-             'scrolled))
-          'scrolled)))
-      (should (= calls 1))
-      (should
-       (equal
-        (car captured)
-        "visible window"))
-      (should (eq (nth 2 captured) 'navigation))
-      (should
-       (equal
-        (mapcar
-         #'emacsvox-aural-compatibility-action-value
-         (nth 3 captured))
-        '(scroll))))))
+  (let* ((probe
+          (emacsvox-notmuch-test--displayed-scroll-feedback
+           'notmuch-show-advance
+           #'emacsvox--advice-notmuch-show-advance-around))
+         (captured (plist-get probe :captured)))
+    (should (eq (plist-get probe :result) 'scrolled))
+    (should (= (plist-get probe :calls) 1))
+    (should
+     (= (plist-get probe :visible-start)
+        (plist-get probe :scroll-start)))
+    (should
+     (string-prefix-p "visible 31\n" (plist-get probe :expected)))
+    (should
+     (equal
+      (substring-no-properties (car captured))
+      (plist-get probe :expected)))
+    (should (eq (nth 2 captured) 'navigation))
+    (should
+     (equal
+      (mapcar
+       #'emacsvox-aural-compatibility-action-value
+       (nth 3 captured))
+      '(scroll)))))
 
 (ert-deftest emacsvox-notmuch-show-advance-announces-thread-end ()
   "Space submits one semantic boundary when it cannot advance."
@@ -2108,36 +2196,29 @@ Return the beginning of the inserted row."
 
 (ert-deftest emacsvox-notmuch-space-uses-state-aware-reading ()
   "The command actually bound to Space uses state-aware page feedback."
-  (with-temp-buffer
-    (setq major-mode 'notmuch-show-mode)
-    (insert "message body")
-    (goto-char (point-min))
-    (let ((ems--interactive-fn-name 'notmuch-show-advance-and-archive)
-          (calls 0)
-          captured)
-      (cl-letf
-          (((symbol-function 'emacsvox-notmuch--current-show-message-id)
-            (lambda () "same"))
-           ((symbol-function 'emacsvox-notmuch--bounded-source-range)
-            (lambda (&rest _) "visible window"))
-           ((symbol-function 'emacsvox-notmuch--submit-content)
-            (lambda (&rest arguments) (setq captured arguments))))
-        (should
-         (eq
-          (emacsvox--advice-notmuch-show-advance-and-archive-around
-           (lambda ()
-             (cl-incf calls)
-             'scrolled))
-          'scrolled)))
-      (should (= calls 1))
-      (should (equal (car captured) "visible window"))
-      (should (eq (nth 2 captured) 'navigation))
-      (should
-       (equal
-        (mapcar
-         #'emacsvox-aural-compatibility-action-value
-         (nth 3 captured))
-        '(scroll))))))
+  (let* ((probe
+          (emacsvox-notmuch-test--displayed-scroll-feedback
+           'notmuch-show-advance-and-archive
+           #'emacsvox--advice-notmuch-show-advance-and-archive-around))
+         (captured (plist-get probe :captured)))
+    (should (eq (plist-get probe :result) 'scrolled))
+    (should (= (plist-get probe :calls) 1))
+    (should
+     (= (plist-get probe :visible-start)
+        (plist-get probe :scroll-start)))
+    (should
+     (string-prefix-p "visible 31\n" (plist-get probe :expected)))
+    (should
+     (equal
+      (substring-no-properties (car captured))
+      (plist-get probe :expected)))
+    (should (eq (nth 2 captured) 'navigation))
+    (should
+     (equal
+      (mapcar
+       #'emacsvox-aural-compatibility-action-value
+       (nth 3 captured))
+      '(scroll)))))
 
 (ert-deftest emacsvox-notmuch-space-delegates-end-of-thread-archive-state ()
   "Space delegates its end-of-thread operation to the archive owner."

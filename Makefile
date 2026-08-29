@@ -45,16 +45,26 @@ README = README
 TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
-.PHONY: test unit-test compiled-aural-test build-aural-test trace trace-test reference-test advice-audit name-audit tts-audit
+.PHONY: test unit-test notmuch-test compiled-notmuch-test
+.PHONY: compiled-aural-test build-aural-test trace trace-test
+.PHONY: reference-test advice-audit name-audit tts-audit
 .PHONY: check-emacs bytecode bytecode-check bytecode-rebuild
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
 .PHONY: windows-omnivox-dev
 .PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers verify-windows-omnivox-runtime
 .PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
-test: unit-test compiled-aural-test build-aural-test trace-test
+test: unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
 
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el
+
+notmuch-test:
+	EMACSVOX_NOTMUCH_TEST_LOAD=source \
+	$(EMACS) -Q --batch -l test/run-notmuch-tests.el
+
+compiled-notmuch-test: bytecode-check
+	EMACSVOX_NOTMUCH_TEST_LOAD=compiled \
+	$(EMACS) -Q --batch -l test/run-notmuch-tests.el
 
 check-emacs:
 	@$(EMACS) -Q --batch --eval \
