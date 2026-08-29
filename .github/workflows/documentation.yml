@@ -1,0 +1,105 @@
+name: Documentation
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Validate and render manual
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out Emacsvox
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Set up Emacs 31.1
+        uses: purcell/setup-emacs@34c6ded44899fd1bf74d2889558befd1750e61a7
+        with:
+          version: '31.1'
+
+      - name: Install Texinfo 7.2
+        run: |
+          # Match the Nixpkgs revision pinned by setup-emacs above.
+          nix profile install \
+            "github:NixOS/nixpkgs/608d0cadfed240589a7eea422407a547ad626a14#texinfo"
+          makeinfo_version=$(makeinfo --version | sed -n '1s/.* //p')
+          install_info_version=$(install-info --version | sed -n '1s/.* //p')
+          test "$makeinfo_version" = '7.2'
+          test "$install_info_version" = '7.2'
+
+      - name: Check selected Emacs
+        run: make check-emacs
+
+      - name: Build local byte-code
+        run: make bytecode
+
+      - name: Validate and render the manual
+        run: |
+          mkdir -p "$RUNNER_TEMP/emacsvox-manual"
+          make docs-publish \
+            DOCS_PUBLISH_DIR="$RUNNER_TEMP/emacsvox-manual"
+
+      - name: Verify browser entry points
+        run: |
+          for page in \
+            index.html \
+            Installation.html \
+            Speech-Backends.html \
+            Recovering-From-No-Speech.html
+          do
+            test -s "$RUNNER_TEMP/emacsvox-manual/$page"
+          done
+
+      - name: Require non-mutating publication
+        run: git diff --exit-code
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: ${{ runner.temp }}/emacsvox-manual
+
+  deploy:
+    name: Deploy manual
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+
+      - name: Verify public manual routes
+        env:
+          PUBLIC_MANUAL_URL: https://bartbunting.github.io/emacsvox
+        run: |
+          for page in \
+            index.html \
+            Installation.html \
+            Speech-Backends.html \
+            Recovering-From-No-Speech.html
+          do
+            curl --fail --location \
+              --retry 12 --retry-all-errors --retry-delay 5 \
+              --max-time 30 --output /dev/null \
+              "$PUBLIC_MANUAL_URL/$page"
+          done
