@@ -112,11 +112,18 @@
 
 ;;;  Configuration:
 
-(defconst soundscape-player (executable-find "boodler")
+(defvar soundscape-player (executable-find "boodler")
   "Soundscape player. Looks for installed boodler.")
 
 (defconst soundscape-mgr (executable-find "boodle-mgr")
   "Soundscape manager. Looks for installed boodler.")
+
+(defun soundscape--player ()
+  "Return the Boodler executable, or signal an actionable user error."
+  (or soundscape-player
+      (setq soundscape-player (executable-find "boodler"))
+      (user-error
+       "Install Boodler and put the boodler executable on Emacs's PATH")))
 
 (defgroup soundscape nil
   "Soundscapes For Emacs."
@@ -180,8 +187,10 @@ Defaults specify alsa as the output and set master volume"
 (defun soundscape-catalog (&optional refresh)
   "Return catalog of installed Soundscapes, initialize if necessary."
   
-  (when (null (file-exists-p soundscape-list))
-    (error "Soundscape Catalog missing."))
+  (unless (file-exists-p soundscape-list)
+    (user-error
+     "Soundscape catalog not found: %s; install its packages or customize soundscape-data"
+     soundscape-list))
   (cond
    ((and soundscape--catalog (null refresh)) soundscape--catalog)
    (t
@@ -226,7 +235,7 @@ Default is to return NullAgent if name not found."
             (apply
              #'start-process
              "Boodler" nil
-             "nice" "-n"  "19" soundscape-player
+             "nice" "-n"  "19" (soundscape--player)
              ;; Add --device only if not using default device:
              (if (string= soundscape-device "default")
                  `(,@soundscape-manager-options ,scape)
@@ -356,8 +365,6 @@ is a Soundscape name, and the second element is a list of
 Soundscape names. Soundscape at position 0 (the first entry in
 this list) must be the NullAgent written as (). ")
 
-(soundscape-load-theme soundscape-default-theme)
-
 (defun soundscape--read-mode-name ()
   "Helper to read major-mode name with completion."
   (let ((completion-regexp-list '("-mode$")))
@@ -414,7 +421,7 @@ Optional interactive prefix arg `prompt-mode' prompts for the mode."
 
 (defun soundscape-init ()
   "Initialize Soundscape."
-  (soundscape-catalog)
+  (soundscape-load-theme soundscape-default-theme)
   (soundscape-listener)
   (unless
       (member '(soundscape--auto (:eval (soundscape-current))) minor-mode-alist)
@@ -436,7 +443,7 @@ Optional interactive prefix arg restarts the listener."
        (apply
         #'start-process
         "SoundscapeListener" " *Soundscapes*"
-        "nice" "-n"  "19" soundscape-player
+        "nice" "-n"  "19" (soundscape--player)
         ;; Add --device only if not using default device:
         (if (string= soundscape-device "default")
             `(,@soundscape-manager-options
@@ -638,4 +645,3 @@ The  is then saved to soundscape-device for future use."
 
 (provide 'soundscape)
 ;;;  end of file
-
