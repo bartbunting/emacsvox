@@ -72,6 +72,21 @@
       (should (fboundp function))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-view-line-to-top-restores-spoken-recenter-command ()
+  "Moving the current line to the window top speaks and cues the result."
+  (let (events)
+    (cl-letf (((symbol-function 'recenter)
+               (lambda (position) (push (list 'recenter position) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (call-interactively #'emacsvox-view-line-to-top))
+    (should
+     (equal
+      (nreverse events)
+      '((recenter 0) speak-line (icon select-object))))))
+
 (ert-deftest emacsvox-view-exit-feedback-is-target-aware ()
   "Only the matching interactive View exit produces feedback."
   (let ((ems--interactive-fn-name 'View-quit)

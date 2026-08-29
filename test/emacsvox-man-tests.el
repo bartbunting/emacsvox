@@ -39,6 +39,11 @@
       (should (advice-member-p function target))))
   (should-not (fboundp 'Man-quit)))
 
+(ert-deftest emacsvox-man-line-to-top-key-targets-restored-command ()
+  "The Man `t' binding names the restored spoken recenter command."
+  (should (eq (lookup-key Man-mode-map (kbd "t"))
+              'emacsvox-view-line-to-top)))
+
 (ert-deftest emacsvox-man-mode-setup-remains-unconditional ()
   "Man mode setup runs for normal internal mode initialization."
   (with-temp-buffer

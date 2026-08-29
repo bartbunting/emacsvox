@@ -19552,11 +19552,11 @@ Provide additional advice to view-mode
 @subsection Emacsvox-View Commands
 
 @subsubsection emacsvox-view-line-to-top
-@deffn {Command} emacsvox-view-line-to-top  [Arg list not available until function definition is loaded.]
+@deffn {Command} emacsvox-view-line-to-top
 @findex emacsvox-view-line-to-top
 
 @format
-Move current line to top of window
+Move the current line to the top of the window and speak it.
 @end format
 @end deffn
 

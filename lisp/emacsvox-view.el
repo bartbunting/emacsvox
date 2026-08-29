@@ -58,6 +58,15 @@
      (outline-minor-mode 1))
  'at-end)
 
+;;;  additional interactive commands
+
+(defun emacsvox-view-line-to-top ()
+  "Move the current line to the top of the window and speak it."
+  (interactive)
+  (recenter 0)
+  (emacsvox-speak-line)
+  (emacsvox-icon 'select-object))
+
 ;;;  Advise additional interactive commands:
 
 (defun emacsvox--advice-view-mode-after (&rest _)
