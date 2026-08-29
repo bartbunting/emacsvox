@@ -1,0 +1,387 @@
+@c Emacsvox speech support for the third-party Notmuch mail interface.
+
+@node Notmuch Mail
+@chapter Notmuch Mail
+
+@cindex Notmuch mail
+@cindex mail search, Notmuch
+@cindex asynchronous search, Notmuch
+@findex notmuch
+Notmuch is a separately installed mail index and Emacs interface.  Emacsvox
+adds speech and semantic presentation to its Hello, Search, and Show views; it
+does not configure a mail store, build the Notmuch database, fetch or send
+mail, or replace Notmuch's commands.  Install compatible Notmuch command-line
+and Emacs components and complete their setup first.  The
+@uref{https://notmuchmail.org/doc/latest/notmuch-emacs.html,official Notmuch
+Emacs manual} covers that setup and the complete upstream command set.
+
+The generated @ref{emacsvox-notmuch} section is the exhaustive Emacsvox
+command and option reference.  This chapter follows the tasks a user performs
+and explains when automatic feedback occurs.
+
+@section Start Notmuch
+
+@cindex starting Notmuch
+@cindex Notmuch Hello
+@findex notmuch-search
+Run @kbd{M-x notmuch} to open Notmuch Hello.  With the standard Emacsvox global
+maps loaded, @kbd{C-' m} runs @code{notmuch-search} directly and prompts for a
+query.  Emacsvox loads its live integration when Notmuch loads and marks new
+Hello, Search, Show, and Tree buffers with Notmuch semantic context.
+
+Notmuch remains the authority for every database, tag, archive, attachment,
+and message-composition operation.  Emacsvox observes the result of an
+explicit upstream command and presents it; loading the integration by itself
+does not alter mail, tags, files, or Notmuch configuration.
+
+@section Use Hello and start a search
+
+@cindex saved searches, Notmuch
+@cindex widgets, Notmuch Hello
+Moving among Hello widgets speaks a saved-search label and its displayed
+message count, or identifies the button or link reached.  These are the common
+Hello keys in the current Notmuch map:
+
+@table @kbd
+@item TAB
+Run @code{widget-forward} to reach the next saved search, entry field, button,
+or link.
+@item <backtab>
+Run @code{widget-backward} to reach the preceding widget.
+@item RET
+Run @code{widget-button-press}; on a saved search this starts its query.
+@item j
+Run @code{notmuch-jump-search} and choose a configured search.
+@item g
+Run @code{notmuch-refresh-this-buffer} to refresh Hello.
+@item m
+Run @code{notmuch-mua-new-mail}.  Composition then belongs to Message mode and
+the separate @code{emacsvox-message} integration.
+@end table
+
+Press @kbd{?} in any Notmuch view, or @kbd{C-h m}, for the complete bindings
+provided by the installed Notmuch version.
+
+@subsection Understand asynchronous search completion
+
+@cindex search results, asynchronous rendering
+@cindex notification stream, Notmuch
+@vindex emacsvox-notmuch-search-completion-style
+A Notmuch search buffer can appear before its rows have finished rendering.
+For a user-owned non-refresh search that remains selected, Emacsvox gives a
+progress cue and waits for Notmuch's process sentinel.  It does not announce an
+empty row or move point while the process is still producing results.
+
+The default @code{adaptive} completion policy distinguishes two interactions:
+
+@itemize @bullet
+@item
+If the search is still selected, no command has been issued in it, and no input
+is pending, completion uses the primary speech stream.  It reports the final
+thread count followed by the result at point, or an explicit zero-thread
+summary.
+
+@item
+If you navigate, invoke another command, leave the buffer, or refresh an
+existing search before it completes, the eventual completion is a generic
+count on the notification stream.  It does not reread the row you reached and
+does not disclose the query, sender, recipients, subject, tags, or attachment
+metadata.  Killing the owning search buffer cancels this delivery silently.
+@end itemize
+
+The notification stream uses @code{tts-notification-device} when one is
+available and otherwise falls back to the primary process.  The
+@code{summary} policy always sends a generic count there; @code{cue} sends only
+a completion cue; and @code{silent} suppresses successful completion.
+Failures remain audible and generic for every policy.  A normal refresh is
+always treated as background-style completion, while the deliberate global
+refresh-all command remains silent.
+
+@section Navigate and inspect Search results
+
+@cindex Notmuch Search
+@cindex search fields, Notmuch
+On thread movement, Emacsvox reads the configured semantic fields and presents
+status cues.  Reaching a boundary reports the beginning or end instead of
+repeating the current row.  Emacsvox makes the arrow keys equivalent to the
+standard next and previous thread commands.
+
+@table @kbd
+@item n
+Run @code{notmuch-search-next-thread}.
+@item <down>
+Also run @code{notmuch-search-next-thread}.
+@item p
+Run @code{notmuch-search-previous-thread}.
+@item <up>
+Also run @code{notmuch-search-previous-thread}.
+@item RET
+Run @code{notmuch-search-show-thread}.  The Show view lands on the first useful
+visible body line or leaf MIME part and presents the opened message.
+@item SPC
+Run @code{notmuch-search-scroll-up}.  This is upstream viewport scrolling
+rather than semantic thread selection.
+@item C-c C-p
+Run @code{emacsvox-notmuch-speak-search-details}.  This explicitly reads all
+configured fields for the result at point without the automatic content
+limits.
+@item +
+Run @code{notmuch-search-add-tag}.
+@item -
+Run @code{notmuch-search-remove-tag}.
+@item *
+Run @code{notmuch-search-tag-all} for the selected results.
+@item a
+Run @code{notmuch-search-archive-thread}.
+@item g
+Run @code{notmuch-refresh-this-buffer}; completion is delivered through the
+generic notification policy described above.
+@end table
+
+The default Search fields are authors, subject, relative date, matched and
+total message counts, and ordinary tags.  Status tags configured as auditory
+cues are not repeated as words.  See @ref{Notmuch fields and privacy}
+to omit or reorder potentially sensitive fields.
+
+@section Read a thread and its MIME parts
+
+@cindex Notmuch Show
+@cindex MIME parts, Notmuch
+@cindex attachments, Notmuch
+Opening a thread speaks one semantic message summary and the first visible body
+line.  Hidden alternative bodies are skipped.  If a message has no visible
+body text, point falls back to a leaf MIME-part button when possible.  Moving
+onto such a button identifies its bounded filename, content type, and size.
+
+@table @kbd
+@item n
+Run @code{notmuch-show-next-open-message}.
+@item p
+Run @code{notmuch-show-previous-open-message}.
+@item N
+Run @code{notmuch-show-next-message}, including closed messages.
+@item P
+Run @code{notmuch-show-previous-message}, including closed messages.
+@item SPC
+Run @code{notmuch-show-advance-and-archive}.  Within one message Emacsvox reads
+the newly visible page; on a message transition it reads the new message; at
+the thread end it reports the actual archive outcome and destination.
+@item DEL
+Run @code{notmuch-show-rewind} and read the resulting page or message.
+@item RET
+Run @code{notmuch-show-toggle-message} and cue the current message's resulting
+visibility.
+@item M-RET
+Run @code{notmuch-show-open-or-close-all}.  It opens every message and reports
+the resulting thread state and total, such as ``Opened all 5 messages.''  Use a
+prefix argument, @kbd{C-u M-RET}, to close every message and receive the
+corresponding total.
+@item C-c C-p
+Run @code{emacsvox-notmuch-speak-show-position}.  It reports the message
+ordinal and total plus complete configured message details.  On a MIME-part
+button it instead gives the complete part description, including its full
+filename.
+@item TAB
+Run @code{notmuch-show-next-button} and identify the button or MIME part.
+@item <backtab>
+Run @code{notmuch-show-previous-button} and identify the button or MIME part.
+@item w
+Run @code{notmuch-show-save-attachments}.  Emacsvox confirms when the upstream
+command returns, but Notmuch does not expose a per-attachment result through
+this command, so the confirmation cannot distinguish partial skips.
+@item . s
+Run @code{notmuch-show-save-part} on the current MIME part.
+@item . v
+Run @code{notmuch-show-view-part}.
+@item . o
+Run @code{notmuch-show-interactively-view-part} and choose an external action.
+@item . m
+Run @code{notmuch-show-choose-mime-of-part}.
+@end table
+
+Viewing, saving, overwriting, or launching a MIME part remains an explicit
+Notmuch operation.  Merely navigating or requesting details never opens an
+attachment or external viewer.
+
+@section Change tags and archive state
+
+@cindex tags, Notmuch
+@cindex archiving, Notmuch
+Emacsvox compares displayed tags before and after interactive mutation.  It
+reports only the actual additions and removals.  Adding an existing tag or
+removing an absent one reports ``Tags unchanged'' rather than claiming a
+change.  An error or cancelled upstream command does not produce success
+feedback.
+
+The following common Show commands receive that result-aware feedback:
+
+@table @kbd
+@item +
+Run @code{notmuch-show-add-tag} on the current message.
+@item -
+Run @code{notmuch-show-remove-tag}.
+@item *
+Run @code{notmuch-show-tag-all} across the thread.
+@item a
+Run @code{notmuch-show-archive-message-then-next-or-next-thread}.
+@item A
+Run @code{notmuch-show-archive-thread-then-next}.
+@end table
+
+Archive feedback distinguishes a real change, unchanged archive tags, and an
+unset @code{notmuch-archive-tags} configuration.  Movement wrappers give one
+combined result rather than duplicating feedback from their nested tag or
+archive command.
+
+@anchor{Notmuch fields and privacy}
+@section Choose fields, status, and privacy
+
+@cindex privacy, Notmuch speech
+@cindex fields, Notmuch speech
+@cindex status cues, Notmuch
+@cindex automatic speech limits, Notmuch
+Run @kbd{M-x customize-group RET emacsvox-notmuch RET} to change Notmuch speech
+without altering Notmuch's own database or display.
+
+@table @code
+@item emacsvox-notmuch-search-result-fields
+Defaults to @code{(authors subject date count tags)}.  Remove @code{subject} or
+another field to keep it out of Search navigation speech, reorder fields, or
+add a formatter function.
+@item emacsvox-notmuch-show-message-fields
+Defaults to @code{(from date to cc tags attachments)}.  The subject is omitted
+by default in Show, while To and Cc recipients are included.  Remove
+@code{to}, @code{cc}, or any other field when recipient privacy matters.
+@item emacsvox-notmuch-search-field-separator
+@itemx emacsvox-notmuch-show-field-separator
+Control the text placed between configured fields; both default to comma and
+space.
+@item emacsvox-notmuch-search-status-icons
+@itemx emacsvox-notmuch-show-status-icons
+Map unread, replied, forwarded, flagged, and personal status tags to cues or
+silence.  Removing an entry makes that status available to ordinary tag
+speech.  The optional Aural Presentation feature
+@code{mail-message-status-cues} can own shared semantic mail-state cues.
+@item emacsvox-notmuch-search-completion-style
+Choose @code{adaptive}, @code{summary}, @code{cue}, or @code{silent} as
+described under asynchronous completion.
+@end table
+
+Mail-controlled text is bounded before automatic speech and Aural history.
+The defaults are 256 characters and 1,024 UTF-8 bytes per field, then 1,000
+characters and 4,096 bytes for the complete automatic presentation:
+
+@table @code
+@item emacsvox-notmuch-automatic-field-character-limit
+@itemx emacsvox-notmuch-automatic-field-byte-limit
+Bound each automatic field before formatting and submission.
+@item emacsvox-notmuch-automatic-total-character-limit
+@itemx emacsvox-notmuch-automatic-total-byte-limit
+Provide the final defense for one automatic Notmuch presentation.
+@item emacsvox-notmuch-mime-node-limit
+@itemx emacsvox-notmuch-mime-depth-limit
+Default to 4,096 cons nodes and depth 64.  They keep malformed, cyclic, broad,
+or deeply nested MIME metadata from exhausting automatic inspection.  An
+incomplete scan reports a conservative attachment lower bound instead of
+claiming that no attachment exists.
+@end table
+
+A shortened Search or Show presentation states what was omitted and points to
+@kbd{C-c C-p} for explicit full configured details; a shortened Hello item
+points to @key{RET}.  The explicit Search and Show inspection commands
+deliberately bypass the automatic content limits; use them only when speaking
+the complete configured fields is appropriate.
+
+@subsection Understand retained and notification content
+
+@cindex Aural history, mail privacy
+Primary-stream Notmuch presentations can enter bounded Aural Presentation
+history.  By default Emacsvox retains at most 20 presentations and at most
+4,096 UTF-8 bytes of speech preview per record; records contain frozen data,
+source names, and positions, but never retain source buffers.  Run
+@kbd{M-x emacsvox-aural-list-recent-feedback} to inspect what was retained, or
+set @code{emacsvox-aural-presentation-history-limit} to zero to disable that
+history.
+
+Generic asynchronous completion uses the notification stream and contains no
+query or message metadata, but notification text may be retained by the
+notification subsystem.  Choose @code{cue} or @code{silent} when even a generic
+thread count is unwanted, and review the global notification-device and log
+settings separately.
+
+@section Know the support boundaries
+
+@cindex Notmuch Tree support
+@cindex message composition, Notmuch
+@table @asis
+@item Hello
+Widget navigation, view lifecycle, and searches have Notmuch-specific semantic
+feedback.
+@item Search
+Result navigation, asynchronous lifecycle, tags, archive operations, opening,
+and configured detail inspection have Notmuch-specific feedback.
+@item Show
+Message and part navigation, page reading, visibility, tags, archive operations,
+and explicit detail inspection have Notmuch-specific feedback.
+@item Tree
+Tree buffers receive @code{emacsvox-aural-module} context only.  Generic core
+speech can still operate, but this module currently has no Tree-specific row
+formatter, navigation, mutation, visibility, or asynchronous lifecycle.
+@item Composition
+Notmuch uses standard Message-mode composition.  Speech support after
+@code{notmuch-mua-new-mail}, reply, forward, or resume transitions belongs to
+@code{emacsvox-message}, not to the Notmuch integration.
+@end table
+
+There is no independent Notmuch speech disable or unload command.  Advice,
+hooks, and the Search arrow bindings remain installed for the Emacs session
+once the module loads.  Repeated loading is idempotent and does not duplicate
+them.
+
+@section Troubleshoot the live integration
+
+@cindex troubleshooting, Notmuch
+@cindex byte-code, Notmuch integration
+Use @kbd{?} or @kbd{C-h m} in the affected Notmuch buffer to confirm the keys
+owned by the installed Notmuch version.  Run @kbd{M-x notmuch-version} to
+identify that package, and use the official manual linked at the beginning of
+this chapter for its current behavior.
+
+Run @kbd{M-x emacsvox-aural-doctor} when speech bindings, loaded source versus
+byte-code, Aural rules, sound resources, or the backend appear wrong.  Use
+@kbd{M-x emacsvox-aural-list-recent-feedback} to inspect the exact bounded
+presentation submitted for a Notmuch action.  These diagnostics do not query
+or modify the mail database.
+
+For a source checkout, use the Emacs selected by @file{local.mk}.  Run
+@code{make check-emacs} before diagnosing compilation, @code{make bytecode}
+after an ordinary integration edit, and @code{make bytecode-rebuild} after a
+branch switch or a macro or public-interface change.  A fresh Emacs must load
+the rebuilt byte-code before live verification.
+
+@section Integration contracts for maintainers
+
+@cindex Notmuch integration maintenance
+The live module is registered as an optional package integration.  Its stable
+extension points are the Hello, Search, Show, and Tree mode hooks; Search and
+Show mode maps; public interactive commands; and public Search/Show accessors.
+Advice is installed only when a target exists and is target-aware, so a nested
+or programmatic upstream call does not claim the outer user's feedback.
+
+The Show landing and visibility paths also read renderer metadata such as
+@code{:headers-overlay}, @code{:message-visible}, message extents,
+@code{:notmuch-part}, part-hidden state, and Notmuch part-button types.  Missing
+optional metadata should reduce presentation detail rather than authorize an
+operation.  Review these adapters whenever the Notmuch renderer changes.
+
+Each user-owned asynchronous Search process carries its own completion state
+as a process property.  The upstream sentinel renders first; Emacsvox then
+clears that property before delivering exactly one terminal result.  The
+owning buffer and process status are authoritative.  A killed owner remains
+silent, concurrent buffers cannot overwrite one another, and the global
+refresh-all path intentionally acquires no ownership.
+
+Run @code{make notmuch-test} for the explicit source suite.  After current
+byte-code exists, run @code{make compiled-notmuch-test}; it verifies the exact
+loaded @file{emacsvox-notmuch.elc}, compiler version, and the same focused
+selector, including real displayed-window reading for both advance paths.

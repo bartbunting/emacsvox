@@ -29,11 +29,18 @@
            "^;;; in Emacs version \\([^\n]+\\)$" nil t)
       (match-string-no-properties 1))))
 
+(defconst emacsvox-notmuch-test--repository-directory
+  (file-name-as-directory
+   (file-truename
+    (expand-file-name
+     "../" (file-name-directory (or load-file-name buffer-file-name)))))
+  "Repository root containing the maintained Notmuch task guide.")
+
 (defconst emacsvox-notmuch-test--loaded-module-path
-  (let* ((test-directory
-          (file-name-directory (or load-file-name buffer-file-name)))
-         (source
-          (expand-file-name "../lisp/emacsvox-notmuch.el" test-directory))
+  (let* ((source
+          (expand-file-name
+           "lisp/emacsvox-notmuch.el"
+           emacsvox-notmuch-test--repository-directory))
          (module
           (if (eq emacsvox-notmuch-test--module-load-kind 'compiled)
               (concat source "c")
@@ -61,6 +68,13 @@
          module loaded))
       loaded))
   "Canonical path of the Notmuch module exercised by this test file.")
+
+(defun emacsvox-notmuch-test--repository-file-string (file)
+  "Return repository-relative FILE as a string."
+  (with-temp-buffer
+    (insert-file-contents
+     (expand-file-name file emacsvox-notmuch-test--repository-directory))
+    (buffer-string)))
 
 (defun emacsvox-test--notmuch-submission-recorder (record)
   "Return a native submission stub that passes logical events to RECORD."
@@ -249,6 +263,157 @@ Return the beginning of the inserted row."
     (emacsvox-notmuch-enable-aural-context)
     (should (eq emacsvox-aural-module 'notmuch))
     (should (local-variable-p 'emacsvox-aural-module))))
+
+(ert-deftest emacsvox-notmuch-task-guide-covers-live-keys-and-defaults ()
+  "The task guide should agree with current Notmuch maps and Customize."
+  (let* ((guide
+          (emacsvox-notmuch-test--repository-file-string
+           "info/notmuch.texi"))
+         (searchable-guide
+          (mapconcat #'identity (split-string (downcase guide)) " ")))
+    (dolist
+        (binding
+         '((notmuch-hello-mode-map "TAB" widget-forward)
+           (notmuch-hello-mode-map "<backtab>" widget-backward)
+           (notmuch-hello-mode-map "RET" widget-button-press)
+           (notmuch-hello-mode-map "j" notmuch-jump-search)
+           (notmuch-hello-mode-map "g" notmuch-refresh-this-buffer)
+           (notmuch-hello-mode-map "m" notmuch-mua-new-mail)
+           (notmuch-search-mode-map "n" notmuch-search-next-thread)
+           (notmuch-search-mode-map "<down>" notmuch-search-next-thread)
+           (notmuch-search-mode-map "p" notmuch-search-previous-thread)
+           (notmuch-search-mode-map "<up>" notmuch-search-previous-thread)
+           (notmuch-search-mode-map "RET" notmuch-search-show-thread)
+           (notmuch-search-mode-map "SPC" notmuch-search-scroll-up)
+           (notmuch-search-mode-map
+            "C-c C-p" emacsvox-notmuch-speak-search-details)
+           (notmuch-search-mode-map "+" notmuch-search-add-tag)
+           (notmuch-search-mode-map "-" notmuch-search-remove-tag)
+           (notmuch-search-mode-map "*" notmuch-search-tag-all)
+           (notmuch-search-mode-map "a" notmuch-search-archive-thread)
+           (notmuch-search-mode-map "g" notmuch-refresh-this-buffer)
+           (notmuch-show-mode-map "n" notmuch-show-next-open-message)
+           (notmuch-show-mode-map "p" notmuch-show-previous-open-message)
+           (notmuch-show-mode-map "N" notmuch-show-next-message)
+           (notmuch-show-mode-map "P" notmuch-show-previous-message)
+           (notmuch-show-mode-map "SPC" notmuch-show-advance-and-archive)
+           (notmuch-show-mode-map "DEL" notmuch-show-rewind)
+           (notmuch-show-mode-map "RET" notmuch-show-toggle-message)
+           (notmuch-show-mode-map "M-RET" notmuch-show-open-or-close-all)
+           (notmuch-show-mode-map
+            "C-c C-p" emacsvox-notmuch-speak-show-position)
+           (notmuch-show-mode-map "TAB" notmuch-show-next-button)
+           (notmuch-show-mode-map
+            "<backtab>" notmuch-show-previous-button)
+           (notmuch-show-mode-map "w" notmuch-show-save-attachments)
+           (notmuch-show-mode-map ". s" notmuch-show-save-part)
+           (notmuch-show-mode-map ". v" notmuch-show-view-part)
+           (notmuch-show-mode-map
+            ". o" notmuch-show-interactively-view-part)
+           (notmuch-show-mode-map ". m" notmuch-show-choose-mime-of-part)
+           (notmuch-show-mode-map "+" notmuch-show-add-tag)
+           (notmuch-show-mode-map "-" notmuch-show-remove-tag)
+           (notmuch-show-mode-map "*" notmuch-show-tag-all)
+           (notmuch-show-mode-map
+            "a" notmuch-show-archive-message-then-next-or-next-thread)
+           (notmuch-show-mode-map
+            "A" notmuch-show-archive-thread-then-next)))
+      (pcase-let ((`(,map ,key ,command) binding))
+        (should (eq (lookup-key (symbol-value map) (kbd key)) command))
+        (should
+         (string-match-p
+          (regexp-quote (format "@item %s\n" key)) guide))
+        (should
+         (string-match-p
+          (regexp-quote (format "@code{%s}" command)) guide))))
+    (dolist
+        (entry
+         '((emacsvox-notmuch-search-result-fields
+            (authors subject date count tags))
+           (emacsvox-notmuch-search-completion-style adaptive)
+           (emacsvox-notmuch-automatic-field-character-limit 256)
+           (emacsvox-notmuch-automatic-field-byte-limit 1024)
+           (emacsvox-notmuch-automatic-total-character-limit 1000)
+           (emacsvox-notmuch-automatic-total-byte-limit 4096)
+           (emacsvox-notmuch-mime-node-limit 4096)
+           (emacsvox-notmuch-mime-depth-limit 64)
+           (emacsvox-notmuch-search-field-separator ", ")
+           (emacsvox-notmuch-search-status-icons
+            (("unread" . mail-unread)
+             ("replied" . mail-replied)
+             ("forwarded" . mail-forwarded)
+             ("flagged" . mark-object)))
+           (emacsvox-notmuch-show-message-fields
+            (from date to cc tags attachments))
+           (emacsvox-notmuch-show-field-separator ", ")
+           (emacsvox-notmuch-show-status-icons
+            (("unread" . mail-unread)
+             ("replied" . mail-replied)
+             ("forwarded" . mail-forwarded)
+             ("flagged" . mark-object)))))
+      (let ((option (car entry))
+            (expected (cadr entry)))
+        (should (custom-variable-p option))
+        (should (equal (default-value option) expected))
+        (should
+         (or
+          (string-match-p
+           (regexp-quote (format "@item %s\n" option)) guide)
+          (string-match-p
+           (regexp-quote (format "@itemx %s\n" option)) guide)))))
+    (dolist
+        (topic
+         '("asynchronous search completion"
+           "notification stream"
+           "killing the owning search buffer"
+           "aural presentation history"
+           "tree buffers receive"
+           "emacsvox-message"
+           "renderer metadata"
+           "process property"
+           "make compiled-notmuch-test"))
+      (should
+       (string-match-p (regexp-quote topic) searchable-guide)))))
+
+(ert-deftest emacsvox-notmuch-task-guide-links-form-documentation-triangle ()
+  "The manual, README, and generated reference should cross-link the guide."
+  (let ((guide
+         (emacsvox-notmuch-test--repository-file-string
+          "info/notmuch.texi"))
+        (master
+         (emacsvox-notmuch-test--repository-file-string
+          "info/emacsvox.texi"))
+        (menu
+         (emacsvox-notmuch-test--repository-file-string
+          "info/preamble.texi"))
+        (packages
+         (emacsvox-notmuch-test--repository-file-string
+          "info/packages.texi"))
+        (generated
+         (emacsvox-notmuch-test--repository-file-string
+          "info/docs.texi"))
+        (readme
+         (emacsvox-notmuch-test--repository-file-string "Readme.org")))
+    (should (string-match-p "@node Notmuch Mail" guide))
+    (should (string-match-p "@ref{emacsvox-notmuch}" guide))
+    (should (string-match-p "@include notmuch.texi" master))
+    (should (string-match-p "\\* Notmuch Mail: Notmuch Mail\\." menu))
+    (should (string-match-p "@ref{Notmuch Mail}" packages))
+    (should
+     (string-match-p
+      "file:info/notmuch\\.texi.*Notmuch Mail workflow chapter" readme))
+    (should (string-match-p "@node emacsvox-notmuch" generated))
+    (should (string-match-p "@ref{Notmuch Mail}" generated))
+    (dolist
+        (command
+         '(emacsvox-notmuch-speak-search-result
+           emacsvox-notmuch-speak-search-details
+           emacsvox-notmuch-speak-show-message
+           emacsvox-notmuch-speak-show-position))
+      (should
+       (string-match-p
+        (regexp-quote (format "@deffn {Command} %s" command))
+        generated)))))
 
 (ert-deftest emacsvox-notmuch-search-arrows-match-thread-navigation ()
   "Search-buffer arrows use the same semantic navigation as n and p."

@@ -348,6 +348,9 @@ Org exposes heading, content, list, paragraph, agenda, table, capture,
 source-edit, and export intent.  Its =org-action= attribute distinguishes
 navigation and lifecycle operations without hard-coding their presentation.
 Notmuch, Gnus, Dired, Magit, and Shell/Comint also expose workflow intent.
+The [[file:info/notmuch.texi][Notmuch Mail workflow chapter]] covers setup,
+Hello/Search/Show tasks, asynchronous completion, keys, bounded automatic
+speech, privacy and history controls, support boundaries, and troubleshooting.
 Routine Dired next/previous-file navigation speaks the entry without the
 redundant selection earcon; marking, unmarking, directory, and other state
 changes retain their distinct feedback.  The repository audit rejects a new

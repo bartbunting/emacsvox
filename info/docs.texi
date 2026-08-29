@@ -5,7 +5,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1456 commands and 184 options.
+This chapter documents a total of 1457 commands and 191 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -14402,9 +14402,35 @@ Functions you would like to run when network is disconnected:
 @node emacsvox-notmuch
 @section emacsvox-notmuch
 
-NOTMUCH ==  Emacs interface to notmuch mail
+Speech access for Notmuch Hello, Search, and Show workflows.  The
+integration presents saved searches, asynchronous completion, semantic
+result rows and messages, MIME parts, tag and archive outcomes, and message
+visibility while leaving database and mail operations to Notmuch.
+
+Customize `emacsvox-notmuch' for fields, status cues, automatic content
+limits, and search-completion policy.  See the @ref{Notmuch Mail} chapter in
+the Emacsvox manual for setup, keys, privacy, inspection, support boundaries,
+and troubleshooting; the generated emacsvox-notmuch section is the
+exhaustive command and option reference.
+Tree buffers receive semantic module context only.  Message composition is
+speech-enabled separately by `emacsvox-message'.
+See https://notmuchmail.org/doc/latest/notmuch-emacs.html for Notmuch itself.
 
 @subsection Emacsvox-Notmuch Commands
+
+@subsubsection emacsvox-notmuch-speak-search-details
+@deffn {Command} emacsvox-notmuch-speak-search-details  (&optional result)
+@findex emacsvox-notmuch-speak-search-details
+
+@format
+Speak complete configured details for search RESULT at point.
+
+Unlike automatic navigation feedback, this explicit inspection is not
+truncated by Notmuch’s automatic presentation limits.
+
+(fn &optional RESULT)
+@end format
+@end deffn
 
 @subsubsection emacsvox-notmuch-speak-search-result
 @deffn {Command} emacsvox-notmuch-speak-search-result  (&optional result)
@@ -14434,11 +14460,138 @@ When BODY-LINE is non-nil, speak it after the semantic message summary.
 @findex emacsvox-notmuch-speak-show-position
 
 @format
-Speak the current position in the thread and semantic message details.
+Speak thread position and complete details for the current Show item.
 @end format
 @end deffn
 
 @subsection emacsvox-notmuch Options
+
+@defvar {User Option} emacsvox-notmuch-automatic-field-byte-limit
+@verbatim
+Maximum UTF-8 bytes spoken from one automatic Notmuch field.
+
+This is a preparation bound as well as a speech bound.  A truncation notice
+uses part of the limit.  Set this to nil to disable the per-field byte limit;
+the total automatic-presentation limits still apply.
+@end verbatim
+
+Default Value:
+@verbatim
+
+1024
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-automatic-field-character-limit
+@verbatim
+Maximum characters spoken from one automatic Notmuch field.
+
+This limit applies to mail-controlled fields before automatic navigation,
+opening, action, and widget feedback is submitted.  A truncation notice uses
+part of the limit.  Set this to nil to disable the per-field character limit;
+the total automatic-presentation limits still apply.
+@end verbatim
+
+Default Value:
+@verbatim
+
+256
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-automatic-total-byte-limit
+@verbatim
+Maximum UTF-8 bytes in one automatic Notmuch presentation.
+
+The limit includes the explicit truncation notice.  Set this to nil to disable
+the total byte limit; the total character limit still applies.
+@end verbatim
+
+Default Value:
+@verbatim
+
+4096
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-automatic-total-character-limit
+@verbatim
+Maximum characters in one automatic Notmuch presentation.
+
+The limit includes the explicit truncation notice.  Set this to nil to disable
+the total character limit; the total byte limit still applies.
+@end verbatim
+
+Default Value:
+@verbatim
+
+1000
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-mime-depth-limit
+@verbatim
+Maximum nesting depth inspected while scanning a Notmuch MIME body.
+@end verbatim
+
+Default Value:
+@verbatim
+
+64
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-mime-node-limit
+@verbatim
+Maximum cons nodes inspected while scanning a Notmuch MIME body.
+@end verbatim
+
+Default Value:
+@verbatim
+
+4096
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-notmuch-search-completion-style
+@verbatim
+Control successful asynchronous Notmuch search completion feedback.
+
+With ‘adaptive’, a user-owned search that remains selected and untouched
+speaks its final count and the result at point on the primary speech stream.
+After the user issues another command, leaves the search buffer, or refreshes
+an existing search, completion contains only a generic result count and uses
+the notification stream.  ‘summary’ always sends the generic count to the
+notification stream, ‘cue’ sends only a task-completion cue there, and
+‘silent’ suppresses successful completion feedback.
+
+Failures remain audible for every style.  Notification feedback contains no
+query or message metadata and may be retained in the notifications log.  A
+separate notification process is controlled globally by
+‘tts-notification-device’; when none is available, notification speech falls
+back to the primary process.
+@end verbatim
+
+Default Value:
+@verbatim
+
+adaptive
+
+@end verbatim
+
+@end defvar
 
 @defvar {User Option} emacsvox-notmuch-search-field-separator
 @verbatim
@@ -23824,6 +23977,7 @@ Switch to previous legacy language.
 Signal a user error when logical voices own language routing.
 @end format
 @end deffn
+
 @subsubsection tts-set-punctuations
 @deffn {Command} tts-set-punctuations  (mode &optional prefix)
 @table @kbd

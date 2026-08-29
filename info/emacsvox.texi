@@ -47,6 +47,7 @@ and  was last updated on @today{}.
 @include voices.texi
 @include online-help.texi
 @include packages.texi
+@include notmuch.texi
 @include agent-shell.texi
 @include keys.texi
 @include docs.texi

@@ -78,6 +78,10 @@ sections integrate smoothly with the messaging applications described
 here; this means that you do not need to re-learn a new set of work
 habits when dealing with content in your messaging application.
 
+For current task-oriented guidance to indexed mail search, thread reading,
+attachments, asynchronous results, and privacy controls, see
+@ref{Notmuch Mail}.
+
 @node Editing Code
 @section Editing Code
 
