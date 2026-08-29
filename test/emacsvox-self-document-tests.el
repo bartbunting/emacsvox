@@ -66,6 +66,15 @@
     (should (string-match-p "<system-mail-spool>/<login>" rendered))
     (should-not (string-match-p "private-login" rendered))))
 
+(ert-deftest emacsvox-self-document-sanitizes-builder-home-defaults ()
+  "Compile-time home defaults should use portable generated values."
+  (let ((rendered
+         (self-document--portable-default-value
+          'emacsvox-bookshare-directory
+          "/home/build-user/books/book-share")))
+    (should (string-match-p "~/books/book-share" rendered))
+    (should-not (string-match-p "build-user" rendered))))
+
 (ert-deftest emacsvox-self-document-rejects-unresolved-autoload-commands ()
   "A documented command should have a loaded function definition."
   (let ((command 'emacsvox-self-document-autoload-fixture))

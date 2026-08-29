@@ -231,7 +231,8 @@ generator always skips the declared module instead of probing the host.")
   "Global count of options.")
 
 (defconst self-document-portable-default-overrides
-  '((emacsvox-mail-spool-file . "<system-mail-spool>/<login>"))
+  '((emacsvox-bookshare-directory . "~/books/book-share")
+    (emacsvox-mail-spool-file . "<system-mail-spool>/<login>"))
   "Portable renderings for identity- or host-derived option defaults.")
 
 (defsubst self-document-option-p (o)
