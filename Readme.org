@@ -392,20 +392,32 @@ For a more detailed installation guide, and further instructions on usage, see t
 5. Install and test Omnivox:
    Omnivox is the recommended speech server on Linux, macOS, and WSL2.
    Follow the [[file:info/backends.texi][Speech Backends guide]] for your
-   platform.  Run its standalone check and continue only after hearing both
-   the test tone and speech.  Direct eSpeak, SwiftMac, macOS Python,
-   Eloquence, and DECtalk servers are compatibility alternatives, not the
-   initial-user path.
+   platform.  The supported launcher can run its standalone check after
+   validating the selected Emacs and Omnivox executable:
+   #+BEGIN_SRC sh
+   ./bin/emacsvox --check
+   #+END_SRC
+   Continue only after hearing both the test tone and speech.  Direct eSpeak,
+   SwiftMac, macOS Python, Eloquence, and DECtalk servers are compatibility
+   alternatives, not the initial-user path.
 
-6. Set Up the TTS Engine:
-   After installing Omnivox, add this to the shell startup file used to launch
-   Emacs:
+6. Prove an isolated Emacsvox start:
+   #+BEGIN_SRC sh
+   ./bin/emacsvox
+   #+END_SRC
+   This source-checkout launcher defaults to Omnivox, honors the =EMACS=
+   selection in =local.mk=, requires Emacs 31 or newer, uses absolute checkout
+   paths, and deliberately loads neither site files nor personal Emacs
+   configuration.  Run =./bin/emacsvox --diagnose= to print its selections
+   without producing audio or starting interactive Emacs.  This clean session
+   is the first-use proof, not a replacement for your normal customized Emacs.
+
+7. Set up normal customized starts:
+   Add the backend selection to the shell startup file used to launch Emacs:
    #+BEGIN_SRC sh
    export TTS_PROGRAM=omnivox
    #+END_SRC
-
-7. Load Emacsvox in Your Emacs Configuration:
-   Add the following line to the top of your .emacs file:
+   Then add the following line to the top of your Emacs init file:
    #+BEGIN_SRC elisp
    (load-file "<emacsvox-dir>/lisp/emacsvox-setup.el")
    #+END_SRC

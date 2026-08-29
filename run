@@ -1,8 +1,0 @@
-#!/bin/sh
-#Run out of this directory.
-# Default to using espeak unless TTS_PROGRAM is set.
-#
-[ -z "$TTS_PROGRAM" ] && export TTS_PROGRAM="espeak"
-EMACSVOX_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" > /dev/null 2>&1 && pwd)
-export EMACSVOX_DIR
-emacs "$@"

@@ -6,8 +6,15 @@ To install a specific version of Emacsvox:
   2. Run =make all= to configure and build Emacsvox.
   3. Install and smoke-test the recommended Omnivox server by following the
      [[file:../info/backends.texi][Speech Backends guide]].
-  4. Copy the resulting =emacsvox= directory to the install location.
-  5. Load =lisp/emacsvox-setup.el= from that installation.
+  4. From the source tree, run =./bin/emacsvox --check= and continue only after
+     hearing both the test tone and speech.  Then run =./bin/emacsvox= to prove
+     first speech in an isolated Emacs that does not load personal init files.
+     =./bin/emacsvox --diagnose= reports the selected Emacs, backend, and paths
+     without producing audio or starting interactive Emacs.
+  5. Copy the resulting =emacsvox= directory to the install location.  For
+     normal customized starts, export =TTS_PROGRAM=omnivox= and load
+     =lisp/emacsvox-setup.el= from that installation in the user's Emacs init
+     file.
 
 Direct eSpeak, Outloud, SwiftMac, macOS Python, and DECtalk servers are retained
 compatibility paths.  Their prerequisites and support boundary are owned by
@@ -22,6 +29,9 @@ EMACS=/path/to/emacs-31/bin/emacs
 
 All build and test targets then use that compiler without repeating
 =EMACS=...= on every invocation.  =make check-emacs= verifies the selection.
+The portable =bin/emacsvox= launcher uses the same simple =EMACS= assignment,
+unless its process has an explicit =EMACS= environment override, and rejects
+an older executable before startup.
 
 ** Source checkouts and byte-code
 

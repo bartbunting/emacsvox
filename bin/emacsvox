@@ -1,0 +1,231 @@
+#!/bin/sh
+
+# Copyright (C) 2026 Emacsvox Contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is not part of GNU Emacs, but the same permissions apply.
+# See the file COPYING in this distribution.
+
+set -eu
+
+program_name=emacsvox
+
+usage()
+{
+    cat <<'EOF'
+Usage: bin/emacsvox [LAUNCHER-OPTION] [--] [EMACS-ARGUMENT ...]
+
+Start an isolated Emacsvox session from this source tree.  The launcher does
+not load site files or personal Emacs configuration.
+
+Launcher options:
+  --diagnose  validate and print the selected Emacs, backend, and setup paths
+  --check     validate the launcher, then run Omnivox's audible backend check
+  -h, --help  show this help and exit
+  --          pass all following arguments to Emacs
+
+Selection order:
+  Emacs       $EMACS, then EMACS= in local.mk, then emacs on PATH
+  backend     $TTS_PROGRAM, otherwise the recommended omnivox backend
+  source tree $EMACSVOX_DIR, otherwise the parent of this bin directory
+
+Use -- before an Emacs argument that is also a launcher option.  A normal
+start always passes -Q, --no-splash, and the absolute emacsvox-setup.el path
+before the supplied Emacs arguments.
+EOF
+}
+
+fail()
+{
+    printf '%s: %s\n' "$program_name" "$1" >&2
+    exit "${2:-1}"
+}
+
+mode=start
+case ${1-} in
+    -h|--help)
+        usage
+        exit 0
+        ;;
+    --diagnose)
+        mode=diagnose
+        shift
+        ;;
+    --check)
+        mode=check
+        shift
+        ;;
+    --)
+        shift
+        ;;
+esac
+
+if [ "$mode" != start ] && [ "$#" -ne 0 ]; then
+    fail "$mode does not accept Emacs arguments; use --help for usage" 2
+fi
+
+script_directory=$(CDPATH= cd -- "$(dirname "$0")" && pwd) ||
+    fail "cannot resolve the launcher directory"
+default_emacsvox_root=$(CDPATH= cd -- "$script_directory/.." && pwd) ||
+    fail "cannot resolve the Emacsvox source tree"
+requested_emacsvox_root=${EMACSVOX_DIR:-$default_emacsvox_root}
+
+if [ ! -d "$requested_emacsvox_root" ]; then
+    fail "Emacsvox directory does not exist: $requested_emacsvox_root"
+fi
+emacsvox_root=$(CDPATH= cd -- "$requested_emacsvox_root" && pwd) ||
+    fail "cannot enter the Emacsvox directory: $requested_emacsvox_root"
+setup_file=$emacsvox_root/lisp/emacsvox-setup.el
+if [ ! -r "$setup_file" ]; then
+    fail "Emacsvox setup source is not readable: $setup_file"
+fi
+
+if [ "${EMACS+x}" = x ]; then
+    emacs_bin=$EMACS
+    emacs_selection='EMACS environment variable'
+else
+    emacs_bin=
+    if [ -r "$emacsvox_root/local.mk" ]; then
+        emacs_bin=$(
+            sed -n \
+                's/^[[:space:]]*EMACS[[:space:]]*=[[:space:]]*//; s/[[:space:]]*$//; p' \
+                "$emacsvox_root/local.mk" | sed -n '$p'
+        )
+    fi
+    if [ -n "$emacs_bin" ]; then
+        emacs_selection=local.mk
+    else
+        emacs_bin=emacs
+        emacs_selection=PATH
+    fi
+fi
+
+if [ -z "$emacs_bin" ]; then
+    fail "the selected Emacs executable is empty"
+fi
+case $emacs_bin in
+    /*) ;;
+    */*) emacs_bin=$emacsvox_root/$emacs_bin ;;
+    *)
+        resolved_emacs=$(command -v "$emacs_bin" 2>/dev/null || :)
+        if [ -z "$resolved_emacs" ]; then
+            fail "Emacs executable not found on PATH: $emacs_bin" 127
+        fi
+        emacs_bin=$resolved_emacs
+        ;;
+esac
+if [ ! -x "$emacs_bin" ]; then
+    fail "Emacs is not executable: $emacs_bin" 126
+fi
+
+if ! version_output=$(
+    "$emacs_bin" -Q --batch \
+        --eval '(princ (format "EMACSVOX_VERSION=%s" emacs-version))' \
+        2>&1
+); then
+    printf '%s\n' "$version_output" >&2
+    fail "unable to query the selected Emacs: $emacs_bin"
+fi
+emacs_version=$(
+    printf '%s\n' "$version_output" |
+        sed -n 's/^EMACSVOX_VERSION=//p' | sed -n '$p'
+)
+emacs_major=${emacs_version%%.*}
+case $emacs_major in
+    ''|*[!0-9]*)
+        fail "selected executable did not report a valid Emacs version: $emacs_bin"
+        ;;
+esac
+if [ "$emacs_major" -lt 31 ]; then
+    fail "Emacsvox requires Emacs 31 or newer; $emacs_bin reports $emacs_version"
+fi
+
+if [ "${TTS_PROGRAM+x}" = x ]; then
+    if [ -z "$TTS_PROGRAM" ]; then
+        fail "TTS_PROGRAM is set but empty"
+    fi
+    tts_program=$TTS_PROGRAM
+    tts_selection='TTS_PROGRAM environment variable'
+else
+    tts_program=omnivox
+    tts_selection='recommended default'
+fi
+
+case $tts_program in
+    /*)
+        backend_program=$tts_program
+        ;;
+    */*)
+        fail "TTS_PROGRAM must be a server name or an absolute executable path: $tts_program"
+        ;;
+    *)
+        bundled_backend=$emacsvox_root/servers/$tts_program
+        if [ -x "$bundled_backend" ]; then
+            backend_program=$bundled_backend
+        else
+            backend_program=$(command -v "$tts_program" 2>/dev/null || :)
+        fi
+        ;;
+esac
+if [ -z "${backend_program-}" ] || [ ! -x "$backend_program" ]; then
+    fail "speech backend is not executable: $tts_program" 127
+fi
+
+omnivox_runtime=
+case $backend_program in
+    "$emacsvox_root/servers/omnivox")
+        if ! omnivox_runtime=$(
+            EMACSVOX_OMNIVOX_PROBE_ONLY=1 "$backend_program"
+        ); then
+            fail "the Omnivox launcher could not find a runnable Omnivox backend" 127
+        fi
+        ;;
+esac
+unset EMACSVOX_OMNIVOX_PROBE_ONLY
+
+if [ -r /proc/version ] && grep -qi microsoft /proc/version; then
+    windows_play=$emacsvox_root/servers/windows-play
+    if [ -x "$windows_play" ]; then
+        export EMACSVOX_PLAY="${EMACSVOX_PLAY:-$windows_play}"
+    fi
+fi
+
+export EMACSVOX_DIR="$emacsvox_root"
+export TTS_PROGRAM="$tts_program"
+
+diagnose()
+{
+    printf 'Emacsvox root: %s\n' "$emacsvox_root"
+    printf 'Setup source: %s\n' "$setup_file"
+    printf 'Emacs: %s\n' "$emacs_bin"
+    printf 'Emacs selection: %s\n' "$emacs_selection"
+    printf 'Emacs version: %s\n' "$emacs_version"
+    printf 'Speech backend: %s\n' "$tts_program"
+    printf 'Backend selection: %s\n' "$tts_selection"
+    printf 'Backend executable: %s\n' "$backend_program"
+    if [ -n "$omnivox_runtime" ]; then
+        printf 'Omnivox runtime: %s\n' "$omnivox_runtime"
+    fi
+    printf 'Startup configuration: isolated (-Q); no site or personal init files\n'
+}
+
+case $mode in
+    diagnose)
+        diagnose
+        exit 0
+        ;;
+    check)
+        diagnose
+        case ${tts_program##*/} in
+            omnivox|omnivox.exe)
+                printf '\nRunning the audible Omnivox check.  Confirm that you hear both the tone and speech.\n'
+                exec "$backend_program" --check
+                ;;
+            *)
+                fail "--check supports the recommended Omnivox backend; see info/backends.texi for $tts_program"
+                ;;
+        esac
+        ;;
+esac
+
+exec "$emacs_bin" -Q --no-splash --load "$setup_file" "$@"

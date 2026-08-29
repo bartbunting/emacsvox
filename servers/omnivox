@@ -62,6 +62,15 @@ else
     fi
 fi
 
+# Let the top-level Emacsvox launcher validate the selected runtime without
+# starting it, producing audio, or creating a diagnostic-log session.  This is
+# an internal contract between the two tracked launchers, not an Omnivox CLI
+# option forwarded to the native executable.
+if [ "${EMACSVOX_OMNIVOX_PROBE_ONLY-}" = 1 ]; then
+    printf '%s\n' "$resolved_program"
+    exit 0
+fi
+
 # Preserve diagnostics outside Emacs: speech servers normally have no process
 # buffer, so stderr would otherwise be discarded.  Each launch streams into
 # line-aware bounded parts.  Closed logs are retained within both aggregate

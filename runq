@@ -1,6 +1,0 @@
-#!/bin/sh
-#Run out of this directory.
-# Default to using espeak unless TTS_PROGRAM is set.
-#
-[ -z "$TTS_PROGRAM" ] && export TTS_PROGRAM="espeak"
-exec emacs -q -l ./lisp/emacsvox-setup.el "$@"

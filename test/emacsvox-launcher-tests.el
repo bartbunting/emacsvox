@@ -6,8 +6,8 @@
 
 ;;; Commentary:
 
-;; Verify that the tracked launcher resolves its own checkout and bundled
-;; Windows speech runtime.
+;; Verify the portable first-use launcher and the bundled Omnivox runtime
+;; launcher without starting a real speech server.
 
 ;;; Code:
 
@@ -15,6 +15,62 @@
 
 (defconst emacsvox-launcher-tests--root
   (expand-file-name "../" (file-name-directory load-file-name)))
+
+(defun emacsvox-launcher-tests--write-executable (file contents)
+  "Write executable FILE containing CONTENTS and return FILE."
+  (make-directory (file-name-directory file) t)
+  (with-temp-file file
+    (insert contents))
+  (set-file-modes file #o700)
+  file)
+
+(defun emacsvox-launcher-tests--make-checkout ()
+  "Return a minimal launcher checkout in a path containing spaces."
+  (let ((root (make-temp-file "emacsvox launcher checkout " t)))
+    (dolist (relative '("bin/emacsvox" "bin/evox" "servers/omnivox"))
+      (let ((destination (expand-file-name relative root)))
+        (make-directory (file-name-directory destination) t)
+        (copy-file
+         (expand-file-name relative emacsvox-launcher-tests--root)
+         destination)
+        (set-file-modes destination #o700)))
+    (make-directory (expand-file-name "lisp" root) t)
+    (with-temp-file (expand-file-name "lisp/emacsvox-setup.el" root)
+      (insert ";;; launcher test setup source\n"))
+    root))
+
+(defun emacsvox-launcher-tests--fake-emacs (file version)
+  "Write a fake Emacs executable at FILE reporting VERSION."
+  (emacsvox-launcher-tests--write-executable
+   file
+   (concat
+    "#!/bin/sh\n"
+    "case $* in\n"
+    "  *EMACSVOX_VERSION*) printf '%s' 'EMACSVOX_VERSION=" version
+    "'; exit 0 ;;\n"
+    "esac\n"
+    "printf 'ROOT=%s\\n' \"${EMACSVOX_DIR-}\"\n"
+    "printf 'TTS=%s\\n' \"${TTS_PROGRAM-}\"\n"
+    "printf 'PLAY=%s\\n' \"${EMACSVOX_PLAY-}\"\n"
+    "printf 'LEGACY_DIR=%s\\n' \"${EMACSPEAK_DIR-}\"\n"
+    "printf 'LEGACY_PLAY=%s\\n' \"${EMACSPEAK_PLAY-}\"\n"
+    "for argument\n"
+    "do\n"
+    "  printf 'ARG=%s\\n' \"$argument\"\n"
+    "done\n")))
+
+(defun emacsvox-launcher-tests--fake-omnivox (file)
+  "Write a fake native Omnivox executable at FILE."
+  (emacsvox-launcher-tests--write-executable
+   file
+   "#!/bin/sh\nprintf 'OMNIVOX=%s\\n' \"$*\"\n"))
+
+(defun emacsvox-launcher-tests--call (program &rest arguments)
+  "Call PROGRAM with ARGUMENTS and return its status and combined output."
+  (with-temp-buffer
+    (let ((status
+           (apply #'call-process program nil '(t t) nil arguments)))
+      (list status (buffer-string)))))
 
 (defun emacsvox-launcher-tests--wsl-p ()
   "Return non-nil when these tests are running under WSL."
@@ -267,21 +323,249 @@
             (should (equal (buffer-string) "configured:--configured\n"))))
       (delete-directory directory t))))
 
-(ert-deftest emacsvox-launcher-uses-bundled-windows-runtime ()
-  "The tracked launcher prefers its checkout's staged Omnivox runtime."
+(ert-deftest emacsvox-launcher-starts-portably-and-in-isolation ()
+  "The canonical launcher works outside a checkout whose path has spaces."
+  (let* ((root (emacsvox-launcher-tests--make-checkout))
+         (caller (make-temp-file "emacsvox launcher caller " t))
+         (tools (expand-file-name "tool chain" root))
+         (fake-emacs
+          (emacsvox-launcher-tests--fake-emacs
+           (expand-file-name "emacs 31" tools) "31.1"))
+         (fake-omnivox
+          (emacsvox-launcher-tests--fake-omnivox
+           (expand-file-name "omnivox runtime" tools)))
+         (launcher (expand-file-name "bin/emacsvox" root)))
+    (unwind-protect
+        (let ((process-environment (copy-sequence process-environment))
+              (default-directory caller))
+          (dolist
+              (name
+               '("EMACSVOX_DIR" "EMACSVOX_PLAY" "TTS_PROGRAM"
+                 "EMACSPEAK_DIR" "EMACSPEAK_PLAY"
+                 "EMACSVOX_OMNIVOX_PROBE_ONLY"))
+            (setenv name nil))
+          ;; An explicit override takes precedence over a broken local.mk.
+          (with-temp-file (expand-file-name "local.mk" root)
+            (insert "EMACS=/does/not/exist\n"))
+          (setenv "EMACS" fake-emacs)
+          (setenv "OMNIVOX_PROGRAM" fake-omnivox)
+          (let* ((result
+                  (emacsvox-launcher-tests--call
+                   launcher "--" "--debug-init" "notes file.org"))
+                 (status (car result))
+                 (output (cadr result)))
+            (should (zerop status))
+            (should
+             (string-search
+              (format "ROOT=%s\n" (directory-file-name root)) output))
+            (should (string-search "TTS=omnivox\n" output))
+            (should (string-search "ARG=-Q\n" output))
+            (should (string-search "ARG=--no-splash\n" output))
+            (should (string-search "ARG=--load\n" output))
+            (should
+             (string-search
+              (format "ARG=%s/lisp/emacsvox-setup.el\n"
+                      (directory-file-name root))
+              output))
+            (should (string-search "ARG=--debug-init\n" output))
+            (should (string-search "ARG=notes file.org\n" output))
+            (should-not (string-search "init-directory" output))
+            (should (string-search "LEGACY_DIR=\n" output))
+            (should (string-search "LEGACY_PLAY=\n" output))))
+      (delete-directory caller t)
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-launcher-uses-local-mk-without-starting-audio ()
+  "Diagnostics honor local.mk and leave Omnivox logging untouched."
+  (let* ((root (emacsvox-launcher-tests--make-checkout))
+         (tools (expand-file-name "selected tools" root))
+         (fake-emacs
+          (emacsvox-launcher-tests--fake-emacs
+           (expand-file-name "selected emacs" tools) "31.2"))
+         (fake-omnivox
+          (emacsvox-launcher-tests--fake-omnivox
+           (expand-file-name "selected omnivox" tools)))
+         (log-directory (expand-file-name "logs must stay absent" root))
+         (launcher (expand-file-name "bin/emacsvox" root)))
+    (unwind-protect
+        (let ((process-environment (copy-sequence process-environment)))
+          (dolist (name '("EMACS" "EMACSVOX_DIR" "TTS_PROGRAM"))
+            (setenv name nil))
+          (with-temp-file (expand-file-name "local.mk" root)
+            (insert "EMACS=" fake-emacs "\n"))
+          (setenv "OMNIVOX_PROGRAM" fake-omnivox)
+          (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
+          (let* ((result
+                  (emacsvox-launcher-tests--call launcher "--diagnose"))
+                 (status (car result))
+                 (output (cadr result)))
+            (should (zerop status))
+            (should
+             (string-search (format "Emacs: %s\n" fake-emacs) output))
+            (should (string-search "Emacs selection: local.mk\n" output))
+            (should (string-search "Emacs version: 31.2\n" output))
+            (should (string-search "Speech backend: omnivox\n" output))
+            (should (string-search
+                     (format "Omnivox runtime: %s\n" fake-omnivox)
+                     output))
+            (should-not (file-exists-p log-directory))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-launcher-rejects-system-emacs-30 ()
+  "PATH fallback does not start Emacsvox with an old system Emacs."
+  (let* ((root (emacsvox-launcher-tests--make-checkout))
+         (tools (expand-file-name "old system bin" root))
+         (_fake-emacs
+          (emacsvox-launcher-tests--fake-emacs
+           (expand-file-name "emacs" tools) "30.4"))
+         (launcher (expand-file-name "bin/emacsvox" root)))
+    (unwind-protect
+        (let ((process-environment (copy-sequence process-environment)))
+          (dolist (name '("EMACS" "EMACSVOX_DIR" "TTS_PROGRAM"))
+            (setenv name nil))
+          (setenv "PATH" (concat tools path-separator "/usr/bin:/bin"))
+          (let* ((result
+                  (emacsvox-launcher-tests--call launcher "--diagnose"))
+                 (status (car result))
+                 (output (cadr result)))
+            (should (and (integerp status) (not (zerop status))))
+            (should
+             (string-search
+              "Emacsvox requires Emacs 31 or newer" output))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-launcher-reports-a-missing-omnivox-runtime ()
+  "The default backend fails before interactive Emacs when Omnivox is absent."
+  (let* ((root (emacsvox-launcher-tests--make-checkout))
+         (fake-emacs
+          (emacsvox-launcher-tests--fake-emacs
+           (expand-file-name "tools/emacs" root) "31.0"))
+         (missing (expand-file-name "missing/omnivox" root))
+         (launcher (expand-file-name "bin/emacsvox" root)))
+    (unwind-protect
+        (let ((process-environment (copy-sequence process-environment)))
+          (dolist (name '("EMACSVOX_DIR" "TTS_PROGRAM"))
+            (setenv name nil))
+          (setenv "EMACS" fake-emacs)
+          (setenv "OMNIVOX_PROGRAM" missing)
+          (let* ((result
+                  (emacsvox-launcher-tests--call launcher "--diagnose"))
+                 (status (car result))
+                 (output (cadr result)))
+            (should (and (integerp status) (not (zerop status))))
+            (should
+             (string-search
+              "Configured Omnivox executable is not runnable" output))
+            (should
+             (string-search
+              "could not find a runnable Omnivox backend" output))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-launcher-honors-root-and-backend-overrides ()
+  "Explicit root and non-Omnivox backend paths are reported unchanged."
+  (let* ((root (emacsvox-launcher-tests--make-checkout))
+         (tools (expand-file-name "override tools" root))
+         (fake-emacs
+          (emacsvox-launcher-tests--fake-emacs
+           (expand-file-name "emacs" tools) "31.3"))
+         (backend
+          (emacsvox-launcher-tests--write-executable
+           (expand-file-name "custom speech" tools) "#!/bin/sh\nexit 0\n"))
+         (launcher
+          (expand-file-name
+           "bin/emacsvox" emacsvox-launcher-tests--root)))
+    (unwind-protect
+        (let ((process-environment (copy-sequence process-environment)))
+          (setenv "EMACSVOX_DIR" root)
+          (setenv "EMACS" fake-emacs)
+          (setenv "TTS_PROGRAM" backend)
+          (let* ((result
+                  (emacsvox-launcher-tests--call launcher "--diagnose"))
+                 (status (car result))
+                 (output (cadr result)))
+            (should (zerop status))
+            (should
+             (string-search
+              (format "Emacsvox root: %s\n" (directory-file-name root))
+              output))
+            (should
+             (string-search (format "Speech backend: %s\n" backend) output))
+            (should
+             (string-search
+              "Backend selection: TTS_PROGRAM environment variable\n"
+              output))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-launcher-check-runs-audible-omnivox-check ()
+  "The explicit check mode forwards --check to Omnivox after diagnostics."
+  (let* ((root (emacsvox-launcher-tests--make-checkout))
+         (tools (expand-file-name "check tools" root))
+         (fake-emacs
+          (emacsvox-launcher-tests--fake-emacs
+           (expand-file-name "emacs" tools) "31.0"))
+         (fake-omnivox
+          (emacsvox-launcher-tests--fake-omnivox
+           (expand-file-name "omnivox" tools)))
+         (launcher (expand-file-name "bin/emacsvox" root)))
+    (unwind-protect
+        (let ((process-environment (copy-sequence process-environment)))
+          (dolist (name '("EMACSVOX_DIR" "TTS_PROGRAM"))
+            (setenv name nil))
+          (setenv "EMACS" fake-emacs)
+          (setenv "OMNIVOX_PROGRAM" fake-omnivox)
+          (setenv "OMNIVOX_LOG_DIRECTORY" (expand-file-name "logs" root))
+          (let* ((result
+                  (emacsvox-launcher-tests--call launcher "--check"))
+                 (status (car result))
+                 (output (cadr result)))
+            (should (zerop status))
+            (should
+             (string-search "Running the audible Omnivox check" output))
+            (should (string-search "OMNIVOX=--check\n" output))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-launcher-evox-is-a-bounded-compatibility-shim ()
+  "The old evox name warns and forwards to the isolated launcher."
+  (let* ((root (emacsvox-launcher-tests--make-checkout))
+         (tools (expand-file-name "shim tools" root))
+         (fake-emacs
+          (emacsvox-launcher-tests--fake-emacs
+           (expand-file-name "emacs" tools) "31.0"))
+         (fake-omnivox
+          (emacsvox-launcher-tests--fake-omnivox
+           (expand-file-name "omnivox" tools)))
+         (launcher (expand-file-name "bin/evox" root)))
+    (unwind-protect
+        (let ((process-environment (copy-sequence process-environment)))
+          (dolist (name '("EMACSVOX_DIR" "TTS_PROGRAM"))
+            (setenv name nil))
+          (setenv "EMACS" fake-emacs)
+          (setenv "OMNIVOX_PROGRAM" fake-omnivox)
+          (setenv "EMACSVOX_INIT_DIRECTORY" "/personal/evox/init")
+          (let* ((result
+                  (emacsvox-launcher-tests--call launcher "--diagnose"))
+                 (status (car result))
+                 (output (cadr result)))
+            (should (zerop status))
+            (should (string-search "evox: deprecated" output))
+            (should
+             (string-search
+              "EMACSVOX_INIT_DIRECTORY is no longer used" output))
+            (should
+             (string-search
+              "Startup configuration: isolated (-Q)" output))
+            (should-not (string-search "/personal/evox/init" output))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-launcher-configures-bundled-wsl-audio ()
+  "The canonical launcher selects the bundled WSL auditory-icon player."
   (skip-unless (emacsvox-launcher-tests--wsl-p))
-  (let ((fake-emacs (make-temp-file "emacsvox-launcher-emacs-")))
+  (let ((fake-emacs (make-temp-file "emacsvox-launcher-emacs-"))
+        (fake-omnivox (make-temp-file "emacsvox-launcher-omnivox-")))
     (unwind-protect
         (progn
-          (with-temp-file fake-emacs
-            (insert
-             "#!/bin/sh\n"
-             "printf 'ROOT=%s\\n' \"$EMACSVOX_DIR\"\n"
-             "printf 'TTS=%s\\n' \"$TTS_PROGRAM\"\n"
-             "printf 'PLAY=%s\\n' \"$EMACSVOX_PLAY\"\n"
-             "printf 'LEGACY_DIR=%s\\n' \"${EMACSPEAK_DIR-}\"\n"
-             "printf 'LEGACY_PLAY=%s\\n' \"${EMACSPEAK_PLAY-}\"\n"))
-          (set-file-modes fake-emacs #o700)
+          (emacsvox-launcher-tests--fake-emacs fake-emacs "31.0")
+          (emacsvox-launcher-tests--fake-omnivox fake-omnivox)
           (let ((process-environment (copy-sequence process-environment)))
             (dolist
                 (name
@@ -289,35 +573,25 @@
                    "EMACSPEAK_DIR" "EMACSPEAK_PLAY"))
               (setenv name nil))
             (setenv "EMACS" fake-emacs)
-            (with-temp-buffer
+            (setenv "OMNIVOX_PROGRAM" fake-omnivox)
+            (let* ((result
+                    (emacsvox-launcher-tests--call
+                     (expand-file-name
+                      "bin/emacsvox" emacsvox-launcher-tests--root)))
+                   (status (car result))
+                   (output (cadr result))
+                   (root
+                    (directory-file-name emacsvox-launcher-tests--root)))
+              (should (zerop status))
+              (should (string-search (format "ROOT=%s\n" root) output))
+              (should (string-search "TTS=omnivox\n" output))
               (should
-               (zerop
-                (call-process
-                 (expand-file-name "bin/evox"
-                                   emacsvox-launcher-tests--root)
-                 nil t nil)))
-              (let ((root (directory-file-name
-                           emacsvox-launcher-tests--root))
-                    (server
-                     (if
-                         (file-executable-p
-                          (expand-file-name
-                           "servers/omnivox-bin/current/omnivox.exe"
-                           emacsvox-launcher-tests--root))
-                         "omnivox"
-                       "windows-outloud")))
-                (should
-                 (equal
-                  (buffer-string)
-                  (format
-                   (concat
-                    "ROOT=%s\n"
-                    "TTS=%s/servers/%s\n"
-                    "PLAY=%s/servers/windows-play\n"
-                    "LEGACY_DIR=\n"
-                    "LEGACY_PLAY=\n")
-                   root root server root)))))))
-      (delete-file fake-emacs))))
+               (string-search
+                (format "PLAY=%s/servers/windows-play\n" root) output))
+              (should (string-search "LEGACY_DIR=\n" output))
+              (should (string-search "LEGACY_PLAY=\n" output)))))
+      (delete-file fake-emacs)
+      (delete-file fake-omnivox))))
 
 (provide 'emacsvox-launcher-tests)
 ;;; emacsvox-launcher-tests.el ends here

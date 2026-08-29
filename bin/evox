@@ -2,65 +2,21 @@
 
 set -eu
 
-script_path=$(readlink -f "$0")
-script_directory=$(dirname "$script_path")
-default_emacsvox_root=$(
-  unset CDPATH
-  cd "$script_directory/.."
-  pwd
-)
+script_directory=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+launcher=$script_directory/emacsvox
 
-emacs_bin=${EMACS:-/home/bart/opt/emacs-31/bin/emacs}
-emacsvox_root=${EMACSVOX_DIR:-$default_emacsvox_root}
-emacsvox_root=${emacsvox_root%/}
-emacsvox_init=${EMACSVOX_INIT_DIRECTORY:-/home/bart/.emacsvox.d}
-default_tts=dtk-soft
-
-if [ -r /proc/version ] && grep -qi microsoft /proc/version; then
-  windows_support=$emacsvox_root/servers
-  windows_omnivox=$windows_support/omnivox
-  windows_omnivox_bin=$windows_support/omnivox-bin/current/omnivox.exe
-  windows_outloud=$windows_support/windows-outloud
-  windows_play=$windows_support/windows-play
-  if [ -x "$windows_play" ]; then
-    export EMACSVOX_PLAY="${EMACSVOX_PLAY:-$windows_play}"
-  fi
-  if [ -x "$windows_omnivox" ] && [ -x "$windows_omnivox_bin" ]; then
-    default_tts=$windows_omnivox
-  elif [ -f "$windows_support/tts-lib.tcl" ] &&
-       [ -x "$windows_outloud" ]; then
-    default_tts=$windows_outloud
-  fi
+printf '%s\n' \
+    'evox: deprecated; use bin/emacsvox (evox will be removed after Emacsvox 60)' \
+    >&2
+if [ "${EMACSVOX_INIT_DIRECTORY+x}" = x ]; then
+    printf '%s\n' \
+        'evox: EMACSVOX_INIT_DIRECTORY is no longer used; the supported launcher starts an isolated session' \
+        >&2
 fi
 
-if [ ! -x "$emacs_bin" ]; then
-  echo "evox: Emacs is not executable: $emacs_bin" >&2
-  exit 1
+if [ ! -x "$launcher" ]; then
+    printf 'evox: replacement launcher is not executable: %s\n' "$launcher" >&2
+    exit 127
 fi
 
-if [ ! -f "$emacsvox_root/lisp/emacsvox-setup.el" ]; then
-  echo "evox: Emacsvox setup not found under: $emacsvox_root" >&2
-  exit 1
-fi
-
-export EMACSVOX_DIR="$emacsvox_root"
-export TTS_PROGRAM="${TTS_PROGRAM:-$default_tts}"
-
-xmodmap_file=/home/bart/.Xmodmap
-if [ -n "${DISPLAY:-}" ] &&
-   [ -r "$xmodmap_file" ] &&
-   command -v xmodmap >/dev/null 2>&1; then
-  if ! xmodmap "$xmodmap_file"; then
-    echo "evox: unable to load keyboard mapping from $xmodmap_file" >&2
-  fi
-fi
-
-exec "$emacs_bin" \
-  --init-directory="$emacsvox_init" \
-  -q \
-  --debug-init \
-  --no-splash \
-  --name evox \
-  -l "$emacsvox_init/early-init.el" \
-  -l "$emacsvox_init/init.el" \
-  "$@"
+exec "$launcher" "$@"

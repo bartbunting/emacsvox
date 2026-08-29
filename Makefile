@@ -617,10 +617,12 @@ install:
 	@echo "This release requires Emacs 31 or later."
 	@echo "You need SoX installed to play OGG and WAV files."
 	@echo "You need curl installed for some Internet features."
-	@echo "To run  this Emacsvox build, add this  line to the top of your .emacs:"
+	@echo "Install and smoke-test the recommended Omnivox backend first."
+	@echo "For an audible backend check, run: ./bin/emacsvox --check"
+	@echo "For an isolated first start, run: ./bin/emacsvox"
+	@echo "For normal customized starts, export TTS_PROGRAM=omnivox and add:"
 	@echo "(load-file \"`pwd`/lisp/emacsvox-setup.el\")"
-	@echo "    Type make  <engine> [dtk, outloud,  espeak, swiftmac] to build TTS server. "
-	@echo "Package maintainers: see   etc/install.org	 for instructions."
+	@echo "Package maintainers: see etc/install.org for instructions."
 
 ### Worktree:
 # Usage make wk TAG=tag

@@ -10,6 +10,25 @@ Maintained by Emacsvox Contributors.
 
 This version requires Emacs 31 or later.
 
+** Portable First-use Launcher
+
+~bin/emacsvox~ is now the one supported source-checkout launcher.  It works
+from any calling directory, honors an explicit ~EMACS~ setting or the
+~EMACS=~ selection in ~local.mk~, rejects Emacs older than 31, defaults to the
+recommended Omnivox backend, and reports a missing backend before opening
+interactive Emacs.  It always starts an isolated ~-Q~ session and loads the
+tracked ~lisp/emacsvox-setup.el~ source; it never reads a maintainer-specific
+or personal Emacs init file.
+
+Run ~bin/emacsvox --diagnose~ for a non-audible selection report and
+~bin/emacsvox --check~ for the audible Omnivox smoke test.  Explicit ~EMACS~,
+~TTS_PROGRAM~, and ~EMACSVOX_DIR~ overrides are supported.
+
+The ambiguous root ~run~ and ~runq~ helpers have been removed.  ~bin/evox~ is
+a deprecated forwarding command for the Emacsvox 60 transition and will be
+removed after this release; unlike its former personal workflow, it now has
+the same isolated, Omnivox-first behavior as ~bin/emacsvox~.
+
 ** Native Windows Speech Under WSL
 
 Emacsvox now owns its native Windows speech stack.  The bundled

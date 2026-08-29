@@ -364,11 +364,38 @@ File: emacsvox.info,  Node: Quick Installation,  Next: Building And Testing The 
      audible smoke test.  *Note Speech Backends::, for the supported
      platform matrix, exact prerequisite classes, source and WSL2 build
      paths, expected tone and speech, and compatibility alternatives.
-     Do not diagnose Emacs configuration until the standalone Omnivox
-     check passes.
+     From the Emacsvox source tree, the supported launcher first
+     validates the selected Emacs and backend and then runs that audible
+     check:
 
-  4. Select the server before loading Emacsvox.  In a shell startup
-     file, set ‘TTS_PROGRAM’ to the recommended server name:
+          ./bin/emacsvox --check
+
+     Continue only after hearing both the tone and speech.  Do not
+     diagnose Emacs configuration until this standalone Omnivox check
+     passes.
+
+  4. Prove a clean Emacsvox start:
+
+          ./bin/emacsvox
+
+     The launcher defaults to Omnivox.  It uses an explicit ‘EMACS’
+     override, then the ‘EMACS=’ selection in ‘local.mk’, then ‘emacs’
+     on ‘PATH’.  It rejects Emacs older than 31, resolves the checkout
+     independently of the calling directory, and loads the setup source
+     by its absolute path.  The session uses ‘-Q’: it loads neither site
+     files nor a personal Emacs init file.  This makes the first
+     successful speech a reproducible installation proof rather than a
+     side effect of existing configuration.
+
+     ‘./bin/emacsvox --diagnose’ prints the selected root, setup source,
+     Emacs version, and backend without playing audio or starting
+     interactive Emacs.  ‘./bin/emacsvox --help’ documents explicit
+     ‘EMACS’, ‘TTS_PROGRAM’, and ‘EMACSVOX_DIR’ overrides.  Arguments
+     after ‘--’ are passed to Emacs.
+
+  5. For normal customized starts, select the server before loading
+     Emacsvox.  In a shell startup file, set ‘TTS_PROGRAM’ to the
+     recommended server name:
 
           export TTS_PROGRAM=omnivox
 
@@ -381,13 +408,16 @@ File: emacsvox.info,  Node: Quick Installation,  Next: Building And Testing The 
      table.  Names for actual DECtalk servers, including ‘dtk-exp’ and
      ‘dtk-soft’, remain valid server choices.
 
-  5. For a changing source checkout, load the setup source explicitly:
+     Then, for a changing source checkout, load the setup source
+     explicitly from your Emacs init file:
 
           (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
 
-     The setup entry point can then warn and prefer source when newer
-     Lisp would otherwise be hidden by stale byte-code.  A stable
-     installed copy with current byte-code may instead use:
+     The portable launcher is intentionally an isolated first-use path;
+     this init file form owns repeat use with personal customization.
+     The setup entry point can warn and prefer source when newer Lisp
+     would otherwise be hidden by stale byte-code.  A stable installed
+     copy with current byte-code may instead use:
 
           (load-library "emacsvox-setup")
 
