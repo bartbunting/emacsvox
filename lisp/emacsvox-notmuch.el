@@ -134,6 +134,59 @@ back to the primary process."
           (const :tag "No successful completion feedback" silent))
   :group 'emacsvox-notmuch)
 
+(defcustom emacsvox-notmuch-automatic-field-character-limit 256
+  "Maximum characters spoken from one automatic Notmuch field.
+
+This limit applies to mail-controlled fields before automatic navigation,
+opening, action, and widget feedback is submitted.  A truncation notice uses
+part of the limit.  Set this to nil to disable the per-field character limit;
+the total automatic-presentation limits still apply."
+  :type '(choice
+          (const :tag "No per-field character limit" nil)
+          (integer :tag "Characters"))
+  :group 'emacsvox-notmuch)
+
+(defcustom emacsvox-notmuch-automatic-field-byte-limit 1024
+  "Maximum UTF-8 bytes spoken from one automatic Notmuch field.
+
+This is a preparation bound as well as a speech bound.  A truncation notice
+uses part of the limit.  Set this to nil to disable the per-field byte limit;
+the total automatic-presentation limits still apply."
+  :type '(choice
+          (const :tag "No per-field byte limit" nil)
+          (integer :tag "UTF-8 bytes"))
+  :group 'emacsvox-notmuch)
+
+(defcustom emacsvox-notmuch-automatic-total-character-limit 1000
+  "Maximum characters in one automatic Notmuch presentation.
+
+The limit includes the explicit truncation notice.  Set this to nil to disable
+the total character limit; the total byte limit still applies."
+  :type '(choice
+          (const :tag "No total character limit" nil)
+          (integer :tag "Characters"))
+  :group 'emacsvox-notmuch)
+
+(defcustom emacsvox-notmuch-automatic-total-byte-limit 4096
+  "Maximum UTF-8 bytes in one automatic Notmuch presentation.
+
+The limit includes the explicit truncation notice.  Set this to nil to disable
+the total byte limit; the total character limit still applies."
+  :type '(choice
+          (const :tag "No total byte limit" nil)
+          (integer :tag "UTF-8 bytes"))
+  :group 'emacsvox-notmuch)
+
+(defcustom emacsvox-notmuch-mime-node-limit 4096
+  "Maximum cons nodes inspected while scanning a Notmuch MIME body."
+  :type 'integer
+  :group 'emacsvox-notmuch)
+
+(defcustom emacsvox-notmuch-mime-depth-limit 64
+  "Maximum nesting depth inspected while scanning a Notmuch MIME body."
+  :type 'integer
+  :group 'emacsvox-notmuch)
+
 (defcustom emacsvox-notmuch-search-field-separator ", "
   "String placed between spoken Notmuch search-result fields."
   :type 'string
@@ -271,10 +324,218 @@ still suppress words."
 
 ;;;  Semantic aural presentation:
 
+(defvar emacsvox-notmuch--automatic-presentation-p t
+  "Non-nil while Notmuch content must obey automatic speech budgets.")
+
+(defun emacsvox-notmuch--positive-limit (value)
+  "Normalize optional budget VALUE without turning invalid input unlimited."
+  (cond
+   ((null value) nil)
+   ((integerp value) (max 1 value))
+   (t 1)))
+
+(defun emacsvox-notmuch--utf8-byte-length (text)
+  "Return the number of UTF-8 bytes needed to encode TEXT."
+  (string-bytes
+   (encode-coding-string (substring-no-properties text) 'utf-8 t)))
+
+(defun emacsvox-notmuch--text-within-limits-p
+    (text character-limit byte-limit)
+  "Return non-nil when TEXT fits CHARACTER-LIMIT and BYTE-LIMIT.
+Nil limits are unbounded.  Avoid encoding text already too long to fit."
+  (let ((characters (length text)))
+    (and
+     (or (null character-limit) (<= characters character-limit))
+     (or
+      (null byte-limit)
+      (and
+       (<= characters byte-limit)
+       (<= (emacsvox-notmuch--utf8-byte-length text) byte-limit))))))
+
+(defun emacsvox-notmuch--truncation-hint ()
+  "Return the concise full-detail hint appropriate to the current view."
+  (pcase major-mode
+    ((or 'notmuch-search-mode 'notmuch-show-mode)
+     "C-c C-p gives full details")
+    ('notmuch-hello-mode "RET opens full details")
+    (_ "full details are available on demand")))
+
+(defun emacsvox-notmuch--truncation-notice (label omitted)
+  "Return a trusted truncation notice for LABEL and OMITTED characters."
+  (format
+   " … [%s shortened: %d characters omitted; %s]"
+   label omitted (emacsvox-notmuch--truncation-hint)))
+
+(defun emacsvox-notmuch--safe-prefix-end (text end)
+  "Move END backward when it splits a non-whitespace token in TEXT."
+  (if
+      (or
+       (zerop end)
+       (= end (length text))
+       (memq (aref text (1- end)) '(?\s ?\t ?\n ?\r))
+       (memq (aref text end) '(?\s ?\t ?\n ?\r)))
+      end
+    (let ((position end))
+      (while
+          (and
+           (> position 0)
+           (not
+            (memq
+             (aref text (1- position))
+             '(?\s ?\t ?\n ?\r))))
+        (cl-decf position))
+      (while
+          (and
+           (> position 0)
+           (memq
+            (aref text (1- position))
+            '(?\s ?\t ?\n ?\r)))
+        (cl-decf position))
+      position)))
+
+(defun emacsvox-notmuch--bounded-text-components
+    (text character-limit byte-limit label &optional total-characters)
+  "Return bounded TEXT components under character and UTF-8 byte limits.
+
+The result is (PREFIX NOTICE OMITTED).  LABEL identifies the shortened field.
+TOTAL-CHARACTERS may exceed the supplied TEXT length when TEXT is an early,
+bounded copy of a larger source buffer."
+  (let* ((character-limit
+          (emacsvox-notmuch--positive-limit character-limit))
+         (byte-limit (emacsvox-notmuch--positive-limit byte-limit))
+         (available (length text))
+         (total (or total-characters available)))
+    (if
+        (or
+         (not emacsvox-notmuch--automatic-presentation-p)
+         (and
+          (= available total)
+          (emacsvox-notmuch--text-within-limits-p
+           text character-limit byte-limit)))
+        (list text nil 0)
+      (let ((low 0)
+            (high
+             (min
+              available
+              (or character-limit available)
+              ;; Every character occupies at least one UTF-8 byte.
+              (or byte-limit available)))
+            (best 0))
+        (while (<= low high)
+          (let* ((middle (/ (+ low high) 2))
+                 (notice
+                  (emacsvox-notmuch--truncation-notice
+                   label (- total middle)))
+                 (candidate (concat (substring text 0 middle) notice)))
+            (if
+                (emacsvox-notmuch--text-within-limits-p
+                 candidate character-limit byte-limit)
+                (setq best middle
+                      low (1+ middle))
+              (setq high (1- middle)))))
+        (setq best (emacsvox-notmuch--safe-prefix-end text best))
+        (let ((notice
+               (emacsvox-notmuch--truncation-notice
+                label (- total best))))
+          ;; Extremely small custom limits may not fit the full trusted notice.
+          ;; Preserve a visible marker while respecting those limits.
+          (unless
+              (emacsvox-notmuch--text-within-limits-p
+               (concat (substring text 0 best) notice)
+               character-limit byte-limit)
+            (setq best 0
+                  notice "… [shortened]"))
+          (while
+              (and
+               (> (length notice) 0)
+               (not
+                (emacsvox-notmuch--text-within-limits-p
+                 notice character-limit byte-limit)))
+            (setq notice (substring notice 0 -1)))
+          (list (substring text 0 best) notice (- total best)))))))
+
+(defun emacsvox-notmuch--bounded-text
+    (text character-limit byte-limit label &optional total-characters)
+  "Return TEXT bounded for LABEL, including an explicit omission notice."
+  (when text
+    (pcase-let
+        ((`(,prefix ,notice ,_omitted)
+          (emacsvox-notmuch--bounded-text-components
+           text character-limit byte-limit label total-characters)))
+      (concat prefix notice))))
+
+(defun emacsvox-notmuch--prepare-field-text
+    (value label &optional transform)
+  "Bound VALUE as mail field LABEL, then apply optional TRANSFORM to its prefix."
+  (when value
+    (let ((raw (if (stringp value) value (format "%s" value))))
+      (pcase-let
+          ((`(,prefix ,notice ,_omitted)
+            (emacsvox-notmuch--bounded-text-components
+             raw
+             emacsvox-notmuch-automatic-field-character-limit
+             emacsvox-notmuch-automatic-field-byte-limit
+             label)))
+        (let* ((prepared (if transform (funcall transform prefix) prefix))
+               (trimmed (string-trim prepared))
+               (text
+                (cond
+                 ((and (string-empty-p trimmed) notice)
+                  (string-trim-left notice))
+                 (notice (concat trimmed notice))
+                 (t trimmed))))
+          (unless (string-empty-p text)
+            (emacsvox-notmuch--bounded-text
+             text
+             emacsvox-notmuch-automatic-field-character-limit
+             emacsvox-notmuch-automatic-field-byte-limit
+             label)))))))
+
+(defun emacsvox-notmuch--bounded-source-range
+    (start end label character-limit byte-limit)
+  "Copy source START through END early-bounded for LABEL under given limits."
+  (if (not emacsvox-notmuch--automatic-presentation-p)
+      (emacsvox-aural-source-substring start end)
+    (let* ((character-limit (emacsvox-notmuch--positive-limit character-limit))
+           (byte-limit (emacsvox-notmuch--positive-limit byte-limit))
+           (copy-limit
+            (min
+             (- end start)
+             (or character-limit (- end start))
+             (or byte-limit (- end start))))
+           (text
+            (emacsvox-aural-source-substring
+             start (+ start copy-limit))))
+      (pcase-let
+          ((`(,prefix ,notice ,_omitted)
+            (emacsvox-notmuch--bounded-text-components
+             text character-limit byte-limit label (- end start))))
+        (if (and notice (string-empty-p prefix))
+            (string-trim-left notice)
+          (concat prefix notice))))))
+
+(defun emacsvox-notmuch--bounded-source-substring (start end label)
+  "Copy source START through END early-bounded as field LABEL."
+  (emacsvox-notmuch--bounded-source-range
+   start end label
+   emacsvox-notmuch-automatic-field-character-limit
+   emacsvox-notmuch-automatic-field-byte-limit))
+
+(defun emacsvox-notmuch--limit-automatic-presentation (text)
+  "Apply the total automatic Notmuch presentation budget to TEXT."
+  (emacsvox-notmuch--bounded-text
+   text
+   emacsvox-notmuch-automatic-total-character-limit
+   emacsvox-notmuch-automatic-total-byte-limit
+   "automatic Notmuch speech"))
+
 (defun emacsvox-notmuch--submit-content
     (text facts occasion compatibility-actions)
   "Submit TEXT and COMPATIBILITY-ACTIONS under FACTS and OCCASION."
-  (let ((arguments
+  (let ((text
+         (and text
+              (emacsvox-notmuch--limit-automatic-presentation text)))
+        (arguments
          (list :facts facts :module 'notmuch :occasion occasion
                :compatibility-actions compatibility-actions)))
     (if (and (stringp text) (not (string-empty-p text)))
@@ -316,8 +577,8 @@ still suppress words."
 
 (defun emacsvox-notmuch--current-line-content ()
   "Return the current source-aware line without its newline."
-  (emacsvox-aural-source-substring
-   (line-beginning-position) (line-end-position)))
+  (emacsvox-notmuch--bounded-source-substring
+   (line-beginning-position) (line-end-position) "line"))
 
 (defun emacsvox-notmuch-thread-facts (action event)
   "Return semantic facts for a Notmuch thread ACTION and EVENT."
@@ -353,17 +614,17 @@ still suppress words."
 (defun emacsvox-notmuch-message-facts (message &optional event)
   "Return semantic facts for Notmuch MESSAGE and optional EVENT."
   (let ((tags (plist-get message :tags))
+        (attachment-scan
+         (and
+          (plist-member message :body)
+          (emacsvox-notmuch--attachment-scan
+           (plist-get message :body))))
         states)
     (when (member "unread" tags) (push 'unread states))
     (when (member "replied" tags) (push 'replied states))
     (when (member "forwarded" tags) (push 'forwarded states))
     (when (member "flagged" tags) (push 'flagged states))
-    (when
-        (and
-         (plist-member message :body)
-         (> (emacsvox-notmuch--attachment-count
-             (plist-get message :body))
-            0))
+    (when (> (or (plist-get attachment-scan :count) 0) 0)
       (push 'has-attachments states))
     (append
      (list :role 'message)
@@ -372,29 +633,40 @@ still suppress words."
 
 ;;;  Search Results:
 
-(defun emacsvox-notmuch--field-string (value face)
-  "Return VALUE as a non-empty string using FACE."
-  (when value
-    (let ((text (string-trim (format "%s" value))))
-      (unless (string-empty-p text)
-        (propertize text 'face face)))))
+(defun emacsvox-notmuch--field-string
+    (value face &optional label transform)
+  "Return bounded VALUE as a non-empty string using FACE.
+LABEL names the field in a truncation notice.  Apply TRANSFORM only after the
+untrusted input has been bounded."
+  (when-let* ((text
+               (emacsvox-notmuch--prepare-field-text
+                value (or label "field") transform)))
+    (propertize text 'face face)))
 
 (defun emacsvox-notmuch--format-authors (authors)
   "Format AUTHORS with Notmuch's matching-author personalities."
-  (when authors
-    (save-match-data
-      (if (string-match "\\(.*\\)|\\(.*\\)" authors)
-          (let ((matching
-                 (emacsvox-notmuch--field-string
-                  (match-string 1 authors)
-                  'notmuch-search-matching-authors))
-                (non-matching
-                 (emacsvox-notmuch--field-string
-                  (match-string 2 authors)
-                  'notmuch-search-non-matching-authors)))
-            (string-join (delq nil (list matching non-matching)) ", "))
-        (emacsvox-notmuch--field-string
-         authors 'notmuch-search-matching-authors)))))
+  (when-let* ((authors
+               (emacsvox-notmuch--prepare-field-text
+                authors "authors" #'notmuch-sanitize)))
+    (emacsvox-notmuch--bounded-text
+     (save-match-data
+       (if (string-match "\\(.*\\)|\\(.*\\)" authors)
+           (let ((matching
+                  (emacsvox-notmuch--field-string
+                   (match-string 1 authors)
+                   'notmuch-search-matching-authors
+                   "authors"))
+                 (non-matching
+                  (emacsvox-notmuch--field-string
+                   (match-string 2 authors)
+                   'notmuch-search-non-matching-authors
+                   "authors")))
+             (string-join (delq nil (list matching non-matching)) ", "))
+         (emacsvox-notmuch--field-string
+          authors 'notmuch-search-matching-authors "authors")))
+     emacsvox-notmuch-automatic-field-character-limit
+     emacsvox-notmuch-automatic-field-byte-limit
+     "authors")))
 
 (defun emacsvox-notmuch--status-tags (status-icons)
   "Return tags represented by STATUS-ICONS."
@@ -407,18 +679,114 @@ still suppress words."
      (lambda (tag) (member tag status-tags))
      tags)))
 
+(defun emacsvox-notmuch--bounded-ordinary-tags (tags status-icons)
+  "Return bounded ordinary TAGS and truncation metadata.
+
+The result is (VALUES OMITTED COMPLETE).  Status tags represented by
+STATUS-ICONS are deliberately excluded rather than counted as omissions.
+Automatic preparation keeps whole tag names so it cannot manufacture a
+partial trusted-status word."
+  (if (not emacsvox-notmuch--automatic-presentation-p)
+      (list (emacsvox-notmuch--ordinary-tags tags status-icons) 0 t)
+    (let* ((character-limit
+            (emacsvox-notmuch--positive-limit
+             emacsvox-notmuch-automatic-field-character-limit))
+           (byte-limit
+            (emacsvox-notmuch--positive-limit
+             emacsvox-notmuch-automatic-field-byte-limit))
+           ;; Reserve ample room for the trusted omission notice.
+           (character-budget (and character-limit (/ character-limit 2)))
+           (byte-budget (and byte-limit (/ byte-limit 2)))
+           (node-limit
+            (max 1 (or character-limit 256)))
+           (status-tags (emacsvox-notmuch--status-tags status-icons))
+           (seen (make-hash-table :test #'eq))
+           (cursor tags)
+           (nodes 0)
+           (characters 0)
+           (bytes 0)
+           (omitted 0)
+           (accepting t)
+           values
+           complete)
+      (while
+          (and
+           (consp cursor)
+           (< nodes node-limit)
+           (not (gethash cursor seen)))
+        (puthash cursor t seen)
+        (cl-incf nodes)
+        (let ((tag (car cursor)))
+          (when (and (stringp tag) (not (member tag status-tags)))
+            (let* ((separator (if (or values (> omitted 0)) 1 0))
+                   (tag-characters (length tag))
+                   (additional-characters (+ separator tag-characters))
+                   (fits-characters
+                    (or
+                     (null character-budget)
+                     (<=
+                      (+ characters additional-characters)
+                      character-budget)))
+                   (fits-bytes
+                    (and
+                     accepting
+                     (or
+                      (null byte-budget)
+                      (and
+                       (<= (+ bytes separator tag-characters) byte-budget)
+                       (<=
+                        (+
+                         bytes separator
+                         (emacsvox-notmuch--utf8-byte-length tag))
+                        byte-budget))))))
+              (if (and accepting fits-characters fits-bytes)
+                  (progn
+                    (push tag values)
+                    (cl-incf characters additional-characters)
+                    (cl-incf
+                     bytes
+                     (+
+                      separator
+                      (emacsvox-notmuch--utf8-byte-length tag))))
+                (setq accepting nil)
+                (cl-incf omitted additional-characters)))))
+        (setq cursor (cdr cursor)))
+      (setq complete (null cursor))
+      (list (nreverse values) omitted complete))))
+
 (defun emacsvox-notmuch--format-tags (result status-icons)
   "Format ordinary tags from Notmuch RESULT using STATUS-ICONS."
-  (let ((tags
-         (emacsvox-notmuch--ordinary-tags
-          (plist-get result :tags)
-          status-icons))
-        (orig-tags
-         (emacsvox-notmuch--ordinary-tags
-          (plist-get result :orig-tags)
-          status-icons)))
-    (unless (and (null tags) (null orig-tags))
-      (notmuch-tag-format-tags tags orig-tags))))
+  (pcase-let*
+      ((`(,tags ,omitted ,complete)
+        (emacsvox-notmuch--bounded-ordinary-tags
+         (plist-get result :tags) status-icons))
+       (`(,orig-tags ,orig-omitted ,orig-complete)
+        (emacsvox-notmuch--bounded-ordinary-tags
+         (plist-get result :orig-tags) status-icons))
+       (formatted
+        (unless (and (null tags) (null orig-tags))
+          (notmuch-tag-format-tags tags orig-tags)))
+       (notice
+        (cond
+         ((or (not complete) (not orig-complete))
+          (format
+           " … [tags shortened: additional tags omitted; %s]"
+           (emacsvox-notmuch--truncation-hint)))
+         ((> (+ omitted orig-omitted) 0)
+          (emacsvox-notmuch--truncation-notice
+           "tags" (+ omitted orig-omitted)))))
+       (text
+        (cond
+         ((and formatted notice) (concat formatted notice))
+         (formatted formatted)
+         (notice (string-trim-left notice)))))
+    (and
+     text
+     (emacsvox-notmuch--bounded-text
+      text
+      emacsvox-notmuch-automatic-field-character-limit
+      emacsvox-notmuch-automatic-field-byte-limit
+      "tags"))))
 
 (defun emacsvox-notmuch--format-search-field (field result)
   "Format FIELD from Notmuch search RESULT for speech."
@@ -426,25 +794,27 @@ still suppress words."
    (pcase field
      ('authors
       (emacsvox-notmuch--format-authors
-       (notmuch-sanitize (or (plist-get result :authors) ""))))
+       (or (plist-get result :authors) "")))
      ('subject
       (emacsvox-notmuch--field-string
-       (notmuch-sanitize (or (plist-get result :subject) "[No subject]"))
-       'notmuch-search-subject))
+       (or (plist-get result :subject) "[No subject]")
+       'notmuch-search-subject "subject" #'notmuch-sanitize))
      ('date
       (emacsvox-notmuch--field-string
        (plist-get result :date_relative)
-       'notmuch-search-date))
+       'notmuch-search-date "date"))
      ('count
       (emacsvox-notmuch--field-string
        (format "%s of %s"
                (plist-get result :matched)
                (plist-get result :total))
-       'notmuch-search-count))
+       'notmuch-search-count "count"))
      ('tags
       (emacsvox-notmuch--format-tags
        result emacsvox-notmuch-search-status-icons))
-     ((pred functionp) (funcall field result))
+     ((pred functionp)
+      (emacsvox-notmuch--prepare-field-text
+       (funcall field result) "custom field"))
      (_ nil))
    (if (symbolp field) field 'custom)))
 
@@ -503,8 +873,10 @@ after-content attachment cue when RESULT contains a named MIME attachment."
         (and
          include-attachments
          (not semantic-navigation)
-         (> (emacsvox-notmuch--attachment-count
-             (plist-get result :body))
+         (> (plist-get
+             (emacsvox-notmuch--attachment-scan
+              (plist-get result :body))
+             :count)
             0))
       (setq
        actions
@@ -524,34 +896,143 @@ after-content attachment cue when RESULT contains a named MIME attachment."
      (emacsvox-notmuch-message-facts result 'focus-entered)
      'navigation)))
 
+(defun emacsvox-notmuch-speak-search-details (&optional result)
+  "Speak complete configured details for search RESULT at point.
+
+Unlike automatic navigation feedback, this explicit inspection is not
+truncated by Notmuch's automatic presentation limits."
+  (interactive)
+  (when (and (called-interactively-p 'interactive)
+             (not (eq major-mode 'notmuch-search-mode)))
+    (user-error "This command is only available in Notmuch Search"))
+  (when-let* ((result (or result (notmuch-search-get-result))))
+    (let ((emacsvox-notmuch--automatic-presentation-p nil))
+      (emacsvox-notmuch--submit-search-result
+       result
+       (emacsvox-notmuch-message-facts result)
+       'inspection))))
+
 ;;;  Show Messages:
 
+(defun emacsvox-notmuch--attachment-scan (body)
+  "Return a bounded attachment scan plist for MIME BODY.
+
+The result contains :count, :complete, and :nodes.  Traverse iteratively so a
+deep, broad, cyclic, improper, or malformed MIME value cannot exhaust Lisp's
+call stack.  A non-nil :complete value means the configured node and depth
+budgets covered the entire well-formed graph."
+  (let* ((node-limit
+          (max 1 (or
+                  (emacsvox-notmuch--positive-limit
+                   emacsvox-notmuch-mime-node-limit)
+                  1)))
+         (depth-limit
+          (max 0 (if (integerp emacsvox-notmuch-mime-depth-limit)
+                     emacsvox-notmuch-mime-depth-limit
+                   0)))
+         (stack (list (cons body 0)))
+         (seen (make-hash-table :test #'eq))
+         (nodes 0)
+         (count 0)
+         (complete t))
+    (cl-labels
+        ((claim
+          (cell)
+          (cond
+           ((gethash cell seen)
+            (setq complete nil)
+            nil)
+           ((>= nodes node-limit)
+            (setq complete nil
+                  stack nil)
+            nil)
+           (t
+            (puthash cell t seen)
+            (cl-incf nodes)
+            t))))
+      (while stack
+        (pcase-let* ((`(,node . ,depth) (pop stack)))
+          (cond
+           ((not (consp node)))
+           ((> depth depth-limit)
+            (setq complete nil))
+           ((claim node)
+            (if (keywordp (car node))
+                (let ((cursor node)
+                      content-type filename content body-value
+                      (valid t)
+                      (first t))
+                  (while (and valid (consp cursor))
+                    (unless first
+                      (setq valid (claim cursor)))
+                    (setq first nil)
+                    (when valid
+                      (let ((value-cell (cdr cursor)))
+                        (if (not (consp value-cell))
+                            (setq valid nil
+                                  complete nil)
+                          (if (claim value-cell)
+                              (progn
+                                (pcase (car cursor)
+                                  (:content-type
+                                   (setq content-type (car value-cell)))
+                                  (:filename
+                                   (setq filename (car value-cell)))
+                                  (:content
+                                   (setq content (car value-cell)))
+                                  (:body
+                                   (setq body-value (car value-cell))))
+                                (setq cursor (cdr value-cell)))
+                            (setq valid nil))))))
+                  (when (and valid (not (null cursor)))
+                    (setq complete nil))
+                  (when (and content-type filename)
+                    (cl-incf count))
+                  (when body-value
+                    (push (cons body-value (1+ depth)) stack))
+                  (when content
+                    (push (cons content (1+ depth)) stack)))
+              (let ((cursor node)
+                    (first t)
+                    (valid t))
+                (while (and valid (consp cursor))
+                  (unless first
+                    (setq valid (claim cursor)))
+                  (setq first nil)
+                  (when valid
+                    (push (cons (car cursor) (1+ depth)) stack)
+                    (setq cursor (cdr cursor))))
+                (when (and valid (not (null cursor)))
+                  (setq complete nil))))))))
+    (list :count count :complete complete :nodes nodes))))
+
 (defun emacsvox-notmuch--attachment-count (body)
-  "Return the number of named MIME attachments below BODY."
-  (cl-labels
-      ((count-node
-        (node)
-        (cond
-         ((and (listp node) (keywordp (car node)))
-          (+
-           (if (and
-                (plist-get node :content-type)
-                (plist-get node :filename))
-               1
-             0)
-           (count-node (plist-get node :content))
-           (count-node (plist-get node :body))))
-         ((listp node)
-          (cl-loop for child in node sum (count-node child)))
-         (t 0))))
-    (count-node body)))
+  "Return the safely observed number of named MIME attachments below BODY."
+  (plist-get (emacsvox-notmuch--attachment-scan body) :count))
+
+(defun emacsvox-notmuch--attachment-summary (scan)
+  "Return a truthful spoken attachment summary for bounded SCAN."
+  (let ((count (plist-get scan :count))
+        (complete (plist-get scan :complete)))
+    (cond
+     ((and complete (zerop count)) nil)
+     (complete
+      (format "%d %s"
+              count
+              (if (= count 1) "attachment" "attachments")))
+     ((> count 0)
+      (format "at least %d %s"
+              count
+              (if (= count 1) "attachment" "attachments")))
+     (t "attachment scan incomplete"))))
 
 (defun emacsvox-notmuch--format-show-header (message header face)
   "Format HEADER from MESSAGE using FACE."
   (emacsvox-notmuch--field-string
-   (notmuch-sanitize
-    (or (plist-get (plist-get message :headers) header) ""))
-   face))
+   (or (plist-get (plist-get message :headers) header) "")
+   face
+   (downcase (substring (symbol-name header) 1))
+   #'notmuch-sanitize))
 
 (defun emacsvox-notmuch--format-show-field (field message)
   "Format FIELD from Notmuch MESSAGE for speech."
@@ -561,9 +1042,11 @@ after-content attachment cue when RESULT contains a named MIME attachment."
       (let ((from
              (plist-get (plist-get message :headers) :From)))
         (emacsvox-notmuch--field-string
-         (notmuch-sanitize
-          (if from (notmuch-show-clean-address from) ""))
-         'emacsvox-notmuch-message-from)))
+         (or from "")
+         'emacsvox-notmuch-message-from
+         "from"
+         (lambda (text)
+           (notmuch-sanitize (notmuch-show-clean-address text))))))
      ('subject
       (emacsvox-notmuch--format-show-header
        message :Subject 'emacsvox-notmuch-message-subject))
@@ -572,7 +1055,7 @@ after-content attachment cue when RESULT contains a named MIME attachment."
        (or
         (plist-get message :date_relative)
         (plist-get (plist-get message :headers) :Date))
-       'emacsvox-notmuch-message-date))
+       'emacsvox-notmuch-message-date "date"))
      ('to
       (emacsvox-notmuch--format-show-header
        message :To 'emacsvox-notmuch-message-to))
@@ -583,16 +1066,18 @@ after-content attachment cue when RESULT contains a named MIME attachment."
       (emacsvox-notmuch--format-tags
        message emacsvox-notmuch-show-status-icons))
      ('attachments
-      (let ((count
-             (emacsvox-notmuch--attachment-count
-              (plist-get message :body))))
-        (when (> count 0)
+      (let ((summary
+             (emacsvox-notmuch--attachment-summary
+              (emacsvox-notmuch--attachment-scan
+               (plist-get message :body)))))
+        (when summary
           (emacsvox-notmuch--field-string
-           (format "%d %s"
-                   count
-                   (if (= count 1) "attachment" "attachments"))
-           'emacsvox-notmuch-message-attachments))))
-     ((pred functionp) (funcall field message))
+           summary
+           'emacsvox-notmuch-message-attachments
+           "attachments"))))
+     ((pred functionp)
+      (emacsvox-notmuch--prepare-field-text
+       (funcall field message) "custom field"))
      (_ nil))
    (if (symbolp field) field 'custom)))
 
@@ -655,7 +1140,8 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
           (let* ((start (line-beginning-position))
                  (end (min limit (line-end-position)))
                  (line
-                  (emacsvox-aural-source-substring start end)))
+                  (emacsvox-notmuch--bounded-source-substring
+                   start end "body line")))
             (unless
                 (or
                  (invisible-p start)
@@ -684,13 +1170,18 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
         (cons position total)))))
 
 (defun emacsvox-notmuch-speak-show-position ()
-  "Speak the current position in the thread and semantic message details."
+  "Speak thread position and complete details for the current Show item."
   (interactive)
   (unless (eq major-mode 'notmuch-show-mode)
     (user-error "This command is only available in Notmuch Show"))
   (when-let* ((message (notmuch-show-get-message-properties))
               (position (emacsvox-notmuch--show-message-position)))
-    (let* ((details (emacsvox-notmuch-format-show-message message))
+    (let* ((emacsvox-notmuch--automatic-presentation-p nil)
+           (part (emacsvox-notmuch--part-at-point))
+           (details
+            (if part
+                (emacsvox-notmuch-format-part part)
+              (emacsvox-notmuch-format-show-message message)))
            (position-summary
             (format "Message %d of %d" (car position) (cdr position)))
            (summary
@@ -699,12 +1190,16 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
               (concat position-summary ", " details))))
       (emacsvox-aural-submit
        summary
-       :facts (emacsvox-notmuch-message-facts message)
+       :facts
+       (if part
+           (emacsvox-notmuch-part-facts part 'select nil)
+         (emacsvox-notmuch-message-facts message))
        :module 'notmuch
        :occasion 'inspection
        :compatibility-actions
-       (emacsvox-notmuch--status-compatibility-actions
-        message emacsvox-notmuch-show-status-icons 'inspection t))
+       (unless part
+         (emacsvox-notmuch--status-compatibility-actions
+          message emacsvox-notmuch-show-status-icons 'inspection t)))
       summary)))
 
 (defun emacsvox-notmuch--current-show-message-id ()
@@ -783,11 +1278,15 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
 
 (defun emacsvox-notmuch-format-part (part)
   "Return a concise description of Notmuch MIME PART."
-  (let* ((filename (plist-get part :filename))
+  (let* ((filename
+          (emacsvox-notmuch--prepare-field-text
+           (plist-get part :filename) "filename"))
          (content-type
-          (or
-           (plist-get part :computed-type)
-           (plist-get part :content-type)))
+          (emacsvox-notmuch--prepare-field-text
+           (or
+            (plist-get part :computed-type)
+            (plist-get part :content-type))
+           "content type"))
          (length (emacsvox-notmuch--part-content-length part))
          (description
           (string-join
@@ -806,12 +1305,16 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
 
 (defun emacsvox-notmuch--part-action-object (part)
   "Return a concise action-oriented name for Notmuch MIME PART."
-  (if-let* ((filename (plist-get part :filename)))
+  (if-let* ((filename
+             (emacsvox-notmuch--prepare-field-text
+              (plist-get part :filename) "filename")))
       (format "attachment %s" filename)
     (if-let* ((content-type
-               (or
-                (plist-get part :computed-type)
-                (plist-get part :content-type))))
+               (emacsvox-notmuch--prepare-field-text
+                (or
+                 (plist-get part :computed-type)
+                 (plist-get part :content-type))
+                "content type")))
         (format "%s part" content-type)
       "MIME part")))
 
@@ -827,7 +1330,9 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
       (emacsvox-notmuch--submit-text-feedback
        '(:role message-part :message-part-kind button
          :mail-action-kind select :events (focus-entered))
-       'navigation 'large-movement (button-label button)))))
+       'navigation 'large-movement
+       (emacsvox-notmuch--prepare-field-text
+        (button-label button) "button label")))))
 
 (defun emacsvox-notmuch--part-action-feedback (action part)
   "Confirm ACTION on Notmuch MIME PART."
@@ -1047,13 +1552,17 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
       (let ((end (point)))
         (skip-chars-backward "^ \t\n")
         (unless (= (point) end)
-          (buffer-substring-no-properties (point) end))))))
+          (substring-no-properties
+           (emacsvox-notmuch--bounded-source-substring
+            (point) end "message count")))))))
 
 (defun emacsvox-notmuch--hello-widget-summary ()
   "Speak the Notmuch Hello widget at point."
   (when-let* ((widget (widget-at (point)))
               (value (widget-value widget))
-              (label (string-trim (format "%s" value))))
+              (label
+               (emacsvox-notmuch--prepare-field-text
+                value "widget label")))
     (let* ((count
             (and
              (widget-get widget :notmuch-search-terms)
@@ -1443,11 +1952,13 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
   "Confirm saving attachments from the current Notmuch message."
   (let* ((message
           (ignore-errors (notmuch-show-get-message-properties)))
-         (count
+         (scan
           (and
            message
-           (emacsvox-notmuch--attachment-count
+           (emacsvox-notmuch--attachment-scan
             (plist-get message :body))))
+         (count (and scan (plist-get scan :count)))
+         (complete (and scan (plist-get scan :complete)))
          (result (apply original arguments)))
     (when (ems-interactive-p 'notmuch-show-save-attachments)
       (emacsvox-notmuch--submit-text-feedback
@@ -1458,9 +1969,10 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
         '(:mail-action-kind save :events (operation-completed)))
        'state-change
        (if (and count (> count 0)) 'save-object 'select-object)
-       (if (and count (> count 0))
-           "Finished saving attachments"
-         "No attachments to save")))
+       (cond
+        ((and count (> count 0)) "Finished saving attachments")
+        (complete "No attachments to save")
+        (t "Finished saving attachments; attachment scan incomplete"))))
     result))
 
 (push
@@ -1487,7 +1999,12 @@ the selected message changes; otherwise speak the visible window."
              'navigation 'select-object "End of thread"))
            (t
             (emacsvox-notmuch--submit-content
-             (emacsvox-get-window-contents)
+             (emacsvox-notmuch--bounded-source-range
+              (window-start (selected-window))
+              (window-end (selected-window) 'update)
+              "visible page"
+              emacsvox-notmuch-automatic-total-character-limit
+              emacsvox-notmuch-automatic-total-byte-limit)
              '(:role message-part :message-part-kind page
                :mail-action-kind scroll :events (focus-entered))
              'navigation
@@ -1570,11 +2087,32 @@ the selected message changes; otherwise speak the visible window."
       nil
       (list
        (when added
-         (format "Added %s" (string-join (nreverse added) ", ")))
+         (format
+          "Added %s"
+          (string-join
+           (mapcar
+            (lambda (tag)
+              (emacsvox-notmuch--prepare-field-text tag "tag"))
+            (nreverse added))
+           ", ")))
        (when removed
-         (format "Removed %s" (string-join (nreverse removed) ", ")))
+         (format
+          "Removed %s"
+          (string-join
+           (mapcar
+            (lambda (tag)
+              (emacsvox-notmuch--prepare-field-text tag "tag"))
+            (nreverse removed))
+           ", ")))
        (when changed
-         (format "Changed %s" (string-join (nreverse changed) ", ")))))
+         (format
+          "Changed %s"
+          (string-join
+           (mapcar
+            (lambda (tag)
+              (emacsvox-notmuch--prepare-field-text tag "tag"))
+            (nreverse changed))
+           ", ")))))
      "; ")))
 
 (defun emacsvox-notmuch--tag-change-name (tag-change)
@@ -2338,7 +2876,10 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
   (define-key
    notmuch-search-mode-map (kbd "<down>") #'notmuch-search-next-thread)
   (define-key
-   notmuch-search-mode-map (kbd "<up>") #'notmuch-search-previous-thread))
+   notmuch-search-mode-map (kbd "<up>") #'notmuch-search-previous-thread)
+  (define-key
+   notmuch-search-mode-map (kbd "C-c C-p")
+   #'emacsvox-notmuch-speak-search-details))
 
 (with-eval-after-load 'notmuch-show
   (define-key

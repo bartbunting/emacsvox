@@ -191,6 +191,31 @@ Return the beginning of the inserted row."
         (nreverse events)
         '((icon item) (speak "inbox, 42 messages")))))))
 
+(ert-deftest emacsvox-notmuch-hello-widget-label-is-bounded ()
+  "Automatic Hello navigation does not submit an arbitrary widget label."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-hello-mode)
+    (let* ((label (make-string 200000 ?w))
+           (widget (widget-create 'push-button label))
+           spoken)
+      (widget-setup)
+      (goto-char (widget-get widget :from))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest _arguments)
+              (setq spoken (substring-no-properties content)))))
+        (emacsvox-notmuch--hello-widget-summary))
+      (should
+       (<=
+        (length spoken)
+        emacsvox-notmuch-automatic-field-character-limit))
+      (should
+       (equal
+        spoken
+        (concat
+         "… [widget label shortened: 200000 characters omitted; "
+         "RET opens full details] button"))))))
+
 (ert-deftest emacsvox-notmuch-show-visual-lines-leave-blank-policy-to-core ()
   "Notmuch should not duplicate core visual-line blank presentation."
   (dolist (case '((notmuch-show-mode "")
@@ -244,6 +269,99 @@ Return the beginning of the inserted row."
           :body
           ((:content-type "image/png" :filename "chart.png")))))))))
   "Representative Notmuch show message used by speech tests.")
+
+(defun emacsvox-notmuch-test--nested-mime-body (depth &optional attachment)
+  "Return a synthetic MIME body with ATTACHMENT below DEPTH containers."
+  (let ((node
+         (or attachment '(:content-type "text/plain" :content "body"))))
+    (dotimes (_ depth)
+      (setq node
+            (list :content-type "multipart/mixed" :content node)))
+    (list node)))
+
+(ert-deftest emacsvox-notmuch-mime-scan-is-complete-for-normal-message ()
+  "The iterative scan preserves exact attachment results for ordinary mail."
+  (let ((scan
+         (emacsvox-notmuch--attachment-scan
+          (plist-get emacsvox-notmuch-test--show-message :body))))
+    (should (= (plist-get scan :count) 2))
+    (should (plist-get scan :complete))
+    (should (<= (plist-get scan :nodes) emacsvox-notmuch-mime-node-limit))))
+
+(ert-deftest emacsvox-notmuch-mime-scan-bounds-deep-input ()
+  "A deeply nested MIME body returns unknown instead of recursing in Lisp."
+  (let* ((emacsvox-notmuch-mime-depth-limit 16)
+         (body
+          (emacsvox-notmuch-test--nested-mime-body
+           250
+           '(:content-type "application/pdf" :filename "deep.pdf")))
+         (scan (emacsvox-notmuch--attachment-scan body)))
+    (should-not (plist-get scan :complete))
+    (should (= (plist-get scan :count) 0))
+    (should
+     (equal
+      (emacsvox-notmuch--attachment-summary scan)
+      "attachment scan incomplete"))))
+
+(ert-deftest emacsvox-notmuch-mime-scan-reports-conservative-lower-bound ()
+  "A found attachment remains truthful when another MIME branch is too deep."
+  (let* ((emacsvox-notmuch-mime-depth-limit 8)
+         (body
+          (list
+           '(:content-type "application/pdf" :filename "visible.pdf")
+           (car
+            (emacsvox-notmuch-test--nested-mime-body
+             100
+             '(:content-type "image/png" :filename "deep.png")))))
+         (scan (emacsvox-notmuch--attachment-scan body))
+         (facts (emacsvox-notmuch-message-facts (list :body body))))
+    (should-not (plist-get scan :complete))
+    (should (= (plist-get scan :count) 1))
+    (should
+     (equal
+      (emacsvox-notmuch--attachment-summary scan)
+      "at least 1 attachment"))
+    (should (memq 'has-attachments (plist-get facts :states)))))
+
+(ert-deftest emacsvox-notmuch-mime-scan-bounds-broad-input ()
+  "A broad MIME list cannot exceed the configured node budget."
+  (let* ((emacsvox-notmuch-mime-node-limit 40)
+         (body
+          (make-list
+           5000
+           '(:content-type "application/pdf" :filename "broad.pdf")))
+         (scan (emacsvox-notmuch--attachment-scan body)))
+    (should-not (plist-get scan :complete))
+    (should (<= (plist-get scan :nodes) 40))
+    (should (<= (plist-get scan :count) 5000))))
+
+(ert-deftest emacsvox-notmuch-mime-scan-handles-cycles-and-improper-lists ()
+  "Malformed MIME graphs terminate and expose an incomplete result."
+  (let* ((cycle (list nil))
+         (improper
+          (cons
+           '(:content-type "application/pdf" :filename "seen.pdf")
+           'malformed-tail)))
+    (setcar cycle cycle)
+    (dolist (body (list cycle improper))
+      (let ((scan (emacsvox-notmuch--attachment-scan body)))
+        (should-not (plist-get scan :complete))
+        (should
+         (<=
+          (plist-get scan :nodes)
+          emacsvox-notmuch-mime-node-limit))))))
+
+(ert-deftest emacsvox-notmuch-incomplete-scan-never-claims-no-attachment ()
+  "Unknown attachment state stays unknown in fields and semantic facts."
+  (let* ((emacsvox-notmuch-mime-depth-limit 1)
+         (body (emacsvox-notmuch-test--nested-mime-body 20))
+         (message (list :body body))
+         (facts (emacsvox-notmuch-message-facts message))
+         (field
+          (substring-no-properties
+           (emacsvox-notmuch--format-show-field 'attachments message))))
+    (should (equal field "attachment scan incomplete"))
+    (should-not (memq 'has-attachments (plist-get facts :states)))))
 
 (ert-deftest emacsvox-notmuch-formats-semantic-search-result ()
   "Search results use semantic fields, native faces, and silent statuses."
@@ -623,6 +741,191 @@ Return the beginning of the inserted row."
         emacsvox-notmuch-test--search-result))
       "Project update / Alice Smith, Bob Jones"))))
 
+(ert-deftest emacsvox-notmuch-automatic-field-defaults-are-explicit ()
+  "Automatic mail fields have documented character and UTF-8 byte budgets."
+  (should (= emacsvox-notmuch-automatic-field-character-limit 256))
+  (should (= emacsvox-notmuch-automatic-field-byte-limit 1024))
+  (should (= emacsvox-notmuch-automatic-total-character-limit 1000))
+  (should (= emacsvox-notmuch-automatic-total-byte-limit 4096))
+  (should (= emacsvox-notmuch-mime-node-limit 4096))
+  (should (= emacsvox-notmuch-mime-depth-limit 64)))
+
+(ert-deftest emacsvox-notmuch-automatic-field-character-boundary-is-exact ()
+  "The character limit accepts its boundary and reports the next character."
+  (let ((major-mode 'notmuch-search-mode)
+        (emacsvox-notmuch-search-result-fields '(subject))
+        (emacsvox-notmuch-automatic-field-byte-limit nil))
+    (should
+     (equal
+      (substring-no-properties
+       (emacsvox-notmuch-format-search-result
+        (list :subject (make-string 256 ?x))))
+      (make-string 256 ?x)))
+    (should
+     (equal
+      (substring-no-properties
+       (emacsvox-notmuch-format-search-result
+        (list :subject (make-string 257 ?x))))
+      (concat
+       "… [subject shortened: 257 characters omitted; "
+       "C-c C-p gives full details]")))))
+
+(ert-deftest emacsvox-notmuch-automatic-field-byte-boundary-is-utf8 ()
+  "The byte limit uses UTF-8 and never splits a multibyte character."
+  (let ((major-mode 'notmuch-search-mode)
+        (emacsvox-notmuch-automatic-field-character-limit nil)
+        (emacsvox-notmuch-automatic-field-byte-limit 100))
+    (should
+     (equal
+      (emacsvox-notmuch--prepare-field-text
+       (make-string 50 ?é) "subject")
+      (make-string 50 ?é)))
+    (let ((bounded
+           (emacsvox-notmuch--prepare-field-text
+            (make-string 51 ?é) "subject")))
+      (should
+       (equal
+        bounded
+        (concat
+         "… [subject shortened: 51 characters omitted; "
+         "C-c C-p gives full details]")))
+      (should
+       (<= (emacsvox-notmuch--utf8-byte-length bounded) 100)))))
+
+(ert-deftest emacsvox-notmuch-bounds-mail-before-header-transforms ()
+  "Huge authors and recipients are bounded before Notmuch transforms them."
+  (let ((major-mode 'notmuch-show-mode)
+        (huge (make-string 200000 ?x))
+        sanitize-lengths
+        clean-lengths)
+    (cl-letf
+        (((symbol-function 'notmuch-sanitize)
+          (lambda (text)
+            (push (length text) sanitize-lengths)
+            text))
+         ((symbol-function 'notmuch-show-clean-address)
+          (lambda (text)
+            (push (length text) clean-lengths)
+            text)))
+      (emacsvox-notmuch--format-authors huge)
+      (emacsvox-notmuch--format-show-field
+       'from (list :headers (list :From huge))))
+    (should sanitize-lengths)
+    (should clean-lengths)
+    (should
+     (cl-every
+      (lambda (length)
+        (<= length emacsvox-notmuch-automatic-field-character-limit))
+      sanitize-lengths))
+    (should
+     (cl-every
+      (lambda (length)
+        (<= length emacsvox-notmuch-automatic-field-character-limit))
+      clean-lengths))))
+
+(ert-deftest emacsvox-notmuch-bounds-tags-before-native-formatting ()
+  "Huge tag strings never reach Notmuch's formatter in full."
+  (let* ((major-mode 'notmuch-search-mode)
+         (huge (make-string 200000 ?t))
+         (result
+          (list :tags (list "inbox" huge)
+                :orig-tags (list "inbox" huge)))
+         calls)
+    (cl-letf
+        (((symbol-function 'notmuch-tag-format-tags)
+          (lambda (tags orig-tags &optional _face)
+            (push (list tags orig-tags) calls)
+            (string-join tags " "))))
+      (let ((formatted
+             (substring-no-properties
+              (emacsvox-notmuch--format-tags result nil))))
+        (should (string-match-p "tags shortened" formatted))))
+    (should (= (length calls) 1))
+    (dolist (tag (append (caar calls) (cadar calls)))
+      (should (< (length tag) 200000)))))
+
+(ert-deftest emacsvox-notmuch-bounds-custom-formatter-output ()
+  "A custom field cannot bypass automatic Notmuch presentation limits."
+  (let ((major-mode 'notmuch-search-mode)
+        (emacsvox-notmuch-search-result-fields
+         (list (lambda (_result) (make-string 200000 ?c)))))
+    (let ((summary
+           (substring-no-properties
+            (emacsvox-notmuch-format-search-result nil))))
+      (should
+       (<=
+        (length summary)
+        emacsvox-notmuch-automatic-field-character-limit))
+      (should (string-match-p "custom field shortened" summary)))))
+
+(ert-deftest emacsvox-notmuch-total-budget-preserves-semantic-actions ()
+  "Total text truncation leaves structured status facts and cues intact."
+  (let* ((major-mode 'notmuch-search-mode)
+         (emacsvox-notmuch-search-result-fields '(subject))
+         (emacsvox-notmuch-automatic-total-character-limit 120)
+         (result
+          (list :subject (string-join (make-list 600 "word") " ")
+                :tags '("unread" "flagged")))
+         captured)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (setq captured (cons content arguments)))))
+      (emacsvox-notmuch-speak-search-result result))
+    (pcase-let ((`(,content . ,arguments) captured))
+      (should (<= (length content) 120))
+      (should (string-match-p "shortened" content))
+      (should
+       (equal
+        (plist-get (plist-get arguments :facts) :states)
+        '(unread flagged)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (plist-get arguments :compatibility-actions))
+        '(mail-unread mark-object))))))
+
+(ert-deftest emacsvox-notmuch-tag-truncation-never-creates-status-word ()
+  "Truncation drops a long tag whole instead of speaking a status-like prefix."
+  (let* ((major-mode 'notmuch-search-mode)
+         (emacsvox-notmuch-search-result-fields '(tags))
+         (status-like (concat "unread" (make-string 200000 ?x)))
+         (result
+          (list :tags (list "unread" "flagged" status-like)
+                :orig-tags (list "unread" "flagged" status-like)))
+         (summary
+          (substring-no-properties
+           (emacsvox-notmuch-format-search-result result))))
+    (should (string-match-p "tags shortened" summary))
+    (should-not (string-match-p "unreadx" summary))
+    (should-not (string-match-p "flagged" summary))))
+
+(ert-deftest emacsvox-notmuch-explicit-search-details-are-untruncated ()
+  "C-c C-p inspection speaks the full configured Search fields."
+  (let* ((major-mode 'notmuch-search-mode)
+         (emacsvox-notmuch-search-result-fields '(subject))
+         (subject (make-string 2000 ?s))
+         (result (list :subject subject))
+         spoken)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest _arguments)
+            (push (substring-no-properties content) spoken))))
+      (emacsvox-notmuch-speak-search-result result)
+      (emacsvox-notmuch-speak-search-details result))
+    (setq spoken (nreverse spoken))
+    (should (< (length (car spoken)) (length subject)))
+    (should (string-match-p "shortened" (car spoken)))
+    (should (equal (cadr spoken) subject))))
+
+(ert-deftest emacsvox-notmuch-search-details-have-manual-binding ()
+  "Search exposes complete current-result details on C-c C-p."
+  (should
+   (eq
+    (lookup-key notmuch-search-mode-map (kbd "C-c C-p"))
+    #'emacsvox-notmuch-speak-search-details)))
+
 (ert-deftest emacsvox-notmuch-search-status-uses-icons-not-words ()
   "Configured status tags play icons and remain out of speech."
   (let ((status-actions
@@ -769,6 +1072,64 @@ Return the beginning of the inserted row."
         (substring-no-properties spoken)))
       (should (= (point) (point-min))))))
 
+(ert-deftest emacsvox-notmuch-limits-body-copy-before-source-preparation ()
+  "A huge landed body line is copied only up to the per-field ingress budget."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (insert "Body separator\n" (make-string 200000 ?b) "\n")
+    (goto-char (point-min))
+    (let ((source-substring
+           (symbol-function 'emacsvox-aural-source-substring))
+          copied
+          line)
+      (cl-letf
+          (((symbol-function 'notmuch-show-message-extent)
+            (lambda () (cons (point-min) (point-max))))
+           ((symbol-function 'emacsvox-aural-source-substring)
+            (lambda (start end &optional buffer)
+              (setq copied (- end start))
+              (funcall source-substring start end buffer))))
+        (setq line
+              (substring-no-properties
+               (emacsvox-notmuch--landed-body-line))))
+      (should
+       (<= copied emacsvox-notmuch-automatic-field-character-limit))
+      (should
+       (equal
+        line
+        (concat
+         "… [body line shortened: 200000 characters omitted; "
+         "C-c C-p gives full details]"))))))
+
+(ert-deftest emacsvox-notmuch-limits-visible-page-before-source-preparation ()
+  "Scrolled Show feedback copies no more than the total presentation budget."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (insert (make-string 200000 ?p))
+    (let ((source-substring
+           (symbol-function 'emacsvox-aural-source-substring))
+          copied
+          page)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-source-substring)
+            (lambda (start end &optional buffer)
+              (setq copied (- end start))
+              (funcall source-substring start end buffer))))
+        (setq page
+              (emacsvox-notmuch--bounded-source-range
+               (point-min) (point-max) "visible page"
+               emacsvox-notmuch-automatic-total-character-limit
+               emacsvox-notmuch-automatic-total-byte-limit)))
+      (should
+       (<= copied emacsvox-notmuch-automatic-total-character-limit))
+      (should
+       (<= (length page) emacsvox-notmuch-automatic-total-character-limit))
+      (should
+       (<=
+        (emacsvox-notmuch--utf8-byte-length page)
+        emacsvox-notmuch-automatic-total-byte-limit))
+      (should (string-match-p "visible page shortened" page)))))
+
 (ert-deftest emacsvox-notmuch-show-position-speaks-ordinal-and-details ()
   "The manual position report combines thread position and message details."
   (with-temp-buffer
@@ -839,6 +1200,43 @@ Return the beginning of the inserted row."
      (eq
       (get-text-property 0 'face description)
       'emacsvox-notmuch-message-attachments))))
+
+(ert-deftest emacsvox-notmuch-automatic-part-filename-is-bounded ()
+  "Automatic part feedback identifies a shortened hostile filename explicitly."
+  (let* ((major-mode 'notmuch-show-mode)
+         (filename (make-string 200000 ?f))
+         (part (list :filename filename :content-type "application/pdf"))
+         (automatic
+          (substring-no-properties (emacsvox-notmuch-format-part part)))
+         (full
+          (let ((emacsvox-notmuch--automatic-presentation-p nil))
+            (substring-no-properties
+             (emacsvox-notmuch-format-part part)))))
+    (should (string-match-p "filename shortened: 200000" automatic))
+    (should (< (length automatic) (length filename)))
+    (should (string-search filename full))))
+
+(ert-deftest emacsvox-notmuch-show-inspection-reveals-full-part-filename ()
+  "C-c C-p on a MIME part bypasses automatic filename truncation."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let* ((filename (make-string 2000 ?f))
+           (part (list :filename filename :content-type "application/pdf"))
+           spoken)
+      (insert-text-button "attachment" 'action #'ignore)
+      (put-text-property (point-min) (point-max) :notmuch-part part)
+      (goto-char (point-min))
+      (cl-letf
+          (((symbol-function 'notmuch-show-get-message-properties)
+            (lambda () emacsvox-notmuch-test--show-message))
+           ((symbol-function 'emacsvox-notmuch--show-message-position)
+            (lambda () '(1 . 1)))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest _arguments)
+              (setq spoken (substring-no-properties content)))))
+        (emacsvox-notmuch-speak-show-position))
+      (should (string-search filename spoken))
+      (should-not (string-match-p "shortened" spoken)))))
 
 (ert-deftest emacsvox-notmuch-show-button-navigation-describes-attachment ()
   "TAB navigation gives attachment-specific semantic feedback."
@@ -1102,6 +1500,28 @@ Return the beginning of the inserted row."
       (nreverse events)
       '((icon save-object)
         (speak "Finished saving attachments"))))))
+
+(ert-deftest emacsvox-notmuch-save-attachments-keeps-incomplete-scan-truthful ()
+  "A bounded unknown scan never produces a false no-attachment confirmation."
+  (let* ((ems--interactive-fn-name 'notmuch-show-save-attachments)
+         (emacsvox-notmuch-mime-depth-limit 1)
+         (message
+          (list :body (emacsvox-notmuch-test--nested-mime-body 20)))
+         events)
+    (cl-letf
+        (((symbol-function 'notmuch-show-get-message-properties)
+          (lambda () message))
+         ((symbol-function 'emacsvox-aural-submit)
+          (emacsvox-test--notmuch-submission-recorder
+           (lambda (event) (push event events)))))
+      (emacsvox--advice-notmuch-show-save-attachments-around
+       (lambda () 'saved)))
+    (should
+     (equal
+      (nreverse events)
+      '((icon select-object)
+        (speak
+         "Finished saving attachments; attachment scan incomplete"))))))
 
 (ert-deftest emacsvox-notmuch-opening-thread-speaks-semantic-message ()
   "Opening a search result selects the line before the message body."
@@ -1580,8 +2000,8 @@ Return the beginning of the inserted row."
       (cl-letf
           (((symbol-function 'emacsvox-notmuch--current-show-message-id)
             (lambda () "same"))
-           ((symbol-function 'emacsvox-get-window-contents)
-            (lambda () "visible window"))
+           ((symbol-function 'emacsvox-notmuch--bounded-source-range)
+            (lambda (&rest _) "visible window"))
            ((symbol-function 'emacsvox-notmuch--submit-content)
             (lambda (&rest arguments) (setq captured arguments))))
         (should
@@ -1668,8 +2088,8 @@ Return the beginning of the inserted row."
       (cl-letf
           (((symbol-function 'emacsvox-notmuch--current-show-message-id)
             (lambda () "same"))
-           ((symbol-function 'emacsvox-get-window-contents)
-            (lambda () "visible window"))
+           ((symbol-function 'emacsvox-notmuch--bounded-source-range)
+            (lambda (&rest _) "visible window"))
            ((symbol-function 'emacsvox-notmuch--submit-content)
             (lambda (&rest arguments) (setq captured arguments))))
         (should
