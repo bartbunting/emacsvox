@@ -225,8 +225,9 @@ The integration uses three deliberately different contract layers:
 @multitable @columnfractions .18 .37 .45
 @headitem Layer @tab Agent Shell owner @tab Emacsvox rule
 @item Public structured API
-@tab @code{agent-shell-subscribe-to}, @code{agent-shell-unsubscribe}, and
-@code{agent-shell-status}; lifecycle, permission, and tool events
+@tab @code{agent-shell-subscribe-to}, @code{agent-shell-unsubscribe},
+@code{agent-shell-status}, and @code{agent-shell-shell-buffer}; lifecycle,
+permission, and tool events
 @tab Primary authority for processing, completion, errors, permission urgency,
 and tool status.  The public turn boundary triggers inspection of renderer-owned
 response sections.  Event and response data is treated as untrusted content and
@@ -238,11 +239,11 @@ Markdown table/source properties, and renderer-owned faces
 provenance outranks provider-controlled IDs; prose and IDs cannot manufacture
 structured permission or lifecycle authority.
 @item Private compatibility fallback
-@tab The aggregate @code{agent-shell--state}, viewport position helpers, and
-legacy face, prompt, or ID inference
-@tab Kept in narrow adapter functions for older or incomplete renderers.  A
-missing optional detail may reduce header or navigation richness but must not
-create a permission action or completed response.
+@tab The aggregate @code{agent-shell--state}, the legacy viewport ownership
+resolver, viewport position helpers, and legacy face, prompt, or ID inference
+@tab Kept in narrow adapter functions for older Agent Shell releases or
+incomplete renderers.  A missing optional detail may reduce header or navigation
+richness but must not create a permission action or completed response.
 @end multitable
 
 The lifecycle subscription currently consumes @code{init-started},

@@ -150,6 +150,8 @@
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--session-focused-p
                   "emacsvox-agent-shell" (&optional buffer))
+(declare-function emacsvox-agent-shell--session-buffer
+                  "emacsvox-agent-shell" (&optional buffer))
 (declare-function emacsvox-agent-shell--speak-focus-header-if-needed
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--prepare-speech-text
@@ -3786,6 +3788,170 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should (eq (emacsvox-agent-shell--effective-speech-level shell)
                       'response)))
       (dolist (buffer (list shell viewport other))
+        (when (buffer-live-p buffer)
+          (kill-buffer buffer))))))
+
+(ert-deftest emacsvox-agent-shell-public-viewport-resolver-owns-workflows ()
+  "Public viewport ownership should drive focus and session commands."
+  (let ((shell (generate-new-buffer "Codex Agent @ public-resolver"))
+        (viewport
+         (generate-new-buffer "Codex Agent @ public-resolver [viewport]"))
+        public-calls)
+    (unwind-protect
+        (save-window-excursion
+          (with-current-buffer shell
+            (setq major-mode 'agent-shell-mode)
+            (setq-local
+             agent-shell--state
+             '((:agent-config . ((:buffer-name . "Public Resolver")))))
+            (setq-local emacsvox-agent-shell-speech-level 'auto)
+            (setq-local emacsvox-agent-shell--last-completed-answer
+                        "Resolved response")
+            (setq-local emacsvox-agent-shell--latest-turn-outcome 'completed))
+          (with-current-buffer viewport
+            (setq major-mode 'agent-shell-viewport-view-mode))
+          (switch-to-buffer viewport)
+          (let ((agent-shell-show-context-usage-indicator nil)
+                (agent-shell-show-session-id nil))
+            (cl-letf
+                (((symbol-function 'agent-shell-shell-buffer)
+                  (lambda (&rest arguments)
+                    (push (cons (current-buffer) arguments) public-calls)
+                    (should
+                     (eq (plist-get arguments :viewport-buffer) viewport))
+                    (should (eq (plist-get arguments :no-error) t))
+                    (should (eq (plist-get arguments :no-create) t))
+                    shell))
+                 ((symbol-function 'agent-shell-viewport--shell-buffer) nil)
+                 ((symbol-function 'agent-shell-status)
+                  (lambda (&rest arguments)
+                    (should (eq (plist-get arguments :shell-buffer) shell))
+                    'ready))
+                 ((symbol-function 'shell-maker-busy) (lambda () nil))
+                 ((symbol-function 'agent-shell--project-name)
+                  (lambda ()
+                    (should (eq (current-buffer) shell))
+                    "correct-project"))
+                 ((symbol-function 'agent-shell-get-model-name)
+                  (lambda (_state) nil))
+                 ((symbol-function 'agent-shell-get-thought-level-name)
+                  (lambda (_state) nil))
+                 ((symbol-function 'agent-shell-get-mode-name)
+                  (lambda (_state) nil)))
+              (should-not
+               (fboundp 'agent-shell-viewport--shell-buffer))
+              (should (emacsvox-agent-shell--session-focused-p shell))
+              (with-current-buffer viewport
+                (should
+                 (equal
+                  (emacsvox-agent-shell-test--capture-events
+                    (emacsvox-agent-shell-speak-last-response))
+                  '((stop nil)
+                    (icon item)
+                    (speak "Resolved response")))))
+              (with-current-buffer viewport
+                (cl-letf (((symbol-function 'completing-read)
+                           (lambda (&rest _) "notify")))
+                  (should
+                   (equal
+                    (emacsvox-agent-shell-test--capture-events
+                      (emacsvox-agent-shell-select-speech-level))
+                    '((icon select-object)
+                      (speak
+                       "Agent speech notify for Codex Agent @ public-resolver."))))))
+              (with-current-buffer shell
+                (should (eq emacsvox-agent-shell-speech-level 'notify)))
+              (let ((state (emacsvox-agent-shell--header-state viewport)))
+                (should (equal (plist-get state :agent)
+                               "Public Resolver agent"))
+                (should (equal (plist-get state :project)
+                               "correct-project"))))
+            (should public-calls)
+            (dolist (call public-calls)
+              (should (eq (car call) viewport))
+              (should
+               (equal
+                (cdr call)
+                (list :viewport-buffer viewport
+                      :no-error t
+                      :no-create t))))))
+      (dolist (buffer (list shell viewport))
+        (when (buffer-live-p buffer)
+          (kill-buffer buffer))))))
+
+(ert-deftest emacsvox-agent-shell-old-viewport-resolver-falls-back-narrowly ()
+  "Agent Shell versions predating the public resolver should still work."
+  (let ((shell (generate-new-buffer "Codex Agent @ legacy-resolver"))
+        (viewport
+         (generate-new-buffer "Codex Agent @ legacy-resolver [viewport]"))
+        private-calls)
+    (unwind-protect
+        (save-window-excursion
+          (with-current-buffer shell
+            (setq major-mode 'agent-shell-mode))
+          (with-current-buffer viewport
+            (setq major-mode 'agent-shell-viewport-view-mode))
+          (switch-to-buffer viewport)
+          (cl-letf
+              (((symbol-function 'agent-shell-shell-buffer) nil)
+               ((symbol-function 'agent-shell-viewport--shell-buffer)
+                (lambda (&optional candidate)
+                  (push candidate private-calls)
+                  shell)))
+            (should-not (fboundp 'agent-shell-shell-buffer))
+            (should (emacsvox-agent-shell--session-focused-p shell))
+            (with-current-buffer viewport
+              (should (eq (emacsvox-agent-shell--session-buffer) shell)))
+            (should (equal private-calls (list viewport viewport)))))
+      (dolist (buffer (list shell viewport))
+        (when (buffer-live-p buffer)
+          (kill-buffer buffer))))))
+
+(ert-deftest emacsvox-agent-shell-stale-viewport-does-not-select-a-session ()
+  "A stale viewport should report no session and never use another shell."
+  (let ((unrelated (generate-new-buffer "Codex Agent @ unrelated"))
+        (viewport (generate-new-buffer "Codex Agent @ stale [viewport]"))
+        public-calls)
+    (unwind-protect
+        (save-window-excursion
+          (with-current-buffer unrelated
+            (setq major-mode 'agent-shell-mode)
+            (setq-local emacsvox-agent-shell-speech-level 'full))
+          (with-current-buffer viewport
+            (setq major-mode 'agent-shell-viewport-view-mode))
+          (switch-to-buffer viewport)
+          (cl-letf
+              (((symbol-function 'agent-shell-shell-buffer)
+                (lambda (&rest arguments)
+                  (push arguments public-calls)
+                  nil))
+               ((symbol-function 'agent-shell-viewport--shell-buffer)
+                (lambda (&rest _)
+                  (ert-fail "The private resolver must not follow public nil"))))
+            (should-not
+             (emacsvox-agent-shell--session-focused-p unrelated))
+            (with-current-buffer viewport
+              (should-not (emacsvox-agent-shell--header-state))
+              (dolist
+                  (command
+                   '(emacsvox-agent-shell-speak-last-response
+                     emacsvox-agent-shell-select-speech-level))
+                (let ((failure
+                       (should-error (funcall command) :type 'user-error)))
+                  (should
+                   (equal (cadr failure)
+                          "This viewport has no agent-shell session")))))
+            (with-current-buffer unrelated
+              (should (eq emacsvox-agent-shell-speech-level 'full)))
+            (should public-calls)
+            (dolist (arguments public-calls)
+              (should
+               (equal
+                arguments
+                (list :viewport-buffer viewport
+                      :no-error t
+                      :no-create t))))))
+      (dolist (buffer (list unrelated viewport))
         (when (buffer-live-p buffer)
           (kill-buffer buffer))))))
 

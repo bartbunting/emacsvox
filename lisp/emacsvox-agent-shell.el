@@ -84,9 +84,12 @@
 ;; These public entry points are `cl-defun' keyword APIs.  A value of t keeps
 ;; `check-declare' checking their source without presenting `&key' as positional
 ;; to the native byte compiler, whose declaration arglists follow `defun'.
+(declare-function agent-shell-shell-buffer "agent-shell" t)
 (declare-function agent-shell-status "agent-shell" t)
 (declare-function agent-shell-subscribe-to "agent-shell" t)
 (declare-function agent-shell-unsubscribe "agent-shell" t)
+(declare-function agent-shell-viewport--shell-buffer
+                  "agent-shell-viewport" (&optional viewport-buffer))
 (declare-function agent-shell-ui-toggle-fragment "agent-shell-ui" ())
 (declare-function agent-shell-ui-toggle-all-fragments "agent-shell-ui" ())
 (declare-function agent-shell-ui--toggle-fragment-at-point
@@ -1266,6 +1269,31 @@ so this value never determines when a submitted turn is spoken."
   '((quiet . 0) (notify . 1) (response . 2) (full . 3))
   "Numeric ordering of agent-shell automatic speech levels.")
 
+(defun emacsvox-agent-shell--viewport-session-buffer (viewport-buffer)
+  "Return VIEWPORT-BUFFER's live Agent Shell session, or nil.
+Prefer Agent Shell's stable public resolver and prohibit session creation.
+The private resolver is only a compatibility fallback for Agent Shell releases
+that predate the public API."
+  (when (buffer-live-p viewport-buffer)
+    (let ((shell-buffer
+           (cond
+            ((fboundp 'agent-shell-shell-buffer)
+             (with-current-buffer viewport-buffer
+               (ignore-errors
+                 (agent-shell-shell-buffer
+                  :viewport-buffer viewport-buffer
+                  :no-error t
+                  :no-create t))))
+            ;; Compatibility with Agent Shell releases before the stable public
+            ;; resolver.  Do not use this branch when the public API is present.
+            ((fboundp 'agent-shell-viewport--shell-buffer)
+             (ignore-errors
+               (agent-shell-viewport--shell-buffer viewport-buffer))))))
+      (when (and (buffer-live-p shell-buffer)
+                 (with-current-buffer shell-buffer
+                   (derived-mode-p 'agent-shell-mode)))
+        shell-buffer))))
+
 (defun emacsvox-agent-shell--session-focused-p (&optional buffer)
   "Return non-nil when BUFFER's agent-shell session has keyboard focus.
 A selected viewport counts as focus for its associated shell buffer."
@@ -1278,9 +1306,8 @@ A selected viewport counts as focus for its associated shell buffer."
                     (and
                      (derived-mode-p 'agent-shell-viewport-view-mode
                                      'agent-shell-viewport-edit-mode)
-                     (fboundp 'agent-shell-viewport--shell-buffer)
                      (eq shell-buffer
-                         (agent-shell-viewport--shell-buffer
+                         (emacsvox-agent-shell--viewport-session-buffer
                           selected-buffer)))))))))
 
 (defun emacsvox-agent-shell--session-label (&optional buffer)
@@ -1478,8 +1505,7 @@ Signal a user error when BUFFER is neither a shell nor an associated viewport."
        ((derived-mode-p 'agent-shell-mode) candidate)
        ((derived-mode-p 'agent-shell-viewport-view-mode
                         'agent-shell-viewport-edit-mode)
-        (or (and (fboundp 'agent-shell-viewport--shell-buffer)
-                 (agent-shell-viewport--shell-buffer candidate))
+        (or (emacsvox-agent-shell--viewport-session-buffer candidate)
             (user-error "This viewport has no agent-shell session")))
        (t (user-error "Not in an agent-shell session"))))))
 

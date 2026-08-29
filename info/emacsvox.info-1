@@ -2882,10 +2882,10 @@ Layer         Agent Shell owner           Emacsvox rule
 ---------------------------------------------------------------------------
 Public        ‘agent-shell-subscribe-to’, Primary authority for
 structured    ‘agent-shell-unsubscribe’,  processing, completion,
-API           and ‘agent-shell-status’;   errors, permission urgency,
-              lifecycle, permission,      and tool status.  The public
-              and tool events             turn boundary triggers
-                                          inspection of renderer-owned
+API           ‘agent-shell-status’, and   errors, permission urgency,
+              ‘agent-shell-shell-buffer’; and tool status.  The public
+              lifecycle, permission,      turn boundary triggers
+              and tool events             inspection of renderer-owned
                                           response sections.  Event and
                                           response data is treated as
                                           untrusted content and bounded
@@ -2900,13 +2900,13 @@ metadata      rendered Markdown           Renderer group provenance
                                           permission or lifecycle
                                           authority.
 Private       The aggregate               Kept in narrow adapter
-compatibility ‘agent-shell--state’,       functions for older or
-fallback      viewport position           incomplete renderers.  A
-              helpers, and legacy face,   missing optional detail may
-              prompt, or ID inference     reduce header or navigation
-                                          richness but must not create a
-                                          permission action or completed
-                                          response.
+compatibility ‘agent-shell--state’, the   functions for older Agent
+fallback      legacy viewport ownership   Shell releases or incomplete
+              resolver, viewport          renderers.  A missing optional
+              position helpers, and       detail may reduce header or
+              legacy face, prompt, or     navigation richness but must
+              ID inference                not create a permission action
+                                          or completed response.
 
    The lifecycle subscription currently consumes ‘init-started’,
 ‘init-finished’, ‘session-selected’, ‘session-restored’,
