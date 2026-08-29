@@ -8,7 +8,7 @@ SF_HOME= raman,emacspeak@web.sourceforge.net:/home/groups/e/em/emacspeak/htdocs/
 GH_PAGES ?=
 FILES=*.texi
 INCLUDES= style.texi preamble.texi copyright.texi announce.texi emacspeak-significance.texi \
-introduction.texi install.texi using.texi audio-desktop.texi voices.texi online-help.texi \
+introduction.texi install.texi backends.texi using.texi audio-desktop.texi voices.texi online-help.texi \
 packages.texi notmuch.texi agent-shell.texi eat.texi eterm.texi docs.texi keys.texi keyboard.texi tts-server.texi \
 inc-turning-twenty.texi acknowledge.texi intro-docs.texi documents.texi structure.texi \
 web-browsing.texi tts.texi

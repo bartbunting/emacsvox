@@ -4,10 +4,14 @@ To install a specific version of Emacsvox:
 
   1. Clone the repository and check out the desired tag or commit.
   2. Run =make all= to configure and build Emacsvox.
-  3. Optional: make espeak to build espeak support.
-  4. Optional: make outloud to build ViaVoice outloud support.
-  5. Copy the resulting =emacsvox= directory to the install location.
-  6. Load =lisp/emacsvox-setup.el= from that installation.
+  3. Install and smoke-test the recommended Omnivox server by following the
+     [[file:../info/backends.texi][Speech Backends guide]].
+  4. Copy the resulting =emacsvox= directory to the install location.
+  5. Load =lisp/emacsvox-setup.el= from that installation.
+
+Direct eSpeak, Outloud, SwiftMac, macOS Python, and DECtalk servers are retained
+compatibility paths.  Their prerequisites and support boundary are owned by
+the Speech Backends guide rather than this installation summary.
 
 Emacsvox requires Emacs 31 or newer.  When that is not the system =emacs=,
 create the ignored machine-local =local.mk= in the repository root:

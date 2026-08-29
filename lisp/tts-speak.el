@@ -82,12 +82,13 @@
 
 (defvar tts-program
   (tts--default-program)
-  "Speech-server.
-Choices:
-dtk-exp     For the Dectalk Express.
-outloud     For IBM ViaVoice Outloud
-espeak      For eSpeak (default on Linux)
-mac for MAC TTS (default on Mac)")
+  "Speech-server program.
+
+Omnivox is recommended for new installations.  Set the TTS_PROGRAM
+environment variable to `omnivox' before loading Emacsvox.  When that
+variable is unset, compatibility defaults select `mac' on macOS and
+`espeak' elsewhere.  Other retained server names include `swiftmac',
+`outloud', `dtk-exp', and `dtk-soft'.")
 
 (defun tts--omnivox-program-p (&optional program)
   "Return non-nil when PROGRAM names the Omnivox server executable."

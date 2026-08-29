@@ -35,18 +35,21 @@ point.  The generated author and lifecycle reference is
 @section Speech Adapters And Omnivox
 
 Emacsvox retains standalone speech servers for engines such as eSpeak,
-Eloquence, DECtalk, and SwiftMac.  Omnivox is the multi-engine server used by
-the current Windows/WSL integration.  It negotiates capabilities, reports live
-engine and physical-voice inventory, routes portable logical voices, and
-accepts structured presentation timelines.  Keyed replaceable timelines
-cancel only older work in the same replacement domain; ordered and urgent work
-are not placed behind the replaceable coalescing window.
+Eloquence, DECtalk, and SwiftMac.  Omnivox is the recommended multi-engine
+server for new GNU/Linux, macOS, and WSL2 installations.  It negotiates
+capabilities, reports live engine and physical-voice inventory, routes portable
+logical voices, and accepts structured presentation timelines.  Keyed
+replaceable timelines cancel only older work in the same replacement domain;
+ordered and urgent work are not placed behind the replaceable coalescing
+window.
 
-The Emacsvox @file{Readme.org} documents user-facing Omnivox setup and voice
-routing.  Omnivox owns the detailed control, helper, and presentation-timeline
-protocol contracts in its own repository.  The legacy line protocol remains
-supported for standalone and older speech servers; @xref{TTS Servers} explains
-the boundary between those protocol families.
+@xref{Speech Backends}, for Emacsvox's platform status, Omnivox installation,
+selection, smoke test, and compatibility policy.  The Emacsvox
+@file{Readme.org} documents advanced portable voice routing.  Omnivox owns the
+detailed control, helper, and presentation-timeline protocol contracts in its
+own repository.  The legacy line protocol remains supported for standalone
+and older speech servers; @xref{TTS Servers} explains the boundary between
+those protocol families.
 
 @section Documentation Scope
 

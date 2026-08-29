@@ -19,6 +19,7 @@ The manual is divided into the following chapters:
 * Emacspeak Heritage: Background.
 * Introduction: Introduction.
 * Installation: Installation.
+* Speech Backends: Speech Backends.
 * Basic Usage: Basic Usage.
 * Audio Desktop: Audio Desktop.
 * Voice Lock: Voice Lock.

@@ -66,6 +66,7 @@
   (require 'emacsvox-search-tests)
   (require 'emacsvox-self-document-tests)
   (require 'emacsvox-docs-check-tests)
+  (require 'emacsvox-backend-doc-tests)
   (require 'emacsvox-file-tests)
   (require 'emacsvox-process-tests)
   (require 'emacsvox-vc-tests)

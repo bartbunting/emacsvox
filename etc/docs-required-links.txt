@@ -2,6 +2,7 @@
 https://github.com/bartbunting/emacsvox
 https://www.gnu.org/software/emacs/download.html
 https://www.gnu.org/software/emacs/history.html
+https://rustup.rs/
 https://github.com/espeak-ng/espeak-ng/blob/master/docs/building.md
 https://voxin.oralux.net/
 https://voxin.oralux.net/rss.xml
@@ -10,6 +11,9 @@ https://notmuchmail.org/doc/latest/notmuch-emacs.html
 https://elpa.nongnu.org/nongnu/eat.html
 https://elpa.nongnu.org/nongnu/doc/eat.html
 https://github.com/bartbunting/omnivox
+https://github.com/bartbunting/omnivox/blob/main/README.md
+https://github.com/bartbunting/omnivox/blob/main/STATUS.md
+https://github.com/bartbunting/omnivox/blob/main/docs/DIAGNOSTICS.md
 https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md
 https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md
 https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md

@@ -52,57 +52,24 @@ Do not compile Emacsvox with an older system Emacs.  Tests prefer source and
 therefore do not prove that the byte-code used by a normal startup is current.
 
 @item
-Install or build a speech server.  The common choices are:
-
-@itemize @bullet
-@item
-@strong{Omnivox on Windows/WSL.}  Keep the Omnivox repository beside Emacsvox
-at @file{../omnivox}, or set @code{OMNIVOX_DIR}, then run
-@command{make windows-omnivox}.  This stages a content-addressed Windows
-runtime beneath @file{servers/omnivox-bin}.  Select server name
-@code{omnivox}.  See @file{Readme.org} and
-@file{servers/omnivox-release/README.org} for the engine, helper, licensing,
-and reproducibility details.
-
-@item
-@strong{eSpeak on GNU/Linux.}  Install the system eSpeak development packages
-and run @command{make espeak}.  Select server name @code{espeak}.
-
-@item
-@strong{SwiftMac on macOS.}  Install Swift 5.9 or newer and run
-@command{make swiftmac}.  Select server name @code{swiftmac}.  See
-@file{servers/mac-swiftmac/Readme.org}.
-
-@item
-@strong{Eloquence/Outloud.}  A separately licensed compatible IBM TTS or
-Eloquence runtime is required; it is not included with Emacsvox.  Run
-@command{make outloud} for the GNU/Linux server.  Voxin information is at
-@url{https://voxin.oralux.net}.  Cerence and Vocalizer voices are not supported
-by the Outloud adapter.
-
-@item
-@strong{Software DECtalk.}  Install the engine separately and run
-@command{make dtk}.  See @file{servers/software-dtk/Readme.org}.
-@end itemize
-
-Native Windows audio, standalone Eloquence, and standalone DECtalk bridges are
-also available through @command{make windows-audio},
-@command{make windows-outloud}, and @command{make windows-dtk}.  Their READMEs
-under @file{servers/} document the WSL-specific setup.  The optional Piper
-notification path is experimental and is not a primary speech-server adapter.
+Install the recommended Omnivox speech server and complete its audible smoke
+test.  @xref{Speech Backends}, for the supported platform matrix, exact
+prerequisite classes, source and WSL2 build paths, expected tone and speech,
+and compatibility alternatives.  Do not diagnose Emacs configuration until
+the standalone Omnivox check passes.
 
 @item
 Select the server before loading Emacsvox.  In a shell startup file, set
-@env{TTS_PROGRAM} to the server name, for example:
+@env{TTS_PROGRAM} to the recommended server name:
 
 @example
-export TTS_PROGRAM=espeak
+export TTS_PROGRAM=omnivox
 @end example
 
 The equivalent Emacs form, evaluated before setup, is:
 
 @lisp
-(setenv "TTS_PROGRAM" "espeak")
+(setenv "TTS_PROGRAM" "omnivox")
 @end lisp
 
 The retired DECtalk-named generic environment selector is not recognized; see
@@ -139,9 +106,10 @@ Speech-server launchers live in @file{servers/}.  Build them through the
 repository-root targets above so the selected paths and staging rules remain
 consistent.
 
-The standalone Tcl-compatible servers implement a legacy line protocol.  To
-smoke-test one outside Emacs, run its launcher from the repository root, for
-example:
+The Omnivox smoke test and its audible success condition are in
+@ref{Selecting And Checking Omnivox}.  The following protocol-level test is
+only for retained direct Tcl-compatible servers.  Run one of those launchers
+from the repository root, for example:
 
 @example
 ./servers/espeak

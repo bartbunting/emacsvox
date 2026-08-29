@@ -40,6 +40,7 @@ This manual documents @strong{Emacsvox, The Complete Audio Desktop}.
 @include emacspeak-significance.texi
 @include introduction.texi
 @include install.texi
+@include backends.texi
 @include using.texi
 @include audio-desktop.texi
 @include voices.texi
