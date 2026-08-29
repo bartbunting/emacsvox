@@ -83,9 +83,16 @@
 (load "voice-setup")
 (load "emacsvox-loaddefs")
 
-(defconst self-document-files
-  (directory-files self-document-lisp-directory nil "\\.elc$")
-  "List of elisp modules  to document.")
+(defvar self-document-files nil
+  "Manifested Emacsvox byte-code modules being documented.")
+
+(defconst self-document-declared-module-omissions nil
+  "Alist of intentionally omitted manifested modules and reasons.
+Each entry has the form (MODULE . REASON).  An omission is deterministic: the
+generator always skips the declared module instead of probing the host.")
+
+(defvar self-document-module-results nil
+  "Load results for the current generated-reference run.")
 
 (defvar emacsvox-muggles-activate-p t)
 (defvar self-document-fn-key
@@ -98,29 +105,98 @@
 
 (cl-defstruct self-document name commentary commands options)
 
+(defun self-document--manifest-files ()
+  "Return the canonical compiled-module manifest from `lisp/Makefile'."
+  (let* ((default-directory self-document-lisp-directory)
+         (manifest
+          (process-lines
+           "make" "--no-print-directory" "-s" "documentation-modules"))
+         (compiled
+          (directory-files self-document-lisp-directory nil "\\.elc\\'")))
+    (unless manifest
+      (error "The documentation module manifest is empty"))
+    (unless (equal manifest (sort (delete-dups (copy-sequence manifest))
+                                  #'string-lessp))
+      (error "The documentation module manifest is not sorted and unique"))
+    (unless (equal manifest (sort compiled #'string-lessp))
+      (error
+       "Manifested and compiled modules differ; run make bytecode-rebuild"))
+    manifest))
+
+(defun self-document--module-file (module)
+  "Return the absolute manifested byte-code file for MODULE."
+  (expand-file-name module self-document-lisp-directory))
+
+(defun self-document--record-module-result (module status &optional detail)
+  "Record MODULE with STATUS and optional DETAIL."
+  (push (list :module module :status status :detail detail)
+        self-document-module-results))
+
+(defun self-document--load-manifest-modules ()
+  "Load `self-document-files', failing on every undeclared error."
+  (dolist (omission self-document-declared-module-omissions)
+    (unless (member (car omission) self-document-files)
+      (error "Declared documentation omission is not manifested: %s"
+             (car omission))))
+  (dolist (module self-document-files)
+    (let ((omission
+           (assoc module self-document-declared-module-omissions)))
+      (cond
+       (omission
+        (self-document--record-module-result
+         module 'omitted (cdr omission)))
+       ((string= module "emacsvox-setup.elc")
+        ;; Setup is loaded first by `self-document-load-modules'.
+        (self-document--record-module-result module 'loaded))
+       (t
+        (condition-case condition
+            (progn
+              (load (self-document--module-file module) nil t t)
+              (self-document--record-module-result module 'loaded))
+          (error
+           (let ((message (error-message-string condition)))
+             (self-document--record-module-result module 'failed message)
+             (setq self-document-module-results
+                   (nreverse self-document-module-results))
+             (error "Generated-reference module loading failed:\n%s: %s"
+                    module message))))))))
+  (setq self-document-module-results
+        (nreverse self-document-module-results)))
+
 (defun self-document-load-modules ()
   "Load all Emacsvox modules."
+  (when (bound-and-true-p package-activated-list)
+    (error "Generate the reference in a clean Emacs started with -Q"))
   (let* ((file-name-handler-alist nil)
          (load-source-file-function nil)
          (tts-program "log-null")
          (temporary-user-directory
           (file-name-as-directory
            (make-temp-file "emacsvox-self-document-" t)))
-         (emacsvox-user-directory temporary-user-directory))
+         (emacsvox-user-directory temporary-user-directory)
+         (emacs-lisp-directory
+          (file-name-as-directory
+           (expand-file-name "../lisp" data-directory)))
+         (load-path
+          (cons
+           self-document-lisp-directory
+           (cl-remove-if-not
+            (lambda (directory)
+              (and directory
+                   (file-in-directory-p directory emacs-lisp-directory)))
+            load-path)))
+         (package-enable-at-startup nil)
+         (package-user-dir (expand-file-name "elpa" temporary-user-directory))
+         (package-directory-list nil))
     (setq self-document-temporary-user-directory temporary-user-directory)
     (unwind-protect
         (progn
-          (package-initialize)        ; bootstrap emacs package system
+          (setq self-document-files (self-document--manifest-files)
+                self-document-module-results nil)
           ;; Silently bootstrap Emacsvox without reading personal data.
-          (load-library "emacsvox-setup")
+          (load (self-document--module-file "emacsvox-setup.elc") nil t t)
           (setq-default emacsvox-use-icons nil)
-          ;; Load all Emacsvox modules:
-          (cl-loop
-           for f in self-document-files do
-           (unless (string-match "emacsvox-setup" f) ; avoid loading setup twice
-             (condition-case nil
-                 (load-library f)
-               (error (message "Warn: Did not load %s" f))))))
+          (self-document--load-manifest-modules))
       (when (file-directory-p temporary-user-directory)
         (delete-directory temporary-user-directory t)))))
 
@@ -151,6 +227,10 @@
 
 (defvar self-document-option-count 0
   "Global count of options.")
+
+(defconst self-document-portable-default-overrides
+  '((emacsvox-mail-spool-file . "<system-mail-spool>/<login>"))
+  "Portable renderings for identity- or host-derived option defaults.")
 
 (defsubst self-document-option-p (o)
   "Predicate to test if we document this option."
@@ -217,6 +297,9 @@
 (defun self-document-build-map()
   "Build a map of module names to commands and options."
   (let ((file-name-handler-alist nil))
+    (clrhash self-document-map)
+    (setq self-document-command-count 0
+          self-document-option-count 0)
     (cl-loop
      for f in self-document-files do
      (let ((module (file-name-sans-extension f)))
@@ -249,9 +332,11 @@
                     (or lmc
                         (format "### %s: No Commentary\n" name))))))
 
-(defun self-document--portable-default-value (value)
-  "Render VALUE without embedding this build machine's absolute paths."
-  (let* ((root
+(defun self-document--portable-default-value (option value)
+  "Render OPTION's VALUE without build-machine paths or identity."
+  (let* ((override (assq option self-document-portable-default-overrides))
+         (value (if override (cdr override) value))
+         (root
           (file-name-as-directory
            (expand-file-name ".." self-document-lisp-directory)))
          (user-home (file-name-as-directory (expand-file-name "~/")))
@@ -284,7 +369,7 @@
                         (format "###%s: Not Documented\n" o))))
     (insert
      (format "\nDefault Value: \n@verbatim\n%s\n@end verbatim\n\n"
-             (self-document--portable-default-value value)))
+             (self-document--portable-default-value o value)))
     (insert "\n@end defvar\n\n")))
 
 (defun self-document-module-options (self)
@@ -428,8 +513,38 @@
   (insert "* URL Templates:: Generated web-search templates.\n")
   (insert "@end menu\n\n"))
 
-(defun self-document-all-modules()
-  "Generate documentation for all modules."
+(defun self-document-insert-generation-manifest ()
+  "Insert a comment recording the inputs to this generated reference."
+  (let* ((loaded
+          (cl-remove-if-not
+           (lambda (result) (eq (plist-get result :status) 'loaded))
+           self-document-module-results))
+         (omitted
+          (cl-remove-if-not
+           (lambda (result) (eq (plist-get result :status) 'omitted))
+           self-document-module-results)))
+    (insert (format "@c Generator Emacs: GNU Emacs %s\n" emacs-version))
+    (insert "@c Manifest: lisp/Makefile OBJECTS via documentation-modules.\n")
+    (insert
+     (format "@c Modules: %d loaded; %d intentionally omitted.\n"
+             (length loaded) (length omitted)))
+    (cl-loop
+     for result in loaded
+     for index from 0
+     when (zerop (% index 5)) do (insert "@c Loaded: ")
+     do (insert (plist-get result :module))
+     if (= (% index 5) 4) do (insert "\n") else do (insert " ")
+     finally (unless (zerop (% (length loaded) 5)) (insert "\n")))
+    (if omitted
+        (dolist (result omitted)
+          (insert
+           (format "@c Omitted: %s -- %s\n"
+                   (plist-get result :module)
+                   (plist-get result :detail))))
+      (insert "@c Omitted: none.\n"))))
+
+(defun self-document--generate-all-modules ()
+  "Generate documentation for all modules in `default-directory'."
   (self-document-all-keymaps)
   (let ((file-name-handler-alist nil)
         (output (find-file-noselect "docs.texi"))
@@ -443,6 +558,7 @@
     (with-current-buffer output
       (erase-buffer)
       (insert "@c Auto-generated, do not hand-edit.\n")
+      (self-document-insert-generation-manifest)
       (insert
        (format
         "@node Emacsvox Commands And Options \n
@@ -464,6 +580,49 @@ This chapter documents a total of %d commands and %d options.\n\n"
        "cat -s" (current-buffer) 'replace)
       (save-buffer)))
   (message "Done!"))
+
+(defun self-document--install-staged-files (staging-directory destination)
+  "Install generated files from STAGING-DIRECTORY into DESTINATION."
+  (dolist (name '("docs.texi" "keys.texi"))
+    (let ((source (expand-file-name name staging-directory)))
+      (unless (file-regular-p source)
+        (error "Generated reference did not produce %s" name))))
+  (dolist (name '("docs.texi" "keys.texi"))
+    (let ((source (expand-file-name name staging-directory))
+          (target (expand-file-name name destination)))
+      (copy-file source target t))))
+
+(defun self-document-all-modules()
+  "Generate documentation in staging before installing both output files."
+  (let* ((destination (file-name-as-directory (expand-file-name default-directory)))
+         (staging-directory
+          (file-name-as-directory
+           (make-temp-file "emacsvox-generated-reference-" t))))
+    (unwind-protect
+        (let ((default-directory staging-directory))
+          (self-document--generate-all-modules)
+          (self-document--install-staged-files
+           staging-directory destination))
+      (dolist (name '("docs.texi" "keys.texi"))
+        (when-let* ((buffer
+                     (get-file-buffer
+                      (expand-file-name name staging-directory))))
+          (kill-buffer buffer)))
+      (when (file-directory-p staging-directory)
+        (delete-directory staging-directory t)))))
+
+(defun self-document-all-modules-batch ()
+  "Generate the reference, exiting cleanly and nonzero after any error."
+  (condition-case condition
+      (self-document-all-modules)
+    (error
+     (princ
+      (format "Generated reference failed: %s\n"
+              (error-message-string condition))
+      'external-debugging-output)
+     (let ((kill-emacs-hook nil)
+           (kill-emacs-query-functions nil))
+       (kill-emacs 1)))))
 
 
 ;;;  Document all keybindings:
@@ -512,6 +671,8 @@ This chapter documents a total of %d commands and %d options.\n\n"
     (with-current-buffer output
       (erase-buffer)
       (texinfo-mode)
+      (insert "@c Auto-generated, do not hand-edit.\n")
+      (insert (format "@c Generator Emacs: GNU Emacs %s\n" emacs-version))
       (insert "@node Emacsvox Keymaps\n @chapter Emacsvox Keymaps\n\n ")
       (cl-loop
        for keymap in self-document-keymap-list do

@@ -1,3 +1,5 @@
+@c Auto-generated, do not hand-edit.
+@c Generator Emacs: GNU Emacs 31.0.90
 @node Emacsvox Keymaps
  @chapter Emacsvox Keymaps
 

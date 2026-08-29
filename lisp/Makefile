@@ -343,8 +343,13 @@ OBJECTS = $(TTS_OBJECTS) $(SPEAK_OBJECTS) $(CORE_OBJECTS)  $(ADDON_OBJECTS)
 
 ###   User level targets all
 
-.PHONY: all aural
+.PHONY: all aural documentation-modules
 all: $(OBJECTS)
+
+# Canonical compiled-module inventory consumed by the generated reference.
+documentation-modules:
+	@for module in $(OBJECTS); do printf '%s\n' "$$module"; done | \
+		LC_ALL=C sort -u
 
 aural: $(AURAL_RUNTIME_OBJECTS) emacsvox-keymap.elc \
 $(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc

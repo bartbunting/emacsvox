@@ -1,11 +1,70 @@
 @c Auto-generated, do not hand-edit.
+@c Generator Emacs: GNU Emacs 31.0.90
+@c Manifest: lisp/Makefile OBJECTS via documentation-modules.
+@c Modules: 274 loaded; 0 intentionally omitted.
+@c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
+@c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell.elc emacsvox-amark.elc
+@c Loaded: emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-compatibility-voice.elc emacsvox-aural-compiler.elc
+@c Loaded: emacsvox-aural-concrete.elc emacsvox-aural-description.elc emacsvox-aural-doctor.elc emacsvox-aural-editor.elc emacsvox-aural-explanation.elc
+@c Loaded: emacsvox-aural-feature-fragments.elc emacsvox-aural-history.elc emacsvox-aural-home.elc emacsvox-aural-inspection.elc emacsvox-aural-overrides.elc
+@c Loaded: emacsvox-aural-planner.elc emacsvox-aural-preview.elc emacsvox-aural-profile-service.elc emacsvox-aural-profiles.elc emacsvox-aural-provider-markdown.elc
+@c Loaded: emacsvox-aural-provider-notmuch.elc emacsvox-aural-provider-org-srs.elc emacsvox-aural-provider-org.elc emacsvox-aural-provider-workflows.elc emacsvox-aural-providers.elc
+@c Loaded: emacsvox-aural-recent-feedback.elc emacsvox-aural-resources.elc emacsvox-aural-routing-profiles.elc emacsvox-aural-rules.elc emacsvox-aural-schemes.elc
+@c Loaded: emacsvox-aural-semantics.elc emacsvox-aural-sound-packs.elc emacsvox-aural-source.elc emacsvox-aural-spatial.elc emacsvox-aural-submission.elc
+@c Loaded: emacsvox-aural-tools.elc emacsvox-aural-transport.elc emacsvox-aural-ui.elc emacsvox-aural-validation.elc emacsvox-aural-voice-palettes.elc
+@c Loaded: emacsvox-aural-voice-workbench.elc emacsvox-aural.elc emacsvox-avy.elc emacsvox-bbdb.elc emacsvox-bibtex.elc
+@c Loaded: emacsvox-bookmark.elc emacsvox-bookshare.elc emacsvox-browse-kill-ring.elc emacsvox-bs.elc emacsvox-buff-menu.elc
+@c Loaded: emacsvox-c.elc emacsvox-calc.elc emacsvox-calculator.elc emacsvox-calendar.elc emacsvox-calibredb.elc
+@c Loaded: emacsvox-chess.elc emacsvox-cider.elc emacsvox-clojure.elc emacsvox-cmuscheme.elc emacsvox-combobulate.elc
+@c Loaded: emacsvox-comint.elc emacsvox-company.elc emacsvox-compile.elc emacsvox-consult.elc emacsvox-corfu.elc
+@c Loaded: emacsvox-cperl.elc emacsvox-custom.elc emacsvox-dbus.elc emacsvox-deadgrep.elc emacsvox-debugger.elc
+@c Loaded: emacsvox-denote.elc emacsvox-desktop.elc emacsvox-devdocs.elc emacsvox-dictionary.elc emacsvox-diff-mode.elc
+@c Loaded: emacsvox-dired.elc emacsvox-dumb-jump.elc emacsvox-eat-core.elc emacsvox-eat-input.elc emacsvox-eat-review.elc
+@c Loaded: emacsvox-eat.elc emacsvox-ebuku.elc emacsvox-ediff.elc emacsvox-eglot.elc emacsvox-ein.elc
+@c Loaded: emacsvox-elfeed.elc emacsvox-elisp-refs.elc emacsvox-ellama.elc emacsvox-elpher.elc emacsvox-elpy.elc
+@c Loaded: emacsvox-embark.elc emacsvox-emms.elc emacsvox-empv.elc emacsvox-enriched.elc emacsvox-entertain.elc
+@c Loaded: emacsvox-enwc.elc emacsvox-epa.elc emacsvox-epub.elc emacsvox-erc.elc emacsvox-eshell.elc
+@c Loaded: emacsvox-ess.elc emacsvox-etable.elc emacsvox-eterm.elc emacsvox-eudc.elc emacsvox-evil.elc
+@c Loaded: emacsvox-eww.elc emacsvox-extras.elc emacsvox-exwm.elc emacsvox-feeds.elc emacsvox-ffap.elc
+@c Loaded: emacsvox-ffip.elc emacsvox-filtertext.elc emacsvox-flycheck.elc emacsvox-flymake.elc emacsvox-flyspell.elc
+@c Loaded: emacsvox-folding.elc emacsvox-forge.elc emacsvox-forms.elc emacsvox-geiser.elc emacsvox-gnuplot.elc
+@c Loaded: emacsvox-gnus.elc emacsvox-go-mode.elc emacsvox-gomoku.elc emacsvox-google.elc emacsvox-gptel.elc
+@c Loaded: emacsvox-gridtext.elc emacsvox-gud.elc emacsvox-haskell.elc emacsvox-helm.elc emacsvox-helpful.elc
+@c Loaded: emacsvox-hide-lines.elc emacsvox-hide.elc emacsvox-hideshow.elc emacsvox-hydra.elc emacsvox-ibuffer.elc
+@c Loaded: emacsvox-ido.elc emacsvox-iedit.elc emacsvox-info.elc emacsvox-ispell.elc emacsvox-ivy.elc
+@c Loaded: emacsvox-journalctl.elc emacsvox-js2.elc emacsvox-keymap.elc emacsvox-kmacro.elc emacsvox-librivox.elc
+@c Loaded: emacsvox-lispy.elc emacsvox-lua.elc emacsvox-m-player.elc emacsvox-magit.elc emacsvox-make-mode.elc
+@c Loaded: emacsvox-man.elc emacsvox-marginalia.elc emacsvox-markdown.elc emacsvox-maths.elc emacsvox-message.elc
+@c Loaded: emacsvox-mines.elc emacsvox-mu4e.elc emacsvox-multiple-cursors.elc emacsvox-net-utils.elc emacsvox-newsticker.elc
+@c Loaded: emacsvox-nm.elc emacsvox-notmuch.elc emacsvox-nov.elc emacsvox-nxml.elc emacsvox-ocr.elc
+@c Loaded: emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc emacsvox-outline.elc emacsvox-package.elc
+@c Loaded: emacsvox-perl.elc emacsvox-pipewire.elc emacsvox-popup.elc emacsvox-preamble.elc emacsvox-proced.elc
+@c Loaded: emacsvox-project.elc emacsvox-projectile.elc emacsvox-pronounce.elc emacsvox-py.elc emacsvox-pydoc.elc
+@c Loaded: emacsvox-python.elc emacsvox-racket.elc emacsvox-re-builder.elc emacsvox-reftex.elc emacsvox-related.elc
+@c Loaded: emacsvox-rg.elc emacsvox-rmail.elc emacsvox-rpm-spec.elc emacsvox-rst.elc emacsvox-ruby.elc
+@c Loaded: emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc emacsvox-setup.elc
+@c Loaded: emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc
+@c Loaded: emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-sql.elc emacsvox-sudoku.elc
+@c Loaded: emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-ui.elc emacsvox-table.elc
+@c Loaded: emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc emacsvox-tempo.elc
+@c Loaded: emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc emacsvox-treesit.elc
+@c Loaded: emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-vertico.elc emacsvox-view.elc
+@c Loaded: emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc
+@c Loaded: emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc
+@c Loaded: emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc
+@c Loaded: emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc
+@c Loaded: gmaps.elc gweb.elc ladspa.elc light.elc mac-voices.elc
+@c Loaded: omaps.elc omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc
+@c Loaded: soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc
+@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
+@c Omitted: none.
 @node Emacsvox Commands And Options
 
 @chapter Emacsvox Commands And Options
 
 @include intro-docs.texi
 
-This chapter documents a total of 1457 commands and 191 options.
+This chapter documents a total of 1467 commands and 191 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -482,46 +541,6 @@ system.
 programming modes.
 @end itemize
 
-@subsection Emacsvox Commands
-
-@subsubsection soundscape
-@deffn {Command} soundscape  (scape)
-@table @kbd
-@item C-. s
-@kindex C-. s
-@item C-x @@ s s
-@kindex C-x @@ s s
-@end table
-
-@findex soundscape
-
-@format
-Play soundscape.
-
-(fn SCAPE)
-@end format
-@end deffn
-
-@subsubsection soundscape-kill
-@deffn {Command} soundscape-kill
-@findex soundscape-kill
-
-@format
-Stop all running soundscapes.
-@end format
-@end deffn
-
-@subsubsection soundscape-stop
-@deffn {Command} soundscape-stop  (scape)
-@findex soundscape-stop
-
-@format
-Stop running Soundscape.
-
-(fn SCAPE)
-@end format
-@end deffn
-
 @subsection emacsvox Options
 
 @defvar {User Option} emacsvox-pip-enable
@@ -533,49 +552,6 @@ Default Value:
 @verbatim
 
 nil
-
-@end verbatim
-
-@end defvar
-
-@defvar {User Option} soundscape-data
-@verbatim
-Soundscape data directory.
-@end verbatim
-
-Default Value:
-@verbatim
-
-"~/.boodler/Collection"
-
-@end verbatim
-
-@end defvar
-
-@defvar {User Option} soundscape-device
-@verbatim
-Alsa sound device to use for soundscapes.
-@end verbatim
-
-Default Value:
-@verbatim
-
-"default"
-
-@end verbatim
-
-@end defvar
-
-@defvar {User Option} soundscape-manager-options
-@verbatim
-User customizable options list passed to boodler.
-Defaults specify alsa as the output and set master volume
-@end verbatim
-
-Default Value:
-@verbatim
-
-("-o" "pulse" "-m" "0.15")
 
 @end verbatim
 
@@ -11506,7 +11482,7 @@ remain available for explicit selection.
 Default Value:
 @verbatim
 
-flyspell-correct
+nil
 
 @end verbatim
 
@@ -17041,10 +17017,6 @@ Speak current field.
 
 @format
 Speak header line if set.
-
-This function has :around advice: ‘emacsvox-agent-shell--speak-header-line-around’.
-
-(fn)
 @end format
 @end deffn
 
@@ -17090,7 +17062,6 @@ before-string, or after-string) is indicated with auditory icon
 spoken using command C-e M-l.
 
 This function has :around advice: ‘emacsvox--advice-markdown-speak-line-around’.
-This function has :around advice: ‘emacsvox-agent-shell--speak-line-around’.
 
 (fn &optional ARG)
 @end format
@@ -17260,8 +17231,6 @@ Optional interactive prefix arg ‘log-msg’ logs spoken info to
 Speak the mode-line.
 Speaks header-line if that is set when called non-interactively.
 Interactive prefix arg speaks buffer info.
-
-This function has :around advice: ‘emacsvox-agent-shell--speak-mode-line-around’.
 
 (fn &optional BUFFER-INFO)
 @end format
@@ -17652,10 +17621,6 @@ Announce version information for running emacsvox.
 @format
 Speaks current visual line.
 Cues the start of a physical line with auditory icon ‘left’.
-
-This function has :around advice: ‘emacsvox-agent-shell--speak-visual-line-around’.
-
-(fn)
 @end format
 @end deffn
 
@@ -18068,7 +18033,7 @@ arrived mail.
 Default Value:
 @verbatim
 
-"/var/mail/bart"
+"<system-mail-spool>/<login>"
 
 @end verbatim
 
@@ -23187,14 +23152,56 @@ trumps latency.
 
 @subsection Pip Commands
 
+@subsubsection pip-device-select
+@deffn {Command} pip-device-select  (device)
+@findex pip-device-select
+
+@format
+Select default from available choices.
+Restarts piper pipeline if already running.
+
+(fn DEVICE)
+@end format
+@end deffn
+
+@subsubsection pip-model-select
+@deffn {Command} pip-model-select  (voice)
+@findex pip-model-select
+
+@format
+Select default from available choices.
+Restarts piper pipeline if already running.
+
+(fn VOICE)
+@end format
+@end deffn
+
 @subsubsection pip-speak
-@deffn {Command} pip-speak  [Arg list not available until function definition is loaded.]
+@deffn {Command} pip-speak  (text)
 @findex pip-speak
 
 @format
 Speak text
 
 (fn TEXT)
+@end format
+@end deffn
+
+@subsubsection pip-start
+@deffn {Command} pip-start
+@findex pip-start
+
+@format
+Start the Piper process
+@end format
+@end deffn
+
+@subsubsection pip-stop
+@deffn {Command} pip-stop
+@findex pip-stop
+
+@format
+Stop Piper TTS
 @end format
 @end deffn
 
@@ -23255,8 +23262,108 @@ communication == email, IM, ... map to  the same @strong{mood}.
 
 @subsection Soundscape Commands
 
+@subsubsection soundscape
+@deffn {Command} soundscape  (scape)
+@table @kbd
+@item C-. s
+@kindex C-. s
+@item C-x @@ s s
+@kindex C-x @@ s s
+@end table
+
+@findex soundscape
+
+@format
+Play soundscape.
+
+(fn SCAPE)
+@end format
+@end deffn
+
+@subsubsection soundscape-kill
+@deffn {Command} soundscape-kill
+@findex soundscape-kill
+
+@format
+Stop all running soundscapes.
+@end format
+@end deffn
+
+@subsubsection soundscape-listener
+@deffn {Command} soundscape-listener  (&optional restart)
+@findex soundscape-listener
+
+@format
+Start  a Soundscape listener.
+Listener is loaded with all Soundscapes defined in ‘soundscape-default-theme’ .
+Optional interactive prefix arg restarts the listener.
+
+(fn &optional RESTART)
+@end format
+@end deffn
+
+@subsubsection soundscape-listener-shutdown
+@deffn {Command} soundscape-listener-shutdown
+@findex soundscape-listener-shutdown
+
+@format
+Shutdown listener.
+@end format
+@end deffn
+
+@subsubsection soundscape-remote
+@deffn {Command} soundscape-remote  (names)
+@findex soundscape-remote
+
+@format
+Activate scapes named ‘names’ --- a list of strings.
+
+(fn NAMES)
+@end format
+@end deffn
+
+@subsubsection soundscape-restart
+@deffn {Command} soundscape-restart  (&optional prompt)
+@table @kbd
+@item C-. r
+@kindex C-. r
+@item C-x @@ s r
+@kindex C-x @@ s r
+@end table
+
+@findex soundscape-restart
+
+@format
+Restart Soundscape  environment.
+With prefix arg ‘prompt’, prompt for a alsa/ladspa device and volume.
+The  is then saved to soundscape-device for future use.
+
+(fn &optional PROMPT)
+@end format
+@end deffn
+
+@subsubsection soundscape-stop
+@deffn {Command} soundscape-stop  (scape)
+@findex soundscape-stop
+
+@format
+Stop running Soundscape.
+
+(fn SCAPE)
+@end format
+@end deffn
+
+@subsubsection soundscape-theme
+@deffn {Command} soundscape-theme
+@findex soundscape-theme
+
+@format
+Shows default theme in a special buffer.
+@end format
+@end deffn
+
 @subsubsection soundscape-toggle
-@deffn {Command} soundscape-toggle  [Arg list not available until function definition is loaded.]
+@deffn {Command} soundscape-toggle
 @table @kbd
 @item C-. t
 @kindex C-. t
@@ -23271,6 +23378,71 @@ Toggle automatic SoundScapes.
 Run command M-x soundscape-theme to see the default mode->mood mapping.
 @end format
 @end deffn
+
+@subsubsection soundscape-update-mood
+@deffn {Command} soundscape-update-mood  (&optional prompt-mode)
+@table @kbd
+@item C-. u
+@kindex C-. u
+@item C-x @@ s u
+@kindex C-x @@ s u
+@end table
+
+@findex soundscape-update-mood
+
+@format
+Update mood/scape mapping for current  mode.
+The  updated mapping is not persisted.
+Optional interactive prefix arg ‘prompt-mode’ prompts for the mode.
+
+(fn &optional PROMPT-MODE)
+@end format
+@end deffn
+
+@subsection soundscape Options
+
+@defvar {User Option} soundscape-data
+@verbatim
+Soundscape data directory.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"~/.boodler/Collection"
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} soundscape-device
+@verbatim
+Alsa sound device to use for soundscapes.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"default"
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} soundscape-manager-options
+@verbatim
+User customizable options list passed to boodler.
+Defaults specify alsa as the output and set master volume
+@end verbatim
+
+Default Value:
+@verbatim
+
+("-o" "pulse" "-m" "0.15")
+
+@end verbatim
+
+@end defvar
 
 @node sox
 @section sox

@@ -4933,7 +4933,7 @@ completion or an explicit IDO, Popup, or Helm interface.
 
      Default Value:
 
-     flyspell-correct
+     nil
 
 
 
@@ -9587,10 +9587,6 @@ of emacsvox from becoming dependent on the speech server modules
 
      Speak header line if set.
 
-     This function has :around advice: ‘emacsvox-agent-shell-speak-header-line-around’.
-
-     (fn)
-
 14.213.1.45 emacsvox-speak-help
 ...............................
 
@@ -9623,7 +9619,6 @@ of emacsvox from becoming dependent on the speech server modules
      spoken using command C-e M-l.
 
      This function has :around advice: ‘emacsvox-advice-markdown-speak-line-around’.
-     This function has :around advice: ‘emacsvox-agent-shell-speak-line-around’.
 
      (fn &optional ARG)
 
@@ -9742,8 +9737,6 @@ of emacsvox from becoming dependent on the speech server modules
      Speak the mode-line.
      Speaks header-line if that is set when called non-interactively.
      Interactive prefix arg speaks buffer info.
-
-     This function has :around advice: ‘emacsvox-agent-shell-speak-mode-line-around’.
 
      (fn &optional BUFFER-INFO)
 
@@ -10017,10 +10010,6 @@ of emacsvox from becoming dependent on the speech server modules
      Speaks current visual line.
      Cues the start of a physical line with auditory icon ‘left’.
 
-     This function has :around advice: ‘emacsvox-agent-shell-speak-visual-line-around’.
-
-     (fn)
-
 14.213.1.86 emacsvox-speak-voice-annotate-paragraphs
 ....................................................
 
@@ -10289,7 +10278,7 @@ of emacsvox from becoming dependent on the speech server modules
 
      Default Value:
 
-     "/var/mail/bart"
+     "<system-mail-spool>/<login>"
 
 
  -- Variable: User Option emacsvox-show-point-presentation

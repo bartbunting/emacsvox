@@ -3495,7 +3495,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1457 commands and 191 options.
+   This chapter documents a total of 1467 commands and 191 options.
 
 * Menu:
 
@@ -3927,37 +3927,7 @@ the main emacsvox module.  It actually does very little:
    • It provides affordances for setting up consistent behavior in
      programming modes.
 
-14.4.1 Emacsvox Commands
-------------------------
-
-14.4.1.1 soundscape
-...................
-
- -- Command: soundscape (scape)
-     ‘C-. s’
-     ‘C-x @ s s’
-
-     Play soundscape.
-
-     (fn SCAPE)
-
-14.4.1.2 soundscape-kill
-........................
-
- -- Command: soundscape-kill
-
-     Stop all running soundscapes.
-
-14.4.1.3 soundscape-stop
-........................
-
- -- Command: soundscape-stop (scape)
-
-     Stop running Soundscape.
-
-     (fn SCAPE)
-
-14.4.2 emacsvox Options
+14.4.1 emacsvox Options
 -----------------------
 
  -- Variable: User Option emacsvox-pip-enable
@@ -3966,31 +3936,6 @@ the main emacsvox module.  It actually does very little:
      Default Value:
 
      nil
-
-
- -- Variable: User Option soundscape-data
-     Soundscape data directory.
-
-     Default Value:
-
-     "~/.boodler/Collection"
-
-
- -- Variable: User Option soundscape-device
-     Alsa sound device to use for soundscapes.
-
-     Default Value:
-
-     "default"
-
-
- -- Variable: User Option soundscape-manager-options
-     User customizable options list passed to boodler.
-     Defaults specify alsa as the output and set master volume
-
-     Default Value:
-
-     ("-o" "pulse" "-m" "0.15")
 
 
 

@@ -64,6 +64,7 @@
   (require 'emacsvox-completion-tests)
   (require 'emacsvox-input-tests)
   (require 'emacsvox-search-tests)
+  (require 'emacsvox-self-document-tests)
   (require 'emacsvox-file-tests)
   (require 'emacsvox-process-tests)
   (require 'emacsvox-vc-tests)

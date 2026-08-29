@@ -48,7 +48,7 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: test unit-test notmuch-test compiled-notmuch-test
 .PHONY: compiled-aural-test build-aural-test trace trace-test
 .PHONY: reference-test advice-audit name-audit tts-audit
-.PHONY: check-emacs bytecode bytecode-check bytecode-rebuild
+.PHONY: check-emacs bytecode bytecode-check bytecode-rebuild generated-reference
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
 .PHONY: windows-omnivox-dev
 .PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers verify-windows-omnivox-runtime
@@ -107,6 +107,11 @@ bytecode-check: check-emacs
 bytecode-rebuild:
 	$(MAKE) clean
 	$(MAKE) EMACS="$(EMACS)" bytecode
+
+generated-reference: bytecode-check
+	cd info && $(EMACS) -Q --batch \
+		--eval '(setq file-name-handler-alist nil gc-cons-threshold 128000000)' \
+		-l ../utils/self-document.el -f self-document-all-modules-batch
 
 compiled-aural-test:
 	$(EMACS) -Q --batch -l test/run-compiled-aural-tests.el
