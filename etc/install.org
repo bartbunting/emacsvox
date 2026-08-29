@@ -2,7 +2,9 @@
 
 To install a specific version of Emacsvox:
 
-  1. Clone the repository and check out the desired tag or commit.
+  1. Choose a permanent directory for Emacsvox, clone the repository there,
+     and check out the desired tag or commit.  The checkout itself is the
+     installation directory; run the remaining steps from that directory.
   2. Run =make all= to configure and build Emacsvox.
   3. Install and smoke-test the recommended Omnivox server by following the
      [[file:../info/backends.texi][Speech Backends guide]].
@@ -11,10 +13,15 @@ To install a specific version of Emacsvox:
      first speech in an isolated Emacs that does not load personal init files.
      =./bin/emacsvox --diagnose= reports the selected Emacs, backend, and paths
      without producing audio or starting interactive Emacs.
-  5. Copy the resulting =emacsvox= directory to the install location.  For
-     normal customized starts, export =TTS_PROGRAM=omnivox= and load
-     =lisp/emacsvox-setup.el= from that installation in the user's Emacs init
-     file.
+  5. Keep the built checkout in that location; there is no separate copy or
+     install step.  For normal customized starts, export
+     =TTS_PROGRAM=omnivox= and load =lisp/emacsvox-setup.el= from that checkout
+     in the user's Emacs init file.  For example, a checkout at
+     =~/.local/share/emacsvox= uses:
+
+     #+BEGIN_SRC elisp
+     (load-file "~/.local/share/emacsvox/lisp/emacsvox-setup.el")
+     #+END_SRC
 
 Direct eSpeak, Outloud, SwiftMac, macOS Python, and DECtalk servers are retained
 compatibility paths.  Their prerequisites and support boundary are owned by
