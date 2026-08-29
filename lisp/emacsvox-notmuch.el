@@ -2068,9 +2068,62 @@ the selected message changes; otherwise speak the visible window."
        facts 'state-change 'close-object nil))))
 
 (emacsvox-notmuch--register-after-group
- '(notmuch-show-toggle-message
-   notmuch-show-open-or-close-all)
+ '(notmuch-show-toggle-message)
  #'emacsvox-notmuch--show-visibility-feedback)
+
+(defun emacsvox-notmuch--show-thread-visibility-state ()
+  "Return the current Show thread's total and visible message counts."
+  (let ((count 0)
+        (visible 0))
+    (notmuch-show-mapc
+     (lambda ()
+       (cl-incf count)
+       (when
+           (plist-get
+            (notmuch-show-get-message-properties) :message-visible)
+         (cl-incf visible))))
+    (list :count count :visible visible)))
+
+(defun emacsvox-notmuch--show-all-visibility-feedback (open-p)
+  "Report whether all Show messages reached requested visibility OPEN-P."
+  (let* ((state (emacsvox-notmuch--show-thread-visibility-state))
+         (count (plist-get state :count))
+         (visible (plist-get state :visible))
+         (expected-visible (if open-p count 0))
+         (complete (and (> count 0) (= visible expected-visible))))
+    (if complete
+        (emacsvox-notmuch--submit-text-feedback
+         (append
+          (emacsvox-notmuch-thread-facts
+           (if open-p 'show 'hide) nil)
+          (list :visibility (if open-p 'expanded 'folded)))
+         'state-change
+         (if open-p 'open-object 'close-object)
+         (format
+          "%s all %d %s"
+          (if open-p "Opened" "Closed")
+          count
+          (if (= count 1) "message" "messages")))
+      (emacsvox-notmuch--submit-text-feedback
+       (emacsvox-notmuch-thread-facts
+        (if open-p 'show 'hide) 'operation-failed)
+       'state-change 'warn-user
+       (if (zerop count)
+           "No messages in thread"
+         (format
+          "Message visibility incomplete: %d of %d messages open"
+          visible count))))))
+
+(defun emacsvox--advice-notmuch-show-open-or-close-all-after (&rest _)
+  "Report thread-scoped visibility after opening or closing all messages."
+  (when (ems-interactive-p 'notmuch-show-open-or-close-all)
+    (emacsvox-notmuch--show-all-visibility-feedback
+     (not current-prefix-arg))))
+
+(push
+ '(notmuch-show-open-or-close-all
+   :after emacsvox--advice-notmuch-show-open-or-close-all-after)
+ emacsvox-notmuch--advice)
 
 (defun emacsvox-notmuch--tag-change-summary (tag-changes)
   "Return a concise description of Notmuch TAG-CHANGES."

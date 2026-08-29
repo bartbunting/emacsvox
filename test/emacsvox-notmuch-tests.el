@@ -67,6 +67,36 @@ Return the beginning of the inserted row."
      start (1+ start) :notmuch-message-properties message)
     start))
 
+(defun emacsvox-notmuch-test--insert-rendered-show-message (id visible)
+  "Insert renderer-compatible Show message ID with body visibility VISIBLE."
+  (let ((start (point)))
+    (insert (format "Message %s\nBody %s\n" id id))
+    (let* ((end (point))
+           (message-overlay (make-overlay start end))
+           (properties
+            (list
+             :id id
+             :headers (list :From (format "Sender %s" id))
+             :message-overlay message-overlay
+             :message-visible visible)))
+      (overlay-put message-overlay 'invisible (not visible))
+      (put-text-property
+       start end :notmuch-message-extent (cons start end))
+      (put-text-property
+       start (1+ start) :notmuch-message-properties properties))
+    start))
+
+(defun emacsvox-notmuch-test--show-visibilities ()
+  "Return message visibility values from the current synthetic Show thread."
+  (let (values)
+    (notmuch-show-mapc
+     (lambda ()
+       (push
+        (plist-get
+         (notmuch-show-get-message-properties) :message-visible)
+        values)))
+    (nreverse values)))
+
 (cl-defmacro emacsvox-notmuch-test--with-synthetic-show-tags (&rest body)
   "Run BODY with Show tag accessors backed by message properties per line."
   (declare (indent 0) (debug t))
@@ -2172,18 +2202,109 @@ Return the beginning of the inserted row."
     (should-not (nth 3 captured))))
 
 (ert-deftest emacsvox-notmuch-show-open-all-feedback-is-target-aware ()
-  "Opening all message bodies produces one visibility announcement."
+  "The all-message owner suppresses nested single-message feedback."
   (let ((ems--interactive-fn-name 'notmuch-show-open-or-close-all)
-        submissions)
+        captured)
     (cl-letf
-        (((symbol-function 'notmuch-show-get-message-properties)
+        (((symbol-function 'notmuch-show-mapc)
+          (lambda (function)
+            (funcall function)
+            (funcall function)))
+         ((symbol-function 'notmuch-show-get-message-properties)
           (lambda () '(:message-visible t)))
-         ((symbol-function 'emacsvox-notmuch--submit-show-message)
-          (lambda (&rest arguments) (push arguments submissions))))
+         ((symbol-function 'emacsvox-notmuch--submit-text-feedback)
+          (lambda (&rest arguments) (setq captured arguments))))
       (emacsvox--advice-notmuch-show-toggle-message-after)
       (emacsvox--advice-notmuch-show-open-or-close-all-after))
-    (should (= (length submissions) 1))
-    (should (eq (nth 4 (car submissions)) 'open-object))))
+    (should
+     (equal
+      captured
+      '((:role message-thread :mail-action-kind show :visibility expanded)
+        state-change open-object "Opened all 2 messages")))))
+
+(ert-deftest emacsvox-notmuch-show-open-or-close-all-reports-thread-state ()
+  "Public all-message visibility commands report one resulting thread state."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (emacsvox-notmuch-test--insert-rendered-show-message "one" t)
+    (let ((second
+           (emacsvox-notmuch-test--insert-rendered-show-message "two" nil)))
+      (emacsvox-notmuch-test--insert-rendered-show-message "three" t)
+      (goto-char second)
+      (let ((initial-point (point))
+            submissions)
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-submit)
+              (lambda (content &rest arguments)
+                (push (cons content arguments) submissions)
+                'submission)))
+          (funcall-interactively #'notmuch-show-open-or-close-all)
+          (should (= (point) initial-point))
+          (should
+           (equal
+            (emacsvox-notmuch-test--show-visibilities)
+            '(t t t)))
+          (should (= (length submissions) 1))
+          (pcase-let ((`(,content . ,arguments) (car submissions)))
+            (should (equal content "Opened all 3 messages"))
+            (should
+             (equal
+              (plist-get arguments :facts)
+              '(:role message-thread :mail-action-kind show
+                :visibility expanded)))
+            (should
+             (equal
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions))
+              '(open-object))))
+          (setq submissions nil)
+          (let ((current-prefix-arg '(4)))
+            (funcall-interactively #'notmuch-show-open-or-close-all))
+          (should (= (point) initial-point))
+          (should
+           (equal
+            (emacsvox-notmuch-test--show-visibilities)
+            '(nil nil nil)))
+          (should (= (length submissions) 1))
+          (pcase-let ((`(,content . ,arguments) (car submissions)))
+            (should (equal content "Closed all 3 messages"))
+            (should
+             (equal
+              (plist-get arguments :facts)
+              '(:role message-thread :mail-action-kind hide
+                :visibility folded)))
+            (should
+             (equal
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions))
+              '(close-object))))
+          (setq submissions nil)
+          (notmuch-show-open-or-close-all)
+          (should (= (point) initial-point))
+          (should
+           (equal
+            (emacsvox-notmuch-test--show-visibilities)
+            '(t t t)))
+          (should-not submissions))))))
+
+(ert-deftest emacsvox-notmuch-show-all-visibility-mismatch-is-not-success ()
+  "A mixed post-state never produces a false all-messages confirmation."
+  (let (captured)
+    (cl-letf
+        (((symbol-function 'emacsvox-notmuch--show-thread-visibility-state)
+          (lambda () '(:count 3 :visible 2)))
+         ((symbol-function 'emacsvox-notmuch--submit-text-feedback)
+          (lambda (&rest arguments) (setq captured arguments))))
+      (emacsvox-notmuch--show-all-visibility-feedback t))
+    (should
+     (equal
+      captured
+      '((:role message-thread :mail-action-kind show
+         :events (operation-failed))
+        state-change warn-user
+        "Message visibility incomplete: 2 of 3 messages open")))))
 
 (ert-deftest emacsvox-notmuch-describes-tag-changes ()
   "Tag-change summaries distinguish additions and removals."
