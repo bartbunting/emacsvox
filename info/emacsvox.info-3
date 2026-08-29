@@ -14,6 +14,1217 @@ END-INFO-DIR-ENTRY
 This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 
+File: emacsvox.info,  Node: emacsvox-speak,  Next: emacsvox-speedbar,  Prev: emacsvox-sounds,  Up: Emacsvox Commands And Options
+
+15.213 emacsvox-speak
+=====================
+
+This module defines the core speech services used by emacsvox.  It
+depends on the speech server interface modules It protects other parts
+of emacsvox from becoming dependent on the speech server modules
+
+15.213.1 Emacsvox-Speak Commands
+--------------------------------
+
+15.213.1.1 emacsvox-beginning-or-end
+....................................
+
+ -- Command: emacsvox-beginning-or-end
+
+     Move to start or end of buffer.
+
+15.213.1.2 emacsvox-buffer-select
+.................................
+
+ -- Command: emacsvox-buffer-select
+     ‘C-e p’
+     ‘C-e n’
+     ‘C-e .’
+     ‘C-e ,’
+
+     Select buffer by smart cycling.
+     Use option emacsvox-buffer-select-help to customize interactive feedback.
+     By default, this command is bound to multiple keys.
+     The final key of the initial  key-sequence, and  further invocations
+     of the keys below call the following bindings:
+
+     , previous-buffer
+     . next-buffer
+     b switch-to-buffer
+     f find-file
+     k emacsvox-kill-buffer-quietly
+     n emacsvox-cycle-to-next-buffer
+     o other-window
+     p emacsvox-cycle-to-previous-buffer
+
+15.213.1.3 emacsvox-completions-move-to-completion-group
+........................................................
+
+ -- Command: emacsvox-completions-move-to-completion-group
+
+     Move to group of choices beginning with character last
+     typed. If no such group exists, then we try to search for that
+     char, or dont move.
+
+15.213.1.4 emacsvox-cycle-to-next-buffer
+........................................
+
+ -- Command: emacsvox-cycle-to-next-buffer
+
+     Cycles to next buffer having same mode.
+
+15.213.1.5 emacsvox-cycle-to-previous-buffer
+............................................
+
+ -- Command: emacsvox-cycle-to-previous-buffer
+
+     Cycles to previous buffer having same mode.
+
+15.213.1.6 emacsvox-describe-tapestry
+.....................................
+
+ -- Command: emacsvox-describe-tapestry (&optional details)
+     ‘C-e M-t’
+
+     Describe the current layout of visible buffers in current frame.
+     Use interactive prefix arg to get coordinate positions of the
+     displayed buffers.
+
+     (fn &optional DETAILS)
+
+15.213.1.7 emacsvox-filter-after
+................................
+
+ -- Command: emacsvox-filter-after
+
+     Add after:today filter
+
+15.213.1.8 emacsvox-filter-before
+.................................
+
+ -- Command: emacsvox-filter-before
+
+     Add before:today filter
+
+15.213.1.9 emacsvox-goto-percent
+................................
+
+ -- Command: emacsvox-goto-percent (percent)
+     ‘C-e M-%’
+
+     Move to end  PERCENT of buffer like in View mode.
+     Display is centered at point.
+     Also set the mark at the position where point was.
+
+     (fn PERCENT)
+
+15.213.1.10 emacsvox-mark-backward-mark
+.......................................
+
+ -- Command: emacsvox-mark-backward-mark
+
+     Cycle backward through the mark ring.
+     To cycle forward, use pop-to-mark-command bound to M-x pop-to-mark-command
+
+15.213.1.11 emacsvox-open-info
+..............................
+
+ -- Command: emacsvox-open-info
+     ‘C-e TAB’
+
+     Open Emacsvox Info Manual.
+
+15.213.1.12 emacsvox-owindow-next-line
+......................................
+
+ -- Command: emacsvox-owindow-next-line (count)
+     ‘ESC <down>’
+
+     Move to the next line in the other window and speak it.
+     Numeric prefix arg COUNT can specify number of lines to move.
+
+     (fn COUNT)
+
+15.213.1.13 emacsvox-owindow-previous-line
+..........................................
+
+ -- Command: emacsvox-owindow-previous-line (count)
+     ‘ESC <up>’
+
+     Move to the next line in the other window and speak it.
+     Numeric prefix arg COUNT specifies number of lines to move.
+
+     (fn COUNT)
+
+15.213.1.14 emacsvox-owindow-scroll-down
+........................................
+
+ -- Command: emacsvox-owindow-scroll-down
+     ‘ESC <prior>’
+
+     Scroll down  the window that command ‘other-window’ would move to.
+     Speak the window contents after scrolling.
+
+15.213.1.15 emacsvox-owindow-scroll-up
+......................................
+
+ -- Command: emacsvox-owindow-scroll-up
+     ‘ESC <next>’
+
+     Scroll up the window that command ‘other-window’ would move to.
+     Speak the window contents after scrolling.
+
+15.213.1.16 emacsvox-owindow-speak-line
+.......................................
+
+ -- Command: emacsvox-owindow-speak-line
+
+     Speak the current line in the other window.
+
+15.213.1.17 emacsvox-read-next-line
+...................................
+
+ -- Command: emacsvox-read-next-line (&optional arg)
+     ‘C-e <down>’
+
+     Read next line, specified by an offset, without moving.
+     Default is to read the next line.
+
+     (fn &optional ARG)
+
+15.213.1.18 emacsvox-read-previous-line
+.......................................
+
+ -- Command: emacsvox-read-previous-line (&optional arg)
+     ‘C-e <up>’
+
+     Read previous line, specified by an offset, without moving.
+     Default is to read the previous line.
+
+     (fn &optional ARG)
+
+15.213.1.19 emacsvox-select-window-by-name
+..........................................
+
+ -- Command: emacsvox-select-window-by-name (buffer-name)
+     ‘C-e W’
+
+     Select window by the name of the buffer it displays.
+     This is useful when using modes like ECB or the new GDB UI where
+       you want to preserve the window layout
+     but quickly switch to a window by name.
+
+     (fn BUFFER-NAME)
+
+15.213.1.20 emacsvox-selective-display
+......................................
+
+ -- Command: emacsvox-selective-display (&optional arg)
+     ‘C-e C-c’
+
+     Continuously adjust selective-display.
+     Use ‘,’ and ‘.’ to continuously decrease/increase ‘selective-display’.
+      If not specified, ‘arg’ defaults to current-column.
+
+     (fn &optional ARG)
+
+15.213.1.21 emacsvox-set-indentation-presentation
+.................................................
+
+ -- Command: emacsvox-set-indentation-presentation (presentation
+          &optional global)
+     ‘C-e d I’
+
+     Select indentation PRESENTATION and preview four-column indentation.
+
+     Set the option buffer-locally by default.  With interactive prefix GLOBAL,
+     also set the global default and use it in the current buffer.
+
+     (fn PRESENTATION &optional GLOBAL)
+
+15.213.1.22 emacsvox-set-show-point-presentation
+................................................
+
+ -- Command: emacsvox-set-show-point-presentation (presentation
+          &optional global)
+
+     Select point PRESENTATION and preview the current line.
+
+     Set the option buffer-locally by default.  With interactive prefix GLOBAL,
+     also set the global default and use it in the current buffer.
+
+     (fn PRESENTATION &optional GLOBAL)
+
+15.213.1.23 emacsvox-shell-command
+..................................
+
+ -- Command: emacsvox-shell-command (command)
+
+     Run shell command COMMANDAND speak its output.
+
+     (fn COMMAND)
+
+15.213.1.24 emacsvox-silence
+............................
+
+ -- Command: emacsvox-silence
+     ‘<silence>’
+     ‘<XF86AudioPlay>’
+
+     Silence is golden. Stop speech, and pause/resume any media
+     streams. Runs ‘emacsvox-silence-hook’ which can be used to
+     configure which media players get silenced or paused/resumed.
+
+15.213.1.25 emacsvox-speak-brief-time
+.....................................
+
+ -- Command: emacsvox-speak-brief-time
+     ‘<fn>’
+     ‘C-e <fn>’
+
+     Time in brief
+
+15.213.1.26 emacsvox-speak-buffer
+.................................
+
+ -- Command: emacsvox-speak-buffer (&optional arg)
+     ‘C-e b’
+
+     Speak current buffer  contents.
+     With prefix ARG, speaks the rest of the buffer from point.
+     Negative prefix arg speaks from start of buffer to point.
+
+     (fn &optional ARG)
+
+15.213.1.27 emacsvox-speak-buffer-filename
+..........................................
+
+ -- Command: emacsvox-speak-buffer-filename (&optional filename)
+     ‘C-e f’
+
+     Speak name of file being visited in current buffer.
+     Speak default directory if invoked in a dired buffer, or when the
+     buffer is not visiting any file.  Interactive prefix arg
+     ‘filename’ speaks only the final path component.  The result is
+     put in the kill ring for convenience.
+
+     (fn &optional FILENAME)
+
+15.213.1.28 emacsvox-speak-buffer-interactively
+...............................................
+
+ -- Command: emacsvox-speak-buffer-interactively
+     ‘C-e B’
+
+     Speak the start of, rest of, or the entire buffer.
+      ‘s’ to speak the start.
+      ‘r’ to speak the rest.
+     any other key to speak entire buffer.
+
+15.213.1.29 emacsvox-speak-char
+...............................
+
+ -- Command: emacsvox-speak-char (&optional prefix)
+     ‘C-e c’
+
+     Speak character under point.
+     Pronounces character phonetically unless  called with a PREFIX arg.
+
+     (fn &optional PREFIX)
+
+15.213.1.30 emacsvox-speak-char-name
+....................................
+
+ -- Command: emacsvox-speak-char-name (char)
+
+     tell me what this is
+
+     (fn CHAR)
+
+15.213.1.31 emacsvox-speak-completions-if-available
+...................................................
+
+ -- Command: emacsvox-speak-completions-if-available
+     ‘C-e M-SPC’
+
+     Speak completions if available.
+
+15.213.1.32 emacsvox-speak-continuously
+.......................................
+
+ -- Command: emacsvox-speak-continuously
+     ‘C-e C-<return>’
+
+     Speak a buffer continuously.
+     First prompts using the minibuffer for the kind of action to
+     perform after speaking each chunk,   E.G.  speak a line at a time
+     etc.  Speaking commences at current buffer position.  Pressing
+     C-g breaks out, leaving point on last chunk that
+     was spoken.  Pressing SPC  continues to speak the buffer; any other
+       key quits.
+
+15.213.1.33 emacsvox-speak-current-column
+.........................................
+
+ -- Command: emacsvox-speak-current-column
+     ‘C-e =’
+
+     Speak the current column.
+
+15.213.1.34 emacsvox-speak-current-kill
+.......................................
+
+ -- Command: emacsvox-speak-current-kill (&optional count)
+     ‘C-e k’
+
+     Speak the current kill.
+     This is what will be yanked by the next C-y. Prefix numeric
+     arg, COUNT, specifies that the text that will be yanked as a
+     result of a C-y followed by count-1 M-y be
+     spoken. The kill number that is spoken says what numeric prefix
+     arg to give to command yank.
+
+     (fn &optional COUNT)
+
+15.213.1.35 emacsvox-speak-current-mark
+.......................................
+
+ -- Command: emacsvox-speak-current-mark (count)
+     ‘C-e C-SPC’
+     ‘C-e C-@’
+
+     Speak the line containing the mark.
+     With no argument, speaks the line containing the mark-this is
+     where C-x C-x would
+     jump.  Numeric prefix arg  ‘COUNT’ speaks line containing mark  ‘n’
+     where  ‘n’ is one less than the number of times one has to jump
+     using ‘set-mark-command’ to get to this marked position.  The
+     location of the mark is indicated by an aural highlight.
+
+     (fn COUNT)
+
+15.213.1.36 emacsvox-speak-current-percentage
+.............................................
+
+ -- Command: emacsvox-speak-current-percentage
+     ‘C-e %’
+
+     Announce the percentage into the current buffer.
+
+15.213.1.37 emacsvox-speak-current-window
+.........................................
+
+ -- Command: emacsvox-speak-current-window
+
+     Speak contents of current window.
+     Speaks entire window irrespective of point.
+
+15.213.1.38 emacsvox-speak-date-as-seconds
+..........................................
+
+ -- Command: emacsvox-speak-date-as-seconds (time)
+
+     Read time value as a human-readable string, return seconds.
+     Seconds value is also placed in the kill-ring.
+
+     (fn TIME)
+
+15.213.1.39 emacsvox-speak-extent
+.................................
+
+ -- Command: emacsvox-speak-extent (beg end &optional no-case)
+     ‘C-e M-r’
+
+     Speak extent delimited by beg and end.
+     Match patterns beg and end define the extent; optional arg
+       no-case determines if the match is case sensitive.  Point is
+       left at the start of beg on success.
+
+     (fn BEG END &optional NO-CASE)
+
+15.213.1.40 emacsvox-speak-face-backward
+........................................
+
+ -- Command: emacsvox-speak-face-backward
+
+     Property search for face at point see M-x text-property-search-backward
+
+15.213.1.41 emacsvox-speak-face-browse
+......................................
+
+ -- Command: emacsvox-speak-face-browse
+     ‘C-e C-.’
+
+     Use C-f and C-b or left/right arrows to browse by current face.
+
+15.213.1.42 emacsvox-speak-face-forward
+.......................................
+
+ -- Command: emacsvox-speak-face-forward
+
+     Property search for face -- see M-x text-property-search-forward
+
+15.213.1.43 emacsvox-speak-field
+................................
+
+ -- Command: emacsvox-speak-field
+
+     Speak current field.
+
+15.213.1.44 emacsvox-speak-header-line
+......................................
+
+ -- Command: emacsvox-speak-header-line
+     ‘C-e C-x’
+
+     Speak header line if set.
+
+15.213.1.45 emacsvox-speak-help
+...............................
+
+ -- Command: emacsvox-speak-help
+     ‘C-e h’
+
+     Speak help buffer if one present.
+
+15.213.1.46 emacsvox-speak-line
+...............................
+
+ -- Command: emacsvox-speak-line (&optional arg)
+     ‘C-e l’
+
+     Speaks current line.  With prefix ARG, speaks the rest of the
+     line from point.  Negative prefix optional arg speaks from start
+     of line to point.  Indicates indentation with a spoken message if
+     audio indentation is on see ‘emacsvox-toggle-audio-indentation’
+     bound to C-e d i.  Indicates
+     position of point with an aural highlight if option
+     ‘emacsvox-show-point’ is on -see command
+     ‘emacsvox-toggle-show-point’ bound to
+     C-e C-d.  Lines that start hidden blocks
+     of text, e.g.  outline header lines, or header lines of blocks
+     created by command ‘emacsvox-hide-or-expose-block’ are indicated
+     with auditory icon ellipses. Presence of additional
+     presentational overlays (created via property display,
+     before-string, or after-string) is indicated with auditory icon
+     ‘left’, ‘right’, or ‘more’ as appropriate.  These can then be
+     spoken using command C-e M-l.
+
+     This function has :around advice: ‘emacsvox-advice-markdown-speak-line-around’.
+
+     (fn &optional ARG)
+
+15.213.1.47 emacsvox-speak-line-interactively
+.............................................
+
+ -- Command: emacsvox-speak-line-interactively
+     ‘C-e L’
+
+     Speak the start of, rest of, or the entire line.
+      ‘s’ to speak the start.
+      ‘r’ to speak the rest.
+     any other key to speak entire line.
+
+15.213.1.48 emacsvox-speak-line-set-column-filter
+.................................................
+
+ -- Command: emacsvox-speak-line-set-column-filter (filter)
+     ‘C-e |’
+
+     Set up filter for selectively speaking or ignoring portions of lines.
+     The filter is specified as a list of pairs.
+     For example, to filter  columns 1 - 10 and 20 - 25,
+     specify filter as
+     ((0 9) (20 25)). Filter settings are persisted across sessions.  A
+     persisted filter is used as the default when prompting for a filter.
+     This allows one to accumulate a set of filters for specific files like
+     /var/adm/messages and /var/adm/maillog over time.
+     Option emacsvox-speak-line-invert-filter determines
+     the sense of the filter.
+
+     (fn FILTER)
+
+15.213.1.49 emacsvox-speak-load-directory-settings
+..................................................
+
+ -- Command: emacsvox-speak-load-directory-settings (&optional dir)
+     ‘C-e x d’
+
+     Load a directory specific Emacsvox settings file.
+     This is typically used to load up settings that are specific to
+     an electronic book consisting of many files in the same
+     directory.
+
+     (fn &optional DIR)
+
+15.213.1.50 emacsvox-speak-load-filter-settings
+...............................................
+
+ -- Command: emacsvox-speak-load-filter-settings
+
+     Load emacsvox filter settings.
+
+15.213.1.51 emacsvox-speak-message-again
+........................................
+
+ -- Command: emacsvox-speak-message-again (&optional from-message-cache)
+     ‘C-e a’
+     ‘C-e <backspace>’
+     ‘C-e <delete>’
+     ‘C-e M-a’
+
+     Speak the last message from Emacs once again.
+     The message is also placed in the kill ring for convenient yanking
+
+     (fn &optional FROM-MESSAGE-CACHE)
+
+15.213.1.52 emacsvox-speak-message-at-time
+..........................................
+
+ -- Command: emacsvox-speak-message-at-time (time message)
+     ‘C-e @’
+
+     Speak message at specified time.
+     Provides simple stop watch functionality.
+     See documentation for command run-at-time for details on time-spec.
+
+     (fn TIME MESSAGE)
+
+15.213.1.53 emacsvox-speak-microseconds-since-epoch
+...................................................
+
+ -- Command: emacsvox-speak-microseconds-since-epoch (ms)
+
+     Speaks time value specified as microseconds  since epoch.
+
+     (fn MS)
+
+15.213.1.54 emacsvox-speak-milliseconds-since-epoch
+...................................................
+
+ -- Command: emacsvox-speak-milliseconds-since-epoch (ms)
+
+     Speaks time value specified as milliseconds  since epoch..
+
+     (fn MS)
+
+15.213.1.55 emacsvox-speak-minor-mode-line
+..........................................
+
+ -- Command: emacsvox-speak-minor-mode-line (&optional log-msg)
+     ‘C-e M’
+
+     Speak the minor mode-information.
+     Optional interactive prefix arg ‘log-msg’ logs spoken info to
+     *Messages*.
+
+     (fn &optional LOG-MSG)
+
+15.213.1.56 emacsvox-speak-mode-line
+....................................
+
+ -- Command: emacsvox-speak-mode-line (&optional buffer-info)
+     ‘C-e m’
+
+     Speak the mode-line.
+     Speaks header-line if that is set when called non-interactively.
+     Interactive prefix arg speaks buffer info.
+
+     (fn &optional BUFFER-INFO)
+
+15.213.1.57 emacsvox-speak-net-id
+.................................
+
+ -- Command: emacsvox-speak-net-id
+     ‘C-e `’
+
+     Shows active network interfaces in the echo area.
+      The address is also copied to the kill ring for convenient yanking.
+
+15.213.1.58 emacsvox-speak-next-field
+.....................................
+
+ -- Command: emacsvox-speak-next-field
+
+     Move to and speak next field.
+
+15.213.1.59 emacsvox-speak-other-buffer
+.......................................
+
+ -- Command: emacsvox-speak-other-buffer (buffer)
+     ‘C-e M-b’
+
+     Speak specified buffer.
+     Useful to listen to a buffer without switching  contexts.
+
+     (fn BUFFER)
+
+15.213.1.60 emacsvox-speak-other-window
+.......................................
+
+ -- Command: emacsvox-speak-other-window
+     ‘C-e 2’
+
+     Speak other window
+
+15.213.1.61 emacsvox-speak-overlay-properties
+.............................................
+
+ -- Command: emacsvox-speak-overlay-properties
+     ‘C-e M-l’
+
+     Speak display, before-string or after-string property if any.
+
+15.213.1.62 emacsvox-speak-page
+...............................
+
+ -- Command: emacsvox-speak-page (&optional arg)
+     ‘C-e ]’
+
+     Speak a page.
+     With prefix ARG, speaks rest of current page.
+     Negative prefix arg will read from start of current page to point.
+
+     (fn &optional ARG)
+
+15.213.1.63 emacsvox-speak-page-interactively
+.............................................
+
+ -- Command: emacsvox-speak-page-interactively
+
+     Speak the start of, rest of, or the entire page.
+      ‘s’ to speak the start.
+      ‘r’ to speak the rest.
+     any other key to speak entire page.
+
+15.213.1.64 emacsvox-speak-paragraph
+....................................
+
+ -- Command: emacsvox-speak-paragraph (&optional arg)
+     ‘C-e [’
+
+     Speak paragraph.
+     With prefix arg, speaks rest of current paragraph.
+     Negative prefix arg will read from start of current paragraph to point.
+
+     (fn &optional ARG)
+
+15.213.1.65 emacsvox-speak-paragraph-interactively
+..................................................
+
+ -- Command: emacsvox-speak-paragraph-interactively
+     ‘C-e P’
+
+     Speak the start of, rest of, or the entire paragraph.
+      ‘s’ to speak the start.
+      ‘r’ to speak the rest.
+     any other key to speak entire paragraph.
+
+15.213.1.66 emacsvox-speak-persist-filter-settings
+..................................................
+
+ -- Command: emacsvox-speak-persist-filter-settings
+
+     Persist emacsvox filter settings for future sessions.
+
+15.213.1.67 emacsvox-speak-preceding-char
+.........................................
+
+ -- Command: emacsvox-speak-preceding-char
+
+     Speak character before point.
+
+15.213.1.68 emacsvox-speak-predefined-window
+............................................
+
+ -- Command: emacsvox-speak-predefined-window (&optional arg)
+
+     Speak one of the first 10 windows on the screen, 0 is current window.
+     Speaks entire window irrespective of point.  Semantics of ‘other’
+     is the same as for the Emacs builtin ‘other-window’.
+
+     (fn &optional ARG)
+
+15.213.1.69 emacsvox-speak-previous-field
+.........................................
+
+ -- Command: emacsvox-speak-previous-field
+
+     Move to previous field and speak it.
+
+15.213.1.70 emacsvox-speak-range
+................................
+
+ -- Command: emacsvox-speak-range (&optional prop)
+
+     Speak and return  range at point
+
+     (fn &optional PROP)
+
+15.213.1.71 emacsvox-speak-rectangle
+....................................
+
+ -- Command: emacsvox-speak-rectangle (start end)
+     ‘C-e R’
+
+     Speak a rectangle of text.
+     Rectangle is delimited by point and mark.  When call from a
+     program, arguments specify the START and END of the rectangle.
+
+     (fn START END)
+
+15.213.1.72 emacsvox-speak-region
+.................................
+
+ -- Command: emacsvox-speak-region (start end)
+     ‘C-e r’
+
+     Speak region bounded by start and end.
+
+     (fn START END)
+
+15.213.1.73 emacsvox-speak-rest-of-buffer
+.........................................
+
+ -- Command: emacsvox-speak-rest-of-buffer
+     ‘C-e i’
+
+     Speak from point to buffer end, tracking interrupt position by chunk.
+     Any subsequent user command interrupts speech.  Point remains at the start of
+     the sentence-oriented chunk that was audible when interruption occurred.
+
+15.213.1.74 emacsvox-speak-seconds-since-epoch
+..............................................
+
+ -- Command: emacsvox-speak-seconds-since-epoch (seconds)
+
+     Speaks time value specified as seconds  since epoch.
+
+     (fn SECONDS)
+
+15.213.1.75 emacsvox-speak-sentence
+...................................
+
+ -- Command: emacsvox-speak-sentence (&optional arg)
+
+     Speak current sentence.
+     With prefix ARG, speaks the rest of the sentence  from point.
+     Negative prefix arg speaks from start of sentence to point.
+
+     (fn &optional ARG)
+
+15.213.1.76 emacsvox-speak-sexp
+...............................
+
+ -- Command: emacsvox-speak-sexp (&optional arg)
+
+     Speak current sexp.
+     With prefix ARG, speaks the rest of the sexp  from point.
+     Negative prefix arg speaks from start of sexp to point.
+
+     (fn &optional ARG)
+
+15.213.1.77 emacsvox-speak-sexp-interactively
+.............................................
+
+ -- Command: emacsvox-speak-sexp-interactively
+
+     Speak the start of, rest of, or the entire sexp.
+      ‘s’ to speak the start.
+      ‘r’ to speak the rest.
+     any other key to speak entire sexp.
+
+15.213.1.78 emacsvox-speak-skim-buffer
+......................................
+
+ -- Command: emacsvox-speak-skim-buffer
+
+     Skim the current buffer  a paragraph at a time.
+
+15.213.1.79 emacsvox-speak-spaces
+.................................
+
+ -- Command: emacsvox-speak-spaces
+     ‘C-e v SPC’
+
+     Speak number of spaces at point.
+
+15.213.1.80 emacsvox-speak-spaces-at-point
+..........................................
+
+ -- Command: emacsvox-speak-spaces-at-point
+     ‘C-e C-M-SPC’
+
+     Speak the white space at point.
+
+15.213.1.81 emacsvox-speak-spell-current-word
+.............................................
+
+ -- Command: emacsvox-speak-spell-current-word
+
+     Spell word at  point.
+
+15.213.1.82 emacsvox-speak-this-window
+......................................
+
+ -- Command: emacsvox-speak-this-window
+     ‘C-e 1’
+
+     Speak current window.
+
+15.213.1.83 emacsvox-speak-time
+...............................
+
+ -- Command: emacsvox-speak-time (&optional world)
+     ‘C-e t’
+
+     Speak the time.
+     Spoken time  is available via C-h N.
+     Optional interactive prefix arg ‘C-u’invokes world clock.
+     Timezone is specified using minibuffer completion.
+     Second interactive prefix sets clock to new timezone.
+
+     (fn &optional WORLD)
+
+15.213.1.84 emacsvox-speak-version
+..................................
+
+ -- Command: emacsvox-speak-version
+     ‘C-e V’
+
+     Announce version information for running emacsvox.
+
+15.213.1.85 emacsvox-speak-visual-line
+......................................
+
+ -- Command: emacsvox-speak-visual-line
+
+     Speaks current visual line.
+     Cues the start of a physical line with auditory icon ‘left’.
+
+15.213.1.86 emacsvox-speak-voice-annotate-paragraphs
+....................................................
+
+ -- Command: emacsvox-speak-voice-annotate-paragraphs
+
+     Locate paragraphs and voice annotate the first word.
+     Here, paragraph is taken to mean a chunk of text preceded by a blank line.
+     Useful to do this before you listen to an entire buffer.
+
+15.213.1.87 emacsvox-speak-which-function
+.........................................
+
+ -- Command: emacsvox-speak-which-function
+     ‘C-e M-w’
+
+     Speak which function we are on.  Uses which-function from
+     which-func without turning that mode on.
+
+15.213.1.88 emacsvox-speak-window-information
+.............................................
+
+ -- Command: emacsvox-speak-window-information
+     ‘C-e C-w’
+
+     Speaks information about current window.
+
+15.213.1.89 emacsvox-speak-windowful
+....................................
+
+ -- Command: emacsvox-speak-windowful
+     ‘C-e SPC’
+
+     Delete other windows, Line to top, then Speak window contents.
+
+15.213.1.90 emacsvox-speak-word
+...............................
+
+ -- Command: emacsvox-speak-word (&optional arg)
+     ‘C-e w’
+
+     Speak current word.
+     With prefix ARG, speaks the rest of the word from point.
+     Negative prefix arg speaks from start of word to point.
+     If executed  on the same buffer position a second time, the word is
+     spelled out  instead of being spoken.
+
+     (fn &optional ARG)
+
+15.213.1.91 emacsvox-speak-word-interactively
+.............................................
+
+ -- Command: emacsvox-speak-word-interactively
+
+     Speak the start of, rest of, or the entire word.
+      ‘s’ to speak the start.
+      ‘r’ to speak the rest.
+     any other key to speak entire word.
+
+15.213.1.92 emacsvox-speak-world-clock
+......................................
+
+ -- Command: emacsvox-speak-world-clock (zone &optional set)
+
+     Display current date and time  for specified zone.
+     Optional second arg ‘set’ sets the TZ environment variable as well.
+
+     (fn ZONE &optional SET)
+
+15.213.1.93 emacsvox-submit-bug
+...............................
+
+ -- Command: emacsvox-submit-bug
+
+     Function to submit a bug to the Emacsvox list
+
+15.213.1.94 emacsvox-switch-to-reference-buffer
+...............................................
+
+ -- Command: emacsvox-switch-to-reference-buffer
+
+     Switch back to buffer that generated completions.
+
+15.213.1.95 emacsvox-toggle-audio-indentation
+.............................................
+
+ -- Command: emacsvox-toggle-audio-indentation (&optional prefix)
+     ‘C-e d i’
+
+     Toggle state of  Emacsvox  audio indentation.
+     Interactive PREFIX arg means toggle  the global default value, and then set the
+     current local  value to the result.
+     Specifying the method of indentation as ‘tones’
+     results in the Dectalk producing a tone whose length is a function of the
+     line’s indentation.  Specifying ‘speak’
+     results in the number of initial spaces being spoken.
+
+15.213.1.96 emacsvox-toggle-character-echo
+..........................................
+
+ -- Command: emacsvox-toggle-character-echo (&optional prefix)
+     ‘C-e d k’
+
+     Toggle state of  Emacsvox  character echo.
+     Interactive PREFIX arg means toggle  the global default value, and then set the
+     current local  value to the result.
+
+15.213.1.97 emacsvox-toggle-header-line
+.......................................
+
+ -- Command: emacsvox-toggle-header-line
+
+     Toggle Emacsvox’s default header line.
+
+15.213.1.98 emacsvox-toggle-line-echo
+.....................................
+
+ -- Command: emacsvox-toggle-line-echo (&optional prefix)
+     ‘C-e d l’
+
+     Toggle state of  Emacsvox  line echo.
+     Interactive PREFIX arg means toggle  the global default value, and then set the
+     current local  value to the result.
+
+15.213.1.99 emacsvox-toggle-mail-alert
+......................................
+
+ -- Command: emacsvox-toggle-mail-alert (&optional prefix)
+     ‘C-e M-m’
+
+     Toggle state of  Emacsvox  mail alert.
+     Interactive PREFIX arg means toggle  the global default value, and then set the
+     current local  value to the result.
+     Turning on this option results in Emacsvox producing an auditory icon
+     indicating the arrival  of new mail when displaying the mode line.
+
+15.213.1.100 emacsvox-toggle-show-point
+.......................................
+
+ -- Command: emacsvox-toggle-show-point (&optional prefix)
+     ‘C-e C-d’
+
+     Toggle state of  Emacsvox-show-point.
+     Interactive PREFIX arg means toggle  the global default value, and then set the
+     current local  value to the result.
+
+15.213.1.101 emacsvox-toggle-speak-line-invert-filter
+.....................................................
+
+ -- Command: emacsvox-toggle-speak-line-invert-filter (&optional prefix)
+     ‘C-e \’
+
+     Toggle state of   how column filter is interpreted.
+     Interactive PREFIX arg means toggle  the global default value, and then set the
+     current local  value to the result.
+
+15.213.1.102 emacsvox-toggle-speak-messages
+...........................................
+
+ -- Command: emacsvox-toggle-speak-messages (&optional prefix)
+     ‘C-e C-M-q’
+
+     Toggle  state of whether emacsvox echoes messages.
+
+15.213.1.103 emacsvox-toggle-word-echo
+......................................
+
+ -- Command: emacsvox-toggle-word-echo (&optional prefix)
+     ‘C-e d w’
+
+     Toggle state of  Emacsvox  word echo.
+     Interactive PREFIX arg means toggle  the global default value, and then set the
+     current local  value to the result.
+
+15.213.1.104 emacsvox-view-notifications
+........................................
+
+ -- Command: emacsvox-view-notifications
+     ‘C-h N’
+     ‘<f1> N’
+     ‘<help> N’
+
+     Display notifications.
+
+15.213.1.105 emacsvox-zap-tts
+.............................
+
+ -- Command: emacsvox-zap-tts
+     ‘C-e d z’
+
+     Send this command to the TTS directly.
+
+15.213.2 emacsvox-speak Options
+-------------------------------
+
+ -- Variable: User Option emacsvox-buffer-select-help
+     String passed to speak help.
+     Set this to the empty string once you’ve learnt this command.
+
+     Default Value:
+
+     ""
+
+
+ -- Variable: User Option emacsvox-indentation-pitch-tone-base
+     Pitch in hertz for the first nonzero indentation column.
+
+     Default Value:
+
+     250.0
+
+
+ -- Variable: User Option emacsvox-indentation-pitch-tone-duration
+     Requested duration in milliseconds for rising-pitch indentation tones.
+
+     The actual duration is never shorter than the registered blank-line tone.
+
+     Default Value:
+
+     150
+
+
+ -- Variable: User Option emacsvox-indentation-pitch-tone-maximum
+     Maximum pitch in hertz for rising-pitch indentation tones.
+
+     Default Value:
+
+     2000.0
+
+
+ -- Variable: User Option
+          emacsvox-indentation-pitch-tone-semitones-per-column
+     Pitch rise in semitones for each additional indentation column.
+
+     Default Value:
+
+     1.0
+
+
+ -- Variable: User Option emacsvox-indentation-presentation
+     How enabled line indentation is presented.
+
+     ‘spoken’ says the indentation column.  ‘duration-tone’ uses a fixed pitch and
+     increases duration with indentation.  ‘pitch-tone’ uses a fixed duration and
+     raises pitch with indentation.  The two ‘spoken-...-tone’ values combine the
+     corresponding tone with speech.  ‘custom’ publishes indentation facts for
+     personal aural rules, and ‘none’ suppresses presentation while leaving
+     ‘emacsvox-audio-indentation’ enabled.
+
+     Default Value:
+
+     spoken
+
+
+ -- Variable: User Option emacsvox-mail-alert-interval
+     Interval in seconds between mail alerts for the same pending
+       message.
+
+     Default Value:
+
+     300
+
+
+ -- Variable: User Option emacsvox-mail-spool-file
+     Mail spool file examined  to alert you about newly
+     arrived mail.
+
+     Default Value:
+
+     "<system-mail-spool>/<login>"
+
+
+ -- Variable: User Option emacsvox-show-point-presentation
+     How ‘emacsvox-speak-line’ presents buffer point.
+
+     ‘voice’ applies the animated voice to the character at point.  ‘tone’ and
+     ‘earcon’ place a short marker at the exact text boundary.  ‘voice-tone’ and
+     ‘voice-earcon’ combine the corresponding presentations.  ‘spoken’ says
+     "point" at the boundary.  ‘custom’ publishes point facts for personal aural
+     rules without adding a built-in presentation, and ‘none’ suppresses point
+     presentation while leaving ‘emacsvox-show-point’ enabled.
+
+     Default Value:
+
+     voice
+
+
+ -- Variable: User Option emacsvox-silence-hook
+     Functions run after emacsvox-silence is called.
+
+     Default Value:
+
+     (emacsvox-m-player-pause-or-resume emacsvox-emms-pause-or-resume)
+
+
+ -- Variable: User Option emacsvox-speak-time-brief-format
+     Format for time in brief.
+
+     Default Value:
+
+     "%l %M"
+
+
+ -- Variable: User Option emacsvox-speak-time-format
+     Format string that specifies how the time should be spoken.
+     See the documentation for function
+     ‘format-time-string’
+
+     Default Value:
+
+     "%l %M%p on %A %B %_e"
+
+
+ -- Variable: User Option emacsvox-tracked-reading-max-chars
+     Maximum source characters in one tracked reading chunk.
+     Tracked reading prefers sentence boundaries and uses this limit to keep the
+     position retained after interruption reasonably close to audible playback.
+
+     Default Value:
+
+     280
+
+
+
 File: emacsvox.info,  Node: emacsvox-speedbar,  Next: emacsvox-sql,  Prev: emacsvox-speak,  Up: Emacsvox Commands And Options
 
 15.214 emacsvox-speedbar

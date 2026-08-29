@@ -27,6 +27,10 @@
      (expand-file-name relative-name emacsvox-backend-doc-tests--root))
     (buffer-string)))
 
+(defun emacsvox-backend-doc-tests--normalize-whitespace (string)
+  "Collapse whitespace in STRING for spoken-copy comparisons."
+  (replace-regexp-in-string "[ \t\n\r]+" " " string))
+
 (ert-deftest emacsvox-backend-guide-owns-the-omnivox-first-route ()
   "The canonical guide should recommend and visibly accept Omnivox."
   (let ((guide
@@ -79,6 +83,71 @@
     (should (string-match-p "Omnivox is recommended" documentation))
     (should (string-match-p "compatibility defaults" documentation))
     (should (string-match-p "TTS_PROGRAM" documentation))))
+
+(ert-deftest emacsvox-first-use-bootstrap-is-visible-before-advanced-material ()
+  "The rendered repository entry point should expose first speech immediately."
+  (let* ((readme
+          (emacsvox-backend-doc-tests--file-string "Readme.org"))
+         (start (string-search "* Start Here: First Speech" readme))
+         (advanced (string-search "* TTS Namespace Upgrade" readme)))
+    (should start)
+    (should advanced)
+    (should (< start advanced))
+    (dolist
+        (required
+         '("make check-emacs"
+           "make all"
+           "./bin/emacsvox --diagnose"
+           "./bin/emacsvox --check"
+           "M-x tts-speak-version RET"
+           "C-h v tts-program RET"
+           "(setenv \"TTS_PROGRAM\" \"omnivox\")"
+           "(load-file \"/path/to/emacsvox/lisp/emacsvox-setup.el\")"
+           "Recovering-From-No-Speech.html"))
+      (should (string-match-p (regexp-quote required) readme)))))
+
+(ert-deftest emacsvox-first-use-manual-owns-success-and-recovery ()
+  "The canonical manual should define first-speech acceptance and rollback."
+  (let ((guide
+         (emacsvox-backend-doc-tests--file-string "info/install.texi")))
+    (dolist
+        (required
+         '("@chapter Getting Started: Installation and First Speech"
+           "@node Confirming First Speech"
+           "@node Recovering From No Speech"
+           "@node Persistent Startup"
+           "without playing audio, creating\nan Omnivox session log"
+           "A zero exit status without both audible signals is not success."
+           "Could not find speech server executable"
+           "M-x tts-restart RET"
+           "This is the rollback"
+           "build\noutputs are not distributed"))
+      (should (string-match-p (regexp-quote required) guide)))
+    (let ((selection
+           (string-search "(setenv \"TTS_PROGRAM\" \"omnivox\")" guide))
+          (setup
+           (string-search
+            "(load-file \"/path/to/emacsvox/lisp/emacsvox-setup.el\")"
+            guide)))
+      (should selection)
+      (should setup)
+      (should (< selection setup)))))
+
+(ert-deftest emacsvox-first-use-docs-match-the-live-startup-checkpoint ()
+  "The documented acceptance sentence should match the startup source."
+  (let ((checkpoint
+         "I am completely operational, and all my circuits are functioning perfectly!")
+        (readme
+         (emacsvox-backend-doc-tests--file-string "Readme.org"))
+        (guide
+         (emacsvox-backend-doc-tests--file-string "info/install.texi"))
+        (startup
+         (emacsvox-backend-doc-tests--file-string "lisp/emacsvox.el")))
+    (dolist (text (list readme guide startup))
+      (should
+       (string-match-p
+        (regexp-quote checkpoint)
+        (emacsvox-backend-doc-tests--normalize-whitespace text))))))
 
 (provide 'emacsvox-backend-doc-tests)
 ;;; emacsvox-backend-doc-tests.el ends here

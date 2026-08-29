@@ -10,6 +10,77 @@ features.
 
 *Modernization Status:* Fully updated for Emacs 31+ with modern elisp patterns and advice-add throughout.
 
+* Start Here: First Speech
+
+This checklist is sufficient to reach first speech without an installed Info
+manual.  The
+[[https://bartbunting.github.io/emacsvox/Installation.html][Getting Started manual]]
+owns the complete explanations and recovery procedure; its checked-in source
+is [[file:info/install.texi][info/install.texi]].
+
+1. Install Git, Make, GNU Texinfo (which provides =makeinfo=), and
+   [[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].
+   Install the platform prerequisites from the
+   [[https://bartbunting.github.io/emacsvox/Speech-Backends.html][Speech Backends guide]]
+   ([[file:info/backends.texi][source]]) before building Omnivox.
+
+2. Clone Emacsvox into the permanent directory where you intend to use it.
+   The checkout itself is the installation; there is no later copy step.
+   #+BEGIN_SRC sh
+   git clone https://github.com/bartbunting/emacsvox
+   cd emacsvox
+   #+END_SRC
+
+3. If Emacs 31 is not the system =emacs=, copy =local.mk.example= to the
+   ignored =local.mk= and set its =EMACS= value.  Then build with that Emacs:
+   #+BEGIN_SRC sh
+   make check-emacs
+   make all
+   #+END_SRC
+
+4. Install Omnivox, the recommended speech server, by following the Speech
+   Backends guide for GNU/Linux, macOS, or WSL2.  Then run the silent launcher
+   preflight:
+   #+BEGIN_SRC sh
+   ./bin/emacsvox --diagnose
+   #+END_SRC
+   It should report Emacs 31 or newer, the =omnivox= backend, and an isolated
+   startup.  It neither plays audio nor opens Emacs.
+
+5. Run the deliberately audible backend check:
+   #+BEGIN_SRC sh
+   ./bin/emacsvox --check
+   #+END_SRC
+   Continue only after hearing both the test tone and speech.
+
+6. Start the isolated first session:
+   #+BEGIN_SRC sh
+   ./bin/emacsvox
+   #+END_SRC
+   Success includes the spoken sentence, ``I am completely operational, and
+   all my circuits are functioning perfectly!''  An auditory icon is optional
+   and is not part of this acceptance check.  Type =M-x tts-speak-version RET=
+   to hear the live adapter version.  Type =C-h v tts-program RET=; its current
+   value should name =omnivox=.
+
+7. Only after that clean session works, add the following to the user's Emacs
+   init file, replacing the example path with this checkout's absolute path:
+   #+BEGIN_SRC elisp
+   (setenv "TTS_PROGRAM" "omnivox")
+   (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
+   #+END_SRC
+   A normal customized start should speak the same startup sentence.  Use
+   =C-n= and =C-p= to try spoken line movement, and type
+   =M-x emacsvox-describe-emacsvox RET= for an overview.
+
+If =--diagnose= fails, correct the Emacs or backend path it reports.  If the
+diagnostic passes but the tone or speech check fails, stop and diagnose
+Omnivox before changing Emacs configuration.  If the isolated launcher works
+but a customized start does not, remove or comment out the two init lines
+above and return to =./bin/emacsvox=.  The
+[[https://bartbunting.github.io/emacsvox/Recovering-From-No-Speech.html][no-speech recovery guide]]
+provides the complete symptom-by-symptom procedure.
+
 * TTS Namespace Upgrade
 
 The generic speech interface now uses =tts-*= names and the
@@ -361,73 +432,6 @@ Routine Dired next/previous-file navigation speaks the entry without the
 redundant selection earcon; marking, unmarking, directory, and other state
 changes retain their distinct feedback.  The repository audit rejects a new
 context-free direct icon call in its maintained migrated-module set.
-
-* Quick Installation Instructions
-
-For a more detailed installation guide, and further instructions on usage, see the documentation. For a quick installation guide, see below.
-
-1. Obtain the Source Code:
-   - Clone the repository:
-   #+BEGIN_SRC sh
-   git clone https://github.com/bartbunting/emacsvox
-   #+END_SRC
-
-2. Change to the Emacsvox Directory:
-   #+BEGIN_SRC sh
-   cd emacsvox
-   #+END_SRC
-
-3. Select and verify Emacs:
-   If Emacs 31 is not the system default, copy =local.mk.example= to the
-   ignored =local.mk= and set =EMACS= there.  Then verify the selected binary:
-   #+BEGIN_SRC sh
-   make check-emacs
-   #+END_SRC
-
-4. Configure and compile the files:
-   #+BEGIN_SRC sh
-   make all
-   #+END_SRC
-
-5. Install and test Omnivox:
-   Omnivox is the recommended speech server on Linux, macOS, and WSL2.
-   Follow the [[file:info/backends.texi][Speech Backends guide]] for your
-   platform.  The supported launcher can run its standalone check after
-   validating the selected Emacs and Omnivox executable:
-   #+BEGIN_SRC sh
-   ./bin/emacsvox --check
-   #+END_SRC
-   Continue only after hearing both the test tone and speech.  Direct eSpeak,
-   SwiftMac, macOS Python, Eloquence, and DECtalk servers are compatibility
-   alternatives, not the initial-user path.
-
-6. Prove an isolated Emacsvox start:
-   #+BEGIN_SRC sh
-   ./bin/emacsvox
-   #+END_SRC
-   This source-checkout launcher defaults to Omnivox, honors the =EMACS=
-   selection in =local.mk=, requires Emacs 31 or newer, uses absolute checkout
-   paths, and deliberately loads neither site files nor personal Emacs
-   configuration.  Run =./bin/emacsvox --diagnose= to print its selections
-   without producing audio or starting interactive Emacs.  This clean session
-   is the first-use proof, not a replacement for your normal customized Emacs.
-
-7. Set up normal customized starts:
-   Add the backend selection to the shell startup file used to launch Emacs:
-   #+BEGIN_SRC sh
-   export TTS_PROGRAM=omnivox
-   #+END_SRC
-   Then add the following line to the top of your Emacs init file:
-   #+BEGIN_SRC elisp
-   (load-file "<emacsvox-dir>/lisp/emacsvox-setup.el")
-   #+END_SRC
-   Replace =<emacsvox-dir>= with the directory where you unpacked the sources.
-   In a changing source checkout, rebuild with =make all= and keep
-   this explicit =load-file= form.  It lets the setup entry point warn and
-   prefer source if newer Lisp would otherwise be hidden by stale byte-code.
-   A stable installed build may instead use =(load-library
-   "emacsvox-setup")=.  See [[file:etc/install.org][the installation guide]]
-   for the source-checkout and installed-package details.
 
 * Requirements
 
