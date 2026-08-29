@@ -64,6 +64,8 @@
 (declare-function notmuch-show-move-to-message-top "notmuch-show" ())
 (declare-function notmuch-tag-format-tags "notmuch-tag"
                   (tags orig-tags &optional face))
+(declare-function tts-notify "tts-speak" (text &optional dont-log))
+(declare-function tts-notify-icon "tts-speak" (icon))
 
 (defvar notmuch-archive-tags)
 (defvar notmuch-search-mode-map)
@@ -105,6 +107,29 @@ it is spoken."
            (const :tag "Matched and total count" count)
            (const :tag "Tags" tags)
            (function :tag "Custom formatter")))
+  :group 'emacsvox-notmuch)
+
+(defcustom emacsvox-notmuch-search-completion-style 'adaptive
+  "Control successful asynchronous Notmuch search completion feedback.
+
+With `adaptive', a user-owned search that remains selected and untouched
+speaks its final count and the result at point on the primary speech stream.
+After the user issues another command, leaves the search buffer, or refreshes
+an existing search, completion contains only a generic result count and uses
+the notification stream.  `summary' always sends the generic count to the
+notification stream, `cue' sends only a task-completion cue there, and
+`silent' suppresses successful completion feedback.
+
+Failures remain audible for every style.  Notification feedback contains no
+query or message metadata and may be retained in the notifications log.  A
+separate notification process is controlled globally by
+`tts-notification-device'; when none is available, notification speech falls
+back to the primary process."
+  :type '(choice
+          (const :tag "Adapt to focus and interaction" adaptive)
+          (const :tag "Result count only" summary)
+          (const :tag "Completion cue only" cue)
+          (const :tag "No successful completion feedback" silent))
   :group 'emacsvox-notmuch)
 
 (defcustom emacsvox-notmuch-search-field-separator ", "
@@ -1097,22 +1122,6 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
  '(notmuch-bury-or-kill-this-buffer)
  #'emacsvox-notmuch--close-feedback)
 
-(defun emacsvox-notmuch--search-feedback ()
-  "Speak a Notmuch search result."
-  (let ((facts
-         (emacsvox-notmuch-view-facts
-          'search 'search 'mail-view-opened)))
-    (if-let* ((result (notmuch-search-get-result)))
-        (emacsvox-notmuch--submit-search-result
-         result facts 'state-change 'open-object)
-      (emacsvox-notmuch--submit-text-feedback
-       facts 'state-change 'open-object
-       (emacsvox-notmuch--current-line-content)))))
-
-(emacsvox-notmuch--register-after-group
- '(notmuch-search)
- #'emacsvox-notmuch--search-feedback)
-
 (defun emacsvox-notmuch--show-feedback ()
   "Speak the first message in a newly opened Notmuch thread."
   (emacsvox-notmuch--move-to-message-body)
@@ -1866,9 +1875,16 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
    :after emacsvox--advice-notmuch-search-archive-thread-after)
  emacsvox-notmuch--advice)
 
-(defconst emacsvox-notmuch--refresh-process-property
-  'emacsvox-notmuch-announce-refresh
-  "Process property requesting refresh-completion feedback.")
+(defconst emacsvox-notmuch--search-process-property
+  'emacsvox-notmuch-search-completion
+  "Process property holding user-owned search completion state.")
+
+(defconst emacsvox-notmuch--search-sentinel-finished-property
+  'emacsvox-notmuch-search-sentinel-finished
+  "Process property recording that Notmuch finished its search sentinel.")
+
+(defvar-local emacsvox-notmuch--tracked-search-process nil
+  "User-owned Notmuch process currently tracked in this search buffer.")
 
 (defun emacsvox-notmuch--search-result-count (&optional buffer)
   "Count structured Notmuch search results in BUFFER."
@@ -1886,52 +1902,188 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
                limit)))
       count)))
 
-(defun emacsvox-notmuch--announce-refresh-complete (&optional buffer)
-  "Announce completed Notmuch search refresh for BUFFER."
-  (with-current-buffer (or buffer (current-buffer))
-    (let* ((count (emacsvox-notmuch--search-result-count))
-           (noun (if (= count 1) "thread" "threads"))
-           (summary (format "Search refreshed, %d %s" count noun)))
-      (emacsvox-notmuch--submit-text-feedback
-       (emacsvox-notmuch-view-facts
-        'search 'refresh 'refresh-completed)
-       'notification 'task-done summary))))
+(defun emacsvox-notmuch--search-request-kind ()
+  "Return the completion kind for the current user-owned search request.
+Return nil for programmatic searches and the deliberately silent global
+refresh command."
+  (let ((owner ems--interactive-fn-name))
+    (cond
+     ((or
+       (null owner)
+       (eq owner 'notmuch-refresh-all-buffers)
+       (eq this-command 'notmuch-refresh-all-buffers))
+      nil)
+     ((memq
+       owner
+       '(notmuch-search-refresh-view
+         notmuch-refresh-this-buffer
+         notmuch-poll-and-refresh-this-buffer))
+      'refresh)
+     (t 'search))))
 
-(defun emacsvox-notmuch--mark-refresh-process ()
-  "Mark the current Notmuch search process for completion feedback."
-  (when-let* ((process (get-buffer-process (current-buffer))))
-    (process-put process emacsvox-notmuch--refresh-process-property t)
-    ;; A very small search can finish before the command's after advice runs.
-    (unless (process-live-p process)
-      (emacsvox--advice-notmuch-search-process-sentinel-after process nil))))
+(defun emacsvox-notmuch--search-buffer-focused-p (buffer)
+  "Return non-nil when BUFFER is displayed in the selected window."
+  (and
+   (buffer-live-p buffer)
+   (window-live-p (selected-window))
+   (eq buffer (window-buffer (selected-window)))))
 
-(defun emacsvox--advice-notmuch-search-refresh-view-after (&rest _)
-  "Arrange feedback after an interactive search refresh completes."
-  (when (ems-interactive-p 'notmuch-search-refresh-view)
-    ;; `notmuch-refresh-all-buffers' deliberately refreshes silently.
-    (unless (eq this-command 'notmuch-refresh-all-buffers)
-      (emacsvox-notmuch--mark-refresh-process))))
+(defun emacsvox-notmuch--search-summary (kind count)
+  "Return a generic completed-search summary for KIND with COUNT results."
+  (format
+   "%s, %d %s"
+   (if (eq kind 'refresh) "Search refreshed" "Search complete")
+   count
+   (if (= count 1) "thread" "threads")))
 
-(defun emacsvox--advice-notmuch-search-process-sentinel-after (process _event)
-  "Announce completion of a marked Notmuch search PROCESS."
-  (when (and
-         (process-get process emacsvox-notmuch--refresh-process-property)
-         (memq (process-status process) '(exit signal)))
-    (process-put process emacsvox-notmuch--refresh-process-property nil)
-    (let ((buffer (process-buffer process)))
+(defun emacsvox-notmuch--search-completion-facts (kind event)
+  "Return completion facts for search KIND and EVENT."
+  (emacsvox-notmuch-view-facts
+   'search (if (eq kind 'refresh) 'refresh 'search) event))
+
+(defun emacsvox-notmuch--notify-search-feedback (facts icon &optional text)
+  "Send generic Notmuch search feedback through the notification stream.
+FACTS describe the event, ICON is its leading cue, and TEXT is optional."
+  (emacsvox-aural-call-with-submission
+   (lambda ()
+     (when icon (tts-notify-icon icon))
+     (when text (tts-notify text)))
+   :facts facts :module 'notmuch :occasion 'notification))
+
+(defun emacsvox-notmuch--announce-search-start ()
+  "Signal that a user-owned non-refresh Notmuch search has started."
+  (emacsvox-notmuch--submit-text-feedback
+   (emacsvox-notmuch-view-facts 'search 'search nil)
+   'state-change 'progress nil))
+
+(defun emacsvox-notmuch--announce-foreground-search-complete
+    (buffer count)
+  "Present completed focused search BUFFER with final result COUNT."
+  (with-current-buffer buffer
+    (let* ((summary (emacsvox-notmuch--search-summary 'search count))
+           (result (notmuch-search-get-result))
+           (facts
+            (emacsvox-notmuch--search-completion-facts
+             'search 'mail-view-opened)))
+      (if result
+          (emacsvox-notmuch--submit-content
+           (concat summary "\n" (emacsvox-notmuch-format-search-result result))
+           facts 'state-change
+           (append
+            (emacsvox-notmuch--leading-compatibility-actions 'task-done)
+            (emacsvox-notmuch--status-compatibility-actions
+             result emacsvox-notmuch-search-status-icons 'state-change)))
+        (emacsvox-notmuch--submit-text-feedback
+         facts 'state-change 'task-done summary)))))
+
+(defun emacsvox-notmuch--announce-search-complete (state buffer)
+  "Announce a successful completed search described by STATE in BUFFER."
+  (let* ((kind (plist-get state :kind))
+         (count (emacsvox-notmuch--search-result-count buffer))
+         (summary (emacsvox-notmuch--search-summary kind count))
+         (focused (emacsvox-notmuch--search-buffer-focused-p buffer))
+         (interacted (plist-get state :interacted))
+         (facts
+          (emacsvox-notmuch--search-completion-facts
+           kind 'refresh-completed)))
+    (pcase emacsvox-notmuch-search-completion-style
+      ('silent nil)
+      ('cue
+       (emacsvox-notmuch--notify-search-feedback facts 'task-done))
+      ('summary
+       (emacsvox-notmuch--notify-search-feedback
+        facts 'task-done summary))
+      ('adaptive
+       (if (and
+            (eq kind 'search)
+            focused
+            (not interacted)
+            (not (input-pending-p)))
+           (emacsvox-notmuch--announce-foreground-search-complete
+            buffer count)
+         (emacsvox-notmuch--notify-search-feedback
+          facts 'task-done summary)))
+      (_
+       (emacsvox-notmuch--notify-search-feedback
+        facts 'task-done summary)))))
+
+(defun emacsvox-notmuch--note-search-interaction ()
+  "Record a command issued while this Notmuch search is still running."
+  (if-let* ((process emacsvox-notmuch--tracked-search-process)
+            (state
+             (process-get process emacsvox-notmuch--search-process-property)))
+      (process-put
+       process emacsvox-notmuch--search-process-property
+       (plist-put (copy-sequence state) :interacted t))
+    (setq emacsvox-notmuch--tracked-search-process nil)
+    (remove-hook
+     'pre-command-hook #'emacsvox-notmuch--note-search-interaction t)))
+
+(defun emacsvox-notmuch--clear-tracked-search (process buffer)
+  "Stop tracking completed search PROCESS in BUFFER when it still owns it."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when (eq emacsvox-notmuch--tracked-search-process process)
+        (setq emacsvox-notmuch--tracked-search-process nil)
+        (remove-hook
+         'pre-command-hook #'emacsvox-notmuch--note-search-interaction t)))))
+
+(defun emacsvox-notmuch--finish-search-process (process)
+  "Deliver one terminal presentation for tracked Notmuch search PROCESS."
+  (when-let* ((state
+               (process-get process emacsvox-notmuch--search-process-property)))
+    (process-put process emacsvox-notmuch--search-process-property nil)
+    (let ((buffer (process-buffer process))
+          (status (process-status process)))
+      (emacsvox-notmuch--clear-tracked-search process buffer)
       (if (and
-           (eq (process-status process) 'exit)
+           (eq status 'exit)
            (zerop (process-exit-status process))
            (buffer-live-p buffer))
-          (emacsvox-notmuch--announce-refresh-complete buffer)
-        (emacsvox-notmuch--submit-text-feedback
-         (emacsvox-notmuch-view-facts
-          'search 'refresh 'refresh-failed)
-         'notification 'warn-user "Search refresh failed")))))
+          (emacsvox-notmuch--announce-search-complete state buffer)
+        (emacsvox-notmuch--notify-search-feedback
+         (emacsvox-notmuch--search-completion-facts
+          (plist-get state :kind) 'refresh-failed)
+         'warn-user
+         (if (eq (plist-get state :kind) 'refresh)
+             "Search refresh failed"
+           "Search failed"))))))
+
+(defun emacsvox-notmuch--track-search-process (kind)
+  "Track the current buffer's user-owned Notmuch process as KIND."
+  (when-let* ((process (get-buffer-process (current-buffer))))
+    (let ((state (list :kind kind :interacted nil)))
+      (process-put process emacsvox-notmuch--search-process-property state)
+      (setq-local emacsvox-notmuch--tracked-search-process process)
+      (add-hook
+       'pre-command-hook #'emacsvox-notmuch--note-search-interaction nil t)
+      ;; A small search can run its sentinel before `notmuch-search' returns.
+      (if
+          (process-get
+           process emacsvox-notmuch--search-sentinel-finished-property)
+          (emacsvox-notmuch--finish-search-process process)
+        (when (and
+               (eq kind 'search)
+               (emacsvox-notmuch--search-buffer-focused-p (current-buffer)))
+          (emacsvox-notmuch--announce-search-start))))))
+
+(defun emacsvox--advice-notmuch-search-around (original &rest arguments)
+  "Track completion of a user-owned call to `notmuch-search'."
+  (let ((kind (emacsvox-notmuch--search-request-kind)))
+    (prog1 (apply original arguments)
+      (when kind
+        (emacsvox-notmuch--track-search-process kind)))))
+
+(defun emacsvox--advice-notmuch-search-process-sentinel-after (process _event)
+  "Record and announce completion after Notmuch's sentinel for PROCESS."
+  (process-put
+   process emacsvox-notmuch--search-sentinel-finished-property t)
+  (when (memq (process-status process) '(exit signal))
+    (emacsvox-notmuch--finish-search-process process)))
 
 (push
- '(notmuch-search-refresh-view
-   :after emacsvox--advice-notmuch-search-refresh-view-after)
+ '(notmuch-search
+   :around emacsvox--advice-notmuch-search-around)
  emacsvox-notmuch--advice)
 
 (push

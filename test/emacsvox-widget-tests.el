@@ -236,6 +236,41 @@
         (nreverse events)
         '((icon large-movement) (summary nil) line))))))
 
+(ert-deftest emacsvox-widget-buffer-changing-button-defers-to-destination ()
+  "A new buffer owns its feedback without a stale widget summary or nil line."
+  (let ((source (generate-new-buffer " *emacsvox-widget-source*"))
+        (destination
+         (generate-new-buffer " *emacsvox-widget-destination*"))
+        (calls 0)
+        events)
+    (unwind-protect
+        (save-window-excursion
+          (set-window-buffer (selected-window) source)
+          (with-current-buffer source
+            (cl-letf
+                (((symbol-function 'widget-at)
+                  (lambda (_pos)
+                    (and (eq (current-buffer) source) 'source-widget)))
+                 ((symbol-function 'emacsvox-icon)
+                  (lambda (icon) (push (list 'icon icon) events)))
+                 ((symbol-function 'emacsvox-widget-summarize)
+                  (lambda (widget) (push (list 'summary widget) events)))
+                 ((symbol-function 'emacsvox-speak-line)
+                  (lambda (&rest _) (push 'line events))))
+              (should
+               (eq
+                (emacsvox--advice-widget-button-press-around
+                 (lambda (&rest _)
+                   (cl-incf calls)
+                   (switch-to-buffer destination)
+                   'opened)
+                 1)
+                'opened)))))
+      (when (buffer-live-p source) (kill-buffer source))
+      (when (buffer-live-p destination) (kill-buffer destination)))
+    (should (= calls 1))
+    (should-not events)))
+
 (ert-deftest emacsvox-widget-button-without-widget-runs-quietly-once ()
   "Activation without a widget calls the original once without feedback."
   (let ((calls 0)

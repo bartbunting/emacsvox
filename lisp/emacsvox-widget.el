@@ -550,7 +550,8 @@ Returns a string with appropriate personality."
 
 (defun emacsvox--advice-widget-button-press-around
     (original pos &rest arguments)
-  "speak"
+  "Present same-buffer widget activation around ORIGINAL at POS.
+Destination-specific feedback owns activation that changes buffers."
   (let ((inhibit-read-only t)
         (widget (widget-at pos)))
     (cond
@@ -563,9 +564,11 @@ Returns a string with appropriate personality."
       (call-interactively 'emacsvox-we-url-expand-and-execute)
       nil)
      (t
-      (let ((old-position (point))
+      (let ((old-buffer (current-buffer))
+            (old-position (point))
             (result (apply original pos arguments)))
         (cond
+         ((not (eq old-buffer (current-buffer))))
          ((= old-position (point))
           (emacsvox-icon 'button)
           (emacsvox-widget-summarize (widget-at pos)))

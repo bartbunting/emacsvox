@@ -22,6 +22,37 @@
     (funcall record (list 'speak (substring-no-properties content)))
     'submission))
 
+(cl-defmacro emacsvox-notmuch-test--with-fake-search-process
+    ((process buffer properties status exit-status) &rest body)
+  "Run BODY with PROCESS backed by mutable PROPERTIES for BUFFER.
+STATUS and EXIT-STATUS supply its terminal state."
+  (declare (indent 1) (debug t))
+  `(cl-letf
+       (((symbol-function 'get-buffer-process)
+         (lambda (&optional target)
+           (when (or (null target) (eq target ,buffer)) ,process)))
+        ((symbol-function 'process-get)
+         (lambda (_process property)
+           (alist-get property ,properties)))
+        ((symbol-function 'process-put)
+         (lambda (_process property value)
+           (setf (alist-get property ,properties) value)))
+        ((symbol-function 'process-buffer)
+         (lambda (_process) ,buffer))
+        ((symbol-function 'process-status)
+         (lambda (_process) ,status))
+        ((symbol-function 'process-exit-status)
+         (lambda (_process) ,exit-status)))
+     ,@body))
+
+(defun emacsvox-notmuch-test--insert-search-result (label result)
+  "Insert a search row named LABEL carrying structured RESULT.
+Return the beginning of the inserted row."
+  (let ((start (point)))
+    (insert label "\n")
+    (put-text-property start (point) 'notmuch-search-result result)
+    start))
+
 (ert-deftest emacsvox-notmuch-advice-is-current-and-direct ()
   "Current Notmuch targets use native advice directly."
   (dolist (entry emacsvox-notmuch--advice)
@@ -1948,116 +1979,383 @@
          (plist-get (cdr captured) :compatibility-actions))
         (list (nth 1 case) 'mail-unread 'mark-object))))))
 
-(ert-deftest emacsvox-notmuch-refresh-marks-its-search-process ()
-  "Interactive single-buffer refresh requests completion feedback."
-  (let ((ems--interactive-fn-name 'notmuch-search-refresh-view)
-        (this-command 'notmuch-search-refresh-view)
-        events)
-    (cl-letf (((symbol-function 'get-buffer-process)
-               (lambda (_buffer) 'process))
-              ((symbol-function 'process-put)
-               (lambda (process property value)
-                 (push (list process property value) events)))
-              ((symbol-function 'process-live-p) (lambda (_process) t)))
-      (emacsvox--advice-notmuch-search-refresh-view-after))
-    (should
-     (equal
-      events
-      `((process ,emacsvox-notmuch--refresh-process-property t))))))
+(ert-deftest emacsvox-notmuch-search-completion-style-is-customizable ()
+  "Search completion defaults to the approved interaction-aware policy."
+  (should (custom-variable-p 'emacsvox-notmuch-search-completion-style))
+  (should (eq (default-value 'emacsvox-notmuch-search-completion-style)
+              'adaptive)))
 
-(ert-deftest emacsvox-notmuch-refresh-all-remains-silent ()
-  "The command for silently refreshing every buffer requests no feedback."
-  (let ((ems--interactive-fn-name 'notmuch-search-refresh-view)
-        (this-command 'notmuch-refresh-all-buffers)
-        marked)
-    (cl-letf (((symbol-function 'emacsvox-notmuch--mark-refresh-process)
-               (lambda () (setq marked t))))
-      (emacsvox--advice-notmuch-search-refresh-view-after))
-    (should-not marked)))
+(ert-deftest emacsvox-notmuch-search-identifies-user-owned-entry-paths ()
+  "Direct, Hello, filter, toggle, and refresh searches retain their owner."
+  (dolist
+      (case
+       '((notmuch-search notmuch-search search)
+         (widget-button-press widget-button-press search)
+         (notmuch-search-filter notmuch-search-filter search)
+         (notmuch-search-toggle-order notmuch-search-toggle-order search)
+         (notmuch-search-refresh-view notmuch-search-refresh-view refresh)
+         (notmuch-refresh-this-buffer notmuch-refresh-this-buffer refresh)
+         (nil nil nil)
+         (notmuch-refresh-all-buffers notmuch-refresh-all-buffers nil)
+         (notmuch-search-refresh-view notmuch-refresh-all-buffers nil)))
+    (let ((ems--interactive-fn-name (nth 0 case))
+          (this-command (nth 1 case)))
+      (should (eq (emacsvox-notmuch--search-request-kind) (nth 2 case))))))
 
-(ert-deftest emacsvox-notmuch-refresh-announces-after-process-exit ()
-  "A marked successful process reports its final structured-result count."
-  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-refresh-test*"))
+(ert-deftest emacsvox-notmuch-delayed-search-defers-result-presentation ()
+  "A running search gets a progress cue without premature empty speech."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-running-test*"))
+        properties events)
+    (unwind-protect
+        (save-window-excursion
+          (set-window-buffer (selected-window) buffer)
+          (with-current-buffer buffer
+            (emacsvox-notmuch-test--with-fake-search-process
+                ('process buffer properties 'run 0)
+              (cl-letf
+                  (((symbol-function 'emacsvox-aural-submit-actions)
+                    (lambda (&rest arguments)
+                      (push
+                       (mapcar
+                        #'emacsvox-aural-compatibility-action-value
+                        (plist-get arguments :compatibility-actions))
+                       events)
+                      'submission))
+                   ((symbol-function 'emacsvox-aural-submit)
+                    (lambda (&rest _)
+                      (ert-fail "Search spoke content before it completed")))
+                   ((symbol-function 'tts-notify)
+                    (lambda (&rest _)
+                      (ert-fail "Search notified before it completed"))))
+                (let ((ems--interactive-fn-name 'notmuch-search)
+                      (this-command 'notmuch-search))
+                  (should
+                   (eq
+                    (emacsvox--advice-notmuch-search-around
+                     (lambda () 'started))
+                    'started))))
+              (should
+               (equal
+                (alist-get
+                 emacsvox-notmuch--search-process-property properties)
+                '(:kind search :interacted nil)))
+              (should (eq emacsvox-notmuch--tracked-search-process 'process))
+              (should
+               (memq #'emacsvox-notmuch--note-search-interaction
+                     pre-command-hook)))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))
+    (should (equal events '((progress))))))
+
+(ert-deftest emacsvox-notmuch-untouched-search-speaks-final-row-and-count ()
+  "A focused untouched search presents complete data once without moving."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-complete-test*"))
+        (properties
+         `((,emacsvox-notmuch--search-process-property
+            . (:kind search :interacted nil))))
+        captured initial-point)
+    (unwind-protect
+        (save-window-excursion
+          (set-window-buffer (selected-window) buffer)
+          (with-current-buffer buffer
+            (setq major-mode 'notmuch-search-mode)
+            (emacsvox-notmuch-test--insert-search-result
+             "First result" (copy-tree emacsvox-notmuch-test--search-result))
+            (emacsvox-notmuch-test--insert-search-result
+             "Second result" '(:thread "two"))
+            (insert "End of search results.\n")
+            (goto-char (point-min))
+            (setq initial-point (point)
+                  emacsvox-notmuch--tracked-search-process 'process)
+            (add-hook
+             'pre-command-hook
+             #'emacsvox-notmuch--note-search-interaction nil t))
+          (emacsvox-notmuch-test--with-fake-search-process
+              ('process buffer properties 'exit 0)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-submit)
+                  (lambda (content &rest arguments)
+                    (push (cons content arguments) captured)
+                    'submission))
+                 ((symbol-function 'tts-notify)
+                  (lambda (&rest _)
+                    (ert-fail "Untouched foreground search used notifications")))
+                 ((symbol-function 'tts-notify-icon)
+                  (lambda (&rest _)
+                    (ert-fail "Untouched foreground search used notifications"))))
+              (emacsvox--advice-notmuch-search-process-sentinel-after
+               'process nil)))
+          (should (= (length captured) 1))
+          (pcase-let ((`(,content . ,arguments) (car captured)))
+            (should
+             (equal
+              (substring-no-properties content)
+              (concat
+               "Search complete, 2 threads\n"
+               "Alice Smith, Bob Jones, Project update, yesterday, "
+               "2 of 5, inbox work")))
+            (should
+             (equal
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions))
+              '(task-done mail-unread mark-object))))
+          (with-current-buffer buffer
+            (should (= (point) initial-point))
+            (should-not emacsvox-notmuch--tracked-search-process)
+            (should-not
+             (memq #'emacsvox-notmuch--note-search-interaction
+                   pre-command-hook)))
+          (should-not
+           (alist-get emacsvox-notmuch--search-process-property properties)))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-notmuch-empty-search-is-explicit-after-completion ()
+  "An untouched empty search reports zero only after its sentinel."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-empty-test*"))
+        (properties
+         `((,emacsvox-notmuch--search-process-property
+            . (:kind search :interacted nil))))
+        captured)
+    (unwind-protect
+        (save-window-excursion
+          (set-window-buffer (selected-window) buffer)
+          (emacsvox-notmuch-test--with-fake-search-process
+              ('process buffer properties 'exit 0)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-submit)
+                  (lambda (content &rest arguments)
+                    (setq captured (cons content arguments))
+                    'submission))
+                 ((symbol-function 'tts-notify)
+                  (lambda (&rest _)
+                    (ert-fail "Focused empty search used notifications"))))
+              (emacsvox--advice-notmuch-search-process-sentinel-after
+               'process nil)))
+          (should (equal (substring-no-properties (car captured))
+                         "Search complete, 0 threads")))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-notmuch-navigation-during-search-gets-summary-only ()
+  "Completion never replays a row after the user navigates streamed results."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-interaction-test*"))
+        (properties
+         `((,emacsvox-notmuch--search-process-property
+            . (:kind search :interacted nil))))
+        events facts second-point)
+    (unwind-protect
+        (save-window-excursion
+          (set-window-buffer (selected-window) buffer)
+          (with-current-buffer buffer
+            (setq major-mode 'notmuch-search-mode)
+            (emacsvox-notmuch-test--insert-search-result
+             "First result" (copy-tree emacsvox-notmuch-test--search-result))
+            (setq second-point
+                  (emacsvox-notmuch-test--insert-search-result
+                   "Second result" '(:thread "two")))
+            (goto-char second-point)
+            (setq emacsvox-notmuch--tracked-search-process 'process)
+            (add-hook
+             'pre-command-hook
+             #'emacsvox-notmuch--note-search-interaction nil t))
+          (emacsvox-notmuch-test--with-fake-search-process
+              ('process buffer properties 'exit 0)
+            (with-current-buffer buffer
+              (emacsvox-notmuch--note-search-interaction))
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-submit)
+                  (lambda (&rest _)
+                    (ert-fail "Interacted search replayed message content")))
+                 ((symbol-function 'tts-notify-icon)
+                  (lambda (icon) (push (list 'icon icon) events)))
+                 ((symbol-function 'tts-notify)
+                  (lambda (text &optional _)
+                    (setq facts (copy-tree emacsvox-aural-submission-facts))
+                    (push (list 'notify text) events))))
+              (emacsvox--advice-notmuch-search-process-sentinel-after
+               'process nil)))
+          (should
+           (equal
+            (nreverse events)
+            '((icon task-done) (notify "Search complete, 2 threads"))))
+          (should
+           (equal
+            facts
+            '(:role mail-view :mail-view-kind search
+              :mail-action-kind search :events (refresh-completed))))
+          (with-current-buffer buffer
+            (should (= (point) second-point))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-notmuch-background-search-notification-is-generic ()
+  "Background completion omits query and message metadata from notifications."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-background-test*"))
         events)
     (unwind-protect
         (progn
           (with-current-buffer buffer
-            (insert "First result\nSecond result\nEnd of search results.\n")
-            (goto-char (point-min))
-            (put-text-property
-             (point-min) (line-beginning-position 2)
-             'notmuch-search-result '(:thread "one"))
-            (put-text-property
-             (line-beginning-position 2) (line-beginning-position 3)
-             'notmuch-search-result '(:thread "two")))
+            (emacsvox-notmuch-test--insert-search-result
+             "First result" (copy-tree emacsvox-notmuch-test--search-result)))
           (cl-letf
-              (((symbol-function 'process-get)
-                (lambda (_process property)
-                  (and
-                   (eq property emacsvox-notmuch--refresh-process-property)
-                   t)))
-               ((symbol-function 'process-put)
-                (lambda (_process property value)
-                  (push (list 'property property value) events)))
-               ((symbol-function 'process-status)
-                (lambda (_process) 'exit))
-               ((symbol-function 'process-exit-status)
-                (lambda (_process) 0))
-               ((symbol-function 'process-buffer)
-                (lambda (_process) buffer))
+              (((symbol-function 'emacsvox-notmuch--search-buffer-focused-p)
+                (lambda (_buffer) nil))
                ((symbol-function 'emacsvox-aural-submit)
-                (emacsvox-test--notmuch-submission-recorder
-                 (lambda (event) (push event events)))))
-            (emacsvox--advice-notmuch-search-process-sentinel-after
-             'process nil)))
-      (kill-buffer buffer))
+                (lambda (&rest _)
+                  (ert-fail "Background completion used primary speech")))
+               ((symbol-function 'tts-notify-icon)
+                (lambda (icon) (push (list 'icon icon) events)))
+               ((symbol-function 'tts-notify)
+                (lambda (text &optional _)
+                  (push (list 'notify text) events))))
+            (emacsvox-notmuch--announce-search-complete
+             '(:kind search :interacted nil) buffer)))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))
     (should
      (equal
       (nreverse events)
-      `((property ,emacsvox-notmuch--refresh-process-property nil)
-        (icon task-done)
-        (speak "Search refreshed, 2 threads"))))))
+      '((icon task-done) (notify "Search complete, 1 thread"))))))
 
-(ert-deftest emacsvox-notmuch-refresh-failure-submits-notification ()
-  "A marked failed refresh submits one warning notification."
-  (let (captured events)
-    (cl-letf
-        (((symbol-function 'process-get)
-          (lambda (_process property)
-            (eq property emacsvox-notmuch--refresh-process-property)))
-         ((symbol-function 'process-put)
-          (lambda (_process property value)
-            (push (list property value) events)))
-         ((symbol-function 'process-status)
-          (lambda (_process) 'signal))
-         ((symbol-function 'process-buffer)
-          (lambda (_process) nil))
-         ((symbol-function 'emacsvox-aural-submit)
-          (lambda (content &rest arguments)
-            (setq captured (cons content arguments))
-            'submission)))
-      (emacsvox--advice-notmuch-search-process-sentinel-after
-       'process nil))
+(ert-deftest emacsvox-notmuch-refresh-announces-on-notification-stream ()
+  "An explicit refresh reports its final count without replaying a row."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-refresh-test*"))
+        (properties
+         `((,emacsvox-notmuch--search-process-property
+            . (:kind refresh :interacted nil))))
+        events)
+    (unwind-protect
+        (progn
+          (with-current-buffer buffer
+            (emacsvox-notmuch-test--insert-search-result
+             "First result" '(:thread "one"))
+            (emacsvox-notmuch-test--insert-search-result
+             "Second result" '(:thread "two")))
+          (emacsvox-notmuch-test--with-fake-search-process
+              ('process buffer properties 'exit 0)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-submit)
+                  (lambda (&rest _)
+                    (ert-fail "Refresh replayed primary row speech")))
+                 ((symbol-function 'tts-notify-icon)
+                  (lambda (icon) (push (list 'icon icon) events)))
+                 ((symbol-function 'tts-notify)
+                  (lambda (text &optional _)
+                    (push (list 'notify text) events))))
+              (emacsvox--advice-notmuch-search-process-sentinel-after
+               'process nil))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))
     (should
      (equal
-      events
-      `((,emacsvox-notmuch--refresh-process-property nil))))
-    (pcase-let* ((`(,content . ,arguments) captured)
-                 (actions
-                  (plist-get arguments :compatibility-actions)))
-      (should (equal content "Search refresh failed"))
-      (should
-       (equal
-        (plist-get arguments :facts)
-        '(:role mail-view :mail-view-kind search
-          :mail-action-kind refresh :events (refresh-failed))))
-      (should (eq (plist-get arguments :module) 'notmuch))
-      (should (eq (plist-get arguments :occasion) 'notification))
-      (should (= (length actions) 1))
-      (should
-       (eq
-        (emacsvox-aural-compatibility-action-value (car actions))
-        'warn-user)))))
+      (nreverse events)
+      '((icon task-done) (notify "Search refreshed, 2 threads"))))))
+
+(ert-deftest emacsvox-notmuch-refresh-all-remains-silent ()
+  "The command for silently refreshing every buffer tracks no process."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-refresh-all-test*"))
+        properties)
+    (unwind-protect
+        (with-current-buffer buffer
+          (emacsvox-notmuch-test--with-fake-search-process
+              ('process buffer properties 'run 0)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-submit-actions)
+                  (lambda (&rest _)
+                    (ert-fail "Global refresh produced feedback"))))
+              (let ((ems--interactive-fn-name 'notmuch-search-refresh-view)
+                    (this-command 'notmuch-refresh-all-buffers))
+                (emacsvox--advice-notmuch-search-around #'ignore))))
+          (should-not
+           (alist-get emacsvox-notmuch--search-process-property properties))
+          (should-not emacsvox-notmuch--tracked-search-process))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-notmuch-fast-search-completes-exactly-once ()
+  "A sentinel that ran before advice marking still produces one completion."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-fast-test*"))
+        (properties
+         `((,emacsvox-notmuch--search-sentinel-finished-property . t)))
+        (emacsvox-notmuch-search-completion-style 'summary)
+        events)
+    (unwind-protect
+        (with-current-buffer buffer
+          (emacsvox-notmuch-test--insert-search-result
+           "First result" '(:thread "one"))
+          (emacsvox-notmuch-test--with-fake-search-process
+              ('process buffer properties 'exit 0)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-submit-actions)
+                  (lambda (&rest _)
+                    (ert-fail "Completed search emitted a progress cue")))
+                 ((symbol-function 'tts-notify-icon)
+                  (lambda (icon) (push (list 'icon icon) events)))
+                 ((symbol-function 'tts-notify)
+                  (lambda (text &optional _)
+                    (push (list 'notify text) events))))
+              (emacsvox-notmuch--track-search-process 'search)
+              (emacsvox--advice-notmuch-search-process-sentinel-after
+               'process nil)))
+          (should-not
+           (alist-get emacsvox-notmuch--search-process-property properties))
+          (should-not emacsvox-notmuch--tracked-search-process)
+          (should-not
+           (memq #'emacsvox-notmuch--note-search-interaction
+                 pre-command-hook)))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))
+    (should
+     (equal
+      (nreverse events)
+      '((icon task-done) (notify "Search complete, 1 thread"))))))
+
+(ert-deftest emacsvox-notmuch-search-completion-cue-and-silent-styles ()
+  "The concise completion styles emit exactly their configured output."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-style-test*")))
+    (unwind-protect
+        (dolist (case '((cue ((icon task-done))) (silent nil)))
+          (let ((emacsvox-notmuch-search-completion-style (car case))
+                events)
+            (cl-letf
+                (((symbol-function 'emacsvox-notmuch--search-buffer-focused-p)
+                  (lambda (_buffer) nil))
+                 ((symbol-function 'tts-notify-icon)
+                  (lambda (icon) (push (list 'icon icon) events)))
+                 ((symbol-function 'tts-notify)
+                  (lambda (text &optional _)
+                    (push (list 'notify text) events))))
+              (emacsvox-notmuch--announce-search-complete
+               '(:kind search :interacted nil) buffer))
+            (should (equal (nreverse events) (nth 1 case)))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-notmuch-refresh-failure-uses-notification-stream ()
+  "Failed user-owned searches warn even when success feedback is silent."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-failure-test*"))
+        (properties
+         `((,emacsvox-notmuch--search-process-property
+            . (:kind refresh :interacted nil))))
+        (emacsvox-notmuch-search-completion-style 'silent)
+        events facts)
+    (unwind-protect
+        (emacsvox-notmuch-test--with-fake-search-process
+            ('process buffer properties 'signal 1)
+          (cl-letf
+              (((symbol-function 'tts-notify-icon)
+                (lambda (icon) (push (list 'icon icon) events)))
+               ((symbol-function 'tts-notify)
+                (lambda (text &optional _)
+                  (setq facts (copy-tree emacsvox-aural-submission-facts))
+                  (push (list 'notify text) events))))
+            (emacsvox--advice-notmuch-search-process-sentinel-after
+             'process nil)))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))
+    (should
+     (equal
+      (nreverse events)
+      '((icon warn-user) (notify "Search refresh failed"))))
+    (should
+     (equal
+      facts
+      '(:role mail-view :mail-view-kind search
+        :mail-action-kind refresh :events (refresh-failed))))
+    (should-not
+     (alist-get emacsvox-notmuch--search-process-property properties))))
 
 (provide 'emacsvox-notmuch-tests)
 ;;; emacsvox-notmuch-tests.el ends here
