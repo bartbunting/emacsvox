@@ -243,5 +243,66 @@
            "@include web-browsing.texi"))
       (should (string-match-p (regexp-quote required) survey)))))
 
+(ert-deftest emacsvox-heritage-owns-standalone-historical-artifacts ()
+  "Standalone essays should be explicit Heritage links with one artifact owner."
+  (let ((heritage
+         (emacsvox-backend-doc-tests--file-string
+          "info/emacsvox-heritage.texi"))
+        (makefile
+         (emacsvox-backend-doc-tests--file-string "info/Makefile"))
+        (directory
+         (emacsvox-backend-doc-tests--file-string "info/dir"))
+        (turning-twenty
+         (emacsvox-backend-doc-tests--file-string
+          "info/inc-turning-twenty.texi"))
+        (root emacsvox-backend-doc-tests--root))
+    (should
+     (string-match-p
+      (regexp-quote
+       "* Introducing Emacspeak: (introducing-emacspeak).  A standalone 2006 essay.")
+      heritage))
+    (should-not
+     (string-match-p "@include introducing-emacspeak\\.texi" heritage))
+    (should
+     (string-match-p
+      (regexp-quote
+       "@ref{Top,Introducing Emacspeak,,introducing-emacspeak}")
+      heritage))
+    (should (string-match-p "^all: info *#" makefile))
+    (should
+     (string-match-p
+      (regexp-quote
+       "heritage-standalone: introducing-emacspeak.info")
+      makefile))
+    (should
+     (string-match-p
+      (regexp-quote
+       "* Introducing Emacspeak: (introducing-emacspeak). Historical standalone 2006 essay")
+      directory))
+    (should
+     (file-regular-p (expand-file-name "html/introducing-emacspeak.html" root)))
+    (should-not
+     (file-exists-p (expand-file-name "info/introducing-emacspeak.html" root)))
+    (should
+     (file-regular-p (expand-file-name "announcements/now-thirty.info" root)))
+    (should-not
+     (file-exists-p (expand-file-name "info/now-thirty.info" root)))
+    (should
+     (file-regular-p
+      (expand-file-name "announcements/turning-twenty.org" root)))
+    (should
+     (file-regular-p (expand-file-name "html/turning-twenty.html" root)))
+    (should-not
+     (file-exists-p (expand-file-name "info/turning-twenty.texi" root)))
+    (should-not
+     (file-exists-p (expand-file-name "info/turning-twenty.info" root)))
+    (dolist
+        (copying-term
+         '("Copyright (C) T. V. Raman"
+           "All Rights Reserved."
+           "Permission is granted to make and distribute verbatim copies"))
+      (should
+       (string-match-p (regexp-quote copying-term) turning-twenty)))))
+
 (provide 'emacsvox-backend-doc-tests)
 ;;; emacsvox-backend-doc-tests.el ends here

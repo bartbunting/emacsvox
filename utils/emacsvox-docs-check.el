@@ -35,8 +35,12 @@
      :html-directory "reference")
     (:name "emacsvox-heritage"
      :source "emacsvox-heritage.texi"
-     :html-directory "heritage"))
-  "Manuals compiled and published by the documentation workflow.")
+     :html-directory "heritage")
+    (:name "introducing-emacspeak"
+     :source "introducing-emacspeak.texi"
+     :html-file "heritage/introducing-emacspeak.html"
+     :external-dir-entry "Introducing Emacspeak"))
+  "Checked Info manuals and retained HTML publications.")
 
 (defconst emacsvox-docs-check--compatibility-redirects
   '((:html-directory "reference"
@@ -238,6 +242,22 @@ ROOT and TEMPORARY-ROOT identify the current checkout and staging directory."
       (format "\\`%s\\.info\\(?:-[0-9]+\\)?\\'" (regexp-quote name)))
      #'string-lessp)))
 
+(defun emacsvox-docs-check--check-external-dir-entry
+    (source-directory manual)
+  "Validate MANUAL's maintained entry in SOURCE-DIRECTORY's Info directory.
+This is for preserved sources that intentionally have no embedded `@direntry'."
+  (let* ((name (plist-get manual :name))
+         (label (plist-get manual :external-dir-entry))
+         (directory-file (expand-file-name "dir" source-directory))
+         (entry-regexp
+          (format "^\\* %s: *(%s)\\."
+                  (regexp-quote label) (regexp-quote name))))
+    (with-temp-buffer
+      (insert-file-contents directory-file)
+      (unless (re-search-forward entry-regexp nil t)
+        (error "%s maintained Info directory entry is missing from %s"
+               name directory-file)))))
+
 (defun emacsvox-docs-check--check-info-manual
     (source-directory output-directory makeinfo install-info manual)
   "Compile and validate one Info MANUAL from SOURCE-DIRECTORY.
@@ -265,11 +285,14 @@ directory entry with INSTALL-INFO."
          (expand-file-name file source-directory)
          (expand-file-name file output-directory)
          (format "Checked Info output %s" file))))
-    (emacsvox-docs-check--run-process
-     (format "%s Info directory validation" name)
-     install-info source-directory
-     "\\`test mode, not updating dir file .+\\'"
-     "--test" output (expand-file-name "dir" source-directory))))
+    (if (plist-get manual :external-dir-entry)
+        (emacsvox-docs-check--check-external-dir-entry
+         source-directory manual)
+      (emacsvox-docs-check--run-process
+       (format "%s Info directory validation" name)
+       install-info source-directory
+       "\\`test mode, not updating dir file .+\\'"
+       "--test" output (expand-file-name "dir" source-directory)))))
 
 (defun emacsvox-docs-check--check-info
     (root temporary-directory makeinfo install-info)
@@ -289,23 +312,37 @@ directory entry with INSTALL-INFO."
   (let* ((name (plist-get manual :name))
          (source (plist-get manual :source))
          (relative-directory (plist-get manual :html-directory))
-         (output-directory
-          (if relative-directory
-              (expand-file-name relative-directory output-root)
-            output-root)))
-    (when (file-exists-p output-directory)
-      (error "%s HTML output already exists: %s" name output-directory))
-    (when relative-directory
-      (make-directory output-root t))
-    (emacsvox-docs-check--run-process
+         (relative-file (plist-get manual :html-file))
+         (output
+          (cond
+           (relative-file (expand-file-name relative-file output-root))
+           (relative-directory
+            (expand-file-name relative-directory output-root))
+           (t output-root))))
+    (when (and relative-directory relative-file)
+      (error "%s specifies both an HTML directory and file" name))
+    (when (and relative-file
+               (not (emacsvox-docs-check--managed-html-name-p relative-file)))
+      (error "%s specifies an unsafe HTML file: %s" name relative-file))
+    (when (file-exists-p output)
+      (error "%s HTML output already exists: %s" name output))
+    (make-directory
+     (if relative-file (file-name-directory output) output-root) t)
+    (apply
+     #'emacsvox-docs-check--run-process
      (format "%s HTML compilation" name) makeinfo source-directory nil
-     "--error-limit=0" "--html"
-     "-c" "HTMLXREF_MODE=file"
-     "-c" (concat "HTMLXREF_FILE=" htmlxref)
-     "--css-ref=https://www.w3.org/StyleSheets/Core/Modernist"
-     (concat "--output=" output-directory) source)
+     (append
+      '("--error-limit=0" "--html")
+      (when relative-file '("--no-split"))
+      (list
+       "-c" "HTMLXREF_MODE=file"
+       "-c" (concat "HTMLXREF_FILE=" htmlxref)
+       "--css-ref=https://www.w3.org/StyleSheets/Core/Modernist"
+       (concat "--output=" output) source)))
     (let ((files
-           (directory-files-recursively output-directory "\\.html\\'")))
+           (if relative-file
+               (list output)
+             (directory-files-recursively output "\\.html\\'"))))
       (dolist (file files)
         (emacsvox-docs-check--normalize-generated-text-file file))
       (mapcar
@@ -375,7 +412,7 @@ directory entry with INSTALL-INFO."
 
 (defun emacsvox-docs-check--compile-html
     (root output-directory makeinfo)
-  "Compile warning-free split HTML manuals for ROOT below OUTPUT-DIRECTORY."
+  "Compile warning-free HTML manuals for ROOT below OUTPUT-DIRECTORY."
   (let ((source-directory (expand-file-name "info" root))
         (htmlxref (expand-file-name "info/htmlxref.cnf" root))
         files)
@@ -390,9 +427,11 @@ directory entry with INSTALL-INFO."
            root output-directory files))
     (dolist (manual emacsvox-docs-check--manuals)
       (let ((entry
-             (if-let* ((directory (plist-get manual :html-directory)))
-                 (concat directory "/index.html")
-               "index.html")))
+             (or
+              (plist-get manual :html-file)
+              (if-let* ((directory (plist-get manual :html-directory)))
+                  (concat directory "/index.html")
+                "index.html"))))
         (unless (member entry files)
           (error "HTML compilation did not produce manual entry point: %s"
                  entry))))

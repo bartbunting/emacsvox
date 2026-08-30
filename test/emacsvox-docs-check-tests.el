@@ -120,6 +120,34 @@
                            message))
           (should (string-match-p "missing-manual" message)))))))
 
+(ert-deftest emacsvox-docs-check-publishes-standalone-html-below-heritage ()
+  "A retained standalone manual should render as one nested HTML file."
+  (let ((makeinfo (executable-find "makeinfo")))
+    (skip-unless makeinfo)
+    (emacsvox-docs-check-tests--with-directory (source)
+      (emacsvox-docs-check-tests--with-directory (output)
+        (let ((texinfo (expand-file-name "standalone.texi" source))
+              (htmlxref (expand-file-name "htmlxref.cnf" source)))
+          (with-temp-file texinfo
+            (insert
+             "\\input texinfo\n"
+             "@setfilename standalone.info\n"
+             "@node Top\n@top Standalone fixture\n@bye\n"))
+          (with-temp-file htmlxref)
+          (should
+           (equal
+            (emacsvox-docs-check--compile-html-manual
+             source output makeinfo htmlxref
+             '(:name "standalone"
+               :source "standalone.texi"
+               :html-file "heritage/standalone.html"))
+            '("heritage/standalone.html")))
+          (should
+           (file-regular-p
+            (expand-file-name "heritage/standalone.html" output)))
+          (should-not
+           (file-exists-p (expand-file-name "heritage/index.html" output))))))))
+
 (ert-deftest emacsvox-docs-check-rejects-personal-generated-paths ()
   "Generated reference output should not expose a builder's home."
   (emacsvox-docs-check-tests--with-directory (directory)

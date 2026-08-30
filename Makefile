@@ -118,7 +118,7 @@ generated-reference: bytecode-check
 # Documentation generation, validation, and publication are deliberately
 # separate.  Neither validation nor publication creates Git commits.
 docs-generate: generated-reference
-	$(MAKE) -C info MAKEINFO="$(MAKEINFO)" all
+	$(MAKE) -C info MAKEINFO="$(MAKEINFO)" all heritage-standalone
 
 docs-check: bytecode-check
 	EMACSVOX_MAKEINFO="$(MAKEINFO)" \

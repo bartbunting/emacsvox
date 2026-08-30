@@ -20,8 +20,15 @@ Emacspeak Heritage
 This manual preserves selected historical Emacspeak essays for context.
 It is not current Emacsvox installation, setup, or operating guidance.
 For the maintained user path, start with the *note Emacsvox User Manual:
-(emacsvox)Top.  Copying terms are in *note Copyright:
-(emacsvox)Copyright.
+(emacsvox)Top.  General copying terms are in *note Copyright:
+(emacsvox)Copyright.; distinct terms for a preserved work appear with
+that work.
+
+   Robert J. Chassell's 2006 essay is available as the standalone
+historical manual *note Introducing Emacspeak:
+(introducing-emacspeak)Top.  Its own copying terms and document
+structure remain intact; it is indexed here rather than merged into this
+manual.
 
 * Menu:
 
@@ -29,6 +36,7 @@ For the maintained user path, start with the *note Emacsvox User Manual:
 * Historical Term Survey: Running Terminal Based Applications.
 * Background::                 Emacspeak's significance and design lessons.
 * Emacspeak At Twenty::       A twenty-year retrospective.
+* Introducing Emacspeak: (introducing-emacspeak).  A standalone 2006 essay.
 * Heritage Concept Index::
 
 
@@ -1499,10 +1507,16 @@ File: emacsvox-heritage.info,  Node: Emacspeak At Twenty,  Next: Heritage Concep
 **********************
 
 This article was originally published to mark the 20th anniversary of
-Emacspeak.  It has been incorporated as the final chapter of the
-Emacspeak manual for easy reference.  The original article is available
-on the Web and in its original source form as an *org* file in the
-emacspeak distribution.
+Emacspeak.  It is incorporated here for easy reference.  The original
+article and its generated historical formats remain preserved under
+‘announcements/’.
+
+     Copyright (C) T. V. Raman All Rights Reserved.
+
+     Permission is granted to make and distribute verbatim copies of
+     this manual without charge provided the copyright notice and this
+     permission notice are preserved on all copies.
+
 * Menu:
 
 * Turning Twenty::
@@ -2300,58 +2314,58 @@ File: emacsvox-heritage.info,  Node: Heritage Concept Index,  Prev: Emacspeak At
 
 Tag Table:
 Node: Top391
-Node: Emacs Packages1085
-Node: Document Authoring2760
-Node: Creating Well-formatted Documents3455
-Node: Search replace and spell check6900
-Node: Structured Editing12103
-Node: Outline Editing14119
-Node: Template-based Authoring17830
-Node: Maintaining Structured Data19461
-Node: Browsing Structure20925
-Node: Web Browsing21362
-Node: Intro22393
-Node: emacs-w324813
-Ref: w3 transcode33987
-Ref: xsl-transform36347
-Node: Add-ons40526
-Ref: emacsvox url template40745
-Ref: rss41773
-Ref: bmk-mgr43278
-Node: Conclusion43946
-Node: Messaging44746
-Node: Editing Code45463
-Node: Development Environment46437
-Node: Desktop Management46990
-Node: Personal Information Management47767
-Node: Desktop Applications48123
-Node: Running Terminal Based Applications54858
-Node: Background63766
-Node: Speech-Enabling Applications64554
-Node: Audio Formatting And Aural CSS66060
-Node: Auditory Icons67251
-Node: Summary67960
-Node: Emacspeak At Twenty68456
-Node: Turning Twenty70163
-Node: Using UNIX With Speech Output --- 199470857
-Node: Key Enabler --- Emacs And Lisp Advice72693
-Node: Key Component --- Text To Speech (TTS)73739
-Node: Emacspeak And Software Development76285
-Node: Programming Defensively78894
-Node: Emacspeak And Authoring Documents80156
-Node: Emacspeak And The Early Days Of The Web81733
-Node: Audio Formatting --- Generalizing Aural CSS85176
-Node: Conversational Gestures For The Audio Desktop88238
-Node: Speech-Enabling Interactive Games91587
-Node: Accessing Media Streams93367
-Node: EBooks --- Ubiquitous Access To Books95466
-Node: Leveraging Computational Tools --- From SQL And R To IPython Notebooks98005
-Node: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols99868
-Node: The RESTful Web --- Web Wizards And URL Templates For Faster Access103347
-Node: Mashing It Up --- Leveraging Evolving Web APIs106885
-Node: Conclusion --- Turning Twenty109391
-Node: References110772
-Node: Heritage Concept Index111708
+Node: Emacs Packages1488
+Node: Document Authoring3163
+Node: Creating Well-formatted Documents3858
+Node: Search replace and spell check7303
+Node: Structured Editing12506
+Node: Outline Editing14522
+Node: Template-based Authoring18233
+Node: Maintaining Structured Data19864
+Node: Browsing Structure21328
+Node: Web Browsing21765
+Node: Intro22796
+Node: emacs-w325216
+Ref: w3 transcode34390
+Ref: xsl-transform36750
+Node: Add-ons40929
+Ref: emacsvox url template41148
+Ref: rss42176
+Ref: bmk-mgr43681
+Node: Conclusion44349
+Node: Messaging45149
+Node: Editing Code45866
+Node: Development Environment46840
+Node: Desktop Management47393
+Node: Personal Information Management48170
+Node: Desktop Applications48526
+Node: Running Terminal Based Applications55261
+Node: Background64169
+Node: Speech-Enabling Applications64957
+Node: Audio Formatting And Aural CSS66463
+Node: Auditory Icons67654
+Node: Summary68363
+Node: Emacspeak At Twenty68859
+Node: Turning Twenty70745
+Node: Using UNIX With Speech Output --- 199471439
+Node: Key Enabler --- Emacs And Lisp Advice73275
+Node: Key Component --- Text To Speech (TTS)74321
+Node: Emacspeak And Software Development76867
+Node: Programming Defensively79476
+Node: Emacspeak And Authoring Documents80738
+Node: Emacspeak And The Early Days Of The Web82315
+Node: Audio Formatting --- Generalizing Aural CSS85758
+Node: Conversational Gestures For The Audio Desktop88820
+Node: Speech-Enabling Interactive Games92169
+Node: Accessing Media Streams93949
+Node: EBooks --- Ubiquitous Access To Books96048
+Node: Leveraging Computational Tools --- From SQL And R To IPython Notebooks98587
+Node: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols100450
+Node: The RESTful Web --- Web Wizards And URL Templates For Faster Access103929
+Node: Mashing It Up --- Leveraging Evolving Web APIs107467
+Node: Conclusion --- Turning Twenty109973
+Node: References111354
+Node: Heritage Concept Index112290
 
 End Tag Table
 

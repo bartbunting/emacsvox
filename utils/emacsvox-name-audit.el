@@ -31,8 +31,6 @@
     "info/emacspeak-significance"
     "info/inc-turning-twenty"
     "info/introducing-emacspeak"
-    "info/now-thirty"
-    "info/turning-twenty"
     "info/tutorial."
     "test/golden/"
     "tvr/not-used/")

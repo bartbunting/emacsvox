@@ -34,14 +34,21 @@ This manual preserves selected historical Emacspeak essays for context.  It is
 not current Emacsvox installation, setup, or operating guidance.  For the
 maintained user path, start with the
 @ref{Top,Emacsvox User Manual,,emacsvox,Emacsvox User Manual}.
-Copying terms are in
-@ref{Copyright,Copyright,,emacsvox,Emacsvox User Manual}.
+General copying terms are in
+@ref{Copyright,Copyright,,emacsvox,Emacsvox User Manual}; distinct terms for a
+preserved work appear with that work.
+
+Robert J. Chassell's 2006 essay is available as the standalone historical
+manual @ref{Top,Introducing Emacspeak,,introducing-emacspeak}.  Its own copying
+terms and document structure remain intact; it is indexed here rather than
+merged into this manual.
 
 @menu
 * Historical Application Survey: Emacs Packages.
 * Historical Term Survey: Running Terminal Based Applications.
 * Background::                 Emacspeak's significance and design lessons.
 * Emacspeak At Twenty::       A twenty-year retrospective.
+* Introducing Emacspeak: (introducing-emacspeak).  A standalone 2006 essay.
 * Heritage Concept Index::
 @end menu
 

@@ -1,14 +1,23 @@
-@c do not edit directly -- 
-@c generate turning-twenty.texi from the org file, then prune headers.
+@c Integrated Heritage edition derived from announcements/turning-twenty.org.
+@c The original source and generated historical artifacts remain in the archive.
 
 @node Emacspeak At Twenty 
 @chapter Emacspeak At Twenty.
 
 This article was originally published to mark the 20th anniversary of
-Emacspeak. It has been incorporated as the final chapter of the
-Emacspeak manual for easy reference. The original article 
-is available on the Web and in its original source form as an *org* file
-in the emacspeak distribution.
+Emacspeak.  It is incorporated here for easy reference.  The original article
+and its generated historical formats remain preserved under
+@file{announcements/}.
+
+@quotation
+Copyright (C) T. V. Raman
+All Rights Reserved.
+
+Permission is granted to make and distribute verbatim copies of this
+manual without charge provided the copyright notice and this permission
+notice are preserved on all copies.
+@end quotation
+
 @menu
 * Turning Twenty::
 * Using UNIX With Speech Output  ---   1994: Using UNIX With Speech Output  ---  1994. 
@@ -806,5 +815,3 @@ EWW   Emacspeak  @url{http://emacspeak.blogspot.com/2014/05/emacspeak-eww-update
 @end itemize
 
 @c Emacs 24.4.50.1 (Org mode 8.2.6)
-
-

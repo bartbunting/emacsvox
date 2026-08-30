@@ -21,9 +21,15 @@ INCLUDES= $(USER_INCLUDES) $(REFERENCE_INCLUDES) $(HERITAGE_INCLUDES)
 MAKEINFO ?= makeinfo
 NORMALIZE_INFO = perl -0777 -pi -e 's/[ \t]+$$//mg; s/\n+\z/\n/'
 
-all: info introducing-emacspeak.info turning-twenty.info #emacsvox.pdf
+.PHONY: all info heritage-standalone heritage-html
+
+all: info #emacsvox.pdf
 
 info: emacsvox.info emacsvox-reference.info emacsvox-heritage.info
+
+# The retained standalone historical manual is a checked artifact, but it is
+# not part of the current-manual default build.
+heritage-standalone: introducing-emacspeak.info
 
 emacsvox.info: emacsvox.texi $(USER_INCLUDES)
 	@set -eu; \
@@ -62,12 +68,9 @@ emacsvox-heritage.info: emacsvox-heritage.texi $(HERITAGE_INCLUDES)
 		done
 
 introducing-emacspeak.info: introducing-emacspeak.texi
-	$(MAKEINFO) introducing-emacspeak.texi	
+	$(MAKEINFO) --output=$@ $<
 	$(NORMALIZE_INFO) introducing-emacspeak.info
 
-turning-twenty.info: turning-twenty.texi
-	$(MAKEINFO) turning-twenty.texi
-	$(NORMALIZE_INFO) turning-twenty.info
 pdf:
 	@if test -z "$(GH_PAGES)"; then \
 		echo "Set GH_PAGES to an existing publication directory." >&2; \
@@ -91,11 +94,13 @@ man:
 
 publish: man
 
-introducing-emacspeak.html: introducing-emacspeak.texi
-	$(MAKEINFO) --no-split --html introducing-emacspeak.texi
+heritage-html: ../html/introducing-emacspeak.html
+
+../html/introducing-emacspeak.html: introducing-emacspeak.texi
+	$(MAKEINFO) --no-split --html --output=$@ $<
 # Historical Emacspeak SourceForge publication target.
-pub:  html/index.html introducing-emacspeak.html
-	rsync introducing-emacspeak.html ${SF_HOME}
+pub:  html/index.html ../html/introducing-emacspeak.html
+	rsync ../html/introducing-emacspeak.html ${SF_HOME}
 	rsync -avz  html ${SF_HOME}/info/
 
 
