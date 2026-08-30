@@ -454,39 +454,6 @@ byte-code, Aural rules, sound resources, or the backend appear wrong.  Use
 presentation submitted for a Notmuch action.  These diagnostics do not query
 or modify the mail database.
 
-For a source checkout, use the Emacs selected by ~local.mk~.  Run
-~make check-emacs~ before diagnosing compilation, ~make bytecode~
-after an ordinary integration edit, and ~make bytecode-rebuild~ after a
-branch switch or a macro or public-interface change.  A fresh Emacs must load
-the rebuilt byte-code before live verification.
-
-** Integration contracts for maintainers
-:PROPERTIES:
-:TEXINFO_NODE: no
-:END:
-
-#+cindex: Notmuch integration maintenance
-
-The live module is registered as an optional package integration.  Its stable
-extension points are the Hello, Search, Show, and Tree mode hooks; Search and
-Show mode maps; public interactive commands; and public Search/Show accessors.
-Advice is installed only when a target exists and is target-aware, so a nested
-or programmatic upstream call does not claim the outer user's feedback.
-
-The Show landing and visibility paths also read renderer metadata such as
-~:headers-overlay~, ~:message-visible~, message extents,
-~:notmuch-part~, part-hidden state, and Notmuch part-button types.  Missing
-optional metadata should reduce presentation detail rather than authorize an
-operation.  Review these adapters whenever the Notmuch renderer changes.
-
-Each user-owned asynchronous Search process carries its own completion state
-as a process property.  The upstream sentinel renders first; Emacsvox then
-clears that property before delivering exactly one terminal result.  The
-owning buffer and process status are authoritative.  A killed owner remains
-silent, concurrent buffers cannot overwrite one another, and the global
-refresh-all path intentionally acquires no ownership.
-
-Run ~make notmuch-test~ for the explicit source suite.  After current
-byte-code exists, run ~make compiled-notmuch-test~; it verifies the exact
-loaded ~emacsvox-notmuch.elc~, compiler version, and the same focused
-selector, including real displayed-window reading for both advance paths.
+If you are changing the integration rather than using it, see
+@@texinfo:@ref{Integration Maintenance}@@ for the build, test, renderer, and
+asynchronous lifecycle contracts.

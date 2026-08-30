@@ -56,12 +56,14 @@ Exact generated reference:
 
 Additional current material:
 * Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
-* TTS Servers:  TTS Servers.
 
 Project information:
 * Manual Provenance: Announce.
 * Copying: Copyright.
 * Acknowledgments: Acknowledgments.
+
+Developer and maintainer guide:
+* Developer And Maintainer Guide: Developer Guide.
 
 Heritage (not current operating guidance):
 * Emacspeak Heritage: (emacsvox-heritage).
@@ -1008,11 +1010,9 @@ Windows-local directory so native voice and eSpeak data discovery do not
 pay the WSL filesystem cost.  Optional proprietary Eloquence and DECtalk
 runtimes are not downloaded or distributed.
 
-   Maintainers testing tracked changes may use ‘make
-windows-omnivox-dev’.  That target records both worktree-diff hashes and
-labels the result as a development build; it is not the clean release
-procedure.  See ‘servers/omnivox-release/README.org’ for the pinned
-toolchain, licensing, provenance, and restaging contract.
+   Maintainers testing tracked changes should use the development route
+in *note Integration Maintenance:: rather than weakening the
+clean-release guard.
 
 
 File: emacsvox.info,  Node: Selecting And Checking Omnivox,  Next: Compatibility Speech Servers,  Prev: Building Omnivox For WSL2,  Up: Speech Backends
@@ -2479,42 +2479,9 @@ wrong.  Use ‘M-x emacsvox-aural-list-recent-feedback’ to inspect the
 exact bounded presentation submitted for a Notmuch action.  These
 diagnostics do not query or modify the mail database.
 
-   For a source checkout, use the Emacs selected by ‘local.mk’.  Run
-‘make check-emacs’ before diagnosing compilation, ‘make bytecode’ after
-an ordinary integration edit, and ‘make bytecode-rebuild’ after a branch
-switch or a macro or public-interface change.  A fresh Emacs must load
-the rebuilt byte-code before live verification.
-
-9.9 Integration contracts for maintainers
-=========================================
-
-The live module is registered as an optional package integration.  Its
-stable extension points are the Hello, Search, Show, and Tree mode
-hooks; Search and Show mode maps; public interactive commands; and
-public Search/Show accessors.  Advice is installed only when a target
-exists and is target-aware, so a nested or programmatic upstream call
-does not claim the outer user's feedback.
-
-   The Show landing and visibility paths also read renderer metadata
-such as ‘:headers-overlay’, ‘:message-visible’, message extents,
-‘:notmuch-part’, part-hidden state, and Notmuch part-button types.
-Missing optional metadata should reduce presentation detail rather than
-authorize an operation.  Review these adapters whenever the Notmuch
-renderer changes.
-
-   Each user-owned asynchronous Search process carries its own
-completion state as a process property.  The upstream sentinel renders
-first; Emacsvox then clears that property before delivering exactly one
-terminal result.  The owning buffer and process status are
-authoritative.  A killed owner remains silent, concurrent buffers cannot
-overwrite one another, and the global refresh-all path intentionally
-acquires no ownership.
-
-   Run ‘make notmuch-test’ for the explicit source suite.  After current
-byte-code exists, run ‘make compiled-notmuch-test’; it verifies the
-exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
-focused selector, including real displayed-window reading for both
-advance paths.
+   If you are changing the integration rather than using it, see *note
+Integration Maintenance:: for the build, test, renderer, and
+asynchronous lifecycle contracts.
 
 
 File: emacsvox.info,  Node: Agent Shell,  Next: EAT Terminal Access,  Prev: Notmuch Mail,  Up: Top
@@ -2742,52 +2709,12 @@ the provider's details and edit the live prompt before resubmitting.
 
    Use ‘M-x agent-shell-restart’ when Agent Shell itself needs a fresh
 process for the same project.  Use ‘M-x emacsvox-agent-shell-enable’ to
-reinstall speech hooks after deliberately disabling them or during live
-integration development.  Neither recovery command discards transcript
-files or project work.
+reinstall speech hooks after deliberately disabling them.  Neither
+recovery command discards transcript files or project work.
 
-10.9 Integration ownership for maintainers
-==========================================
-
-The integration uses three deliberately different contract layers:
-
-Layer         Agent Shell owner           Emacsvox rule
----------------------------------------------------------------------------
-Public        ‘agent-shell-subscribe-to’, Primary authority for
-structured    ‘agent-shell-unsubscribe’,  processing, completion,
-API           ‘agent-shell-status’, and   errors, permission urgency,
-              ‘agent-shell-shell-buffer’; and tool status.  The public
-              lifecycle, permission,      turn boundary triggers
-              and tool events             inspection of renderer-owned
-                                          response sections.  Event and
-                                          response data is treated as
-                                          untrusted content and bounded
-                                          before automatic Aural
-                                          submission.
-Experimental  ‘agent-shell-ui-state’,     Feature-detected navigation
-renderer      ‘agent-shell-ui-section’,   and presentation input.
-metadata      rendered Markdown           Renderer group provenance
-              table/source properties,    outranks provider-controlled
-              and renderer-owned faces    IDs; prose and IDs cannot
-                                          manufacture structured
-                                          permission or lifecycle
-                                          authority.
-Private       The aggregate               Kept in narrow adapter
-compatibility ‘agent-shell--state’, the   functions for older Agent
-fallback      legacy viewport ownership   Shell releases or incomplete
-              resolver, viewport          renderers.  A missing optional
-              position helpers, and       detail may reduce header or
-              legacy face, prompt, or     navigation richness but must
-              ID inference                not create a permission action
-                                          or completed response.
-
-   The lifecycle subscription currently consumes ‘init-started’,
-‘init-finished’, ‘session-selected’, ‘session-restored’,
-‘input-submitted’, ‘turn-complete’, and ‘error’.  Dedicated
-subscriptions consume ‘permission-request’, ‘permission-response’, and
-‘tool-call-update’.  Add new semantic behavior at the public event layer
-when Agent Shell exposes it; keep renderer and private fallbacks
-isolated and covered by compatibility tests.
+   If you are changing the integration rather than using it, see *note
+Integration Maintenance:: for its public event, renderer, and
+compatibility contracts.
 
 
 File: emacsvox.info,  Node: EAT Terminal Access,  Next: Running Terminal Based Applications,  Prev: Agent Shell,  Up: Top
@@ -3323,7 +3250,7 @@ File: emacsvox.info,  Node: Term Help And Recovery,  Prev: Reviewing The Term Sc
      EAT's explicit review commands.
 
 
-File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: TTS Servers,  Prev: Running Terminal Based Applications,  Up: Top
+File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Announce,  Prev: Running Terminal Based Applications,  Up: Top
 
 13 Emacsvox Keyboard Commands.
 ******************************
@@ -3360,298 +3287,9 @@ session.  Check customizations first, then compare the generated
 defaults in the *note (emacsvox-reference)Emacsvox Keymaps::.
 
 
-File: emacsvox.info,  Node: TTS Servers,  Next: Announce,  Prev: Emacsvox Keyboard Commands,  Up: Top
+File: emacsvox.info,  Node: Announce,  Next: Copyright,  Prev: Emacsvox Keyboard Commands,  Up: Top
 
-14 Speech Server Protocols
-**************************
-
-Emacsvox produces spoken output by communicating with one of several
-speech servers.  Two protocol families coexist:
-
-   • The legacy command-and-queue line protocol is implemented by
-     standalone Tcl servers and retained by Omnivox for compatibility.
-
-   • Capability-negotiated Omnivox control, marker, logical-voice, and
-     structured presentation protocols carry bounded JSON records beside
-     that legacy stream.
-
-   This chapter is primarily for speech-server and client developers.
-The detailed Omnivox contracts are owned by the Omnivox repository; this
-manual summarizes their relationship to Emacsvox and then documents the
-legacy line protocol.
-
-   For additional notes on how to log and view TTS server commands when
-developing a speech server, see the historical Emacspeak article at
-<http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html>.
-
-14.1 Omnivox Structured Protocol
-================================
-
-At process startup the Emacsvox adapter requests capabilities and live
-engine inventory.  Features are used only after negotiation; an older
-server continues on the legacy path.  Current Emacsvox requires
-‘presentation_timeline_v3’ before it submits an Aural Presentation as a
-structured timeline.
-
-   A complete timeline contains its delivery policy, replacement domain,
-generation, dispatch ID, speech spans, and positioned actions.  Small
-timelines use one bounded frame; large timelines use a bounded multipart
-envelope that is validated and admitted atomically.  Decodable rejected
-or stale direct timelines receive terminal status so Emacs callbacks can
-retire their dispatch records.
-
-   ‘ordered’ and ‘urgent’ timelines are admitted immediately.  Only
-matching ‘replaceable’ work uses the short server-side coalescing
-window.  Receipt of a newer valid replaceable generation immediately
-cancels queued, synthesizing, and buffered work in the same replacement
-domain.  It does not globally stop ordered, urgent, legacy, or
-differently keyed output.
-
-   Marker events distinguish dispatch admission, synthesis, playback
-start, positioned markers, and terminal completion.  Playback markers
-track mixer source consumption and may precede physical sound by the
-output device's buffer latency; a protocol write or terminal callback is
-therefore not proof of acoustic onset.
-
-   The canonical protocol documents are:
-
-   • Omnivox Control Protocol
-     (https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md)
-
-   • Omnivox Presentation Timeline Protocol
-     (https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md)
-
-   • Omnivox Helper Protocol
-     (https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md)
-
-14.2 Legacy Line Protocol
-=========================
-
-The TTS server reads commands from standard input.  Script
-*speech-server* can be used to cause a TTS server to communicate via a
-TCP socket.  Speech server commands are used by the client application
-to make specific requests of the server; the server listens for these
-requests in a non-blocking read-eval-print (REPL) loop and executes
-requests as they become available.  Requests can be classified as
-follows:
-
-   • Commands that send text to be spoken.
-
-   • Commands that set *state* of the TTS server.
-
-   All commands are of the form
-
-     commandWord {arguments}
-
-   The braces are optional if the command argument contains no white
-space.  The speech server maintains a *current state* that determines
-various characteristics of spoken output such as speech rate,
-punctuations mode etc.  (see set of commands that manipulate speech
-state for complete list).  The client application *queues* The text and
-non-speech audio output to be produced before asking the server to
-*dispatch* the set of queued requests, i.e.  start producing output.
-
-   Once the server has been asked to produce output, it removes items
-from the front of the queue, sends the requisite commands to the
-underlying TTS engine, and waits for the engine to acknowledge that the
-request has been completely processed.  This is a non-blocking
-operation, i.e., if the client application generates additional
-requests, these are processed *immediately*.
-
-   This design allows a legacy Emacsvox TTS server to be *highly*
-responsive; Client applications can queue large amounts of text
-(typically queued a clause at a time to achieve the best prosody), ask
-the TTS server to start speaking, and interrupt the spoken output at any
-time.
-
-14.2.1 Testing A Direct Legacy Server
--------------------------------------
-
-This protocol-level test is only for a retained direct Tcl-compatible
-server.  Run its launcher from the Emacsvox repository root, for
-example:
-
-     ./servers/espeak
-
-   Then enter:
-
-     q {This is a test.}
-     d
-     s
-
-   The ‘q’ command queues text, ‘d’ dispatches it, and ‘s’ stops speech.
-Type ‘C-d’ to close the server.  A backend-specific README may provide a
-stronger diagnostic and should take precedence over this generic
-protocol test.
-
-14.2.2 Commands That Queue Output.
-----------------------------------
-
-This section documents commands that either produce spoken output, or
-queue output to be produced on demand.  Commands that place the request
-on the queue are clearly marked.
-
-     version
-
-   Speaks the *version* of the TTS engine.  Produces output immediately.
-
-     tts_say text
-
-   Speaks the specified *text* immediately.  The text is not
-pre-processed in any way, contrast this with the primary way of speaking
-text which is to queue text before asking the server to process the
-queue.
-
-   Note that this command needs to handle the special syntax for
-morpheme boundaries ‘[*]’.  The ‘[*]’ syntax is specific to the Dectalk
-family of synthesizers; servers for other TTS engines need to map this
-pattern to the engine-specific code for each engine.  As an example, see
-‘servers/outloud’ A morpheme boundary results in synthesizing compound
-words such as *left bracket* with the right intonation; using a space
-would result in that phrase being synthesized as two separate words.
-
-     l c
-
-   Speak *c* a single character, as a letter.  The character is spoken
-immediately.  This command uses the TTS engine's capability to speak a
-single character with the ability to flush speech *immediately*.  Client
-applications wishing to produce character-at-a-time output, e.g., when
-providing character echo during keyboard input should use this command.
-
-     d
-
-   This command is used to *dispatch* all queued requests.  It was
-renamed to a single character command (like many of the commonly used
-TTS server commands) to work more effectively over slow (9600) dialup
-lines.  The effect of calling this command is for the TTS server to
-start processing items that have been queued via earlier requests.
-
-     s
-
-   Stop speech *immediately*.  Spoken output is interrupted, and all
-pending requests are flushed from the queue.
-
-     q text
-
-   Queues text to be spoken.  No spoken output is produced until a
-*dispatch* request is received via execution of command *d*.
-
-     c codes
-
-   Queues synthesis codes to be sent to the TTS engine.  Codes are sent
-to the engine with no further transformation or processing.  The codes
-are inserted into the output queue and will be dispatched to the TTS
-engine at the appropriate point in the output stream.
-
-     a filename
-
-   Cues the audio file identified by filename for playing, an ‘ogg’
-file.
-
-     p filename
-
-   *dispatch* play the audio file identified by filename for playing --
-‘ogg’ file.
-
-     t freq length
-
-   Queues a tone to be played at the specified frequency and having the
-specified length.  Frequency is specified in hertz and length is
-specified in milliseconds.
-
-     sh duration
-
-   Queues the specified duration of silence.  Silence is specified in
-milliseconds.
-
-14.2.3 Commands That Set State
-------------------------------
-
-     tts_reset
-
-   *Immediately* reset TTS engine to default settings.  Stops all speech
-and clears the queue.
-
-     tts_set_punctuations mode
-
-   Queues setting TTS engine to the specified punctuation mode.
-Typically, TTS servers provide at least three modes:
-
-   • None: Do not speak punctuation characters.
-
-   • Some: Speak some punctuation characters.  Used for English prose.
-
-   • All: Speak out *all* punctuation characters; useful in programming
-     modes.
-
-     tts_set_speech_rate rate
-
-   *Immediately* change speech rate.  The interpretation of this value
-is typically engine specific.
-
-     tts_set_character_scale factor
-
-   Queues changing the scale factor.  Scale factor applied to speech
-rate when speaking individual characters.Thus, setting speech rate to
-500 and character scale to 1.2 will cause command *l* to use a speech
-rate of *500 * 1.2 = 600*.
-
-     tts_split_caps flag
-
-   Queues changing of the state of *split caps* processing.  Turn this
-on to speak mixed-case (AKA Camel Case) identifiers.
-
-     tts_sync_state punct splitcaps caps rate
-
-   *Immediately* apply the passed settings.
-
-   This ensures *atomicity* i.e., all state settings in the TTS engine
-happen at one shot.  Note that failure to do this might result in some
-utterances being spoken with a partially set state.
-
-   • punct: see tts_set_punctuations
-
-   • splitcaps: see tts_split_caps
-
-   • caps: engine specific implementation of capital letter handling
-
-   • rate: see tts_set_speech_rate
-
-     set_next_lang say_it
-
-   *Immediately* switch to the next language on the server, maintained
-internally on the TTS server.  If say_it is non-nil say the language
-change via the TTS.
-
-     set_previous_lang say_it
-
-   *Immediately* switch to the previous language on the server,
-maintained internally on the TTS server.  If say_it is non-nil say the
-language change via the TTS.
-
-     set_lang language:voice say_it
-
-   *Immediately* switch to the requested language and/or voice,
-separated by a colon.  Examples
-
-   • set_lang "en"
-
-   • set_lang "en:whisper"
-
-   • set_lang ":whisper"
-
-   If say_it is non-nil, speak via the TTS the language and voice
-selected.
-
-     set_preferred_lang alias lang
-
-   *Immediately* set an alias in the TTS server mapping for example "en"
-to "en_GB". This can later be used by set_lang.
-
-
-File: emacsvox.info,  Node: Announce,  Next: Copyright,  Prev: TTS Servers,  Up: Top
-
-15 Manual Provenance And Contributions
+14 Manual Provenance And Contributions
 **************************************
 
 This manual began as the second-edition Emacspeak user manual and still
@@ -3669,7 +3307,7 @@ terminology where that identity and period context matter.
 
 File: emacsvox.info,  Node: Contributing,  Next: Authoring Guidelines,  Up: Announce
 
-15.1 How To Contribute To This Manual
+14.1 How To Contribute To This Manual
 =====================================
 
 The maintained Org chapters live under ‘docs/manual/chapters/’; the
@@ -3691,7 +3329,7 @@ historical chapters form the separately installed
 
 File: emacsvox.info,  Node: Authoring Guidelines,  Next: Credits,  Prev: Contributing,  Up: Announce
 
-15.2 Authoring Guidelines
+14.2 Authoring Guidelines
 =========================
 
 Keep current operating instructions separate from historical accounts.
@@ -3720,7 +3358,7 @@ docs-check’ is its compatibility alias.  Commit the regenerated
 ‘emacsvox.info’, ‘emacsvox-reference.info’, and ‘emacsvox-heritage.info’
 files with their source changes.
 
-15.2.1 Publishing The Browser Manual
+14.2.1 Publishing The Browser Manual
 ------------------------------------
 
 Org on ‘master’ is the canonical maintained manual source.  GitHub Pages
@@ -3759,7 +3397,7 @@ maintainer action.
 
 File: emacsvox.info,  Node: Credits,  Prev: Authoring Guidelines,  Up: Announce
 
-15.3 Credits
+14.3 Credits
 ============
 
 The original manual drew heavily from the Emacspeak user manual and
@@ -3770,7 +3408,7 @@ documentation in the Emacsvox repository.
 
 File: emacsvox.info,  Node: Copyright,  Next: Acknowledgments,  Prev: Announce,  Up: Top
 
-16 Copyright
+15 Copyright
 ************
 
 This manual documents Emacsvox, a speech extension to Emacs.
@@ -3784,15 +3422,445 @@ auto-generated from the source code, and the documentation inherits the
 same license as the original source code.
 
 
-File: emacsvox.info,  Node: Acknowledgments,  Next: Concept Index,  Prev: Copyright,  Up: Top
+File: emacsvox.info,  Node: Acknowledgments,  Next: Developer Guide,  Prev: Copyright,  Up: Top
 
-17 Acknowledgments
+16 Acknowledgments
 ******************
 
 Thanks.
 
 
-File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
+File: emacsvox.info,  Node: Developer Guide,  Next: Concept Index,  Prev: Acknowledgments,  Up: Top
+
+17 Developer And Maintainer Guide
+*********************************
+
+This guide is for people changing Emacsvox source, integrations,
+speech-server protocols, build machinery, or release staging.  It is
+included at the end of the published manual so that an installed Info
+manual and an offline checkout remain complete, but it is not part of
+the ordinary installation and use path.
+
+   Before making a governed change, read ‘AGENTS.md’ and every accepted
+record in ‘docs/adr/’.  Use the Emacs selected by ‘local.mk’ for
+repository checks.  The generated *note Emacsvox Reference Manual:
+(emacsvox-reference)Top. is the exact inventory of Lisp commands,
+options, and keymaps; the chapters that follow explain contracts and
+procedures that cannot be generated from those interfaces.
+
+* Menu:
+
+* Speech Server Protocols::      Understand speech-server protocols.
+* Integration Maintenance::      Maintain optional integrations and release staging.
+
+
+File: emacsvox.info,  Node: Speech Server Protocols,  Next: Integration Maintenance,  Up: Developer Guide
+
+17.1 Speech Server Protocols
+============================
+
+Emacsvox produces spoken output by communicating with one of several
+speech servers.  Two protocol families coexist:
+
+   • The legacy command-and-queue line protocol is implemented by
+     standalone Tcl servers and retained by Omnivox for compatibility.
+
+   • Capability-negotiated Omnivox control, marker, logical-voice, and
+     structured presentation protocols carry bounded JSON records beside
+     that legacy stream.
+
+   This chapter is primarily for speech-server and client developers.
+The detailed Omnivox contracts are owned by the Omnivox repository; this
+manual summarizes their relationship to Emacsvox and then documents the
+legacy line protocol.
+
+   For additional notes on how to log and view TTS server commands when
+developing a speech server, see the historical Emacspeak article at
+<http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html>.
+
+17.1.1 Omnivox Structured Protocol
+----------------------------------
+
+At process startup the Emacsvox adapter requests capabilities and live
+engine inventory.  Features are used only after negotiation; an older
+server continues on the legacy path.  Current Emacsvox requires
+‘presentation_timeline_v3’ before it submits an Aural Presentation as a
+structured timeline.
+
+   A complete timeline contains its delivery policy, replacement domain,
+generation, dispatch ID, speech spans, and positioned actions.  Small
+timelines use one bounded frame; large timelines use a bounded multipart
+envelope that is validated and admitted atomically.  Decodable rejected
+or stale direct timelines receive terminal status so Emacs callbacks can
+retire their dispatch records.
+
+   ‘ordered’ and ‘urgent’ timelines are admitted immediately.  Only
+matching ‘replaceable’ work uses the short server-side coalescing
+window.  Receipt of a newer valid replaceable generation immediately
+cancels queued, synthesizing, and buffered work in the same replacement
+domain.  It does not globally stop ordered, urgent, legacy, or
+differently keyed output.
+
+   Marker events distinguish dispatch admission, synthesis, playback
+start, positioned markers, and terminal completion.  Playback markers
+track mixer source consumption and may precede physical sound by the
+output device's buffer latency; a protocol write or terminal callback is
+therefore not proof of acoustic onset.
+
+   The canonical protocol documents are:
+
+   • Omnivox Control Protocol
+     (https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md)
+
+   • Omnivox Presentation Timeline Protocol
+     (https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md)
+
+   • Omnivox Helper Protocol
+     (https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md)
+
+17.1.2 Legacy Line Protocol
+---------------------------
+
+The TTS server reads commands from standard input.  Script
+*speech-server* can be used to cause a TTS server to communicate via a
+TCP socket.  Speech server commands are used by the client application
+to make specific requests of the server; the server listens for these
+requests in a non-blocking read-eval-print (REPL) loop and executes
+requests as they become available.  Requests can be classified as
+follows:
+
+   • Commands that send text to be spoken.
+
+   • Commands that set *state* of the TTS server.
+
+   All commands are of the form
+
+     commandWord {arguments}
+
+   The braces are optional if the command argument contains no white
+space.  The speech server maintains a *current state* that determines
+various characteristics of spoken output such as speech rate,
+punctuations mode etc.  (see set of commands that manipulate speech
+state for complete list).  The client application *queues* The text and
+non-speech audio output to be produced before asking the server to
+*dispatch* the set of queued requests, i.e.  start producing output.
+
+   Once the server has been asked to produce output, it removes items
+from the front of the queue, sends the requisite commands to the
+underlying TTS engine, and waits for the engine to acknowledge that the
+request has been completely processed.  This is a non-blocking
+operation, i.e., if the client application generates additional
+requests, these are processed *immediately*.
+
+   This design allows a legacy Emacsvox TTS server to be *highly*
+responsive; Client applications can queue large amounts of text
+(typically queued a clause at a time to achieve the best prosody), ask
+the TTS server to start speaking, and interrupt the spoken output at any
+time.
+
+  1. Testing A Direct Legacy Server
+
+     This protocol-level test is only for a retained direct
+     Tcl-compatible server.  Run its launcher from the Emacsvox
+     repository root, for example:
+
+          ./servers/espeak
+
+     Then enter:
+
+          q {This is a test.}
+          d
+          s
+
+     The ‘q’ command queues text, ‘d’ dispatches it, and ‘s’ stops
+     speech.  Type ‘C-d’ to close the server.  A backend-specific README
+     may provide a stronger diagnostic and should take precedence over
+     this generic protocol test.
+
+  2. Commands That Queue Output.
+
+     This section documents commands that either produce spoken output,
+     or queue output to be produced on demand.  Commands that place the
+     request on the queue are clearly marked.
+
+          version
+
+     Speaks the *version* of the TTS engine.  Produces output
+     immediately.
+
+          tts_say text
+
+     Speaks the specified *text* immediately.  The text is not
+     pre-processed in any way, contrast this with the primary way of
+     speaking text which is to queue text before asking the server to
+     process the queue.
+
+     Note that this command needs to handle the special syntax for
+     morpheme boundaries ‘[*]’.  The ‘[*]’ syntax is specific to the
+     Dectalk family of synthesizers; servers for other TTS engines need
+     to map this pattern to the engine-specific code for each engine.
+     As an example, see ‘servers/outloud’ A morpheme boundary results in
+     synthesizing compound words such as *left bracket* with the right
+     intonation; using a space would result in that phrase being
+     synthesized as two separate words.
+
+          l c
+
+     Speak *c* a single character, as a letter.  The character is spoken
+     immediately.  This command uses the TTS engine's capability to
+     speak a single character with the ability to flush speech
+     *immediately*.  Client applications wishing to produce
+     character-at-a-time output, e.g., when providing character echo
+     during keyboard input should use this command.
+
+          d
+
+     This command is used to *dispatch* all queued requests.  It was
+     renamed to a single character command (like many of the commonly
+     used TTS server commands) to work more effectively over slow (9600)
+     dialup lines.  The effect of calling this command is for the TTS
+     server to start processing items that have been queued via earlier
+     requests.
+
+          s
+
+     Stop speech *immediately*.  Spoken output is interrupted, and all
+     pending requests are flushed from the queue.
+
+          q text
+
+     Queues text to be spoken.  No spoken output is produced until a
+     *dispatch* request is received via execution of command *d*.
+
+          c codes
+
+     Queues synthesis codes to be sent to the TTS engine.  Codes are
+     sent to the engine with no further transformation or processing.
+     The codes are inserted into the output queue and will be dispatched
+     to the TTS engine at the appropriate point in the output stream.
+
+          a filename
+
+     Cues the audio file identified by filename for playing, an ‘ogg’
+     file.
+
+          p filename
+
+     *dispatch* play the audio file identified by filename for playing
+     -- ‘ogg’ file.
+
+          t freq length
+
+     Queues a tone to be played at the specified frequency and having
+     the specified length.  Frequency is specified in hertz and length
+     is specified in milliseconds.
+
+          sh duration
+
+     Queues the specified duration of silence.  Silence is specified in
+     milliseconds.
+
+  3. Commands That Set State
+
+          tts_reset
+
+     *Immediately* reset TTS engine to default settings.  Stops all
+     speech and clears the queue.
+
+          tts_set_punctuations mode
+
+     Queues setting TTS engine to the specified punctuation mode.
+     Typically, TTS servers provide at least three modes:
+
+        • None: Do not speak punctuation characters.
+
+        • Some: Speak some punctuation characters.  Used for English
+          prose.
+
+        • All: Speak out *all* punctuation characters; useful in
+          programming modes.
+
+          tts_set_speech_rate rate
+
+     *Immediately* change speech rate.  The interpretation of this value
+     is typically engine specific.
+
+          tts_set_character_scale factor
+
+     Queues changing the scale factor.  Scale factor applied to speech
+     rate when speaking individual characters.Thus, setting speech rate
+     to 500 and character scale to 1.2 will cause command *l* to use a
+     speech rate of *500 * 1.2 = 600*.
+
+          tts_split_caps flag
+
+     Queues changing of the state of *split caps* processing.  Turn this
+     on to speak mixed-case (AKA Camel Case) identifiers.
+
+          tts_sync_state punct splitcaps caps rate
+
+     *Immediately* apply the passed settings.
+
+     This ensures *atomicity* i.e., all state settings in the TTS engine
+     happen at one shot.  Note that failure to do this might result in
+     some utterances being spoken with a partially set state.
+
+        • punct: see tts_set_punctuations
+
+        • splitcaps: see tts_split_caps
+
+        • caps: engine specific implementation of capital letter
+          handling
+
+        • rate: see tts_set_speech_rate
+
+          set_next_lang say_it
+
+     *Immediately* switch to the next language on the server, maintained
+     internally on the TTS server.  If say_it is non-nil say the
+     language change via the TTS.
+
+          set_previous_lang say_it
+
+     *Immediately* switch to the previous language on the server,
+     maintained internally on the TTS server.  If say_it is non-nil say
+     the language change via the TTS.
+
+          set_lang language:voice say_it
+
+     *Immediately* switch to the requested language and/or voice,
+     separated by a colon.  Examples
+
+        • set_lang "en"
+
+        • set_lang "en:whisper"
+
+        • set_lang ":whisper"
+
+     If say_it is non-nil, speak via the TTS the language and voice
+     selected.
+
+          set_preferred_lang alias lang
+
+     *Immediately* set an alias in the TTS server mapping for example
+     "en" to "en_GB". This can later be used by set_lang.
+
+
+File: emacsvox.info,  Node: Integration Maintenance,  Prev: Speech Server Protocols,  Up: Developer Guide
+
+17.2 Integration Maintenance
+============================
+
+This chapter collects source-level contracts that are deliberately
+omitted from the user task guides.  Optional package APIs and renderers
+evolve, so recheck the upstream interfaces and keep compatibility
+behavior bounded when changing an integration.
+
+17.2.1 Build and live-verification boundary
+-------------------------------------------
+
+For a source checkout, use the Emacs selected by ‘local.mk’.  Run ‘make
+check-emacs’ before diagnosing compilation, ‘make bytecode’ after an
+ordinary Lisp edit, and ‘make bytecode-rebuild’ after switching branches
+or changing a macro or public interface.  Tests deliberately prefer
+source and therefore do not prove that the byte-code used by a live
+profile is current.  Verify the rebuilt byte-code in a fresh Emacs
+rather than relying on a file reload when compiled dependants may
+already be resident.
+
+17.2.2 Notmuch contracts
+------------------------
+
+The live module is registered as an optional package integration.  Its
+stable extension points are the Hello, Search, Show, and Tree mode
+hooks; Search and Show mode maps; public interactive commands; and
+public Search/Show accessors.  Advice is installed only when a target
+exists and is target-aware, so a nested or programmatic upstream call
+does not claim the outer user's feedback.
+
+   The Show landing and visibility paths also read renderer metadata
+such as ‘:headers-overlay’, ‘:message-visible’, message extents,
+‘:notmuch-part’, part-hidden state, and Notmuch part-button types.
+Missing optional metadata should reduce presentation detail rather than
+authorize an operation.  Review these adapters whenever the Notmuch
+renderer changes.
+
+   Each user-owned asynchronous Search process carries its own
+completion state as a process property.  The upstream sentinel renders
+first; Emacsvox then clears that property before delivering exactly one
+terminal result.  The owning buffer and process status are
+authoritative.  A killed owner remains silent, concurrent buffers cannot
+overwrite one another, and the global refresh-all path intentionally
+acquires no ownership.
+
+   Run ‘make notmuch-test’ for the explicit source suite.  After current
+byte-code exists, run ‘make compiled-notmuch-test’; it verifies the
+exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
+focused selector, including real displayed-window reading for both
+advance paths.
+
+17.2.3 Agent Shell contracts
+----------------------------
+
+Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
+deliberately disabling them or while testing live integration changes.
+
+   The integration uses three deliberately different contract layers:
+
+Layer         Agent Shell owner           Emacsvox rule
+---------------------------------------------------------------------------
+Public        ‘agent-shell-subscribe-to’, Primary authority for
+structured    ‘agent-shell-unsubscribe’,  processing, completion,
+API           ‘agent-shell-status’, and   errors, permission urgency,
+              ‘agent-shell-shell-buffer’; and tool status.  The public
+              lifecycle, permission,      turn boundary triggers
+              and tool events             inspection of renderer-owned
+                                          response sections.  Event and
+                                          response data is treated as
+                                          untrusted content and bounded
+                                          before automatic Aural
+                                          submission.
+Experimental  ‘agent-shell-ui-state’,     Feature-detected navigation
+renderer      ‘agent-shell-ui-section’,   and presentation input.
+metadata      rendered Markdown           Renderer group provenance
+              table/source properties,    outranks provider-controlled
+              and renderer-owned faces    IDs; prose and IDs cannot
+                                          manufacture structured
+                                          permission or lifecycle
+                                          authority.
+Private       The aggregate               Kept in narrow adapter
+compatibility ‘agent-shell--state’, the   functions for older Agent
+fallback      legacy viewport ownership   Shell releases or incomplete
+              resolver, viewport          renderers.  A missing optional
+              position helpers, and       detail may reduce header or
+              legacy face, prompt, or     navigation richness but must
+              ID inference                not create a permission action
+                                          or completed response.
+
+   The lifecycle subscription currently consumes ‘init-started’,
+‘init-finished’, ‘session-selected’, ‘session-restored’,
+‘input-submitted’, ‘turn-complete’, and ‘error’.  Dedicated
+subscriptions consume ‘permission-request’, ‘permission-response’, and
+‘tool-call-update’.  Add new semantic behavior at the public event layer
+when Agent Shell exposes it; keep renderer and private fallbacks
+isolated and covered by compatibility tests.
+
+17.2.4 WSL2 Omnivox development staging
+---------------------------------------
+
+Maintainers testing tracked Emacsvox or Omnivox changes may use ‘make
+windows-omnivox-dev’.  That target records both worktree-diff hashes and
+labels the result as a development build; it is not the clean release
+procedure.  See ‘servers/omnivox-release/README.org’ for the pinned
+toolchain, licensing, provenance, and restaging contract.
+
+   Do not bypass the Omnivox release target manually or clean either
+repository to make its release guard pass.  Use ‘make windows-omnivox’
+only for the reproducible clean-release path documented in the
+user-facing WSL2 route.
+
+
+File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 
 18 Concept Index
 ****************
@@ -3868,7 +3936,6 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
                                                               (line   6)
 * notification stream, Notmuch:          Notmuch Mail.        (line  63)
 * Notmuch Hello:                         Notmuch Mail.        (line  23)
-* Notmuch integration maintenance:       Notmuch Mail.        (line 351)
 * Notmuch mail:                          Notmuch Mail.        (line   6)
 * Notmuch Search:                        Notmuch Mail.        (line  95)
 * Notmuch Show:                          Notmuch Mail.        (line 140)
@@ -3937,79 +4004,84 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 
 Tag Table:
 Node: Top384
-Node: Introduction2174
-Node: Installation5573
-Node: Obtaining Emacsvox6780
-Node: Building And Testing The Speech Server8180
-Node: Quick Installation9422
-Node: Confirming First Speech11654
-Node: Recovering From No Speech12971
-Node: Persistent Startup15612
-Node: Basic Usage16632
-Node: Overview19210
-Node: Working20595
-Ref: Working-Footnote-121937
-Ref: Working-Footnote-222030
-Node: Reading22140
-Node: Speech System23920
-Node: Controlling Echo24779
-Node: Speech Output Control25646
-Node: Miscellaneous27716
-Node: Voice-lock28838
-Node: Status Information29930
-Node: Speech Backends31323
-Node: Supported Platform Routes32620
-Node: Installing Omnivox From Source35332
-Node: Building Omnivox For WSL237191
-Node: Selecting And Checking Omnivox38774
-Node: Compatibility Speech Servers40515
-Node: Backend Diagnostics And Ownership42441
-Node: Audio Desktop44556
-Node: Desktop Objects45686
-Node: Object Oriented Desktop46911
-Node: Context-Sensitive Interaction48024
-Node: Aural Presentation51139
-Node: Presentation Model53338
-Node: Presentation Modalities55805
-Node: Aural Home57552
-Node: Explaining Presentation59440
-Node: Adjusting Presentation61425
-Node: Presentation Profiles64394
-Node: Voices And Routing66085
-Node: Sounds And Space68442
-Node: Presentation Troubleshooting70066
-Node: Voice Lock72104
-Node: Using Online Help75311
-Node: Emacs Packages79373
-Node: Document Authoring80747
-Node: Structured Editing81301
-Node: Browsing Structure82284
-Node: Web Browsing82882
-Node: Messaging83717
-Node: Editing Code84215
-Node: Development Environment84734
-Node: Desktop Management85291
-Node: Personal Information Management85793
-Node: Desktop Applications86325
-Node: Notmuch Mail87874
-Ref: Notmuch fields and privacy97234
-Node: Agent Shell104705
-Node: EAT Terminal Access117195
-Node: Running Terminal Based Applications134454
-Node: Starting Term135409
-Node: Term Input Modes136248
-Node: Term Speech Feedback137408
-Node: Reviewing The Term Screen138602
-Node: Term Help And Recovery140503
-Node: Emacsvox Keyboard Commands141402
-Node: TTS Servers142808
-Node: Announce153257
-Node: Contributing153831
-Node: Authoring Guidelines154854
-Node: Credits157973
-Node: Copyright158336
-Node: Acknowledgments158905
-Node: Concept Index159050
+Node: Introduction2229
+Node: Installation5628
+Node: Obtaining Emacsvox6835
+Node: Building And Testing The Speech Server8235
+Node: Quick Installation9477
+Node: Confirming First Speech11709
+Node: Recovering From No Speech13026
+Node: Persistent Startup15667
+Node: Basic Usage16687
+Node: Overview19265
+Node: Working20650
+Ref: Working-Footnote-121992
+Ref: Working-Footnote-222085
+Node: Reading22195
+Node: Speech System23975
+Node: Controlling Echo24834
+Node: Speech Output Control25701
+Node: Miscellaneous27771
+Node: Voice-lock28893
+Node: Status Information29985
+Node: Speech Backends31378
+Node: Supported Platform Routes32675
+Node: Installing Omnivox From Source35387
+Node: Building Omnivox For WSL237246
+Node: Selecting And Checking Omnivox38653
+Node: Compatibility Speech Servers40394
+Node: Backend Diagnostics And Ownership42320
+Node: Audio Desktop44435
+Node: Desktop Objects45565
+Node: Object Oriented Desktop46790
+Node: Context-Sensitive Interaction47903
+Node: Aural Presentation51018
+Node: Presentation Model53217
+Node: Presentation Modalities55684
+Node: Aural Home57431
+Node: Explaining Presentation59319
+Node: Adjusting Presentation61304
+Node: Presentation Profiles64273
+Node: Voices And Routing65964
+Node: Sounds And Space68321
+Node: Presentation Troubleshooting69945
+Node: Voice Lock71983
+Node: Using Online Help75190
+Node: Emacs Packages79252
+Node: Document Authoring80626
+Node: Structured Editing81180
+Node: Browsing Structure82163
+Node: Web Browsing82761
+Node: Messaging83596
+Node: Editing Code84094
+Node: Development Environment84613
+Node: Desktop Management85170
+Node: Personal Information Management85672
+Node: Desktop Applications86204
+Node: Notmuch Mail87753
+Ref: Notmuch fields and privacy97113
+Node: Agent Shell102821
+Node: EAT Terminal Access112815
+Node: Running Terminal Based Applications130074
+Node: Starting Term131029
+Node: Term Input Modes131868
+Node: Term Speech Feedback133028
+Node: Reviewing The Term Screen134222
+Node: Term Help And Recovery136123
+Node: Emacsvox Keyboard Commands137022
+Node: Announce138425
+Node: Contributing139014
+Node: Authoring Guidelines140037
+Node: Credits143156
+Node: Copyright143519
+Node: Acknowledgments144088
+Node: Developer Guide144235
+Node: Speech Server Protocols145297
+Ref: Testing A Direct Legacy Server149996
+Ref: Commands That Queue Output150555
+Ref: Commands That Set State153589
+Node: Integration Maintenance156183
+Node: Concept Index162158
 
 End Tag Table
 

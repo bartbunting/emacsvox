@@ -1056,11 +1056,9 @@ Windows-local directory so native voice and eSpeak data discovery do not pay
 the WSL filesystem cost.  Optional proprietary Eloquence and DECtalk runtimes
 are not downloaded or distributed.
 
-Maintainers testing tracked changes may use
-@code{make windows-omnivox-dev}.  That target records both worktree-diff
-hashes and labels the result as a development build; it is not the clean
-release procedure.  See @code{servers/omnivox-release/README.org} for the
-pinned toolchain@comma{} licensing@comma{} provenance@comma{} and restaging contract.
+Maintainers testing tracked changes should use the development route in
+@ref{Integration Maintenance} rather than weakening the clean-release
+guard.
 
 @node Selecting And Checking Omnivox
 @section Selecting And Checking Omnivox
@@ -2627,39 +2625,9 @@ byte-code@comma{} Aural rules@comma{} sound resources@comma{} or the backend app
 presentation submitted for a Notmuch action.  These diagnostics do not query
 or modify the mail database.
 
-For a source checkout@comma{} use the Emacs selected by @code{local.mk}.  Run
-@code{make check-emacs} before diagnosing compilation@comma{} @code{make bytecode}
-after an ordinary integration edit@comma{} and @code{make bytecode-rebuild} after a
-branch switch or a macro or public-interface change.  A fresh Emacs must load
-the rebuilt byte-code before live verification.
-
-@section Integration contracts for maintainers
-
-@cindex Notmuch integration maintenance
-
-The live module is registered as an optional package integration.  Its stable
-extension points are the Hello@comma{} Search@comma{} Show@comma{} and Tree mode hooks; Search and
-Show mode maps; public interactive commands; and public Search/Show accessors.
-Advice is installed only when a target exists and is target-aware@comma{} so a nested
-or programmatic upstream call does not claim the outer user's feedback.
-
-The Show landing and visibility paths also read renderer metadata such as
-@code{:headers-overlay}@comma{} @code{:message-visible}@comma{} message extents@comma{}
-@code{:notmuch-part}@comma{} part-hidden state@comma{} and Notmuch part-button types.  Missing
-optional metadata should reduce presentation detail rather than authorize an
-operation.  Review these adapters whenever the Notmuch renderer changes.
-
-Each user-owned asynchronous Search process carries its own completion state
-as a process property.  The upstream sentinel renders first; Emacsvox then
-clears that property before delivering exactly one terminal result.  The
-owning buffer and process status are authoritative.  A killed owner remains
-silent@comma{} concurrent buffers cannot overwrite one another@comma{} and the global
-refresh-all path intentionally acquires no ownership.
-
-Run @code{make notmuch-test} for the explicit source suite.  After current
-byte-code exists@comma{} run @code{make compiled-notmuch-test}; it verifies the exact
-loaded @code{emacsvox-notmuch.elc}@comma{} compiler version@comma{} and the same focused
-selector@comma{} including real displayed-window reading for both advance paths.
+If you are changing the integration rather than using it@comma{} see
+@ref{Integration Maintenance} for the build@comma{} test@comma{} renderer@comma{} and
+asynchronous lifecycle contracts.
 
 @node Agent Shell
 @chapter Agent Shell
@@ -2880,36 +2848,12 @@ provider's details and edit the live prompt before resubmitting.
 
 Use @code{M-x agent-shell-restart} when Agent Shell itself needs a fresh process
 for the same project.  Use @code{M-x emacsvox-agent-shell-enable} to reinstall
-speech hooks after deliberately disabling them or during live integration
-development.  Neither recovery command discards transcript files or project
-work.
+speech hooks after deliberately disabling them.  Neither recovery command
+discards transcript files or project work.
 
-@section Integration ownership for maintainers
-
-The integration uses three deliberately different contract layers:
-
-@multitable @columnfractions .18 .37 .45
-@headitem Layer
-@tab Agent Shell owner
-@tab Emacsvox rule
-@item Public structured API
-@tab @code{agent-shell-subscribe-to}@comma{} @code{agent-shell-unsubscribe}@comma{} @code{agent-shell-status}@comma{} and @code{agent-shell-shell-buffer}; lifecycle@comma{} permission@comma{} and tool events
-@tab Primary authority for processing@comma{} completion@comma{} errors@comma{} permission urgency@comma{} and tool status. The public turn boundary triggers inspection of renderer-owned response sections. Event and response data is treated as untrusted content and bounded before automatic Aural submission.
-@item Experimental renderer metadata
-@tab @code{agent-shell-ui-state}@comma{} @code{agent-shell-ui-section}@comma{} rendered Markdown table/source properties@comma{} and renderer-owned faces
-@tab Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority.
-@item Private compatibility fallback
-@tab The aggregate @code{agent-shell--state}@comma{} the legacy viewport ownership resolver@comma{} viewport position helpers@comma{} and legacy face@comma{} prompt@comma{} or ID inference
-@tab Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response.
-@end multitable
-
-The lifecycle subscription currently consumes @code{init-started}@comma{}
-@code{init-finished}@comma{} @code{session-selected}@comma{} @code{session-restored}@comma{}
-@code{input-submitted}@comma{} @code{turn-complete}@comma{} and @code{error}.  Dedicated
-subscriptions consume @code{permission-request}@comma{} @code{permission-response}@comma{}
-and @code{tool-call-update}.  Add new semantic behavior at the public event
-layer when Agent Shell exposes it; keep renderer and private fallbacks isolated
-and covered by compatibility tests.
+If you are changing the integration rather than using it@comma{} see
+@ref{Integration Maintenance} for its public event@comma{} renderer@comma{} and
+compatibility contracts.
 
 @node EAT Terminal Access
 @chapter Speech Access To EAT
@@ -3579,366 +3523,6 @@ If live Help and this manual differ@comma{} live Help describes your running
 session.  Check customizations first@comma{} then compare the generated defaults
 in the @ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
 
-@node TTS Servers
-@chapter Speech Server Protocols
-
-Emacsvox produces spoken output by communicating with one of several speech
-servers.  Two protocol families coexist:
-
-@itemize
-@item
-The legacy command-and-queue line protocol is implemented by standalone Tcl
-servers and retained by Omnivox for compatibility.
-
-@item
-Capability-negotiated Omnivox control@comma{} marker@comma{} logical-voice@comma{} and structured
-presentation protocols carry bounded JSON records beside that legacy stream.
-@end itemize
-
-This chapter is primarily for speech-server and client developers.  The
-detailed Omnivox contracts are owned by the Omnivox repository; this manual
-summarizes their relationship to Emacsvox and then documents the legacy line
-protocol.
-
-For additional notes on how to log and view @acronym{TTS} server
-commands when developing a speech server@comma{} see
-the historical Emacspeak article at
-@uref{http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html}.
-
-@section Omnivox Structured Protocol
-
-At process startup the Emacsvox adapter requests capabilities and live engine
-inventory.  Features are used only after negotiation; an older server
-continues on the legacy path.  Current Emacsvox requires
-@code{presentation_timeline_v3} before it submits an Aural Presentation as a
-structured timeline.
-
-A complete timeline contains its delivery policy@comma{} replacement domain@comma{}
-generation@comma{} dispatch ID@comma{} speech spans@comma{} and positioned actions.  Small
-timelines use one bounded frame; large timelines use a bounded multipart
-envelope that is validated and admitted atomically.  Decodable rejected or
-stale direct timelines receive terminal status so Emacs callbacks can retire
-their dispatch records.
-
-@code{ordered} and @code{urgent} timelines are admitted immediately.  Only
-matching @code{replaceable} work uses the short server-side coalescing window.
-Receipt of a newer valid replaceable generation immediately cancels queued@comma{}
-synthesizing@comma{} and buffered work in the same replacement domain.  It does not
-globally stop ordered@comma{} urgent@comma{} legacy@comma{} or differently keyed output.
-
-Marker events distinguish dispatch admission@comma{} synthesis@comma{} playback start@comma{}
-positioned markers@comma{} and terminal completion.  Playback markers track mixer
-source consumption and may precede physical sound by the output device's
-buffer latency; a protocol write or terminal callback is therefore not proof
-of acoustic onset.
-
-The canonical protocol documents are:
-
-@itemize
-@item
-@uref{https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md, Omnivox Control Protocol}
-
-@item
-@uref{https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md, Omnivox Presentation Timeline Protocol}
-
-@item
-@uref{https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md, Omnivox Helper Protocol}
-@end itemize
-
-@section Legacy Line Protocol
-
-The @acronym{TTS} server reads commands from standard input.
-Script @strong{speech-server} can be used to cause a @acronym{TTS}
-server to communicate via a @acronym{TCP} socket. Speech server
-commands are used by the client application to make specific requests
-of the server; the server listens for these requests in a non-blocking
-read-eval-print (REPL)  loop and executes requests as they become available. Requests can
-be classified as follows:
-
-@itemize
-@item
-Commands that send text to be spoken.
-
-@item
-Commands that set @strong{state} of the @acronym{TTS} server.
-@end itemize
-
-All commands are of the form
-
-@example
-commandWord @{arguments@}
-@end example
-
-The braces are optional if the command argument contains no white
-space.  The speech server maintains a @strong{current state} that
-determines various characteristics of spoken output such as speech
-rate@comma{} punctuations mode etc. (see set of commands that manipulate
-speech state for complete list).  The client application
-@strong{queues} The text and non-speech audio output to be produced
-before asking the server to @strong{dispatch} the set of queued
-requests@comma{} i.e. start producing output.
-
-Once the server has been asked to produce output@comma{} it removes items
-from the front of the queue@comma{} sends the requisite commands to the
-underlying @acronym{TTS} engine@comma{} and waits for the engine to
-acknowledge that the request has been completely processed. This is a
-non-blocking operation@comma{} i.e.@comma{} if the client application generates
-additional requests@comma{} these are processed @strong{immediately}.
-
-This design allows a legacy Emacsvox @acronym{TTS} server to be
-@strong{highly} responsive; Client applications can queue large
-amounts of text (typically queued a clause at a time to achieve the
-best prosody)@comma{} ask the @acronym{TTS} server to start speaking@comma{} and
-interrupt the spoken output at any time.
-
-@subsection Testing A Direct Legacy Server
-
-This protocol-level test is only for a retained direct Tcl-compatible server.
-Run its launcher from the Emacsvox repository root@comma{} for example:
-
-@example
-./servers/espeak
-@end example
-
-Then enter:
-
-@example
-q @{This is a test.@}
-d
-s
-@end example
-
-The @code{q} command queues text@comma{} @code{d} dispatches it@comma{} and @code{s} stops speech.  Type
-@kbd{C-d} to close the server.  A backend-specific README may provide a
-stronger diagnostic and should take precedence over this generic protocol
-test.
-
-@subsection Commands That Queue Output.
-
-This section documents commands that either produce spoken output@comma{} or
-queue output to be produced on demand.  Commands that place the
-request on the queue are clearly marked.
-
-@example
-version
-@end example
-
-Speaks the @strong{version} of the @acronym{TTS} engine. Produces
-output immediately.
-
-@example
-tts_say text
-@end example
-
-Speaks the specified @strong{text} immediately. The text is not
-pre-processed in any way@comma{} contrast this with the primary way of
-speaking text which is to queue text before asking the server to
-process the queue.
-
-Note that this command needs to handle the special syntax for morpheme
-boundaries @code{[*]}.  The @code{[*]} syntax is specific to the
-Dectalk family of synthesizers; servers for other @acronym{TTS}
-engines need to map this pattern to the engine-specific code for each
-engine. As an example@comma{} see @code{servers/outloud} A morpheme boundary
-results in synthesizing compound words such as @strong{left bracket}
-with the right intonation; using a space would result in that phrase
-being synthesized as two separate words.
-
-@example
-l c
-@end example
-
-Speak @strong{c} a single character@comma{} as a letter.  The character is
-spoken immediately. This command uses the @acronym{TTS} engine's
-capability to speak a single character with the ability to flush
-speech @strong{immediately}.  Client applications wishing to produce
-character-at-a-time output@comma{} e.g.@comma{} when providing character echo during
-keyboard input should use this command.
-
-@example
-d
-@end example
-
-This command is used to @strong{dispatch} all queued requests.  It was
-renamed to a single character command (like many of the commonly used
-@acronym{TTS} server commands) to work more effectively over slow
-(9600) dialup lines.  The effect of calling this command is for the
-@acronym{TTS} server to start processing items that have been queued
-via earlier requests.
-
-@example
-s
-@end example
-
-Stop speech @strong{immediately}.  Spoken output is interrupted@comma{} and
-all pending requests are flushed from the queue.
-
-@example
-q text
-@end example
-
-Queues text to be spoken. No spoken output is produced until a
-@strong{dispatch} request is received via execution of command
-@strong{d}.
-
-@example
-c codes
-@end example
-
-Queues synthesis codes to be sent to the @acronym{TTS} engine.  Codes
-are sent to the engine with no further transformation or processing.
-The codes are inserted into the output queue and will be dispatched to
-the @acronym{TTS} engine at the appropriate point in the output
-stream.
-
-@example
-a filename
-@end example
-
-Cues the audio file identified by filename for playing@comma{}
-an @code{ogg} file.
-
-@example
-p filename
-@end example
-
-@strong{dispatch} play the audio file identified by filename for
-playing  @MDash{} @code{ogg} file.
-
-@example
-t freq length
-@end example
-
-Queues a tone to be played at the specified frequency and having the
-specified length.  Frequency is specified in hertz and length is
-specified in milliseconds.
-
-@example
-sh duration
-@end example
-
-Queues the specified duration of silence. Silence is specified in
-milliseconds.
-
-@subsection Commands That Set State
-
-@example
-tts_reset
-@end example
-
-@strong{Immediately} reset @acronym{TTS} engine to default settings.
-Stops all speech and clears the queue.
-
-@example
-tts_set_punctuations mode
-@end example
-
-Queues setting @acronym{TTS} engine to the specified punctuation
-mode. Typically@comma{} @acronym{TTS} servers provide at least three modes:
-
-@itemize
-@item
-None: Do not speak punctuation characters.
-
-@item
-Some: Speak some punctuation characters. Used for English prose.
-
-@item
-All: Speak out @strong{all} punctuation characters; useful in
-programming modes.
-@end itemize
-
-@example
-tts_set_speech_rate rate
-@end example
-
-@strong{Immediately} change speech rate. The interpretation of this
-value is typically engine specific.
-
-@example
-tts_set_character_scale factor
-@end example
-
-Queues changing the scale factor.  Scale factor applied to speech rate
-when speaking individual characters.Thus@comma{} setting speech rate to 500
-and character scale to 1.2 will cause command @strong{l} to use a
-speech rate of @strong{500 * 1.2 = 600}.
-
-@example
-tts_split_caps flag
-@end example
-
-Queues changing of the state of @strong{split caps} processing.  Turn
-this on to speak mixed-case (@acronym{AKA} Camel Case) identifiers.
-
-@example
-tts_sync_state punct splitcaps caps rate
-@end example
-
-@strong{Immediately} apply the passed settings.
-
-This ensures @strong{atomicity} i.e.@comma{} all state settings in the TTS
-engine happen at one shot. Note that failure to do this might result
-in some utterances being spoken with a partially set state.
-
-@itemize
-@item
-punct: see tts@math{_set}@math{_punctuations}
-
-@item
-splitcaps: see tts@math{_split}@math{_caps}
-
-@item
-caps: engine specific implementation of capital letter handling
-
-@item
-rate: see tts@math{_set}@math{_speech}@math{_rate}
-@end itemize
-
-@example
-set_next_lang say_it
-@end example
-
-@strong{Immediately} switch to the next language on the server@comma{}
-maintained internally on the TTS server. If say@math{_it} is non-nil say the
-language change via the TTS@.
-
-@example
-set_previous_lang say_it
-@end example
-
-@strong{Immediately} switch to the previous language on the server@comma{}
-maintained internally on the TTS server. If say@math{_it} is non-nil say the
-language change via the TTS@.
-
-@example
-set_lang language:voice say_it
-@end example
-
-@strong{Immediately} switch to the requested language and/or voice@comma{}
-separated by a colon. Examples
-
-@itemize
-@item
-set@math{_lang} "en"
-
-@item
-set@math{_lang} "en:whisper"
-
-@item
-set@math{_lang} ":whisper"
-@end itemize
-
-If say@math{_it} is non-nil@comma{} speak via the TTS the language and voice
-selected.
-
-@example
-set_preferred_lang alias lang
-@end example
-
-@strong{Immediately} set an alias in the TTS server mapping for
-example "en" to "en@math{_GB}". This can later be used by set@math{_lang}.
-
 @node Announce
 @chapter Manual Provenance And Contributions
 
@@ -4071,3 +3655,476 @@ inherits the same license as the original source code.
 @chapter Acknowledgments
 
 Thanks.
+
+@node Developer Guide
+@chapter Developer And Maintainer Guide
+
+This guide is for people changing Emacsvox source@comma{} integrations@comma{} speech-server
+protocols@comma{} build machinery@comma{} or release staging.  It is included at the end of
+the published manual so that an installed Info manual and an offline checkout
+remain complete@comma{} but it is not part of the ordinary installation and use path.
+
+Before making a governed change@comma{} read @code{AGENTS.md} and every accepted record in
+@code{docs/adr/}.  Use the Emacs selected by @code{local.mk} for repository checks.  The
+generated @ref{Top,Emacsvox Reference Manual,,emacsvox-reference,Emacsvox Reference Manual}
+is the exact inventory of Lisp commands@comma{} options@comma{} and keymaps; the chapters
+that follow explain contracts and procedures that cannot be generated from
+those interfaces.
+
+@menu
+* Speech Server Protocols::      Understand speech-server protocols.
+* Integration Maintenance::      Maintain optional integrations and release staging.
+@end menu
+
+@node Speech Server Protocols
+@section Speech Server Protocols
+
+Emacsvox produces spoken output by communicating with one of several speech
+servers.  Two protocol families coexist:
+
+@itemize
+@item
+The legacy command-and-queue line protocol is implemented by standalone Tcl
+servers and retained by Omnivox for compatibility.
+
+@item
+Capability-negotiated Omnivox control@comma{} marker@comma{} logical-voice@comma{} and structured
+presentation protocols carry bounded JSON records beside that legacy stream.
+@end itemize
+
+This chapter is primarily for speech-server and client developers.  The
+detailed Omnivox contracts are owned by the Omnivox repository; this manual
+summarizes their relationship to Emacsvox and then documents the legacy line
+protocol.
+
+For additional notes on how to log and view @acronym{TTS} server
+commands when developing a speech server@comma{} see
+the historical Emacspeak article at
+@uref{http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html}.
+
+@subsection Omnivox Structured Protocol
+
+At process startup the Emacsvox adapter requests capabilities and live engine
+inventory.  Features are used only after negotiation; an older server
+continues on the legacy path.  Current Emacsvox requires
+@code{presentation_timeline_v3} before it submits an Aural Presentation as a
+structured timeline.
+
+A complete timeline contains its delivery policy@comma{} replacement domain@comma{}
+generation@comma{} dispatch ID@comma{} speech spans@comma{} and positioned actions.  Small
+timelines use one bounded frame; large timelines use a bounded multipart
+envelope that is validated and admitted atomically.  Decodable rejected or
+stale direct timelines receive terminal status so Emacs callbacks can retire
+their dispatch records.
+
+@code{ordered} and @code{urgent} timelines are admitted immediately.  Only
+matching @code{replaceable} work uses the short server-side coalescing window.
+Receipt of a newer valid replaceable generation immediately cancels queued@comma{}
+synthesizing@comma{} and buffered work in the same replacement domain.  It does not
+globally stop ordered@comma{} urgent@comma{} legacy@comma{} or differently keyed output.
+
+Marker events distinguish dispatch admission@comma{} synthesis@comma{} playback start@comma{}
+positioned markers@comma{} and terminal completion.  Playback markers track mixer
+source consumption and may precede physical sound by the output device's
+buffer latency; a protocol write or terminal callback is therefore not proof
+of acoustic onset.
+
+The canonical protocol documents are:
+
+@itemize
+@item
+@uref{https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md, Omnivox Control Protocol}
+
+@item
+@uref{https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md, Omnivox Presentation Timeline Protocol}
+
+@item
+@uref{https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md, Omnivox Helper Protocol}
+@end itemize
+
+@subsection Legacy Line Protocol
+
+The @acronym{TTS} server reads commands from standard input.
+Script @strong{speech-server} can be used to cause a @acronym{TTS}
+server to communicate via a @acronym{TCP} socket. Speech server
+commands are used by the client application to make specific requests
+of the server; the server listens for these requests in a non-blocking
+read-eval-print (REPL)  loop and executes requests as they become available. Requests can
+be classified as follows:
+
+@itemize
+@item
+Commands that send text to be spoken.
+
+@item
+Commands that set @strong{state} of the @acronym{TTS} server.
+@end itemize
+
+All commands are of the form
+
+@example
+commandWord @{arguments@}
+@end example
+
+The braces are optional if the command argument contains no white
+space.  The speech server maintains a @strong{current state} that
+determines various characteristics of spoken output such as speech
+rate@comma{} punctuations mode etc. (see set of commands that manipulate
+speech state for complete list).  The client application
+@strong{queues} The text and non-speech audio output to be produced
+before asking the server to @strong{dispatch} the set of queued
+requests@comma{} i.e. start producing output.
+
+Once the server has been asked to produce output@comma{} it removes items
+from the front of the queue@comma{} sends the requisite commands to the
+underlying @acronym{TTS} engine@comma{} and waits for the engine to
+acknowledge that the request has been completely processed. This is a
+non-blocking operation@comma{} i.e.@comma{} if the client application generates
+additional requests@comma{} these are processed @strong{immediately}.
+
+This design allows a legacy Emacsvox @acronym{TTS} server to be
+@strong{highly} responsive; Client applications can queue large
+amounts of text (typically queued a clause at a time to achieve the
+best prosody)@comma{} ask the @acronym{TTS} server to start speaking@comma{} and
+interrupt the spoken output at any time.
+
+@enumerate
+@item
+@anchor{Testing A Direct Legacy Server}Testing A Direct Legacy Server
+
+
+This protocol-level test is only for a retained direct Tcl-compatible server.
+Run its launcher from the Emacsvox repository root@comma{} for example:
+
+@example
+./servers/espeak
+@end example
+
+Then enter:
+
+@example
+q @{This is a test.@}
+d
+s
+@end example
+
+The @code{q} command queues text@comma{} @code{d} dispatches it@comma{} and @code{s} stops speech.  Type
+@kbd{C-d} to close the server.  A backend-specific README may provide a
+stronger diagnostic and should take precedence over this generic protocol
+test.
+
+@item
+@anchor{Commands That Queue Output}Commands That Queue Output.
+
+
+This section documents commands that either produce spoken output@comma{} or
+queue output to be produced on demand.  Commands that place the
+request on the queue are clearly marked.
+
+@example
+version
+@end example
+
+Speaks the @strong{version} of the @acronym{TTS} engine. Produces
+output immediately.
+
+@example
+tts_say text
+@end example
+
+Speaks the specified @strong{text} immediately. The text is not
+pre-processed in any way@comma{} contrast this with the primary way of
+speaking text which is to queue text before asking the server to
+process the queue.
+
+Note that this command needs to handle the special syntax for morpheme
+boundaries @code{[*]}.  The @code{[*]} syntax is specific to the
+Dectalk family of synthesizers; servers for other @acronym{TTS}
+engines need to map this pattern to the engine-specific code for each
+engine. As an example@comma{} see @code{servers/outloud} A morpheme boundary
+results in synthesizing compound words such as @strong{left bracket}
+with the right intonation; using a space would result in that phrase
+being synthesized as two separate words.
+
+@example
+l c
+@end example
+
+Speak @strong{c} a single character@comma{} as a letter.  The character is
+spoken immediately. This command uses the @acronym{TTS} engine's
+capability to speak a single character with the ability to flush
+speech @strong{immediately}.  Client applications wishing to produce
+character-at-a-time output@comma{} e.g.@comma{} when providing character echo during
+keyboard input should use this command.
+
+@example
+d
+@end example
+
+This command is used to @strong{dispatch} all queued requests.  It was
+renamed to a single character command (like many of the commonly used
+@acronym{TTS} server commands) to work more effectively over slow
+(9600) dialup lines.  The effect of calling this command is for the
+@acronym{TTS} server to start processing items that have been queued
+via earlier requests.
+
+@example
+s
+@end example
+
+Stop speech @strong{immediately}.  Spoken output is interrupted@comma{} and
+all pending requests are flushed from the queue.
+
+@example
+q text
+@end example
+
+Queues text to be spoken. No spoken output is produced until a
+@strong{dispatch} request is received via execution of command
+@strong{d}.
+
+@example
+c codes
+@end example
+
+Queues synthesis codes to be sent to the @acronym{TTS} engine.  Codes
+are sent to the engine with no further transformation or processing.
+The codes are inserted into the output queue and will be dispatched to
+the @acronym{TTS} engine at the appropriate point in the output
+stream.
+
+@example
+a filename
+@end example
+
+Cues the audio file identified by filename for playing@comma{}
+an @code{ogg} file.
+
+@example
+p filename
+@end example
+
+@strong{dispatch} play the audio file identified by filename for
+playing  @MDash{} @code{ogg} file.
+
+@example
+t freq length
+@end example
+
+Queues a tone to be played at the specified frequency and having the
+specified length.  Frequency is specified in hertz and length is
+specified in milliseconds.
+
+@example
+sh duration
+@end example
+
+Queues the specified duration of silence. Silence is specified in
+milliseconds.
+
+@item
+@anchor{Commands That Set State}Commands That Set State
+
+
+@example
+tts_reset
+@end example
+
+@strong{Immediately} reset @acronym{TTS} engine to default settings.
+Stops all speech and clears the queue.
+
+@example
+tts_set_punctuations mode
+@end example
+
+Queues setting @acronym{TTS} engine to the specified punctuation
+mode. Typically@comma{} @acronym{TTS} servers provide at least three modes:
+
+@itemize
+@item
+None: Do not speak punctuation characters.
+
+@item
+Some: Speak some punctuation characters. Used for English prose.
+
+@item
+All: Speak out @strong{all} punctuation characters; useful in
+programming modes.
+@end itemize
+
+@example
+tts_set_speech_rate rate
+@end example
+
+@strong{Immediately} change speech rate. The interpretation of this
+value is typically engine specific.
+
+@example
+tts_set_character_scale factor
+@end example
+
+Queues changing the scale factor.  Scale factor applied to speech rate
+when speaking individual characters.Thus@comma{} setting speech rate to 500
+and character scale to 1.2 will cause command @strong{l} to use a
+speech rate of @strong{500 * 1.2 = 600}.
+
+@example
+tts_split_caps flag
+@end example
+
+Queues changing of the state of @strong{split caps} processing.  Turn
+this on to speak mixed-case (@acronym{AKA} Camel Case) identifiers.
+
+@example
+tts_sync_state punct splitcaps caps rate
+@end example
+
+@strong{Immediately} apply the passed settings.
+
+This ensures @strong{atomicity} i.e.@comma{} all state settings in the TTS
+engine happen at one shot. Note that failure to do this might result
+in some utterances being spoken with a partially set state.
+
+@itemize
+@item
+punct: see tts@math{_set}@math{_punctuations}
+
+@item
+splitcaps: see tts@math{_split}@math{_caps}
+
+@item
+caps: engine specific implementation of capital letter handling
+
+@item
+rate: see tts@math{_set}@math{_speech}@math{_rate}
+@end itemize
+
+@example
+set_next_lang say_it
+@end example
+
+@strong{Immediately} switch to the next language on the server@comma{}
+maintained internally on the TTS server. If say@math{_it} is non-nil say the
+language change via the TTS@.
+
+@example
+set_previous_lang say_it
+@end example
+
+@strong{Immediately} switch to the previous language on the server@comma{}
+maintained internally on the TTS server. If say@math{_it} is non-nil say the
+language change via the TTS@.
+
+@example
+set_lang language:voice say_it
+@end example
+
+@strong{Immediately} switch to the requested language and/or voice@comma{}
+separated by a colon. Examples
+
+@itemize
+@item
+set@math{_lang} "en"
+
+@item
+set@math{_lang} "en:whisper"
+
+@item
+set@math{_lang} ":whisper"
+@end itemize
+
+If say@math{_it} is non-nil@comma{} speak via the TTS the language and voice
+selected.
+
+@example
+set_preferred_lang alias lang
+@end example
+
+@strong{Immediately} set an alias in the TTS server mapping for
+example "en" to "en@math{_GB}". This can later be used by set@math{_lang}.
+@end enumerate
+
+@node Integration Maintenance
+@section Integration Maintenance
+
+This chapter collects source-level contracts that are deliberately omitted
+from the user task guides.  Optional package APIs and renderers evolve@comma{} so
+recheck the upstream interfaces and keep compatibility behavior bounded when
+changing an integration.
+
+@subsection Build and live-verification boundary
+
+For a source checkout@comma{} use the Emacs selected by @code{local.mk}.  Run
+@code{make check-emacs} before diagnosing compilation@comma{} @code{make bytecode} after an
+ordinary Lisp edit@comma{} and @code{make bytecode-rebuild} after switching branches or
+changing a macro or public interface.  Tests deliberately prefer source and
+therefore do not prove that the byte-code used by a live profile is current.
+Verify the rebuilt byte-code in a fresh Emacs rather than relying on a file
+reload when compiled dependants may already be resident.
+
+@subsection Notmuch contracts
+
+The live module is registered as an optional package integration.  Its stable
+extension points are the Hello@comma{} Search@comma{} Show@comma{} and Tree mode hooks; Search and
+Show mode maps; public interactive commands; and public Search/Show accessors.
+Advice is installed only when a target exists and is target-aware@comma{} so a nested
+or programmatic upstream call does not claim the outer user's feedback.
+
+The Show landing and visibility paths also read renderer metadata such as
+@code{:headers-overlay}@comma{} @code{:message-visible}@comma{} message extents@comma{} @code{:notmuch-part}@comma{}
+part-hidden state@comma{} and Notmuch part-button types.  Missing optional metadata
+should reduce presentation detail rather than authorize an operation.  Review
+these adapters whenever the Notmuch renderer changes.
+
+Each user-owned asynchronous Search process carries its own completion state
+as a process property.  The upstream sentinel renders first; Emacsvox then
+clears that property before delivering exactly one terminal result.  The
+owning buffer and process status are authoritative.  A killed owner remains
+silent@comma{} concurrent buffers cannot overwrite one another@comma{} and the global
+refresh-all path intentionally acquires no ownership.
+
+Run @code{make notmuch-test} for the explicit source suite.  After current byte-code
+exists@comma{} run @code{make compiled-notmuch-test}; it verifies the exact loaded
+@code{emacsvox-notmuch.elc}@comma{} compiler version@comma{} and the same focused selector@comma{}
+including real displayed-window reading for both advance paths.
+
+@subsection Agent Shell contracts
+
+Use @code{M-x emacsvox-agent-shell-enable} to reinstall speech hooks after
+deliberately disabling them or while testing live integration changes.
+
+The integration uses three deliberately different contract layers:
+
+@multitable @columnfractions .18 .37 .45
+@headitem Layer
+@tab Agent Shell owner
+@tab Emacsvox rule
+@item Public structured API
+@tab @code{agent-shell-subscribe-to}@comma{} @code{agent-shell-unsubscribe}@comma{} @code{agent-shell-status}@comma{} and @code{agent-shell-shell-buffer}; lifecycle@comma{} permission@comma{} and tool events
+@tab Primary authority for processing@comma{} completion@comma{} errors@comma{} permission urgency@comma{} and tool status. The public turn boundary triggers inspection of renderer-owned response sections. Event and response data is treated as untrusted content and bounded before automatic Aural submission.
+@item Experimental renderer metadata
+@tab @code{agent-shell-ui-state}@comma{} @code{agent-shell-ui-section}@comma{} rendered Markdown table/source properties@comma{} and renderer-owned faces
+@tab Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority.
+@item Private compatibility fallback
+@tab The aggregate @code{agent-shell--state}@comma{} the legacy viewport ownership resolver@comma{} viewport position helpers@comma{} and legacy face@comma{} prompt@comma{} or ID inference
+@tab Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response.
+@end multitable
+
+The lifecycle subscription currently consumes @code{init-started}@comma{}
+@code{init-finished}@comma{} @code{session-selected}@comma{} @code{session-restored}@comma{} @code{input-submitted}@comma{}
+@code{turn-complete}@comma{} and @code{error}.  Dedicated subscriptions consume
+@code{permission-request}@comma{} @code{permission-response}@comma{} and @code{tool-call-update}.  Add new
+semantic behavior at the public event layer when Agent Shell exposes it; keep
+renderer and private fallbacks isolated and covered by compatibility tests.
+
+@subsection WSL2 Omnivox development staging
+
+Maintainers testing tracked Emacsvox or Omnivox changes may use
+@code{make windows-omnivox-dev}.  That target records both worktree-diff hashes and
+labels the result as a development build; it is not the clean release
+procedure.  See @code{servers/omnivox-release/README.org} for the pinned toolchain@comma{}
+licensing@comma{} provenance@comma{} and restaging contract.
+
+Do not bypass the Omnivox release target manually or clean either repository
+to make its release guard pass.  Use @code{make windows-omnivox} only for the
+reproducible clean-release path documented in the user-facing WSL2 route.

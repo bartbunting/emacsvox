@@ -38,12 +38,14 @@ Exact generated reference:
 
 Additional current material:
 * Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
-* TTS Servers:  TTS Servers.
 
 Project information:
 * Manual Provenance: Announce.
 * Copying: Copyright.
 * Acknowledgments: Acknowledgments.
+
+Developer and maintainer guide:
+* Developer And Maintainer Guide: Developer Guide.
 
 Heritage (not current operating guidance):
 * Emacspeak Heritage: (emacsvox-heritage).

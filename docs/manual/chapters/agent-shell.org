@@ -268,28 +268,9 @@ provider's details and edit the live prompt before resubmitting.
 
 Use ~M-x agent-shell-restart~ when Agent Shell itself needs a fresh process
 for the same project.  Use ~M-x emacsvox-agent-shell-enable~ to reinstall
-speech hooks after deliberately disabling them or during live integration
-development.  Neither recovery command discards transcript files or project
-work.
+speech hooks after deliberately disabling them.  Neither recovery command
+discards transcript files or project work.
 
-** Integration ownership for maintainers
-:PROPERTIES:
-:TEXINFO_NODE: no
-:END:
-
-The integration uses three deliberately different contract layers:
-
-#+attr_texinfo: :columns .18 .37 .45
-| Layer | Agent Shell owner | Emacsvox rule |
-|---+---+---|
-| Public structured API | ~agent-shell-subscribe-to~, ~agent-shell-unsubscribe~, ~agent-shell-status~, and ~agent-shell-shell-buffer~; lifecycle, permission, and tool events | Primary authority for processing, completion, errors, permission urgency, and tool status. The public turn boundary triggers inspection of renderer-owned response sections. Event and response data is treated as untrusted content and bounded before automatic Aural submission. |
-| Experimental renderer metadata | ~agent-shell-ui-state~, ~agent-shell-ui-section~, rendered Markdown table/source properties, and renderer-owned faces | Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority. |
-| Private compatibility fallback | The aggregate ~agent-shell--state~, the legacy viewport ownership resolver, viewport position helpers, and legacy face, prompt, or ID inference | Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response. |
-
-The lifecycle subscription currently consumes ~init-started~,
-~init-finished~, ~session-selected~, ~session-restored~,
-~input-submitted~, ~turn-complete~, and ~error~.  Dedicated
-subscriptions consume ~permission-request~, ~permission-response~,
-and ~tool-call-update~.  Add new semantic behavior at the public event
-layer when Agent Shell exposes it; keep renderer and private fallbacks isolated
-and covered by compatibility tests.
+If you are changing the integration rather than using it, see
+@@texinfo:@ref{Integration Maintenance}@@ for its public event, renderer, and
+compatibility contracts.

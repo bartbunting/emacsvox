@@ -13,7 +13,8 @@
 
 #+begin_comment
 This is the canonical source for the hand-maintained Emacsvox user
-manual.  Generated reference and heritage manuals remain Texinfo.
+manual and its final developer guide.  Generated reference and heritage
+manuals remain Texinfo.
 #+end_comment
 
 #+include: "chapters/introduction.org"
@@ -29,7 +30,9 @@ manual.  Generated reference and heritage manuals remain Texinfo.
 #+include: "chapters/eat.org"
 #+include: "chapters/term.org"
 #+include: "chapters/keyboard.org"
-#+include: "chapters/tts-server.org"
 #+include: "chapters/provenance.org"
 #+include: "chapters/copyright.org"
 #+include: "chapters/acknowledgments.org"
+#+include: "../developer/index.org"
+#+include: "../developer/speech-server-protocols.org" :minlevel 2
+#+include: "../developer/integration-maintenance.org" :minlevel 2

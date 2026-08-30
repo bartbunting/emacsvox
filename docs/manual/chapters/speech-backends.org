@@ -125,11 +125,9 @@ Windows-local directory so native voice and eSpeak data discovery do not pay
 the WSL filesystem cost.  Optional proprietary Eloquence and DECtalk runtimes
 are not downloaded or distributed.
 
-Maintainers testing tracked changes may use
-~make windows-omnivox-dev~.  That target records both worktree-diff
-hashes and labels the result as a development build; it is not the clean
-release procedure.  See ~servers/omnivox-release/README.org~ for the
-pinned toolchain, licensing, provenance, and restaging contract.
+Maintainers testing tracked changes should use the development route in
+@@texinfo:@ref{Integration Maintenance}@@ rather than weakening the clean-release
+guard.
 
 ** Selecting And Checking Omnivox
 :PROPERTIES:

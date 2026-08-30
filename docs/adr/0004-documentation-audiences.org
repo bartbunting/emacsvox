@@ -1,0 +1,116 @@
+#+title: ADR 0004: Documentation Audiences and Maintainer Boundaries
+#+date: 2026-08-30
+#+startup: content
+
+* Status
+
+Accepted.
+
+* Context
+
+The Emacsvox user manual has grown to include speech-server protocol details,
+integration ownership contracts, compilation targets, focused test suites, and
+release-staging mechanics inside chapters written for ordinary users.  That
+material is useful, but it creates abrupt changes of audience in installation,
+mail, and Agent Shell task guides.  It also makes the shortest route to a
+working audio desktop feel more complex than it is.
+
+Emacsvox must retain complete offline documentation and the fast Org export
+and publication workflow established by ADR 0001.  Creating an independent
+developer manual now would add another build, installation, navigation, and
+publication path before the developer material is large enough to justify it.
+
+* Decision
+
+** Separate source by audience
+
+Hand-maintained documentation is divided as follows:
+
+- =docs/manual/chapters/= contains current-user guidance: installation,
+  ordinary configuration, supported tasks, observable behavior, and recovery
+  that does not require changing Emacsvox source.
+
+- =docs/developer/= contains developer and maintainer guidance: architecture,
+  protocol and schema contracts, integration ownership, compilation and
+  focused test procedures, compatibility maintenance, and release staging.
+
+The developer sources are included as a final, explicitly labeled Developer
+and Maintainer Guide in the same Org master and generated Info and HTML
+manuals.  This preserves one offline artifact and one publication pipeline
+while keeping developer material outside the normal current-user path.
+
+User chapters keep concise user-facing diagnostics and link to the developer
+guide when source-level work is relevant.  They do not duplicate the detailed
+maintenance procedure.
+
+** Give each documentation form one responsibility
+
+- The user chapters explain how to install, use, configure, and recover
+  Emacsvox as a product.
+
+- The developer guide explains how to change, test, and release Emacsvox and
+  its integrations.
+
+- The generated reference records the exact Lisp commands, options, keymaps,
+  and other mechanically discoverable interfaces.
+
+- Architecture Decision Records record durable project decisions, their
+  context, alternatives, and consequences.  Agents and contributors read all
+  accepted ADRs before making a change governed by them.
+
+Source-tree plans, reports, and implementation notes are not substitutes for
+current user or developer operating guidance.
+
+** Apply an audience test during review
+
+Material belongs in the developer guide when following it requires editing
+Lisp, compiling or rebuilding byte-code, running focused test or release
+targets, understanding a protocol or renderer contract, or reasoning about
+implementation ownership.  Material belongs in the user chapters when an
+ordinary user needs it to install, configure, operate, diagnose, or recover
+the running product.
+
+Intentional node changes update =docs/manual/nodes.txt= and pass the release
+documentation gate established by ADR 0001.
+
+* Consequences
+
+- The beginning and task-oriented parts of the manual maintain a consistent,
+  welcoming user audience.
+- Developers retain searchable, linked, offline protocol and maintenance
+  material in the published manual.
+- The existing preview, generation, validation, and =gh-pages= publication
+  machinery remains a single pipeline.
+- Some user chapters contain short links whose destination is later in the
+  manual rather than containing all source-level detail locally.
+- A substantially larger developer guide may eventually justify a separate
+  artifact, but that requires a new decision and build design.
+
+* Alternatives considered
+
+** Keep maintainer material inline in task chapters
+
+Rejected.  It preserves locality for developers at the cost of interrupting
+the ordinary user's path with implementation detail.
+
+** Publish a separate developer manual immediately
+
+Deferred.  It would create additional build and publication machinery without
+yet providing enough independent material to outweigh the maintenance and
+navigation cost.
+
+** Put maintainer prose in the generated reference
+
+Rejected.  The reference is generated from code and should describe exact
+interfaces; architectural rationale and multi-step maintenance procedures are
+hand-maintained prose.
+
+* Follow-up
+
+1. Move speech-server protocols and optional-integration contracts into
+   =docs/developer/=.
+2. Keep user-facing recovery in the Notmuch, Agent Shell, and speech-backend
+   chapters and link to the moved maintenance guidance.
+3. Review new documentation against the audience test during normal changes.
+4. Reconsider a separately generated developer artifact if this guide becomes
+   difficult to navigate as one final section of the manual.

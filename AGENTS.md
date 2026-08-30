@@ -34,9 +34,11 @@
   it before `make release-tag` and `make release-publish`. Never tag or push
   around a failed gate.
 - Reports and internal notes do not require an Emacsvox build. The maintained
-  user-manual source is `docs/manual/emacsvox.org` plus its included files under
-  `docs/manual/chapters/`. Iterate with `make docs-org-preview`; it lints and
-  exports Org to Texinfo, Info, and HTML below ignored
+  manual source is `docs/manual/emacsvox.org`, its included user chapters under
+  `docs/manual/chapters/`, and its final developer guide under
+  `docs/developer/`. Follow the audience boundary in the accepted documentation
+  ADRs. Iterate with `make docs-org-preview`; it lints and exports Org to
+  Texinfo, Info, and HTML below ignored
   `.docs-preview/org-manual/` without loading Emacsvox. Run `make docs-update`
   once the text settles to update the tracked generated Texinfo body and Info
   artifacts; never edit those generated files directly. For retained Texinfo

@@ -5,8 +5,12 @@
 
 [[file:emacsvox.org][emacsvox.org]] is the canonical master for the maintained
 Emacsvox user manual.  It supplies document metadata and includes the chapter
-files below [[file:chapters/][chapters/]].  Edit those Org files; do not edit the generated
-=info/emacsvox-body.texi= or =info/emacsvox.info= files directly.
+files below [[file:chapters/][chapters/]] and the final developer guide below
+[[file:../developer/][docs/developer/]].  Edit those Org files; do not edit the generated
+=info/emacsvox-body.texi= or =info/emacsvox.info= files directly.  ADR 0004
+defines the audience boundary: user tasks and recovery stay in =chapters/=;
+protocols, integration contracts, source-level tests, and release mechanics
+belong in =docs/developer/=.
 
 The generated command/key reference and the historical heritage manuals remain
 Texinfo.  They do not benefit from hand conversion to Org.

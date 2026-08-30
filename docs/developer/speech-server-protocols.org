@@ -1,7 +1,6 @@
 * Speech Server Protocols
 :PROPERTIES:
-:TEXINFO_NODE_NAME: TTS Servers
-:ALT_TITLE: TTS Servers
+:TEXINFO_NODE_NAME: Speech Server Protocols
 :DESCRIPTION: Understand speech-server protocols.
 :END:
 
