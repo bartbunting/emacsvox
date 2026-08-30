@@ -58,7 +58,7 @@ binding.
 ** Emacsvox Overview
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Overview
-:ALT_TITLE: Overview
+:ALT_TITLE: How Emacsvox Helps
 :DESCRIPTION: Understand the main kinds of Emacsvox feedback.
 :END:
 
@@ -68,27 +68,21 @@ larger unit.  Commands announce useful results and state changes, while
 application integrations present structures such as messages, search results,
 tables, source code, and Web pages.
 
-Voice Lock uses changes in speech characteristics to make text structure
-audible.  For example, comments, quoted strings, reserved words, headings, and
-links can sound different without an explanation being inserted into the text.
-See @@texinfo:@ref{Aural Presentation}@@ for configuration and @@texinfo:@ref{Web Browsing}@@ for a
-task-oriented example in EWW.
+Changes in voice, short auditory icons, and tones make structure and familiar
+events recognizable without inserting extra words.  Pronunciation dictionaries
+can also correct names and technical terms globally or for one mode or file.
+You do not need to configure these systems before beginning; first notice what
+the active mode presents automatically.
 
-Pronunciation dictionaries let you adjust how a name, technical term, or
-programming-language word is spoken.  A dictionary can apply everywhere or
-only in a particular mode or file; see
-@@texinfo:@ref{emacsvox-pronounce,,,emacsvox-reference,Emacsvox Reference Manual}@@.
-
-Short auditory icons and tones mark events such as opening or deleting a file,
-finishing an action, receiving mail, or displaying completions.  They
-supplement speech and become especially useful as familiar events no longer
-need a full spoken explanation.  See
-@@texinfo:@ref{emacsvox-sounds,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the available sound support.
+For an everyday Voice Lock experiment, see @@texinfo:@ref{Voice-lock,Hear Structure With Voice Lock}@@.
+When you want to understand or change voices, sounds, pronunciation, or other
+presentation choices, continue with @@texinfo:@ref{Aural Presentation}@@.  The generated
+reference remains the exact inventory of their commands and options.
 
 ** Using Emacs Buffers
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Working
-:ALT_TITLE: Working
+:ALT_TITLE: Using Emacs Buffers
 :DESCRIPTION: Understand feedback while editing and completing text.
 :END:
 
@@ -121,7 +115,7 @@ application.
 ** Reading And Navigating
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Reading
-:ALT_TITLE: Reading
+:ALT_TITLE: Reading And Navigating
 :DESCRIPTION: Reading chunks of information.
 :END:
 
@@ -226,10 +220,10 @@ text before or after point.  Use @@texinfo:@kbd{C-h k}@@ on a command before rel
 on those variants, because their exact argument behavior is documented
 with the command.
 
-** Speech System Commands
+** Adjust Speech While You Work
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Speech System
-:ALT_TITLE: Speech System
+:ALT_TITLE: Adjust Speech While You Work
 :DESCRIPTION: Adjust speech for the way you are working.
 :END:
 
@@ -248,10 +242,10 @@ The generated
 @@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@ contains the complete speech keymap, including specialist
 server and text-chunking controls.
 
-*** Choose What Is Echoed While Typing
+*** Choose Typing Echo
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Controlling Echo
-:ALT_TITLE: Controlling Echo
+:ALT_TITLE: Choose Typing Echo
 :DESCRIPTION: Choose character, word, and line feedback while typing.
 :END:
 
@@ -298,17 +292,17 @@ change the corresponding default and apply it to the current buffer.
 
   Toggle line echo.
 
-*** Adjust Rate, Punctuation, Capitals, And Indentation
+*** Adjust Rate And Spoken Detail
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Speech Output Control
-:ALT_TITLE: Speech Output Control
+:ALT_TITLE: Adjust Rate And Spoken Detail
 :DESCRIPTION: Adjust rate and how textual detail is presented.
 :END:
 
 Use these controls to match speech to the current material.  A faster rate may
 suit familiar prose; full punctuation can help when inspecting code or exact
-text.  Capitalization and indentation each have an on/off control and a
-separate choice of spoken or tonal presentation.
+text.  Start with rate and punctuation, then change capitalization or
+indentation feedback only when the distinction would help your current task.
 
 The commands affect the current buffer unless their interactive help describes
 a global prefix form.  Use @@texinfo:@kbd{C-h k}@@ on a key before changing the global
@@ -317,99 +311,35 @@ default.
 #+attr_texinfo: :indic kbd :compact t
 - C-e d r ::
 
-  #+findex: tts-set-rate
-
-  #+kindex: C-e d r
-
-  ~tts-set-rate~
-
-  Enter a speech rate for the current buffer.
-- C-e d f ::
-
-  #+findex: tts-set-character-scale
-
-  #+kindex: C-e d f
-
-  ~tts-set-character-scale~
-
-  Set the rate multiplier used when speaking individual characters.
+  Enter a speech rate for the current buffer with ~tts-set-rate~.
 - C-e d DIGIT ::
-
-  #+findex: tts-set-predefined-rate
-
-  #+kindex: C-e d DIGIT
-
-  ~tts-set-predefined-rate~
 
   Choose one of ten predefined rates with @@texinfo:@kbd{0}@@ through @@texinfo:@kbd{9}@@.
 - C-e d p ::
 
-  #+findex: tts-set-punctuations
-
-  #+kindex: C-e d p
-
-  ~tts-set-punctuations~
-
-  Choose ~some~, ~all~, or ~none~ punctuation.
+  Choose ~some~, ~all~, or ~none~ punctuation with ~tts-set-punctuations~.
 - C-e d s ::
 
-  #+findex: tts-toggle-split-caps
-
-  #+kindex: C-e d s
-
-  ~tts-toggle-split-caps~
-
   Toggle splitting of mixed-capital identifiers into separate words.
-- C-e d c ::
+- C-e d c / C-e d C ::
 
-  #+kindex: C-e d c
+  Toggle capitalization indication with the lowercase key.  Use the uppercase
+  key to preview and choose whether capitals use speech, a tone, both, a custom
+  rule, or no added indication.
+- C-e d i / C-e d I ::
 
-  #+findex: tts-toggle-caps
+  Toggle indentation feedback with the lowercase key.  Use the uppercase key
+  to preview spoken-column and tonal choices.
 
-  ~tts-toggle-caps~
+Character-rate scaling, text chunking, engine-specific controls, and reusable
+presentation profiles are intentionally outside this starter chapter.  Use
+live help for the current speech keymap and see @@texinfo:@ref{Aural Presentation}@@ when
+you want a complete presentation setup rather than a temporary buffer change.
 
-  Toggle capitalization indication.
-- C-e d C ::
-
-  #+kindex: C-e d C
-
-  #+findex: emacsvox-set-capitalization-presentation
-
-  ~emacsvox-set-capitalization-presentation~
-
-  Choose speech, a tone, both, a custom Aural rule, or no added indication.
-  The command previews representative text before you finish.
-
-Indentation feedback is especially useful in source code and other structured
-text.  You can switch it off independently or choose how indentation is
-presented.
-
-#+attr_texinfo: :indic kbd :compact t
-- C-e d i ::
-
-  #+findex: emacsvox-toggle-audio-indentation
-
-  #+kindex: C-e d i
-
-  ~emacsvox-toggle-audio-indentation~
-
-  Toggle indentation feedback.
-- C-e d I ::
-
-  #+findex: emacsvox-set-indentation-presentation
-
-  #+kindex: C-e d I
-
-  ~emacsvox-set-indentation-presentation~
-
-  Choose a spoken column, one of the tone styles, speech and tone together, a
-  custom Aural rule, or no added indication.  The command previews an indented
-  sample before you finish.
-
-*** Stop, Silence, Restart, Or Identify Speech
+*** Stop Or Restart Speech
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Miscellaneous
-:ALT_TITLE: Miscellaneous
+:ALT_TITLE: Stop Or Restart Speech
 :DESCRIPTION: Stop, silence, restart, or identify the speech server.
 :END:
 
@@ -421,43 +351,15 @@ synthesizer.
 #+attr_texinfo: :indic kbd :compact t
 - C-e s ::
 
-  #+findex: tts-stop
-
-  #+kindex: C-e s
-
-  ~tts-stop~
-
-  Stop speech now.
+  Stop speech now with ~tts-stop~.
 - C-e d q ::
 
-  #+findex: tts-toggle-quiet
-
-  #+kindex: C-e d q
-
-  ~tts-toggle-quiet~
-
-  Toggle speech in the current buffer.  Press @@texinfo:@kbd{C-u}@@ first to toggle it
-  globally.
+  Toggle quiet mode in the current buffer.  Press @@texinfo:@kbd{C-u}@@ first to toggle
+  it globally.
 - C-e C-s ::
 
-  #+findex: tts-restart
-
-  #+kindex: C-e C-s
-
-  ~tts-restart~
-
   Stop and restart the selected speech server.
-
-To hear which speech adapter is running, use:
-
-#+attr_texinfo: :indic kbd :compact t
 - C-e d V ::
-
-  #+findex: tts-speak-version
-
-  #+kindex: C-e d V
-
-  ~tts-speak-version~
 
   Speak the selected adapter and its version information.
 
@@ -466,10 +368,10 @@ repeated-pattern cleanup, text splitting, language selection, and direct engine
 controls.  Those specialist settings are intentionally outside this starter
 guide.
 
-** Voice Lock Mode
+** Hear Structure With Voice Lock
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Voice-lock
-:ALT_TITLE: Voice-lock
+:ALT_TITLE: Hear Structure With Voice Lock
 :DESCRIPTION: Hear document and program structure through voice changes.
 :END:
 
@@ -478,27 +380,25 @@ other structural text properties to speech personalities, allowing comments,
 strings, headings, links, and other elements to sound distinct without adding
 words to the document.
 
-The exact personalities depend on the selected speech engine and your Aural
-Presentation settings.  Try Voice Lock in source code, Org, Info, or EWW to
-hear the active mode's structure.
+Try it in source code, Org, Info, or EWW.  Move between two differently styled
+elements, such as a comment and a string or a heading and a link.  Press
+@@texinfo:@kbd{C-e d v}@@ to turn Voice Lock off in that buffer, compare the same text,
+then press the key again to restore it.
 
-To disable Voice Lock globally, run @@texinfo:@kbd{M-x global-voice-lock-mode}@@ or
-add this form to your Emacs init file:
+Use @@texinfo:@kbd{C-e d C-v}@@ when you want to change Voice Lock globally.  Turning it
+off removes this layer of voice changes; it does not silence ordinary speech,
+semantic feedback, tones, or auditory icons.
 
-#+begin_src emacs-lisp
-(global-voice-lock-mode -1)
-#+end_src
-
-The current binding and command reference are in
-@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.  For the wider system and customization workflow, see
-@@texinfo:@ref{Aural Presentation}@@; for compatibility behavior specifically, see
-@@texinfo:@ref{Voice Lock}@@.  For historical context on Aural CSS, see
-@@texinfo:@ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}@@.
+The exact personalities depend on the speech engine and active presentation
+settings.  For an explanation of the separate Voice Lock, face-presentation,
+and semantic-presentation layers, see @@texinfo:@ref{Voice Lock}@@.  Use
+@@texinfo:@ref{Aural Presentation}@@ when you want to choose voices, sounds, profiles, or
+other reusable presentation behavior.
 
 ** Find Out Where You Are
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Status Information
-:ALT_TITLE: Status Information
+:ALT_TITLE: Find Out Where You Are
 :DESCRIPTION: Ask about the current buffer, position, and Emacs state.
 :END:
 
@@ -527,34 +427,6 @@ Less common status commands are listed in the
   ~emacsvox-speak-mode-line~
 
   Speak the mode line, including the buffer name and major mode.
-- C-e M ::
-
-  #+findex: emacsvox-speak-minor-mode-line
-
-  #+kindex: C-e M
-
-  ~emacsvox-speak-minor-mode-line~
-
-  Speak the active minor-mode information.
-- C-e C-x ::
-
-  #+findex: emacsvox-speak-header-line
-
-  #+kindex: C-e C-x
-
-  ~emacsvox-speak-header-line~
-
-  Speak the header line when the current buffer has one.
-
-- C-e C-w ::
-
-  #+findex: emacsvox-speak-window-information
-
-  #+kindex: C-e C-w
-
-  ~emacsvox-speak-window-information~
-
-  Describe the current Emacs window arrangement.
 - C-e f ::
 
   #+findex: emacsvox-speak-buffer-filename

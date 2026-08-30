@@ -371,12 +371,12 @@ the essential keys and feedback.  It begins with a short guided session@comma{} 
 introduces the reading and speech controls you are most likely to need.
 
 @menu
-* Overview::                     Understand the main kinds of Emacsvox feedback.
-* Working::                      Understand feedback while editing and completing text.
-* Reading::                      Reading chunks of information.
-* Speech System::                Adjust speech for the way you are working.
-* Voice-lock::                   Hear document and program structure through voice changes.
-* Status Information::           Ask about the current buffer, position, and Emacs state.
+* How Emacsvox Helps: Overview.  Understand the main kinds of Emacsvox feedback.
+* Using Emacs Buffers: Working.  Understand feedback while editing and completing text.
+* Reading And Navigating: Reading.  Reading chunks of information.
+* Adjust Speech While You Work: Speech System.  Adjust speech for the way you are working.
+* Hear Structure With Voice Lock: Voice-lock.  Hear document and program structure through voice changes.
+* Find Out Where You Are: Status Information.  Ask about the current buffer, position, and Emacs state.
 @end menu
 
 @section Key Notation And Emacs Words
@@ -436,22 +436,16 @@ larger unit.  Commands announce useful results and state changes@comma{} while
 application integrations present structures such as messages@comma{} search results@comma{}
 tables@comma{} source code@comma{} and Web pages.
 
-Voice Lock uses changes in speech characteristics to make text structure
-audible.  For example@comma{} comments@comma{} quoted strings@comma{} reserved words@comma{} headings@comma{} and
-links can sound different without an explanation being inserted into the text.
-See @ref{Aural Presentation} for configuration and @ref{Web Browsing} for a
-task-oriented example in EWW@.
+Changes in voice@comma{} short auditory icons@comma{} and tones make structure and familiar
+events recognizable without inserting extra words.  Pronunciation dictionaries
+can also correct names and technical terms globally or for one mode or file.
+You do not need to configure these systems before beginning; first notice what
+the active mode presents automatically.
 
-Pronunciation dictionaries let you adjust how a name@comma{} technical term@comma{} or
-programming-language word is spoken.  A dictionary can apply everywhere or
-only in a particular mode or file; see
-@ref{emacsvox-pronounce,,,emacsvox-reference,Emacsvox Reference Manual}.
-
-Short auditory icons and tones mark events such as opening or deleting a file@comma{}
-finishing an action@comma{} receiving mail@comma{} or displaying completions.  They
-supplement speech and become especially useful as familiar events no longer
-need a full spoken explanation.  See
-@ref{emacsvox-sounds,,,emacsvox-reference,Emacsvox Reference Manual} for the available sound support.
+For an everyday Voice Lock experiment@comma{} see @ref{Voice-lock,Hear Structure With Voice Lock}.
+When you want to understand or change voices@comma{} sounds@comma{} pronunciation@comma{} or other
+presentation choices@comma{} continue with @ref{Aural Presentation}.  The generated
+reference remains the exact inventory of their commands and options.
 
 @node Working
 @section Using Emacs Buffers
@@ -580,7 +574,7 @@ on those variants@comma{} because their exact argument behavior is documented
 with the command.
 
 @node Speech System
-@section Speech System Commands
+@section Adjust Speech While You Work
 
 @cindex TTS
 
@@ -598,13 +592,13 @@ The generated
 server and text-chunking controls.
 
 @menu
-* Controlling Echo::             Choose character, word, and line feedback while typing.
-* Speech Output Control::        Adjust rate and how textual detail is presented.
-* Miscellaneous::                Stop, silence, restart, or identify the speech server.
+* Choose Typing Echo: Controlling Echo.  Choose character, word, and line feedback while typing.
+* Adjust Rate And Spoken Detail: Speech Output Control.  Adjust rate and how textual detail is presented.
+* Stop Or Restart Speech: Miscellaneous.  Stop, silence, restart, or identify the speech server.
 @end menu
 
 @node Controlling Echo
-@subsection Choose What Is Echoed While Typing
+@subsection Choose Typing Echo
 
 @cindex line echo
 
@@ -648,12 +642,12 @@ Toggle line echo.
 @end table
 
 @node Speech Output Control
-@subsection Adjust Rate@comma{} Punctuation@comma{} Capitals@comma{} And Indentation
+@subsection Adjust Rate And Spoken Detail
 
 Use these controls to match speech to the current material.  A faster rate may
 suit familiar prose; full punctuation can help when inspecting code or exact
-text.  Capitalization and indentation each have an on/off control and a
-separate choice of spoken or tonal presentation.
+text.  Start with rate and punctuation@comma{} then change capitalization or
+indentation feedback only when the distinction would help your current task.
 
 The commands affect the current buffer unless their interactive help describes
 a global prefix form.  Use @kbd{C-h k} on a key before changing the global
@@ -661,91 +655,29 @@ default.
 
 @table @kbd
 @item C-e d r
-@findex tts-set-rate
-
-@kindex C-e d r
-
-@code{tts-set-rate}
-
-Enter a speech rate for the current buffer.
-@item C-e d f
-@findex tts-set-character-scale
-
-@kindex C-e d f
-
-@code{tts-set-character-scale}
-
-Set the rate multiplier used when speaking individual characters.
+Enter a speech rate for the current buffer with @code{tts-set-rate}.
 @item C-e d DIGIT
-@findex tts-set-predefined-rate
-
-@kindex C-e d DIGIT
-
-@code{tts-set-predefined-rate}
-
 Choose one of ten predefined rates with @kbd{0} through @kbd{9}.
 @item C-e d p
-@findex tts-set-punctuations
-
-@kindex C-e d p
-
-@code{tts-set-punctuations}
-
-Choose @code{some}@comma{} @code{all}@comma{} or @code{none} punctuation.
+Choose @code{some}@comma{} @code{all}@comma{} or @code{none} punctuation with @code{tts-set-punctuations}.
 @item C-e d s
-@findex tts-toggle-split-caps
-
-@kindex C-e d s
-
-@code{tts-toggle-split-caps}
-
 Toggle splitting of mixed-capital identifiers into separate words.
-@item C-e d c
-@kindex C-e d c
-
-@findex tts-toggle-caps
-
-@code{tts-toggle-caps}
-
-Toggle capitalization indication.
-@item C-e d C
-@kindex C-e d C
-
-@findex emacsvox-set-capitalization-presentation
-
-@code{emacsvox-set-capitalization-presentation}
-
-Choose speech@comma{} a tone@comma{} both@comma{} a custom Aural rule@comma{} or no added indication.
-The command previews representative text before you finish.
+@item C-e d c / C-e d C
+Toggle capitalization indication with the lowercase key.  Use the uppercase
+key to preview and choose whether capitals use speech@comma{} a tone@comma{} both@comma{} a custom
+rule@comma{} or no added indication.
+@item C-e d i / C-e d I
+Toggle indentation feedback with the lowercase key.  Use the uppercase key
+to preview spoken-column and tonal choices.
 @end table
 
-Indentation feedback is especially useful in source code and other structured
-text.  You can switch it off independently or choose how indentation is
-presented.
-
-@table @kbd
-@item C-e d i
-@findex emacsvox-toggle-audio-indentation
-
-@kindex C-e d i
-
-@code{emacsvox-toggle-audio-indentation}
-
-Toggle indentation feedback.
-@item C-e d I
-@findex emacsvox-set-indentation-presentation
-
-@kindex C-e d I
-
-@code{emacsvox-set-indentation-presentation}
-
-Choose a spoken column@comma{} one of the tone styles@comma{} speech and tone together@comma{} a
-custom Aural rule@comma{} or no added indication.  The command previews an indented
-sample before you finish.
-@end table
+Character-rate scaling@comma{} text chunking@comma{} engine-specific controls@comma{} and reusable
+presentation profiles are intentionally outside this starter chapter.  Use
+live help for the current speech keymap and see @ref{Aural Presentation} when
+you want a complete presentation setup rather than a temporary buffer change.
 
 @node Miscellaneous
-@subsection Stop@comma{} Silence@comma{} Restart@comma{} Or Identify Speech
+@subsection Stop Or Restart Speech
 
 Stopping speech ends the current output without disabling future feedback.
 Quiet mode is useful when you temporarily want to keep working without speech.
@@ -754,42 +686,13 @@ synthesizer.
 
 @table @kbd
 @item C-e s
-@findex tts-stop
-
-@kindex C-e s
-
-@code{tts-stop}
-
-Stop speech now.
+Stop speech now with @code{tts-stop}.
 @item C-e d q
-@findex tts-toggle-quiet
-
-@kindex C-e d q
-
-@code{tts-toggle-quiet}
-
-Toggle speech in the current buffer.  Press @kbd{C-u} first to toggle it
-globally.
+Toggle quiet mode in the current buffer.  Press @kbd{C-u} first to toggle
+it globally.
 @item C-e C-s
-@findex tts-restart
-
-@kindex C-e C-s
-
-@code{tts-restart}
-
 Stop and restart the selected speech server.
-@end table
-
-To hear which speech adapter is running@comma{} use:
-
-@table @kbd
 @item C-e d V
-@findex tts-speak-version
-
-@kindex C-e d V
-
-@code{tts-speak-version}
-
 Speak the selected adapter and its version information.
 @end table
 
@@ -799,29 +702,27 @@ controls.  Those specialist settings are intentionally outside this starter
 guide.
 
 @node Voice-lock
-@section Voice Lock Mode
+@section Hear Structure With Voice Lock
 
 Voice Lock is enabled automatically in supported buffers.  It maps faces and
 other structural text properties to speech personalities@comma{} allowing comments@comma{}
 strings@comma{} headings@comma{} links@comma{} and other elements to sound distinct without adding
 words to the document.
 
-The exact personalities depend on the selected speech engine and your Aural
-Presentation settings.  Try Voice Lock in source code@comma{} Org@comma{} Info@comma{} or EWW to
-hear the active mode's structure.
+Try it in source code@comma{} Org@comma{} Info@comma{} or EWW@.  Move between two differently styled
+elements@comma{} such as a comment and a string or a heading and a link.  Press
+@kbd{C-e d v} to turn Voice Lock off in that buffer@comma{} compare the same text@comma{}
+then press the key again to restore it.
 
-To disable Voice Lock globally@comma{} run @kbd{M-x global-voice-lock-mode} or
-add this form to your Emacs init file:
+Use @kbd{C-e d C-v} when you want to change Voice Lock globally.  Turning it
+off removes this layer of voice changes; it does not silence ordinary speech@comma{}
+semantic feedback@comma{} tones@comma{} or auditory icons.
 
-@lisp
-(global-voice-lock-mode -1)
-@end lisp
-
-The current binding and command reference are in
-@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.  For the wider system and customization workflow@comma{} see
-@ref{Aural Presentation}; for compatibility behavior specifically@comma{} see
-@ref{Voice Lock}.  For historical context on Aural CSS@comma{} see
-@ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}.
+The exact personalities depend on the speech engine and active presentation
+settings.  For an explanation of the separate Voice Lock@comma{} face-presentation@comma{}
+and semantic-presentation layers@comma{} see @ref{Voice Lock}.  Use
+@ref{Aural Presentation} when you want to choose voices@comma{} sounds@comma{} profiles@comma{} or
+other reusable presentation behavior.
 
 @node Status Information
 @section Find Out Where You Are
@@ -848,31 +749,6 @@ Repeat the last Emacs message.
 @code{emacsvox-speak-mode-line}
 
 Speak the mode line@comma{} including the buffer name and major mode.
-@item C-e M
-@findex emacsvox-speak-minor-mode-line
-
-@kindex C-e M
-
-@code{emacsvox-speak-minor-mode-line}
-
-Speak the active minor-mode information.
-@item C-e C-x
-@findex emacsvox-speak-header-line
-
-@kindex C-e C-x
-
-@code{emacsvox-speak-header-line}
-
-Speak the header line when the current buffer has one.
-
-@item C-e C-w
-@findex emacsvox-speak-window-information
-
-@kindex C-e C-w
-
-@code{emacsvox-speak-window-information}
-
-Describe the current Emacs window arrangement.
 @item C-e f
 @findex emacsvox-speak-buffer-filename
 

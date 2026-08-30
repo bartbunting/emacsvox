@@ -430,12 +430,12 @@ likely to need.
 
 * Menu:
 
-* Overview::                     Understand the main kinds of Emacsvox feedback.
-* Working::                      Understand feedback while editing and completing text.
-* Reading::                      Reading chunks of information.
-* Speech System::                Adjust speech for the way you are working.
-* Voice-lock::                   Hear document and program structure through voice changes.
-* Status Information::           Ask about the current buffer, position, and Emacs state.
+* How Emacsvox Helps: Overview.  Understand the main kinds of Emacsvox feedback.
+* Using Emacs Buffers: Working.  Understand feedback while editing and completing text.
+* Reading And Navigating: Reading.  Reading chunks of information.
+* Adjust Speech While You Work: Speech System.  Adjust speech for the way you are working.
+* Hear Structure With Voice Lock: Voice-lock.  Hear document and program structure through voice changes.
+* Find Out Where You Are: Status Information.  Ask about the current buffer, position, and Emacs state.
 
 3.1 Key Notation And Emacs Words
 ================================
@@ -491,23 +491,18 @@ line, or larger unit.  Commands announce useful results and state
 changes, while application integrations present structures such as
 messages, search results, tables, source code, and Web pages.
 
-   Voice Lock uses changes in speech characteristics to make text
-structure audible.  For example, comments, quoted strings, reserved
-words, headings, and links can sound different without an explanation
-being inserted into the text.  See *note Aural Presentation:: for
-configuration and *note Web Browsing:: for a task-oriented example in
-EWW.
+   Changes in voice, short auditory icons, and tones make structure and
+familiar events recognizable without inserting extra words.
+Pronunciation dictionaries can also correct names and technical terms
+globally or for one mode or file.  You do not need to configure these
+systems before beginning; first notice what the active mode presents
+automatically.
 
-   Pronunciation dictionaries let you adjust how a name, technical term,
-or programming-language word is spoken.  A dictionary can apply
-everywhere or only in a particular mode or file; see *note
-(emacsvox-reference)emacsvox-pronounce::.
-
-   Short auditory icons and tones mark events such as opening or
-deleting a file, finishing an action, receiving mail, or displaying
-completions.  They supplement speech and become especially useful as
-familiar events no longer need a full spoken explanation.  See *note
-(emacsvox-reference)emacsvox-sounds:: for the available sound support.
+   For an everyday Voice Lock experiment, see *note Hear Structure With
+Voice Lock: Voice-lock.  When you want to understand or change voices,
+sounds, pronunciation, or other presentation choices, continue with
+*note Aural Presentation::.  The generated reference remains the exact
+inventory of their commands and options.
 
 
 File: emacsvox.info,  Node: Working,  Next: Reading,  Prev: Overview,  Up: Basic Usage
@@ -607,8 +602,8 @@ with the command.
 
 File: emacsvox.info,  Node: Speech System,  Next: Voice-lock,  Prev: Reading,  Up: Basic Usage
 
-3.6 Speech System Commands
-==========================
+3.6 Adjust Speech While You Work
+================================
 
 Start with the controls in this section when speech is too fast, too
 detailed, or inappropriate for the current task.  Most settings apply
@@ -621,15 +616,15 @@ text-chunking controls.
 
 * Menu:
 
-* Controlling Echo::             Choose character, word, and line feedback while typing.
-* Speech Output Control::        Adjust rate and how textual detail is presented.
-* Miscellaneous::                Stop, silence, restart, or identify the speech server.
+* Choose Typing Echo: Controlling Echo.  Choose character, word, and line feedback while typing.
+* Adjust Rate And Spoken Detail: Speech Output Control.  Adjust rate and how textual detail is presented.
+* Stop Or Restart Speech: Miscellaneous.  Stop, silence, restart, or identify the speech server.
 
 
 File: emacsvox.info,  Node: Controlling Echo,  Next: Speech Output Control,  Up: Speech System
 
-3.6.1 Choose What Is Echoed While Typing
-----------------------------------------
+3.6.1 Choose Typing Echo
+------------------------
 
 Character echo speaks each character you type.  Word echo speaks a word
 when you finish it, and optional line echo speaks a completed line.
@@ -659,78 +654,47 @@ change the corresponding default and apply it to the current buffer.
 
 File: emacsvox.info,  Node: Speech Output Control,  Next: Miscellaneous,  Prev: Controlling Echo,  Up: Speech System
 
-3.6.2 Adjust Rate, Punctuation, Capitals, And Indentation
----------------------------------------------------------
+3.6.2 Adjust Rate And Spoken Detail
+-----------------------------------
 
 Use these controls to match speech to the current material.  A faster
 rate may suit familiar prose; full punctuation can help when inspecting
-code or exact text.  Capitalization and indentation each have an on/off
-control and a separate choice of spoken or tonal presentation.
+code or exact text.  Start with rate and punctuation, then change
+capitalization or indentation feedback only when the distinction would
+help your current task.
 
    The commands affect the current buffer unless their interactive help
 describes a global prefix form.  Use ‘C-h k’ on a key before changing
 the global default.
 
 ‘C-e d r’
-
-     ‘tts-set-rate’
-
-     Enter a speech rate for the current buffer.
-‘C-e d f’
-
-     ‘tts-set-character-scale’
-
-     Set the rate multiplier used when speaking individual characters.
+     Enter a speech rate for the current buffer with ‘tts-set-rate’.
 ‘C-e d DIGIT’
-
-     ‘tts-set-predefined-rate’
-
      Choose one of ten predefined rates with ‘0’ through ‘9’.
 ‘C-e d p’
-
-     ‘tts-set-punctuations’
-
-     Choose ‘some’, ‘all’, or ‘none’ punctuation.
+     Choose ‘some’, ‘all’, or ‘none’ punctuation with
+     ‘tts-set-punctuations’.
 ‘C-e d s’
-
-     ‘tts-toggle-split-caps’
-
      Toggle splitting of mixed-capital identifiers into separate words.
-‘C-e d c’
+‘C-e d c / C-e d C’
+     Toggle capitalization indication with the lowercase key.  Use the
+     uppercase key to preview and choose whether capitals use speech, a
+     tone, both, a custom rule, or no added indication.
+‘C-e d i / C-e d I’
+     Toggle indentation feedback with the lowercase key.  Use the
+     uppercase key to preview spoken-column and tonal choices.
 
-     ‘tts-toggle-caps’
-
-     Toggle capitalization indication.
-‘C-e d C’
-
-     ‘emacsvox-set-capitalization-presentation’
-
-     Choose speech, a tone, both, a custom Aural rule, or no added
-     indication.  The command previews representative text before you
-     finish.
-
-   Indentation feedback is especially useful in source code and other
-structured text.  You can switch it off independently or choose how
-indentation is presented.
-
-‘C-e d i’
-
-     ‘emacsvox-toggle-audio-indentation’
-
-     Toggle indentation feedback.
-‘C-e d I’
-
-     ‘emacsvox-set-indentation-presentation’
-
-     Choose a spoken column, one of the tone styles, speech and tone
-     together, a custom Aural rule, or no added indication.  The command
-     previews an indented sample before you finish.
+   Character-rate scaling, text chunking, engine-specific controls, and
+reusable presentation profiles are intentionally outside this starter
+chapter.  Use live help for the current speech keymap and see *note
+Aural Presentation:: when you want a complete presentation setup rather
+than a temporary buffer change.
 
 
 File: emacsvox.info,  Node: Miscellaneous,  Prev: Speech Output Control,  Up: Speech System
 
-3.6.3 Stop, Silence, Restart, Or Identify Speech
-------------------------------------------------
+3.6.3 Stop Or Restart Speech
+----------------------------
 
 Stopping speech ends the current output without disabling future
 feedback.  Quiet mode is useful when you temporarily want to keep
@@ -738,28 +702,13 @@ working without speech.  Restart the server after correcting a backend
 problem or changing the selected synthesizer.
 
 ‘C-e s’
-
-     ‘tts-stop’
-
-     Stop speech now.
+     Stop speech now with ‘tts-stop’.
 ‘C-e d q’
-
-     ‘tts-toggle-quiet’
-
-     Toggle speech in the current buffer.  Press ‘C-u’ first to toggle
-     it globally.
+     Toggle quiet mode in the current buffer.  Press ‘C-u’ first to
+     toggle it globally.
 ‘C-e C-s’
-
-     ‘tts-restart’
-
      Stop and restart the selected speech server.
-
-   To hear which speech adapter is running, use:
-
 ‘C-e d V’
-
-     ‘tts-speak-version’
-
      Speak the selected adapter and its version information.
 
    Use ‘C-h m’ or the generated keymap reference for server selection,
@@ -770,29 +719,28 @@ this starter guide.
 
 File: emacsvox.info,  Node: Voice-lock,  Next: Status Information,  Prev: Speech System,  Up: Basic Usage
 
-3.7 Voice Lock Mode
-===================
+3.7 Hear Structure With Voice Lock
+==================================
 
 Voice Lock is enabled automatically in supported buffers.  It maps faces
 and other structural text properties to speech personalities, allowing
 comments, strings, headings, links, and other elements to sound distinct
 without adding words to the document.
 
-   The exact personalities depend on the selected speech engine and your
-Aural Presentation settings.  Try Voice Lock in source code, Org, Info,
-or EWW to hear the active mode's structure.
+   Try it in source code, Org, Info, or EWW.  Move between two
+differently styled elements, such as a comment and a string or a heading
+and a link.  Press ‘C-e d v’ to turn Voice Lock off in that buffer,
+compare the same text, then press the key again to restore it.
 
-   To disable Voice Lock globally, run ‘M-x global-voice-lock-mode’ or
-add this form to your Emacs init file:
+   Use ‘C-e d C-v’ when you want to change Voice Lock globally.  Turning
+it off removes this layer of voice changes; it does not silence ordinary
+speech, semantic feedback, tones, or auditory icons.
 
-     (global-voice-lock-mode -1)
-
-   The current binding and command reference are in *note
-(emacsvox-reference)Emacsvox Keymaps::.  For the wider system and
-customization workflow, see *note Aural Presentation::; for
-compatibility behavior specifically, see *note Voice Lock::.  For
-historical context on Aural CSS, see *note (emacsvox-heritage)Audio
-Formatting And Aural CSS::.
+   The exact personalities depend on the speech engine and active
+presentation settings.  For an explanation of the separate Voice Lock,
+face-presentation, and semantic-presentation layers, see *note Voice
+Lock::.  Use *note Aural Presentation:: when you want to choose voices,
+sounds, profiles, or other reusable presentation behavior.
 
 
 File: emacsvox.info,  Node: Status Information,  Prev: Voice-lock,  Up: Basic Usage
@@ -815,22 +763,6 @@ report your position.  Less common status commands are listed in the
      ‘emacsvox-speak-mode-line’
 
      Speak the mode line, including the buffer name and major mode.
-‘C-e M’
-
-     ‘emacsvox-speak-minor-mode-line’
-
-     Speak the active minor-mode information.
-‘C-e C-x’
-
-     ‘emacsvox-speak-header-line’
-
-     Speak the header line when the current buffer has one.
-
-‘C-e C-w’
-
-     ‘emacsvox-speak-window-information’
-
-     Describe the current Emacs window arrangement.
 ‘C-e f’
 
      ‘emacsvox-speak-buffer-filename’
@@ -4010,72 +3942,72 @@ Node: Confirming First Speech11678
 Node: Recovering From No Speech12995
 Node: Persistent Startup15636
 Node: Basic Usage16656
-Node: Overview19234
-Node: Working20619
-Ref: Working-Footnote-121961
-Ref: Working-Footnote-222054
-Node: Reading22164
-Node: Speech System23944
-Node: Controlling Echo24803
-Node: Speech Output Control25670
-Node: Miscellaneous27740
-Node: Voice-lock28862
-Node: Status Information29954
-Node: Speech Backends31347
-Node: Supported Platform Routes32644
-Node: Installing Omnivox From Source35356
-Node: Building Omnivox For WSL237215
-Node: Selecting And Checking Omnivox38622
-Node: Compatibility Speech Servers40363
-Node: Backend Diagnostics And Ownership42289
-Node: Audio Desktop44404
-Node: Desktop Objects45534
-Node: Object Oriented Desktop46759
-Node: Context-Sensitive Interaction47872
-Node: Aural Presentation50987
-Node: Presentation Model53186
-Node: Presentation Modalities55653
-Node: Aural Home57400
-Node: Explaining Presentation59288
-Node: Adjusting Presentation61273
-Node: Presentation Profiles64242
-Node: Voices And Routing65933
-Node: Sounds And Space68290
-Node: Presentation Troubleshooting69914
-Node: Voice Lock71952
-Node: Using Online Help75159
-Node: Emacs Packages79221
-Node: Document Authoring80595
-Node: Structured Editing81149
-Node: Browsing Structure82132
-Node: Web Browsing82730
-Node: Messaging83565
-Node: Editing Code84063
-Node: Development Environment84582
-Node: Desktop Management85139
-Node: Personal Information Management85641
-Node: Desktop Applications86173
-Node: Notmuch Mail87722
-Ref: Notmuch fields and privacy97082
-Node: Agent Shell102790
-Node: EAT Terminal Access112784
-Node: Running Terminal Based Applications130043
-Node: Starting Term130998
-Node: Term Input Modes131837
-Node: Term Speech Feedback132997
-Node: Reviewing The Term Screen134191
-Node: Term Help And Recovery136092
-Node: Emacsvox Keyboard Commands136991
-Node: Copyright138395
-Node: Acknowledgments138982
-Node: Developer Guide140008
-Node: Documentation Maintenance141172
-Node: Speech Server Protocols145818
-Ref: Testing A Direct Legacy Server150551
-Ref: Commands That Queue Output151110
-Ref: Commands That Set State154144
-Node: Integration Maintenance156738
-Node: Concept Index162713
+Node: Overview19280
+Node: Working20418
+Ref: Working-Footnote-121760
+Ref: Working-Footnote-221853
+Node: Reading21963
+Node: Speech System23743
+Node: Controlling Echo24655
+Node: Speech Output Control25490
+Node: Miscellaneous27220
+Node: Voice-lock28167
+Node: Status Information29417
+Node: Speech Backends30480
+Node: Supported Platform Routes31777
+Node: Installing Omnivox From Source34489
+Node: Building Omnivox For WSL236348
+Node: Selecting And Checking Omnivox37755
+Node: Compatibility Speech Servers39496
+Node: Backend Diagnostics And Ownership41422
+Node: Audio Desktop43537
+Node: Desktop Objects44667
+Node: Object Oriented Desktop45892
+Node: Context-Sensitive Interaction47005
+Node: Aural Presentation50120
+Node: Presentation Model52319
+Node: Presentation Modalities54786
+Node: Aural Home56533
+Node: Explaining Presentation58421
+Node: Adjusting Presentation60406
+Node: Presentation Profiles63375
+Node: Voices And Routing65066
+Node: Sounds And Space67423
+Node: Presentation Troubleshooting69047
+Node: Voice Lock71085
+Node: Using Online Help74292
+Node: Emacs Packages78354
+Node: Document Authoring79728
+Node: Structured Editing80282
+Node: Browsing Structure81265
+Node: Web Browsing81863
+Node: Messaging82698
+Node: Editing Code83196
+Node: Development Environment83715
+Node: Desktop Management84272
+Node: Personal Information Management84774
+Node: Desktop Applications85306
+Node: Notmuch Mail86855
+Ref: Notmuch fields and privacy96215
+Node: Agent Shell101923
+Node: EAT Terminal Access111917
+Node: Running Terminal Based Applications129176
+Node: Starting Term130131
+Node: Term Input Modes130970
+Node: Term Speech Feedback132130
+Node: Reviewing The Term Screen133324
+Node: Term Help And Recovery135225
+Node: Emacsvox Keyboard Commands136124
+Node: Copyright137528
+Node: Acknowledgments138115
+Node: Developer Guide139141
+Node: Documentation Maintenance140305
+Node: Speech Server Protocols144951
+Ref: Testing A Direct Legacy Server149684
+Ref: Commands That Queue Output150243
+Ref: Commands That Set State153277
+Node: Integration Maintenance155871
+Node: Concept Index161846
 
 End Tag Table
 
