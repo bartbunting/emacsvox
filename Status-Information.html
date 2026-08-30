@@ -36,10 +36,11 @@ span:hover a.copiable-link {visibility: visible}
 Previous: <a href="Voice_002dlock.html" accesskey="p" rel="prev">Voice Lock Mode</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Status-Commands"><span>3.8 Status  Commands<a class="copiable-link" href="#Status-Commands"> &para;</a></span></h3>
+<h3 class="section" id="Find-Out-Where-You-Are"><span>3.8 Find Out Where You Are<a class="copiable-link" href="#Find-Out-Where-You-Are"> &para;</a></span></h3>
 
-<p>These common commands answer frequent orientation questions.  Less common
-status commands are listed in the
+<p>Use these commands when you need context without moving point.  They repeat the
+last message, identify the current buffer and modes, or report your position.
+Less common status commands are listed in the
 <a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <cite class="cite">Emacsvox Reference Manual</cite>.
 </p>
 <dl class="table">
@@ -49,7 +50,7 @@ status commands are listed in the
 
 <p><code class="code">emacsvox-speak-message-again</code>
 </p>
-<p>Speak the last message from Emacs once again.
+<p>Repeat the last Emacs message.
 </p></dd>
 <dt><a id="index-emacsvox_002dspeak_002dmode_002dline"></a><span><kbd class="kbd">C-e m</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dmode_002dline"> &para;</a></span></dt>
 <dd>
@@ -57,7 +58,7 @@ status commands are listed in the
 
 <p><code class="code">emacsvox-speak-mode-line</code>
 </p>
-<p>Speak the mode-line.
+<p>Speak the mode line, including the buffer name and major mode.
 </p></dd>
 <dt><a id="index-emacsvox_002dspeak_002dminor_002dmode_002dline"></a><span><kbd class="kbd">C-e M</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dminor_002dmode_002dline"> &para;</a></span></dt>
 <dd>
@@ -65,7 +66,7 @@ status commands are listed in the
 
 <p><code class="code">emacsvox-speak-minor-mode-line</code>
 </p>
-<p>Speak the minor mode-information.
+<p>Speak the active minor-mode information.
 </p></dd>
 <dt><a id="index-emacsvox_002dspeak_002dheader_002dline"></a><span><kbd class="kbd">C-e C-x</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dheader_002dline"> &para;</a></span></dt>
 <dd>
@@ -73,7 +74,7 @@ status commands are listed in the
 
 <p><code class="code">emacsvox-speak-header-line</code>
 </p>
-<p>Speak the header-line.
+<p>Speak the header line when the current buffer has one.
 </p>
 </dd>
 <dt><a id="index-emacsvox_002dspeak_002dwindow_002dinformation"></a><span><kbd class="kbd">C-e C-w</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dwindow_002dinformation"> &para;</a></span></dt>
@@ -82,7 +83,7 @@ status commands are listed in the
 
 <p><code class="code">emacsvox-speak-window-information</code>
 </p>
-<p>Speaks information about current windows.
+<p>Describe the current Emacs window arrangement.
 </p></dd>
 <dt><a id="index-emacsvox_002dspeak_002dbuffer_002dfilename"></a><span><kbd class="kbd">C-e f</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dbuffer_002dfilename"> &para;</a></span></dt>
 <dd>
@@ -90,9 +91,8 @@ status commands are listed in the
 
 <p><code class="code">emacsvox-speak-buffer-filename</code>
 </p>
-<p>Speak name of file being visited in current buffer.
-Speak default directory if invoked in a dired buffer,
-or when the buffer is not visiting any file.
+<p>Speak the current file name, or the default directory when the buffer is not
+visiting a file.
 </p></dd>
 <dt><a id="index-what_002dline"></a><span><kbd class="kbd">C-e C-l</kbd><a class="copiable-link" href="#index-what_002dline"> &para;</a></span></dt>
 <dd>
@@ -100,7 +100,7 @@ or when the buffer is not visiting any file.
 
 <p><code class="code">what-line</code>
 </p>
-<p>reports the current line number and position in the buffer.
+<p>Report the current line number and position in the buffer.
 </p></dd>
 <dt><a id="index-emacsvox_002dspeak_002dcurrent_002dcolumn"></a><span><kbd class="kbd">C-e =</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dcurrent_002dcolumn"> &para;</a></span></dt>
 <dd>

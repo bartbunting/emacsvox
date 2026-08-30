@@ -38,84 +38,121 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Emacs-Packages.html" accesskey="n" rel="next">Applications And Integrations</a>, Previous: <a href="Voice-Lock.html" accesskey="p" rel="prev">Voice Lock</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Using-Online-Help-With-Emacsvox_002e"><span>7 Using Online Help With Emacsvox.<a class="copiable-link" href="#Using-Online-Help-With-Emacsvox_002e"> &para;</a></span></h2>
+<h2 class="chapter" id="Find-Help-While-You-Work"><span>7 Find Help While You Work<a class="copiable-link" href="#Find-Help-While-You-Work"> &para;</a></span></h2>
 
 <a class="index-entry-id" id="index-Online-Help"></a>
 
-<p>Emacs provides an extensive online help system for helping you learn
-about various aspects of using Emacs.  Emacsvox provides online help
-for its various extensions using this same help system.  This chapter
-explains how to use the online help facilities in order to empower you
-in discovering powerful and versatile working techniques that will
-make you more and more productive in your day to day computing.
+<p>You do not need to memorize every Emacs or Emacsvox command.  Emacs can explain
+the key you are about to use, the modes active in the current buffer, and the
+commands and variables available in your running session.  This live help is
+usually more reliable than a copied key list because it includes installed
+packages and personal customizations.
 </p>
-<p>The online help options are accessed via the <kbd class="kbd">C-h</kbd> prefix key,
-which must be followed by an additional letter or control character to
-designate the kind of help desired.  For example, <kbd class="kbd">C-h t</kbd>
-<code class="code">help-with-tutorial</code> visits the Emacs tutorial in a new buffer;
-<kbd class="kbd">C-h i</kbd> <code class="code">info</code> enters the Info documentation system, from
-which you can read Texinfo manuals that have been installed on your
-system, including the Emacs and Emacsvox documentation; and <kbd class="kbd">C-h k</kbd> <code class="code">describe-key</code> provides a description of the Emacs function
-which is bound to the next key that you type.  For learning about the
-various options that are available via the <kbd class="kbd">C-h</kbd> mechanism
-described above, view the online help for command <code class="code">help-for-help</code>
-bound to <kbd class="kbd">C-h C-h</kbd>   &mdash; using what has been described so far,
-you would achieve this by pressing <kbd class="kbd">C-h k</kbd> followed by <kbd class="kbd">C-h C-h</kbd>.
+<p>Most help commands begin with the <kbd class="kbd">C-h</kbd> prefix.  If you forget what can
+follow it, press <kbd class="kbd">C-h C-h</kbd> for <code class="code">help-for-help</code>.
 </p>
-<p>Emacsvox users should note that online help is typically displayed in
-a separate Emacs window.  Where it makes sense to do so, Emacsvox
-will automatically speak the displayed help.  Once you&rsquo;ve asked for
-help, you can hear the displayed documentation as many times as you
-wish using Emacsvox command <code class="code">emacsvox-speak-help</code> bound to
-<kbd class="kbd">C-e h</kbd>.  If you want to move through the displayed help a line at
-a time, switch to the buffer where the help is displayed   &mdash; the
-buffer is called <code class="code">*Help*</code>.
-</p>
-<p>Often, in adding an auditory interface to an Emacs extension, such as
-a web browser or mail reader, Emacsvox defines additional commands
-and key bindings which enhance the functionality of the spoken
-feedback provided by the application.  This manual does not purport to
-document all such commands.  It is important, therefore, when learning
-to use the various Emacs extensions which comprise the &lsquo;audio desktop&rsquo;
-(see <a class="pxref" href="Audio-Desktop.html">The Emacsvox Audio Desktop.</a>) that you take advantage of online help to
-obtain details of any context-specific features provided by Emacsvox.
-The following two commands are of particular importance in this
-regard:
+<ul class="mini-toc">
+<li><a href="#Ask-About-A-Key_002c-Command_002c-Or-Setting" accesskey="1">Ask About A Key, Command, Or Setting</a></li>
+<li><a href="#Discover-What-The-Current-Buffer-Can-Do" accesskey="2">Discover What The Current Buffer Can Do</a></li>
+<li><a href="#Read-And-Leave-A-Help-Window" accesskey="3">Read And Leave A Help Window</a></li>
+<li><a href="#Learn-Interactively-And-Read-Manuals" accesskey="4">Learn Interactively And Read Manuals</a></li>
+<li><a href="#Emacsvox_002dSpecific-Help" accesskey="5">Emacsvox-Specific Help</a></li>
+</ul>
+<div class="section-level-extent" id="Ask-About-A-Key_002c-Command_002c-Or-Setting">
+<h3 class="section"><span>7.1 Ask About A Key, Command, Or Setting<a class="copiable-link" href="#Ask-About-A-Key_002c-Command_002c-Or-Setting"> &para;</a></span></h3>
+
+<p>Use the question you have to choose a help command:
 </p>
 <ul class="itemize mark-bullet">
-<li><kbd class="kbd">C-h m</kbd> <code class="code">describe-mode</code> explains which major and minor modes
-are currently in effect, and lists the commands and key bindings
-associated with them.
+<li><kbd class="kbd">C-h k</kbd> followed by a key runs <code class="code">describe-key</code> and explains the
+command currently bound to that key.
 
-</li><li><kbd class="kbd">C-h b</kbd> <code class="code">describe-bindings</code> lists all of the key bindings
-which are currently defined.
+</li><li><kbd class="kbd">C-h f</kbd> runs <code class="code">describe-function</code>.  Enter a command or function name
+to read its complete documentation.
+
+</li><li><kbd class="kbd">C-h v</kbd> runs <code class="code">describe-variable</code>.  Enter an option name to hear its
+current value and documentation.
+
+</li><li><kbd class="kbd">C-h w</kbd> runs <code class="code">where-is</code> and reports the keys that invoke a command.
 </li></ul>
 
-<p>For example, after entering Dired or EWW, use <kbd class="kbd">C-h m</kbd> to hear the
-mode-specific commands and every active minor mode.  Use <kbd class="kbd">C-h b</kbd> when you
-need the exact effective bindings, including local package maps and personal
-configuration.  These live descriptions are more reliable than copying a
-large binding table into a tutorial.
+<p>For example, press <kbd class="kbd">C-h k C-e l</kbd> to ask what the current-line speaking
+key does.  If you know the command name but not its key, use <kbd class="kbd">C-h w</kbd> and
+enter that name.
 </p>
-<p>Emacsvox supplements the online help facilities available within
-Emacs by defining several commands of its own, as follows:
+</div>
+<div class="section-level-extent" id="Discover-What-The-Current-Buffer-Can-Do">
+<h3 class="section"><span>7.2 Discover What The Current Buffer Can Do<a class="copiable-link" href="#Discover-What-The-Current-Buffer-Can-Do"> &para;</a></span></h3>
+
+<p>Two commands answer most questions about a buffer:
 </p>
 <ul class="itemize mark-bullet">
-<li><kbd class="kbd">C-h C-e</kbd> <code class="code">emacsvox-describe-emacsvox</code> presents a brief Emacsvox
+<li><kbd class="kbd">C-h m</kbd> runs <code class="code">describe-mode</code>.  It explains the major mode, active
+minor modes, and their local commands.
+
+</li><li><kbd class="kbd">C-h b</kbd> runs <code class="code">describe-bindings</code>.  It lists the effective key
+bindings after local package maps and personal customizations are applied.
+</li></ul>
+
+<p>After opening Dired, EWW, mail, a terminal, or another application, start with
+<kbd class="kbd">C-h m</kbd>.  Use <kbd class="kbd">C-h b</kbd> when you need the exact keys available in
+that particular buffer.
+</p>
+</div>
+<div class="section-level-extent" id="Read-And-Leave-A-Help-Window">
+<h3 class="section"><span>7.3 Read And Leave A Help Window<a class="copiable-link" href="#Read-And-Leave-A-Help-Window"> &para;</a></span></h3>
+
+<p>Help usually appears in a separate <code class="code">*Help*</code> window, and Emacsvox speaks the
+most relevant initial result automatically.  Press <kbd class="kbd">C-e h</kbd>
+<code class="code">emacsvox-speak-help</code> to hear the displayed help again.
+</p>
+<p>To explore the help text directly, press <kbd class="kbd">C-x o</kbd> to move to its window
+and use ordinary reading and navigation commands.  Press <kbd class="kbd">q</kbd> in the Help
+buffer when you are finished.  If another window is selected unexpectedly,
+<kbd class="kbd">C-e C-w</kbd> describes the current window arrangement.
+</p>
+</div>
+<div class="section-level-extent" id="Learn-Interactively-And-Read-Manuals">
+<h3 class="section"><span>7.4 Learn Interactively And Read Manuals<a class="copiable-link" href="#Learn-Interactively-And-Read-Manuals"> &para;</a></span></h3>
+
+<ul class="itemize mark-bullet">
+<li><kbd class="kbd">C-h t</kbd> opens the interactive Emacs tutorial.  Emacsvox speaks the
+tutorial and your navigation as you work through it.
+
+</li><li><kbd class="kbd">C-h i</kbd> opens Info, the manual reader used by Emacs and Emacsvox.
+Press <kbd class="kbd">d</kbd> for the Info directory, then <kbd class="kbd">m</kbd> and enter <code class="code">Emacsvox</code>
+to open this manual.
+
+</li><li><kbd class="kbd">C-h C-l</kbd> runs <code class="code">emacsvox-learn-emacs</code>, a learning loop that speaks
+the function of each key you press.  Leave the loop with <kbd class="kbd">C-g</kbd>.
+</li></ul>
+
+<p>See the Emacs manual&rsquo;s help and Info chapters when you want to search manuals,
+follow cross-references, or keep a help buffer for later.
+</p>
+</div>
+<div class="section-level-extent" id="Emacsvox_002dSpecific-Help">
+<h3 class="section"><span>7.5 Emacsvox-Specific Help<a class="copiable-link" href="#Emacsvox_002dSpecific-Help"> &para;</a></span></h3>
+
+<ul class="itemize mark-bullet">
+<li><kbd class="kbd">C-h C-e</kbd> <code class="code">emacsvox-describe-emacsvox</code> opens a concise Emacsvox
 overview.
 
-</li><li><kbd class="kbd">C-e N</kbd> <code class="code">emacsvox-view-emacsvox-news</code> opens the versioned Emacsvox
-news, and <kbd class="kbd">C-e T</kbd> <code class="code">emacsvox-view-emacsvox-tips</code> opens the productivity
-tips.
+</li><li><kbd class="kbd">C-e N</kbd> <code class="code">emacsvox-view-emacsvox-news</code> opens versioned project news,
+while <kbd class="kbd">C-e T</kbd> <code class="code">emacsvox-view-emacsvox-tips</code> opens productivity tips.
 
-</li><li><kbd class="kbd">C-h C-l</kbd> <code class="code">emacsvox-learn-emacs</code> enters a loop in which the function
-of every key that you type is spoken; leave it with <kbd class="kbd">C-g</kbd>.
+</li><li><kbd class="kbd">C-e H</kbd> <code class="code">emacsvox-aural</code> opens Aural Home for presentation options.
 
-</li><li><kbd class="kbd">C-e H</kbd> <code class="code">emacsvox-aural</code> opens Aural Home.  From an ordinary buffer,
-<kbd class="kbd">C-e E</kbd> <code class="code">emacsvox-aural-explain-presentation</code> explains why the object
-at point received its voices and auditory actions.
+</li><li><kbd class="kbd">C-e E</kbd> <code class="code">emacsvox-aural-explain-presentation</code> explains why the
+object at point received its voices, sounds, and other auditory actions.
 </li></ul>
 
+<p>The generated
+<a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <cite class="cite">Emacsvox Reference Manual</cite> records all default Emacsvox bindings.  Prefer <kbd class="kbd">C-h k</kbd>,
+<kbd class="kbd">C-h m</kbd>, and <kbd class="kbd">C-h b</kbd> when a running package or customization
+changes those defaults.
+</p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">

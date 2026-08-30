@@ -33,10 +33,10 @@ span:hover a.copiable-link {visibility: visible}
 <div class="subsection-level-extent" id="Controlling-Echo">
 <div class="nav-panel">
 <p>
-Next: <a href="Speech-Output-Control.html" accesskey="n" rel="next">Setting  TTS Characteristics.</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Speech System Commands</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Speech-Output-Control.html" accesskey="n" rel="next">Adjust Rate, Punctuation, Capitals, And Indentation</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Speech System Commands</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Character_002c-Word-And-Line-Echo_002e"><span>3.6.1 Character, Word And Line Echo.<a class="copiable-link" href="#Character_002c-Word-And-Line-Echo_002e"> &para;</a></span></h4>
+<h4 class="subsection" id="Choose-What-Is-Echoed-While-Typing"><span>3.6.1 Choose What Is Echoed While Typing<a class="copiable-link" href="#Choose-What-Is-Echoed-While-Typing"> &para;</a></span></h4>
 
 <a class="index-entry-id" id="index-line-echo"></a>
 
@@ -44,17 +44,13 @@ Next: <a href="Speech-Output-Control.html" accesskey="n" rel="next">Setting  TTS
 
 <a class="index-entry-id" id="index-word-echo"></a>
 
-<p>By default, Emacsvox speaks characters as they are typed   &mdash;
-this is called character echo; Words are spoken as they are completed
-  &mdash; this is called word echo.  Emacsvox can also optionally
-speak each line as it is typed   &mdash; this is called line echo.
+<p>Character echo speaks each character you type.  Word echo speaks a word when
+you finish it, and optional line echo speaks a completed line.  Toggle each
+kind independently to suit the buffer: character feedback may help in a
+form where accuracy matters, while word echo is often more fluent for prose.
 </p>
-<p>Character, word and line echo can be toggled   &mdash; either in the
-current buffer   &mdash; or for all buffers (globally).  To toggle the
-specific echo functionality for all buffers, precede the specific
-command with <kbd class="kbd">C-u</kbd>.  Note that in the documentation below, this
-use of <kbd class="kbd">C-u</kbd> is indicated using the common Emacs terminology of
-<strong class="strong">prefix arg</strong> or <strong class="strong">interactive prefix arg</strong>.
+<p>The commands below affect the current buffer.  Press <kbd class="kbd">C-u</kbd> first to
+change the corresponding default and apply it to the current buffer.
 </p>
 <dl class="table">
 <dt><a id="index-emacsvox_002dtoggle_002dcharacter_002decho"></a><span><kbd class="kbd">C-e d k</kbd><a class="copiable-link" href="#index-emacsvox_002dtoggle_002dcharacter_002decho"> &para;</a></span></dt>
@@ -63,9 +59,7 @@ use of <kbd class="kbd">C-u</kbd> is indicated using the common Emacs terminolog
 
 <p><code class="code">emacsvox-toggle-character-echo</code>
 </p>
-<p>Toggle state of Emacsvox character echo.  Interactive PREFIX arg
-means toggle the global default value, and then set the current local
-value to the result.
+<p>Toggle character echo.
 </p></dd>
 <dt><a id="index-emacsvox_002dtoggle_002dword_002decho"></a><span><kbd class="kbd">C-e d w</kbd><a class="copiable-link" href="#index-emacsvox_002dtoggle_002dword_002decho"> &para;</a></span></dt>
 <dd>
@@ -73,9 +67,7 @@ value to the result.
 
 <p><code class="code">emacsvox-toggle-word-echo</code>
 </p>
-<p>Toggle state of Emacsvox word echo.  Interactive PREFIX arg means
-toggle the global default value, and then set the current local value
-to the result.
+<p>Toggle word echo.
 </p></dd>
 <dt><a id="index-emacsvox_002dtoggle_002dline_002decho"></a><span><kbd class="kbd">C-e d l</kbd><a class="copiable-link" href="#index-emacsvox_002dtoggle_002dline_002decho"> &para;</a></span></dt>
 <dd>
@@ -83,9 +75,7 @@ to the result.
 
 <p><code class="code">emacsvox-toggle-line-echo</code>
 </p>
-<p>Toggle state of Emacsvox line echo.  Interactive PREFIX arg means
-toggle the global default value, and then set the current local value
-to the result.
+<p>Toggle line echo.
 </p></dd>
 </dl>
 

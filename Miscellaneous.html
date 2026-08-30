@@ -21,7 +21,6 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
-kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -34,17 +33,15 @@ span:hover a.copiable-link {visibility: visible}
 <div class="subsection-level-extent" id="Miscellaneous">
 <div class="nav-panel">
 <p>
-Previous: <a href="Speech-Output-Control.html" accesskey="p" rel="prev">Setting  TTS Characteristics.</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Speech System Commands</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="Speech-Output-Control.html" accesskey="p" rel="prev">Adjust Rate, Punctuation, Capitals, And Indentation</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Speech System Commands</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Miscellaneous-Speech-Commands"><span>3.6.3 Miscellaneous Speech Commands<a class="copiable-link" href="#Miscellaneous-Speech-Commands"> &para;</a></span></h4>
+<h4 class="subsection" id="Stop_002c-Silence_002c-Restart_002c-Or-Identify-Speech"><span>3.6.3 Stop, Silence, Restart, Or Identify Speech<a class="copiable-link" href="#Stop_002c-Silence_002c-Restart_002c-Or-Identify-Speech"> &para;</a></span></h4>
 
-<p>Speech can be stopped explicitly using command <code class="code">tts-stop</code>.  In normal
-navigation, replaceable speech supersedes older work in the same replacement
-domain while ordered and urgent output is preserved.
-The speech server can be stopped and restarted for cases where the
-user wants to switch to a different server   &mdash; or in the rare
-case to nuke a runaway speech server.
+<p>Stopping speech ends the current output without disabling future feedback.
+Quiet mode is useful when you temporarily want to keep working without speech.
+Restart the server after correcting a backend problem or changing the selected
+synthesizer.
 </p>
 <dl class="table">
 <dt><a id="index-tts_002dstop-1"></a><span><kbd class="kbd">C-e s</kbd><a class="copiable-link" href="#index-tts_002dstop-1"> &para;</a></span></dt>
@@ -61,11 +58,8 @@ case to nuke a runaway speech server.
 
 <p><code class="code">tts-toggle-quiet</code>
 </p>
-<p>Toggle state of the speech device between being quiet and talkative.
-Useful if you want to continue using an Emacs session that has
-emacsvox loaded but wish to make the speech shut up.  Optional
-argument PREFIX specifies whether speech is turned off in the current
-buffer or in all buffers.
+<p>Toggle speech in the current buffer.  Press <kbd class="kbd">C-u</kbd> first to toggle it
+globally.
 </p></dd>
 <dt><a id="index-tts_002drestart"></a><span><kbd class="kbd">C-e C-s</kbd><a class="copiable-link" href="#index-tts_002drestart"> &para;</a></span></dt>
 <dd>
@@ -73,94 +67,28 @@ buffer or in all buffers.
 
 <p><code class="code">tts-restart</code>
 </p>
-<p>Use this to stop the currently running speech server and restart it.
-Useful if you want to switch to another synthesizer while emacsvox is
-running.  Also useful for emergency stopping of speech.
+<p>Stop and restart the selected speech server.
 </p></dd>
 </dl>
 
-<p>Finally, here are the remaining commands available via the
-<abbr class="acronym">TTS</abbr> related keymap <kbd class="kbd">C-e d</kbd>.
+<p>To hear which speech adapter is running, use:
 </p>
 <dl class="table">
-<dt><a id="index-tts_002dadd_002dcleanup_002dpattern"></a><span><kbd class="kbd">C-e d a</kbd><a class="copiable-link" href="#index-tts_002dadd_002dcleanup_002dpattern"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-a"></a>
-
-<p><code class="code">tts-add-cleanup-pattern</code>
-</p>
-<p>Add this pattern to the list of repeating patterns that are cleaned
-up.  Optional interactive prefix arg deletes this pattern if
-previously added.  Cleaning up repeated patterns results in emacsvox
-speaking the pattern followed by a repeat count instead of speaking
-all the characters making up the pattern.  Thus, by adding the
-repeating pattern &lsquo;.&rsquo; (this is already added by default) emacsvox
-will say &ldquo;aw fifteen dot&rdquo; when speaking the string
-&ldquo;&hellip;&hellip;&hellip;&hellip;&hellip;&rdquo; instead of &ldquo;period period period period&rdquo;.
-</p></dd>
-<dt><a id="index-tts_002dselect_002dserver"></a><span><kbd class="kbd">C-e d d</kbd><a class="copiable-link" href="#index-tts_002dselect_002dserver"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-d"></a>
-
-<p><code class="code">tts-select-server</code>
-</p>
-<p>Select a speech server interactively.  This will be the server that is
-used when you next call either M-x tts-initialize or C-e C-s.
-Argument PROGRAM specifies the speech server program.
-</p></dd>
-<dt><a id="index-tts_002dtoggle_002dsplitting_002don_002dwhite_002dspace"></a><span><kbd class="kbd">C-e d <kbd class="key">SPACE</kbd></kbd><a class="copiable-link" href="#index-tts_002dtoggle_002dsplitting_002don_002dwhite_002dspace"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-SPACE"></a>
-
-<p><code class="code">tts-toggle-splitting-on-white-space</code>
-</p>
-<p>Toggle splitting of speech on white space.  This affects the internal
-state of emacsvox that decides if we split text purely by clause
-boundaries, or also include whitespace.  By default, emacsvox sends a
-clause at a time to the speech device.  This produces fluent speech
-for normal use.  However in modes such as &lsquo;shell-mode&rsquo; and some
-programming language modes, clause markers appear infrequently, and
-this can result in large amounts of text being sent to the speech
-device at once, making the system unresponsive when asked to stop
-talking.  Splitting on white space makes emacsvox&rsquo;s stop command
-responsive.  However, when splitting on white space, the speech sounds
-choppy since the synthesizer is getting a word at a time.
-</p></dd>
-<dt><a id="index-tts_002dset_002dchunk_002dseparator_002dsyntax"></a><span><kbd class="kbd">C-e d <kbd class="key">RETURN</kbd></kbd><a class="copiable-link" href="#index-tts_002dset_002dchunk_002dseparator_002dsyntax"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-RETURN"></a>
-
-<p><code class="code">tts-set-chunk-separator-syntax</code>
-</p>
-<p>Interactively set how text is split in chunks.  See the Emacs
-documentation on syntax tables for details on how characters are
-classified into various syntactic classes.  Argument S specifies the
-syntax class.
-</p></dd>
 <dt><a id="index-tts_002dspeak_002dversion"></a><span><kbd class="kbd">C-e d V</kbd><a class="copiable-link" href="#index-tts_002dspeak_002dversion"> &para;</a></span></dt>
 <dd>
 <a class="index-entry-id" id="index-C_002de-d-V"></a>
 
 <p><code class="code">tts-speak-version</code>
 </p>
-<p>Use this to find out which version of the <abbr class="acronym">TTS</abbr> firmware you
-are running.
-</p></dd>
-<dt><a id="index-emacsvox_002dzap_002dtts"></a><span><kbd class="kbd">C-e d z</kbd><a class="copiable-link" href="#index-emacsvox_002dzap_002dtts"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-z"></a>
-
-<p><code class="code">emacsvox-zap-tts</code>
-</p>
-<p>Send this command to the <abbr class="acronym">TTS</abbr> engine directly.
+<p>Speak the selected adapter and its version information.
 </p></dd>
 </dl>
 
-</div>
-<hr>
-<div class="nav-panel">
-<p>
-Previous: <a href="Speech-Output-Control.html">Setting  TTS Characteristics.</a>, Up: <a href="Speech-System.html">Speech System Commands</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+<p>Use <kbd class="kbd">C-h m</kbd> or the generated keymap reference for server selection,
+repeated-pattern cleanup, text splitting, language selection, and direct engine
+controls.  Those specialist settings are intentionally outside this starter
+guide.
+</p>
 </div>
 
 

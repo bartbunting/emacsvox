@@ -61,16 +61,6 @@ same acceptance sentence as the isolated launcher.  If it does not, remove or
 comment out the two init forms and return to the isolated launcher before
 trying another change.
 </p>
-<p>Emacsvox distributions contain the <code class="code">.el</code> sources.  <code class="code">make all</code>
-generates ignored <code class="code">.elc</code> files locally in the checkout; those build
-outputs are not distributed.  After an ordinary Lisp edit, run
-<code class="code">make bytecode</code>.  After switching branches, pulling, or changing Lisp
-macros or public interfaces, run <code class="code">make bytecode-rebuild</code>.  The
-non-mutating <code class="code">make bytecode-check</code> verifies that local byte-code is
-current and was produced by the selected Emacs.  These commands matter when
-developing Emacsvox; ordinary users do not need to run them again unless the
-checkout changes.
-</p>
 </div>
 
 

@@ -35,38 +35,29 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Voice_002dlock">
 <div class="nav-panel">
 <p>
-Next: <a href="Status-Information.html" accesskey="n" rel="next">Status  Commands</a>, Previous: <a href="Speech-System.html" accesskey="p" rel="prev">Speech System Commands</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Status-Information.html" accesskey="n" rel="next">Find Out Where You Are</a>, Previous: <a href="Speech-System.html" accesskey="p" rel="prev">Speech System Commands</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
 <h3 class="section" id="Voice-Lock-Mode"><span>3.7 Voice Lock Mode<a class="copiable-link" href="#Voice-Lock-Mode"> &para;</a></span></h3>
 
-<p>Toggle voice lock globally with <kbd class="kbd">M-x</kbd>
-<code class="code">global-voice-lock-mode</code>.  Its current default binding is in
-<a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <cite class="cite">Emacsvox Reference Manual</cite>.
+<p>Voice Lock is enabled automatically in supported buffers.  It maps faces and
+other structural text properties to speech personalities, allowing comments,
+strings, headings, links, and other elements to sound distinct without adding
+words to the document.
 </p>
-<p>Voice-lock is turned on automatically in all buffers that support it
-when Emacsvox is started.
+<p>The exact personalities depend on the selected speech engine and your Aural
+Presentation settings.  Try Voice Lock in source code, Org, Info, or EWW to
+hear the active mode&rsquo;s structure.
 </p>
-<p>Emacsvox can be set to disable voice lock in all of the major modes
-that support it. To do so, insert the following statement into your
-Emacs initialization file:
+<p>To disable Voice Lock globally, run <kbd class="kbd">M-x global-voice-lock-mode</kbd> or
+add this form to your Emacs init file:
 </p>
 <div class="example lisp">
 <pre class="lisp-preformatted">(global-voice-lock-mode -1)
 </pre></div>
 
-<p>The characteristics of the different voice personalities used by voice
-lock mode vary according to the capabilities of the speech
-synthesizer. The definitions applicable to the Dectalk family of
-synthesizers are contained in <code class="code">dectalk-voices.el</code>, which is
-supplied as part of the Emacsvox distribution. The Emacsvox
-distribution also contains voice definitions for many other
-synthesizers.
-</p>
-<p>Voice-lock maps faces and other mode-provided text properties to speech
-personalities.  Integrations such as EWW use those properties and document
-structure to provide aural distinctions; the active mode and voice settings,
-not an inherited Web style sheet, determine current behavior.  For historical
+<p>The current binding and command reference are in
+<a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <cite class="cite">Emacsvox Reference Manual</cite>.  For detailed configuration, see <a class="ref" href="Voice-Lock.html">Voice Lock</a>.  For historical
 context on Aural CSS, see
 <a data-manual="emacsvox-heritage" href="heritage/Audio-Formatting-And-Aural-CSS.html#Audio-Formatting-And-Aural-CSS">Audio Formatting And Aural CSS</a> in <cite class="cite">Emacspeak Heritage</cite>.
 </p>
