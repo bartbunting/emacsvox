@@ -108,6 +108,20 @@ Install @code{git}@comma{} @code{make}@comma{} GNU Texinfo (which provides @code
 @uref{https://www.gnu.org/software/emacs/download.html, Emacs 31 or newer}.  The recommended Omnivox speech server also needs the
 Rust toolchain@comma{} Python 3@comma{} a C and C++ toolchain@comma{} CMake@comma{} and Clang with libclang.
 
+To check the Emacs found by your shell@comma{} run:
+
+@example
+emacs --version
+@end example
+
+The first line should begin with @code{GNU Emacs 31} or a higher version number.  If
+the command is not found or reports an older version@comma{} install a supported Emacs
+or locate its executable.  You can check a specific executable in the same way:
+
+@example
+/path/to/emacs-31/bin/emacs --version
+@end example
+
 On GNU/Linux@comma{} install @code{pkg-config} and the ALSA development headers.  On
 macOS@comma{} install the Xcode command-line tools.  WSL2 has additional Docker and
 Windows requirements described in @ref{Building Omnivox For WSL2}.
@@ -181,14 +195,15 @@ Then set @code{EMACS} in @code{local.mk}:
 EMACS=/path/to/emacs-31/bin/emacs
 @end example
 
-Verify the selection:
+The earlier @code{emacs --version} command checks your shell's default.  Verify
+the executable selected by the Emacsvox build separately:
 
 @example
 make check-emacs
 @end example
 
-The command prints the selected Emacs and confirms whether its version is
-supported.
+@code{make check-emacs} uses @code{local.mk} when present@comma{} prints the selected
+executable and version@comma{} and confirms whether Emacsvox supports it.
 
 @item
 Configure and compile Emacsvox:

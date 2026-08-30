@@ -180,6 +180,17 @@ Emacs 31 or newer (https://www.gnu.org/software/emacs/download.html).
 The recommended Omnivox speech server also needs the Rust toolchain,
 Python 3, a C and C++ toolchain, CMake, and Clang with libclang.
 
+   To check the Emacs found by your shell, run:
+
+     emacs --version
+
+   The first line should begin with ‘GNU Emacs 31’ or a higher version
+number.  If the command is not found or reports an older version,
+install a supported Emacs or locate its executable.  You can check a
+specific executable in the same way:
+
+     /path/to/emacs-31/bin/emacs --version
+
    On GNU/Linux, install ‘pkg-config’ and the ALSA development headers.
 On macOS, install the Xcode command-line tools.  WSL2 has additional
 Docker and Windows requirements described in *note Building Omnivox For
@@ -247,12 +258,14 @@ File: emacsvox.info,  Node: Quick Installation,  Next: Confirming First Speech, 
 
           EMACS=/path/to/emacs-31/bin/emacs
 
-     Verify the selection:
+     The earlier ‘emacs --version’ command checks your shell's default.
+     Verify the executable selected by the Emacsvox build separately:
 
           make check-emacs
 
-     The command prints the selected Emacs and confirms whether its
-     version is supported.
+     ‘make check-emacs’ uses ‘local.mk’ when present, prints the
+     selected executable and version, and confirms whether Emacsvox
+     supports it.
 
   3. Configure and compile Emacsvox:
 
@@ -3572,68 +3585,68 @@ Node: Top384
 Node: Introduction2139
 Node: Installation5454
 Node: Obtaining Emacsvox6661
-Node: Building And Testing The Speech Server7698
-Node: Quick Installation8940
-Node: Confirming First Speech10989
-Node: Recovering From No Speech12306
-Node: Persistent Startup14947
-Node: Basic Usage16560
-Node: Overview19053
-Node: Working20430
-Ref: Working-Footnote-121772
-Ref: Working-Footnote-221865
-Node: Reading21975
-Node: Speech System23755
-Node: Controlling Echo24344
-Node: Speech Output Control25808
-Node: Miscellaneous29227
-Node: Voice-lock32752
-Node: Status Information34147
-Node: Speech Backends35422
-Node: Supported Platform Routes36719
-Node: Installing Omnivox From Source39431
-Node: Building Omnivox For WSL241290
-Node: Selecting And Checking Omnivox42873
-Node: Compatibility Speech Servers44614
-Node: Backend Diagnostics And Ownership46540
-Node: Audio Desktop48655
-Node: Desktop Objects50677
-Node: Object Oriented Desktop51504
-Node: Context-Sensitive Interaction52274
-Node: Voice Lock57401
-Node: How It All Works.59680
-Node: What this gives.60720
-Node: Using Online Help61466
-Node: Emacs Packages65463
-Node: Document Authoring66837
-Node: Structured Editing67391
-Node: Browsing Structure68374
-Node: Web Browsing68972
-Node: Messaging69807
-Node: Editing Code70305
-Node: Development Environment70820
-Node: Desktop Management71377
-Node: Personal Information Management71879
-Node: Desktop Applications72408
-Node: Notmuch Mail73957
-Ref: Notmuch fields and privacy83317
-Node: Agent Shell90788
-Node: EAT Terminal Access103278
-Node: Running Terminal Based Applications120537
-Node: Starting Term121492
-Node: Term Input Modes122331
-Node: Term Speech Feedback123491
-Node: Reviewing The Term Screen124685
-Node: Term Help And Recovery126586
-Node: Emacsvox Keyboard Commands127485
-Node: TTS Servers128891
-Node: Announce139340
-Node: Contributing139914
-Node: Authoring Guidelines140937
-Node: Credits144056
-Node: Copyright144419
-Node: Acknowledgments144988
-Node: Concept Index145133
+Node: Building And Testing The Speech Server8061
+Node: Quick Installation9303
+Node: Confirming First Speech11535
+Node: Recovering From No Speech12852
+Node: Persistent Startup15493
+Node: Basic Usage17106
+Node: Overview19599
+Node: Working20976
+Ref: Working-Footnote-122318
+Ref: Working-Footnote-222411
+Node: Reading22521
+Node: Speech System24301
+Node: Controlling Echo24890
+Node: Speech Output Control26354
+Node: Miscellaneous29773
+Node: Voice-lock33298
+Node: Status Information34693
+Node: Speech Backends35968
+Node: Supported Platform Routes37265
+Node: Installing Omnivox From Source39977
+Node: Building Omnivox For WSL241836
+Node: Selecting And Checking Omnivox43419
+Node: Compatibility Speech Servers45160
+Node: Backend Diagnostics And Ownership47086
+Node: Audio Desktop49201
+Node: Desktop Objects51223
+Node: Object Oriented Desktop52050
+Node: Context-Sensitive Interaction52820
+Node: Voice Lock57947
+Node: How It All Works.60226
+Node: What this gives.61266
+Node: Using Online Help62012
+Node: Emacs Packages66009
+Node: Document Authoring67383
+Node: Structured Editing67937
+Node: Browsing Structure68920
+Node: Web Browsing69518
+Node: Messaging70353
+Node: Editing Code70851
+Node: Development Environment71366
+Node: Desktop Management71923
+Node: Personal Information Management72425
+Node: Desktop Applications72954
+Node: Notmuch Mail74503
+Ref: Notmuch fields and privacy83863
+Node: Agent Shell91334
+Node: EAT Terminal Access103824
+Node: Running Terminal Based Applications121083
+Node: Starting Term122038
+Node: Term Input Modes122877
+Node: Term Speech Feedback124037
+Node: Reviewing The Term Screen125231
+Node: Term Help And Recovery127132
+Node: Emacsvox Keyboard Commands128031
+Node: TTS Servers129437
+Node: Announce139886
+Node: Contributing140460
+Node: Authoring Guidelines141483
+Node: Credits144602
+Node: Copyright144965
+Node: Acknowledgments145534
+Node: Concept Index145679
 
 End Tag Table
 
