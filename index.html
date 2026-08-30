@@ -15,7 +15,7 @@
 <link href="#Top" rel="start" title="Top">
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="#SEC_Contents" rel="contents" title="Table of Contents">
-<link href="Installation.html" rel="next" title="Installation">
+<link href="Introduction.html" rel="next" title="Introduction">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -38,14 +38,16 @@ ul.toc-numbered-mark {list-style: none}
 <div class="top-level-extent" id="Top">
 <div class="nav-panel">
 <p>
-Next: <a href="Installation.html" accesskey="n" rel="next">Getting Started: Installation and First Speech</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Introduction.html" accesskey="n" rel="next">Welcome to Emacsvox</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
 <h1 class="top" id="Emacsvox"><span>Emacsvox<a class="copiable-link" href="#Emacsvox"> &para;</a></span></h1>
 
-<p>This user manual contains current Emacsvox operating guidance.  Begin with
-Getting Started, then continue to Speech Backends and Basic Usage.  Exact
-commands, options, and keymaps are in the separate
+<p>Welcome to the Emacsvox user manual.  Begin with the introduction, follow the
+installation path until Emacsvox speaks, and then try the guided first session
+in Basic Usage.  Platform and compatibility detail is available in Speech
+Backends when you need it.  Exact commands, options, and keymaps are in the
+separate
 <a data-manual="emacsvox-reference" href="reference/index.html#Top">Emacsvox Reference Manual</a> in <cite class="cite">Emacsvox Reference
 Manual</cite>.  Selected historical Emacspeak material is in the separate
 <a data-manual="emacsvox-heritage" href="heritage/index.html#Top">Emacspeak Heritage</a> in <cite class="cite">Emacspeak Heritage</cite> manual and
@@ -60,10 +62,10 @@ Presentation details, also consult <samp class="file">Readme.org</samp> and
 
 <div class="shortcontents">
 <ul class="toc-numbered-mark">
-<li><a id="stoc-Getting-Started_003a-Installation-and-First-Speech" href="#toc-Getting-Started_003a-Installation-and-First-Speech">1 Getting Started: Installation and First Speech</a></li>
-<li><a id="stoc-Speech-Backends" href="#toc-Speech-Backends">2 Speech Backends</a></li>
-<li><a id="stoc-Basic-Usage_002e" href="#toc-Basic-Usage_002e">3 Basic Usage.</a></li>
-<li><a id="stoc-Introduction" href="#toc-Introduction">4 Introduction</a></li>
+<li><a id="stoc-Welcome-to-Emacsvox" href="#toc-Welcome-to-Emacsvox">1 Welcome to Emacsvox</a></li>
+<li><a id="stoc-Getting-Started_003a-Installation-and-First-Speech" href="#toc-Getting-Started_003a-Installation-and-First-Speech">2 Getting Started: Installation and First Speech</a></li>
+<li><a id="stoc-Basic-Usage" href="#toc-Basic-Usage">3 Basic Usage</a></li>
+<li><a id="stoc-Speech-Backends" href="#toc-Speech-Backends">4 Speech Backends</a></li>
 <li><a id="stoc-The-Emacsvox-Audio-Desktop_002e" href="#toc-The-Emacsvox-Audio-Desktop_002e">5 The Emacsvox Audio Desktop.</a></li>
 <li><a id="stoc-Voice-Lock" href="#toc-Voice-Lock">6 Voice Lock</a></li>
 <li><a id="stoc-Using-Online-Help-With-Emacsvox_002e" href="#toc-Using-Online-Help-With-Emacsvox_002e">7 Using Online Help With Emacsvox.</a></li>
@@ -87,43 +89,45 @@ Presentation details, also consult <samp class="file">Readme.org</samp> and
 <div class="contents">
 
 <ul class="toc-numbered-mark">
-  <li><a id="toc-Getting-Started_003a-Installation-and-First-Speech" href="Installation.html">1 Getting Started: Installation and First Speech</a>
+  <li><a id="toc-Welcome-to-Emacsvox" href="Introduction.html">1 Welcome to Emacsvox</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Obtaining-Emacsvox" href="Obtaining-Emacsvox.html">1.1 Obtaining Emacsvox</a></li>
-    <li><a id="toc-First-Speech-Checklist" href="Quick-Installation.html">1.2 First Speech Checklist</a></li>
-    <li><a id="toc-Confirming-First-Speech" href="Confirming-First-Speech.html">1.3 Confirming First Speech</a></li>
-    <li><a id="toc-Recovering-From-No-Speech" href="Recovering-From-No-Speech.html">1.4 Recovering From No Speech</a></li>
-    <li><a id="toc-Persistent-Startup" href="Persistent-Startup.html">1.5 Persistent Startup</a></li>
-    <li><a id="toc-Building-And-Testing-The-Speech-Server" href="Building-And-Testing-The-Speech-Server.html">1.6 Building And Testing The Speech Server</a></li>
+    <li><a id="toc-Where-To-Begin" href="Introduction.html#Where-To-Begin">1.1 Where To Begin</a></li>
+    <li><a id="toc-What-You-Will-Hear" href="Introduction.html#What-You-Will-Hear">1.2 What You Will Hear</a></li>
+    <li><a id="toc-About-This-Manual" href="Introduction.html#About-This-Manual">1.3 About This Manual</a></li>
   </ul></li>
-  <li><a id="toc-Speech-Backends" href="Speech-Backends.html">2 Speech Backends</a>
+  <li><a id="toc-Getting-Started_003a-Installation-and-First-Speech" href="Installation.html">2 Getting Started: Installation and First Speech</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Supported-Platform-Routes" href="Supported-Platform-Routes.html">2.1 Supported Platform Routes</a></li>
-    <li><a id="toc-Installing-Omnivox-From-Source" href="Installing-Omnivox-From-Source.html">2.2 Installing Omnivox From Source</a></li>
-    <li><a id="toc-Building-Omnivox-For-WSL2" href="Building-Omnivox-For-WSL2.html">2.3 Building Omnivox For WSL2</a></li>
-    <li><a id="toc-Selecting-And-Checking-Omnivox" href="Selecting-And-Checking-Omnivox.html">2.4 Selecting And Checking Omnivox</a></li>
-    <li><a id="toc-Compatibility-Speech-Servers" href="Compatibility-Speech-Servers.html">2.5 Compatibility Speech Servers</a></li>
-    <li><a id="toc-Backend-Diagnostics-And-Ownership" href="Backend-Diagnostics-And-Ownership.html">2.6 Backend Diagnostics And Ownership</a></li>
+    <li><a id="toc-Before-You-Begin" href="Obtaining-Emacsvox.html">2.1 Before You Begin</a></li>
+    <li><a id="toc-Install-And-Check-Omnivox" href="Building-And-Testing-The-Speech-Server.html">2.2 Install And Check Omnivox</a></li>
+    <li><a id="toc-Build-And-Start-Emacsvox" href="Quick-Installation.html">2.3 Build And Start Emacsvox</a></li>
+    <li><a id="toc-Confirming-First-Speech" href="Confirming-First-Speech.html">2.4 Confirming First Speech</a></li>
+    <li><a id="toc-Recovering-From-No-Speech" href="Recovering-From-No-Speech.html">2.5 Recovering From No Speech</a></li>
+    <li><a id="toc-Persistent-Startup" href="Persistent-Startup.html">2.6 Persistent Startup</a></li>
   </ul></li>
-  <li><a id="toc-Basic-Usage_002e" href="Basic-Usage.html">3 Basic Usage.</a>
+  <li><a id="toc-Basic-Usage" href="Basic-Usage.html">3 Basic Usage</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Emacsvox-Overview" href="Overview.html">3.1 Emacsvox Overview</a></li>
-    <li><a id="toc-Using-Emacs-Buffers" href="Working.html">3.2 Using Emacs Buffers</a></li>
-    <li><a id="toc-Reading-and-Navigating" href="Reading.html">3.3 Reading and Navigating</a></li>
-    <li><a id="toc-Speech-System-Commands" href="Speech-System.html">3.4 Speech System Commands</a>
+    <li><a id="toc-Key-Notation-And-Emacs-Words" href="Basic-Usage.html#Key-Notation-And-Emacs-Words">3.1 Key Notation And Emacs Words</a></li>
+    <li><a id="toc-Your-First-Few-Minutes" href="Basic-Usage.html#Your-First-Few-Minutes">3.2 Your First Few Minutes</a></li>
+    <li><a id="toc-Emacsvox-Overview" href="Overview.html">3.3 Emacsvox Overview</a></li>
+    <li><a id="toc-Using-Emacs-Buffers" href="Working.html">3.4 Using Emacs Buffers</a></li>
+    <li><a id="toc-Reading-and-Navigating" href="Reading.html">3.5 Reading and Navigating</a></li>
+    <li><a id="toc-Speech-System-Commands" href="Speech-System.html">3.6 Speech System Commands</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Character_002c-Word-And-Line-Echo_002e" href="Controlling-Echo.html">3.4.1 Character, Word And Line Echo.</a></li>
-      <li><a id="toc-Setting-TTS-Characteristics_002e" href="Speech-Output-Control.html">3.4.2 Setting  TTS Characteristics.</a></li>
-      <li><a id="toc-Miscellaneous-Speech-Commands" href="Miscellaneous.html">3.4.3 Miscellaneous Speech Commands</a></li>
+      <li><a id="toc-Character_002c-Word-And-Line-Echo_002e" href="Controlling-Echo.html">3.6.1 Character, Word And Line Echo.</a></li>
+      <li><a id="toc-Setting-TTS-Characteristics_002e" href="Speech-Output-Control.html">3.6.2 Setting  TTS Characteristics.</a></li>
+      <li><a id="toc-Miscellaneous-Speech-Commands" href="Miscellaneous.html">3.6.3 Miscellaneous Speech Commands</a></li>
     </ul></li>
-    <li><a id="toc-Voice-Lock-Mode" href="Voice_002dlock.html">3.5 Voice Lock Mode</a></li>
-    <li><a id="toc-Status-Commands" href="Status-Information.html">3.6 Status  Commands</a></li>
+    <li><a id="toc-Voice-Lock-Mode" href="Voice_002dlock.html">3.7 Voice Lock Mode</a></li>
+    <li><a id="toc-Status-Commands" href="Status-Information.html">3.8 Status  Commands</a></li>
   </ul></li>
-  <li><a id="toc-Introduction" href="Introduction.html">4 Introduction</a>
+  <li><a id="toc-Speech-Backends" href="Speech-Backends.html">4 Speech Backends</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Aural-Presentation" href="Introduction.html#Aural-Presentation">4.1 Aural Presentation</a></li>
-    <li><a id="toc-Speech-Adapters-And-Omnivox" href="Introduction.html#Speech-Adapters-And-Omnivox">4.2 Speech Adapters And Omnivox</a></li>
-    <li><a id="toc-Documentation-Scope" href="Introduction.html#Documentation-Scope">4.3 Documentation Scope</a></li>
+    <li><a id="toc-Supported-Platform-Routes" href="Supported-Platform-Routes.html">4.1 Supported Platform Routes</a></li>
+    <li><a id="toc-Installing-Omnivox-From-Source" href="Installing-Omnivox-From-Source.html">4.2 Installing Omnivox From Source</a></li>
+    <li><a id="toc-Building-Omnivox-For-WSL2" href="Building-Omnivox-For-WSL2.html">4.3 Building Omnivox For WSL2</a></li>
+    <li><a id="toc-Selecting-And-Checking-Omnivox" href="Selecting-And-Checking-Omnivox.html">4.4 Selecting And Checking Omnivox</a></li>
+    <li><a id="toc-Compatibility-Speech-Servers" href="Compatibility-Speech-Servers.html">4.5 Compatibility Speech Servers</a></li>
+    <li><a id="toc-Backend-Diagnostics-And-Responsibilities" href="Backend-Diagnostics-And-Ownership.html">4.6 Backend Diagnostics And Responsibilities</a></li>
   </ul></li>
   <li><a id="toc-The-Emacsvox-Audio-Desktop_002e" href="Audio-Desktop.html">5 The Emacsvox Audio Desktop.</a>
   <ul class="toc-numbered-mark">
@@ -193,7 +197,7 @@ Presentation details, also consult <samp class="file">Readme.org</samp> and
   </ul></li>
   <li><a id="toc-Speech-Access-To-EAT" href="EAT-Terminal-Access.html">11 Speech Access To EAT</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Input-Modes-And-Completion-Ownership" href="EAT-Terminal-Access.html#Input-Modes-And-Completion-Ownership">11.1 Input Modes And Completion Ownership</a></li>
+    <li><a id="toc-Input-Modes-And-Completion-Responsibilities" href="EAT-Terminal-Access.html#Input-Modes-And-Completion-Responsibilities">11.1 Input Modes And Completion Responsibilities</a></li>
     <li><a id="toc-Automatic-Terminal-Feedback" href="EAT-Terminal-Access.html#Automatic-Terminal-Feedback">11.2 Automatic Terminal Feedback</a></li>
     <li><a id="toc-Terminal_002dside-Completion" href="EAT-Terminal-Access.html#Terminal_002dside-Completion">11.3 Terminal-side Completion</a></li>
     <li><a id="toc-Explicit-Review-Commands" href="EAT-Terminal-Access.html#Explicit-Review-Commands">11.4 Explicit Review Commands</a>
@@ -221,8 +225,9 @@ Presentation details, also consult <samp class="file">Readme.org</samp> and
     <li><a id="toc-Omnivox-Structured-Protocol" href="TTS-Servers.html#Omnivox-Structured-Protocol">14.1 Omnivox Structured Protocol</a></li>
     <li><a id="toc-Legacy-Line-Protocol" href="TTS-Servers.html#Legacy-Line-Protocol">14.2 Legacy Line Protocol</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Commands-That-Queue-Output_002e" href="TTS-Servers.html#Commands-That-Queue-Output_002e">14.2.1 Commands That Queue Output.</a></li>
-      <li><a id="toc-Commands-That-Set-State" href="TTS-Servers.html#Commands-That-Set-State">14.2.2 Commands That Set State</a></li>
+      <li><a id="toc-Testing-A-Direct-Legacy-Server" href="TTS-Servers.html#Testing-A-Direct-Legacy-Server">14.2.1 Testing A Direct Legacy Server</a></li>
+      <li><a id="toc-Commands-That-Queue-Output_002e" href="TTS-Servers.html#Commands-That-Queue-Output_002e">14.2.2 Commands That Queue Output.</a></li>
+      <li><a id="toc-Commands-That-Set-State" href="TTS-Servers.html#Commands-That-Set-State">14.2.3 Commands That Set State</a></li>
     </ul></li>
   </ul></li>
   <li><a id="toc-Manual-Provenance-And-Contributions" href="Announce.html">15 Manual Provenance And Contributions</a>
@@ -244,7 +249,7 @@ Presentation details, also consult <samp class="file">Readme.org</samp> and
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Installation.html" accesskey="n" rel="next">Getting Started: Installation and First Speech</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Introduction.html" accesskey="n" rel="next">Welcome to Emacsvox</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

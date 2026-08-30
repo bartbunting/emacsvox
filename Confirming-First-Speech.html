@@ -34,35 +34,41 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Confirming-First-Speech">
 <div class="nav-panel">
 <p>
-Next: <a href="Recovering-From-No-Speech.html" accesskey="n" rel="next">Recovering From No Speech</a>, Previous: <a href="Quick-Installation.html" accesskey="p" rel="prev">First Speech Checklist</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Recovering-From-No-Speech.html" accesskey="n" rel="next">Recovering From No Speech</a>, Previous: <a href="Quick-Installation.html" accesskey="p" rel="prev">Build And Start Emacsvox</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Confirming-First-Speech-1"><span>1.3 Confirming First Speech<a class="copiable-link" href="#Confirming-First-Speech-1"> &para;</a></span></h3>
+<h3 class="section" id="Confirming-First-Speech-1"><span>2.4 Confirming First Speech<a class="copiable-link" href="#Confirming-First-Speech-1"> &para;</a></span></h3>
 
-<p>A successful isolated start speaks a versioned introduction ending with:
+<p>You will know the isolated start succeeded when it speaks an introduction
+ending with:
 </p>
 <blockquote class="quotation">
 <p>I am completely operational, and all my circuits are functioning perfectly!
-</p></blockquote>
+</p>
+</blockquote>
 
 <p>The preceding overview key and version number can change.  The sentence above
 is the stable first-speech checkpoint.  A startup auditory icon may also play,
-but it depends on optional audio support and is not part of acceptance.
+depending on the available audio support.
 </p>
-<p>Before changing personal configuration, make these checks in the isolated
-session:
+<p>You now have a working Emacsvox session.  Try these checks before connecting
+it to your personal configuration:
 </p>
 <ol class="enumerate">
 <li> Type <kbd class="kbd">M-x tts-speak-version RET</kbd>.  The live speech adapter should speak its
 version response.
+
 </li><li> Type <kbd class="kbd">C-h v tts-program RET</kbd>.  The displayed current value should name
 <code class="code">omnivox</code>.
+
 </li><li> Use <kbd class="kbd">C-n</kbd> and <kbd class="kbd">C-p</kbd> to move over lines and confirm ordinary spoken
 navigation.  Type <kbd class="kbd">M-x emacsvox-describe-emacsvox RET</kbd> for the Emacsvox
-overview.  See <a class="xref" href="Basic-Usage.html">Basic Usage.</a>, for the tested starter commands.
+overview.  See <a class="xref" href="Basic-Usage.html">Basic Usage</a>, for the tested starter commands.
 </li></ol>
 
-<p>Only after these checks pass is the isolated first-use proof complete.
+<p>When these checks pass, continue to <a class="ref" href="Basic-Usage.html">Basic Usage</a> for a short guided
+first session, or use <a class="ref" href="Persistent-Startup.html">Persistent Startup</a> to connect Emacsvox to your
+normal Emacs configuration.
 </p>
 </div>
 

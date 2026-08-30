@@ -683,6 +683,7 @@ reference/emacsvox_002dtreesit.html
 reference/emacsvox_002dtypo.html
 reference/emacsvox_002durl_002dtemplate.html
 reference/emacsvox_002dvdiff.html
+reference/emacsvox_002dversion.html
 reference/emacsvox_002dvertico.html
 reference/emacsvox_002dview.html
 reference/emacsvox_002dvterm.html
@@ -705,6 +706,7 @@ reference/espeak_002dvoices.html
 reference/g_002dutils.html
 reference/gm_002dnnir.html
 reference/gmaps.html
+reference/gweb.html
 reference/index.html
 reference/ladspa.html
 reference/light.html

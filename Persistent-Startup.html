@@ -16,7 +16,6 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Installation.html" rel="up" title="Installation">
-<link href="Building-And-Testing-The-Speech-Server.html" rel="next" title="Building And Testing The Speech Server">
 <link href="Recovering-From-No-Speech.html" rel="prev" title="Recovering From No Speech">
 <style type="text/css">
 <!--
@@ -34,21 +33,20 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Persistent-Startup">
 <div class="nav-panel">
 <p>
-Next: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="n" rel="next">Building And Testing The Speech Server</a>, Previous: <a href="Recovering-From-No-Speech.html" accesskey="p" rel="prev">Recovering From No Speech</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="Recovering-From-No-Speech.html" accesskey="p" rel="prev">Recovering From No Speech</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Persistent-Startup-1"><span>1.5 Persistent Startup<a class="copiable-link" href="#Persistent-Startup-1"> &para;</a></span></h3>
+<h3 class="section" id="Persistent-Startup-1"><span>2.6 Persistent Startup<a class="copiable-link" href="#Persistent-Startup-1"> &para;</a></span></h3>
 
-<p>Configure a normal customized start only after <a class="ref" href="Confirming-First-Speech.html">Confirming First Speech</a>
-passes.  Add these forms to the user&rsquo;s Emacs init file, replacing the example
-path with the absolute path of the checkout:
+<p>After <a class="ref" href="Confirming-First-Speech.html">Confirming First Speech</a> succeeds, add these forms to your Emacs
+init file, replacing the example path with the absolute path of the checkout:
 </p>
 <div class="example lisp">
 <pre class="lisp-preformatted">(setenv &quot;TTS_PROGRAM&quot; &quot;omnivox&quot;)
 (load-file &quot;/path/to/emacsvox/lisp/emacsvox-setup.el&quot;)
 </pre></div>
 
-<p>The order is significant: Emacsvox selects and starts the speech server while
+<p>Keep the forms in this order: Emacsvox selects and starts the speech server while
 loading setup.  A shell alternative is to export the server name before
 launching Emacs:
 </p>
@@ -63,13 +61,15 @@ same acceptance sentence as the isolated launcher.  If it does not, remove or
 comment out the two init forms and return to the isolated launcher before
 trying another change.
 </p>
-<p>Emacsvox distributions contain the <samp class="file">.el</samp> sources.  <code class="command">make all</code>
-generates ignored <samp class="file">.elc</samp> files locally in the checkout; those build
+<p>Emacsvox distributions contain the <code class="code">.el</code> sources.  <code class="code">make all</code>
+generates ignored <code class="code">.elc</code> files locally in the checkout; those build
 outputs are not distributed.  After an ordinary Lisp edit, run
-<code class="command">make bytecode</code>.  After switching branches, pulling, or changing Lisp
-macros or public interfaces, run <code class="command">make bytecode-rebuild</code>.  The
-non-mutating <code class="command">make bytecode-check</code> verifies that local byte-code is
-current and was produced by the selected Emacs.
+<code class="code">make bytecode</code>.  After switching branches, pulling, or changing Lisp
+macros or public interfaces, run <code class="code">make bytecode-rebuild</code>.  The
+non-mutating <code class="code">make bytecode-check</code> verifies that local byte-code is
+current and was produced by the selected Emacs.  These commands matter when
+developing Emacsvox; ordinary users do not need to run them again unless the
+checkout changes.
 </p>
 </div>
 

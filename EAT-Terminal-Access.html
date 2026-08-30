@@ -43,9 +43,13 @@ Next: <a href="Running-Terminal-Based-Applications.html" accesskey="n" rel="next
 <h2 class="chapter" id="Speech-Access-To-EAT"><span>11 Speech Access To EAT<a class="copiable-link" href="#Speech-Access-To-EAT"> &para;</a></span></h2>
 
 <a class="index-entry-id" id="index-EAT-terminal-emulator"></a>
+
 <a class="index-entry-id" id="index-terminal-accessibility"></a>
+
 <a class="index-entry-id" id="index-speech-access_002c-terminal"></a>
+
 <a class="index-entry-id" id="index-eat"></a>
+
 <p>EAT (Emulate A Terminal) is a third-party terminal emulator; it is not part of
 stock Emacs.  It is commonly installed from NonGNU ELPA.  Start it with
 <kbd class="kbd">M-x eat</kbd>; use a prefix argument to create or select another EAT terminal.
@@ -54,12 +58,12 @@ See the EAT manual for terminal setup and EAT&rsquo;s complete command reference
 </p>
 <p>Emacsvox observes EAT&rsquo;s bounded rendered screen.  It does not parse a shell&rsquo;s
 private state and it does not generate shell or router completion candidates.
-This distinction is important: EAT owns terminal emulation, the program on the
-other end owns terminal-side input and completion, and Emacsvox presents the
-visible result.
+This distinction is important: EAT handles terminal emulation, the program on
+the other end handles terminal-side input and completion, and Emacsvox
+presents the visible result.
 </p>
 <ul class="mini-toc">
-<li><a href="#Input-Modes-And-Completion-Ownership" accesskey="1">Input Modes And Completion Ownership</a></li>
+<li><a href="#Input-Modes-And-Completion-Responsibilities" accesskey="1">Input Modes And Completion Responsibilities</a></li>
 <li><a href="#Automatic-Terminal-Feedback" accesskey="2">Automatic Terminal Feedback</a></li>
 <li><a href="#Terminal_002dside-Completion" accesskey="3">Terminal-side Completion</a></li>
 <li><a href="#Explicit-Review-Commands" accesskey="4">Explicit Review Commands</a></li>
@@ -70,20 +74,31 @@ visible result.
 <li><a href="#Full_002dscreen-Applications-And-Limitations" accesskey="9">Full-screen Applications And Limitations</a></li>
 <li><a href="#EAT-In-Eshell">EAT In Eshell</a></li>
 </ul>
-<div class="section-level-extent" id="Input-Modes-And-Completion-Ownership">
-<h3 class="section"><span>11.1 Input Modes And Completion Ownership<a class="copiable-link" href="#Input-Modes-And-Completion-Ownership"> &para;</a></span></h3>
+<div class="section-level-extent" id="Input-Modes-And-Completion-Responsibilities">
+<h3 class="section"><span>11.1 Input Modes And Completion Responsibilities<a class="copiable-link" href="#Input-Modes-And-Completion-Responsibilities"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-EAT-input-modes"></a>
+
 <a class="index-entry-id" id="index-completion_002c-EAT"></a>
+
 <a class="index-entry-id" id="index-Corfu_002c-EAT"></a>
+
 <a class="index-entry-id" id="index-eat_002dsemi_002dchar_002dmode"></a>
+
 <a class="index-entry-id" id="index-eat_002dchar_002dmode"></a>
+
 <a class="index-entry-id" id="index-eat_002demacs_002dmode"></a>
+
 <a class="index-entry-id" id="index-eat_002dline_002dmode"></a>
+
 <a class="index-entry-id" id="index-C_002dc-C_002dj-_0028EAT_0029"></a>
+
 <a class="index-entry-id" id="index-C_002dc-M_002dd-_0028EAT_0029"></a>
+
 <a class="index-entry-id" id="index-C_002dc-C_002de-_0028EAT_0029"></a>
+
 <a class="index-entry-id" id="index-C_002dc-C_002dl-_0028EAT_0029"></a>
+
 <p>EAT provides four input modes.  Emacsvox announces a human-readable mode name
 whenever you switch modes.
 </p>
@@ -93,19 +108,16 @@ whenever you switch modes.
 while Emacs prefixes such as <kbd class="kbd">C-x</kbd>, <kbd class="kbd">C-c</kbd>, and <kbd class="kbd">M-x</kbd> remain
 available.  Use <kbd class="kbd">C-q</kbd> before a normally reserved key to send it to the
 terminal.  Switch here with <kbd class="kbd">C-c C-j</kbd>.
-</p>
-</dd>
+</p></dd>
 <dt>Character mode</dt>
 <dd><p>All supported keys go to the terminal, which is useful for applications that
 need Emacs-like keys.  Switch here with <kbd class="kbd">C-c M-d</kbd>; return to semi-character
 mode with <kbd class="kbd">C-M-m</kbd> or <kbd class="kbd">M-<kbd class="key">RET</kbd></kbd>.
-</p>
-</dd>
+</p></dd>
 <dt>Emacs mode</dt>
 <dd><p>Keys remain in Emacs and no input is sent to the terminal.  Use this for normal
 Emacs buffer motion and inspection.  Switch here with <kbd class="kbd">C-c C-e</kbd>.
-</p>
-</dd>
+</p></dd>
 <dt>Line mode</dt>
 <dd><p>The pending input line is edited locally and sent on <kbd class="key">RET</kbd>.  <kbd class="key">TAB</kbd> runs
 Emacs&rsquo;s <code class="code">completion-at-point</code>, so a configured Emacs completion front end
@@ -125,7 +137,7 @@ operation; switch to semi-character mode if terminal-side completion was
 intended.
 </p>
 <p>Shell completion must itself be configured.  For example, Bash can complete
-&lsquo;<samp class="samp">git pul</samp>&rsquo; to &lsquo;<samp class="samp">git pull</samp>&rsquo; only when the shell has suitable programmable
+<code class="code">git pul</code> to <code class="code">git pull</code> only when the shell has suitable programmable
 completion definitions, often supplied by a system <code class="code">bash-completion</code>
 package.  Emacsvox observes the result but neither installs nor substitutes for
 those definitions.
@@ -135,7 +147,9 @@ those definitions.
 <h3 class="section"><span>11.2 Automatic Terminal Feedback<a class="copiable-link" href="#Automatic-Terminal-Feedback"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-EAT-automatic-speech"></a>
+
 <a class="index-entry-id" id="index-terminal-output_002c-speech-policy"></a>
+
 <p>Automatic speech is restricted to the selected EAT buffer while its selected
 window follows the live terminal cursor.  Moving into scrollback prevents new
 output from interrupting review.  Output in another terminal or behind an
@@ -168,7 +182,7 @@ otherwise unambiguous word deletion from being announced.  This also handles a
 no-echo peer safely: without a visible deletion there is no content to
 announce.  Feedback requires the selected window to follow the live cursor,
 and is silent during protected password input, in an unselected terminal, and
-on an alternate screen where the application owns the keys.
+on an alternate screen where the application controls the keys.
 </p>
 <p>On a full-screen or alternate-screen application, Emacsvox does not read every
 refresh.  A cursor row reached by correlated arrow-style navigation, or one
@@ -182,15 +196,18 @@ active item.
 <h3 class="section"><span>11.3 Terminal-side Completion<a class="copiable-link" href="#Terminal_002dside-Completion"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-completion-candidates_002c-terminal"></a>
+
 <a class="index-entry-id" id="index-router-completion"></a>
+
 <a class="index-entry-id" id="index-TAB-_0028EAT-terminal-completion_0029"></a>
+
 <p>On the main terminal screen, Emacsvox takes a public screen snapshot before a
 terminal-side <kbd class="key">TAB</kbd> and waits briefly for EAT output to settle.
 </p>
 <ul class="itemize mark-bullet">
 <li>A unique inline completion speaks the newly displayed field.  For example,
-&lsquo;<samp class="samp">~/sr<kbd class="key">TAB</kbd></samp>&rsquo; can speak &lsquo;<samp class="samp">src slash</samp>&rsquo; after the shell displays
-<samp class="file">~/src/</samp>.
+<code class="code">~/sr&lt;TAB&gt;</code> can speak <code class="code">src slash</code> after the shell displays
+<code class="code">~/src/</code>.
 
 </li><li>An ambiguous completion that prints columns or help rows is presented as one
 candidate transaction after the input line is redrawn.  Small inferred lists
@@ -219,18 +236,31 @@ especially useful after a large or multi-column result.
 <h3 class="section"><span>11.4 Explicit Review Commands<a class="copiable-link" href="#Explicit-Review-Commands"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-EAT-review-commands"></a>
+
 <a class="index-entry-id" id="index-terminal-screen-review"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dcurrent_002drow"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dlast_002dchange"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dlikely_002dfocus"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dcompletion_002doutput"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dvisible_002dscreen"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dreview_002dscreen"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dretained_002dstatus"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dspeak_002dretained_002dmetadata"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dcycle_002dverbosity"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dtoggle_002dbackground_002dmonitoring"></a>
+
 <a class="index-entry-id" id="index-C_002de-q-_0028EAT-review_0029"></a>
+
 <p>The default Emacsvox prefix is <kbd class="kbd">C-e</kbd>.  In every EAT input mode,
 <kbd class="kbd">C-e q</kbd> opens the terminal review prefix:
 </p>
@@ -278,6 +308,7 @@ retained, not arbitrary scrollback.
 <h4 class="subsection"><span>11.4.1 Frozen Screen Review<a class="copiable-link" href="#Frozen-Screen-Review"> &para;</a></span></h4>
 
 <a class="index-entry-id" id="index-frozen-EAT-review"></a>
+
 <p><kbd class="kbd">C-e q r</kbd> opens an immutable copy of the latest visible screen.  It does
 not refresh and navigation cannot move the live terminal cursor or send input.
 The copy preserves normalized terminal styling, cursor and likely-focus
@@ -333,7 +364,9 @@ lifetime of copied terminal content.
 <h3 class="section"><span>11.5 Verbosity And Background Monitoring<a class="copiable-link" href="#Verbosity-And-Background-Monitoring"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-emacsvox_002deat_002dverbosity"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002deat_002dmonitor_002dbackground_002doutput"></a>
+
 <p><code class="code">emacsvox-eat-verbosity</code> is buffer-local:
 </p>
 <dl class="table">
@@ -363,7 +396,9 @@ changes do not count as background output.
 <h3 class="section"><span>11.6 Shell Integration And Command Status<a class="copiable-link" href="#Shell-Integration-And-Command-Status"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-EAT-shell-integration"></a>
+
 <a class="index-entry-id" id="index-shell-command-status"></a>
+
 <p>EAT&rsquo;s Bash or Zsh shell integration is required for prompt annotation,
 directory tracking, and per-command running/success/failure status.  For Bash,
 EAT documents this initialization:
@@ -373,7 +408,7 @@ EAT documents this initialization:
   source &quot;$EAT_SHELL_INTEGRATION_DIR/bash&quot;
 </pre></div>
 
-<p>For Zsh, source the <samp class="file">zsh</samp> script instead:
+<p>For Zsh, source the <code class="code">zsh</code> script instead:
 </p>
 <div class="example">
 <pre class="example-preformatted">[ -n &quot;$EAT_SHELL_INTEGRATION_DIR&quot; ] &amp;&amp; \
@@ -381,6 +416,7 @@ EAT documents this initialization:
 </pre></div>
 
 <a class="index-entry-id" id="index-eat_002denable_002dshell_002dprompt_002dannotation"></a>
+
 <p>With shell integration and <code class="code">eat-enable-shell-prompt-annotation</code> enabled,
 Emacsvox retains running, successful, and failed command status.  A failure is
 announced automatically at every verbosity.  Success is automatic only in
@@ -398,8 +434,11 @@ status remains unavailable.
 <h3 class="section"><span>11.7 Passwords And Sensitive Content<a class="copiable-link" href="#Passwords-And-Sensitive-Content"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-password-input_002c-EAT"></a>
+
 <a class="index-entry-id" id="index-terminal-privacy"></a>
+
 <a class="index-entry-id" id="index-eat_002dsend_002dpassword"></a>
+
 <p>Use <kbd class="kbd">M-x eat-send-password</kbd> for a terminal password.  EAT reads it with
 Emacs&rsquo;s protected password reader instead of recording the keystrokes in
 command lossage.  During this command Emacsvox suppresses terminal observation
@@ -424,10 +463,15 @@ by contrast, never speaks content or terminal identity.
 <h3 class="section"><span>11.8 Terminal-Controlled Clipboard Trust<a class="copiable-link" href="#Terminal_002dControlled-Clipboard-Trust"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-clipboard-security_002c-EAT"></a>
+
 <a class="index-entry-id" id="index-OSC-52_002c-EAT"></a>
+
 <a class="index-entry-id" id="index-remote-terminal-trust"></a>
+
 <a class="index-entry-id" id="index-eat_002denable_002dkill_002dfrom_002dterminal"></a>
+
 <a class="index-entry-id" id="index-eat_002denable_002dyank_002dto_002dterminal"></a>
+
 <p>EAT supports terminal selection control sequences, commonly called OSC 52.
 Consequently, trust applies not only to a local shell but also to an SSH peer,
 router CLI, or any program whose output reaches EAT&rsquo;s terminal parser.  Even
@@ -466,7 +510,9 @@ to terminal-originated selection control sequences.
 <h3 class="section"><span>11.9 Full-screen Applications And Limitations<a class="copiable-link" href="#Full_002dscreen-Applications-And-Limitations"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-curses-applications_002c-EAT"></a>
+
 <a class="index-entry-id" id="index-alternate-screen_002c-EAT"></a>
+
 <p>Programs such as pagers, editors, menus, and refreshing dashboards frequently
 rewrite existing cells instead of printing lines.  Emacsvox uses conservative
 cursor, style-change, input-direction, and timing evidence.  Arrow-key movement
@@ -491,21 +537,25 @@ terminal itself renders incorrectly.
 <h3 class="section"><span>11.10 EAT In Eshell<a class="copiable-link" href="#EAT-In-Eshell"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Eshell_002c-EAT-accessibility"></a>
+
 <a class="index-entry-id" id="index-eat_002deshell_002dmode"></a>
+
 <a class="index-entry-id" id="index-eat_002deshell_002dvisual_002dcommand_002dmode"></a>
+
 <p>When EAT&rsquo;s global <code class="code">eat-eshell-mode</code> is enabled, Emacsvox uses the same
 screen observer for the terminal region embedded in Eshell.  Rendered command
-output is owned by one speech path, so it is not repeated by generic Eshell
+output is handled by one speech path, so it is not repeated by generic Eshell
 output feedback.
 </p>
 <p>With <code class="code">eat-eshell-visual-command-mode</code>, an Eshell visual command runs in a
 separate EAT buffer.  Emacsvox announces its start, delivers eligible final
 output before the process-exit event, and labels its exit as an Eshell visual
-command.  EAT and Eshell still own the window-return policy.  In particular,
-<code class="code">eshell-destroy-buffer-when-process-dies</code> determines whether a successful
-visual-command buffer is killed and Eshell is restored; Emacsvox does not
-change that option.
-</p></div>
+command.  EAT and Eshell still determine the window-return policy.  In
+particular, <code class="code">eshell-destroy-buffer-when-process-dies</code> determines whether a
+successful visual-command buffer is killed and Eshell is restored; Emacsvox
+does not change that option.
+</p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">

@@ -32,56 +32,34 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Overview">
 <div class="nav-panel">
 <p>
-Next: <a href="Working.html" accesskey="n" rel="next">Using Emacs Buffers</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Working.html" accesskey="n" rel="next">Using Emacs Buffers</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Emacsvox-Overview"><span>3.1 Emacsvox Overview<a class="copiable-link" href="#Emacsvox-Overview"> &para;</a></span></h3>
+<h3 class="section" id="Emacsvox-Overview"><span>3.3 Emacsvox Overview<a class="copiable-link" href="#Emacsvox-Overview"> &para;</a></span></h3>
 
-<p>Emacsvox provides a small number of core services around which the
-remainder of the audio interface is constructed.  These essential
-features of the software are briefly outlined in the following
-paragraphs; the commands by which they can be controlled will be
-described later in the manual.
+<p>Emacsvox adds spoken feedback to Emacs editing and to applications that run
+inside Emacs.  Movement speaks the corresponding character, word, line, or
+larger unit.  Commands announce useful results and state changes, while
+application integrations present structures such as messages, search results,
+tables, source code, and Web pages.
 </p>
-<p>Apart from providing a fluent spoken interface to all of Emacs&rsquo; basic
-editing functions, Emacsvox also includes software modules which add
-speech feedback to a range of applications that can be run from within
-Emacs. In this sense, Emacsvox amounts to much more than a talking
-text editor; indeed, it can more aptly be characterized as a true
-&ldquo;audio desktop&rdquo;, in which speech is treated as a first-class output modality.
+<p>Voice Lock uses changes in speech characteristics to make text structure
+audible.  For example, comments, quoted strings, reserved words, headings, and
+links can sound different without an explanation being inserted into the text.
+See <a class="ref" href="Voice-Lock.html">Voice Lock</a> for configuration and <a class="ref" href="Web-Browsing.html">Web Browsing With EWW</a> for a
+task-oriented example in EWW.
 </p>
-<p>Emacsvox implements a special minor mode, known as &ldquo;voice lock mode&rdquo;
-(see <a class="pxref" href="Voice_002dlock.html">Voice Lock Mode</a>) which uses distinct speech characteristics to
-provide aural highlighting of specific textual constructs, such as
-comments in program code, quoted strings and reserved words See <a class="xref" href="Voice-Lock.html">Voice Lock</a>. This facility is further extended in the supported <code class="code">EWW</code> Web
-browser, where semantic and structural distinctions captured by HTML markup
-can be communicated efficiently; see <a class="ref" href="Web-Browsing.html">Web Browsing With EWW</a>.
-</p>
-<p>It is often desirable to exercise control over the pronunciation of a
-word (E.G. a technical term or a reserved word in a programming
-language) within specific contexts. Emacsvox maintains pronunciation
-dictionaries for this purpose, which may be customized by the
-user. Moreover, individual dictionaries can be activated selectively,
-depending for example on the current major mode or the name of the
-file which is being visited; see
+<p>Pronunciation dictionaries let you adjust how a name, technical term, or
+programming-language word is spoken.  A dictionary can apply everywhere or
+only in a particular mode or file; see
 <a data-manual="emacsvox-reference" href="reference/emacsvox_002dpronounce.html#emacsvox_002dpronounce">emacsvox-pronounce</a> in <cite class="cite">Emacsvox Reference Manual</cite>.
 </p>
-<p>In addition to spoken feedback, Emacsvox can generate &ldquo;auditory
-icons&rdquo;  &mdash; short sound cues which alert the user to significant
-events, for example the opening or deletion of a file, the completion
-of an action, the arrival of an electronic mail message or the
-creation of a completion buffer. Sound cues act as a supplement to the
-spoken interface, and are especially valuable to the experienced user
-in facilitating rapid interaction. Note that in order to support
-auditory icons, the computer must be equipped with sound hardware for
-which the operating system has been correctly configured; see
-<a data-manual="emacsvox-reference" href="reference/emacsvox_002dsounds.html#emacsvox_002dsounds">emacsvox-sounds</a> in <cite class="cite">Emacsvox Reference Manual</cite>.
+<p>Short auditory icons and tones mark events such as opening or deleting a file,
+finishing an action, receiving mail, or displaying completions.  They
+supplement speech and become especially useful as familiar events no longer
+need a full spoken explanation.  See
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002dsounds.html#emacsvox_002dsounds">emacsvox-sounds</a> in <cite class="cite">Emacsvox Reference Manual</cite> for the available sound support.
 </p>
-</div>
-<hr>
-<div class="nav-panel">
-<p>
-Next: <a href="Working.html">Using Emacs Buffers</a>, Up: <a href="Basic-Usage.html">Basic Usage.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

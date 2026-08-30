@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 ul.mark-bullet {list-style-type: disc}
 -->
@@ -59,7 +60,7 @@ protocol.
 <p>For additional notes on how to log and view <abbr class="acronym">TTS</abbr> server
 commands when developing a speech server, see
 the historical Emacspeak article at
-<a class="url" href="http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html">http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html</a>.
+<a class="uref" href="http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html">http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html</a>.
 </p>
 <ul class="mini-toc">
 <li><a href="#Omnivox-Structured-Protocol" accesskey="1">Omnivox Structured Protocol</a></li>
@@ -96,9 +97,11 @@ of acoustic onset.
 <p>The canonical protocol documents are:
 </p>
 <ul class="itemize mark-bullet">
-<li><a class="url" href="https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md">Omnivox Control Protocol</a>
-</li><li><a class="url" href="https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md">Omnivox Presentation Timeline Protocol</a>
-</li><li><a class="url" href="https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md">Omnivox Helper Protocol</a>
+<li><a class="uref" href="https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md">Omnivox Control Protocol</a>
+
+</li><li><a class="uref" href="https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md">Omnivox Presentation Timeline Protocol</a>
+
+</li><li><a class="uref" href="https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md">Omnivox Helper Protocol</a>
 </li></ul>
 
 </div>
@@ -148,11 +151,36 @@ best prosody), ask the <abbr class="acronym">TTS</abbr> server to start speaking
 interrupt the spoken output at any time.
 </p>
 <ul class="mini-toc">
-<li><a href="#Commands-That-Queue-Output_002e" accesskey="1">Commands That Queue Output.</a></li>
-<li><a href="#Commands-That-Set-State" accesskey="2">Commands That Set State</a></li>
+<li><a href="#Testing-A-Direct-Legacy-Server" accesskey="1">Testing A Direct Legacy Server</a></li>
+<li><a href="#Commands-That-Queue-Output_002e" accesskey="2">Commands That Queue Output.</a></li>
+<li><a href="#Commands-That-Set-State" accesskey="3">Commands That Set State</a></li>
 </ul>
+<div class="subsection-level-extent" id="Testing-A-Direct-Legacy-Server">
+<h4 class="subsection"><span>14.2.1 Testing A Direct Legacy Server<a class="copiable-link" href="#Testing-A-Direct-Legacy-Server"> &para;</a></span></h4>
+
+<p>This protocol-level test is only for a retained direct Tcl-compatible server.
+Run its launcher from the Emacsvox repository root, for example:
+</p>
+<div class="example">
+<pre class="example-preformatted">./servers/espeak
+</pre></div>
+
+<p>Then enter:
+</p>
+<div class="example">
+<pre class="example-preformatted">q {This is a test.}
+d
+s
+</pre></div>
+
+<p>The <code class="code">q</code> command queues text, <code class="code">d</code> dispatches it, and <code class="code">s</code> stops speech.  Type
+<kbd class="kbd">C-d</kbd> to close the server.  A backend-specific README may provide a
+stronger diagnostic and should take precedence over this generic protocol
+test.
+</p>
+</div>
 <div class="subsection-level-extent" id="Commands-That-Queue-Output_002e">
-<h4 class="subsection"><span>14.2.1 Commands That Queue Output.<a class="copiable-link" href="#Commands-That-Queue-Output_002e"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.2.2 Commands That Queue Output.<a class="copiable-link" href="#Commands-That-Queue-Output_002e"> &para;</a></span></h4>
 
 <p>This section documents commands that either produce spoken output, or
 queue output to be produced on demand.  Commands that place the
@@ -175,10 +203,10 @@ speaking text which is to queue text before asking the server to
 process the queue.
 </p>
 <p>Note that this command needs to handle the special syntax for morpheme
-boundaries &lsquo;<samp class="samp">[*]</samp>&rsquo;.  The &lsquo;<samp class="samp">[*]</samp>&rsquo; syntax is specific to the
+boundaries <code class="code">[*]</code>.  The <code class="code">[*]</code> syntax is specific to the
 Dectalk family of synthesizers; servers for other <abbr class="acronym">TTS</abbr>
 engines need to map this pattern to the engine-specific code for each
-engine. As an example, see <samp class="file">servers/outloud</samp> A morpheme boundary
+engine. As an example, see <code class="code">servers/outloud</code> A morpheme boundary
 results in synthesizing compound words such as <strong class="strong">left bracket</strong>
 with the right intonation; using a space would result in that phrase
 being synthesized as two separate words.
@@ -220,7 +248,6 @@ all pending requests are flushed from the queue.
 <strong class="strong">dispatch</strong> request is received via execution of command
 <strong class="strong">d</strong>.
 </p>
-
 <div class="example">
 <pre class="example-preformatted">c codes
 </pre></div>
@@ -243,9 +270,8 @@ an <code class="code">ogg</code> file.
 </pre></div>
 
 <p><strong class="strong">dispatch</strong> play the audio file identified by filename for
-playing  &mdash; <code class="code">ogg</code> file.
+playing   &mdash; <code class="code">ogg</code> file.
 </p>
-
 <div class="example">
 <pre class="example-preformatted">t freq length
 </pre></div>
@@ -263,7 +289,7 @@ milliseconds.
 </p>
 </div>
 <div class="subsection-level-extent" id="Commands-That-Set-State">
-<h4 class="subsection"><span>14.2.2 Commands That Set State<a class="copiable-link" href="#Commands-That-Set-State"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.2.3 Commands That Set State<a class="copiable-link" href="#Commands-That-Set-State"> &para;</a></span></h4>
 
 <div class="example">
 <pre class="example-preformatted">tts_reset
@@ -320,14 +346,15 @@ this on to speak mixed-case (<abbr class="acronym">AKA</abbr> Camel Case) identi
 <p>This ensures <strong class="strong">atomicity</strong> i.e., all state settings in the TTS
 engine happen at one shot. Note that failure to do this might result
 in some utterances being spoken with a partially set state.
-</p><ul class="itemize mark-bullet">
-<li>punct: see tts_set_punctuations
+</p>
+<ul class="itemize mark-bullet">
+<li>punct: see tts<em class="math">_set</em><em class="math">_punctuations</em>
 
-</li><li>splitcaps: see tts_split_caps
+</li><li>splitcaps: see tts<em class="math">_split</em><em class="math">_caps</em>
 
 </li><li>caps: engine specific implementation of capital letter handling
 
-</li><li>rate: see tts_set_speech_rate
+</li><li>rate: see tts<em class="math">_set</em><em class="math">_speech</em><em class="math">_rate</em>
 </li></ul>
 
 <div class="example">
@@ -335,7 +362,7 @@ in some utterances being spoken with a partially set state.
 </pre></div>
 
 <p><strong class="strong">Immediately</strong> switch to the next language on the server,
-maintained internally on the TTS server. If say_it is non-nil say the
+maintained internally on the TTS server. If say<em class="math">_it</em> is non-nil say the
 language change via the TTS.
 </p>
 <div class="example">
@@ -343,7 +370,7 @@ language change via the TTS.
 </pre></div>
 
 <p><strong class="strong">Immediately</strong> switch to the previous language on the server,
-maintained internally on the TTS server. If say_it is non-nil say the
+maintained internally on the TTS server. If say<em class="math">_it</em> is non-nil say the
 language change via the TTS.
 </p>
 <div class="example">
@@ -354,23 +381,22 @@ language change via the TTS.
 separated by a colon. Examples
 </p>
 <ul class="itemize mark-bullet">
-<li>set_lang &quot;en&quot;
+<li>set<em class="math">_lang</em> &quot;en&quot;
 
-</li><li>set_lang &quot;en:whisper&quot;
+</li><li>set<em class="math">_lang</em> &quot;en:whisper&quot;
 
-</li><li>set_lang &quot;:whisper&quot;
+</li><li>set<em class="math">_lang</em> &quot;:whisper&quot;
 </li></ul>
 
-<p>If say_it is non-nil, speak via the TTS the language and voice
+<p>If say<em class="math">_it</em> is non-nil, speak via the TTS the language and voice
 selected.
 </p>
-
 <div class="example">
 <pre class="example-preformatted">set_preferred_lang alias lang
 </pre></div>
 
 <p><strong class="strong">Immediately</strong> set an alias in the TTS server mapping for
-example &quot;en&quot; to &quot;en_GB&quot;. This can later be used by set_lang.
+example &quot;en&quot; to &quot;en<em class="math">_GB</em>&quot;. This can later be used by set<em class="math">_lang</em>.
 </p>
 </div>
 </div>

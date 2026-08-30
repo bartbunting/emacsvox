@@ -38,7 +38,9 @@ Next: <a href="EAT-Terminal-Access.html" accesskey="n" rel="next">Speech Access 
 </div>
 <hr>
 <h2 class="chapter" id="Agent-Shell-1"><span>10 Agent Shell<a class="copiable-link" href="#Agent-Shell-1"> &para;</a></span></h2>
+
 <a class="index-entry-id" id="index-Agent-Shell"></a>
+
 <a class="index-entry-id" id="index-artificial-intelligence-agents"></a>
 
 <p>Agent Shell is a separately installed Emacs package for interactive AI-agent
@@ -320,20 +322,9 @@ work.
 </p>
 <table class="multitable">
 <thead><tr><th width="18%">Layer</th><th width="37%">Agent Shell owner</th><th width="45%">Emacsvox rule</th></tr></thead>
-<tbody><tr><td width="18%">Public structured API</td><td width="37%"><code class="code">agent-shell-subscribe-to</code>, <code class="code">agent-shell-unsubscribe</code>,
-<code class="code">agent-shell-status</code>, and <code class="code">agent-shell-shell-buffer</code>; lifecycle,
-permission, and tool events</td><td width="45%">Primary authority for processing, completion, errors, permission urgency,
-and tool status.  The public turn boundary triggers inspection of renderer-owned
-response sections.  Event and response data is treated as untrusted content and
-bounded before automatic Aural submission.</td></tr>
-<tr><td width="18%">Experimental renderer metadata</td><td width="37%"><code class="code">agent-shell-ui-state</code>, <code class="code">agent-shell-ui-section</code>, rendered
-Markdown table/source properties, and renderer-owned faces</td><td width="45%">Feature-detected navigation and presentation input.  Renderer group
-provenance outranks provider-controlled IDs; prose and IDs cannot manufacture
-structured permission or lifecycle authority.</td></tr>
-<tr><td width="18%">Private compatibility fallback</td><td width="37%">The aggregate <code class="code">agent-shell--state</code>, the legacy viewport ownership
-resolver, viewport position helpers, and legacy face, prompt, or ID inference</td><td width="45%">Kept in narrow adapter functions for older Agent Shell releases or
-incomplete renderers.  A missing optional detail may reduce header or navigation
-richness but must not create a permission action or completed response.</td></tr>
+<tbody><tr><td width="18%">Public structured API</td><td width="37%"><code class="code">agent-shell-subscribe-to</code>, <code class="code">agent-shell-unsubscribe</code>, <code class="code">agent-shell-status</code>, and <code class="code">agent-shell-shell-buffer</code>; lifecycle, permission, and tool events</td><td width="45%">Primary authority for processing, completion, errors, permission urgency, and tool status. The public turn boundary triggers inspection of renderer-owned response sections. Event and response data is treated as untrusted content and bounded before automatic Aural submission.</td></tr>
+<tr><td width="18%">Experimental renderer metadata</td><td width="37%"><code class="code">agent-shell-ui-state</code>, <code class="code">agent-shell-ui-section</code>, rendered Markdown table/source properties, and renderer-owned faces</td><td width="45%">Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority.</td></tr>
+<tr><td width="18%">Private compatibility fallback</td><td width="37%">The aggregate <code class="code">agent-shell--state</code>, the legacy viewport ownership resolver, viewport position helpers, and legacy face, prompt, or ID inference</td><td width="45%">Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response.</td></tr>
 </tbody>
 </table>
 

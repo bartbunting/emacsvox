@@ -40,16 +40,16 @@ Next: <a href="Term-Input-Modes.html" accesskey="n" rel="next">Character And Lin
 <h3 class="section" id="Starting-Term-1"><span>12.1 Starting Term<a class="copiable-link" href="#Starting-Term-1"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-term"></a>
-<p>Run <kbd class="kbd">M-x term <kbd class="key">RET</kbd></kbd>.  At the &lsquo;<samp class="samp">Run program:</samp>&rsquo; prompt, accept the
+
+<p>Run <kbd class="kbd">M-x term <kbd class="key">RET</kbd></kbd>.  At the <code class="code">Run program:</code> prompt, accept the
 proposed shell or enter another executable and press <kbd class="key">RET</kbd>.  Emacsvox
 currently makes the selected Term window fill the frame when <code class="code">term</code> or
 <code class="code">ansi-term</code> starts.  This changes only the window layout: it does not kill
 the buffers that were displayed in the other windows.
 </p>
-<p>Term owns terminal emulation and the child program owns its prompts, input,
-and completion.  Emacsvox observes the rendered Term buffer and adds speech
-feedback and review commands.  See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Term-Mode.html#Term-Mode">Term Mode</a> in <cite class="cite">The GNU Emacs
-Manual</cite> for the emulator itself and
+<p>Term handles terminal emulation, while the child program handles its prompts,
+input, and completion.  Emacsvox observes the rendered Term buffer and adds
+speech feedback and review commands.  See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Term-Mode.html#Term-Mode">Term Mode</a> in <cite class="cite">The GNU Emacs Manual</cite> for the emulator itself and
 <a data-manual="emacsvox-reference" href="reference/emacsvox_002determ.html#emacsvox_002determ">emacsvox-eterm</a> in <cite class="cite">Emacsvox Reference Manual</cite> for the
 complete Emacsvox API inventory.
 </p>

@@ -16,12 +16,13 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="index.html" rel="up" title="Top">
-<link href="Introduction.html" rel="next" title="Introduction">
-<link href="Speech-Backends.html" rel="prev" title="Speech Backends">
+<link href="Speech-Backends.html" rel="next" title="Speech Backends">
+<link href="Installation.html" rel="prev" title="Installation">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -34,36 +35,77 @@ span:hover a.copiable-link {visibility: visible}
 <div class="chapter-level-extent" id="Basic-Usage">
 <div class="nav-panel">
 <p>
-Next: <a href="Introduction.html" accesskey="n" rel="next">Introduction</a>, Previous: <a href="Speech-Backends.html" accesskey="p" rel="prev">Speech Backends</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Speech-Backends.html" accesskey="n" rel="next">Speech Backends</a>, Previous: <a href="Installation.html" accesskey="p" rel="prev">Getting Started: Installation and First Speech</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Basic-Usage_002e"><span>3 Basic Usage.<a class="copiable-link" href="#Basic-Usage_002e"> &para;</a></span></h2>
+<h2 class="chapter" id="Basic-Usage-1"><span>3 Basic Usage<a class="copiable-link" href="#Basic-Usage-1"> &para;</a></span></h2>
 
-<p>This chapter gives a short, task-oriented introduction to Emacsvox.
-For the complete generated key reference, see
-<a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <cite class="cite">Emacsvox Reference Manual</cite>.
-Use <kbd class="kbd">C-h m</kbd> to inspect the modes and bindings active in the current
-buffer, or <kbd class="kbd">C-h k</kbd> followed by a key to ask Emacs what that key does.
-These sections describe the speech-enabling extensions, but are not a
-substitute for the Emacs manual.
-</p>
-<p>All Emacs navigation and editing commands have been speech enabled.
-Thus, moving to the next or previous word, line or paragraph results
-in the text around point being spoken.  Exactly how much text is
-spoken is determined by the amount by which you moved.
-</p>
-<p>In addition, Emacsvox provides  basic reading functions that can be
-invoked to listen to chunks of text without moving.
+<p>Now that Emacsvox is speaking, this chapter helps you become comfortable with
+the essential keys and feedback.  It begins with a short guided session, then
+introduces the reading and speech controls you are most likely to need.
 </p>
 
 <ul class="mini-toc">
-<li><a href="Overview.html" accesskey="1">Emacsvox Overview</a></li>
-<li><a href="Working.html" accesskey="2">Using Emacs Buffers</a></li>
-<li><a href="Reading.html" accesskey="3">Reading and Navigating</a></li>
-<li><a href="Speech-System.html" accesskey="4">Speech System Commands</a></li>
-<li><a href="Voice_002dlock.html" accesskey="5">Voice Lock Mode</a></li>
-<li><a href="Status-Information.html" accesskey="6">Status  Commands</a></li>
+<li><a href="#Key-Notation-And-Emacs-Words" accesskey="1">Key Notation And Emacs Words</a></li>
+<li><a href="#Your-First-Few-Minutes" accesskey="2">Your First Few Minutes</a></li>
+<li><a href="Overview.html" accesskey="3">Emacsvox Overview</a></li>
+<li><a href="Working.html" accesskey="4">Using Emacs Buffers</a></li>
+<li><a href="Reading.html" accesskey="5">Reading and Navigating</a></li>
+<li><a href="Speech-System.html" accesskey="6">Speech System Commands</a></li>
+<li><a href="Voice_002dlock.html" accesskey="7">Voice Lock Mode</a></li>
+<li><a href="Status-Information.html" accesskey="8">Status  Commands</a></li>
 </ul>
+<div class="section-level-extent" id="Key-Notation-And-Emacs-Words">
+<h3 class="section"><span>3.1 Key Notation And Emacs Words<a class="copiable-link" href="#Key-Notation-And-Emacs-Words"> &para;</a></span></h3>
+
+<p>Emacs documentation writes <kbd class="kbd">C-</kbd> for the Control key and <kbd class="kbd">M-</kbd> for the
+Meta key, which is usually Alt or Option.  For example, <kbd class="kbd">C-n</kbd> means
+hold Control and press <kbd class="kbd">n</kbd>.  A sequence such as <kbd class="kbd">C-e l</kbd> means press
+<kbd class="kbd">C-e</kbd>, release it, and then press <kbd class="kbd">l</kbd>.
+</p>
+<p><kbd class="kbd">M-x</kbd> prompts for an Emacs command by name, and <kbd class="key">RET</kbd> means the
+Return or Enter key.  A <em class="emph">buffer</em> is the Emacs workspace containing text or an
+application.  <em class="emph">Point</em> is the current editing position—the place affected by
+movement and editing commands.
+</p>
+<p>If Emacs itself is new to you, <kbd class="kbd">C-h t</kbd> opens its interactive tutorial.
+You can return to this chapter whenever the tutorial refers to buffers, point,
+windows, or key sequences.
+</p>
+</div>
+<div class="section-level-extent" id="Your-First-Few-Minutes">
+<h3 class="section"><span>3.2 Your First Few Minutes<a class="copiable-link" href="#Your-First-Few-Minutes"> &para;</a></span></h3>
+
+<p>Try these actions in the clean session started during installation:
+</p>
+<ol class="enumerate">
+<li> Press <kbd class="kbd">C-n</kbd> and <kbd class="kbd">C-p</kbd> to move down and up by one line.  Emacsvox
+speaks the line you reach.
+
+</li><li> Press <kbd class="kbd">C-e l</kbd> to hear the current line without moving.
+
+</li><li> Press <kbd class="kbd">C-e s</kbd> whenever you want to stop speech immediately.
+
+</li><li> Press <kbd class="kbd">C-h k</kbd> followed by any key to hear what that key does.
+
+</li><li> Press <kbd class="kbd">C-h m</kbd> to hear about the modes and commands available in the
+current buffer.
+
+</li><li> Press <kbd class="kbd">C-h C-e</kbd> to open the Emacsvox overview.
+</li></ol>
+
+<p>These commands are enough to begin exploring safely.  The rest of this chapter
+adds reading controls and speech settings as you need them.  The generated
+<a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <cite class="cite">Emacsvox Reference Manual</cite> records the complete default keymaps, while live
+help remains authoritative when a package or personal configuration changes a
+binding.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Speech-Backends.html">Speech Backends</a>, Previous: <a href="Installation.html">Getting Started: Installation and First Speech</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

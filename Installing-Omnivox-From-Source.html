@@ -38,7 +38,7 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Building-Omnivox-For-WSL2.html" accesskey="n" rel="next">Building Omnivox For WSL2</a>, Previous: <a href="Supported-Platform-Routes.html" accesskey="p" rel="prev">Supported Platform Routes</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Installing-Omnivox-From-Source-1"><span>2.2 Installing Omnivox From Source<a class="copiable-link" href="#Installing-Omnivox-From-Source-1"> &para;</a></span></h3>
+<h3 class="section" id="Installing-Omnivox-From-Source-1"><span>4.2 Installing Omnivox From Source<a class="copiable-link" href="#Installing-Omnivox-From-Source-1"> &para;</a></span></h3>
 
 <p>Use this route on GNU/Linux and macOS.  It requires network access for the
 initial clone, Rust toolchain, and locked dependency downloads.
@@ -46,15 +46,18 @@ initial clone, Rust toolchain, and locked dependency downloads.
 <p>Install these prerequisite classes before building:
 </p>
 <ul class="itemize mark-bullet">
-<li><a class="url" href="https://rustup.rs/">rustup</a>; the checked-in
-<samp class="file">rust-toolchain.toml</samp> selects the supported Rust release.
+<li><a class="uref" href="https://rustup.rs/">rustup</a>; the checked-in
+<code class="code">rust-toolchain.toml</code> selects the supported Rust release.
+
 </li><li>Python 3, a C and C++ toolchain, CMake, and Clang with libclang.  The supported
 build wrapper uses these to build and stage eSpeak NG and its generated data.
-</li><li>On GNU/Linux, <code class="command">pkg-config</code> and ALSA development headers.  The ALSA
+
+</li><li>On GNU/Linux, <code class="code">pkg-config</code> and ALSA development headers.  The ALSA
 package is commonly named <code class="code">libasound2-dev</code> on Debian or Ubuntu and
 <code class="code">alsa-lib-devel</code> on Fedora.
+
 </li><li>On macOS, the Xcode command-line tools.  Install them with
-<code class="command">xcode-select --install</code> if they are absent.
+<code class="code">xcode-select --install</code> if they are absent.
 </li></ul>
 
 <p>Keep the two repositories beside one another; this also matches the WSL2
@@ -68,14 +71,14 @@ make build
 make install
 </pre></div>
 
-<p><code class="command">make build</code> performs the locked release build and stages the matching
-eSpeak data and third-party notices.  <code class="command">make install</code> installs the
-binary and those adjacent directories, normally below <samp class="file">~/.cargo/bin</samp>.
-Set <code class="env">OMNIVOX_INSTALL_BIN</code> before <code class="command">make install</code> only when the Cargo
-binary directory is elsewhere.  Do not use a bare <code class="command">cargo build</code> as the
+<p><code class="code">make build</code> performs the locked release build and stages the matching
+eSpeak data and third-party notices.  <code class="code">make install</code> installs the
+binary and those adjacent directories, normally below <code class="code">~/.cargo/bin</code>.
+Set <code class="code">OMNIVOX_INSTALL_BIN</code> before <code class="code">make install</code> only when the Cargo
+binary directory is elsewhere.  Do not use a bare <code class="code">cargo build</code> as the
 installation procedure; it does not create the complete staged payload.
 </p>
-<p>Make the install directory visible on <code class="env">PATH</code> before continuing.  No
+<p>Make the install directory visible on <code class="code">PATH</code> before continuing.  No
 proprietary speech runtime is needed for the recommended Linux or macOS path.
 </p>
 </div>

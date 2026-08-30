@@ -16,13 +16,14 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="index.html" rel="up" title="Top">
-<link href="Audio-Desktop.html" rel="next" title="Audio Desktop">
-<link href="Basic-Usage.html" rel="prev" title="Basic Usage">
+<link href="Installation.html" rel="next" title="Installation">
+<link href="index.html" rel="prev" title="Top">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -34,83 +35,96 @@ span:hover a.copiable-link {visibility: visible}
 <div class="chapter-level-extent" id="Introduction">
 <div class="nav-panel">
 <p>
-Next: <a href="Audio-Desktop.html" accesskey="n" rel="next">The Emacsvox Audio Desktop.</a>, Previous: <a href="Basic-Usage.html" accesskey="p" rel="prev">Basic Usage.</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Installation.html" accesskey="n" rel="next">Getting Started: Installation and First Speech</a>, Previous: <a href="index.html" accesskey="p" rel="prev">Emacsvox</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Introduction-1"><span>4 Introduction<a class="copiable-link" href="#Introduction-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Welcome-to-Emacsvox"><span>1 Welcome to Emacsvox<a class="copiable-link" href="#Welcome-to-Emacsvox"> &para;</a></span></h2>
 
 <a class="index-entry-id" id="index-Introduction"></a>
 
-<p>Emacsvox is an Emacs 31-or-newer audio desktop derived from Emacspeak.  It is
-not a pixel-oriented screen reader.  It runs inside Emacs, where commands,
-buffers, text properties, faces, modes, and application state are available as
-structured information.  That context lets Emacsvox present the meaning and
-result of an interaction rather than merely reading the visible display.
+<p>Welcome to Emacsvox, a keyboard-driven spoken environment built on Emacs.  It
+helps you read and write text, browse the Web, use mail and messaging, work in
+shells, program, and explore structured information through speech and sound.
 </p>
-<p>Application integrations adapt interactive commands and changing buffers to
-produce spoken text, voice changes, auditory icons, tones, pauses, and spatial
-feedback.  The core speech layer normalizes text and formatting and sends it
-to the selected speech adapter.  Established direct speech paths remain
-available for compatibility, while migrated integrations can submit a complete
-Aural Presentation transaction.
+<p>Emacsvox requires Emacs 31 or newer and is derived from Emacspeak.  Emacspeak&rsquo;s
+pioneering audio-desktop design and T. V. Raman&rsquo;s original work remain the
+foundation of this project.
+</p>
+<p>Emacsvox works inside Emacs rather than reading the screen as a grid of pixels.
+Because it can use commands, modes, text structure, and application state, it
+can announce what an action means and what changed.  Ordinary movement speaks
+the text crossed; different voices convey structure; auditory icons and tones
+mark events without interrupting you with unnecessary words.
 </p>
 <ul class="mini-toc">
-<li><a href="#Aural-Presentation" accesskey="1">Aural Presentation</a></li>
-<li><a href="#Speech-Adapters-And-Omnivox" accesskey="2">Speech Adapters And Omnivox</a></li>
-<li><a href="#Documentation-Scope" accesskey="3">Documentation Scope</a></li>
+<li><a href="#Where-To-Begin" accesskey="1">Where To Begin</a></li>
+<li><a href="#What-You-Will-Hear" accesskey="2">What You Will Hear</a></li>
+<li><a href="#About-This-Manual" accesskey="3">About This Manual</a></li>
 </ul>
-<div class="section-level-extent" id="Aural-Presentation">
-<h3 class="section"><span>4.1 Aural Presentation<a class="copiable-link" href="#Aural-Presentation"> &para;</a></span></h3>
+<div class="section-level-extent" id="Where-To-Begin">
+<h3 class="section"><span>1.1 Where To Begin<a class="copiable-link" href="#Where-To-Begin"> &para;</a></span></h3>
 
-<p>Aural Presentation separates semantic facts from their audible rendering.
-An integration records what an object or event means; providers and rules
-choose voices and actions; a planner and compiler produce a concrete ordered
-presentation.  The fixed internal baseline preserves established Emacsvox
-feedback.  Users can compose Presentation Options, profiles, palettes, sound
-packs, spatial settings, and scoped overrides without replacing that baseline.
+<ul class="itemize mark-bullet">
+<li>If Emacsvox is not installed yet, start with
+<a class="ref" href="Installation.html">Getting Started: Installation and First Speech</a>.  It takes you from a source checkout to a clean
+speaking session and includes a recovery path if speech does not start.
+
+</li><li>If Emacsvox is already speaking, continue with <a class="ref" href="Basic-Usage.html">Basic Usage</a> for a
+short first-session guide and the essential reading commands.
+
+</li><li>If Emacs itself is new to you, <kbd class="kbd">C-h t</kbd> opens the Emacs tutorial.
+Emacsvox speaks the tutorial and the commands you use while following it.
+
+</li><li>In any Emacs buffer, <kbd class="kbd">C-h m</kbd> describes the active modes and their
+commands, while <kbd class="kbd">C-h k</kbd> followed by a key explains that key.  See
+<a class="ref" href="Using-Online-Help.html">Using Online Help With Emacsvox.</a> when you want to explore further.
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="What-You-Will-Hear">
+<h3 class="section"><span>1.2 What You Will Hear<a class="copiable-link" href="#What-You-Will-Hear"> &para;</a></span></h3>
+
+<p>Emacsvox combines several kinds of feedback:
 </p>
-<p>Open Aural Home with <kbd class="kbd">C-e H</kbd> or
-<code class="code">M-x emacsvox-aural</code>.  Use <kbd class="kbd">C-e E</kbd> to explain the presentation at
-point.  The generated author and lifecycle reference is
-<samp class="file">etc/aural-presentation-reference.org</samp> in the source tree.
+<ul class="itemize mark-bullet">
+<li>speech for text, prompts, results, and status;
+</li><li>voice changes that make syntax and document structure audible;
+</li><li>short auditory icons and tones for events such as opening a file or
+completing an action; and
+</li><li>pauses and spatial cues that help separate related information.
+</li></ul>
+
+<p>You can adjust this presentation gradually.  Aural Home, opened with
+<kbd class="kbd">C-e H</kbd>, brings voices, sound packs, profiles, and other presentation
+options together.  You do not need to configure it before beginning.
+</p>
+<p>Emacsvox sends speech through a speech server.  New GNU/Linux, macOS, and WSL2
+installations use Omnivox; established direct servers remain available for
+compatible existing setups.  The installation chapter introduces only what
+you need for first speech.  See <a class="xref" href="Speech-Backends.html">Speech Backends</a> contains the platform and
+compatibility details.
 </p>
 </div>
-<div class="section-level-extent" id="Speech-Adapters-And-Omnivox">
-<h3 class="section"><span>4.2 Speech Adapters And Omnivox<a class="copiable-link" href="#Speech-Adapters-And-Omnivox"> &para;</a></span></h3>
+<div class="section-level-extent" id="About-This-Manual">
+<h3 class="section"><span>1.3 About This Manual<a class="copiable-link" href="#About-This-Manual"> &para;</a></span></h3>
 
-<p>Emacsvox retains standalone speech servers for engines such as eSpeak,
-Eloquence, DECtalk, and SwiftMac.  Omnivox is the recommended multi-engine
-server for new GNU/Linux, macOS, and WSL2 installations.  It negotiates
-capabilities, reports live engine and physical-voice inventory, routes portable
-logical voices, and accepts structured presentation timelines.  Keyed
-replaceable timelines cancel only older work in the same replacement domain;
-ordered and urgent work are not placed behind the replaceable coalescing
-window.
+<p>The maintained chapters provide the current Emacsvox setup and task guides.
+The separate generated reference records commands, options, and keymaps from
+the source, while the heritage manual preserves Emacspeak essays and
+application guides for their historical and design value.  Historical material
+may describe software or Web services from its original period.
 </p>
-<p>See <a class="xref" href="Speech-Backends.html">Speech Backends</a>, for Emacsvox&rsquo;s platform status, Omnivox installation,
-selection, smoke test, and compatibility policy.  The Emacsvox
-<samp class="file">Readme.org</samp> documents advanced portable voice routing.  Omnivox owns the
-detailed control, helper, and presentation-timeline protocol contracts in its
-own repository.  The legacy line protocol remains supported for standalone
-and older speech servers; See <a class="xref" href="TTS-Servers.html">Speech Server Protocols</a> explains the boundary between
-those protocol families.
+<p>Rapidly changing features are also documented in <code class="code">Readme.org</code>, <code class="code">etc/NEWS</code>,
+and the generated Aural Presentation reference.  When a copied key binding
+differs from your running Emacs, prefer the live help shown by <kbd class="kbd">C-h m</kbd> or
+<kbd class="kbd">C-h k</kbd>.
 </p>
 </div>
-<div class="section-level-extent" id="Documentation-Scope">
-<h3 class="section"><span>4.3 Documentation Scope<a class="copiable-link" href="#Documentation-Scope"> &para;</a></span></h3>
-
-<p>This manual includes generated command documentation as well as inherited
-Emacspeak essays and application guides.  Historical chapters are useful for
-design context but may describe software and Web services from their original
-period.  Current setup starts with See <a class="xref" href="Installation.html">Getting Started: Installation and First Speech</a>; rapidly changing
-features are documented in <samp class="file">Readme.org</samp>, <samp class="file">etc/NEWS</samp>, and the generated
-Aural Presentation reference.
-</p></div>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Audio-Desktop.html">The Emacsvox Audio Desktop.</a>, Previous: <a href="Basic-Usage.html">Basic Usage.</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Installation.html">Getting Started: Installation and First Speech</a>, Previous: <a href="index.html">Emacsvox</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

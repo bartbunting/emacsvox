@@ -35,26 +35,20 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Installing-Omnivox-From-Source.html" accesskey="n" rel="next">Installing Omnivox From Source</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Supported-Platform-Routes-1"><span>2.1 Supported Platform Routes<a class="copiable-link" href="#Supported-Platform-Routes-1"> &para;</a></span></h3>
+<h3 class="section" id="Supported-Platform-Routes-1"><span>4.1 Supported Platform Routes<a class="copiable-link" href="#Supported-Platform-Routes-1"> &para;</a></span></h3>
 
 <p>The following table describes Emacsvox support, not every platform that the
 Omnivox project can build.  &ldquo;Host check required&rdquo; means that the source path
-is maintained but an audible <code class="command">omnivox --check</code> on the user&rsquo;s machine
+is maintained but an audible <code class="code">omnivox --check</code> on the user&rsquo;s machine
 is still the acceptance test.
 </p>
 <table class="multitable">
 <thead><tr><th width="18%">Emacs platform</th><th width="31%">Recommended route</th><th width="51%">Current support evidence</th></tr></thead>
-<tbody><tr><td width="18%">GNU/Linux</td><td width="31%">Source-built Omnivox using eSpeak NG</td><td width="51%">Supported source installation; host check required.  Omnivox does not
-currently publish a Linux archive or run a Linux audio-runtime CI job.</td></tr>
-<tr><td width="18%">macOS on Apple silicon</td><td width="31%">Source-built Omnivox using AVSpeechSynthesizer</td><td width="51%">Supported source installation; Omnivox CI executes this native target,
-and the host check remains required.</td></tr>
-<tr><td width="18%">macOS on Intel</td><td width="31%">Source-built Omnivox using AVSpeechSynthesizer</td><td width="51%">Available source installation; current Omnivox CI cross-builds this
-target but does not execute it.  Treat the host check as required validation.</td></tr>
-<tr><td width="18%">Emacs in WSL2 on x86-64 Windows</td><td width="31%">Emacsvox-staged Windows Omnivox using WinRT</td><td width="51%">Supported advanced deployment; the pinned build verifies its payload,
-but speech and audio must be accepted on the target Windows host.</td></tr>
-<tr><td width="18%">Native Windows Emacs</td><td width="31%">Omnivox executable on <code class="code">exec-path</code>, using WinRT</td><td width="51%">Preview.  The executable-resolution path exists, but Emacsvox does not
-yet publish or fresh-machine test a complete native-Windows setup.  Initial
-users should use the WSL2 route.</td></tr>
+<tbody><tr><td width="18%">GNU/Linux</td><td width="31%">Source-built Omnivox using eSpeak NG</td><td width="51%">Supported source installation; host check required. Omnivox does not currently publish a Linux archive or run a Linux audio-runtime CI job.</td></tr>
+<tr><td width="18%">macOS on Apple silicon</td><td width="31%">Source-built Omnivox using AVSpeechSynthesizer</td><td width="51%">Supported source installation; Omnivox CI executes this native target, and the host check remains required.</td></tr>
+<tr><td width="18%">macOS on Intel</td><td width="31%">Source-built Omnivox using AVSpeechSynthesizer</td><td width="51%">Available source installation; current Omnivox CI cross-builds this target but does not execute it. Treat the host check as required validation.</td></tr>
+<tr><td width="18%">Emacs in WSL2 on x86-64 Windows</td><td width="31%">Emacsvox-staged Windows Omnivox using WinRT</td><td width="51%">Supported advanced deployment; the pinned build verifies its payload, but speech and audio must be accepted on the target Windows host.</td></tr>
+<tr><td width="18%">Native Windows Emacs</td><td width="31%">Omnivox executable on <code class="code">exec-path</code>, using WinRT</td><td width="51%">Preview. The executable-resolution path exists, but Emacsvox does not yet publish or fresh-machine test a complete native-Windows setup. Initial users should use the WSL2 route.</td></tr>
 </tbody>
 </table>
 
@@ -63,7 +57,7 @@ source as described below.  A repository tag, a CI artifact, or an executable
 without its adjacent runtime data is not a substitute for a supported install
 payload.
 </p>
-<p>Do not set <code class="env">OMNIVOX_ENGINE</code> during initial setup.  Its empty value selects
+<p>Do not set <code class="code">OMNIVOX_ENGINE</code> during initial setup.  Its empty value selects
 the normal platform engine above.  Engine routing and optional Piper,
 Eloquence, or DECtalk support are later customizations, not prerequisites for
 first speech.

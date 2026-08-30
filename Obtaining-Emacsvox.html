@@ -16,7 +16,7 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Installation.html" rel="up" title="Installation">
-<link href="Quick-Installation.html" rel="next" title="Quick Installation">
+<link href="Building-And-Testing-The-Speech-Server.html" rel="next" title="Building And Testing The Speech Server">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -33,28 +33,44 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Obtaining-Emacsvox">
 <div class="nav-panel">
 <p>
-Next: <a href="Quick-Installation.html" accesskey="n" rel="next">First Speech Checklist</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="n" rel="next">Install And Check Omnivox</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Obtaining-Emacsvox-1"><span>1.1 Obtaining Emacsvox<a class="copiable-link" href="#Obtaining-Emacsvox-1"> &para;</a></span></h3>
+<h3 class="section" id="Before-You-Begin"><span>2.1 Before You Begin<a class="copiable-link" href="#Before-You-Begin"> &para;</a></span></h3>
 
-<p>Before beginning, install <code class="command">git</code>, <code class="command">make</code>, GNU Texinfo (which
-provides <code class="command">makeinfo</code>), and
-<a class="url" href="https://www.gnu.org/software/emacs/download.html">Emacs 31 or newer</a>.
-The Speech Backends chapter lists the additional platform prerequisites for
-the recommended Omnivox server.
+<p>Install <code class="code">git</code>, <code class="code">make</code>, GNU Texinfo (which provides <code class="code">makeinfo</code>), and
+<a class="uref" href="https://www.gnu.org/software/emacs/download.html">Emacs 31 or newer</a>.  The recommended Omnivox speech server also needs the
+Rust toolchain, Python 3, a C and C++ toolchain, CMake, and Clang with libclang.
 </p>
-<p>The maintained source is
-<a class="url" href="https://github.com/bartbunting/emacsvox">https://github.com/bartbunting/emacsvox</a>.  Clone it into the permanent
-directory where it will be used:
+<p>To check the Emacs found by your shell, run:
 </p>
 <div class="example">
-<pre class="example-preformatted">git clone https://github.com/bartbunting/emacsvox
-cd emacsvox
+<pre class="example-preformatted">emacs --version
 </pre></div>
 
-<p>The checkout itself is the source-checkout installation.  The build operates
-in place; it does not create a second directory to copy elsewhere.
+<p>The first line should begin with <code class="code">GNU Emacs 31</code> or a higher version number.  If
+the command is not found or reports an older version, install a supported Emacs
+or locate its executable.  You can check a specific executable in the same way:
+</p>
+<div class="example">
+<pre class="example-preformatted">/path/to/emacs-31/bin/emacs --version
+</pre></div>
+
+<p>On GNU/Linux, install <code class="code">pkg-config</code> and the ALSA development headers.  On
+macOS, install the Xcode command-line tools.  WSL2 has additional Docker and
+Windows requirements described in <a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
+</p>
+<p>Choose a permanent parent directory and clone Emacsvox and Omnivox beside one
+another:
+</p>
+<div class="example">
+<pre class="example-preformatted">cd /path/where/you/keep/source
+git clone https://github.com/bartbunting/emacsvox
+git clone https://github.com/bartbunting/omnivox
+</pre></div>
+
+<p>The Emacsvox checkout is the installation directory.  It builds in place and
+does not create a second tree to copy elsewhere.
 </p>
 </div>
 

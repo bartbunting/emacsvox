@@ -42,16 +42,19 @@ Next: <a href="Agent-Shell.html" accesskey="n" rel="next">Agent Shell</a>, Previ
 <h2 class="chapter" id="Notmuch-Mail-1"><span>9 Notmuch Mail<a class="copiable-link" href="#Notmuch-Mail-1"> &para;</a></span></h2>
 
 <a class="index-entry-id" id="index-Notmuch-mail"></a>
+
 <a class="index-entry-id" id="index-mail-search_002c-Notmuch"></a>
+
 <a class="index-entry-id" id="index-asynchronous-search_002c-Notmuch"></a>
+
 <a class="index-entry-id" id="index-notmuch"></a>
+
 <p>Notmuch is a separately installed mail index and Emacs interface.  Emacsvox
 adds speech and semantic presentation to its Hello, Search, and Show views; it
 does not configure a mail store, build the Notmuch database, fetch or send
 mail, or replace Notmuch&rsquo;s commands.  Install compatible Notmuch command-line
 and Emacs components and complete their setup first.  The
-<a class="uref" href="https://notmuchmail.org/doc/latest/notmuch-emacs.html">official Notmuch
-Emacs manual</a> covers that setup and the complete upstream command set.
+<a class="uref" href="https://notmuchmail.org/doc/latest/notmuch-emacs.html">official Notmuch Emacs manual</a> covers that setup and the complete upstream command set.
 </p>
 <p>The generated
 <a data-manual="emacsvox-reference" href="reference/emacsvox_002dnotmuch.html#emacsvox_002dnotmuch">emacsvox-notmuch</a> in <cite class="cite">Emacsvox Reference Manual</cite> section
@@ -73,8 +76,11 @@ the tasks a user performs and explains when automatic feedback occurs.
 <h3 class="section"><span>9.1 Start Notmuch<a class="copiable-link" href="#Start-Notmuch"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-starting-Notmuch"></a>
+
 <a class="index-entry-id" id="index-Notmuch-Hello"></a>
+
 <a class="index-entry-id" id="index-notmuch_002dsearch"></a>
+
 <p>Run <kbd class="kbd">M-x notmuch</kbd> to open Notmuch Hello.  With the standard Emacsvox global
 maps loaded, <kbd class="kbd">C-' m</kbd> runs <code class="code">notmuch-search</code> directly and prompts for a
 query.  Emacsvox loads its live integration when Notmuch loads and marks new
@@ -90,7 +96,9 @@ does not alter mail, tags, files, or Notmuch configuration.
 <h3 class="section"><span>9.2 Use Hello and start a search<a class="copiable-link" href="#Use-Hello-and-start-a-search"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-saved-searches_002c-Notmuch"></a>
+
 <a class="index-entry-id" id="index-widgets_002c-Notmuch-Hello"></a>
+
 <p>Moving among Hello widgets speaks a saved-search label and its displayed
 message count, or identifies the button or link reached.  These are the common
 Hello keys in the current Notmuch map:
@@ -128,8 +136,11 @@ provided by the installed Notmuch version.
 <h4 class="subsection"><span>9.2.1 Understand asynchronous search completion<a class="copiable-link" href="#Understand-asynchronous-search-completion"> &para;</a></span></h4>
 
 <a class="index-entry-id" id="index-search-results_002c-asynchronous-rendering"></a>
+
 <a class="index-entry-id" id="index-notification-stream_002c-Notmuch"></a>
+
 <a class="index-entry-id" id="index-emacsvox_002dnotmuch_002dsearch_002dcompletion_002dstyle"></a>
+
 <p>A Notmuch search buffer can appear before its rows have finished rendering.
 For a user-owned non-refresh search that remains selected, Emacsvox gives a
 progress cue and waits for Notmuch&rsquo;s process sentinel.  It does not announce an
@@ -164,7 +175,9 @@ refresh-all command remains silent.
 <h3 class="section"><span>9.3 Navigate and inspect Search results<a class="copiable-link" href="#Navigate-and-inspect-Search-results"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Notmuch-Search"></a>
+
 <a class="index-entry-id" id="index-search-fields_002c-Notmuch"></a>
+
 <p>On thread movement, Emacsvox reads the configured semantic fields and presents
 status cues.  Reaching a boundary reports the beginning or end instead of
 repeating the current row.  Emacsvox makes the arrow keys equivalent to the
@@ -224,8 +237,11 @@ to omit or reorder potentially sensitive fields.
 <h3 class="section"><span>9.4 Read a thread and its MIME parts<a class="copiable-link" href="#Read-a-thread-and-its-MIME-parts"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Notmuch-Show"></a>
+
 <a class="index-entry-id" id="index-MIME-parts_002c-Notmuch"></a>
+
 <a class="index-entry-id" id="index-attachments_002c-Notmuch"></a>
+
 <p>Opening a thread speaks one semantic message summary and the first visible body
 line.  Hidden alternative bodies are skipped.  If a message has no visible
 body text, point falls back to a leaf MIME-part button when possible.  Moving
@@ -302,7 +318,9 @@ attachment or external viewer.
 <h3 class="section"><span>9.5 Change tags and archive state<a class="copiable-link" href="#Change-tags-and-archive-state"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-tags_002c-Notmuch"></a>
+
 <a class="index-entry-id" id="index-archiving_002c-Notmuch"></a>
+
 <p>Emacsvox compares displayed tags before and after interactive mutation.  It
 reports only the actual additions and removals.  Adding an existing tag or
 removing an absent one reports &ldquo;Tags unchanged&rdquo; rather than claiming a
@@ -334,14 +352,19 @@ unset <code class="code">notmuch-archive-tags</code> configuration.  Movement wr
 combined result rather than duplicating feedback from their nested tag or
 archive command.
 </p>
-<a class="anchor" id="Notmuch-fields-and-privacy"></a></div>
+<a class="anchor" id="Notmuch-fields-and-privacy"></a>
+</div>
 <div class="section-level-extent" id="Choose-fields_002c-status_002c-and-privacy">
 <h3 class="section"><span>9.6 Choose fields, status, and privacy<a class="copiable-link" href="#Choose-fields_002c-status_002c-and-privacy"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-privacy_002c-Notmuch-speech"></a>
+
 <a class="index-entry-id" id="index-fields_002c-Notmuch-speech"></a>
+
 <a class="index-entry-id" id="index-status-cues_002c-Notmuch"></a>
+
 <a class="index-entry-id" id="index-automatic-speech-limits_002c-Notmuch"></a>
+
 <p>Run <kbd class="kbd">M-x customize-group RET emacsvox-notmuch RET</kbd> to change Notmuch speech
 without altering Notmuch&rsquo;s own database or display.
 </p>
@@ -409,6 +432,7 @@ the complete configured fields is appropriate.
 <h4 class="subsection"><span>9.6.1 Understand retained and notification content<a class="copiable-link" href="#Understand-retained-and-notification-content"> &para;</a></span></h4>
 
 <a class="index-entry-id" id="index-Aural-history_002c-mail-privacy"></a>
+
 <p>Primary-stream Notmuch presentations can enter bounded Aural Presentation
 history.  By default Emacsvox retains at most 20 presentations and at most
 4,096 UTF-8 bytes of speech preview per record; records contain frozen data,
@@ -429,7 +453,9 @@ settings separately.
 <h3 class="section"><span>9.7 Know the support boundaries<a class="copiable-link" href="#Know-the-support-boundaries"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Notmuch-Tree-support"></a>
+
 <a class="index-entry-id" id="index-message-composition_002c-Notmuch"></a>
+
 <dl class="table">
 <dt>Hello</dt>
 <dd><p>Widget navigation, view lifecycle, and searches have Notmuch-specific semantic
@@ -465,9 +491,11 @@ them.
 <h3 class="section"><span>9.8 Troubleshoot the live integration<a class="copiable-link" href="#Troubleshoot-the-live-integration"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-troubleshooting_002c-Notmuch"></a>
+
 <a class="index-entry-id" id="index-byte_002dcode_002c-Notmuch-integration"></a>
+
 <p>Use <kbd class="kbd">?</kbd> or <kbd class="kbd">C-h m</kbd> in the affected Notmuch buffer to confirm the keys
-owned by the installed Notmuch version.  Run <kbd class="kbd">M-x notmuch-version</kbd> to
+provided by the installed Notmuch version.  Run <kbd class="kbd">M-x notmuch-version</kbd> to
 identify that package, and use the official manual linked at the beginning of
 this chapter for its current behavior.
 </p>
@@ -477,7 +505,7 @@ byte-code, Aural rules, sound resources, or the backend appear wrong.  Use
 presentation submitted for a Notmuch action.  These diagnostics do not query
 or modify the mail database.
 </p>
-<p>For a source checkout, use the Emacs selected by <samp class="file">local.mk</samp>.  Run
+<p>For a source checkout, use the Emacs selected by <code class="code">local.mk</code>.  Run
 <code class="code">make check-emacs</code> before diagnosing compilation, <code class="code">make bytecode</code>
 after an ordinary integration edit, and <code class="code">make bytecode-rebuild</code> after a
 branch switch or a macro or public-interface change.  A fresh Emacs must load
@@ -488,6 +516,7 @@ the rebuilt byte-code before live verification.
 <h3 class="section"><span>9.9 Integration contracts for maintainers<a class="copiable-link" href="#Integration-contracts-for-maintainers"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Notmuch-integration-maintenance"></a>
+
 <p>The live module is registered as an optional package integration.  Its stable
 extension points are the Hello, Search, Show, and Tree mode hooks; Search and
 Show mode maps; public interactive commands; and public Search/Show accessors.
@@ -509,9 +538,10 @@ refresh-all path intentionally acquires no ownership.
 </p>
 <p>Run <code class="code">make notmuch-test</code> for the explicit source suite.  After current
 byte-code exists, run <code class="code">make compiled-notmuch-test</code>; it verifies the exact
-loaded <samp class="file">emacsvox-notmuch.elc</samp>, compiler version, and the same focused
+loaded <code class="code">emacsvox-notmuch.elc</code>, compiler version, and the same focused
 selector, including real displayed-window reading for both advance paths.
-</p></div>
+</p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">

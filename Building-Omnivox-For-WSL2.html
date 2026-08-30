@@ -38,16 +38,19 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Selecting-And-Checking-Omnivox.html" accesskey="n" rel="next">Selecting And Checking Omnivox</a>, Previous: <a href="Installing-Omnivox-From-Source.html" accesskey="p" rel="prev">Installing Omnivox From Source</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Building-Omnivox-For-WSL2-1"><span>2.3 Building Omnivox For WSL2<a class="copiable-link" href="#Building-Omnivox-For-WSL2-1"> &para;</a></span></h3>
+<h3 class="section" id="Building-Omnivox-For-WSL2-1"><span>4.3 Building Omnivox For WSL2<a class="copiable-link" href="#Building-Omnivox-For-WSL2-1"> &para;</a></span></h3>
 
 <p>Use this route when Emacs runs inside WSL2 and speech should play through
 Windows.  Clone Omnivox beside Emacsvox as shown above.  The host must provide:
 </p>
 <ul class="itemize mark-bullet">
-<li>WSL2 with working <code class="command">powershell.exe</code> and <code class="command">wslpath</code> interoperation;
+<li>WSL2 with working <code class="code">powershell.exe</code> and <code class="code">wslpath</code> interoperation;
+
 </li><li>Docker with Linux/AMD64 container support;
+
 </li><li>Windows .NET Framework 4.7.2 or newer; and
-</li><li><code class="command">curl</code>, <code class="command">unzip</code>, and <code class="command">sha256sum</code> in WSL, plus network
+
+</li><li><code class="code">curl</code>, <code class="code">unzip</code>, and <code class="code">sha256sum</code> in WSL, plus network
 access for the pinned container and .NET toolchain inputs.
 </li></ul>
 
@@ -61,15 +64,15 @@ make windows-omnivox
 
 <p>This is the reproducible release path.  It builds and verifies a pinned
 Windows-GNU executable and stages a content-addressed runtime beneath
-<samp class="file">servers/omnivox-bin</samp>.  It also copies the runnable payload to a
+<code class="code">servers/omnivox-bin</code>.  It also copies the runnable payload to a
 Windows-local directory so native voice and eSpeak data discovery do not pay
 the WSL filesystem cost.  Optional proprietary Eloquence and DECtalk runtimes
 are not downloaded or distributed.
 </p>
 <p>Maintainers testing tracked changes may use
-<code class="command">make windows-omnivox-dev</code>.  That target records both worktree-diff
+<code class="code">make windows-omnivox-dev</code>.  That target records both worktree-diff
 hashes and labels the result as a development build; it is not the clean
-release procedure.  See <samp class="file">servers/omnivox-release/README.org</samp> for the
+release procedure.  See <code class="code">servers/omnivox-release/README.org</code> for the
 pinned toolchain, licensing, provenance, and restaging contract.
 </p>
 </div>

@@ -3,10 +3,10 @@
 <!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Speech Output  Control (Emacsvox User Manual)</title>
+<title>Speech Output Control (Emacsvox User Manual)</title>
 
-<meta name="description" content="Speech Output  Control (Emacsvox User Manual)">
-<meta name="keywords" content="Speech Output  Control (Emacsvox User Manual)">
+<meta name="description" content="Speech Output Control (Emacsvox User Manual)">
+<meta name="keywords" content="Speech Output Control (Emacsvox User Manual)">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
@@ -37,7 +37,7 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Miscellaneous.html" accesskey="n" rel="next">Miscellaneous Speech Commands</a>, Previous: <a href="Controlling-Echo.html" accesskey="p" rel="prev">Character, Word And Line Echo.</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Speech System Commands</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Setting-TTS-Characteristics_002e"><span>3.4.2 Setting  TTS Characteristics.<a class="copiable-link" href="#Setting-TTS-Characteristics_002e"> &para;</a></span></h4>
+<h4 class="subsection" id="Setting-TTS-Characteristics_002e"><span>3.6.2 Setting  TTS Characteristics.<a class="copiable-link" href="#Setting-TTS-Characteristics_002e"> &para;</a></span></h4>
 
 <p>Emacsvox user commands can set different characteristics of the speech
 output such as speech rate and  punctuations mode.
@@ -50,64 +50,72 @@ These settings can be made locally in a given buffer or be applied to
 all buffers by preceding these commands with <kbd class="kbd">C-u</kbd>.
 </p>
 <dl class="table">
-<dt><a class="index-entry-id" id="index-C_002de-d-r"></a>
-<a id="index-tts_002dset_002drate"></a><span><kbd class="kbd">C-e d r</kbd><a class="copiable-link" href="#index-tts_002dset_002drate"> &para;</a></span></dt>
-<dd><p><code class="code">tts-set-rate</code>
+<dt><a id="index-tts_002dset_002drate"></a><span><kbd class="kbd">C-e d r</kbd><a class="copiable-link" href="#index-tts_002dset_002drate"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-d-r"></a>
+
+<p><code class="code">tts-set-rate</code>
 </p>
 <p>Set speaking RATE for the <abbr class="acronym">TTS</abbr>.  Interactive PREFIX arg means set the
 global default value, and then set the current local value to the
 result.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-d-f"></a>
-<a id="index-tts_002dset_002dcharacter_002dscale"></a><span><kbd class="kbd">C-e d f</kbd><a class="copiable-link" href="#index-tts_002dset_002dcharacter_002dscale"> &para;</a></span></dt>
-<dd><p><code class="code">tts-set-character-scale</code>
+</p></dd>
+<dt><a id="index-tts_002dset_002dcharacter_002dscale"></a><span><kbd class="kbd">C-e d f</kbd><a class="copiable-link" href="#index-tts_002dset_002dcharacter_002dscale"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-d-f"></a>
+
+<p><code class="code">tts-set-character-scale</code>
 </p>
 <p>Set scale FACTOR for speech rate.  Speech rate is scaled by this
 factor when speaking characters.  Interactive PREFIX arg means set the
 global default value, and then set the current local value to the
 result.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-d-DIGIT"></a>
-<a id="index-tts_002dset_002dpredefined_002drate"></a><span><kbd class="kbd">C-e d DIGIT</kbd><a class="copiable-link" href="#index-tts_002dset_002dpredefined_002drate"> &para;</a></span></dt>
-<dd><p><code class="code">tts-set-predefined-rate</code>
+</p></dd>
+<dt><a id="index-tts_002dset_002dpredefined_002drate"></a><span><kbd class="kbd">C-e d DIGIT</kbd><a class="copiable-link" href="#index-tts_002dset_002dpredefined_002drate"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-d-DIGIT"></a>
+
+<p><code class="code">tts-set-predefined-rate</code>
 </p>
 <p>Set speech rate to one of nine predefined levels using digit keys
 <kbd class="kbd">0</kbd> through <kbd class="kbd">9</kbd>.  Interactive PREFIX arg says to set the rate
 globally.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-d-p"></a>
-<a id="index-tts_002dset_002dpunctuations"></a><span><kbd class="kbd">C-e d p</kbd><a class="copiable-link" href="#index-tts_002dset_002dpunctuations"> &para;</a></span></dt>
-<dd><p><code class="code">tts-set-punctuations</code>
+</p></dd>
+<dt><a id="index-tts_002dset_002dpunctuations"></a><span><kbd class="kbd">C-e d p</kbd><a class="copiable-link" href="#index-tts_002dset_002dpunctuations"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-d-p"></a>
+
+<p><code class="code">tts-set-punctuations</code>
 </p>
 <p>Set punctuation mode to MODE.  Possible values are <code class="code">some</code>, <code class="code">all</code>,
 or <code class="code">none</code>.  Interactive PREFIX arg means set the global default value,
 and then set the current local value to the result.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-d-s"></a>
-<a id="index-tts_002dtoggle_002dsplit_002dcaps"></a><span><kbd class="kbd">C-e d s</kbd><a class="copiable-link" href="#index-tts_002dtoggle_002dsplit_002dcaps"> &para;</a></span></dt>
-<dd><p><code class="code">tts-toggle-split-caps</code>
+</p></dd>
+<dt><a id="index-tts_002dtoggle_002dsplit_002dcaps"></a><span><kbd class="kbd">C-e d s</kbd><a class="copiable-link" href="#index-tts_002dtoggle_002dsplit_002dcaps"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-d-s"></a>
+
+<p><code class="code">tts-toggle-split-caps</code>
 </p>
 <p>Toggle split caps mode.  Split caps mode is useful when reading
 Hungarian notation in program source code.  Interactive PREFIX arg
 means toggle the global default value, and then set the current local
 value to the result.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-tts_002dtoggle_002dcaps"></a>
-<a id="index-C_002de-d-c"></a><span><kbd class="kbd">C-e d c</kbd><a class="copiable-link" href="#index-C_002de-d-c"> &para;</a></span></dt>
-<dd><p><code class="code">tts-toggle-caps</code>
+</p></dd>
+<dt><a id="index-C_002de-d-c"></a><span><kbd class="kbd">C-e d c</kbd><a class="copiable-link" href="#index-C_002de-d-c"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-tts_002dtoggle_002dcaps"></a>
+
+<p><code class="code">tts-toggle-caps</code>
 </p>
 <p>Toggle capitalization indication.  Interactive PREFIX arg means toggle the
 global default value, then set the current local value to the result.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-emacsvox_002dset_002dcapitalization_002dpresentation"></a>
-<a id="index-C_002de-d-C"></a><span><kbd class="kbd">C-e d C</kbd><a class="copiable-link" href="#index-C_002de-d-C"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-set-capitalization-presentation</code>
+</p></dd>
+<dt><a id="index-C_002de-d-C"></a><span><kbd class="kbd">C-e d C</kbd><a class="copiable-link" href="#index-C_002de-d-C"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-emacsvox_002dset_002dcapitalization_002dpresentation"></a>
+
+<p><code class="code">emacsvox-set-capitalization-presentation</code>
 </p>
 <p>Choose <code class="code">spoken</code>, <code class="code">tone</code>, <code class="code">spoken-tone</code>, <code class="code">custom</code>, or
 <code class="code">none</code>, and preview representative text.  <code class="code">custom</code> publishes facts
@@ -119,30 +127,33 @@ engine-specific isolated-letter behavior.
 </dl>
 
 <p>In addition, Emacsvox can convey the indentation of lines as they are
-spoken  &mdash; This is relevant when programming and is the default
+spoken   &mdash; This is relevant when programming and is the default
 when working with program source.
 </p>
 <dl class="table">
-<dt><a class="index-entry-id" id="index-C_002de-d-i"></a>
-<a id="index-emacsvox_002dtoggle_002daudio_002dindentation"></a><span><kbd class="kbd">C-e d i</kbd><a class="copiable-link" href="#index-emacsvox_002dtoggle_002daudio_002dindentation"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-toggle-audio-indentation</code>
+<dt><a id="index-emacsvox_002dtoggle_002daudio_002dindentation"></a><span><kbd class="kbd">C-e d i</kbd><a class="copiable-link" href="#index-emacsvox_002dtoggle_002daudio_002dindentation"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-d-i"></a>
+
+<p><code class="code">emacsvox-toggle-audio-indentation</code>
 </p>
 <p>Toggle state of Emacsvox audio indentation.  Interactive PREFIX arg
 means toggle the global default value, and then set the current local
 value to the result.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-d-I"></a>
-<a id="index-emacsvox_002dset_002dindentation_002dpresentation"></a><span><kbd class="kbd">C-e d I</kbd><a class="copiable-link" href="#index-emacsvox_002dset_002dindentation_002dpresentation"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-set-indentation-presentation</code>
+</p></dd>
+<dt><a id="index-emacsvox_002dset_002dindentation_002dpresentation"></a><span><kbd class="kbd">C-e d I</kbd><a class="copiable-link" href="#index-emacsvox_002dset_002dindentation_002dpresentation"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-d-I"></a>
+
+<p><code class="code">emacsvox-set-indentation-presentation</code>
 </p>
 <p>Choose spoken column, duration-coded tone, rising-pitch tone, either tone
 combined with speech, <code class="code">custom</code>, or <code class="code">none</code>.  The command previews a
 four-column indentation sample.  Indentation tones complete before the line is
 spoken so they do not mask its first phoneme.
-</p>
-</dd>
+</p></dd>
 </dl>
+
 </div>
 <hr>
 <div class="nav-panel">

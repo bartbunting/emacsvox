@@ -1,4 +1,4 @@
 Emacsvox browser manual provenance
-Source commit: 21dce599c288eef7748ec7e1d301af977e79b49b
+Source commit: bf347bb2de241f0dad30121244a350968c58ec55
 Emacs: 31.0.90
 Texinfo: texi2any (GNU texinfo) 7.2

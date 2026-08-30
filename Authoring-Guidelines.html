@@ -42,9 +42,29 @@ Next: <a href="Credits.html" accesskey="n" rel="next">Credits</a>, Previous: <a 
 <p>Keep current operating instructions separate from historical accounts.  State
 which back end or platform a procedure applies to, avoid duplicating detailed
 protocol contracts across repositories, and link to the owning document.
-Run <code class="command">make docs-generate</code> after editing Texinfo, then run
-<code class="command">make docs-check</code>.  Commit the regenerated <samp class="file">emacsvox.info</samp> and
-<samp class="file">emacsvox-reference.info</samp> and <samp class="file">emacsvox-heritage.info</samp> files with
+</p>
+<p>Reports and internal notes require no Emacsvox build.  While editing the Org
+manual, preview the complete user manual without inspecting or rebuilding Lisp
+byte-code:
+</p>
+<div class="example">
+<pre class="example-preformatted">make docs-org-preview
+</pre></div>
+
+<p>The ignored Info, Texinfo, and HTML previews appear under
+<code class="code">.docs-preview/org-manual/</code>.  Once the text settles, run
+<code class="code">make docs-update</code> to update the tracked generated Texinfo body and checked
+Info files.  Do not edit those generated files directly.
+</p>
+<p>When public Lisp documentation or keys change, first bring byte-code current
+with <code class="code">make bytecode</code>.  Use <code class="code">make bytecode-rebuild</code> instead after
+changing macros or public interfaces, as described in <code class="code">AGENTS.md</code>.  Then
+run <code class="code">make docs-reference</code>.  <code class="code">make docs-generate</code> remains the
+comprehensive reference and manual update.  Before review, merge, or
+deployment, run the non-mutating
+<code class="code">make docs-release-check</code>; <code class="code">make docs-check</code> is its
+compatibility alias.  Commit the regenerated <code class="code">emacsvox.info</code>,
+<code class="code">emacsvox-reference.info</code>, and <code class="code">emacsvox-heritage.info</code> files with
 their source changes.
 </p>
 <ul class="mini-toc">
@@ -53,16 +73,17 @@ their source changes.
 <div class="subsection-level-extent" id="Publishing-The-Browser-Manual">
 <h4 class="subsection"><span>15.2.1 Publishing The Browser Manual<a class="copiable-link" href="#Publishing-The-Browser-Manual"> &para;</a></span></h4>
 
-<p>Texinfo on <code class="code">master</code> is the canonical manual source.  GitHub Pages serves
+<p>Org on <code class="code">master</code> is the canonical maintained manual source.  GitHub Pages serves
 the generated static files committed on the separate <code class="code">gh-pages</code> branch;
 never edit those HTML files as source.  Publishing is deliberately explicit:
 </p>
 <ol class="enumerate">
-<li> Finish the manual change, run the generation and validation targets above,
-and commit the complete source-side change on <code class="code">master</code>.
+<li> Finish the manual change, update its checked Info output, run the release
+validation target above, and commit the complete source-side change on
+<code class="code">master</code>.
 
 </li><li> Check out that exact commit in a clean source worktree.  Build its local,
-ignored byte-code with the Emacs selected by <samp class="file">local.mk</samp> or an
+ignored byte-code with the Emacs selected by <code class="code">local.mk</code> or an
 <code class="code">EMACS=</code> override.  Use a separate sibling worktree checked out on
 <code class="code">gh-pages</code> as the publication directory.
 
@@ -72,9 +93,10 @@ ignored byte-code with the Emacs selected by <samp class="file">local.mk</samp> 
 <pre class="example-preformatted">make docs-publish-pages DOCS_PUBLISH_DIR=/path/to/emacsvox-pages
 </pre></div>
 
-<p>The target validates the manual, replaces only its managed HTML files, writes
-<samp class="file">.nojekyll</samp>, and records the source commit, Emacs version, and Texinfo
-version in <samp class="file">emacsvox-source.txt</samp>.  It refuses an uncommitted source tree.
+<p>The target validates the manual and publishes that same staged render, replaces
+only its managed HTML files, writes <code class="code">.nojekyll</code>, and records the source
+commit, Emacs version, and Texinfo version in <code class="code">emacsvox-source.txt</code>.  It
+refuses an uncommitted source tree.
 </p>
 </li><li> Inspect the <code class="code">gh-pages</code> worktree, including the provenance file and the
 main browser entry points.  Commit the generated site with the source commit

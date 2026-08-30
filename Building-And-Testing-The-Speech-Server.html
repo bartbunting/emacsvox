@@ -16,12 +16,12 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Installation.html" rel="up" title="Installation">
-<link href="Persistent-Startup.html" rel="prev" title="Persistent Startup">
+<link href="Quick-Installation.html" rel="next" title="Quick Installation">
+<link href="Obtaining-Emacsvox.html" rel="prev" title="Obtaining Emacsvox">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
-kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -34,44 +34,41 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Building-And-Testing-The-Speech-Server">
 <div class="nav-panel">
 <p>
-Previous: <a href="Persistent-Startup.html" accesskey="p" rel="prev">Persistent Startup</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Quick-Installation.html" accesskey="n" rel="next">Build And Start Emacsvox</a>, Previous: <a href="Obtaining-Emacsvox.html" accesskey="p" rel="prev">Before You Begin</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Building-And-Testing-The-Speech-Server-1"><span>1.6 Building And Testing The Speech Server<a class="copiable-link" href="#Building-And-Testing-The-Speech-Server-1"> &para;</a></span></h3>
+<h3 class="section" id="Install-And-Check-Omnivox"><span>2.2 Install And Check Omnivox<a class="copiable-link" href="#Install-And-Check-Omnivox"> &para;</a></span></h3>
 
-<p>Speech-server launchers live in <samp class="file">servers/</samp>.  Build them through the
-repository-root targets above so the selected paths and staging rules remain
-consistent.
-</p>
-<p>The Omnivox smoke test and its audible success condition are in
-<a class="ref" href="Selecting-And-Checking-Omnivox.html">Selecting And Checking Omnivox</a>.  The following protocol-level test is
-only for retained direct Tcl-compatible servers.  Run one of those launchers
-from the repository root, for example:
+<p>On GNU/Linux or macOS, build and install Omnivox from its checkout:
 </p>
 <div class="example">
-<pre class="example-preformatted">./servers/espeak
+<pre class="example-preformatted">cd /path/where/you/keep/source/omnivox
+make build
+make install
+omnivox --check
 </pre></div>
 
-<p>Then enter:
+<p><code class="code">make install</code> normally places the executable below <code class="code">~/.cargo/bin</code>.  Make sure
+that directory is on <code class="code">PATH</code> before running the check.  No proprietary speech
+runtime is needed for the recommended GNU/Linux or macOS route.
+</p>
+<p>Under WSL2, build the staged Windows runtime from a clean Emacsvox checkout:
 </p>
 <div class="example">
-<pre class="example-preformatted">q {This is a test.}
-d
-s
+<pre class="example-preformatted">cd /path/where/you/keep/source/emacsvox
+make windows-omnivox
+./servers/omnivox --check
 </pre></div>
 
-<p>The <code class="code">q</code> command queues text, <code class="code">d</code> dispatches it, and <code class="code">s</code> stops
-speech.  Type <kbd class="kbd">C-d</kbd> to close the server.  Backend-specific READMEs may
-provide stronger diagnostics and should take precedence over this generic
-smoke test.
+<p>The check plays a tone followed by speech.  When you hear both, the speech
+server is ready.  If either is missing, use
+<a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend Diagnostics And Responsibilities</a>
+before continuing.  See <a class="xref" href="Speech-Backends.html">Speech Backends</a> contains the complete platform
+matrix, build details, and compatibility alternatives.  Native Windows Emacs
+support remains a preview; consult that matrix before choosing it for a first
+installation.
 </p>
-<p>From Emacs, use <code class="code">M-x tts-speak-version</code> to verify the selected adapter and
-<code class="code">M-x tts-restart</code> after changing server configuration.  Omnivox also
-records per-process diagnostic logs below
-<samp class="file">$XDG_STATE_HOME/emacsvox/omnivox</samp>, defaulting to
-<samp class="file">~/.local/state/emacsvox/omnivox</samp>; spoken text is omitted unless explicit
-text logging is enabled.
-</p></div>
+</div>
 
 
 

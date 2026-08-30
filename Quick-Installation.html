@@ -17,7 +17,7 @@
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Installation.html" rel="up" title="Installation">
 <link href="Confirming-First-Speech.html" rel="next" title="Confirming First Speech">
-<link href="Obtaining-Emacsvox.html" rel="prev" title="Obtaining Emacsvox">
+<link href="Building-And-Testing-The-Speech-Server.html" rel="prev" title="Building And Testing The Speech Server">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -34,84 +34,90 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Quick-Installation">
 <div class="nav-panel">
 <p>
-Next: <a href="Confirming-First-Speech.html" accesskey="n" rel="next">Confirming First Speech</a>, Previous: <a href="Obtaining-Emacsvox.html" accesskey="p" rel="prev">Obtaining Emacsvox</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Confirming-First-Speech.html" accesskey="n" rel="next">Confirming First Speech</a>, Previous: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="p" rel="prev">Install And Check Omnivox</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="First-Speech-Checklist"><span>1.2 First Speech Checklist<a class="copiable-link" href="#First-Speech-Checklist"> &para;</a></span></h3>
+<h3 class="section" id="Build-And-Start-Emacsvox"><span>2.3 Build And Start Emacsvox<a class="copiable-link" href="#Build-And-Start-Emacsvox"> &para;</a></span></h3>
 
 <ol class="enumerate">
-<li> Select Emacs 31 or newer.  If it is not the system <code class="command">emacs</code>, copy
-<samp class="file">local.mk.example</samp> to the ignored <samp class="file">local.mk</samp> and set <code class="code">EMACS</code>:
+<li> Enter the Emacsvox checkout:
 
+<div class="example">
+<pre class="example-preformatted">cd /path/where/you/keep/source/emacsvox
+</pre></div>
+
+</li><li> Select Emacs 31 or newer.  If it is not the system <code class="code">emacs</code>, create the
+ignored local settings file:
+
+<div class="example">
+<pre class="example-preformatted">cp local.mk.example local.mk
+</pre></div>
+
+<p>Then set <code class="code">EMACS</code> in <code class="code">local.mk</code>:
+</p>
 <div class="example">
 <pre class="example-preformatted">EMACS=/path/to/emacs-31/bin/emacs
 </pre></div>
 
-<p>Verify the selection before diagnosing a compiler failure:
+<p>The earlier <code class="code">emacs --version</code> command checks your shell&rsquo;s default.  Verify
+the executable selected by the Emacsvox build separately:
 </p>
 <div class="example">
 <pre class="example-preformatted">make check-emacs
 </pre></div>
 
-</li><li> Configure and compile the checkout:
+<p><code class="code">make check-emacs</code> uses <code class="code">local.mk</code> when present, prints the selected
+executable and version, and confirms whether Emacsvox supports it.
+</p>
+</li><li> Configure and compile Emacsvox:
 
 <div class="example">
 <pre class="example-preformatted">make all
 </pre></div>
 
-<p>Do not compile Emacsvox with an older system Emacs.  Tests prefer source and
-therefore do not prove that the byte-code used by a normal startup is current.
+<p>A successful build returns to the shell without an error.  Emacsvox must be
+compiled with the same supported Emacs selected in the previous step.
 </p>
-</li><li> Install the recommended Omnivox speech server.  See <a class="xref" href="Speech-Backends.html">Speech Backends</a>, for
-the supported platform matrix, exact prerequisite classes, source and WSL2
-build paths, and compatibility alternatives.
-
 </li><li> Run the non-audible launcher preflight from the Emacsvox checkout:
 
 <div class="example">
 <pre class="example-preformatted">./bin/emacsvox --diagnose
 </pre></div>
 
-<p>It validates the checkout, Emacs, and backend without playing audio, creating
-an Omnivox session log, or opening interactive Emacs.  Before continuing,
-confirm that its report includes Emacs 31 or newer, the <code class="code">omnivox</code> speech
-backend, and an isolated <samp class="option">-Q</samp> startup.  Correct any path or version
-error that it prints.
+<p>This checks the checkout, Emacs, and speech server without playing audio or
+opening interactive Emacs.  A successful report names Emacs 31 or newer,
+the <code class="code">omnivox</code> speech server, and an isolated <code class="code">-Q</code> startup.  If it reports a
+path or version problem, correct that item and run the command again.
 </p>
-</li><li> Run the deliberately audible backend check:
+</li><li> Check the complete launch path with sound:
 
 <div class="example">
 <pre class="example-preformatted">./bin/emacsvox --check
 </pre></div>
 
-<p>The launcher prints its selections and explicitly announces that the audible
-check is starting.  Continue only after hearing both the tone and speech.  Do
-not diagnose Emacs configuration until this standalone Omnivox check passes.
+<p>The launcher prints what it selected, then plays a tone and speech.  Hearing
+both means the complete speech-server launch path is ready.
 </p>
-</li><li> Prove a clean Emacsvox start:
+</li><li> Start a clean Emacsvox session:
 
 <div class="example">
 <pre class="example-preformatted">./bin/emacsvox
 </pre></div>
 
-<p>The launcher defaults to Omnivox, uses the selected Emacs 31 or newer, and
-loads the setup source by its absolute path.  The session uses <samp class="option">-Q</samp>: it
-loads neither site files nor a personal Emacs init file.  This makes first
-speech a reproducible installation proof rather than a side effect of
-existing configuration.
-</p>
-<p><code class="command">./bin/emacsvox --diagnose</code> prints the selected root, setup source,
-Emacs version, and backend without playing audio or starting interactive
-Emacs.  <code class="command">./bin/emacsvox --help</code> documents explicit <code class="env">EMACS</code>,
-<code class="env">TTS_PROGRAM</code>, and <code class="env">EMACSVOX_DIR</code> overrides.  Arguments after
-<samp class="option">--</samp> are passed to Emacs.
+<p>The launcher uses Omnivox and the selected Emacs, but does not load site
+files or your personal Emacs init file.  This gives you a known starting
+point without changing an existing Emacs setup.
 </p></li></ol>
 
+<p>If a command needs an explicit path, <code class="code">./bin/emacsvox --help</code> describes the
+<code class="code">EMACS</code>, <code class="code">TTS_PROGRAM</code>, and <code class="code">EMACSVOX_DIR</code> overrides.  Arguments after <code class="code">--</code>
+are passed to Emacs.
+</p>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Confirming-First-Speech.html">Confirming First Speech</a>, Previous: <a href="Obtaining-Emacsvox.html">Obtaining Emacsvox</a>, Up: <a href="Installation.html">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Confirming-First-Speech.html">Confirming First Speech</a>, Previous: <a href="Building-And-Testing-The-Speech-Server.html">Install And Check Omnivox</a>, Up: <a href="Installation.html">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

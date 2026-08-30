@@ -34,10 +34,10 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Reading">
 <div class="nav-panel">
 <p>
-Next: <a href="Speech-System.html" accesskey="n" rel="next">Speech System Commands</a>, Previous: <a href="Working.html" accesskey="p" rel="prev">Using Emacs Buffers</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Speech-System.html" accesskey="n" rel="next">Speech System Commands</a>, Previous: <a href="Working.html" accesskey="p" rel="prev">Using Emacs Buffers</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Reading-and-Navigating"><span>3.3 Reading and Navigating<a class="copiable-link" href="#Reading-and-Navigating"> &para;</a></span></h3>
+<h3 class="section" id="Reading-and-Navigating"><span>3.5 Reading and Navigating<a class="copiable-link" href="#Reading-and-Navigating"> &para;</a></span></h3>
 
 <p>Ordinary Emacs movement speaks the text crossed by point: moving by a
 character, word, line, or paragraph presents the corresponding unit.
@@ -50,78 +50,89 @@ and check your customizations.  The complete generated defaults are in the
 <a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <cite class="cite">Emacsvox Reference Manual</cite>.
 </p>
 <dl class="table">
-<dt><a class="index-entry-id" id="index-C_002de-c"></a>
-<a id="index-emacsvox_002dspeak_002dchar"></a><span><kbd class="kbd">C-e c</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dchar"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-speak-char</code>
+<dt><a id="index-emacsvox_002dspeak_002dchar"></a><span><kbd class="kbd">C-e c</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dchar"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-c"></a>
+
+<p><code class="code">emacsvox-speak-char</code>
 speaks the character at point.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-w"></a>
-<a id="index-emacsvox_002dspeak_002dword"></a><span><kbd class="kbd">C-e w</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dword"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-speak-word</code>
+</p></dd>
+<dt><a id="index-emacsvox_002dspeak_002dword"></a><span><kbd class="kbd">C-e w</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dword"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-w"></a>
+
+<p><code class="code">emacsvox-speak-word</code>
 speaks the current word.  Repeating it at the same position spells the
 word.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-l"></a>
-<a id="index-emacsvox_002dspeak_002dline"></a><span><kbd class="kbd">C-e l</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dline"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-speak-line</code>
+</p></dd>
+<dt><a id="index-emacsvox_002dspeak_002dline"></a><span><kbd class="kbd">C-e l</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dline"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-l"></a>
+
+<p><code class="code">emacsvox-speak-line</code>
 speaks the current line.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-_005b"></a>
-<a id="index-emacsvox_002dspeak_002dparagraph"></a><span><kbd class="kbd">C-e [</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dparagraph"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-speak-paragraph</code>
+</p></dd>
+<dt><a id="index-emacsvox_002dspeak_002dparagraph"></a><span><kbd class="kbd">C-e [</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dparagraph"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-_005b"></a>
+
+<p><code class="code">emacsvox-speak-paragraph</code>
 speaks the current paragraph.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-_005d"></a>
-<a id="index-emacsvox_002dspeak_002dpage"></a><span><kbd class="kbd">C-e ]</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dpage"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-speak-page</code>
+</p></dd>
+<dt><a id="index-emacsvox_002dspeak_002dpage"></a><span><kbd class="kbd">C-e ]</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dpage"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-_005d"></a>
+
+<p><code class="code">emacsvox-speak-page</code>
 speaks the current page.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-r"></a>
-<a id="index-emacsvox_002dspeak_002dregion"></a><span><kbd class="kbd">C-e r</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dregion"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-speak-region</code>
+</p></dd>
+<dt><a id="index-emacsvox_002dspeak_002dregion"></a><span><kbd class="kbd">C-e r</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dregion"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-r"></a>
+
+<p><code class="code">emacsvox-speak-region</code>
 speaks the active region between point and mark.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-i"></a>
-<a id="index-emacsvox_002dspeak_002drest_002dof_002dbuffer"></a><span><kbd class="kbd">C-e i</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002drest_002dof_002dbuffer"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-speak-rest-of-buffer</code>
+</p></dd>
+<dt><a id="index-emacsvox_002dspeak_002drest_002dof_002dbuffer"></a><span><kbd class="kbd">C-e i</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002drest_002dof_002dbuffer"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-i"></a>
+
+<p><code class="code">emacsvox-speak-rest-of-buffer</code>
 speaks from point to the end of the buffer.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-b"></a>
-<a id="index-emacsvox_002dspeak_002dbuffer"></a><span><kbd class="kbd">C-e b</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dbuffer"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-speak-buffer</code>
+</p></dd>
+<dt><a id="index-emacsvox_002dspeak_002dbuffer"></a><span><kbd class="kbd">C-e b</kbd><a class="copiable-link" href="#index-emacsvox_002dspeak_002dbuffer"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-b"></a>
+
+<p><code class="code">emacsvox-speak-buffer</code>
 speaks the entire current buffer.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-s"></a>
-<a id="index-tts_002dstop"></a><span><kbd class="kbd">C-e s</kbd><a class="copiable-link" href="#index-tts_002dstop"> &para;</a></span></dt>
-<dd><p><code class="code">tts-stop</code>
+</p></dd>
+<dt><a id="index-tts_002dstop"></a><span><kbd class="kbd">C-e s</kbd><a class="copiable-link" href="#index-tts_002dstop"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-s"></a>
+
+<p><code class="code">tts-stop</code>
 stops current speech.
-</p>
-</dd>
-<dt><a class="index-entry-id" id="index-C_002de-C_002dd"></a>
-<a id="index-emacsvox_002dtoggle_002dshow_002dpoint"></a><span><kbd class="kbd">C-e C-d</kbd><a class="copiable-link" href="#index-emacsvox_002dtoggle_002dshow_002dpoint"> &para;</a></span></dt>
-<dd><p><code class="code">emacsvox-toggle-show-point</code>
+</p></dd>
+<dt><a id="index-emacsvox_002dtoggle_002dshow_002dpoint"></a><span><kbd class="kbd">C-e C-d</kbd><a class="copiable-link" href="#index-emacsvox_002dtoggle_002dshow_002dpoint"> &para;</a></span></dt>
+<dd>
+<a class="index-entry-id" id="index-C_002de-C_002dd"></a>
+
+<p><code class="code">emacsvox-toggle-show-point</code>
 toggles the aural indication of point within spoken text.
-</p>
-</dd>
+</p></dd>
 </dl>
 
 <p>Many speaking commands accept a prefix argument to limit speech to the
 text before or after point.  Use <kbd class="kbd">C-h k</kbd> on a command before relying
 on those variants, because their exact argument behavior is documented
 with the command.
-</p></div>
+</p>
+</div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Speech-System.html">Speech System Commands</a>, Previous: <a href="Working.html">Using Emacs Buffers</a>, Up: <a href="Basic-Usage.html">Basic Usage.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Speech-System.html">Speech System Commands</a>, Previous: <a href="Working.html">Using Emacs Buffers</a>, Up: <a href="Basic-Usage.html">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 
