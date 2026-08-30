@@ -34,110 +34,54 @@ span:hover a.copiable-link {visibility: visible}
 <div class="subsection-level-extent" id="Speech-Output-Control">
 <div class="nav-panel">
 <p>
-Next: <a href="Miscellaneous.html" accesskey="n" rel="next">Stop, Silence, Restart, Or Identify Speech</a>, Previous: <a href="Controlling-Echo.html" accesskey="p" rel="prev">Choose What Is Echoed While Typing</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Speech System Commands</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Miscellaneous.html" accesskey="n" rel="next">Stop Or Restart Speech</a>, Previous: <a href="Controlling-Echo.html" accesskey="p" rel="prev">Choose Typing Echo</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Adjust Speech While You Work</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Adjust-Rate_002c-Punctuation_002c-Capitals_002c-And-Indentation"><span>3.6.2 Adjust Rate, Punctuation, Capitals, And Indentation<a class="copiable-link" href="#Adjust-Rate_002c-Punctuation_002c-Capitals_002c-And-Indentation"> &para;</a></span></h4>
+<h4 class="subsection" id="Adjust-Rate-And-Spoken-Detail"><span>3.6.2 Adjust Rate And Spoken Detail<a class="copiable-link" href="#Adjust-Rate-And-Spoken-Detail"> &para;</a></span></h4>
 
 <p>Use these controls to match speech to the current material.  A faster rate may
 suit familiar prose; full punctuation can help when inspecting code or exact
-text.  Capitalization and indentation each have an on/off control and a
-separate choice of spoken or tonal presentation.
+text.  Start with rate and punctuation, then change capitalization or
+indentation feedback only when the distinction would help your current task.
 </p>
 <p>The commands affect the current buffer unless their interactive help describes
 a global prefix form.  Use <kbd class="kbd">C-h k</kbd> on a key before changing the global
 default.
 </p>
 <dl class="table">
-<dt><a id="index-tts_002dset_002drate"></a><span><kbd class="kbd">C-e d r</kbd><a class="copiable-link" href="#index-tts_002dset_002drate"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-r"></a>
-
-<p><code class="code">tts-set-rate</code>
-</p>
-<p>Enter a speech rate for the current buffer.
+<dt><kbd class="kbd">C-e d r</kbd></dt>
+<dd><p>Enter a speech rate for the current buffer with <code class="code">tts-set-rate</code>.
 </p></dd>
-<dt><a id="index-tts_002dset_002dcharacter_002dscale"></a><span><kbd class="kbd">C-e d f</kbd><a class="copiable-link" href="#index-tts_002dset_002dcharacter_002dscale"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-f"></a>
-
-<p><code class="code">tts-set-character-scale</code>
-</p>
-<p>Set the rate multiplier used when speaking individual characters.
+<dt><kbd class="kbd">C-e d DIGIT</kbd></dt>
+<dd><p>Choose one of ten predefined rates with <kbd class="kbd">0</kbd> through <kbd class="kbd">9</kbd>.
 </p></dd>
-<dt><a id="index-tts_002dset_002dpredefined_002drate"></a><span><kbd class="kbd">C-e d DIGIT</kbd><a class="copiable-link" href="#index-tts_002dset_002dpredefined_002drate"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-DIGIT"></a>
-
-<p><code class="code">tts-set-predefined-rate</code>
-</p>
-<p>Choose one of ten predefined rates with <kbd class="kbd">0</kbd> through <kbd class="kbd">9</kbd>.
+<dt><kbd class="kbd">C-e d p</kbd></dt>
+<dd><p>Choose <code class="code">some</code>, <code class="code">all</code>, or <code class="code">none</code> punctuation with <code class="code">tts-set-punctuations</code>.
 </p></dd>
-<dt><a id="index-tts_002dset_002dpunctuations"></a><span><kbd class="kbd">C-e d p</kbd><a class="copiable-link" href="#index-tts_002dset_002dpunctuations"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-p"></a>
-
-<p><code class="code">tts-set-punctuations</code>
-</p>
-<p>Choose <code class="code">some</code>, <code class="code">all</code>, or <code class="code">none</code> punctuation.
+<dt><kbd class="kbd">C-e d s</kbd></dt>
+<dd><p>Toggle splitting of mixed-capital identifiers into separate words.
 </p></dd>
-<dt><a id="index-tts_002dtoggle_002dsplit_002dcaps"></a><span><kbd class="kbd">C-e d s</kbd><a class="copiable-link" href="#index-tts_002dtoggle_002dsplit_002dcaps"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-s"></a>
-
-<p><code class="code">tts-toggle-split-caps</code>
-</p>
-<p>Toggle splitting of mixed-capital identifiers into separate words.
+<dt><kbd class="kbd">C-e d c / C-e d C</kbd></dt>
+<dd><p>Toggle capitalization indication with the lowercase key.  Use the uppercase
+key to preview and choose whether capitals use speech, a tone, both, a custom
+rule, or no added indication.
 </p></dd>
-<dt><a id="index-C_002de-d-c"></a><span><kbd class="kbd">C-e d c</kbd><a class="copiable-link" href="#index-C_002de-d-c"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-tts_002dtoggle_002dcaps"></a>
-
-<p><code class="code">tts-toggle-caps</code>
-</p>
-<p>Toggle capitalization indication.
-</p></dd>
-<dt><a id="index-C_002de-d-C"></a><span><kbd class="kbd">C-e d C</kbd><a class="copiable-link" href="#index-C_002de-d-C"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-emacsvox_002dset_002dcapitalization_002dpresentation"></a>
-
-<p><code class="code">emacsvox-set-capitalization-presentation</code>
-</p>
-<p>Choose speech, a tone, both, a custom Aural rule, or no added indication.
-The command previews representative text before you finish.
+<dt><kbd class="kbd">C-e d i / C-e d I</kbd></dt>
+<dd><p>Toggle indentation feedback with the lowercase key.  Use the uppercase key
+to preview spoken-column and tonal choices.
 </p></dd>
 </dl>
 
-<p>Indentation feedback is especially useful in source code and other structured
-text.  You can switch it off independently or choose how indentation is
-presented.
+<p>Character-rate scaling, text chunking, engine-specific controls, and reusable
+presentation profiles are intentionally outside this starter chapter.  Use
+live help for the current speech keymap and see <a class="ref" href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> when
+you want a complete presentation setup rather than a temporary buffer change.
 </p>
-<dl class="table">
-<dt><a id="index-emacsvox_002dtoggle_002daudio_002dindentation"></a><span><kbd class="kbd">C-e d i</kbd><a class="copiable-link" href="#index-emacsvox_002dtoggle_002daudio_002dindentation"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-i"></a>
-
-<p><code class="code">emacsvox-toggle-audio-indentation</code>
-</p>
-<p>Toggle indentation feedback.
-</p></dd>
-<dt><a id="index-emacsvox_002dset_002dindentation_002dpresentation"></a><span><kbd class="kbd">C-e d I</kbd><a class="copiable-link" href="#index-emacsvox_002dset_002dindentation_002dpresentation"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-I"></a>
-
-<p><code class="code">emacsvox-set-indentation-presentation</code>
-</p>
-<p>Choose a spoken column, one of the tone styles, speech and tone together, a
-custom Aural rule, or no added indication.  The command previews an indented
-sample before you finish.
-</p></dd>
-</dl>
-
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Miscellaneous.html">Stop, Silence, Restart, Or Identify Speech</a>, Previous: <a href="Controlling-Echo.html">Choose What Is Echoed While Typing</a>, Up: <a href="Speech-System.html">Speech System Commands</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Miscellaneous.html">Stop Or Restart Speech</a>, Previous: <a href="Controlling-Echo.html">Choose Typing Echo</a>, Up: <a href="Speech-System.html">Adjust Speech While You Work</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

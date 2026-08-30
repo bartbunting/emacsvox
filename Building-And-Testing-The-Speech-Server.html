@@ -39,24 +39,26 @@ Next: <a href="Quick-Installation.html" accesskey="n" rel="next">Build And Start
 <hr>
 <h3 class="section" id="Install-And-Check-Omnivox"><span>2.2 Install And Check Omnivox<a class="copiable-link" href="#Install-And-Check-Omnivox"> &para;</a></span></h3>
 
-<p>On GNU/Linux or macOS, build and install Omnivox from its checkout:
+<p>On a matching GNU/Linux x86-64 or macOS host, follow
+<a class="ref" href="Installing-An-Omnivox-Release-Binary.html">Install Omnivox From A Release Binary</a>.  That procedure downloads and
+verifies the published 1.4.1 archive, keeps its runtime data beside the
+executable, and adds its versioned installation directory to <code class="code">PATH</code>.  Then run:
 </p>
 <div class="example">
-<pre class="example-preformatted">cd /path/where/you/keep/source/omnivox
-make build
-make install
-omnivox --check
+<pre class="example-preformatted">omnivox --check
 </pre></div>
 
-<p><code class="code">make install</code> normally places the executable below <code class="code">~/.cargo/bin</code>.  Make sure
-that directory is on <code class="code">PATH</code> before running the check.  No proprietary speech
-runtime is needed for the recommended GNU/Linux or macOS route.
+<p>Use <a class="ref" href="Installing-Omnivox-From-Source.html">Installing Omnivox From Source</a> instead on Linux ARM64, an
+incompatible Linux distribution, or a host whose security policy does not
+permit the unsigned macOS archive.  No proprietary speech runtime is needed
+for either GNU/Linux or macOS route.
 </p>
-<p>Under WSL2, build the staged Windows runtime from a clean Emacsvox checkout:
+<p>Under WSL2, follow
+<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a> to install and
+select the verified Windows x64 archive.  Then run:
 </p>
 <div class="example">
 <pre class="example-preformatted">cd /path/where/you/keep/source/emacsvox
-make windows-omnivox
 ./servers/omnivox --check
 </pre></div>
 
@@ -65,8 +67,9 @@ server is ready.  If either is missing, use
 <a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend Diagnostics And Responsibilities</a>
 before continuing.  See <a class="xref" href="Speech-Backends.html">Speech Backends</a> contains the complete platform
 matrix, build details, and compatibility alternatives.  Native Windows Emacs
-support remains a preview; consult that matrix before choosing it for a first
-installation.
+support remains a preview.  Evaluators can follow
+<a class="ref" href="Trying-Native-Windows-Emacsvox.html">Trying Native Windows Emacsvox</a>; initial users should choose
+the WSL2 route.
 </p>
 </div>
 

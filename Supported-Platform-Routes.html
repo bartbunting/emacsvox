@@ -16,7 +16,7 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Speech-Backends.html" rel="up" title="Speech Backends">
-<link href="Installing-Omnivox-From-Source.html" rel="next" title="Installing Omnivox From Source">
+<link href="Installing-An-Omnivox-Release-Binary.html" rel="next" title="Installing An Omnivox Release Binary">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -32,30 +32,32 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Supported-Platform-Routes">
 <div class="nav-panel">
 <p>
-Next: <a href="Installing-Omnivox-From-Source.html" accesskey="n" rel="next">Installing Omnivox From Source</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Installing-An-Omnivox-Release-Binary.html" accesskey="n" rel="next">Install Omnivox From A Release Binary</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
 <h3 class="section" id="Supported-Platform-Routes-1"><span>4.1 Supported Platform Routes<a class="copiable-link" href="#Supported-Platform-Routes-1"> &para;</a></span></h3>
 
 <p>The following table describes Emacsvox support, not every platform that the
-Omnivox project can build.  &ldquo;Host check required&rdquo; means that the source path
-is maintained but an audible <code class="code">omnivox --check</code> on the user&rsquo;s machine
-is still the acceptance test.
+Omnivox project can build.  &ldquo;Host check required&rdquo; means that automated build
+and archive verification does not prove playback through the user&rsquo;s audio
+device; an audible <code class="code">omnivox --check</code> on that machine remains the acceptance
+test.
 </p>
 <table class="multitable">
 <thead><tr><th width="18%">Emacs platform</th><th width="31%">Recommended route</th><th width="51%">Current support evidence</th></tr></thead>
-<tbody><tr><td width="18%">GNU/Linux</td><td width="31%">Source-built Omnivox using eSpeak NG</td><td width="51%">Supported source installation; host check required. Omnivox does not currently publish a Linux archive or run a Linux audio-runtime CI job.</td></tr>
-<tr><td width="18%">macOS on Apple silicon</td><td width="31%">Source-built Omnivox using AVSpeechSynthesizer</td><td width="51%">Supported source installation; Omnivox CI executes this native target, and the host check remains required.</td></tr>
-<tr><td width="18%">macOS on Intel</td><td width="31%">Source-built Omnivox using AVSpeechSynthesizer</td><td width="51%">Available source installation; current Omnivox CI cross-builds this target but does not execute it. Treat the host check as required validation.</td></tr>
-<tr><td width="18%">Emacs in WSL2 on x86-64 Windows</td><td width="31%">Emacsvox-staged Windows Omnivox using WinRT</td><td width="51%">Supported advanced deployment; the pinned build verifies its payload, but speech and audio must be accepted on the target Windows host.</td></tr>
-<tr><td width="18%">Native Windows Emacs</td><td width="31%">Omnivox executable on <code class="code">exec-path</code>, using WinRT</td><td width="51%">Preview. The executable-resolution path exists, but Emacsvox does not yet publish or fresh-machine test a complete native-Windows setup. Initial users should use the WSL2 route.</td></tr>
+<tbody><tr><td width="18%">GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime</td><td width="31%">Omnivox 1.4.1 release archive using eSpeak NG</td><td width="51%">The published archive is built and verified on Ubuntu 24.04. Compatible glibc, libstdc++, libgcc, and ALSA runtime libraries are required; the audible host check remains required.</td></tr>
+<tr><td width="18%">Other GNU/Linux systems</td><td width="31%">Source-built Omnivox using eSpeak NG</td><td width="51%">Use the source route for Linux ARM64, an older distribution ABI, or a host that cannot run the published x86-64 archive.</td></tr>
+<tr><td width="18%">macOS on Apple silicon</td><td width="31%">Omnivox 1.4.1 release archive using AVSpeechSynthesizer</td><td width="51%">The published ARM64 archive is built and verified on a native macOS runner; the audible host check remains required.</td></tr>
+<tr><td width="18%">macOS on Intel</td><td width="31%">Omnivox 1.4.1 release archive using AVSpeechSynthesizer</td><td width="51%">The published x64 archive is built and verified on a native macOS runner; the audible host check remains required.</td></tr>
+<tr><td width="18%">Emacs in WSL2 on x86-64 Windows</td><td width="31%">Omnivox 1.4.1 Windows x64 release archive using WinRT</td><td width="51%">The published archive is checksum-protected and release CI verifies its architecture, adjacent data, WinRT and eSpeak synthesis.  The audible host check remains required.</td></tr>
+<tr><td width="18%">Native Windows Emacs</td><td width="31%">Omnivox 1.4.1 Windows release using WinRT</td><td width="51%">Preview. Omnivox verifies its native Windows archive, and Emacsvox can start <code class="code">omnivox.exe</code> directly, but the complete combination has not passed a fresh-machine acceptance test. Initial users should use WSL2; evaluators can follow the bounded trial below.</td></tr>
 </tbody>
 </table>
 
-<p>There is no verified public binary-download path in this guide.  Build from
-source as described below.  A repository tag, a CI artifact, or an executable
-without its adjacent runtime data is not a substitute for a supported install
-payload.
+<p>The release-archive routes below are the shortest installation on matching
+GNU/Linux, macOS, and WSL2 hosts.  A bare executable, a repository tag, or an
+unpackaged CI artifact is not a complete installation: keep the release&rsquo;s
+runtime data and notices beside the executable.
 </p>
 <p>Do not set <code class="code">OMNIVOX_ENGINE</code> during initial setup.  Its empty value selects
 the normal platform engine above.  Engine routing and optional Piper,
@@ -66,7 +68,7 @@ first speech.
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Installing-Omnivox-From-Source.html">Installing Omnivox From Source</a>, Up: <a href="Speech-Backends.html">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Installing-An-Omnivox-Release-Binary.html">Install Omnivox From A Release Binary</a>, Up: <a href="Speech-Backends.html">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

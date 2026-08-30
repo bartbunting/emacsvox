@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Trying Native Windows Emacsvox (Emacsvox User Manual)</title>
+
+<meta name="description" content="Trying Native Windows Emacsvox (Emacsvox User Manual)">
+<meta name="keywords" content="Trying Native Windows Emacsvox (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Speech-Backends.html" rel="up" title="Speech Backends">
+<link href="Installing-Omnivox-From-Source.html" rel="next" title="Installing Omnivox From Source">
+<link href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" rel="prev" title="Installing An Omnivox Windows Release Under WSL2">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Trying-Native-Windows-Emacsvox">
+<div class="nav-panel">
+<p>
+Next: <a href="Installing-Omnivox-From-Source.html" accesskey="n" rel="next">Installing Omnivox From Source</a>, Previous: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" accesskey="p" rel="prev">Install An Omnivox Windows Release Under WSL2</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Trying-Native-Windows-Emacsvox-1"><span>4.4 Trying Native Windows Emacsvox<a class="copiable-link" href="#Trying-Native-Windows-Emacsvox-1"> &para;</a></span></h3>
+
+<p>This is a <em class="emph">preview evaluation</em>, not yet the recommended first installation.
+It runs both Emacs and Omnivox directly on Windows; it does not use WSL2 or the
+POSIX <code class="code">bin/emacsvox</code> and <code class="code">servers/omnivox</code> launchers.  The procedure is
+self-contained so a useful result records exactly where success or failure
+occurred.
+</p>
+<p>You need a native Windows build of Emacs 31 or newer, PowerShell, Git, an
+Emacsvox checkout on the Windows filesystem, and network access for the
+Omnivox release download.  Windows audio must work and at least one Windows
+speech voice must be installed.  You do not need WSL2, Docker, Rust, MinGW,
+Visual Studio, or Windows .NET Framework.  Use <code class="code">windows-x64</code> on an Intel or
+AMD Windows computer.  Use <code class="code">windows-arm64</code> only on Windows on ARM.
+</p>
+<p>If Emacsvox is not already checked out on Windows, open PowerShell and place a
+checkout on the Windows filesystem:
+</p>
+<div class="example">
+<pre class="example-preformatted">$SourceRoot = Join-Path $env:USERPROFILE &quot;src&quot;
+New-Item -ItemType Directory -Force $SourceRoot | Out-Null
+Set-Location $SourceRoot
+git clone https://github.com/bartbunting/emacsvox.git
+$Emacsvox = Join-Path $SourceRoot &quot;emacsvox&quot;
+</pre></div>
+
+<p>If the checkout already exists, skip <code class="code">git clone</code> and set <code class="code">$Emacsvox</code> to its
+absolute Windows path instead.  Continue in the same PowerShell window.
+</p>
+<ul class="mini-toc">
+<li><a href="#Download-And-Verify-Omnivox" accesskey="1">Download And Verify Omnivox</a></li>
+<li><a href="#Install-And-Check-The-Native-Server" accesskey="2">Install And Check The Native Server</a></li>
+<li><a href="#Start-Native-Emacsvox" accesskey="3">Start Native Emacsvox</a></li>
+<li><a href="#Accept-Or-Report-The-Trial" accesskey="4">Accept Or Report The Trial</a></li>
+</ul>
+<div class="subsection-level-extent" id="Download-And-Verify-Omnivox">
+<h4 class="subsection"><span>4.4.1 Download And Verify Omnivox<a class="copiable-link" href="#Download-And-Verify-Omnivox"> &para;</a></span></h4>
+
+<p>Set <code class="code">$Platform</code> for the computer.  The example below uses the usual Intel or
+AMD Windows x64 archive:
+</p>
+<div class="example">
+<pre class="example-preformatted">$Version = &quot;1.4.1&quot;
+$Platform = &quot;windows-x64&quot; # Use windows-arm64 only on Windows on ARM.
+$DownloadDir = Join-Path $env:USERPROFILE &quot;Downloads\omnivox-$Version&quot;
+$Archive = &quot;omnivox-$Version-$Platform.zip&quot;
+$ReleaseUrl = &quot;https://github.com/bartbunting/omnivox/releases/download/v$Version&quot;
+
+New-Item -ItemType Directory -Force $DownloadDir | Out-Null
+$ArchivePath = Join-Path $DownloadDir $Archive
+$ChecksumPath = Join-Path $DownloadDir &quot;sha256sums.txt&quot;
+Invoke-WebRequest -UseBasicParsing &quot;$ReleaseUrl/$Archive&quot; -OutFile $ArchivePath
+Invoke-WebRequest -UseBasicParsing &quot;$ReleaseUrl/sha256sums.txt&quot; -OutFile $ChecksumPath
+
+$Pattern = '\s+\*?' + [regex]::Escape($Archive) + '$'
+$ChecksumLine = Get-Content $ChecksumPath |
+  Where-Object { $_ -match $Pattern } |
+  Select-Object -First 1
+if (-not $ChecksumLine) { throw &quot;No published checksum for $Archive&quot; }
+$Expected = ($ChecksumLine -split '\s+')[0].ToLowerInvariant()
+$Actual = (Get-FileHash -Algorithm SHA256 $ArchivePath).Hash.ToLowerInvariant()
+if ($Actual -ne $Expected) { throw &quot;Checksum mismatch for $Archive&quot; }
+Write-Host &quot;Checksum OK: $Archive&quot;
+</pre></div>
+
+<p>Do not extract or run the archive unless the last line reports <code class="code">Checksum OK</code>.
+The Windows release is not code-signed.  If Windows security or local policy
+refuses it, stop rather than weakening that policy.
+</p>
+</div>
+<div class="subsection-level-extent" id="Install-And-Check-The-Native-Server">
+<h4 class="subsection"><span>4.4.2 Install And Check The Native Server<a class="copiable-link" href="#Install-And-Check-The-Native-Server"> &para;</a></span></h4>
+
+<p>Continue in the same PowerShell window.  Extract the complete release into a
+versioned directory below the current user&rsquo;s <code class="code">LocalAppData</code>:
+</p>
+<div class="example">
+<pre class="example-preformatted">$InstallDir = Join-Path $env:LOCALAPPDATA &quot;Emacsvox\Omnivox\releases\$Version-$Platform&quot;
+New-Item -ItemType Directory -Force $InstallDir | Out-Null
+Expand-Archive -LiteralPath $ArchivePath -DestinationPath $InstallDir -Force
+$Omnivox = Join-Path $InstallDir &quot;omnivox.exe&quot;
+
+foreach ($Required in @(
+  $Omnivox,
+  (Join-Path $InstallDir &quot;espeak-ng-data\phontab&quot;),
+  (Join-Path $InstallDir &quot;third-party-licenses\THIRD-PARTY-NOTICES.md&quot;)
+)) {
+  if (-not (Test-Path -LiteralPath $Required -PathType Leaf)) {
+    throw &quot;Incomplete Omnivox installation: $Required&quot;
+  }
+}
+
+&amp; $Omnivox --version
+if ($LASTEXITCODE -ne 0) { throw &quot;Omnivox version check failed&quot; }
+&amp; $Omnivox --list-voices
+if ($LASTEXITCODE -ne 0) { throw &quot;Omnivox voice discovery failed&quot; }
+&amp; $Omnivox --check
+if ($LASTEXITCODE -ne 0) { throw &quot;Omnivox audio check failed&quot; }
+</pre></div>
+
+<p>The version must report 1.4.1, voice discovery must list at least one Windows
+voice, and the final check must produce both a tone and spoken confirmation.
+Keep <code class="code">omnivox.exe</code>, <code class="code">espeak-ng-data</code>, and <code class="code">third-party-licenses</code> together.
+Do not copy or load the archive&rsquo;s <code class="code">omnivox-voices.el</code>: it is the adapter for
+upstream Emacspeak, while Emacsvox supplies its own adapter.
+</p>
+</div>
+<div class="subsection-level-extent" id="Start-Native-Emacsvox">
+<h4 class="subsection"><span>4.4.3 Start Native Emacsvox<a class="copiable-link" href="#Start-Native-Emacsvox"> &para;</a></span></h4>
+
+<p>Keep the same PowerShell window so <code class="code">$Omnivox</code> still identifies the verified
+executable.  Set <code class="code">$Emacs</code> to the native <code class="code">emacs.exe</code>.  If this window did not
+create the Emacsvox checkout above, also set <code class="code">$Emacsvox</code> to that checkout:
+</p>
+<div class="example">
+<pre class="example-preformatted">$Emacs = &quot;C:\path\to\emacs\bin\emacs.exe&quot;
+# If not set above, uncomment and edit the next line:
+# $Emacsvox = &quot;C:\path\to\emacsvox&quot;
+
+&amp; $Emacs --version
+if ($LASTEXITCODE -ne 0) { throw &quot;Could not run native Emacs&quot; }
+$env:TTS_PROGRAM = $Omnivox
+&amp; $Emacs -Q --no-splash --load &quot;$Emacsvox\lisp\emacsvox-setup.el&quot;
+</pre></div>
+
+<p>The Emacs version must be 31 or newer.  Use <code class="code">emacs.exe</code>, rather than
+<code class="code">runemacs.exe</code>, for this first trial so startup errors remain visible in the
+PowerShell window.  Loading <code class="code">emacsvox-setup.el</code> directly is intentional: the
+repository&rsquo;s <code class="code">bin/emacsvox</code> launcher is a POSIX shell script and is not the
+native Windows entry point.
+</p>
+</div>
+<div class="subsection-level-extent" id="Accept-Or-Report-The-Trial">
+<h4 class="subsection"><span>4.4.4 Accept Or Report The Trial<a class="copiable-link" href="#Accept-Or-Report-The-Trial"> &para;</a></span></h4>
+
+<p>A successful trial satisfies every item below:
+</p>
+<ol class="enumerate">
+<li> Emacsvox speaks its startup introduction.
+
+</li><li> <kbd class="kbd">C-h v tts-program RET</kbd> displays the absolute path to the
+verified <code class="code">omnivox.exe</code>.
+
+</li><li> <kbd class="kbd">M-x tts-speak-version RET</kbd> speaks the Omnivox version
+response, and <kbd class="kbd">M-x omnivox-list-voices RET</kbd> displays the
+Windows voices.
+
+</li><li> <kbd class="kbd">C-n</kbd> and <kbd class="kbd">C-p</kbd> speak ordinary line
+movement, <kbd class="kbd">C-e s</kbd> stops current speech, and
+<kbd class="kbd">M-x tts-restart RET</kbd> restores speech without a process
+error.
+
+</li><li> Type <kbd class="kbd">M-x emacsvox-toggle-icons RET</kbd> twice.  The second
+toggle, which turns icons back on, plays a short auditory icon in addition
+to plain speech.
+</li></ol>
+
+<p>If the direct <code class="code">--check</code> fails, diagnose Omnivox or Windows audio before
+starting Emacs.  If it succeeds but Emacsvox reports that it cannot find the
+speech server, confirm in the same PowerShell window that
+<code class="code">$env:TTS_PROGRAM</code> contains the absolute executable path and that
+<code class="code">Test-Path $env:TTS_PROGRAM</code> returns <code class="code">True</code>.  If the process starts and then
+exits, retain the PowerShell error, the Emacs <code class="code">*Messages*</code> buffer, Windows
+version and architecture, the complete <code class="code">emacs.exe --version</code> output, and
+<code class="code">omnivox.exe --version</code> output.
+</p>
+<p>After a successful trial, the same absolute selection can be placed before
+loading Emacsvox in the user&rsquo;s Emacs initialization file:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(setenv &quot;TTS_PROGRAM&quot;
+        &quot;C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.4.1-windows-x64/omnivox.exe&quot;)
+(load-file &quot;C:/path/to/emacsvox/lisp/emacsvox-setup.el&quot;)
+</pre></div>
+
+<p>Replace both example paths.  This initial configuration deliberately uses an
+absolute executable path.  Adding the Omnivox directory to <code class="code">exec-path</code> is
+optional and is needed only when later selecting it by the short name
+<code class="code">omnivox</code>.  A successful report is evidence for promoting native Windows out
+of preview; it does not silently change the support status on its own.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Installing-Omnivox-From-Source.html">Installing Omnivox From Source</a>, Previous: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>, Up: <a href="Speech-Backends.html">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

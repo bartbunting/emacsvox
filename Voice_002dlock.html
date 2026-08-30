@@ -21,7 +21,6 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
-div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
@@ -35,32 +34,30 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Voice_002dlock">
 <div class="nav-panel">
 <p>
-Next: <a href="Status-Information.html" accesskey="n" rel="next">Find Out Where You Are</a>, Previous: <a href="Speech-System.html" accesskey="p" rel="prev">Speech System Commands</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Status-Information.html" accesskey="n" rel="next">Find Out Where You Are</a>, Previous: <a href="Speech-System.html" accesskey="p" rel="prev">Adjust Speech While You Work</a>, Up: <a href="Basic-Usage.html" accesskey="u" rel="up">Basic Usage</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Voice-Lock-Mode"><span>3.7 Voice Lock Mode<a class="copiable-link" href="#Voice-Lock-Mode"> &para;</a></span></h3>
+<h3 class="section" id="Hear-Structure-With-Voice-Lock"><span>3.7 Hear Structure With Voice Lock<a class="copiable-link" href="#Hear-Structure-With-Voice-Lock"> &para;</a></span></h3>
 
 <p>Voice Lock is enabled automatically in supported buffers.  It maps faces and
 other structural text properties to speech personalities, allowing comments,
 strings, headings, links, and other elements to sound distinct without adding
 words to the document.
 </p>
-<p>The exact personalities depend on the selected speech engine and your Aural
-Presentation settings.  Try Voice Lock in source code, Org, Info, or EWW to
-hear the active mode&rsquo;s structure.
+<p>Try it in source code, Org, Info, or EWW.  Move between two differently styled
+elements, such as a comment and a string or a heading and a link.  Press
+<kbd class="kbd">C-e d v</kbd> to turn Voice Lock off in that buffer, compare the same text,
+then press the key again to restore it.
 </p>
-<p>To disable Voice Lock globally, run <kbd class="kbd">M-x global-voice-lock-mode</kbd> or
-add this form to your Emacs init file:
+<p>Use <kbd class="kbd">C-e d C-v</kbd> when you want to change Voice Lock globally.  Turning it
+off removes this layer of voice changes; it does not silence ordinary speech,
+semantic feedback, tones, or auditory icons.
 </p>
-<div class="example lisp">
-<pre class="lisp-preformatted">(global-voice-lock-mode -1)
-</pre></div>
-
-<p>The current binding and command reference are in
-<a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <cite class="cite">Emacsvox Reference Manual</cite>.  For the wider system and customization workflow, see
-<a class="ref" href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a>; for compatibility behavior specifically, see
-<a class="ref" href="Voice-Lock.html">Voice Lock Compatibility</a>.  For historical context on Aural CSS, see
-<a data-manual="emacsvox-heritage" href="heritage/Audio-Formatting-And-Aural-CSS.html#Audio-Formatting-And-Aural-CSS">Audio Formatting And Aural CSS</a> in <cite class="cite">Emacspeak Heritage</cite>.
+<p>The exact personalities depend on the speech engine and active presentation
+settings.  For an explanation of the separate Voice Lock, face-presentation,
+and semantic-presentation layers, see <a class="ref" href="Voice-Lock.html">Voice Lock Compatibility</a>.  Use
+<a class="ref" href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> when you want to choose voices, sounds, profiles, or
+other reusable presentation behavior.
 </p>
 </div>
 

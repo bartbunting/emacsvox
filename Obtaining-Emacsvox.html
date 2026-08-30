@@ -39,8 +39,10 @@ Next: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="n" rel="n
 <h3 class="section" id="Before-You-Begin"><span>2.1 Before You Begin<a class="copiable-link" href="#Before-You-Begin"> &para;</a></span></h3>
 
 <p>Install <code class="code">git</code>, <code class="code">make</code>, GNU Texinfo (which provides <code class="code">makeinfo</code>), and
-<a class="uref" href="https://www.gnu.org/software/emacs/download.html">Emacs 31 or newer</a>.  The recommended Omnivox speech server also needs the
-Rust toolchain, Python 3, a C and C++ toolchain, CMake, and Clang with libclang.
+<a class="uref" href="https://www.gnu.org/software/emacs/download.html">Emacs 31 or newer</a>.  Installing the Omnivox 1.4.1 release archive also
+requires <code class="code">curl</code> and either <code class="code">sha256sum</code> on GNU/Linux and WSL2 or <code class="code">shasum</code> on
+macOS.  GNU/Linux and macOS use <code class="code">tar</code>; WSL2 uses <code class="code">unzip</code>.  It does not require
+a Rust or C++ build toolchain.
 </p>
 <p>To check the Emacs found by your shell, run:
 </p>
@@ -56,22 +58,32 @@ or locate its executable.  You can check a specific executable in the same way:
 <pre class="example-preformatted">/path/to/emacs-31/bin/emacs --version
 </pre></div>
 
-<p>On GNU/Linux, install <code class="code">pkg-config</code> and the ALSA development headers.  On
-macOS, install the Xcode command-line tools.  WSL2 has additional Docker and
-Windows requirements described in <a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
+<p>The Linux x86-64 archive requires an Ubuntu 24.04-compatible glibc, libstdc++,
+libgcc, and ALSA runtime.  If the archive does not match the host, the Omnivox
+source route requires Rust, Python 3, a C and C++ toolchain, CMake, and Clang
+with libclang.  It additionally requires <code class="code">pkg-config</code> and ALSA development
+headers on GNU/Linux or the Xcode command-line tools on macOS.  WSL2 has
+an easier pre-built Windows route described in
+<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>.  Docker and
+Windows .NET Framework are required only for the reproducible source-build
+route in <a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
 </p>
-<p>Choose a permanent parent directory and clone Emacsvox and Omnivox beside one
-another:
+<p>Choose a permanent parent directory and clone Emacsvox:
 </p>
 <div class="example">
 <pre class="example-preformatted">cd /path/where/you/keep/source
 git clone https://github.com/bartbunting/emacsvox
-git clone https://github.com/bartbunting/omnivox
 </pre></div>
 
 <p>The Emacsvox checkout is the installation directory.  It builds in place and
-does not create a second tree to copy elsewhere.
+does not create a second tree to copy elsewhere.  Clone Omnivox beside it only
+when following the Omnivox source-build or reproducible WSL2 build route.
 </p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Building-And-Testing-The-Speech-Server.html">Install And Check Omnivox</a>, Up: <a href="Installation.html">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

@@ -38,24 +38,66 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Selecting-And-Checking-Omnivox.html" accesskey="n" rel="next">Selecting And Checking Omnivox</a>, Previous: <a href="Installing-Omnivox-From-Source.html" accesskey="p" rel="prev">Installing Omnivox From Source</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Building-Omnivox-For-WSL2-1"><span>4.3 Building Omnivox For WSL2<a class="copiable-link" href="#Building-Omnivox-For-WSL2-1"> &para;</a></span></h3>
+<h3 class="section" id="Building-Omnivox-For-WSL2-1"><span>4.6 Building Omnivox For WSL2<a class="copiable-link" href="#Building-Omnivox-For-WSL2-1"> &para;</a></span></h3>
 
-<p>Use this route when Emacs runs inside WSL2 and speech should play through
-Windows.  Clone Omnivox beside Emacsvox as shown above.  The host must provide:
+<p>Use this advanced route when maintaining the reproducible Emacsvox Windows
+bundle or its optional engine integrations.  Ordinary WSL2 users should use
+the pre-built release in
+<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>.  This target
+builds from source and currently produces an x86-64 Windows runtime.
+</p>
+<p>Before running it, install or configure all of the following:
 </p>
 <ul class="itemize mark-bullet">
-<li>WSL2 with working <code class="code">powershell.exe</code> and <code class="code">wslpath</code> interoperation;
+<li>A WSL2 distribution with Windows interoperation enabled.  Both
+<code class="code">powershell.exe</code> and <code class="code">wslpath</code> must run directly from the WSL shell, and the
+Windows user&rsquo;s <code class="code">LocalAppData</code> directory must be writable.
 
-</li><li>Docker with Linux/AMD64 container support;
+</li><li>A working Docker client and daemon with Linux/AMD64 container support.  The
+current WSL user must be able to run <code class="code">docker</code> without adding <code class="code">sudo</code> because
+the Make target invokes it directly.  Docker Desktop with WSL integration is
+one way to provide this, but it is not the only possible Docker setup.
 
-</li><li>Windows .NET Framework 4.7.2 or newer; and
+</li><li>Windows .NET Framework 4.7.2 or newer.  This means the Windows-only
+&ldquo;.NET Framework&rdquo;, not merely a modern <code class="code">dotnet</code> SDK.  Visual Studio is not
+required.
 
-</li><li><code class="code">curl</code>, <code class="code">unzip</code>, and <code class="code">sha256sum</code> in WSL, plus network
-access for the pinned container and .NET toolchain inputs.
+</li><li>In WSL, <code class="code">git</code>, GNU <code class="code">make</code>, <code class="code">curl</code>, <code class="code">unzip</code>, <code class="code">sha256sum</code>, and the normal GNU
+shell utilities supplied by a standard distribution.  The build also uses
+commands such as <code class="code">awk</code>, <code class="code">cmp</code>, <code class="code">find</code>, <code class="code">readlink</code>, <code class="code">sed</code>, <code class="code">sort</code>, and
+<code class="code">xargs</code>.
+
+</li><li>Network access for the first Docker image build, Rust dependency download,
+and two checksum-pinned NuGet packages.  Later builds reuse the local Docker,
+Cargo, and .NET package caches.
+
+</li><li>Emacsvox and Omnivox Git checkouts.  By default they must be sibling
+directories named <code class="code">emacsvox</code> and <code class="code">omnivox</code>, although maintainers can set
+<code class="code">OMNIVOX_DIR</code> to an alternate Omnivox checkout.  Both need enough free space
+for the Docker image, native and cross-compiled build products, and caches.
 </li></ul>
 
-<p>From a clean Emacsvox checkout whose sibling Omnivox checkout also has no
-tracked changes, run:
+<p>You do <em class="emph">not</em> need to install Rust, MinGW, CMake, Clang, libclang, eSpeak NG,
+Roslyn, Visual Studio, or the .NET reference assemblies in WSL.  The target
+pins or builds those inside its controlled toolchain.  Eloquence and DECtalk
+runtimes are optional and are not needed for the normal Windows WinRT voice.
+</p>
+<p>The quickest prerequisite check is:
+</p>
+<div class="example">
+<pre class="example-preformatted">cd /path/to/emacsvox
+make verify-windows-omnivox-toolchain
+</pre></div>
+
+<p>This is more than a presence check: on its first run it downloads the pinned
+.NET compiler packages, builds the pinned Docker image, and verifies the exact
+Rust, MinGW, libclang, Roslyn, and .NET Framework versions.  A failure names the
+missing host command or unsupported framework before the full Omnivox build is
+attempted.
+</p>
+<p>Clone Omnivox beside Emacsvox as shown in the source-build section.  Then, from
+a clean Emacsvox checkout whose sibling Omnivox checkout also has no tracked
+changes, run:
 </p>
 <div class="example">
 <pre class="example-preformatted">cd /path/to/emacsvox
@@ -66,13 +108,18 @@ make windows-omnivox
 Windows-GNU executable and stages a content-addressed runtime beneath
 <code class="code">servers/omnivox-bin</code>.  It also copies the runnable payload to a
 Windows-local directory so native voice and eSpeak data discovery do not pay
-the WSL filesystem cost.  Optional proprietary Eloquence and DECtalk runtimes
-are not downloaded or distributed.
+the WSL filesystem cost.  Optional Eloquence and DECtalk runtimes are not
+downloaded by this target or required for normal WinRT speech.
 </p>
 <p>Maintainers testing tracked changes should use the development route in
 <a class="ref" href="Integration-Maintenance.html">Integration Maintenance</a> rather than weakening the clean-release
 guard.
 </p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Selecting-And-Checking-Omnivox.html">Selecting And Checking Omnivox</a>, Previous: <a href="Installing-Omnivox-From-Source.html">Installing Omnivox From Source</a>, Up: <a href="Speech-Backends.html">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

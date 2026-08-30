@@ -49,8 +49,10 @@ point and find the first command below that did not work:
 set <code class="code">EMACS</code>, correct <code class="code">EMACS=</code> in <code class="code">local.mk</code>, or install Emacs 31
 or newer when the Emacs check fails.  When the speech backend is not
 executable, finish installing Omnivox, put it on <code class="code">PATH</code>, or set
-<code class="code">OMNIVOX_PROGRAM</code> to its absolute executable.  Under WSL2, rebuild or
-verify the staged runtime described in <a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
+<code class="code">OMNIVOX_PROGRAM</code> to its absolute executable.  Under WSL2, confirm the
+pre-built executable selected in
+<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>, or verify a
+source-built staged runtime described in <a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
 </p></dd>
 <dt>The diagnostic passes, but <code class="code">--check</code> errors or is inaudible</dt>
 <dd><p>The speech server needs attention before Emacs configuration is relevant.

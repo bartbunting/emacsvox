@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Installing An Omnivox Windows Release Under WSL2 (Emacsvox User Manual)</title>
+
+<meta name="description" content="Installing An Omnivox Windows Release Under WSL2 (Emacsvox User Manual)">
+<meta name="keywords" content="Installing An Omnivox Windows Release Under WSL2 (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Speech-Backends.html" rel="up" title="Speech Backends">
+<link href="Trying-Native-Windows-Emacsvox.html" rel="next" title="Trying Native Windows Emacsvox">
+<link href="Installing-An-Omnivox-Release-Binary.html" rel="prev" title="Installing An Omnivox Release Binary">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Installing-An-Omnivox-Windows-Release-Under-WSL2">
+<div class="nav-panel">
+<p>
+Next: <a href="Trying-Native-Windows-Emacsvox.html" accesskey="n" rel="next">Trying Native Windows Emacsvox</a>, Previous: <a href="Installing-An-Omnivox-Release-Binary.html" accesskey="p" rel="prev">Install Omnivox From A Release Binary</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Install-An-Omnivox-Windows-Release-Under-WSL2"><span>4.3 Install An Omnivox Windows Release Under WSL2<a class="copiable-link" href="#Install-An-Omnivox-Windows-Release-Under-WSL2"> &para;</a></span></h3>
+
+<p>This is the recommended WSL2 route for ordinary use on x86-64 Windows.  It
+needs <code class="code">curl</code>, <code class="code">unzip</code>, <code class="code">sha256sum</code>, working <code class="code">powershell.exe</code> and <code class="code">wslpath</code>
+interoperation, and the Emacsvox checkout.  It does not need the Omnivox source
+checkout, Docker, Rust, MinGW, Visual Studio, or Windows .NET Framework.
+</p>
+<p>Download the Windows x64 archive and the release checksum file in WSL:
+</p>
+<div class="example">
+<pre class="example-preformatted">mkdir -p &quot;$HOME/Downloads/omnivox-1.4.1&quot;
+cd &quot;$HOME/Downloads/omnivox-1.4.1&quot;
+omnivox_version=1.4.1
+archive=&quot;omnivox-${omnivox_version}-windows-x64.zip&quot;
+release_url=&quot;https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}&quot;
+curl -fLO &quot;$release_url/$archive&quot;
+curl -fLO &quot;$release_url/sha256sums.txt&quot;
+grep &quot;  $archive$&quot; sha256sums.txt | sha256sum --check -
+</pre></div>
+
+<p>The final command must name the archive and report <code class="code">OK</code>.  If it does not,
+remove the download and do not run it.  Install the complete archive in a
+versioned directory on the Windows filesystem:
+</p>
+<div class="example">
+<pre class="example-preformatted">windows_local_app_data=&quot;$(powershell.exe -NoProfile -NonInteractive \
+  -Command '[Environment]::GetFolderPath(&quot;LocalApplicationData&quot;)' | tr -d '\r')&quot;
+install_dir=&quot;$(wslpath -u &quot;$windows_local_app_data&quot;)/Emacsvox/Omnivox/releases/$omnivox_version&quot;
+mkdir -p &quot;$install_dir&quot;
+unzip -q -o &quot;$archive&quot; -d &quot;$install_dir&quot;
+chmod 755 &quot;$install_dir/omnivox.exe&quot;
+export OMNIVOX_PROGRAM=&quot;$install_dir/omnivox.exe&quot;
+</pre></div>
+
+<p>Keep <code class="code">omnivox.exe</code>, <code class="code">espeak-ng-data</code>, and <code class="code">third-party-licenses</code> together in
+that directory.  Do not copy or load the archive&rsquo;s <code class="code">omnivox-voices.el</code>;
+Emacsvox uses its bundled adapter.  Add the <code class="code">OMNIVOX_PROGRAM</code> assignment, with
+the resulting absolute WSL path, to the shell startup file used to launch
+Emacs.  An explicit <code class="code">OMNIVOX_PROGRAM</code> takes precedence over an older
+source-built runtime beneath <code class="code">servers/omnivox-bin</code>.
+</p>
+<p>From the Emacsvox checkout, verify the selected release and listen to its
+physical audio check:
+</p>
+<div class="example">
+<pre class="example-preformatted">./servers/omnivox --version
+./servers/omnivox --list-voices
+./servers/omnivox --check
+</pre></div>
+
+<p>The version must report 1.4.1.  The check must produce both its tone and spoken
+confirmation.  Release CI verifies the downloaded archive, Windows x64
+architecture, adjacent eSpeak data, voice discovery, and headless synthesis
+through both WinRT and eSpeak, but only this audible check proves the local
+audio path.  The Windows archive is not code-signed.  If Windows security or
+local policy refuses it, do not weaken that policy to complete the install.
+</p>
+<p>The published archive does not contain the optional Piper, Eloquence, or
+DECtalk helpers or their runtimes.  They are not needed for normal WinRT
+speech.  Use the source-build route below when maintaining Emacsvox&rsquo;s pinned,
+content-addressed Windows bundle or its Eloquence and DECtalk bridges.  Piper
+has a separate optional build workflow in the Omnivox repository.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Trying-Native-Windows-Emacsvox.html">Trying Native Windows Emacsvox</a>, Previous: <a href="Installing-An-Omnivox-Release-Binary.html">Install Omnivox From A Release Binary</a>, Up: <a href="Speech-Backends.html">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

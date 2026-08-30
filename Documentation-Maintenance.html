@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Documentation Maintenance (Emacsvox User Manual)</title>
+
+<meta name="description" content="Documentation Maintenance (Emacsvox User Manual)">
+<meta name="keywords" content="Documentation Maintenance (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Developer-Guide.html" rel="up" title="Developer Guide">
+<link href="Speech-Server-Protocols.html" rel="next" title="Speech Server Protocols">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Documentation-Maintenance">
+<div class="nav-panel">
+<p>
+Next: <a href="Speech-Server-Protocols.html" accesskey="n" rel="next">Speech Server Protocols</a>, Up: <a href="Developer-Guide.html" accesskey="u" rel="up">Developer And Maintainer Guide</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Documentation-Maintenance-1"><span>16.1 Documentation Maintenance<a class="copiable-link" href="#Documentation-Maintenance-1"> &para;</a></span></h3>
+
+<p>This chapter is for contributors changing the maintained manuals, generated
+reference, or public browser documentation.  Reports and internal notes do not
+require an Emacsvox build; use the smallest documentation target that covers
+the source being changed.
+</p>
+<ul class="mini-toc">
+<li><a href="#Choose-the-canonical-source" accesskey="1">Choose the canonical source</a></li>
+<li><a href="#Use-the-fast-authoring-workflow" accesskey="2">Use the fast authoring workflow</a></li>
+<li><a href="#Publish-the-browser-manual" accesskey="3">Publish the browser manual</a></li>
+</ul>
+<div class="subsection-level-extent" id="Choose-the-canonical-source">
+<h4 class="subsection"><span>16.1.1 Choose the canonical source<a class="copiable-link" href="#Choose-the-canonical-source"> &para;</a></span></h4>
+
+<p>The maintained Org master is <code class="code">docs/manual/emacsvox.org</code>.  Current-user chapters
+live under <code class="code">docs/manual/chapters/</code>, while developer and maintainer chapters
+live under <code class="code">docs/developer/</code>.  The source layout and fast authoring loop are
+summarized in <code class="code">docs/manual/README.org</code>.
+</p>
+<p>The current project overview and installation summary live in <code class="code">Readme.org</code> and
+<code class="code">etc/install.org</code>.  Submit changes through the Emacsvox repository at
+<a class="uref" href="https://github.com/bartbunting/emacsvox">https://github.com/bartbunting/emacsvox</a>.  Before changing a governed
+workflow or architecture, read <code class="code">AGENTS.md</code> and every accepted record under
+<code class="code">docs/adr/</code>.  Repository-local <code class="code">local.mk</code> selects the Emacs used by supported
+targets; Emacsvox requires Emacs 31 or newer.
+</p>
+<p>Do not hand-edit generated references.  <code class="code">info/docs.texi</code> and <code class="code">info/keys.texi</code>
+come from the source documentation generator, and
+<code class="code">etc/aural-presentation-reference.org</code> comes from
+<code class="code">utils/emacsvox-aural-audit.el</code>.  The first two sources form the separately
+installed <code class="code">emacsvox-reference.info</code> manual.  Selected historical chapters form
+the separately installed <code class="code">emacsvox-heritage.info</code> manual.
+</p>
+</div>
+<div class="subsection-level-extent" id="Use-the-fast-authoring-workflow">
+<h4 class="subsection"><span>16.1.2 Use the fast authoring workflow<a class="copiable-link" href="#Use-the-fast-authoring-workflow"> &para;</a></span></h4>
+
+<p>Keep current operating instructions separate from historical accounts.  State
+which backend or platform a procedure applies to, avoid duplicating detailed
+protocol contracts across repositories, and link to the owning document.
+Apply the user-versus-developer audience test in ADR 0004 before choosing a
+source directory.
+</p>
+<p>While editing Org prose, preview the complete manual without inspecting or
+rebuilding Lisp byte-code:
+</p>
+<div class="example">
+<pre class="example-preformatted">make docs-org-preview
+</pre></div>
+
+<p>The ignored Info, Texinfo, and HTML previews appear under
+<code class="code">.docs-preview/org-manual/</code>.  Once the text settles, run <code class="code">make docs-update</code> to
+update the tracked generated Texinfo body and checked Info files.  Do not edit
+those generated files directly.
+</p>
+<p>When public Lisp documentation or keys change, first bring byte-code current
+with <code class="code">make bytecode</code>.  Use <code class="code">make bytecode-rebuild</code> instead after changing
+macros or public interfaces, as described in <code class="code">AGENTS.md</code>.  Then run
+<code class="code">make docs-reference</code>.  <code class="code">make docs-generate</code> remains the comprehensive
+reference and manual update.
+</p>
+<p>Before review, merge, or deployment, run the non-mutating
+<code class="code">make docs-release-check</code>; <code class="code">make docs-check</code> is its compatibility alias.
+Commit the regenerated Info artifacts with their source changes.
+</p>
+</div>
+<div class="subsection-level-extent" id="Publish-the-browser-manual">
+<h4 class="subsection"><span>16.1.3 Publish the browser manual<a class="copiable-link" href="#Publish-the-browser-manual"> &para;</a></span></h4>
+
+<p>Org on <code class="code">master</code> is the canonical maintained manual source.  GitHub Pages serves
+the generated static files committed on the separate <code class="code">gh-pages</code> branch; never
+edit those HTML files as source.  Publishing is deliberately explicit:
+</p>
+<ol class="enumerate">
+<li> Finish the manual change, update its checked Info output, run the release
+validation target above, and commit the complete source-side change on
+<code class="code">master</code>.
+
+</li><li> Check out that exact commit in a clean source worktree.  Build its local,
+ignored byte-code with the Emacs selected by <code class="code">local.mk</code> or an <code class="code">EMACS=</code>
+override.  Use a separate sibling worktree checked out on <code class="code">gh-pages</code> as the
+publication directory.
+
+</li><li> From the clean source worktree, run:
+
+<div class="example">
+<pre class="example-preformatted">make docs-publish-pages DOCS_PUBLISH_DIR=/path/to/emacsvox-pages
+</pre></div>
+
+<p>The target validates the manual and publishes that same staged render,
+replaces only its managed HTML files, writes <code class="code">.nojekyll</code>, and records the
+source commit, Emacs version, and Texinfo version in
+<code class="code">emacsvox-source.txt</code>.  It refuses an uncommitted source tree.
+</p>
+</li><li> Inspect the <code class="code">gh-pages</code> worktree, including the provenance file and the main
+browser entry points.  Commit the generated site with the source commit in
+the commit message, then push <code class="code">master</code> and <code class="code">gh-pages</code>.  The GitHub Pages
+source setting must name the root of <code class="code">gh-pages</code>.
+</li></ol>
+
+<p>No documentation target creates a commit or pushes a branch.  This keeps the
+published bytes reviewable and makes publication a distinct maintainer action.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Speech-Server-Protocols.html">Speech Server Protocols</a>, Up: <a href="Developer-Guide.html">Developer And Maintainer Guide</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

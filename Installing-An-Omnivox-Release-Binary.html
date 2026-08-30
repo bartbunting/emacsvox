@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Installing An Omnivox Release Binary (Emacsvox User Manual)</title>
+
+<meta name="description" content="Installing An Omnivox Release Binary (Emacsvox User Manual)">
+<meta name="keywords" content="Installing An Omnivox Release Binary (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Speech-Backends.html" rel="up" title="Speech Backends">
+<link href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" rel="next" title="Installing An Omnivox Windows Release Under WSL2">
+<link href="Supported-Platform-Routes.html" rel="prev" title="Supported Platform Routes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Installing-An-Omnivox-Release-Binary">
+<div class="nav-panel">
+<p>
+Next: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" accesskey="n" rel="next">Install An Omnivox Windows Release Under WSL2</a>, Previous: <a href="Supported-Platform-Routes.html" accesskey="p" rel="prev">Supported Platform Routes</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Install-Omnivox-From-A-Release-Binary"><span>4.2 Install Omnivox From A Release Binary<a class="copiable-link" href="#Install-Omnivox-From-A-Release-Binary"> &para;</a></span></h3>
+
+<p>Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime,
+macOS on Apple silicon, or macOS on Intel.  The
+<a class="uref" href="https://github.com/bartbunting/omnivox/releases/tag/v1.4.1">Omnivox 1.4.1 release</a>
+provides these archive names:
+</p>
+<table class="multitable">
+<thead><tr><th width="28%">Host</th><th width="27%">Set <code class="code">platform</code> to</th><th width="45%">Archive</th></tr></thead>
+<tbody><tr><td width="28%">GNU/Linux x86-64</td><td width="27%"><code class="code">linux-x64</code></td><td width="45%"><code class="code">omnivox-1.4.1-linux-x64.tar.gz</code></td></tr>
+<tr><td width="28%">macOS Apple silicon</td><td width="27%"><code class="code">macos-arm64</code></td><td width="45%"><code class="code">omnivox-1.4.1-macos-arm64.tar.gz</code></td></tr>
+<tr><td width="28%">macOS Intel</td><td width="27%"><code class="code">macos-x64</code></td><td width="45%"><code class="code">omnivox-1.4.1-macos-x64.tar.gz</code></td></tr>
+</tbody>
+</table>
+
+<p>Run <code class="code">uname -m</code> if the Mac architecture is uncertain: <code class="code">arm64</code> identifies Apple
+silicon and <code class="code">x86_64</code> identifies Intel.  Create a download directory, select the
+matching platform value, and fetch both the archive and published checksum
+file:
+</p>
+<div class="example">
+<pre class="example-preformatted">mkdir -p &quot;$HOME/Downloads/omnivox-1.4.1&quot;
+cd &quot;$HOME/Downloads/omnivox-1.4.1&quot;
+omnivox_version=1.4.1
+platform=linux-x64
+archive=&quot;omnivox-${omnivox_version}-${platform}.tar.gz&quot;
+release_url=&quot;https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}&quot;
+curl -fLO &quot;$release_url/$archive&quot;
+curl -fLO &quot;$release_url/sha256sums.txt&quot;
+</pre></div>
+
+<p>Replace <code class="code">linux-x64</code> with the matching macOS value from the table.  Verify the
+selected archive before extracting it.  On GNU/Linux, run:
+</p>
+<div class="example">
+<pre class="example-preformatted">grep &quot;  $archive$&quot; sha256sums.txt | sha256sum --check -
+</pre></div>
+
+<p>On macOS, use its installed <code class="code">shasum</code> command instead:
+</p>
+<div class="example">
+<pre class="example-preformatted">grep &quot;  $archive$&quot; sha256sums.txt | shasum -a 256 --check
+</pre></div>
+
+<p>The command must name the archive and report <code class="code">OK</code>.  If it does not, remove the
+download and do not run it.  Extract the verified payload into a versioned
+directory and keep every supplied directory beside the executable:
+</p>
+<div class="example">
+<pre class="example-preformatted">install_dir=&quot;$HOME/.local/opt/omnivox-${omnivox_version}&quot;
+mkdir -p &quot;$install_dir&quot;
+tar -xzf &quot;$archive&quot; -C &quot;$install_dir&quot;
+chmod 755 &quot;$install_dir/omnivox&quot;
+export PATH=&quot;$install_dir:$PATH&quot;
+</pre></div>
+
+<p>Add the same <code class="code">PATH</code> entry to the shell startup file used to launch Emacs so it
+remains available in later sessions.  The extracted directory contains
+<code class="code">omnivox</code>, <code class="code">espeak-ng-data</code>, <code class="code">third-party-licenses</code>, and
+<code class="code">omnivox-voices.el</code>.  Emacsvox uses its own bundled Lisp adapter, so do not
+load or copy the release&rsquo;s <code class="code">omnivox-voices.el</code> into Emacsvox.
+</p>
+<p>Now prove the installed binary before starting Emacsvox:
+</p>
+<div class="example">
+<pre class="example-preformatted">omnivox --version
+omnivox --check
+omnivox --list-voices
+</pre></div>
+
+<p>The version must report 1.4.1, and the check must produce both its tone and
+spoken confirmation.  The macOS archives are not code-signed or notarized; if
+local security policy refuses the verified binary, use the source route below
+rather than weakening that policy.  On GNU/Linux, a missing runtime library or
+incompatible glibc also means that the source route is the appropriate path.
+</p>
+<p>For Emacs running under WSL2, continue to
+<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>.  That route
+uses the verified Windows archive without requiring a compiler or Docker.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>, Previous: <a href="Supported-Platform-Routes.html">Supported Platform Routes</a>, Up: <a href="Speech-Backends.html">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

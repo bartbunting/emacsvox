@@ -35,7 +35,7 @@ span:hover a.copiable-link {visibility: visible}
 Previous: <a href="Speech-Server-Protocols.html" accesskey="p" rel="prev">Speech Server Protocols</a>, Up: <a href="Developer-Guide.html" accesskey="u" rel="up">Developer And Maintainer Guide</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Integration-Maintenance-1"><span>17.2 Integration Maintenance<a class="copiable-link" href="#Integration-Maintenance-1"> &para;</a></span></h3>
+<h3 class="section" id="Integration-Maintenance-1"><span>16.3 Integration Maintenance<a class="copiable-link" href="#Integration-Maintenance-1"> &para;</a></span></h3>
 
 <p>This chapter collects source-level contracts that are deliberately omitted
 from the user task guides.  Optional package APIs and renderers evolve, so
@@ -49,7 +49,7 @@ changing an integration.
 <li><a href="#WSL2-Omnivox-development-staging" accesskey="4">WSL2 Omnivox development staging</a></li>
 </ul>
 <div class="subsection-level-extent" id="Build-and-live_002dverification-boundary">
-<h4 class="subsection"><span>17.2.1 Build and live-verification boundary<a class="copiable-link" href="#Build-and-live_002dverification-boundary"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.1 Build and live-verification boundary<a class="copiable-link" href="#Build-and-live_002dverification-boundary"> &para;</a></span></h4>
 
 <p>For a source checkout, use the Emacs selected by <code class="code">local.mk</code>.  Run
 <code class="code">make check-emacs</code> before diagnosing compilation, <code class="code">make bytecode</code> after an
@@ -61,7 +61,7 @@ reload when compiled dependants may already be resident.
 </p>
 </div>
 <div class="subsection-level-extent" id="Notmuch-contracts">
-<h4 class="subsection"><span>17.2.2 Notmuch contracts<a class="copiable-link" href="#Notmuch-contracts"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.2 Notmuch contracts<a class="copiable-link" href="#Notmuch-contracts"> &para;</a></span></h4>
 
 <p>The live module is registered as an optional package integration.  Its stable
 extension points are the Hello, Search, Show, and Tree mode hooks; Search and
@@ -89,7 +89,7 @@ including real displayed-window reading for both advance paths.
 </p>
 </div>
 <div class="subsection-level-extent" id="Agent-Shell-contracts">
-<h4 class="subsection"><span>17.2.3 Agent Shell contracts<a class="copiable-link" href="#Agent-Shell-contracts"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.3 Agent Shell contracts<a class="copiable-link" href="#Agent-Shell-contracts"> &para;</a></span></h4>
 
 <p>Use <code class="code">M-x emacsvox-agent-shell-enable</code> to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
@@ -113,8 +113,30 @@ renderer and private fallbacks isolated and covered by compatibility tests.
 </p>
 </div>
 <div class="subsection-level-extent" id="WSL2-Omnivox-development-staging">
-<h4 class="subsection"><span>17.2.4 WSL2 Omnivox development staging<a class="copiable-link" href="#WSL2-Omnivox-development-staging"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.4 WSL2 Omnivox development staging<a class="copiable-link" href="#WSL2-Omnivox-development-staging"> &para;</a></span></h4>
 
+<p>This section describes the reproducible source-build path, not the ordinary
+pre-built WSL2 installation.  The complete source-build prerequisite checklist
+is in
+<a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.  Dependency ownership is deliberately
+split across three boundaries:
+</p>
+<table class="multitable">
+<thead><tr><th width="18%">Boundary</th><th width="30%">Supplied by</th><th width="52%">Dependencies</th></tr></thead>
+<tbody><tr><td width="18%">Windows and WSL host</td><td width="30%">Maintainer</td><td width="52%">WSL interoperation, <code class="code">powershell.exe</code>, <code class="code">wslpath</code>, Windows .NET Framework 4.7.2 or newer, Docker with Linux/AMD64 support, Git, Make, download and checksum tools, standard GNU shell utilities, network access, and writable Windows <code class="code">LocalAppData</code>.</td></tr>
+<tr><td width="18%">Pinned release toolchain</td><td width="30%">Emacsvox target</td><td width="52%">The immutable Rust/Debian container, MinGW cross tools and runtime DLLs, CMake, Clang and libclang, eSpeak build dependencies, Roslyn, and .NET 4.0 reference assemblies.  The exact versions and downloaded-package hashes live in <code class="code">servers/omnivox-release/toolchain.lock</code>.</td></tr>
+<tr><td width="18%">Build source</td><td width="30%">Git checkouts</td><td width="52%">The current Emacsvox checkout and the Omnivox checkout selected by <code class="code">OMNIVOX_DIR</code>, including Omnivox&rsquo;s locked Rust dependencies.</td></tr>
+</tbody>
+</table>
+
+<p><code class="code">make verify-windows-omnivox-toolchain</code> prepares the cached Roslyn inputs,
+builds the Docker image, and validates this boundary before compilation.  The
+full target then builds the two 32-bit helpers deterministically, builds native
+and Windows Omnivox in the container, stages a content-addressed payload, and
+verifies the Windows-local copy.  A host Rust installation, MinGW installation,
+Visual Studio, .NET SDK, or system eSpeak installation is not an input to this
+release path.
+</p>
 <p>Maintainers testing tracked Emacsvox or Omnivox changes may use
 <code class="code">make windows-omnivox-dev</code>.  That target records both worktree-diff hashes and
 labels the result as a development build; it is not the clean release

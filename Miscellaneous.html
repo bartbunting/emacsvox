@@ -33,10 +33,10 @@ span:hover a.copiable-link {visibility: visible}
 <div class="subsection-level-extent" id="Miscellaneous">
 <div class="nav-panel">
 <p>
-Previous: <a href="Speech-Output-Control.html" accesskey="p" rel="prev">Adjust Rate, Punctuation, Capitals, And Indentation</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Speech System Commands</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="Speech-Output-Control.html" accesskey="p" rel="prev">Adjust Rate And Spoken Detail</a>, Up: <a href="Speech-System.html" accesskey="u" rel="up">Adjust Speech While You Work</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="Stop_002c-Silence_002c-Restart_002c-Or-Identify-Speech"><span>3.6.3 Stop, Silence, Restart, Or Identify Speech<a class="copiable-link" href="#Stop_002c-Silence_002c-Restart_002c-Or-Identify-Speech"> &para;</a></span></h4>
+<h4 class="subsection" id="Stop-Or-Restart-Speech"><span>3.6.3 Stop Or Restart Speech<a class="copiable-link" href="#Stop-Or-Restart-Speech"> &para;</a></span></h4>
 
 <p>Stopping speech ends the current output without disabling future feedback.
 Quiet mode is useful when you temporarily want to keep working without speech.
@@ -44,43 +44,18 @@ Restart the server after correcting a backend problem or changing the selected
 synthesizer.
 </p>
 <dl class="table">
-<dt><a id="index-tts_002dstop-1"></a><span><kbd class="kbd">C-e s</kbd><a class="copiable-link" href="#index-tts_002dstop-1"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-s-1"></a>
-
-<p><code class="code">tts-stop</code>
-</p>
-<p>Stop speech now.
+<dt><kbd class="kbd">C-e s</kbd></dt>
+<dd><p>Stop speech now with <code class="code">tts-stop</code>.
 </p></dd>
-<dt><a id="index-tts_002dtoggle_002dquiet"></a><span><kbd class="kbd">C-e d q</kbd><a class="copiable-link" href="#index-tts_002dtoggle_002dquiet"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-q"></a>
-
-<p><code class="code">tts-toggle-quiet</code>
-</p>
-<p>Toggle speech in the current buffer.  Press <kbd class="kbd">C-u</kbd> first to toggle it
-globally.
+<dt><kbd class="kbd">C-e d q</kbd></dt>
+<dd><p>Toggle quiet mode in the current buffer.  Press <kbd class="kbd">C-u</kbd> first to toggle
+it globally.
 </p></dd>
-<dt><a id="index-tts_002drestart"></a><span><kbd class="kbd">C-e C-s</kbd><a class="copiable-link" href="#index-tts_002drestart"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-C_002ds"></a>
-
-<p><code class="code">tts-restart</code>
-</p>
-<p>Stop and restart the selected speech server.
+<dt><kbd class="kbd">C-e C-s</kbd></dt>
+<dd><p>Stop and restart the selected speech server.
 </p></dd>
-</dl>
-
-<p>To hear which speech adapter is running, use:
-</p>
-<dl class="table">
-<dt><a id="index-tts_002dspeak_002dversion"></a><span><kbd class="kbd">C-e d V</kbd><a class="copiable-link" href="#index-tts_002dspeak_002dversion"> &para;</a></span></dt>
-<dd>
-<a class="index-entry-id" id="index-C_002de-d-V"></a>
-
-<p><code class="code">tts-speak-version</code>
-</p>
-<p>Speak the selected adapter and its version information.
+<dt><kbd class="kbd">C-e d V</kbd></dt>
+<dd><p>Speak the selected adapter and its version information.
 </p></dd>
 </dl>
 
