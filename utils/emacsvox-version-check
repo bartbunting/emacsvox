@@ -1,0 +1,102 @@
+#!/bin/sh
+
+set -eu
+
+usage() {
+    printf '%s\n' \
+        "usage: $0 [--check|--release|--tag|--publish]" >&2
+    exit 2
+}
+
+mode=check
+if [ "$#" -gt 0 ]; then
+    mode=$1
+    shift
+fi
+[ "$#" -eq 0 ] || usage
+case $mode in
+    --check) mode=check ;;
+    --release) mode=release ;;
+    --tag) mode=tag ;;
+    --publish) mode=publish ;;
+    *) usage ;;
+esac
+
+script_directory=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+root=${EMACSVOX_VERSION_ROOT:-$(CDPATH= cd -- "$script_directory/.." && pwd)}
+version_file=$root/VERSION
+package_file=$root/lisp/emacsvox.el
+news_file=$root/etc/NEWS
+
+fail() {
+    printf 'version check: %s\n' "$*" >&2
+    exit 1
+}
+
+[ -f "$version_file" ] || fail "missing canonical file $version_file"
+[ -f "$package_file" ] || fail "missing package source $package_file"
+[ -f "$news_file" ] || fail "missing current NEWS file $news_file"
+
+version=$(sed -n '1p' "$version_file")
+line_count=$(awk 'END { print NR + 0 }' "$version_file")
+[ "$line_count" -eq 1 ] || fail "$version_file must contain exactly one line"
+printf '%s\n' "$version" | grep -Eq \
+    '^[0-9]{4}\.(1[0-2]|[1-9])\.(0|[1-9][0-9]*)$' ||
+    fail "$version is not an unpadded YYYY.MONTH.PATCH version"
+
+package_versions=$(sed -n 's/^;; Version:[[:space:]]*//p' "$package_file")
+[ "$package_versions" = "$version" ] ||
+    fail "lisp/emacsvox.el Version is '$package_versions', expected '$version'"
+
+news_versions=$(
+    sed -n \
+        's/^\* Emacsvox \([^ ]*\) --- Current User-Visible Changes$/\1/p' \
+        "$news_file"
+)
+[ "$news_versions" = "$version" ] ||
+    fail "etc/NEWS current version is '$news_versions', expected '$version'"
+
+if [ "$mode" != check ]; then
+    command -v git >/dev/null 2>&1 || fail "git is required for a release"
+    git -C "$root" rev-parse --verify HEAD >/dev/null 2>&1 ||
+        fail "$root is not a Git worktree with a committed HEAD"
+    status=$(git -C "$root" status --porcelain --untracked-files=normal)
+    [ -z "$status" ] ||
+        fail "release worktree is not clean; use a separate clean worktree"
+
+    current_year=$(date +%Y)
+    current_month=$(date +%m)
+    current_month=${current_month#0}
+    current_series=$current_year.$current_month
+    version_year=${version%%.*}
+    version_remainder=${version#*.}
+    version_month=${version_remainder%%.*}
+    version_patch=${version##*.}
+    if [ "$version_patch" -eq 0 ]; then
+        [ "$version_year.$version_month" = "$current_series" ] ||
+            fail \
+                "feature release $version must use current series $current_series"
+    else
+        version_index=$((version_year * 12 + version_month))
+        current_index=$((current_year * 12 + current_month))
+        [ "$version_index" -le "$current_index" ] ||
+            fail "patch release $version belongs to a future release series"
+    fi
+fi
+
+if [ "$mode" = tag ]; then
+    if git -C "$root" show-ref --verify --quiet "refs/tags/$version"; then
+        fail "tag $version already exists"
+    fi
+fi
+
+if [ "$mode" = publish ]; then
+    git -C "$root" show-ref --verify --quiet "refs/tags/$version" ||
+        fail "tag $version does not exist"
+    head_commit=$(git -C "$root" rev-parse HEAD)
+    tag_commit=$(git -C "$root" rev-list -n 1 "$version")
+    [ "$tag_commit" = "$head_commit" ] ||
+        fail "tag $version does not identify HEAD $head_commit"
+fi
+
+printf 'Emacsvox version %s is valid for %s.\n' "$version" "$mode"

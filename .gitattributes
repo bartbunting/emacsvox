@@ -1,0 +1,14 @@
+/.gitattributes export-ignore
+/.github export-ignore
+/.gitignore export-ignore
+/.dir-locals.el export-ignore
+/.excludes export-ignore
+/android export-ignore
+/announcements export-ignore
+/git-hooks export-ignore
+/html export-ignore
+/js/node/auto export-ignore
+/js/node/node_modules export-ignore
+/scapes export-ignore
+/tvr export-ignore
+/utils export-ignore

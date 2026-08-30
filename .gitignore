@@ -23,6 +23,7 @@ servers/native-espeak/tclespeak.so
 servers/software-dtk/tcldtk.so
 .build.log
 .docs-preview/
+/dist/
 .cask/
 /etc/pickup-c/pickup
 /.ccls-cache/

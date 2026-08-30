@@ -75,3 +75,42 @@ use =load-library= as the first load after modifying a source checkout:
 Emacs can select an old =emacsvox-setup.elc= before the checker in the newer
 source has had a chance to run.  Either rebuild first or use =load-file= on
 =emacsvox-setup.el=.
+
+* Maintainer release workflow
+
+The repository-level =VERSION= file is the canonical stable release
+identifier.  Calendar-versioning policy, including delayed patches and
+backports, is recorded in
+[[file:../docs/adr/0002-calendar-versioning.org][ADR 0002]].  When advancing
+the release, update =VERSION=, the literal package header in
+=lisp/emacsvox.el=, and the current heading in =etc/NEWS= together, then run:
+
+#+BEGIN_SRC sh
+make version-check
+#+END_SRC
+
+Prepare a public release only from a separate clean, committed worktree.  The
+guarded sequence is:
+
+#+BEGIN_SRC sh
+make bytecode-rebuild
+make release-artifact
+# Inspect dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2 and its checksum.
+make release-tag
+make release-publish
+#+END_SRC
+
+=bytecode-rebuild= produces fresh ignored byte-code with the selected Emacs;
+the release gate will not accept missing, stale, or mismatched byte-code.
+=release-artifact= then invokes the non-mutating =release-check=.  For a
+patch-zero feature release, the release series must match the current month;
+a corrective or backport release retains its original non-future series as
+required by ADR 0002.  The check also runs the complete test and documentation
+gates before creating the archive, SHA-256 checksum, and source-commit
+provenance from committed =HEAD=.
+=release-tag= creates a local signed tag only after validating that same
+artifact against the still-clean =HEAD=; it does not rerun the expensive
+suite.  =release-publish= repeats the artifact and source-commit validation,
+pushes only that exact tag, and creates the GitHub release.  No release target
+pushes =master= or any documentation branch.  Run =make release-check= alone
+when a non-mutating preflight is wanted without creating an artifact.

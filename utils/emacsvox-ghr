@@ -1,29 +1,33 @@
 #!/bin/sh
-#Upload a release to github
-#Usage:  $1 tagname $2 filename asset (tar.bz2)
-# Run from the Emacsvox directory after `make release'.
-# Example: emacsvox-ghr 60 emacsvox-60.0.tar.bz2
-# Set token, username and repo in environment
 
-. ${HOME}/.github_token
-export PATH=$PATH:${HOME}/go/bin
-AText="./announcements/Announce-$1.txt"
-AHtml="./announcements/Announce-$1.html"
-# First,  create a release for this tag.
-github-release release --tag $1 --name "Release $1 " 
+set -eu
 
-# Next, upload the tar.bz2 dist package 
-github-release upload --tag $1 --name $2 --file $2
+# Compatibility entry point for the former github-release helper.  Keep every
+# publication path behind the same version, source, artifact, and tag checks.
+script_directory=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+root=$(CDPATH= cd -- "$script_directory/.." && pwd)
+version=$(sed -n '1p' "$root/VERSION")
 
-# Upload the latest NEWS   into releases 
-github-release upload --tag $1 --name News-$1 --file ./etc/NEWS
+if [ "$#" -gt 2 ]; then
+    printf 'usage: %s [VERSION [ARCHIVE]]\n' "$0" >&2
+    exit 2
+fi
+if [ "$#" -ge 1 ] && [ "$1" != "$version" ]; then
+    printf 'emacsvox-ghr: requested version %s; VERSION contains %s\n' \
+        "$1" "$version" >&2
+    exit 1
+fi
+if [ "$#" -eq 2 ]; then
+    expected=emacsvox-$version.tar.bz2
+    actual=$(basename -- "$2")
+    if [ "$actual" != "$expected" ]; then
+        printf 'emacsvox-ghr: requested artifact %s; expected %s\n' \
+            "$actual" "$expected" >&2
+        exit 1
+    fi
+fi
 
-# Final releases contain  an announcement file.
-test -f ${AText} &&  github-release upload --tag $1 --name $AText --file $AText
-test -f ${AHtml} &&  github-release upload --tag $1 --name $AHtml --file $AHtml
-
-echo "Released $1"
-echo "uploaded assets are under release name:"
-echo "https://github.com/bartbunting/emacsvox/releases/download/tagname/assetname"
-
-echo "Download URL: https://github.com/bartbunting/emacsvox/releases/download/$1/$2"
+printf '%s\n' \
+    'emacsvox-ghr is deprecated; delegating to the guarded release-publish target.' \
+    >&2
+exec make -C "$root" release-publish

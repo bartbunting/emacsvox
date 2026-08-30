@@ -43,6 +43,7 @@
   (dolist
       (source
        '("tts-speak.el"
+         "emacsvox-version.el"
          "voice-setup.el"
          "voice-defs.el"
          "dectalk-voices.el"

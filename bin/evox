@@ -6,7 +6,7 @@ script_directory=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 launcher=$script_directory/emacsvox
 
 printf '%s\n' \
-    'evox: deprecated; use bin/emacsvox (evox will be removed after Emacsvox 60)' \
+    'evox: deprecated; use bin/emacsvox (evox will be removed after Emacsvox 2026.9.0)' \
     >&2
 if [ "${EMACSVOX_INIT_DIRECTORY+x}" = x ]; then
     printf '%s\n' \

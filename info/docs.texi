@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 274 loaded; 0 intentionally omitted.
+@c Modules: 275 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell.elc emacsvox-amark.elc
 @c Loaded: emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-compatibility-voice.elc emacsvox-aural-compiler.elc
@@ -48,15 +48,15 @@
 @c Loaded: emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-ui.elc emacsvox-table.elc
 @c Loaded: emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc emacsvox-tempo.elc
 @c Loaded: emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc emacsvox-treesit.elc
-@c Loaded: emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-vertico.elc emacsvox-view.elc
-@c Loaded: emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc
-@c Loaded: emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc
-@c Loaded: emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc
-@c Loaded: emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc
-@c Loaded: gmaps.elc gweb.elc ladspa.elc light.elc mac-voices.elc
-@c Loaded: omaps.elc omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc
-@c Loaded: soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc
-@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
+@c Loaded: emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc
+@c Loaded: emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc
+@c Loaded: emacsvox-webspace.elc emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc
+@c Loaded: emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc
+@c Loaded: emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc
+@c Loaded: gm-nnir.elc gmaps.elc gweb.elc ladspa.elc light.elc
+@c Loaded: mac-voices.elc omaps.elc omnivox-voices.elc outloud-voices.elc pip.elc
+@c Loaded: plain-voices.elc soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc
+@c Loaded: tetris.elc tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -301,6 +301,7 @@ This chapter documents a total of 1467 commands and 191 options.
 * emacsvox-typo:: Speech-enable TYPO.
 * emacsvox-url-template:: URI templates.
 * emacsvox-vdiff:: Speech-enable VDIFF.
+* emacsvox-version:: Emacsvox release identity.
 * emacsvox-vertico:: Speech-enable Vertico.
 * emacsvox-view:: Speech enable View mode -.
 * emacsvox-vterm:: Speech-enable VTERM.
@@ -19537,6 +19538,13 @@ Speak corresponding line from other buffer.
 Speak VDiff hunk under point.
 @end format
 @end deffn
+
+@node emacsvox-version
+@section emacsvox-version
+
+Read the canonical release identifier from the repository-level VERSION
+file.  Reading it when this module loads keeps source and byte-code users on
+the same value without generating a second version source.
 
 @node emacsvox-vertico
 @section emacsvox-vertico

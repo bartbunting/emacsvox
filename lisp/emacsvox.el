@@ -3,7 +3,7 @@
 ;; $Author: tv.raman.tv $
 ;; Description:  Emacsvox: A speech interface to Emacs
 ;; Keywords: Emacsvox, Speech, Dectalk,
-;; Version: 55.0
+;; Version: 2026.9.0
 ;; Package-Requires: ((emacs "31") (hydra "0.5"))
 ;;;   LCD Archive entry:
 ;; LCD Archive Entry:
@@ -345,13 +345,12 @@ This cannot be set via custom; set this in your startup file before
       (run-at-time 3 nil #'(lambda () (start-process "ogg" nil sox-play f))))))
 
 (defvar emacsvox-startup
-  (eval-when-compile
-    (format
-     "  Press %s to get an   overview of emacsvox  %s. \
+  (format
+   "  Press %s to get an   overview of emacsvox  %s. \
  I am  completely operational,  and all my circuits are functioning perfectly!"
-     (substitute-command-keys
-      "\\[emacsvox-describe-emacsvox]")
-     emacsvox-version))
+   (substitute-command-keys
+    "\\[emacsvox-describe-emacsvox]")
+   emacsvox-version)
   "Emacsvox startup message.")
 
 (defcustom emacsvox-pip-enable

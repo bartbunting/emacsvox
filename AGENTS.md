@@ -21,6 +21,13 @@
   reloading one file when compiled dependents may already be resident.
 - Local `.elc` files are build and preflight inputs only. They are ignored and
   never distributed; releases contain the `.el` sources.
+- `VERSION` is the canonical release identifier; accepted calendar-versioning
+  policy is recorded under `docs/adr/`. Run `make version-check` after changing
+  it, package metadata, or the current NEWS heading. In a separate clean
+  release worktree, run `make bytecode-rebuild`; `make release-artifact` then
+  runs the guarded release gate and records the checked source commit. Inspect
+  it before `make release-tag` and `make release-publish`. Never tag or push
+  around a failed gate.
 - Reports and internal notes do not require an Emacsvox build. The maintained
   user-manual source is `docs/manual/emacsvox.org` plus its included files under
   `docs/manual/chapters/`. Iterate with `make docs-org-preview`; it lints and

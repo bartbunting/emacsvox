@@ -65,6 +65,7 @@ swiftmac-voices.elc \
 omnivox-voices.elc
 
 TTS_OBJECTS = \
+emacsvox-version.elc \
 emacsvox-preamble.elc \
 tts-speak.elc \
 $(VOICE_OBJECTS)
@@ -354,6 +355,8 @@ documentation-modules:
 aural: $(AURAL_RUNTIME_OBJECTS) emacsvox-keymap.elc \
 $(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc
 
+emacsvox-preamble.elc: emacsvox-version.elc
+
 emacsvox-eat-input.elc: emacsvox-eat-core.elc
 emacsvox-eat-review.elc: emacsvox-eat-core.elc emacsvox-eat-input.elc
 emacsvox-eat.elc: \
@@ -393,7 +396,7 @@ dectalk-voices.elc plain-voices.elc espeak-voices.elc \
 outloud-voices.elc mac-voices.elc swiftmac-voices.elc: voice-defs.elc
 emacsvox-speak.elc: \
 tts-speak.elc voice-setup.elc voice-defs.elc emacsvox-pronounce.elc \
-emacsvox-aural-submission.elc
+emacsvox-aural-submission.elc emacsvox-version.elc
 emacsvox-aural-description.elc: \
 emacsvox-aural-concrete.elc emacsvox-aural-rules.elc
 emacsvox-aural-preview.elc: emacsvox-aural-transport.elc
@@ -459,7 +462,8 @@ emacsvox-aural-sound-packs.elc: \
 emacsvox-aural-ui.elc emacsvox-aural-inspection.elc \
 emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc emacsvox-sounds.elc
-emacsvox.elc: emacsvox-preamble.elc emacsvox-keymap.elc $(AURAL_OBJECTS)
+emacsvox.elc: \
+emacsvox-version.elc emacsvox-preamble.elc emacsvox-keymap.elc $(AURAL_OBJECTS)
 emacsvox-setup.elc: emacsvox-preamble.elc emacsvox.elc
 
 muggles: emacsvox-muggles.elc

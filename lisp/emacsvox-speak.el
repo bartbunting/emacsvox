@@ -2488,15 +2488,20 @@ Seconds value is also placed in the kill-ring."
   (propertize "DreamDog" 'face 'bold)
   "Code name of present release.")
 (defvar emacsvox-version
-  (concat "60.0,   " emacsvox-codename " " emacsvox-git-revision)
-  "Version number for Emacsvox.")
+  (format
+   "%s, %s%s"
+   emacsvox-version-number
+   emacsvox-codename
+   (if (> (length emacsvox-git-revision) 0)
+       (concat " " emacsvox-git-revision)
+     ""))
+  "Display version for Emacsvox, including codename and Git revision.")
 
 (defun emacsvox-speak-version ()
   "Announce version information for running emacsvox. "
   (interactive)
   (emacsvox-icon 'emacsvox)
-  (message
-   (format "Emacsvox %s " emacsvox-version )))
+  (message "Emacsvox %s" emacsvox-version))
 
 (defun emacsvox-speak-current-kill (&optional count)
   "Speak the current kill.

@@ -6,9 +6,22 @@ Emacsvox News -- History Of User-Visible Changes
 
 Maintained by Emacsvox Contributors.
 
-* Emacsvox 60 --- Current User-Visible Changes
+* Emacsvox 2026.9.0 --- Current User-Visible Changes
 
 This version requires Emacs 31 or later.
+
+** Calendar Versioning And Release Safety
+
+Emacsvox stable releases now use =YYYY.MONTH.PATCH= calendar versions.  The
+year and month identify a feature-release series rather than promising a
+monthly cadence; corrective and backport releases retain the series they fix.
+The repository-level =VERSION= file is canonical, and non-mutating validation
+keeps Lisp package metadata, runtime output, and NEWS consistent with it.
+
+The release workflow now validates a clean committed source tree, runs tests
+and documentation gates, and creates a checked artifact before allowing an
+explicit tag or GitHub publication step.  See
+=docs/adr/0002-calendar-versioning.org= for the policy.
 
 ** Portable First-use Launcher
 

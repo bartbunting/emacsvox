@@ -60,6 +60,8 @@
   (expand-file-name "../" (file-name-directory load-file-name))
   "emacsvox directory")
 
+(require 'emacsvox-version)
+
 (defconst emacsvox-lisp-directory
   (expand-file-name  "lisp/" emacsvox-directory)
   "Lisp directory.")

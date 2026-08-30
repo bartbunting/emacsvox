@@ -56,7 +56,8 @@
 (declare-function emacsvox "emacsvox" ())
 
 (defconst emacsvox-setup--startup-sources
-  '("emacsvox-preamble.el"
+  '("emacsvox-version.el"
+    "emacsvox-preamble.el"
     "emacsvox-loaddefs.el"
     "emacsvox-keymap.el"
     "tts-speak.el"

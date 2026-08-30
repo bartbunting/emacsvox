@@ -655,6 +655,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-typo:: Speech-enable TYPO.
 * emacsvox-url-template:: URI templates.
 * emacsvox-vdiff:: Speech-enable VDIFF.
+* emacsvox-version:: Emacsvox release identity.
 * emacsvox-vertico:: Speech-enable Vertico.
 * emacsvox-view:: Speech enable View mode -.
 * emacsvox-vterm:: Speech-enable VTERM.

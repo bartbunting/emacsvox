@@ -49,13 +49,21 @@ DOCS_ORG_NODES ?= $(CURDIR)/docs/manual/nodes.txt
 DOCS_ORG_PREVIEW_DIR ?= $(DOCS_PREVIEW_DIR)/org-manual
 DOCS_ORG_HTMLXREF ?= $(CURDIR)/info/htmlxref.cnf
 README = README
+VERSION_FILE ?= $(CURDIR)/VERSION
+VERSION = $(shell sed -n '1p' "$(VERSION_FILE)" 2>/dev/null)
+DIST_DIR ?= $(CURDIR)/dist
+RELEASE_PREFIX = emacsvox-$(VERSION)
+RELEASE_ARCHIVE = $(abspath $(DIST_DIR))/$(RELEASE_PREFIX).tar.bz2
+RELEASE_CHECKSUM = $(RELEASE_ARCHIVE).sha256
+RELEASE_PROVENANCE = $(RELEASE_ARCHIVE).source
+RELEASE_REMOTE ?= origin
 
 ### Tests
 
 TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
-.PHONY: test unit-test notmuch-test compiled-notmuch-test
+.PHONY: version version-check test unit-test notmuch-test compiled-notmuch-test
 .PHONY: compiled-aural-test build-aural-test trace trace-test
 .PHONY: reference-test advice-audit name-audit tts-audit
 .PHONY: check-emacs bytecode bytecode-check bytecode-rebuild generated-reference
@@ -67,7 +75,17 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: windows-omnivox-dev
 .PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers verify-windows-omnivox-runtime
 .PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
-test: unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
+.PHONY: dist release release-source-check release-check release-artifact
+.PHONY: release-artifact-check
+.PHONY: release-tag release-publish
+
+version:
+	@cat "$(VERSION_FILE)"
+
+version-check:
+	@utils/emacsvox-version-check --check
+
+test: version-check unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
 
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el
@@ -214,7 +232,7 @@ docs-reference: generated-reference
 docs-generate: docs-reference
 	$(MAKE) docs-update
 
-docs-release-check: bytecode-check docs-org-check
+docs-release-check: version-check bytecode-check docs-org-check
 	EMACSVOX_MAKEINFO="$(MAKEINFO)" \
 	EMACSVOX_INSTALL_INFO="$(INSTALL_INFO)" \
 	$(EMACS) -Q --batch -L utils -l utils/emacsvox-docs-check.el \
@@ -663,7 +681,7 @@ clean-windows-dtk:
 clean-windows-omnivox:
 	rm -rf "$(OMNIVOX_RUNTIME_DIR)"
 
-###   Maintenance targets:   dist
+###   Maintenance targets: distribution identity
 
 GITVERSION=$(shell git show HEAD | head -1  | cut -b 8- )
 README: 
@@ -672,10 +690,7 @@ README:
 	@echo "This release requires Emacs 31 or later." >> $(README)
 	@echo "Distribution created by `whoami` at `date`" >> $(README)
 	@echo "Unpack the distribution and type make all" >> $(README)
-EXCLUDES=-X .excludes --exclude-backups
-dist:
-	make ${README}
-	tar cvf  emacsvox.tar $(EXCLUDES) .
+dist: release-artifact
 
 ###  User level target--  config
 
@@ -700,24 +715,99 @@ q:
 clean:
 	@cd lisp &&  $(MAKE) $(MAKEFLAGS) clean
 
-###  labeling releases
+###  guarded releases
 
-#label  releases when ready
-LABEL=#version number
-MSG="Releasing ${LABEL}"
-release: #supply LABEL=NN.NN
-	git tag -a -s ${LABEL} -m "Tagging release with ${LABEL}"
-	git push --tags
-	$(MAKE) dist
-	mkdir emacsvox-${LABEL}; \
-cd emacsvox-${LABEL} ;\
-	tar xvf ../emacsvox.tar ; \
-	rm -f ../emacsvox.tar ; \
-cd .. ;\
-	tar cvfj emacsvox-${LABEL}.tar.bz2 emacsvox-$(LABEL); \
-	/bin/rm -rf emacsvox-${LABEL} ;\
-	echo "Prepared release in emacsvox-${LABEL}.tar.bz2"
-	./utils/emacsvox-ghr ${LABEL} "emacsvox-${LABEL}.tar.bz2"
+# All version values come from VERSION.  Checking, artifact creation, local
+# tagging, and external publication remain separate operations so no tag or
+# remote state changes before the complete gate and artifact succeed.
+release-source-check: version-check
+	@utils/emacsvox-version-check --release
+
+release-check: release-source-check test docs-release-check
+	@echo "Emacsvox $(VERSION) passed the release gate."
+
+release-artifact: release-check
+	@set -eu; \
+		utils/emacsvox-version-check --release; \
+		mkdir -p "$(DIST_DIR)"; \
+		tar_tmp="$(RELEASE_ARCHIVE).tar.tmp"; \
+		archive_tmp="$(RELEASE_ARCHIVE).tmp"; \
+		checksum_tmp="$(RELEASE_CHECKSUM).tmp"; \
+		provenance_tmp="$(RELEASE_PROVENANCE).tmp"; \
+		trap 'rm -f "$$tar_tmp" "$$archive_tmp" "$$checksum_tmp" \
+			"$$provenance_tmp"' \
+			EXIT HUP INT TERM; \
+		git archive --format=tar --prefix="$(RELEASE_PREFIX)/" \
+			--output="$$tar_tmp" HEAD; \
+		bzip2 -9 -c "$$tar_tmp" > "$$archive_tmp"; \
+		rm -f "$$tar_tmp"; \
+		mv "$$archive_tmp" "$(RELEASE_ARCHIVE)"; \
+		cd "$(DIST_DIR)"; \
+		sha256sum "$(notdir $(RELEASE_ARCHIVE))" > "$$checksum_tmp"; \
+		mv "$$checksum_tmp" "$(notdir $(RELEASE_CHECKSUM))"; \
+		artifact_sha256="$$(cut -d ' ' -f 1 \
+			"$(notdir $(RELEASE_CHECKSUM))")"; \
+		{ \
+			printf 'version=%s\n' "$(VERSION)"; \
+			printf 'source_commit=%s\n' "$$(git -C "$(CURDIR)" rev-parse HEAD)"; \
+			printf 'artifact_sha256=%s\n' "$$artifact_sha256"; \
+		} > "$$provenance_tmp"; \
+		mv "$$provenance_tmp" "$(notdir $(RELEASE_PROVENANCE))"; \
+		trap - EXIT HUP INT TERM
+	@echo "Prepared $(RELEASE_ARCHIVE)"
+	@echo "Checksum $(RELEASE_CHECKSUM)"
+	@echo "Provenance $(RELEASE_PROVENANCE)"
+
+release-artifact-check: release-source-check
+	@set -eu; \
+		test -f "$(RELEASE_ARCHIVE)" || { \
+			echo "Missing release artifact; run make release-artifact." >&2; \
+			exit 1; \
+		}; \
+		test -f "$(RELEASE_CHECKSUM)" || { \
+			echo "Missing release checksum; run make release-artifact." >&2; \
+			exit 1; \
+		}; \
+		test -f "$(RELEASE_PROVENANCE)" || { \
+			echo "Missing release provenance; run make release-artifact." >&2; \
+			exit 1; \
+		}; \
+		cd "$(DIST_DIR)"; \
+		sha256sum --check "$(notdir $(RELEASE_CHECKSUM))"; \
+		test "$$(sed -n 's/^version=//p' \
+			"$(notdir $(RELEASE_PROVENANCE))")" = "$(VERSION)" || { \
+			echo "Release artifact version does not match VERSION." >&2; \
+			exit 1; \
+		}; \
+		test "$$(sed -n 's/^source_commit=//p' \
+			"$(notdir $(RELEASE_PROVENANCE))")" = \
+			"$$(git -C "$(CURDIR)" rev-parse HEAD)" || { \
+			echo "Release artifact was not built from current HEAD." >&2; \
+			exit 1; \
+		}; \
+		test "$$(sed -n 's/^artifact_sha256=//p' \
+			"$(notdir $(RELEASE_PROVENANCE))")" = \
+			"$$(cut -d ' ' -f 1 "$(notdir $(RELEASE_CHECKSUM))")" || { \
+			echo "Release artifact provenance does not match its checksum." >&2; \
+			exit 1; \
+		}
+
+release: release-artifact
+	@echo "Artifact ready; run make release-tag only after inspecting it."
+
+release-tag: release-artifact-check
+	@utils/emacsvox-version-check --tag
+	git tag -s -a "$(VERSION)" -m "Emacsvox $(VERSION)"
+	@echo "Created local signed tag $(VERSION); it has not been pushed."
+
+release-publish: release-artifact-check
+	@utils/emacsvox-version-check --publish
+	@command -v gh >/dev/null 2>&1 || { \
+		echo "GitHub CLI 'gh' is required for publication." >&2; exit 1; }
+	git push "$(RELEASE_REMOTE)" "refs/tags/$(VERSION)"
+	gh release create "$(VERSION)" \
+		"$(RELEASE_ARCHIVE)" "$(RELEASE_CHECKSUM)" "$(RELEASE_PROVENANCE)" \
+		--verify-tag --title "Emacsvox $(VERSION)" --notes-file etc/NEWS
 
 ### Install: 
 
