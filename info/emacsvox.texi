@@ -47,8 +47,6 @@ This manual documents @strong{Emacsvox, The Complete Audio Desktop}.
 @include agent-shell.texi
 @include eat.texi
 @include eterm.texi
-@include keys.texi
-@include docs.texi
 @include keyboard.texi
 @include tts-server.texi
 @include announce.texi
@@ -61,20 +59,5 @@ This manual documents @strong{Emacsvox, The Complete Audio Desktop}.
 @node Concept Index
 @chapter Concept Index
 @printindex cp
-
-@node Key Index
-@chapter Key Index
-@printindex ky
-
-
-
-@node Function Index
-@unnumbered Function Index
-@printindex fn
-
-@node Variable Index
-@unnumbered Variable Index
-@printindex vr
-
 
 @bye

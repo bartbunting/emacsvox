@@ -20,8 +20,9 @@ generated module reference and each live mode's @kbd{C-h m} output for the
 authoritative current commands and bindings.
 
 For the current speech-enabled module inventory, use the generated
-@xref{Emacsvox Commands And Options}.  Emacsvox 60 requires Emacs 31 or newer,
-whose built-in package manager can install and update external packages.
+@ref{Emacsvox Commands And Options,,,emacsvox-reference,Emacsvox Reference
+Manual}.  Emacsvox 60 requires Emacs 31 or newer, whose built-in package
+manager can install and update external packages.
 The original Emacspeak application list at
 @url{http://emacspeak.sf.net/applications.html} is retained only as historical
 background.

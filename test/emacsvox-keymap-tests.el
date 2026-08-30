@@ -101,7 +101,9 @@
               (expand-file-name
                relative-name emacsvox-keymap-test--repository-directory))
              (buffer-string))))
-      (should (string-match-p "@ref{Emacsvox Keymaps}" guide))
+      (should
+       (string-match-p
+        "@ref{Emacsvox Keymaps,,,emacsvox-reference" guide))
       (should (string-match-p (regexp-quote "@kbd{C-h m}") guide))
       (should (string-match-p (regexp-quote "@kbd{C-h k}") guide)))))
 

@@ -3,7 +3,8 @@
 @chapter Basic Usage.
 
 This chapter gives a short, task-oriented introduction to Emacsvox.
-For the complete generated key reference, see @ref{Emacsvox Keymaps}.
+For the complete generated key reference, see
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
 Use @kbd{C-h m} to inspect the modes and bindings active in the current
 buffer, or @kbd{C-h k} followed by a key to ask Emacs what that key does.
 These sections describe the speech-enabling extensions, but are not a
@@ -57,7 +58,8 @@ language) within specific contexts. Emacsvox maintains pronunciation
 dictionaries for this purpose, which may be customized by the
 user. Moreover, individual dictionaries can be activated selectively,
 depending for example on the current major mode or the name of the
-file which is being visited @xref{emacsvox-pronounce}.
+file which is being visited; see
+@ref{emacsvox-pronounce,,,emacsvox-reference,Emacsvox Reference Manual}.
 
 In addition to spoken feedback, Emacsvox can generate ``auditory
 icons'' @MDash{} short sound cues which alert the user to significant
@@ -67,8 +69,8 @@ creation of a completion buffer. Sound cues act as a supplement to the
 spoken interface, and are especially valuable to the experienced user
 in facilitating rapid interaction. Note that in order to support
 auditory icons, the computer must be equipped with sound hardware for
-which the operating system has been correctly configured
-@xref{emacsvox-sounds}.
+which the operating system has been correctly configured; see
+@ref{emacsvox-sounds,,,emacsvox-reference,Emacsvox Reference Manual}.
 
 @node Working
 @section  Using Emacs Buffers
@@ -122,8 +124,8 @@ They use the default @kbd{C-e} prefix.
 
 This is deliberately a starter set, not a second complete key reference.
 If a binding below differs in your session, use @kbd{C-h k} on that key
-and check your customizations.  The complete generated defaults are in
-@ref{Emacsvox Keymaps}.
+and check your customizations.  The complete generated defaults are in the
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
 
 @c basic-usage-live-keys-begin
 @table @kbd
@@ -207,7 +209,7 @@ with the command.
 
 Toggle voice lock globally with @kbd{M-x}
 @code{global-voice-lock-mode}.  Its current default binding is in
-@ref{Emacsvox Keymaps}.
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
 
 Voice-lock is turned on automatically in all buffers that support it
 when Emacsvox is started.
@@ -245,7 +247,8 @@ supplied in the Emacs/W3 distribution.
 
 
 These common commands answer frequent orientation questions.  Less common
-status commands are listed in @ref{Emacsvox Keymaps}.
+status commands are listed in the
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
 
 @c basic-usage-live-keys-begin
 @table @kbd

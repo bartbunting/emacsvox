@@ -35,6 +35,20 @@
           "Generated reference docs.texi is stale"
           (error-message-string condition)))))))
 
+(ert-deftest emacsvox-docs-check-normalizes-checked-info-output ()
+  "Checked Info output should not retain spaces or blank lines at EOF."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((file (expand-file-name "manual.info" directory)))
+      (with-temp-file file
+        (insert "first  \nsecond\t\n\n"))
+      (emacsvox-docs-check--normalize-info-file file)
+      (should
+       (equal
+        (with-temp-buffer
+          (insert-file-contents-literally file)
+          (buffer-string))
+        "first\nsecond\n")))))
+
 (ert-deftest emacsvox-docs-check-rejects-successful-process-warnings ()
   "A publication warning should fail even when makeinfo exits zero."
   (let ((condition
@@ -159,6 +173,97 @@
        (equal
         (emacsvox-docs-check--read-publish-manifest destination)
         '("index.html"))))))
+
+(ert-deftest emacsvox-docs-publish-copies-nested-manual-output ()
+  "Publishing should preserve the selected manual directory topology."
+  (emacsvox-docs-check-tests--with-directory (root)
+    (emacsvox-docs-check-tests--with-directory (destination)
+      (cl-letf
+          (((symbol-function 'emacsvox-docs-check--compile-html)
+            (lambda (_root staging _makeinfo)
+              (make-directory (expand-file-name "reference" staging) t)
+              (with-temp-file (expand-file-name "index.html" staging)
+                (insert "user\n"))
+              (with-temp-file
+                  (expand-file-name "reference/index.html" staging)
+                (insert "reference\n"))
+              '("index.html" "reference/index.html"))))
+        (let ((result (emacsvox-docs-publish destination root "makeinfo")))
+          (should (equal result '(:written 2 :removed 0)))))
+      (should (file-exists-p (expand-file-name "index.html" destination)))
+      (should
+       (file-exists-p
+        (expand-file-name "reference/index.html" destination)))
+      (should
+       (equal
+        (emacsvox-docs-check--read-publish-manifest destination)
+        '("index.html" "reference/index.html"))))))
+
+(ert-deftest emacsvox-docs-publish-rejects-manifest-traversal ()
+  "Nested manual paths must not permit a manifest to escape publication."
+  (emacsvox-docs-check-tests--with-directory (destination)
+    (with-temp-file
+        (expand-file-name ".emacsvox-generated-html" destination)
+      (insert "reference/../outside.html\n"))
+    (let ((condition
+           (should-error
+            (emacsvox-docs-check--read-publish-manifest destination))))
+      (should
+       (string-match-p
+        "Unsafe entry in documentation publication manifest"
+        (error-message-string condition))))))
+
+(ert-deftest emacsvox-docs-publish-rejects-symlinked-manual-directory ()
+  "Publishing must not enter a symbolic-link manual directory."
+  (emacsvox-docs-check-tests--with-directory (root)
+    (emacsvox-docs-check-tests--with-directory (destination)
+      (emacsvox-docs-check-tests--with-directory (outside)
+        (make-symbolic-link outside (expand-file-name "reference" destination))
+        (cl-letf
+            (((symbol-function 'emacsvox-docs-check--compile-html)
+              (lambda (_root staging _makeinfo)
+                (make-directory (expand-file-name "reference" staging) t)
+                (with-temp-file
+                    (expand-file-name "reference/index.html" staging)
+                  (insert "generated\n"))
+                '("reference/index.html"))))
+          (let ((condition
+                 (should-error
+                  (emacsvox-docs-publish destination root "makeinfo"))))
+            (should
+             (string-match-p
+              "Refusing symlinked documentation publication directory"
+              (error-message-string condition)))))))))
+
+(ert-deftest emacsvox-docs-compatibility-redirect-is-accessible-and-frozen ()
+  "A moved node should retain only its inventoried root compatibility path."
+  (emacsvox-docs-check-tests--with-directory (root)
+    (emacsvox-docs-check-tests--with-directory (output)
+      (make-directory (expand-file-name "etc" root))
+      (make-directory (expand-file-name "reference" output))
+      (with-temp-file (expand-file-name "etc/redirects.txt" root)
+        (insert "Emacsvox-Keymaps.html\n"))
+      (with-temp-file
+          (expand-file-name "reference/Emacsvox-Keymaps.html" output)
+        (insert "reference\n"))
+      (let ((emacsvox-docs-check--compatibility-redirects
+             '((:html-directory "reference"
+                :inventory "etc/redirects.txt"))))
+        (should
+         (equal
+          (emacsvox-docs-check--add-compatibility-redirects
+           root output '("reference/Emacsvox-Keymaps.html"))
+          '("Emacsvox-Keymaps.html"
+            "reference/Emacsvox-Keymaps.html"))))
+      (with-temp-buffer
+        (insert-file-contents
+         (expand-file-name "Emacsvox-Keymaps.html" output))
+        (should
+         (search-forward
+          "content=\"0; url=reference/Emacsvox-Keymaps.html\"" nil t))
+        (should
+         (search-forward
+          "href=\"reference/Emacsvox-Keymaps.html\"" nil t))))))
 
 (ert-deftest emacsvox-docs-publish-rejects-symlinked-managed-output ()
   "Publishing must not overwrite a managed path through a symbolic link."

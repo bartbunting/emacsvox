@@ -3,14 +3,14 @@
 @top Emacsvox
 
 @ifinfo 
-This manual currently combines Emacsvox operating guidance, generated
-reference, and selected historical Emacspeak material.  Begin with Getting
-Started, then continue to Speech Backends and Basic Usage.  Generated
-reference and heritage are grouped separately after the current-user route;
-heritage is preserved for background, not as current setup instructions.
-For rapidly evolving Omnivox and Aural Presentation details, also consult
-@file{Readme.org} and @file{etc/aural-presentation-reference.org} in the source
-tree.
+This user manual contains current Emacsvox operating guidance and selected
+historical Emacspeak material.  Begin with Getting Started, then continue to
+Speech Backends and Basic Usage.  Exact commands, options, and keymaps are in
+the separate Emacsvox Reference Manual.  Heritage is grouped after the
+current-user route and is preserved for background, not as current setup
+instructions.  For rapidly evolving Omnivox and Aural Presentation details,
+also consult @file{Readme.org} and
+@file{etc/aural-presentation-reference.org} in the source tree.
 
 The manual is divided into the following chapters:
 @end ifinfo
@@ -32,9 +32,10 @@ Current workflows:
 * EAT Terminal Access: EAT Terminal Access.
 * Running Terminal Based Applications: Running Terminal Based Applications.
 
-Exact reference:
-* Emacsvox Keymaps: Emacsvox Keymaps.
-* Emacsvox Commands And Options:  Emacsvox Commands And Options.
+Exact generated reference:
+* Commands, Options, And Keys: (emacsvox-reference).
+
+Additional current material:
 * Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
 * TTS Servers:  TTS Servers.
 
@@ -49,7 +50,4 @@ Heritage (not current operating guidance):
 
 Indices:
 * Concept Index: Concept Index.
-* Key Index: Key Index.
-* Function Index: Function Index.
-* Variable Index: Variable Index.
 @end  menu

@@ -7,30 +7,53 @@ SF_HOME= raman,emacspeak@web.sourceforge.net:/home/groups/e/em/emacspeak/htdocs/
 # root `docs-publish` target; this path is intentionally not defaulted.
 GH_PAGES ?=
 FILES=*.texi
-INCLUDES= style.texi preamble.texi copyright.texi announce.texi emacspeak-significance.texi \
-introduction.texi install.texi backends.texi using.texi audio-desktop.texi voices.texi online-help.texi \
-packages.texi notmuch.texi agent-shell.texi eat.texi eterm.texi docs.texi keys.texi keyboard.texi tts-server.texi \
-inc-turning-twenty.texi acknowledge.texi intro-docs.texi documents.texi structure.texi \
-web-browsing.texi tts.texi
+USER_INCLUDES= style.texi preamble.texi copyright.texi announce.texi \
+emacspeak-significance.texi introduction.texi install.texi backends.texi \
+using.texi audio-desktop.texi voices.texi online-help.texi packages.texi \
+notmuch.texi agent-shell.texi eat.texi eterm.texi keyboard.texi \
+tts-server.texi inc-turning-twenty.texi acknowledge.texi documents.texi \
+structure.texi web-browsing.texi tts.texi
+REFERENCE_INCLUDES= style.texi docs.texi keys.texi intro-docs.texi
+INCLUDES= $(USER_INCLUDES) $(REFERENCE_INCLUDES)
 
 MAKEINFO ?= makeinfo
-STRIP_TRAILING_WHITESPACE = perl -pi -e 's/[ \t]+$$//'
+NORMALIZE_INFO = perl -0777 -pi -e 's/[ \t]+$$//mg; s/\n+\z/\n/'
 
-all: info  introducing-emacspeak.info turning-twenty.info #emacsvox.pdf
+all: info introducing-emacspeak.info turning-twenty.info #emacsvox.pdf
 
-info: emacsvox.info
+info: emacsvox.info emacsvox-reference.info
 
-emacsvox.info: emacsvox.texi $(INCLUDES)
-	$(MAKEINFO) emacsvox.texi
-	$(STRIP_TRAILING_WHITESPACE) emacsvox.info*
+emacsvox.info: emacsvox.texi $(USER_INCLUDES)
+	@set -eu; \
+		info_staging=$$(mktemp -d ./.emacsvox-info.XXXXXX); \
+		trap 'rm -rf "$$info_staging"' 0 1 2 3 15; \
+		$(MAKEINFO) --output="$$info_staging/emacsvox.info" emacsvox.texi; \
+		$(NORMALIZE_INFO) "$$info_staging"/emacsvox.info*; \
+		rm -f emacsvox.info emacsvox.info-[0-9]*; \
+		for info_file in "$$info_staging"/emacsvox.info*; do \
+			cp "$$info_file" .; \
+		done
+
+emacsvox-reference.info: emacsvox-reference.texi $(REFERENCE_INCLUDES)
+	@set -eu; \
+		info_staging=$$(mktemp -d ./.emacsvox-reference-info.XXXXXX); \
+		trap 'rm -rf "$$info_staging"' 0 1 2 3 15; \
+		$(MAKEINFO) --output="$$info_staging/emacsvox-reference.info" \
+			emacsvox-reference.texi; \
+		$(NORMALIZE_INFO) \
+			"$$info_staging"/emacsvox-reference.info*; \
+		rm -f emacsvox-reference.info emacsvox-reference.info-[0-9]*; \
+		for info_file in "$$info_staging"/emacsvox-reference.info*; do \
+			cp "$$info_file" .; \
+		done
 
 introducing-emacspeak.info: introducing-emacspeak.texi
 	$(MAKEINFO) introducing-emacspeak.texi	
-	$(STRIP_TRAILING_WHITESPACE) introducing-emacspeak.info
+	$(NORMALIZE_INFO) introducing-emacspeak.info
 
 turning-twenty.info: turning-twenty.texi
 	$(MAKEINFO) turning-twenty.texi
-	$(STRIP_TRAILING_WHITESPACE) turning-twenty.info
+	$(NORMALIZE_INFO) turning-twenty.info
 pdf:
 	@if test -z "$(GH_PAGES)"; then \
 		echo "Set GH_PAGES to an existing publication directory." >&2; \
@@ -38,7 +61,7 @@ pdf:
 	fi
 	$(MAKE) emacsvox.pdf
 	cp emacsvox.pdf $(GH_PAGES)/
-emacsvox.pdf: emacsvox.texi $(INCLUDES)
+emacsvox.pdf: emacsvox.texi $(USER_INCLUDES)
 	$(MAKEINFO) --pdf emacsvox.texi
 	\rm emacsvox.aux emacsvox.cp emacsvox.cps emacsvox.fn \
 emacsvox.fns emacsvox.ky emacsvox.kys emacsvox.log \
@@ -63,7 +86,7 @@ pub:  html/index.html introducing-emacspeak.html
 
 
 clean:
-	\rm emacsvox.info* emacsvox.pdf || echo "all clean"
+	\rm emacsvox.info* emacsvox-reference.info* emacsvox.pdf || echo "all clean"
 
 spell:
 	codespell -I .codespell *.texi

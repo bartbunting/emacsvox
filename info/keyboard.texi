@@ -5,7 +5,8 @@
 
 This chapter explains how to discover the bindings that are current in
 your Emacs session.  For the small starter set, see @ref{Basic Usage}.
-For the complete generated default bindings, see @ref{Emacsvox Keymaps}.
+For the complete generated default bindings, see
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
 
 Most Emacsvox commands use one of these two default prefixes:
 @table @kbd
@@ -34,4 +35,4 @@ prefix's current bindings.
 
 If live Help and this manual differ, live Help describes your running
 session.  Check customizations first, then compare the generated defaults
-in @ref{Emacsvox Keymaps}.
+in the @ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.

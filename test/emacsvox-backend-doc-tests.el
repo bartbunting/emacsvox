@@ -117,11 +117,16 @@
          (backends
           (string-search "* Speech Backends: Speech Backends." menu))
          (basic (string-search "* Basic Usage: Basic Usage." menu))
-         (reference (string-search "Exact reference:" menu))
+         (reference (string-search "Exact generated reference:" menu))
          (heritage
           (string-search "Heritage (not current operating guidance):" menu)))
     (dolist (position (list installation backends basic reference heritage))
       (should position))
+    (should
+     (string-match-p
+      (regexp-quote
+       "* Commands, Options, And Keys: (emacsvox-reference).")
+      menu))
     (should (< installation backends basic reference heritage))))
 
 (ert-deftest emacsvox-first-use-manual-owns-success-and-recovery ()

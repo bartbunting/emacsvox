@@ -43,10 +43,10 @@
 ;; visibility while leaving database and mail operations to Notmuch.
 ;;
 ;; Customize `emacsvox-notmuch' for fields, status cues, automatic content
-;; limits, and search-completion policy.  See the @ref{Notmuch Mail} chapter in
-;; the Emacsvox manual for setup, keys, privacy, inspection, support boundaries,
-;; and troubleshooting; the generated emacsvox-notmuch section is the
-;; exhaustive command and option reference.
+;; limits, and search-completion policy.  See the
+;; @ref{Notmuch Mail,,,emacsvox,Emacsvox User Manual} chapter for setup, keys,
+;; privacy, inspection, support boundaries, and troubleshooting; the generated
+;; emacsvox-notmuch section is the exhaustive command and option reference.
 ;; Tree buffers receive semantic module context only.  Message composition is
 ;; speech-enabled separately by `emacsvox-message'.
 ;; See https://notmuchmail.org/doc/latest/notmuch-emacs.html for Notmuch itself.

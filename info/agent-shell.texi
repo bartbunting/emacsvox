@@ -9,9 +9,10 @@ Agent Shell's provider setup, session management, prompt editor, or permission
 controls.  See @uref{https://github.com/xenodium/agent-shell,Agent Shell} for
 provider installation and configuration.
 
-The generated @ref{emacsvox-agent-shell} section is the exhaustive Emacsvox
-command and option reference.  This chapter follows the tasks a user performs
-in a session.
+The generated
+@ref{emacsvox-agent-shell,,,emacsvox-reference,Emacsvox Reference Manual}
+section is the exhaustive Emacsvox command and option reference.  This chapter
+follows the tasks a user performs in a session.
 
 @section Start and control a session
 

@@ -15,9 +15,10 @@ and Emacs components and complete their setup first.  The
 @uref{https://notmuchmail.org/doc/latest/notmuch-emacs.html,official Notmuch
 Emacs manual} covers that setup and the complete upstream command set.
 
-The generated @ref{emacsvox-notmuch} section is the exhaustive Emacsvox
-command and option reference.  This chapter follows the tasks a user performs
-and explains when automatic feedback occurs.
+The generated
+@ref{emacsvox-notmuch,,,emacsvox-reference,Emacsvox Reference Manual} section
+is the exhaustive Emacsvox command and option reference.  This chapter follows
+the tasks a user performs and explains when automatic feedback occurs.
 
 @section Start Notmuch
 

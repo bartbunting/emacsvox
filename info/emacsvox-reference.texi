@@ -1,0 +1,71 @@
+\input texinfo
+@finalout
+@setfilename ./emacsvox-reference.info
+@include style.texi
+@settitle Emacsvox Generated Reference Manual
+@dircategory Accessibility
+@direntry
+* Emacsvox Reference:(emacsvox-reference). Generated commands, options, and keys.
+@end direntry
+@dircategory Emacs
+@direntry
+* Emacsvox Reference:(emacsvox-reference). Generated commands, options, and keys.
+@end direntry
+
+@titlepage
+
+@title Emacsvox Generated Reference Manual
+@subtitle Commands, Options, And Keys
+@author Emacsvox Contributors
+
+@page
+@vskip 0pt plus 1filll
+Generated from the Emacsvox source and live keymaps.
+
+@end titlepage
+
+@node Top
+@top Emacsvox Generated Reference
+
+This manual is the exact, machine-generated reference for Emacsvox commands,
+options, and default keymaps.  It is exhaustive reference material rather than
+a first-use guide.  Start with the
+@ref{Top,Emacsvox User Manual,,emacsvox,Emacsvox User Manual} for installation,
+first speech, basic use, supported workflows, customization, and
+troubleshooting.
+
+Do not edit the included chapters directly.  Regenerate them from current
+Emacsvox byte-code with @command{make docs-generate}.  Copying terms are in
+@ref{Copyright,Copyright,,emacsvox,Emacsvox User Manual}.
+
+@menu
+* Emacsvox Keymaps: Emacsvox Keymaps.
+* Emacsvox Commands And Options: Emacsvox Commands And Options.
+
+Indices:
+* Reference Concept Index: Reference Concept Index.
+* Key Index: Key Index.
+* Function Index: Function Index.
+* Variable Index: Variable Index.
+@end menu
+
+@include keys.texi
+@include docs.texi
+
+@node Reference Concept Index
+@chapter Reference Concept Index
+@printindex cp
+
+@node Key Index
+@chapter Key Index
+@printindex ky
+
+@node Function Index
+@unnumbered Function Index
+@printindex fn
+
+@node Variable Index
+@unnumbered Variable Index
+@printindex vr
+
+@bye

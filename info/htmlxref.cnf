@@ -3,3 +3,7 @@
 emacs	mono	https://www.gnu.org/software/emacs/manual/html_mono/emacs.html
 emacs	node	https://www.gnu.org/software/emacs/manual/html_node/emacs/
 eat	mono	https://elpa.nongnu.org/nongnu/doc/eat.html
+emacsvox	mono	../index.html
+emacsvox	node	../
+emacsvox-reference	mono	reference/index.html
+emacsvox-reference	node	reference/

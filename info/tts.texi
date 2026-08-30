@@ -6,7 +6,8 @@
 
 This section documents the main Emacsvox commands for controlling the
 text-to-speech (@acronym{TTS}) system.  The exact key bindings generated from
-the current keymaps appear in @xref{Emacsvox Keymaps}.
+the current keymaps appear in the
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
 
 @menu
 * Controlling Echo::             Character, Word and Line Echo.

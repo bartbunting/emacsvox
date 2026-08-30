@@ -27,6 +27,19 @@
   '("docs.texi" "keys.texi")
   "Generated reference files checked against isolated regeneration.")
 
+(defconst emacsvox-docs-check--manuals
+  '((:name "emacsvox"
+     :source "emacsvox.texi")
+    (:name "emacsvox-reference"
+     :source "emacsvox-reference.texi"
+     :html-directory "reference"))
+  "Manuals compiled and published by the documentation workflow.")
+
+(defconst emacsvox-docs-check--compatibility-redirects
+  '((:html-directory "reference"
+     :inventory "etc/docs-reference-redirects.txt"))
+  "Frozen inventories of legacy root HTML paths for moved manual nodes.")
+
 (defconst emacsvox-docs-check--public-org-files
   '("Readme.org")
   "Current public Org entry points whose local links must resolve.")
@@ -131,18 +144,26 @@ ACCEPTED-DIAGNOSTICS may name one exact successful output pattern."
     (error "%s is stale: %s (run make docs-generate)"
            description expected)))
 
-(defun emacsvox-docs-check--strip-trailing-whitespace (file)
-  "Remove trailing horizontal whitespace from temporary FILE."
+(defun emacsvox-docs-check--normalize-info-file (file)
+  "Remove trailing whitespace and excess final newlines from temporary FILE."
   (with-temp-buffer
     (set-buffer-multibyte nil)
     (insert-file-contents-literally file)
-    (goto-char (point-min))
-    (when (re-search-forward "[ \t]+$" nil t)
+    (let ((changed nil))
       (goto-char (point-min))
       (while (re-search-forward "[ \t]+$" nil t)
-        (replace-match "" nil nil))
-      (let ((coding-system-for-write 'no-conversion))
-        (write-region (point-min) (point-max) file nil 'silent)))))
+        (replace-match "" nil nil)
+        (setq changed t))
+      (goto-char (point-max))
+      (let ((end (point)))
+        (skip-chars-backward "\n")
+        (unless (= (- end (point)) 1)
+          (delete-region (point) end)
+          (insert "\n")
+          (setq changed t)))
+      (when changed
+        (let ((coding-system-for-write 'no-conversion))
+          (write-region (point-min) (point-max) file nil 'silent))))))
 
 (defun emacsvox-docs-check--assert-portable-reference (file root temporary-root)
   "Reject machine-local paths in generated FILE.
@@ -196,60 +217,165 @@ ROOT and TEMPORARY-ROOT identify the current checkout and staging directory."
         (emacsvox-docs-check--assert-portable-reference
          actual root temporary-directory)))))
 
-(defun emacsvox-docs-check--manual-info-files (directory)
-  "Return sorted current-manual Info basenames below DIRECTORY."
-  (sort
-   (directory-files
-    directory nil "\\`emacsvox\\.info\\(?:-[0-9]+\\)?\\'")
-   #'string-lessp))
+(defun emacsvox-docs-check--manual-info-files (directory manual)
+  "Return sorted Info basenames for MANUAL below DIRECTORY."
+  (let ((name (plist-get manual :name)))
+    (sort
+     (directory-files
+      directory nil
+      (format "\\`%s\\.info\\(?:-[0-9]+\\)?\\'" (regexp-quote name)))
+     #'string-lessp)))
 
-(defun emacsvox-docs-check--check-info
-    (root temporary-directory makeinfo install-info)
-  "Compile and validate current Info documentation for ROOT."
-  (let* ((source-directory (expand-file-name "info" root))
-         (output-directory
-          (file-name-as-directory
-           (expand-file-name "info" temporary-directory)))
-         (output (expand-file-name "emacsvox.info" output-directory)))
-    (make-directory output-directory)
+(defun emacsvox-docs-check--check-info-manual
+    (source-directory output-directory makeinfo install-info manual)
+  "Compile and validate one Info MANUAL from SOURCE-DIRECTORY.
+Write temporary output below OUTPUT-DIRECTORY using MAKEINFO and validate its
+directory entry with INSTALL-INFO."
+  (let* ((name (plist-get manual :name))
+         (source (plist-get manual :source))
+         (output (expand-file-name (concat name ".info") output-directory))
+         (file-regexp
+          (format "\\`%s\\.info\\(?:-[0-9]+\\)?\\'" (regexp-quote name))))
     (emacsvox-docs-check--run-process
-     "Info compilation" makeinfo source-directory nil
-     "--error-limit=0" (concat "--output=" output) "emacsvox.texi")
-    (dolist (file (directory-files output-directory t "\\`emacsvox\\.info"))
-      (emacsvox-docs-check--strip-trailing-whitespace file))
+     (format "%s Info compilation" name) makeinfo source-directory nil
+     "--error-limit=0" (concat "--output=" output) source)
+    (dolist (file (directory-files output-directory t file-regexp))
+      (emacsvox-docs-check--normalize-info-file file))
     (let ((expected-files
-           (emacsvox-docs-check--manual-info-files source-directory))
+           (emacsvox-docs-check--manual-info-files source-directory manual))
           (actual-files
-           (emacsvox-docs-check--manual-info-files output-directory)))
+           (emacsvox-docs-check--manual-info-files output-directory manual)))
       (unless (equal expected-files actual-files)
-        (error "Checked Info file set is stale: expected %S, generated %S"
-               expected-files actual-files))
-      (dolist (name expected-files)
+        (error "%s checked Info file set is stale: expected %S, generated %S"
+               name expected-files actual-files))
+      (dolist (file expected-files)
         (emacsvox-docs-check--compare-file
-         (expand-file-name name source-directory)
-         (expand-file-name name output-directory)
-         (format "Checked Info output %s" name))))
+         (expand-file-name file source-directory)
+         (expand-file-name file output-directory)
+         (format "Checked Info output %s" file))))
     (emacsvox-docs-check--run-process
-     "Info directory validation" install-info source-directory
+     (format "%s Info directory validation" name)
+     install-info source-directory
      "\\`test mode, not updating dir file .+\\'"
      "--test" output (expand-file-name "dir" source-directory))))
 
-(defun emacsvox-docs-check--compile-html
-    (root output-directory makeinfo)
-  "Compile warning-free split HTML for ROOT below OUTPUT-DIRECTORY."
-  (let ((source-directory (expand-file-name "info" root))
-        (htmlxref (expand-file-name "info/htmlxref.cnf" root)))
+(defun emacsvox-docs-check--check-info
+    (root temporary-directory makeinfo install-info)
+  "Compile and validate every checked Info manual for ROOT."
+  (let* ((source-directory (expand-file-name "info" root))
+         (output-directory
+          (file-name-as-directory
+           (expand-file-name "info" temporary-directory))))
+    (make-directory output-directory)
+    (dolist (manual emacsvox-docs-check--manuals)
+      (emacsvox-docs-check--check-info-manual
+       source-directory output-directory makeinfo install-info manual))))
+
+(defun emacsvox-docs-check--compile-html-manual
+    (source-directory output-root makeinfo htmlxref manual)
+  "Compile one HTML MANUAL below OUTPUT-ROOT from SOURCE-DIRECTORY."
+  (let* ((name (plist-get manual :name))
+         (source (plist-get manual :source))
+         (relative-directory (plist-get manual :html-directory))
+         (output-directory
+          (if relative-directory
+              (expand-file-name relative-directory output-root)
+            output-root)))
+    (when (file-exists-p output-directory)
+      (error "%s HTML output already exists: %s" name output-directory))
+    (when relative-directory
+      (make-directory output-root t))
     (emacsvox-docs-check--run-process
-     "HTML compilation" makeinfo source-directory nil
+     (format "%s HTML compilation" name) makeinfo source-directory nil
      "--error-limit=0" "--html"
      "-c" "HTMLXREF_MODE=file"
      "-c" (concat "HTMLXREF_FILE=" htmlxref)
      "--css-ref=https://www.w3.org/StyleSheets/Core/Modernist"
-     (concat "--output=" output-directory) "emacsvox.texi")
-    (let ((files (directory-files output-directory nil "\\.html\\'")))
-      (unless (and files (member "index.html" files))
-        (error "HTML compilation did not produce index.html"))
-      files)))
+     (concat "--output=" output-directory) source)
+    (mapcar
+     (lambda (file) (file-relative-name file output-root))
+     (directory-files-recursively output-directory "\\.html\\'"))))
+
+(defun emacsvox-docs-check--html-escape (string)
+  "Return STRING escaped for HTML text and attribute contexts."
+  (let ((escaped (replace-regexp-in-string "&" "&amp;" string t t)))
+    (setq escaped (replace-regexp-in-string "<" "&lt;" escaped t t))
+    (setq escaped (replace-regexp-in-string ">" "&gt;" escaped t t))
+    (replace-regexp-in-string "\"" "&quot;" escaped t t)))
+
+(defun emacsvox-docs-check--redirect-inventory (root relative-file)
+  "Read a frozen redirect inventory RELATIVE-FILE below ROOT."
+  (let ((file (expand-file-name relative-file root)))
+    (unless (file-regular-p file)
+      (error "Compatibility redirect inventory is missing: %s" relative-file))
+    (with-temp-buffer
+      (insert-file-contents file)
+      (let (names)
+        (dolist (line (split-string (buffer-string) "\n" t "[ \t]+"))
+          (unless (or (string-prefix-p "#" line)
+                      (and (string= line (file-name-nondirectory line))
+                           (string-match-p "\\.html\\'" line)))
+            (error "Unsafe compatibility redirect entry in %s: %s"
+                   relative-file line))
+          (unless (string-prefix-p "#" line)
+            (push line names)))
+        (sort (delete-dups names) #'string-lessp)))))
+
+(defun emacsvox-docs-check--write-html-redirect (file target)
+  "Write an accessible static redirect FILE pointing to relative TARGET."
+  (let ((escaped-target (emacsvox-docs-check--html-escape target)))
+    (with-temp-file file
+      (insert
+       "<!doctype html>\n<html lang=\"en\">\n<head>\n"
+       "<meta charset=\"utf-8\">\n"
+       (format "<meta http-equiv=\"refresh\" content=\"0; url=%s\">\n"
+               escaped-target)
+       (format "<link rel=\"canonical\" href=\"%s\">\n" escaped-target)
+       "<title>Emacsvox documentation moved</title>\n</head>\n<body>\n"
+       "<p>This Emacsvox reference page moved to "
+       (format "<a href=\"%s\">its maintained location</a>.</p>\n"
+               escaped-target)
+       "</body>\n</html>\n"))))
+
+(defun emacsvox-docs-check--add-compatibility-redirects
+    (root output-root generated)
+  "Add inventoried legacy root redirects to GENERATED below OUTPUT-ROOT."
+  (let ((generated (copy-sequence generated)))
+    (dolist (specification emacsvox-docs-check--compatibility-redirects)
+      (let ((directory (plist-get specification :html-directory))
+            (inventory (plist-get specification :inventory)))
+        (dolist (name (emacsvox-docs-check--redirect-inventory root inventory))
+          (let ((target (concat directory "/" name))
+                (alias (expand-file-name name output-root)))
+            (unless (member target generated)
+              (error "Compatibility redirect target was not generated: %s"
+                     target))
+            (when (member name generated)
+              (error "Compatibility redirect collides with current HTML: %s"
+                     name))
+            (emacsvox-docs-check--write-html-redirect alias target)
+            (push name generated)))))
+    (sort (delete-dups generated) #'string-lessp)))
+
+(defun emacsvox-docs-check--compile-html
+    (root output-directory makeinfo)
+  "Compile warning-free split HTML manuals for ROOT below OUTPUT-DIRECTORY."
+  (let ((source-directory (expand-file-name "info" root))
+        (htmlxref (expand-file-name "info/htmlxref.cnf" root))
+        files)
+    (dolist (manual emacsvox-docs-check--manuals)
+      (setq files
+            (append
+             files
+             (emacsvox-docs-check--compile-html-manual
+              source-directory output-directory makeinfo htmlxref manual))))
+    (setq files
+          (emacsvox-docs-check--add-compatibility-redirects
+           root output-directory files))
+    (unless (and (member "index.html" files)
+                 (member "reference/index.html" files))
+      (error "HTML compilation did not produce both manual entry points"))
+    files))
 
 (defun emacsvox-docs-check--check-html
     (root temporary-directory makeinfo)
@@ -356,8 +482,39 @@ ROOT defaults to `emacsvox-docs-check--root'."
              destination))
     destination))
 
+(defun emacsvox-docs-check--managed-html-name-p (name)
+  "Return non-nil when NAME is a safe relative managed HTML path."
+  (and (stringp name)
+       (not (string-empty-p name))
+       (not (file-name-absolute-p name))
+       (not (string-match-p "\\\\" name))
+       (string-match-p "\\.html\\'" name)
+       (cl-every
+        (lambda (component)
+          (not (member component '("" "." ".."))))
+        (split-string name "/" nil))))
+
+(defun emacsvox-docs-check--managed-target (destination name description)
+  "Return a safe target below DESTINATION for managed NAME.
+DESCRIPTION identifies the operation when a symbolic-link or path conflict is
+reported."
+  (unless (emacsvox-docs-check--managed-html-name-p name)
+    (error "Unsafe managed documentation path: %s" name))
+  (let ((directory (file-name-as-directory destination))
+        (components (split-string name "/" nil)))
+    (dolist (component (butlast components))
+      (setq directory (expand-file-name component directory))
+      (when (file-symlink-p directory)
+        (error "Refusing symlinked %s directory: %s" description directory))
+      (when (and (file-exists-p directory) (not (file-directory-p directory)))
+        (error "Refusing non-directory %s path: %s" description directory)))
+    (let ((target (expand-file-name name destination)))
+      (when (file-symlink-p target)
+        (error "Refusing symlinked %s file: %s" description target))
+      target)))
+
 (defun emacsvox-docs-check--read-publish-manifest (destination)
-  "Return managed HTML basenames recorded below DESTINATION."
+  "Return managed relative HTML paths recorded below DESTINATION."
   (let ((manifest
          (expand-file-name emacsvox-docs-check--publish-manifest destination)))
     (when (file-symlink-p manifest)
@@ -368,8 +525,7 @@ ROOT defaults to `emacsvox-docs-check--root'."
         (insert-file-contents manifest)
         (let ((names (split-string (buffer-string) "\n" t "[ \t]+")))
           (dolist (name names)
-            (unless (and (string= name (file-name-nondirectory name))
-                         (string-match-p "\\.html\\'" name))
+            (unless (emacsvox-docs-check--managed-html-name-p name)
               (error "Unsafe entry in documentation publication manifest: %s"
                      name)))
           (sort (delete-dups names) #'string-lessp))))))
@@ -381,6 +537,9 @@ ROOT defaults to `emacsvox-docs-check--root'."
     (when (file-symlink-p manifest)
       (error "Refusing symlinked documentation publication manifest: %s"
              manifest))
+    (dolist (name names)
+      (unless (emacsvox-docs-check--managed-html-name-p name)
+        (error "Unsafe generated documentation path: %s" name)))
     (with-temp-file manifest
       (dolist (name (sort (copy-sequence names) #'string-lessp))
         (insert name "\n")))))
@@ -459,17 +618,17 @@ ROOT defaults to `emacsvox-docs-check--root'."
                (stale
                 (cl-set-difference previous generated :test #'string=)))
           (dolist (name generated)
-            (let ((target (expand-file-name name destination)))
-              (when (file-symlink-p target)
-                (error "Refusing symlinked documentation publication file: %s"
-                       target))
+            (let ((target
+                   (emacsvox-docs-check--managed-target
+                    destination name "documentation publication")))
+              (make-directory (file-name-directory target) t)
               (copy-file (expand-file-name name staging) target t)))
           (dolist (name stale)
-            (let ((target (expand-file-name name destination)))
-              (when (file-symlink-p target)
-                (error "Refusing symlinked stale documentation file: %s"
-                       target))
-              (delete-file target)))
+            (let ((target
+                   (emacsvox-docs-check--managed-target
+                    destination name "stale documentation")))
+              (when (file-exists-p target)
+                (delete-file target))))
           (emacsvox-docs-check--write-publish-manifest
            destination generated)
           (list :written (length generated) :removed (length stale)))

@@ -131,8 +131,9 @@ When that list is edited, @code{voice-bolden} is arranged to be
 updated automatically.
 @end enumerate
 
-The following additional commands from module @xref{emacsvox-wizards},
-are  useful when designing aural styles.
+The following additional commands from the
+@ref{emacsvox-wizards,,,emacsvox-reference,Emacsvox Reference Manual} module
+are useful when designing aural styles.
 @enumerate
 
 @item

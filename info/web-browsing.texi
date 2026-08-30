@@ -1,6 +1,7 @@
 @strong{Historical application survey.}  EWW is the supported built-in Web
-browser for current Emacsvox.  See @xref{EWW,,,emacs} for browser operation
-and @xref{emacsvox-eww} for the generated Emacsvox command reference.
+browser for current Emacsvox.  See @xref{EWW,,,emacs} for browser operation,
+and see @ref{emacsvox-eww,,,emacsvox-reference,Emacsvox Reference Manual} for
+the generated Emacsvox command reference.
 Emacs/W3 and the unmaintained w3m integration below are retained only to
 preserve the original 2007 survey and must not be treated as current setup
 guidance.
@@ -431,7 +432,8 @@ pages.  Media streams can also be made into url-templates.
 The way to get to the templates is with the command @kbd{C-e u}.  A @key{TAB} at
 the prompt will give you a list of the available templates.  You
 should go now and have a look at the info manual section on
-@xref{URL Templates,,URL Templates},  and read it.  I'll wait here.
+@ref{URL Templates,URL Templates,,emacsvox-reference,Emacsvox Reference
+Manual}, and read it.  I'll wait here.
 
 By the way, the ones I find most useful are the ``Google Hits'',
 ``emacswiki search'' ``NPR On Demand'' and ``Weather forecast from Weather
@@ -465,12 +467,13 @@ Module @code{emacsvox-websearch} is complemented by module
 module provides URL templates that prompt for and retrieve  the relevant
 information from complex Web pages.
 
-@xref{emacsvox-websearch,emacsvox-websearch},
-and @xref{emacsvox-url-template, emacsvox-url-template},
-for more information.
+See @ref{emacsvox-websearch,emacsvox-websearch,,emacsvox-reference,Emacsvox
+Reference Manual} and
+@ref{emacsvox-url-template,emacsvox-url-template,,emacsvox-reference,Emacsvox
+Reference Manual} for more information.
 
 @anchor{bmk-mgr}
-@heading  bmk-mgr
+@heading  bmk-mgr package
 
 This is a newcomer to the emacsvox world.  In the interest of full
 disclosure, I am the one that wrote the emacsvox module that makes

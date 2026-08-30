@@ -395,7 +395,9 @@ Return the beginning of the inserted row."
         (readme
          (emacsvox-notmuch-test--repository-file-string "Readme.org")))
     (should (string-match-p "@node Notmuch Mail" guide))
-    (should (string-match-p "@ref{emacsvox-notmuch}" guide))
+    (should
+     (string-match-p
+      "@ref{emacsvox-notmuch,,,emacsvox-reference" guide))
     (should (string-match-p "@include notmuch.texi" master))
     (should (string-match-p "\\* Notmuch Mail: Notmuch Mail\\." menu))
     (should (string-match-p "@ref{Notmuch Mail}" packages))
@@ -403,7 +405,8 @@ Return the beginning of the inserted row."
      (string-match-p
       "file:info/notmuch\\.texi.*Notmuch Mail workflow chapter" readme))
     (should (string-match-p "@node emacsvox-notmuch" generated))
-    (should (string-match-p "@ref{Notmuch Mail}" generated))
+    (should
+     (string-match-p "@ref{Notmuch Mail,,,emacsvox" generated))
     (dolist
         (command
          '(emacsvox-notmuch-speak-search-result
