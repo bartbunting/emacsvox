@@ -39,12 +39,14 @@ Copying terms are in
 
 @menu
 * Historical Application Survey: Emacs Packages.
+* Historical Term Survey: Running Terminal Based Applications.
 * Background::                 Emacspeak's significance and design lessons.
 * Emacspeak At Twenty::       A twenty-year retrospective.
 * Heritage Concept Index::
 @end menu
 
 @include packages.texi
+@include eterm.texi
 @include emacspeak-significance.texi
 @include inc-turning-twenty.texi
 

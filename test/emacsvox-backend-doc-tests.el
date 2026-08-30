@@ -204,6 +204,8 @@
            "@ref{emacsvox-tempo,,,emacsvox-reference"
            "@ref{emacsvox-forms,,,emacsvox-reference"
            "@ref{Notmuch Mail}"
+           "@ref{EAT Terminal Access}"
+           "@ref{Running Terminal Based Applications}"
            "experimental legacy front end"
            "not a validated deployment guide"))
       (should (string-match-p (regexp-quote required) guide)))

@@ -26,12 +26,13 @@ For the maintained user path, start with the *note Emacsvox User Manual:
 * Menu:
 
 * Historical Application Survey: Emacs Packages.
+* Historical Term Survey: Running Terminal Based Applications.
 * Background::                 Emacspeak's significance and design lessons.
 * Emacspeak At Twenty::       A twenty-year retrospective.
 * Heritage Concept Index::
 
 
-File: emacsvox-heritage.info,  Node: Emacs Packages,  Next: Background,  Prev: Top,  Up: Top
+File: emacsvox-heritage.info,  Node: Emacs Packages,  Next: Running Terminal Based Applications,  Prev: Top,  Up: Top
 
 1 Historical Emacs Application Survey
 *************************************
@@ -1167,9 +1168,226 @@ key-bindings and a brief description:
      “describe-mode” Describe OCR mode.
 
 
-File: emacsvox-heritage.info,  Node: Background,  Next: Emacspeak At Twenty,  Prev: Emacs Packages,  Up: Top
+File: emacsvox-heritage.info,  Node: Running Terminal Based Applications,  Next: Background,  Prev: Emacs Packages,  Up: Top
 
-2 Background
+2 Historical Term And Eterm Survey
+**********************************
+
+     Historical status: This chapter is preserved from the inherited
+     Emacspeak Term survey.  Its copied command inventory, Help
+     behavior, application examples, and ‘eterm-autospeak’ spelling
+     describe an older environment and are not current Emacsvox
+     instructions.  For the maintained Emacs 31 workflow, see *note Term
+     Terminal Access: (emacsvox)Running Terminal Based Applications.
+
+   You can use the terminal emulator mode to run arbitrary
+terminal-based programs from within Emacs.  You open a terminal emulator
+buffer using ‘M-x term’, with an extra carriage return to accept the
+default shell (such as ‘bash’).  (Incidentally, don't confuse this
+command with ‘M-x terminal-emulator’, which starts an older terminal
+emulator mode not supported by Emacsvox.)
+
+   Three kinds of commands are used within the terminal emulator.
+Normal term commands use a prefix of ‘C-c’.  The emacsvox commands for
+eterm mode use a prefix of ‘C-t’.  Anything else is a normal shell
+command.
+
+   There are two sub-modes of term mode: char sub-mode and line
+sub-mode.  In char sub-mode, emacsvox will only speak the final chunk of
+output -- typically the last line displayed.  Each character typed
+(except 'term-escape-char') is sent immediately.  Use char sub-mode for
+screen oriented programs like ‘vi’ or ‘pine’.
+
+   In line sub-mode, program output is spoken if user option
+‘eterm-autospeak’ is turned on.  When you type a return at the end of
+the buffer, that line is sent as input, while return not at end copies
+the rest of the line to the end and sends it.  When using terminal line
+mode with option ‘eterm-autospeak’ turned on, speech feedback is similar
+to that obtained in regular ‘shell-mode’ buffers.
+
+   The default is char sub-mode.  You can switch to line sub-mode with
+‘C-c C-j’ (recall that control J is a linefeed), and back to char
+sub-mode with ‘C-c C-k’ (think of character spelled with a K).
+
+   Note: Use char-mode with the terminal emulator for running
+screen-oriented programs like Lynx or Pine.  For regular shell
+interaction just use ‘M-x shell’ instead of using the terminal emulator.
+
+2.1 Char Sub-mode of Term Mode
+==============================
+
+In char sub-mode of term, each character you type is sent directly to
+the inferior process without intervention from emacs, except for the
+escape character (usually ‘C-c’).
+
+   Here are some of the useful commands for the char sub-mode.  Note
+that the usual commands for killing a buffer or switching buffers do not
+work in this mode, so new key bindings are supplied.  The first five
+commands are different ways of leaving this mode.
+
+‘C-c C-j’
+‘M-x term-line-mode’
+     Switch to line sub-mode of term mode.
+
+‘C-c o’
+‘M-x other-window’
+     Select the next window on this frame.  All windows on current frame
+     are arranged in a cyclic order.  This command selects the next
+     window in that order.  If there are no other windows, this command
+     does nothing.
+
+‘C-c C-f’
+‘M-x find-file’
+     Switch to a buffer visiting a file, creating one if none already
+     exists.
+
+‘C-c 0’
+‘M-x delete-window’
+     Remove current window from the display.
+
+‘C-c k’
+‘M-x kill-buffer’
+     Kill the current buffer.
+
+‘C-c C-x C-c’
+‘M-x save-buffers-kill-emacs’
+     Offer to save each buffer, then kill this Emacs process.
+
+‘C-c C-d’
+‘M-x list-directory’
+     Display a list of files in or matching DIRNAME, a la 'ls'.  DIRNAME
+     is globbed by the shell if necessary.  Prefix arg (‘C-u’) means
+     supply -l switch to ‘ls’.  The list appears in a second window.
+
+‘C-c 1’
+‘M-x delete-other-windows’
+     Delete all other windows in the frame, making the current window
+     fill its frame.
+
+‘C-c C-c’
+‘M-x term-send-raw’
+     Send the last character typed through the terminal-emulator without
+     any interpretation.
+
+‘C-c (’
+‘M-x start-kbd-macro’
+     Record subsequent keyboard input, defining a keyboard macro.  The
+     commands are recorded even as they are executed.  Use ‘C-c )’ to
+     finish recording and make the macro available.  Use ‘M-x
+     name-last-kbd-macro’ to give it a permanent name.  Prefix arg
+     (‘C-u’) means append to last macro defined; This begins by
+     re-executing that macro as if you had typed it again.
+
+‘C-c )’
+‘M-x end-kbd-macro’
+     Finish defining a keyboard macro.  The definition was started by
+     ‘C-c (’.  The macro is now available for use via ‘C-c e’, or it can
+     be given a name with ‘M-x name-last-kbd-macro’ and then invoked
+     under that name.
+
+‘C-c e’
+‘M-x call-last-kbd-macro’
+     Call the last keyboard macro that you defined with ‘C-c (’.  A
+     prefix argument serves as a repeat count.  Zero means repeat until
+     error.
+
+   You can get a list of all the key sequences with a C-c prefix by
+typing ‘C-c C-h’ while in this sub-mode.  Some of those commands are
+only available in the char sub-mode, while others are generally
+available.
+
+2.2 Line Sub-mode of Term Mode
+==============================
+
+In line sub-mode of term mode, emacs editing commands work normally,
+until you type <RETURN> which sends the current line to the inferior
+process.
+
+   Here are some of the useful commands for the line sub-mode of the
+term mode.  In addition, the usual commands for handling a buffer work
+in this mode (‘C-x o’ to switch windows, ‘C-x k’ to kill a buffer, ‘C-x
+f’ to find a file, and so forth).
+
+‘C-c C-k’
+‘M-x term-char-mode’
+     Switch to char sub-mode of term mode.
+
+‘C-c C-z’
+‘M-x term-stop-subjob’
+     Stop the current subjob.  Resume the subjob in the foreground with
+     the ordinary command ‘fg’, or run it in the background with ‘bg’.
+     WARNING: if there is no current subjob, you can end up suspending
+     the top-level process running in the buffer.  If you accidentally
+     do this, use ‘M-x term-continue-subjob’ to resume the process.
+     (This is not a problem with most shells, including ‘bash’, since
+     they ignore this signal.)
+
+‘C-c C-\’
+‘M-x term-quit-subjob’
+     Send quit signal to the current subjob.
+
+‘C-c C-c’
+‘M-x term-interrupt-subjob’
+     Interrupt the current subjob.
+
+‘C-c C-w’
+‘M-x backward-kill-word’
+     Kill characters backward until encountering the end of a word.
+
+‘C-c C-u’
+‘M-x term-kill-input’
+     Kill all text from last stuff output by interpreter to point.
+
+‘C-c C-a’
+‘M-x term-bol’
+     Goes to the beginning of line, then skips past the prompt, if any.
+     If a prefix argument is given (‘C-u’), then no prompt skip -- go
+     straight to column 0.
+
+‘C-c C-d’
+‘M-x term-send-eof’
+     Send an end of file character (EOF) to the current buffer's
+     process.
+
+   You can get a list of all the key sequences with a ‘C-c’ prefix by
+typing ‘C-c C-h’ while in this sub-mode.  Some of those commands are
+only available in the line sub-mode, while others are generally
+available.
+
+2.3 Eterm Mode Commands
+=======================
+
+The eterm mode maintains a pointer, which is not necessarily the same as
+the terminal's cursor.  It is intended to be used in eterm's char
+submode.  In char submode, ‘C-t ,’ (that's control-t followed by comma)
+will tell you where the eterm pointer is.  ‘C-t C-i’ will tell you where
+the terminal's cursor is.  The top left corner of the window is "row 0
+column 0".
+
+   The eterm pointer can be moved with ‘C-t <’ (to the top of the
+screen), ‘C-t >’ (to the bottom of the screen), ‘C-t n’ (to the next
+line), ‘C-t p’ (to the previous line), and ‘C-t .’ (to the cursor).
+Each of these also speaks the line the pointer moves to.  You can also
+search forward with ‘C-t s’.
+
+   These commands speak without moving the pointer: ‘C-t l’ (current
+line), ‘C-t w’ (current word), ‘C-t c’ (current character), and ‘C-t
+<SPACE>’ (from eterm pointer to cursor).
+
+   You may enter review mode with ‘C-t q’.  In review mode, you can
+search the buffer and speak its contents, without disturbing the
+terminal.  Commands for moving the pointer are similar to normal editing
+commands, but without a control key: ‘n’ and ‘p’ for next and previous
+line, ‘f’ and ‘b’ for forward and back by characters, ‘<’ and ‘>’ for
+the beginning or end of the buffer.  ‘c’, ‘w’, and ‘l’ speak the current
+character, word, and line.  ‘s’ searches forward (not incrementally).  A
+comma speaks the pointer location.  A period moves the pointer to the
+terminal cursor.  Return to normal term mode by typing ‘q’.
+
+
+File: emacsvox-heritage.info,  Node: Background,  Next: Emacspeak At Twenty,  Prev: Running Terminal Based Applications,  Up: Top
+
+3 Background
 ************
 
 Emacspeak was originally developed in late 1994 and released as Open
@@ -1191,7 +1409,7 @@ impact of the work.
 
 File: emacsvox-heritage.info,  Node: Speech-Enabling Applications,  Next: Audio Formatting And Aural CSS,  Up: Background
 
-2.1 Speech-Enabling Applications
+3.1 Speech-Enabling Applications
 ================================
 
 The underlying thesis behind AsTeR (Audio System For Technical Readings)
@@ -1219,7 +1437,7 @@ on Emacspeak in the OReilly publication entitled Beautiful Code
 
 File: emacsvox-heritage.info,  Node: Audio Formatting And Aural CSS,  Next: Auditory Icons,  Prev: Speech-Enabling Applications,  Up: Background
 
-2.2 Audio Formatting And Aural CSS
+3.2 Audio Formatting And Aural CSS
 ==================================
 
 AsTeR introduced the notion of _audio formatting_ a concept analogous to
@@ -1242,7 +1460,7 @@ voice-locking, rather than just for Web content.
 
 File: emacsvox-heritage.info,  Node: Auditory Icons,  Next: Summary,  Prev: Audio Formatting And Aural CSS,  Up: Background
 
-2.3 Auditory Icons
+3.3 Auditory Icons
 ==================
 
 Emacspeak augments spoken feedback with short auditory icons that vastly
@@ -1257,7 +1475,7 @@ how one can play Tetris on the Emacspeak desktop.
 
 File: emacsvox-heritage.info,  Node: Summary,  Prev: Auditory Icons,  Up: Background
 
-2.4 Summary
+3.4 Summary
 ===========
 
 The lessons learnt from developing Emacspeak are many -- here are a few
@@ -1277,7 +1495,7 @@ highlights:
 
 File: emacsvox-heritage.info,  Node: Emacspeak At Twenty,  Next: Heritage Concept Index,  Prev: Background,  Up: Top
 
-3 Emacspeak At Twenty.
+4 Emacspeak At Twenty.
 **********************
 
 This article was originally published to mark the 20th anniversary of
@@ -1308,7 +1526,7 @@ emacspeak distribution.
 
 File: emacsvox-heritage.info,  Node: Turning Twenty,  Next: Using UNIX With Speech Output --- 1994,  Up: Emacspeak At Twenty
 
-3.1 Turning Twenty
+4.1 Turning Twenty
 ==================
 
 One afternoon in the third week of September 1994, I started writing
@@ -1323,7 +1541,7 @@ Peter Norvig for some of its inspiration.
 
 File: emacsvox-heritage.info,  Node: Using UNIX With Speech Output --- 1994,  Next: Key Enabler --- Emacs And Lisp Advice,  Prev: Turning Twenty,  Up: Emacspeak At Twenty
 
-3.2 Using UNIX With Speech Output -- 1994
+4.2 Using UNIX With Speech Output -- 1994
 =========================================
 
 As a graduate student at Cornell
@@ -1358,7 +1576,7 @@ of Emacspeak was up and running.
 
 File: emacsvox-heritage.info,  Node: Key Enabler --- Emacs And Lisp Advice,  Next: Key Component --- Text To Speech (TTS),  Prev: Using UNIX With Speech Output --- 1994,  Up: Emacspeak At Twenty
 
-3.3 Key Enabler -- Emacs And Lisp Advice
+4.3 Key Enabler -- Emacs And Lisp Advice
 ========================================
 
 It took me a couple of weeks to fully recognize the potential of what I
@@ -1378,7 +1596,7 @@ from O'Reilly.
 
 File: emacsvox-heritage.info,  Node: Key Component --- Text To Speech (TTS),  Next: Emacspeak And Software Development,  Prev: Key Enabler --- Emacs And Lisp Advice,  Up: Emacspeak At Twenty
 
-3.4 Key Component -- Text To Speech (TTS)
+4.4 Key Component -- Text To Speech (TTS)
 =========================================
 
 Emacspeak is a speech-subsystem for Emacs; it depends on an external
@@ -1421,7 +1639,7 @@ DECTalk!
 
 File: emacsvox-heritage.info,  Node: Emacspeak And Software Development,  Next: Emacspeak And Authoring Documents,  Prev: Key Component --- Text To Speech (TTS),  Up: Emacspeak At Twenty
 
-3.5 Emacspeak And Software Development
+4.5 Emacspeak And Software Development
 ======================================
 
 Version 0.01 of Emacspeak was written using IBM Screen-Reader on a PC
@@ -1474,7 +1692,7 @@ content being accessed.
 
 File: emacsvox-heritage.info,  Node: Programming Defensively,  Up: Emacspeak And Software Development
 
-3.5.1 Programming Defensively
+4.5.1 Programming Defensively
 -----------------------------
 
 As an aside, note that all of Emacspeak has been developed over the last
@@ -1500,7 +1718,7 @@ other key features of the Emacspeak code-base:
 
 File: emacsvox-heritage.info,  Node: Emacspeak And Authoring Documents,  Next: Emacspeak And The Early Days Of The Web,  Prev: Emacspeak And Software Development,  Up: Emacspeak At Twenty
 
-3.6 Emacspeak And Authoring Documents
+4.6 Emacspeak And Authoring Documents
 =====================================
 
 In 1994, my preferred environment for authoring *all* documents was
@@ -1530,7 +1748,7 @@ created by me using Emacs.
 
 File: emacsvox-heritage.info,  Node: Emacspeak And The Early Days Of The Web,  Next: Audio Formatting --- Generalizing Aural CSS,  Prev: Emacspeak And Authoring Documents,  Up: Emacspeak At Twenty
 
-3.7 Emacspeak And The Early Days Of The Web
+4.7 Emacspeak And The Early Days Of The Web
 ===========================================
 
 Right around the time that I was writing version 0.01 of emacspeak, a
@@ -1586,7 +1804,7 @@ with support for DOM filtering and quick content navigation.
 
 File: emacsvox-heritage.info,  Node: Audio Formatting --- Generalizing Aural CSS,  Next: Conversational Gestures For The Audio Desktop,  Prev: Emacspeak And The Early Days Of The Web,  Up: Emacspeak At Twenty
 
-3.8 Audio Formatting -- Generalizing Aural CSS
+4.8 Audio Formatting -- Generalizing Aural CSS
 ==============================================
 
 A key idea in Audio System For Technical Readings (AsTeR)
@@ -1637,7 +1855,7 @@ correctly write *else if* vs *elsif* in various programming languages!
 
 File: emacsvox-heritage.info,  Node: Conversational Gestures For The Audio Desktop,  Next: Accessing Media Streams,  Prev: Audio Formatting --- Generalizing Aural CSS,  Up: Emacspeak At Twenty
 
-3.9 Conversational Gestures For The Audio Desktop
+4.9 Conversational Gestures For The Audio Desktop
 =================================================
 
 By 1996, Emacspeak was the only piece of adaptive technology I used; in
@@ -1695,7 +1913,7 @@ with two-dimensional data.
 
 File: emacsvox-heritage.info,  Node: Speech-Enabling Interactive Games,  Up: Conversational Gestures For The Audio Desktop
 
-3.9.1 Speech-Enabling Interactive Games
+4.9.1 Speech-Enabling Interactive Games
 ---------------------------------------
 
 So in 1997, I went the next step in asking -- given access to the
@@ -1727,7 +1945,7 @@ the rest of the environment.
 
 File: emacsvox-heritage.info,  Node: Accessing Media Streams,  Next: EBooks --- Ubiquitous Access To Books,  Prev: Conversational Gestures For The Audio Desktop,  Up: Emacspeak At Twenty
 
-3.10 Accessing Media Streams
+4.10 Accessing Media Streams
 ============================
 
 Streaming real-time audio on the Internet became a reality with the
@@ -1762,7 +1980,7 @@ package *ido*, these types of actions become even more efficient!
 
 File: emacsvox-heritage.info,  Node: EBooks --- Ubiquitous Access To Books,  Next: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Prev: Accessing Media Streams,  Up: Emacspeak At Twenty
 
-3.11 EBooks -- Ubiquitous Access To Books
+4.11 EBooks -- Ubiquitous Access To Books
 =========================================
 
 AsTeR -- was motivated by the increasing availability of technical
@@ -1807,7 +2025,7 @@ books.
 
 File: emacsvox-heritage.info,  Node: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Next: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Prev: EBooks --- Ubiquitous Access To Books,  Up: Emacspeak At Twenty
 
-3.12 Leveraging Computational Tools -- From SQL And R To IPython Notebooks
+4.12 Leveraging Computational Tools -- From SQL And R To IPython Notebooks
 ==========================================================================
 
 The ability to invoke external processes and interface with them via a
@@ -1838,7 +2056,7 @@ smoother in Emacs than in a browser-based editor.
 
 File: emacsvox-heritage.info,  Node: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Next: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Prev: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Up: Emacspeak At Twenty
 
-3.13 Social Web -- EMail, Instant Messaging, Blogging And Tweeting Using Open Protocols
+4.13 Social Web -- EMail, Instant Messaging, Blogging And Tweeting Using Open Protocols
 =======================================================================================
 
 The ability to process large amounts of email and electronic news has
@@ -1892,7 +2110,7 @@ RESTful API.
 
 File: emacsvox-heritage.info,  Node: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Next: Mashing It Up --- Leveraging Evolving Web APIs,  Prev: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Up: Emacspeak At Twenty
 
-3.14 The RESTful Web -- Web Wizards And URL Templates For Faster Access
+4.14 The RESTful Web -- Web Wizards And URL Templates For Faster Access
 =======================================================================
 
 Today, the Web, based on URLs and HTTP-style protocols is widely
@@ -1958,7 +2176,7 @@ user's collection of subscribed feeds.
 
 File: emacsvox-heritage.info,  Node: Mashing It Up --- Leveraging Evolving Web APIs,  Next: Conclusion --- Turning Twenty,  Prev: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Up: Emacspeak At Twenty
 
-3.15 Mashing It Up -- Leveraging Evolving Web APIs
+4.15 Mashing It Up -- Leveraging Evolving Web APIs
 ==================================================
 
 The next step in this evolution came with the arrival of richer Web APIs
@@ -2002,7 +2220,7 @@ today's tight association of the Web to the Web Browser.
 
 File: emacsvox-heritage.info,  Node: Conclusion --- Turning Twenty,  Next: References,  Prev: Mashing It Up --- Leveraging Evolving Web APIs,  Up: Emacspeak At Twenty
 
-3.16 Conclusion -- Turning Twenty
+4.16 Conclusion -- Turning Twenty
 =================================
 
 In 1996, I wrote an article entitled User Interface -- A Means To An End
@@ -2027,7 +2245,7 @@ alongside visual interaction when this comes to pass.
 
 File: emacsvox-heritage.info,  Node: References,  Prev: Conclusion --- Turning Twenty,  Up: Emacspeak At Twenty
 
-3.17 References
+4.17 References
 ===============
 
    • Auditory User Interfaces
@@ -2050,7 +2268,7 @@ File: emacsvox-heritage.info,  Node: References,  Prev: Conclusion --- Turning T
 
 File: emacsvox-heritage.info,  Node: Heritage Concept Index,  Prev: Emacspeak At Twenty,  Up: Top
 
-4 Heritage Concept Index
+5 Heritage Concept Index
 ************************
 
  [index ]
@@ -2082,57 +2300,58 @@ File: emacsvox-heritage.info,  Node: Heritage Concept Index,  Prev: Emacspeak At
 
 Tag Table:
 Node: Top391
-Node: Emacs Packages1022
-Node: Document Authoring2672
-Node: Creating Well-formatted Documents3367
-Node: Search replace and spell check6812
-Node: Structured Editing12015
-Node: Outline Editing14031
-Node: Template-based Authoring17742
-Node: Maintaining Structured Data19373
-Node: Browsing Structure20837
-Node: Web Browsing21274
-Node: Intro22305
-Node: emacs-w324725
-Ref: w3 transcode33899
-Ref: xsl-transform36259
-Node: Add-ons40438
-Ref: emacsvox url template40657
-Ref: rss41685
-Ref: bmk-mgr43190
-Node: Conclusion43858
-Node: Messaging44658
-Node: Editing Code45375
-Node: Development Environment46349
-Node: Desktop Management46902
-Node: Personal Information Management47679
-Node: Desktop Applications48035
-Node: Background54770
-Node: Speech-Enabling Applications55537
-Node: Audio Formatting And Aural CSS57043
-Node: Auditory Icons58234
-Node: Summary58943
-Node: Emacspeak At Twenty59439
-Node: Turning Twenty61146
-Node: Using UNIX With Speech Output --- 199461840
-Node: Key Enabler --- Emacs And Lisp Advice63676
-Node: Key Component --- Text To Speech (TTS)64722
-Node: Emacspeak And Software Development67268
-Node: Programming Defensively69877
-Node: Emacspeak And Authoring Documents71139
-Node: Emacspeak And The Early Days Of The Web72716
-Node: Audio Formatting --- Generalizing Aural CSS76159
-Node: Conversational Gestures For The Audio Desktop79221
-Node: Speech-Enabling Interactive Games82570
-Node: Accessing Media Streams84350
-Node: EBooks --- Ubiquitous Access To Books86449
-Node: Leveraging Computational Tools --- From SQL And R To IPython Notebooks88988
-Node: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols90851
-Node: The RESTful Web --- Web Wizards And URL Templates For Faster Access94330
-Node: Mashing It Up --- Leveraging Evolving Web APIs97868
-Node: Conclusion --- Turning Twenty100374
-Node: References101755
-Node: Heritage Concept Index102691
+Node: Emacs Packages1085
+Node: Document Authoring2760
+Node: Creating Well-formatted Documents3455
+Node: Search replace and spell check6900
+Node: Structured Editing12103
+Node: Outline Editing14119
+Node: Template-based Authoring17830
+Node: Maintaining Structured Data19461
+Node: Browsing Structure20925
+Node: Web Browsing21362
+Node: Intro22393
+Node: emacs-w324813
+Ref: w3 transcode33987
+Ref: xsl-transform36347
+Node: Add-ons40526
+Ref: emacsvox url template40745
+Ref: rss41773
+Ref: bmk-mgr43278
+Node: Conclusion43946
+Node: Messaging44746
+Node: Editing Code45463
+Node: Development Environment46437
+Node: Desktop Management46990
+Node: Personal Information Management47767
+Node: Desktop Applications48123
+Node: Running Terminal Based Applications54858
+Node: Background63766
+Node: Speech-Enabling Applications64554
+Node: Audio Formatting And Aural CSS66060
+Node: Auditory Icons67251
+Node: Summary67960
+Node: Emacspeak At Twenty68456
+Node: Turning Twenty70163
+Node: Using UNIX With Speech Output --- 199470857
+Node: Key Enabler --- Emacs And Lisp Advice72693
+Node: Key Component --- Text To Speech (TTS)73739
+Node: Emacspeak And Software Development76285
+Node: Programming Defensively78894
+Node: Emacspeak And Authoring Documents80156
+Node: Emacspeak And The Early Days Of The Web81733
+Node: Audio Formatting --- Generalizing Aural CSS85176
+Node: Conversational Gestures For The Audio Desktop88238
+Node: Speech-Enabling Interactive Games91587
+Node: Accessing Media Streams93367
+Node: EBooks --- Ubiquitous Access To Books95466
+Node: Leveraging Computational Tools --- From SQL And R To IPython Notebooks98005
+Node: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols99868
+Node: The RESTful Web --- Web Wizards And URL Templates For Faster Access103347
+Node: Mashing It Up --- Leveraging Evolving Web APIs106885
+Node: Conclusion --- Turning Twenty109391
+Node: References110772
+Node: Heritage Concept Index111708
 
 End Tag Table
 

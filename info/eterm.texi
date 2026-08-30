@@ -1,7 +1,16 @@
 @c $Id$
 
 @node Running Terminal Based Applications
-@chapter Running Terminal Based Applications.
+@chapter Historical Term And Eterm Survey
+
+@quotation Historical status
+This chapter is preserved from the inherited Emacspeak Term survey.  Its
+copied command inventory, Help behavior, application examples, and
+@code{eterm-autospeak} spelling describe an older environment and are not
+current Emacsvox instructions.  For the maintained Emacs 31 workflow, see
+@ref{Running Terminal Based Applications,Term Terminal Access,,emacsvox,
+Emacsvox User Manual}.
+@end quotation
 
 You can use the terminal emulator mode to run arbitrary terminal-based
 programs from within Emacs.  You open a terminal emulator buffer using

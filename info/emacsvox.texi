@@ -46,7 +46,7 @@ This manual documents @strong{Emacsvox, The Complete Audio Desktop}.
 @include notmuch.texi
 @include agent-shell.texi
 @include eat.texi
-@include eterm.texi
+@include term.texi
 @include keyboard.texi
 @include tts-server.texi
 @include announce.texi

@@ -10,12 +10,12 @@ FILES=*.texi
 USER_INCLUDES= style.texi preamble.texi copyright.texi announce.texi \
 introduction.texi install.texi backends.texi using.texi audio-desktop.texi \
 voices.texi online-help.texi applications.texi \
-notmuch.texi agent-shell.texi eat.texi eterm.texi keyboard.texi \
+notmuch.texi agent-shell.texi eat.texi term.texi keyboard.texi \
 tts-server.texi acknowledge.texi tts.texi
 REFERENCE_INCLUDES= style.texi docs.texi keys.texi intro-docs.texi
 HERITAGE_INCLUDES= style.texi emacspeak-significance.texi \
 inc-turning-twenty.texi packages.texi documents.texi structure.texi \
-web-browsing.texi
+web-browsing.texi eterm.texi
 INCLUDES= $(USER_INCLUDES) $(REFERENCE_INCLUDES) $(HERITAGE_INCLUDES)
 
 MAKEINFO ?= makeinfo

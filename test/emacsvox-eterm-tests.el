@@ -16,6 +16,19 @@
   ;; Exercise source even when a compiled integration module exists.
   (load module nil nil))
 
+(defconst emacsvox-test--eterm-root
+  (file-name-as-directory
+   (expand-file-name
+    "../" (file-name-directory (or load-file-name buffer-file-name))))
+  "Repository root used by Term documentation checks.")
+
+(defun emacsvox-test--eterm-file-string (relative-name)
+  "Return the literal contents of RELATIVE-NAME below the repository root."
+  (with-temp-buffer
+    (insert-file-contents
+     (expand-file-name relative-name emacsvox-test--eterm-root))
+    (buffer-string)))
+
 (defconst emacsvox-test--eterm-targets
   '(term
     ansi-term
@@ -321,6 +334,97 @@
      (equal
       events
       '("Switch to the other window to browse the input history ")))))
+
+(ert-deftest emacsvox-eterm-current-guide-owns-the-supported-workflow ()
+  "Current Term guidance should be separate from the inherited survey."
+  (let ((guide (emacsvox-test--eterm-file-string "info/term.texi"))
+        (survey (emacsvox-test--eterm-file-string "info/eterm.texi"))
+        (master (emacsvox-test--eterm-file-string "info/emacsvox.texi"))
+        (heritage
+         (emacsvox-test--eterm-file-string "info/emacsvox-heritage.texi"))
+        (menu (emacsvox-test--eterm-file-string "info/preamble.texi"))
+        (applications
+         (emacsvox-test--eterm-file-string "info/applications.texi")))
+    (should (string-match-p "@include term\\.texi" master))
+    (should-not (string-match-p "@include eterm\\.texi" master))
+    (should (string-match-p "@include eterm\\.texi" heritage))
+    (should
+     (string-match-p
+      "\\* Historical Term Survey: Running Terminal Based Applications\\."
+      heritage))
+    (should
+     (string-match-p
+      "\\* Term Terminal Access: Running Terminal Based Applications\\."
+      menu))
+    (dolist
+        (required
+         '("@chapter Term Terminal Access"
+           "prefer @ref{EAT Terminal Access}"
+           "@kbd{M-x term @key{RET}}"
+           "fill the frame"
+           "@kbd{C-c C-j}"
+           "@kbd{C-c C-k}"
+           "@kbd{C-c C-h m}"
+           "@kbd{C-t C-t}"
+           "@code{emacsvox-eterm-autospeak}"
+           "@kbd{C-t C-q}"
+           "The older spelling\n@code{eterm-autospeak} is not an Emacsvox variable"
+           "hidden Term buffer can continue running without speaking"
+           "@kbd{C-t q}"
+           "@ref{emacsvox-eterm,,,emacsvox-reference"))
+      (should (string-match-p (regexp-quote required) guide)))
+    (should-not
+     (string-match-p
+      (regexp-quote
+       "program output is spoken if user option\n@code{eterm-autospeak}")
+      guide))
+    (should
+     (string-match-p "@chapter Historical Term And Eterm Survey" survey))
+    (should
+     (string-match-p (regexp-quote "@code{eterm-autospeak}") survey))
+    (dolist
+        (reference
+         '("@ref{EAT Terminal Access}"
+           "@ref{Running Terminal Based Applications}"))
+      (should (string-match-p (regexp-quote reference) applications)))))
+
+(ert-deftest emacsvox-eterm-current-guide-keys-match-live-maps ()
+  "The documented starter keys should resolve to the current commands."
+  (emacsvox-eterm-setup-keys)
+  (emacsvox-eterm-setup-raw-keys)
+  (dolist
+      (entry
+       '(("C-q" . emacsvox-toggle-eterm-autospeak)
+         ("." . emacsvox-eterm-pointer-to-cursor)
+         ("p" . emacsvox-eterm-pointer-up)
+         ("n" . emacsvox-eterm-pointer-down)
+         ("<left>" . emacsvox-eterm-pointer-left)
+         ("<right>" . emacsvox-eterm-pointer-right)
+         ("M-b" . emacsvox-eterm-pointer-backward-word)
+         ("M-f" . emacsvox-eterm-pointer-forward-word)
+         ("l" . emacsvox-eterm-speak-pointer-line)
+         ("w" . emacsvox-eterm-speak-pointer-word)
+         ("c" . emacsvox-eterm-speak-pointer-char)
+         ("SPC" . emacsvox-eterm-speak-screen)
+         ("s" . emacsvox-eterm-search-forward)
+         ("q" . emacsvox-eterm-toggle-review)
+         ("m" . emacsvox-eterm-set-marker)
+         ("y" . emacsvox-eterm-kill-ring-save-region)))
+    (should
+     (eq (lookup-key emacsvox-eterm-keymap (kbd (car entry)))
+         (cdr entry))))
+  (dolist
+      (entry
+       '(("C-c C-j" . term-line-mode)
+         ("C-c C-k" . term-char-mode)
+         ("C-c C-h m" . describe-mode)
+         ("C-c M-x" . execute-extended-command)
+         ("C-t C-t" . emacsvox-eterm-maybe-send-raw)))
+    (should
+     (eq (lookup-key term-raw-map (kbd (car entry)))
+         (cdr entry))))
+  (should (default-value 'emacsvox-eterm-autospeak))
+  (should-not (boundp 'eterm-autospeak)))
 
 (provide 'emacsvox-eterm-tests)
 ;;; emacsvox-eterm-tests.el ends here

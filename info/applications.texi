@@ -155,6 +155,13 @@ reference.
 @node Desktop Applications
 @section Desktop Applications
 
+@subsection Terminal Applications
+
+For a new full-terminal workflow, use @ref{EAT Terminal Access}.  When a
+built-in terminal with no additional package is preferable, use
+@ref{Running Terminal Based Applications}.  For ordinary line-oriented shell
+commands, @kbd{M-x shell} is usually the simplest route.
+
 @subsection Forms Mode
 
 @cindex Forms mode

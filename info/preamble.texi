@@ -29,7 +29,7 @@ Current workflows:
 * Notmuch Mail: Notmuch Mail.
 * Agent Shell: Agent Shell.
 * EAT Terminal Access: EAT Terminal Access.
-* Running Terminal Based Applications: Running Terminal Based Applications.
+* Term Terminal Access: Running Terminal Based Applications.
 
 Exact generated reference:
 * Commands, Options, And Keys: (emacsvox-reference).
