@@ -2,9 +2,11 @@
 @node Top
 @top Emacsvox
 
-This user manual contains current Emacsvox operating guidance.  Begin with
-Getting Started, then continue to Speech Backends and Basic Usage.  Exact
-commands, options, and keymaps are in the separate
+Welcome to the Emacsvox user manual.  Begin with the introduction, follow the
+installation path until Emacsvox speaks, and then try the guided first session
+in Basic Usage.  Platform and compatibility detail is available in Speech
+Backends when you need it.  Exact commands, options, and keymaps are in the
+separate
 @ref{Top,Emacsvox Reference Manual,,emacsvox-reference,Emacsvox Reference
 Manual}.  Selected historical Emacspeak material is in the separate
 @ref{Top,Emacspeak Heritage,,emacsvox-heritage,Emacspeak Heritage} manual and
@@ -16,10 +18,10 @@ The manual is divided into the following chapters:
 
 @menu
 Current-user path:
+* Welcome to Emacsvox: Introduction.
 * Installation: Installation.
-* Speech Backends: Speech Backends.
 * Basic Usage: Basic Usage.
-* Introduction: Introduction.
+* Speech Backends: Speech Backends.
 * Audio Desktop: Audio Desktop.
 * Voice Lock: Voice Lock.
 * Using Online Help: Using Online Help.

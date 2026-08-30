@@ -444,7 +444,7 @@ them.
 #+cindex: byte-code, Notmuch integration
 
 Use @@texinfo:@kbd{?}@@ or @@texinfo:@kbd{C-h m}@@ in the affected Notmuch buffer to confirm the keys
-owned by the installed Notmuch version.  Run @@texinfo:@kbd{M-x notmuch-version}@@ to
+provided by the installed Notmuch version.  Run @@texinfo:@kbd{M-x notmuch-version}@@ to
 identify that package, and use the official manual linked at the beginning of
 this chapter for its current behavior.
 

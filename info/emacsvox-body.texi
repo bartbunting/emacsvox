@@ -1,77 +1,204 @@
+@node Introduction
+@chapter Welcome to Emacsvox
+
+@cindex Introduction
+
+Welcome to Emacsvox@comma{} a keyboard-driven spoken environment built on Emacs.  It
+helps you read and write text@comma{} browse the Web@comma{} use mail and messaging@comma{} work in
+shells@comma{} program@comma{} and explore structured information through speech and sound.
+
+Emacsvox requires Emacs 31 or newer and is derived from Emacspeak.  Emacspeak's
+pioneering audio-desktop design and T@. V@. Raman's original work remain the
+foundation of this project.
+
+Emacsvox works inside Emacs rather than reading the screen as a grid of pixels.
+Because it can use commands@comma{} modes@comma{} text structure@comma{} and application state@comma{} it
+can announce what an action means and what changed.  Ordinary movement speaks
+the text crossed; different voices convey structure; auditory icons and tones
+mark events without interrupting you with unnecessary words.
+
+@section Where To Begin
+
+@itemize
+@item
+If Emacsvox is not installed yet@comma{} start with
+@ref{Installation}.  It takes you from a source checkout to a clean
+speaking session and includes a recovery path if speech does not start.
+
+@item
+If Emacsvox is already speaking@comma{} continue with @ref{Basic Usage} for a
+short first-session guide and the essential reading commands.
+
+@item
+If Emacs itself is new to you@comma{} @kbd{C-h t} opens the Emacs tutorial.
+Emacsvox speaks the tutorial and the commands you use while following it.
+
+@item
+In any Emacs buffer@comma{} @kbd{C-h m} describes the active modes and their
+commands@comma{} while @kbd{C-h k} followed by a key explains that key.  See
+@ref{Using Online Help} when you want to explore further.
+@end itemize
+
+@section What You Will Hear
+
+Emacsvox combines several kinds of feedback:
+
+@itemize
+@item
+speech for text@comma{} prompts@comma{} results@comma{} and status;
+@item
+voice changes that make syntax and document structure audible;
+@item
+short auditory icons and tones for events such as opening a file or
+completing an action; and
+@item
+pauses and spatial cues that help separate related information.
+@end itemize
+
+You can adjust this presentation gradually.  Aural Home@comma{} opened with
+@kbd{C-e H}@comma{} brings voices@comma{} sound packs@comma{} profiles@comma{} and other presentation
+options together.  You do not need to configure it before beginning.
+
+Emacsvox sends speech through a speech server.  New GNU/Linux@comma{} macOS@comma{} and WSL2
+installations use Omnivox; established direct servers remain available for
+compatible existing setups.  The installation chapter introduces only what
+you need for first speech.  @xref{Speech Backends} contains the platform and
+compatibility details.
+
+@section About This Manual
+
+The maintained chapters provide the current Emacsvox setup and task guides.
+The separate generated reference records commands@comma{} options@comma{} and keymaps from
+the source@comma{} while the heritage manual preserves Emacspeak essays and
+application guides for their historical and design value.  Historical material
+may describe software or Web services from its original period.
+
+Rapidly changing features are also documented in @code{Readme.org}@comma{} @code{etc/NEWS}@comma{}
+and the generated Aural Presentation reference.  When a copied key binding
+differs from your running Emacs@comma{} prefer the live help shown by @kbd{C-h m} or
+@kbd{C-h k}.
+
 @node Installation
 @chapter Getting Started: Installation and First Speech
 
 @c Generated from docs/manual/emacsvox.org; do not edit.
 
-This is the canonical first-use procedure for a source-checkout installation.
-It starts before Emacsvox is available@comma{} establishes an audible acceptance
-checkpoint@comma{} and delays personal configuration until an isolated session has
-spoken successfully.  The same chapter is published for pre-installation web
-access at
+This chapter takes you from a fresh source checkout to a speaking Emacsvox
+session.  You will prepare the speech server@comma{} build Emacsvox@comma{} check each layer@comma{}
+and start an isolated session before changing your personal Emacs setup.
+
+Commands shown before Emacsvox starts are entered in a terminal.  Keys written
+with @kbd{C-} or @kbd{M-} are entered inside Emacs.  The same chapter is
+available before installation at
 @uref{https://bartbunting.github.io/emacsvox/Installation.html}.
 
 @menu
-* Obtaining Emacsvox::           Obtaining Emacsvox.
-* Quick Installation::           Reach an isolated first spoken session.
+* Before You Begin: Obtaining Emacsvox.  Prepare the tools and source checkouts.
+* Install And Check Omnivox: Building And Testing The Speech Server.  Install the recommended server and hear its check.
+* Quick Installation::           Build Emacsvox and reach an isolated speaking session.
 * Confirming First Speech::      Verify the live adapter and basic feedback.
 * Recovering From No Speech::    Diagnose the boundary at which speech failed.
 * Persistent Startup::           Add Emacsvox to personal configuration safely.
-* Building And Testing The Speech Server::
 @end menu
 
 @node Obtaining Emacsvox
-@section Obtaining Emacsvox
+@section Before You Begin
 
-Before beginning@comma{} install @code{git}@comma{} @code{make}@comma{} GNU Texinfo (which
-provides @code{makeinfo})@comma{} and
-@uref{https://www.gnu.org/software/emacs/download.html, Emacs 31 or newer}.
-The Speech Backends chapter lists the additional platform prerequisites for
-the recommended Omnivox server.
+Install @code{git}@comma{} @code{make}@comma{} GNU Texinfo (which provides @code{makeinfo})@comma{} and
+@uref{https://www.gnu.org/software/emacs/download.html, Emacs 31 or newer}.  The recommended Omnivox speech server also needs the
+Rust toolchain@comma{} Python 3@comma{} a C and C++ toolchain@comma{} CMake@comma{} and Clang with libclang.
 
-The maintained source is
-@uref{https://github.com/bartbunting/emacsvox}.  Clone it into the permanent
-directory where it will be used:
+On GNU/Linux@comma{} install @code{pkg-config} and the ALSA development headers.  On
+macOS@comma{} install the Xcode command-line tools.  WSL2 has additional Docker and
+Windows requirements described in @ref{Building Omnivox For WSL2}.
+
+Choose a permanent parent directory and clone Emacsvox and Omnivox beside one
+another:
 
 @example
+cd /path/where/you/keep/source
 git clone https://github.com/bartbunting/emacsvox
-cd emacsvox
+git clone https://github.com/bartbunting/omnivox
 @end example
 
-The checkout itself is the source-checkout installation.  The build operates
-in place; it does not create a second directory to copy elsewhere.
+The Emacsvox checkout is the installation directory.  It builds in place and
+does not create a second tree to copy elsewhere.
+
+@node Building And Testing The Speech Server
+@section Install And Check Omnivox
+
+On GNU/Linux or macOS@comma{} build and install Omnivox from its checkout:
+
+@example
+cd /path/where/you/keep/source/omnivox
+make build
+make install
+omnivox --check
+@end example
+
+@code{make install} normally places the executable below @code{~/.cargo/bin}.  Make sure
+that directory is on @code{PATH} before running the check.  No proprietary speech
+runtime is needed for the recommended GNU/Linux or macOS route.
+
+Under WSL2@comma{} build the staged Windows runtime from a clean Emacsvox checkout:
+
+@example
+cd /path/where/you/keep/source/emacsvox
+make windows-omnivox
+./servers/omnivox --check
+@end example
+
+The check plays a tone followed by speech.  When you hear both@comma{} the speech
+server is ready.  If either is missing@comma{} use
+@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}
+before continuing.  @xref{Speech Backends} contains the complete platform
+matrix@comma{} build details@comma{} and compatibility alternatives.  Native Windows Emacs
+support remains a preview; consult that matrix before choosing it for a first
+installation.
 
 @node Quick Installation
-@section First Speech Checklist
+@section Build And Start Emacsvox
 
 @enumerate
 @item
-Select Emacs 31 or newer.  If it is not the system @code{emacs}@comma{} copy
-@code{local.mk.example} to the ignored @code{local.mk} and set @code{EMACS}:
+Enter the Emacsvox checkout:
+
+@example
+cd /path/where/you/keep/source/emacsvox
+@end example
+
+@item
+Select Emacs 31 or newer.  If it is not the system @code{emacs}@comma{} create the
+ignored local settings file:
+
+@example
+cp local.mk.example local.mk
+@end example
+
+Then set @code{EMACS} in @code{local.mk}:
 
 @example
 EMACS=/path/to/emacs-31/bin/emacs
 @end example
 
-Verify the selection before diagnosing a compiler failure:
+Verify the selection:
 
 @example
 make check-emacs
 @end example
 
+The command prints the selected Emacs and confirms whether its version is
+supported.
+
 @item
-Configure and compile the checkout:
+Configure and compile Emacsvox:
 
 @example
 make all
 @end example
 
-Do not compile Emacsvox with an older system Emacs.  Tests prefer source and
-therefore do not prove that the byte-code used by a normal startup is current.
-
-@item
-Install the recommended Omnivox speech server.  @xref{Speech Backends}@comma{} for
-the supported platform matrix@comma{} exact prerequisite classes@comma{} source and WSL2
-build paths@comma{} and compatibility alternatives.
+A successful build returns to the shell without an error.  Emacsvox must be
+compiled with the same supported Emacs selected in the previous step.
 
 @item
 Run the non-audible launcher preflight from the Emacsvox checkout:
@@ -80,47 +207,42 @@ Run the non-audible launcher preflight from the Emacsvox checkout:
 ./bin/emacsvox --diagnose
 @end example
 
-It validates the checkout@comma{} Emacs@comma{} and backend without playing audio@comma{} creating
-an Omnivox session log@comma{} or opening interactive Emacs.  Before continuing@comma{}
-confirm that its report includes Emacs 31 or newer@comma{} the @code{omnivox} speech
-backend@comma{} and an isolated @code{-Q} startup.  Correct any path or version
-error that it prints.
+This checks the checkout@comma{} Emacs@comma{} and speech server without playing audio or
+opening interactive Emacs.  A successful report names Emacs 31 or newer@comma{}
+the @code{omnivox} speech server@comma{} and an isolated @code{-Q} startup.  If it reports a
+path or version problem@comma{} correct that item and run the command again.
 
 @item
-Run the deliberately audible backend check:
+Check the complete launch path with sound:
 
 @example
 ./bin/emacsvox --check
 @end example
 
-The launcher prints its selections and explicitly announces that the audible
-check is starting.  Continue only after hearing both the tone and speech.  Do
-not diagnose Emacs configuration until this standalone Omnivox check passes.
+The launcher prints what it selected@comma{} then plays a tone and speech.  Hearing
+both means the complete speech-server launch path is ready.
 
 @item
-Prove a clean Emacsvox start:
+Start a clean Emacsvox session:
 
 @example
 ./bin/emacsvox
 @end example
 
-The launcher defaults to Omnivox@comma{} uses the selected Emacs 31 or newer@comma{} and
-loads the setup source by its absolute path.  The session uses @code{-Q}: it
-loads neither site files nor a personal Emacs init file.  This makes first
-speech a reproducible installation proof rather than a side effect of
-existing configuration.
-
-@code{./bin/emacsvox --diagnose} prints the selected root@comma{} setup source@comma{}
-Emacs version@comma{} and backend without playing audio or starting interactive
-Emacs.  @code{./bin/emacsvox --help} documents explicit @code{EMACS}@comma{}
-@code{TTS_PROGRAM}@comma{} and @code{EMACSVOX_DIR} overrides.  Arguments after
-@code{--} are passed to Emacs.
+The launcher uses Omnivox and the selected Emacs@comma{} but does not load site
+files or your personal Emacs init file.  This gives you a known starting
+point without changing an existing Emacs setup.
 @end enumerate
+
+If a command needs an explicit path@comma{} @code{./bin/emacsvox --help} describes the
+@code{EMACS}@comma{} @code{TTS_PROGRAM}@comma{} and @code{EMACSVOX_DIR} overrides.  Arguments after @code{--}
+are passed to Emacs.
 
 @node Confirming First Speech
 @section Confirming First Speech
 
-A successful isolated start speaks a versioned introduction ending with:
+You will know the isolated start succeeded when it speaks an introduction
+ending with:
 
 @quotation
 I am completely operational@comma{} and all my circuits are functioning perfectly!
@@ -129,10 +251,10 @@ I am completely operational@comma{} and all my circuits are functioning perfectl
 
 The preceding overview key and version number can change.  The sentence above
 is the stable first-speech checkpoint.  A startup auditory icon may also play@comma{}
-but it depends on optional audio support and is not part of acceptance.
+depending on the available audio support.
 
-Before changing personal configuration@comma{} make these checks in the isolated
-session:
+You now have a working Emacsvox session.  Try these checks before connecting
+it to your personal configuration:
 
 @enumerate
 @item
@@ -149,13 +271,15 @@ navigation.  Type @kbd{M-x emacsvox-describe-emacsvox RET} for the Emacsvox
 overview.  @xref{Basic Usage}@comma{} for the tested starter commands.
 @end enumerate
 
-Only after these checks pass is the isolated first-use proof complete.
+When these checks pass@comma{} continue to @ref{Basic Usage} for a short guided
+first session@comma{} or use @ref{Persistent Startup} to connect Emacsvox to your
+normal Emacs configuration.
 
 @node Recovering From No Speech
 @section Recovering From No Speech
 
-Do not add Emacsvox to a personal init file while recovering.  Start at the
-first failing boundary:
+If speech did not start@comma{} keep the isolated launcher as your known starting
+point and find the first command below that did not work:
 
 @table @asis
 @item @code{./bin/emacsvox --diagnose} fails
@@ -166,9 +290,10 @@ executable@comma{} finish installing Omnivox@comma{} put it on @code{PATH}@comma
 @code{OMNIVOX_PROGRAM} to its absolute executable.  Under WSL2@comma{} rebuild or
 verify the staged runtime described in @ref{Building Omnivox For WSL2}.
 @item The diagnostic passes@comma{} but @code{--check} errors or is inaudible
-The failure is below Emacsvox.  Do not edit the Emacs init file.  Follow
-@ref{Backend Diagnostics And Ownership} until the check produces both its tone
-and speech.  A zero exit status without both audible signals is not success.
+The speech server needs attention before Emacs configuration is relevant.
+Follow
+@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities} until the check produces both its tone
+and speech.
 @item The audible check passes@comma{} but the isolated startup sentence is absent
 Run @code{./bin/emacsvox --diagnose} again from the same checkout and shell.
 Remove an unintended @code{TTS_PROGRAM} override if the report does not select
@@ -199,16 +324,15 @@ is loaded.
 @node Persistent Startup
 @section Persistent Startup
 
-Configure a normal customized start only after @ref{Confirming First Speech}
-passes.  Add these forms to the user's Emacs init file@comma{} replacing the example
-path with the absolute path of the checkout:
+After @ref{Confirming First Speech} succeeds@comma{} add these forms to your Emacs
+init file@comma{} replacing the example path with the absolute path of the checkout:
 
 @lisp
 (setenv "TTS_PROGRAM" "omnivox")
 (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
 @end lisp
 
-The order is significant: Emacsvox selects and starts the speech server while
+Keep the forms in this order: Emacsvox selects and starts the speech server while
 loading setup.  A shell alternative is to export the server name before
 launching Emacs:
 
@@ -229,422 +353,133 @@ outputs are not distributed.  After an ordinary Lisp edit@comma{} run
 @code{make bytecode}.  After switching branches@comma{} pulling@comma{} or changing Lisp
 macros or public interfaces@comma{} run @code{make bytecode-rebuild}.  The
 non-mutating @code{make bytecode-check} verifies that local byte-code is
-current and was produced by the selected Emacs.
-
-@node Building And Testing The Speech Server
-@section Building And Testing The Speech Server
-
-Speech-server launchers live in @code{servers/}.  Build them through the
-repository-root targets above so the selected paths and staging rules remain
-consistent.
-
-The Omnivox smoke test and its audible success condition are in
-@ref{Selecting And Checking Omnivox}.  The following protocol-level test is
-only for retained direct Tcl-compatible servers.  Run one of those launchers
-from the repository root@comma{} for example:
-
-@example
-./servers/espeak
-@end example
-
-Then enter:
-
-@example
-q @{This is a test.@}
-d
-s
-@end example
-
-The @code{q} command queues text@comma{} @code{d} dispatches it@comma{} and @code{s} stops
-speech.  Type @kbd{C-d} to close the server.  Backend-specific READMEs may
-provide stronger diagnostics and should take precedence over this generic
-smoke test.
-
-From Emacs@comma{} use @code{M-x tts-speak-version} to verify the selected adapter and
-@code{M-x tts-restart} after changing server configuration.  Omnivox also
-records per-process diagnostic logs below
-@code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
-@code{~/.local/state/emacsvox/omnivox}; spoken text is omitted unless explicit
-text logging is enabled.
-
-@node Speech Backends
-@chapter Speech Backends
-
-Emacsvox needs a speech-server process.  For a new installation@comma{} use
-@strong{Omnivox}.  Omnivox is the server that Emacsvox talks to; the engine
-that produces speech underneath it is platform-specific.  The normal engine
-is eSpeak NG on GNU/Linux@comma{} AVSpeechSynthesizer on macOS@comma{} and WinRT
-SpeechSynthesizer on Windows.
-
-This chapter owns Emacsvox's platform recommendation and first backend smoke
-test.  Omnivox owns its build internals@comma{} engine behavior@comma{} and versioned
-protocols.  The maintained Omnivox source and current status are at
-@uref{https://github.com/bartbunting/omnivox, the Omnivox repository}.
-
-@menu
-* Supported Platform Routes::    Choose the maintained route for this machine.
-* Installing Omnivox From Source:: Install on GNU/Linux or macOS.
-* Building Omnivox For WSL2::    Stage the Windows runtime from WSL2.
-* Selecting And Checking Omnivox:: Prove speech before starting Emacsvox.
-* Compatibility Speech Servers:: Understand the retained direct adapters.
-* Backend Diagnostics And Ownership:: Locate failures and authoritative detail.
-@end menu
-
-@node Supported Platform Routes
-@section Supported Platform Routes
-
-The following table describes Emacsvox support@comma{} not every platform that the
-Omnivox project can build.  ``Host check required'' means that the source path
-is maintained but an audible @code{omnivox --check} on the user's machine
-is still the acceptance test.
-
-@multitable @columnfractions .18 .31 .51
-@headitem Emacs platform
-@tab Recommended route
-@tab Current support evidence
-@item GNU/Linux
-@tab Source-built Omnivox using eSpeak NG
-@tab Supported source installation; host check required. Omnivox does not currently publish a Linux archive or run a Linux audio-runtime CI job.
-@item macOS on Apple silicon
-@tab Source-built Omnivox using AVSpeechSynthesizer
-@tab Supported source installation; Omnivox CI executes this native target@comma{} and the host check remains required.
-@item macOS on Intel
-@tab Source-built Omnivox using AVSpeechSynthesizer
-@tab Available source installation; current Omnivox CI cross-builds this target but does not execute it. Treat the host check as required validation.
-@item Emacs in WSL2 on x86-64 Windows
-@tab Emacsvox-staged Windows Omnivox using WinRT
-@tab Supported advanced deployment; the pinned build verifies its payload@comma{} but speech and audio must be accepted on the target Windows host.
-@item Native Windows Emacs
-@tab Omnivox executable on @code{exec-path}@comma{} using WinRT
-@tab Preview. The executable-resolution path exists@comma{} but Emacsvox does not yet publish or fresh-machine test a complete native-Windows setup. Initial users should use the WSL2 route.
-@end multitable
-
-There is no verified public binary-download path in this guide.  Build from
-source as described below.  A repository tag@comma{} a CI artifact@comma{} or an executable
-without its adjacent runtime data is not a substitute for a supported install
-payload.
-
-Do not set @code{OMNIVOX_ENGINE} during initial setup.  Its empty value selects
-the normal platform engine above.  Engine routing and optional Piper@comma{}
-Eloquence@comma{} or DECtalk support are later customizations@comma{} not prerequisites for
-first speech.
-
-@node Installing Omnivox From Source
-@section Installing Omnivox From Source
-
-Use this route on GNU/Linux and macOS@.  It requires network access for the
-initial clone@comma{} Rust toolchain@comma{} and locked dependency downloads.
-
-Install these prerequisite classes before building:
-
-@itemize
-@item
-@uref{https://rustup.rs/, rustup}; the checked-in
-@code{rust-toolchain.toml} selects the supported Rust release.
-
-@item
-Python 3@comma{} a C and C++ toolchain@comma{} CMake@comma{} and Clang with libclang.  The supported
-build wrapper uses these to build and stage eSpeak NG and its generated data.
-
-@item
-On GNU/Linux@comma{} @code{pkg-config} and ALSA development headers.  The ALSA
-package is commonly named @code{libasound2-dev} on Debian or Ubuntu and
-@code{alsa-lib-devel} on Fedora.
-
-@item
-On macOS@comma{} the Xcode command-line tools.  Install them with
-@code{xcode-select --install} if they are absent.
-@end itemize
-
-Keep the two repositories beside one another; this also matches the WSL2
-release layout:
-
-@example
-cd /path/containing/emacsvox
-git clone https://github.com/bartbunting/omnivox
-cd omnivox
-make build
-make install
-@end example
-
-@code{make build} performs the locked release build and stages the matching
-eSpeak data and third-party notices.  @code{make install} installs the
-binary and those adjacent directories@comma{} normally below @code{~/.cargo/bin}.
-Set @code{OMNIVOX_INSTALL_BIN} before @code{make install} only when the Cargo
-binary directory is elsewhere.  Do not use a bare @code{cargo build} as the
-installation procedure; it does not create the complete staged payload.
-
-Make the install directory visible on @code{PATH} before continuing.  No
-proprietary speech runtime is needed for the recommended Linux or macOS path.
-
-@node Building Omnivox For WSL2
-@section Building Omnivox For WSL2
-
-Use this route when Emacs runs inside WSL2 and speech should play through
-Windows.  Clone Omnivox beside Emacsvox as shown above.  The host must provide:
-
-@itemize
-@item
-WSL2 with working @code{powershell.exe} and @code{wslpath} interoperation;
-
-@item
-Docker with Linux/AMD64 container support;
-
-@item
-Windows .NET Framework 4.7.2 or newer; and
-
-@item
-@code{curl}@comma{} @code{unzip}@comma{} and @code{sha256sum} in WSL@comma{} plus network
-access for the pinned container and .NET toolchain inputs.
-@end itemize
-
-From a clean Emacsvox checkout whose sibling Omnivox checkout also has no
-tracked changes@comma{} run:
-
-@example
-cd /path/to/emacsvox
-make windows-omnivox
-@end example
-
-This is the reproducible release path.  It builds and verifies a pinned
-Windows-GNU executable and stages a content-addressed runtime beneath
-@code{servers/omnivox-bin}.  It also copies the runnable payload to a
-Windows-local directory so native voice and eSpeak data discovery do not pay
-the WSL filesystem cost.  Optional proprietary Eloquence and DECtalk runtimes
-are not downloaded or distributed.
-
-Maintainers testing tracked changes may use
-@code{make windows-omnivox-dev}.  That target records both worktree-diff
-hashes and labels the result as a development build; it is not the clean
-release procedure.  See @code{servers/omnivox-release/README.org} for the
-pinned toolchain@comma{} licensing@comma{} provenance@comma{} and restaging contract.
-
-@node Selecting And Checking Omnivox
-@section Selecting And Checking Omnivox
-
-First test Omnivox without Emacs.  On GNU/Linux or macOS@comma{} run the installed
-binary:
-
-@example
-omnivox --version
-omnivox --check
-omnivox --list-voices
-@end example
-
-Under WSL2@comma{} test the content-addressed launcher instead:
-
-@example
-./servers/omnivox --check
-@end example
-
-The check initializes the selected engine and audio output@comma{} then plays a tone
-and speech.  Success ends with a message saying that everything is working if
-both were heard.  Do not continue merely because the command exited zero:
-hearing both signals is the backend acceptance condition.
-
-Next select the server before loading Emacsvox:
-
-@example
-export TTS_PROGRAM=omnivox
-@end example
-
-Make that setting visible in the shell used to launch Emacs.  An
-@code{export} affects only that shell and its children; placing it in a
-shell startup file makes the choice persistent for later sessions.  On POSIX
-systems@comma{} Emacsvox's @code{servers/omnivox} launcher finds an installed
-@code{omnivox} on @code{PATH}; @code{OMNIVOX_PROGRAM} can instead name its
-absolute executable.  Native Windows Emacs resolves @code{omnivox.exe}
-directly through @code{exec-path}@comma{} but that route remains preview.
-
-Inside a running Emacsvox session@comma{} @code{M-x omnivox} selects the same server
-temporarily.  Use @code{M-x tts-speak-version} to identify the live adapter
-and @code{M-x tts-restart} after changing server configuration.  This backend
-contract stops at a proven speech server; the complete isolated Emacs start@comma{}
-expected startup speech@comma{} and no-speech recovery belong to the first-use
-procedure.
-
-@node Compatibility Speech Servers
-@section Compatibility Speech Servers
-
-Emacsvox retains direct speech servers for existing installations.  They are
-not the recommended first setup and are outside the initial-user platform
-matrix above:
-
-@table @code
-@item espeak
-The direct GNU/Linux Tcl server.  Building it with @code{make espeak}
-requires Tclx at runtime@comma{} Tcl 8.6 development headers@comma{} eSpeak NG development
-libraries@comma{} and a C++ compiler.  It remains useful for compatibility testing@comma{}
-but new users should install Omnivox instead.
-@item swiftmac
-The direct Swift macOS server.  It requires Swift 5.9 or newer and is built
-with @code{make swiftmac}.  It remains a compatibility alternative to
-Omnivox's AVSpeechSynthesizer engine; see
-@code{servers/mac-swiftmac/Readme.org}.
-@item mac
-The legacy Python/PyObjC macOS server.  The unset runtime selector still names
-it as a compatibility default on Darwin@comma{} but it is not the recommended or
-documented initial-user route.  It depends on Foundation@comma{} AppKit@comma{} and
-PyObjCTools availability.
-@item outloud
-The direct GNU/Linux IBM TTS or Eloquence adapter.  It requires a separately
-licensed compatible runtime@comma{} which Emacsvox does not distribute.  Voxin
-availability is documented at @uref{https://voxin.oralux.net}.
-@item dtk-soft
-The direct Software DECtalk adapter.  Install its runtime separately and see
-@code{servers/software-dtk/Readme.org}.  Emacsvox does not distribute licensed
-speech runtimes.
-@end table
-
-The native Windows audio@comma{} standalone Eloquence@comma{} and standalone DECtalk bridges
-under @code{servers/} are advanced WSL-specific compatibility paths.  Piper is
-an optional Omnivox engine and model workflow@comma{} not a primary Emacsvox server.
-
-@node Backend Diagnostics And Ownership
-@section Backend Diagnostics And Ownership
-
-Use the boundary at which speech failed to choose the next diagnostic:
-
-@table @asis
-@item @code{omnivox} is not found
-Check @code{PATH}; on POSIX@comma{} an absolute @code{OMNIVOX_PROGRAM} can identify the
-installed executable.  Keep its adjacent @code{espeak-ng-data} and
-@code{third-party-licenses} directories with it.
-@item @code{omnivox --check} reports an error or is inaudible
-The failure is below Emacsvox.  Consult Omnivox's
-@uref{https://github.com/bartbunting/omnivox/blob/main/README.md, build guide}@comma{}
-@uref{https://github.com/bartbunting/omnivox/blob/main/STATUS.md, platform status}@comma{}
-and
-@uref{https://github.com/bartbunting/omnivox/blob/main/docs/DIAGNOSTICS.md, diagnostics guide}.  Do not diagnose Emacs configuration until the tone and
-speech check passes.
-@item The check passes but Emacsvox is silent
-Confirm that @code{TTS_PROGRAM=omnivox} was present before Emacsvox loaded@comma{} then
-use @code{M-x tts-speak-version}.  Under WSL2@comma{} also run
-@code{make verify-windows-omnivox-runtime} and restart the speech process
-after restaging.
-@item A process starts and later fails
-The Emacsvox POSIX/WSL launcher writes private@comma{} bounded stderr logs below
-@code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
-@code{~/.local/state/emacsvox/omnivox}.  Spoken text is excluded unless
-@code{OMNIVOX_LOG_SYNTHESIS_TEXT} is explicitly enabled; enabling it can expose
-passwords@comma{} messages@comma{} and document contents.
-@end table
-
-Emacsvox owns server selection@comma{} its POSIX/WSL launcher@comma{} Windows staging@comma{} and
-the bundled Lisp adapter.  Omnivox owns its native builds@comma{} engines@comma{} command
-line@comma{} runtime data layout@comma{} and protocol specifications.  Backend-local
-READMEs own licensed-runtime and compatibility-adapter details.  Cross-link
-these owners rather than copying their versioned contracts into installation
-instructions.
+current and was produced by the selected Emacs.  These commands matter when
+developing Emacsvox; ordinary users do not need to run them again unless the
+checkout changes.
 
 @node Basic Usage
-@chapter Basic Usage.
+@chapter Basic Usage
 
-This chapter gives a short@comma{} task-oriented introduction to Emacsvox.
-For the complete generated key reference@comma{} see
-@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
-Use @kbd{C-h m} to inspect the modes and bindings active in the current
-buffer@comma{} or @kbd{C-h k} followed by a key to ask Emacs what that key does.
-These sections describe the speech-enabling extensions@comma{} but are not a
-substitute for the Emacs manual.
-
-All Emacs navigation and editing commands have been speech enabled.
-Thus@comma{} moving to the next or previous word@comma{} line or paragraph results
-in the text around point being spoken.  Exactly how much text is
-spoken is determined by the amount by which you moved.
-
-In addition@comma{} Emacsvox provides  basic reading functions that can be
-invoked to listen to chunks of text without moving.
+Now that Emacsvox is speaking@comma{} this chapter helps you become comfortable with
+the essential keys and feedback.  It begins with a short guided session@comma{} then
+introduces the reading and speech controls you are most likely to need.
 
 @menu
-* Overview::                     Basic Overview.
-* Working::                      Working in Emacsvox.
+* Overview::                     Understand the main kinds of Emacsvox feedback.
+* Working::                      Understand feedback while editing and completing text.
 * Reading::                      Reading chunks of information.
 * Speech System::                Controlling Speech Output.
 * Voice-lock::                   Audio Formatting.
 * Status Information::           Speaking Status Information.
 @end menu
 
+@section Key Notation And Emacs Words
+
+Emacs documentation writes @kbd{C-} for the Control key and @kbd{M-} for the
+Meta key@comma{} which is usually Alt or Option.  For example@comma{} @kbd{C-n} means
+hold Control and press @kbd{n}.  A sequence such as @kbd{C-e l} means press
+@kbd{C-e}@comma{} release it@comma{} and then press @kbd{l}.
+
+@kbd{M-x} prompts for an Emacs command by name@comma{} and @key{RET} means the
+Return or Enter key.  A @emph{buffer} is the Emacs workspace containing text or an
+application.  @emph{Point} is the current editing position—the place affected by
+movement and editing commands.
+
+If Emacs itself is new to you@comma{} @kbd{C-h t} opens its interactive tutorial.
+You can return to this chapter whenever the tutorial refers to buffers@comma{} point@comma{}
+windows@comma{} or key sequences.
+
+@section Your First Few Minutes
+
+Try these actions in the clean session started during installation:
+
+@enumerate
+@item
+Press @kbd{C-n} and @kbd{C-p} to move down and up by one line.  Emacsvox
+speaks the line you reach.
+
+@item
+Press @kbd{C-e l} to hear the current line without moving.
+
+@item
+Press @kbd{C-e s} whenever you want to stop speech immediately.
+
+@item
+Press @kbd{C-h k} followed by any key to hear what that key does.
+
+@item
+Press @kbd{C-h m} to hear about the modes and commands available in the
+current buffer.
+
+@item
+Press @kbd{C-h C-e} to open the Emacsvox overview.
+@end enumerate
+
+These commands are enough to begin exploring safely.  The rest of this chapter
+adds reading controls and speech settings as you need them.  The generated
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual} records the complete default keymaps@comma{} while live
+help remains authoritative when a package or personal configuration changes a
+binding.
+
 @node Overview
 @section Emacsvox Overview
 
-Emacsvox provides a small number of core services around which the
-remainder of the audio interface is constructed.  These essential
-features of the software are briefly outlined in the following
-paragraphs; the commands by which they can be controlled will be
-described later in the manual.
+Emacsvox adds spoken feedback to Emacs editing and to applications that run
+inside Emacs.  Movement speaks the corresponding character@comma{} word@comma{} line@comma{} or
+larger unit.  Commands announce useful results and state changes@comma{} while
+application integrations present structures such as messages@comma{} search results@comma{}
+tables@comma{} source code@comma{} and Web pages.
 
-Apart from providing a fluent spoken interface to all of Emacs' basic
-editing functions@comma{} Emacsvox also includes software modules which add
-speech feedback to a range of applications that can be run from within
-Emacs. In this sense@comma{} Emacsvox amounts to much more than a talking
-text editor; indeed@comma{} it can more aptly be characterized as a true
-``audio desktop''@comma{} in which speech is treated as a first-class output modality.
+Voice Lock uses changes in speech characteristics to make text structure
+audible.  For example@comma{} comments@comma{} quoted strings@comma{} reserved words@comma{} headings@comma{} and
+links can sound different without an explanation being inserted into the text.
+See @ref{Voice Lock} for configuration and @ref{Web Browsing} for a
+task-oriented example in EWW@.
 
-Emacsvox implements a special minor mode@comma{} known as ``voice lock mode''
-(@pxref{Voice-lock}) which uses distinct speech characteristics to
-provide aural highlighting of specific textual constructs@comma{} such as
-comments in program code@comma{} quoted strings and reserved words @xref{Voice Lock}. This facility is further extended in the supported @code{EWW} Web
-browser@comma{} where semantic and structural distinctions captured by HTML markup
-can be communicated efficiently; see @ref{Web Browsing}.
-
-It is often desirable to exercise control over the pronunciation of a
-word (E.G@. a technical term or a reserved word in a programming
-language) within specific contexts. Emacsvox maintains pronunciation
-dictionaries for this purpose@comma{} which may be customized by the
-user. Moreover@comma{} individual dictionaries can be activated selectively@comma{}
-depending for example on the current major mode or the name of the
-file which is being visited; see
+Pronunciation dictionaries let you adjust how a name@comma{} technical term@comma{} or
+programming-language word is spoken.  A dictionary can apply everywhere or
+only in a particular mode or file; see
 @ref{emacsvox-pronounce,,,emacsvox-reference,Emacsvox Reference Manual}.
 
-In addition to spoken feedback@comma{} Emacsvox can generate ``auditory
-icons''  @MDash{} short sound cues which alert the user to significant
-events@comma{} for example the opening or deletion of a file@comma{} the completion
-of an action@comma{} the arrival of an electronic mail message or the
-creation of a completion buffer. Sound cues act as a supplement to the
-spoken interface@comma{} and are especially valuable to the experienced user
-in facilitating rapid interaction. Note that in order to support
-auditory icons@comma{} the computer must be equipped with sound hardware for
-which the operating system has been correctly configured; see
-@ref{emacsvox-sounds,,,emacsvox-reference,Emacsvox Reference Manual}.
+Short auditory icons and tones mark events such as opening or deleting a file@comma{}
+finishing an action@comma{} receiving mail@comma{} or displaying completions.  They
+supplement speech and become especially useful as familiar events no longer
+need a full spoken explanation.  See
+@ref{emacsvox-sounds,,,emacsvox-reference,Emacsvox Reference Manual} for the available sound support.
 
 @node Working
 @section Using Emacs Buffers
 
-While typing in an Emacs buffer@comma{} hitting space speaks the recently
-typed word.  I use completion all the time; so Emacsvox will speak
-the completion just inserted as well as the next possible completion.
-In Emacs@comma{} use @kbd{M-x load-library @key{RETURN} completion @key{RETURN}} for loading the completion package.
+As you type@comma{} character echo can speak individual characters and word echo can
+speak a word when you finish it.  Completion interfaces announce candidates@comma{}
+the inserted completion@comma{} and the item currently selected.  Prompts and error
+messages are spoken through the same Emacs feedback that appears on screen.
 
-The standard Emacs prompting functions have also been speech-enabled.
-Emacs prompts with available lists of completions in response to partial
-input wherever appropriate   @MDash{} all forms of completion provide speech
-feedback.
-
-In addition@comma{} Emacsvox provides a number of commands for reading
-portions of the current buffer@comma{} getting status information@comma{} and
-modifying Emacsvox's state.
-
-All of the commands are documented in the subsequent sections.
-They can be classified into types:
+Most everyday feedback happens automatically.  Emacsvox also provides three
+useful groups of explicit commands:
 
 @itemize
 @item
-Emacsvox commands for listening to chunks of information.  Most of
-these command names start with @code{emacsvox-speak-}.  Their default
-bindings are grouped under the main Emacsvox prefix @kbd{C-e}@footnote{The prefix is inherited from Emacspeak@comma{} where C-e was mnemonic for the project name.}.  The starter bindings are introduced in @ref{Reading};
-the live Help system and generated key reference remain authoritative
-when bindings are customized.
+Reading commands speak a character@comma{} word@comma{} line@comma{} region@comma{} or larger portion of
+a buffer without requiring you to move first.  Their names usually begin
+with @code{emacsvox-speak-}@comma{} and their default keys use the main @kbd{C-e}
+prefix.@footnote{The prefix is inherited from Emacspeak@comma{} where C-e was mnemonic
+for the project name.}
 
 @item
-The second category manipulates the speech engine.  These commands
-normally start with @code{tts-} and are grouped under @kbd{C-e d}
-@footnote{Historically@comma{} d was mnemonic for DECtalk; the prefix now contains engine-independent speech controls.}.
+Speech-system commands change settings such as rate@comma{} punctuation@comma{} and echo.
+Their names usually begin with @code{tts-}@comma{} and many are grouped under
+@kbd{C-e d}.@footnote{Historically@comma{} d was mnemonic for DECtalk; the prefix now
+contains engine-independent speech controls.}
+
+@item
+Help commands describe the active modes@comma{} available keys@comma{} and Emacsvox
+integrations in the buffer where you are working.
 @end itemize
 
-Emacs and Emacsvox both expose their current commands through Emacs Help.
-Use the small set below to get oriented@comma{} then use Help or the generated
-reference instead of relying on a copied exhaustive list.
+The following sections introduce a practical starter set.  Use live Help or
+the generated reference when you need the complete commands for a particular
+application.
 
 @node Reading
 @section Reading and Navigating
@@ -1168,65 +1003,278 @@ Speak the current column.
 Announce the percentage into the current buffer.
 @end table
 
-@node Introduction
-@chapter Introduction
+@node Speech Backends
+@chapter Speech Backends
 
-@cindex Introduction
+Emacsvox needs a speech-server process.  For a new installation@comma{} use
+@strong{Omnivox}.  Omnivox is the server that Emacsvox talks to; the engine
+that produces speech underneath it is platform-specific.  The normal engine
+is eSpeak NG on GNU/Linux@comma{} AVSpeechSynthesizer on macOS@comma{} and WinRT
+SpeechSynthesizer on Windows.
 
-Emacsvox is an Emacs 31-or-newer audio desktop derived from Emacspeak.  It is
-not a pixel-oriented screen reader.  It runs inside Emacs@comma{} where commands@comma{}
-buffers@comma{} text properties@comma{} faces@comma{} modes@comma{} and application state are available as
-structured information.  That context lets Emacsvox present the meaning and
-result of an interaction rather than merely reading the visible display.
+For a first installation@comma{} follow the linear procedure in
+@ref{Installation}.  Return here when you need platform-specific build
+details@comma{} compatibility servers@comma{} or deeper diagnostics.  Omnivox build
+internals@comma{} engine behavior@comma{} and versioned protocols are documented and
+maintained in
+@uref{https://github.com/bartbunting/omnivox, the Omnivox repository}.
 
-Application integrations adapt interactive commands and changing buffers to
-produce spoken text@comma{} voice changes@comma{} auditory icons@comma{} tones@comma{} pauses@comma{} and spatial
-feedback.  The core speech layer normalizes text and formatting and sends it
-to the selected speech adapter.  Established direct speech paths remain
-available for compatibility@comma{} while migrated integrations can submit a complete
-Aural Presentation transaction.
+@menu
+* Supported Platform Routes::    Choose the maintained route for this machine.
+* Installing Omnivox From Source:: Install on GNU/Linux or macOS.
+* Building Omnivox For WSL2::    Stage the Windows runtime from WSL2.
+* Selecting And Checking Omnivox:: Prove speech before starting Emacsvox.
+* Compatibility Speech Servers:: Understand the retained direct adapters.
+* Backend Diagnostics And Responsibilities: Backend Diagnostics And Ownership.  Locate failures and authoritative detail.
+@end menu
 
-@section Aural Presentation
+@node Supported Platform Routes
+@section Supported Platform Routes
 
-Aural Presentation separates semantic facts from their audible rendering.
-An integration records what an object or event means; providers and rules
-choose voices and actions; a planner and compiler produce a concrete ordered
-presentation.  The fixed internal baseline preserves established Emacsvox
-feedback.  Users can compose Presentation Options@comma{} profiles@comma{} palettes@comma{} sound
-packs@comma{} spatial settings@comma{} and scoped overrides without replacing that baseline.
+The following table describes Emacsvox support@comma{} not every platform that the
+Omnivox project can build.  ``Host check required'' means that the source path
+is maintained but an audible @code{omnivox --check} on the user's machine
+is still the acceptance test.
 
-Open Aural Home with @kbd{C-e H} or
-@code{M-x emacsvox-aural}.  Use @kbd{C-e E} to explain the presentation at
-point.  The generated author and lifecycle reference is
-@code{etc/aural-presentation-reference.org} in the source tree.
+@multitable @columnfractions .18 .31 .51
+@headitem Emacs platform
+@tab Recommended route
+@tab Current support evidence
+@item GNU/Linux
+@tab Source-built Omnivox using eSpeak NG
+@tab Supported source installation; host check required. Omnivox does not currently publish a Linux archive or run a Linux audio-runtime CI job.
+@item macOS on Apple silicon
+@tab Source-built Omnivox using AVSpeechSynthesizer
+@tab Supported source installation; Omnivox CI executes this native target@comma{} and the host check remains required.
+@item macOS on Intel
+@tab Source-built Omnivox using AVSpeechSynthesizer
+@tab Available source installation; current Omnivox CI cross-builds this target but does not execute it. Treat the host check as required validation.
+@item Emacs in WSL2 on x86-64 Windows
+@tab Emacsvox-staged Windows Omnivox using WinRT
+@tab Supported advanced deployment; the pinned build verifies its payload@comma{} but speech and audio must be accepted on the target Windows host.
+@item Native Windows Emacs
+@tab Omnivox executable on @code{exec-path}@comma{} using WinRT
+@tab Preview. The executable-resolution path exists@comma{} but Emacsvox does not yet publish or fresh-machine test a complete native-Windows setup. Initial users should use the WSL2 route.
+@end multitable
 
-@section Speech Adapters And Omnivox
+There is no verified public binary-download path in this guide.  Build from
+source as described below.  A repository tag@comma{} a CI artifact@comma{} or an executable
+without its adjacent runtime data is not a substitute for a supported install
+payload.
 
-Emacsvox retains standalone speech servers for engines such as eSpeak@comma{}
-Eloquence@comma{} DECtalk@comma{} and SwiftMac.  Omnivox is the recommended multi-engine
-server for new GNU/Linux@comma{} macOS@comma{} and WSL2 installations.  It negotiates
-capabilities@comma{} reports live engine and physical-voice inventory@comma{} routes portable
-logical voices@comma{} and accepts structured presentation timelines.  Keyed
-replaceable timelines cancel only older work in the same replacement domain;
-ordered and urgent work are not placed behind the replaceable coalescing
-window.
+Do not set @code{OMNIVOX_ENGINE} during initial setup.  Its empty value selects
+the normal platform engine above.  Engine routing and optional Piper@comma{}
+Eloquence@comma{} or DECtalk support are later customizations@comma{} not prerequisites for
+first speech.
 
-@xref{Speech Backends}@comma{} for Emacsvox's platform status@comma{} Omnivox installation@comma{}
-selection@comma{} smoke test@comma{} and compatibility policy.  The Emacsvox
-@code{Readme.org} documents advanced portable voice routing.  Omnivox owns the
-detailed control@comma{} helper@comma{} and presentation-timeline protocol contracts in its
-own repository.  The legacy line protocol remains supported for standalone
-and older speech servers; @xref{TTS Servers} explains the boundary between
-those protocol families.
+@node Installing Omnivox From Source
+@section Installing Omnivox From Source
 
-@section Documentation Scope
+Use this route on GNU/Linux and macOS@.  It requires network access for the
+initial clone@comma{} Rust toolchain@comma{} and locked dependency downloads.
 
-This manual includes generated command documentation as well as inherited
-Emacspeak essays and application guides.  Historical chapters are useful for
-design context but may describe software and Web services from their original
-period.  Current setup starts with @xref{Installation}; rapidly changing
-features are documented in @code{Readme.org}@comma{} @code{etc/NEWS}@comma{} and the generated
-Aural Presentation reference.
+Install these prerequisite classes before building:
+
+@itemize
+@item
+@uref{https://rustup.rs/, rustup}; the checked-in
+@code{rust-toolchain.toml} selects the supported Rust release.
+
+@item
+Python 3@comma{} a C and C++ toolchain@comma{} CMake@comma{} and Clang with libclang.  The supported
+build wrapper uses these to build and stage eSpeak NG and its generated data.
+
+@item
+On GNU/Linux@comma{} @code{pkg-config} and ALSA development headers.  The ALSA
+package is commonly named @code{libasound2-dev} on Debian or Ubuntu and
+@code{alsa-lib-devel} on Fedora.
+
+@item
+On macOS@comma{} the Xcode command-line tools.  Install them with
+@code{xcode-select --install} if they are absent.
+@end itemize
+
+Keep the two repositories beside one another; this also matches the WSL2
+release layout:
+
+@example
+cd /path/containing/emacsvox
+git clone https://github.com/bartbunting/omnivox
+cd omnivox
+make build
+make install
+@end example
+
+@code{make build} performs the locked release build and stages the matching
+eSpeak data and third-party notices.  @code{make install} installs the
+binary and those adjacent directories@comma{} normally below @code{~/.cargo/bin}.
+Set @code{OMNIVOX_INSTALL_BIN} before @code{make install} only when the Cargo
+binary directory is elsewhere.  Do not use a bare @code{cargo build} as the
+installation procedure; it does not create the complete staged payload.
+
+Make the install directory visible on @code{PATH} before continuing.  No
+proprietary speech runtime is needed for the recommended Linux or macOS path.
+
+@node Building Omnivox For WSL2
+@section Building Omnivox For WSL2
+
+Use this route when Emacs runs inside WSL2 and speech should play through
+Windows.  Clone Omnivox beside Emacsvox as shown above.  The host must provide:
+
+@itemize
+@item
+WSL2 with working @code{powershell.exe} and @code{wslpath} interoperation;
+
+@item
+Docker with Linux/AMD64 container support;
+
+@item
+Windows .NET Framework 4.7.2 or newer; and
+
+@item
+@code{curl}@comma{} @code{unzip}@comma{} and @code{sha256sum} in WSL@comma{} plus network
+access for the pinned container and .NET toolchain inputs.
+@end itemize
+
+From a clean Emacsvox checkout whose sibling Omnivox checkout also has no
+tracked changes@comma{} run:
+
+@example
+cd /path/to/emacsvox
+make windows-omnivox
+@end example
+
+This is the reproducible release path.  It builds and verifies a pinned
+Windows-GNU executable and stages a content-addressed runtime beneath
+@code{servers/omnivox-bin}.  It also copies the runnable payload to a
+Windows-local directory so native voice and eSpeak data discovery do not pay
+the WSL filesystem cost.  Optional proprietary Eloquence and DECtalk runtimes
+are not downloaded or distributed.
+
+Maintainers testing tracked changes may use
+@code{make windows-omnivox-dev}.  That target records both worktree-diff
+hashes and labels the result as a development build; it is not the clean
+release procedure.  See @code{servers/omnivox-release/README.org} for the
+pinned toolchain@comma{} licensing@comma{} provenance@comma{} and restaging contract.
+
+@node Selecting And Checking Omnivox
+@section Selecting And Checking Omnivox
+
+First test Omnivox without Emacs.  On GNU/Linux or macOS@comma{} run the installed
+binary:
+
+@example
+omnivox --version
+omnivox --check
+omnivox --list-voices
+@end example
+
+Under WSL2@comma{} test the content-addressed launcher instead:
+
+@example
+./servers/omnivox --check
+@end example
+
+The check initializes the selected engine and audio output@comma{} then plays a tone
+and speech.  Success ends with a message saying that everything is working if
+both were heard.  Do not continue merely because the command exited zero:
+hearing both signals is the backend acceptance condition.
+
+Next select the server before loading Emacsvox:
+
+@example
+export TTS_PROGRAM=omnivox
+@end example
+
+Make that setting visible in the shell used to launch Emacs.  An
+@code{export} affects only that shell and its children; placing it in a
+shell startup file makes the choice persistent for later sessions.  On POSIX
+systems@comma{} Emacsvox's @code{servers/omnivox} launcher finds an installed
+@code{omnivox} on @code{PATH}; @code{OMNIVOX_PROGRAM} can instead name its
+absolute executable.  Native Windows Emacs resolves @code{omnivox.exe}
+directly through @code{exec-path}@comma{} but that route remains preview.
+
+Inside a running Emacsvox session@comma{} @code{M-x omnivox} selects the same server
+temporarily.  Use @code{M-x tts-speak-version} to identify the live adapter
+and @code{M-x tts-restart} after changing server configuration.  This backend
+contract stops at a proven speech server; the complete isolated Emacs start@comma{}
+expected startup speech@comma{} and no-speech recovery belong to the first-use
+procedure.
+
+@node Compatibility Speech Servers
+@section Compatibility Speech Servers
+
+Emacsvox retains direct speech servers for existing installations.  They are
+not the recommended first setup and are outside the initial-user platform
+matrix above:
+
+@table @code
+@item espeak
+The direct GNU/Linux Tcl server.  Building it with @code{make espeak}
+requires Tclx at runtime@comma{} Tcl 8.6 development headers@comma{} eSpeak NG development
+libraries@comma{} and a C++ compiler.  It remains useful for compatibility testing@comma{}
+but new users should install Omnivox instead.
+@item swiftmac
+The direct Swift macOS server.  It requires Swift 5.9 or newer and is built
+with @code{make swiftmac}.  It remains a compatibility alternative to
+Omnivox's AVSpeechSynthesizer engine; see
+@code{servers/mac-swiftmac/Readme.org}.
+@item mac
+The legacy Python/PyObjC macOS server.  The unset runtime selector still names
+it as a compatibility default on Darwin@comma{} but it is not the recommended or
+documented initial-user route.  It depends on Foundation@comma{} AppKit@comma{} and
+PyObjCTools availability.
+@item outloud
+The direct GNU/Linux IBM TTS or Eloquence adapter.  It requires a separately
+licensed compatible runtime@comma{} which Emacsvox does not distribute.  Voxin
+availability is documented at @uref{https://voxin.oralux.net}.
+@item dtk-soft
+The direct Software DECtalk adapter.  Install its runtime separately and see
+@code{servers/software-dtk/Readme.org}.  Emacsvox does not distribute licensed
+speech runtimes.
+@end table
+
+The native Windows audio@comma{} standalone Eloquence@comma{} and standalone DECtalk bridges
+under @code{servers/} are advanced WSL-specific compatibility paths.  Piper is
+an optional Omnivox engine and model workflow@comma{} not a primary Emacsvox server.
+
+@node Backend Diagnostics And Ownership
+@section Backend Diagnostics And Responsibilities
+
+Use the boundary at which speech failed to choose the next diagnostic:
+
+@table @asis
+@item @code{omnivox} is not found
+Check @code{PATH}; on POSIX@comma{} an absolute @code{OMNIVOX_PROGRAM} can identify the
+installed executable.  Keep its adjacent @code{espeak-ng-data} and
+@code{third-party-licenses} directories with it.
+@item @code{omnivox --check} reports an error or is inaudible
+The failure is below Emacsvox.  Consult Omnivox's
+@uref{https://github.com/bartbunting/omnivox/blob/main/README.md, build guide}@comma{}
+@uref{https://github.com/bartbunting/omnivox/blob/main/STATUS.md, platform status}@comma{}
+and
+@uref{https://github.com/bartbunting/omnivox/blob/main/docs/DIAGNOSTICS.md, diagnostics guide}.  Do not diagnose Emacs configuration until the tone and
+speech check passes.
+@item The check passes but Emacsvox is silent
+Confirm that @code{TTS_PROGRAM=omnivox} was present before Emacsvox loaded@comma{} then
+use @code{M-x tts-speak-version}.  Under WSL2@comma{} also run
+@code{make verify-windows-omnivox-runtime} and restart the speech process
+after restaging.
+@item A process starts and later fails
+The Emacsvox POSIX/WSL launcher writes private@comma{} bounded stderr logs below
+@code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
+@code{~/.local/state/emacsvox/omnivox}.  Spoken text is excluded unless
+@code{OMNIVOX_LOG_SYNTHESIS_TEXT} is explicitly enabled; enabling it can expose
+passwords@comma{} messages@comma{} and document contents.
+@end table
+
+Server selection@comma{} the POSIX/WSL launcher@comma{} Windows staging@comma{} and the bundled
+Lisp adapter are implemented and documented in Emacsvox.  Native builds@comma{}
+engines@comma{} the command line@comma{} runtime data layout@comma{} and protocol specifications
+are documented in the Omnivox repository.  Backend-local READMEs describe
+licensed runtimes and compatibility adapters.  Follow those sources for
+versioned details rather than copying their contracts into installation
+instructions.
 
 @node Audio Desktop
 @chapter The Emacsvox Audio Desktop.
@@ -1666,9 +1714,8 @@ The generated
 
 This chapter is a curated starting point@comma{} not a promise that every module in
 the generated reference has a maintained task guide.  Emacs itself or a
-third-party package owns the application's general operation; Emacsvox owns
-the additional speech feedback.  Consult both sets of help when diagnosing a
-problem.
+third-party package provides the application's general operation; Emacsvox
+adds the speech feedback.  Consult both sets of help when diagnosing a problem.
 
 Earlier Emacspeak surveys@comma{} including their W3@comma{} Dismal@comma{} and scanner/OCR setup@comma{}
 are preserved as historical material in
@@ -1721,8 +1768,8 @@ the underlying editor.
 
 Tempo supplies template fields for modes and packages that use it.  Emacsvox
 speaks inserted text and the line reached when moving between template marks.
-The package that supplied a template owns its insertion commands; use that
-package's mode help@comma{} together with
+The package that supplied a template also provides its insertion commands;
+use that package's mode help@comma{} together with
 @ref{emacsvox-tempo,,,emacsvox-reference,Emacsvox Reference Manual}.
 
 @node Browsing Structure
@@ -2227,7 +2274,7 @@ them.
 @cindex byte-code, Notmuch integration
 
 Use @kbd{?} or @kbd{C-h m} in the affected Notmuch buffer to confirm the keys
-owned by the installed Notmuch version.  Run @kbd{M-x notmuch-version} to
+provided by the installed Notmuch version.  Run @kbd{M-x notmuch-version} to
 identify that package@comma{} and use the official manual linked at the beginning of
 this chapter for its current behavior.
 
@@ -2540,11 +2587,11 @@ See the EAT manual for terminal setup and EAT's complete command reference
 
 Emacsvox observes EAT's bounded rendered screen.  It does not parse a shell's
 private state and it does not generate shell or router completion candidates.
-This distinction is important: EAT owns terminal emulation@comma{} the program on the
-other end owns terminal-side input and completion@comma{} and Emacsvox presents the
-visible result.
+This distinction is important: EAT handles terminal emulation@comma{} the program on
+the other end handles terminal-side input and completion@comma{} and Emacsvox
+presents the visible result.
 
-@section Input Modes And Completion Ownership
+@section Input Modes And Completion Responsibilities
 
 @cindex EAT input modes
 
@@ -2645,7 +2692,7 @@ otherwise unambiguous word deletion from being announced.  This also handles a
 no-echo peer safely: without a visible deletion there is no content to
 announce.  Feedback requires the selected window to follow the live cursor@comma{}
 and is silent during protected password input@comma{} in an unselected terminal@comma{} and
-on an alternate screen where the application owns the keys.
+on an alternate screen where the application controls the keys.
 
 On a full-screen or alternate-screen application@comma{} Emacsvox does not read every
 refresh.  A cursor row reached by correlated arrow-style navigation@comma{} or one
@@ -2966,16 +3013,16 @@ terminal itself renders incorrectly.
 
 When EAT's global @code{eat-eshell-mode} is enabled@comma{} Emacsvox uses the same
 screen observer for the terminal region embedded in Eshell.  Rendered command
-output is owned by one speech path@comma{} so it is not repeated by generic Eshell
+output is handled by one speech path@comma{} so it is not repeated by generic Eshell
 output feedback.
 
 With @code{eat-eshell-visual-command-mode}@comma{} an Eshell visual command runs in a
 separate EAT buffer.  Emacsvox announces its start@comma{} delivers eligible final
 output before the process-exit event@comma{} and labels its exit as an Eshell visual
-command.  EAT and Eshell still own the window-return policy.  In particular@comma{}
-@code{eshell-destroy-buffer-when-process-dies} determines whether a successful
-visual-command buffer is killed and Eshell is restored; Emacsvox does not
-change that option.
+command.  EAT and Eshell still determine the window-return policy.  In
+particular@comma{} @code{eshell-destroy-buffer-when-process-dies} determines whether a
+successful visual-command buffer is killed and Eshell is restored; Emacsvox
+does not change that option.
 
 @node Running Terminal Based Applications
 @chapter Term Terminal Access
@@ -3015,9 +3062,9 @@ currently makes the selected Term window fill the frame when @code{term} or
 @code{ansi-term} starts.  This changes only the window layout: it does not kill
 the buffers that were displayed in the other windows.
 
-Term owns terminal emulation and the child program owns its prompts@comma{} input@comma{}
-and completion.  Emacsvox observes the rendered Term buffer and adds speech
-feedback and review commands.  See @ref{Term Mode,,,emacs,The GNU Emacs Manual} for the emulator itself and
+Term handles terminal emulation@comma{} while the child program handles its prompts@comma{}
+input@comma{} and completion.  Emacsvox observes the rendered Term buffer and adds
+speech feedback and review commands.  See @ref{Term Mode,,,emacs,The GNU Emacs Manual} for the emulator itself and
 @ref{emacsvox-eterm,,,emacsvox-reference,Emacsvox Reference Manual} for the
 complete Emacsvox API inventory.
 
@@ -3139,7 +3186,7 @@ line mode with @kbd{C-c C-j}.
 
 @item
 If review has drifted away from live output@comma{} press @kbd{C-t .}.  If dedicated
-review mode owns the keys@comma{} press @kbd{q} first to return to character mode.
+review mode controls the keys@comma{} press @kbd{q} first to return to character mode.
 
 @item
 If a full-screen application redraws in a way that Term cannot present
@@ -3300,6 +3347,28 @@ This design allows a legacy Emacsvox @acronym{TTS} server to be
 amounts of text (typically queued a clause at a time to achieve the
 best prosody)@comma{} ask the @acronym{TTS} server to start speaking@comma{} and
 interrupt the spoken output at any time.
+
+@subsection Testing A Direct Legacy Server
+
+This protocol-level test is only for a retained direct Tcl-compatible server.
+Run its launcher from the Emacsvox repository root@comma{} for example:
+
+@example
+./servers/espeak
+@end example
+
+Then enter:
+
+@example
+q @{This is a test.@}
+d
+s
+@end example
+
+The @code{q} command queues text@comma{} @code{d} dispatches it@comma{} and @code{s} stops speech.  Type
+@kbd{C-d} to close the server.  A backend-specific README may provide a
+stronger diagnostic and should take precedence over this generic protocol
+test.
 
 @subsection Commands That Queue Output.
 

@@ -1,17 +1,11 @@
+Introduction
 Installation
 Obtaining Emacsvox
+Building And Testing The Speech Server
 Quick Installation
 Confirming First Speech
 Recovering From No Speech
 Persistent Startup
-Building And Testing The Speech Server
-Speech Backends
-Supported Platform Routes
-Installing Omnivox From Source
-Building Omnivox For WSL2
-Selecting And Checking Omnivox
-Compatibility Speech Servers
-Backend Diagnostics And Ownership
 Basic Usage
 Overview
 Working
@@ -22,7 +16,13 @@ Speech Output Control
 Miscellaneous
 Voice-lock
 Status Information
-Introduction
+Speech Backends
+Supported Platform Routes
+Installing Omnivox From Source
+Building Omnivox For WSL2
+Selecting And Checking Omnivox
+Compatibility Speech Servers
+Backend Diagnostics And Ownership
 Audio Desktop
 Desktop Objects
 Object Oriented Desktop

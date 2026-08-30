@@ -20,9 +20,8 @@ The generated
 
 This chapter is a curated starting point, not a promise that every module in
 the generated reference has a maintained task guide.  Emacs itself or a
-third-party package owns the application's general operation; Emacsvox owns
-the additional speech feedback.  Consult both sets of help when diagnosing a
-problem.
+third-party package provides the application's general operation; Emacsvox
+adds the speech feedback.  Consult both sets of help when diagnosing a problem.
 
 Earlier Emacspeak surveys, including their W3, Dismal, and scanner/OCR setup,
 are preserved as historical material in
@@ -67,8 +66,8 @@ the underlying editor.
 
 Tempo supplies template fields for modes and packages that use it.  Emacsvox
 speaks inserted text and the line reached when moving between template marks.
-The package that supplied a template owns its insertion commands; use that
-package's mode help, together with
+The package that supplied a template also provides its insertion commands;
+use that package's mode help, together with
 @@texinfo:@ref{emacsvox-tempo,,,emacsvox-reference,Emacsvox Reference Manual}@@.
 
 ** Browsing Structure

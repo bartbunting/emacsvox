@@ -107,6 +107,31 @@ amounts of text (typically queued a clause at a time to achieve the
 best prosody), ask the @@texinfo:@acronym{TTS}@@ server to start speaking, and
 interrupt the spoken output at any time.
 
+*** Testing A Direct Legacy Server
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+This protocol-level test is only for a retained direct Tcl-compatible server.
+Run its launcher from the Emacsvox repository root, for example:
+
+#+begin_example
+./servers/espeak
+#+end_example
+
+Then enter:
+
+#+begin_example
+q {This is a test.}
+d
+s
+#+end_example
+
+The ~q~ command queues text, ~d~ dispatches it, and ~s~ stops speech.  Type
+@@texinfo:@kbd{C-d}@@ to close the server.  A backend-specific README may provide a
+stronger diagnostic and should take precedence over this generic protocol
+test.
+
 *** Commands That Queue Output.
 :PROPERTIES:
 :TEXINFO_NODE: no

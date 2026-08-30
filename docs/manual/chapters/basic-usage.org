@@ -1,110 +1,122 @@
-* Basic Usage.
+* Basic Usage
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Basic Usage
 :ALT_TITLE: Basic Usage
-:DESCRIPTION: Learn the basic Emacsvox interaction model.
+:DESCRIPTION: Learn the essentials in a speaking Emacsvox session.
 :END:
 
-This chapter gives a short, task-oriented introduction to Emacsvox.
-For the complete generated key reference, see
-@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
-Use @@texinfo:@kbd{C-h m}@@ to inspect the modes and bindings active in the current
-buffer, or @@texinfo:@kbd{C-h k}@@ followed by a key to ask Emacs what that key does.
-These sections describe the speech-enabling extensions, but are not a
-substitute for the Emacs manual.
+Now that Emacsvox is speaking, this chapter helps you become comfortable with
+the essential keys and feedback.  It begins with a short guided session, then
+introduces the reading and speech controls you are most likely to need.
 
-All Emacs navigation and editing commands have been speech enabled.
-Thus, moving to the next or previous word, line or paragraph results
-in the text around point being spoken.  Exactly how much text is
-spoken is determined by the amount by which you moved.
+** Key Notation And Emacs Words
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-In addition, Emacsvox provides  basic reading functions that can be
-invoked to listen to chunks of text without moving.
+Emacs documentation writes @@texinfo:@kbd{C-}@@ for the Control key and @@texinfo:@kbd{M-}@@ for the
+Meta key, which is usually Alt or Option.  For example, @@texinfo:@kbd{C-n}@@ means
+hold Control and press @@texinfo:@kbd{n}@@.  A sequence such as @@texinfo:@kbd{C-e l}@@ means press
+@@texinfo:@kbd{C-e}@@, release it, and then press @@texinfo:@kbd{l}@@.
+
+@@texinfo:@kbd{M-x}@@ prompts for an Emacs command by name, and @@texinfo:@key{RET}@@ means the
+Return or Enter key.  A /buffer/ is the Emacs workspace containing text or an
+application.  /Point/ is the current editing position—the place affected by
+movement and editing commands.
+
+If Emacs itself is new to you, @@texinfo:@kbd{C-h t}@@ opens its interactive tutorial.
+You can return to this chapter whenever the tutorial refers to buffers, point,
+windows, or key sequences.
+
+** Your First Few Minutes
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Try these actions in the clean session started during installation:
+
+1. Press @@texinfo:@kbd{C-n}@@ and @@texinfo:@kbd{C-p}@@ to move down and up by one line.  Emacsvox
+   speaks the line you reach.
+
+1. Press @@texinfo:@kbd{C-e l}@@ to hear the current line without moving.
+
+1. Press @@texinfo:@kbd{C-e s}@@ whenever you want to stop speech immediately.
+
+1. Press @@texinfo:@kbd{C-h k}@@ followed by any key to hear what that key does.
+
+1. Press @@texinfo:@kbd{C-h m}@@ to hear about the modes and commands available in the
+   current buffer.
+
+1. Press @@texinfo:@kbd{C-h C-e}@@ to open the Emacsvox overview.
+
+These commands are enough to begin exploring safely.  The rest of this chapter
+adds reading controls and speech settings as you need them.  The generated
+@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@ records the complete default keymaps, while live
+help remains authoritative when a package or personal configuration changes a
+binding.
 
 ** Emacsvox Overview
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Overview
 :ALT_TITLE: Overview
-:DESCRIPTION: Basic Overview.
+:DESCRIPTION: Understand the main kinds of Emacsvox feedback.
 :END:
 
-Emacsvox provides a small number of core services around which the
-remainder of the audio interface is constructed.  These essential
-features of the software are briefly outlined in the following
-paragraphs; the commands by which they can be controlled will be
-described later in the manual.
+Emacsvox adds spoken feedback to Emacs editing and to applications that run
+inside Emacs.  Movement speaks the corresponding character, word, line, or
+larger unit.  Commands announce useful results and state changes, while
+application integrations present structures such as messages, search results,
+tables, source code, and Web pages.
 
-Apart from providing a fluent spoken interface to all of Emacs' basic
-editing functions, Emacsvox also includes software modules which add
-speech feedback to a range of applications that can be run from within
-Emacs. In this sense, Emacsvox amounts to much more than a talking
-text editor; indeed, it can more aptly be characterized as a true
-``audio desktop'', in which speech is treated as a first-class output modality.
+Voice Lock uses changes in speech characteristics to make text structure
+audible.  For example, comments, quoted strings, reserved words, headings, and
+links can sound different without an explanation being inserted into the text.
+See @@texinfo:@ref{Voice Lock}@@ for configuration and @@texinfo:@ref{Web Browsing}@@ for a
+task-oriented example in EWW.
 
-Emacsvox implements a special minor mode, known as ``voice lock mode''
-(@@texinfo:@pxref{Voice-lock}@@) which uses distinct speech characteristics to
-provide aural highlighting of specific textual constructs, such as
-comments in program code, quoted strings and reserved words @@texinfo:@xref{Voice Lock}@@. This facility is further extended in the supported ~EWW~ Web
-browser, where semantic and structural distinctions captured by HTML markup
-can be communicated efficiently; see @@texinfo:@ref{Web Browsing}@@.
-
-It is often desirable to exercise control over the pronunciation of a
-word (E.G. a technical term or a reserved word in a programming
-language) within specific contexts. Emacsvox maintains pronunciation
-dictionaries for this purpose, which may be customized by the
-user. Moreover, individual dictionaries can be activated selectively,
-depending for example on the current major mode or the name of the
-file which is being visited; see
+Pronunciation dictionaries let you adjust how a name, technical term, or
+programming-language word is spoken.  A dictionary can apply everywhere or
+only in a particular mode or file; see
 @@texinfo:@ref{emacsvox-pronounce,,,emacsvox-reference,Emacsvox Reference Manual}@@.
 
-In addition to spoken feedback, Emacsvox can generate ``auditory
-icons''  @@texinfo:@MDash{}@@ short sound cues which alert the user to significant
-events, for example the opening or deletion of a file, the completion
-of an action, the arrival of an electronic mail message or the
-creation of a completion buffer. Sound cues act as a supplement to the
-spoken interface, and are especially valuable to the experienced user
-in facilitating rapid interaction. Note that in order to support
-auditory icons, the computer must be equipped with sound hardware for
-which the operating system has been correctly configured; see
-@@texinfo:@ref{emacsvox-sounds,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+Short auditory icons and tones mark events such as opening or deleting a file,
+finishing an action, receiving mail, or displaying completions.  They
+supplement speech and become especially useful as familiar events no longer
+need a full spoken explanation.  See
+@@texinfo:@ref{emacsvox-sounds,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the available sound support.
 
 ** Using Emacs Buffers
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Working
 :ALT_TITLE: Working
-:DESCRIPTION: Working in Emacsvox.
+:DESCRIPTION: Understand feedback while editing and completing text.
 :END:
 
-While typing in an Emacs buffer, hitting space speaks the recently
-typed word.  I use completion all the time; so Emacsvox will speak
-the completion just inserted as well as the next possible completion.
-In Emacs, use @@texinfo:@kbd{M-x load-library @key{RETURN} completion @key{RETURN}}@@ for loading the completion package.
+As you type, character echo can speak individual characters and word echo can
+speak a word when you finish it.  Completion interfaces announce candidates,
+the inserted completion, and the item currently selected.  Prompts and error
+messages are spoken through the same Emacs feedback that appears on screen.
 
-The standard Emacs prompting functions have also been speech-enabled.
-Emacs prompts with available lists of completions in response to partial
-input wherever appropriate   @@texinfo:@MDash{}@@ all forms of completion provide speech
-feedback.
+Most everyday feedback happens automatically.  Emacsvox also provides three
+useful groups of explicit commands:
 
-In addition, Emacsvox provides a number of commands for reading
-portions of the current buffer, getting status information, and
-modifying Emacsvox's state.
+- Reading commands speak a character, word, line, region, or larger portion of
+  a buffer without requiring you to move first.  Their names usually begin
+  with ~emacsvox-speak-~, and their default keys use the main @@texinfo:@kbd{C-e}@@
+  prefix.[fn::The prefix is inherited from Emacspeak, where C-e was mnemonic
+  for the project name.]
 
-All of the commands are documented in the subsequent sections.
-They can be classified into types:
+- Speech-system commands change settings such as rate, punctuation, and echo.
+  Their names usually begin with ~tts-~, and many are grouped under
+  @@texinfo:@kbd{C-e d}@@.[fn::Historically, d was mnemonic for DECtalk; the prefix now
+  contains engine-independent speech controls.]
 
-- Emacsvox commands for listening to chunks of information.  Most of
-   these command names start with ~emacsvox-speak-~.  Their default
-   bindings are grouped under the main Emacsvox prefix @@texinfo:@kbd{C-e}@@[fn::The prefix is inherited from Emacspeak, where C-e was mnemonic for the project name.].  The starter bindings are introduced in @@texinfo:@ref{Reading}@@;
-   the live Help system and generated key reference remain authoritative
-   when bindings are customized.
+- Help commands describe the active modes, available keys, and Emacsvox
+  integrations in the buffer where you are working.
 
-- The second category manipulates the speech engine.  These commands
-   normally start with ~tts-~ and are grouped under @@texinfo:@kbd{C-e d}@@
-   [fn::Historically, d was mnemonic for DECtalk; the prefix now contains engine-independent speech controls.].
-
-Emacs and Emacsvox both expose their current commands through Emacs Help.
-Use the small set below to get oriented, then use Help or the generated
-reference instead of relying on a copied exhaustive list.
+The following sections introduce a practical starter set.  Use live Help or
+the generated reference when you need the complete commands for a particular
+application.
 
 ** Reading and Navigating
 :PROPERTIES:

@@ -16,10 +16,10 @@ This is the canonical source for the hand-maintained Emacsvox user
 manual.  Generated reference and heritage manuals remain Texinfo.
 #+end_comment
 
-#+include: "chapters/installation.org"
-#+include: "chapters/speech-backends.org"
-#+include: "chapters/basic-usage.org"
 #+include: "chapters/introduction.org"
+#+include: "chapters/installation.org"
+#+include: "chapters/basic-usage.org"
+#+include: "chapters/speech-backends.org"
 #+include: "chapters/audio-desktop.org"
 #+include: "chapters/voice-lock.org"
 #+include: "chapters/online-help.org"

@@ -34,9 +34,9 @@ currently makes the selected Term window fill the frame when ~term~ or
 ~ansi-term~ starts.  This changes only the window layout: it does not kill
 the buffers that were displayed in the other windows.
 
-Term owns terminal emulation and the child program owns its prompts, input,
-and completion.  Emacsvox observes the rendered Term buffer and adds speech
-feedback and review commands.  See @@texinfo:@ref{Term Mode,,,emacs,The GNU Emacs Manual}@@ for the emulator itself and
+Term handles terminal emulation, while the child program handles its prompts,
+input, and completion.  Emacsvox observes the rendered Term buffer and adds
+speech feedback and review commands.  See @@texinfo:@ref{Term Mode,,,emacs,The GNU Emacs Manual}@@ for the emulator itself and
 @@texinfo:@ref{emacsvox-eterm,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the
 complete Emacsvox API inventory.
 
@@ -172,7 +172,7 @@ live @@texinfo:@kbd{C-h m}@@ output and the generated module reference before us
    line mode with @@texinfo:@kbd{C-c C-j}@@.
 
 - If review has drifted away from live output, press @@texinfo:@kbd{C-t .}@@.  If dedicated
-   review mode owns the keys, press @@texinfo:@kbd{q}@@ first to return to character mode.
+   review mode controls the keys, press @@texinfo:@kbd{q}@@ first to return to character mode.
 
 - If a full-screen application redraws in a way that Term cannot present
    reliably, retry it in @@texinfo:@ref{EAT Terminal Access}@@ and use EAT's explicit review

@@ -10,9 +10,11 @@ that produces speech underneath it is platform-specific.  The normal engine
 is eSpeak NG on GNU/Linux, AVSpeechSynthesizer on macOS, and WinRT
 SpeechSynthesizer on Windows.
 
-This chapter owns Emacsvox's platform recommendation and first backend smoke
-test.  Omnivox owns its build internals, engine behavior, and versioned
-protocols.  The maintained Omnivox source and current status are at
+For a first installation, follow the linear procedure in
+@@texinfo:@ref{Installation}@@.  Return here when you need platform-specific build
+details, compatibility servers, or deeper diagnostics.  Omnivox build
+internals, engine behavior, and versioned protocols are documented and
+maintained in
 [[https://github.com/bartbunting/omnivox][the Omnivox repository]].
 
 ** Supported Platform Routes
@@ -220,7 +222,7 @@ The native Windows audio, standalone Eloquence, and standalone DECtalk bridges
 under ~servers/~ are advanced WSL-specific compatibility paths.  Piper is
 an optional Omnivox engine and model workflow, not a primary Emacsvox server.
 
-** Backend Diagnostics And Ownership
+** Backend Diagnostics And Responsibilities
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Backend Diagnostics And Ownership
 :DESCRIPTION: Locate failures and authoritative detail.
@@ -256,9 +258,10 @@ Use the boundary at which speech failed to choose the next diagnostic:
   ~OMNIVOX_LOG_SYNTHESIS_TEXT~ is explicitly enabled; enabling it can expose
   passwords, messages, and document contents.
 
-Emacsvox owns server selection, its POSIX/WSL launcher, Windows staging, and
-the bundled Lisp adapter.  Omnivox owns its native builds, engines, command
-line, runtime data layout, and protocol specifications.  Backend-local
-READMEs own licensed-runtime and compatibility-adapter details.  Cross-link
-these owners rather than copying their versioned contracts into installation
+Server selection, the POSIX/WSL launcher, Windows staging, and the bundled
+Lisp adapter are implemented and documented in Emacsvox.  Native builds,
+engines, the command line, runtime data layout, and protocol specifications
+are documented in the Omnivox repository.  Backend-local READMEs describe
+licensed runtimes and compatibility adapters.  Follow those sources for
+versioned details rather than copying their contracts into installation
 instructions.

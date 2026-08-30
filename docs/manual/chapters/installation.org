@@ -9,69 +9,119 @@
 @c Generated from docs/manual/emacsvox.org; do not edit.
 #+end_export
 
-This is the canonical first-use procedure for a source-checkout installation.
-It starts before Emacsvox is available, establishes an audible acceptance
-checkpoint, and delays personal configuration until an isolated session has
-spoken successfully.  The same chapter is published for pre-installation web
-access at
+This chapter takes you from a fresh source checkout to a speaking Emacsvox
+session.  You will prepare the speech server, build Emacsvox, check each layer,
+and start an isolated session before changing your personal Emacs setup.
+
+Commands shown before Emacsvox starts are entered in a terminal.  Keys written
+with @@texinfo:@kbd{C-}@@ or @@texinfo:@kbd{M-}@@ are entered inside Emacs.  The same chapter is
+available before installation at
 [[https://bartbunting.github.io/emacsvox/Installation.html]].
 
-** Obtaining Emacsvox
+** Before You Begin
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Obtaining Emacsvox
-:DESCRIPTION: Obtaining Emacsvox.
+:DESCRIPTION: Prepare the tools and source checkouts.
 :END:
 
-Before beginning, install ~git~, ~make~, GNU Texinfo (which
-provides ~makeinfo~), and
-[[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].
-The Speech Backends chapter lists the additional platform prerequisites for
-the recommended Omnivox server.
+Install ~git~, ~make~, GNU Texinfo (which provides ~makeinfo~), and
+[[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].  The recommended Omnivox speech server also needs the
+Rust toolchain, Python 3, a C and C++ toolchain, CMake, and Clang with libclang.
 
-The maintained source is
-[[https://github.com/bartbunting/emacsvox]].  Clone it into the permanent
-directory where it will be used:
+On GNU/Linux, install ~pkg-config~ and the ALSA development headers.  On
+macOS, install the Xcode command-line tools.  WSL2 has additional Docker and
+Windows requirements described in @@texinfo:@ref{Building Omnivox For WSL2}@@.
+
+Choose a permanent parent directory and clone Emacsvox and Omnivox beside one
+another:
 
 #+begin_example
+cd /path/where/you/keep/source
 git clone https://github.com/bartbunting/emacsvox
-cd emacsvox
+git clone https://github.com/bartbunting/omnivox
 #+end_example
 
-The checkout itself is the source-checkout installation.  The build operates
-in place; it does not create a second directory to copy elsewhere.
+The Emacsvox checkout is the installation directory.  It builds in place and
+does not create a second tree to copy elsewhere.
 
-** First Speech Checklist
+** Install And Check Omnivox
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Building And Testing The Speech Server
+:DESCRIPTION: Install the recommended server and hear its check.
+:END:
+
+On GNU/Linux or macOS, build and install Omnivox from its checkout:
+
+#+begin_example
+cd /path/where/you/keep/source/omnivox
+make build
+make install
+omnivox --check
+#+end_example
+
+~make install~ normally places the executable below ~~/.cargo/bin~.  Make sure
+that directory is on ~PATH~ before running the check.  No proprietary speech
+runtime is needed for the recommended GNU/Linux or macOS route.
+
+Under WSL2, build the staged Windows runtime from a clean Emacsvox checkout:
+
+#+begin_example
+cd /path/where/you/keep/source/emacsvox
+make windows-omnivox
+./servers/omnivox --check
+#+end_example
+
+The check plays a tone followed by speech.  When you hear both, the speech
+server is ready.  If either is missing, use
+@@texinfo:@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}@@
+before continuing.  @@texinfo:@xref{Speech Backends}@@ contains the complete platform
+matrix, build details, and compatibility alternatives.  Native Windows Emacs
+support remains a preview; consult that matrix before choosing it for a first
+installation.
+
+** Build And Start Emacsvox
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Quick Installation
 :ALT_TITLE: Quick Installation
-:DESCRIPTION: Reach an isolated first spoken session.
+:DESCRIPTION: Build Emacsvox and reach an isolated speaking session.
 :END:
 
-1. Select Emacs 31 or newer.  If it is not the system ~emacs~, copy
-   ~local.mk.example~ to the ignored ~local.mk~ and set ~EMACS~:
+1. Enter the Emacsvox checkout:
+
+   #+begin_example
+   cd /path/where/you/keep/source/emacsvox
+   #+end_example
+
+1. Select Emacs 31 or newer.  If it is not the system ~emacs~, create the
+   ignored local settings file:
+
+   #+begin_example
+   cp local.mk.example local.mk
+   #+end_example
+
+   Then set ~EMACS~ in ~local.mk~:
 
    #+begin_example
    EMACS=/path/to/emacs-31/bin/emacs
    #+end_example
 
-   Verify the selection before diagnosing a compiler failure:
+   Verify the selection:
 
    #+begin_example
    make check-emacs
    #+end_example
 
-1. Configure and compile the checkout:
+   The command prints the selected Emacs and confirms whether its version is
+   supported.
+
+1. Configure and compile Emacsvox:
 
    #+begin_example
    make all
    #+end_example
 
-   Do not compile Emacsvox with an older system Emacs.  Tests prefer source and
-   therefore do not prove that the byte-code used by a normal startup is current.
-
-1. Install the recommended Omnivox speech server.  @@texinfo:@xref{Speech Backends}@@, for
-   the supported platform matrix, exact prerequisite classes, source and WSL2
-   build paths, and compatibility alternatives.
+   A successful build returns to the shell without an error.  Emacsvox must be
+   compiled with the same supported Emacs selected in the previous step.
 
 1. Run the non-audible launcher preflight from the Emacsvox checkout:
 
@@ -79,39 +129,33 @@ in place; it does not create a second directory to copy elsewhere.
    ./bin/emacsvox --diagnose
    #+end_example
 
-   It validates the checkout, Emacs, and backend without playing audio, creating
-   an Omnivox session log, or opening interactive Emacs.  Before continuing,
-   confirm that its report includes Emacs 31 or newer, the ~omnivox~ speech
-   backend, and an isolated ~-Q~ startup.  Correct any path or version
-   error that it prints.
+   This checks the checkout, Emacs, and speech server without playing audio or
+   opening interactive Emacs.  A successful report names Emacs 31 or newer,
+   the ~omnivox~ speech server, and an isolated ~-Q~ startup.  If it reports a
+   path or version problem, correct that item and run the command again.
 
-1. Run the deliberately audible backend check:
+1. Check the complete launch path with sound:
 
    #+begin_example
    ./bin/emacsvox --check
    #+end_example
 
-   The launcher prints its selections and explicitly announces that the audible
-   check is starting.  Continue only after hearing both the tone and speech.  Do
-   not diagnose Emacs configuration until this standalone Omnivox check passes.
+   The launcher prints what it selected, then plays a tone and speech.  Hearing
+   both means the complete speech-server launch path is ready.
 
-1. Prove a clean Emacsvox start:
+1. Start a clean Emacsvox session:
 
    #+begin_example
    ./bin/emacsvox
    #+end_example
 
-   The launcher defaults to Omnivox, uses the selected Emacs 31 or newer, and
-   loads the setup source by its absolute path.  The session uses ~-Q~: it
-   loads neither site files nor a personal Emacs init file.  This makes first
-   speech a reproducible installation proof rather than a side effect of
-   existing configuration.
+   The launcher uses Omnivox and the selected Emacs, but does not load site
+   files or your personal Emacs init file.  This gives you a known starting
+   point without changing an existing Emacs setup.
 
-   ~./bin/emacsvox --diagnose~ prints the selected root, setup source,
-   Emacs version, and backend without playing audio or starting interactive
-   Emacs.  ~./bin/emacsvox --help~ documents explicit ~EMACS~,
-   ~TTS_PROGRAM~, and ~EMACSVOX_DIR~ overrides.  Arguments after
-   ~--~ are passed to Emacs.
+If a command needs an explicit path, ~./bin/emacsvox --help~ describes the
+~EMACS~, ~TTS_PROGRAM~, and ~EMACSVOX_DIR~ overrides.  Arguments after ~--~
+are passed to Emacs.
 
 ** Confirming First Speech
 :PROPERTIES:
@@ -119,7 +163,8 @@ in place; it does not create a second directory to copy elsewhere.
 :DESCRIPTION: Verify the live adapter and basic feedback.
 :END:
 
-A successful isolated start speaks a versioned introduction ending with:
+You will know the isolated start succeeded when it speaks an introduction
+ending with:
 
 #+begin_quote
 I am completely operational, and all my circuits are functioning perfectly!
@@ -127,10 +172,10 @@ I am completely operational, and all my circuits are functioning perfectly!
 
 The preceding overview key and version number can change.  The sentence above
 is the stable first-speech checkpoint.  A startup auditory icon may also play,
-but it depends on optional audio support and is not part of acceptance.
+depending on the available audio support.
 
-Before changing personal configuration, make these checks in the isolated
-session:
+You now have a working Emacsvox session.  Try these checks before connecting
+it to your personal configuration:
 
 1. Type @@texinfo:@kbd{M-x tts-speak-version RET}@@.  The live speech adapter should speak its
    version response.
@@ -142,7 +187,9 @@ session:
    navigation.  Type @@texinfo:@kbd{M-x emacsvox-describe-emacsvox RET}@@ for the Emacsvox
    overview.  @@texinfo:@xref{Basic Usage}@@, for the tested starter commands.
 
-Only after these checks pass is the isolated first-use proof complete.
+When these checks pass, continue to @@texinfo:@ref{Basic Usage}@@ for a short guided
+first session, or use @@texinfo:@ref{Persistent Startup}@@ to connect Emacsvox to your
+normal Emacs configuration.
 
 ** Recovering From No Speech
 :PROPERTIES:
@@ -150,8 +197,8 @@ Only after these checks pass is the isolated first-use proof complete.
 :DESCRIPTION: Diagnose the boundary at which speech failed.
 :END:
 
-Do not add Emacsvox to a personal init file while recovering.  Start at the
-first failing boundary:
+If speech did not start, keep the isolated launcher as your known starting
+point and find the first command below that did not work:
 
 #+attr_texinfo: :indic asis :compact t
 - ~./bin/emacsvox --diagnose~ fails ::
@@ -164,9 +211,10 @@ first failing boundary:
   verify the staged runtime described in @@texinfo:@ref{Building Omnivox For WSL2}@@.
 - The diagnostic passes, but ~--check~ errors or is inaudible ::
 
-  The failure is below Emacsvox.  Do not edit the Emacs init file.  Follow
-  @@texinfo:@ref{Backend Diagnostics And Ownership}@@ until the check produces both its tone
-  and speech.  A zero exit status without both audible signals is not success.
+  The speech server needs attention before Emacs configuration is relevant.
+  Follow
+  @@texinfo:@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}@@ until the check produces both its tone
+  and speech.
 - The audible check passes, but the isolated startup sentence is absent ::
 
   Run ~./bin/emacsvox --diagnose~ again from the same checkout and shell.
@@ -202,16 +250,15 @@ first failing boundary:
 :DESCRIPTION: Add Emacsvox to personal configuration safely.
 :END:
 
-Configure a normal customized start only after @@texinfo:@ref{Confirming First Speech}@@
-passes.  Add these forms to the user's Emacs init file, replacing the example
-path with the absolute path of the checkout:
+After @@texinfo:@ref{Confirming First Speech}@@ succeeds, add these forms to your Emacs
+init file, replacing the example path with the absolute path of the checkout:
 
 #+begin_src emacs-lisp
 (setenv "TTS_PROGRAM" "omnivox")
 (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
 #+end_src
 
-The order is significant: Emacsvox selects and starts the speech server while
+Keep the forms in this order: Emacsvox selects and starts the speech server while
 loading setup.  A shell alternative is to export the server name before
 launching Emacs:
 
@@ -232,42 +279,6 @@ outputs are not distributed.  After an ordinary Lisp edit, run
 ~make bytecode~.  After switching branches, pulling, or changing Lisp
 macros or public interfaces, run ~make bytecode-rebuild~.  The
 non-mutating ~make bytecode-check~ verifies that local byte-code is
-current and was produced by the selected Emacs.
-
-** Building And Testing The Speech Server
-:PROPERTIES:
-:TEXINFO_NODE_NAME: Building And Testing The Speech Server
-:END:
-
-Speech-server launchers live in ~servers/~.  Build them through the
-repository-root targets above so the selected paths and staging rules remain
-consistent.
-
-The Omnivox smoke test and its audible success condition are in
-@@texinfo:@ref{Selecting And Checking Omnivox}@@.  The following protocol-level test is
-only for retained direct Tcl-compatible servers.  Run one of those launchers
-from the repository root, for example:
-
-#+begin_example
-./servers/espeak
-#+end_example
-
-Then enter:
-
-#+begin_example
-q {This is a test.}
-d
-s
-#+end_example
-
-The ~q~ command queues text, ~d~ dispatches it, and ~s~ stops
-speech.  Type @@texinfo:@kbd{C-d}@@ to close the server.  Backend-specific READMEs may
-provide stronger diagnostics and should take precedence over this generic
-smoke test.
-
-From Emacs, use ~M-x tts-speak-version~ to verify the selected adapter and
-~M-x tts-restart~ after changing server configuration.  Omnivox also
-records per-process diagnostic logs below
-~$XDG_STATE_HOME/emacsvox/omnivox~, defaulting to
-~~/.local/state/emacsvox/omnivox~; spoken text is omitted unless explicit
-text logging is enabled.
+current and was produced by the selected Emacs.  These commands matter when
+developing Emacsvox; ordinary users do not need to run them again unless the
+checkout changes.

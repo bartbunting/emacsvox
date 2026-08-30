@@ -21,11 +21,11 @@ See the EAT manual for terminal setup and EAT's complete command reference
 
 Emacsvox observes EAT's bounded rendered screen.  It does not parse a shell's
 private state and it does not generate shell or router completion candidates.
-This distinction is important: EAT owns terminal emulation, the program on the
-other end owns terminal-side input and completion, and Emacsvox presents the
-visible result.
+This distinction is important: EAT handles terminal emulation, the program on
+the other end handles terminal-side input and completion, and Emacsvox
+presents the visible result.
 
-** Input Modes And Completion Ownership
+** Input Modes And Completion Responsibilities
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -135,7 +135,7 @@ otherwise unambiguous word deletion from being announced.  This also handles a
 no-echo peer safely: without a visible deletion there is no content to
 announce.  Feedback requires the selected window to follow the live cursor,
 and is silent during protected password input, in an unselected terminal, and
-on an alternate screen where the application owns the keys.
+on an alternate screen where the application controls the keys.
 
 On a full-screen or alternate-screen application, Emacsvox does not read every
 refresh.  A cursor row reached by correlated arrow-style navigation, or one
@@ -498,13 +498,13 @@ terminal itself renders incorrectly.
 
 When EAT's global ~eat-eshell-mode~ is enabled, Emacsvox uses the same
 screen observer for the terminal region embedded in Eshell.  Rendered command
-output is owned by one speech path, so it is not repeated by generic Eshell
+output is handled by one speech path, so it is not repeated by generic Eshell
 output feedback.
 
 With ~eat-eshell-visual-command-mode~, an Eshell visual command runs in a
 separate EAT buffer.  Emacsvox announces its start, delivers eligible final
 output before the process-exit event, and labels its exit as an Eshell visual
-command.  EAT and Eshell still own the window-return policy.  In particular,
-~eshell-destroy-buffer-when-process-dies~ determines whether a successful
-visual-command buffer is killed and Eshell is restored; Emacsvox does not
-change that option.
+command.  EAT and Eshell still determine the window-return policy.  In
+particular, ~eshell-destroy-buffer-when-process-dies~ determines whether a
+successful visual-command buffer is killed and Eshell is restored; Emacsvox
+does not change that option.
