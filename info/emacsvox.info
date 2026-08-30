@@ -58,7 +58,6 @@ Additional current material:
 * Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
 
 Project information:
-* Manual Provenance: Announce.
 * Copying: Copyright.
 * Acknowledgments: Acknowledgments.
 
@@ -3250,7 +3249,7 @@ File: emacsvox.info,  Node: Term Help And Recovery,  Prev: Reviewing The Term Sc
      EAT's explicit review commands.
 
 
-File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Announce,  Prev: Running Terminal Based Applications,  Up: Top
+File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: Copyright,  Prev: Running Terminal Based Applications,  Up: Top
 
 13 Emacsvox Keyboard Commands.
 ******************************
@@ -3287,59 +3286,116 @@ session.  Check customizations first, then compare the generated
 defaults in the *note (emacsvox-reference)Emacsvox Keymaps::.
 
 
-File: emacsvox.info,  Node: Announce,  Next: Copyright,  Prev: Emacsvox Keyboard Commands,  Up: Top
+File: emacsvox.info,  Node: Copyright,  Next: Acknowledgments,  Prev: Emacsvox Keyboard Commands,  Up: Top
 
-14 Manual Provenance And Contributions
-**************************************
+14 Copyright
+************
 
-This manual began as the second-edition Emacspeak user manual and still
-contains selected chapters from that project.  Emacsvox-specific
-operating guidance, names, requirements, and generated command reference
-are maintained in this repository.  Historical chapters retain Emacspeak
-terminology where that identity and period context matter.
+This manual documents Emacsvox, a speech extension to Emacs.
+
+   Copyright (C)1994 - 2024 T.  V.  Raman All Rights Reserved.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual without charge provided the copyright notice and this permission
+notice are preserved on all copies.  Sections of this manual are
+auto-generated from the source code, and the documentation inherits the
+same license as the original source code.
+
+
+File: emacsvox.info,  Node: Acknowledgments,  Next: Developer Guide,  Prev: Copyright,  Up: Top
+
+15 Acknowledgments
+******************
+
+Emacsvox grows from Emacspeak, created by T.  V.  Raman.  Raman is the
+principal original author of the inherited system, and Emacsvox
+preserves his authorship and copyright notices throughout the source
+where that work remains.
+
+   The Emacsvox documentation began with the second-edition Emacspeak
+user manual.  Jim Van Zandt and Jason White contributed to that manual.
+Selected historical chapters remain available in the separate *note
+Emacspeak Heritage: (emacsvox-heritage)Top. manual, where their original
+terminology and period context can be read without confusing them with
+current setup guidance.
+
+   Thank you to everyone who has contributed code, documentation,
+testing, problem reports, and practical experience to Emacspeak and
+Emacsvox.  The current Emacsvox contributors continue that work while
+maintaining the user guidance and generated reference in this
+repository.
+
+
+File: emacsvox.info,  Node: Developer Guide,  Next: Concept Index,  Prev: Acknowledgments,  Up: Top
+
+16 Developer And Maintainer Guide
+*********************************
+
+This guide is for people changing Emacsvox source, documentation,
+integrations, speech-server protocols, build machinery, or release
+staging.  It is included at the end of the published manual so that an
+installed Info manual and an offline checkout remain complete, but it is
+not part of the ordinary installation and use path.
+
+   Before making a governed change, read ‘AGENTS.md’ and every accepted
+record in ‘docs/adr/’.  Use the Emacs selected by ‘local.mk’ for
+repository checks.  The generated *note Emacsvox Reference Manual:
+(emacsvox-reference)Top. is the exact inventory of Lisp commands,
+options, and keymaps; the chapters that follow explain contracts and
+procedures that cannot be generated from those interfaces.
 
 * Menu:
 
-* Contributing::
-* Authoring Guidelines::
-* Credits::
+* Documentation Maintenance::    Author, validate, and publish Emacsvox documentation.
+* Speech Server Protocols::      Understand speech-server protocols.
+* Integration Maintenance::      Maintain optional integrations and release staging.
 
 
-File: emacsvox.info,  Node: Contributing,  Next: Authoring Guidelines,  Up: Announce
+File: emacsvox.info,  Node: Documentation Maintenance,  Next: Speech Server Protocols,  Up: Developer Guide
 
-14.1 How To Contribute To This Manual
-=====================================
+16.1 Documentation Maintenance
+==============================
 
-The maintained Org chapters live under ‘docs/manual/chapters/’; the
-current project overview and installation summary live in ‘Readme.org’
-and ‘etc/install.org’.  Submit changes through the Emacsvox repository
-at <https://github.com/bartbunting/emacsvox>.  Read ‘AGENTS.md’ before
-building or testing: Emacsvox requires Emacs 31 or newer and
-repository-local ‘local.mk’ selects the compiler used by supported
-targets.
+This chapter is for contributors changing the maintained manuals,
+generated reference, or public browser documentation.  Reports and
+internal notes do not require an Emacsvox build; use the smallest
+documentation target that covers the source being changed.
+
+16.1.1 Choose the canonical source
+----------------------------------
+
+The maintained Org master is ‘docs/manual/emacsvox.org’.  Current-user
+chapters live under ‘docs/manual/chapters/’, while developer and
+maintainer chapters live under ‘docs/developer/’.  The source layout and
+fast authoring loop are summarized in ‘docs/manual/README.org’.
+
+   The current project overview and installation summary live in
+‘Readme.org’ and ‘etc/install.org’.  Submit changes through the Emacsvox
+repository at <https://github.com/bartbunting/emacsvox>.  Before
+changing a governed workflow or architecture, read ‘AGENTS.md’ and every
+accepted record under ‘docs/adr/’.  Repository-local ‘local.mk’ selects
+the Emacs used by supported targets; Emacsvox requires Emacs 31 or
+newer.
 
    Do not hand-edit generated references.  ‘info/docs.texi’ and
-‘info/keys.texi’ come from the source documentation generator;
+‘info/keys.texi’ come from the source documentation generator, and
 ‘etc/aural-presentation-reference.org’ comes from
 ‘utils/emacsvox-aural-audit.el’.  The first two sources form the
-separately installed ‘emacsvox-reference.info’ manual.  The selected
+separately installed ‘emacsvox-reference.info’ manual.  Selected
 historical chapters form the separately installed
 ‘emacsvox-heritage.info’ manual.
 
-
-File: emacsvox.info,  Node: Authoring Guidelines,  Next: Credits,  Prev: Contributing,  Up: Announce
-
-14.2 Authoring Guidelines
-=========================
+16.1.2 Use the fast authoring workflow
+--------------------------------------
 
 Keep current operating instructions separate from historical accounts.
-State which back end or platform a procedure applies to, avoid
+State which backend or platform a procedure applies to, avoid
 duplicating detailed protocol contracts across repositories, and link to
-the owning document.
+the owning document.  Apply the user-versus-developer audience test in
+ADR 0004 before choosing a source directory.
 
-   Reports and internal notes require no Emacsvox build.  While editing
-the Org manual, preview the complete user manual without inspecting or
-rebuilding Lisp byte-code:
+   While editing Org prose, preview the complete manual without
+inspecting or rebuilding Lisp byte-code:
 
      make docs-org-preview
 
@@ -3352,14 +3408,14 @@ Info files.  Do not edit those generated files directly.
 current with ‘make bytecode’.  Use ‘make bytecode-rebuild’ instead after
 changing macros or public interfaces, as described in ‘AGENTS.md’.  Then
 run ‘make docs-reference’.  ‘make docs-generate’ remains the
-comprehensive reference and manual update.  Before review, merge, or
-deployment, run the non-mutating ‘make docs-release-check’; ‘make
-docs-check’ is its compatibility alias.  Commit the regenerated
-‘emacsvox.info’, ‘emacsvox-reference.info’, and ‘emacsvox-heritage.info’
-files with their source changes.
+comprehensive reference and manual update.
 
-14.2.1 Publishing The Browser Manual
-------------------------------------
+   Before review, merge, or deployment, run the non-mutating ‘make
+docs-release-check’; ‘make docs-check’ is its compatibility alias.
+Commit the regenerated Info artifacts with their source changes.
+
+16.1.3 Publish the browser manual
+---------------------------------
 
 Org on ‘master’ is the canonical maintained manual source.  GitHub Pages
 serves the generated static files committed on the separate ‘gh-pages’
@@ -3395,68 +3451,9 @@ keeps the published bytes reviewable and makes publication a distinct
 maintainer action.
 
 
-File: emacsvox.info,  Node: Credits,  Prev: Authoring Guidelines,  Up: Announce
+File: emacsvox.info,  Node: Speech Server Protocols,  Next: Integration Maintenance,  Prev: Documentation Maintenance,  Up: Developer Guide
 
-14.3 Credits
-============
-
-The original manual drew heavily from the Emacspeak user manual and
-includes contributions from Jim Van Zandt and Jason White.  Emacsvox
-retains that work with attribution while maintaining its current project
-documentation in the Emacsvox repository.
-
-
-File: emacsvox.info,  Node: Copyright,  Next: Acknowledgments,  Prev: Announce,  Up: Top
-
-15 Copyright
-************
-
-This manual documents Emacsvox, a speech extension to Emacs.
-
-   Copyright (C)1994 - 2024 T.  V.  Raman All Rights Reserved.
-
-   Permission is granted to make and distribute verbatim copies of this
-manual without charge provided the copyright notice and this permission
-notice are preserved on all copies.  Sections of this manual are
-auto-generated from the source code, and the documentation inherits the
-same license as the original source code.
-
-
-File: emacsvox.info,  Node: Acknowledgments,  Next: Developer Guide,  Prev: Copyright,  Up: Top
-
-16 Acknowledgments
-******************
-
-Thanks.
-
-
-File: emacsvox.info,  Node: Developer Guide,  Next: Concept Index,  Prev: Acknowledgments,  Up: Top
-
-17 Developer And Maintainer Guide
-*********************************
-
-This guide is for people changing Emacsvox source, integrations,
-speech-server protocols, build machinery, or release staging.  It is
-included at the end of the published manual so that an installed Info
-manual and an offline checkout remain complete, but it is not part of
-the ordinary installation and use path.
-
-   Before making a governed change, read ‘AGENTS.md’ and every accepted
-record in ‘docs/adr/’.  Use the Emacs selected by ‘local.mk’ for
-repository checks.  The generated *note Emacsvox Reference Manual:
-(emacsvox-reference)Top. is the exact inventory of Lisp commands,
-options, and keymaps; the chapters that follow explain contracts and
-procedures that cannot be generated from those interfaces.
-
-* Menu:
-
-* Speech Server Protocols::      Understand speech-server protocols.
-* Integration Maintenance::      Maintain optional integrations and release staging.
-
-
-File: emacsvox.info,  Node: Speech Server Protocols,  Next: Integration Maintenance,  Up: Developer Guide
-
-17.1 Speech Server Protocols
+16.2 Speech Server Protocols
 ============================
 
 Emacsvox produces spoken output by communicating with one of several
@@ -3478,7 +3475,7 @@ legacy line protocol.
 developing a speech server, see the historical Emacspeak article at
 <http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html>.
 
-17.1.1 Omnivox Structured Protocol
+16.2.1 Omnivox Structured Protocol
 ----------------------------------
 
 At process startup the Emacsvox adapter requests capabilities and live
@@ -3518,7 +3515,7 @@ therefore not proof of acoustic onset.
    • Omnivox Helper Protocol
      (https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md)
 
-17.1.2 Legacy Line Protocol
+16.2.2 Legacy Line Protocol
 ---------------------------
 
 The TTS server reads commands from standard input.  Script
@@ -3748,7 +3745,7 @@ time.
 
 File: emacsvox.info,  Node: Integration Maintenance,  Prev: Speech Server Protocols,  Up: Developer Guide
 
-17.2 Integration Maintenance
+16.3 Integration Maintenance
 ============================
 
 This chapter collects source-level contracts that are deliberately
@@ -3756,7 +3753,7 @@ omitted from the user task guides.  Optional package APIs and renderers
 evolve, so recheck the upstream interfaces and keep compatibility
 behavior bounded when changing an integration.
 
-17.2.1 Build and live-verification boundary
+16.3.1 Build and live-verification boundary
 -------------------------------------------
 
 For a source checkout, use the Emacs selected by ‘local.mk’.  Run ‘make
@@ -3768,7 +3765,7 @@ profile is current.  Verify the rebuilt byte-code in a fresh Emacs
 rather than relying on a file reload when compiled dependants may
 already be resident.
 
-17.2.2 Notmuch contracts
+16.3.2 Notmuch contracts
 ------------------------
 
 The live module is registered as an optional package integration.  Its
@@ -3799,7 +3796,7 @@ exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
 focused selector, including real displayed-window reading for both
 advance paths.
 
-17.2.3 Agent Shell contracts
+16.3.3 Agent Shell contracts
 ----------------------------
 
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
@@ -3845,7 +3842,7 @@ subscriptions consume ‘permission-request’, ‘permission-response’, and
 when Agent Shell exposes it; keep renderer and private fallbacks
 isolated and covered by compatibility tests.
 
-17.2.4 WSL2 Omnivox development staging
+16.3.4 WSL2 Omnivox development staging
 ---------------------------------------
 
 Maintainers testing tracked Emacsvox or Omnivox changes may use ‘make
@@ -3862,7 +3859,7 @@ user-facing WSL2 route.
 
 File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 
-18 Concept Index
+17 Concept Index
 ****************
 
  [index ]
@@ -4004,84 +4001,81 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 
 Tag Table:
 Node: Top384
-Node: Introduction2229
-Node: Installation5628
-Node: Obtaining Emacsvox6835
-Node: Building And Testing The Speech Server8235
-Node: Quick Installation9477
-Node: Confirming First Speech11709
-Node: Recovering From No Speech13026
-Node: Persistent Startup15667
-Node: Basic Usage16687
-Node: Overview19265
-Node: Working20650
-Ref: Working-Footnote-121992
-Ref: Working-Footnote-222085
-Node: Reading22195
-Node: Speech System23975
-Node: Controlling Echo24834
-Node: Speech Output Control25701
-Node: Miscellaneous27771
-Node: Voice-lock28893
-Node: Status Information29985
-Node: Speech Backends31378
-Node: Supported Platform Routes32675
-Node: Installing Omnivox From Source35387
-Node: Building Omnivox For WSL237246
-Node: Selecting And Checking Omnivox38653
-Node: Compatibility Speech Servers40394
-Node: Backend Diagnostics And Ownership42320
-Node: Audio Desktop44435
-Node: Desktop Objects45565
-Node: Object Oriented Desktop46790
-Node: Context-Sensitive Interaction47903
-Node: Aural Presentation51018
-Node: Presentation Model53217
-Node: Presentation Modalities55684
-Node: Aural Home57431
-Node: Explaining Presentation59319
-Node: Adjusting Presentation61304
-Node: Presentation Profiles64273
-Node: Voices And Routing65964
-Node: Sounds And Space68321
-Node: Presentation Troubleshooting69945
-Node: Voice Lock71983
-Node: Using Online Help75190
-Node: Emacs Packages79252
-Node: Document Authoring80626
-Node: Structured Editing81180
-Node: Browsing Structure82163
-Node: Web Browsing82761
-Node: Messaging83596
-Node: Editing Code84094
-Node: Development Environment84613
-Node: Desktop Management85170
-Node: Personal Information Management85672
-Node: Desktop Applications86204
-Node: Notmuch Mail87753
-Ref: Notmuch fields and privacy97113
-Node: Agent Shell102821
-Node: EAT Terminal Access112815
-Node: Running Terminal Based Applications130074
-Node: Starting Term131029
-Node: Term Input Modes131868
-Node: Term Speech Feedback133028
-Node: Reviewing The Term Screen134222
-Node: Term Help And Recovery136123
-Node: Emacsvox Keyboard Commands137022
-Node: Announce138425
-Node: Contributing139014
-Node: Authoring Guidelines140037
-Node: Credits143156
-Node: Copyright143519
-Node: Acknowledgments144088
-Node: Developer Guide144235
-Node: Speech Server Protocols145297
-Ref: Testing A Direct Legacy Server149996
-Ref: Commands That Queue Output150555
-Ref: Commands That Set State153589
-Node: Integration Maintenance156183
-Node: Concept Index162158
+Node: Introduction2198
+Node: Installation5597
+Node: Obtaining Emacsvox6804
+Node: Building And Testing The Speech Server8204
+Node: Quick Installation9446
+Node: Confirming First Speech11678
+Node: Recovering From No Speech12995
+Node: Persistent Startup15636
+Node: Basic Usage16656
+Node: Overview19234
+Node: Working20619
+Ref: Working-Footnote-121961
+Ref: Working-Footnote-222054
+Node: Reading22164
+Node: Speech System23944
+Node: Controlling Echo24803
+Node: Speech Output Control25670
+Node: Miscellaneous27740
+Node: Voice-lock28862
+Node: Status Information29954
+Node: Speech Backends31347
+Node: Supported Platform Routes32644
+Node: Installing Omnivox From Source35356
+Node: Building Omnivox For WSL237215
+Node: Selecting And Checking Omnivox38622
+Node: Compatibility Speech Servers40363
+Node: Backend Diagnostics And Ownership42289
+Node: Audio Desktop44404
+Node: Desktop Objects45534
+Node: Object Oriented Desktop46759
+Node: Context-Sensitive Interaction47872
+Node: Aural Presentation50987
+Node: Presentation Model53186
+Node: Presentation Modalities55653
+Node: Aural Home57400
+Node: Explaining Presentation59288
+Node: Adjusting Presentation61273
+Node: Presentation Profiles64242
+Node: Voices And Routing65933
+Node: Sounds And Space68290
+Node: Presentation Troubleshooting69914
+Node: Voice Lock71952
+Node: Using Online Help75159
+Node: Emacs Packages79221
+Node: Document Authoring80595
+Node: Structured Editing81149
+Node: Browsing Structure82132
+Node: Web Browsing82730
+Node: Messaging83565
+Node: Editing Code84063
+Node: Development Environment84582
+Node: Desktop Management85139
+Node: Personal Information Management85641
+Node: Desktop Applications86173
+Node: Notmuch Mail87722
+Ref: Notmuch fields and privacy97082
+Node: Agent Shell102790
+Node: EAT Terminal Access112784
+Node: Running Terminal Based Applications130043
+Node: Starting Term130998
+Node: Term Input Modes131837
+Node: Term Speech Feedback132997
+Node: Reviewing The Term Screen134191
+Node: Term Help And Recovery136092
+Node: Emacsvox Keyboard Commands136991
+Node: Copyright138395
+Node: Acknowledgments138982
+Node: Developer Guide140008
+Node: Documentation Maintenance141172
+Node: Speech Server Protocols145818
+Ref: Testing A Direct Legacy Server150551
+Ref: Commands That Queue Output151110
+Ref: Commands That Set State154144
+Node: Integration Maintenance156738
+Node: Concept Index162713
 
 End Tag Table
 

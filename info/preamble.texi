@@ -40,7 +40,6 @@ Additional current material:
 * Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
 
 Project information:
-* Manual Provenance: Announce.
 * Copying: Copyright.
 * Acknowledgments: Acknowledgments.
 

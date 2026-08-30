@@ -1,0 +1,104 @@
+* Documentation Maintenance
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Documentation Maintenance
+:DESCRIPTION: Author, validate, and publish Emacsvox documentation.
+:END:
+
+This chapter is for contributors changing the maintained manuals, generated
+reference, or public browser documentation.  Reports and internal notes do not
+require an Emacsvox build; use the smallest documentation target that covers
+the source being changed.
+
+** Choose the canonical source
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The maintained Org master is ~docs/manual/emacsvox.org~.  Current-user chapters
+live under ~docs/manual/chapters/~, while developer and maintainer chapters
+live under ~docs/developer/~.  The source layout and fast authoring loop are
+summarized in ~docs/manual/README.org~.
+
+The current project overview and installation summary live in ~Readme.org~ and
+~etc/install.org~.  Submit changes through the Emacsvox repository at
+[[https://github.com/bartbunting/emacsvox]].  Before changing a governed
+workflow or architecture, read ~AGENTS.md~ and every accepted record under
+~docs/adr/~.  Repository-local ~local.mk~ selects the Emacs used by supported
+targets; Emacsvox requires Emacs 31 or newer.
+
+Do not hand-edit generated references.  ~info/docs.texi~ and ~info/keys.texi~
+come from the source documentation generator, and
+~etc/aural-presentation-reference.org~ comes from
+~utils/emacsvox-aural-audit.el~.  The first two sources form the separately
+installed ~emacsvox-reference.info~ manual.  Selected historical chapters form
+the separately installed ~emacsvox-heritage.info~ manual.
+
+** Use the fast authoring workflow
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Keep current operating instructions separate from historical accounts.  State
+which backend or platform a procedure applies to, avoid duplicating detailed
+protocol contracts across repositories, and link to the owning document.
+Apply the user-versus-developer audience test in ADR 0004 before choosing a
+source directory.
+
+While editing Org prose, preview the complete manual without inspecting or
+rebuilding Lisp byte-code:
+
+#+begin_example
+make docs-org-preview
+#+end_example
+
+The ignored Info, Texinfo, and HTML previews appear under
+~.docs-preview/org-manual/~.  Once the text settles, run ~make docs-update~ to
+update the tracked generated Texinfo body and checked Info files.  Do not edit
+those generated files directly.
+
+When public Lisp documentation or keys change, first bring byte-code current
+with ~make bytecode~.  Use ~make bytecode-rebuild~ instead after changing
+macros or public interfaces, as described in ~AGENTS.md~.  Then run
+~make docs-reference~.  ~make docs-generate~ remains the comprehensive
+reference and manual update.
+
+Before review, merge, or deployment, run the non-mutating
+~make docs-release-check~; ~make docs-check~ is its compatibility alias.
+Commit the regenerated Info artifacts with their source changes.
+
+** Publish the browser manual
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Org on ~master~ is the canonical maintained manual source.  GitHub Pages serves
+the generated static files committed on the separate ~gh-pages~ branch; never
+edit those HTML files as source.  Publishing is deliberately explicit:
+
+1. Finish the manual change, update its checked Info output, run the release
+   validation target above, and commit the complete source-side change on
+   ~master~.
+
+1. Check out that exact commit in a clean source worktree.  Build its local,
+   ignored byte-code with the Emacs selected by ~local.mk~ or an ~EMACS=~
+   override.  Use a separate sibling worktree checked out on ~gh-pages~ as the
+   publication directory.
+
+1. From the clean source worktree, run:
+
+   #+begin_example
+   make docs-publish-pages DOCS_PUBLISH_DIR=/path/to/emacsvox-pages
+   #+end_example
+
+   The target validates the manual and publishes that same staged render,
+   replaces only its managed HTML files, writes ~.nojekyll~, and records the
+   source commit, Emacs version, and Texinfo version in
+   ~emacsvox-source.txt~.  It refuses an uncommitted source tree.
+
+1. Inspect the ~gh-pages~ worktree, including the provenance file and the main
+   browser entry points.  Commit the generated site with the source commit in
+   the commit message, then push ~master~ and ~gh-pages~.  The GitHub Pages
+   source setting must name the root of ~gh-pages~.
+
+No documentation target creates a commit or pushes a branch.  This keeps the
+published bytes reviewable and makes publication a distinct maintainer action.

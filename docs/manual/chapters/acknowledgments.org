@@ -1,7 +1,21 @@
 * Acknowledgments
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Acknowledgments
-:DESCRIPTION: Acknowledge project contributors.
+:DESCRIPTION: Recognize the people and projects behind Emacsvox.
 :END:
 
-Thanks.
+Emacsvox grows from Emacspeak, created by T. V. Raman.  Raman is the principal
+original author of the inherited system, and Emacsvox preserves his authorship
+and copyright notices throughout the source where that work remains.
+
+The Emacsvox documentation began with the second-edition Emacspeak user
+manual.  Jim Van Zandt and Jason White contributed to that manual.  Selected
+historical chapters remain available in the separate
+@@texinfo:@ref{Top,Emacspeak Heritage,,emacsvox-heritage,Emacspeak Heritage}@@
+manual, where their original terminology and period context can be read
+without confusing them with current setup guidance.
+
+Thank you to everyone who has contributed code, documentation, testing,
+problem reports, and practical experience to Emacspeak and Emacsvox.  The
+current Emacsvox contributors continue that work while maintaining the user
+guidance and generated reference in this repository.

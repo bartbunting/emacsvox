@@ -1,13 +1,14 @@
 * Developer And Maintainer Guide
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Developer Guide
-:DESCRIPTION: Develop, test, and maintain Emacsvox integrations and protocols.
+:DESCRIPTION: Develop, document, test, and maintain Emacsvox.
 :END:
 
-This guide is for people changing Emacsvox source, integrations, speech-server
-protocols, build machinery, or release staging.  It is included at the end of
-the published manual so that an installed Info manual and an offline checkout
-remain complete, but it is not part of the ordinary installation and use path.
+This guide is for people changing Emacsvox source, documentation, integrations,
+speech-server protocols, build machinery, or release staging.  It is included
+at the end of the published manual so that an installed Info manual and an
+offline checkout remain complete, but it is not part of the ordinary
+installation and use path.
 
 Before making a governed change, read ~AGENTS.md~ and every accepted record in
 ~docs/adr/~.  Use the Emacs selected by ~local.mk~ for repository checks.  The

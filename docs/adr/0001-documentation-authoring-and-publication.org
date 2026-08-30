@@ -146,9 +146,10 @@ provide the same dependable offline manual.
 
 The canonical master now lives at
 [[file:../manual/emacsvox.org][docs/manual/emacsvox.org]], with maintained prose
-split below =docs/manual/chapters/=.  =docs-org-preview= lints and renders an
-isolated preview below =.docs-preview/org-manual/=.  =docs-org-check= verifies
-the generated release body and the accepted
+split between current-user chapters below =docs/manual/chapters/= and the final
+developer guide below =docs/developer/=.  =docs-org-preview= lints and renders
+an isolated preview below =.docs-preview/org-manual/=.  =docs-org-check=
+verifies the generated release body and the accepted
 [[file:../manual/nodes.txt][node inventory]] and is a prerequisite of release
 validation and publication.  Generated reference and heritage manuals remain
 Texinfo, and public HTML still publishes through the reviewed =gh-pages=

@@ -60,12 +60,9 @@ Term Speech Feedback
 Reviewing The Term Screen
 Term Help And Recovery
 Emacsvox Keyboard Commands
-Announce
-Contributing
-Authoring Guidelines
-Credits
 Copyright
 Acknowledgments
 Developer Guide
+Documentation Maintenance
 Speech Server Protocols
 Integration Maintenance

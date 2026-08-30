@@ -30,9 +30,9 @@ manuals remain Texinfo.
 #+include: "chapters/eat.org"
 #+include: "chapters/term.org"
 #+include: "chapters/keyboard.org"
-#+include: "chapters/provenance.org"
 #+include: "chapters/copyright.org"
 #+include: "chapters/acknowledgments.org"
 #+include: "../developer/index.org"
+#+include: "../developer/documentation-maintenance.org" :minlevel 2
 #+include: "../developer/speech-server-protocols.org" :minlevel 2
 #+include: "../developer/integration-maintenance.org" :minlevel 2
