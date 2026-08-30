@@ -31,6 +31,8 @@ Do not hand-edit generated references.  @file{info/docs.texi} and
 @file{utils/emacsvox-aural-audit.el}.
 The first two sources form the separately installed
 @file{emacsvox-reference.info} manual.
+The selected historical chapters form the separately installed
+@file{emacsvox-heritage.info} manual.
 
 @node Authoring Guidelines
 @section Authoring Guidelines
@@ -40,7 +42,8 @@ which back end or platform a procedure applies to, avoid duplicating detailed
 protocol contracts across repositories, and link to the owning document.
 Run @command{make docs-generate} after editing Texinfo, then run
 @command{make docs-check}.  Commit the regenerated @file{emacsvox.info} and
-@file{emacsvox-reference.info} files with their source changes.
+@file{emacsvox-reference.info} and @file{emacsvox-heritage.info} files with
+their source changes.
 
 @subsection Publishing The Browser Manual
 

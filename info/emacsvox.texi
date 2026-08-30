@@ -52,8 +52,6 @@ This manual documents @strong{Emacsvox, The Complete Audio Desktop}.
 @include announce.texi
 @include copyright.texi
 @include acknowledge.texi
-@include emacspeak-significance.texi
-@include inc-turning-twenty.texi
 @c trailer
 
 @node Concept Index

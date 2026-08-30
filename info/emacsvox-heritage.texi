@@ -1,0 +1,53 @@
+\input texinfo
+@finalout
+@setfilename ./emacsvox-heritage.info
+@include style.texi
+@settitle Emacspeak Heritage
+@dircategory Accessibility
+@direntry
+* Emacspeak Heritage:(emacsvox-heritage). Selected historical Emacspeak essays.
+@end direntry
+@dircategory Emacs
+@direntry
+* Emacspeak Heritage:(emacsvox-heritage). Selected historical Emacspeak essays.
+@end direntry
+
+@titlepage
+
+@title Emacspeak Heritage
+@subtitle Selected Historical Essays Preserved By Emacsvox
+@author T. V. Raman
+
+@page
+@vskip 0pt plus 1filll
+Historical material preserved from the Emacspeak corpus.
+
+@end titlepage
+
+@summarycontents
+@contents
+
+@node Top
+@top Emacspeak Heritage
+
+This manual preserves selected historical Emacspeak essays for context.  It is
+not current Emacsvox installation, setup, or operating guidance.  For the
+maintained user path, start with the
+@ref{Top,Emacsvox User Manual,,emacsvox,Emacsvox User Manual}.
+Copying terms are in
+@ref{Copyright,Copyright,,emacsvox,Emacsvox User Manual}.
+
+@menu
+* Background::                 Emacspeak's significance and design lessons.
+* Emacspeak At Twenty::       A twenty-year retrospective.
+* Heritage Concept Index::
+@end menu
+
+@include emacspeak-significance.texi
+@include inc-turning-twenty.texi
+
+@node Heritage Concept Index
+@chapter Heritage Concept Index
+@printindex cp
+
+@bye

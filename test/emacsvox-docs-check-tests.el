@@ -187,17 +187,26 @@
               (with-temp-file
                   (expand-file-name "reference/index.html" staging)
                 (insert "reference\n"))
-              '("index.html" "reference/index.html"))))
+              (make-directory (expand-file-name "heritage" staging) t)
+              (with-temp-file
+                  (expand-file-name "heritage/index.html" staging)
+                (insert "heritage\n"))
+              '("heritage/index.html" "index.html"
+                "reference/index.html"))))
         (let ((result (emacsvox-docs-publish destination root "makeinfo")))
-          (should (equal result '(:written 2 :removed 0)))))
+          (should (equal result '(:written 3 :removed 0)))))
       (should (file-exists-p (expand-file-name "index.html" destination)))
       (should
        (file-exists-p
         (expand-file-name "reference/index.html" destination)))
       (should
+       (file-exists-p
+        (expand-file-name "heritage/index.html" destination)))
+      (should
        (equal
         (emacsvox-docs-check--read-publish-manifest destination)
-        '("index.html" "reference/index.html"))))))
+        '("heritage/index.html" "index.html"
+          "reference/index.html"))))))
 
 (ert-deftest emacsvox-docs-publish-rejects-manifest-traversal ()
   "Nested manual paths must not permit a manifest to escape publication."

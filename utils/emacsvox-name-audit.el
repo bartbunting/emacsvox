@@ -60,7 +60,7 @@
     ("Makefile" "EMACSPEAK_DIR" "EMACSPEAK_TRACE_GOLDEN")
     ("Readme.org" "EMACSPEAK_DIR" "EMACSPEAK_PLAY")
     ("info/dir" "emacspeak-significance")
-    ("info/emacsvox.texi" "emacspeak-significance")
+    ("info/emacsvox-heritage.texi" "emacspeak-significance")
     ("servers/windows-speech-NOTICE.md" "emacspeak-support")
     ("test/emacsvox-launcher-tests.el"
      "EMACSPEAK_DIR" "EMACSPEAK_PLAY"))
@@ -80,7 +80,7 @@
     (lambda (prefix) (string-prefix-p prefix relative))
     ems-name-audit-excluded-prefixes)
    (string-match-p
-    "\\`info/emacsvox\\.info\\(?:-[[:digit:]]+\\)?\\'"
+    "\\`info/emacsvox\\(?:-heritage\\|-reference\\)?\\.info\\(?:-[[:digit:]]+\\)?\\'"
     relative)))
 
 (defun ems-name-audit--allowed-name-p (relative name)

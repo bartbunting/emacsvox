@@ -98,8 +98,8 @@ and [[https://bartbunting.github.io/emacsvox/Agent-Shell.html][Agent Shell]].
 For exact, machine-generated details, use the
 [[https://bartbunting.github.io/emacsvox/reference/Emacsvox-Keymaps.html][key reference]]
 or [[https://bartbunting.github.io/emacsvox/reference/Emacsvox-Commands-And-Options.html][command and option reference]].
-The [[https://bartbunting.github.io/emacsvox/Background.html][Emacspeak background]]
-and [[https://bartbunting.github.io/emacsvox/Emacspeak-At-Twenty.html][Emacspeak at Twenty]]
+The [[https://bartbunting.github.io/emacsvox/heritage/Background.html][Emacspeak background]]
+and [[https://bartbunting.github.io/emacsvox/heritage/Emacspeak-At-Twenty.html][Emacspeak at Twenty]]
 pages are preserved heritage, not current setup instructions.
 
 * Advanced Technical And Migration Notes

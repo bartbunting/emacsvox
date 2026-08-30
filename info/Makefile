@@ -8,20 +8,22 @@ SF_HOME= raman,emacspeak@web.sourceforge.net:/home/groups/e/em/emacspeak/htdocs/
 GH_PAGES ?=
 FILES=*.texi
 USER_INCLUDES= style.texi preamble.texi copyright.texi announce.texi \
-emacspeak-significance.texi introduction.texi install.texi backends.texi \
-using.texi audio-desktop.texi voices.texi online-help.texi packages.texi \
+introduction.texi install.texi backends.texi using.texi audio-desktop.texi \
+voices.texi online-help.texi packages.texi \
 notmuch.texi agent-shell.texi eat.texi eterm.texi keyboard.texi \
-tts-server.texi inc-turning-twenty.texi acknowledge.texi documents.texi \
+tts-server.texi acknowledge.texi documents.texi \
 structure.texi web-browsing.texi tts.texi
 REFERENCE_INCLUDES= style.texi docs.texi keys.texi intro-docs.texi
-INCLUDES= $(USER_INCLUDES) $(REFERENCE_INCLUDES)
+HERITAGE_INCLUDES= style.texi emacspeak-significance.texi \
+inc-turning-twenty.texi
+INCLUDES= $(USER_INCLUDES) $(REFERENCE_INCLUDES) $(HERITAGE_INCLUDES)
 
 MAKEINFO ?= makeinfo
 NORMALIZE_INFO = perl -0777 -pi -e 's/[ \t]+$$//mg; s/\n+\z/\n/'
 
 all: info introducing-emacspeak.info turning-twenty.info #emacsvox.pdf
 
-info: emacsvox.info emacsvox-reference.info
+info: emacsvox.info emacsvox-reference.info emacsvox-heritage.info
 
 emacsvox.info: emacsvox.texi $(USER_INCLUDES)
 	@set -eu; \
@@ -44,6 +46,18 @@ emacsvox-reference.info: emacsvox-reference.texi $(REFERENCE_INCLUDES)
 			"$$info_staging"/emacsvox-reference.info*; \
 		rm -f emacsvox-reference.info emacsvox-reference.info-[0-9]*; \
 		for info_file in "$$info_staging"/emacsvox-reference.info*; do \
+			cp "$$info_file" .; \
+		done
+
+emacsvox-heritage.info: emacsvox-heritage.texi $(HERITAGE_INCLUDES)
+	@set -eu; \
+		heritage_staging=$$(mktemp -d ./.emacsvox-heritage-info.XXXXXX); \
+		trap 'rm -rf "$$heritage_staging"' 0 1 2 3 15; \
+		$(MAKEINFO) --output="$$heritage_staging/emacsvox-heritage.info" \
+			emacsvox-heritage.texi; \
+		$(NORMALIZE_INFO) "$$heritage_staging"/emacsvox-heritage.info*; \
+		rm -f emacsvox-heritage.info emacsvox-heritage.info-[0-9]*; \
+		for info_file in "$$heritage_staging"/emacsvox-heritage.info*; do \
 			cp "$$info_file" .; \
 		done
 
@@ -86,7 +100,8 @@ pub:  html/index.html introducing-emacspeak.html
 
 
 clean:
-	\rm emacsvox.info* emacsvox-reference.info* emacsvox.pdf || echo "all clean"
+	\rm emacsvox.info* emacsvox-reference.info* emacsvox-heritage.info* \
+		emacsvox.pdf || echo "all clean"
 
 spell:
 	codespell -I .codespell *.texi

@@ -2,18 +2,17 @@
 @node Top
 @top Emacsvox
 
-@ifinfo 
-This user manual contains current Emacsvox operating guidance and selected
-historical Emacspeak material.  Begin with Getting Started, then continue to
-Speech Backends and Basic Usage.  Exact commands, options, and keymaps are in
-the separate Emacsvox Reference Manual.  Heritage is grouped after the
-current-user route and is preserved for background, not as current setup
-instructions.  For rapidly evolving Omnivox and Aural Presentation details,
-also consult @file{Readme.org} and
+This user manual contains current Emacsvox operating guidance.  Begin with
+Getting Started, then continue to Speech Backends and Basic Usage.  Exact
+commands, options, and keymaps are in the separate
+@ref{Top,Emacsvox Reference Manual,,emacsvox-reference,Emacsvox Reference
+Manual}.  Selected historical Emacspeak material is in the separate
+@ref{Top,Emacspeak Heritage,,emacsvox-heritage,Emacspeak Heritage} manual and
+is not current setup guidance.  For rapidly evolving Omnivox and Aural
+Presentation details, also consult @file{Readme.org} and
 @file{etc/aural-presentation-reference.org} in the source tree.
 
 The manual is divided into the following chapters:
-@end ifinfo
 
 @menu
 Current-user path:
@@ -45,8 +44,7 @@ Project information:
 * Acknowledgments: Acknowledgments.
 
 Heritage (not current operating guidance):
-* Emacspeak Heritage: Background.
-* Emacspeak At Twenty (Historical): Emacspeak At Twenty.
+* Emacspeak Heritage: (emacsvox-heritage).
 
 Indices:
 * Concept Index: Concept Index.

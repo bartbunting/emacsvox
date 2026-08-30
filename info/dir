@@ -18,5 +18,6 @@ File: dir,	Node: Top	This is the top of the INFO tree
 Emacs
 * Emacsvox: (emacsvox).                 Emacsvox Audio Desktop.
 * Emacsvox Reference: (emacsvox-reference). Generated commands, options, and keys.
+* Emacspeak Heritage: (emacsvox-heritage). Selected historical Emacspeak essays.
 * Turning Twenty: (turning-twenty). Emacspeak At Twenty.
 * Introducing Emacspeak: (introducing-emacspeak). Introducing Emacspeak By  Robert J. Chassell.

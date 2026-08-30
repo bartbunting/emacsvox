@@ -127,6 +127,14 @@
       (regexp-quote
        "* Commands, Options, And Keys: (emacsvox-reference).")
       menu))
+    (should
+     (string-match-p
+      (regexp-quote "* Emacspeak Heritage: (emacsvox-heritage).")
+      menu))
+    (should
+     (string-match-p
+      (regexp-quote "@ref{Top,Emacspeak Heritage,,emacsvox-heritage")
+      menu))
     (should (< installation backends basic reference heritage))))
 
 (ert-deftest emacsvox-first-use-manual-owns-success-and-recovery ()

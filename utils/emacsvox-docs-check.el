@@ -32,12 +32,17 @@
      :source "emacsvox.texi")
     (:name "emacsvox-reference"
      :source "emacsvox-reference.texi"
-     :html-directory "reference"))
+     :html-directory "reference")
+    (:name "emacsvox-heritage"
+     :source "emacsvox-heritage.texi"
+     :html-directory "heritage"))
   "Manuals compiled and published by the documentation workflow.")
 
 (defconst emacsvox-docs-check--compatibility-redirects
   '((:html-directory "reference"
-     :inventory "etc/docs-reference-redirects.txt"))
+     :inventory "etc/docs-reference-redirects.txt")
+    (:html-directory "heritage"
+     :inventory "etc/docs-heritage-redirects.txt"))
   "Frozen inventories of legacy root HTML paths for moved manual nodes.")
 
 (defconst emacsvox-docs-check--public-org-files
@@ -332,7 +337,7 @@ directory entry with INSTALL-INFO."
                escaped-target)
        (format "<link rel=\"canonical\" href=\"%s\">\n" escaped-target)
        "<title>Emacsvox documentation moved</title>\n</head>\n<body>\n"
-       "<p>This Emacsvox reference page moved to "
+       "<p>This Emacsvox documentation page moved to "
        (format "<a href=\"%s\">its maintained location</a>.</p>\n"
                escaped-target)
        "</body>\n</html>\n"))))
@@ -372,9 +377,14 @@ directory entry with INSTALL-INFO."
     (setq files
           (emacsvox-docs-check--add-compatibility-redirects
            root output-directory files))
-    (unless (and (member "index.html" files)
-                 (member "reference/index.html" files))
-      (error "HTML compilation did not produce both manual entry points"))
+    (dolist (manual emacsvox-docs-check--manuals)
+      (let ((entry
+             (if-let* ((directory (plist-get manual :html-directory)))
+                 (concat directory "/index.html")
+               "index.html")))
+        (unless (member entry files)
+          (error "HTML compilation did not produce manual entry point: %s"
+                 entry))))
     files))
 
 (defun emacsvox-docs-check--check-html

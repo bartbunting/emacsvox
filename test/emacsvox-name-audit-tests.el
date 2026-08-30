@@ -45,6 +45,10 @@
   (should (ems-name-audit--excluded-path-p "announcements/old.org"))
   (should
    (ems-name-audit--excluded-path-p "test/run-scenarios.el"))
+  (should
+   (ems-name-audit--excluded-path-p "info/emacsvox-reference.info-2"))
+  (should
+   (ems-name-audit--excluded-path-p "info/emacsvox-heritage.info"))
   (should-not
    (ems-name-audit--excluded-path-p "lisp/emacsvox-speak.el"))
   (should-not
