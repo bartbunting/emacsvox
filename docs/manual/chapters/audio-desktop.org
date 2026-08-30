@@ -1,202 +1,169 @@
-* The Emacsvox Audio Desktop.
+* Work With The Audio Desktop
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Audio Desktop
 :ALT_TITLE: Audio Desktop
-:DESCRIPTION: Explore the objects and gestures of the audio desktop.
+:DESCRIPTION: Work with buffers, modes, structure, and search.
 :END:
 
 #+cindex: Audio Desktop
 
-This chapter describes the Emacsvox audio desktop and gives tips and
-tricks for making use of many of Emacs' powerful features.
+The /audio desktop/ is the Emacsvox working environment.  It is not a
+separate program or a spoken copy of a graphical desktop.  Emacs keeps each
+document, application, and result in a buffer; its modes understand the kind
+of information in that buffer; and Emacsvox presents that context through
+speech, voice changes, sounds, and structured navigation.
 
-The desktop is the work area where you organize the tools of your
-trade and the information objects relevant to your current activities.
-In the conventional world of visual @@texinfo:@acronym{GUI,Graphical User Interface}@@-based computing, these tools and information objects
-manifest themselves as a collection of icons organized in a
-two-dimensional work-area  @@texinfo:@MDash{}@@ this organization is designed to
-place frequently used objects within easy reach.
+You can begin without learning a new desktop model.  Open a file or application
+normally, use @@texinfo:@kbd{C-e m}@@ to hear the current buffer and mode, and press
+@@texinfo:@kbd{C-h m}@@ to discover what that buffer can do.  The rest of this chapter
+explains why the same approach works for text, Web pages, mail, shells, source
+code, and many other tasks.
 
-Notice that organizing one's work area in terms of visual icons
-arranged in a two-dimensional area where such an organization is
-optimized for the available ``conversational gestures'' of pointing and
-clicking is an artifact of visual interaction.
-
-In the spirit of a truly speech-enabled application, Emacsvox does
-not simply provide you spoken access to a particular presentation of
-your work environment that was initially designed with the ``sign
-language'' of visual interaction in mind.  Instead, Emacsvox enables
-you to work with documents and other information objects in a manner
-that is optimized to aural, eyes-free interaction.  A necessary
-consequence of this setup is that users accustomed to the purely
-visual manifestation of today's electronic desktop do not immediately
-perceive the Emacsvox environment as an electronic desktop.  This
-section of the manual hopes to introduce you to a work-style that
-encourages a different perspective on how one interacts with the
-computer in performing day-to-day computing tasks.
-
-The end result in my case has been a marked increase in personal
-productivity.
-
-** Objects Making Up The Emacsvox Desktop
+** Buffers Hold Your Work
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Desktop Objects
 :ALT_TITLE: Desktop Objects
-:DESCRIPTION: Desktop Objects
+:DESCRIPTION: Understand and move between Emacs buffers.
 :END:
 
-#+cindex: Desktop Objects
+#+cindex: buffers
 
-A ``buffer'' is the basic building block of  the
-Emacsvox desktop.  Any information presented by Emacs is placed in a
-``buffer''.  For example, when perusing this manual within Emacs, the
-``file'' containing the documentation is presented in a ``buffer''.  All
-information objects such as @@texinfo:@acronym{WWW}@@ pages, email messages, output from
-user interaction with command-line shells etc., are presented by Emacs
-in individual ``buffers''.
+A buffer is Emacs's working view of one piece of information.  A buffer might
+contain a file you are editing, an Info manual, a directory listing, a Web
+page, a mail search, a shell session, or a temporary Help result.  Some buffers
+are connected to files; many useful application buffers are not.
 
-Buffers provide a base level of user interaction; Emacs derives its
-power by allowing applications to specialize buffers to enable
-specific types of user-interaction that is optimized for a specific
-class of information.
+The mode line identifies the selected buffer and its major mode.  Press
+@@texinfo:@kbd{C-e m}@@ whenever you want to hear it.  Common buffer commands include:
 
-** An Object-Oriented Desktop
+#+attr_texinfo: :indic kbd :compact t
+- C-x b ::
+
+  Switch to another buffer by name.  Completion lets you narrow the choices
+  instead of remembering the complete name.
+
+- C-x C-b ::
+
+  Open a buffer list.  In that list, use @@texinfo:@kbd{C-h m}@@ to learn its navigation,
+  selection, saving, and cleanup commands.
+
+- C-x k ::
+
+  Close a buffer that you no longer need.  Emacs asks before discarding
+  unsaved file changes.
+
+Moving to another buffer changes the selected work object without closing the
+one you left.  This makes it practical to keep a document, its reference
+material, a shell, and related application results available together.
+
+** Let Modes Give Each Buffer Its Tools
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Object Oriented Desktop
 :ALT_TITLE: Object Oriented Desktop
-:DESCRIPTION: Object Oriented Desktop
+:DESCRIPTION: Let major and minor modes interpret each kind of content.
 :END:
 
-#+cindex: Object-Oriented Desktop
+#+cindex: major modes
 
-The basic ``buffer object'' can be specialized by Emacs applications
-to provide optimal interaction.  This kind of specialization makes the
-Emacs environment an object-oriented environment; thus, the basic
-conversational gesture of ``move to the next statement'' can be
-assigned behavior that is appropriate to the content that the user is
-currently navigating.  As an example of such specialization, Emacs
-provides ``specialized modes'' for working with English text,
-programming languages, markup source e.g. @@texinfo:@acronym{HTML,Hypertext Markup Language}@@ or LaTeX documents and so on.
+#+cindex: minor modes
 
-** Emacsvox Specializes Aural Interaction
+Every buffer has one major mode that provides its main editing or application
+behavior.  A source buffer uses a programming-language mode, Dired uses a mode
+for directories, EWW uses one for Web pages, and Org uses one for structured
+notes and documents.  Minor modes add optional behavior alongside the major
+mode.
+
+This context is what makes Emacs efficient: a movement command can move by a
+sentence in prose, a heading in an outline, an item in a list, or another
+meaningful unit supplied by the active mode.  Emacsvox speaks the result of the
+operation and can use the same context to announce state changes.
+
+You do not need to predict which commands every mode provides.  Press
+@@texinfo:@kbd{C-h m}@@ in the buffer you are using, then @@texinfo:@kbd{C-h k}@@ followed by a key
+when you want a fuller explanation.  @@texinfo:@xref{Using Online Help}@@ provides a
+short practical guide to these discovery commands.
+
+** Hear And Navigate The Current Context
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Context-Sensitive Interaction
 :ALT_TITLE: Context-Sensitive Interaction
-:DESCRIPTION: Context-Sensitive Interaction
+:DESCRIPTION: Use aural structure, mode commands, buffers, and search.
 :END:
 
 #+cindex: Context-Sensitive Interaction
 
-The content-specific user interaction described above is a very
-powerful feature of Emacs, and this is where Emacsvox derives its
-power.  Traditionally, the ability to create buffers specialized for
-working with specific content-types has been used by the Emacs
-community to develop versatile programming environments, messaging
-applications such as mail and news readers, and authoring
-environments.  The clean design present in all of these Emacs
-extensions in terms of separating application functionality from the
-user-interface, combined with the availability of the entire source
-code making up these packages under the open-source model has laid the
-ground-work for developing Emacsvox as a versatile aural counterpart
-to the product of years of software engineering that has been invested
-by the Emacs community.  In short, Emacsvox would not exist in its
-present shape or form without this prior effort.
+Emacsvox uses information already exposed by Emacs and the active application.
+That produces more useful feedback than reading every visible character in the
+same way.  You can hear what an object means, move using its structure, and ask
+for detail only when you need it.
 
-*** Audio Formatted Output
+*** Hear Structure Without Extra Words
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-#+cindex: Audio Formatting
+#+cindex: audio formatting
 
-Emacsvox takes advantage of the content-specific knowledge available
-within specialized buffers to produce ``audio formatted'' output
-designed to optimize user interaction.  A basic consequence of the
-above is ``voice locking'' in specialized modes; a more interesting
-consequence is the implementation of Aural Cascading Style Sheets
-(@@texinfo:@acronym{ACSS}@@) in conjunction with the Emacs @@texinfo:@acronym{EWW,Emacs Web Wowser}@@ and @@texinfo:@acronym{W3}@@ Web browsers.
+Voice changes can distinguish headings, comments, strings, links, warnings,
+and other meaningful text.  Short sounds and tones can mark events or state
+changes without interrupting the spoken content.  Ordinary text remains
+available through the usual reading commands.
 
-*** Structured Navigation:
+The exact result depends on the mode, the Emacsvox integration, and your Aural
+Presentation settings.  @@texinfo:@xref{Voice Lock}@@ explains the established
+face-and-personality voice layer, while @@texinfo:@kbd{C-e E}@@ explains the presentation
+chosen for the object at point.
+
+*** Move By The Structure Of The Content
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-#+cindex: Structured Navigation
+#+cindex: structured navigation
 
-Emacsvox also exploits content-specific knowledge to provide
-structured navigation of different types of electronic content.  In
-many cases, such structured navigation is an extension of what Emacs
-provides by default; in other cases, Emacsvox implements the
-necessary extensions to provide the level of structural navigation
-needed to work efficiently in an eyes-free environment.
+Prefer the navigation supplied by the active mode when it matches your task.
+For example, Info moves among nodes and menu entries, Org and Outline move
+among headings, Dired moves among files, programming modes understand
+definitions and diagnostics, and EWW exposes links and document structure.
 
-Notable among such structured navigation is Emacs' powerful outline
-feature.
+Begin with @@texinfo:@kbd{C-h m}@@.  It describes the commands available in the
+running buffer, including personal customizations and installed packages.
+@@texinfo:@xref{Browsing Structure}@@ points to maintained guides for several common
+types of content.
 
-An example of content-sensitive navigation is provided by the ~imenu~
-package which dynamically creates a ``table of contents'' based on the
-content that is being displayed in a given buffer.  Emacs
-@@texinfo:@dfn{Selective Display}@@ lets one easily hide and expose portions of a
-buffer based on indentation  @@texinfo:@MDash{}@@ this feature can be used to
-advantage when working with program source code.
-
-*** Navigating The Desktop
+*** Move Between Tasks Without Losing Your Place
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-#+cindex: Desktop Navigation
+#+cindex: desktop navigation
 
-In addition to navigating individual information objects, the
-Emacsvox environment provides speech-enabled navigation of the
-various buffers that are currently open on the Emacsvox desktop via
-Emacs' built-in list-buffers feature.  Emacs' dired  @@texinfo:@MDash{}@@ directory
-editor  @@texinfo:@MDash{}@@ for browsing the file system, along with the new
-speedbar package that combines features from dired and imenu round off
-the suite of navigational tools.
+Buffers keep different tasks available in one Emacs session.  Use
+@@texinfo:@kbd{C-x b}@@ to return to a known buffer or @@texinfo:@kbd{C-x C-b}@@ to browse the
+current set.  Emacs windows can show more than one buffer at a time; if the
+selected window is unclear, @@texinfo:@kbd{C-e C-w}@@ describes the arrangement.
 
-*** Everything Is Searchable:
+Applications often create several related buffers, such as a search result and
+an individual message.  Their mode help explains the commands for moving among
+those views.  Treat each buffer as a place you can revisit, rather than as a
+dialog that must be completed before doing anything else.
+
+*** Search Wherever You Are
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-#+cindex: Searching
+#+cindex: searching
 
-#+cindex: Finding
+#+cindex: finding
 
-Emacs derives one final advantage from using buffers as the basic
-building block for the entire desktop.  Every Emacs buffer is
-searchable via a uniform and powerful search interface.  Emacs'
-incremental search works efficiently and consistently to enable you
-locate ``objects'' of interest either within a given document or to
-locate a given object from among the various objects that are
-currently open on the Emacsvox desktop.  This is @@texinfo:@b{very powerful}@@
- @@texinfo:@MDash{}@@ where a @@texinfo:@acronym{GUI,Graphical User Interface}@@ user is
-typically limited to quickly locating an object from a relatively
-small collection  @@texinfo:@MDash{}@@ the size of the collection being a direct
-function of available display real-estate  @@texinfo:@MDash{}@@ the Emacsvox user
-can typically work with a far larger collection of objects.  This is
-well-suited to the eyes-free environment, where display real-estate
-has no meaning; so bringing up a list of currently open buffers and
-performing an incremental search to locate a specific buffer is just
-as efficient independent of whether you have a few dozen or a few
-hundred buffers open.
+In most text buffers, @@texinfo:@kbd{C-s}@@ searches forward incrementally and
+@@texinfo:@kbd{C-r}@@ searches backward.  Type more text to narrow the match, repeat the
+search key to move to another match, and press @@texinfo:@kbd{C-g}@@ to cancel.  This same
+basic search is available in documents, Help, source code, and many application
+results.
 
-To illustrate the above, my typical working Emacs session lasts
-between two and three weeks  @@texinfo:@MDash{}@@ over that time I typically
-accumulate several hundred open buffers holding a large variety of
-content ranging from program source code to email messages and
-@@texinfo:@acronym{WWW}@@ pages.
-
-Ubiquitous search in the eyes-free environment is critical  @@texinfo:@MDash{}@@ as
-a comparison, when using a conventional, purely visual WWW browser,
-users have no means of easily ``searching'' for say the ``submit''
-button on a WWW page.  This inability is a minor annoyance in visual
-interaction, and the typical mouse-enabled user @@texinfo:@b{never}@@ uses the
-find dialog to find a submit button  @@texinfo:@MDash{}@@ it is simply more
-efficient to point at the submit button given the eye's ability to
-quickly scan the two-dimensional display.  This luxury is absent in an
-eyes-free environment; as a consequence, blind users confronted by the
-combination of a visual interface and screen-reader are typically
-limited to either tabbing through all the controls on a @@texinfo:@acronym{WWW}@@
-page, or using the sub-optimal find dialog.
+Also look for the mode's semantic search and filtering commands.  A mail
+application can search message fields, Dired can narrow files, and a browser
+can move directly among links or headings.  Use the general search when text
+is what matters and the mode-specific command when the kind of object matters.

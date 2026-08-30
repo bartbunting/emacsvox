@@ -1135,301 +1135,272 @@ into installation instructions.
 
 File: emacsvox.info,  Node: Audio Desktop,  Next: Voice Lock,  Prev: Speech Backends,  Up: Top
 
-5 The Emacsvox Audio Desktop.
+5 Work With The Audio Desktop
 *****************************
 
-This chapter describes the Emacsvox audio desktop and gives tips and
-tricks for making use of many of Emacs' powerful features.
+The _audio desktop_ is the Emacsvox working environment.  It is not a
+separate program or a spoken copy of a graphical desktop.  Emacs keeps
+each document, application, and result in a buffer; its modes understand
+the kind of information in that buffer; and Emacsvox presents that
+context through speech, voice changes, sounds, and structured
+navigation.
 
-   The desktop is the work area where you organize the tools of your
-trade and the information objects relevant to your current activities.
-In the conventional world of visual GUI (Graphical User Interface)-based
-computing, these tools and information objects manifest themselves as a
-collection of icons organized in a two-dimensional work-area -- this
-organization is designed to place frequently used objects within easy
-reach.
-
-   Notice that organizing one's work area in terms of visual icons
-arranged in a two-dimensional area where such an organization is
-optimized for the available "conversational gestures" of pointing and
-clicking is an artifact of visual interaction.
-
-   In the spirit of a truly speech-enabled application, Emacsvox does
-not simply provide you spoken access to a particular presentation of
-your work environment that was initially designed with the "sign
-language" of visual interaction in mind.  Instead, Emacsvox enables you
-to work with documents and other information objects in a manner that is
-optimized to aural, eyes-free interaction.  A necessary consequence of
-this setup is that users accustomed to the purely visual manifestation
-of today's electronic desktop do not immediately perceive the Emacsvox
-environment as an electronic desktop.  This section of the manual hopes
-to introduce you to a work-style that encourages a different perspective
-on how one interacts with the computer in performing day-to-day
-computing tasks.
-
-   The end result in my case has been a marked increase in personal
-productivity.
+   You can begin without learning a new desktop model.  Open a file or
+application normally, use ‘C-e m’ to hear the current buffer and mode,
+and press ‘C-h m’ to discover what that buffer can do.  The rest of this
+chapter explains why the same approach works for text, Web pages, mail,
+shells, source code, and many other tasks.
 
 * Menu:
 
-* Desktop Objects::              Desktop Objects
-* Object Oriented Desktop::      Object Oriented Desktop
-* Context-Sensitive Interaction:: Context-Sensitive Interaction
+* Desktop Objects::              Understand and move between Emacs buffers.
+* Object Oriented Desktop::      Let major and minor modes interpret each kind of content.
+* Context-Sensitive Interaction:: Use aural structure, mode commands, buffers, and search.
 
 
 File: emacsvox.info,  Node: Desktop Objects,  Next: Object Oriented Desktop,  Up: Audio Desktop
 
-5.1 Objects Making Up The Emacsvox Desktop
-==========================================
+5.1 Buffers Hold Your Work
+==========================
 
-A "buffer" is the basic building block of the Emacsvox desktop.  Any
-information presented by Emacs is placed in a "buffer".  For example,
-when perusing this manual within Emacs, the "file" containing the
-documentation is presented in a "buffer".  All information objects such
-as WWW pages, email messages, output from user interaction with
-command-line shells etc., are presented by Emacs in individual
-"buffers".
+A buffer is Emacs's working view of one piece of information.  A buffer
+might contain a file you are editing, an Info manual, a directory
+listing, a Web page, a mail search, a shell session, or a temporary Help
+result.  Some buffers are connected to files; many useful application
+buffers are not.
 
-   Buffers provide a base level of user interaction; Emacs derives its
-power by allowing applications to specialize buffers to enable specific
-types of user-interaction that is optimized for a specific class of
-information.
+   The mode line identifies the selected buffer and its major mode.
+Press ‘C-e m’ whenever you want to hear it.  Common buffer commands
+include:
+
+‘C-x b’
+     Switch to another buffer by name.  Completion lets you narrow the
+     choices instead of remembering the complete name.
+
+‘C-x C-b’
+     Open a buffer list.  In that list, use ‘C-h m’ to learn its
+     navigation, selection, saving, and cleanup commands.
+
+‘C-x k’
+     Close a buffer that you no longer need.  Emacs asks before
+     discarding unsaved file changes.
+
+   Moving to another buffer changes the selected work object without
+closing the one you left.  This makes it practical to keep a document,
+its reference material, a shell, and related application results
+available together.
 
 
 File: emacsvox.info,  Node: Object Oriented Desktop,  Next: Context-Sensitive Interaction,  Prev: Desktop Objects,  Up: Audio Desktop
 
-5.2 An Object-Oriented Desktop
-==============================
+5.2 Let Modes Give Each Buffer Its Tools
+========================================
 
-The basic "buffer object" can be specialized by Emacs applications to
-provide optimal interaction.  This kind of specialization makes the
-Emacs environment an object-oriented environment; thus, the basic
-conversational gesture of "move to the next statement" can be assigned
-behavior that is appropriate to the content that the user is currently
-navigating.  As an example of such specialization, Emacs provides
-"specialized modes" for working with English text, programming
-languages, markup source e.g.  HTML (Hypertext Markup Language) or LaTeX
-documents and so on.
+Every buffer has one major mode that provides its main editing or
+application behavior.  A source buffer uses a programming-language mode,
+Dired uses a mode for directories, EWW uses one for Web pages, and Org
+uses one for structured notes and documents.  Minor modes add optional
+behavior alongside the major mode.
+
+   This context is what makes Emacs efficient: a movement command can
+move by a sentence in prose, a heading in an outline, an item in a list,
+or another meaningful unit supplied by the active mode.  Emacsvox speaks
+the result of the operation and can use the same context to announce
+state changes.
+
+   You do not need to predict which commands every mode provides.  Press
+‘C-h m’ in the buffer you are using, then ‘C-h k’ followed by a key when
+you want a fuller explanation.  *Note Using Online Help:: provides a
+short practical guide to these discovery commands.
 
 
 File: emacsvox.info,  Node: Context-Sensitive Interaction,  Prev: Object Oriented Desktop,  Up: Audio Desktop
 
-5.3 Emacsvox Specializes Aural Interaction
-==========================================
+5.3 Hear And Navigate The Current Context
+=========================================
 
-The content-specific user interaction described above is a very powerful
-feature of Emacs, and this is where Emacsvox derives its power.
-Traditionally, the ability to create buffers specialized for working
-with specific content-types has been used by the Emacs community to
-develop versatile programming environments, messaging applications such
-as mail and news readers, and authoring environments.  The clean design
-present in all of these Emacs extensions in terms of separating
-application functionality from the user-interface, combined with the
-availability of the entire source code making up these packages under
-the open-source model has laid the ground-work for developing Emacsvox
-as a versatile aural counterpart to the product of years of software
-engineering that has been invested by the Emacs community.  In short,
-Emacsvox would not exist in its present shape or form without this prior
-effort.
+Emacsvox uses information already exposed by Emacs and the active
+application.  That produces more useful feedback than reading every
+visible character in the same way.  You can hear what an object means,
+move using its structure, and ask for detail only when you need it.
 
-5.3.1 Audio Formatted Output
-----------------------------
+5.3.1 Hear Structure Without Extra Words
+----------------------------------------
 
-Emacsvox takes advantage of the content-specific knowledge available
-within specialized buffers to produce "audio formatted" output designed
-to optimize user interaction.  A basic consequence of the above is
-"voice locking" in specialized modes; a more interesting consequence is
-the implementation of Aural Cascading Style Sheets (ACSS) in conjunction
-with the Emacs EWW (Emacs Web Wowser) and W3 Web browsers.
+Voice changes can distinguish headings, comments, strings, links,
+warnings, and other meaningful text.  Short sounds and tones can mark
+events or state changes without interrupting the spoken content.
+Ordinary text remains available through the usual reading commands.
 
-5.3.2 Structured Navigation:
-----------------------------
+   The exact result depends on the mode, the Emacsvox integration, and
+your Aural Presentation settings.  *Note Voice Lock:: explains the
+established face-and-personality voice layer, while ‘C-e E’ explains the
+presentation chosen for the object at point.
 
-Emacsvox also exploits content-specific knowledge to provide structured
-navigation of different types of electronic content.  In many cases,
-such structured navigation is an extension of what Emacs provides by
-default; in other cases, Emacsvox implements the necessary extensions to
-provide the level of structural navigation needed to work efficiently in
-an eyes-free environment.
+5.3.2 Move By The Structure Of The Content
+------------------------------------------
 
-   Notable among such structured navigation is Emacs' powerful outline
-feature.
+Prefer the navigation supplied by the active mode when it matches your
+task.  For example, Info moves among nodes and menu entries, Org and
+Outline move among headings, Dired moves among files, programming modes
+understand definitions and diagnostics, and EWW exposes links and
+document structure.
 
-   An example of content-sensitive navigation is provided by the ‘imenu’
-package which dynamically creates a "table of contents" based on the
-content that is being displayed in a given buffer.  Emacs “Selective
-Display” lets one easily hide and expose portions of a buffer based on
-indentation -- this feature can be used to advantage when working with
-program source code.
+   Begin with ‘C-h m’.  It describes the commands available in the
+running buffer, including personal customizations and installed
+packages.  *Note Browsing Structure:: points to maintained guides for
+several common types of content.
 
-5.3.3 Navigating The Desktop
-----------------------------
+5.3.3 Move Between Tasks Without Losing Your Place
+--------------------------------------------------
 
-In addition to navigating individual information objects, the Emacsvox
-environment provides speech-enabled navigation of the various buffers
-that are currently open on the Emacsvox desktop via Emacs' built-in
-list-buffers feature.  Emacs' dired -- directory editor -- for browsing
-the file system, along with the new speedbar package that combines
-features from dired and imenu round off the suite of navigational tools.
+Buffers keep different tasks available in one Emacs session.  Use ‘C-x
+b’ to return to a known buffer or ‘C-x C-b’ to browse the current set.
+Emacs windows can show more than one buffer at a time; if the selected
+window is unclear, ‘C-e C-w’ describes the arrangement.
 
-5.3.4 Everything Is Searchable:
--------------------------------
+   Applications often create several related buffers, such as a search
+result and an individual message.  Their mode help explains the commands
+for moving among those views.  Treat each buffer as a place you can
+revisit, rather than as a dialog that must be completed before doing
+anything else.
 
-Emacs derives one final advantage from using buffers as the basic
-building block for the entire desktop.  Every Emacs buffer is searchable
-via a uniform and powerful search interface.  Emacs' incremental search
-works efficiently and consistently to enable you locate "objects" of
-interest either within a given document or to locate a given object from
-among the various objects that are currently open on the Emacsvox
-desktop.  This is very powerful -- where a GUI (Graphical User
-Interface) user is typically limited to quickly locating an object from
-a relatively small collection -- the size of the collection being a
-direct function of available display real-estate -- the Emacsvox user
-can typically work with a far larger collection of objects.  This is
-well-suited to the eyes-free environment, where display real-estate has
-no meaning; so bringing up a list of currently open buffers and
-performing an incremental search to locate a specific buffer is just as
-efficient independent of whether you have a few dozen or a few hundred
-buffers open.
+5.3.4 Search Wherever You Are
+-----------------------------
 
-   To illustrate the above, my typical working Emacs session lasts
-between two and three weeks -- over that time I typically accumulate
-several hundred open buffers holding a large variety of content ranging
-from program source code to email messages and WWW pages.
+In most text buffers, ‘C-s’ searches forward incrementally and ‘C-r’
+searches backward.  Type more text to narrow the match, repeat the
+search key to move to another match, and press ‘C-g’ to cancel.  This
+same basic search is available in documents, Help, source code, and many
+application results.
 
-   Ubiquitous search in the eyes-free environment is critical -- as a
-comparison, when using a conventional, purely visual WWW browser, users
-have no means of easily "searching" for say the "submit" button on a WWW
-page.  This inability is a minor annoyance in visual interaction, and
-the typical mouse-enabled user never uses the find dialog to find a
-submit button -- it is simply more efficient to point at the submit
-button given the eye's ability to quickly scan the two-dimensional
-display.  This luxury is absent in an eyes-free environment; as a
-consequence, blind users confronted by the combination of a visual
-interface and screen-reader are typically limited to either tabbing
-through all the controls on a WWW page, or using the sub-optimal find
-dialog.
+   Also look for the mode's semantic search and filtering commands.  A
+mail application can search message fields, Dired can narrow files, and
+a browser can move directly among links or headings.  Use the general
+search when text is what matters and the mode-specific command when the
+kind of object matters.
 
 
 File: emacsvox.info,  Node: Voice Lock,  Next: Using Online Help,  Prev: Audio Desktop,  Up: Top
 
-6 Voice Lock
-************
+6 Hear Structure With Voice Lock
+********************************
 
-See <http://tvraman.github.io/emacspeak/blog/voice-lock-refreshed.html>
-for a high-level overview of how Emacsvox Voice-Lock has evolved over
-the years.
+Voice Lock makes structure audible by applying different speech
+personalities to text properties supplied by Emacs modes and Emacsvox
+integrations.  Emacs calls its visual style labels _faces_; Emacsvox can
+use the same labels without requiring you to see them.  A comment can
+sound different from program code, a heading from body text, or a link
+from surrounding prose without inserting extra words into the document.
 
-  1. Emacsvox defines a number of voice overlays such as ‘voice-bolden’,
-     and ‘voice-lighten’ that can be applied to a given voice to change
-     what it sounds like.
-
-  2. Voice overlays are defined in terms of Aural CSS (ACSS
-     (http://www.w3.org/tr/css2/aural.html)) to keep them independent of
-     a specific TTS engine.
-
-  3. For each such overlay there is a corresponding
-     ‘<OVERLAY-NAME>-settings’ variable that can be customized via
-     custom.
-
-  4. The numbers in ‘voice-bolden-settings’ as an example:
-
-Setting                              Value
-family                               nil
-average-pitch                        1
-pitch-range                          6
-stress                               6
-richness                             nil
-punctuation                          nil
-
-   Unset values (‘nil’) show up as "unspecified" in the customize
-interface.
-
-  1. Do not directly customize ‘voice-bolden’ and friends, instead
-     customize the corresponding ‘voice-bolden-settings’, since that
-     ensures that all voices that are defined in terms of ‘voice-bolden’
-     get correctly updated.
-
-  2. Discovering what to customize:
-
-   Command ‘emacsvox-show-personality-at-point’ (bound by default to C-e
-M-v) will show you the value of properties personality and face at
-point.  Describe-variable on these names should tell you what to
-customize; so as an example:
-
-   Put point on a comment line, and hit ‘C-e M-v’: you will hear
-
-     Personality emacsvox-voice-lock-comment-personality
-     Face font-lock-comment-delimiter-face
-
-   Describe-variable of ‘emacsvox-voice-lock-comment-personality’ gives:
-
-     emacsvox-voice-lock-comment-personality's value is acss-p0-s0-all
-
-     Documentation: Personality used for font-lock-comment-face This
-     personality uses voice-monotone whose effect can be changed globally
-     by customizing voice-monotone-settings.
+   Voice Lock is enabled automatically in supported buffers.  Its
+differences are easiest to hear in source code, Org, Info, or EWW, where
+the active mode already marks several kinds of content.
 
 * Menu:
 
-* How It All Works.::
-* What this gives.::
+* How Voice Lock Fits The Presentation: How It All Works..  Follow a face or personality from the mode to the speech engine.
+* Adjust Voice Lock In Small Steps: What this gives..  Diagnose a distinction, then change the narrowest relevant setting.
+
+6.1 Try It In One Buffer
+========================
+
+Move across a few elements that the mode treats differently, such as a
+comment and a string in source code or a heading and a link in Org.
+Then use:
+
+‘C-e d v’
+     Toggle Voice Lock in the current buffer.  Comparing the same text
+     before and after the toggle is a quick way to confirm that a voice
+     change comes from the established face-and-personality layer.
+
+‘C-e d C-v’
+     Toggle Voice Lock globally.  Existing and subsequently created
+     buffers follow the new global state; an individual mode can still
+     opt out when it starts.
+
+‘C-e E’
+     Explain the Aural Presentation at point.  The explanation can
+     identify the semantic facts, matching rules, voices, sounds, and
+     other actions that contributed to what you heard.
+
+   Voice Lock controls the compatibility mapping from faces and
+personality text properties to voices.  Turning it off does not disable
+semantic presentation, auditory icons, tones, or ordinary spoken status.
+This distinction makes the current-buffer toggle a useful diagnostic
+rather than an all-or-nothing speech control.
 
 
 File: emacsvox.info,  Node: How It All Works.,  Next: What this gives.,  Up: Voice Lock
 
-6.1 How It All Works
-====================
+6.2 How Voice Lock Fits The Presentation
+========================================
 
-Here is a brief explanation of the connection between ‘voice-bolden’ and
-its associated ‘voice-bolden-settings’.
+The normal path has four parts:
 
-  1. Voice settings are initially in ‘voice-bolden-settings’ which is a
-     list of numbers.
+  1. The active Emacs mode marks meaningful text with faces.  An
+     Emacsvox integration may also attach a named speech personality
+     directly.
 
-  2. That list of numbers needs to be translated to appropriate
-     device-specific codes to send to the TTS engine.
+  2. While Voice Lock is active, the established face-and-personality
+     mapping supplies a compatibility voice for the spoken text.
 
-  3. You do not want to do this translation *each* time you speak
-     something.
+  3. Aural Presentation can combine that compatibility voice with
+     semantic rules.  Separate visual-face rules can also participate
+     whether Voice Lock is on or off.  A voice palette gives the
+     resulting logical voices portable characteristics and routes them
+     to available physical voices.
 
-  4. So when ‘voice-bolden’ is defined, the definition happens in two
-     steps:
+  4. The selected speech adapter translates the result for its
+     synthesizer.
 
-        • The list of settings is stored away in
-          ‘voice-bolden-settings’,
+   The meaning of a distinction can therefore remain stable while its
+exact sound varies with the engine and voice inventory.  A high-quality
+engine may express several characteristics; a simpler engine can fall
+back to a smaller set without changing the document or its mode.
 
-        • A corresponding voice-name is generated --
-          ‘acss-a<n>-p<n>-r<n>-s<n>’ and the corresponding control codes
-          to send to the device are stored away in a hash-table keyed by
-          the above symbol.
-
-        • Finally, ‘voice-bolden’ is assigned the above symbol.
+   Older help and configuration may show names such as ‘voice-bolden’,
+‘voice-monotone’, or generated ‘acss-...’ symbols.  They are
+compatibility details below the user-facing presentation system.
+Historical background on their Aural CSS design is preserved in *note
+(emacsvox-heritage)Audio Formatting And Aural CSS::.
 
 
 File: emacsvox.info,  Node: What this gives.,  Prev: How It All Works.,  Up: Voice Lock
 
-6.2 What this gives
-===================
+6.3 Adjust Voice Lock In Small Steps
+====================================
 
-  1. The ability to customize the voice via custom by editing the list
-     of numbers in ‘voice-bolden-settings’
+Start with the object that sounds wrong or is difficult to distinguish:
 
-  2. When that list is edited, ‘voice-bolden’ is arranged to be updated
-     automatically.
+  1. Press ‘C-e E’ at that object and read the explanation before
+     changing a setting.
 
-   The following additional commands from the *note
-(emacsvox-reference)emacsvox-wizards:: module are useful when designing
-aural styles.
+  2. Toggle Voice Lock only in the current buffer with ‘C-e d v’.  If
+     the distinction remains, it comes from another presentation rule or
+     action.
 
-  1. ‘emacsvox-wizards-generate-voice-sampler’
+  3. Open Aural Home with ‘C-e H’.  Use its presentation tools and Voice
+     Workbench to preview changes before saving them.  You do not need
+     to edit a generated voice symbol.
 
-     Generate a buffer containing text that demonstrates the effect of
-     various aural settings.
+  4. Revisit the original buffer and compare the same object.  Keeping
+     the test case and the scope small makes it easier to understand the
+     result.
 
-  2. ‘emacsvox-wizards-voice-sampler’
+   Advanced legacy configurations can still customize a named voice's
+‘-settings’ option, such as ‘voice-monotone-settings’.  Customize the
+settings option rather than ‘voice-monotone’ itself, because the
+settings update every generated voice that depends on that style.  Use
+this compatibility route only when maintaining an existing low-level
+voice setup; prefer Aural Home for new configuration.
 
-     Applied specified aural style to text in current region.
+   For deliberate style design,
+‘emacsvox-wizards-generate-voice-sampler’ creates a buffer of
+characteristic combinations, while ‘emacsvox-wizards-voice-sampler’
+applies a selected personality to the current line and speaks it.  These
+sampler commands are advanced auditioning tools, not required for
+ordinary Voice Lock use.
 
 
 File: emacsvox.info,  Node: Using Online Help,  Next: Emacs Packages,  Prev: Voice Lock,  Up: Top
@@ -1650,11 +1621,12 @@ File: emacsvox.info,  Node: Editing Code,  Next: Development Environment,  Prev:
 8.6 Editing Code
 ================
 
-Programming modes own language-aware movement, indentation, compilation,
-and navigation.  Emacsvox speaks those operations and uses voice-lock to
-distinguish faces such as comments, strings, warnings, and language
-constructs.  Use ‘C-h m’ in the source buffer for the language mode, and
-search the generated reference for an integration named after that mode.
+Programming modes provide language-aware movement, indentation,
+compilation, and navigation.  Emacsvox speaks those operations and uses
+voice-lock to distinguish faces such as comments, strings, warnings, and
+language constructs.  Use ‘C-h m’ in the source buffer for the language
+mode, and search the generated reference for an integration named after
+that mode.
 
 
 File: emacsvox.info,  Node: Development Environment,  Next: Desktop Management,  Prev: Editing Code,  Up: Emacs Packages
@@ -1687,7 +1659,7 @@ File: emacsvox.info,  Node: Personal Information Management,  Next: Desktop Appl
 8.9 Personal Information Management
 ===================================
 
-Calendar, Org, and related packages own their data formats and
+Calendar, Org, and related packages define their data formats and
 workflows.  Emacsvox integrations present navigation, state changes, and
 structured content when those modes are active.  Begin with the
 application's own manual and live mode help, then consult its matching
@@ -3401,13 +3373,14 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * asynchronous search, Notmuch:          Notmuch Mail.        (line   6)
 * attachments, Notmuch:                  Notmuch Mail.        (line 140)
 * Audio Desktop:                         Audio Desktop.       (line   6)
-* Audio Formatting:                      Context-Sensitive Interaction.
-                                                              (line  24)
+* audio formatting:                      Context-Sensitive Interaction.
+                                                              (line  14)
 * Aural history, mail privacy:           Notmuch Mail.        (line 284)
 * automatic speech limits, Notmuch:      Notmuch Mail.        (line 230)
 * automatic speech, Term:                Term Speech Feedback.
                                                               (line   6)
-* buffers:                               Desktop Management.  (line   6)
+* buffers:                               Desktop Objects.     (line   6)
+* buffers <1>:                           Desktop Management.  (line   6)
 * byte-code, Notmuch integration:        Notmuch Mail.        (line 331)
 * character echo:                        Controlling Echo.    (line   6)
 * character mode, Term:                  Term Input Modes.    (line   6)
@@ -3418,9 +3391,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
                                                               (line   6)
 * Corfu, EAT:                            EAT Terminal Access. (line  21)
 * curses applications, EAT:              EAT Terminal Access. (line 331)
-* Desktop Navigation:                    Context-Sensitive Interaction.
-                                                              (line  54)
-* Desktop Objects:                       Desktop Objects.     (line   6)
+* desktop navigation:                    Context-Sensitive Interaction.
+                                                              (line  41)
 * development tools:                     Development Environment.
                                                               (line   6)
 * document authoring:                    Document Authoring.  (line   6)
@@ -3436,8 +3408,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
                                                               (line   6)
 * EWW:                                   Web Browsing.        (line   6)
 * fields, Notmuch speech:                Notmuch Mail.        (line 230)
-* Finding:                               Context-Sensitive Interaction.
-                                                              (line  64)
+* finding:                               Context-Sensitive Interaction.
+                                                              (line  55)
 * Forms mode:                            Desktop Applications.
                                                               (line  17)
 * frozen EAT review:                     EAT Terminal Access. (line 176)
@@ -3446,9 +3418,13 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * line echo:                             Controlling Echo.    (line   6)
 * line mode, Term:                       Term Input Modes.    (line   6)
 * mail search, Notmuch:                  Notmuch Mail.        (line   6)
+* major modes:                           Object Oriented Desktop.
+                                                              (line   6)
 * message composition, Notmuch:          Notmuch Mail.        (line 302)
 * messaging:                             Messaging.           (line   6)
 * MIME parts, Notmuch:                   Notmuch Mail.        (line 140)
+* minor modes:                           Object Oriented Desktop.
+                                                              (line   6)
 * notification stream, Notmuch:          Notmuch Mail.        (line  63)
 * Notmuch Hello:                         Notmuch Mail.        (line  23)
 * Notmuch integration maintenance:       Notmuch Mail.        (line 351)
@@ -3456,8 +3432,6 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * Notmuch Search:                        Notmuch Mail.        (line  95)
 * Notmuch Show:                          Notmuch Mail.        (line 140)
 * Notmuch Tree support:                  Notmuch Mail.        (line 302)
-* Object-Oriented Desktop:               Object Oriented Desktop.
-                                                              (line   6)
 * OCR, experimental:                     Desktop Applications.
                                                               (line  27)
 * Online Help:                           Using Online Help.   (line   6)
@@ -3478,17 +3452,17 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * saved searches, Notmuch:               Notmuch Mail.        (line  38)
 * search fields, Notmuch:                Notmuch Mail.        (line  95)
 * search results, asynchronous rendering: Notmuch Mail.       (line  63)
-* Searching:                             Context-Sensitive Interaction.
-                                                              (line  64)
+* searching:                             Context-Sensitive Interaction.
+                                                              (line  55)
 * shell command status:                  EAT Terminal Access. (line 242)
 * speech access, terminal:               EAT Terminal Access. (line   6)
 * speech settings:                       Speech System.       (line   6)
 * speech system:                         Speech System.       (line   6)
 * starting Notmuch:                      Notmuch Mail.        (line  23)
 * status cues, Notmuch:                  Notmuch Mail.        (line 230)
-* Structured Navigation:                 Context-Sensitive Interaction.
-                                                              (line  34)
-* structured navigation:                 Browsing Structure.  (line   6)
+* structured navigation:                 Context-Sensitive Interaction.
+                                                              (line  27)
+* structured navigation <1>:             Browsing Structure.  (line   6)
 * tabs:                                  Desktop Management.  (line   6)
 * tags, Notmuch:                         Notmuch Mail.        (line 202)
 * Tempo:                                 Structured Editing.  (line   6)
@@ -3502,6 +3476,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * terminal screen review:                EAT Terminal Access. (line 143)
 * troubleshooting, Notmuch:              Notmuch Mail.        (line 331)
 * TTS:                                   Speech System.       (line   6)
+* Voice Lock:                            Voice Lock.          (line   6)
 * Web browsing:                          Web Browsing.        (line   6)
 * widgets, Notmuch Hello:                Notmuch Mail.        (line  38)
 * windows:                               Desktop Management.  (line   6)
@@ -3538,43 +3513,43 @@ Node: Selecting And Checking Omnivox38553
 Node: Compatibility Speech Servers40294
 Node: Backend Diagnostics And Ownership42220
 Node: Audio Desktop44335
-Node: Desktop Objects46357
-Node: Object Oriented Desktop47184
-Node: Context-Sensitive Interaction47954
-Node: Voice Lock53081
-Node: How It All Works.55360
-Node: What this gives.56400
-Node: Using Online Help57146
-Node: Emacs Packages61200
-Node: Document Authoring62574
-Node: Structured Editing63128
-Node: Browsing Structure64111
-Node: Web Browsing64709
-Node: Messaging65544
-Node: Editing Code66042
-Node: Development Environment66557
-Node: Desktop Management67114
-Node: Personal Information Management67616
-Node: Desktop Applications68145
-Node: Notmuch Mail69694
-Ref: Notmuch fields and privacy79054
-Node: Agent Shell86525
-Node: EAT Terminal Access99015
-Node: Running Terminal Based Applications116274
-Node: Starting Term117229
-Node: Term Input Modes118068
-Node: Term Speech Feedback119228
-Node: Reviewing The Term Screen120422
-Node: Term Help And Recovery122323
-Node: Emacsvox Keyboard Commands123222
-Node: TTS Servers124628
-Node: Announce135077
-Node: Contributing135651
-Node: Authoring Guidelines136674
-Node: Credits139793
-Node: Copyright140156
-Node: Acknowledgments140725
-Node: Concept Index140870
+Node: Desktop Objects45457
+Node: Object Oriented Desktop46682
+Node: Context-Sensitive Interaction47795
+Node: Voice Lock50872
+Node: How It All Works.53055
+Node: What this gives.54549
+Node: Using Online Help56138
+Node: Emacs Packages60192
+Node: Document Authoring61566
+Node: Structured Editing62120
+Node: Browsing Structure63103
+Node: Web Browsing63701
+Node: Messaging64536
+Node: Editing Code65034
+Node: Development Environment65553
+Node: Desktop Management66110
+Node: Personal Information Management66612
+Node: Desktop Applications67144
+Node: Notmuch Mail68693
+Ref: Notmuch fields and privacy78053
+Node: Agent Shell85524
+Node: EAT Terminal Access98014
+Node: Running Terminal Based Applications115273
+Node: Starting Term116228
+Node: Term Input Modes117067
+Node: Term Speech Feedback118227
+Node: Reviewing The Term Screen119421
+Node: Term Help And Recovery121322
+Node: Emacsvox Keyboard Commands122221
+Node: TTS Servers123627
+Node: Announce134076
+Node: Contributing134650
+Node: Authoring Guidelines135673
+Node: Credits138792
+Node: Copyright139155
+Node: Acknowledgments139724
+Node: Concept Index139869
 
 End Tag Table
 

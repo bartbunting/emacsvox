@@ -1180,339 +1180,271 @@ versioned details rather than copying their contracts into installation
 instructions.
 
 @node Audio Desktop
-@chapter The Emacsvox Audio Desktop.
+@chapter Work With The Audio Desktop
 
 @cindex Audio Desktop
 
-This chapter describes the Emacsvox audio desktop and gives tips and
-tricks for making use of many of Emacs' powerful features.
+The @emph{audio desktop} is the Emacsvox working environment.  It is not a
+separate program or a spoken copy of a graphical desktop.  Emacs keeps each
+document@comma{} application@comma{} and result in a buffer; its modes understand the kind
+of information in that buffer; and Emacsvox presents that context through
+speech@comma{} voice changes@comma{} sounds@comma{} and structured navigation.
 
-The desktop is the work area where you organize the tools of your
-trade and the information objects relevant to your current activities.
-In the conventional world of visual @acronym{GUI,Graphical User Interface}-based computing@comma{} these tools and information objects
-manifest themselves as a collection of icons organized in a
-two-dimensional work-area  @MDash{} this organization is designed to
-place frequently used objects within easy reach.
-
-Notice that organizing one's work area in terms of visual icons
-arranged in a two-dimensional area where such an organization is
-optimized for the available ``conversational gestures'' of pointing and
-clicking is an artifact of visual interaction.
-
-In the spirit of a truly speech-enabled application@comma{} Emacsvox does
-not simply provide you spoken access to a particular presentation of
-your work environment that was initially designed with the ``sign
-language'' of visual interaction in mind.  Instead@comma{} Emacsvox enables
-you to work with documents and other information objects in a manner
-that is optimized to aural@comma{} eyes-free interaction.  A necessary
-consequence of this setup is that users accustomed to the purely
-visual manifestation of today's electronic desktop do not immediately
-perceive the Emacsvox environment as an electronic desktop.  This
-section of the manual hopes to introduce you to a work-style that
-encourages a different perspective on how one interacts with the
-computer in performing day-to-day computing tasks.
-
-The end result in my case has been a marked increase in personal
-productivity.
+You can begin without learning a new desktop model.  Open a file or application
+normally@comma{} use @kbd{C-e m} to hear the current buffer and mode@comma{} and press
+@kbd{C-h m} to discover what that buffer can do.  The rest of this chapter
+explains why the same approach works for text@comma{} Web pages@comma{} mail@comma{} shells@comma{} source
+code@comma{} and many other tasks.
 
 @menu
-* Desktop Objects::              Desktop Objects
-* Object Oriented Desktop::      Object Oriented Desktop
-* Context-Sensitive Interaction:: Context-Sensitive Interaction
+* Desktop Objects::              Understand and move between Emacs buffers.
+* Object Oriented Desktop::      Let major and minor modes interpret each kind of content.
+* Context-Sensitive Interaction:: Use aural structure, mode commands, buffers, and search.
 @end menu
 
 @node Desktop Objects
-@section Objects Making Up The Emacsvox Desktop
+@section Buffers Hold Your Work
 
-@cindex Desktop Objects
+@cindex buffers
 
-A ``buffer'' is the basic building block of  the
-Emacsvox desktop.  Any information presented by Emacs is placed in a
-``buffer''.  For example@comma{} when perusing this manual within Emacs@comma{} the
-``file'' containing the documentation is presented in a ``buffer''.  All
-information objects such as @acronym{WWW} pages@comma{} email messages@comma{} output from
-user interaction with command-line shells etc.@comma{} are presented by Emacs
-in individual ``buffers''.
+A buffer is Emacs's working view of one piece of information.  A buffer might
+contain a file you are editing@comma{} an Info manual@comma{} a directory listing@comma{} a Web
+page@comma{} a mail search@comma{} a shell session@comma{} or a temporary Help result.  Some buffers
+are connected to files; many useful application buffers are not.
 
-Buffers provide a base level of user interaction; Emacs derives its
-power by allowing applications to specialize buffers to enable
-specific types of user-interaction that is optimized for a specific
-class of information.
+The mode line identifies the selected buffer and its major mode.  Press
+@kbd{C-e m} whenever you want to hear it.  Common buffer commands include:
+
+@table @kbd
+@item C-x b
+Switch to another buffer by name.  Completion lets you narrow the choices
+instead of remembering the complete name.
+
+@item C-x C-b
+Open a buffer list.  In that list@comma{} use @kbd{C-h m} to learn its navigation@comma{}
+selection@comma{} saving@comma{} and cleanup commands.
+
+@item C-x k
+Close a buffer that you no longer need.  Emacs asks before discarding
+unsaved file changes.
+@end table
+
+Moving to another buffer changes the selected work object without closing the
+one you left.  This makes it practical to keep a document@comma{} its reference
+material@comma{} a shell@comma{} and related application results available together.
 
 @node Object Oriented Desktop
-@section An Object-Oriented Desktop
+@section Let Modes Give Each Buffer Its Tools
 
-@cindex Object-Oriented Desktop
+@cindex major modes
 
-The basic ``buffer object'' can be specialized by Emacs applications
-to provide optimal interaction.  This kind of specialization makes the
-Emacs environment an object-oriented environment; thus@comma{} the basic
-conversational gesture of ``move to the next statement'' can be
-assigned behavior that is appropriate to the content that the user is
-currently navigating.  As an example of such specialization@comma{} Emacs
-provides ``specialized modes'' for working with English text@comma{}
-programming languages@comma{} markup source e.g. @acronym{HTML,Hypertext Markup Language} or @LaTeX{} documents and so on.
+@cindex minor modes
+
+Every buffer has one major mode that provides its main editing or application
+behavior.  A source buffer uses a programming-language mode@comma{} Dired uses a mode
+for directories@comma{} EWW uses one for Web pages@comma{} and Org uses one for structured
+notes and documents.  Minor modes add optional behavior alongside the major
+mode.
+
+This context is what makes Emacs efficient: a movement command can move by a
+sentence in prose@comma{} a heading in an outline@comma{} an item in a list@comma{} or another
+meaningful unit supplied by the active mode.  Emacsvox speaks the result of the
+operation and can use the same context to announce state changes.
+
+You do not need to predict which commands every mode provides.  Press
+@kbd{C-h m} in the buffer you are using@comma{} then @kbd{C-h k} followed by a key
+when you want a fuller explanation.  @xref{Using Online Help} provides a
+short practical guide to these discovery commands.
 
 @node Context-Sensitive Interaction
-@section Emacsvox Specializes Aural Interaction
+@section Hear And Navigate The Current Context
 
 @cindex Context-Sensitive Interaction
 
-The content-specific user interaction described above is a very
-powerful feature of Emacs@comma{} and this is where Emacsvox derives its
-power.  Traditionally@comma{} the ability to create buffers specialized for
-working with specific content-types has been used by the Emacs
-community to develop versatile programming environments@comma{} messaging
-applications such as mail and news readers@comma{} and authoring
-environments.  The clean design present in all of these Emacs
-extensions in terms of separating application functionality from the
-user-interface@comma{} combined with the availability of the entire source
-code making up these packages under the open-source model has laid the
-ground-work for developing Emacsvox as a versatile aural counterpart
-to the product of years of software engineering that has been invested
-by the Emacs community.  In short@comma{} Emacsvox would not exist in its
-present shape or form without this prior effort.
+Emacsvox uses information already exposed by Emacs and the active application.
+That produces more useful feedback than reading every visible character in the
+same way.  You can hear what an object means@comma{} move using its structure@comma{} and ask
+for detail only when you need it.
 
-@subsection Audio Formatted Output
+@subsection Hear Structure Without Extra Words
 
-@cindex Audio Formatting
+@cindex audio formatting
 
-Emacsvox takes advantage of the content-specific knowledge available
-within specialized buffers to produce ``audio formatted'' output
-designed to optimize user interaction.  A basic consequence of the
-above is ``voice locking'' in specialized modes; a more interesting
-consequence is the implementation of Aural Cascading Style Sheets
-(@acronym{ACSS}) in conjunction with the Emacs @acronym{EWW,Emacs Web Wowser} and @acronym{W3} Web browsers.
+Voice changes can distinguish headings@comma{} comments@comma{} strings@comma{} links@comma{} warnings@comma{}
+and other meaningful text.  Short sounds and tones can mark events or state
+changes without interrupting the spoken content.  Ordinary text remains
+available through the usual reading commands.
 
-@subsection Structured Navigation:
+The exact result depends on the mode@comma{} the Emacsvox integration@comma{} and your Aural
+Presentation settings.  @xref{Voice Lock} explains the established
+face-and-personality voice layer@comma{} while @kbd{C-e E} explains the presentation
+chosen for the object at point.
 
-@cindex Structured Navigation
+@subsection Move By The Structure Of The Content
 
-Emacsvox also exploits content-specific knowledge to provide
-structured navigation of different types of electronic content.  In
-many cases@comma{} such structured navigation is an extension of what Emacs
-provides by default; in other cases@comma{} Emacsvox implements the
-necessary extensions to provide the level of structural navigation
-needed to work efficiently in an eyes-free environment.
+@cindex structured navigation
 
-Notable among such structured navigation is Emacs' powerful outline
-feature.
+Prefer the navigation supplied by the active mode when it matches your task.
+For example@comma{} Info moves among nodes and menu entries@comma{} Org and Outline move
+among headings@comma{} Dired moves among files@comma{} programming modes understand
+definitions and diagnostics@comma{} and EWW exposes links and document structure.
 
-An example of content-sensitive navigation is provided by the @code{imenu}
-package which dynamically creates a ``table of contents'' based on the
-content that is being displayed in a given buffer.  Emacs
-@dfn{Selective Display} lets one easily hide and expose portions of a
-buffer based on indentation  @MDash{} this feature can be used to
-advantage when working with program source code.
+Begin with @kbd{C-h m}.  It describes the commands available in the
+running buffer@comma{} including personal customizations and installed packages.
+@xref{Browsing Structure} points to maintained guides for several common
+types of content.
 
-@subsection Navigating The Desktop
+@subsection Move Between Tasks Without Losing Your Place
 
-@cindex Desktop Navigation
+@cindex desktop navigation
 
-In addition to navigating individual information objects@comma{} the
-Emacsvox environment provides speech-enabled navigation of the
-various buffers that are currently open on the Emacsvox desktop via
-Emacs' built-in list-buffers feature.  Emacs' dired  @MDash{} directory
-editor  @MDash{} for browsing the file system@comma{} along with the new
-speedbar package that combines features from dired and imenu round off
-the suite of navigational tools.
+Buffers keep different tasks available in one Emacs session.  Use
+@kbd{C-x b} to return to a known buffer or @kbd{C-x C-b} to browse the
+current set.  Emacs windows can show more than one buffer at a time; if the
+selected window is unclear@comma{} @kbd{C-e C-w} describes the arrangement.
 
-@subsection Everything Is Searchable:
+Applications often create several related buffers@comma{} such as a search result and
+an individual message.  Their mode help explains the commands for moving among
+those views.  Treat each buffer as a place you can revisit@comma{} rather than as a
+dialog that must be completed before doing anything else.
 
-@cindex Searching
+@subsection Search Wherever You Are
 
-@cindex Finding
+@cindex searching
 
-Emacs derives one final advantage from using buffers as the basic
-building block for the entire desktop.  Every Emacs buffer is
-searchable via a uniform and powerful search interface.  Emacs'
-incremental search works efficiently and consistently to enable you
-locate ``objects'' of interest either within a given document or to
-locate a given object from among the various objects that are
-currently open on the Emacsvox desktop.  This is @b{very powerful}
- @MDash{} where a @acronym{GUI,Graphical User Interface} user is
-typically limited to quickly locating an object from a relatively
-small collection  @MDash{} the size of the collection being a direct
-function of available display real-estate  @MDash{} the Emacsvox user
-can typically work with a far larger collection of objects.  This is
-well-suited to the eyes-free environment@comma{} where display real-estate
-has no meaning; so bringing up a list of currently open buffers and
-performing an incremental search to locate a specific buffer is just
-as efficient independent of whether you have a few dozen or a few
-hundred buffers open.
+@cindex finding
 
-To illustrate the above@comma{} my typical working Emacs session lasts
-between two and three weeks  @MDash{} over that time I typically
-accumulate several hundred open buffers holding a large variety of
-content ranging from program source code to email messages and
-@acronym{WWW} pages.
+In most text buffers@comma{} @kbd{C-s} searches forward incrementally and
+@kbd{C-r} searches backward.  Type more text to narrow the match@comma{} repeat the
+search key to move to another match@comma{} and press @kbd{C-g} to cancel.  This same
+basic search is available in documents@comma{} Help@comma{} source code@comma{} and many application
+results.
 
-Ubiquitous search in the eyes-free environment is critical  @MDash{} as
-a comparison@comma{} when using a conventional@comma{} purely visual WWW browser@comma{}
-users have no means of easily ``searching'' for say the ``submit''
-button on a WWW page.  This inability is a minor annoyance in visual
-interaction@comma{} and the typical mouse-enabled user @b{never} uses the
-find dialog to find a submit button  @MDash{} it is simply more
-efficient to point at the submit button given the eye's ability to
-quickly scan the two-dimensional display.  This luxury is absent in an
-eyes-free environment; as a consequence@comma{} blind users confronted by the
-combination of a visual interface and screen-reader are typically
-limited to either tabbing through all the controls on a @acronym{WWW}
-page@comma{} or using the sub-optimal find dialog.
+Also look for the mode's semantic search and filtering commands.  A mail
+application can search message fields@comma{} Dired can narrow files@comma{} and a browser
+can move directly among links or headings.  Use the general search when text
+is what matters and the mode-specific command when the kind of object matters.
 
 @node Voice Lock
-@chapter Voice Lock
+@chapter Hear Structure With Voice Lock
 
-See
-@uref{http://tvraman.github.io/emacspeak/blog/voice-lock-refreshed.html}
-for a high-level overview of how Emacsvox Voice-Lock has evolved over
-the years.
+@cindex Voice Lock
 
-@enumerate
-@item
-Emacsvox defines a number of voice overlays such as
-@code{voice-bolden}@comma{} and @code{voice-lighten} that can be applied to a
-given voice to change what it sounds like.
+Voice Lock makes structure audible by applying different speech personalities
+to text properties supplied by Emacs modes and Emacsvox integrations.  Emacs
+calls its visual style labels @emph{faces}; Emacsvox can use the same labels without
+requiring you to see them.  A comment can sound different from program code@comma{} a
+heading from body text@comma{} or a link from surrounding prose without inserting
+extra words into the document.
 
-@item
-Voice overlays are defined in terms of Aural CSS
-(@uref{http://www.w3.org/tr/css2/aural.html, ACSS}) to keep them
-independent of a specific TTS engine.
-
-@item
-For each such overlay there is a corresponding
-@code{<OVERLAY-NAME>-settings} variable that can be customized via
-custom.
-
-@item
-The numbers in @code{voice-bolden-settings} as an example:
-@end enumerate
-
-@multitable @columnfractions 0.5 0.5
-@item Setting
-@tab Value
-@item family
-@tab nil
-@item average-pitch
-@tab 1
-@item pitch-range
-@tab 6
-@item stress
-@tab 6
-@item richness
-@tab nil
-@item punctuation
-@tab nil
-@end multitable
-
-Unset values (@code{nil}) show up as ``unspecified'' in the customize
-interface.
-
-@enumerate
-@item
-Do not directly customize @code{voice-bolden} and friends@comma{} instead
-customize the corresponding @code{voice-bolden-settings}@comma{} since that
-ensures that all voices that are defined in terms of
-@code{voice-bolden} get correctly updated.
-
-@item
-Discovering what to customize:
-@end enumerate
-
-Command @code{emacsvox-show-personality-at-point} (bound by default
-to C-e M-v) will show you the value of properties personality and
-face at point.  Describe-variable on these names should tell you
-what to customize; so as an example:
-
-Put point on a comment line@comma{} and hit @kbd{C-e M-v}: you will hear
-
-@example
-Personality emacsvox-voice-lock-comment-personality
-Face font-lock-comment-delimiter-face
-@end example
-
-Describe-variable of @code{emacsvox-voice-lock-comment-personality} gives:
-
-@example
-emacsvox-voice-lock-comment-personality's value is acss-p0-s0-all
-
-Documentation: Personality used for font-lock-comment-face This
-personality uses voice-monotone whose effect can be changed globally
-by customizing voice-monotone-settings.
-@end example
+Voice Lock is enabled automatically in supported buffers.  Its differences are
+easiest to hear in source code@comma{} Org@comma{} Info@comma{} or EWW@comma{} where the active mode already
+marks several kinds of content.
 
 @menu
-* How It All Works.::
-* What this gives.::
+* How Voice Lock Fits The Presentation: How It All Works..  Follow a face or personality from the mode to the speech engine.
+* Adjust Voice Lock In Small Steps: What this gives..  Diagnose a distinction, then change the narrowest relevant setting.
 @end menu
 
-@node How It All Works.
-@section How It All Works
+@section Try It In One Buffer
 
-Here is a brief explanation of the connection between
-@code{voice-bolden} and its associated @code{voice-bolden-settings}.
+Move across a few elements that the mode treats differently@comma{} such as a comment
+and a string in source code or a heading and a link in Org.  Then use:
+
+@table @kbd
+@item C-e d v
+Toggle Voice Lock in the current buffer.  Comparing the same text before and
+after the toggle is a quick way to confirm that a voice change comes from
+the established face-and-personality layer.
+
+@item C-e d C-v
+Toggle Voice Lock globally.  Existing and subsequently created buffers
+follow the new global state; an individual mode can still opt out when it
+starts.
+
+@item C-e E
+Explain the Aural Presentation at point.  The explanation can identify the
+semantic facts@comma{} matching rules@comma{} voices@comma{} sounds@comma{} and other actions that
+contributed to what you heard.
+@end table
+
+Voice Lock controls the compatibility mapping from faces and personality text
+properties to voices.  Turning it off does not disable semantic presentation@comma{}
+auditory icons@comma{} tones@comma{} or ordinary spoken status.  This distinction makes the
+current-buffer toggle a useful diagnostic rather than an all-or-nothing speech
+control.
+
+@node How It All Works.
+@section How Voice Lock Fits The Presentation
+
+The normal path has four parts:
 
 @enumerate
 @item
-Voice settings are initially in @code{voice-bolden-settings} which is
-a list of numbers.
+The active Emacs mode marks meaningful text with faces.  An Emacsvox
+integration may also attach a named speech personality directly.
 
 @item
-That list of numbers needs to be translated to appropriate
-device-specific codes to send to the TTS engine.
+While Voice Lock is active@comma{} the established face-and-personality mapping
+supplies a compatibility voice for the spoken text.
 
 @item
-You do not want to do this translation @strong{each} time you
-speak something.
+Aural Presentation can combine that compatibility voice with semantic
+rules.  Separate visual-face rules can also participate whether Voice Lock
+is on or off.  A voice palette gives the resulting logical voices portable
+characteristics and routes them to available physical voices.
 
 @item
-So when @code{voice-bolden} is defined@comma{} the definition happens in
-two steps:
-
-@itemize
-@item
-The list of settings is stored away in
-@code{voice-bolden-settings}@comma{}
-
-@item
-A corresponding voice-name is generated   @MDash{}
-@code{acss-a<n>-p<n>-r<n>-s<n>} and the corresponding control codes to
-send to the device are stored away in a hash-table keyed by the above symbol.
-
-@item
-Finally@comma{} @code{voice-bolden} is assigned the above symbol.
-@end itemize
+The selected speech adapter translates the result for its synthesizer.
 @end enumerate
+
+The meaning of a distinction can therefore remain stable while its exact sound
+varies with the engine and voice inventory.  A high-quality engine may express
+several characteristics; a simpler engine can fall back to a smaller set
+without changing the document or its mode.
+
+Older help and configuration may show names such as @code{voice-bolden}@comma{}
+@code{voice-monotone}@comma{} or generated @code{acss-...} symbols.  They are compatibility
+details below the user-facing presentation system.  Historical background on
+their Aural CSS design is preserved in
+@ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}.
 
 @node What this gives.
-@section What this gives
+@section Adjust Voice Lock In Small Steps
+
+Start with the object that sounds wrong or is difficult to distinguish:
 
 @enumerate
 @item
-The ability to customize the voice via custom by editing
-the list of numbers in @code{voice-bolden-settings}
+Press @kbd{C-e E} at that object and read the explanation before changing
+a setting.
 
 @item
-When that list is edited@comma{} @code{voice-bolden} is arranged to be
-updated automatically.
+Toggle Voice Lock only in the current buffer with @kbd{C-e d v}.  If the
+distinction remains@comma{} it comes from another presentation rule or action.
+
+@item
+Open Aural Home with @kbd{C-e H}.  Use its presentation tools and Voice
+Workbench to preview changes before saving them.  You do not need to edit a
+generated voice symbol.
+
+@item
+Revisit the original buffer and compare the same object.  Keeping the test
+case and the scope small makes it easier to understand the result.
 @end enumerate
 
-The following additional commands from the
-@ref{emacsvox-wizards,,,emacsvox-reference,Emacsvox Reference Manual} module
-are useful when designing aural styles.
+Advanced legacy configurations can still customize a named voice's
+@code{-settings} option@comma{} such as @code{voice-monotone-settings}.  Customize the settings
+option rather than @code{voice-monotone} itself@comma{} because the settings update every
+generated voice that depends on that style.  Use this compatibility route only
+when maintaining an existing low-level voice setup; prefer Aural Home for new
+configuration.
 
-@enumerate
-@item
-@code{emacsvox-wizards-generate-voice-sampler}
-
-Generate a buffer containing text that demonstrates the effect of
-various aural settings.
-
-@item
-@code{emacsvox-wizards-voice-sampler}
-
-Applied specified aural style to text in current region.
-@end enumerate
+For deliberate style design@comma{}
+@code{emacsvox-wizards-generate-voice-sampler} creates a buffer of characteristic
+combinations@comma{} while @code{emacsvox-wizards-voice-sampler} applies a selected
+personality to the current line and speaks it.  These sampler commands are
+advanced auditioning tools@comma{} not required for ordinary Voice Lock use.
 
 @node Using Online Help
 @chapter Find Help While You Work
@@ -1752,9 +1684,9 @@ an Emacsvox module with the same package or mode name.
 
 @cindex programming
 
-Programming modes own language-aware movement@comma{} indentation@comma{} compilation@comma{} and
-navigation.  Emacsvox speaks those operations and uses voice-lock to distinguish
-faces such as comments@comma{} strings@comma{} warnings@comma{} and language constructs.  Use
+Programming modes provide language-aware movement@comma{} indentation@comma{} compilation@comma{}
+and navigation.  Emacsvox speaks those operations and uses voice-lock to
+distinguish faces such as comments@comma{} strings@comma{} warnings@comma{} and language constructs.  Use
 @kbd{C-h m} in the source buffer for the language mode@comma{} and search the generated
 reference for an integration named after that mode.
 
@@ -1788,7 +1720,7 @@ specialized buffer-list or tab interfaces to learn their local commands.
 
 @cindex personal information management
 
-Calendar@comma{} Org@comma{} and related packages own their data formats and workflows.
+Calendar@comma{} Org@comma{} and related packages define their data formats and workflows.
 Emacsvox integrations present navigation@comma{} state changes@comma{} and structured
 content when those modes are active.  Begin with the application's own manual
 and live mode help@comma{} then consult its matching Emacsvox module in the generated

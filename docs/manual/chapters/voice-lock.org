@@ -1,120 +1,119 @@
-* Voice Lock
+* Hear Structure With Voice Lock
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Voice Lock
-:DESCRIPTION: Use voice lock and aural highlighting.
+:DESCRIPTION: Hear and adjust face and personality voice changes.
 :END:
 
-See
-[[http://tvraman.github.io/emacspeak/blog/voice-lock-refreshed.html]]
-for a high-level overview of how Emacsvox Voice-Lock has evolved over
-the years.
+#+cindex: Voice Lock
 
-1. Emacsvox defines a number of voice overlays such as
-   ~voice-bolden~, and ~voice-lighten~ that can be applied to a
-   given voice to change what it sounds like.
+Voice Lock makes structure audible by applying different speech personalities
+to text properties supplied by Emacs modes and Emacsvox integrations.  Emacs
+calls its visual style labels /faces/; Emacsvox can use the same labels without
+requiring you to see them.  A comment can sound different from program code, a
+heading from body text, or a link from surrounding prose without inserting
+extra words into the document.
 
-1. Voice overlays are defined in terms of Aural CSS
-   ([[http://www.w3.org/tr/css2/aural.html][ACSS]]) to keep them
-   independent of a specific TTS engine.
+Voice Lock is enabled automatically in supported buffers.  Its differences are
+easiest to hear in source code, Org, Info, or EWW, where the active mode already
+marks several kinds of content.
 
-1. For each such overlay there is a corresponding
-   ~<OVERLAY-NAME>-settings~ variable that can be customized via
-   custom.
+** Try It In One Buffer
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-1. The numbers in ~voice-bolden-settings~ as an example:
+Move across a few elements that the mode treats differently, such as a comment
+and a string in source code or a heading and a link in Org.  Then use:
 
-#+attr_texinfo: :columns 0.5 0.5
-| Setting | Value |
-| family | nil |
-| average-pitch | 1 |
-| pitch-range | 6 |
-| stress | 6 |
-| richness | nil |
-| punctuation | nil |
+#+attr_texinfo: :indic kbd :compact t
+- C-e d v ::
 
-Unset values (~nil~) show up as ``unspecified'' in the customize
-interface.
+  Toggle Voice Lock in the current buffer.  Comparing the same text before and
+  after the toggle is a quick way to confirm that a voice change comes from
+  the established face-and-personality layer.
 
-1. Do not directly customize ~voice-bolden~ and friends, instead
-   customize the corresponding ~voice-bolden-settings~, since that
-   ensures that all voices that are defined in terms of
-   ~voice-bolden~ get correctly updated.
+- C-e d C-v ::
 
-1. Discovering what to customize:
+  Toggle Voice Lock globally.  Existing and subsequently created buffers
+  follow the new global state; an individual mode can still opt out when it
+  starts.
 
-Command ~emacsvox-show-personality-at-point~ (bound by default
-to C-e M-v) will show you the value of properties personality and
-face at point.  Describe-variable on these names should tell you
-what to customize; so as an example:
+- C-e E ::
 
-Put point on a comment line, and hit @@texinfo:@kbd{C-e M-v}@@: you will hear
+  Explain the Aural Presentation at point.  The explanation can identify the
+  semantic facts, matching rules, voices, sounds, and other actions that
+  contributed to what you heard.
 
-#+begin_example
-Personality emacsvox-voice-lock-comment-personality
-Face font-lock-comment-delimiter-face
-#+end_example
+Voice Lock controls the compatibility mapping from faces and personality text
+properties to voices.  Turning it off does not disable semantic presentation,
+auditory icons, tones, or ordinary spoken status.  This distinction makes the
+current-buffer toggle a useful diagnostic rather than an all-or-nothing speech
+control.
 
-Describe-variable of ~emacsvox-voice-lock-comment-personality~ gives:
-
-#+begin_example
-emacsvox-voice-lock-comment-personality's value is acss-p0-s0-all
-
-Documentation: Personality used for font-lock-comment-face This
-personality uses voice-monotone whose effect can be changed globally
-by customizing voice-monotone-settings.
-#+end_example
-
-** How It All Works
+** How Voice Lock Fits The Presentation
 :PROPERTIES:
 :TEXINFO_NODE_NAME: How It All Works.
-:ALT_TITLE: How It All Works.
+:ALT_TITLE: How Voice Lock Fits The Presentation
+:DESCRIPTION: Follow a face or personality from the mode to the speech engine.
 :END:
 
-Here is a brief explanation of the connection between
-~voice-bolden~ and its associated ~voice-bolden-settings~.
+The normal path has four parts:
 
-1. Voice settings are initially in ~voice-bolden-settings~ which is
-   a list of numbers.
+1. The active Emacs mode marks meaningful text with faces.  An Emacsvox
+   integration may also attach a named speech personality directly.
 
-1. That list of numbers needs to be translated to appropriate
-   device-specific codes to send to the TTS engine.
+2. While Voice Lock is active, the established face-and-personality mapping
+   supplies a compatibility voice for the spoken text.
 
-1. You do not want to do this translation *each* time you
-   speak something.
+3. Aural Presentation can combine that compatibility voice with semantic
+   rules.  Separate visual-face rules can also participate whether Voice Lock
+   is on or off.  A voice palette gives the resulting logical voices portable
+   characteristics and routes them to available physical voices.
 
-1. So when ~voice-bolden~ is defined, the definition happens in
-   two steps:
+4. The selected speech adapter translates the result for its synthesizer.
 
-   - The list of settings is stored away in
-      ~voice-bolden-settings~,
+The meaning of a distinction can therefore remain stable while its exact sound
+varies with the engine and voice inventory.  A high-quality engine may express
+several characteristics; a simpler engine can fall back to a smaller set
+without changing the document or its mode.
 
-   - A corresponding voice-name is generated   @@texinfo:@MDash{}@@
-      ~acss-a<n>-p<n>-r<n>-s<n>~ and the corresponding control codes to
-      send to the device are stored away in a hash-table keyed by the above symbol.
+Older help and configuration may show names such as ~voice-bolden~,
+~voice-monotone~, or generated ~acss-...~ symbols.  They are compatibility
+details below the user-facing presentation system.  Historical background on
+their Aural CSS design is preserved in
+@@texinfo:@ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}@@.
 
-   - Finally, ~voice-bolden~ is assigned the above symbol.
-
-** What this gives
+** Adjust Voice Lock In Small Steps
 :PROPERTIES:
 :TEXINFO_NODE_NAME: What this gives.
-:ALT_TITLE: What this gives.
+:ALT_TITLE: Adjust Voice Lock In Small Steps
+:DESCRIPTION: Diagnose a distinction, then change the narrowest relevant setting.
 :END:
 
-1. The ability to customize the voice via custom by editing
-   the list of numbers in ~voice-bolden-settings~
+Start with the object that sounds wrong or is difficult to distinguish:
 
-1. When that list is edited, ~voice-bolden~ is arranged to be
-   updated automatically.
+1. Press @@texinfo:@kbd{C-e E}@@ at that object and read the explanation before changing
+   a setting.
 
-The following additional commands from the
-@@texinfo:@ref{emacsvox-wizards,,,emacsvox-reference,Emacsvox Reference Manual}@@ module
-are useful when designing aural styles.
+2. Toggle Voice Lock only in the current buffer with @@texinfo:@kbd{C-e d v}@@.  If the
+   distinction remains, it comes from another presentation rule or action.
 
-1. ~emacsvox-wizards-generate-voice-sampler~
+3. Open Aural Home with @@texinfo:@kbd{C-e H}@@.  Use its presentation tools and Voice
+   Workbench to preview changes before saving them.  You do not need to edit a
+   generated voice symbol.
 
-   Generate a buffer containing text that demonstrates the effect of
-   various aural settings.
+4. Revisit the original buffer and compare the same object.  Keeping the test
+   case and the scope small makes it easier to understand the result.
 
-1. ~emacsvox-wizards-voice-sampler~
+Advanced legacy configurations can still customize a named voice's
+~-settings~ option, such as ~voice-monotone-settings~.  Customize the settings
+option rather than ~voice-monotone~ itself, because the settings update every
+generated voice that depends on that style.  Use this compatibility route only
+when maintaining an existing low-level voice setup; prefer Aural Home for new
+configuration.
 
-   Applied specified aural style to text in current region.
+For deliberate style design,
+~emacsvox-wizards-generate-voice-sampler~ creates a buffer of characteristic
+combinations, while ~emacsvox-wizards-voice-sampler~ applies a selected
+personality to the current line and speaks it.  These sampler commands are
+advanced auditioning tools, not required for ordinary Voice Lock use.

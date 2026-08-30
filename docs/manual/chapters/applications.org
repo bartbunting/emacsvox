@@ -129,9 +129,9 @@ an Emacsvox module with the same package or mode name.
 
 #+cindex: programming
 
-Programming modes own language-aware movement, indentation, compilation, and
-navigation.  Emacsvox speaks those operations and uses voice-lock to distinguish
-faces such as comments, strings, warnings, and language constructs.  Use
+Programming modes provide language-aware movement, indentation, compilation,
+and navigation.  Emacsvox speaks those operations and uses voice-lock to
+distinguish faces such as comments, strings, warnings, and language constructs.  Use
 @@texinfo:@kbd{C-h m}@@ in the source buffer for the language mode, and search the generated
 reference for an integration named after that mode.
 
@@ -171,7 +171,7 @@ specialized buffer-list or tab interfaces to learn their local commands.
 
 #+cindex: personal information management
 
-Calendar, Org, and related packages own their data formats and workflows.
+Calendar, Org, and related packages define their data formats and workflows.
 Emacsvox integrations present navigation, state changes, and structured
 content when those modes are active.  Begin with the application's own manual
 and live mode help, then consult its matching Emacsvox module in the generated
