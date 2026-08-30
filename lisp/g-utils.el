@@ -1,23 +1,14 @@
 ;;; g-utils.el --- Google Client Utilities  -*- lexical-binding: t; -*-
-;;
-;; $Author: raman $
-;; Description:  Google Client utilities
-;; Keywords: Google   Atom API, Google Services
-;;;   LCD Archive entry:
-
-;; LCD Archive Entry:
-;; g-client| T. V. Raman |tv.raman.tv@gmail.com
-;; An emacs interface to Google Services|
-;; 
-;;  $Revision: 1.14 $ |
-;; Location https://github.com/robertmeta/emacsvox
-;; License: GPL
-;; 
-
-;;;  Copyright:
 
 ;; Copyright (c) 2006 and later, Google Inc.
-;; All rights reserved.
+;; Copyright (C) 2026 Emacsvox contributors
+;; All Rights Reserved.
+;; SPDX-License-Identifier: BSD-3-Clause
+
+;; Author: T. V. Raman <tv.raman.tv@gmail.com>
+;; Maintainer: Emacsvox contributors
+;; Keywords: Google   Atom API, Google Services
+;; URL: https://github.com/bartbunting/emacsvox
 
 ;; Redistribution and use in source and binary forms, with or without
 ;; modification, are permitted provided that the following conditions
@@ -44,8 +35,6 @@
 ;; STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 ;; OF THE POSSIBILITY OF SUCH DAMAGE.
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Commentary:
 ;; Common Code  e.g. helper functions.
@@ -390,5 +379,5 @@ Note that in the Curl output, we see lf rather than crlf.")
     (buffer-string)))
 
 (provide 'g-utils)
-;;;  end of file
 
+;;; g-utils.el ends here

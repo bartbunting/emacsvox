@@ -1,23 +1,14 @@
 ;;; gweb.el --- Google Search  -*- lexical-binding: t; -*-
-;;
-;; $Author: raman $
-;; Description:  AJAX Search -> Lisp
-;; Keywords: Google   AJAX API
-;;;   LCD Archive entry:
-
-;; LCD Archive Entry:
-;; gcal| T. V. Raman |tv.raman.tv@gmail.com
-;; An emacs interface to Reader|
-;; 
-;;  $Revision: 1.30 $ |
-;; Location https://github.com/robertmeta/emacsvox
-;; License: GPL
-;; 
-
-;;;  Copyright:
 
 ;; Copyright (c) 2006 and later, Google Inc.
-;; All rights reserved.
+;; Copyright (C) 2026 Emacsvox contributors
+;; All Rights Reserved.
+;; SPDX-License-Identifier: BSD-3-Clause
+
+;; Author: T. V. Raman <tv.raman.tv@gmail.com>
+;; Maintainer: Emacsvox contributors
+;; Keywords: Google   AJAX API
+;; URL: https://github.com/bartbunting/emacsvox
 
 ;; Redistribution and use in source and binary forms, with or without
 ;; modification, are permitted provided that the following conditions
@@ -45,9 +36,8 @@
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 ;; OF THE POSSIBILITY OF SUCH DAMAGE.
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Commentary: Provide Google services --- such as search,
+;;; Commentary:
+;; Provide Google services --- such as search,
 ;; search-based completion etc.  For use from within Emacs tools.
 ;; This is meant to be fast and efficient --- and uses WebAPIs as
 ;; opposed to HTML scraping.
@@ -64,7 +54,7 @@
 
 ;;;  Variables
 
-(defvar gweb-referer "https://github.com/robertmeta/emacsvox"
+(defvar gweb-referer "https://github.com/bartbunting/emacsvox"
   "Referer URL to send to the API.")
 (defvar gweb-history nil
   "History of Google Search queries.")
@@ -201,4 +191,5 @@ and preserve the return value of the selected operation."
 (gweb--install-completion-advice)
 
 (provide 'gweb)
-;;;  end of file
+
+;;; gweb.el ends here

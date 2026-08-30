@@ -1,0 +1,45 @@
+Emacsvox third-party and exceptional source notices
+===================================================
+
+This inventory supplements, and does not replace, the notices in individual
+files.  Preserve the file-level terms when copying or modifying these files.
+
+Known top-level Lisp exceptions
+-------------------------------
+
+lisp/tetris.el
+  Copyright Free Software Foundation, Inc. and Glynn Clements authorship.
+  GNU General Public License version 3 or later, as stated in the file.  The
+  licence text is in LICENSES/GPL-3.0-or-later.txt.
+
+lisp/emacsvox-nm.el
+  Authored by Øyvind Stegard and declared public domain with no warranty in
+  the file.  Its declaration is retained verbatim.
+
+lisp/g-utils.el
+lisp/gm-nnir.el
+lisp/gmaps.el
+lisp/gweb.el
+lisp/omaps.el
+  Copyright Google Inc.  These files contain a BSD-style redistribution and
+  warranty notice.  That embedded notice controls; the historical
+  "License: GPL" metadata is not treated as a reliable licence declaration.
+
+Historical notices
+------------------
+
+Many Raman-origin files retain notices for Digital Equipment Corporation.
+The historical permission and warranty text in etc/COPYRIGHT is preserved.
+Its presence does not override a more specific licence notice in a source
+file.
+
+lisp/tts-speak.el retains the copyright and authorship notice for Unicode
+character-pronunciation work by Lukas Loehrer.
+
+Other directories
+-----------------
+
+Subdirectories may carry their own licence files, including
+servers/mac-swiftmac/LICENSE.  This initial inventory covers the top-level
+Lisp header migration; it is not a complete audit of every bundled asset or
+server.

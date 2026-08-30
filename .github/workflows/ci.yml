@@ -8,12 +8,12 @@ on:
 
 jobs:
   version:
-    name: Calendar version consistency
+    name: Release metadata consistency
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Check canonical and derived versions
-        run: make version-check
+        run: make version-check headers-check
 
   docs:
     name: Documentation authoring gate (Emacs 31.1, Texinfo 7.2)

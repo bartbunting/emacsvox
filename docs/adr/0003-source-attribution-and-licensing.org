@@ -1,0 +1,129 @@
+#+title: ADR 0003: Source Attribution, Licensing, and Library Headers
+#+date: 2026-08-30
+#+startup: content
+
+* Status
+
+Accepted.
+
+* Context
+
+Emacsvox inherits a long source history from Emacspeak.  T. V. Raman is the
+principal original author, and many files also retain copyright notices for
+Digital Equipment Corporation or other holders.  Later Emacsvox work has
+additional authors and copyright holders.
+
+Most Lisp files still use RCS keywords, LCD Archive entries, obsolete
+repository locations, and a licence notice written as though the file were
+part of GNU Emacs.  Those fields no longer identify the maintained source
+accurately.  The distribution also refers to a top-level =COPYING= file that
+is absent.
+
+Header cleanup must improve attribution and make licensing unambiguous without
+rewriting ownership, erasing imported notices, or turning each Lisp component
+into a separately versioned package.
+
+* Decision
+
+** Preserve historical attribution
+
+Existing copyright holders and named authors are retained.  In particular,
+Raman-origin libraries identify =T. V. Raman= as their original author and
+retain his copyright notice.  Notices for Digital Equipment Corporation, the
+Free Software Foundation, Bart Bunting, and other named holders are not
+replaced by a project-wide label.
+
+For files with collective Emacsvox work, the supplemental notice is:
+
+#+begin_example
+Copyright (C) 2026 Emacsvox contributors
+#+end_example
+
+=Emacsvox contributors= describes the contributing people identified by the
+repository history and =AUTHORS= file.  It is not represented as a separate
+legal entity and does not transfer an individual's copyright.
+
+The =Author= field records original or principal authorship.  The =Maintainer=
+field records current project responsibility; changing maintainers does not
+change authorship.
+
+** Make the default code licence explicit
+
+New Emacsvox-authored code and the established Emacsvox files that already
+grant GNU GPL version 2 or later use the SPDX identifier
+=GPL-2.0-or-later=.  The complete GNU GPL version 2 text is distributed in the
+top-level =COPYING= file.  Each maintained Lisp source also carries an explicit
+copying notice so its terms remain clear if the file is copied separately.
+
+Adding SPDX metadata supplements the existing copyright notices.  It does not
+remove a holder, alter historical years, or relicense a file.
+
+Files with distinct or unclear terms retain those terms and are recorded in
+=THIRD_PARTY_NOTICES=.  They are not mechanically changed to the project
+default.  The maintained manual's existing copying terms are likewise outside
+this source-header decision; changing them requires a separate rights and
+documentation decision.
+
+** Use conventional Emacs Lisp headers
+
+Maintained project libraries use the conventional first line, copyright and
+licence notices, =Author=, =Maintainer=, =Keywords=, =URL=,
+=;;; Commentary:=, =;;; Code:=, and matching end marker where applicable.
+
+Stale RCS =$Author= and =$Revision= keywords, LCD Archive entries, redundant
+=Description= fields, and obsolete =Location= fields are removed only after
+their useful authorship and project information has been retained in the
+standard fields.
+
+Only the package entry file, =lisp/emacsvox.el=, carries the Emacsvox release
+=Version= and =Package-Requires= headers.  Component libraries do not duplicate
+the release number.
+
+Generated files are governed by their generator and are not hand-normalized.
+
+** Check the policy automatically
+
+A non-mutating header check verifies the default licence identifier, current
+project URL, contributor notice, package-version boundary, and absence of
+retired metadata in maintained project files.  Explicit exceptions are kept
+in one reviewed inventory.
+
+* Consequences
+
+- T. V. Raman remains visibly and accurately credited throughout the source.
+- Current collective work is acknowledged without claiming that the project
+  label owns all earlier code.
+- Release archives contain the licence text referenced by their sources.
+- Automated tools can identify the default licence reliably.
+- Imported and historically distinct files require an explicit exception
+  inventory rather than a uniform but inaccurate header.
+- Copyright-year or licence changes still require provenance review; the
+  header checker cannot decide ownership.
+
+* Alternatives considered
+
+** Replace every holder with =The Emacsvox Team=
+
+Rejected.  A project label does not transfer copyright and would obscure the
+named holders whose notices must remain.
+
+** Put the release version in every Lisp file
+
+Rejected.  Emacsvox is a multi-file system with one release identity.  Copies
+of the version in component headers would become independent sources of
+truth.
+
+** Apply GPL-2.0-or-later to every file mechanically
+
+Rejected.  The tree contains public-domain, BSD-style, GPL-3.0-or-later, and
+other file-specific terms that must be preserved.
+
+* Follow-up
+
+1. Keep =AUTHORS= and =THIRD_PARTY_NOTICES= current when importing code or
+   adding a substantial contributor.
+2. Require new maintained Lisp files to pass the header check.
+3. Resolve the maintained manual's copying terms separately before changing
+   its licence notice.
+4. Expand the licence inventory beyond the top-level Lisp directory as a
+   separate repository-wide provenance audit.

@@ -1,23 +1,14 @@
 ;;; gmaps.el --- Google Maps  -*- lexical-binding: t; -*-
-;; $Id: gmaps.el 8157 2013-02-19 01:31:05Z tv.raman.tv $
-;; $Author: raman $
-;; Description:  Google Maps -> Lisp
-;; Keywords: Google   Maps API
-;;;   LCD Archive entry:
-
-;; LCD Archive Entry:
-;; gcal| T. V. Raman |tv.raman.tv@gmail.com
-;; An emacs interface to Reader|
-;; 
-;;  $Revision: 1.30 $ |
-;; Location https://github.com/robertmeta/emacsvox
-;; License: GPL
-;; 
-
-;;;  Copyright:
 
 ;; Copyright (c) 2006 and later, Google Inc.
-;; All rights reserved.
+;; Copyright (C) 2026 Emacsvox contributors
+;; All Rights Reserved.
+;; SPDX-License-Identifier: BSD-3-Clause
+
+;; Author: T. V. Raman <tv.raman.tv@gmail.com>
+;; Maintainer: Emacsvox contributors
+;; Keywords: Google   Maps API
+;; URL: https://github.com/bartbunting/emacsvox
 
 ;; Redistribution and use in source and binary forms, with or without
 ;; modification, are permitted provided that the following conditions
@@ -44,8 +35,6 @@
 ;; STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 ;; OF THE POSSIBILITY OF SUCH DAMAGE.
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Commentary:
 ;; Implements the Google Maps API
@@ -965,4 +954,5 @@ Place details need to have been expanded first."
     (message (format "Inserted %d reviews"  (length reviews)))))
 
 (provide 'gmaps)
-;;;  end of file
+
+;;; gmaps.el ends here

@@ -4,6 +4,11 @@
   documentation publication, read every architecture decision record under
   `docs/adr/` and follow all accepted decisions. Do not rely on a single ADR in
   isolation; later records may refine earlier decisions.
+- Preserve named authors and copyright holders when editing source headers;
+  follow the attribution and licensing policy in `docs/adr/`. Run
+  `make headers-check` after changing a maintained Lisp header, attribution,
+  licence notice, or package metadata. Do not apply the default project licence
+  to a file listed as an exception in `THIRD_PARTY_NOTICES`.
 - Preserve existing tracked and untracked work. Never clean, reset, stash, or
   discard a dirty worktree merely to satisfy a build precondition.
 - Use the Emacs selected by the ignored `local.mk` and run `make check-emacs`

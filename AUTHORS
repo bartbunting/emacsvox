@@ -1,0 +1,22 @@
+Emacsvox authors and contributors
+=================================
+
+Emacsvox descends from Emacspeak and retains its source history.
+
+Principal original author
+-------------------------
+
+T. V. Raman <tv.raman.tv@gmail.com>
+
+Emacsvox maintainers and contributors
+-------------------------------------
+
+Bart Bunting <bart@ursys.com.au>
+Robert Melton
+Krzysztof Drewniak <krzysdrewniak@gmail.com>
+Haden Pike
+Sekulum Forka
+
+Additional authors and copyright holders are identified in individual source
+files and in the Git history.  This file is an attribution aid, not an
+exhaustive statement of copyright ownership.

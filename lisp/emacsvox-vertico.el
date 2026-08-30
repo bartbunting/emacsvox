@@ -1,32 +1,29 @@
 ;;; emacsvox-vertico.el --- Speech-enable Vertico  -*- lexical-binding: t; -*-
-;; Author: Krzysztof Drewniak <krzysdrewniak@gmail.com>
-;; Description:  Speech-enable Vertico, a modern Emacs completion interface
-;; Keywords: Emacsvox, Audio Desktop, Vertico, completion
-
-;;;   Copyright:
 
 ;; Copyright (C) 2021 Krzysztof Drewniak <krzysdrewniak@gmail.com>
+;; Copyright (C) 2026 Emacsvox contributors
 ;; All Rights Reserved.
+;; SPDX-License-Identifier: GPL-2.0-or-later
+
+;; Author: Krzysztof Drewniak <krzysdrewniak@gmail.com>
+;; Maintainer: Emacsvox contributors
+;; Keywords: Emacsvox, Audio Desktop, Vertico, completion
+;; URL: https://github.com/bartbunting/emacsvox
+
+;; This file is part of Emacsvox.
 ;;
-;; This file is not part of GNU Emacs, but the same permissions apply.
-;;
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; Emacsvox is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 ;;
-;; GNU Emacs is distributed in the hope that it will be useful,
+;; Emacsvox is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNMARKDOWN FOR A PARTICULAR PURPOSE.  See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;; along with Emacsvox.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;; Vertico is a modern completion UI that uses Emacs's native completion engine
@@ -273,4 +270,5 @@ feedback when an attempted exit is refused."
   (emacsvox-vertico--install-advice))
 
 (provide 'emacsvox-vertico)
-;;;  end of file
+
+;;; emacsvox-vertico.el ends here

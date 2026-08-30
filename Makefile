@@ -63,7 +63,7 @@ RELEASE_REMOTE ?= origin
 TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
-.PHONY: version version-check test unit-test notmuch-test compiled-notmuch-test
+.PHONY: version version-check headers-check test unit-test notmuch-test compiled-notmuch-test
 .PHONY: compiled-aural-test build-aural-test trace trace-test
 .PHONY: reference-test advice-audit name-audit tts-audit
 .PHONY: check-emacs bytecode bytecode-check bytecode-rebuild generated-reference
@@ -85,7 +85,10 @@ version:
 version-check:
 	@utils/emacsvox-version-check --check
 
-test: version-check unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
+headers-check:
+	@utils/emacsvox-header-check
+
+test: version-check headers-check unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
 
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el
@@ -720,7 +723,7 @@ clean:
 # All version values come from VERSION.  Checking, artifact creation, local
 # tagging, and external publication remain separate operations so no tag or
 # remote state changes before the complete gate and artifact succeed.
-release-source-check: version-check
+release-source-check: version-check headers-check
 	@utils/emacsvox-version-check --release
 
 release-check: release-source-check test docs-release-check

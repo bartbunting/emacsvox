@@ -1,23 +1,14 @@
 ;;; gm-nnir.el --- Searching GMail Using NNIR  -*- lexical-binding: t; -*-
-;; $Id: gmaps.el 8157 2013-02-19 01:31:05Z tv.raman.tv $
-;; $Author: raman $
-;; Description:  GMail Search -> IMap -> NNIR -> Gnus
-;; Keywords: GMail, IMap, gnus
-;;;   LCD Archive entry:
-
-;; LCD Archive Entry:
-;; gcal| T. V. Raman |tv.raman.tv@gmail.com
-;; An emacs interface to Reader|
-;; 
-;;  $Revision: 1.30 $ |
-;; Location https://github.com/robertmeta/emacsvox
-;; License: GPL
-;; 
-
-;;;  Copyright:
 
 ;; Copyright (c) 2006 and later, Google Inc.
-;; All rights reserved.
+;; Copyright (C) 2026 Emacsvox contributors
+;; All Rights Reserved.
+;; SPDX-License-Identifier: BSD-3-Clause
+
+;; Author: T. V. Raman <tv.raman.tv@gmail.com>
+;; Maintainer: Emacsvox contributors
+;; Keywords: GMail, IMap, gnus
+;; URL: https://github.com/bartbunting/emacsvox
 
 ;; Redistribution and use in source and binary forms, with or without
 ;; modification, are permitted provided that the following conditions
@@ -46,8 +37,6 @@
 ;; TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 ;; THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 ;; SUCH DAMAGE.
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Commentary:
 ;; Makes search GMail more convenient.
@@ -155,3 +144,4 @@ See https://support.google.com/mail/answer/7190?hl=en for syntax.
 
 ;; byte-compile-warnings: (not obsolete)
 
+;;; gm-nnir.el ends here

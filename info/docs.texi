@@ -324,6 +324,7 @@ This chapter documents a total of 1467 commands and 191 options.
 * g-utils:: Google Client Utilities.
 * gm-nnir:: Searching GMail Using NNIR.
 * gmaps:: Google Maps.
+* gweb:: Google Search.
 * ladspa:: Ladspa Tools For Emacs.
 * light:: Control Brightness.
 * mac-voices:: Define  Mac tags.
@@ -15599,7 +15600,7 @@ POPUP ==  popup.el from MELPA
 Module that is preloaded by every emacsvox module.
 1.  Defines key macros.
 2. Defines location-related variables.
-Define locations of executables.;;; Code:
+Define locations of executables.
 
 @node emacsvox-proced
 @section emacsvox-proced
@@ -22916,6 +22917,14 @@ nil
 @end verbatim
 
 @end defvar
+
+@node gweb
+@section gweb
+
+Provide Google services --- such as search,
+search-based completion etc.  For use from within Emacs tools.
+This is meant to be fast and efficient --- and uses WebAPIs as
+opposed to HTML scraping.
 
 @node ladspa
 @section ladspa

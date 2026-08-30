@@ -678,6 +678,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * g-utils:: Google Client Utilities.
 * gm-nnir:: Searching GMail Using NNIR.
 * gmaps:: Google Maps.
+* gweb:: Google Search.
 * ladspa:: Ladspa Tools For Emacs.
 * light:: Control Brightness.
 * mac-voices:: Define  Mac tags.

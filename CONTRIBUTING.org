@@ -1,0 +1,32 @@
+#+title: Contributing to Emacsvox
+
+* Read the project decisions
+
+Before changing architecture, workflow, versioning, releases, publication,
+source attribution, or licensing, read every accepted record in =docs/adr/=.
+
+* Licence of contributions
+
+Unless a file or contribution explicitly states different terms, contributions
+to Emacsvox are submitted under the GNU General Public License version 2 or
+later, identified by =GPL-2.0-or-later=.  Contributors retain copyright in
+their work; contributing does not assign it to a project entity.
+
+The collective notice =Copyright (C) 2026 Emacsvox contributors= acknowledges
+current project work.  It supplements rather than replaces existing notices
+for T. V. Raman, Digital Equipment Corporation, the Free Software Foundation,
+Robert Melton, Bart Bunting, or any other holder.
+
+Do not add, remove, or change a copyright holder, copyright year, licence, or
+third-party notice without checking the file's provenance.  Record imported
+or exceptional terms in =THIRD_PARTY_NOTICES=.
+
+* Lisp library headers
+
+Maintained Emacsvox Lisp libraries follow ADR 0003 and the conventional Emacs
+library structure.  Use the current project URL and an explicit SPDX licence
+identifier.  Only =lisp/emacsvox.el= carries the Emacsvox release =Version= and
+=Package-Requires= headers.
+
+Run =make headers-check= after changing a maintained Lisp header.  Ordinary
+Lisp build and test requirements in =AGENTS.md= continue to apply.

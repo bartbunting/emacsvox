@@ -1,0 +1,146 @@
+#!/bin/sh
+# Check maintained Emacs Lisp attribution, licensing, and header policy.
+
+set -eu
+
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+root=$(CDPATH='' cd -- "$script_dir/.." && pwd)
+cd "$root"
+
+failures=0
+
+fail()
+{
+    printf 'header check: %s\n' "$*" >&2
+    failures=$((failures + 1))
+}
+
+require_fixed()
+{
+    file=$1
+    text=$2
+    description=$3
+    if ! grep -aFq -- "$text" "$file"; then
+        fail "$file is missing $description"
+    fi
+}
+
+require_fixed COPYING 'GNU GENERAL PUBLIC LICENSE' 'the GNU GPL text'
+require_fixed COPYING 'Version 2, June 1991' 'the GNU GPL version 2 text'
+require_fixed LICENSES/GPL-3.0-or-later.txt \
+    'Version 3, 29 June 2007' 'the GNU GPL version 3 text'
+require_fixed AUTHORS 'T. V. Raman' 'principal original author attribution'
+require_fixed AUTHORS 'Emacsvox maintainers and contributors' \
+    'current contributor attribution'
+
+dollar=$(printf '\044')
+author_keyword="${dollar}Author:"
+revision_keyword="${dollar}Revision:"
+
+for file in $(git ls-files 'lisp/*.el'); do
+    case $file in
+        lisp/emacsvox-nm.el|lisp/tetris.el)
+            continue
+            ;;
+        lisp/g-utils.el|lisp/gm-nnir.el|lisp/gmaps.el|lisp/gweb.el|lisp/omaps.el)
+            expected_spdx='BSD-3-Clause'
+            ;;
+        *)
+            expected_spdx='GPL-2.0-or-later'
+            ;;
+    esac
+
+    expected_file=$(basename -- "$file")
+    if test "$file" = lisp/.skeleton.el; then
+        expected_file='emacsvox-<skeleton>.el'
+    fi
+
+    first_line=$(sed -n '1p' "$file")
+    case $first_line in
+        ";;; $expected_file --- "*) ;;
+        *) fail "$file has a non-conventional or mismatched first line" ;;
+    esac
+
+    header=$(sed -n '1,/^;;; Commentary:/p' "$file")
+    if ! printf '%s\n' "$header" | grep -Fqx \
+        ';; Copyright (C) 2026 Emacsvox contributors'; then
+        fail "$file is missing the Emacsvox contributors notice"
+    fi
+    if ! printf '%s\n' "$header" | grep -Fqx \
+        ";; SPDX-License-Identifier: $expected_spdx"; then
+        fail "$file does not declare $expected_spdx"
+    fi
+    spdx_count=$(printf '%s\n' "$header" | \
+        grep -c '^;; SPDX-License-Identifier:' || true)
+    if test "$spdx_count" -ne 1; then
+        fail "$file must have exactly one SPDX licence identifier"
+    fi
+
+    for field in Author Maintainer Keywords URL; do
+        if ! printf '%s\n' "$header" | grep -q "^;; $field: ."; then
+            fail "$file is missing a non-empty $field header"
+        fi
+    done
+    if ! grep -aFqx ';;; Commentary:' "$file"; then
+        fail "$file is missing the conventional Commentary marker"
+    fi
+    if ! grep -aFqx ';;; Code:' "$file"; then
+        fail "$file is missing the conventional Code marker"
+    fi
+    if ! tail -c 1024 "$file" | grep -aFqx ";;; $expected_file ends here"; then
+        fail "$file is missing its matching end marker"
+    fi
+
+    for retired in "$author_keyword" "$revision_keyword" 'LCD Archive' \
+        'Location https://github.com/' 'github.com/robertmeta/emacsvox'; do
+        if printf '%s\n' "$header" | grep -Fq -- "$retired"; then
+            fail "$file retains obsolete header metadata: $retired"
+        fi
+    done
+    if printf '%s\n' "$header" | grep -Eq '^;;+ Description:'; then
+        fail "$file retains the redundant Description header"
+    fi
+
+    version_count=$(printf '%s\n' "$header" | \
+        grep -c '^;; \(Package-\)\?Version:' || true)
+    requires_count=$(printf '%s\n' "$header" | \
+        grep -c '^;; Package-Requires:' || true)
+    if test "$file" = lisp/emacsvox.el; then
+        version=$(sed -n '1p' VERSION)
+        if ! printf '%s\n' "$header" | grep -Fqx ";; Version: $version"; then
+            fail "$file does not match the canonical VERSION"
+        fi
+        if test "$requires_count" -ne 1; then
+            fail "$file must have one Package-Requires header"
+        fi
+    else
+        if test "$version_count" -ne 0 || test "$requires_count" -ne 0; then
+            fail "$file duplicates package release metadata"
+        fi
+    fi
+
+    if test "$expected_spdx" = GPL-2.0-or-later; then
+        if ! printf '%s\n' "$header" | grep -Fqx \
+            ';; This file is part of Emacsvox.'; then
+            fail "$file is missing the explicit Emacsvox copying notice"
+        fi
+    else
+        if ! printf '%s\n' "$header" | grep -Fqx \
+            ';; Redistribution and use in source and binary forms, with or without'; then
+            fail "$file is missing its BSD redistribution notice"
+        fi
+    fi
+done
+
+require_fixed lisp/emacsvox-nm.el \
+    'License: Public domain, use at own risk, no warranties of any kind.' \
+    'its public-domain declaration'
+require_fixed lisp/tetris.el \
+    'either version 3 of the License, or' 'its GNU GPL version 3-or-later notice'
+
+if test "$failures" -ne 0; then
+    printf 'header check: %s problem(s) found\n' "$failures" >&2
+    exit 1
+fi
+
+printf 'Emacsvox Lisp attribution and licence headers are consistent.\n'
