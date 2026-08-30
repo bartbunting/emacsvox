@@ -1,0 +1,135 @@
+#+title: ADR 0002: Calendar Versioning and Release Series
+#+date: 2026-08-30
+#+startup: content
+
+* Status
+
+Accepted.
+
+* Context
+
+Emacsvox inherited release numbers and codenames from its Emacspeak ancestry,
+but those numbers no longer communicate when an Emacsvox release was made.
+Users benefit more from seeing the age of a release than from an arbitrary
+major number.
+
+Emacsvox releases when work is ready.  It does not intend to promise a monthly
+release cadence, and it does not use version numbers to claim semantic API
+compatibility.  The scheme must nevertheless distinguish a new body of work
+from a correction to an existing release, including a correction published
+months after the original release.
+
+* Decision
+
+** Use =YYYY.MONTH.PATCH= for stable releases
+
+Stable Emacsvox releases use the full release year, the unpadded release month,
+and a patch number.  The year and month identify the release series opened by
+the initial stable release; they are not a release schedule.
+
+For example:
+
+- =2026.9.0= is the initial feature release published in September 2026;
+- =2026.9.1= is its first corrective release; and
+- =2027.2.0= may be the next feature release if no release is made in the
+  intervening months.
+
+Skipped months are expected and carry no special meaning.  Emacsvox makes no
+commitment to release every month.
+
+** Keep patches in their original release series
+
+A patch increments the final component of the series it corrects, regardless
+of its publication date.  Thus a correction published in September for
+=2026.7.0= is =2026.7.1=, not =2026.9.0=.  A September release containing a new
+body of development is instead =2026.9.0=.
+
+Release communication uses the terms /feature release/, /patch release/, and
+/backport release/.  The terms /major/ and /minor/ are avoided because their
+Semantic Versioning meanings do not describe these calendar components.
+
+Normally only the latest feature-release series is supported.  A security fix
+or severe-regression fix may be backported to an older series at maintainer
+discretion; such a backport retains that older series' year and month.
+
+** Treat compatibility separately
+
+Calendar versions identify release time and lineage, not compatibility.
+Breaking changes, migration requirements, and changes to supported Emacs
+versions must be called out explicitly in the release notes.
+
+Normally at most one feature-release series is opened in a calendar month.
+This keeps the final component unambiguously reserved for corrective releases.
+
+** Use the same identifier throughout a release
+
+The Git tag and published artifact use the exact stable version.  For example,
+release =2026.9.0= uses tag =2026.9.0= and an artifact named
+=emacsvox-2026.9.0.tar.bz2=.  Runtime version output, package metadata, release
+notes, tags, and artifact names must agree.
+
+Codenames may remain descriptive release metadata but are not part of the
+version identifier.  Development builds may also display a Git revision.  This
+record does not establish a public prerelease-version syntax.
+
+The first calendar version is determined by the date on which it is actually
+released.  If the first release is published in September 2026, it is
+=2026.9.0=.  Existing historical version numbers and release records remain
+unchanged.
+
+* Consequences
+
+** Benefits
+
+- Users can see approximately when a release series began.
+- Delayed fixes and backports retain an obvious relationship to the release
+  they correct.
+- Gaps in the release history naturally represent months without releases.
+- The transition cleanly separates Emacsvox releases from inherited Emacspeak
+  numbering.
+
+** Costs and risks
+
+- The version does not express API compatibility or the scale of a change.
+- Feature releases normally cannot be distinguished from one another if two
+  must be published in the same month, so release planning should avoid that
+  case.
+- Release tooling, package metadata, runtime output, tests, documentation, and
+  automation must be migrated from the legacy version values consistently.
+- Consumers that assume the old numbering or tag format may require updates.
+
+* Alternatives considered
+
+** Use =YYYY.SEQUENCE.PATCH=
+
+This handles several irregular feature releases in one month, but the sequence
+is easily mistaken for a month and does not tell users when in the year the
+release occurred.
+
+** Use a year and annual release number only
+
+A form such as =2026.2= is compact, but it cannot distinguish release series
+from corrective releases without another convention and provides less useful
+date information.
+
+** Continue arbitrary major and minor numbers
+
+This preserves the legacy appearance but does not communicate release age and
+continues the ambiguity between Emacsvox and its Emacspeak ancestry.
+
+** Use Semantic Versioning
+
+Semantic Versioning is valuable when a versioned public API and compatibility
+contract determine release numbers.  That is not the primary meaning Emacsvox
+needs its release identifier to convey.  Compatibility remains an explicit
+release-note responsibility instead.
+
+* Follow-up
+
+1. Establish one canonical version source and make runtime output, package
+   metadata, release notes, tags, and artifact names agree with it.
+2. Add non-mutating checks for the version form and cross-file consistency.
+3. Make release validation and artifact creation succeed before creating or
+   pushing a tag.
+4. Document breaking changes and supported Emacs versions in each affected
+   release's notes.

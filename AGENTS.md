@@ -1,5 +1,9 @@
 # Emacsvox repository workflow
 
+- Before changing architecture, workflows, versioning, release tooling, or
+  documentation publication, read every architecture decision record under
+  `docs/adr/` and follow all accepted decisions. Do not rely on a single ADR in
+  isolation; later records may refine earlier decisions.
 - Preserve existing tracked and untracked work. Never clean, reset, stash, or
   discard a dirty worktree merely to satisfy a build precondition.
 - Use the Emacs selected by the ignored `local.mk` and run `make check-emacs`
