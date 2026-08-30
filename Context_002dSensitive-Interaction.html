@@ -20,6 +20,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -32,134 +33,96 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Context_002dSensitive-Interaction">
 <div class="nav-panel">
 <p>
-Previous: <a href="Object-Oriented-Desktop.html" accesskey="p" rel="prev">An Object-Oriented Desktop</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">The Emacsvox Audio Desktop.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="Object-Oriented-Desktop.html" accesskey="p" rel="prev">Let Modes Give Each Buffer Its Tools</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Emacsvox-Specializes-Aural-Interaction"><span>5.3 Emacsvox Specializes Aural Interaction<a class="copiable-link" href="#Emacsvox-Specializes-Aural-Interaction"> &para;</a></span></h3>
+<h3 class="section" id="Hear-And-Navigate-The-Current-Context"><span>5.3 Hear And Navigate The Current Context<a class="copiable-link" href="#Hear-And-Navigate-The-Current-Context"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Context_002dSensitive-Interaction"></a>
 
-<p>The content-specific user interaction described above is a very
-powerful feature of Emacs, and this is where Emacsvox derives its
-power.  Traditionally, the ability to create buffers specialized for
-working with specific content-types has been used by the Emacs
-community to develop versatile programming environments, messaging
-applications such as mail and news readers, and authoring
-environments.  The clean design present in all of these Emacs
-extensions in terms of separating application functionality from the
-user-interface, combined with the availability of the entire source
-code making up these packages under the open-source model has laid the
-ground-work for developing Emacsvox as a versatile aural counterpart
-to the product of years of software engineering that has been invested
-by the Emacs community.  In short, Emacsvox would not exist in its
-present shape or form without this prior effort.
+<p>Emacsvox uses information already exposed by Emacs and the active application.
+That produces more useful feedback than reading every visible character in the
+same way.  You can hear what an object means, move using its structure, and ask
+for detail only when you need it.
 </p>
 <ul class="mini-toc">
-<li><a href="#Audio-Formatted-Output" accesskey="1">Audio Formatted Output</a></li>
-<li><a href="#Structured-Navigation_003a" accesskey="2">Structured Navigation:</a></li>
-<li><a href="#Navigating-The-Desktop" accesskey="3">Navigating The Desktop</a></li>
-<li><a href="#Everything-Is-Searchable_003a" accesskey="4">Everything Is Searchable:</a></li>
+<li><a href="#Hear-Structure-Without-Extra-Words" accesskey="1">Hear Structure Without Extra Words</a></li>
+<li><a href="#Move-By-The-Structure-Of-The-Content" accesskey="2">Move By The Structure Of The Content</a></li>
+<li><a href="#Move-Between-Tasks-Without-Losing-Your-Place" accesskey="3">Move Between Tasks Without Losing Your Place</a></li>
+<li><a href="#Search-Wherever-You-Are" accesskey="4">Search Wherever You Are</a></li>
 </ul>
-<div class="subsection-level-extent" id="Audio-Formatted-Output">
-<h4 class="subsection"><span>5.3.1 Audio Formatted Output<a class="copiable-link" href="#Audio-Formatted-Output"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Hear-Structure-Without-Extra-Words">
+<h4 class="subsection"><span>5.3.1 Hear Structure Without Extra Words<a class="copiable-link" href="#Hear-Structure-Without-Extra-Words"> &para;</a></span></h4>
 
-<a class="index-entry-id" id="index-Audio-Formatting"></a>
+<a class="index-entry-id" id="index-audio-formatting"></a>
 
-<p>Emacsvox takes advantage of the content-specific knowledge available
-within specialized buffers to produce &ldquo;audio formatted&rdquo; output
-designed to optimize user interaction.  A basic consequence of the
-above is &ldquo;voice locking&rdquo; in specialized modes; a more interesting
-consequence is the implementation of Aural Cascading Style Sheets
-(<abbr class="acronym">ACSS</abbr>) in conjunction with the Emacs <abbr class="acronym" title="Emacs Web Wowser">EWW</abbr> (Emacs Web Wowser) and <abbr class="acronym">W3</abbr> Web browsers.
+<p>Voice changes can distinguish headings, comments, strings, links, warnings,
+and other meaningful text.  Short sounds and tones can mark events or state
+changes without interrupting the spoken content.  Ordinary text remains
+available through the usual reading commands.
+</p>
+<p>The exact result depends on the mode, the Emacsvox integration, and your Aural
+Presentation settings.  See <a class="xref" href="Voice-Lock.html">Hear Structure With Voice Lock</a> explains the established
+face-and-personality voice layer, while <kbd class="kbd">C-e E</kbd> explains the presentation
+chosen for the object at point.
 </p>
 </div>
-<div class="subsection-level-extent" id="Structured-Navigation_003a">
-<h4 class="subsection"><span>5.3.2 Structured Navigation:<a class="copiable-link" href="#Structured-Navigation_003a"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Move-By-The-Structure-Of-The-Content">
+<h4 class="subsection"><span>5.3.2 Move By The Structure Of The Content<a class="copiable-link" href="#Move-By-The-Structure-Of-The-Content"> &para;</a></span></h4>
 
-<a class="index-entry-id" id="index-Structured-Navigation"></a>
+<a class="index-entry-id" id="index-structured-navigation"></a>
 
-<p>Emacsvox also exploits content-specific knowledge to provide
-structured navigation of different types of electronic content.  In
-many cases, such structured navigation is an extension of what Emacs
-provides by default; in other cases, Emacsvox implements the
-necessary extensions to provide the level of structural navigation
-needed to work efficiently in an eyes-free environment.
+<p>Prefer the navigation supplied by the active mode when it matches your task.
+For example, Info moves among nodes and menu entries, Org and Outline move
+among headings, Dired moves among files, programming modes understand
+definitions and diagnostics, and EWW exposes links and document structure.
 </p>
-<p>Notable among such structured navigation is Emacs&rsquo; powerful outline
-feature.
-</p>
-<p>An example of content-sensitive navigation is provided by the <code class="code">imenu</code>
-package which dynamically creates a &ldquo;table of contents&rdquo; based on the
-content that is being displayed in a given buffer.  Emacs
-<em class="dfn">Selective Display</em> lets one easily hide and expose portions of a
-buffer based on indentation   &mdash; this feature can be used to
-advantage when working with program source code.
+<p>Begin with <kbd class="kbd">C-h m</kbd>.  It describes the commands available in the
+running buffer, including personal customizations and installed packages.
+See <a class="xref" href="Browsing-Structure.html">Browsing Structure</a> points to maintained guides for several common
+types of content.
 </p>
 </div>
-<div class="subsection-level-extent" id="Navigating-The-Desktop">
-<h4 class="subsection"><span>5.3.3 Navigating The Desktop<a class="copiable-link" href="#Navigating-The-Desktop"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Move-Between-Tasks-Without-Losing-Your-Place">
+<h4 class="subsection"><span>5.3.3 Move Between Tasks Without Losing Your Place<a class="copiable-link" href="#Move-Between-Tasks-Without-Losing-Your-Place"> &para;</a></span></h4>
 
-<a class="index-entry-id" id="index-Desktop-Navigation"></a>
+<a class="index-entry-id" id="index-desktop-navigation"></a>
 
-<p>In addition to navigating individual information objects, the
-Emacsvox environment provides speech-enabled navigation of the
-various buffers that are currently open on the Emacsvox desktop via
-Emacs&rsquo; built-in list-buffers feature.  Emacs&rsquo; dired   &mdash; directory
-editor   &mdash; for browsing the file system, along with the new
-speedbar package that combines features from dired and imenu round off
-the suite of navigational tools.
+<p>Buffers keep different tasks available in one Emacs session.  Use
+<kbd class="kbd">C-x b</kbd> to return to a known buffer or <kbd class="kbd">C-x C-b</kbd> to browse the
+current set.  Emacs windows can show more than one buffer at a time; if the
+selected window is unclear, <kbd class="kbd">C-e C-w</kbd> describes the arrangement.
+</p>
+<p>Applications often create several related buffers, such as a search result and
+an individual message.  Their mode help explains the commands for moving among
+those views.  Treat each buffer as a place you can revisit, rather than as a
+dialog that must be completed before doing anything else.
 </p>
 </div>
-<div class="subsection-level-extent" id="Everything-Is-Searchable_003a">
-<h4 class="subsection"><span>5.3.4 Everything Is Searchable:<a class="copiable-link" href="#Everything-Is-Searchable_003a"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Search-Wherever-You-Are">
+<h4 class="subsection"><span>5.3.4 Search Wherever You Are<a class="copiable-link" href="#Search-Wherever-You-Are"> &para;</a></span></h4>
 
-<a class="index-entry-id" id="index-Searching"></a>
+<a class="index-entry-id" id="index-searching"></a>
 
-<a class="index-entry-id" id="index-Finding"></a>
+<a class="index-entry-id" id="index-finding"></a>
 
-<p>Emacs derives one final advantage from using buffers as the basic
-building block for the entire desktop.  Every Emacs buffer is
-searchable via a uniform and powerful search interface.  Emacs&rsquo;
-incremental search works efficiently and consistently to enable you
-locate &ldquo;objects&rdquo; of interest either within a given document or to
-locate a given object from among the various objects that are
-currently open on the Emacsvox desktop.  This is <b class="b">very powerful</b>
-  &mdash; where a <abbr class="acronym" title="Graphical User Interface">GUI</abbr> (Graphical User Interface) user is
-typically limited to quickly locating an object from a relatively
-small collection   &mdash; the size of the collection being a direct
-function of available display real-estate   &mdash; the Emacsvox user
-can typically work with a far larger collection of objects.  This is
-well-suited to the eyes-free environment, where display real-estate
-has no meaning; so bringing up a list of currently open buffers and
-performing an incremental search to locate a specific buffer is just
-as efficient independent of whether you have a few dozen or a few
-hundred buffers open.
+<p>In most text buffers, <kbd class="kbd">C-s</kbd> searches forward incrementally and
+<kbd class="kbd">C-r</kbd> searches backward.  Type more text to narrow the match, repeat the
+search key to move to another match, and press <kbd class="kbd">C-g</kbd> to cancel.  This same
+basic search is available in documents, Help, source code, and many application
+results.
 </p>
-<p>To illustrate the above, my typical working Emacs session lasts
-between two and three weeks   &mdash; over that time I typically
-accumulate several hundred open buffers holding a large variety of
-content ranging from program source code to email messages and
-<abbr class="acronym">WWW</abbr> pages.
-</p>
-<p>Ubiquitous search in the eyes-free environment is critical   &mdash; as
-a comparison, when using a conventional, purely visual WWW browser,
-users have no means of easily &ldquo;searching&rdquo; for say the &ldquo;submit&rdquo;
-button on a WWW page.  This inability is a minor annoyance in visual
-interaction, and the typical mouse-enabled user <b class="b">never</b> uses the
-find dialog to find a submit button   &mdash; it is simply more
-efficient to point at the submit button given the eye&rsquo;s ability to
-quickly scan the two-dimensional display.  This luxury is absent in an
-eyes-free environment; as a consequence, blind users confronted by the
-combination of a visual interface and screen-reader are typically
-limited to either tabbing through all the controls on a <abbr class="acronym">WWW</abbr>
-page, or using the sub-optimal find dialog.
+<p>Also look for the mode&rsquo;s semantic search and filtering commands.  A mail
+application can search message fields, Dired can narrow files, and a browser
+can move directly among links or headings.  Use the general search when text
+is what matters and the mode-specific command when the kind of object matters.
 </p>
 </div>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Previous: <a href="Object-Oriented-Desktop.html">An Object-Oriented Desktop</a>, Up: <a href="Audio-Desktop.html">The Emacsvox Audio Desktop.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="Object-Oriented-Desktop.html">Let Modes Give Each Buffer Its Tools</a>, Up: <a href="Audio-Desktop.html">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

@@ -21,6 +21,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -33,21 +34,30 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Object-Oriented-Desktop">
 <div class="nav-panel">
 <p>
-Next: <a href="Context_002dSensitive-Interaction.html" accesskey="n" rel="next">Emacsvox Specializes Aural Interaction</a>, Previous: <a href="Desktop-Objects.html" accesskey="p" rel="prev">Objects Making Up The Emacsvox Desktop</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">The Emacsvox Audio Desktop.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Context_002dSensitive-Interaction.html" accesskey="n" rel="next">Hear And Navigate The Current Context</a>, Previous: <a href="Desktop-Objects.html" accesskey="p" rel="prev">Buffers Hold Your Work</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="An-Object_002dOriented-Desktop"><span>5.2 An Object-Oriented Desktop<a class="copiable-link" href="#An-Object_002dOriented-Desktop"> &para;</a></span></h3>
+<h3 class="section" id="Let-Modes-Give-Each-Buffer-Its-Tools"><span>5.2 Let Modes Give Each Buffer Its Tools<a class="copiable-link" href="#Let-Modes-Give-Each-Buffer-Its-Tools"> &para;</a></span></h3>
 
-<a class="index-entry-id" id="index-Object_002dOriented-Desktop"></a>
+<a class="index-entry-id" id="index-major-modes"></a>
 
-<p>The basic &ldquo;buffer object&rdquo; can be specialized by Emacs applications
-to provide optimal interaction.  This kind of specialization makes the
-Emacs environment an object-oriented environment; thus, the basic
-conversational gesture of &ldquo;move to the next statement&rdquo; can be
-assigned behavior that is appropriate to the content that the user is
-currently navigating.  As an example of such specialization, Emacs
-provides &ldquo;specialized modes&rdquo; for working with English text,
-programming languages, markup source e.g. <abbr class="acronym" title="Hypertext Markup Language">HTML</abbr> (Hypertext Markup Language) or LaTeX documents and so on.
+<a class="index-entry-id" id="index-minor-modes"></a>
+
+<p>Every buffer has one major mode that provides its main editing or application
+behavior.  A source buffer uses a programming-language mode, Dired uses a mode
+for directories, EWW uses one for Web pages, and Org uses one for structured
+notes and documents.  Minor modes add optional behavior alongside the major
+mode.
+</p>
+<p>This context is what makes Emacs efficient: a movement command can move by a
+sentence in prose, a heading in an outline, an item in a list, or another
+meaningful unit supplied by the active mode.  Emacsvox speaks the result of the
+operation and can use the same context to announce state changes.
+</p>
+<p>You do not need to predict which commands every mode provides.  Press
+<kbd class="kbd">C-h m</kbd> in the buffer you are using, then <kbd class="kbd">C-h k</kbd> followed by a key
+when you want a fuller explanation.  See <a class="xref" href="Using-Online-Help.html">Find Help While You Work</a> provides a
+short practical guide to these discovery commands.
 </p>
 </div>
 

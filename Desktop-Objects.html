@@ -20,6 +20,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -32,25 +33,41 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Desktop-Objects">
 <div class="nav-panel">
 <p>
-Next: <a href="Object-Oriented-Desktop.html" accesskey="n" rel="next">An Object-Oriented Desktop</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">The Emacsvox Audio Desktop.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Object-Oriented-Desktop.html" accesskey="n" rel="next">Let Modes Give Each Buffer Its Tools</a>, Up: <a href="Audio-Desktop.html" accesskey="u" rel="up">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Objects-Making-Up-The-Emacsvox-Desktop"><span>5.1 Objects Making Up The Emacsvox Desktop<a class="copiable-link" href="#Objects-Making-Up-The-Emacsvox-Desktop"> &para;</a></span></h3>
+<h3 class="section" id="Buffers-Hold-Your-Work"><span>5.1 Buffers Hold Your Work<a class="copiable-link" href="#Buffers-Hold-Your-Work"> &para;</a></span></h3>
 
-<a class="index-entry-id" id="index-Desktop-Objects"></a>
+<a class="index-entry-id" id="index-buffers"></a>
 
-<p>A &ldquo;buffer&rdquo; is the basic building block of  the
-Emacsvox desktop.  Any information presented by Emacs is placed in a
-&ldquo;buffer&rdquo;.  For example, when perusing this manual within Emacs, the
-&ldquo;file&rdquo; containing the documentation is presented in a &ldquo;buffer&rdquo;.  All
-information objects such as <abbr class="acronym">WWW</abbr> pages, email messages, output from
-user interaction with command-line shells etc., are presented by Emacs
-in individual &ldquo;buffers&rdquo;.
+<p>A buffer is Emacs&rsquo;s working view of one piece of information.  A buffer might
+contain a file you are editing, an Info manual, a directory listing, a Web
+page, a mail search, a shell session, or a temporary Help result.  Some buffers
+are connected to files; many useful application buffers are not.
 </p>
-<p>Buffers provide a base level of user interaction; Emacs derives its
-power by allowing applications to specialize buffers to enable
-specific types of user-interaction that is optimized for a specific
-class of information.
+<p>The mode line identifies the selected buffer and its major mode.  Press
+<kbd class="kbd">C-e m</kbd> whenever you want to hear it.  Common buffer commands include:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">C-x b</kbd></dt>
+<dd><p>Switch to another buffer by name.  Completion lets you narrow the choices
+instead of remembering the complete name.
+</p>
+</dd>
+<dt><kbd class="kbd">C-x C-b</kbd></dt>
+<dd><p>Open a buffer list.  In that list, use <kbd class="kbd">C-h m</kbd> to learn its navigation,
+selection, saving, and cleanup commands.
+</p>
+</dd>
+<dt><kbd class="kbd">C-x k</kbd></dt>
+<dd><p>Close a buffer that you no longer need.  Emacs asks before discarding
+unsaved file changes.
+</p></dd>
+</dl>
+
+<p>Moving to another buffer changes the selected work object without closing the
+one you left.  This makes it practical to keep a document, its reference
+material, a shell, and related application results available together.
 </p>
 </div>
 
