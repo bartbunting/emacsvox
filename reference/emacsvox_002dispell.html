@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-ispell (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-ispell (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-ispell (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002divy.html" rel="next" title="emacsvox-ivy">
+<link href="emacsvox_002dinfo.html" rel="prev" title="emacsvox-info">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dispell">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002divy.html" accesskey="n" rel="next">emacsvox-ivy</a>, Previous: <a href="emacsvox_002dinfo.html" accesskey="p" rel="prev">emacsvox-info</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dispell-1"><span>2.150 emacsvox-ispell<a class="copiable-link" href="#emacsvox_002dispell-1"> &para;</a></span></h3>
+
+<p>This module speech enables ispell.  Implementation note: This is
+hard because of how ispell.el is written Namely, all of the work is
+done by one huge hairy function.  This makes advising it hard.  The
+ispell commands work well with Emacsvox as long as the list of
+correction choices are few.  For interactively moving through
+corrections, install package flyspell-correct from MELPA
+(package-install &quot;flyspell-correct&quot;) Then use M-x flyspell-mode.
+Package flyspell is speech-enabled by Emacsvox module
+emacsvox-flyspell.  That module uses standard completion by default, so
+Vertico or another active completion frontend presents correction choices.
+IDO, Popup, and Helm remain available as explicit alternatives.
+</p>
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dispell-Options" accesskey="1">emacsvox-ispell Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="emacsvox_002dispell-Options">
+<h4 class="subsection"><span>2.150.1 emacsvox-ispell Options<a class="copiable-link" href="#emacsvox_002dispell-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-70"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-ispell-max-choices</var><a class="copiable-link" href="#index-User-Option-70"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maximum number of correction choices Emacsvox will speak.
+When Ispell returns more choices, Emacsvox speaks this many of the
+highest-ranked corrections and announces the total.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+8
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+
+
+
+</body>
+</html>

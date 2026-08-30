@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-mines (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-mines (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-mines (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dmu4e.html" rel="next" title="emacsvox-mu4e">
+<link href="emacsvox_002dmessage.html" rel="prev" title="emacsvox-message">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dmines">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dmu4e.html" accesskey="n" rel="next">emacsvox-mu4e</a>, Previous: <a href="emacsvox_002dmessage.html" accesskey="p" rel="prev">emacsvox-message</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dmines-1"><span>2.167 emacsvox-mines<a class="copiable-link" href="#emacsvox_002dmines-1"> &para;</a></span></h3>
+
+<p>MINES == Minesweeper game in emacs. The game itself provides a
+fully keyboard driven interface. In addition, Emacsvox provides
+these additional interactive commands:
+</p><ul class="itemize mark-bullet">
+<li><kbd class="kbd">SPC</kbd> Speak current cell.
+</li><li><kbd class="kbd">.</kbd> Speak neighbors of current cell.
+</li><li><kbd class="kbd">,</kbd> Speak number of marks
+</li><li><kbd class="kbd">a</kbd> Move to beginning of row.
+</li><li><kbd class="kbd">e</kbd> Move to end of row.
+</li><li><kbd class="kbd">g</kbd> Move to specified cell
+</li><li><kbd class="kbd">s</kbd> Move to next uncovered cell.
+</li><li><kbd class="kbd">/</kbd> Speak number of remaining uncovered cells.
+</li><li><kbd class="kbd">'</kbd> Speaks entire board.
+</li></ul>
+
+<p>Speaking cell neighbors uses appropriate clause boundaries to group
+related cells &mdash; neighbors are read left-to-right, top-to-bottom.
+Moving to the left/right edge of the board produces an appropriate
+auditory icon.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dMines-Commands" accesskey="1">Emacsvox-Mines Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dMines-Commands">
+<h4 class="subsection"><span>2.167.1 Emacsvox-Mines Commands<a class="copiable-link" href="#Emacsvox_002dMines-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dmines_002dbeginning_002dof_002drow" accesskey="1">emacsvox-mines-beginning-of-row</a></li>
+<li><a href="#emacsvox_002dmines_002dend_002dof_002drow" accesskey="2">emacsvox-mines-end-of-row</a></li>
+<li><a href="#emacsvox_002dmines_002dgoto" accesskey="3">emacsvox-mines-goto</a></li>
+<li><a href="#emacsvox_002dmines_002djump_002dto_002duncovered_002dcell" accesskey="4">emacsvox-mines-jump-to-uncovered-cell</a></li>
+<li><a href="#emacsvox_002dmines_002dspeak_002dboard" accesskey="5">emacsvox-mines-speak-board</a></li>
+<li><a href="#emacsvox_002dmines_002dspeak_002dcell" accesskey="6">emacsvox-mines-speak-cell</a></li>
+<li><a href="#emacsvox_002dmines_002dspeak_002dmark_002dcount" accesskey="7">emacsvox-mines-speak-mark-count</a></li>
+<li><a href="#emacsvox_002dmines_002dspeak_002dneighbors" accesskey="8">emacsvox-mines-speak-neighbors</a></li>
+<li><a href="#emacsvox_002dmines_002dspeak_002duncovered_002dcount" accesskey="9">emacsvox-mines-speak-uncovered-count</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dmines_002dbeginning_002dof_002drow">
+<h4 class="subsubsection"><span>2.167.1.1 emacsvox-mines-beginning-of-row<a class="copiable-link" href="#emacsvox_002dmines_002dbeginning_002dof_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmines_002dbeginning_002dof_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-mines-beginning-of-row</strong><a class="copiable-link" href="#index-emacsvox_002dmines_002dbeginning_002dof_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmines_002dbeginning_002dof_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to beginning of row
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmines_002dend_002dof_002drow">
+<h4 class="subsubsection"><span>2.167.1.2 emacsvox-mines-end-of-row<a class="copiable-link" href="#emacsvox_002dmines_002dend_002dof_002drow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmines_002dend_002dof_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-mines-end-of-row</strong><a class="copiable-link" href="#index-emacsvox_002dmines_002dend_002dof_002drow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmines_002dend_002dof_002drow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to end of row
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmines_002dgoto">
+<h4 class="subsubsection"><span>2.167.1.3 emacsvox-mines-goto<a class="copiable-link" href="#emacsvox_002dmines_002dgoto"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmines_002dgoto"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-mines-goto</strong> <var class="def-var-arguments">(index)</var><a class="copiable-link" href="#index-emacsvox_002dmines_002dgoto"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmines_002dgoto-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to specified cell.
+
+(fn INDEX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmines_002djump_002dto_002duncovered_002dcell">
+<h4 class="subsubsection"><span>2.167.1.4 emacsvox-mines-jump-to-uncovered-cell<a class="copiable-link" href="#emacsvox_002dmines_002djump_002dto_002duncovered_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmines_002djump_002dto_002duncovered_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-mines-jump-to-uncovered-cell</strong> <var class="def-var-arguments">(from-beginning)</var><a class="copiable-link" href="#index-emacsvox_002dmines_002djump_002dto_002duncovered_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmines_002djump_002dto_002duncovered_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Jump to next uncovered cell. With interactive prefix-arg, jump
+to beginning of board before searching.
+
+(fn FROM-BEGINNING)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmines_002dspeak_002dboard">
+<h4 class="subsubsection"><span>2.167.1.5 emacsvox-mines-speak-board<a class="copiable-link" href="#emacsvox_002dmines_002dspeak_002dboard"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmines_002dspeak_002dboard"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-mines-speak-board</strong><a class="copiable-link" href="#index-emacsvox_002dmines_002dspeak_002dboard"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmines_002dspeak_002dboard-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the board.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmines_002dspeak_002dcell">
+<h4 class="subsubsection"><span>2.167.1.6 emacsvox-mines-speak-cell<a class="copiable-link" href="#emacsvox_002dmines_002dspeak_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmines_002dspeak_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-mines-speak-cell</strong><a class="copiable-link" href="#index-emacsvox_002dmines_002dspeak_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmines_002dspeak_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak current cell.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmines_002dspeak_002dmark_002dcount">
+<h4 class="subsubsection"><span>2.167.1.7 emacsvox-mines-speak-mark-count<a class="copiable-link" href="#emacsvox_002dmines_002dspeak_002dmark_002dcount"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmines_002dspeak_002dmark_002dcount"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-mines-speak-mark-count</strong><a class="copiable-link" href="#index-emacsvox_002dmines_002dspeak_002dmark_002dcount"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmines_002dspeak_002dmark_002dcount-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Count and speak number of marks.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmines_002dspeak_002dneighbors">
+<h4 class="subsubsection"><span>2.167.1.8 emacsvox-mines-speak-neighbors<a class="copiable-link" href="#emacsvox_002dmines_002dspeak_002dneighbors"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmines_002dspeak_002dneighbors"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-mines-speak-neighbors</strong><a class="copiable-link" href="#index-emacsvox_002dmines_002dspeak_002dneighbors"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmines_002dspeak_002dneighbors-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak neighboring cells in sorted order.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmines_002dspeak_002duncovered_002dcount">
+<h4 class="subsubsection"><span>2.167.1.9 emacsvox-mines-speak-uncovered-count<a class="copiable-link" href="#emacsvox_002dmines_002dspeak_002duncovered_002dcount"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmines_002dspeak_002duncovered_002dcount"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-mines-speak-uncovered-count</strong><a class="copiable-link" href="#index-emacsvox_002dmines_002dspeak_002duncovered_002dcount"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmines_002dspeak_002duncovered_002dcount-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak number of uncovered cells.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dmu4e.html">emacsvox-mu4e</a>, Previous: <a href="emacsvox_002dmessage.html">emacsvox-message</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

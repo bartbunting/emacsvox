@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-sounds (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-sounds (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-sounds (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dspeak.html" rel="next" title="emacsvox-speak">
+<link href="emacsvox_002dsolitaire.html" rel="prev" title="emacsvox-solitaire">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dsounds">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dspeak.html" accesskey="n" rel="next">emacsvox-speak</a>, Previous: <a href="emacsvox_002dsolitaire.html" accesskey="p" rel="prev">emacsvox-solitaire</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dsounds-1"><span>2.212 emacsvox-sounds<a class="copiable-link" href="#emacsvox_002dsounds-1"> &para;</a></span></h3>
+
+<p>This module provides the interface for generating auditory icons.
+ It also defines sound themes for auditory icons.
+</p><ul class="mini-toc">
+<li><a href="#Design-goal_003a" accesskey="1">Design goal:</a></li>
+<li><a href="#Designing-Auditory-Icons" accesskey="2">Designing Auditory Icons</a></li>
+<li><a href="#Emacsvox_002dSounds-Commands" accesskey="3">Emacsvox-Sounds Commands</a></li>
+<li><a href="#emacsvox_002dsounds-Options" accesskey="4">emacsvox-sounds Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Design-goal_003a">
+<h4 class="subsection"><span>2.212.1 Design goal:<a class="copiable-link" href="#Design-goal_003a"> &para;</a></span></h4>
+
+<ul class="itemize mark-bullet">
+<li>Auditory icons should be used to
+provide additional feedback, not as a gimmick.
+</li><li>The Emacsvox interface
+should be usable at all times with the icons turned off.
+</li><li>Command <code class="code">emacsvox-toggle-icons</code> toggles the
+use of auditory icons. This flag is buffer-local; use an
+interactive prefix argosy <code class="code">C-u</code> to toggle auditory icons on/off
+globally.
+</li><li>Use <code class="code">setq-default emacsvox-use-icons nil)</code> to turn
+auditory icons  off at startup; default is to use auditory icons globally.
+</li><li>General principle for using auditory icons:
+<ol class="enumerate">
+<li> Convey information about events taking place in parallel.
+</li><li> For instance, if making a selection automatically moves the current
+focus to the next choice, We speak the next choice, while
+indicating the fact that something was selected with an auditory
+icon.
+</li><li> Speed up task completion &mdash; auditory icons take less time than
+the accompanying spoken feedback.
+</li></ol>
+</li><li>This module provides  a mapping between names in the elisp
+world and actual sound files.
+</li><li>icon names are symbols,
+sound files  are strings &mdash;  fully-qualified file-names.
+</li><li>Modules that  use auditory icons
+ use icon names and not  actual file names.
+</li><li>Icons are played either using a local player, or by sending
+appropriate commands to the speech server (local or cloud).
+</li><li>This is determined by the value of <code class="code">emacsvox-play-program</code>.
+</li><li>As of
+Emacsvox 13.0, this module defines a sound-pack architecture for
+auditory icons.  Bundled packs live below <samp class="file">sounds/packs/</samp>; personal
+packs live below <samp class="file">~/.emacsvox/sounds/packs/</samp> by default.
+</li><li>The bundled packs are <code class="code">chimes</code> and <code class="code">3d</code>.  Additional
+pack directories containing <samp class="file">button.ogg</samp>, or a data-only
+<samp class="file">emacsvox-sound-pack.el</samp> manifest, are discovered dynamically.
+</li><li>Contrast this with <code class="code">prompts</code> &mdash; they  dont belong to any theme.
+</li></ul>
+</div>
+<div class="subsection-level-extent" id="Designing-Auditory-Icons">
+<h4 class="subsection"><span>2.212.2 Designing Auditory Icons<a class="copiable-link" href="#Designing-Auditory-Icons"> &para;</a></span></h4>
+<p>Here are some notes on what I have learnt while designing and using
+auditory icons over the years:
+</p><ol class="enumerate">
+<li> Auditory icons should be short  &mdash; use command <code class="code">soxi</code> or
+<code class="code">;</code> in a dired buffer to see duration of a sound file. Use
+the bundled themes as a guide.
+</li><li> Sounds have many properties, eg: duration, gain, pitch, at
+the basic level.
+</li><li> Even more important is the nature of the sound and what it sounds
+like in the context of the overall speech output  where that sound is used.
+</li><li> This is why  the gain of icons  <strong class="strong">should never be</strong> normalized in
+my view&mdash;  tuning icons is as complex as picking
+colors from  a color palette.
+</li><li> The included themes have been optimized over years of use and
+are primarily tuned for using with headphones.
+</li></ol>
+<p>If <code class="code">emacsvox-play-program</code> is set to <code class="code">nil</code>,
+we serve icons, otherwise play
+them using a local player.
+</p>
+</div>
+<div class="subsection-level-extent" id="Emacsvox_002dSounds-Commands">
+<h4 class="subsection"><span>2.212.3 Emacsvox-Sounds Commands<a class="copiable-link" href="#Emacsvox_002dSounds-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dsounds_002dselect_002dtheme" accesskey="1">emacsvox-sounds-select-theme</a></li>
+<li><a href="#emacsvox_002dtoggle_002dicons" accesskey="2">emacsvox-toggle-icons</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dsounds_002dselect_002dtheme">
+<h4 class="subsubsection"><span>2.212.3.1 emacsvox-sounds-select-theme<a class="copiable-link" href="#emacsvox_002dsounds_002dselect_002dtheme"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsounds_002dselect_002dtheme"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-sounds-select-theme</strong> <var class="def-var-arguments">(&amp;optional theme)</var><a class="copiable-link" href="#index-emacsvox_002dsounds_002dselect_002dtheme"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_0029"></a><span><kbd class="kbd">C-e )</kbd><a class="copiable-link" href="#index-C_002de-_0029"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dsounds_002dselect_002dtheme-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select registered resource pack or compatibility directory THEME.
+
+(fn &amp;optional THEME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtoggle_002dicons">
+<h4 class="subsubsection"><span>2.212.3.2 emacsvox-toggle-icons<a class="copiable-link" href="#emacsvox_002dtoggle_002dicons"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtoggle_002dicons"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-toggle-icons</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dtoggle_002dicons"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002da"></a><span><kbd class="kbd">C-e C-a</kbd><a class="copiable-link" href="#index-C_002de-C_002da"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dtoggle_002dicons-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle use of auditory icons.
+Optional interactive PREFIX arg toggles global value.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dsounds-Options">
+<h4 class="subsection"><span>2.212.4 emacsvox-sounds Options<a class="copiable-link" href="#emacsvox_002dsounds-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-118"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-play-program</var><a class="copiable-link" href="#index-User-Option-118"> &para;</a></span></dt>
+<dd><pre class="verbatim">Play program.
+Pulse: For systems running Pipewire or Pulseaudio.
+sox-play: For systems using SoX as the local player.
+None: For systems that rely on the speech server playing the icon.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;/usr/bin/pactl&quot;
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dspeak.html">emacsvox-speak</a>, Previous: <a href="emacsvox_002dsolitaire.html">emacsvox-solitaire</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

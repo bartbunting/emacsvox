@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-vdiff (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-vdiff (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-vdiff (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dvertico.html" rel="next" title="emacsvox-vertico">
+<link href="emacsvox_002durl_002dtemplate.html" rel="prev" title="emacsvox-url-template">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dvdiff">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dvertico.html" accesskey="n" rel="next">emacsvox-vertico</a>, Previous: <a href="emacsvox_002durl_002dtemplate.html" accesskey="p" rel="prev">emacsvox-url-template</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dvdiff-1"><span>2.234 emacsvox-vdiff<a class="copiable-link" href="#emacsvox_002dvdiff-1"> &para;</a></span></h3>
+
+<p>VDIFF ==  vimdiff
+Installable from melpa, vdiff enables synchronized movement
+through diff buffers without resorting to an extra control-panel
+as is the case with ediff.
+ In addition to speech-enabling interactive commands and setting
+ up face-&gt;voice mappings, this module provides commands that speak
+ the current hunk. These are bound in <code class="code">vdiff-mode-prefix-map</code>.
+</p><ul class="itemize mark-bullet">
+<li><code class="code">emacsvox-vdiff-speak-this-hunk</code> bound to <kbd class="kbd">SPC</kbd>.
+</li><li><code class="code">emacsvox-vdiff-speak-other-hunk</code> bound to <kbd class="kbd">C-SPC</kbd>.
+</li><li><code class="code">emacsvox-vdiff-speak-other-line</code> bound to <kbd class="kbd">l</kbd>.
+</li></ul>
+
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dVdiff-Commands" accesskey="1">Emacsvox-Vdiff Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dVdiff-Commands">
+<h4 class="subsection"><span>2.234.1 Emacsvox-Vdiff Commands<a class="copiable-link" href="#Emacsvox_002dVdiff-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dvdiff_002dspeak_002dother_002dhunk" accesskey="1">emacsvox-vdiff-speak-other-hunk</a></li>
+<li><a href="#emacsvox_002dvdiff_002dspeak_002dother_002dline" accesskey="2">emacsvox-vdiff-speak-other-line</a></li>
+<li><a href="#emacsvox_002dvdiff_002dspeak_002dthis_002dhunk" accesskey="3">emacsvox-vdiff-speak-this-hunk</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dvdiff_002dspeak_002dother_002dhunk">
+<h4 class="subsubsection"><span>2.234.1.1 emacsvox-vdiff-speak-other-hunk<a class="copiable-link" href="#emacsvox_002dvdiff_002dspeak_002dother_002dhunk"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dvdiff_002dspeak_002dother_002dhunk"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-vdiff-speak-other-hunk</strong><a class="copiable-link" href="#index-emacsvox_002dvdiff_002dspeak_002dother_002dhunk"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dvdiff_002dspeak_002dother_002dhunk-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak corresponding hunk from other buffer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dvdiff_002dspeak_002dother_002dline">
+<h4 class="subsubsection"><span>2.234.1.2 emacsvox-vdiff-speak-other-line<a class="copiable-link" href="#emacsvox_002dvdiff_002dspeak_002dother_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dvdiff_002dspeak_002dother_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-vdiff-speak-other-line</strong><a class="copiable-link" href="#index-emacsvox_002dvdiff_002dspeak_002dother_002dline"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dvdiff_002dspeak_002dother_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak corresponding line from other buffer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dvdiff_002dspeak_002dthis_002dhunk">
+<h4 class="subsubsection"><span>2.234.1.3 emacsvox-vdiff-speak-this-hunk<a class="copiable-link" href="#emacsvox_002dvdiff_002dspeak_002dthis_002dhunk"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dvdiff_002dspeak_002dthis_002dhunk"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-vdiff-speak-this-hunk</strong><a class="copiable-link" href="#index-emacsvox_002dvdiff_002dspeak_002dthis_002dhunk"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dvdiff_002dspeak_002dthis_002dhunk-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak VDiff hunk under point.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+
+</body>
+</html>

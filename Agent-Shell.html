@@ -16,7 +16,7 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="index.html" rel="up" title="Top">
-<link href="Emacsvox-Keymaps.html" rel="next" title="Emacsvox Keymaps">
+<link href="EAT-Terminal-Access.html" rel="next" title="EAT Terminal Access">
 <link href="Notmuch-Mail.html" rel="prev" title="Notmuch Mail">
 <style type="text/css">
 <!--
@@ -34,10 +34,10 @@ span:hover a.copiable-link {visibility: visible}
 <div class="chapter-level-extent" id="Agent-Shell">
 <div class="nav-panel">
 <p>
-Next: <a href="Emacsvox-Keymaps.html" accesskey="n" rel="next">Emacsvox Keymaps</a>, Previous: <a href="Notmuch-Mail.html" accesskey="p" rel="prev">Notmuch Mail</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="EAT-Terminal-Access.html" accesskey="n" rel="next">Speech Access To EAT</a>, Previous: <a href="Notmuch-Mail.html" accesskey="p" rel="prev">Notmuch Mail</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Agent-Shell-1"><span>13 Agent Shell<a class="copiable-link" href="#Agent-Shell-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Agent-Shell-1"><span>10 Agent Shell<a class="copiable-link" href="#Agent-Shell-1"> &para;</a></span></h2>
 <a class="index-entry-id" id="index-Agent-Shell"></a>
 <a class="index-entry-id" id="index-artificial-intelligence-agents"></a>
 
@@ -47,9 +47,10 @@ Agent Shell&rsquo;s provider setup, session management, prompt editor, or permis
 controls.  See <a class="uref" href="https://github.com/xenodium/agent-shell">Agent Shell</a> for
 provider installation and configuration.
 </p>
-<p>The generated <a class="ref" href="emacsvox_002dagent_002dshell.html">emacsvox-agent-shell</a> section is the exhaustive Emacsvox
-command and option reference.  This chapter follows the tasks a user performs
-in a session.
+<p>The generated
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002dagent_002dshell.html#emacsvox_002dagent_002dshell">emacsvox-agent-shell</a> in <cite class="cite">Emacsvox Reference Manual</cite>
+section is the exhaustive Emacsvox command and option reference.  This chapter
+follows the tasks a user performs in a session.
 </p>
 <ul class="mini-toc">
 <li><a href="#Start-and-control-a-session" accesskey="1">Start and control a session</a></li>
@@ -63,7 +64,7 @@ in a session.
 <li><a href="#Integration-ownership-for-maintainers" accesskey="9">Integration ownership for maintainers</a></li>
 </ul>
 <div class="section-level-extent" id="Start-and-control-a-session">
-<h3 class="section"><span>13.1 Start and control a session<a class="copiable-link" href="#Start-and-control-a-session"> &para;</a></span></h3>
+<h3 class="section"><span>10.1 Start and control a session<a class="copiable-link" href="#Start-and-control-a-session"> &para;</a></span></h3>
 
 <p>Load Emacsvox and start Agent Shell with <code class="code">M-x agent-shell</code>.  Emacsvox loads
 its integration after Agent Shell and activates both new and already existing
@@ -82,7 +83,7 @@ completed response.
 </p>
 </div>
 <div class="section-level-extent" id="Choose-automatic-speech-and-privacy">
-<h3 class="section"><span>13.2 Choose automatic speech and privacy<a class="copiable-link" href="#Choose-automatic-speech-and-privacy"> &para;</a></span></h3>
+<h3 class="section"><span>10.2 Choose automatic speech and privacy<a class="copiable-link" href="#Choose-automatic-speech-and-privacy"> &para;</a></span></h3>
 
 <p>The focused session defaults to <code class="code">response</code>: completed answers and routine
 completion feedback are presented, while thought, plan, and tool chatter is
@@ -134,7 +135,7 @@ automatic speech copy.
 </p>
 </div>
 <div class="section-level-extent" id="Respond-to-urgent-permissions">
-<h3 class="section"><span>13.3 Respond to urgent permissions<a class="copiable-link" href="#Respond-to-urgent-permissions"> &para;</a></span></h3>
+<h3 class="section"><span>10.3 Respond to urgent permissions<a class="copiable-link" href="#Respond-to-urgent-permissions"> &para;</a></span></h3>
 
 <p>Permission requests are separate from routine speech levels because they can
 block the agent and require a decision.  With
@@ -157,7 +158,7 @@ available in the transcript even when routine response speech is quiet.
 </p>
 </div>
 <div class="section-level-extent" id="Inspect-a-response-on-demand">
-<h3 class="section"><span>13.4 Inspect a response on demand<a class="copiable-link" href="#Inspect-a-response-on-demand"> &para;</a></span></h3>
+<h3 class="section"><span>10.4 Inspect a response on demand<a class="copiable-link" href="#Inspect-a-response-on-demand"> &para;</a></span></h3>
 
 <p>These commands work from the shell and its associated viewports:
 </p>
@@ -180,7 +181,7 @@ presenting a streaming partial or failed answer.
 </p>
 </div>
 <div class="section-level-extent" id="Navigate-transcript-blocks">
-<h3 class="section"><span>13.5 Navigate transcript blocks<a class="copiable-link" href="#Navigate-transcript-blocks"> &para;</a></span></h3>
+<h3 class="section"><span>10.5 Navigate transcript blocks<a class="copiable-link" href="#Navigate-transcript-blocks"> &para;</a></span></h3>
 
 <p>Agent Shell responses contain semantic prompt, response, thought, activity,
 tool, plan, permission, error, source-block, and table locations.  Emacsvox
@@ -211,7 +212,7 @@ over prompt editing.
 </p>
 </div>
 <div class="section-level-extent" id="Read-and-copy-source-blocks">
-<h3 class="section"><span>13.6 Read and copy source blocks<a class="copiable-link" href="#Read-and-copy-source-blocks"> &para;</a></span></h3>
+<h3 class="section"><span>10.6 Read and copy source blocks<a class="copiable-link" href="#Read-and-copy-source-blocks"> &para;</a></span></h3>
 
 <p>Use typed block navigation to reach a source block, then:
 </p>
@@ -232,7 +233,7 @@ policy.
 </p>
 </div>
 <div class="section-level-extent" id="Navigate-and-copy-rendered-tables">
-<h3 class="section"><span>13.7 Navigate and copy rendered tables<a class="copiable-link" href="#Navigate-and-copy-rendered-tables"> &para;</a></span></h3>
+<h3 class="section"><span>10.7 Navigate and copy rendered tables<a class="copiable-link" href="#Navigate-and-copy-rendered-tables"> &para;</a></span></h3>
 
 <p>Moving into a rendered Markdown table activates a contextual table map.  It
 announces the table dimensions and current cell.  Leaving the table restores
@@ -297,7 +298,7 @@ borders.  Wrapped cell contents remain complete.
 </p>
 </div>
 <div class="section-level-extent" id="Recover-from-interruption-or-failure">
-<h3 class="section"><span>13.8 Recover from interruption or failure<a class="copiable-link" href="#Recover-from-interruption-or-failure"> &para;</a></span></h3>
+<h3 class="section"><span>10.8 Recover from interruption or failure<a class="copiable-link" href="#Recover-from-interruption-or-failure"> &para;</a></span></h3>
 
 <p>If a request is taking the wrong path, press <kbd class="kbd">C-c C-c</kbd> and confirm the
 Agent Shell interrupt.  A failed or interrupted partial response is not cached
@@ -313,7 +314,7 @@ work.
 </p>
 </div>
 <div class="section-level-extent" id="Integration-ownership-for-maintainers">
-<h3 class="section"><span>13.9 Integration ownership for maintainers<a class="copiable-link" href="#Integration-ownership-for-maintainers"> &para;</a></span></h3>
+<h3 class="section"><span>10.9 Integration ownership for maintainers<a class="copiable-link" href="#Integration-ownership-for-maintainers"> &para;</a></span></h3>
 
 <p>The integration uses three deliberately different contract layers:
 </p>
@@ -343,12 +344,13 @@ subscriptions consume <code class="code">permission-request</code>, <code class=
 and <code class="code">tool-call-update</code>.  Add new semantic behavior at the public event
 layer when Agent Shell exposes it; keep renderer and private fallbacks isolated
 and covered by compatibility tests.
-</p></div>
+</p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Emacsvox-Keymaps.html">Emacsvox Keymaps</a>, Previous: <a href="Notmuch-Mail.html">Notmuch Mail</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="EAT-Terminal-Access.html">Speech Access To EAT</a>, Previous: <a href="Notmuch-Mail.html">Notmuch Mail</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

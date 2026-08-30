@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-notmuch (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-notmuch (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-notmuch (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dnov.html" rel="next" title="emacsvox-nov">
+<link href="emacsvox_002dnm.html" rel="prev" title="emacsvox-nm">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dnotmuch">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dnov.html" accesskey="n" rel="next">emacsvox-nov</a>, Previous: <a href="emacsvox_002dnm.html" accesskey="p" rel="prev">emacsvox-nm</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dnotmuch-1"><span>2.173 emacsvox-notmuch<a class="copiable-link" href="#emacsvox_002dnotmuch-1"> &para;</a></span></h3>
+
+<p>Speech access for Notmuch Hello, Search, and Show workflows.  The
+integration presents saved searches, asynchronous completion, semantic
+result rows and messages, MIME parts, tag and archive outcomes, and message
+visibility while leaving database and mail operations to Notmuch.
+</p>
+<p>Customize &lsquo;emacsvox-notmuch&rsquo; for fields, status cues, automatic content
+limits, and search-completion policy.  See the
+<a data-manual="emacsvox" href="../Notmuch-Mail.html#Notmuch-Mail">Notmuch Mail</a> in <cite class="cite">Emacsvox User Manual</cite> chapter for setup, keys,
+privacy, inspection, support boundaries, and troubleshooting; the generated
+emacsvox-notmuch section is the exhaustive command and option reference.
+Tree buffers receive semantic module context only.  Message composition is
+speech-enabled separately by &lsquo;emacsvox-message&rsquo;.
+See https://notmuchmail.org/doc/latest/notmuch-emacs.html for Notmuch itself.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dNotmuch-Commands" accesskey="1">Emacsvox-Notmuch Commands</a></li>
+<li><a href="#emacsvox_002dnotmuch-Options" accesskey="2">emacsvox-notmuch Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dNotmuch-Commands">
+<h4 class="subsection"><span>2.173.1 Emacsvox-Notmuch Commands<a class="copiable-link" href="#Emacsvox_002dNotmuch-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dnotmuch_002dspeak_002dsearch_002ddetails" accesskey="1">emacsvox-notmuch-speak-search-details</a></li>
+<li><a href="#emacsvox_002dnotmuch_002dspeak_002dsearch_002dresult" accesskey="2">emacsvox-notmuch-speak-search-result</a></li>
+<li><a href="#emacsvox_002dnotmuch_002dspeak_002dshow_002dmessage" accesskey="3">emacsvox-notmuch-speak-show-message</a></li>
+<li><a href="#emacsvox_002dnotmuch_002dspeak_002dshow_002dposition" accesskey="4">emacsvox-notmuch-speak-show-position</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dnotmuch_002dspeak_002dsearch_002ddetails">
+<h4 class="subsubsection"><span>2.173.1.1 emacsvox-notmuch-speak-search-details<a class="copiable-link" href="#emacsvox_002dnotmuch_002dspeak_002dsearch_002ddetails"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dnotmuch_002dspeak_002dsearch_002ddetails"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-notmuch-speak-search-details</strong> <var class="def-var-arguments">(&amp;optional result)</var><a class="copiable-link" href="#index-emacsvox_002dnotmuch_002dspeak_002dsearch_002ddetails"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dnotmuch_002dspeak_002dsearch_002ddetails-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak complete configured details for search RESULT at point.
+
+Unlike automatic navigation feedback, this explicit inspection is not
+truncated by Notmuch’s automatic presentation limits.
+
+(fn &amp;optional RESULT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dnotmuch_002dspeak_002dsearch_002dresult">
+<h4 class="subsubsection"><span>2.173.1.2 emacsvox-notmuch-speak-search-result<a class="copiable-link" href="#emacsvox_002dnotmuch_002dspeak_002dsearch_002dresult"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dnotmuch_002dspeak_002dsearch_002dresult"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-notmuch-speak-search-result</strong> <var class="def-var-arguments">(&amp;optional result)</var><a class="copiable-link" href="#index-emacsvox_002dnotmuch_002dspeak_002dsearch_002dresult"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dnotmuch_002dspeak_002dsearch_002dresult-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak Notmuch search RESULT, defaulting to the result at point.
+
+(fn &amp;optional RESULT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dnotmuch_002dspeak_002dshow_002dmessage">
+<h4 class="subsubsection"><span>2.173.1.3 emacsvox-notmuch-speak-show-message<a class="copiable-link" href="#emacsvox_002dnotmuch_002dspeak_002dshow_002dmessage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dnotmuch_002dspeak_002dshow_002dmessage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-notmuch-speak-show-message</strong> <var class="def-var-arguments">(&amp;optional message body-line)</var><a class="copiable-link" href="#index-emacsvox_002dnotmuch_002dspeak_002dshow_002dmessage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dnotmuch_002dspeak_002dshow_002dmessage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak Notmuch MESSAGE, defaulting to the message at point.
+When BODY-LINE is non-nil, speak it after the semantic message summary.
+
+(fn &amp;optional MESSAGE BODY-LINE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dnotmuch_002dspeak_002dshow_002dposition">
+<h4 class="subsubsection"><span>2.173.1.4 emacsvox-notmuch-speak-show-position<a class="copiable-link" href="#emacsvox_002dnotmuch_002dspeak_002dshow_002dposition"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dnotmuch_002dspeak_002dshow_002dposition"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-notmuch-speak-show-position</strong><a class="copiable-link" href="#index-emacsvox_002dnotmuch_002dspeak_002dshow_002dposition"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dnotmuch_002dspeak_002dshow_002dposition-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak thread position and complete details for the current Show item.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dnotmuch-Options">
+<h4 class="subsection"><span>2.173.2 emacsvox-notmuch Options<a class="copiable-link" href="#emacsvox_002dnotmuch-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-85"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-automatic-field-byte-limit</var><a class="copiable-link" href="#index-User-Option-85"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maximum UTF-8 bytes spoken from one automatic Notmuch field.
+
+This is a preparation bound as well as a speech bound.  A truncation notice
+uses part of the limit.  Set this to nil to disable the per-field byte limit;
+the total automatic-presentation limits still apply.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+1024
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-86"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-automatic-field-character-limit</var><a class="copiable-link" href="#index-User-Option-86"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maximum characters spoken from one automatic Notmuch field.
+
+This limit applies to mail-controlled fields before automatic navigation,
+opening, action, and widget feedback is submitted.  A truncation notice uses
+part of the limit.  Set this to nil to disable the per-field character limit;
+the total automatic-presentation limits still apply.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+256
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-87"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-automatic-total-byte-limit</var><a class="copiable-link" href="#index-User-Option-87"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maximum UTF-8 bytes in one automatic Notmuch presentation.
+
+The limit includes the explicit truncation notice.  Set this to nil to disable
+the total byte limit; the total character limit still applies.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+4096
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-88"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-automatic-total-character-limit</var><a class="copiable-link" href="#index-User-Option-88"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maximum characters in one automatic Notmuch presentation.
+
+The limit includes the explicit truncation notice.  Set this to nil to disable
+the total character limit; the total byte limit still applies.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+1000
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-89"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-mime-depth-limit</var><a class="copiable-link" href="#index-User-Option-89"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maximum nesting depth inspected while scanning a Notmuch MIME body.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+64
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-90"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-mime-node-limit</var><a class="copiable-link" href="#index-User-Option-90"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maximum cons nodes inspected while scanning a Notmuch MIME body.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+4096
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-91"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-search-completion-style</var><a class="copiable-link" href="#index-User-Option-91"> &para;</a></span></dt>
+<dd><pre class="verbatim">Control successful asynchronous Notmuch search completion feedback.
+
+With ‘adaptive’, a user-owned search that remains selected and untouched
+speaks its final count and the result at point on the primary speech stream.
+After the user issues another command, leaves the search buffer, or refreshes
+an existing search, completion contains only a generic result count and uses
+the notification stream.  ‘summary’ always sends the generic count to the
+notification stream, ‘cue’ sends only a task-completion cue there, and
+‘silent’ suppresses successful completion feedback.
+
+Failures remain audible for every style.  Notification feedback contains no
+query or message metadata and may be retained in the notifications log.  A
+separate notification process is controlled globally by
+‘tts-notification-device’; when none is available, notification speech falls
+back to the primary process.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+adaptive
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-92"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-search-field-separator</var><a class="copiable-link" href="#index-User-Option-92"> &para;</a></span></dt>
+<dd><pre class="verbatim">String placed between spoken Notmuch search-result fields.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;, &quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-93"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-search-result-fields</var><a class="copiable-link" href="#index-User-Option-93"> &para;</a></span></dt>
+<dd><pre class="verbatim">Ordered fields spoken for the current Notmuch search result.
+
+The built-in fields are ‘authors’, ‘subject’, ‘date’, ‘count’,
+and ‘tags’.  A function may also be used as a field; it receives
+the Notmuch result plist and should return the string to speak.
+Remove a field to silence it, or reorder the list to change when
+it is spoken.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(authors subject date count tags)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-94"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-search-status-icons</var><a class="copiable-link" href="#index-User-Option-94"> &para;</a></span></dt>
+<dd><pre class="verbatim">Map Notmuch status tags to auditory icons.
+
+Entries are checked in order and every matching non-nil icon is
+played.  Tags present in this alist are omitted from the spoken
+‘tags’ field.  Remove an entry to speak that status as an ordinary
+tag, or give it a nil icon to keep the status silent.  When the
+‘mail-message-status-cues’ presentation option is enabled, its semantic
+rules own unread, replied, forwarded, and flagged cues while these entries
+still suppress words.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+((&quot;unread&quot; . mail-unread)
+ (&quot;replied&quot; . mail-replied)
+ (&quot;forwarded&quot; . mail-forwarded)
+ (&quot;flagged&quot; . mark-object))
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-95"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-show-field-separator</var><a class="copiable-link" href="#index-User-Option-95"> &para;</a></span></dt>
+<dd><pre class="verbatim">String placed between spoken fields for a Notmuch message.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;, &quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-96"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-show-message-fields</var><a class="copiable-link" href="#index-User-Option-96"> &para;</a></span></dt>
+<dd><pre class="verbatim">Ordered fields spoken for the current Notmuch message.
+
+The built-in fields are ‘from’, ‘subject’, ‘date’, ‘to’, ‘cc’,
+‘tags’, and ‘attachments’.  A function may also be used as a
+field; it receives the Notmuch message plist and should return the
+string to speak.  Remove a field to silence it, or reorder the
+list to change when it is spoken.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(from date to cc tags attachments)
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-97"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-notmuch-show-status-icons</var><a class="copiable-link" href="#index-User-Option-97"> &para;</a></span></dt>
+<dd><pre class="verbatim">Map Notmuch message status tags to auditory icons.
+
+Entries are checked in order and every matching non-nil icon is
+played.  Tags present in this alist are omitted from the spoken
+‘tags’ field.  Remove an entry to speak that status as an ordinary
+tag, or give it a nil icon to keep the status silent.  When the
+‘mail-message-status-cues’ presentation option is enabled, its semantic
+rules own unread, replied, forwarded, and flagged cues while these entries
+still suppress words.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+((&quot;unread&quot; . mail-unread)
+ (&quot;replied&quot; . mail-replied)
+ (&quot;forwarded&quot; . mail-forwarded)
+ (&quot;flagged&quot; . mark-object))
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dnov.html">emacsvox-nov</a>, Previous: <a href="emacsvox_002dnm.html">emacsvox-nm</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

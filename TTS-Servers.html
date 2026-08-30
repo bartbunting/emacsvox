@@ -16,7 +16,7 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="index.html" rel="up" title="Top">
-<link href="Emacspeak-At-Twenty.html" rel="next" title="Emacspeak At Twenty">
+<link href="Announce.html" rel="next" title="Announce">
 <link href="Emacsvox-Keyboard-Commands.html" rel="prev" title="Emacsvox Keyboard Commands">
 <style type="text/css">
 <!--
@@ -35,10 +35,10 @@ ul.mark-bullet {list-style-type: disc}
 <div class="chapter-level-extent" id="TTS-Servers">
 <div class="nav-panel">
 <p>
-Next: <a href="Emacspeak-At-Twenty.html" accesskey="n" rel="next">Emacspeak At Twenty.</a>, Previous: <a href="Emacsvox-Keyboard-Commands.html" accesskey="p" rel="prev">Emacsvox Keyboard Commands.</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Announce.html" accesskey="n" rel="next">Manual Provenance And Contributions</a>, Previous: <a href="Emacsvox-Keyboard-Commands.html" accesskey="p" rel="prev">Emacsvox Keyboard Commands.</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Speech-Server-Protocols"><span>19 Speech Server Protocols<a class="copiable-link" href="#Speech-Server-Protocols"> &para;</a></span></h2>
+<h2 class="chapter" id="Speech-Server-Protocols"><span>14 Speech Server Protocols<a class="copiable-link" href="#Speech-Server-Protocols"> &para;</a></span></h2>
 
 <p>Emacsvox produces spoken output by communicating with one of several speech
 servers.  Two protocol families coexist:
@@ -66,7 +66,7 @@ the historical Emacspeak article at
 <li><a href="#Legacy-Line-Protocol" accesskey="2">Legacy Line Protocol</a></li>
 </ul>
 <div class="section-level-extent" id="Omnivox-Structured-Protocol">
-<h3 class="section"><span>19.1 Omnivox Structured Protocol<a class="copiable-link" href="#Omnivox-Structured-Protocol"> &para;</a></span></h3>
+<h3 class="section"><span>14.1 Omnivox Structured Protocol<a class="copiable-link" href="#Omnivox-Structured-Protocol"> &para;</a></span></h3>
 
 <p>At process startup the Emacsvox adapter requests capabilities and live engine
 inventory.  Features are used only after negotiation; an older server
@@ -103,7 +103,7 @@ of acoustic onset.
 
 </div>
 <div class="section-level-extent" id="Legacy-Line-Protocol">
-<h3 class="section"><span>19.2 Legacy Line Protocol<a class="copiable-link" href="#Legacy-Line-Protocol"> &para;</a></span></h3>
+<h3 class="section"><span>14.2 Legacy Line Protocol<a class="copiable-link" href="#Legacy-Line-Protocol"> &para;</a></span></h3>
 
 <p>The <abbr class="acronym">TTS</abbr> server reads commands from standard input.
 Script <strong class="strong">speech-server</strong> can be used to cause a <abbr class="acronym">TTS</abbr>
@@ -152,7 +152,7 @@ interrupt the spoken output at any time.
 <li><a href="#Commands-That-Set-State" accesskey="2">Commands That Set State</a></li>
 </ul>
 <div class="subsection-level-extent" id="Commands-That-Queue-Output_002e">
-<h4 class="subsection"><span>19.2.1 Commands That Queue Output.<a class="copiable-link" href="#Commands-That-Queue-Output_002e"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.2.1 Commands That Queue Output.<a class="copiable-link" href="#Commands-That-Queue-Output_002e"> &para;</a></span></h4>
 
 <p>This section documents commands that either produce spoken output, or
 queue output to be produced on demand.  Commands that place the
@@ -263,7 +263,7 @@ milliseconds.
 </p>
 </div>
 <div class="subsection-level-extent" id="Commands-That-Set-State">
-<h4 class="subsection"><span>19.2.2 Commands That Set State<a class="copiable-link" href="#Commands-That-Set-State"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.2.2 Commands That Set State<a class="copiable-link" href="#Commands-That-Set-State"> &para;</a></span></h4>
 
 <div class="example">
 <pre class="example-preformatted">tts_reset
@@ -378,7 +378,7 @@ example &quot;en&quot; to &quot;en_GB&quot;. This can later be used by set_lang.
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Emacspeak-At-Twenty.html">Emacspeak At Twenty.</a>, Previous: <a href="Emacsvox-Keyboard-Commands.html">Emacsvox Keyboard Commands.</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Announce.html">Manual Provenance And Contributions</a>, Previous: <a href="Emacsvox-Keyboard-Commands.html">Emacsvox Keyboard Commands.</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

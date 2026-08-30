@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-eterm (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-eterm (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-eterm (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002deudc.html" rel="next" title="emacsvox-eudc">
+<link href="emacsvox_002detable.html" rel="prev" title="emacsvox-etable">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002determ">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002deudc.html" accesskey="n" rel="next">emacsvox-eudc</a>, Previous: <a href="emacsvox_002detable.html" accesskey="p" rel="prev">emacsvox-etable</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002determ-1"><span>2.114 emacsvox-eterm<a class="copiable-link" href="#emacsvox_002determ-1"> &para;</a></span></h3>
+
+<p>This module makes eterm talk.
+Eterm is the new terminal emulator for Emacs.
+Use of emacsvox with eterm really needs an info page.
+At present, the only documentation is the source level documentation.
+This module uses Control-t as an additional prefix key to allow the user
+To move around the terminal and have different parts spoken.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dEterm-Commands" accesskey="1">Emacsvox-Eterm Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dEterm-Commands">
+<h4 class="subsection"><span>2.114.1 Emacsvox-Eterm Commands<a class="copiable-link" href="#Emacsvox_002dEterm-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002determ_002dcopy_002dregion_002dto_002dregister" accesskey="1">emacsvox-eterm-copy-region-to-register</a></li>
+<li><a href="#emacsvox_002determ_002ddefine_002dwindow" accesskey="2">emacsvox-eterm-define-window</a></li>
+<li><a href="#emacsvox_002determ_002ddescribe_002dwindow" accesskey="3">emacsvox-eterm-describe-window</a></li>
+<li><a href="#emacsvox_002determ_002dgoto_002dline" accesskey="4">emacsvox-eterm-goto-line</a></li>
+<li><a href="#emacsvox_002determ_002dkill_002dring_002dsave_002dregion" accesskey="5">emacsvox-eterm-kill-ring-save-region</a></li>
+<li><a href="#emacsvox_002determ_002dmaybe_002dsend_002draw" accesskey="6">emacsvox-eterm-maybe-send-raw</a></li>
+<li><a href="#emacsvox_002determ_002dpaste_002dregister" accesskey="7">emacsvox-eterm-paste-register</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dbackward_002dword" accesskey="8">emacsvox-eterm-pointer-backward-word</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002ddown" accesskey="9">emacsvox-eterm-pointer-down</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dforward_002dword">emacsvox-eterm-pointer-forward-word</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dleft">emacsvox-eterm-pointer-left</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dright">emacsvox-eterm-pointer-right</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dto_002dbottom">emacsvox-eterm-pointer-to-bottom</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dto_002dcursor">emacsvox-eterm-pointer-to-cursor</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dto_002dleft_002dedge">emacsvox-eterm-pointer-to-left-edge</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dto_002dnext_002dcolor_002dchange">emacsvox-eterm-pointer-to-next-color-change</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dto_002dprevious_002dcolor_002dchange">emacsvox-eterm-pointer-to-previous-color-change</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dto_002dright_002dedge">emacsvox-eterm-pointer-to-right-edge</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dto_002dtop">emacsvox-eterm-pointer-to-top</a></li>
+<li><a href="#emacsvox_002determ_002dpointer_002dup">emacsvox-eterm-pointer-up</a></li>
+<li><a href="#emacsvox_002determ_002dsearch_002dbackward">emacsvox-eterm-search-backward</a></li>
+<li><a href="#emacsvox_002determ_002dsearch_002dforward">emacsvox-eterm-search-forward</a></li>
+<li><a href="#emacsvox_002determ_002dset_002dfilter_002dwindow">emacsvox-eterm-set-filter-window</a></li>
+<li><a href="#emacsvox_002determ_002dset_002dfocus_002dwindow">emacsvox-eterm-set-focus-window</a></li>
+<li><a href="#emacsvox_002determ_002dset_002dmarker">emacsvox-eterm-set-marker</a></li>
+<li><a href="#emacsvox_002determ_002dspeak_002dcursor">emacsvox-eterm-speak-cursor</a></li>
+<li><a href="#emacsvox_002determ_002dspeak_002dpointer">emacsvox-eterm-speak-pointer</a></li>
+<li><a href="#emacsvox_002determ_002dspeak_002dpointer_002dchar">emacsvox-eterm-speak-pointer-char</a></li>
+<li><a href="#emacsvox_002determ_002dspeak_002dpointer_002dline">emacsvox-eterm-speak-pointer-line</a></li>
+<li><a href="#emacsvox_002determ_002dspeak_002dpointer_002dword">emacsvox-eterm-speak-pointer-word</a></li>
+<li><a href="#emacsvox_002determ_002dspeak_002dpredefined_002dwindow">emacsvox-eterm-speak-predefined-window</a></li>
+<li><a href="#emacsvox_002determ_002dspeak_002dscreen">emacsvox-eterm-speak-screen</a></li>
+<li><a href="#emacsvox_002determ_002dspeak_002dwindow">emacsvox-eterm-speak-window</a></li>
+<li><a href="#emacsvox_002determ_002dtoggle_002dfilter_002dwindow">emacsvox-eterm-toggle-filter-window</a></li>
+<li><a href="#emacsvox_002determ_002dtoggle_002dfocus_002dwindow">emacsvox-eterm-toggle-focus-window</a></li>
+<li><a href="#emacsvox_002determ_002dtoggle_002dpointer_002dmode">emacsvox-eterm-toggle-pointer-mode</a></li>
+<li><a href="#emacsvox_002determ_002dtoggle_002dreview">emacsvox-eterm-toggle-review</a></li>
+<li><a href="#emacsvox_002determ_002dyank_002dwindow">emacsvox-eterm-yank-window</a></li>
+<li><a href="#emacsvox_002dtoggle_002determ_002dautospeak">emacsvox-toggle-eterm-autospeak</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dcopy_002dregion_002dto_002dregister">
+<h4 class="subsubsection"><span>2.114.1.1 emacsvox-eterm-copy-region-to-register<a class="copiable-link" href="#emacsvox_002determ_002dcopy_002dregion_002dto_002dregister"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dcopy_002dregion_002dto_002dregister"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-copy-region-to-register</strong> <var class="def-var-arguments">(register)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dcopy_002dregion_002dto_002dregister"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dcopy_002dregion_002dto_002dregister-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy text from terminal to an Emacs REGISTER.
+This copies  region delimited by the emacsvox eterm marker
+set by command M-x emacsvox-eterm-set-marker and the
+emacsvox eterm pointer to a register.
+
+(fn REGISTER)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002ddefine_002dwindow">
+<h4 class="subsubsection"><span>2.114.1.2 emacsvox-eterm-define-window<a class="copiable-link" href="#emacsvox_002determ_002ddefine_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002ddefine_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-define-window</strong> <var class="def-var-arguments">(id)</var><a class="copiable-link" href="#index-emacsvox_002determ_002ddefine_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002ddefine_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prompt for a window ID.
+The window is then define to be
+the rectangle delimited by point and eterm mark.  This is to
+be used when emacsvox is set to review mode inside an
+eterm.
+
+(fn ID)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002ddescribe_002dwindow">
+<h4 class="subsubsection"><span>2.114.1.3 emacsvox-eterm-describe-window<a class="copiable-link" href="#emacsvox_002determ_002ddescribe_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002ddescribe_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-describe-window</strong> <var class="def-var-arguments">(id)</var><a class="copiable-link" href="#index-emacsvox_002determ_002ddescribe_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002ddescribe_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Describe an eterm  window.
+Description indicates eterm window coordinates and whether it is stretchable
+
+(fn ID)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dgoto_002dline">
+<h4 class="subsubsection"><span>2.114.1.4 emacsvox-eterm-goto-line<a class="copiable-link" href="#emacsvox_002determ_002dgoto_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dgoto_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-goto-line</strong> <var class="def-var-arguments">(line)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dgoto_002dline"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dgoto_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move emacsvox eterm pointer to a specified LINE.
+
+(fn LINE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dkill_002dring_002dsave_002dregion">
+<h4 class="subsubsection"><span>2.114.1.5 emacsvox-eterm-kill-ring-save-region<a class="copiable-link" href="#emacsvox_002determ_002dkill_002dring_002dsave_002dregion"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dkill_002dring_002dsave_002dregion"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-kill-ring-save-region</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dkill_002dring_002dsave_002dregion"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dkill_002dring_002dsave_002dregion-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy text from terminal to kill ring.
+This copies  region delimited by the emacsvox eterm marker
+set by command M-x emacsvox-eterm-set-marker and the
+emacsvox eterm pointer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dmaybe_002dsend_002draw">
+<h4 class="subsubsection"><span>2.114.1.6 emacsvox-eterm-maybe-send-raw<a class="copiable-link" href="#emacsvox_002determ_002dmaybe_002dsend_002draw"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dmaybe_002dsend_002draw"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-maybe-send-raw</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dmaybe_002dsend_002draw"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dmaybe_002dsend_002draw-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Send a raw character through if in the terminal buffer.
+Execute end of line if
+in a non eterm buffer if executed via C-e C-e
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpaste_002dregister">
+<h4 class="subsubsection"><span>2.114.1.7 emacsvox-eterm-paste-register<a class="copiable-link" href="#emacsvox_002determ_002dpaste_002dregister"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpaste_002dregister"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-paste-register</strong> <var class="def-var-arguments">(register)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dpaste_002dregister"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpaste_002dregister-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Paste contents of REGISTER at current location.
+If the specified register contains text, then that text is
+sent to the terminal as if it were typed by the user.
+
+(fn REGISTER)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dbackward_002dword">
+<h4 class="subsubsection"><span>2.114.1.8 emacsvox-eterm-pointer-backward-word<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dbackward_002dword"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dbackward_002dword"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-backward-word</strong> <var class="def-var-arguments">(count)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dbackward_002dword"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dbackward_002dword-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer backward  by words.
+Interactive numeric prefix arg specifies number of words to move.
+Argument COUNT specifies number of words by which to move.
+
+(fn COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002ddown">
+<h4 class="subsubsection"><span>2.114.1.9 emacsvox-eterm-pointer-down<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002ddown"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002ddown"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-down</strong> <var class="def-var-arguments">(count)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002ddown"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002ddown-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer down a line.
+Argument COUNT specifies number of lines by which to move.
+
+(fn COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dforward_002dword">
+<h4 class="subsubsection"><span>2.114.1.10 emacsvox-eterm-pointer-forward-word<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dforward_002dword"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dforward_002dword"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-forward-word</strong> <var class="def-var-arguments">(count)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dforward_002dword"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dforward_002dword-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer forward by words.
+Interactive numeric prefix arg specifies number of words to move.
+Argument COUNT specifies number of words by which to move.
+
+(fn COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dleft">
+<h4 class="subsubsection"><span>2.114.1.11 emacsvox-eterm-pointer-left<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dleft"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dleft"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-left</strong> <var class="def-var-arguments">(count)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dleft"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dleft-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer left.
+Argument COUNT specifies number of columns by which to move.
+
+(fn COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dright">
+<h4 class="subsubsection"><span>2.114.1.12 emacsvox-eterm-pointer-right<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dright"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dright"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-right</strong> <var class="def-var-arguments">(count)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dright"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dright-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer right.
+Argument COUNT specifies number of columns by which to move.
+
+(fn COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dto_002dbottom">
+<h4 class="subsubsection"><span>2.114.1.13 emacsvox-eterm-pointer-to-bottom<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dto_002dbottom"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dto_002dbottom"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-to-bottom</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dto_002dbottom"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dto_002dbottom-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer to the bottom  of the screen.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dto_002dcursor">
+<h4 class="subsubsection"><span>2.114.1.14 emacsvox-eterm-pointer-to-cursor<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dto_002dcursor"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dto_002dcursor"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-to-cursor</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dto_002dcursor"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dto_002dcursor-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer to the cursor.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dto_002dleft_002dedge">
+<h4 class="subsubsection"><span>2.114.1.15 emacsvox-eterm-pointer-to-left-edge<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dto_002dleft_002dedge"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dto_002dleft_002dedge"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-to-left-edge</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dto_002dleft_002dedge"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dto_002dleft_002dedge-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer to the right edge.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dto_002dnext_002dcolor_002dchange">
+<h4 class="subsubsection"><span>2.114.1.16 emacsvox-eterm-pointer-to-next-color-change<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dto_002dnext_002dcolor_002dchange"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dto_002dnext_002dcolor_002dchange"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-to-next-color-change</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dto_002dnext_002dcolor_002dchange"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dto_002dnext_002dcolor_002dchange-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the eterm pointer to the next color change.
+This allows you to move between highlighted regions of the screen.
+Optional argument COUNT specifies how many changes to skip.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dto_002dprevious_002dcolor_002dchange">
+<h4 class="subsubsection"><span>2.114.1.17 emacsvox-eterm-pointer-to-previous-color-change<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dto_002dprevious_002dcolor_002dchange"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dto_002dprevious_002dcolor_002dchange"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-to-previous-color-change</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dto_002dprevious_002dcolor_002dchange"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dto_002dprevious_002dcolor_002dchange-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the eterm pointer to the next color change.
+This allows you to move between highlighted regions of the screen.
+Optional argument COUNT specifies how many changes to skip.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dto_002dright_002dedge">
+<h4 class="subsubsection"><span>2.114.1.18 emacsvox-eterm-pointer-to-right-edge<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dto_002dright_002dedge"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dto_002dright_002dedge"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-to-right-edge</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dto_002dright_002dedge"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dto_002dright_002dedge-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer to the right edge.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dto_002dtop">
+<h4 class="subsubsection"><span>2.114.1.19 emacsvox-eterm-pointer-to-top<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dto_002dtop"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dto_002dtop"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-to-top</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dto_002dtop"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dto_002dtop-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer to the top of the screen.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dpointer_002dup">
+<h4 class="subsubsection"><span>2.114.1.20 emacsvox-eterm-pointer-up<a class="copiable-link" href="#emacsvox_002determ_002dpointer_002dup"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dpointer_002dup"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-pointer-up</strong> <var class="def-var-arguments">(count)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dpointer_002dup"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dpointer_002dup-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move the pointer up a line.
+Argument COUNT .specifies number of lines by which to move.
+
+(fn COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dsearch_002dbackward">
+<h4 class="subsubsection"><span>2.114.1.21 emacsvox-eterm-search-backward<a class="copiable-link" href="#emacsvox_002determ_002dsearch_002dbackward"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dsearch_002dbackward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-search-backward</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dsearch_002dbackward"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dsearch_002dbackward-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search backward on the terminal.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dsearch_002dforward">
+<h4 class="subsubsection"><span>2.114.1.22 emacsvox-eterm-search-forward<a class="copiable-link" href="#emacsvox_002determ_002dsearch_002dforward"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dsearch_002dforward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-search-forward</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dsearch_002dforward"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dsearch_002dforward-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search forward on the terminal.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dset_002dfilter_002dwindow">
+<h4 class="subsubsection"><span>2.114.1.23 emacsvox-eterm-set-filter-window<a class="copiable-link" href="#emacsvox_002determ_002dset_002dfilter_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dset_002dfilter_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-set-filter-window</strong> <var class="def-var-arguments">(flag)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dset_002dfilter_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dset_002dfilter_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prompt for the id of a predefined window,
+and set the ‘filter’ window to it.
+Non-nil interactive prefix arg ‘unsets’ the filter window;
+this is equivalent to having the entire terminal as the filter window (this is
+what eterm starts up with).
+Setting the filter window results in emacsvox  only monitoring screen
+activity within the filter window.
+
+(fn FLAG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dset_002dfocus_002dwindow">
+<h4 class="subsubsection"><span>2.114.1.24 emacsvox-eterm-set-focus-window<a class="copiable-link" href="#emacsvox_002determ_002dset_002dfocus_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dset_002dfocus_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-set-focus-window</strong> <var class="def-var-arguments">(flag)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dset_002dfocus_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dset_002dfocus_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prompt for the id of a predefined window,
+and set the ‘focus’ window to it.
+Non-nil interactive prefix arg ‘unsets’ the focus window;
+this is equivalent to having the entire terminal as the focus window (this is
+what eterm starts up with).
+Setting the focus window results in emacsvox  monitoring screen
+and speaking that window upon seeing screen activity.
+
+(fn FLAG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dset_002dmarker">
+<h4 class="subsubsection"><span>2.114.1.25 emacsvox-eterm-set-marker<a class="copiable-link" href="#emacsvox_002determ_002dset_002dmarker"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dset_002dmarker"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-set-marker</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dset_002dmarker"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dset_002dmarker-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set Emacsvox eterm marker.
+This sets  the emacsvox eterm marker to the position pointed
+to by the emacsvox eterm pointer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dspeak_002dcursor">
+<h4 class="subsubsection"><span>2.114.1.26 emacsvox-eterm-speak-cursor<a class="copiable-link" href="#emacsvox_002determ_002dspeak_002dcursor"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dspeak_002dcursor"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-speak-cursor</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dspeak_002dcursor"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dspeak_002dcursor-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak cursor position.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dspeak_002dpointer">
+<h4 class="subsubsection"><span>2.114.1.27 emacsvox-eterm-speak-pointer<a class="copiable-link" href="#emacsvox_002determ_002dspeak_002dpointer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dspeak_002dpointer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-speak-pointer</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dspeak_002dpointer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dspeak_002dpointer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak current pointer position.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dspeak_002dpointer_002dchar">
+<h4 class="subsubsection"><span>2.114.1.28 emacsvox-eterm-speak-pointer-char<a class="copiable-link" href="#emacsvox_002determ_002dspeak_002dpointer_002dchar"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dspeak_002dpointer_002dchar"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-speak-pointer-char</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dspeak_002dpointer_002dchar"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dspeak_002dpointer_002dchar-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak char under eterm pointer.
+Pronounces character phonetically unless  called with a PREFIX arg.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dspeak_002dpointer_002dline">
+<h4 class="subsubsection"><span>2.114.1.29 emacsvox-eterm-speak-pointer-line<a class="copiable-link" href="#emacsvox_002determ_002dspeak_002dpointer_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dspeak_002dpointer_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-speak-pointer-line</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dspeak_002dpointer_002dline"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dspeak_002dpointer_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the line the pointer is on.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dspeak_002dpointer_002dword">
+<h4 class="subsubsection"><span>2.114.1.30 emacsvox-eterm-speak-pointer-word<a class="copiable-link" href="#emacsvox_002determ_002dspeak_002dpointer_002dword"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dspeak_002dpointer_002dword"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-speak-pointer-word</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dspeak_002dpointer_002dword"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dspeak_002dpointer_002dword-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the word  the pointer is on.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dspeak_002dpredefined_002dwindow">
+<h4 class="subsubsection"><span>2.114.1.31 emacsvox-eterm-speak-predefined-window<a class="copiable-link" href="#emacsvox_002determ_002dspeak_002dpredefined_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dspeak_002dpredefined_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-speak-predefined-window</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dspeak_002dpredefined_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dspeak_002dpredefined_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak a predefined eterm window between 1 and 10.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dspeak_002dscreen">
+<h4 class="subsubsection"><span>2.114.1.32 emacsvox-eterm-speak-screen<a class="copiable-link" href="#emacsvox_002determ_002dspeak_002dscreen"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dspeak_002dscreen"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-speak-screen</strong> <var class="def-var-arguments">(&amp;optional flag)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dspeak_002dscreen"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dspeak_002dscreen-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the screen.  Default is to speak from the emacsvox pointer  to point.
+Optional prefix arg FLAG causes region above
+the Emacsvox pointer to be spoken.
+
+(fn &amp;optional FLAG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dspeak_002dwindow">
+<h4 class="subsubsection"><span>2.114.1.33 emacsvox-eterm-speak-window<a class="copiable-link" href="#emacsvox_002determ_002dspeak_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dspeak_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-speak-window</strong> <var class="def-var-arguments">(id)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dspeak_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dspeak_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak an eterm window.
+Argument ID specifies the window.
+
+(fn ID)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dtoggle_002dfilter_002dwindow">
+<h4 class="subsubsection"><span>2.114.1.34 emacsvox-eterm-toggle-filter-window<a class="copiable-link" href="#emacsvox_002determ_002dtoggle_002dfilter_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dtoggle_002dfilter_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-toggle-filter-window</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dtoggle_002dfilter_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dtoggle_002dfilter_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle active state of filter window.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dtoggle_002dfocus_002dwindow">
+<h4 class="subsubsection"><span>2.114.1.35 emacsvox-eterm-toggle-focus-window<a class="copiable-link" href="#emacsvox_002determ_002dtoggle_002dfocus_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dtoggle_002dfocus_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-toggle-focus-window</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dtoggle_002dfocus_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dtoggle_002dfocus_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle active state of focus window.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dtoggle_002dpointer_002dmode">
+<h4 class="subsubsection"><span>2.114.1.36 emacsvox-eterm-toggle-pointer-mode<a class="copiable-link" href="#emacsvox_002determ_002dtoggle_002dpointer_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dtoggle_002dpointer_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-toggle-pointer-mode</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dtoggle_002dpointer_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dtoggle_002dpointer_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle emacsvox eterm pointer mode.
+With optional interactive prefix  arg, turn it on.
+When emacsvox eterm is in pointer mode, the eterm read pointer
+stays where it is rather than automatically moving to the terminal cursor when
+there is terminal activity.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dtoggle_002dreview">
+<h4 class="subsubsection"><span>2.114.1.37 emacsvox-eterm-toggle-review<a class="copiable-link" href="#emacsvox_002determ_002dtoggle_002dreview"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dtoggle_002dreview"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-toggle-review</strong><a class="copiable-link" href="#index-emacsvox_002determ_002dtoggle_002dreview"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dtoggle_002dreview-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle state of eterm review.
+In review mode, you can move around the terminal and listen to the contents
+without sending input to the terminal itself.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002determ_002dyank_002dwindow">
+<h4 class="subsubsection"><span>2.114.1.38 emacsvox-eterm-yank-window<a class="copiable-link" href="#emacsvox_002determ_002dyank_002dwindow"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002determ_002dyank_002dwindow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-eterm-yank-window</strong> <var class="def-var-arguments">(id)</var><a class="copiable-link" href="#index-emacsvox_002determ_002dyank_002dwindow"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002determ_002dyank_002dwindow-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Yank contents of  an eterm window at point.
+
+(fn ID)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dtoggle_002determ_002dautospeak">
+<h4 class="subsubsection"><span>2.114.1.39 emacsvox-toggle-eterm-autospeak<a class="copiable-link" href="#emacsvox_002dtoggle_002determ_002dautospeak"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dtoggle_002determ_002dautospeak"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-toggle-eterm-autospeak</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dtoggle_002determ_002dautospeak"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dtoggle_002determ_002dautospeak-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle state of eterm autospeak.
+When eterm autospeak is turned on and the terminal is in line
+mode, all output to the terminal is automatically spoken.
+Interactive prefix arg means toggle the global default value, and
+then set the current local value to the result.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002deudc.html">emacsvox-eudc</a>, Previous: <a href="emacsvox_002detable.html">emacsvox-etable</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

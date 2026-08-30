@@ -37,20 +37,21 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Credits.html" accesskey="n" rel="next">Credits</a>, Previous: <a href="Contributing.html" accesskey="p" rel="prev">How To Contribute To This Manual</a>, Up: <a href="Announce.html" accesskey="u" rel="up">Manual Provenance And Contributions</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Authoring-Guidelines-1"><span>2.2 Authoring Guidelines<a class="copiable-link" href="#Authoring-Guidelines-1"> &para;</a></span></h3>
+<h3 class="section" id="Authoring-Guidelines-1"><span>15.2 Authoring Guidelines<a class="copiable-link" href="#Authoring-Guidelines-1"> &para;</a></span></h3>
 
 <p>Keep current operating instructions separate from historical accounts.  State
 which back end or platform a procedure applies to, avoid duplicating detailed
 protocol contracts across repositories, and link to the owning document.
 Run <code class="command">make docs-generate</code> after editing Texinfo, then run
-<code class="command">make docs-check</code>.  Commit the regenerated <samp class="file">emacsvox.info</samp> files
-with their source changes.
+<code class="command">make docs-check</code>.  Commit the regenerated <samp class="file">emacsvox.info</samp> and
+<samp class="file">emacsvox-reference.info</samp> and <samp class="file">emacsvox-heritage.info</samp> files with
+their source changes.
 </p>
 <ul class="mini-toc">
 <li><a href="#Publishing-The-Browser-Manual" accesskey="1">Publishing The Browser Manual</a></li>
 </ul>
 <div class="subsection-level-extent" id="Publishing-The-Browser-Manual">
-<h4 class="subsection"><span>2.2.1 Publishing The Browser Manual<a class="copiable-link" href="#Publishing-The-Browser-Manual"> &para;</a></span></h4>
+<h4 class="subsection"><span>15.2.1 Publishing The Browser Manual<a class="copiable-link" href="#Publishing-The-Browser-Manual"> &para;</a></span></h4>
 
 <p>Texinfo on <code class="code">master</code> is the canonical manual source.  GitHub Pages serves
 the generated static files committed on the separate <code class="code">gh-pages</code> branch;

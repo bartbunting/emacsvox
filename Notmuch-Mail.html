@@ -39,7 +39,7 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Agent-Shell.html" accesskey="n" rel="next">Agent Shell</a>, Previous: <a href="Emacs-Packages.html" accesskey="p" rel="prev">Emacs Packages.</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Notmuch-Mail-1"><span>12 Notmuch Mail<a class="copiable-link" href="#Notmuch-Mail-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Notmuch-Mail-1"><span>9 Notmuch Mail<a class="copiable-link" href="#Notmuch-Mail-1"> &para;</a></span></h2>
 
 <a class="index-entry-id" id="index-Notmuch-mail"></a>
 <a class="index-entry-id" id="index-mail-search_002c-Notmuch"></a>
@@ -53,9 +53,10 @@ and Emacs components and complete their setup first.  The
 <a class="uref" href="https://notmuchmail.org/doc/latest/notmuch-emacs.html">official Notmuch
 Emacs manual</a> covers that setup and the complete upstream command set.
 </p>
-<p>The generated <a class="ref" href="emacsvox_002dnotmuch.html">emacsvox-notmuch</a> section is the exhaustive Emacsvox
-command and option reference.  This chapter follows the tasks a user performs
-and explains when automatic feedback occurs.
+<p>The generated
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002dnotmuch.html#emacsvox_002dnotmuch">emacsvox-notmuch</a> in <cite class="cite">Emacsvox Reference Manual</cite> section
+is the exhaustive Emacsvox command and option reference.  This chapter follows
+the tasks a user performs and explains when automatic feedback occurs.
 </p>
 <ul class="mini-toc">
 <li><a href="#Start-Notmuch" accesskey="1">Start Notmuch</a></li>
@@ -69,7 +70,7 @@ and explains when automatic feedback occurs.
 <li><a href="#Integration-contracts-for-maintainers" accesskey="9">Integration contracts for maintainers</a></li>
 </ul>
 <div class="section-level-extent" id="Start-Notmuch">
-<h3 class="section"><span>12.1 Start Notmuch<a class="copiable-link" href="#Start-Notmuch"> &para;</a></span></h3>
+<h3 class="section"><span>9.1 Start Notmuch<a class="copiable-link" href="#Start-Notmuch"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-starting-Notmuch"></a>
 <a class="index-entry-id" id="index-Notmuch-Hello"></a>
@@ -86,7 +87,7 @@ does not alter mail, tags, files, or Notmuch configuration.
 </p>
 </div>
 <div class="section-level-extent" id="Use-Hello-and-start-a-search">
-<h3 class="section"><span>12.2 Use Hello and start a search<a class="copiable-link" href="#Use-Hello-and-start-a-search"> &para;</a></span></h3>
+<h3 class="section"><span>9.2 Use Hello and start a search<a class="copiable-link" href="#Use-Hello-and-start-a-search"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-saved-searches_002c-Notmuch"></a>
 <a class="index-entry-id" id="index-widgets_002c-Notmuch-Hello"></a>
@@ -124,7 +125,7 @@ provided by the installed Notmuch version.
 <li><a href="#Understand-asynchronous-search-completion" accesskey="1">Understand asynchronous search completion</a></li>
 </ul>
 <div class="subsection-level-extent" id="Understand-asynchronous-search-completion">
-<h4 class="subsection"><span>12.2.1 Understand asynchronous search completion<a class="copiable-link" href="#Understand-asynchronous-search-completion"> &para;</a></span></h4>
+<h4 class="subsection"><span>9.2.1 Understand asynchronous search completion<a class="copiable-link" href="#Understand-asynchronous-search-completion"> &para;</a></span></h4>
 
 <a class="index-entry-id" id="index-search-results_002c-asynchronous-rendering"></a>
 <a class="index-entry-id" id="index-notification-stream_002c-Notmuch"></a>
@@ -160,7 +161,7 @@ refresh-all command remains silent.
 </div>
 </div>
 <div class="section-level-extent" id="Navigate-and-inspect-Search-results">
-<h3 class="section"><span>12.3 Navigate and inspect Search results<a class="copiable-link" href="#Navigate-and-inspect-Search-results"> &para;</a></span></h3>
+<h3 class="section"><span>9.3 Navigate and inspect Search results<a class="copiable-link" href="#Navigate-and-inspect-Search-results"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Notmuch-Search"></a>
 <a class="index-entry-id" id="index-search-fields_002c-Notmuch"></a>
@@ -220,7 +221,7 @@ to omit or reorder potentially sensitive fields.
 </p>
 </div>
 <div class="section-level-extent" id="Read-a-thread-and-its-MIME-parts">
-<h3 class="section"><span>12.4 Read a thread and its MIME parts<a class="copiable-link" href="#Read-a-thread-and-its-MIME-parts"> &para;</a></span></h3>
+<h3 class="section"><span>9.4 Read a thread and its MIME parts<a class="copiable-link" href="#Read-a-thread-and-its-MIME-parts"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Notmuch-Show"></a>
 <a class="index-entry-id" id="index-MIME-parts_002c-Notmuch"></a>
@@ -298,7 +299,7 @@ attachment or external viewer.
 </p>
 </div>
 <div class="section-level-extent" id="Change-tags-and-archive-state">
-<h3 class="section"><span>12.5 Change tags and archive state<a class="copiable-link" href="#Change-tags-and-archive-state"> &para;</a></span></h3>
+<h3 class="section"><span>9.5 Change tags and archive state<a class="copiable-link" href="#Change-tags-and-archive-state"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-tags_002c-Notmuch"></a>
 <a class="index-entry-id" id="index-archiving_002c-Notmuch"></a>
@@ -335,7 +336,7 @@ archive command.
 </p>
 <a class="anchor" id="Notmuch-fields-and-privacy"></a></div>
 <div class="section-level-extent" id="Choose-fields_002c-status_002c-and-privacy">
-<h3 class="section"><span>12.6 Choose fields, status, and privacy<a class="copiable-link" href="#Choose-fields_002c-status_002c-and-privacy"> &para;</a></span></h3>
+<h3 class="section"><span>9.6 Choose fields, status, and privacy<a class="copiable-link" href="#Choose-fields_002c-status_002c-and-privacy"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-privacy_002c-Notmuch-speech"></a>
 <a class="index-entry-id" id="index-fields_002c-Notmuch-speech"></a>
@@ -405,7 +406,7 @@ the complete configured fields is appropriate.
 <li><a href="#Understand-retained-and-notification-content" accesskey="1">Understand retained and notification content</a></li>
 </ul>
 <div class="subsection-level-extent" id="Understand-retained-and-notification-content">
-<h4 class="subsection"><span>12.6.1 Understand retained and notification content<a class="copiable-link" href="#Understand-retained-and-notification-content"> &para;</a></span></h4>
+<h4 class="subsection"><span>9.6.1 Understand retained and notification content<a class="copiable-link" href="#Understand-retained-and-notification-content"> &para;</a></span></h4>
 
 <a class="index-entry-id" id="index-Aural-history_002c-mail-privacy"></a>
 <p>Primary-stream Notmuch presentations can enter bounded Aural Presentation
@@ -425,7 +426,7 @@ settings separately.
 </div>
 </div>
 <div class="section-level-extent" id="Know-the-support-boundaries">
-<h3 class="section"><span>12.7 Know the support boundaries<a class="copiable-link" href="#Know-the-support-boundaries"> &para;</a></span></h3>
+<h3 class="section"><span>9.7 Know the support boundaries<a class="copiable-link" href="#Know-the-support-boundaries"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Notmuch-Tree-support"></a>
 <a class="index-entry-id" id="index-message-composition_002c-Notmuch"></a>
@@ -461,7 +462,7 @@ them.
 </p>
 </div>
 <div class="section-level-extent" id="Troubleshoot-the-live-integration">
-<h3 class="section"><span>12.8 Troubleshoot the live integration<a class="copiable-link" href="#Troubleshoot-the-live-integration"> &para;</a></span></h3>
+<h3 class="section"><span>9.8 Troubleshoot the live integration<a class="copiable-link" href="#Troubleshoot-the-live-integration"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-troubleshooting_002c-Notmuch"></a>
 <a class="index-entry-id" id="index-byte_002dcode_002c-Notmuch-integration"></a>
@@ -484,7 +485,7 @@ the rebuilt byte-code before live verification.
 </p>
 </div>
 <div class="section-level-extent" id="Integration-contracts-for-maintainers">
-<h3 class="section"><span>12.9 Integration contracts for maintainers<a class="copiable-link" href="#Integration-contracts-for-maintainers"> &para;</a></span></h3>
+<h3 class="section"><span>9.9 Integration contracts for maintainers<a class="copiable-link" href="#Integration-contracts-for-maintainers"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Notmuch-integration-maintenance"></a>
 <p>The live module is registered as an optional package integration.  Its stable

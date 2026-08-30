@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-m-player (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-m-player (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-m-player (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dmagit.html" rel="next" title="emacsvox-magit">
+<link href="emacsvox_002dlua.html" rel="prev" title="emacsvox-lua">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dm_002dplayer">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dmagit.html" accesskey="n" rel="next">emacsvox-magit</a>, Previous: <a href="emacsvox_002dlua.html" accesskey="p" rel="prev">emacsvox-lua</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dm_002dplayer-1"><span>2.159 emacsvox-m-player<a class="copiable-link" href="#emacsvox_002dm_002dplayer-1"> &para;</a></span></h3>
+
+<p>Defines an Emacsvox front-end for interacting with <code class="code">mplayer</code>.
+Program <code class="code">mplayer</code>  is a versatile media player capable of playing many
+streaming media formats.
+This module provides complete access to all <code class="code">mplayer</code> functionality
+from a convenient Emacs interface.
+</p>
+<ul class="mini-toc">
+<li><a href="#Usage-2" accesskey="1">Usage</a></li>
+<li><a href="#Emacsvox_002dM_002dPlayer-Commands" accesskey="2">Emacsvox-M-Player Commands</a></li>
+<li><a href="#emacsvox_002dm_002dplayer-Options" accesskey="3">emacsvox-m-player Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Usage-2">
+<h4 class="subsection"><span>2.159.1 Usage<a class="copiable-link" href="#Usage-2"> &para;</a></span></h4>
+
+<p>The main entry-point is command <code class="code">emacsvox-multimedia</code> bound
+to <kbd class="kbd">C-e ;</kbd>.  This prompts for and launches the desired media
+stream.  Once a stream is playing, you can control it with
+single-letter keystrokes in the <code class="code">*M-Player*</code> buffer.
+Alternatively, you can switch away from that buffer to do real
+work, And invoke <code class="code">m-player</code> commands by first pressing
+prefix-key <kbd class="kbd">C-e ;</kbd>.  If your Emacs supports <code class="code">repeat-mode</code>,
+&mdash; See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/repeating.html#repeating">(emacs)repeating</a> you can avoid the need to
+repeatedly press the prefix-key <code class="code">C-e ;</code> each time; with
+<code class="code">repeat-mode</code> active, you only need to press the prefix
+<code class="code">C-e ;</code> the first time; subsequent invocations can happen via
+single-letter presses as long as they are performed in a sequence.
+As an example, pressing <kbd class="kbd">v</kbd> in the <code class="code">*M-Player*</code> buffer
+prompts for and sets the volume; When not in the <code class="code">*M-Player*</code>
+buffer, you can achieve the same by pressing <kbd class="kbd">C-e ; v</kbd>.  Press
+<kbd class="kbd">C-h b</kbd> in the <code class="code">*M-Player*</code> buffer to list <code class="code">m-player</code>
+keybindings.
+</p>
+</div>
+<div class="subsection-level-extent" id="Emacsvox_002dM_002dPlayer-Commands">
+<h4 class="subsection"><span>2.159.2 Emacsvox-M-Player Commands<a class="copiable-link" href="#Emacsvox_002dM_002dPlayer-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dm_002dplayer-2" accesskey="1">emacsvox-m-player</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dadd_002dautopan" accesskey="2">emacsvox-m-player-add-autopan</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dadd_002dautosat" accesskey="3">emacsvox-m-player-add-autosat</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dadd_002ddynamic" accesskey="4">emacsvox-m-player-add-dynamic</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dadd_002dequalizer" accesskey="5">emacsvox-m-player-add-equalizer</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dadd_002dfilter" accesskey="6">emacsvox-m-player-add-filter</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dadd_002dladspa" accesskey="7">emacsvox-m-player-add-ladspa</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dadd_002dloop" accesskey="8">emacsvox-m-player-add-loop</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dalt_002dsrc_002dstep" accesskey="9">emacsvox-m-player-alt-src-step</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002damark_002dadd">emacsvox-m-player-amark-add</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002damark_002djump">emacsvox-m-player-amark-jump</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002damark_002dsave">emacsvox-m-player-amark-save</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dapply_002dreverb">emacsvox-m-player-apply-reverb</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dbackward_002d10min">emacsvox-m-player-backward-10min</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dbackward_002d10s">emacsvox-m-player-backward-10s</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dbackward_002d1min">emacsvox-m-player-backward-1min</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dbalance">emacsvox-m-player-balance</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dbalance_002dchannels">emacsvox-m-player-balance-channels</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dbind_002dhotkey">emacsvox-m-player-bind-hotkey</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dbrowse_002dhistory">emacsvox-m-player-browse-history</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dclear_002dfilters">emacsvox-m-player-clear-filters</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dcommand">emacsvox-m-player-command</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dcustomize">emacsvox-m-player-customize</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002ddelete_002dfilter">emacsvox-m-player-delete-filter</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002ddelete_002dladspa">emacsvox-m-player-delete-ladspa</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002ddisplay_002dpercent">emacsvox-m-player-display-percent</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002ddouble_002dspeed">emacsvox-m-player-double-speed</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dedit_002dreverb">emacsvox-m-player-edit-reverb</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dend_002dtrack">emacsvox-m-player-end-track</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002deq_002dcontrols">emacsvox-m-player-eq-controls</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002deq_002dpreset">emacsvox-m-player-eq-preset</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dfaster">emacsvox-m-player-faster</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dforward_002d10min">emacsvox-m-player-forward-10min</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dforward_002d10s">emacsvox-m-player-forward-10s</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dforward_002d1min">emacsvox-m-player-forward-1min</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dfrom_002dhistory">emacsvox-m-player-from-history</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dget_002dlength">emacsvox-m-player-get-length</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dhalf_002dspeed">emacsvox-m-player-half-speed</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dleft_002dchannel">emacsvox-m-player-left-channel</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dlocate_002dmedia">emacsvox-m-player-locate-media</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dloop">emacsvox-m-player-loop</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dmode">emacsvox-m-player-mode</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dmode_002dline">emacsvox-m-player-mode-line</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dnext_002dtrack">emacsvox-m-player-next-track</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dpan">emacsvox-m-player-pan</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dpause">emacsvox-m-player-pause</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dpersist_002dprocess">emacsvox-m-player-persist-process</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dplay_002drss">emacsvox-m-player-play-rss</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dplay_002dtree_002dup">emacsvox-m-player-play-tree-up</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dpop_002dto_002dplayer">emacsvox-m-player-pop-to-player</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dprevious_002dtrack">emacsvox-m-player-previous-track</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dquit">emacsvox-m-player-quit</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002drem_002dhistory">emacsvox-m-player-rem-history</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dreset_002doptions">emacsvox-m-player-reset-options</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dreset_002dspeed">emacsvox-m-player-reset-speed</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002drestore_002dprocess">emacsvox-m-player-restore-process</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dright_002dchannel">emacsvox-m-player-right-channel</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dscale_002dspeed">emacsvox-m-player-scale-speed</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dseek_002dabsolute">emacsvox-m-player-seek-absolute</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dseek_002dpercentage">emacsvox-m-player-seek-percentage</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dseek_002drelative">emacsvox-m-player-seek-relative</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dset_002dclip_002dend">emacsvox-m-player-set-clip-end</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dset_002dclip_002dstart">emacsvox-m-player-set-clip-start</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dshow_002ddata">emacsvox-m-player-show-data</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dshow_002dpos">emacsvox-m-player-show-pos</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dshuffle">emacsvox-m-player-shuffle</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dskip_002dtracks">emacsvox-m-player-skip-tracks</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dslave_002dcommand">emacsvox-m-player-slave-command</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dslower">emacsvox-m-player-slower</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dstart_002dtrack">emacsvox-m-player-start-track</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dstore_002dlink">emacsvox-m-player-store-link</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dstream_002dinfo">emacsvox-m-player-stream-info</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dtoggle_002dextrastereo">emacsvox-m-player-toggle-extrastereo</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002durl">emacsvox-m-player-url</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dusing_002dhrtf">emacsvox-m-player-using-hrtf</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dusing_002dopenal">emacsvox-m-player-using-openal</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dvolume_002dchange">emacsvox-m-player-volume-change</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dvolume_002ddown">emacsvox-m-player-volume-down</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dvolume_002dset">emacsvox-m-player-volume-set</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dvolume_002dup">emacsvox-m-player-volume-up</a></li>
+<li><a href="#emacsvox_002dm_002dplayer_002dwrite_002dclip">emacsvox-m-player-write-clip</a></li>
+<li><a href="#emacsvox_002dmultimedia">emacsvox-multimedia</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer-2">
+<h4 class="subsubsection"><span>2.159.2.1 emacsvox-m-player<a class="copiable-link" href="#emacsvox_002dm_002dplayer-2"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player</strong> <var class="def-var-arguments">(resource &amp;optional play-list)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play  resource, or play dynamic playlist if set.  Optional prefix argument
+play-list interprets resource as a play-list.  Second interactive
+prefix arg adds option -allow-dangerous-playlist-parsing to mplayer.
+See command M-x emacsvox-m-player-add-dynamic for adding to the
+dynamic playlist.
+
+(fn RESOURCE &amp;optional PLAY-LIST)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dadd_002dautopan">
+<h4 class="subsubsection"><span>2.159.2.2 emacsvox-m-player-add-autopan<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dadd_002dautopan"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dadd_002dautopan"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-add-autopan</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dadd_002dautopan"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dadd_002dautopan-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add autopan effect.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dadd_002dautosat">
+<h4 class="subsubsection"><span>2.159.2.3 emacsvox-m-player-add-autosat<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dadd_002dautosat"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dadd_002dautosat"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-add-autosat</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dadd_002dautosat"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dadd_002dautosat-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add ZamAutoSat (auto saturation) effect.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dadd_002ddynamic">
+<h4 class="subsubsection"><span>2.159.2.4 emacsvox-m-player-add-dynamic<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dadd_002ddynamic"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dadd_002ddynamic"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-add-dynamic</strong> <var class="def-var-arguments">(file)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dadd_002ddynamic"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dadd_002ddynamic-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add file to the current  dynamic playlist.
+
+(fn FILE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dadd_002dequalizer">
+<h4 class="subsubsection"><span>2.159.2.5 emacsvox-m-player-add-equalizer<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dadd_002dequalizer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dadd_002dequalizer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-add-equalizer</strong> <var class="def-var-arguments">(&amp;optional reset)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dadd_002dequalizer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dadd_002dequalizer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add equalizer.  Equalizer is updated as each change
+is made, and the final effect set by pressing RET.  Interactive prefix
+arg ‘reset’ starts with all filters set to 0.
+
+(fn &amp;optional RESET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dadd_002dfilter">
+<h4 class="subsubsection"><span>2.159.2.6 emacsvox-m-player-add-filter<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dadd_002dfilter"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dadd_002dfilter"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-add-filter</strong> <var class="def-var-arguments">(filter-name &amp;optional edit)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dadd_002dfilter"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dadd_002dfilter-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Adds  filter with completion.
+ Optional interactive prefix arg ‘edit’ edits the.
+
+(fn FILTER-NAME &amp;optional EDIT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dadd_002dladspa">
+<h4 class="subsubsection"><span>2.159.2.7 emacsvox-m-player-add-ladspa<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dadd_002dladspa"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dadd_002dladspa"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-add-ladspa</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dadd_002dladspa"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dadd_002dladspa-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Apply plugin to running MPlayer.
+Copies  invocation string to kill-ring so it can be added easily to
+our pre-defined filters if appropriate.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dadd_002dloop">
+<h4 class="subsubsection"><span>2.159.2.8 emacsvox-m-player-add-loop<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dadd_002dloop"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dadd_002dloop"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-add-loop</strong> <var class="def-var-arguments">(&amp;optional prompt)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dadd_002dloop"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dadd_002dloop-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add loop 10 is default.
+
+(fn &amp;optional PROMPT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dalt_002dsrc_002dstep">
+<h4 class="subsubsection"><span>2.159.2.9 emacsvox-m-player-alt-src-step<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dalt_002dsrc_002dstep"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dalt_002dsrc_002dstep"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-alt-src-step</strong> <var class="def-var-arguments">(step)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dalt_002dsrc_002dstep"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dalt_002dsrc_002dstep-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move within an ASF playlist.
+
+(fn STEP)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002damark_002dadd">
+<h4 class="subsubsection"><span>2.159.2.10 emacsvox-m-player-amark-add<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002damark_002dadd"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002damark_002dadd"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-amark-add</strong> <var class="def-var-arguments">(name &amp;optional prompt-position)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002damark_002dadd"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002damark_002dadd-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set AMark ‘name’ at current position.
+Interactive prefix arg prompts for position.
+As the default, use current position.
+
+(fn NAME &amp;optional PROMPT-POSITION)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002damark_002djump">
+<h4 class="subsubsection"><span>2.159.2.11 emacsvox-m-player-amark-jump<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002damark_002djump"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002damark_002djump"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-amark-jump</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002damark_002djump"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002damark_002djump-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Jump to AMark.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002damark_002dsave">
+<h4 class="subsubsection"><span>2.159.2.12 emacsvox-m-player-amark-save<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002damark_002dsave"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002damark_002dsave"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-amark-save</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002damark_002dsave"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002damark_002dsave-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Save amarks.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dapply_002dreverb">
+<h4 class="subsubsection"><span>2.159.2.13 emacsvox-m-player-apply-reverb<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dapply_002dreverb"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dapply_002dreverb"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-apply-reverb</strong> <var class="def-var-arguments">(preset)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dapply_002dreverb"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dapply_002dreverb-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prompt for and apply a reverb preset.
+  You need to use mplayer built with ladspa support, and have package
+  tap-reverb already installed.
+
+(fn PRESET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dbackward_002d10min">
+<h4 class="subsubsection"><span>2.159.2.14 emacsvox-m-player-backward-10min<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dbackward_002d10min"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dbackward_002d10min"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-backward-10min</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dbackward_002d10min"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dbackward_002d10min-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move backward ten minutes.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dbackward_002d10s">
+<h4 class="subsubsection"><span>2.159.2.15 emacsvox-m-player-backward-10s<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dbackward_002d10s"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dbackward_002d10s"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-backward-10s</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dbackward_002d10s"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dbackward_002d10s-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move back 10 seconds.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dbackward_002d1min">
+<h4 class="subsubsection"><span>2.159.2.16 emacsvox-m-player-backward-1min<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dbackward_002d1min"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dbackward_002d1min"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-backward-1min</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dbackward_002d1min"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dbackward_002d1min-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move back 1 minute.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dbalance">
+<h4 class="subsubsection"><span>2.159.2.17 emacsvox-m-player-balance<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dbalance"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dbalance"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-balance</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dbalance"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dbalance-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set left/right balance.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dbalance_002dchannels">
+<h4 class="subsubsection"><span>2.159.2.18 emacsvox-m-player-balance-channels<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dbalance_002dchannels"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dbalance_002dchannels"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-balance-channels</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dbalance_002dchannels"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dbalance_002dchannels-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Mono to stereo.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dbind_002dhotkey">
+<h4 class="subsubsection"><span>2.159.2.19 emacsvox-m-player-bind-hotkey<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dbind_002dhotkey"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dbind_002dhotkey"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-bind-hotkey</strong> <var class="def-var-arguments">(directory key)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dbind_002dhotkey"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dbind_002dhotkey-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Binds key to invoke m-player  on specified directory.
+
+(fn DIRECTORY KEY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dbrowse_002dhistory">
+<h4 class="subsubsection"><span>2.159.2.20 emacsvox-m-player-browse-history<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dbrowse_002dhistory"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dbrowse_002dhistory"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-browse-history</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dbrowse_002dhistory"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dbrowse_002dhistory-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Create a  media history browser from media-history.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dclear_002dfilters">
+<h4 class="subsubsection"><span>2.159.2.21 emacsvox-m-player-clear-filters<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dclear_002dfilters"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dclear_002dfilters"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-clear-filters</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dclear_002dfilters"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dclear_002dfilters-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Clear all filters
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dcommand">
+<h4 class="subsubsection"><span>2.159.2.22 emacsvox-m-player-command<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dcommand"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dcommand"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-command</strong> <var class="def-var-arguments">(key)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dcommand"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dcommand-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Invoke MPlayer commands.
+
+(fn KEY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dcustomize">
+<h4 class="subsubsection"><span>2.159.2.23 emacsvox-m-player-customize<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dcustomize"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dcustomize"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-customize</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dcustomize"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dcustomize-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Use Customize to set MPlayer options.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002ddelete_002dfilter">
+<h4 class="subsubsection"><span>2.159.2.24 emacsvox-m-player-delete-filter<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002ddelete_002dfilter"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002ddelete_002dfilter"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-delete-filter</strong> <var class="def-var-arguments">(filter)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002ddelete_002dfilter"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002ddelete_002dfilter-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Delete filter.
+
+(fn FILTER)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002ddelete_002dladspa">
+<h4 class="subsubsection"><span>2.159.2.25 emacsvox-m-player-delete-ladspa<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002ddelete_002dladspa"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002ddelete_002dladspa"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-delete-ladspa</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002ddelete_002dladspa"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002ddelete_002dladspa-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Delete plugin from  running MPlayer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002ddisplay_002dpercent">
+<h4 class="subsubsection"><span>2.159.2.26 emacsvox-m-player-display-percent<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002ddisplay_002dpercent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002ddisplay_002dpercent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-display-percent</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002ddisplay_002dpercent"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002ddisplay_002dpercent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display current percentage.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002ddouble_002dspeed">
+<h4 class="subsubsection"><span>2.159.2.27 emacsvox-m-player-double-speed<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002ddouble_002dspeed"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002ddouble_002dspeed"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-double-speed</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002ddouble_002dspeed"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002ddouble_002dspeed-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Scale speed by 2.0
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dedit_002dreverb">
+<h4 class="subsubsection"><span>2.159.2.28 emacsvox-m-player-edit-reverb<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dedit_002dreverb"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dedit_002dreverb"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-edit-reverb</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dedit_002dreverb"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dedit_002dreverb-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Edit ladspa reverb filter.
+  You need to use mplayer built with ladspa support, and have package
+  tap-reverb already installed.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dend_002dtrack">
+<h4 class="subsubsection"><span>2.159.2.29 emacsvox-m-player-end-track<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dend_002dtrack"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dend_002dtrack"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-end-track</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dend_002dtrack"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dend_002dtrack-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to end.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002deq_002dcontrols">
+<h4 class="subsubsection"><span>2.159.2.30 emacsvox-m-player-eq-controls<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002deq_002dcontrols"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002deq_002dcontrols"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-eq-controls</strong> <var class="def-var-arguments">(v)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002deq_002dcontrols"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002deq_002dcontrols-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Manipulate values in  vector using minibuffer.
+Applies  the resulting value at each step.
+
+(fn V)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002deq_002dpreset">
+<h4 class="subsubsection"><span>2.159.2.31 emacsvox-m-player-eq-preset<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002deq_002dpreset"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002deq_002dpreset"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-eq-preset</strong> <var class="def-var-arguments">(name)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002deq_002dpreset"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002deq_002dpreset-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prompts for  and apply equalizer preset.
+
+The following presets are available:
+
+flat classical club dance full-bass full-bass-and-treble
+ full-treble headphones large-hall live party pop reggae rock
+ ska soft soft-rock techno
+
+(fn NAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dfaster">
+<h4 class="subsubsection"><span>2.159.2.32 emacsvox-m-player-faster<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dfaster"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dfaster"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-faster</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dfaster"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dfaster-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speed up  playback.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dforward_002d10min">
+<h4 class="subsubsection"><span>2.159.2.33 emacsvox-m-player-forward-10min<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dforward_002d10min"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dforward_002d10min"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-forward-10min</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dforward_002d10min"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dforward_002d10min-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move forward ten minutes.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dforward_002d10s">
+<h4 class="subsubsection"><span>2.159.2.34 emacsvox-m-player-forward-10s<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dforward_002d10s"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dforward_002d10s"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-forward-10s</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dforward_002d10s"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dforward_002d10s-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move forward 10 seconds.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dforward_002d1min">
+<h4 class="subsubsection"><span>2.159.2.35 emacsvox-m-player-forward-1min<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dforward_002d1min"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dforward_002d1min"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-forward-1min</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dforward_002d1min"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dforward_002d1min-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move forward by 1 minute.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dfrom_002dhistory">
+<h4 class="subsubsection"><span>2.159.2.36 emacsvox-m-player-from-history<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dfrom_002dhistory"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dfrom_002dhistory"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-from-history</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dfrom_002dhistory"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_003b-h"></a><span><kbd class="kbd">C-; h</kbd><a class="copiable-link" href="#index-C_002d_003b-h"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-h-h"></a><span><kbd class="kbd">C-x @ h h</kbd><a class="copiable-link" href="#index-C_002dx-_0040-h-h"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dfrom_002dhistory-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play media from the front of media-history.
+   Interactive prefix arg invokes media history browser.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dget_002dlength">
+<h4 class="subsubsection"><span>2.159.2.37 emacsvox-m-player-get-length<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dget_002dlength"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dget_002dlength"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-get-length</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dget_002dlength"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dget_002dlength-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display length of track.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dhalf_002dspeed">
+<h4 class="subsubsection"><span>2.159.2.38 emacsvox-m-player-half-speed<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dhalf_002dspeed"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dhalf_002dspeed"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-half-speed</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dhalf_002dspeed"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dhalf_002dspeed-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Scale speed by 0.5.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dleft_002dchannel">
+<h4 class="subsubsection"><span>2.159.2.39 emacsvox-m-player-left-channel<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dleft_002dchannel"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dleft_002dchannel"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-left-channel</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dleft_002dchannel"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dleft_002dchannel-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play both channels on left.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dlocate_002dmedia">
+<h4 class="subsubsection"><span>2.159.2.40 emacsvox-m-player-locate-media<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dlocate_002dmedia"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dlocate_002dmedia"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-locate-media</strong> <var class="def-var-arguments">(pattern)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dlocate_002dmedia"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dz-l"></a><span><kbd class="kbd">C-z l</kbd><a class="copiable-link" href="#index-C_002dz-l"> &para;</a></span></dt>
+<dt><a id="index-C_002d_0027-l"></a><span><kbd class="kbd">C-' l</kbd><a class="copiable-link" href="#index-C_002d_0027-l"> &para;</a></span></dt>
+<dt><a id="index-C_002de-z-l"></a><span><kbd class="kbd">C-e z l</kbd><a class="copiable-link" href="#index-C_002de-z-l"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dlocate_002dmedia-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Locate media matching  pattern.  The results can be
+played as a play-list by pressing [RET] on the first line, see
+ M-x emacsvox-dired-open-this-file locally bound to C-RET
+to play  tracks.
+
+(fn PATTERN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dloop">
+<h4 class="subsubsection"><span>2.159.2.41 emacsvox-m-player-loop<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dloop"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dloop"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-loop</strong> <var class="def-var-arguments">(&amp;optional raw)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dloop"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-_003a"></a><span><kbd class="kbd">C-e x :</kbd><a class="copiable-link" href="#index-C_002de-x-_003a"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dloop-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">M-Player with repeat indefinitely  turned on.
+Interactive prefix ‘raw’ reads a raw URL.
+
+(fn &amp;optional RAW)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dmode">
+<h4 class="subsubsection"><span>2.159.2.42 emacsvox-m-player-mode<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-mode</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Major mode for m-player interaction.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+C-a		emacsvox-amark-browse
+C-l		ladspa
+SPC		emacsvox-m-player-pause
+%		emacsvox-m-player-display-percent
+&rsquo;		emacsvox-m-player-add-loop
+(		emacsvox-m-player-left-channel
+)		emacsvox-m-player-right-channel
++		emacsvox-m-player-volume-up
+,		emacsvox-m-player-backward-10s
+-		emacsvox-m-player-volume-down
+.		emacsvox-m-player-forward-10s
+/		emacsvox-m-player-restore-process
+1 .. 9		emacsvox-m-player-volume-set
+;		emacsvox-m-player-pop-to-player
+&lt;		emacsvox-m-player-backward-1min
+=		emacsvox-m-player-volume-up
+&gt;		emacsvox-m-player-forward-1min
+?		emacsvox-m-player-show-pos
+A		emacsvox-m-player-amark-add
+C		emacsvox-m-player-clear-filters
+E		emacsvox-m-player-add-equalizer
+G		emacsvox-m-player-seek-percentage
+L		emacsvox-m-player-get-length
+M		emacsvox-m-player-show-data
+O		emacsvox-m-player-reset-options
+P		emacsvox-m-player-apply-reverb
+Q		emacsvox-m-player-quit
+R		emacsvox-m-player-edit-reverb
+S		emacsvox-m-player-amark-save
+T		emacsvox-speak-brief-time
+[		emacsvox-m-player-slower
+\		emacsvox-m-player-persist-process
+]		emacsvox-m-player-faster
+a		emacsvox-m-player-add-autopan
+b		emacsvox-m-player-balance-channels
+c		emacsvox-m-player-slave-command
+d		emacsvox-m-player-delete-filter
+e		emacsvox-m-player-eq-preset
+f		emacsvox-m-player-add-filter
+g		emacsvox-m-player-seek-absolute
+h		emacsvox-m-player-from-history
+i		emacsvox-m-player-stream-info
+j		emacsvox-m-player-amark-jump
+k		emacsvox-m-player-quit
+l		emacsvox-m-player-store-link
+m		emacsvox-m-player-mode-line
+n		emacsvox-m-player-next-track
+o		emacsvox-m-player-customize
+p		emacsvox-m-player-previous-track
+r		emacsvox-m-player-seek-relative
+s		emacsvox-m-player-scale-speed
+t		emacsvox-m-player-skip-tracks
+v		emacsvox-m-player-volume-change
+w		emacsvox-m-player-write-clip
+x		emacsvox-m-player-pan
+z		emacsvox-m-player-add-autosat
+{		emacsvox-m-player-half-speed
+}		emacsvox-m-player-double-speed
+DEL		emacsvox-m-player-reset-speed
+&lt;down&gt;		emacsvox-m-player-forward-1min
+&lt;end&gt;		emacsvox-m-player-end-track
+&lt;home&gt;		emacsvox-m-player-start-track
+&lt;left&gt;		emacsvox-m-player-backward-10s
+&lt;next&gt;		emacsvox-m-player-forward-10min
+&lt;prior&gt;		emacsvox-m-player-backward-10min
+&lt;right&gt;		emacsvox-m-player-forward-10s
+&lt;up&gt;		emacsvox-m-player-backward-1min
+
+M-,		emacsvox-m-player-set-clip-start
+M-.		emacsvox-m-player-set-clip-end
+
+In addition to any hooks its parent mode ‘special-mode’ might have
+run, this mode runs the hook ‘emacsvox-m-player-mode-hook’, as the
+final or penultimate step during initialization.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dmode_002dline">
+<h4 class="subsubsection"><span>2.159.2.43 emacsvox-m-player-mode-line<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dmode_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dmode_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-mode-line</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dmode_002dline"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dmode_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Mode-line for M-Player buffers.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dnext_002dtrack">
+<h4 class="subsubsection"><span>2.159.2.44 emacsvox-m-player-next-track<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dnext_002dtrack"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dnext_002dtrack"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-next-track</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dnext_002dtrack"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dnext_002dtrack-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Next track.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dpan">
+<h4 class="subsubsection"><span>2.159.2.45 emacsvox-m-player-pan<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dpan"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dpan"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-pan</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dpan"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dpan-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Pan from left to right   and back  one step at a time.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dpause">
+<h4 class="subsubsection"><span>2.159.2.46 emacsvox-m-player-pause<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dpause"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dpause"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-pause</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dpause"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dpause-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Pause or unpause.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dpersist_002dprocess">
+<h4 class="subsubsection"><span>2.159.2.47 emacsvox-m-player-persist-process<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dpersist_002dprocess"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dpersist_002dprocess"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-persist-process</strong> <var class="def-var-arguments">(&amp;optional name)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dpersist_002dprocess"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dpersist_002dprocess-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Persists  m-player process instance by renaming its buffer.
+Optional interactive prefix arg prompts for name to use for  player.
+
+(fn &amp;optional NAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dplay_002drss">
+<h4 class="subsubsection"><span>2.159.2.48 emacsvox-m-player-play-rss<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dplay_002drss"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dplay_002drss"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-play-rss</strong> <var class="def-var-arguments">(rss-url)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dplay_002drss"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dplay_002drss-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play an RSS stream.
+
+(fn RSS-URL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dplay_002dtree_002dup">
+<h4 class="subsubsection"><span>2.159.2.49 emacsvox-m-player-play-tree-up<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dplay_002dtree_002dup"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dplay_002dtree_002dup"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-play-tree-up</strong> <var class="def-var-arguments">(step)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dplay_002dtree_002dup"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dplay_002dtree_002dup-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move within the play tree.
+
+(fn STEP)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dpop_002dto_002dplayer">
+<h4 class="subsubsection"><span>2.159.2.50 emacsvox-m-player-pop-to-player<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dpop_002dto_002dplayer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dpop_002dto_002dplayer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-pop-to-player</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dpop_002dto_002dplayer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dpop_002dto_002dplayer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Pop to m-player buffer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dprevious_002dtrack">
+<h4 class="subsubsection"><span>2.159.2.51 emacsvox-m-player-previous-track<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dprevious_002dtrack"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dprevious_002dtrack"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-previous-track</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dprevious_002dtrack"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dprevious_002dtrack-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Previous track.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dquit">
+<h4 class="subsubsection"><span>2.159.2.52 emacsvox-m-player-quit<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dquit"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dquit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-quit</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dquit"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dquit-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Quit.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002drem_002dhistory">
+<h4 class="subsubsection"><span>2.159.2.53 emacsvox-m-player-rem-history<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002drem_002dhistory"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002drem_002dhistory"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-rem-history</strong> <var class="def-var-arguments">(url)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002drem_002dhistory"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002drem_002dhistory-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Remove URL from media history
+
+(fn URL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dreset_002doptions">
+<h4 class="subsubsection"><span>2.159.2.54 emacsvox-m-player-reset-options<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dreset_002doptions"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dreset_002doptions"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-reset-options</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dreset_002doptions"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dreset_002doptions-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Reset MPlayer options.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dreset_002dspeed">
+<h4 class="subsubsection"><span>2.159.2.55 emacsvox-m-player-reset-speed<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dreset_002dspeed"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dreset_002dspeed"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-reset-speed</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dreset_002dspeed"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dreset_002dspeed-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Reset  speed.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002drestore_002dprocess">
+<h4 class="subsubsection"><span>2.159.2.56 emacsvox-m-player-restore-process<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002drestore_002dprocess"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002drestore_002dprocess"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-restore-process</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002drestore_002dprocess"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002drestore_002dprocess-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Restore emacsvox-m-player-process from current buffer.
+Check first if current buffer is in emacsvox-m-player-mode.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dright_002dchannel">
+<h4 class="subsubsection"><span>2.159.2.57 emacsvox-m-player-right-channel<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dright_002dchannel"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dright_002dchannel"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-right-channel</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dright_002dchannel"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dright_002dchannel-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play on right channel.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dscale_002dspeed">
+<h4 class="subsubsection"><span>2.159.2.58 emacsvox-m-player-scale-speed<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dscale_002dspeed"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dscale_002dspeed"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-scale-speed</strong> <var class="def-var-arguments">(factor)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dscale_002dspeed"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dscale_002dspeed-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Scale speed by factor.
+
+(fn FACTOR)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dseek_002dabsolute">
+<h4 class="subsubsection"><span>2.159.2.59 emacsvox-m-player-seek-absolute<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dseek_002dabsolute"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dseek_002dabsolute"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-seek-absolute</strong> <var class="def-var-arguments">(pos)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dseek_002dabsolute"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dseek_002dabsolute-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Seek  to absolute pos in seconds.
+The time position can also be specified as HH:MM:SS.
+
+(fn POS)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dseek_002dpercentage">
+<h4 class="subsubsection"><span>2.159.2.60 emacsvox-m-player-seek-percentage<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dseek_002dpercentage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dseek_002dpercentage"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-seek-percentage</strong> <var class="def-var-arguments">(pos)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dseek_002dpercentage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dseek_002dpercentage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Seek  to absolute pos in percent.
+
+(fn POS)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dseek_002drelative">
+<h4 class="subsubsection"><span>2.159.2.61 emacsvox-m-player-seek-relative<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dseek_002drelative"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dseek_002drelative"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-seek-relative</strong> <var class="def-var-arguments">(offset)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dseek_002drelative"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dseek_002drelative-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Seek  by offset from current position.
+Time offset can be specified as a number of seconds, or as HH:MM:SS.
+
+(fn OFFSET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dset_002dclip_002dend">
+<h4 class="subsubsection"><span>2.159.2.62 emacsvox-m-player-set-clip-end<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dset_002dclip_002dend"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dset_002dclip_002dend"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-set-clip-end</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dset_002dclip_002dend"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dset_002dclip_002dend-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set end of clip mark.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dset_002dclip_002dstart">
+<h4 class="subsubsection"><span>2.159.2.63 emacsvox-m-player-set-clip-start<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dset_002dclip_002dstart"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dset_002dclip_002dstart"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-set-clip-start</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dset_002dclip_002dstart"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dset_002dclip_002dstart-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set start of clip.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dshow_002ddata">
+<h4 class="subsubsection"><span>2.159.2.64 emacsvox-m-player-show-data<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dshow_002ddata"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dshow_002ddata"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-show-data</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dshow_002ddata"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dshow_002ddata-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display metadata after refreshing it if needed.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dshow_002dpos">
+<h4 class="subsubsection"><span>2.159.2.65 emacsvox-m-player-show-pos<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dshow_002dpos"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dshow_002dpos"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-show-pos</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dshow_002dpos"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dshow_002dpos-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display current position in track.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dshuffle">
+<h4 class="subsubsection"><span>2.159.2.66 emacsvox-m-player-shuffle<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dshuffle"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dshuffle"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-shuffle</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dshuffle"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-_003b"></a><span><kbd class="kbd">C-e x ;</kbd><a class="copiable-link" href="#index-C_002de-x-_003b"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dshuffle-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">M-Player with shuffle turned on.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dskip_002dtracks">
+<h4 class="subsubsection"><span>2.159.2.67 emacsvox-m-player-skip-tracks<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dskip_002dtracks"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dskip_002dtracks"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-skip-tracks</strong> <var class="def-var-arguments">(step)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dskip_002dtracks"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dskip_002dtracks-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Skip tracks.
+
+(fn STEP)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dslave_002dcommand">
+<h4 class="subsubsection"><span>2.159.2.68 emacsvox-m-player-slave-command<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dslave_002dcommand"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dslave_002dcommand"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-slave-command</strong> <var class="def-var-arguments">(command)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dslave_002dcommand"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dslave_002dcommand-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Dispatch slave command.
+
+(fn COMMAND)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dslower">
+<h4 class="subsubsection"><span>2.159.2.69 emacsvox-m-player-slower<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dslower"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dslower"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-slower</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dslower"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dslower-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Slow down playback.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dstart_002dtrack">
+<h4 class="subsubsection"><span>2.159.2.70 emacsvox-m-player-start-track<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dstart_002dtrack"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dstart_002dtrack"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-start-track</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dstart_002dtrack"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dstart_002dtrack-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to beginning.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dstore_002dlink">
+<h4 class="subsubsection"><span>2.159.2.71 emacsvox-m-player-store-link<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dstore_002dlink"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dstore_002dlink"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-store-link</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dstore_002dlink"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dstore_002dlink-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Store an org-link to currently playing stream at current position.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dstream_002dinfo">
+<h4 class="subsubsection"><span>2.159.2.72 emacsvox-m-player-stream-info<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dstream_002dinfo"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dstream_002dinfo"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-stream-info</strong> <var class="def-var-arguments">(&amp;optional toggle-cue)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dstream_002dinfo"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dstream_002dinfo-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak and display metadata.
+Interactive prefix arg toggles automatic cueing of ICY info updates.
+
+(fn &amp;optional TOGGLE-CUE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dtoggle_002dextrastereo">
+<h4 class="subsubsection"><span>2.159.2.73 emacsvox-m-player-toggle-extrastereo<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dtoggle_002dextrastereo"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dtoggle_002dextrastereo"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-toggle-extrastereo</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dtoggle_002dextrastereo"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dtoggle_002dextrastereo-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle application of extrastereo filter to all streams.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002durl">
+<h4 class="subsubsection"><span>2.159.2.74 emacsvox-m-player-url<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002durl"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002durl"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-url</strong> <var class="def-var-arguments">(url &amp;optional playlist-p)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002durl"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_002c-u"></a><span><kbd class="kbd">C-, u</kbd><a class="copiable-link" href="#index-C_002d_002c-u"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-a-u"></a><span><kbd class="kbd">C-x @ a u</kbd><a class="copiable-link" href="#index-C_002dx-_0040-a-u"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002durl-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Call emacsvox-m-player on  URL.
+URL fragment specifies optional start position.
+
+(fn URL &amp;optional PLAYLIST-P)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dusing_002dhrtf">
+<h4 class="subsubsection"><span>2.159.2.75 emacsvox-m-player-using-hrtf<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dusing_002dhrtf"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dusing_002dhrtf"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-using-hrtf</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dusing_002dhrtf"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dusing_002dhrtf-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add af resample=48000,hrtf to startup options.
+This will work if the soundcard is set to 48000.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dusing_002dopenal">
+<h4 class="subsubsection"><span>2.159.2.76 emacsvox-m-player-using-openal<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dusing_002dopenal"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dusing_002dopenal"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-using-openal</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dusing_002dopenal"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dusing_002dopenal-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Use openal.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dvolume_002dchange">
+<h4 class="subsubsection"><span>2.159.2.77 emacsvox-m-player-volume-change<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dvolume_002dchange"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dvolume_002dchange"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-volume-change</strong> <var class="def-var-arguments">(value)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dvolume_002dchange"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dvolume_002dchange-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set volume.
+
+(fn VALUE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dvolume_002ddown">
+<h4 class="subsubsection"><span>2.159.2.78 emacsvox-m-player-volume-down<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dvolume_002ddown"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dvolume_002ddown"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-volume-down</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dvolume_002ddown"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dvolume_002ddown-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Volume down.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dvolume_002dset">
+<h4 class="subsubsection"><span>2.159.2.79 emacsvox-m-player-volume-set<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dvolume_002dset"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dvolume_002dset"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-volume-set</strong> <var class="def-var-arguments">(&amp;optional arg)</var><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dvolume_002dset"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dvolume_002dset-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set Volume in steps from 1 to 9.
+
+(fn &amp;optional ARG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dvolume_002dup">
+<h4 class="subsubsection"><span>2.159.2.80 emacsvox-m-player-volume-up<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dvolume_002dup"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dvolume_002dup"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-volume-up</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dvolume_002dup"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dvolume_002dup-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Volume up.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dm_002dplayer_002dwrite_002dclip">
+<h4 class="subsubsection"><span>2.159.2.81 emacsvox-m-player-write-clip<a class="copiable-link" href="#emacsvox_002dm_002dplayer_002dwrite_002dclip"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dm_002dplayer_002dwrite_002dclip"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-m-player-write-clip</strong><a class="copiable-link" href="#index-emacsvox_002dm_002dplayer_002dwrite_002dclip"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dm_002dplayer_002dwrite_002dclip-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Split selected range using SoX
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmultimedia">
+<h4 class="subsubsection"><span>2.159.2.82 emacsvox-multimedia<a class="copiable-link" href="#emacsvox_002dmultimedia"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmultimedia"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-multimedia</strong><a class="copiable-link" href="#index-emacsvox_002dmultimedia"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003b"></a><span><kbd class="kbd">C-e ;</kbd><a class="copiable-link" href="#index-C_002de-_003b"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dmultimedia-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Start or control Emacsvox multimedia player.
+Controls media playback when already playing.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+C-a		emacsvox-amark-browse
+C-l		ladspa
+SPC		emacsvox-m-player-pause
+%		emacsvox-m-player-display-percent
+&rsquo;		emacsvox-m-player-add-loop
+(		emacsvox-m-player-left-channel
+)		emacsvox-m-player-right-channel
++		emacsvox-m-player-volume-up
+,		emacsvox-m-player-backward-10s
+-		emacsvox-m-player-volume-down
+.		emacsvox-m-player-forward-10s
+/		emacsvox-m-player-restore-process
+1 .. 9		emacsvox-m-player-volume-set
+;		emacsvox-m-player-pop-to-player
+&lt;		emacsvox-m-player-backward-1min
+=		emacsvox-m-player-volume-up
+&gt;		emacsvox-m-player-forward-1min
+?		emacsvox-m-player-show-pos
+A		emacsvox-m-player-amark-add
+C		emacsvox-m-player-clear-filters
+E		emacsvox-m-player-add-equalizer
+G		emacsvox-m-player-seek-percentage
+L		emacsvox-m-player-get-length
+M		emacsvox-m-player-show-data
+O		emacsvox-m-player-reset-options
+P		emacsvox-m-player-apply-reverb
+Q		emacsvox-m-player-quit
+R		emacsvox-m-player-edit-reverb
+S		emacsvox-m-player-amark-save
+T		emacsvox-speak-brief-time
+[		emacsvox-m-player-slower
+\		emacsvox-m-player-persist-process
+]		emacsvox-m-player-faster
+a		emacsvox-m-player-add-autopan
+b		emacsvox-m-player-balance-channels
+c		emacsvox-m-player-slave-command
+d		emacsvox-m-player-delete-filter
+e		emacsvox-m-player-eq-preset
+f		emacsvox-m-player-add-filter
+g		emacsvox-m-player-seek-absolute
+h		emacsvox-m-player-from-history
+i		emacsvox-m-player-stream-info
+j		emacsvox-m-player-amark-jump
+k		emacsvox-m-player-quit
+l		emacsvox-m-player-store-link
+m		emacsvox-m-player-mode-line
+n		emacsvox-m-player-next-track
+o		emacsvox-m-player-customize
+p		emacsvox-m-player-previous-track
+r		emacsvox-m-player-seek-relative
+s		emacsvox-m-player-scale-speed
+t		emacsvox-m-player-skip-tracks
+v		emacsvox-m-player-volume-change
+w		emacsvox-m-player-write-clip
+x		emacsvox-m-player-pan
+z		emacsvox-m-player-add-autosat
+{		emacsvox-m-player-half-speed
+}		emacsvox-m-player-double-speed
+DEL		emacsvox-m-player-reset-speed
+&lt;down&gt;		emacsvox-m-player-forward-1min
+&lt;end&gt;		emacsvox-m-player-end-track
+&lt;home&gt;		emacsvox-m-player-start-track
+&lt;left&gt;		emacsvox-m-player-backward-10s
+&lt;next&gt;		emacsvox-m-player-forward-10min
+&lt;prior&gt;		emacsvox-m-player-backward-10min
+&lt;right&gt;		emacsvox-m-player-forward-10s
+&lt;up&gt;		emacsvox-m-player-backward-1min
+
+M-,		emacsvox-m-player-set-clip-start
+M-.		emacsvox-m-player-set-clip-end
+
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dm_002dplayer-Options">
+<h4 class="subsection"><span>2.159.3 emacsvox-m-player Options<a class="copiable-link" href="#emacsvox_002dm_002dplayer-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-81"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-m-player-clips</var><a class="copiable-link" href="#index-User-Option-81"> &para;</a></span></dt>
+<dd><pre class="verbatim">Directory where we store clips.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;~/mp3/clips&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-82"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-m-player-custom-filters</var><a class="copiable-link" href="#index-User-Option-82"> &para;</a></span></dt>
+<dd><pre class="verbatim">Additional filters to apply to streams.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-83"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-media-location-bindings</var><a class="copiable-link" href="#index-User-Option-83"> &para;</a></span></dt>
+<dd><pre class="verbatim">Map  keys  to launch MPlayer on a  directory.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dmagit.html">emacsvox-magit</a>, Previous: <a href="emacsvox_002dlua.html">emacsvox-lua</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

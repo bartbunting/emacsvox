@@ -39,12 +39,12 @@ ul.mark-bullet {list-style-type: disc}
 Next: <a href="Add_002dons.html" accesskey="n" rel="next">Add-ons</a>, Previous: <a href="Intro.html" accesskey="p" rel="prev">Intro</a>, Up: <a href="Web-Browsing.html" accesskey="u" rel="up">Web Browsing</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h4 class="subsection" id="emacs_002dw3-1"><span>11.4.2 emacs-w3<a class="copiable-link" href="#emacs_002dw3-1"> &para;</a></span></h4>
+<h4 class="subsection" id="emacs_002dw3-1"><span>8.4.2 emacs-w3<a class="copiable-link" href="#emacs_002dw3-1"> &para;</a></span></h4>
 
 <p>emacs/w3 is a web browser (now obsolete and replaced by EWW) written completely in emacs lisp.  It has
 some really nice features applicable to the emacsvox community such
 as the ability to navigate tables and support for the w3c&rsquo;s aural
-cascading stylesheets.  
+cascading stylesheets.
 </p>
 <h3 class="heading" id="emacs_002fw3-advantages"><span>emacs/w3 advantages<a class="copiable-link" href="#emacs_002fw3-advantages"> &para;</a></span></h3>
 
@@ -56,7 +56,7 @@ the like.
 </p>
 <p>Another advantage of emacs/w3 is that it is written completely in
 emacs lisp.  With some effort, emacs/w3 is very customizable and quite
-extendable.  
+extendable.
 </p>
 <h3 class="heading" id="emacs_002fw3-disadvantages"><span>emacs/w3 disadvantages<a class="copiable-link" href="#emacs_002fw3-disadvantages"> &para;</a></span></h3>
 
@@ -80,7 +80,7 @@ stops doing anything while rendering a page.  There is a way I have
 found to get around this.  I hit <kbd class="kbd">C-g</kbd>.  I usually wait five to ten
 seconds and then simply quit, using <kbd class="kbd">C-g</kbd>.  Not always, but usually,
 the page has already completed downloading and is being rendered and
-it therefore is not a problem.  
+it therefore is not a problem.
 </p>
 <p>emacs/w3 also has no bookmark functionality.  This can be remedied in
 several ways.  One simple way, mentioned below, is to use the emacs
@@ -89,7 +89,7 @@ is the method used by Dr. Raman, the creator of the original Emacspeak.  See
 See <a class="xref" href="Add_002dons.html#bmk_002dmgr">bmk-mgr</a>, later in this manual, for more information.
 </p>
 <p>History back and next in the browser also seem to be broken but this
-is not generally a problem for me as I never look back. 
+is not generally a problem for me as I never look back.
 </p>
 <h3 class="heading" id="emacs_002fw3-native-functions"><span>emacs/w3 native functions<a class="copiable-link" href="#emacs_002fw3-native-functions"> &para;</a></span></h3>
 
@@ -136,14 +136,14 @@ the table, and at what nesting level the table is.
 <p>The pipe key, is used to read the table column.  As this command seems
 to read the rectangle the column is in, this command is most useful
 when used in a table where there is no column spanning, i.e. all rows
-and columns are uniform.  
+and columns are uniform.
 </p>
 <p>Here is a list of table navigation commands:
 </p>
 <ul class="itemize mark-bullet">
 <li><kbd class="kbd">C-e +</kbd> moves to the beginning of the next table row.
 
-</li><li><kbd class="kbd">C-e -</kbd> moves to the beginning of the previous table row. 
+</li><li><kbd class="kbd">C-e -</kbd> moves to the beginning of the previous table row.
 
 </li><li><kbd class="kbd">C-e &lt;</kbd> moves to the beginning of the table.
 
@@ -195,7 +195,7 @@ case I have it under <samp class="file">/home/rdc/share/emacs/site-lisp/</samp>.
 </p>
 <p>There are two ways to use the imenu facilities: automatically and
 manually.  Since I do not use imenu on every site, I prefer to invoke
-it manually to save the time required to build the index.  
+it manually to save the time required to build the index.
 </p>
 <p>Once things are in place, invoke imenu with the <kbd class="kbd">j</kbd> key.  This will ask
 you for an index position.  Hitting <kbd class="key">TAB</kbd> will give you a list
@@ -212,7 +212,7 @@ It might also be useful to grab the headlines from a page and present
 them in a more concise, readable format.  If using the sort-tables xsl
 transform, there will be a link at the top of the page if there is an
 rss feed available.  See See <a class="xref" href="Add_002dons.html#rss">emacsvox atom and emacsvox rss</a>,
-for more information. 
+for more information.
 </p>
 <p>Google provides many useful tools for web surfers.  The following
 commands are useful to access much google goodness.
@@ -225,7 +225,7 @@ pages are removed from a site like in the case of a government
 conspiracy.  Are we at war with Eurasia or East Asia?
 </p>
 <p>The slash key will search google for pages similar to the current
-page.  
+page.
 </p>
 <p>The command <kbd class="kbd">g</kbd> will do a google search restricted to the site of the
 document.
@@ -243,17 +243,17 @@ transcoded.
 <p><kbd class="kbd">Cap T</kbd> will jump to the first occurrence of the title in the
 document.  Multiple consecutive executions of this command will jump
 to further occurrences.  This command is probably one of the most
-useful timesavers while web browsing.   
+useful timesavers while web browsing.
 </p>
 <p><kbd class="kbd">M-s</kbd> jumps to the &ldquo;submit&rdquo; button for the form you are editing.
 </p>
-<p><kbd class="kbd">M-r</kbd> plays the media stream at point with the default media player. 
+<p><kbd class="kbd">M-r</kbd> plays the media stream at point with the default media player.
 </p>
 <p>The <kbd class="kbd">y</kbd> command will rewrite the url of the url under point.  This is
 useful for those sites you frequent.  Often, sites that have printer
 friendly content have a specific way in which the url is written.  For
 The first time you run this command in a particular buffer you are
-prompted for a pattern to use.  The pattern is in the form of 
+prompted for a pattern to use.  The pattern is in the form of
 </p>
 <p>&lsquo;<samp class="samp">(&quot;from string&quot; &quot;to string&quot;)</samp>&rsquo;
 </p>
@@ -262,12 +262,12 @@ will get an error.  From this point on, until you kill the buffer in
 which you wrote the rule, hitting <kbd class="kbd">y</kbd> on a link will use this rewrite
 rule to visit the page.  If you mistyped the rule, providing a numeric
 argument will allow you to rewrite the rewrite rule.  I love
-alliteration. 
+alliteration.
 </p>
 <p>Saving the best for last, <kbd class="kbd">e</kbd> is the xsl map prefix.  As I mentioned
 in the section on emacs-w3m, xsl transforms are some powerful magic
 that takes a web page and transforms it in some way.  Linearizing
-tables is a good example, and the one I use most often.  
+tables is a good example, and the one I use most often.
 </p>
 <p>The keystroke <kbd class="kbd">e a</kbd> prompts for an xsl transform to apply to the
 current page.  If you know the name of the particular transform you
@@ -302,12 +302,12 @@ streams from the current document.
 </p>
 <p>Closely associated commands are <kbd class="kbd">e r</kbd> and <kbd class="kbd">e Cap R</kbd> which extract the
 media streams from the current page and from the link under point,
-respectively.  
+respectively.
 </p>
 <p>The command <kbd class="kbd">e y</kbd> is another command that is useful for frequented
 sites.  It does the same as the <kbd class="kbd">y</kbd> command above in that it rewrites
 the url at point and follows it.  In addition, it filters the output
-by a particular CSS class.  
+by a particular CSS class.
 </p>
 <p>The command <kbd class="kbd">e e</kbd> does more magic to the url at point.  It processes
 the url using a specific function.  For example, it can be used in
@@ -339,7 +339,7 @@ the filter, giving you everything but the content of the specified tag.
 </p>
 <p>A related command can be invoked with the <kbd class="kbd">e p</kbd> keystroke.  This
 command does the same as the filter above but works on the url under
-point. 
+point.
 </p>
 <h3 class="heading" id="emacs_002fw3-tips-and-tricks"><span>emacs/w3 tips and tricks<a class="copiable-link" href="#emacs_002fw3-tips-and-tricks"> &para;</a></span></h3>
 
@@ -349,7 +349,7 @@ mileage may vary.  Taxes, tags and title are extra.
 </p>
 <p>Also mentioned above is the use of sort-tables or identity as an xsl
 transform to speed up the rendering of pages.  Every little bit
-helps. 
+helps.
 </p>
 <p>Another useful tip is the use of the <kbd class="kbd">k</kbd> key.  This key will place the
 current url in the kill-ring for later yanking.  If a page will not

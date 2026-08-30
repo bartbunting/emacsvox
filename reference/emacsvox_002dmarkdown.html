@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-markdown (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-markdown (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-markdown (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dmaths.html" rel="next" title="emacsvox-maths">
+<link href="emacsvox_002dmarginalia.html" rel="prev" title="emacsvox-marginalia">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dmarkdown">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dmaths.html" accesskey="n" rel="next">emacsvox-maths</a>, Previous: <a href="emacsvox_002dmarginalia.html" accesskey="p" rel="prev">emacsvox-marginalia</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dmarkdown-1"><span>2.164 emacsvox-markdown<a class="copiable-link" href="#emacsvox_002dmarkdown-1"> &para;</a></span></h3>
+
+<p>Speech-enables markdown-mode with smart heading and structure navigation.
+Instead of hearing &quot;three pounds space&quot;, users hear &quot;heading level 3&quot;.
+</p>
+<p>Provides &lsquo;emacsvox-markdown-reading-mode&rsquo;, a minor mode that strips
+markup syntax when reading content, so you hear &quot;car&quot; instead of
+&quot;star star car star star&quot; for **car**.
+</p>
+<p>Reading mode handles: images, links, task lists, code fences, tables,
+footnotes, horizontal rules, HTML comments, and escaped characters.
+</p>
+<p>Keybindings (active in markdown-mode):
+- C-c C-s h: Speak current heading with level
+- C-c C-s r: Toggle reading mode
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dMarkdown-Commands" accesskey="1">Emacsvox-Markdown Commands</a></li>
+<li><a href="#emacsvox_002dmarkdown-Options" accesskey="2">emacsvox-markdown Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dMarkdown-Commands">
+<h4 class="subsection"><span>2.164.1 Emacsvox-Markdown Commands<a class="copiable-link" href="#Emacsvox_002dMarkdown-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dmarkdown_002dreading_002dmode" accesskey="1">emacsvox-markdown-reading-mode</a></li>
+<li><a href="#emacsvox_002dmarkdown_002dspeak_002dheading" accesskey="2">emacsvox-markdown-speak-heading</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dmarkdown_002dreading_002dmode">
+<h4 class="subsubsection"><span>2.164.1.1 emacsvox-markdown-reading-mode<a class="copiable-link" href="#emacsvox_002dmarkdown_002dreading_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmarkdown_002dreading_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-markdown-reading-mode</strong> <var class="def-var-arguments">(&amp;optional arg)</var><a class="copiable-link" href="#index-emacsvox_002dmarkdown_002dreading_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmarkdown_002dreading_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle reading mode that strips markup syntax from speech.
+ARG enables the mode when positive, disables it otherwise, and toggles it
+when it is the symbol ‘toggle’.
+When enabled, voice personalities still indicate emphasis, headings, etc.,
+but you won’t hear the literal markup characters.
+
+(fn &amp;optional ARG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dmarkdown_002dspeak_002dheading">
+<h4 class="subsubsection"><span>2.164.1.2 emacsvox-markdown-speak-heading<a class="copiable-link" href="#emacsvox_002dmarkdown_002dspeak_002dheading"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dmarkdown_002dspeak_002dheading"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-markdown-speak-heading</strong><a class="copiable-link" href="#index-emacsvox_002dmarkdown_002dspeak_002dheading"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dmarkdown_002dspeak_002dheading-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current heading with level information.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dmarkdown-Options">
+<h4 class="subsection"><span>2.164.2 emacsvox-markdown Options<a class="copiable-link" href="#emacsvox_002dmarkdown-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-84"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-markdown-auto-reading-mode</var><a class="copiable-link" href="#index-User-Option-84"> &para;</a></span></dt>
+<dd><pre class="verbatim">When non-nil, automatically enable reading mode in markdown buffers.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dmaths.html">emacsvox-maths</a>, Previous: <a href="emacsvox_002dmarginalia.html">emacsvox-marginalia</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>tts-speak (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="tts-speak (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="tts-speak (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="voice_002ddefs.html" rel="next" title="voice-defs">
+<link href="tetris.html" rel="prev" title="tetris">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="tts_002dspeak">
+<div class="nav-panel">
+<p>
+Next: <a href="voice_002ddefs.html" accesskey="n" rel="next">voice-defs</a>, Previous: <a href="tetris.html" accesskey="p" rel="prev">tetris</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="tts_002dspeak-1"><span>2.270 tts-speak<a class="copiable-link" href="#tts_002dspeak-1"> &para;</a></span></h3>
+
+<p>This module defines the generic TTS interface.
+</p>
+<ul class="mini-toc">
+<li><a href="#Tts_002dSpeak-Commands" accesskey="1">Tts-Speak Commands</a></li>
+<li><a href="#tts_002dspeak-Options" accesskey="2">tts-speak Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Tts_002dSpeak-Commands">
+<h4 class="subsection"><span>2.270.1 Tts-Speak Commands<a class="copiable-link" href="#Tts_002dSpeak-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dset_002dcapitalization_002dpresentation" accesskey="1">emacsvox-set-capitalization-presentation</a></li>
+<li><a href="#tts_002dadd_002dcleanup_002dpattern" accesskey="2">tts-add-cleanup-pattern</a></li>
+<li><a href="#tts_002dcloud" accesskey="3">tts-cloud</a></li>
+<li><a href="#tts_002ddefine_002dvoice_002dfrom_002dacss" accesskey="4">tts-define-voice-from-acss</a></li>
+<li><a href="#tts_002dlocal_002dserver" accesskey="5">tts-local-server</a></li>
+<li><a href="#tts_002dnotify_002dinitialize" accesskey="6">tts-notify-initialize</a></li>
+<li><a href="#tts_002dnotify_002dstop" accesskey="7">tts-notify-stop</a></li>
+<li><a href="#tts_002drate_002dadjust" accesskey="8">tts-rate-adjust</a></li>
+<li><a href="#tts_002dreset_002dpunctuation_002dmode" accesskey="9">tts-reset-punctuation-mode</a></li>
+<li><a href="#tts_002dreset_002dstate">tts-reset-state</a></li>
+<li><a href="#tts_002drestart">tts-restart</a></li>
+<li><a href="#tts_002dselect_002dserver">tts-select-server</a></li>
+<li><a href="#tts_002dset_002dcharacter_002dscale">tts-set-character-scale</a></li>
+<li><a href="#tts_002dset_002dchunk_002dseparator_002dsyntax">tts-set-chunk-separator-syntax</a></li>
+<li><a href="#tts_002dset_002dlanguage">tts-set-language</a></li>
+<li><a href="#tts_002dset_002dnext_002dlanguage">tts-set-next-language</a></li>
+<li><a href="#tts_002dset_002dpredefined_002drate">tts-set-predefined-rate</a></li>
+<li><a href="#tts_002dset_002dpreferred_002dlanguage">tts-set-preferred-language</a></li>
+<li><a href="#tts_002dset_002dprevious_002dlanguage">tts-set-previous-language</a></li>
+<li><a href="#tts_002dset_002dpunctuations">tts-set-punctuations</a></li>
+<li><a href="#tts_002dset_002dpunctuations_002dto_002dall">tts-set-punctuations-to-all</a></li>
+<li><a href="#tts_002dset_002dpunctuations_002dto_002dsome">tts-set-punctuations-to-some</a></li>
+<li><a href="#tts_002dset_002drate">tts-set-rate</a></li>
+<li><a href="#tts_002dspeak_002dversion">tts-speak-version</a></li>
+<li><a href="#tts_002dstop">tts-stop</a></li>
+<li><a href="#tts_002dtoggle_002dcaps">tts-toggle-caps</a></li>
+<li><a href="#tts_002dtoggle_002dpunctuation_002dmode">tts-toggle-punctuation-mode</a></li>
+<li><a href="#tts_002dtoggle_002dquiet">tts-toggle-quiet</a></li>
+<li><a href="#tts_002dtoggle_002dspeak_002dnonprinting_002dchars">tts-toggle-speak-nonprinting-chars</a></li>
+<li><a href="#tts_002dtoggle_002dsplit_002dcaps">tts-toggle-split-caps</a></li>
+<li><a href="#tts_002dtoggle_002dsplitting_002don_002dwhite_002dspace">tts-toggle-splitting-on-white-space</a></li>
+<li><a href="#tts_002dtoggle_002dstrip_002doctals">tts-toggle-strip-octals</a></li>
+<li><a href="#tts_002dunicode_002dcustomize_002dchar">tts-unicode-customize-char</a></li>
+<li><a href="#tts_002dunicode_002duncustomize_002dchar">tts-unicode-uncustomize-char</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dset_002dcapitalization_002dpresentation">
+<h4 class="subsubsection"><span>2.270.1.1 emacsvox-set-capitalization-presentation<a class="copiable-link" href="#emacsvox_002dset_002dcapitalization_002dpresentation"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dset_002dcapitalization_002dpresentation"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-set-capitalization-presentation</strong> <var class="def-var-arguments">(presentation &amp;optional global)</var><a class="copiable-link" href="#index-emacsvox_002dset_002dcapitalization_002dpresentation"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-C"></a><span><kbd class="kbd">C-e d C</kbd><a class="copiable-link" href="#index-C_002de-d-C"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dset_002dcapitalization_002dpresentation-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select capitalization PRESENTATION and preview representative text.
+
+Set the option buffer-locally by default.  With interactive prefix GLOBAL,
+also set the global default and use it in the current buffer.
+
+(fn PRESENTATION &amp;optional GLOBAL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dadd_002dcleanup_002dpattern">
+<h4 class="subsubsection"><span>2.270.1.2 tts-add-cleanup-pattern<a class="copiable-link" href="#tts_002dadd_002dcleanup_002dpattern"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dadd_002dcleanup_002dpattern"><span class="category-def">Command: </span><span><strong class="def-name">tts-add-cleanup-pattern</strong> <var class="def-var-arguments">(&amp;optional delete)</var><a class="copiable-link" href="#index-tts_002dadd_002dcleanup_002dpattern"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-a"></a><span><kbd class="kbd">C-e d a</kbd><a class="copiable-link" href="#index-C_002de-d-a"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dadd_002dcleanup_002dpattern-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add this pattern to the list of repeating patterns.
+  Optional interactive prefix arg deletes
+this pattern if previously added.
+
+(fn &amp;optional DELETE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dcloud">
+<h4 class="subsubsection"><span>2.270.1.3 tts-cloud<a class="copiable-link" href="#tts_002dcloud"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dcloud"><span class="category-def">Command: </span><span><strong class="def-name">tts-cloud</strong><a class="copiable-link" href="#index-tts_002dcloud"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-C_002dc"></a><span><kbd class="kbd">C-e d C-c</kbd><a class="copiable-link" href="#index-C_002de-d-C_002dc"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dcloud-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select  Cloud TTS server.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002ddefine_002dvoice_002dfrom_002dacss">
+<h4 class="subsubsection"><span>2.270.1.4 tts-define-voice-from-acss<a class="copiable-link" href="#tts_002ddefine_002dvoice_002dfrom_002dacss"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002ddefine_002dvoice_002dfrom_002dacss"><span class="category-def">Command: </span><span><strong class="def-name">tts-define-voice-from-acss</strong> <var class="def-var-arguments">(&amp;rest arguments)</var><a class="copiable-link" href="#index-tts_002ddefine_002dvoice_002dfrom_002dacss"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-tts_002ddefine_002dvoice_002dfrom_002dacss-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Ignore ARGUMENTS, do nothing, and return nil.
+This function accepts any number of arguments in ARGUMENTS.
+Also see ‘always’.
+
+(fn &amp;rest ARGUMENTS)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dlocal_002dserver">
+<h4 class="subsubsection"><span>2.270.1.5 tts-local-server<a class="copiable-link" href="#tts_002dlocal_002dserver"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dlocal_002dserver"><span class="category-def">Command: </span><span><strong class="def-name">tts-local-server</strong> <var class="def-var-arguments">(program &amp;optional prompt-port)</var><a class="copiable-link" href="#index-tts_002dlocal_002dserver"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-L"></a><span><kbd class="kbd">C-e d L</kbd><a class="copiable-link" href="#index-C_002de-d-L"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dlocal_002dserver-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select and start an local speech server interactively. Local server
+lets Emacsvox on a remote host connect back via SSH port forwarding
+for instance. Argument PROGRAM specifies the speech server
+program. Port defaults to tts-local-server-port
+
+(fn PROGRAM &amp;optional PROMPT-PORT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dnotify_002dinitialize">
+<h4 class="subsubsection"><span>2.270.1.6 tts-notify-initialize<a class="copiable-link" href="#tts_002dnotify_002dinitialize"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dnotify_002dinitialize"><span class="category-def">Command: </span><span><strong class="def-name">tts-notify-initialize</strong><a class="copiable-link" href="#index-tts_002dnotify_002dinitialize"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-C_002dn"></a><span><kbd class="kbd">C-e d C-n</kbd><a class="copiable-link" href="#index-C_002de-d-C_002dn"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dnotify_002dinitialize-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Initialize a separate notification TTS process when configured.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dnotify_002dstop">
+<h4 class="subsubsection"><span>2.270.1.7 tts-notify-stop<a class="copiable-link" href="#tts_002dnotify_002dstop"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dnotify_002dstop"><span class="category-def">Command: </span><span><strong class="def-name">tts-notify-stop</strong><a class="copiable-link" href="#index-tts_002dnotify_002dstop"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-_002e"></a><span><kbd class="kbd">C-e d .</kbd><a class="copiable-link" href="#index-C_002de-d-_002e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dnotify_002dstop-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Stop  speech on notification stream.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002drate_002dadjust">
+<h4 class="subsubsection"><span>2.270.1.8 tts-rate-adjust<a class="copiable-link" href="#tts_002drate_002dadjust"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002drate_002dadjust"><span class="category-def">Command: </span><span><strong class="def-name">tts-rate-adjust</strong><a class="copiable-link" href="#index-tts_002drate_002dadjust"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-_002d"></a><span><kbd class="kbd">C-e d -</kbd><a class="copiable-link" href="#index-C_002de-d-_002d"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-_002b"></a><span><kbd class="kbd">C-e d +</kbd><a class="copiable-link" href="#index-C_002de-d-_002b"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-_003d"></a><span><kbd class="kbd">C-e d =</kbd><a class="copiable-link" href="#index-C_002de-d-_003d"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002drate_002dadjust-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Adjust speech rate in current buffer, inspired by
+  text-scale-adjust.   Invoke this command via C-e d =/+ or
+C-impel-d -. Pressing =,+, or - immediately continues to adjust
+the speech rate.  Call when on a non-blank line to preview the effectt
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dreset_002dpunctuation_002dmode">
+<h4 class="subsubsection"><span>2.270.1.9 tts-reset-punctuation-mode<a class="copiable-link" href="#tts_002dreset_002dpunctuation_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dreset_002dpunctuation_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">tts-reset-punctuation-mode</strong><a class="copiable-link" href="#index-tts_002dreset_002dpunctuation_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-tts_002dreset_002dpunctuation_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Clear the buffer override and restore automatic punctuation policy.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dreset_002dstate">
+<h4 class="subsubsection"><span>2.270.1.10 tts-reset-state<a class="copiable-link" href="#tts_002dreset_002dstate"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dreset_002dstate"><span class="category-def">Command: </span><span><strong class="def-name">tts-reset-state</strong><a class="copiable-link" href="#index-tts_002dreset_002dstate"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-R"></a><span><kbd class="kbd">C-e d R</kbd><a class="copiable-link" href="#index-C_002de-d-R"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dreset_002dstate-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Reset TTS engine.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002drestart">
+<h4 class="subsubsection"><span>2.270.1.11 tts-restart<a class="copiable-link" href="#tts_002drestart"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002drestart"><span class="category-def">Command: </span><span><strong class="def-name">tts-restart</strong><a class="copiable-link" href="#index-tts_002drestart"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002ds"></a><span><kbd class="kbd">C-e C-s</kbd><a class="copiable-link" href="#index-C_002de-C_002ds"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002drestart-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Restart TTS server.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dselect_002dserver">
+<h4 class="subsubsection"><span>2.270.1.12 tts-select-server<a class="copiable-link" href="#tts_002dselect_002dserver"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dselect_002dserver"><span class="category-def">Command: </span><span><strong class="def-name">tts-select-server</strong> <var class="def-var-arguments">(program)</var><a class="copiable-link" href="#index-tts_002dselect_002dserver"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-d"></a><span><kbd class="kbd">C-e d d</kbd><a class="copiable-link" href="#index-C_002de-d-d"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dselect_002dserver-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select  speech server ‘program’.
+
+This function has :filter-args advice: ‘emacsvox-windows-speech&ndash;resolve-server-arguments’.
+
+(fn PROGRAM)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002dcharacter_002dscale">
+<h4 class="subsubsection"><span>2.270.1.13 tts-set-character-scale<a class="copiable-link" href="#tts_002dset_002dcharacter_002dscale"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002dcharacter_002dscale"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-character-scale</strong> <var class="def-var-arguments">(factor &amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dset_002dcharacter_002dscale"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-f"></a><span><kbd class="kbd">C-e d f</kbd><a class="copiable-link" href="#index-C_002de-d-f"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dset_002dcharacter_002dscale-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set character scale FACTOR for   speech rate.
+Speech rate is scaled by this factor when speaking characters.
+Not presently used by either Dectalk or Viavoice TTS.
+Interactive PREFIX arg means set the global default value, and
+then set the current local value to the result.
+
+(fn FACTOR &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002dchunk_002dseparator_002dsyntax">
+<h4 class="subsubsection"><span>2.270.1.14 tts-set-chunk-separator-syntax<a class="copiable-link" href="#tts_002dset_002dchunk_002dseparator_002dsyntax"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002dchunk_002dseparator_002dsyntax"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-chunk-separator-syntax</strong> <var class="def-var-arguments">(s)</var><a class="copiable-link" href="#index-tts_002dset_002dchunk_002dseparator_002dsyntax"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-C_002dj"></a><span><kbd class="kbd">C-e d C-j</kbd><a class="copiable-link" href="#index-C_002de-d-C_002dj"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dset_002dchunk_002dseparator_002dsyntax-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Interactively set how text is split in chunks.
+Argument S specifies the syntax class.
+
+(fn S)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002dlanguage">
+<h4 class="subsubsection"><span>2.270.1.15 tts-set-language<a class="copiable-link" href="#tts_002dset_002dlanguage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002dlanguage"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-language</strong> <var class="def-var-arguments">(lang)</var><a class="copiable-link" href="#index-tts_002dset_002dlanguage"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-S"></a><span><kbd class="kbd">C-e d S</kbd><a class="copiable-link" href="#index-C_002de-d-S"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dset_002dlanguage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set language. If your server supports it, also set the synthesis
+ voice, using the syntax language:voice , where language can be
+ omitted.  Adapters with logical-voice language routing reject this
+ legacy global operation with an actionable error.
+
+(fn LANG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002dnext_002dlanguage">
+<h4 class="subsubsection"><span>2.270.1.16 tts-set-next-language<a class="copiable-link" href="#tts_002dset_002dnext_002dlanguage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002dnext_002dlanguage"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-next-language</strong><a class="copiable-link" href="#index-tts_002dset_002dnext_002dlanguage"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-N"></a><span><kbd class="kbd">C-e d N</kbd><a class="copiable-link" href="#index-C_002de-d-N"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dset_002dnext_002dlanguage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Switch to next legacy language.
+Signal a user error when logical voices own language routing.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002dpredefined_002drate">
+<h4 class="subsubsection"><span>2.270.1.17 tts-set-predefined-rate<a class="copiable-link" href="#tts_002dset_002dpredefined_002drate"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002dpredefined_002drate"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-predefined-rate</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dset_002dpredefined_002drate"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-9"></a><span><kbd class="kbd">C-e d 9</kbd><a class="copiable-link" href="#index-C_002de-d-9"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-8"></a><span><kbd class="kbd">C-e d 8</kbd><a class="copiable-link" href="#index-C_002de-d-8"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-7"></a><span><kbd class="kbd">C-e d 7</kbd><a class="copiable-link" href="#index-C_002de-d-7"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-6"></a><span><kbd class="kbd">C-e d 6</kbd><a class="copiable-link" href="#index-C_002de-d-6"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-5"></a><span><kbd class="kbd">C-e d 5</kbd><a class="copiable-link" href="#index-C_002de-d-5"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-4"></a><span><kbd class="kbd">C-e d 4</kbd><a class="copiable-link" href="#index-C_002de-d-4"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-3"></a><span><kbd class="kbd">C-e d 3</kbd><a class="copiable-link" href="#index-C_002de-d-3"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-2"></a><span><kbd class="kbd">C-e d 2</kbd><a class="copiable-link" href="#index-C_002de-d-2"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-1"></a><span><kbd class="kbd">C-e d 1</kbd><a class="copiable-link" href="#index-C_002de-d-1"> &para;</a></span></dt>
+<dt><a id="index-C_002de-d-0"></a><span><kbd class="kbd">C-e d 0</kbd><a class="copiable-link" href="#index-C_002de-d-0"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dset_002dpredefined_002drate-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set speech rate to one of nine predefined levels.
+Interactive PREFIX arg says to set the rate globally.
+Formula used is:
+rate = tts-speech-rate-base + tts-speech-rate-step * level.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002dpreferred_002dlanguage">
+<h4 class="subsubsection"><span>2.270.1.18 tts-set-preferred-language<a class="copiable-link" href="#tts_002dset_002dpreferred_002dlanguage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002dpreferred_002dlanguage"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-preferred-language</strong> <var class="def-var-arguments">(alias lang)</var><a class="copiable-link" href="#index-tts_002dset_002dpreferred_002dlanguage"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-tts_002dset_002dpreferred_002dlanguage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set legacy language ALIAS to LANG.
+Signal a user error when logical voices own language routing.
+
+(fn ALIAS LANG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002dprevious_002dlanguage">
+<h4 class="subsubsection"><span>2.270.1.19 tts-set-previous-language<a class="copiable-link" href="#tts_002dset_002dprevious_002dlanguage"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002dprevious_002dlanguage"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-previous-language</strong><a class="copiable-link" href="#index-tts_002dset_002dprevious_002dlanguage"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-P"></a><span><kbd class="kbd">C-e d P</kbd><a class="copiable-link" href="#index-C_002de-d-P"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dset_002dprevious_002dlanguage-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Switch to previous legacy language.
+Signal a user error when logical voices own language routing.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002dpunctuations">
+<h4 class="subsubsection"><span>2.270.1.20 tts-set-punctuations<a class="copiable-link" href="#tts_002dset_002dpunctuations"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002dpunctuations"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-punctuations</strong> <var class="def-var-arguments">(mode &amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dset_002dpunctuations"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-p"></a><span><kbd class="kbd">C-e d p</kbd><a class="copiable-link" href="#index-C_002de-d-p"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dset_002dpunctuations-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set punctuation mode to MODE.
+Possible values are ‘some’, ‘all’, or ‘none’.
+Interactive PREFIX arg means set   the global default value, and then set the
+current local  value to the result.
+
+(fn MODE &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002dpunctuations_002dto_002dall">
+<h4 class="subsubsection"><span>2.270.1.21 tts-set-punctuations-to-all<a class="copiable-link" href="#tts_002dset_002dpunctuations_002dto_002dall"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002dpunctuations_002dto_002dall"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-punctuations-to-all</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dset_002dpunctuations_002dto_002dall"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-tts_002dset_002dpunctuations_002dto_002dall-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set punctuation  mode to all.
+Interactive PREFIX arg sets punctuation mode globally.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002dpunctuations_002dto_002dsome">
+<h4 class="subsubsection"><span>2.270.1.22 tts-set-punctuations-to-some<a class="copiable-link" href="#tts_002dset_002dpunctuations_002dto_002dsome"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002dpunctuations_002dto_002dsome"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-punctuations-to-some</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dset_002dpunctuations_002dto_002dsome"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-tts_002dset_002dpunctuations_002dto_002dsome-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set punctuation  mode to some.
+Interactive PREFIX arg sets punctuation mode globally.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dset_002drate">
+<h4 class="subsubsection"><span>2.270.1.23 tts-set-rate<a class="copiable-link" href="#tts_002dset_002drate"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dset_002drate"><span class="category-def">Command: </span><span><strong class="def-name">tts-set-rate</strong> <var class="def-var-arguments">(rate &amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dset_002drate"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-r"></a><span><kbd class="kbd">C-e d r</kbd><a class="copiable-link" href="#index-C_002de-d-r"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dset_002drate-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set speaking RATE.
+Interactive PREFIX arg means set   the global default value, and then set the
+current local  value to the result.
+
+(fn RATE &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dspeak_002dversion">
+<h4 class="subsubsection"><span>2.270.1.24 tts-speak-version<a class="copiable-link" href="#tts_002dspeak_002dversion"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dspeak_002dversion"><span class="category-def">Command: </span><span><strong class="def-name">tts-speak-version</strong><a class="copiable-link" href="#index-tts_002dspeak_002dversion"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-V"></a><span><kbd class="kbd">C-e d V</kbd><a class="copiable-link" href="#index-C_002de-d-V"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dspeak_002dversion-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak version.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dstop">
+<h4 class="subsubsection"><span>2.270.1.25 tts-stop<a class="copiable-link" href="#tts_002dstop"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dstop"><span class="category-def">Command: </span><span><strong class="def-name">tts-stop</strong> <var class="def-var-arguments">(&amp;optional all)</var><a class="copiable-link" href="#index-tts_002dstop"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-s"></a><span><kbd class="kbd">C-e s</kbd><a class="copiable-link" href="#index-C_002de-s"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dstop-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Stop speech.  Optional arg ‘all’ or interactive call silences
+  notification stream as well.
+
+(fn &amp;optional ALL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dtoggle_002dcaps">
+<h4 class="subsubsection"><span>2.270.1.26 tts-toggle-caps<a class="copiable-link" href="#tts_002dtoggle_002dcaps"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dtoggle_002dcaps"><span class="category-def">Command: </span><span><strong class="def-name">tts-toggle-caps</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dtoggle_002dcaps"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-c"></a><span><kbd class="kbd">C-e d c</kbd><a class="copiable-link" href="#index-C_002de-d-c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dtoggle_002dcaps-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle tts-caps.
+Interactive PREFIX arg means toggle the global default
+value, and then set the current local value to the result.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dtoggle_002dpunctuation_002dmode">
+<h4 class="subsubsection"><span>2.270.1.27 tts-toggle-punctuation-mode<a class="copiable-link" href="#tts_002dtoggle_002dpunctuation_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dtoggle_002dpunctuation_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">tts-toggle-punctuation-mode</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dtoggle_002dpunctuation_002dmode"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-_002c"></a><span><kbd class="kbd">C-e d ,</kbd><a class="copiable-link" href="#index-C_002de-d-_002c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dtoggle_002dpunctuation_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle punctuation mode between &quot;some&quot; and &quot;all&quot;.
+Interactive PREFIX arg makes the new setting global.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dtoggle_002dquiet">
+<h4 class="subsubsection"><span>2.270.1.28 tts-toggle-quiet<a class="copiable-link" href="#tts_002dtoggle_002dquiet"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dtoggle_002dquiet"><span class="category-def">Command: </span><span><strong class="def-name">tts-toggle-quiet</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dtoggle_002dquiet"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-q"></a><span><kbd class="kbd">C-e d q</kbd><a class="copiable-link" href="#index-C_002de-d-q"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dtoggle_002dquiet-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggles state of  tts-quiet.
+Turning on this switch silences speech.  Optional interactive
+prefix arg causes this setting to become global.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dtoggle_002dspeak_002dnonprinting_002dchars">
+<h4 class="subsubsection"><span>2.270.1.29 tts-toggle-speak-nonprinting-chars<a class="copiable-link" href="#tts_002dtoggle_002dspeak_002dnonprinting_002dchars"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dtoggle_002dspeak_002dnonprinting_002dchars"><span class="category-def">Command: </span><span><strong class="def-name">tts-toggle-speak-nonprinting-chars</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dtoggle_002dspeak_002dnonprinting_002dchars"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-n"></a><span><kbd class="kbd">C-e d n</kbd><a class="copiable-link" href="#index-C_002de-d-n"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dtoggle_002dspeak_002dnonprinting_002dchars-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle speak-nonprinting-chars.
+Interactive PREFIX arg means toggle the global default
+value, and then set the current local value to the result.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dtoggle_002dsplit_002dcaps">
+<h4 class="subsubsection"><span>2.270.1.30 tts-toggle-split-caps<a class="copiable-link" href="#tts_002dtoggle_002dsplit_002dcaps"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dtoggle_002dsplit_002dcaps"><span class="category-def">Command: </span><span><strong class="def-name">tts-toggle-split-caps</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dtoggle_002dsplit_002dcaps"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-s"></a><span><kbd class="kbd">C-e d s</kbd><a class="copiable-link" href="#index-C_002de-d-s"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dtoggle_002dsplit_002dcaps-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle split caps mode.
+Split caps mode is useful when reading Hungarian notation in
+program source code.  Interactive PREFIX arg means toggle the
+global default value, and then set the current local value to the
+result.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dtoggle_002dsplitting_002don_002dwhite_002dspace">
+<h4 class="subsubsection"><span>2.270.1.31 tts-toggle-splitting-on-white-space<a class="copiable-link" href="#tts_002dtoggle_002dsplitting_002don_002dwhite_002dspace"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dtoggle_002dsplitting_002don_002dwhite_002dspace"><span class="category-def">Command: </span><span><strong class="def-name">tts-toggle-splitting-on-white-space</strong><a class="copiable-link" href="#index-tts_002dtoggle_002dsplitting_002don_002dwhite_002dspace"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-SPC"></a><span><kbd class="kbd">C-e d SPC</kbd><a class="copiable-link" href="#index-C_002de-d-SPC"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dtoggle_002dsplitting_002don_002dwhite_002dspace-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle splitting of speech on white space.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dtoggle_002dstrip_002doctals">
+<h4 class="subsubsection"><span>2.270.1.32 tts-toggle-strip-octals<a class="copiable-link" href="#tts_002dtoggle_002dstrip_002doctals"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dtoggle_002dstrip_002doctals"><span class="category-def">Command: </span><span><strong class="def-name">tts-toggle-strip-octals</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-tts_002dtoggle_002dstrip_002doctals"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-o"></a><span><kbd class="kbd">C-e d o</kbd><a class="copiable-link" href="#index-C_002de-d-o"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-tts_002dtoggle_002dstrip_002doctals-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle stripping of octals.
+Interactive prefix arg means
+ toggle the global default value, and then set the current local
+value to the result.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dunicode_002dcustomize_002dchar">
+<h4 class="subsubsection"><span>2.270.1.33 tts-unicode-customize-char<a class="copiable-link" href="#tts_002dunicode_002dcustomize_002dchar"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dunicode_002dcustomize_002dchar"><span class="category-def">Command: </span><span><strong class="def-name">tts-unicode-customize-char</strong> <var class="def-var-arguments">(char replacement)</var><a class="copiable-link" href="#index-tts_002dunicode_002dcustomize_002dchar"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-tts_002dunicode_002dcustomize_002dchar-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add a custom replacement string for CHAR.
+
+When called interactively, CHAR defaults to the character after point.
+
+(fn CHAR REPLACEMENT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="tts_002dunicode_002duncustomize_002dchar">
+<h4 class="subsubsection"><span>2.270.1.34 tts-unicode-uncustomize-char<a class="copiable-link" href="#tts_002dunicode_002duncustomize_002dchar"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-tts_002dunicode_002duncustomize_002dchar"><span class="category-def">Command: </span><span><strong class="def-name">tts-unicode-uncustomize-char</strong> <var class="def-var-arguments">(char)</var><a class="copiable-link" href="#index-tts_002dunicode_002duncustomize_002dchar"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-tts_002dunicode_002duncustomize_002dchar-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Delete custom replacement for CHAR.
+
+When called interactively, CHAR defaults to the character after point.
+
+(fn CHAR)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="tts_002dspeak-Options">
+<h4 class="subsection"><span>2.270.2 tts-speak Options<a class="copiable-link" href="#tts_002dspeak-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-157"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-capitalization-presentation</var><a class="copiable-link" href="#index-User-Option-157"> &para;</a></span></dt>
+<dd><pre class="verbatim">How enabled capitalization indication is presented.
+
+‘spoken’ says &quot;cap&quot; or &quot;all caps&quot;.  ‘tone’ places a short tone at the
+capitalized boundary, and ‘spoken-tone’ combines both presentations.  ‘custom’
+publishes capitalization facts for personal aural rules without adding a
+built-in presentation.  ‘none’ suppresses capitalization presentation while
+leaving ‘tts-caps’ enabled.  Camel-case splitting remains controlled
+independently by ‘tts-split-caps’.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+tone
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-158"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">tts-cloud-server</var><a class="copiable-link" href="#index-User-Option-158"> &para;</a></span></dt>
+<dd><pre class="verbatim">Set this to your preferred cloud TTS server.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;cloud-outloud&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-159"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">tts-local-engine</var><a class="copiable-link" href="#index-User-Option-159"> &para;</a></span></dt>
+<dd><pre class="verbatim">Engine we use  for our local TTS  server.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;outloud&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-160"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">tts-notification-device</var><a class="copiable-link" href="#index-User-Option-160"> &para;</a></span></dt>
+<dd><pre class="verbatim">Virtual sound device to use for notifications stream.
+Set to nil to disable a separate Notification stream.
+If you set the device here, make sure it exists first.
+For SwiftMac, set this to ‘left’ or ‘right’.  For Omnivox, ‘left’,
+‘right’, or ‘both’ starts a separately routed second process; nil keeps
+notifications on the main process and its route.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-161"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">tts-punctuation-mode-policy-alist</var><a class="copiable-link" href="#index-User-Option-161"> &para;</a></span></dt>
+<dd><pre class="verbatim">Automatic punctuation modes, ordered from specific to general.
+
+Each entry maps a major mode to ‘all’, ‘some’, or ‘none’.  The first entry
+for which ‘derived-mode-p’ succeeds supplies the buffer policy.  A buffer
+override set through ‘tts-set-punctuations’ takes precedence.  When no entry
+matches, the default value of ‘tts-punctuation-mode’ is used.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+((agent-shell-mode . all)
+ (2048-mode . some)
+ (eat-mode . all)
+ (eshell-mode . all)
+ (eww-mode . some)
+ (Man-mode . all)
+ (speedbar-mode . all)
+ (sudoku-mode . some)
+ (term-mode . all)
+ (vterm-mode . all)
+ (org-mode . some)
+ (markdown-mode . some)
+ (muse-mode . some)
+ (LaTeX-mode . some)
+ (TeX-mode . some)
+ (texinfo-mode . some)
+ (conf-unix-mode . all)
+ (html-helper-mode . all)
+ (sgml-mode . all)
+ (xml-mode . all)
+ (nxml-mode . all)
+ (xsl-mode . all)
+ (bibtex-mode . all)
+ (prog-mode
+  . all)
+ (comint-mode . all)
+ (text-mode . some))
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-162"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">tts-speech-rate-base</var><a class="copiable-link" href="#index-User-Option-162"> &para;</a></span></dt>
+<dd><pre class="verbatim">Value of lowest speech rate.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+50
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-163"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">tts-speech-rate-step</var><a class="copiable-link" href="#index-User-Option-163"> &para;</a></span></dt>
+<dd><pre class="verbatim">Speech rate step used by ‘tts-set-predefined-rate’.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+8
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-164"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">tts-unicode-character-replacement-alist</var><a class="copiable-link" href="#index-User-Option-164"> &para;</a></span></dt>
+<dd><pre class="verbatim">Replacements for  characters.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+((150 . &quot;-&quot;)
+ (9473 . &quot;-&quot;)
+ (9475 . &quot;|&quot;)
+ (176 . &quot; degrees &quot;)
+ (8451 . &quot;Degree C&quot;)
+ (8457 . &quot;Degree F &quot;)
+ (8220 . &quot;\&quot;&quot;)
+ (8221 . &quot;\&quot;&quot;)
+ (8902 . &quot;*&quot;)
+ (173 . &quot;-&quot;)
+ (8216 . &quot;`&quot;)
+ (8217 . &quot;'&quot;)
+ (8208 . &quot; dash &quot;)
+ (8211 . &quot; dash dash  &quot;)
+ (8212 . &quot; em dash  &quot;)
+ (8202 . &quot; &quot;)
+ (65279 . &quot; &quot;)
+ (8204 . &quot;&quot;)
+ (8203 . &quot; &quot;)
+ (8201 . &quot; &quot;)
+ (8213 . &quot;----&quot;)
+ (8214 . &quot;||&quot;)
+ (8230 . &quot;...&quot;)
+ (8226 . &quot; bullet &quot;)
+ (149 . &quot; ... &quot;)
+ (8482 . &quot;TM&quot;)
+ (64256 . &quot;ff&quot;)
+ (64257 . &quot;fi&quot;)
+ (64258 . &quot;fl&quot;)
+ (64259 . &quot;ffi&quot;)
+ (64260 . &quot;Ffl&quot;))
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-165"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">tts-unicode-name-transformation-rules-alist</var><a class="copiable-link" href="#index-User-Option-165"> &para;</a></span></dt>
+<dd><pre class="verbatim">Alist of character name transformation rules.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+((&quot;BOX DRAWING&quot; lambda (_ignored) &quot;.&quot;)
+ (&quot;^Mathematical Sans-Serif\\( small\\| capital\\)? letter \\(.*\\)$&quot; lambda
+  (s)
+  (match-string 2 s))
+ (&quot;^greek\\( small\\| capital\\)? letter \\(.*\\)$&quot; lambda
+  (s)
+  (match-string 2 s))
+ (&quot;^latin\\( small\\| capital\\)? letter \\(.*\\)$&quot; lambda
+  (s)
+  (match-string 2 s))
+ (&quot;^DEVANAGARI \\(sign\\|vowel sign\\|letter\\)? \\(.*\\)$&quot; lambda
+  (s)
+  (match-string 2 s)))
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-166"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">tts-unicode-untouched-charsets</var><a class="copiable-link" href="#index-User-Option-166"> &para;</a></span></dt>
+<dd><pre class="verbatim">Characters of these charsets are  ignored by
+  tts-unicode-replace-chars.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(ascii latin-iso8859-1)
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="voice_002ddefs.html">voice-defs</a>, Previous: <a href="tetris.html">tetris</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

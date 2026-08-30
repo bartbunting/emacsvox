@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-profiles (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-aural-profiles (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-aural-profiles (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dprovider_002dmarkdown.html" rel="next" title="emacsvox-aural-provider-markdown">
+<link href="emacsvox_002daural_002dprofile_002dservice.html" rel="prev" title="emacsvox-aural-profile-service">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002dprofiles">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dprovider_002dmarkdown.html" accesskey="n" rel="next">emacsvox-aural-provider-markdown</a>, Previous: <a href="emacsvox_002daural_002dprofile_002dservice.html" accesskey="p" rel="prev">emacsvox-aural-profile-service</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002dprofiles-1"><span>2.31 emacsvox-aural-profiles<a class="copiable-link" href="#emacsvox_002daural_002dprofiles-1"> &para;</a></span></h3>
+
+<p>Accessible management for named configurations that select presentation
+options while capturing sound, voice, and spatial choices.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural_002dProfiles-Commands" accesskey="1">Emacsvox-Aural-Profiles Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dProfiles-Commands">
+<h4 class="subsection"><span>2.31.1 Emacsvox-Aural-Profiles Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dProfiles-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dlist_002dprofiles" accesskey="1">emacsvox-aural-list-profiles</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dactivate" accesskey="2">emacsvox-aural-profiles-activate</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dcopy" accesskey="3">emacsvox-aural-profiles-copy</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dcreate" accesskey="4">emacsvox-aural-profiles-create</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002ddelete" accesskey="5">emacsvox-aural-profiles-delete</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002ddescribe" accesskey="6">emacsvox-aural-profiles-describe</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dhelp" accesskey="7">emacsvox-aural-profiles-help</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dmode" accesskey="8">emacsvox-aural-profiles-mode</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dnext" accesskey="9">emacsvox-aural-profiles-next</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dnext_002dcolumn">emacsvox-aural-profiles-next-column</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dprevious">emacsvox-aural-profiles-previous</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dprevious_002dcolumn">emacsvox-aural-profiles-previous-column</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002drefresh">emacsvox-aural-profiles-refresh</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002drename">emacsvox-aural-profiles-rename</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dspeak_002dcurrent">emacsvox-aural-profiles-speak-current</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dspeak_002dcurrent_002dcell">emacsvox-aural-profiles-speak-current-cell</a></li>
+<li><a href="#emacsvox_002daural_002dprofiles_002dupdate_002dfrom_002dcurrent">emacsvox-aural-profiles-update-from-current</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dlist_002dprofiles">
+<h4 class="subsubsection"><span>2.31.1.1 emacsvox-aural-list-profiles<a class="copiable-link" href="#emacsvox_002daural_002dlist_002dprofiles"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dlist_002dprofiles"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-list-profiles</strong> <var class="def-var-arguments">(&amp;optional profile)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dlist_002dprofiles"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dlist_002dprofiles-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open the spoken manager for saved presentation PROFILE configurations.
+
+(fn &amp;optional PROFILE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dactivate">
+<h4 class="subsubsection"><span>2.31.1.2 emacsvox-aural-profiles-activate<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dactivate"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dactivate"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-activate</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dactivate"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dactivate-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Apply the saved presentation profile at point.
+
+Confirm first when the currently selected profile has diverged, because
+applying a saved profile replaces the differing live configuration.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dcopy">
+<h4 class="subsubsection"><span>2.31.1.3 emacsvox-aural-profiles-copy<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dcopy"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dcopy"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-copy</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dcopy"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dcopy-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy the profile at point under a new identifier.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dcreate">
+<h4 class="subsubsection"><span>2.31.1.4 emacsvox-aural-profiles-create<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dcreate"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dcreate"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-create</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dcreate"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dcreate-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Save the complete current presentation configuration as a new profile.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002ddelete">
+<h4 class="subsubsection"><span>2.31.1.5 emacsvox-aural-profiles-delete<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002ddelete"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002ddelete"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-delete</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002ddelete"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002ddelete-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Delete the personal presentation profile at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002ddescribe">
+<h4 class="subsubsection"><span>2.31.1.6 emacsvox-aural-profiles-describe<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002ddescribe"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002ddescribe"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-describe</strong> <var class="def-var-arguments">(&amp;optional id)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002ddescribe"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002ddescribe-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display and speak complete details for profile ID.
+
+(fn &amp;optional ID)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dhelp">
+<h4 class="subsubsection"><span>2.31.1.7 emacsvox-aural-profiles-help<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dhelp"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dhelp"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dhelp-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display and speak presentation-profile manager help.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dmode">
+<h4 class="subsubsection"><span>2.31.1.8 emacsvox-aural-profiles-mode<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Spoken manager for complete aural presentation profiles.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-profiles-mode-hook’, as the final or penultimate
+step during initialization.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+RET		emacsvox-aural-profiles-activate
+?		emacsvox-aural-profiles-help
+N		emacsvox-aural-profiles-create
+a		emacsvox-aural-profiles-activate
+c		emacsvox-aural-profiles-copy
+d		emacsvox-aural-profiles-delete
+h		emacsvox-aural
+r		emacsvox-aural-profiles-rename
+v		emacsvox-aural-profiles-describe
+w		emacsvox-aural-profiles-update-from-current
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dnext">
+<h4 class="subsubsection"><span>2.31.1.9 emacsvox-aural-profiles-next<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dnext"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-next</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dnext"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dnext-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to and speak the next presentation profile.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dnext_002dcolumn">
+<h4 class="subsubsection"><span>2.31.1.10 emacsvox-aural-profiles-next-column<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dnext_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-next-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dnext_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dnext_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move right and speak the next profile column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dprevious">
+<h4 class="subsubsection"><span>2.31.1.11 emacsvox-aural-profiles-previous<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dprevious"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-previous</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dprevious"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dprevious-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to and speak the previous presentation profile.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dprevious_002dcolumn">
+<h4 class="subsubsection"><span>2.31.1.12 emacsvox-aural-profiles-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dprevious_002dcolumn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-previous-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dprevious_002dcolumn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dprevious_002dcolumn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move left and speak the previous profile column.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002drefresh">
+<h4 class="subsubsection"><span>2.31.1.13 emacsvox-aural-profiles-refresh<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-refresh</strong> <var class="def-var-arguments">(&amp;optional id)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Refresh profiles, preserving ID and the current column.
+
+(fn &amp;optional ID)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002drename">
+<h4 class="subsubsection"><span>2.31.1.14 emacsvox-aural-profiles-rename<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002drename"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002drename"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-rename</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002drename"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002drename-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Rename the presentation profile at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dspeak_002dcurrent">
+<h4 class="subsubsection"><span>2.31.1.15 emacsvox-aural-profiles-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dspeak_002dcurrent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dspeak_002dcurrent"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dspeak_002dcurrent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the complete presentation profile at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dspeak_002dcurrent_002dcell">
+<h4 class="subsubsection"><span>2.31.1.16 emacsvox-aural-profiles-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dspeak_002dcurrent_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-speak-current-cell</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dspeak_002dcurrent_002dcell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dspeak_002dcurrent_002dcell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak the current profile column title and value.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dprofiles_002dupdate_002dfrom_002dcurrent">
+<h4 class="subsubsection"><span>2.31.1.17 emacsvox-aural-profiles-update-from-current<a class="copiable-link" href="#emacsvox_002daural_002dprofiles_002dupdate_002dfrom_002dcurrent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dprofiles_002dupdate_002dfrom_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-profiles-update-from-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dprofiles_002dupdate_002dfrom_002dcurrent"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dprofiles_002dupdate_002dfrom_002dcurrent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Write the complete current configuration into the profile at point.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dprovider_002dmarkdown.html">emacsvox-aural-provider-markdown</a>, Previous: <a href="emacsvox_002daural_002dprofile_002dservice.html">emacsvox-aural-profile-service</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

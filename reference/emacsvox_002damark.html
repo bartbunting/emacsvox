@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-amark (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-amark (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-amark (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dannotate.html" rel="next" title="emacsvox-annotate">
+<link href="emacsvox_002dagent_002dshell.html" rel="prev" title="emacsvox-agent-shell">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002damark">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dannotate.html" accesskey="n" rel="next">emacsvox-annotate</a>, Previous: <a href="emacsvox_002dagent_002dshell.html" accesskey="p" rel="prev">emacsvox-agent-shell</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002damark-1"><span>2.11 emacsvox-amark<a class="copiable-link" href="#emacsvox_002damark-1"> &para;</a></span></h3>
+
+<p>Structure emacsvox-amark holds a bookmark into an mp3 file
+path:  filename containing  marked
+name: Bookmark tag
+Position: time offset from start
+</p>
+<p>This library will be used from emacsvox-m-player to set and jump
+to bookmarks. Amarks are stored in a .amarks.am file in the working
+directory.  It also provides a simple AMark Browser to use from a
+directory containing mp3 files where Amarks have been created &ndash;
+see <code class="command">emacsvox-amarks-browse</code>.
+ <code class="command">emacsvox-amarks-bookshelf</code> brings up a <strong class="strong">AmarksBookshelf</strong>
+that can be used to  browse available Amark files.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAmark-Commands" accesskey="1">Emacsvox-Amark Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAmark-Commands">
+<h4 class="subsection"><span>2.11.1 Emacsvox-Amark Commands<a class="copiable-link" href="#Emacsvox_002dAmark-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002damark_002dadd" accesskey="1">emacsvox-amark-add</a></li>
+<li><a href="#emacsvox_002damark_002dbookshelf" accesskey="2">emacsvox-amark-bookshelf</a></li>
+<li><a href="#emacsvox_002damark_002dbrowse" accesskey="3">emacsvox-amark-browse</a></li>
+<li><a href="#emacsvox_002damark_002dfile_002dload" accesskey="4">emacsvox-amark-file-load</a></li>
+<li><a href="#emacsvox_002damark_002dfind" accesskey="5">emacsvox-amark-find</a></li>
+<li><a href="#emacsvox_002damark_002dlist_002dplay" accesskey="6">emacsvox-amark-list-play</a></li>
+<li><a href="#emacsvox_002damark_002dmode" accesskey="7">emacsvox-amark-mode</a></li>
+<li><a href="#emacsvox_002damark_002dsave" accesskey="8">emacsvox-amark-save</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002damark_002dadd">
+<h4 class="subsubsection"><span>2.11.1.1 emacsvox-amark-add<a class="copiable-link" href="#emacsvox_002damark_002dadd"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002damark_002dadd"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-amark-add</strong> <var class="def-var-arguments">(path name position)</var><a class="copiable-link" href="#index-emacsvox_002damark_002dadd"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002damark_002dadd-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Add an AMark to the buffer local list of AMarks. AMarks are
+bookmarks in audio content. If there is an existing amark of the
+given name, it is updated with path and position.
+
+(fn PATH NAME POSITION)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002damark_002dbookshelf">
+<h4 class="subsubsection"><span>2.11.1.2 emacsvox-amark-bookshelf<a class="copiable-link" href="#emacsvox_002damark_002dbookshelf"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002damark_002dbookshelf"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-amark-bookshelf</strong> <var class="def-var-arguments">(&amp;optional pattern)</var><a class="copiable-link" href="#index-emacsvox_002damark_002dbookshelf"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_003b-C_002d_003b"></a><span><kbd class="kbd">C-; C-;</kbd><a class="copiable-link" href="#index-C_002d_003b-C_002d_003b"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-h-C_002d_003b"></a><span><kbd class="kbd">C-x @ h C-;</kbd><a class="copiable-link" href="#index-C_002dx-_0040-h-C_002d_003b"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002damark_002dbookshelf-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open a locate buffer with all .amarks.am files.
+Optional interactive prefix arg prompts for a pattern that is
+used to filter the amarks files to show.  Use
+M-x emacsvox-dired-open-this-file to open the AMark Browser on
+current file.
+
+(fn &amp;optional PATTERN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002damark_002dbrowse">
+<h4 class="subsubsection"><span>2.11.1.3 emacsvox-amark-browse<a class="copiable-link" href="#emacsvox_002damark_002dbrowse"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002damark_002dbrowse"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-amark-browse</strong><a class="copiable-link" href="#index-emacsvox_002damark_002dbrowse"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_003b-a"></a><span><kbd class="kbd">C-; a</kbd><a class="copiable-link" href="#index-C_002d_003b-a"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-h-a"></a><span><kbd class="kbd">C-x @ h a</kbd><a class="copiable-link" href="#index-C_002dx-_0040-h-a"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002damark_002dbrowse-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse   amarks  in current directory using ‘emacsvox-amark-mode’.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002damark_002dfile_002dload">
+<h4 class="subsubsection"><span>2.11.1.4 emacsvox-amark-file-load<a class="copiable-link" href="#emacsvox_002damark_002dfile_002dload"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002damark_002dfile_002dload"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-amark-file-load</strong><a class="copiable-link" href="#index-emacsvox_002damark_002dfile_002dload"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002damark_002dfile_002dload-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open .amark.el on current line in AMark Browser
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002damark_002dfind">
+<h4 class="subsubsection"><span>2.11.1.5 emacsvox-amark-find<a class="copiable-link" href="#emacsvox_002damark_002dfind"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002damark_002dfind"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-amark-find</strong> <var class="def-var-arguments">(name)</var><a class="copiable-link" href="#index-emacsvox_002damark_002dfind"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002damark_002dfind-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return matching AMark if found in buffer-local AMark list.
+
+(fn NAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002damark_002dlist_002dplay">
+<h4 class="subsubsection"><span>2.11.1.6 emacsvox-amark-list-play<a class="copiable-link" href="#emacsvox_002damark_002dlist_002dplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002damark_002dlist_002dplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-amark-list-play</strong><a class="copiable-link" href="#index-emacsvox_002damark_002dlist_002dplay"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002damark_002dlist_002dplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play amark list as a playlist.
+Maps command M-x emacsvox-m-player across elements of the amarks
+  list.  Pressing ‘y’ as the current item is playing skips to the
+  next item; this ‘y/n’ prompt is produced by
+  M-x emacsvox-m-player as is usual when that command is called
+  while media is already playing. Here, attempting to play the next
+  item while the current item is playing produces the prompt.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002damark_002dmode">
+<h4 class="subsubsection"><span>2.11.1.7 emacsvox-amark-mode<a class="copiable-link" href="#emacsvox_002damark_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002damark_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-amark-mode</strong><a class="copiable-link" href="#index-emacsvox_002damark_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002damark_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">A light-weight mode for the ‘*Emacsvox Amark Browser*’.
+ 1. Provides buttons for opening and removing AMarks.
+ 2. Enables org integration via command
+ ‘org-store-link’ bound to M-x org-store-link.
+ 3. Stored links can be inserted into org files in the same directory
+via command ‘org-insert-link’ bound to M-x org-insert-link.
+
+In addition to any hooks its parent mode ‘special-mode’ might have
+run, this mode runs the hook ‘emacsvox-amark-mode-hook’, as the final
+or penultimate step during initialization.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002damark_002dsave">
+<h4 class="subsubsection"><span>2.11.1.8 emacsvox-amark-save<a class="copiable-link" href="#emacsvox_002damark_002dsave"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002damark_002dsave"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-amark-save</strong><a class="copiable-link" href="#index-emacsvox_002damark_002dsave"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002damark_002dsave-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Save buffer-local AMarks in  currently playing directory.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dannotate.html">emacsvox-annotate</a>, Previous: <a href="emacsvox_002dagent_002dshell.html">emacsvox-agent-shell</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

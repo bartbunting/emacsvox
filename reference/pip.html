@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>pip (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="pip (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="pip (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="plain_002dvoices.html" rel="next" title="plain-voices">
+<link href="outloud_002dvoices.html" rel="prev" title="outloud-voices">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="pip">
+<div class="nav-panel">
+<p>
+Next: <a href="plain_002dvoices.html" accesskey="n" rel="next">plain-voices</a>, Previous: <a href="outloud_002dvoices.html" accesskey="p" rel="prev">outloud-voices</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="pip-1"><span>2.263 pip<a class="copiable-link" href="#pip-1"> &para;</a></span></h3>
+
+<p>Piper TTS is an Open Source neural-net TTS engine.
+This module exposes Piper TTS to Emacs.
+</p>
+<ol class="enumerate">
+<li> Sandbox for
+<a class="url" href="https://github.com/OHF-Voice/piper1-gpl">https://github.com/OHF-Voice/piper1-gpl</a>
+</li><li> Install piper-tts in a virtual environment whose bin directory is on
+Emacs&rsquo;s PATH.
+</li><li> Set location of voice data in <code class="code">pip-data-dir</code>.
+Default is <code class="code">~/.local/share/voices-piper</code>
+</li><li> Use that environment&rsquo;s Python to run
+<code class="code">-m piper.download_voices</code>.  Download a voice with its
+<code class="code">--data-dir</code> option set to <code class="code">pip-data-dir</code>.
+</li><li> <code class="code">M-x pip-speak</code> to speak.  </li><li> At present
+<code class="code">piper</code> is not suitable for use as a primary TTS engine for
+Emacsvox through this experimental per-request wrapper, given its model-load
+latency and fixed 22,050 Hz raw-output assumption.
+</li><li> However it might be
+interesting to use it for lower-priority speech where quality
+trumps latency.
+</li></ol>
+
+<ul class="mini-toc">
+<li><a href="#Pip-Commands" accesskey="1">Pip Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Pip-Commands">
+<h4 class="subsection"><span>2.263.1 Pip Commands<a class="copiable-link" href="#Pip-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#pip_002ddevice_002dselect" accesskey="1">pip-device-select</a></li>
+<li><a href="#pip_002dmodel_002dselect" accesskey="2">pip-model-select</a></li>
+<li><a href="#pip_002dspeak" accesskey="3">pip-speak</a></li>
+<li><a href="#pip_002dstart" accesskey="4">pip-start</a></li>
+<li><a href="#pip_002dstop" accesskey="5">pip-stop</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="pip_002ddevice_002dselect">
+<h4 class="subsubsection"><span>2.263.1.1 pip-device-select<a class="copiable-link" href="#pip_002ddevice_002dselect"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-pip_002ddevice_002dselect"><span class="category-def">Command: </span><span><strong class="def-name">pip-device-select</strong> <var class="def-var-arguments">(device)</var><a class="copiable-link" href="#index-pip_002ddevice_002dselect"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-pip_002ddevice_002dselect-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select default from available choices.
+Restarts piper pipeline if already running.
+
+(fn DEVICE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="pip_002dmodel_002dselect">
+<h4 class="subsubsection"><span>2.263.1.2 pip-model-select<a class="copiable-link" href="#pip_002dmodel_002dselect"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-pip_002dmodel_002dselect"><span class="category-def">Command: </span><span><strong class="def-name">pip-model-select</strong> <var class="def-var-arguments">(voice)</var><a class="copiable-link" href="#index-pip_002dmodel_002dselect"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-pip_002dmodel_002dselect-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select default from available choices.
+Restarts piper pipeline if already running.
+
+(fn VOICE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="pip_002dspeak">
+<h4 class="subsubsection"><span>2.263.1.3 pip-speak<a class="copiable-link" href="#pip_002dspeak"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-pip_002dspeak"><span class="category-def">Command: </span><span><strong class="def-name">pip-speak</strong> <var class="def-var-arguments">(text)</var><a class="copiable-link" href="#index-pip_002dspeak"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-pip_002dspeak-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak text
+
+(fn TEXT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="pip_002dstart">
+<h4 class="subsubsection"><span>2.263.1.4 pip-start<a class="copiable-link" href="#pip_002dstart"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-pip_002dstart"><span class="category-def">Command: </span><span><strong class="def-name">pip-start</strong><a class="copiable-link" href="#index-pip_002dstart"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-pip_002dstart-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Start the Piper process
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="pip_002dstop">
+<h4 class="subsubsection"><span>2.263.1.5 pip-stop<a class="copiable-link" href="#pip_002dstop"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-pip_002dstop"><span class="category-def">Command: </span><span><strong class="def-name">pip-stop</strong><a class="copiable-link" href="#index-pip_002dstop"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-pip_002dstop-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Stop Piper TTS
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="plain_002dvoices.html">plain-voices</a>, Previous: <a href="outloud_002dvoices.html">outloud-voices</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

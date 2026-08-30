@@ -1,94 +1,12 @@
-<!DOCTYPE html>
-<html>
-<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<!doctype html>
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Mashing It Up  ---  Leveraging Evolving Web APIs (Emacsvox User Manual)</title>
-
-<meta name="description" content="Mashing It Up  ---  Leveraging Evolving Web APIs (Emacsvox User Manual)">
-<meta name="keywords" content="Mashing It Up  ---  Leveraging Evolving Web APIs (Emacsvox User Manual)">
-<meta name="resource-type" content="document">
-<meta name="distribution" content="global">
-<meta name="Generator" content="makeinfo">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<link href="index.html" rel="start" title="Top">
-<link href="Concept-Index.html" rel="index" title="Concept Index">
-<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
-<link href="Emacspeak-At-Twenty.html" rel="up" title="Emacspeak At Twenty">
-<link href="Conclusion-_002d_002d_002d-Turning-Twenty.html" rel="next" title="Conclusion ---  Turning Twenty">
-<link href="The-RESTful-Web-_002d_002d_002d-Web-Wizards-And-URL-Templates-For-Faster-Access.html" rel="prev" title="The RESTful Web  ---  Web Wizards And URL Templates For Faster Access">
-<style type="text/css">
-<!--
-a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
-span:hover a.copiable-link {visibility: visible}
--->
-</style>
-<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
-
-
+<meta charset="utf-8">
+<meta http-equiv="refresh" content="0; url=heritage/Mashing-It-Up-_002d_002d_002d-Leveraging-Evolving-Web-APIs.html">
+<link rel="canonical" href="heritage/Mashing-It-Up-_002d_002d_002d-Leveraging-Evolving-Web-APIs.html">
+<title>Emacsvox documentation moved</title>
 </head>
-
-<body lang="en">
-<div class="section-level-extent" id="Mashing-It-Up-_002d_002d_002d-Leveraging-Evolving-Web-APIs">
-<div class="nav-panel">
-<p>
-Next: <a href="Conclusion-_002d_002d_002d-Turning-Twenty.html" accesskey="n" rel="next">Conclusion &mdash; Turning Twenty</a>, Previous: <a href="The-RESTful-Web-_002d_002d_002d-Web-Wizards-And-URL-Templates-For-Faster-Access.html" accesskey="p" rel="prev">The RESTful Web  &mdash;   Web Wizards And URL Templates For Faster Access</a>, Up: <a href="Emacspeak-At-Twenty.html" accesskey="u" rel="up">Emacspeak At Twenty.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
-</div>
-<hr>
-<h3 class="section" id="Mashing-It-Up-_002d_002d_002d-Leveraging-Evolving-Web-APIs-1"><span>20.15 Mashing It Up  &mdash;   Leveraging Evolving Web APIs<a class="copiable-link" href="#Mashing-It-Up-_002d_002d_002d-Leveraging-Evolving-Web-APIs-1"> &para;</a></span></h3>
-
-<p>The next step in this evolution came with the arrival of richer
-Web APIs  &mdash;  especially ones that defined a clean client/server
-separation. In this respect, the world of Web APIs is a somewhat
-mixed bag in that many Web sites equate a Web API with a JS-based
-API that can be exclusively invoked from within a Web-Browser
-run-time. The issue with that type of API binding is that the
-only runtime that is supported is a full-blown Web browser; but
-the arrival of native mobile apps has actually proven a net
-positive in encouraging sites to create a cleaner
-separation. Emacspeak has leveraged these APIs to create
-Emacspeak front-ends to many useful services, here are a few:
-</p>
-<ol class="enumerate">
-<li> Minibuffer completion for Google Search using Google Suggest
-to provide completions.
-</li><li> Librivox for browsing  and playing free audio books.
-</li><li> NPR  for browsing and playing NPR archived programs.
-</li><li> BBC for playing a wide variety of streaming content
-available from the BBC.
-</li><li> A Google Maps front-end that  provides instantaneous access
-to directions and Places search.
-</li><li> Access to Twitter via package <strong class="strong">twittering-mode</strong>.
-</li></ol>
-
-
-<p>And a lot more than will fit this margin! This is an example of
-generalizing the concept of a mashup as seen on the Web with
-respect to creating hybrid applications by bringing together a
-collection of different Web APIs. Another way to think of such
-separation is to view an application as a <strong class="strong">head</strong> and a <strong class="strong">body</strong>  &mdash; 
-where the <strong class="strong">head</strong> is a specific user interface, with the <strong class="strong">body</strong>
-implementing the application logic. A cleanly defined separation
-between the <strong class="strong">head</strong> and <strong class="strong">body</strong> allows one to attach <em class="emph">different</em>
-user interfaces i.e., <strong class="strong">heads</strong> to the given <strong class="strong">body</strong> without any
-loss of functionality, or the need to re-implement the entire
-application. Modern platforms like Android enable such separation
-via an
-<a class="url" href="http://developer.android.com/reference/android/content/Intent.html">Intent</a>
-mechanism. The Web platform as originally defined around URLs is
-actually well-suited to this type of separation  &mdash;  though the full
-potential of this design pattern remains to be fully realized
-given today&rsquo;s tight association of the Web to the Web Browser.
-</p>
-</div>
-<hr>
-<div class="nav-panel">
-<p>
-Next: <a href="Conclusion-_002d_002d_002d-Turning-Twenty.html">Conclusion &mdash; Turning Twenty</a>, Previous: <a href="The-RESTful-Web-_002d_002d_002d-Web-Wizards-And-URL-Templates-For-Faster-Access.html">The RESTful Web  &mdash;   Web Wizards And URL Templates For Faster Access</a>, Up: <a href="Emacspeak-At-Twenty.html">Emacspeak At Twenty.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
-</div>
-
-
-
+<body>
+<p>This Emacsvox documentation page moved to <a href="heritage/Mashing-It-Up-_002d_002d_002d-Leveraging-Evolving-Web-APIs.html">its maintained location</a>.</p>
 </body>
 </html>

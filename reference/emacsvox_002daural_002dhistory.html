@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural-history (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-aural-history (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-aural-history (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dhome.html" rel="next" title="emacsvox-aural-home">
+<link href="emacsvox_002daural_002dfeature_002dfragments.html" rel="prev" title="emacsvox-aural-feature-fragments">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural_002dhistory">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dhome.html" accesskey="n" rel="next">emacsvox-aural-home</a>, Previous: <a href="emacsvox_002daural_002dfeature_002dfragments.html" accesskey="p" rel="prev">emacsvox-aural-feature-fragments</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural_002dhistory-1"><span>2.24 emacsvox-aural-history<a class="copiable-link" href="#emacsvox_002daural_002dhistory-1"> &para;</a></span></h3>
+
+<p>Bounded, data-only records of presentations actually submitted to a live
+transport.  History never retains source buffers and does not resolve rules,
+resources, voices, or backend transport.
+</p>
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dhistory-Options" accesskey="1">emacsvox-aural-history Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="emacsvox_002daural_002dhistory-Options">
+<h4 class="subsection"><span>2.24.1 emacsvox-aural-history Options<a class="copiable-link" href="#emacsvox_002daural_002dhistory-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-27"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-history-record-interface-presentations</var><a class="copiable-link" href="#index-User-Option-27"> &para;</a></span></dt>
+<dd><pre class="verbatim">Whether presentations originating in Aural interfaces enter history.
+
+Leave this nil during normal use so interface navigation, opening, closing,
+help, previews, and status speech do not displace source-buffer feedback.
+Enable it temporarily when diagnosing presentation inside the Aural UI.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-28"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-presentation-history-limit</var><a class="copiable-link" href="#index-User-Option-28"> &para;</a></span></dt>
+<dd><pre class="verbatim">Maximum number of transport-submitted presentations retained for inspection.
+
+History records contain frozen data and source names and positions, but never
+retain source buffers.  Set this to zero to disable history.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+20
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+
+
+
+</body>
+</html>

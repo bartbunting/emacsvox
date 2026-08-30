@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-empv (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-empv (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-empv (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002denriched.html" rel="next" title="emacsvox-enriched">
+<link href="emacsvox_002demms.html" rel="prev" title="emacsvox-emms">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dempv">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002denriched.html" accesskey="n" rel="next">emacsvox-enriched</a>, Previous: <a href="emacsvox_002demms.html" accesskey="p" rel="prev">emacsvox-emms</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dempv-1"><span>2.104 emacsvox-empv<a class="copiable-link" href="#emacsvox_002dempv-1"> &para;</a></span></h3>
+
+<p><code class="code">EMPV</code>  ==  Emacs Front-End To <code class="code">mpv</code>  &mdash; the GNU media player &mdash;
+Provides better Youtube integration.
+</p>
+<p>This section documents Emacsvox extensions to <code class="code">EMPV</code> , the Emacs
+interface of choice to the GNU <code class="code">MPV</code>  media player.
+This section should be read alongside the <code class="code">EMPV</code>  documentation; Install
+<code class="code">EMPV</code>  from ELPA.
+</p>
+<ul class="mini-toc">
+<li><a href="#Interactive-Commands" accesskey="1">Interactive Commands</a></li>
+<li><a href="#Navigating-In-Time" accesskey="2">Navigating In Time</a></li>
+<li><a href="#Toggling-Filters" accesskey="3">Toggling Filters</a></li>
+<li><a href="#Emacsvox_002dEmpv-Commands" accesskey="4">Emacsvox-Empv Commands</a></li>
+<li><a href="#emacsvox_002dempv-Options" accesskey="5">emacsvox-empv Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Interactive-Commands">
+<h4 class="subsection"><span>2.104.1 Interactive Commands<a class="copiable-link" href="#Interactive-Commands"> &para;</a></span></h4>
+
+<p>Emacsvox adds a few convenience commands to the those provided by
+package <code class="code">empv</code>:
+</p>
+<ol class="enumerate">
+<li> Command  <code class="code">emacsvox-empv-play-url to play</code>
+a URL using <code class="code">MPV</code> .
+</li><li> Adds history tracking to our <code class="code">EMPV</code>  commands.
+</li><li> Command empv-play-last-url to play from our <code class="code">EMPV</code>  history.
+</li><li> Command  <code class="code">emacsvox-empv-play-file  to play  local media and</code>
+Internet streams.
+</li></ol>
+
+</div>
+<div class="subsection-level-extent" id="Navigating-In-Time">
+<h4 class="subsection"><span>2.104.2 Navigating In Time<a class="copiable-link" href="#Navigating-In-Time"> &para;</a></span></h4>
+
+<p>Emacsvox defines additional convenience commands to seek in  streams
+at different time granularities, the names are self-documenting and
+bound  in the empv-map.
+</p>
+<ul class="itemize mark-bullet">
+<li><code class="code">emacsvox-empv-absolute-seek</code>
+</li><li><code class="code">emacsvox-empv-backward-10-minutes</code>
+</li><li><code class="code">emacsvox-empv-backward-10-seconds</code>
+</li><li><code class="code">emacsvox-empv-backward-30-minutes</code>
+</li><li><code class="code">emacsvox-empv-backward-5-minutes</code>
+</li><li><code class="code">emacsvox-empv-backward-minute</code>
+</li><li><code class="code">emacsvox-empv-forward-10-minutes</code>
+</li><li><code class="code">emacsvox-empv-forward-10-seconds</code>
+</li><li><code class="code">emacsvox-empv-forward-30-minutes</code>
+</li><li><code class="code">emacsvox-empv-forward-5-minutes</code>
+</li><li><code class="code">emacsvox-empv-forward-minute</code>
+</li><li><code class="code">emacsvox-empv-percentage-seek</code>
+</li><li><code class="code">emacsvox-empv-relative-seek</code>
+</li></ul>
+
+</div>
+<div class="subsection-level-extent" id="Toggling-Filters">
+<h4 class="subsection"><span>2.104.3 Toggling Filters<a class="copiable-link" href="#Toggling-Filters"> &para;</a></span></h4>
+
+<p>Command <code class="code">mpv</code>  provides a number of audio filters. Emacsvox exposes a
+select few for interactive use.
+</p>
+<ol class="enumerate">
+<li> Toggle active filter:  <code class="code">emacsvox-empv-toggle-filter</code>
+</li><li> Toggle Audio Balance:  <code class="code">emacsvox-empv-toggle-balance</code>
+</li><li> Clear any active filters:  <code class="code">emacsvox-empv-clear-filter</code>
+</li><li> Toggle our custom filter:  <code class="code">emacsvox-empv-toggle-custom</code>
+</li><li> Toggle left output:  <code class="code">emacsvox-empv-toggle-left</code>
+</li><li> Toggle right output:  <code class="code">emacsvox-empv-toggle-right</code>
+</li></ol>
+
+</div>
+<div class="subsection-level-extent" id="Emacsvox_002dEmpv-Commands">
+<h4 class="subsection"><span>2.104.4 Emacsvox-Empv Commands<a class="copiable-link" href="#Emacsvox_002dEmpv-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dempv_002dabsolute_002dseek" accesskey="1">emacsvox-empv-absolute-seek</a></li>
+<li><a href="#emacsvox_002dempv_002daccumulate_002dto_002dregister" accesskey="2">emacsvox-empv-accumulate-to-register</a></li>
+<li><a href="#emacsvox_002dempv_002dbackward_002d10_002dminutes" accesskey="3">emacsvox-empv-backward-10-minutes</a></li>
+<li><a href="#emacsvox_002dempv_002dbackward_002d10_002dseconds" accesskey="4">emacsvox-empv-backward-10-seconds</a></li>
+<li><a href="#emacsvox_002dempv_002dbackward_002d30_002dminutes" accesskey="5">emacsvox-empv-backward-30-minutes</a></li>
+<li><a href="#emacsvox_002dempv_002dbackward_002d5_002dminutes" accesskey="6">emacsvox-empv-backward-5-minutes</a></li>
+<li><a href="#emacsvox_002dempv_002dbackward_002dminute" accesskey="7">emacsvox-empv-backward-minute</a></li>
+<li><a href="#emacsvox_002dempv_002dclear_002dfilter" accesskey="8">emacsvox-empv-clear-filter</a></li>
+<li><a href="#emacsvox_002dempv_002dcurrent_002dtitle" accesskey="9">emacsvox-empv-current-title</a></li>
+<li><a href="#emacsvox_002dempv_002dforward_002d10_002dminutes">emacsvox-empv-forward-10-minutes</a></li>
+<li><a href="#emacsvox_002dempv_002dforward_002d10_002dseconds">emacsvox-empv-forward-10-seconds</a></li>
+<li><a href="#emacsvox_002dempv_002dforward_002d30_002dminutes">emacsvox-empv-forward-30-minutes</a></li>
+<li><a href="#emacsvox_002dempv_002dforward_002d5_002dminutes">emacsvox-empv-forward-5-minutes</a></li>
+<li><a href="#emacsvox_002dempv_002dforward_002dminute">emacsvox-empv-forward-minute</a></li>
+<li><a href="#emacsvox_002dempv_002dpercentage_002dseek">emacsvox-empv-percentage-seek</a></li>
+<li><a href="#emacsvox_002dempv_002dplay_002dfile">emacsvox-empv-play-file</a></li>
+<li><a href="#emacsvox_002dempv_002dplay_002dlast">emacsvox-empv-play-last</a></li>
+<li><a href="#emacsvox_002dempv_002dplay_002durl">emacsvox-empv-play-url</a></li>
+<li><a href="#emacsvox_002dempv_002drelative_002dseek">emacsvox-empv-relative-seek</a></li>
+<li><a href="#emacsvox_002dempv_002dtime_002dpos">emacsvox-empv-time-pos</a></li>
+<li><a href="#emacsvox_002dempv_002dtoggle_002dbalance">emacsvox-empv-toggle-balance</a></li>
+<li><a href="#emacsvox_002dempv_002dtoggle_002dcustom">emacsvox-empv-toggle-custom</a></li>
+<li><a href="#emacsvox_002dempv_002dtoggle_002dfilter">emacsvox-empv-toggle-filter</a></li>
+<li><a href="#emacsvox_002dempv_002dtoggle_002dleft">emacsvox-empv-toggle-left</a></li>
+<li><a href="#emacsvox_002dempv_002dtoggle_002dright">emacsvox-empv-toggle-right</a></li>
+<li><a href="#emacsvox_002dempv_002dyt_002dafter">emacsvox-empv-yt-after</a></li>
+<li><a href="#emacsvox_002dempv_002dyt_002dbefore">emacsvox-empv-yt-before</a></li>
+<li><a href="#emacsvox_002dempv_002dyt_002dsearch">emacsvox-empv-yt-search</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dabsolute_002dseek">
+<h4 class="subsubsection"><span>2.104.4.1 emacsvox-empv-absolute-seek<a class="copiable-link" href="#emacsvox_002dempv_002dabsolute_002dseek"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dabsolute_002dseek"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-absolute-seek</strong> <var class="def-var-arguments">(target)</var><a class="copiable-link" href="#index-emacsvox_002dempv_002dabsolute_002dseek"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dabsolute_002dseek-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Absolute seek in seconds,see ‘empv-seek’
+
+(fn TARGET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002daccumulate_002dto_002dregister">
+<h4 class="subsubsection"><span>2.104.4.2 emacsvox-empv-accumulate-to-register<a class="copiable-link" href="#emacsvox_002dempv_002daccumulate_002dto_002dregister"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002daccumulate_002dto_002dregister"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-accumulate-to-register</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002daccumulate_002dto_002dregister"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002daccumulate_002dto_002dregister-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Accumulate media links to register u
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dbackward_002d10_002dminutes">
+<h4 class="subsubsection"><span>2.104.4.3 emacsvox-empv-backward-10-minutes<a class="copiable-link" href="#emacsvox_002dempv_002dbackward_002d10_002dminutes"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dbackward_002d10_002dminutes"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-backward-10-minutes</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dbackward_002d10_002dminutes"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dbackward_002d10_002dminutes-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move backward by 10 minutes
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dbackward_002d10_002dseconds">
+<h4 class="subsubsection"><span>2.104.4.4 emacsvox-empv-backward-10-seconds<a class="copiable-link" href="#emacsvox_002dempv_002dbackward_002d10_002dseconds"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dbackward_002d10_002dseconds"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-backward-10-seconds</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dbackward_002d10_002dseconds"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dbackward_002d10_002dseconds-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move back  10 seconds.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dbackward_002d30_002dminutes">
+<h4 class="subsubsection"><span>2.104.4.5 emacsvox-empv-backward-30-minutes<a class="copiable-link" href="#emacsvox_002dempv_002dbackward_002d30_002dminutes"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dbackward_002d30_002dminutes"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-backward-30-minutes</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dbackward_002d30_002dminutes"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dbackward_002d30_002dminutes-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move backward by 30 minutes
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dbackward_002d5_002dminutes">
+<h4 class="subsubsection"><span>2.104.4.6 emacsvox-empv-backward-5-minutes<a class="copiable-link" href="#emacsvox_002dempv_002dbackward_002d5_002dminutes"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dbackward_002d5_002dminutes"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-backward-5-minutes</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dbackward_002d5_002dminutes"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dbackward_002d5_002dminutes-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move backward by 5 minutes
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dbackward_002dminute">
+<h4 class="subsubsection"><span>2.104.4.7 emacsvox-empv-backward-minute<a class="copiable-link" href="#emacsvox_002dempv_002dbackward_002dminute"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dbackward_002dminute"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-backward-minute</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dempv_002dbackward_002dminute"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dbackward_002dminute-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move back  count  minutes.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dclear_002dfilter">
+<h4 class="subsubsection"><span>2.104.4.8 emacsvox-empv-clear-filter<a class="copiable-link" href="#emacsvox_002dempv_002dclear_002dfilter"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dclear_002dfilter"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-clear-filter</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dclear_002dfilter"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dclear_002dfilter-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Clear all filters.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dcurrent_002dtitle">
+<h4 class="subsubsection"><span>2.104.4.9 emacsvox-empv-current-title<a class="copiable-link" href="#emacsvox_002dempv_002dcurrent_002dtitle"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dcurrent_002dtitle"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-current-title</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dcurrent_002dtitle"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dcurrent_002dtitle-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak title of currently selected item.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dforward_002d10_002dminutes">
+<h4 class="subsubsection"><span>2.104.4.10 emacsvox-empv-forward-10-minutes<a class="copiable-link" href="#emacsvox_002dempv_002dforward_002d10_002dminutes"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dforward_002d10_002dminutes"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-forward-10-minutes</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dforward_002d10_002dminutes"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dforward_002d10_002dminutes-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move forward by 10 minutes
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dforward_002d10_002dseconds">
+<h4 class="subsubsection"><span>2.104.4.11 emacsvox-empv-forward-10-seconds<a class="copiable-link" href="#emacsvox_002dempv_002dforward_002d10_002dseconds"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dforward_002d10_002dseconds"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-forward-10-seconds</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dforward_002d10_002dseconds"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dforward_002d10_002dseconds-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move forward 10 seconds.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dforward_002d30_002dminutes">
+<h4 class="subsubsection"><span>2.104.4.12 emacsvox-empv-forward-30-minutes<a class="copiable-link" href="#emacsvox_002dempv_002dforward_002d30_002dminutes"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dforward_002d30_002dminutes"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-forward-30-minutes</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dforward_002d30_002dminutes"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dforward_002d30_002dminutes-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move forward by 30 minutes
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dforward_002d5_002dminutes">
+<h4 class="subsubsection"><span>2.104.4.13 emacsvox-empv-forward-5-minutes<a class="copiable-link" href="#emacsvox_002dempv_002dforward_002d5_002dminutes"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dforward_002d5_002dminutes"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-forward-5-minutes</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dforward_002d5_002dminutes"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dforward_002d5_002dminutes-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move forward by 5 minutes
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dforward_002dminute">
+<h4 class="subsubsection"><span>2.104.4.14 emacsvox-empv-forward-minute<a class="copiable-link" href="#emacsvox_002dempv_002dforward_002dminute"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dforward_002dminute"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-forward-minute</strong> <var class="def-var-arguments">(&amp;optional count)</var><a class="copiable-link" href="#index-emacsvox_002dempv_002dforward_002dminute"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dforward_002dminute-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move forward count  minutes.
+
+(fn &amp;optional COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dpercentage_002dseek">
+<h4 class="subsubsection"><span>2.104.4.15 emacsvox-empv-percentage-seek<a class="copiable-link" href="#emacsvox_002dempv_002dpercentage_002dseek"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dpercentage_002dseek"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-percentage-seek</strong> <var class="def-var-arguments">(target)</var><a class="copiable-link" href="#index-emacsvox_002dempv_002dpercentage_002dseek"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dpercentage_002dseek-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Percentage seek in seconds,see ‘empv-seek’
+
+(fn TARGET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dplay_002dfile">
+<h4 class="subsubsection"><span>2.104.4.16 emacsvox-empv-play-file<a class="copiable-link" href="#emacsvox_002dempv_002dplay_002dfile"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dplay_002dfile"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-play-file</strong> <var class="def-var-arguments">(file &amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dempv_002dplay_002dfile"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_0027"></a><span><kbd class="kbd">C-e '</kbd><a class="copiable-link" href="#index-C_002de-_0027"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dempv_002dplay_002dfile-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play file using mpv.
+Interactive prefix arg plays directory.
+If already playing, then read an empv key and invoke its command.
+
+(fn FILE &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dplay_002dlast">
+<h4 class="subsubsection"><span>2.104.4.17 emacsvox-empv-play-last<a class="copiable-link" href="#emacsvox_002dempv_002dplay_002dlast"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dplay_002dlast"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-play-last</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dplay_002dlast"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-y-l"></a><span><kbd class="kbd">C-e y l</kbd><a class="copiable-link" href="#index-C_002de-y-l"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dempv_002dplay_002dlast-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play most recently played URL.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dplay_002durl">
+<h4 class="subsubsection"><span>2.104.4.18 emacsvox-empv-play-url<a class="copiable-link" href="#emacsvox_002dempv_002dplay_002durl"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dplay_002durl"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-play-url</strong> <var class="def-var-arguments">(url)</var><a class="copiable-link" href="#index-emacsvox_002dempv_002dplay_002durl"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-y-y"></a><span><kbd class="kbd">C-e y y</kbd><a class="copiable-link" href="#index-C_002de-y-y"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dempv_002dplay_002durl-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Play URL using mpv.
+
+(fn URL)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002drelative_002dseek">
+<h4 class="subsubsection"><span>2.104.4.19 emacsvox-empv-relative-seek<a class="copiable-link" href="#emacsvox_002dempv_002drelative_002dseek"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002drelative_002dseek"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-relative-seek</strong> <var class="def-var-arguments">(target)</var><a class="copiable-link" href="#index-emacsvox_002dempv_002drelative_002dseek"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002drelative_002dseek-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Relative seek in seconds,see ‘empv-seek’
+
+(fn TARGET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dtime_002dpos">
+<h4 class="subsubsection"><span>2.104.4.20 emacsvox-empv-time-pos<a class="copiable-link" href="#emacsvox_002dempv_002dtime_002dpos"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dtime_002dpos"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-time-pos</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dtime_002dpos"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dtime_002dpos-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak time and percent position.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dtoggle_002dbalance">
+<h4 class="subsubsection"><span>2.104.4.21 emacsvox-empv-toggle-balance<a class="copiable-link" href="#emacsvox_002dempv_002dtoggle_002dbalance"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dtoggle_002dbalance"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-toggle-balance</strong> <var class="def-var-arguments">(value)</var><a class="copiable-link" href="#index-emacsvox_002dempv_002dtoggle_002dbalance"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dtoggle_002dbalance-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set balance to value &mdash; range is -1.0..1.0
+
+(fn VALUE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dtoggle_002dcustom">
+<h4 class="subsubsection"><span>2.104.4.22 emacsvox-empv-toggle-custom<a class="copiable-link" href="#emacsvox_002dempv_002dtoggle_002dcustom"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dtoggle_002dcustom"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-toggle-custom</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dtoggle_002dcustom"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dtoggle_002dcustom-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle our custom filters.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dtoggle_002dfilter">
+<h4 class="subsubsection"><span>2.104.4.23 emacsvox-empv-toggle-filter<a class="copiable-link" href="#emacsvox_002dempv_002dtoggle_002dfilter"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dtoggle_002dfilter"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-toggle-filter</strong> <var class="def-var-arguments">(filter)</var><a class="copiable-link" href="#index-emacsvox_002dempv_002dtoggle_002dfilter"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dtoggle_002dfilter-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle Filter.
+Filter is of the  form name=arg-1:arg-2:...
+
+(fn FILTER)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dtoggle_002dleft">
+<h4 class="subsubsection"><span>2.104.4.24 emacsvox-empv-toggle-left<a class="copiable-link" href="#emacsvox_002dempv_002dtoggle_002dleft"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dtoggle_002dleft"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-toggle-left</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dtoggle_002dleft"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dtoggle_002dleft-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle output to being just on the left.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dtoggle_002dright">
+<h4 class="subsubsection"><span>2.104.4.25 emacsvox-empv-toggle-right<a class="copiable-link" href="#emacsvox_002dempv_002dtoggle_002dright"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dtoggle_002dright"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-toggle-right</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dtoggle_002dright"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dtoggle_002dright-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle output to being just on the right.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dyt_002dafter">
+<h4 class="subsubsection"><span>2.104.4.26 emacsvox-empv-yt-after<a class="copiable-link" href="#emacsvox_002dempv_002dyt_002dafter"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dyt_002dafter"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-yt-after</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dyt_002dafter"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dyt_002dafter-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Youtube Search  from calendar &mdash; add after:date-at-point..
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dyt_002dbefore">
+<h4 class="subsubsection"><span>2.104.4.27 emacsvox-empv-yt-before<a class="copiable-link" href="#emacsvox_002dempv_002dyt_002dbefore"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dyt_002dbefore"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-yt-before</strong><a class="copiable-link" href="#index-emacsvox_002dempv_002dyt_002dbefore"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dempv_002dyt_002dbefore-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Youtube Search  from calendar &mdash; add before:date-at-point..
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dempv_002dyt_002dsearch">
+<h4 class="subsubsection"><span>2.104.4.28 emacsvox-empv-yt-search<a class="copiable-link" href="#emacsvox_002dempv_002dyt_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dempv_002dyt_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-empv-yt-search</strong> <var class="def-var-arguments">(query)</var><a class="copiable-link" href="#index-emacsvox_002dempv_002dyt_002dsearch"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-y-s"></a><span><kbd class="kbd">C-e y s</kbd><a class="copiable-link" href="#index-C_002de-y-s"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dempv_002dyt_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Tabulated results from Youtube search but with completion.
+
+(fn QUERY)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dempv-Options">
+<h4 class="subsection"><span>2.104.5 emacsvox-empv Options<a class="copiable-link" href="#emacsvox_002dempv-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-51"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-empv-custom-filters</var><a class="copiable-link" href="#index-User-Option-51"> &para;</a></span></dt>
+<dd><pre class="verbatim">List of custom filters to turn on/off at one shot
+The default value is suitable for classical instrumental music.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+(&quot;extrastereo&quot; &quot;stereowiden=4.25:.1:735:.8&quot; &quot;haas&quot;)
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002denriched.html">emacsvox-enriched</a>, Previous: <a href="emacsvox_002demms.html">emacsvox-emms</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

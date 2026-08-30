@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-aural (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-aural (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-aural (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002daural_002dcompatibility_002dvoice.html" rel="next" title="emacsvox-aural-compatibility-voice">
+<link href="emacsvox_002dauctex.html" rel="prev" title="emacsvox-auctex">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002daural">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dcompatibility_002dvoice.html" accesskey="n" rel="next">emacsvox-aural-compatibility-voice</a>, Previous: <a href="emacsvox_002dauctex.html" accesskey="p" rel="prev">emacsvox-auctex</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002daural-1"><span>2.15 emacsvox-aural<a class="copiable-link" href="#emacsvox_002daural-1"> &para;</a></span></h3>
+
+<p>This module owns the device-independent vocabulary used by Aural
+Presentation.  It deliberately contains no speech-server, sound
+player, major-mode, or resource resolution.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dAural-Commands" accesskey="1">Emacsvox-Aural Commands</a></li>
+<li><a href="#emacsvox_002daural-Options" accesskey="2">emacsvox-aural Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural-Commands">
+<h4 class="subsection"><span>2.15.1 Emacsvox-Aural Commands<a class="copiable-link" href="#Emacsvox_002dAural-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dtoggle_002dface_002dpresentation" accesskey="1">emacsvox-aural-toggle-face-presentation</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dtoggle_002dface_002dpresentation">
+<h4 class="subsubsection"><span>2.15.1.1 emacsvox-aural-toggle-face-presentation<a class="copiable-link" href="#emacsvox_002daural_002dtoggle_002dface_002dpresentation"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dtoggle_002dface_002dpresentation"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-toggle-face-presentation</strong> <var class="def-var-arguments">(&amp;optional arg)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dtoggle_002dface_002dpresentation"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dtoggle_002dface_002dpresentation-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle explicit visual-face presentation.
+
+With a positive prefix ARG, enable it.  With zero or a negative prefix,
+disable it.  This does not change semantic presentation or Voice Lock.
+
+(fn &amp;optional ARG)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002daural-Options">
+<h4 class="subsection"><span>2.15.2 emacsvox-aural Options<a class="copiable-link" href="#emacsvox_002daural-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-21"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-face-presentation-enabled</var><a class="copiable-link" href="#index-User-Option-21"> &para;</a></span></dt>
+<dd><pre class="verbatim">Whether rules selected by explicit visual faces participate.
+
+This control affects rules with a ‘:legacy-face’ selector.  It does not
+disable semantic role, state, event, or attribute presentation, and it does
+not replace ‘voice-lock-mode’.  Voice Lock continues to control only the
+legacy face/personality-to-voice compatibility mapping.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+t
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>emacsvox-wizards (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="emacsvox-wizards (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="emacsvox-wizards (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="emacsvox_002dwoman.html" rel="next" title="emacsvox-woman">
+<link href="emacsvox_002dwindows_002dspeech.html" rel="prev" title="emacsvox-windows-speech">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
+span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="emacsvox_002dwizards">
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dwoman.html" accesskey="n" rel="next">emacsvox-woman</a>, Previous: <a href="emacsvox_002dwindows_002dspeech.html" accesskey="p" rel="prev">emacsvox-windows-speech</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="emacsvox_002dwizards-1"><span>2.246 emacsvox-wizards<a class="copiable-link" href="#emacsvox_002dwizards-1"> &para;</a></span></h3>
+
+<p>Contains various wizards for the Emacsvox desktop.
+</p>
+<ul class="mini-toc">
+<li><a href="#Emacsvox_002dWizards-Commands" accesskey="1">Emacsvox-Wizards Commands</a></li>
+<li><a href="#emacsvox_002dwizards-Options" accesskey="2">emacsvox-wizards Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="Emacsvox_002dWizards-Commands">
+<h4 class="subsection"><span>2.246.1 Emacsvox-Wizards Commands<a class="copiable-link" href="#Emacsvox_002dWizards-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dbrightness_002dalert_002dtoggle" accesskey="1">emacsvox-brightness-alert-toggle</a></li>
+<li><a href="#emacsvox_002dbrightness_002dautoblack_002dtoggle" accesskey="2">emacsvox-brightness-autoblack-toggle</a></li>
+<li><a href="#emacsvox_002dcopy_002dcurrent_002dfile" accesskey="3">emacsvox-copy-current-file</a></li>
+<li><a href="#emacsvox_002dcustomize" accesskey="4">emacsvox-customize</a></li>
+<li><a href="#emacsvox_002ddescribe_002demacsvox" accesskey="5">emacsvox-describe-emacsvox</a></li>
+<li><a href="#emacsvox_002dkill_002dbuffer_002dquietly" accesskey="6">emacsvox-kill-buffer-quietly</a></li>
+<li><a href="#emacsvox_002dlearn_002demacs" accesskey="7">emacsvox-learn-emacs</a></li>
+<li><a href="#emacsvox_002dlink_002dcurrent_002dfile" accesskey="8">emacsvox-link-current-file</a></li>
+<li><a href="#emacsvox_002dnext_002dframe_002dor_002dbuffer" accesskey="9">emacsvox-next-frame-or-buffer</a></li>
+<li><a href="#emacsvox_002dprevious_002dframe_002dor_002dbuffer">emacsvox-previous-frame-or-buffer</a></li>
+<li><a href="#emacsvox_002dselect_002dthis_002dbuffer_002dnext_002ddisplay">emacsvox-select-this-buffer-next-display</a></li>
+<li><a href="#emacsvox_002dselect_002dthis_002dbuffer_002dother_002dwindow_002ddisplay">emacsvox-select-this-buffer-other-window-display</a></li>
+<li><a href="#emacsvox_002dselect_002dthis_002dbuffer_002dprevious_002ddisplay">emacsvox-select-this-buffer-previous-display</a></li>
+<li><a href="#emacsvox_002dshow_002dproperty_002dat_002dpoint">emacsvox-show-property-at-point</a></li>
+<li><a href="#emacsvox_002dshow_002dstyle_002dat_002dpoint">emacsvox-show-style-at-point</a></li>
+<li><a href="#emacsvox_002dskip_002dblank_002dlines_002dbackward">emacsvox-skip-blank-lines-backward</a></li>
+<li><a href="#emacsvox_002dskip_002dblank_002dlines_002dforward">emacsvox-skip-blank-lines-forward</a></li>
+<li><a href="#emacsvox_002dskip_002dspace_002dbackward">emacsvox-skip-space-backward</a></li>
+<li><a href="#emacsvox_002dskip_002dspace_002dforwar">emacsvox-skip-space-forwar</a></li>
+<li><a href="#emacsvox_002dspeak_002dhostname">emacsvox-speak-hostname</a></li>
+<li><a href="#emacsvox_002dspeak_002dpopup_002dmessages">emacsvox-speak-popup-messages</a></li>
+<li><a href="#emacsvox_002dspeak_002dtelephone_002ddirectory">emacsvox-speak-telephone-directory</a></li>
+<li><a href="#emacsvox_002dspeak_002dthis_002dbuffer_002dnext_002ddisplay">emacsvox-speak-this-buffer-next-display</a></li>
+<li><a href="#emacsvox_002dspeak_002dthis_002dbuffer_002dother_002dwindow_002ddisplay">emacsvox-speak-this-buffer-other-window-display</a></li>
+<li><a href="#emacsvox_002dspeak_002dthis_002dbuffer_002dprevious_002ddisplay">emacsvox-speak-this-buffer-previous-display</a></li>
+<li><a href="#emacsvox_002dsymlink_002dcurrent_002dfile">emacsvox-symlink-current-file</a></li>
+<li><a href="#emacsvox_002dview_002demacsvox_002dnews">emacsvox-view-emacsvox-news</a></li>
+<li><a href="#emacsvox_002dview_002demacsvox_002dtips">emacsvox-view-emacsvox-tips</a></li>
+<li><a href="#emacsvox_002dwizards_002dbbc_002diplayer">emacsvox-wizards-bbc-iplayer</a></li>
+<li><a href="#emacsvox_002dwizards_002dcleanup_002dshell_002dpath">emacsvox-wizards-cleanup-shell-path</a></li>
+<li><a href="#emacsvox_002dwizards_002dcolor_002dat_002dpoint">emacsvox-wizards-color-at-point</a></li>
+<li><a href="#emacsvox_002dwizards_002dcolor_002ddiff_002dat_002dpoint">emacsvox-wizards-color-diff-at-point</a></li>
+<li><a href="#emacsvox_002dwizards_002dcolor_002dwheel">emacsvox-wizards-color-wheel</a></li>
+<li><a href="#emacsvox_002dwizards_002dcolors">emacsvox-wizards-colors</a></li>
+<li><a href="#emacsvox_002dwizards_002dcomma_002dat_002dend_002dof_002dword">emacsvox-wizards-comma-at-end-of-word</a></li>
+<li><a href="#emacsvox_002dwizards_002dcount_002dslides_002din_002dregion">emacsvox-wizards-count-slides-in-region</a></li>
+<li><a href="#emacsvox_002dwizards_002dcustomize_002dsaved">emacsvox-wizards-customize-saved</a></li>
+<li><a href="#emacsvox_002dwizards_002ddescribe_002dvoice">emacsvox-wizards-describe-voice</a></li>
+<li><a href="#emacsvox_002dwizards_002dend_002dof_002dword">emacsvox-wizards-end-of-word</a></li>
+<li><a href="#emacsvox_002dwizards_002denumerate_002dmatching_002dcommands">emacsvox-wizards-enumerate-matching-commands</a></li>
+<li><a href="#emacsvox_002dwizards_002denumerate_002dmatching_002dfaces">emacsvox-wizards-enumerate-matching-faces</a></li>
+<li><a href="#emacsvox_002dwizards_002denumerate_002duncovered_002dcommands">emacsvox-wizards-enumerate-uncovered-commands</a></li>
+<li><a href="#emacsvox_002dwizards_002denumerate_002dundefined_002dfaces">emacsvox-wizards-enumerate-undefined-faces</a></li>
+<li><a href="#emacsvox_002dwizards_002denumerate_002dunmapped_002dfaces">emacsvox-wizards-enumerate-unmapped-faces</a></li>
+<li><a href="#emacsvox_002dwizards_002despeak_002dline">emacsvox-wizards-espeak-line</a></li>
+<li><a href="#emacsvox_002dwizards_002despeak_002dregion">emacsvox-wizards-espeak-region</a></li>
+<li><a href="#emacsvox_002dwizards_002despeak_002dstring">emacsvox-wizards-espeak-string</a></li>
+<li><a href="#emacsvox_002dwizards_002deww_002dbuffer_002dlist">emacsvox-wizards-eww-buffer-list</a></li>
+<li><a href="#emacsvox_002dwizards_002dexec_002dpath_002dfrom_002dshell">emacsvox-wizards-exec-path-from-shell</a></li>
+<li><a href="#emacsvox_002dwizards_002dexecute_002dasynchronously">emacsvox-wizards-execute-asynchronously</a></li>
+<li><a href="#emacsvox_002dwizards_002dfind_002dfile_002das_002droot">emacsvox-wizards-find-file-as-root</a></li>
+<li><a href="#emacsvox_002dwizards_002dfind_002dlongest_002dline_002din_002dregion">emacsvox-wizards-find-longest-line-in-region</a></li>
+<li><a href="#emacsvox_002dwizards_002dfind_002dlongest_002dparagraph_002din_002dregion">emacsvox-wizards-find-longest-paragraph-in-region</a></li>
+<li><a href="#emacsvox_002dwizards_002dfind_002dlongest_002dsentence_002din_002dregion">emacsvox-wizards-find-longest-sentence-in-region</a></li>
+<li><a href="#emacsvox_002dwizards_002dfind_002dshortest_002dline_002din_002dregion">emacsvox-wizards-find-shortest-line-in-region</a></li>
+<li><a href="#emacsvox_002dwizards_002dframe_002dcolors">emacsvox-wizards-frame-colors</a></li>
+<li><a href="#emacsvox_002dwizards_002dfree_002dgeo_002dip">emacsvox-wizards-free-geo-ip</a></li>
+<li><a href="#emacsvox_002dwizards_002dgen_002dfn_002ddecl">emacsvox-wizards-gen-fn-decl</a></li>
+<li><a href="#emacsvox_002dwizards_002dgoogle_002dnews">emacsvox-wizards-google-news</a></li>
+<li><a href="#emacsvox_002dwizards_002dhow_002dmany_002dmatches">emacsvox-wizards-how-many-matches</a></li>
+<li><a href="#emacsvox_002dwizards_002dlacheck_002dbuffer_002dfile">emacsvox-wizards-lacheck-buffer-file</a></li>
+<li><a href="#emacsvox_002dwizards_002dlocate_002dcontent">emacsvox-wizards-locate-content</a></li>
+<li><a href="#emacsvox_002dwizards_002dmlb_002dstandings">emacsvox-wizards-mlb-standings</a></li>
+<li><a href="#emacsvox_002dwizards_002dmodule_002denumerate_002duncovered_002dcommands">emacsvox-wizards-module-enumerate-uncovered-commands</a></li>
+<li><a href="#emacsvox_002dwizards_002dmove_002dand_002dspeak">emacsvox-wizards-move-and-speak</a></li>
+<li><a href="#emacsvox_002dwizards_002dnba_002dstandings">emacsvox-wizards-nba-standings</a></li>
+<li><a href="#emacsvox_002dwizards_002dnext_002dbullet">emacsvox-wizards-next-bullet</a></li>
+<li><a href="#emacsvox_002dwizards_002dnext_002dinteractive_002ddefun">emacsvox-wizards-next-interactive-defun</a></li>
+<li><a href="#emacsvox_002dwizards_002dnoaa_002dweather">emacsvox-wizards-noaa-weather</a></li>
+<li><a href="#emacsvox_002dwizards_002doccur_002dheader_002dlines">emacsvox-wizards-occur-header-lines</a></li>
+<li><a href="#emacsvox_002dwizards_002dpdf_002dopen">emacsvox-wizards-pdf-open</a></li>
+<li><a href="#emacsvox_002dwizards_002dportfolio">emacsvox-wizards-portfolio</a></li>
+<li><a href="#emacsvox_002dwizards_002dprevious_002dbullet">emacsvox-wizards-previous-bullet</a></li>
+<li><a href="#emacsvox_002dwizards_002dremote_002dframe">emacsvox-wizards-remote-frame</a></li>
+<li><a href="#emacsvox_002dwizards_002dset_002dcolors">emacsvox-wizards-set-colors</a></li>
+<li><a href="#emacsvox_002dwizards_002dshell">emacsvox-wizards-shell</a></li>
+<li><a href="#emacsvox_002dwizards_002dshell_002dby_002dkey">emacsvox-wizards-shell-by-key</a></li>
+<li><a href="#emacsvox_002dwizards_002dshell_002dcommand_002don_002dcurrent_002dfile">emacsvox-wizards-shell-command-on-current-file</a></li>
+<li><a href="#emacsvox_002dwizards_002dshell_002ddirectory_002dreset">emacsvox-wizards-shell-directory-reset</a></li>
+<li><a href="#emacsvox_002dwizards_002dshell_002ddirectory_002dset">emacsvox-wizards-shell-directory-set</a></li>
+<li><a href="#emacsvox_002dwizards_002dshell_002dtoggle">emacsvox-wizards-shell-toggle</a></li>
+<li><a href="#emacsvox_002dwizards_002dshow_002deval_002dresult">emacsvox-wizards-show-eval-result</a></li>
+<li><a href="#emacsvox_002dwizards_002dshow_002dface">emacsvox-wizards-show-face</a></li>
+<li><a href="#emacsvox_002dwizards_002dshow_002dmemory_002dused">emacsvox-wizards-show-memory-used</a></li>
+<li><a href="#emacsvox_002dwizards_002dshow_002dtheme">emacsvox-wizards-show-theme</a></li>
+<li><a href="#emacsvox_002dwizards_002dsnarf_002dsexp">emacsvox-wizards-snarf-sexp</a></li>
+<li><a href="#emacsvox_002dwizards_002dspeak_002diso_002ddatetime">emacsvox-wizards-speak-iso-datetime</a></li>
+<li><a href="#emacsvox_002dwizards_002dsqueeze_002dblanks">emacsvox-wizards-squeeze-blanks</a></li>
+<li><a href="#emacsvox_002dwizards_002dswap_002dfg_002dand_002dbg">emacsvox-wizards-swap-fg-and-bg</a></li>
+<li><a href="#emacsvox_002dwizards_002dtex_002dtie_002dcurrent_002dword">emacsvox-wizards-tex-tie-current-word</a></li>
+<li><a href="#emacsvox_002dwizards_002dtoggle_002dmm_002ddd_002dyyyy_002ddate_002dpronouncer">emacsvox-wizards-toggle-mm-dd-yyyy-date-pronouncer</a></li>
+<li><a href="#emacsvox_002dwizards_002dtoggle_002dyyyy_002dmm_002ddd_002ddate_002dpronouncer">emacsvox-wizards-toggle-yyyy-mm-dd-date-pronouncer</a></li>
+<li><a href="#emacsvox_002dwizards_002dtoggle_002dyyyymmdd_002ddate_002dpronouncer">emacsvox-wizards-toggle-yyyymmdd-date-pronouncer</a></li>
+<li><a href="#emacsvox_002dwizards_002dtramp_002dopen_002dlocation">emacsvox-wizards-tramp-open-location</a></li>
+<li><a href="#emacsvox_002dwizards_002dtune_002din_002dradio_002dbrowse">emacsvox-wizards-tune-in-radio-browse</a></li>
+<li><a href="#emacsvox_002dwizards_002dtune_002din_002dradio_002dsearch">emacsvox-wizards-tune-in-radio-search</a></li>
+<li><a href="#emacsvox_002dwizards_002dunits">emacsvox-wizards-units</a></li>
+<li><a href="#emacsvox_002dwizards_002dvc_002dn">emacsvox-wizards-vc-n</a></li>
+<li><a href="#emacsvox_002dwizards_002dvc_002dview_002dmode">emacsvox-wizards-vc-view-mode</a></li>
+<li><a href="#emacsvox_002dwizards_002dvc_002dviewer">emacsvox-wizards-vc-viewer</a></li>
+<li><a href="#emacsvox_002dwizards_002dvc_002dviewer_002drefresh">emacsvox-wizards-vc-viewer-refresh</a></li>
+<li><a href="#emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dm_002dplayer_002dmode">emacsvox-wizards-view-buffers-filtered-by-m-player-mode</a></li>
+<li><a href="#emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dthis_002dmode">emacsvox-wizards-view-buffers-filtered-by-this-mode</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dbrightness_002dalert_002dtoggle">
+<h4 class="subsubsection"><span>2.246.1.1 emacsvox-brightness-alert-toggle<a class="copiable-link" href="#emacsvox_002dbrightness_002dalert_002dtoggle"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbrightness_002dalert_002dtoggle"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-brightness-alert-toggle</strong><a class="copiable-link" href="#index-emacsvox_002dbrightness_002dalert_002dtoggle"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbrightness_002dalert_002dtoggle-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle brightness alert.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dbrightness_002dautoblack_002dtoggle">
+<h4 class="subsubsection"><span>2.246.1.2 emacsvox-brightness-autoblack-toggle<a class="copiable-link" href="#emacsvox_002dbrightness_002dautoblack_002dtoggle"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dbrightness_002dautoblack_002dtoggle"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-brightness-autoblack-toggle</strong><a class="copiable-link" href="#index-emacsvox_002dbrightness_002dautoblack_002dtoggle"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dbrightness_002dautoblack_002dtoggle-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle brightness autoblack.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dcopy_002dcurrent_002dfile">
+<h4 class="subsubsection"><span>2.246.1.3 emacsvox-copy-current-file<a class="copiable-link" href="#emacsvox_002dcopy_002dcurrent_002dfile"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dcopy_002dcurrent_002dfile"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-copy-current-file</strong><a class="copiable-link" href="#index-emacsvox_002dcopy_002dcurrent_002dfile"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-M_002dc"></a><span><kbd class="kbd">C-e M-c</kbd><a class="copiable-link" href="#index-C_002de-M_002dc"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dcopy_002dcurrent_002dfile-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Copy file visited in current buffer to new location.
+Prompts for the new location and preserves modification time
+  when copying.  If location is a directory, the file is copied
+  to that directory under its current name ; if location names
+  a file in an existing directory, the specified name is
+  used.  Asks for confirmation if the copy will result in an
+  existing file being overwritten.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dcustomize">
+<h4 class="subsubsection"><span>2.246.1.4 emacsvox-customize<a class="copiable-link" href="#emacsvox_002dcustomize"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dcustomize"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-customize</strong><a class="copiable-link" href="#index-emacsvox_002dcustomize"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C"></a><span><kbd class="kbd">C-e C</kbd><a class="copiable-link" href="#index-C_002de-C"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dcustomize-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Customize Emacsvox.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002ddescribe_002demacsvox">
+<h4 class="subsubsection"><span>2.246.1.5 emacsvox-describe-emacsvox<a class="copiable-link" href="#emacsvox_002ddescribe_002demacsvox"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002ddescribe_002demacsvox"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-describe-emacsvox</strong><a class="copiable-link" href="#index-emacsvox_002ddescribe_002demacsvox"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dh-C_002de"></a><span><kbd class="kbd">C-h C-e</kbd><a class="copiable-link" href="#index-C_002dh-C_002de"> &para;</a></span></dt>
+<dt><a id="index-_003cf1_003e-C_002de"></a><span><kbd class="kbd">&lt;f1&gt; C-e</kbd><a class="copiable-link" href="#index-_003cf1_003e-C_002de"> &para;</a></span></dt>
+<dt><a id="index-_003chelp_003e-C_002de"></a><span><kbd class="kbd">&lt;help&gt; C-e</kbd><a class="copiable-link" href="#index-_003chelp_003e-C_002de"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002ddescribe_002demacsvox-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Give a brief overview of emacsvox.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dkill_002dbuffer_002dquietly">
+<h4 class="subsubsection"><span>2.246.1.6 emacsvox-kill-buffer-quietly<a class="copiable-link" href="#emacsvox_002dkill_002dbuffer_002dquietly"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dkill_002dbuffer_002dquietly"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-kill-buffer-quietly</strong><a class="copiable-link" href="#index-emacsvox_002dkill_002dbuffer_002dquietly"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002dt-Q"></a><span><kbd class="kbd">C-e C-t Q</kbd><a class="copiable-link" href="#index-C_002de-C_002dt-Q"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dkill_002dbuffer_002dquietly-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Kill current buffer without  confirmation.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dlearn_002demacs">
+<h4 class="subsubsection"><span>2.246.1.7 emacsvox-learn-emacs<a class="copiable-link" href="#emacsvox_002dlearn_002demacs"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dlearn_002demacs"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-learn-emacs</strong><a class="copiable-link" href="#index-emacsvox_002dlearn_002demacs"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003cf1_003e"></a><span><kbd class="kbd">C-e &lt;f1&gt;</kbd><a class="copiable-link" href="#index-C_002de-_003cf1_003e"> &para;</a></span></dt>
+<dt><a id="index-C_002dh-C_002dl"></a><span><kbd class="kbd">C-h C-l</kbd><a class="copiable-link" href="#index-C_002dh-C_002dl"> &para;</a></span></dt>
+<dt><a id="index-_003cf1_003e-C_002dl"></a><span><kbd class="kbd">&lt;f1&gt; C-l</kbd><a class="copiable-link" href="#index-_003cf1_003e-C_002dl"> &para;</a></span></dt>
+<dt><a id="index-_003chelp_003e-C_002dl"></a><span><kbd class="kbd">&lt;help&gt; C-l</kbd><a class="copiable-link" href="#index-_003chelp_003e-C_002dl"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dlearn_002demacs-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Helps you learn the keys.  You can press keys and hear what they do.
+To leave, press C-g.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dlink_002dcurrent_002dfile">
+<h4 class="subsubsection"><span>2.246.1.8 emacsvox-link-current-file<a class="copiable-link" href="#emacsvox_002dlink_002dcurrent_002dfile"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dlink_002dcurrent_002dfile"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-link-current-file</strong><a class="copiable-link" href="#index-emacsvox_002dlink_002dcurrent_002dfile"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dlink_002dcurrent_002dfile-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Link (hard link) file visited in current buffer to new location.
+Prompts for the new location and preserves modification time
+  when linking.  If location is a directory, the file is copied
+  to that directory under its current name ; if location names
+  a file in an existing directory, the specified name is
+  used.  Signals an error if target already exists.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dnext_002dframe_002dor_002dbuffer">
+<h4 class="subsubsection"><span>2.246.1.9 emacsvox-next-frame-or-buffer<a class="copiable-link" href="#emacsvox_002dnext_002dframe_002dor_002dbuffer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dnext_002dframe_002dor_002dbuffer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-next-frame-or-buffer</strong> <var class="def-var-arguments">(&amp;optional frame)</var><a class="copiable-link" href="#index-emacsvox_002dnext_002dframe_002dor_002dbuffer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dnext_002dframe_002dor_002dbuffer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to next buffer.
+With optional interactive prefix arg ‘frame’, move to next frame instead.
+
+(fn &amp;optional FRAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dprevious_002dframe_002dor_002dbuffer">
+<h4 class="subsubsection"><span>2.246.1.10 emacsvox-previous-frame-or-buffer<a class="copiable-link" href="#emacsvox_002dprevious_002dframe_002dor_002dbuffer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dprevious_002dframe_002dor_002dbuffer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-previous-frame-or-buffer</strong> <var class="def-var-arguments">(&amp;optional frame)</var><a class="copiable-link" href="#index-emacsvox_002dprevious_002dframe_002dor_002dbuffer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dprevious_002dframe_002dor_002dbuffer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to previous buffer.
+With optional interactive prefix arg ‘frame’, move to previous frame instead.
+
+(fn &amp;optional FRAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dselect_002dthis_002dbuffer_002dnext_002ddisplay">
+<h4 class="subsubsection"><span>2.246.1.11 emacsvox-select-this-buffer-next-display<a class="copiable-link" href="#emacsvox_002dselect_002dthis_002dbuffer_002dnext_002ddisplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dselect_002dthis_002dbuffer_002dnext_002ddisplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-select-this-buffer-next-display</strong><a class="copiable-link" href="#index-emacsvox_002dselect_002dthis_002dbuffer_002dnext_002ddisplay"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002d_003cright_003e"></a><span><kbd class="kbd">C-e C-&lt;right&gt;</kbd><a class="copiable-link" href="#index-C_002de-C_002d_003cright_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dselect_002dthis_002dbuffer_002dnext_002ddisplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select this buffer as displayed in a ‘next’ frame.
+See documentation for command
+‘emacsvox-select-this-buffer-other-window-display’ for the
+meaning of ‘next’.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dselect_002dthis_002dbuffer_002dother_002dwindow_002ddisplay">
+<h4 class="subsubsection"><span>2.246.1.12 emacsvox-select-this-buffer-other-window-display<a class="copiable-link" href="#emacsvox_002dselect_002dthis_002dbuffer_002dother_002dwindow_002ddisplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dselect_002dthis_002dbuffer_002dother_002dwindow_002ddisplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-select-this-buffer-other-window-display</strong> <var class="def-var-arguments">(&amp;optional arg)</var><a class="copiable-link" href="#index-emacsvox_002dselect_002dthis_002dbuffer_002dother_002dwindow_002ddisplay"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dselect_002dthis_002dbuffer_002dother_002dwindow_002ddisplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Switch to this buffer as displayed in a different frame.
+Emacs allows you to display the same buffer in multiple windows
+or frames.  These different windows can display different
+portions of the buffer.  This is equivalent to leaving a book
+open at multiple places at once.
+
+(fn &amp;optional ARG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dselect_002dthis_002dbuffer_002dprevious_002ddisplay">
+<h4 class="subsubsection"><span>2.246.1.13 emacsvox-select-this-buffer-previous-display<a class="copiable-link" href="#emacsvox_002dselect_002dthis_002dbuffer_002dprevious_002ddisplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dselect_002dthis_002dbuffer_002dprevious_002ddisplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-select-this-buffer-previous-display</strong><a class="copiable-link" href="#index-emacsvox_002dselect_002dthis_002dbuffer_002dprevious_002ddisplay"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002d_003cleft_003e"></a><span><kbd class="kbd">C-e C-&lt;left&gt;</kbd><a class="copiable-link" href="#index-C_002de-C_002d_003cleft_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dselect_002dthis_002dbuffer_002dprevious_002ddisplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Select this buffer as displayed in a ‘previous’ window.
+See documentation for command
+‘emacsvox-select-this-buffer-other-window-display’ for the
+meaning of ‘previous’.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dshow_002dproperty_002dat_002dpoint">
+<h4 class="subsubsection"><span>2.246.1.14 emacsvox-show-property-at-point<a class="copiable-link" href="#emacsvox_002dshow_002dproperty_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dshow_002dproperty_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-show-property-at-point</strong> <var class="def-var-arguments">(&amp;optional property)</var><a class="copiable-link" href="#index-emacsvox_002dshow_002dproperty_002dat_002dpoint"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-M_002dp"></a><span><kbd class="kbd">C-e M-p</kbd><a class="copiable-link" href="#index-C_002de-M_002dp"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dshow_002dproperty_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Show value of PROPERTY at point.
+If optional arg property is not supplied, read it interactively.
+
+(fn &amp;optional PROPERTY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dshow_002dstyle_002dat_002dpoint">
+<h4 class="subsubsection"><span>2.246.1.15 emacsvox-show-style-at-point<a class="copiable-link" href="#emacsvox_002dshow_002dstyle_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dshow_002dstyle_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-show-style-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dshow_002dstyle_002dat_002dpoint"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-M_002dv"></a><span><kbd class="kbd">C-e M-v</kbd><a class="copiable-link" href="#index-C_002de-M_002dv"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dshow_002dstyle_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Show value of property personality (and possibly face) at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dskip_002dblank_002dlines_002dbackward">
+<h4 class="subsubsection"><span>2.246.1.16 emacsvox-skip-blank-lines-backward<a class="copiable-link" href="#emacsvox_002dskip_002dblank_002dlines_002dbackward"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dskip_002dblank_002dlines_002dbackward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-skip-blank-lines-backward</strong><a class="copiable-link" href="#index-emacsvox_002dskip_002dblank_002dlines_002dbackward"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-S_002d_003cup_003e"></a><span><kbd class="kbd">S-&lt;up&gt;</kbd><a class="copiable-link" href="#index-S_002d_003cup_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dskip_002dblank_002dlines_002dbackward-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move backward  across blank lines, then speak line.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dskip_002dblank_002dlines_002dforward">
+<h4 class="subsubsection"><span>2.246.1.17 emacsvox-skip-blank-lines-forward<a class="copiable-link" href="#emacsvox_002dskip_002dblank_002dlines_002dforward"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dskip_002dblank_002dlines_002dforward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-skip-blank-lines-forward</strong><a class="copiable-link" href="#index-emacsvox_002dskip_002dblank_002dlines_002dforward"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-S_002d_003cdown_003e"></a><span><kbd class="kbd">S-&lt;down&gt;</kbd><a class="copiable-link" href="#index-S_002d_003cdown_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dskip_002dblank_002dlines_002dforward-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move forward across blank lines, then speak line.
+
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dskip_002dspace_002dbackward">
+<h4 class="subsubsection"><span>2.246.1.18 emacsvox-skip-space-backward<a class="copiable-link" href="#emacsvox_002dskip_002dspace_002dbackward"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dskip_002dspace_002dbackward"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-skip-space-backward</strong><a class="copiable-link" href="#index-emacsvox_002dskip_002dspace_002dbackward"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-S_002d_003cleft_003e"></a><span><kbd class="kbd">S-&lt;left&gt;</kbd><a class="copiable-link" href="#index-S_002d_003cleft_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dskip_002dspace_002dbackward-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Skip back across blanks.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dskip_002dspace_002dforwar">
+<h4 class="subsubsection"><span>2.246.1.19 emacsvox-skip-space-forwar<a class="copiable-link" href="#emacsvox_002dskip_002dspace_002dforwar"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dskip_002dspace_002dforwar"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-skip-space-forwar</strong><a class="copiable-link" href="#index-emacsvox_002dskip_002dspace_002dforwar"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-S_002d_003cright_003e"></a><span><kbd class="kbd">S-&lt;right&gt;</kbd><a class="copiable-link" href="#index-S_002d_003cright_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dskip_002dspace_002dforwar-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Skip forward across blanks.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dhostname">
+<h4 class="subsubsection"><span>2.246.1.20 emacsvox-speak-hostname<a class="copiable-link" href="#emacsvox_002dspeak_002dhostname"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dhostname"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-hostname</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dhostname"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-M_002dh"></a><span><kbd class="kbd">C-e M-h</kbd><a class="copiable-link" href="#index-C_002de-M_002dh"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dhostname-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak host name.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dpopup_002dmessages">
+<h4 class="subsubsection"><span>2.246.1.21 emacsvox-speak-popup-messages<a class="copiable-link" href="#emacsvox_002dspeak_002dpopup_002dmessages"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dpopup_002dmessages"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-popup-messages</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dpopup_002dmessages"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dh-M"></a><span><kbd class="kbd">C-h M</kbd><a class="copiable-link" href="#index-C_002dh-M"> &para;</a></span></dt>
+<dt><a id="index-_003cf1_003e-M"></a><span><kbd class="kbd">&lt;f1&gt; M</kbd><a class="copiable-link" href="#index-_003cf1_003e-M"> &para;</a></span></dt>
+<dt><a id="index-_003chelp_003e-M"></a><span><kbd class="kbd">&lt;help&gt; M</kbd><a class="copiable-link" href="#index-_003chelp_003e-M"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dpopup_002dmessages-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Pop up Messages  and switch to it.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dtelephone_002ddirectory">
+<h4 class="subsubsection"><span>2.246.1.22 emacsvox-speak-telephone-directory<a class="copiable-link" href="#emacsvox_002dspeak_002dtelephone_002ddirectory"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dtelephone_002ddirectory"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-telephone-directory</strong> <var class="def-var-arguments">(&amp;optional edit)</var><a class="copiable-link" href="#index-emacsvox_002dspeak_002dtelephone_002ddirectory"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-t"></a><span><kbd class="kbd">C-e x t</kbd><a class="copiable-link" href="#index-C_002de-x-t"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dtelephone_002ddirectory-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Lookup and display a phone number.
+With prefix arg, opens the phone book for editing.
+
+(fn &amp;optional EDIT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dthis_002dbuffer_002dnext_002ddisplay">
+<h4 class="subsubsection"><span>2.246.1.23 emacsvox-speak-this-buffer-next-display<a class="copiable-link" href="#emacsvox_002dspeak_002dthis_002dbuffer_002dnext_002ddisplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dthis_002dbuffer_002dnext_002ddisplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-this-buffer-next-display</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dthis_002dbuffer_002dnext_002ddisplay"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003cright_003e"></a><span><kbd class="kbd">C-e &lt;right&gt;</kbd><a class="copiable-link" href="#index-C_002de-_003cright_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dthis_002dbuffer_002dnext_002ddisplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak this buffer as displayed in a ‘previous’ window.
+See documentation for command
+‘emacsvox-speak-this-buffer-other-window-display’ for the
+meaning of ‘next’.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dthis_002dbuffer_002dother_002dwindow_002ddisplay">
+<h4 class="subsubsection"><span>2.246.1.24 emacsvox-speak-this-buffer-other-window-display<a class="copiable-link" href="#emacsvox_002dspeak_002dthis_002dbuffer_002dother_002dwindow_002ddisplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dthis_002dbuffer_002dother_002dwindow_002ddisplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-this-buffer-other-window-display</strong> <var class="def-var-arguments">(window)</var><a class="copiable-link" href="#index-emacsvox_002dspeak_002dthis_002dbuffer_002dother_002dwindow_002ddisplay"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-C_002d_002f"></a><span><kbd class="kbd">C-e C-/</kbd><a class="copiable-link" href="#index-C_002de-C_002d_002f"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dthis_002dbuffer_002dother_002dwindow_002ddisplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak this buffer as displayed in a different frame or window.  Emacs
+allows you to display the same buffer in multiple windows or
+frames.  These different windows can display different
+portions of the buffer.  This is equivalent to leaving a
+book open at places at once.  This command allows you to
+listen to the places where you have left the book open.
+
+(fn WINDOW)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dspeak_002dthis_002dbuffer_002dprevious_002ddisplay">
+<h4 class="subsubsection"><span>2.246.1.25 emacsvox-speak-this-buffer-previous-display<a class="copiable-link" href="#emacsvox_002dspeak_002dthis_002dbuffer_002dprevious_002ddisplay"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dspeak_002dthis_002dbuffer_002dprevious_002ddisplay"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-speak-this-buffer-previous-display</strong><a class="copiable-link" href="#index-emacsvox_002dspeak_002dthis_002dbuffer_002dprevious_002ddisplay"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003cleft_003e"></a><span><kbd class="kbd">C-e &lt;left&gt;</kbd><a class="copiable-link" href="#index-C_002de-_003cleft_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dspeak_002dthis_002dbuffer_002dprevious_002ddisplay-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak this buffer as displayed in a ‘previous’ window.
+See documentation for command
+‘emacsvox-speak-this-buffer-other-window-display’ for the
+meaning of ‘previous’.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dsymlink_002dcurrent_002dfile">
+<h4 class="subsubsection"><span>2.246.1.26 emacsvox-symlink-current-file<a class="copiable-link" href="#emacsvox_002dsymlink_002dcurrent_002dfile"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dsymlink_002dcurrent_002dfile"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-symlink-current-file</strong><a class="copiable-link" href="#index-emacsvox_002dsymlink_002dcurrent_002dfile"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-M_002ds"></a><span><kbd class="kbd">C-e M-s</kbd><a class="copiable-link" href="#index-C_002de-M_002ds"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dsymlink_002dcurrent_002dfile-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Link (symbolic link) file visited in current buffer to new location.
+Prompts for the new location and preserves modification time
+  when linking.  If location is a directory, the file is copied
+  to that directory under its current name ; if location names
+  a file in an existing directory, the specified name is
+  used.  Signals an error if target already exists.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dview_002demacsvox_002dnews">
+<h4 class="subsubsection"><span>2.246.1.27 emacsvox-view-emacsvox-news<a class="copiable-link" href="#emacsvox_002dview_002demacsvox_002dnews"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dview_002demacsvox_002dnews"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-view-emacsvox-news</strong><a class="copiable-link" href="#index-emacsvox_002dview_002demacsvox_002dnews"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-N"></a><span><kbd class="kbd">C-e N</kbd><a class="copiable-link" href="#index-C_002de-N"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dview_002demacsvox_002dnews-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display emacsvox News for a given version.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dview_002demacsvox_002dtips">
+<h4 class="subsubsection"><span>2.246.1.28 emacsvox-view-emacsvox-tips<a class="copiable-link" href="#emacsvox_002dview_002demacsvox_002dtips"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dview_002demacsvox_002dtips"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-view-emacsvox-tips</strong><a class="copiable-link" href="#index-emacsvox_002dview_002demacsvox_002dtips"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-T"></a><span><kbd class="kbd">C-e T</kbd><a class="copiable-link" href="#index-C_002de-T"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dview_002demacsvox_002dtips-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse  Emacsvox productivity tips.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dbbc_002diplayer">
+<h4 class="subsubsection"><span>2.246.1.29 emacsvox-wizards-bbc-iplayer<a class="copiable-link" href="#emacsvox_002dwizards_002dbbc_002diplayer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dbbc_002diplayer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-bbc-iplayer</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dbbc_002diplayer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dbbc_002diplayer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse BBC Schedule from get_iplayer radio cache.
+Bug: First run fails to bind keys.   Works on subsequent runs.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dcleanup_002dshell_002dpath">
+<h4 class="subsubsection"><span>2.246.1.30 emacsvox-wizards-cleanup-shell-path<a class="copiable-link" href="#emacsvox_002dwizards_002dcleanup_002dshell_002dpath"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dcleanup_002dshell_002dpath"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-cleanup-shell-path</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dcleanup_002dshell_002dpath"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dcleanup_002dshell_002dpath-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Cleans up duplicates in shell path env variable.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dcolor_002dat_002dpoint">
+<h4 class="subsubsection"><span>2.246.1.31 emacsvox-wizards-color-at-point<a class="copiable-link" href="#emacsvox_002dwizards_002dcolor_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dcolor_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-color-at-point</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dcolor_002dat_002dpoint"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dh-_002c"></a><span><kbd class="kbd">C-h ,</kbd><a class="copiable-link" href="#index-C_002dh-_002c"> &para;</a></span></dt>
+<dt><a id="index-_003cf1_003e-_002c"></a><span><kbd class="kbd">&lt;f1&gt; ,</kbd><a class="copiable-link" href="#index-_003cf1_003e-_002c"> &para;</a></span></dt>
+<dt><a id="index-_003chelp_003e-_002c"></a><span><kbd class="kbd">&lt;help&gt; ,</kbd><a class="copiable-link" href="#index-_003chelp_003e-_002c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dcolor_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Echo foreground/background color at point.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dcolor_002ddiff_002dat_002dpoint">
+<h4 class="subsubsection"><span>2.246.1.32 emacsvox-wizards-color-diff-at-point<a class="copiable-link" href="#emacsvox_002dwizards_002dcolor_002ddiff_002dat_002dpoint"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dcolor_002ddiff_002dat_002dpoint"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-color-diff-at-point</strong> <var class="def-var-arguments">(&amp;optional set)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dcolor_002ddiff_002dat_002dpoint"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dh-_005c"></a><span><kbd class="kbd">C-h \</kbd><a class="copiable-link" href="#index-C_002dh-_005c"> &para;</a></span></dt>
+<dt><a id="index-_003cf1_003e-_005c"></a><span><kbd class="kbd">&lt;f1&gt; \</kbd><a class="copiable-link" href="#index-_003cf1_003e-_005c"> &para;</a></span></dt>
+<dt><a id="index-_003chelp_003e-_005c"></a><span><kbd class="kbd">&lt;help&gt; \</kbd><a class="copiable-link" href="#index-_003chelp_003e-_005c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dcolor_002ddiff_002dat_002dpoint-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak difference between background and foreground color at point.
+With interactive prefix arg, set foreground and background color first.
+
+(fn &amp;optional SET)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dcolor_002dwheel">
+<h4 class="subsubsection"><span>2.246.1.33 emacsvox-wizards-color-wheel<a class="copiable-link" href="#emacsvox_002dwizards_002dcolor_002dwheel"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dcolor_002dwheel"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-color-wheel</strong> <var class="def-var-arguments">(start)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dcolor_002dwheel"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-C_002dc"></a><span><kbd class="kbd">C-e x C-c</kbd><a class="copiable-link" href="#index-C_002de-x-C_002dc"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dcolor_002dwheel-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Manipulate a simple color wheel and display the name and shade
+  of the resulting color.  Prompts for a color from which to
+  start exploration.
+
+Keyboard Commands During Interaction:
+Up/Down: Increase/Decrement along current axis using specified step-size.
+=: Set value on current axis to number read from minibuffer.
+Left/Right: Switch color axis along which to move.
+b/f: Quit  wheel after setting background/foreground color to current value.
+n: Read color name from minibuffer.
+c: Complement  current color.
+s: Set stepsize to number read from minibuffer.
+q: Quit color wheel, after copying current hex value to kill-ring.
+
+(fn START)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dcolors">
+<h4 class="subsubsection"><span>2.246.1.34 emacsvox-wizards-colors<a class="copiable-link" href="#emacsvox_002dwizards_002dcolors"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dcolors"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-colors</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dcolors"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-M_002dc"></a><span><kbd class="kbd">C-e x M-c</kbd><a class="copiable-link" href="#index-C_002de-x-M_002dc"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dcolors-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display list of colors and setup a callback to activate color
+under point as either the foreground or background color.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dcomma_002dat_002dend_002dof_002dword">
+<h4 class="subsubsection"><span>2.246.1.35 emacsvox-wizards-comma-at-end-of-word<a class="copiable-link" href="#emacsvox_002dwizards_002dcomma_002dat_002dend_002dof_002dword"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dcomma_002dat_002dend_002dof_002dword"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-comma-at-end-of-word</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dcomma_002dat_002dend_002dof_002dword"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dcomma_002dat_002dend_002dof_002dword-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move to the end of current word and add a comma.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dcount_002dslides_002din_002dregion">
+<h4 class="subsubsection"><span>2.246.1.36 emacsvox-wizards-count-slides-in-region<a class="copiable-link" href="#emacsvox_002dwizards_002dcount_002dslides_002din_002dregion"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dcount_002dslides_002din_002dregion"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-count-slides-in-region</strong> <var class="def-var-arguments">(start end)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dcount_002dslides_002din_002dregion"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dcount_002dslides_002din_002dregion-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Count slides starting from point.
+
+(fn START END)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dcustomize_002dsaved">
+<h4 class="subsubsection"><span>2.246.1.37 emacsvox-wizards-customize-saved<a class="copiable-link" href="#emacsvox_002dwizards_002dcustomize_002dsaved"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dcustomize_002dsaved"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-customize-saved</strong> <var class="def-var-arguments">(pattern)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dcustomize_002dsaved"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dh-C_002ds"></a><span><kbd class="kbd">C-h C-s</kbd><a class="copiable-link" href="#index-C_002dh-C_002ds"> &para;</a></span></dt>
+<dt><a id="index-_003cf1_003e-C_002ds"></a><span><kbd class="kbd">&lt;f1&gt; C-s</kbd><a class="copiable-link" href="#index-_003cf1_003e-C_002ds"> &para;</a></span></dt>
+<dt><a id="index-_003chelp_003e-C_002ds"></a><span><kbd class="kbd">&lt;help&gt; C-s</kbd><a class="copiable-link" href="#index-_003chelp_003e-C_002ds"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dcustomize_002dsaved-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Customize saved options matching ‘pattern’.  This command enables
+updating custom settings for a specific package or group of packages.
+
+(fn PATTERN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002ddescribe_002dvoice">
+<h4 class="subsubsection"><span>2.246.1.38 emacsvox-wizards-describe-voice<a class="copiable-link" href="#emacsvox_002dwizards_002ddescribe_002dvoice"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002ddescribe_002dvoice"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-describe-voice</strong> <var class="def-var-arguments">(personality)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002ddescribe_002dvoice"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dh-C_002dv"></a><span><kbd class="kbd">C-h C-v</kbd><a class="copiable-link" href="#index-C_002dh-C_002dv"> &para;</a></span></dt>
+<dt><a id="index-_003cf1_003e-C_002dv"></a><span><kbd class="kbd">&lt;f1&gt; C-v</kbd><a class="copiable-link" href="#index-_003cf1_003e-C_002dv"> &para;</a></span></dt>
+<dt><a id="index-_003chelp_003e-C_002dv"></a><span><kbd class="kbd">&lt;help&gt; C-v</kbd><a class="copiable-link" href="#index-_003chelp_003e-C_002dv"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002ddescribe_002dvoice-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Describe  voice &mdash; analogous to C-h /.
+When called interactively, ‘personality’ defaults to first
+personality at point.
+
+(fn PERSONALITY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dend_002dof_002dword">
+<h4 class="subsubsection"><span>2.246.1.39 emacsvox-wizards-end-of-word<a class="copiable-link" href="#emacsvox_002dwizards_002dend_002dof_002dword"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dend_002dof_002dword"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-end-of-word</strong> <var class="def-var-arguments">(arg)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dend_002dof_002dword"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dend_002dof_002dword-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">move to end of word
+
+(fn ARG)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002denumerate_002dmatching_002dcommands">
+<h4 class="subsubsection"><span>2.246.1.40 emacsvox-wizards-enumerate-matching-commands<a class="copiable-link" href="#emacsvox_002dwizards_002denumerate_002dmatching_002dcommands"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002denumerate_002dmatching_002dcommands"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-enumerate-matching-commands</strong> <var class="def-var-arguments">(pattern)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002denumerate_002dmatching_002dcommands"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002denumerate_002dmatching_002dcommands-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return list of commands whose names match pattern.
+
+(fn PATTERN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002denumerate_002dmatching_002dfaces">
+<h4 class="subsubsection"><span>2.246.1.41 emacsvox-wizards-enumerate-matching-faces<a class="copiable-link" href="#emacsvox_002dwizards_002denumerate_002dmatching_002dfaces"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002denumerate_002dmatching_002dfaces"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-enumerate-matching-faces</strong> <var class="def-var-arguments">(pattern)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002denumerate_002dmatching_002dfaces"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002denumerate_002dmatching_002dfaces-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enumerate  faces matching pattern.
+
+(fn PATTERN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002denumerate_002duncovered_002dcommands">
+<h4 class="subsubsection"><span>2.246.1.42 emacsvox-wizards-enumerate-uncovered-commands<a class="copiable-link" href="#emacsvox_002dwizards_002denumerate_002duncovered_002dcommands"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002denumerate_002duncovered_002dcommands"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-enumerate-uncovered-commands</strong> <var class="def-var-arguments">(pattern &amp;optional bound)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002denumerate_002duncovered_002dcommands"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002denumerate_002duncovered_002dcommands-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enumerate unadvised commands matching pattern.
+Optional interactive prefix arg ‘bound’
+filters out commands that dont have an active key-binding.
+
+(fn PATTERN &amp;optional BOUND)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002denumerate_002dundefined_002dfaces">
+<h4 class="subsubsection"><span>2.246.1.43 emacsvox-wizards-enumerate-undefined-faces<a class="copiable-link" href="#emacsvox_002dwizards_002denumerate_002dundefined_002dfaces"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002denumerate_002dundefined_002dfaces"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-enumerate-undefined-faces</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002denumerate_002dundefined_002dfaces"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002denumerate_002dundefined_002dfaces-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">utility function to enumerate possibly old, obsolete maps that we have still
+mapped to voices.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002denumerate_002dunmapped_002dfaces">
+<h4 class="subsubsection"><span>2.246.1.44 emacsvox-wizards-enumerate-unmapped-faces<a class="copiable-link" href="#emacsvox_002dwizards_002denumerate_002dunmapped_002dfaces"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002denumerate_002dunmapped_002dfaces"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-enumerate-unmapped-faces</strong> <var class="def-var-arguments">(&amp;optional pattern)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002denumerate_002dunmapped_002dfaces"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002denumerate_002dunmapped_002dfaces-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enumerate unmapped faces matching pattern.
+
+(fn &amp;optional PATTERN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002despeak_002dline">
+<h4 class="subsubsection"><span>2.246.1.45 emacsvox-wizards-espeak-line<a class="copiable-link" href="#emacsvox_002dwizards_002despeak_002dline"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002despeak_002dline"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-espeak-line</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002despeak_002dline"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002despeak_002dline-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak line using espeak polyglot wizard.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002despeak_002dregion">
+<h4 class="subsubsection"><span>2.246.1.46 emacsvox-wizards-espeak-region<a class="copiable-link" href="#emacsvox_002dwizards_002despeak_002dregion"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002despeak_002dregion"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-espeak-region</strong> <var class="def-var-arguments">(start end)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002despeak_002dregion"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002despeak_002dregion-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak region using ESpeak polyglot wizard.
+
+(fn START END)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002despeak_002dstring">
+<h4 class="subsubsection"><span>2.246.1.47 emacsvox-wizards-espeak-string<a class="copiable-link" href="#emacsvox_002dwizards_002despeak_002dstring"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002despeak_002dstring"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-espeak-string</strong> <var class="def-var-arguments">(string)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002despeak_002dstring"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002despeak_002dstring-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak string in lang via ESpeak.
+Lang is obtained from property ‘lang’ on string, or via an
+interactive prompt.
+
+(fn STRING)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002deww_002dbuffer_002dlist">
+<h4 class="subsubsection"><span>2.246.1.48 emacsvox-wizards-eww-buffer-list<a class="copiable-link" href="#emacsvox_002dwizards_002deww_002dbuffer_002dlist"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002deww_002dbuffer_002dlist"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-eww-buffer-list</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002deww_002dbuffer_002dlist"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dz-e"></a><span><kbd class="kbd">C-z e</kbd><a class="copiable-link" href="#index-C_002dz-e"> &para;</a></span></dt>
+<dt><a id="index-C_002de-z-e"></a><span><kbd class="kbd">C-e z e</kbd><a class="copiable-link" href="#index-C_002de-z-e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002deww_002dbuffer_002dlist-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display list of  EWW buffers.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dexec_002dpath_002dfrom_002dshell">
+<h4 class="subsubsection"><span>2.246.1.49 emacsvox-wizards-exec-path-from-shell<a class="copiable-link" href="#emacsvox_002dwizards_002dexec_002dpath_002dfrom_002dshell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dexec_002dpath_002dfrom_002dshell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-exec-path-from-shell</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dexec_002dpath_002dfrom_002dshell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dexec_002dpath_002dfrom_002dshell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Update exec-path from shell path.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dexecute_002dasynchronously">
+<h4 class="subsubsection"><span>2.246.1.50 emacsvox-wizards-execute-asynchronously<a class="copiable-link" href="#emacsvox_002dwizards_002dexecute_002dasynchronously"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dexecute_002dasynchronously"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-execute-asynchronously</strong> <var class="def-var-arguments">(key)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dexecute_002dasynchronously"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dexecute_002dasynchronously-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Read key-sequence, then execute its command on a new thread.
+
+(fn KEY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dfind_002dfile_002das_002droot">
+<h4 class="subsubsection"><span>2.246.1.51 emacsvox-wizards-find-file-as-root<a class="copiable-link" href="#emacsvox_002dwizards_002dfind_002dfile_002das_002droot"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dfind_002dfile_002das_002droot"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-find-file-as-root</strong> <var class="def-var-arguments">(file)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dfind_002dfile_002das_002droot"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_003b-r"></a><span><kbd class="kbd">C-; r</kbd><a class="copiable-link" href="#index-C_002d_003b-r"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-h-r"></a><span><kbd class="kbd">C-x @ h r</kbd><a class="copiable-link" href="#index-C_002dx-_0040-h-r"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dfind_002dfile_002das_002droot-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Automatically edit file with root-privileges (using
+tramp/sudo), if the file is not writable by user.
+
+(fn FILE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dfind_002dlongest_002dline_002din_002dregion">
+<h4 class="subsubsection"><span>2.246.1.52 emacsvox-wizards-find-longest-line-in-region<a class="copiable-link" href="#emacsvox_002dwizards_002dfind_002dlongest_002dline_002din_002dregion"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dfind_002dlongest_002dline_002din_002dregion"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-find-longest-line-in-region</strong> <var class="def-var-arguments">(start end)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dfind_002dlongest_002dline_002din_002dregion"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-_003d"></a><span><kbd class="kbd">C-e x =</kbd><a class="copiable-link" href="#index-C_002de-x-_003d"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dfind_002dlongest_002dline_002din_002dregion-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Find longest line in region and move to it.
+
+(fn START END)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dfind_002dlongest_002dparagraph_002din_002dregion">
+<h4 class="subsubsection"><span>2.246.1.53 emacsvox-wizards-find-longest-paragraph-in-region<a class="copiable-link" href="#emacsvox_002dwizards_002dfind_002dlongest_002dparagraph_002din_002dregion"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dfind_002dlongest_002dparagraph_002din_002dregion"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-find-longest-paragraph-in-region</strong> <var class="def-var-arguments">(start end)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dfind_002dlongest_002dparagraph_002din_002dregion"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-_005b"></a><span><kbd class="kbd">C-e x [</kbd><a class="copiable-link" href="#index-C_002de-x-_005b"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dfind_002dlongest_002dparagraph_002din_002dregion-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Find longest paragraph in region, and move to it.
+
+(fn START END)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dfind_002dlongest_002dsentence_002din_002dregion">
+<h4 class="subsubsection"><span>2.246.1.54 emacsvox-wizards-find-longest-sentence-in-region<a class="copiable-link" href="#emacsvox_002dwizards_002dfind_002dlongest_002dsentence_002din_002dregion"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dfind_002dlongest_002dsentence_002din_002dregion"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-find-longest-sentence-in-region</strong> <var class="def-var-arguments">(start end)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dfind_002dlongest_002dsentence_002din_002dregion"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-_005d"></a><span><kbd class="kbd">C-e x ]</kbd><a class="copiable-link" href="#index-C_002de-x-_005d"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dfind_002dlongest_002dsentence_002din_002dregion-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Find longest sentence in region, and move to it.
+
+(fn START END)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dfind_002dshortest_002dline_002din_002dregion">
+<h4 class="subsubsection"><span>2.246.1.55 emacsvox-wizards-find-shortest-line-in-region<a class="copiable-link" href="#emacsvox_002dwizards_002dfind_002dshortest_002dline_002din_002dregion"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dfind_002dshortest_002dline_002din_002dregion"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-find-shortest-line-in-region</strong> <var class="def-var-arguments">(start end)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dfind_002dshortest_002dline_002din_002dregion"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dfind_002dshortest_002dline_002din_002dregion-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Find shortest line in region.
+Moves to the shortest line when called interactively.
+
+(fn START END)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dframe_002dcolors">
+<h4 class="subsubsection"><span>2.246.1.56 emacsvox-wizards-frame-colors<a class="copiable-link" href="#emacsvox_002dwizards_002dframe_002dcolors"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dframe_002dcolors"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-frame-colors</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dframe_002dcolors"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dframe_002dcolors-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display frame’s foreground/background color setting.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dfree_002dgeo_002dip">
+<h4 class="subsubsection"><span>2.246.1.57 emacsvox-wizards-free-geo-ip<a class="copiable-link" href="#emacsvox_002dwizards_002dfree_002dgeo_002dip"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dfree_002dgeo_002dip"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-free-geo-ip</strong> <var class="def-var-arguments">(&amp;optional reverse-geocode)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dfree_002dgeo_002dip"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dfree_002dgeo_002dip-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return list consisting of city and region_name.
+Optional interactive prefix arg reverse-geocodes using Google Maps.
+
+(fn &amp;optional REVERSE-GEOCODE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dgen_002dfn_002ddecl">
+<h4 class="subsubsection"><span>2.246.1.58 emacsvox-wizards-gen-fn-decl<a class="copiable-link" href="#emacsvox_002dwizards_002dgen_002dfn_002ddecl"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dgen_002dfn_002ddecl"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-gen-fn-decl</strong> <var class="def-var-arguments">(f &amp;optional ext)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dgen_002dfn_002ddecl"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dgen_002dfn_002ddecl-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Generate declare-function call for function ‘f’.
+Optional interactive prefix arg ext says this comes from an
+external package.
+
+(fn F &amp;optional EXT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dgoogle_002dnews">
+<h4 class="subsubsection"><span>2.246.1.59 emacsvox-wizards-google-news<a class="copiable-link" href="#emacsvox_002dwizards_002dgoogle_002dnews"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dgoogle_002dnews"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-google-news</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dgoogle_002dnews"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_002e-n"></a><span><kbd class="kbd">C-. n</kbd><a class="copiable-link" href="#index-C_002d_002e-n"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-s-n"></a><span><kbd class="kbd">C-x @ s n</kbd><a class="copiable-link" href="#index-C_002dx-_0040-s-n"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dgoogle_002dnews-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Clean up news.google.com.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dhow_002dmany_002dmatches">
+<h4 class="subsubsection"><span>2.246.1.60 emacsvox-wizards-how-many-matches<a class="copiable-link" href="#emacsvox_002dwizards_002dhow_002dmany_002dmatches"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dhow_002dmany_002dmatches"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-how-many-matches</strong> <var class="def-var-arguments">(start end &amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dhow_002dmany_002dmatches"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-h"></a><span><kbd class="kbd">C-e x h</kbd><a class="copiable-link" href="#index-C_002de-x-h"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dhow_002dmany_002dmatches-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">If you define a file local variable
+called ‘emacsvox-occur-pattern’ that holds a regular expression
+that matches  lines of interest, you can use this command to
+run ‘how-many’ to count  matching header lines.
+With interactive prefix arg, prompts for and remembers the file local pattern.
+
+(fn START END &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dlacheck_002dbuffer_002dfile">
+<h4 class="subsubsection"><span>2.246.1.61 emacsvox-wizards-lacheck-buffer-file<a class="copiable-link" href="#emacsvox_002dwizards_002dlacheck_002dbuffer_002dfile"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dlacheck_002dbuffer_002dfile"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-lacheck-buffer-file</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dlacheck_002dbuffer_002dfile"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dlacheck_002dbuffer_002dfile-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Run Lacheck on current buffer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dlocate_002dcontent">
+<h4 class="subsubsection"><span>2.246.1.62 emacsvox-wizards-locate-content<a class="copiable-link" href="#emacsvox_002dwizards_002dlocate_002dcontent"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dlocate_002dcontent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-locate-content</strong> <var class="def-var-arguments">(pattern)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dlocate_002dcontent"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_002e-l"></a><span><kbd class="kbd">C-. l</kbd><a class="copiable-link" href="#index-C_002d_002e-l"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-s-l"></a><span><kbd class="kbd">C-x @ s l</kbd><a class="copiable-link" href="#index-C_002dx-_0040-s-l"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dlocate_002dcontent-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Locate content matching  pattern.  The results can be
+ opened by M-x emacsvox-dired-open-this-file locally bound to C-RET .
+
+(fn PATTERN)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dmlb_002dstandings">
+<h4 class="subsubsection"><span>2.246.1.63 emacsvox-wizards-mlb-standings<a class="copiable-link" href="#emacsvox_002dwizards_002dmlb_002dstandings"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dmlb_002dstandings"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-mlb-standings</strong> <var class="def-var-arguments">(&amp;optional raw)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dmlb_002dstandings"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dmlb_002dstandings-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display MLB standings as of today.
+Optional interactive prefix arg shows  unprocessed results.
+
+(fn &amp;optional RAW)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dmodule_002denumerate_002duncovered_002dcommands">
+<h4 class="subsubsection"><span>2.246.1.64 emacsvox-wizards-module-enumerate-uncovered-commands<a class="copiable-link" href="#emacsvox_002dwizards_002dmodule_002denumerate_002duncovered_002dcommands"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dmodule_002denumerate_002duncovered_002dcommands"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-module-enumerate-uncovered-commands</strong> <var class="def-var-arguments">(m)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dmodule_002denumerate_002duncovered_002dcommands"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dmodule_002denumerate_002duncovered_002dcommands-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Enumerate uncovered commands from module m
+
+(fn M)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dmove_002dand_002dspeak">
+<h4 class="subsubsection"><span>2.246.1.65 emacsvox-wizards-move-and-speak<a class="copiable-link" href="#emacsvox_002dwizards_002dmove_002dand_002dspeak"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dmove_002dand_002dspeak"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-move-and-speak</strong> <var class="def-var-arguments">(command count)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dmove_002dand_002dspeak"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dmove_002dand_002dspeak-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speaks a chunk of text bounded by point and a target position.
+Target position is specified using a navigation command and a
+count that specifies how many times to execute that command
+first.  Point is left at the target position.  Interactively,
+command is specified by pressing the key that invokes the
+command.
+
+(fn COMMAND COUNT)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dnba_002dstandings">
+<h4 class="subsubsection"><span>2.246.1.66 emacsvox-wizards-nba-standings<a class="copiable-link" href="#emacsvox_002dwizards_002dnba_002dstandings"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dnba_002dstandings"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-nba-standings</strong> <var class="def-var-arguments">(&amp;optional raw)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dnba_002dstandings"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dnba_002dstandings-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display NBA standings as of today.
+Optional interactive prefix arg shows  unprocessed results.
+
+(fn &amp;optional RAW)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dnext_002dbullet">
+<h4 class="subsubsection"><span>2.246.1.67 emacsvox-wizards-next-bullet<a class="copiable-link" href="#emacsvox_002dwizards_002dnext_002dbullet"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dnext_002dbullet"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-next-bullet</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dnext_002dbullet"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dnext_002dbullet-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Navigate to and speak next ‘bullet’.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dnext_002dinteractive_002ddefun">
+<h4 class="subsubsection"><span>2.246.1.68 emacsvox-wizards-next-interactive-defun<a class="copiable-link" href="#emacsvox_002dwizards_002dnext_002dinteractive_002ddefun"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dnext_002dinteractive_002ddefun"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-next-interactive-defun</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dnext_002dinteractive_002ddefun"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dnext_002dinteractive_002ddefun-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Move point to the next interactive defun
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dnoaa_002dweather">
+<h4 class="subsubsection"><span>2.246.1.69 emacsvox-wizards-noaa-weather<a class="copiable-link" href="#emacsvox_002dwizards_002dnoaa_002dweather"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dnoaa_002dweather"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-noaa-weather</strong> <var class="def-var-arguments">(&amp;optional ask)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dnoaa_002dweather"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_003b-w"></a><span><kbd class="kbd">C-; w</kbd><a class="copiable-link" href="#index-C_002d_003b-w"> &para;</a></span></dt>
+<dt><a id="index-C_002de-x-w"></a><span><kbd class="kbd">C-e x w</kbd><a class="copiable-link" href="#index-C_002de-x-w"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-h-w"></a><span><kbd class="kbd">C-x @ h w</kbd><a class="copiable-link" href="#index-C_002dx-_0040-h-w"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dnoaa_002dweather-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display weather  using NOAA Weather API.
+Address is a string and can include house-number, street name,
+city and zip.  Data is retrieved only once, subsequent calls
+switch to previously displayed results. Kill that buffer or use
+an interactive prefix arg (C-u) to get new data.  Optional second
+interactive prefix arg (C-u C-u) asks for location address;
+Default is to display weather for ‘gmaps-my-address’.
+
+(fn &amp;optional ASK)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002doccur_002dheader_002dlines">
+<h4 class="subsubsection"><span>2.246.1.70 emacsvox-wizards-occur-header-lines<a class="copiable-link" href="#emacsvox_002dwizards_002doccur_002dheader_002dlines"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002doccur_002dheader_002dlines"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-occur-header-lines</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002doccur_002dheader_002dlines"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-o"></a><span><kbd class="kbd">C-e x o</kbd><a class="copiable-link" href="#index-C_002de-x-o"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002doccur_002dheader_002dlines-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">If you define a file local variable called
+‘emacsvox-occur-pattern’ that holds a regular expression that
+matches header lines, you can use this command to
+run ‘occur’ to find matching header lines. With prefix arg,
+prompts for and sets value of the file local pattern.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dpdf_002dopen">
+<h4 class="subsubsection"><span>2.246.1.71 emacsvox-wizards-pdf-open<a class="copiable-link" href="#emacsvox_002dwizards_002dpdf_002dopen"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dpdf_002dopen"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-pdf-open</strong> <var class="def-var-arguments">(filename &amp;optional ask-pwd)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dpdf_002dopen"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_002c-p"></a><span><kbd class="kbd">C-, p</kbd><a class="copiable-link" href="#index-C_002d_002c-p"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-a-p"></a><span><kbd class="kbd">C-x @ a p</kbd><a class="copiable-link" href="#index-C_002dx-_0040-a-p"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dpdf_002dopen-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open pdf file as text.
+Optional interactive prefix arg ask-pwd prompts for password.
+
+(fn FILENAME &amp;optional ASK-PWD)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dportfolio">
+<h4 class="subsubsection"><span>2.246.1.72 emacsvox-wizards-portfolio<a class="copiable-link" href="#emacsvox_002dwizards_002dportfolio"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dportfolio"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-portfolio</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dportfolio"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_0027-p"></a><span><kbd class="kbd">C-' p</kbd><a class="copiable-link" href="#index-C_002d_0027-p"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dportfolio-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">View stock quotes
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dprevious_002dbullet">
+<h4 class="subsubsection"><span>2.246.1.73 emacsvox-wizards-previous-bullet<a class="copiable-link" href="#emacsvox_002dwizards_002dprevious_002dbullet"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dprevious_002dbullet"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-previous-bullet</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dprevious_002dbullet"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dprevious_002dbullet-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Navigate to and speak previous ‘bullet’.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dremote_002dframe">
+<h4 class="subsubsection"><span>2.246.1.74 emacsvox-wizards-remote-frame<a class="copiable-link" href="#emacsvox_002dwizards_002dremote_002dframe"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dremote_002dframe"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-remote-frame</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dremote_002dframe"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-f"></a><span><kbd class="kbd">C-e x f</kbd><a class="copiable-link" href="#index-C_002de-x-f"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dremote_002dframe-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open a frame on a remote Emacs.
+Remote workstation is  ‘emacsvox-wizards-remote-workstation’.
+Works best when you already are ssh-impel-ed in and have a talking
+  remote Emacs in   a local XTerm.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dset_002dcolors">
+<h4 class="subsubsection"><span>2.246.1.75 emacsvox-wizards-set-colors<a class="copiable-link" href="#emacsvox_002dwizards_002dset_002dcolors"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dset_002dcolors"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-set-colors</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dset_002dcolors"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dset_002dcolors-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prompt for foreground and background colors.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshell">
+<h4 class="subsubsection"><span>2.246.1.76 emacsvox-wizards-shell<a class="copiable-link" href="#emacsvox_002dwizards_002dshell"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-shell</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshell"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dshell-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Run Emacs  ‘shell’ command when not in a shell buffer, or
+when called with a prefix argument. When called from a shell buffer,
+switches to ‘next’ shell buffer. When called from outside a shell
+buffer, find the most ‘appropriate shell’ and switch to it. Once
+switched, set default directory in that target shell to the directory
+of the source buffer.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshell_002dby_002dkey">
+<h4 class="subsubsection"><span>2.246.1.77 emacsvox-wizards-shell-by-key<a class="copiable-link" href="#emacsvox_002dwizards_002dshell_002dby_002dkey"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshell_002dby_002dkey"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-shell-by-key</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshell_002dby_002dkey"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-5"></a><span><kbd class="kbd">C-e x 5</kbd><a class="copiable-link" href="#index-C_002de-x-5"> &para;</a></span></dt>
+<dt><a id="index-C_002de-x-4"></a><span><kbd class="kbd">C-e x 4</kbd><a class="copiable-link" href="#index-C_002de-x-4"> &para;</a></span></dt>
+<dt><a id="index-C_002de-x-3"></a><span><kbd class="kbd">C-e x 3</kbd><a class="copiable-link" href="#index-C_002de-x-3"> &para;</a></span></dt>
+<dt><a id="index-C_002de-x-2"></a><span><kbd class="kbd">C-e x 2</kbd><a class="copiable-link" href="#index-C_002de-x-2"> &para;</a></span></dt>
+<dt><a id="index-C_002de-x-1"></a><span><kbd class="kbd">C-e x 1</kbd><a class="copiable-link" href="#index-C_002de-x-1"> &para;</a></span></dt>
+<dt><a id="index-C_002de-x-0"></a><span><kbd class="kbd">C-e x 0</kbd><a class="copiable-link" href="#index-C_002de-x-0"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dshell_002dby_002dkey-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Switch to shell buffer by key. This provides a predictable
+  means for switching to a specific shell buffer. When invoked
+  from a non-shell-mode buffer that is a dired-buffer or is
+  visiting a file, invokes ‘cd ’ in the shell to change to the.
+  value of ‘default-directory’ When already in a shell buffer,
+  interactive prefix arg ‘prefix’ causes this shell to be
+  re-keyed if appropriate &mdash; see
+  M-x emacsvox-wizards-shell-re-key for an explanation of how
+  re-keying works.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshell_002dcommand_002don_002dcurrent_002dfile">
+<h4 class="subsubsection"><span>2.246.1.78 emacsvox-wizards-shell-command-on-current-file<a class="copiable-link" href="#emacsvox_002dwizards_002dshell_002dcommand_002don_002dcurrent_002dfile"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshell_002dcommand_002don_002dcurrent_002dfile"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-shell-command-on-current-file</strong> <var class="def-var-arguments">(command)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshell_002dcommand_002don_002dcurrent_002dfile"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_0026"></a><span><kbd class="kbd">C-e &amp;</kbd><a class="copiable-link" href="#index-C_002de-_0026"> &para;</a></span></dt>
+<dt><a id="index-C_002de-x-7"></a><span><kbd class="kbd">C-e x 7</kbd><a class="copiable-link" href="#index-C_002de-x-7"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dshell_002dcommand_002don_002dcurrent_002dfile-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Prompts for and runs shell command on current file.
+
+(fn COMMAND)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshell_002ddirectory_002dreset">
+<h4 class="subsubsection"><span>2.246.1.79 emacsvox-wizards-shell-directory-reset<a class="copiable-link" href="#emacsvox_002dwizards_002dshell_002ddirectory_002dreset"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshell_002ddirectory_002dreset"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-shell-directory-reset</strong> <var class="def-var-arguments">(&amp;optional prefix)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshell_002ddirectory_002dreset"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_002e-_002e"></a><span><kbd class="kbd">C-. .</kbd><a class="copiable-link" href="#index-C_002d_002e-_002e"> &para;</a></span></dt>
+<dt><a id="index-C_002de-x-_002e"></a><span><kbd class="kbd">C-e x .</kbd><a class="copiable-link" href="#index-C_002de-x-_002e"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-s-_002e"></a><span><kbd class="kbd">C-x @ s .</kbd><a class="copiable-link" href="#index-C_002dx-_0040-s-_002e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dshell_002ddirectory_002dreset-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Set current directory to this shell’s initial directory if one was
+defined.  If not in a shell buffer, switch to our Home shell buffer.
+With interactive prefix-arg, change this shell’s  project directory to
+the current directory.
+
+(fn &amp;optional PREFIX)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshell_002ddirectory_002dset">
+<h4 class="subsubsection"><span>2.246.1.80 emacsvox-wizards-shell-directory-set<a class="copiable-link" href="#emacsvox_002dwizards_002dshell_002ddirectory_002dset"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshell_002ddirectory_002dset"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-shell-directory-set</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshell_002ddirectory_002dset"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-_002c"></a><span><kbd class="kbd">C-e x ,</kbd><a class="copiable-link" href="#index-C_002de-x-_002c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dshell_002ddirectory_002dset-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Define current directory as this shell’s project directory.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshell_002dtoggle">
+<h4 class="subsubsection"><span>2.246.1.81 emacsvox-wizards-shell-toggle<a class="copiable-link" href="#emacsvox_002dwizards_002dshell_002dtoggle"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshell_002dtoggle"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-shell-toggle</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshell_002dtoggle"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-_003cf11_003e"></a><span><kbd class="kbd">C-e &lt;f11&gt;</kbd><a class="copiable-link" href="#index-C_002de-_003cf11_003e"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dshell_002dtoggle-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Switch to  shell  and cd to
+  directory of the previously current buffer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshow_002deval_002dresult">
+<h4 class="subsubsection"><span>2.246.1.82 emacsvox-wizards-show-eval-result<a class="copiable-link" href="#emacsvox_002dwizards_002dshow_002deval_002dresult"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshow_002deval_002dresult"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-show-eval-result</strong> <var class="def-var-arguments">(form)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshow_002deval_002dresult"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-M_002dESC-_003a"></a><span><kbd class="kbd">M-ESC :</kbd><a class="copiable-link" href="#index-M_002dESC-_003a"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dshow_002deval_002dresult-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Pretty-print and view Lisp evaluation results.
+
+(fn FORM)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshow_002dface">
+<h4 class="subsubsection"><span>2.246.1.83 emacsvox-wizards-show-face<a class="copiable-link" href="#emacsvox_002dwizards_002dshow_002dface"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshow_002dface"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-show-face</strong> <var class="def-var-arguments">(face)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshow_002dface"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dshow_002dface-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Show  properties of  face.
+
+(fn FACE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshow_002dmemory_002dused">
+<h4 class="subsubsection"><span>2.246.1.84 emacsvox-wizards-show-memory-used<a class="copiable-link" href="#emacsvox_002dwizards_002dshow_002dmemory_002dused"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshow_002dmemory_002dused"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-show-memory-used</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshow_002dmemory_002dused"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dshow_002dmemory_002dused-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Convenience command to view state of memory used in this session so far.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dshow_002dtheme">
+<h4 class="subsubsection"><span>2.246.1.85 emacsvox-wizards-show-theme<a class="copiable-link" href="#emacsvox_002dwizards_002dshow_002dtheme"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dshow_002dtheme"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-show-theme</strong> <var class="def-var-arguments">(palette)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dshow_002dtheme"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dshow_002dtheme-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Display colors in  palette.
+Prompts for a color palette variable as used in the modus theme and
+  its variants,
+and pops to a buffer that describes the colors used in that palette.
+
+(fn PALETTE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dsnarf_002dsexp">
+<h4 class="subsubsection"><span>2.246.1.86 emacsvox-wizards-snarf-sexp<a class="copiable-link" href="#emacsvox_002dwizards_002dsnarf_002dsexp"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dsnarf_002dsexp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-snarf-sexp</strong> <var class="def-var-arguments">(&amp;optional delete)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dsnarf_002dsexp"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_003b-DEL"></a><span><kbd class="kbd">C-; DEL</kbd><a class="copiable-link" href="#index-C_002d_003b-DEL"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-h-DEL"></a><span><kbd class="kbd">C-x @ h DEL</kbd><a class="copiable-link" href="#index-C_002dx-_0040-h-DEL"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dsnarf_002dsexp-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Snarf the contents between delimiters at point.
+Optional interactive prefix arg deletes it.
+
+(fn &amp;optional DELETE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dspeak_002diso_002ddatetime">
+<h4 class="subsubsection"><span>2.246.1.87 emacsvox-wizards-speak-iso-datetime<a class="copiable-link" href="#emacsvox_002dwizards_002dspeak_002diso_002ddatetime"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dspeak_002diso_002ddatetime"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-speak-iso-datetime</strong> <var class="def-var-arguments">(iso)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dspeak_002diso_002ddatetime"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dspeak_002diso_002ddatetime-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Speak ISO date-time.
+
+(fn ISO)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dsqueeze_002dblanks">
+<h4 class="subsubsection"><span>2.246.1.88 emacsvox-wizards-squeeze-blanks<a class="copiable-link" href="#emacsvox_002dwizards_002dsqueeze_002dblanks"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dsqueeze_002dblanks"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-squeeze-blanks</strong> <var class="def-var-arguments">(start end)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dsqueeze_002dblanks"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-_007c"></a><span><kbd class="kbd">C-e x |</kbd><a class="copiable-link" href="#index-C_002de-x-_007c"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dsqueeze_002dblanks-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Squeeze multiple blank lines.
+
+(fn START END)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dswap_002dfg_002dand_002dbg">
+<h4 class="subsubsection"><span>2.246.1.89 emacsvox-wizards-swap-fg-and-bg<a class="copiable-link" href="#emacsvox_002dwizards_002dswap_002dfg_002dand_002dbg"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dswap_002dfg_002dand_002dbg"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-swap-fg-and-bg</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dswap_002dfg_002dand_002dbg"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dh-_003d"></a><span><kbd class="kbd">C-h =</kbd><a class="copiable-link" href="#index-C_002dh-_003d"> &para;</a></span></dt>
+<dt><a id="index-_003cf1_003e-_003d"></a><span><kbd class="kbd">&lt;f1&gt; =</kbd><a class="copiable-link" href="#index-_003cf1_003e-_003d"> &para;</a></span></dt>
+<dt><a id="index-_003chelp_003e-_003d"></a><span><kbd class="kbd">&lt;help&gt; =</kbd><a class="copiable-link" href="#index-_003chelp_003e-_003d"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dswap_002dfg_002dand_002dbg-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Swap foreground and background.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dtex_002dtie_002dcurrent_002dword">
+<h4 class="subsubsection"><span>2.246.1.90 emacsvox-wizards-tex-tie-current-word<a class="copiable-link" href="#emacsvox_002dwizards_002dtex_002dtie_002dcurrent_002dword"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dtex_002dtie_002dcurrent_002dword"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-tex-tie-current-word</strong> <var class="def-var-arguments">(n)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dtex_002dtie_002dcurrent_002dword"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dtex_002dtie_002dcurrent_002dword-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Tie the next n  words.
+
+(fn N)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dtoggle_002dmm_002ddd_002dyyyy_002ddate_002dpronouncer">
+<h4 class="subsubsection"><span>2.246.1.91 emacsvox-wizards-toggle-mm-dd-yyyy-date-pronouncer<a class="copiable-link" href="#emacsvox_002dwizards_002dtoggle_002dmm_002ddd_002dyyyy_002ddate_002dpronouncer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dtoggle_002dmm_002ddd_002dyyyy_002ddate_002dpronouncer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-toggle-mm-dd-yyyy-date-pronouncer</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dtoggle_002dmm_002ddd_002dyyyy_002ddate_002dpronouncer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dtoggle_002dmm_002ddd_002dyyyy_002ddate_002dpronouncer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle pronunciation of mm-dd-yyyy dates.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dtoggle_002dyyyy_002dmm_002ddd_002ddate_002dpronouncer">
+<h4 class="subsubsection"><span>2.246.1.92 emacsvox-wizards-toggle-yyyy-mm-dd-date-pronouncer<a class="copiable-link" href="#emacsvox_002dwizards_002dtoggle_002dyyyy_002dmm_002ddd_002ddate_002dpronouncer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dtoggle_002dyyyy_002dmm_002ddd_002ddate_002dpronouncer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-toggle-yyyy-mm-dd-date-pronouncer</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dtoggle_002dyyyy_002dmm_002ddd_002ddate_002dpronouncer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dtoggle_002dyyyy_002dmm_002ddd_002ddate_002dpronouncer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle pronunciation of yyyy-mm-dd dates.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dtoggle_002dyyyymmdd_002ddate_002dpronouncer">
+<h4 class="subsubsection"><span>2.246.1.93 emacsvox-wizards-toggle-yyyymmdd-date-pronouncer<a class="copiable-link" href="#emacsvox_002dwizards_002dtoggle_002dyyyymmdd_002ddate_002dpronouncer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dtoggle_002dyyyymmdd_002ddate_002dpronouncer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-toggle-yyyymmdd-date-pronouncer</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dtoggle_002dyyyymmdd_002ddate_002dpronouncer"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dtoggle_002dyyyymmdd_002ddate_002dpronouncer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle pronunciation of yyyymmdd  dates.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dtramp_002dopen_002dlocation">
+<h4 class="subsubsection"><span>2.246.1.94 emacsvox-wizards-tramp-open-location<a class="copiable-link" href="#emacsvox_002dwizards_002dtramp_002dopen_002dlocation"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dtramp_002dopen_002dlocation"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-tramp-open-location</strong> <var class="def-var-arguments">(name)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dtramp_002dopen_002dlocation"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_003b-C_002dt"></a><span><kbd class="kbd">C-; C-t</kbd><a class="copiable-link" href="#index-C_002d_003b-C_002dt"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-h-C_002dt"></a><span><kbd class="kbd">C-x @ h C-t</kbd><a class="copiable-link" href="#index-C_002dx-_0040-h-C_002dt"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dtramp_002dopen_002dlocation-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Open specified tramp location.
+Location is specified by name.
+
+(fn NAME)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dtune_002din_002dradio_002dbrowse">
+<h4 class="subsubsection"><span>2.246.1.95 emacsvox-wizards-tune-in-radio-browse<a class="copiable-link" href="#emacsvox_002dwizards_002dtune_002din_002dradio_002dbrowse"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dtune_002din_002dradio_002dbrowse"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-tune-in-radio-browse</strong> <var class="def-var-arguments">(&amp;optional category)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dtune_002din_002dradio_002dbrowse"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_002c-t"></a><span><kbd class="kbd">C-, t</kbd><a class="copiable-link" href="#index-C_002d_002c-t"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-a-t"></a><span><kbd class="kbd">C-x @ a t</kbd><a class="copiable-link" href="#index-C_002dx-_0040-a-t"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dtune_002din_002dradio_002dbrowse-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Browse Tune-In Radio.
+Optional interactive prefix arg ‘category’ prompts for a category.
+
+(fn &amp;optional CATEGORY)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dtune_002din_002dradio_002dsearch">
+<h4 class="subsubsection"><span>2.246.1.96 emacsvox-wizards-tune-in-radio-search<a class="copiable-link" href="#emacsvox_002dwizards_002dtune_002din_002dradio_002dsearch"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dtune_002din_002dradio_002dsearch"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-tune-in-radio-search</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dtune_002din_002dradio_002dsearch"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002d_002c-s"></a><span><kbd class="kbd">C-, s</kbd><a class="copiable-link" href="#index-C_002d_002c-s"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-a-s"></a><span><kbd class="kbd">C-x @ a s</kbd><a class="copiable-link" href="#index-C_002dx-_0040-a-s"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dtune_002din_002dradio_002dsearch-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Search Tune-In Radio.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dunits">
+<h4 class="subsubsection"><span>2.246.1.97 emacsvox-wizards-units<a class="copiable-link" href="#emacsvox_002dwizards_002dunits"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dunits"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-units</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dunits"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-u"></a><span><kbd class="kbd">C-e x u</kbd><a class="copiable-link" href="#index-C_002de-x-u"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dunits-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Run units.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dvc_002dn">
+<h4 class="subsubsection"><span>2.246.1.98 emacsvox-wizards-vc-n<a class="copiable-link" href="#emacsvox_002dwizards_002dvc_002dn"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dvc_002dn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-vc-n</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dvc_002dn"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dvc_002dn-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Accelerator for VC viewer.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dvc_002dview_002dmode">
+<h4 class="subsubsection"><span>2.246.1.99 emacsvox-wizards-vc-view-mode<a class="copiable-link" href="#emacsvox_002dwizards_002dvc_002dview_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dvc_002dview_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-vc-view-mode</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dvc_002dview_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dvc_002dview_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Major mode for interactively viewing virtual console contents.
+
+Key             Binding
+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
+C-l		emacsvox-wizards-vc-viewer-refresh
+
+In addition to any hooks its parent mode ‘special-mode’ might have
+run, this mode runs the hook ‘emacsvox-wizards-vc-view-mode-hook’, as
+the final or penultimate step during initialization.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dvc_002dviewer">
+<h4 class="subsubsection"><span>2.246.1.100 emacsvox-wizards-vc-viewer<a class="copiable-link" href="#emacsvox_002dwizards_002dvc_002dviewer"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dvc_002dviewer"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-vc-viewer</strong> <var class="def-var-arguments">(console)</var><a class="copiable-link" href="#index-emacsvox_002dwizards_002dvc_002dviewer"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-x-v"></a><span><kbd class="kbd">C-e x v</kbd><a class="copiable-link" href="#index-C_002de-x-v"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dvc_002dviewer-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">View contents of  virtual console.
+
+(fn CONSOLE)
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dvc_002dviewer_002drefresh">
+<h4 class="subsubsection"><span>2.246.1.101 emacsvox-wizards-vc-viewer-refresh<a class="copiable-link" href="#emacsvox_002dwizards_002dvc_002dviewer_002drefresh"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dvc_002dviewer_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-vc-viewer-refresh</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dvc_002dviewer_002drefresh"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dvc_002dviewer_002drefresh-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Refresh view of VC we’re viewing.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dm_002dplayer_002dmode">
+<h4 class="subsubsection"><span>2.246.1.102 emacsvox-wizards-view-buffers-filtered-by-m-player-mode<a class="copiable-link" href="#emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dm_002dplayer_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dm_002dplayer_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-view-buffers-filtered-by-m-player-mode</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dm_002dplayer_002dmode"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dm_002dplayer_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Buffer menu filtered by  m-player mode.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dthis_002dmode">
+<h4 class="subsubsection"><span>2.246.1.103 emacsvox-wizards-view-buffers-filtered-by-this-mode<a class="copiable-link" href="#emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dthis_002dmode"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dthis_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-wizards-view-buffers-filtered-by-this-mode</strong><a class="copiable-link" href="#index-emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dthis_002dmode"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002dz-b"></a><span><kbd class="kbd">C-z b</kbd><a class="copiable-link" href="#index-C_002dz-b"> &para;</a></span></dt>
+<dt><a id="index-C_002d_002e-m"></a><span><kbd class="kbd">C-. m</kbd><a class="copiable-link" href="#index-C_002d_002e-m"> &para;</a></span></dt>
+<dt><a id="index-C_002de-z-b"></a><span><kbd class="kbd">C-e z b</kbd><a class="copiable-link" href="#index-C_002de-z-b"> &para;</a></span></dt>
+<dt><a id="index-C_002dx-_0040-s-m"></a><span><kbd class="kbd">C-x @ s m</kbd><a class="copiable-link" href="#index-C_002dx-_0040-s-m"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002dwizards_002dview_002dbuffers_002dfiltered_002dby_002dthis_002dmode-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Buffer menu filtered by  mode of current-buffer.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
+<div class="subsection-level-extent" id="emacsvox_002dwizards-Options">
+<h4 class="subsection"><span>2.246.2 emacsvox-wizards Options<a class="copiable-link" href="#emacsvox_002dwizards-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-139"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-brightness-autoblack</var><a class="copiable-link" href="#index-User-Option-139"> &para;</a></span></dt>
+<dd><pre class="verbatim">Set to T to automatically turn display black.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-140"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-speak-telephone-directory</var><a class="copiable-link" href="#index-User-Option-140"> &para;</a></span></dt>
+<dd><pre class="verbatim">File holding telephone directory.
+This is just a text file, and we use grep to search it.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;~/.emacsvox/tel-dir&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-141"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-wizards-pdf-to-text-options</var><a class="copiable-link" href="#index-User-Option-141"> &para;</a></span></dt>
+<dd><pre class="verbatim">options to Command for running pdftotext.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;-layout&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-142"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-wizards-project-shells</var><a class="copiable-link" href="#index-User-Option-142"> &para;</a></span></dt>
+<dd><pre class="verbatim">Project shells, a list of shell-name/initial-directory pairs.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-143"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-wizards-remote-workstation</var><a class="copiable-link" href="#index-User-Option-143"> &para;</a></span></dt>
+<dd><pre class="verbatim">Name of remote workstation.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+&quot;&quot;
+
+</pre>
+</dd></dl>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-144"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-wizards-tramp-locations</var><a class="copiable-link" href="#index-User-Option-144"> &para;</a></span></dt>
+<dd><pre class="verbatim">Tramp locations used by Emacsvox tramp wizard.
+Locations added here via custom can be opened using command
+emacsvox-wizards-tramp-open-location
+bound to C-x @@ h C-t.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+nil
+
+</pre>
+</dd></dl>
+
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002dwoman.html">emacsvox-woman</a>, Previous: <a href="emacsvox_002dwindows_002dspeech.html">emacsvox-windows-speech</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

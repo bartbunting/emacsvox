@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>URL Templates (Emacsvox Generated Reference Manual)</title>
+
+<meta name="description" content="URL Templates (Emacsvox Generated Reference Manual)">
+<meta name="keywords" content="URL Templates (Emacsvox Generated Reference Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Reference-Concept-Index.html" rel="index" title="Reference Concept Index">
+<link href="Emacsvox-Commands-And-Options.html" rel="up" title="Emacsvox Commands And Options">
+<link href="xbacklight.html" rel="prev" title="xbacklight">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="URL-Templates">
+<div class="nav-panel">
+<p>
+Previous: <a href="xbacklight.html" accesskey="p" rel="prev">xbacklight</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="URL-Templates-1"><span>2.274 URL Templates<a class="copiable-link" href="#URL-Templates-1"> &para;</a></span></h3>
+
+<p>This section documents a total of 66 URL Templates.
+</p>
+<p>All of these URL templates can be invoked via command
+ <kbd class="kbd">M-x emacsvox-url-template-fetch</kbd> normally bound to
+ <kbd class="kbd">C-e u</kbd>.
+This command prompts for the name of the template, and completion
+ is available via Emacs&rsquo; minibuffer completion.
+Each URL template carries out the following steps:
+</p><ul class="itemize mark-bullet">
+<li>Prompt for the relevant information.
+</li><li>Fetch the resulting URL using an appropriate fetcher.
+</li><li>Set up the resulting resource with appropriate
+ customizations.
+</li></ul>
+<ol class="enumerate">
+<li> <b class="b">acu weather</b>
+
+<p>Weather Forecast from ACUWeather
+</p></li><li> <b class="b">air traffic control</b>
+
+<p>Find live streams for Air Traffic Control.
+</p></li><li> <b class="b">airport conditions</b>
+
+<p>Display airport conditions from the FAA.
+</p></li><li> <b class="b">amazon product details by asin</b>
+
+<p>Retrieve product details from Amazon by either ISBN or ASIN.
+</p></li><li> <b class="b">aqi from wunderground</b>
+
+<p>Air quality from Wunderground
+</p></li><li> <b class="b">archwiki search</b>
+
+<p>Search Linux ArchWiki
+</p></li><li> <b class="b">bbc 5-live  schedule </b>
+
+<p>BBC Radio 5 Live  Schedule
+</p></li><li> <b class="b">bbc podcast directory</b>
+
+<p>BBC PodCast Directory
+</p></li><li> <b class="b">bbc r4 extra schedule </b>
+
+<p>BBC Radio 4 Extra Schedule
+</p></li><li> <b class="b">bbc r4 schedule </b>
+
+<p>BBC R4 Schedule
+</p></li><li> <b class="b">bbc sounds</b>
+
+<p>Search BBC Sounds.
+Result page is filtered down to two sections, Shows and Episodes.
+</p>
+<p>Press [RET] on links in the Show section to open that show page.
+The page for that show contains playable links for Episodes.
+</p>
+<p>Press &lsquo;y&rsquo; on Episode links to play them with MPV.
+</p></li><li> <b class="b">bbc world service  schedule </b>
+
+<p>BBC World Service Schedule
+</p></li><li> <b class="b">bing news</b>
+
+<p>Bing News results as RSS feed.
+</p></li><li> <b class="b">business headlines from cnn</b>
+
+<p>Money Headlines From CNN
+</p></li><li> <b class="b">cbs radio streams from streamtheworld</b>
+
+<p>Play radio stream.
+Example: kcbsFM.
+Format is stationid+AM/FM.
+</p></li><li> <b class="b">cnbc quotes</b>
+
+<p>Stock portfolio via CNBC
+</p></li><li> <b class="b">cnbc ticker</b>
+
+<p>Stock Quote via CNBC
+</p></li><li> <b class="b">cnn headlines</b>
+
+<p>News Headlines From CNN
+</p></li><li> <b class="b">cnn money</b>
+
+<p>CNN Money
+</p></li><li> <b class="b">cricinfo print</b>
+
+<p>Printer friendly   link on Cricinfo
+</p></li><li> <b class="b">dictionary lookup</b>
+
+<p>Dictionary Lookup
+</p></li><li> <b class="b">emacsvox search via google</b>
+
+<p>Search Emacsvox Site
+</p></li><li> <b class="b">espn cricinfo search</b>
+
+<p>Cricinfo Search Using Google
+</p></li><li> <b class="b">finance  google</b>
+
+<p>Lookup ticker on Google Finance.
+</p></li><li> <b class="b">finance summary from google</b>
+
+<p>Display top stocks  from Google Finance.
+</p></li><li> <b class="b">freesound</b>
+
+<p>Search FreeSound.
+</p></li><li> <b class="b">gita</b>
+
+<p>Open specific chapter/verse in the Gita
+</p></li><li> <b class="b">global weather from google</b>
+
+<p>World Weather From Google
+</p></li><li> <b class="b">google news search</b>
+
+<p>Search Google news.
+</p></li><li> <b class="b">google scholar</b>
+
+<p>Google Scholar Search
+</p></li><li> <b class="b">google trends</b>
+
+<p>Google Trends
+</p></li><li> <b class="b">guardian rss feeds directory</b>
+
+<p>Guardian Feeds  Directory
+</p></li><li> <b class="b">hacker  news frontpage</b>
+
+<p>Display Hacker News Front Page
+</p></li><li> <b class="b">hacker  news search</b>
+
+<p>Display Hacker News Front Page
+</p></li><li> <b class="b">hoogle haskell api search</b>
+
+<p>Haskell API Search against a local server.
+</p></li><li> <b class="b">html google news search</b>
+
+<p>Search Google news.
+</p></li><li> <b class="b">local weather from google</b>
+
+<p>Light-weight Google weather. Displays weather for your current US-ZIP Code.
+</p></li><li> <b class="b">microsoft search</b>
+
+<p>Bing results as RSS feed.
+</p></li><li> <b class="b">nba  standings</b>
+
+<p>Display NBA standings.
+</p></li><li> <b class="b">nls bard bookshelf</b>
+
+<p>NLS Bard Catalog: Most Popular. Login once before using this
+template.
+</p></li><li> <b class="b">nls bard popular</b>
+
+<p>NLS Bard Catalog: Most Popular. Login once before using this
+template.
+</p></li><li> <b class="b">nls bard recent</b>
+
+<p>NLS Bard Catalog: Recently Added. Login once before using this
+template.
+</p></li><li> <b class="b">nls bard search</b>
+
+<p>Search NLS Bard Catalog. Login once before using this template.
+</p></li><li> <b class="b">npr</b>
+
+<p>Open NPR home , then display the alternative links to access RSS feeds.
+</p></li><li> <b class="b">online radiotime browser</b>
+
+<p>RadioTime Entry point.
+</p></li><li> <b class="b">online radiotime search</b>
+
+<p>RadioTime Search
+</p></li><li> <b class="b">openlibrary</b>
+
+<p>Open Library Search
+</p></li><li> <b class="b">player fm bbc rss feeds</b>
+
+<p>Player FM BBC RSS Feeds
+</p></li><li> <b class="b">radiotime categories</b>
+
+<p>RadioTime Categories
+</p></li><li> <b class="b">reddit at point</b>
+
+<p>Open RSS Feed for Reddit URL under point.
+</p></li><li> <b class="b">reddit by topic</b>
+
+<p>Open RSS Feed for Reddit Topic.
+</p></li><li> <b class="b">reddit front page</b>
+
+<p>Open  Feed for Reddit  Front Page.
+</p></li><li> <b class="b">reddit search</b>
+
+<p>Reddit Search Results Feed.
+</p></li><li> <b class="b">seeking alpha</b>
+
+<p>Stock profile from Seeking Alpha
+</p></li><li> <b class="b">sourceforge browse mirrors</b>
+
+<p>Retrieve download page at Sourceforge for specified project.
+</p></li><li> <b class="b">sourceforge download</b>
+
+<p>Download specified file.
+</p></li><li> <b class="b">sourceforge project</b>
+
+<p>Open specified project page at SourceForge.
+</p></li><li> <b class="b">tech news from cnet</b>
+
+<p>Display tech news from CNET
+</p></li><li> <b class="b">tinyurl</b>
+
+<p>URL Shortener via tinyurl.
+If on a URL, replace it with the shortened version. If on a link
+in EWW, use it. Otherwise prompt for a URL to shorten and insert
+the result at point.
+</p></li><li> <b class="b">tunein radio</b>
+
+<p>Translate StreamId to playable stream.
+</p></li><li> <b class="b">washington post</b>
+
+<p>Washington Post Contents
+</p></li><li> <b class="b">wiki data search</b>
+
+<p>Search WikiData.
+</p></li><li> <b class="b">wikipedia at point</b>
+
+<p>Extract body content from Wikipedia link at point
+</p></li><li> <b class="b">wordnet search</b>
+
+<p>Look up term in WordNet.
+</p></li><li> <b class="b">yahoo finance</b>
+
+<p>Yahoo Finance Stock News
+</p></li><li> <b class="b">yahoo rssnews</b>
+
+<p>News  From Yahoo As RSS.
+</p>
+</li></ol>
+
+
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="xbacklight.html">xbacklight</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>
