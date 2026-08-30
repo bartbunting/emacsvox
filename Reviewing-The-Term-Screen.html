@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Reviewing The Term Screen (Emacsvox User Manual)</title>
+
+<meta name="description" content="Reviewing The Term Screen (Emacsvox User Manual)">
+<meta name="keywords" content="Reviewing The Term Screen (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Running-Terminal-Based-Applications.html" rel="up" title="Running Terminal Based Applications">
+<link href="Term-Help-And-Recovery.html" rel="next" title="Term Help And Recovery">
+<link href="Term-Speech-Feedback.html" rel="prev" title="Term Speech Feedback">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Reviewing-The-Term-Screen">
+<div class="nav-panel">
+<p>
+Next: <a href="Term-Help-And-Recovery.html" accesskey="n" rel="next">Help And Recovery</a>, Previous: <a href="Term-Speech-Feedback.html" accesskey="p" rel="prev">Automatic Speech Feedback</a>, Up: <a href="Running-Terminal-Based-Applications.html" accesskey="u" rel="up">Term Terminal Access</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Reviewing-The-Term-Screen-1"><span>12.4 Reviewing The Term Screen<a class="copiable-link" href="#Reviewing-The-Term-Screen-1"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-review-pointer_002c-Term"></a>
+<a class="index-entry-id" id="index-review-mode_002c-Term"></a>
+<p>The Emacsvox review pointer is independent of the terminal cursor, so reviewing
+old screen text does not send keys or move the child application.  These core
+commands keep the normal <kbd class="kbd">C-t</kbd> prefix:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">C-t .</kbd></dt>
+<dd><p>Move the review pointer to the terminal cursor and announce its coordinates.
+</p>
+</dd>
+<dt><kbd class="kbd">C-t p</kbd></dt>
+<dt><kbd class="kbd">C-t n</kbd></dt>
+<dd><p>Move the review pointer to the previous or next line and speak it.  The Up and
+Down arrow keys are equivalent after the <kbd class="kbd">C-t</kbd> prefix.
+</p>
+</dd>
+<dt><kbd class="kbd">C-t <kbd class="key">LEFT</kbd></kbd></dt>
+<dt><kbd class="kbd">C-t <kbd class="key">RIGHT</kbd></kbd></dt>
+<dd><p>Move the pointer by a character and speak the character reached.
+</p>
+</dd>
+<dt><kbd class="kbd">C-t M-b</kbd></dt>
+<dt><kbd class="kbd">C-t M-f</kbd></dt>
+<dd><p>Move the pointer backward or forward by a word and speak it.
+</p>
+</dd>
+<dt><kbd class="kbd">C-t l</kbd></dt>
+<dt><kbd class="kbd">C-t w</kbd></dt>
+<dt><kbd class="kbd">C-t c</kbd></dt>
+<dd><p>Speak the line, word, or character at the review pointer without moving it.
+</p>
+</dd>
+<dt><kbd class="kbd">C-t <kbd class="key">SPC</kbd></kbd></dt>
+<dd><p>Speak from the review pointer to the current end of the Term buffer.
+</p>
+</dd>
+<dt><kbd class="kbd">C-t s</kbd></dt>
+<dd><p>Prompt for text, search forward from the review pointer, and speak the matching
+line.
+</p></dd>
+</dl>
+
+<p>In character mode, <kbd class="kbd">C-t q</kbd> enters dedicated review mode.  The terminal
+stops receiving ordinary keys while this review keymap is active.  Use
+<kbd class="kbd">p</kbd>, <kbd class="kbd">n</kbd>, the arrow keys, <kbd class="kbd">M-b</kbd>, <kbd class="kbd">M-f</kbd>, <kbd class="kbd">l</kbd>, <kbd class="kbd">w</kbd>,
+<kbd class="kbd">c</kbd>, and <kbd class="kbd">s</kbd> without the <kbd class="kbd">C-t</kbd> prefix; press <kbd class="kbd">q</kbd> to return to
+character mode.  To copy reviewed text, press <kbd class="kbd">m</kbd> at one endpoint, move the
+pointer, and press <kbd class="kbd">y</kbd> to copy the region to the kill ring.
+</p>
+<p>The integration also supports named rectangular screen regions and focus or
+filter windows.  Those are advanced, coordinate-based facilities; inspect the
+live <kbd class="kbd">C-h m</kbd> output and the generated module reference before using them.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Term-Help-And-Recovery.html">Help And Recovery</a>, Previous: <a href="Term-Speech-Feedback.html">Automatic Speech Feedback</a>, Up: <a href="Running-Terminal-Based-Applications.html">Term Terminal Access</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

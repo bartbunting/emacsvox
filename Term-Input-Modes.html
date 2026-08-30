@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Term Input Modes (Emacsvox User Manual)</title>
+
+<meta name="description" content="Term Input Modes (Emacsvox User Manual)">
+<meta name="keywords" content="Term Input Modes (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Running-Terminal-Based-Applications.html" rel="up" title="Running Terminal Based Applications">
+<link href="Term-Speech-Feedback.html" rel="next" title="Term Speech Feedback">
+<link href="Starting-Term.html" rel="prev" title="Starting Term">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Term-Input-Modes">
+<div class="nav-panel">
+<p>
+Next: <a href="Term-Speech-Feedback.html" accesskey="n" rel="next">Automatic Speech Feedback</a>, Previous: <a href="Starting-Term.html" accesskey="p" rel="prev">Starting Term</a>, Up: <a href="Running-Terminal-Based-Applications.html" accesskey="u" rel="up">Term Terminal Access</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Character-And-Line-Input-Modes"><span>12.2 Character And Line Input Modes<a class="copiable-link" href="#Character-And-Line-Input-Modes"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-character-mode_002c-Term"></a>
+<a class="index-entry-id" id="index-line-mode_002c-Term"></a>
+<a class="index-entry-id" id="index-term_002dchar_002dmode"></a>
+<a class="index-entry-id" id="index-term_002dline_002dmode"></a>
+<p>Term starts in character mode.  Choose the mode according to who should receive
+your keys:
+</p>
+<dl class="table">
+<dt>Character mode</dt>
+<dd><p>Most keys are sent immediately to the terminal program.  Use this for
+full-screen or key-driven terminal applications.  Press <kbd class="kbd">C-c C-j</kbd> to enter
+line mode.  Because normal Emacs prefixes may belong to the child program, use
+<kbd class="kbd">C-c C-h m</kbd> for mode help and <kbd class="kbd">C-c M-x</kbd> to run an Emacs command.
+</p>
+</dd>
+<dt>Line mode</dt>
+<dd><p>Normal Emacs editing commands edit the pending input.  <kbd class="key">RET</kbd> sends that
+input to the terminal program.  Use <kbd class="kbd">C-h m</kbd> and other ordinary Emacs Help
+keys directly.  Press <kbd class="kbd">C-c C-k</kbd> to return to character mode.
+</p></dd>
+</dl>
+
+<p>Emacsvox announces &lsquo;<samp class="samp">Terminal line mode</samp>&rsquo; or &lsquo;<samp class="samp">Terminal character mode</samp>&rsquo;
+after an interactive switch.  In either mode, <kbd class="kbd">C-t</kbd> begins the Emacsvox
+Term review prefix.  To send a literal <kbd class="kbd">C-t</kbd> to the child program in
+character mode, press <kbd class="kbd">C-t C-t</kbd>.
+</p>
+</div>
+
+
+
+</body>
+</html>

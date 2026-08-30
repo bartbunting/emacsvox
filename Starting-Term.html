@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Starting Term (Emacsvox User Manual)</title>
+
+<meta name="description" content="Starting Term (Emacsvox User Manual)">
+<meta name="keywords" content="Starting Term (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Running-Terminal-Based-Applications.html" rel="up" title="Running Terminal Based Applications">
+<link href="Term-Input-Modes.html" rel="next" title="Term Input Modes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Starting-Term">
+<div class="nav-panel">
+<p>
+Next: <a href="Term-Input-Modes.html" accesskey="n" rel="next">Character And Line Input Modes</a>, Up: <a href="Running-Terminal-Based-Applications.html" accesskey="u" rel="up">Term Terminal Access</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Starting-Term-1"><span>12.1 Starting Term<a class="copiable-link" href="#Starting-Term-1"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-term"></a>
+<p>Run <kbd class="kbd">M-x term <kbd class="key">RET</kbd></kbd>.  At the &lsquo;<samp class="samp">Run program:</samp>&rsquo; prompt, accept the
+proposed shell or enter another executable and press <kbd class="key">RET</kbd>.  Emacsvox
+currently makes the selected Term window fill the frame when <code class="code">term</code> or
+<code class="code">ansi-term</code> starts.  This changes only the window layout: it does not kill
+the buffers that were displayed in the other windows.
+</p>
+<p>Term owns terminal emulation and the child program owns its prompts, input,
+and completion.  Emacsvox observes the rendered Term buffer and adds speech
+feedback and review commands.  See <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Term-Mode.html#Term-Mode">Term Mode</a> in <cite class="cite">The GNU Emacs
+Manual</cite> for the emulator itself and
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002determ.html#emacsvox_002determ">emacsvox-eterm</a> in <cite class="cite">Emacsvox Reference Manual</cite> for the
+complete Emacsvox API inventory.
+</p>
+</div>
+
+
+
+</body>
+</html>

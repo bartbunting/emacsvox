@@ -21,6 +21,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -33,27 +34,17 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Editing-Code">
 <div class="nav-panel">
 <p>
-Next: <a href="Development-Environment.html" accesskey="n" rel="next">Development Environment</a>, Previous: <a href="Messaging.html" accesskey="p" rel="prev">Messaging</a>, Up: <a href="Emacs-Packages.html" accesskey="u" rel="up">Emacs Packages.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Development-Environment.html" accesskey="n" rel="next">Development Environment</a>, Previous: <a href="Messaging.html" accesskey="p" rel="prev">Messaging</a>, Up: <a href="Emacs-Packages.html" accesskey="u" rel="up">Applications And Integrations</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
 <h3 class="section" id="Editing-Code-1"><span>8.6 Editing Code<a class="copiable-link" href="#Editing-Code-1"> &para;</a></span></h3>
 
-<a class="index-entry-id" id="index-Programming"></a>
-
-<p>Files containing program source code form a very specific class of
-<b class="b">structured</b> documents.  Unlike documents meant for human
-consumption that are often only loosely structured, program source (as
-a concession to the computer&rsquo;s intolerance of lack of structure) are
-per force well-structured and adhere to a fairly stringent syntax.
-</p>
-<p>The Emacs environment provides editing modes that are specific to
-creating and maintaining software written in most popular programming
-languages.  Many of these editing modes are speech-enabled by
-Emacsvox.  Speech-enabling these modes includes providing a rich set
-of navigational commands that allow you to move through the source
-efficiently.  In addition, Emacsvox&rsquo;s core <b class="b">voice-lock</b> facilities
-are used to produce audio formatted output  &mdash; this helps you
-spot errors quickly.
+<a class="index-entry-id" id="index-programming"></a>
+<p>Programming modes own language-aware movement, indentation, compilation, and
+navigation.  Emacsvox speaks those operations and uses voice-lock to distinguish
+faces such as comments, strings, warnings, and language constructs.  Use
+<kbd class="kbd">C-h m</kbd> in the source buffer for the language mode, and search the generated
+reference for an integration named after that mode.
 </p>
 </div>
 

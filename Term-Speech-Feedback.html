@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Term Speech Feedback (Emacsvox User Manual)</title>
+
+<meta name="description" content="Term Speech Feedback (Emacsvox User Manual)">
+<meta name="keywords" content="Term Speech Feedback (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Running-Terminal-Based-Applications.html" rel="up" title="Running Terminal Based Applications">
+<link href="Reviewing-The-Term-Screen.html" rel="next" title="Reviewing The Term Screen">
+<link href="Term-Input-Modes.html" rel="prev" title="Term Input Modes">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Term-Speech-Feedback">
+<div class="nav-panel">
+<p>
+Next: <a href="Reviewing-The-Term-Screen.html" accesskey="n" rel="next">Reviewing The Term Screen</a>, Previous: <a href="Term-Input-Modes.html" accesskey="p" rel="prev">Character And Line Input Modes</a>, Up: <a href="Running-Terminal-Based-Applications.html" accesskey="u" rel="up">Term Terminal Access</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Automatic-Speech-Feedback"><span>12.3 Automatic Speech Feedback<a class="copiable-link" href="#Automatic-Speech-Feedback"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-automatic-speech_002c-Term"></a>
+<a class="index-entry-id" id="index-emacsvox_002determ_002dautospeak"></a>
+<a class="index-entry-id" id="index-emacsvox_002dtoggle_002determ_002dautospeak"></a>
+<p>Automatic feedback is controlled by the buffer-local setting
+<code class="code">emacsvox-eterm-autospeak</code>, which is on by default.  Toggle it for the
+current Term buffer with <kbd class="kbd">C-t C-q</kbd>.  The older spelling
+<code class="code">eterm-autospeak</code> is not an Emacsvox variable.
+</p>
+<p>The Term buffer must be displayed in a live window for output to be spoken
+automatically.  A hidden Term buffer can continue running without speaking.
+In line mode, Emacsvox reads the newly inserted output range without
+interrupting it for every character.  In character mode, it presents rendered
+cursor movement, characters, words, or the reached line according to how the
+screen changed; new terminal activity can stop earlier speech.
+</p>
+<p>This feedback is based on Term&rsquo;s rendered buffer and cursor coordinates.  It
+does not provide EAT&rsquo;s bounded screen transactions, terminal-completion model,
+or alternate-screen policy.  Use explicit review whenever automatic output is
+too brief or an application redraw is ambiguous.
+</p>
+</div>
+
+
+
+</body>
+</html>

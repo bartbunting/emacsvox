@@ -21,6 +21,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -33,51 +34,30 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Structured-Editing">
 <div class="nav-panel">
 <p>
-Next: <a href="Browsing-Structure.html" accesskey="n" rel="next">Browsing Structure</a>, Previous: <a href="Document-Authoring.html" accesskey="p" rel="prev">Document Authoring</a>, Up: <a href="Emacs-Packages.html" accesskey="u" rel="up">Emacs Packages.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Browsing-Structure.html" accesskey="n" rel="next">Browsing Structure</a>, Previous: <a href="Document-Authoring.html" accesskey="p" rel="prev">Document Authoring</a>, Up: <a href="Emacs-Packages.html" accesskey="u" rel="up">Applications And Integrations</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
 <h3 class="section" id="Structured-Editing-And-Templates"><span>8.2 Structured Editing And Templates<a class="copiable-link" href="#Structured-Editing-And-Templates"> &para;</a></span></h3>
 
-
-<p>Editing documents based on the inherent structure present in the
-electronic encoding can be very efficient when using spoken
-interaction.  We described mode <strong class="strong">AUCTeX</strong>  &mdash; a specialized
-interface to authoring LaTeX documents as a special instance of such
-structured editing in see <a class="pxref" href="Document-Authoring.html">Document Authoring</a>.
+<a class="index-entry-id" id="index-Outline-mode"></a>
+<a class="index-entry-id" id="index-Tempo"></a>
+<a class="index-entry-id" id="index-outline_002dmode"></a>
+<a class="index-entry-id" id="index-outline_002dminor_002dmode"></a>
+<p>Emacsvox has maintained integrations for the built-in Outline and Tempo
+libraries.  In Outline mode, heading navigation speaks the reached heading and
+visibility commands announce what was hidden or exposed.  Start a dedicated
+outline with <kbd class="kbd">M-x outline-mode</kbd>, or enable <code class="code">outline-minor-mode</code> in a
+suitable document.  See
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002doutline.html#emacsvox_002doutline">emacsvox-outline</a> in <cite class="cite">Emacsvox Reference Manual</cite> for the
+Emacsvox integration and <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Outline-Mode.html#Outline-Mode">Outline Mode</a> in <cite class="cite">The GNU Emacs Manual</cite> for
+the underlying editor.
 </p>
-<p>The Emacsvox desktop allows the user to efficiently author and
-maintain an electronic document based either on the structure present
-in the markup (as in the case of mode AUCTeX) or on special outlining
-constructs that allow the user to impose a desired logical structure
-on the document.  This section describes the effect of speech-enabling
-such editing tools and points out the advantages in using these in a
-speech oriented interface.
+<p>Tempo supplies template fields for modes and packages that use it.  Emacsvox
+speaks inserted text and the line reached when moving between template marks.
+The package that supplied a template owns its insertion commands; use that
+package&rsquo;s mode help, together with
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002dtempo.html#emacsvox_002dtempo">emacsvox-tempo</a> in <cite class="cite">Emacsvox Reference Manual</cite>.
 </p>
-<p>Template-based authoring  &mdash; a technique that allows the user to
-create a document by inserting contents into appropriate positions in
-a predefined template  &mdash; goes hand in hand with such structured
-editing.  Finally, structured editing can vastly simplify the creation
-and maintenance of structured data, for example, the data present in a
-UNIX password file.  Such data files are in fact nothing more than a
-collection of database records, where each record (or line) consists
-of a set of fields delimited by a special character.  Maintaining such
-files without exploiting the underlying structure often tends to be
-error prone.  We describe editing modes that can exploit such record
-structure to provide a fluent editing interface.  Finally, we outline
-a speech-enabled interface to a spreadsheet application as a complex
-instance of such structured data editing.
-</p>
-
-<ul class="mini-toc">
-<li><a href="Outline-Editing.html" accesskey="1">Outline Editing</a></li>
-<li><a href="Template_002dbased-Authoring.html" accesskey="2">Template-based Authoring</a></li>
-<li><a href="Maintaining-Structured-Data.html" accesskey="3">Maintaining Structured Data</a></li>
-</ul>
-</div>
-<hr>
-<div class="nav-panel">
-<p>
-Next: <a href="Browsing-Structure.html">Browsing Structure</a>, Previous: <a href="Document-Authoring.html">Document Authoring</a>, Up: <a href="Emacs-Packages.html">Emacs Packages.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

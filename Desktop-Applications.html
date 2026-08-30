@@ -22,7 +22,6 @@
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
-ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -34,252 +33,53 @@ ul.mark-bullet {list-style-type: disc}
 <div class="section-level-extent" id="Desktop-Applications">
 <div class="nav-panel">
 <p>
-Previous: <a href="Personal-Information-Management.html" accesskey="p" rel="prev">Personal Information Management</a>, Up: <a href="Emacs-Packages.html" accesskey="u" rel="up">Emacs Packages.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="Personal-Information-Management.html" accesskey="p" rel="prev">Personal Information Management</a>, Up: <a href="Emacs-Packages.html" accesskey="u" rel="up">Applications And Integrations</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
 <h3 class="section" id="Desktop-Applications-1"><span>8.10 Desktop Applications<a class="copiable-link" href="#Desktop-Applications-1"> &para;</a></span></h3>
 
-<a class="index-entry-id" id="index-Desktop-Applications"></a>
-
 <ul class="mini-toc">
-<li><a href="#Spread-Sheets" accesskey="1">Spread Sheets</a></li>
+<li><a href="#Terminal-Applications" accesskey="1">Terminal Applications</a></li>
 <li><a href="#Forms-Mode" accesskey="2">Forms Mode</a></li>
-<li><a href="#OCR-_002d_002d_002d-Reading-Print-Documents" accesskey="3"><abbr class="acronym">OCR</abbr>  &mdash; Reading Print Documents</a></li>
+<li><a href="#Experimental-OCR-Front-End" accesskey="3">Experimental OCR Front End</a></li>
 </ul>
-<div class="subsection-level-extent" id="Spread-Sheets">
-<h4 class="subsection"><span>8.10.1 Spread Sheets<a class="copiable-link" href="#Spread-Sheets"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Terminal-Applications">
+<h4 class="subsection"><span>8.10.1 Terminal Applications<a class="copiable-link" href="#Terminal-Applications"> &para;</a></span></h4>
 
-<p>Spreadsheet applications present a two dimensional view of structured
-data where the field values are (possibly) mutually dependent.  On the
-Emacsvox desktop, a speech-enabled spreadsheet application can be
-used to manipulate such data-driven documents ranging from simple
-cheque books and expense reports to complex investment portfolios.
-Where the traditional visual interface to spreadsheets is typically
-independent of the semantics of the data stored in the spreadsheet,
-the speech-enabled interface is derived from the <strong class="strong">meaning</strong> of
-the various fields making up the data.  When presenting such
-information on a visual display, implicit visual layout can be used to
-cue the user to the meaning of different data fields.
-</p>
-<p>On the other hand, in the case of an actively scrolling auditory display, the
-spoken output needs to explicitly convey both the value and interpretation of
-the different data items.  In addition, the interface needs to enable an
-active dialog between user and application where the user is able to query
-the system about the possible meaning of a particular item of data.
-</p>
-<p>Finally, the aural interface needs to enable <strong class="strong">multiple</strong> views of
-the display.  In the visual interface, such <strong class="strong">multiple</strong> views are
-automatically enabled by the two dimensional layout combined with the
-eye&rsquo;s ability to move rapidly around the layout structure.  Thus,
-while viewing any particular row of a portfolio, one can immediately
-see the current total value as well as the net gain or loss.  The
-Emacs spread-sheet package <code class="code">dismal</code> can be retrieved from
-<a class="url" href="ftp://cs.nyu.edu/pub/local/fox/dismal">ftp://cs.nyu.edu/pub/local/fox/dismal</a>.
+<p>For a new full-terminal workflow, use <a class="ref" href="EAT-Terminal-Access.html">Speech Access To EAT</a>.  When a
+built-in terminal with no additional package is preferable, use
+<a class="ref" href="Running-Terminal-Based-Applications.html">Term Terminal Access</a>.  For ordinary line-oriented shell
+commands, <kbd class="kbd">M-x shell</kbd> is usually the simplest route.
 </p>
 </div>
 <div class="subsection-level-extent" id="Forms-Mode">
 <h4 class="subsection"><span>8.10.2 Forms Mode<a class="copiable-link" href="#Forms-Mode"> &para;</a></span></h4>
 
-<p><strong class="strong">Forms</strong> mode an Emacs mode designed to edit structured data
-records like the line shown from file <samp class="file">/etc/passwd</samp> presents a
-user-friendly visual interface that displays the field name along with
-the field value.  The user can edit the field value and save the file,
-at which point the data is written out using the underlying <code class="code"> :</code>
-delimited representation.  Mode <strong class="strong">forms</strong> provides a flexible
-interface to associating meaning to the fields of such structured data
-files.  For details on it use, see the forms-mode section of the
-online Emacs info documentation.
+<a class="index-entry-id" id="index-Forms-mode"></a>
+<a class="index-entry-id" id="index-forms_002dfind_002dfile"></a>
+<p>The built-in Forms library presents records from a structured text file one at
+a time.  Emacsvox speaks field values, record movement, searches, and status
+changes while Forms mode is active.  Forms requires a format specification;
+see <a data-manual="emacs" href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Forms-Mode.html#Forms-Mode">Forms Mode</a> in <cite class="cite">The GNU Emacs Manual</cite> for setup and operation, and
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002dforms.html#emacsvox_002dforms">emacsvox-forms</a> in <cite class="cite">Emacsvox Reference Manual</cite> for the
+speech integration.
 </p>
 </div>
-<div class="subsection-level-extent" id="OCR-_002d_002d_002d-Reading-Print-Documents">
-<h4 class="subsection"><span>8.10.3 <abbr class="acronym">OCR</abbr>  &mdash; Reading Print Documents<a class="copiable-link" href="#OCR-_002d_002d_002d-Reading-Print-Documents"> &para;</a></span></h4>
-<p>Module <code class="code">emacsvox-ocr</code> implements an <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> (Optical
-Character Recognition) front-end for the Emacsvox desktop.
-</p>
-<p>Page image is acquired using tools from package <code class="code">SANE</code> (Scanner
-Access Now Easy).  The acquired image is run through the <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> engine if
-one is available, and the results placed in a buffer that is suitable
-for browsing the results.  This buffer is placed in mode
-<code class="code">emacsvox-ocr-mode</code> a specialized mode for reading and scanning
-documents.
-</p>
-<ul class="mini-toc">
-<li><a href="#Emacsvox-OCR-Mode" accesskey="1">Emacsvox <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> Mode</a></li>
-</ul>
-<div class="subsubsection-level-extent" id="Emacsvox-OCR-Mode">
-<h4 class="subsubsection"><span>8.10.3.1 Emacsvox <abbr class="acronym">OCR</abbr> Mode<a class="copiable-link" href="#Emacsvox-OCR-Mode"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Experimental-OCR-Front-End">
+<h4 class="subsection"><span>8.10.3 Experimental OCR Front End<a class="copiable-link" href="#Experimental-OCR-Front-End"> &para;</a></span></h4>
 
-<p>Emacsvox <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> mode is a special major mode for document scanning and
-<abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr>.
+<a class="index-entry-id" id="index-OCR_002c-experimental"></a>
+<a class="index-entry-id" id="index-emacsvox_002docr"></a>
+<p>Module <code class="code">emacsvox-ocr</code> is an experimental legacy front end, not a supported
+initial-user route.  Its scanner, image-processing, and OCR-engine workflow has
+not yet received a current integration review.  Do not rely on setup commands,
+program paths, or defaults in the historical survey.  If you evaluate the
+module, inspect its live command and option help first; the generated
+<a data-manual="emacsvox-reference" href="reference/emacsvox_002docr.html#emacsvox_002docr">emacsvox-ocr</a> in <cite class="cite">Emacsvox Reference Manual</cite> is an API
+inventory, not a validated deployment guide.  Report the exact platform,
+scanner backend, OCR engine, and Emacsvox revision when requesting help.
 </p>
-<p>Pre-requisites:
-</p>
-<ul class="itemize mark-bullet">
-<li>A working scanner back-end like SANE on Linux.
-
-</li><li>An <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> engine.
-</li></ul>
-
-<p>Make sure your scanner back-end works, and that you have the utilities
-to scan a document and acquire an image as a tiff file.  Then set
-variable <var class="var">emacsvox-ocr-scan-image-program</var> to point at this
-utility.  By default, this is set to &lsquo;scanimage&rsquo; which is the image
-scanning utility provided by SANE.
-</p>
-<p>By default, this front-end attempts to compress the acquired tiff
-image; make sure you have a utility like <code class="code">tiffcp</code>.  Variable
-<var class="var">emacsvox-ocr-compress-image</var> is set to &lsquo;tiffcp&rsquo; by default; if
-you use something else, you should customize this variable.
-</p>
-<p>Next, make sure you have an <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> engine installed and
-working.  By default this front-end assumes that <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> is
-available as <code class="code">/usr/bin/ocr</code>.
-</p>
-<p>Once you have ensured that acquiring an image and applying
-<abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> to it work independently of Emacs, you can use this
-Emacsvox front-end to enable easy <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> access from within
-Emacsvox.
-</p>
-<p>The Emacsvox <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> front-end is launched by command
-<em class="dfn">emacsvox-ocr</em> bound to <kbd class="kbd">C-e C-o</kbd>.
-</p>
-<p>This command switches to a special buffer that has <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr>
-commands bounds to single keystrokes  &mdash; see the key-binding list
-at the end of this description.  Use Emacs online help facility to
-look up help on these commands.
-</p>
-<p>Mode <em class="dfn">emacsvox-ocr-mode</em> provides the necessary functionality to
-scan, <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr>, read and save documents.  By default, scanned
-images and the resulting text are saved under directory <samp class="file">~/ocr</samp>;
-see variable <var class="var">emacsvox-ocr-working-directory</var>.  Invoking command
-<em class="dfn">emacsvox-ocr-open-working-directory</em> bound to <kbd class="kbd">d</kbd> will open
-this directory.
-</p>
-<p>By default, the document being scanned is named &lsquo;untitled&rsquo;.  You can
-name the document by using command <em class="dfn">emacsvox-ocr-name-document</em>
-bound to <kbd class="kbd">n</kbd>.  The document name is used in constructing the name
-of the image and text files.
-</p>
-<p>Here is a list of all emacsvox <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> commands along with their
-key-bindings and a brief description:
-</p>
-<dl class="table">
-<dt><kbd class="kbd">digit</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-page</em>
-Jumps to specified page in the <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> output.
-</p>
-</dd>
-<dt><kbd class="kbd">c</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-set-compress-image-options</em>
-Interactively update image compression options.  Prompts with current
-setting in the minibuffer.  Setting persists for current Emacs
-session.
-</p>
-</dd>
-<dt><kbd class="kbd">i</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-set-scan-image-options</em> Interactively update scan
-image options.  Prompts with current setting in the minibuffer.
-Setting persists for current Emacs session.
-</p>
-</dd>
-<dt><kbd class="kbd">spc</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-read-current-page</em>
-Speaks current page.
-</p>
-</dd>
-<dt><kbd class="kbd">s</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-save-current-page</em>
-Saves current page as a text file.
-</p>
-</dd>
-<dt><kbd class="kbd">p</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-page</em>
-Prompts for a page number and moves to the specified page.
-</p>
-</dd>
-<dt><kbd class="kbd">]</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-forward-page</em>
-Move forward to the next page.
-</p>
-</dd>
-<dt><kbd class="kbd">[</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-backward-page</em>
-Move back to the previous page.
-</p>
-</dd>
-<dt><kbd class="kbd">d</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-open-working-directory</em>
-Open directory containing the results of <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr>.
-</p>
-</dd>
-<dt><kbd class="kbd">n</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-name-document</em>
-Name current document.
-</p>
-</dd>
-<dt><kbd class="kbd">o</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-recognize-image</em>
-Launch <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> engine on a scanned image.
-</p>
-</dd>
-<dt><kbd class="kbd">i</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-scan-image</em>
-Acquire an image using <code class="code">scanimage</code>.
-</p>
-</dd>
-<dt><kbd class="kbd">RET</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-scan-and-recognize</em>
-Scan and recognize a page.
-</p>
-</dd>
-<dt><kbd class="kbd">w</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-write-document</em>
-Write all pages of current document to a text file.
-</p>
-</dd>
-<dt><kbd class="kbd">q</kbd></dt>
-<dd><p><em class="dfn">bury-buffer</em>
-Bury the <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> buffer.
-</p>
-</dd>
-<dt><kbd class="kbd">c</kbd></dt>
-<dd><p><em class="dfn">emacsvox-ocr-customize</em>
-Customize Emacsvox <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> settings.
-</p>
-</dd>
-<dt><kbd class="kbd">?</kbd></dt>
-<dd><p><em class="dfn">describe-mode</em>
-Describe <abbr class="acronym" title="Optical
-Character Recognition">OCR</abbr> mode.
-</p></dd>
-</dl>
-
 </div>
-</div>
-</div>
-<hr>
-<div class="nav-panel">
-<p>
-Previous: <a href="Personal-Information-Management.html">Personal Information Management</a>, Up: <a href="Emacs-Packages.html">Emacs Packages.</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 
