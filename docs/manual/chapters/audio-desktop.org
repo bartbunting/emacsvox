@@ -110,9 +110,9 @@ changes without interrupting the spoken content.  Ordinary text remains
 available through the usual reading commands.
 
 The exact result depends on the mode, the Emacsvox integration, and your Aural
-Presentation settings.  @@texinfo:@xref{Voice Lock}@@ explains the established
-face-and-personality voice layer, while @@texinfo:@kbd{C-e E}@@ explains the presentation
-chosen for the object at point.
+Presentation settings.  @@texinfo:@xref{Aural Presentation}@@ explains how the
+parts fit together, including the established Voice Lock compatibility layer;
+@@texinfo:@kbd{C-e E}@@ explains the presentation chosen for the object at point.
 
 *** Move By The Structure Of The Content
 :PROPERTIES:

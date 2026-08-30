@@ -54,7 +54,8 @@ Emacsvox combines several kinds of feedback:
 
 You can adjust this presentation gradually.  Aural Home, opened with
 @@texinfo:@kbd{C-e H}@@, brings voices, sound packs, profiles, and other presentation
-options together.  You do not need to configure it before beginning.
+options together.  You do not need to configure it before beginning.  See
+@@texinfo:@ref{Aural Presentation}@@ when you want to understand or change what you hear.
 
 Emacsvox sends speech through a speech server.  New GNU/Linux, macOS, and WSL2
 installations use Omnivox; established direct servers remain available for

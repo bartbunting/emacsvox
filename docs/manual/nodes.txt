@@ -27,9 +27,17 @@ Audio Desktop
 Desktop Objects
 Object Oriented Desktop
 Context-Sensitive Interaction
+Aural Presentation
+Presentation Model
+Presentation Modalities
+Aural Home
+Explaining Presentation
+Adjusting Presentation
+Presentation Profiles
+Voices And Routing
+Sounds And Space
+Presentation Troubleshooting
 Voice Lock
-How It All Works.
-What this gives.
 Using Online Help
 Emacs Packages
 Document Authoring

@@ -57,7 +57,8 @@ pauses and spatial cues that help separate related information.
 
 You can adjust this presentation gradually.  Aural Home@comma{} opened with
 @kbd{C-e H}@comma{} brings voices@comma{} sound packs@comma{} profiles@comma{} and other presentation
-options together.  You do not need to configure it before beginning.
+options together.  You do not need to configure it before beginning.  See
+@ref{Aural Presentation} when you want to understand or change what you hear.
 
 Emacsvox sends speech through a speech server.  New GNU/Linux@comma{} macOS@comma{} and WSL2
 installations use Omnivox; established direct servers remain available for
@@ -438,7 +439,7 @@ tables@comma{} source code@comma{} and Web pages.
 Voice Lock uses changes in speech characteristics to make text structure
 audible.  For example@comma{} comments@comma{} quoted strings@comma{} reserved words@comma{} headings@comma{} and
 links can sound different without an explanation being inserted into the text.
-See @ref{Voice Lock} for configuration and @ref{Web Browsing} for a
+See @ref{Aural Presentation} for configuration and @ref{Web Browsing} for a
 task-oriented example in EWW@.
 
 Pronunciation dictionaries let you adjust how a name@comma{} technical term@comma{} or
@@ -817,8 +818,9 @@ add this form to your Emacs init file:
 @end lisp
 
 The current binding and command reference are in
-@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.  For detailed configuration@comma{} see @ref{Voice Lock}.  For historical
-context on Aural CSS@comma{} see
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.  For the wider system and customization workflow@comma{} see
+@ref{Aural Presentation}; for compatibility behavior specifically@comma{} see
+@ref{Voice Lock}.  For historical context on Aural CSS@comma{} see
 @ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}.
 
 @node Status Information
@@ -1276,9 +1278,9 @@ changes without interrupting the spoken content.  Ordinary text remains
 available through the usual reading commands.
 
 The exact result depends on the mode@comma{} the Emacsvox integration@comma{} and your Aural
-Presentation settings.  @xref{Voice Lock} explains the established
-face-and-personality voice layer@comma{} while @kbd{C-e E} explains the presentation
-chosen for the object at point.
+Presentation settings.  @xref{Aural Presentation} explains how the
+parts fit together@comma{} including the established Voice Lock compatibility layer;
+@kbd{C-e E} explains the presentation chosen for the object at point.
 
 @subsection Move By The Structure Of The Content
 
@@ -1325,126 +1327,605 @@ application can search message fields@comma{} Dired can narrow files@comma{} and
 can move directly among links or headings.  Use the general search when text
 is what matters and the mode-specific command when the kind of object matters.
 
+@node Aural Presentation
+@chapter Aural Presentation: Speech@comma{} Voices@comma{} And Sound
+
+@cindex Aural Presentation
+
+Aural Presentation is the Emacsvox system that decides @emph{how} information and
+events should be heard.  It can combine spoken text@comma{} voice changes@comma{} auditory
+icons@comma{} tones@comma{} pauses@comma{} and spatial cues in one ordered presentation.  The speech
+server delivers that result; it does not decide what a heading@comma{} unread message@comma{}
+completed command@comma{} warning@comma{} or other object means.
+
+You do not need to configure Aural Presentation before using Emacsvox.  The
+built-in baseline and application integrations provide useful defaults.  When
+you do want a change@comma{} start from the object you heard and use Aural Home rather
+than editing configuration data by hand:
+
+@table @kbd
+@item C-e H
+Open Aural Home@comma{} the spoken control center for understanding@comma{} adjusting@comma{} and
+diagnosing presentation.
+
+@item C-e E
+Explain why the object at point received its voices@comma{} sounds@comma{} and other
+actions.
+@end table
+
+This chapter gives a user-level model of the system and practical workflows for
+common changes.  The generated reference remains the authority for rule
+schemas@comma{} transport contracts@comma{} and extension development.
+
+@menu
+* Presentation Model::           Follow meaning from an Emacs application to audible output.
+* Presentation Modalities::      Recognize speech, voices, cues, tones, pauses, and spatial output.
+* Aural Home::                   Navigate the spoken presentation control center.
+* Explaining Presentation::      Explain current or recently queued feedback.
+* Adjusting Presentation::       Preview, scope, save, and undo presentation changes.
+* Presentation Profiles::        Save and switch complete presentation configurations.
+* Voices And Routing::           Distinguish logical styles, palettes, physical voices, and engines.
+* Sounds And Space::             Audition sound packs and inspect spatial fallback.
+* Presentation Troubleshooting:: Trace unexpected output and use safe diagnostics.
+* Voice Lock Compatibility: Voice Lock.  Understand the established face and personality voice adapter.
+@end menu
+
+@node Presentation Model
+@section A Practical Model Of Presentation
+
+@cindex presentation model
+
+It helps to separate four questions that are often mixed together:
+
+@multitable @columnfractions 0.22 0.30 0.48
+@item Layer
+@tab Question
+@tab Example
+@item Meaning
+@tab What happened or what is this?
+@tab A level-two heading was reached during navigation.
+@item Presentation
+@tab What should convey that meaning?
+@tab Speak the heading in a named voice and play a section cue first.
+@item Resources
+@tab Which voice and sound realize that request?
+@tab Resolve the logical voice through the active palette and the cue through the active sound pack.
+@item Output
+@tab What can this machine produce?
+@tab Route speech to an installed engine and apply supported spatial behavior.
+@end multitable
+
+An Emacs mode or Emacsvox integration supplies facts about an object or event.
+Facts can describe a role such as a heading@comma{} an event such as completion@comma{} a
+state such as unread@comma{} or an attribute such as heading level.  Context also says
+whether you are navigating@comma{} reading continuously@comma{} or receiving a state change.
+This allows the same object to receive concise feedback during continuous
+reading and more orientation when you move to it deliberately.
+
+Presentation rules match those facts and context.  A rule can choose a voice@comma{}
+add speech or a cue@comma{} insert a pause or tone@comma{} request spatial placement@comma{} or
+suppress something that is unhelpful.  Several matching rules can compose; a
+stronger@comma{} narrower rule need change only the relevant part rather than repeat
+the complete presentation.
+
+The user-visible configuration layers are:
+
+@enumerate
+@item
+A fixed internal baseline that preserves established Emacsvox behavior.
+
+@item
+Automatic integration behavior supplied by the active mode or package.
+
+@item
+Enabled @emph{Presentation Options} that add optional behavior in a stable
+weakest-to-strongest order.
+
+@item
+Personal@comma{} session@comma{} and current-buffer @emph{overrides}.  These are the strongest
+layers and are intended for precise changes.
+@end enumerate
+
+A presentation profile is not another rule layer.  It records a complete set
+of selected options@comma{} sound pack@comma{} voice palette@comma{} and spatial choices so you can
+switch those choices together.
+
+@node Presentation Modalities
+@section What You Can Hear
+
+@cindex presentation modalities
+
+Aural Presentation can use one or more of these forms of feedback:
+
+@itemize
+@item
+@emph{Speech} conveys content@comma{} labels@comma{} prompts@comma{} results@comma{} and status.  Added speech
+should explain meaning that is not already clear from the content.
+
+@item
+@emph{Voice} changes characteristics of spoken content.  Named logical voices
+make distinctions such as headings@comma{} annotations@comma{} warnings@comma{} or quoted text
+portable across speech engines.
+
+@item
+@emph{Auditory cues} are short recognizable sounds associated with semantic
+events or objects.  A sound pack supplies the concrete audio for those cue
+names.
+
+@item
+@emph{Tones} convey compact information using a named pitch and duration.  They
+are useful when a short distinction is preferable to speech or a sampled
+sound.
+
+@item
+@emph{Pauses} separate related parts of a presentation without adding words.
+
+@item
+@emph{Spatial presentation} can place speech or cues across supported output.
+When the selected backend cannot provide the requested placement@comma{} Emacsvox
+keeps the content audible using its documented fallback.
+@end itemize
+
+These forms can be ordered around the content.  For example@comma{} entering a section
+might play a cue@comma{} speak the heading in a distinctive voice@comma{} and leave a short
+pause before body text.  The presentation is one result@comma{} not several unrelated
+notifications.
+
+The precise sound may vary by speech engine@comma{} installed voices@comma{} sound pack@comma{} and
+audio hardware.  The intended distinction should remain understandable even
+when a simpler backend uses fewer voice characteristics or centered output.
+
+@node Aural Home
+@section Begin With Aural Home
+
+@cindex Aural Home
+
+Open Aural Home from an ordinary buffer with @kbd{C-e H}.  Emacsvox
+remembers that source buffer so contextual actions such as explanation and
+remapping can operate on the object you were using.
+
+Aural Home is a spoken table.  Each row names an area@comma{} reports its current
+status@comma{} and describes its purpose.  The common controls are:
+
+@table @kbd
+@item n@comma{} p@comma{} down@comma{} up
+Move by row and speak the new row.
+@item left@comma{} right
+Move among the titled columns.
+@item .
+Speak the current column title and value.
+@item SPC
+Speak the complete current row.
+@item RET
+Open or perform the current row's main action.
+@item ?
+Display and speak help for the current Aural interface.
+@item h
+Return to Aural Home from a manager or editor.
+@item q
+Leave the current Aural interface.
+@end table
+
+The rows fall into a few practical groups:
+
+@multitable @columnfractions 0.27 0.73
+@item Goal
+@tab Aural Home routes
+@item Understand feedback
+@tab Explain At Point@comma{} Recent Aural Feedback@comma{} Semantic Vocabulary@comma{} and Training Mode.
+@item Change one behavior
+@tab Remap Voice At Point@comma{} Remap Earcon At Point@comma{} Presentation Overrides@comma{} and Current Buffer Rules.
+@item Select broader behavior
+@tab Presentation Options and Presentation Profiles.
+@item Adjust resources
+@tab Voice Palettes@comma{} Voice Workbench@comma{} Sound Packs@comma{} Spatial Capabilities@comma{} and Spatial Settings.
+@item Diagnose the system
+@tab Aural Doctor.
+@end multitable
+
+You can press @key{RET} on a row without memorizing its shortcut.  Aural
+Home also provides direct keys for frequent routes@comma{} including @kbd{x} for
+explanation@comma{} @kbd{O} for overrides@comma{} @kbd{H} for recent feedback@comma{}
+@kbd{P} for profiles@comma{} @kbd{V} for voice palettes@comma{} @kbd{W} for
+Voice Workbench@comma{} and @kbd{D} for Aural Doctor.
+
+@node Explaining Presentation
+@section Understand Why Something Sounded That Way
+
+@cindex explaining presentation
+
+Use this workflow when feedback is surprising@comma{} unclear@comma{} or especially useful:
+
+@enumerate
+@item
+Leave point on the object and press @kbd{C-e E}.
+
+@item
+Read the explanation as a report of the object and occasion@comma{} matching
+presentation rules@comma{} selected actions@comma{} concrete voices and sounds@comma{} and any
+backend fallback or degradation.
+
+@item
+Note the strongest rule that changed the part you care about.  This tells
+you whether to inspect an option@comma{} an override@comma{} a voice route@comma{} a sound pack@comma{}
+or the Voice Lock compatibility layer.
+@end enumerate
+
+When a retained presentation from that source is available@comma{} the explanation
+describes the exact output that was queued@comma{} including its source location and
+resolved resources.  It does not reinterpret that old output using your latest
+settings.  Without an exact record@comma{} Emacsvox labels the explanation as a
+simulation of what the current rules would produce at point.
+
+To inspect something heard earlier@comma{} open Aural Home and choose @emph{Recent Aural
+Feedback}@comma{} or press @kbd{H} there.  Each row is a bounded frozen record.
+Useful commands in the feedback browser include:
+
+@table @kbd
+@item RET or e
+Explain the selected retained presentation.
+@item P
+Replay its complete ordered presentation.
+@item c
+Audition only its auditory cues.
+@item r
+Prepare a voice remap from the selected record.
+@item R
+Replace@comma{} suppress@comma{} or restore one exact earcon.
+@item L
+Change the bounded history limit for the current session.
+@end table
+
+Training Mode@comma{} available from Aural Home@comma{} speaks concise semantic explanations
+after normal presentations.  It can help while learning the vocabulary used by
+an integration@comma{} but is intentionally more verbose than ordinary operation;
+turn it off when you no longer need the additional labels.
+
+@node Adjusting Presentation
+@section Make A Small Change Safely
+
+@cindex presentation overrides
+
+Start by choosing the narrowest tool that matches your intention:
+
+@multitable @columnfractions 0.42 0.30 0.28
+@item Intention
+@tab Use
+@tab Scope
+@item Try an optional behavior supplied by Emacsvox or an integration
+@tab Presentation Options
+@tab Global configuration
+@item Change the voice or earcon for the object at point
+@tab Remap At Point
+@tab Personal@comma{} session@comma{} or current buffer
+@item Review or remove an existing precise change
+@tab Presentation Overrides
+@tab Its recorded scope
+@item Try rules only in the current work buffer
+@tab Current Buffer Rules
+@tab Life of that buffer
+@item Switch a complete reading or working setup
+@tab Presentation Profiles
+@tab Saved global configuration
+@end multitable
+
+@subsection Remap One Item At Point
+
+@enumerate
+@item
+Move to a representative object and press @kbd{C-e E} so you know what
+currently controls it.
+
+@item
+Press @kbd{C-e H}.  Use @kbd{r} to remap its voice or @kbd{R} to
+remap one exact earcon.
+
+@item
+Choose the scope deliberately:
+
+@itemize
+@item
+a @emph{personal} override persists across Emacs sessions;
+@item
+a @emph{session} override lasts until this Emacs exits; and
+@item
+a @emph{buffer} override affects only the remembered live buffer.
+@end itemize
+
+@item
+Review the generated rule in the editor.  It is initially unwritten.  Use
+the editor's @kbd{?} help@comma{} preview when offered@comma{} and press @kbd{w} only
+when the target@comma{} scope@comma{} and change are correct.
+
+@item
+Return to the source@comma{} repeat the action@comma{} and use @kbd{C-e E} again to
+confirm which rule now wins.
+@end enumerate
+
+Open @emph{Presentation Overrides} to manage these changes together.  There@comma{}
+@kbd{P} previews the complete current result@comma{} @kbd{t} temporarily disables
+or enables a rule@comma{} and @kbd{d} removes it.  Disabling or deleting an
+override restores the next weaker behavior; it does not leave a copied default
+behind.
+
+@subsection Try A Presentation Option
+
+Presentation Options are maintained additions such as richer heading feedback
+or integration-specific cues.  From Aural Home@comma{} open @emph{Presentation Options}:
+
+@enumerate
+@item
+Use @key{TAB} or @key{RET} on a collection to expand it.
+
+@item
+Move to an option and press @kbd{P} to preview it composed with the
+current configuration.  Press @kbd{C-u P} to preview it in isolation.
+
+@item
+Press @kbd{t} to enable or disable it.  Press @kbd{a} to hear
+enabled options in their exact weakest-to-strongest order.
+
+@item
+Return to the source and test the original task.  Personal@comma{} session@comma{} and
+buffer overrides remain stronger than an enabled option.
+@end enumerate
+
+Avoid reordering options merely to solve one exceptional object.  A narrow
+override usually expresses that intention more clearly.
+
+@node Presentation Profiles
+@section Save Complete Setups With Profiles
+
+@cindex presentation profiles
+
+A presentation profile records a coordinated setup: enabled Presentation
+Options and their order@comma{} the sound pack@comma{} the voice palette@comma{} and portable
+spatial settings.  This is useful for switching between focused work and
+leisure reading@comma{} between quiet and information-rich feedback@comma{} or between audio
+environments.
+
+To save and use a profile:
+
+@enumerate
+@item
+Configure the live options@comma{} sound pack@comma{} voice palette@comma{} and spatial choices
+you want.
+
+@item
+Open @emph{Presentation Profiles} from Aural Home or press @kbd{P} there.
+
+@item
+Press @kbd{N} to save the current live configuration as a new named
+profile.
+
+@item
+Later@comma{} select that profile and press @key{RET} or @kbd{a} to apply
+its saved values.
+
+@item
+If you deliberately change the live configuration and want the selected
+profile to adopt it@comma{} press @kbd{w}.  If you instead want to discard the
+live differences@comma{} press @kbd{a} to restore the saved profile; Emacsvox
+asks before replacing the diverged values.
+@end enumerate
+
+Only one profile identity is selected.  @emph{Active} means the selected profile's
+saved values match the live configuration.  @emph{Diverged} means the same profile
+is still selected but the live values differ; it is a status@comma{} not an unsaved
+editor warning.
+
+Profiles do not copy presentation rules.  Edit rules in Presentation Options
+or Overrides.  They also do not capture buffer-local Voice Lock state or
+current-buffer rules@comma{} because those belong to an individual buffer rather than
+a global setup.
+
+@node Voices And Routing
+@section Choose Voices And Speech Engines
+
+@cindex voice palettes
+
+@cindex Voice Workbench
+
+Four terms help when adjusting voices:
+
+@itemize
+@item
+A @emph{logical voice} expresses a purpose such as boldening@comma{} annotation@comma{} or a
+heading distinction without naming one synthesizer voice.
+
+@item
+A @emph{voice palette} gives named logical voices portable style characteristics.
+Palettes can inherit from another palette and travel between machines.
+
+@item
+A @emph{physical voice} is an actual voice reported by an installed speech engine.
+Its exact identifier is usually machine-local.
+
+@item
+An @emph{engine route} decides which engine and physical voice realize a logical
+voice on the current machine.
+@end itemize
+
+Use the @emph{Voice Palettes} manager when you want to choose or edit the portable
+style vocabulary.  Press @key{RET} on a palette to browse its voices@comma{}
+preview them before editing@comma{} and use @kbd{a} in the palette manager to
+activate a selected palette.  Built-in palettes remain intact; editing can
+create a personal copy.
+
+Use @emph{Voice Workbench} when the question involves installed voices@comma{} engines@comma{} or
+routes.  Open it from Aural Home with @kbd{W}.  Its main views are:
+
+@table @kbd
+@item l
+Logical voices and their current routes.
+@item v
+Physical voices reported by the engines.
+@item e
+Engines@comma{} preference@comma{} fallback@comma{} and health.
+@item s
+Portable styles and effects.
+@end table
+
+Press @kbd{P} to preview a row@comma{} @kbd{A} to preview all visible
+voices@comma{} @kbd{B} to compare two@comma{} and @kbd{S} to stop preview.
+Use @kbd{a} to assign a physical voice and @kbd{t} to tune the
+selected logical voice on its effective route.  Route changes are staged until
+you press @kbd{w} or @kbd{C-c C-c} to save and apply them.  Pressing
+@kbd{q} with unsaved route changes warns that they remain staged.
+
+For a quick engine preference@comma{} @kbd{C-e d e} chooses an available engine
+for the current Emacs session.  Press @kbd{C-u} first to save the new
+preference.  Explicit logical-voice routes still take precedence.
+
+Judge voices in context.  The goal is usually to distinguish nearby kinds of
+content@comma{} not to identify every named voice in isolation.  Use a portable
+palette for the intended distinction and machine routing for the best local
+realization.
+
+@node Sounds And Space
+@section Choose Sounds And Spatial Cues
+
+@cindex sound packs
+
+@cindex spatial presentation
+
+Presentation rules refer to auditory cues by semantic name.  A sound pack maps
+those names to concrete audio assets and can inherit missing cues from another
+pack.  This separation lets you change the overall sound character without
+rewriting every presentation rule.
+
+Open @emph{Sound Packs} from Aural Home.  In the manager:
+
+@table @kbd
+@item P
+Audition a representative cue without activating the pack.
+@item RET
+Browse the pack's individual cues and their source or fallback.
+@item P or RET in the cue browser
+Audition the selected concrete cue.
+@item v
+Validate the pack and report missing or invalid resources.
+@item a
+Activate the selected pack.
+@end table
+
+Use a sound pack when you want to change a family of cues together.  Use
+@emph{Remap Earcon At Point} or Presentation Overrides when one semantic event needs
+a different cue@comma{} suppression@comma{} or restoration.
+
+Spatial requests are portable descriptions rather than assumptions about one
+device.  Aural Home separates @emph{Spatial Capabilities}@comma{} which reports what the
+current route can provide and how it falls back@comma{} from @emph{Spatial Settings}@comma{} which
+controls output@comma{} separation@comma{} direction@comma{} speech@comma{} and cues.  Unsupported or mono
+output remains audible at the center rather than silently losing content.
+
+Named tones are another compact presentation resource.  They do not require a
+sampled sound file and may be used independently of the active sound pack.
+
+@node Presentation Troubleshooting
+@section Diagnose Unexpected Presentation
+
+@cindex Aural Doctor
+
+Use the symptom to choose the shortest diagnostic route:
+
+@multitable @columnfractions 0.43 0.57
+@item Symptom
+@tab First action
+@item The current object sounds wrong or too verbose
+@tab Press @kbd{C-e E} and inspect the strongest matching rule.
+@item Something heard earlier was wrong
+@tab Open Recent Aural Feedback and explain its frozen record.
+@item A broad optional behavior is unwanted
+@tab Inspect Presentation Options and preview or disable the matching option.
+@item One narrow exception is unwanted
+@tab Open Presentation Overrides@comma{} preview it@comma{} then disable or remove it.
+@item A logical voice uses the wrong engine or physical voice
+@tab Inspect its route and engine health in Voice Workbench.
+@item A cue is missing or inappropriate
+@tab Validate and audition the active Sound Pack@comma{} then inspect earcon overrides.
+@item A saved setup no longer appears active
+@tab Check whether the selected Presentation Profile is active or diverged.
+@item Voice changes disappear only in some buffers
+@tab Compare Voice Lock and explicit face-presentation state.
+@end multitable
+
+Open @emph{Aural Doctor} from Aural Home or press @kbd{D} there.  The doctor
+checks live bindings@comma{} loaded source or byte-code@comma{} the compatibility baseline@comma{}
+options@comma{} profiles@comma{} personal data@comma{} sound resources@comma{} spatial fallback@comma{} and the
+speech backend.  It does not start the speech server or change settings
+automatically.  When one row offers a reviewed safe repair@comma{} press @kbd{r}
+on that row to run it.
+
+Press @kbd{?} in any Aural interface for its complete current keys.  If
+speech itself is absent rather than merely presented incorrectly@comma{} follow
+@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}; presentation diagnostics assume that a speech route can run.
+
 @node Voice Lock
-@chapter Hear Structure With Voice Lock
+@section Voice Lock Compatibility
 
 @cindex Voice Lock
 
-Voice Lock makes structure audible by applying different speech personalities
-to text properties supplied by Emacs modes and Emacsvox integrations.  Emacs
-calls its visual style labels @emph{faces}; Emacsvox can use the same labels without
-requiring you to see them.  A comment can sound different from program code@comma{} a
-heading from body text@comma{} or a link from surrounding prose without inserting
-extra words into the document.
+Voice Lock is one compatibility input to Aural Presentation@comma{} not the whole
+presentation system.  It maps established Emacs faces and @code{personality} text
+properties to voices.  Emacs calls its visual style labels @emph{faces}; Emacsvox
+can use those labels without requiring you to see them.
 
-Voice Lock is enabled automatically in supported buffers.  Its differences are
-easiest to hear in source code@comma{} Org@comma{} Info@comma{} or EWW@comma{} where the active mode already
-marks several kinds of content.
+The three related policies are independent:
 
-@menu
-* How Voice Lock Fits The Presentation: How It All Works..  Follow a face or personality from the mode to the speech engine.
-* Adjust Voice Lock In Small Steps: What this gives..  Diagnose a distinction, then change the narrowest relevant setting.
-@end menu
+@multitable @columnfractions 0.28 0.42 0.30
+@item Policy
+@tab What it controls
+@tab How to inspect or change it
+@item Semantic presentation
+@tab Rules based on roles@comma{} events@comma{} states@comma{} and attributes supplied by integrations.
+@tab Use @kbd{C-e E}@comma{} Presentation Options@comma{} and Overrides.
+@item Explicit face presentation
+@tab Aural rules that deliberately match a named Emacs face.
+@tab Run @code{emacsvox-aural-toggle-face-presentation} or inspect it in Aural Doctor.
+@item Voice Lock
+@tab The historical face or personality-to-voice mapping in each buffer.
+@tab Use @kbd{C-e d v} locally or @kbd{C-e d C-v} globally.
+@end multitable
 
-@section Try It In One Buffer
-
-Move across a few elements that the mode treats differently@comma{} such as a comment
-and a string in source code or a heading and a link in Org.  Then use:
-
-@table @kbd
-@item C-e d v
-Toggle Voice Lock in the current buffer.  Comparing the same text before and
-after the toggle is a quick way to confirm that a voice change comes from
-the established face-and-personality layer.
-
-@item C-e d C-v
-Toggle Voice Lock globally.  Existing and subsequently created buffers
-follow the new global state; an individual mode can still opt out when it
-starts.
-
-@item C-e E
-Explain the Aural Presentation at point.  The explanation can identify the
-semantic facts@comma{} matching rules@comma{} voices@comma{} sounds@comma{} and other actions that
-contributed to what you heard.
-@end table
-
-Voice Lock controls the compatibility mapping from faces and personality text
-properties to voices.  Turning it off does not disable semantic presentation@comma{}
-auditory icons@comma{} tones@comma{} or ordinary spoken status.  This distinction makes the
-current-buffer toggle a useful diagnostic rather than an all-or-nothing speech
-control.
-
-@node How It All Works.
-@section How Voice Lock Fits The Presentation
-
-The normal path has four parts:
+To find out whether a distinction comes from Voice Lock:
 
 @enumerate
 @item
-The active Emacs mode marks meaningful text with faces.  An Emacsvox
-integration may also attach a named speech personality directly.
+Move across two elements that the mode treats differently@comma{} such as a comment
+and string in source code or a heading and link in Org.
 
 @item
-While Voice Lock is active@comma{} the established face-and-personality mapping
-supplies a compatibility voice for the spoken text.
+Press @kbd{C-e d v} to toggle Voice Lock only in that buffer@comma{} then
+compare the same elements.
 
 @item
-Aural Presentation can combine that compatibility voice with semantic
-rules.  Separate visual-face rules can also participate whether Voice Lock
-is on or off.  A voice palette gives the resulting logical voices portable
-characteristics and routes them to available physical voices.
-
-@item
-The selected speech adapter translates the result for its synthesizer.
+Press @kbd{C-e E} on the element.  The explanation reports the
+Voice Lock and explicit face-presentation state alongside the rules that
+contributed to the result.
 @end enumerate
 
-The meaning of a distinction can therefore remain stable while its exact sound
-varies with the engine and voice inventory.  A high-quality engine may express
-several characteristics; a simpler engine can fall back to a smaller set
-without changing the document or its mode.
+Turning Voice Lock off removes only its compatibility voice contribution.  It
+does not disable semantic presentation@comma{} explicit face rules@comma{} auditory cues@comma{}
+tones@comma{} or ordinary spoken status.  The global Voice Lock command updates
+existing and new buffers; an individual mode can still opt out when it starts.
+Buffer-local Voice Lock state is not saved in a presentation profile.
 
-Older help and configuration may show names such as @code{voice-bolden}@comma{}
-@code{voice-monotone}@comma{} or generated @code{acss-...} symbols.  They are compatibility
-details below the user-facing presentation system.  Historical background on
-their Aural CSS design is preserved in
+For new customization@comma{} prefer explanation@comma{} Aural Home@comma{} voice palettes@comma{} and
+Voice Workbench.  Older configurations can still customize a named legacy
+voice's @code{-settings} option@comma{} such as @code{voice-monotone-settings}.  Customize the
+settings option rather than a generated @code{acss-...} voice symbol.  Historical
+background is preserved in
 @ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}.
 
-@node What this gives.
-@section Adjust Voice Lock In Small Steps
+@section Further Detail
 
-Start with the object that sounds wrong or is difficult to distinguish:
-
-@enumerate
-@item
-Press @kbd{C-e E} at that object and read the explanation before changing
-a setting.
-
-@item
-Toggle Voice Lock only in the current buffer with @kbd{C-e d v}.  If the
-distinction remains@comma{} it comes from another presentation rule or action.
-
-@item
-Open Aural Home with @kbd{C-e H}.  Use its presentation tools and Voice
-Workbench to preview changes before saving them.  You do not need to edit a
-generated voice symbol.
-
-@item
-Revisit the original buffer and compare the same object.  Keeping the test
-case and the scope small makes it easier to understand the result.
-@end enumerate
-
-Advanced legacy configurations can still customize a named voice's
-@code{-settings} option@comma{} such as @code{voice-monotone-settings}.  Customize the settings
-option rather than @code{voice-monotone} itself@comma{} because the settings update every
-generated voice that depends on that style.  Use this compatibility route only
-when maintaining an existing low-level voice setup; prefer Aural Home for new
-configuration.
-
-For deliberate style design@comma{}
-@code{emacsvox-wizards-generate-voice-sampler} creates a buffer of characteristic
-combinations@comma{} while @code{emacsvox-wizards-voice-sampler} applies a selected
-personality to the current line and speaks it.  These sampler commands are
-advanced auditioning tools@comma{} not required for ordinary Voice Lock use.
+Every Aural manager and editor has live @kbd{?} help.  The generated
+@ref{Emacsvox Commands And Options,,,emacsvox-reference,Emacsvox Reference Manual} records the exact public commands and options.  The source-tree file
+@code{etc/aural-presentation-reference.org} documents the rule schema@comma{} selection
+order@comma{} queue behavior@comma{} extension contracts@comma{} and advanced data authoring.  Those
+details are useful when developing an integration or a reusable Presentation
+Option; they are not required for ordinary customization.
 
 @node Using Online Help
 @chapter Find Help While You Work

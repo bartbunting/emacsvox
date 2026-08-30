@@ -71,7 +71,7 @@ tables, source code, and Web pages.
 Voice Lock uses changes in speech characteristics to make text structure
 audible.  For example, comments, quoted strings, reserved words, headings, and
 links can sound different without an explanation being inserted into the text.
-See @@texinfo:@ref{Voice Lock}@@ for configuration and @@texinfo:@ref{Web Browsing}@@ for a
+See @@texinfo:@ref{Aural Presentation}@@ for configuration and @@texinfo:@ref{Web Browsing}@@ for a
 task-oriented example in EWW.
 
 Pronunciation dictionaries let you adjust how a name, technical term, or
@@ -490,8 +490,9 @@ add this form to your Emacs init file:
 #+end_src
 
 The current binding and command reference are in
-@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.  For detailed configuration, see @@texinfo:@ref{Voice Lock}@@.  For historical
-context on Aural CSS, see
+@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.  For the wider system and customization workflow, see
+@@texinfo:@ref{Aural Presentation}@@; for compatibility behavior specifically, see
+@@texinfo:@ref{Voice Lock}@@.  For historical context on Aural CSS, see
 @@texinfo:@ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}@@.
 
 ** Find Out Where You Are

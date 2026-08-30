@@ -1,0 +1,508 @@
+* Aural Presentation: Speech, Voices, And Sound
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Aural Presentation
+:ALT_TITLE: Aural Presentation
+:DESCRIPTION: Understand and adjust how Emacsvox conveys meaning.
+:END:
+
+#+cindex: Aural Presentation
+
+Aural Presentation is the Emacsvox system that decides /how/ information and
+events should be heard.  It can combine spoken text, voice changes, auditory
+icons, tones, pauses, and spatial cues in one ordered presentation.  The speech
+server delivers that result; it does not decide what a heading, unread message,
+completed command, warning, or other object means.
+
+You do not need to configure Aural Presentation before using Emacsvox.  The
+built-in baseline and application integrations provide useful defaults.  When
+you do want a change, start from the object you heard and use Aural Home rather
+than editing configuration data by hand:
+
+#+attr_texinfo: :indic kbd :compact t
+- C-e H ::
+
+  Open Aural Home, the spoken control center for understanding, adjusting, and
+  diagnosing presentation.
+
+- C-e E ::
+
+  Explain why the object at point received its voices, sounds, and other
+  actions.
+
+This chapter gives a user-level model of the system and practical workflows for
+common changes.  The generated reference remains the authority for rule
+schemas, transport contracts, and extension development.
+
+** A Practical Model Of Presentation
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Presentation Model
+:ALT_TITLE: Presentation Model
+:DESCRIPTION: Follow meaning from an Emacs application to audible output.
+:END:
+
+#+cindex: presentation model
+
+It helps to separate four questions that are often mixed together:
+
+#+attr_texinfo: :columns 0.22 0.30 0.48
+| Layer | Question | Example |
+| Meaning | What happened or what is this? | A level-two heading was reached during navigation. |
+| Presentation | What should convey that meaning? | Speak the heading in a named voice and play a section cue first. |
+| Resources | Which voice and sound realize that request? | Resolve the logical voice through the active palette and the cue through the active sound pack. |
+| Output | What can this machine produce? | Route speech to an installed engine and apply supported spatial behavior. |
+
+An Emacs mode or Emacsvox integration supplies facts about an object or event.
+Facts can describe a role such as a heading, an event such as completion, a
+state such as unread, or an attribute such as heading level.  Context also says
+whether you are navigating, reading continuously, or receiving a state change.
+This allows the same object to receive concise feedback during continuous
+reading and more orientation when you move to it deliberately.
+
+Presentation rules match those facts and context.  A rule can choose a voice,
+add speech or a cue, insert a pause or tone, request spatial placement, or
+suppress something that is unhelpful.  Several matching rules can compose; a
+stronger, narrower rule need change only the relevant part rather than repeat
+the complete presentation.
+
+The user-visible configuration layers are:
+
+1. A fixed internal baseline that preserves established Emacsvox behavior.
+
+2. Automatic integration behavior supplied by the active mode or package.
+
+3. Enabled /Presentation Options/ that add optional behavior in a stable
+   weakest-to-strongest order.
+
+4. Personal, session, and current-buffer /overrides/.  These are the strongest
+   layers and are intended for precise changes.
+
+A presentation profile is not another rule layer.  It records a complete set
+of selected options, sound pack, voice palette, and spatial choices so you can
+switch those choices together.
+
+** What You Can Hear
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Presentation Modalities
+:ALT_TITLE: Presentation Modalities
+:DESCRIPTION: Recognize speech, voices, cues, tones, pauses, and spatial output.
+:END:
+
+#+cindex: presentation modalities
+
+Aural Presentation can use one or more of these forms of feedback:
+
+- /Speech/ conveys content, labels, prompts, results, and status.  Added speech
+  should explain meaning that is not already clear from the content.
+
+- /Voice/ changes characteristics of spoken content.  Named logical voices
+  make distinctions such as headings, annotations, warnings, or quoted text
+  portable across speech engines.
+
+- /Auditory cues/ are short recognizable sounds associated with semantic
+  events or objects.  A sound pack supplies the concrete audio for those cue
+  names.
+
+- /Tones/ convey compact information using a named pitch and duration.  They
+  are useful when a short distinction is preferable to speech or a sampled
+  sound.
+
+- /Pauses/ separate related parts of a presentation without adding words.
+
+- /Spatial presentation/ can place speech or cues across supported output.
+  When the selected backend cannot provide the requested placement, Emacsvox
+  keeps the content audible using its documented fallback.
+
+These forms can be ordered around the content.  For example, entering a section
+might play a cue, speak the heading in a distinctive voice, and leave a short
+pause before body text.  The presentation is one result, not several unrelated
+notifications.
+
+The precise sound may vary by speech engine, installed voices, sound pack, and
+audio hardware.  The intended distinction should remain understandable even
+when a simpler backend uses fewer voice characteristics or centered output.
+
+** Begin With Aural Home
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Aural Home
+:ALT_TITLE: Aural Home
+:DESCRIPTION: Navigate the spoken presentation control center.
+:END:
+
+#+cindex: Aural Home
+
+Open Aural Home from an ordinary buffer with @@texinfo:@kbd{C-e H}@@.  Emacsvox
+remembers that source buffer so contextual actions such as explanation and
+remapping can operate on the object you were using.
+
+Aural Home is a spoken table.  Each row names an area, reports its current
+status, and describes its purpose.  The common controls are:
+
+#+attr_texinfo: :indic kbd :compact t
+- n, p, down, up :: Move by row and speak the new row.
+- left, right :: Move among the titled columns.
+- . :: Speak the current column title and value.
+- SPC :: Speak the complete current row.
+- RET :: Open or perform the current row's main action.
+- ? :: Display and speak help for the current Aural interface.
+- h :: Return to Aural Home from a manager or editor.
+- q :: Leave the current Aural interface.
+
+The rows fall into a few practical groups:
+
+#+attr_texinfo: :columns 0.27 0.73
+| Goal | Aural Home routes |
+| Understand feedback | Explain At Point, Recent Aural Feedback, Semantic Vocabulary, and Training Mode. |
+| Change one behavior | Remap Voice At Point, Remap Earcon At Point, Presentation Overrides, and Current Buffer Rules. |
+| Select broader behavior | Presentation Options and Presentation Profiles. |
+| Adjust resources | Voice Palettes, Voice Workbench, Sound Packs, Spatial Capabilities, and Spatial Settings. |
+| Diagnose the system | Aural Doctor. |
+
+You can press @@texinfo:@key{RET}@@ on a row without memorizing its shortcut.  Aural
+Home also provides direct keys for frequent routes, including @@texinfo:@kbd{x}@@ for
+explanation, @@texinfo:@kbd{O}@@ for overrides, @@texinfo:@kbd{H}@@ for recent feedback,
+@@texinfo:@kbd{P}@@ for profiles, @@texinfo:@kbd{V}@@ for voice palettes, @@texinfo:@kbd{W}@@ for
+Voice Workbench, and @@texinfo:@kbd{D}@@ for Aural Doctor.
+
+** Understand Why Something Sounded That Way
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Explaining Presentation
+:ALT_TITLE: Explaining Presentation
+:DESCRIPTION: Explain current or recently queued feedback.
+:END:
+
+#+cindex: explaining presentation
+
+Use this workflow when feedback is surprising, unclear, or especially useful:
+
+1. Leave point on the object and press @@texinfo:@kbd{C-e E}@@.
+
+2. Read the explanation as a report of the object and occasion, matching
+   presentation rules, selected actions, concrete voices and sounds, and any
+   backend fallback or degradation.
+
+3. Note the strongest rule that changed the part you care about.  This tells
+   you whether to inspect an option, an override, a voice route, a sound pack,
+   or the Voice Lock compatibility layer.
+
+When a retained presentation from that source is available, the explanation
+describes the exact output that was queued, including its source location and
+resolved resources.  It does not reinterpret that old output using your latest
+settings.  Without an exact record, Emacsvox labels the explanation as a
+simulation of what the current rules would produce at point.
+
+To inspect something heard earlier, open Aural Home and choose /Recent Aural
+Feedback/, or press @@texinfo:@kbd{H}@@ there.  Each row is a bounded frozen record.
+Useful commands in the feedback browser include:
+
+#+attr_texinfo: :indic kbd :compact t
+- RET or e :: Explain the selected retained presentation.
+- P :: Replay its complete ordered presentation.
+- c :: Audition only its auditory cues.
+- r :: Prepare a voice remap from the selected record.
+- R :: Replace, suppress, or restore one exact earcon.
+- L :: Change the bounded history limit for the current session.
+
+Training Mode, available from Aural Home, speaks concise semantic explanations
+after normal presentations.  It can help while learning the vocabulary used by
+an integration, but is intentionally more verbose than ordinary operation;
+turn it off when you no longer need the additional labels.
+
+** Make A Small Change Safely
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Adjusting Presentation
+:ALT_TITLE: Adjusting Presentation
+:DESCRIPTION: Preview, scope, save, and undo presentation changes.
+:END:
+
+#+cindex: presentation overrides
+
+Start by choosing the narrowest tool that matches your intention:
+
+#+attr_texinfo: :columns 0.42 0.30 0.28
+| Intention | Use | Scope |
+| Try an optional behavior supplied by Emacsvox or an integration | Presentation Options | Global configuration |
+| Change the voice or earcon for the object at point | Remap At Point | Personal, session, or current buffer |
+| Review or remove an existing precise change | Presentation Overrides | Its recorded scope |
+| Try rules only in the current work buffer | Current Buffer Rules | Life of that buffer |
+| Switch a complete reading or working setup | Presentation Profiles | Saved global configuration |
+
+*** Remap One Item At Point
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+1. Move to a representative object and press @@texinfo:@kbd{C-e E}@@ so you know what
+   currently controls it.
+
+2. Press @@texinfo:@kbd{C-e H}@@.  Use @@texinfo:@kbd{r}@@ to remap its voice or @@texinfo:@kbd{R}@@ to
+   remap one exact earcon.
+
+3. Choose the scope deliberately:
+
+   - a /personal/ override persists across Emacs sessions;
+   - a /session/ override lasts until this Emacs exits; and
+   - a /buffer/ override affects only the remembered live buffer.
+
+4. Review the generated rule in the editor.  It is initially unwritten.  Use
+   the editor's @@texinfo:@kbd{?}@@ help, preview when offered, and press @@texinfo:@kbd{w}@@ only
+   when the target, scope, and change are correct.
+
+5. Return to the source, repeat the action, and use @@texinfo:@kbd{C-e E}@@ again to
+   confirm which rule now wins.
+
+Open /Presentation Overrides/ to manage these changes together.  There,
+@@texinfo:@kbd{P}@@ previews the complete current result, @@texinfo:@kbd{t}@@ temporarily disables
+or enables a rule, and @@texinfo:@kbd{d}@@ removes it.  Disabling or deleting an
+override restores the next weaker behavior; it does not leave a copied default
+behind.
+
+*** Try A Presentation Option
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Presentation Options are maintained additions such as richer heading feedback
+or integration-specific cues.  From Aural Home, open /Presentation Options/:
+
+1. Use @@texinfo:@key{TAB}@@ or @@texinfo:@key{RET}@@ on a collection to expand it.
+
+2. Move to an option and press @@texinfo:@kbd{P}@@ to preview it composed with the
+   current configuration.  Press @@texinfo:@kbd{C-u P}@@ to preview it in isolation.
+
+3. Press @@texinfo:@kbd{t}@@ to enable or disable it.  Press @@texinfo:@kbd{a}@@ to hear
+   enabled options in their exact weakest-to-strongest order.
+
+4. Return to the source and test the original task.  Personal, session, and
+   buffer overrides remain stronger than an enabled option.
+
+Avoid reordering options merely to solve one exceptional object.  A narrow
+override usually expresses that intention more clearly.
+
+** Save Complete Setups With Profiles
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Presentation Profiles
+:ALT_TITLE: Presentation Profiles
+:DESCRIPTION: Save and switch complete presentation configurations.
+:END:
+
+#+cindex: presentation profiles
+
+A presentation profile records a coordinated setup: enabled Presentation
+Options and their order, the sound pack, the voice palette, and portable
+spatial settings.  This is useful for switching between focused work and
+leisure reading, between quiet and information-rich feedback, or between audio
+environments.
+
+To save and use a profile:
+
+1. Configure the live options, sound pack, voice palette, and spatial choices
+   you want.
+
+2. Open /Presentation Profiles/ from Aural Home or press @@texinfo:@kbd{P}@@ there.
+
+3. Press @@texinfo:@kbd{N}@@ to save the current live configuration as a new named
+   profile.
+
+4. Later, select that profile and press @@texinfo:@key{RET}@@ or @@texinfo:@kbd{a}@@ to apply
+   its saved values.
+
+5. If you deliberately change the live configuration and want the selected
+   profile to adopt it, press @@texinfo:@kbd{w}@@.  If you instead want to discard the
+   live differences, press @@texinfo:@kbd{a}@@ to restore the saved profile; Emacsvox
+   asks before replacing the diverged values.
+
+Only one profile identity is selected.  /Active/ means the selected profile's
+saved values match the live configuration.  /Diverged/ means the same profile
+is still selected but the live values differ; it is a status, not an unsaved
+editor warning.
+
+Profiles do not copy presentation rules.  Edit rules in Presentation Options
+or Overrides.  They also do not capture buffer-local Voice Lock state or
+current-buffer rules, because those belong to an individual buffer rather than
+a global setup.
+
+** Choose Voices And Speech Engines
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Voices And Routing
+:ALT_TITLE: Voices And Routing
+:DESCRIPTION: Distinguish logical styles, palettes, physical voices, and engines.
+:END:
+
+#+cindex: voice palettes
+
+#+cindex: Voice Workbench
+
+Four terms help when adjusting voices:
+
+- A /logical voice/ expresses a purpose such as boldening, annotation, or a
+  heading distinction without naming one synthesizer voice.
+
+- A /voice palette/ gives named logical voices portable style characteristics.
+  Palettes can inherit from another palette and travel between machines.
+
+- A /physical voice/ is an actual voice reported by an installed speech engine.
+  Its exact identifier is usually machine-local.
+
+- An /engine route/ decides which engine and physical voice realize a logical
+  voice on the current machine.
+
+Use the /Voice Palettes/ manager when you want to choose or edit the portable
+style vocabulary.  Press @@texinfo:@key{RET}@@ on a palette to browse its voices,
+preview them before editing, and use @@texinfo:@kbd{a}@@ in the palette manager to
+activate a selected palette.  Built-in palettes remain intact; editing can
+create a personal copy.
+
+Use /Voice Workbench/ when the question involves installed voices, engines, or
+routes.  Open it from Aural Home with @@texinfo:@kbd{W}@@.  Its main views are:
+
+#+attr_texinfo: :indic kbd :compact t
+- l :: Logical voices and their current routes.
+- v :: Physical voices reported by the engines.
+- e :: Engines, preference, fallback, and health.
+- s :: Portable styles and effects.
+
+Press @@texinfo:@kbd{P}@@ to preview a row, @@texinfo:@kbd{A}@@ to preview all visible
+voices, @@texinfo:@kbd{B}@@ to compare two, and @@texinfo:@kbd{S}@@ to stop preview.
+Use @@texinfo:@kbd{a}@@ to assign a physical voice and @@texinfo:@kbd{t}@@ to tune the
+selected logical voice on its effective route.  Route changes are staged until
+you press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ to save and apply them.  Pressing
+@@texinfo:@kbd{q}@@ with unsaved route changes warns that they remain staged.
+
+For a quick engine preference, @@texinfo:@kbd{C-e d e}@@ chooses an available engine
+for the current Emacs session.  Press @@texinfo:@kbd{C-u}@@ first to save the new
+preference.  Explicit logical-voice routes still take precedence.
+
+Judge voices in context.  The goal is usually to distinguish nearby kinds of
+content, not to identify every named voice in isolation.  Use a portable
+palette for the intended distinction and machine routing for the best local
+realization.
+
+** Choose Sounds And Spatial Cues
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Sounds And Space
+:ALT_TITLE: Sounds And Space
+:DESCRIPTION: Audition sound packs and inspect spatial fallback.
+:END:
+
+#+cindex: sound packs
+
+#+cindex: spatial presentation
+
+Presentation rules refer to auditory cues by semantic name.  A sound pack maps
+those names to concrete audio assets and can inherit missing cues from another
+pack.  This separation lets you change the overall sound character without
+rewriting every presentation rule.
+
+Open /Sound Packs/ from Aural Home.  In the manager:
+
+#+attr_texinfo: :indic kbd :compact t
+- P :: Audition a representative cue without activating the pack.
+- RET :: Browse the pack's individual cues and their source or fallback.
+- P or RET in the cue browser :: Audition the selected concrete cue.
+- v :: Validate the pack and report missing or invalid resources.
+- a :: Activate the selected pack.
+
+Use a sound pack when you want to change a family of cues together.  Use
+/Remap Earcon At Point/ or Presentation Overrides when one semantic event needs
+a different cue, suppression, or restoration.
+
+Spatial requests are portable descriptions rather than assumptions about one
+device.  Aural Home separates /Spatial Capabilities/, which reports what the
+current route can provide and how it falls back, from /Spatial Settings/, which
+controls output, separation, direction, speech, and cues.  Unsupported or mono
+output remains audible at the center rather than silently losing content.
+
+Named tones are another compact presentation resource.  They do not require a
+sampled sound file and may be used independently of the active sound pack.
+
+** Diagnose Unexpected Presentation
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Presentation Troubleshooting
+:ALT_TITLE: Presentation Troubleshooting
+:DESCRIPTION: Trace unexpected output and use safe diagnostics.
+:END:
+
+#+cindex: Aural Doctor
+
+Use the symptom to choose the shortest diagnostic route:
+
+#+attr_texinfo: :columns 0.43 0.57
+| Symptom | First action |
+| The current object sounds wrong or too verbose | Press @@texinfo:@kbd{C-e E}@@ and inspect the strongest matching rule. |
+| Something heard earlier was wrong | Open Recent Aural Feedback and explain its frozen record. |
+| A broad optional behavior is unwanted | Inspect Presentation Options and preview or disable the matching option. |
+| One narrow exception is unwanted | Open Presentation Overrides, preview it, then disable or remove it. |
+| A logical voice uses the wrong engine or physical voice | Inspect its route and engine health in Voice Workbench. |
+| A cue is missing or inappropriate | Validate and audition the active Sound Pack, then inspect earcon overrides. |
+| A saved setup no longer appears active | Check whether the selected Presentation Profile is active or diverged. |
+| Voice changes disappear only in some buffers | Compare Voice Lock and explicit face-presentation state. |
+
+Open /Aural Doctor/ from Aural Home or press @@texinfo:@kbd{D}@@ there.  The doctor
+checks live bindings, loaded source or byte-code, the compatibility baseline,
+options, profiles, personal data, sound resources, spatial fallback, and the
+speech backend.  It does not start the speech server or change settings
+automatically.  When one row offers a reviewed safe repair, press @@texinfo:@kbd{r}@@
+on that row to run it.
+
+Press @@texinfo:@kbd{?}@@ in any Aural interface for its complete current keys.  If
+speech itself is absent rather than merely presented incorrectly, follow
+@@texinfo:@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}@@; presentation diagnostics assume that a speech route can run.
+
+** Voice Lock Compatibility
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Voice Lock
+:ALT_TITLE: Voice Lock Compatibility
+:DESCRIPTION: Understand the established face and personality voice adapter.
+:END:
+
+#+cindex: Voice Lock
+
+Voice Lock is one compatibility input to Aural Presentation, not the whole
+presentation system.  It maps established Emacs faces and ~personality~ text
+properties to voices.  Emacs calls its visual style labels /faces/; Emacsvox
+can use those labels without requiring you to see them.
+
+The three related policies are independent:
+
+#+attr_texinfo: :columns 0.28 0.42 0.30
+| Policy | What it controls | How to inspect or change it |
+| Semantic presentation | Rules based on roles, events, states, and attributes supplied by integrations. | Use @@texinfo:@kbd{C-e E}@@, Presentation Options, and Overrides. |
+| Explicit face presentation | Aural rules that deliberately match a named Emacs face. | Run ~emacsvox-aural-toggle-face-presentation~ or inspect it in Aural Doctor. |
+| Voice Lock | The historical face or personality-to-voice mapping in each buffer. | Use @@texinfo:@kbd{C-e d v}@@ locally or @@texinfo:@kbd{C-e d C-v}@@ globally. |
+
+To find out whether a distinction comes from Voice Lock:
+
+1. Move across two elements that the mode treats differently, such as a comment
+   and string in source code or a heading and link in Org.
+
+2. Press @@texinfo:@kbd{C-e d v}@@ to toggle Voice Lock only in that buffer, then
+   compare the same elements.
+
+3. Press @@texinfo:@kbd{C-e E}@@ on the element.  The explanation reports the
+   Voice Lock and explicit face-presentation state alongside the rules that
+   contributed to the result.
+
+Turning Voice Lock off removes only its compatibility voice contribution.  It
+does not disable semantic presentation, explicit face rules, auditory cues,
+tones, or ordinary spoken status.  The global Voice Lock command updates
+existing and new buffers; an individual mode can still opt out when it starts.
+Buffer-local Voice Lock state is not saved in a presentation profile.
+
+For new customization, prefer explanation, Aural Home, voice palettes, and
+Voice Workbench.  Older configurations can still customize a named legacy
+voice's ~-settings~ option, such as ~voice-monotone-settings~.  Customize the
+settings option rather than a generated ~acss-...~ voice symbol.  Historical
+background is preserved in
+@@texinfo:@ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}@@.
+
+** Further Detail
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Every Aural manager and editor has live @@texinfo:@kbd{?}@@ help.  The generated
+@@texinfo:@ref{Emacsvox Commands And Options,,,emacsvox-reference,Emacsvox Reference Manual}@@ records the exact public commands and options.  The source-tree file
+~etc/aural-presentation-reference.org~ documents the rule schema, selection
+order, queue behavior, extension contracts, and advanced data authoring.  Those
+details are useful when developing an integration or a reusable Presentation
+Option; they are not required for ordinary customization.

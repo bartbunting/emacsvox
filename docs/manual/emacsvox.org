@@ -21,7 +21,7 @@ manual.  Generated reference and heritage manuals remain Texinfo.
 #+include: "chapters/basic-usage.org"
 #+include: "chapters/speech-backends.org"
 #+include: "chapters/audio-desktop.org"
-#+include: "chapters/voice-lock.org"
+#+include: "chapters/aural-presentation.org"
 #+include: "chapters/online-help.org"
 #+include: "chapters/applications.org"
 #+include: "chapters/notmuch.org"

@@ -10,8 +10,8 @@ separate
 @ref{Top,Emacsvox Reference Manual,,emacsvox-reference,Emacsvox Reference
 Manual}.  Selected historical Emacspeak material is in the separate
 @ref{Top,Emacspeak Heritage,,emacsvox-heritage,Emacspeak Heritage} manual and
-is not current setup guidance.  For rapidly evolving Omnivox and Aural
-Presentation details, also consult @file{Readme.org} and
+is not current setup guidance.  For rapidly evolving development and Aural
+Presentation rule-authoring details, also consult @file{Readme.org} and
 @file{etc/aural-presentation-reference.org} in the source tree.
 
 The manual is divided into the following chapters:
@@ -23,7 +23,7 @@ Current-user path:
 * Basic Usage: Basic Usage.
 * Speech Backends: Speech Backends.
 * Audio Desktop: Audio Desktop.
-* Voice Lock: Voice Lock.
+* Aural Presentation: Aural Presentation.
 * Using Online Help: Using Online Help.
 
 Current workflows:

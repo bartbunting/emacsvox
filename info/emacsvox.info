@@ -26,9 +26,10 @@ is available in Speech Backends when you need it.  Exact commands,
 options, and keymaps are in the separate *note Emacsvox Reference
 Manual: (emacsvox-reference)Top.  Selected historical Emacspeak material
 is in the separate *note Emacspeak Heritage: (emacsvox-heritage)Top.
-manual and is not current setup guidance.  For rapidly evolving Omnivox
-and Aural Presentation details, also consult ‘Readme.org’ and
-‘etc/aural-presentation-reference.org’ in the source tree.
+manual and is not current setup guidance.  For rapidly evolving
+development and Aural Presentation rule-authoring details, also consult
+‘Readme.org’ and ‘etc/aural-presentation-reference.org’ in the source
+tree.
 
    The manual is divided into the following chapters:
 
@@ -40,7 +41,7 @@ Current-user path:
 * Basic Usage: Basic Usage.
 * Speech Backends: Speech Backends.
 * Audio Desktop: Audio Desktop.
-* Voice Lock: Voice Lock.
+* Aural Presentation: Aural Presentation.
 * Using Online Help: Using Online Help.
 
 Current workflows:
@@ -122,6 +123,8 @@ Emacsvox combines several kinds of feedback:
    You can adjust this presentation gradually.  Aural Home, opened with
 ‘C-e H’, brings voices, sound packs, profiles, and other presentation
 options together.  You do not need to configure it before beginning.
+See *note Aural Presentation:: when you want to understand or change
+what you hear.
 
    Emacsvox sends speech through a speech server.  New GNU/Linux, macOS,
 and WSL2 installations use Omnivox; established direct servers remain
@@ -490,8 +493,9 @@ messages, search results, tables, source code, and Web pages.
    Voice Lock uses changes in speech characteristics to make text
 structure audible.  For example, comments, quoted strings, reserved
 words, headings, and links can sound different without an explanation
-being inserted into the text.  See *note Voice Lock:: for configuration
-and *note Web Browsing:: for a task-oriented example in EWW.
+being inserted into the text.  See *note Aural Presentation:: for
+configuration and *note Web Browsing:: for a task-oriented example in
+EWW.
 
    Pronunciation dictionaries let you adjust how a name, technical term,
 or programming-language word is spoken.  A dictionary can apply
@@ -783,9 +787,11 @@ add this form to your Emacs init file:
      (global-voice-lock-mode -1)
 
    The current binding and command reference are in *note
-(emacsvox-reference)Emacsvox Keymaps::.  For detailed configuration, see
-*note Voice Lock::.  For historical context on Aural CSS, see *note
-(emacsvox-heritage)Audio Formatting And Aural CSS::.
+(emacsvox-reference)Emacsvox Keymaps::.  For the wider system and
+customization workflow, see *note Aural Presentation::; for
+compatibility behavior specifically, see *note Voice Lock::.  For
+historical context on Aural CSS, see *note (emacsvox-heritage)Audio
+Formatting And Aural CSS::.
 
 
 File: emacsvox.info,  Node: Status Information,  Prev: Voice-lock,  Up: Basic Usage
@@ -1133,7 +1139,7 @@ those sources for versioned details rather than copying their contracts
 into installation instructions.
 
 
-File: emacsvox.info,  Node: Audio Desktop,  Next: Voice Lock,  Prev: Speech Backends,  Up: Top
+File: emacsvox.info,  Node: Audio Desktop,  Next: Aural Presentation,  Prev: Speech Backends,  Up: Top
 
 5 Work With The Audio Desktop
 *****************************
@@ -1233,9 +1239,10 @@ events or state changes without interrupting the spoken content.
 Ordinary text remains available through the usual reading commands.
 
    The exact result depends on the mode, the Emacsvox integration, and
-your Aural Presentation settings.  *Note Voice Lock:: explains the
-established face-and-personality voice layer, while ‘C-e E’ explains the
-presentation chosen for the object at point.
+your Aural Presentation settings.  *Note Aural Presentation:: explains
+how the parts fit together, including the established Voice Lock
+compatibility layer; ‘C-e E’ explains the presentation chosen for the
+object at point.
 
 5.3.2 Move By The Structure Of The Content
 ------------------------------------------
@@ -1281,129 +1288,557 @@ search when text is what matters and the mode-specific command when the
 kind of object matters.
 
 
-File: emacsvox.info,  Node: Voice Lock,  Next: Using Online Help,  Prev: Audio Desktop,  Up: Top
+File: emacsvox.info,  Node: Aural Presentation,  Next: Using Online Help,  Prev: Audio Desktop,  Up: Top
 
-6 Hear Structure With Voice Lock
-********************************
+6 Aural Presentation: Speech, Voices, And Sound
+***********************************************
 
-Voice Lock makes structure audible by applying different speech
-personalities to text properties supplied by Emacs modes and Emacsvox
-integrations.  Emacs calls its visual style labels _faces_; Emacsvox can
-use the same labels without requiring you to see them.  A comment can
-sound different from program code, a heading from body text, or a link
-from surrounding prose without inserting extra words into the document.
+Aural Presentation is the Emacsvox system that decides _how_ information
+and events should be heard.  It can combine spoken text, voice changes,
+auditory icons, tones, pauses, and spatial cues in one ordered
+presentation.  The speech server delivers that result; it does not
+decide what a heading, unread message, completed command, warning, or
+other object means.
 
-   Voice Lock is enabled automatically in supported buffers.  Its
-differences are easiest to hear in source code, Org, Info, or EWW, where
-the active mode already marks several kinds of content.
+   You do not need to configure Aural Presentation before using
+Emacsvox.  The built-in baseline and application integrations provide
+useful defaults.  When you do want a change, start from the object you
+heard and use Aural Home rather than editing configuration data by hand:
+
+‘C-e H’
+     Open Aural Home, the spoken control center for understanding,
+     adjusting, and diagnosing presentation.
+
+‘C-e E’
+     Explain why the object at point received its voices, sounds, and
+     other actions.
+
+   This chapter gives a user-level model of the system and practical
+workflows for common changes.  The generated reference remains the
+authority for rule schemas, transport contracts, and extension
+development.
 
 * Menu:
 
-* How Voice Lock Fits The Presentation: How It All Works..  Follow a face or personality from the mode to the speech engine.
-* Adjust Voice Lock In Small Steps: What this gives..  Diagnose a distinction, then change the narrowest relevant setting.
-
-6.1 Try It In One Buffer
-========================
-
-Move across a few elements that the mode treats differently, such as a
-comment and a string in source code or a heading and a link in Org.
-Then use:
-
-‘C-e d v’
-     Toggle Voice Lock in the current buffer.  Comparing the same text
-     before and after the toggle is a quick way to confirm that a voice
-     change comes from the established face-and-personality layer.
-
-‘C-e d C-v’
-     Toggle Voice Lock globally.  Existing and subsequently created
-     buffers follow the new global state; an individual mode can still
-     opt out when it starts.
-
-‘C-e E’
-     Explain the Aural Presentation at point.  The explanation can
-     identify the semantic facts, matching rules, voices, sounds, and
-     other actions that contributed to what you heard.
-
-   Voice Lock controls the compatibility mapping from faces and
-personality text properties to voices.  Turning it off does not disable
-semantic presentation, auditory icons, tones, or ordinary spoken status.
-This distinction makes the current-buffer toggle a useful diagnostic
-rather than an all-or-nothing speech control.
+* Presentation Model::           Follow meaning from an Emacs application to audible output.
+* Presentation Modalities::      Recognize speech, voices, cues, tones, pauses, and spatial output.
+* Aural Home::                   Navigate the spoken presentation control center.
+* Explaining Presentation::      Explain current or recently queued feedback.
+* Adjusting Presentation::       Preview, scope, save, and undo presentation changes.
+* Presentation Profiles::        Save and switch complete presentation configurations.
+* Voices And Routing::           Distinguish logical styles, palettes, physical voices, and engines.
+* Sounds And Space::             Audition sound packs and inspect spatial fallback.
+* Presentation Troubleshooting:: Trace unexpected output and use safe diagnostics.
+* Voice Lock Compatibility: Voice Lock.  Understand the established face and personality voice adapter.
 
 
-File: emacsvox.info,  Node: How It All Works.,  Next: What this gives.,  Up: Voice Lock
+File: emacsvox.info,  Node: Presentation Model,  Next: Presentation Modalities,  Up: Aural Presentation
 
-6.2 How Voice Lock Fits The Presentation
-========================================
+6.1 A Practical Model Of Presentation
+=====================================
 
-The normal path has four parts:
+It helps to separate four questions that are often mixed together:
 
-  1. The active Emacs mode marks meaningful text with faces.  An
-     Emacsvox integration may also attach a named speech personality
-     directly.
+Layer            Question               Example
+Meaning          What happened or       A level-two heading was reached
+                 what is this?          during navigation.
+Presentation     What should convey     Speak the heading in a named
+                 that meaning?          voice and play a section cue
+                                        first.
+Resources        Which voice and        Resolve the logical voice through
+                 sound realize that     the active palette and the cue
+                 request?               through the active sound pack.
+Output           What can this          Route speech to an installed
+                 machine produce?       engine and apply supported
+                                        spatial behavior.
 
-  2. While Voice Lock is active, the established face-and-personality
-     mapping supplies a compatibility voice for the spoken text.
+   An Emacs mode or Emacsvox integration supplies facts about an object
+or event.  Facts can describe a role such as a heading, an event such as
+completion, a state such as unread, or an attribute such as heading
+level.  Context also says whether you are navigating, reading
+continuously, or receiving a state change.  This allows the same object
+to receive concise feedback during continuous reading and more
+orientation when you move to it deliberately.
 
-  3. Aural Presentation can combine that compatibility voice with
-     semantic rules.  Separate visual-face rules can also participate
-     whether Voice Lock is on or off.  A voice palette gives the
-     resulting logical voices portable characteristics and routes them
-     to available physical voices.
+   Presentation rules match those facts and context.  A rule can choose
+a voice, add speech or a cue, insert a pause or tone, request spatial
+placement, or suppress something that is unhelpful.  Several matching
+rules can compose; a stronger, narrower rule need change only the
+relevant part rather than repeat the complete presentation.
 
-  4. The selected speech adapter translates the result for its
-     synthesizer.
+   The user-visible configuration layers are:
 
-   The meaning of a distinction can therefore remain stable while its
-exact sound varies with the engine and voice inventory.  A high-quality
-engine may express several characteristics; a simpler engine can fall
-back to a smaller set without changing the document or its mode.
+  1. A fixed internal baseline that preserves established Emacsvox
+     behavior.
 
-   Older help and configuration may show names such as ‘voice-bolden’,
-‘voice-monotone’, or generated ‘acss-...’ symbols.  They are
-compatibility details below the user-facing presentation system.
-Historical background on their Aural CSS design is preserved in *note
-(emacsvox-heritage)Audio Formatting And Aural CSS::.
+  2. Automatic integration behavior supplied by the active mode or
+     package.
+
+  3. Enabled _Presentation Options_ that add optional behavior in a
+     stable weakest-to-strongest order.
+
+  4. Personal, session, and current-buffer _overrides_.  These are the
+     strongest layers and are intended for precise changes.
+
+   A presentation profile is not another rule layer.  It records a
+complete set of selected options, sound pack, voice palette, and spatial
+choices so you can switch those choices together.
 
 
-File: emacsvox.info,  Node: What this gives.,  Prev: How It All Works.,  Up: Voice Lock
+File: emacsvox.info,  Node: Presentation Modalities,  Next: Aural Home,  Prev: Presentation Model,  Up: Aural Presentation
 
-6.3 Adjust Voice Lock In Small Steps
+6.2 What You Can Hear
+=====================
+
+Aural Presentation can use one or more of these forms of feedback:
+
+   • _Speech_ conveys content, labels, prompts, results, and status.
+     Added speech should explain meaning that is not already clear from
+     the content.
+
+   • _Voice_ changes characteristics of spoken content.  Named logical
+     voices make distinctions such as headings, annotations, warnings,
+     or quoted text portable across speech engines.
+
+   • _Auditory cues_ are short recognizable sounds associated with
+     semantic events or objects.  A sound pack supplies the concrete
+     audio for those cue names.
+
+   • _Tones_ convey compact information using a named pitch and
+     duration.  They are useful when a short distinction is preferable
+     to speech or a sampled sound.
+
+   • _Pauses_ separate related parts of a presentation without adding
+     words.
+
+   • _Spatial presentation_ can place speech or cues across supported
+     output.  When the selected backend cannot provide the requested
+     placement, Emacsvox keeps the content audible using its documented
+     fallback.
+
+   These forms can be ordered around the content.  For example, entering
+a section might play a cue, speak the heading in a distinctive voice,
+and leave a short pause before body text.  The presentation is one
+result, not several unrelated notifications.
+
+   The precise sound may vary by speech engine, installed voices, sound
+pack, and audio hardware.  The intended distinction should remain
+understandable even when a simpler backend uses fewer voice
+characteristics or centered output.
+
+
+File: emacsvox.info,  Node: Aural Home,  Next: Explaining Presentation,  Prev: Presentation Modalities,  Up: Aural Presentation
+
+6.3 Begin With Aural Home
+=========================
+
+Open Aural Home from an ordinary buffer with ‘C-e H’.  Emacsvox
+remembers that source buffer so contextual actions such as explanation
+and remapping can operate on the object you were using.
+
+   Aural Home is a spoken table.  Each row names an area, reports its
+current status, and describes its purpose.  The common controls are:
+
+‘n, p, down, up’
+     Move by row and speak the new row.
+‘left, right’
+     Move among the titled columns.
+‘.’
+     Speak the current column title and value.
+‘SPC’
+     Speak the complete current row.
+‘RET’
+     Open or perform the current row's main action.
+‘?’
+     Display and speak help for the current Aural interface.
+‘h’
+     Return to Aural Home from a manager or editor.
+‘q’
+     Leave the current Aural interface.
+
+   The rows fall into a few practical groups:
+
+Goal                Aural Home routes
+Understand          Explain At Point, Recent Aural Feedback, Semantic
+feedback            Vocabulary, and Training Mode.
+Change one          Remap Voice At Point, Remap Earcon At Point,
+behavior            Presentation Overrides, and Current Buffer Rules.
+Select broader      Presentation Options and Presentation Profiles.
+behavior
+Adjust resources    Voice Palettes, Voice Workbench, Sound Packs,
+                    Spatial Capabilities, and Spatial Settings.
+Diagnose the        Aural Doctor.
+system
+
+   You can press <RET> on a row without memorizing its shortcut.  Aural
+Home also provides direct keys for frequent routes, including ‘x’ for
+explanation, ‘O’ for overrides, ‘H’ for recent feedback, ‘P’ for
+profiles, ‘V’ for voice palettes, ‘W’ for Voice Workbench, and ‘D’ for
+Aural Doctor.
+
+
+File: emacsvox.info,  Node: Explaining Presentation,  Next: Adjusting Presentation,  Prev: Aural Home,  Up: Aural Presentation
+
+6.4 Understand Why Something Sounded That Way
+=============================================
+
+Use this workflow when feedback is surprising, unclear, or especially
+useful:
+
+  1. Leave point on the object and press ‘C-e E’.
+
+  2. Read the explanation as a report of the object and occasion,
+     matching presentation rules, selected actions, concrete voices and
+     sounds, and any backend fallback or degradation.
+
+  3. Note the strongest rule that changed the part you care about.  This
+     tells you whether to inspect an option, an override, a voice route,
+     a sound pack, or the Voice Lock compatibility layer.
+
+   When a retained presentation from that source is available, the
+explanation describes the exact output that was queued, including its
+source location and resolved resources.  It does not reinterpret that
+old output using your latest settings.  Without an exact record,
+Emacsvox labels the explanation as a simulation of what the current
+rules would produce at point.
+
+   To inspect something heard earlier, open Aural Home and choose
+_Recent Aural Feedback_, or press ‘H’ there.  Each row is a bounded
+frozen record.  Useful commands in the feedback browser include:
+
+‘RET or e’
+     Explain the selected retained presentation.
+‘P’
+     Replay its complete ordered presentation.
+‘c’
+     Audition only its auditory cues.
+‘r’
+     Prepare a voice remap from the selected record.
+‘R’
+     Replace, suppress, or restore one exact earcon.
+‘L’
+     Change the bounded history limit for the current session.
+
+   Training Mode, available from Aural Home, speaks concise semantic
+explanations after normal presentations.  It can help while learning the
+vocabulary used by an integration, but is intentionally more verbose
+than ordinary operation; turn it off when you no longer need the
+additional labels.
+
+
+File: emacsvox.info,  Node: Adjusting Presentation,  Next: Presentation Profiles,  Prev: Explaining Presentation,  Up: Aural Presentation
+
+6.5 Make A Small Change Safely
+==============================
+
+Start by choosing the narrowest tool that matches your intention:
+
+Intention                      Use                    Scope
+Try an optional behavior       Presentation Options   Global
+supplied by Emacsvox or an                            configuration
+integration
+Change the voice or earcon     Remap At Point         Personal, session,
+for the object at point                               or current buffer
+Review or remove an existing   Presentation           Its recorded scope
+precise change                 Overrides
+Try rules only in the          Current Buffer Rules   Life of that
+current work buffer                                   buffer
+Switch a complete reading or   Presentation           Saved global
+working setup                  Profiles               configuration
+
+6.5.1 Remap One Item At Point
+-----------------------------
+
+  1. Move to a representative object and press ‘C-e E’ so you know what
+     currently controls it.
+
+  2. Press ‘C-e H’.  Use ‘r’ to remap its voice or ‘R’ to remap one
+     exact earcon.
+
+  3. Choose the scope deliberately:
+
+        • a _personal_ override persists across Emacs sessions;
+        • a _session_ override lasts until this Emacs exits; and
+        • a _buffer_ override affects only the remembered live buffer.
+
+  4. Review the generated rule in the editor.  It is initially
+     unwritten.  Use the editor's ‘?’ help, preview when offered, and
+     press ‘w’ only when the target, scope, and change are correct.
+
+  5. Return to the source, repeat the action, and use ‘C-e E’ again to
+     confirm which rule now wins.
+
+   Open _Presentation Overrides_ to manage these changes together.
+There, ‘P’ previews the complete current result, ‘t’ temporarily
+disables or enables a rule, and ‘d’ removes it.  Disabling or deleting
+an override restores the next weaker behavior; it does not leave a
+copied default behind.
+
+6.5.2 Try A Presentation Option
+-------------------------------
+
+Presentation Options are maintained additions such as richer heading
+feedback or integration-specific cues.  From Aural Home, open
+_Presentation Options_:
+
+  1. Use <TAB> or <RET> on a collection to expand it.
+
+  2. Move to an option and press ‘P’ to preview it composed with the
+     current configuration.  Press ‘C-u P’ to preview it in isolation.
+
+  3. Press ‘t’ to enable or disable it.  Press ‘a’ to hear enabled
+     options in their exact weakest-to-strongest order.
+
+  4. Return to the source and test the original task.  Personal,
+     session, and buffer overrides remain stronger than an enabled
+     option.
+
+   Avoid reordering options merely to solve one exceptional object.  A
+narrow override usually expresses that intention more clearly.
+
+
+File: emacsvox.info,  Node: Presentation Profiles,  Next: Voices And Routing,  Prev: Adjusting Presentation,  Up: Aural Presentation
+
+6.6 Save Complete Setups With Profiles
+======================================
+
+A presentation profile records a coordinated setup: enabled Presentation
+Options and their order, the sound pack, the voice palette, and portable
+spatial settings.  This is useful for switching between focused work and
+leisure reading, between quiet and information-rich feedback, or between
+audio environments.
+
+   To save and use a profile:
+
+  1. Configure the live options, sound pack, voice palette, and spatial
+     choices you want.
+
+  2. Open _Presentation Profiles_ from Aural Home or press ‘P’ there.
+
+  3. Press ‘N’ to save the current live configuration as a new named
+     profile.
+
+  4. Later, select that profile and press <RET> or ‘a’ to apply its
+     saved values.
+
+  5. If you deliberately change the live configuration and want the
+     selected profile to adopt it, press ‘w’.  If you instead want to
+     discard the live differences, press ‘a’ to restore the saved
+     profile; Emacsvox asks before replacing the diverged values.
+
+   Only one profile identity is selected.  _Active_ means the selected
+profile's saved values match the live configuration.  _Diverged_ means
+the same profile is still selected but the live values differ; it is a
+status, not an unsaved editor warning.
+
+   Profiles do not copy presentation rules.  Edit rules in Presentation
+Options or Overrides.  They also do not capture buffer-local Voice Lock
+state or current-buffer rules, because those belong to an individual
+buffer rather than a global setup.
+
+
+File: emacsvox.info,  Node: Voices And Routing,  Next: Sounds And Space,  Prev: Presentation Profiles,  Up: Aural Presentation
+
+6.7 Choose Voices And Speech Engines
 ====================================
 
-Start with the object that sounds wrong or is difficult to distinguish:
+Four terms help when adjusting voices:
 
-  1. Press ‘C-e E’ at that object and read the explanation before
-     changing a setting.
+   • A _logical voice_ expresses a purpose such as boldening,
+     annotation, or a heading distinction without naming one synthesizer
+     voice.
 
-  2. Toggle Voice Lock only in the current buffer with ‘C-e d v’.  If
-     the distinction remains, it comes from another presentation rule or
-     action.
+   • A _voice palette_ gives named logical voices portable style
+     characteristics.  Palettes can inherit from another palette and
+     travel between machines.
 
-  3. Open Aural Home with ‘C-e H’.  Use its presentation tools and Voice
-     Workbench to preview changes before saving them.  You do not need
-     to edit a generated voice symbol.
+   • A _physical voice_ is an actual voice reported by an installed
+     speech engine.  Its exact identifier is usually machine-local.
 
-  4. Revisit the original buffer and compare the same object.  Keeping
-     the test case and the scope small makes it easier to understand the
-     result.
+   • An _engine route_ decides which engine and physical voice realize a
+     logical voice on the current machine.
 
-   Advanced legacy configurations can still customize a named voice's
-‘-settings’ option, such as ‘voice-monotone-settings’.  Customize the
-settings option rather than ‘voice-monotone’ itself, because the
-settings update every generated voice that depends on that style.  Use
-this compatibility route only when maintaining an existing low-level
-voice setup; prefer Aural Home for new configuration.
+   Use the _Voice Palettes_ manager when you want to choose or edit the
+portable style vocabulary.  Press <RET> on a palette to browse its
+voices, preview them before editing, and use ‘a’ in the palette manager
+to activate a selected palette.  Built-in palettes remain intact;
+editing can create a personal copy.
 
-   For deliberate style design,
-‘emacsvox-wizards-generate-voice-sampler’ creates a buffer of
-characteristic combinations, while ‘emacsvox-wizards-voice-sampler’
-applies a selected personality to the current line and speaks it.  These
-sampler commands are advanced auditioning tools, not required for
-ordinary Voice Lock use.
+   Use _Voice Workbench_ when the question involves installed voices,
+engines, or routes.  Open it from Aural Home with ‘W’.  Its main views
+are:
+
+‘l’
+     Logical voices and their current routes.
+‘v’
+     Physical voices reported by the engines.
+‘e’
+     Engines, preference, fallback, and health.
+‘s’
+     Portable styles and effects.
+
+   Press ‘P’ to preview a row, ‘A’ to preview all visible voices, ‘B’ to
+compare two, and ‘S’ to stop preview.  Use ‘a’ to assign a physical
+voice and ‘t’ to tune the selected logical voice on its effective route.
+Route changes are staged until you press ‘w’ or ‘C-c C-c’ to save and
+apply them.  Pressing ‘q’ with unsaved route changes warns that they
+remain staged.
+
+   For a quick engine preference, ‘C-e d e’ chooses an available engine
+for the current Emacs session.  Press ‘C-u’ first to save the new
+preference.  Explicit logical-voice routes still take precedence.
+
+   Judge voices in context.  The goal is usually to distinguish nearby
+kinds of content, not to identify every named voice in isolation.  Use a
+portable palette for the intended distinction and machine routing for
+the best local realization.
 
 
-File: emacsvox.info,  Node: Using Online Help,  Next: Emacs Packages,  Prev: Voice Lock,  Up: Top
+File: emacsvox.info,  Node: Sounds And Space,  Next: Presentation Troubleshooting,  Prev: Voices And Routing,  Up: Aural Presentation
+
+6.8 Choose Sounds And Spatial Cues
+==================================
+
+Presentation rules refer to auditory cues by semantic name.  A sound
+pack maps those names to concrete audio assets and can inherit missing
+cues from another pack.  This separation lets you change the overall
+sound character without rewriting every presentation rule.
+
+   Open _Sound Packs_ from Aural Home.  In the manager:
+
+‘P’
+     Audition a representative cue without activating the pack.
+‘RET’
+     Browse the pack's individual cues and their source or fallback.
+‘P or RET in the cue browser’
+     Audition the selected concrete cue.
+‘v’
+     Validate the pack and report missing or invalid resources.
+‘a’
+     Activate the selected pack.
+
+   Use a sound pack when you want to change a family of cues together.
+Use _Remap Earcon At Point_ or Presentation Overrides when one semantic
+event needs a different cue, suppression, or restoration.
+
+   Spatial requests are portable descriptions rather than assumptions
+about one device.  Aural Home separates _Spatial Capabilities_, which
+reports what the current route can provide and how it falls back, from
+_Spatial Settings_, which controls output, separation, direction,
+speech, and cues.  Unsupported or mono output remains audible at the
+center rather than silently losing content.
+
+   Named tones are another compact presentation resource.  They do not
+require a sampled sound file and may be used independently of the active
+sound pack.
+
+
+File: emacsvox.info,  Node: Presentation Troubleshooting,  Next: Voice Lock,  Prev: Sounds And Space,  Up: Aural Presentation
+
+6.9 Diagnose Unexpected Presentation
+====================================
+
+Use the symptom to choose the shortest diagnostic route:
+
+Symptom                         First action
+The current object sounds       Press ‘C-e E’ and inspect the strongest
+wrong or too verbose            matching rule.
+Something heard earlier was     Open Recent Aural Feedback and explain
+wrong                           its frozen record.
+A broad optional behavior is    Inspect Presentation Options and
+unwanted                        preview or disable the matching option.
+One narrow exception is         Open Presentation Overrides, preview
+unwanted                        it, then disable or remove it.
+A logical voice uses the        Inspect its route and engine health in
+wrong engine or physical        Voice Workbench.
+voice
+A cue is missing or             Validate and audition the active Sound
+inappropriate                   Pack, then inspect earcon overrides.
+A saved setup no longer         Check whether the selected Presentation
+appears active                  Profile is active or diverged.
+Voice changes disappear only    Compare Voice Lock and explicit
+in some buffers                 face-presentation state.
+
+   Open _Aural Doctor_ from Aural Home or press ‘D’ there.  The doctor
+checks live bindings, loaded source or byte-code, the compatibility
+baseline, options, profiles, personal data, sound resources, spatial
+fallback, and the speech backend.  It does not start the speech server
+or change settings automatically.  When one row offers a reviewed safe
+repair, press ‘r’ on that row to run it.
+
+   Press ‘?’ in any Aural interface for its complete current keys.  If
+speech itself is absent rather than merely presented incorrectly, follow
+*note Backend Diagnostics And Responsibilities: Backend Diagnostics And
+Ownership.; presentation diagnostics assume that a speech route can run.
+
+
+File: emacsvox.info,  Node: Voice Lock,  Prev: Presentation Troubleshooting,  Up: Aural Presentation
+
+6.10 Voice Lock Compatibility
+=============================
+
+Voice Lock is one compatibility input to Aural Presentation, not the
+whole presentation system.  It maps established Emacs faces and
+‘personality’ text properties to voices.  Emacs calls its visual style
+labels _faces_; Emacsvox can use those labels without requiring you to
+see them.
+
+   The three related policies are independent:
+
+Policy               What it controls               How to inspect or
+                                                    change it
+Semantic             Rules based on roles,          Use ‘C-e E’,
+presentation         events, states, and            Presentation
+                     attributes supplied by         Options, and
+                     integrations.                  Overrides.
+Explicit face        Aural rules that               Run
+presentation         deliberately match a named     ‘emacsvox-aural-toggle-face-presentation’
+                     Emacs face.                    or inspect it in
+                                                    Aural Doctor.
+Voice Lock           The historical face or         Use ‘C-e d v’
+                     personality-to-voice mapping   locally or ‘C-e d
+                     in each buffer.                C-v’ globally.
+
+   To find out whether a distinction comes from Voice Lock:
+
+  1. Move across two elements that the mode treats differently, such as
+     a comment and string in source code or a heading and link in Org.
+
+  2. Press ‘C-e d v’ to toggle Voice Lock only in that buffer, then
+     compare the same elements.
+
+  3. Press ‘C-e E’ on the element.  The explanation reports the Voice
+     Lock and explicit face-presentation state alongside the rules that
+     contributed to the result.
+
+   Turning Voice Lock off removes only its compatibility voice
+contribution.  It does not disable semantic presentation, explicit face
+rules, auditory cues, tones, or ordinary spoken status.  The global
+Voice Lock command updates existing and new buffers; an individual mode
+can still opt out when it starts.  Buffer-local Voice Lock state is not
+saved in a presentation profile.
+
+   For new customization, prefer explanation, Aural Home, voice
+palettes, and Voice Workbench.  Older configurations can still customize
+a named legacy voice's ‘-settings’ option, such as
+‘voice-monotone-settings’.  Customize the settings option rather than a
+generated ‘acss-...’ voice symbol.  Historical background is preserved
+in *note (emacsvox-heritage)Audio Formatting And Aural CSS::.
+
+6.11 Further Detail
+===================
+
+Every Aural manager and editor has live ‘?’ help.  The generated *note
+(emacsvox-reference)Emacsvox Commands And Options:: records the exact
+public commands and options.  The source-tree file
+‘etc/aural-presentation-reference.org’ documents the rule schema,
+selection order, queue behavior, extension contracts, and advanced data
+authoring.  Those details are useful when developing an integration or a
+reusable Presentation Option; they are not required for ordinary
+customization.
+
+
+File: emacsvox.info,  Node: Using Online Help,  Next: Emacs Packages,  Prev: Aural Presentation,  Up: Top
 
 7 Find Help While You Work
 **************************
@@ -3375,7 +3810,11 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * Audio Desktop:                         Audio Desktop.       (line   6)
 * audio formatting:                      Context-Sensitive Interaction.
                                                               (line  14)
+* Aural Doctor:                          Presentation Troubleshooting.
+                                                              (line   6)
 * Aural history, mail privacy:           Notmuch Mail.        (line 284)
+* Aural Home:                            Aural Home.          (line   6)
+* Aural Presentation:                    Aural Presentation.  (line   6)
 * automatic speech limits, Notmuch:      Notmuch Mail.        (line 230)
 * automatic speech, Term:                Term Speech Feedback.
                                                               (line   6)
@@ -3392,7 +3831,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * Corfu, EAT:                            EAT Terminal Access. (line  21)
 * curses applications, EAT:              EAT Terminal Access. (line 331)
 * desktop navigation:                    Context-Sensitive Interaction.
-                                                              (line  41)
+                                                              (line  42)
 * development tools:                     Development Environment.
                                                               (line   6)
 * document authoring:                    Document Authoring.  (line   6)
@@ -3407,9 +3846,11 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * Eterm, Emacsvox module name:           Running Terminal Based Applications.
                                                               (line   6)
 * EWW:                                   Web Browsing.        (line   6)
+* explaining presentation:               Explaining Presentation.
+                                                              (line   6)
 * fields, Notmuch speech:                Notmuch Mail.        (line 230)
 * finding:                               Context-Sensitive Interaction.
-                                                              (line  55)
+                                                              (line  56)
 * Forms mode:                            Desktop Applications.
                                                               (line  17)
 * frozen EAT review:                     EAT Terminal Access. (line 176)
@@ -3441,6 +3882,13 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * password input, EAT:                   EAT Terminal Access. (line 270)
 * personal information management:       Personal Information Management.
                                                               (line   6)
+* presentation modalities:               Presentation Modalities.
+                                                              (line   6)
+* presentation model:                    Presentation Model.  (line   6)
+* presentation overrides:                Adjusting Presentation.
+                                                              (line   6)
+* presentation profiles:                 Presentation Profiles.
+                                                              (line   6)
 * privacy, Notmuch speech:               Notmuch Mail.        (line 230)
 * programming:                           Editing Code.        (line   6)
 * remote terminal trust:                 EAT Terminal Access. (line 295)
@@ -3453,15 +3901,17 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * search fields, Notmuch:                Notmuch Mail.        (line  95)
 * search results, asynchronous rendering: Notmuch Mail.       (line  63)
 * searching:                             Context-Sensitive Interaction.
-                                                              (line  55)
+                                                              (line  56)
 * shell command status:                  EAT Terminal Access. (line 242)
+* sound packs:                           Sounds And Space.    (line   6)
+* spatial presentation:                  Sounds And Space.    (line   6)
 * speech access, terminal:               EAT Terminal Access. (line   6)
 * speech settings:                       Speech System.       (line   6)
 * speech system:                         Speech System.       (line   6)
 * starting Notmuch:                      Notmuch Mail.        (line  23)
 * status cues, Notmuch:                  Notmuch Mail.        (line 230)
 * structured navigation:                 Context-Sensitive Interaction.
-                                                              (line  27)
+                                                              (line  28)
 * structured navigation <1>:             Browsing Structure.  (line   6)
 * tabs:                                  Desktop Management.  (line   6)
 * tags, Notmuch:                         Notmuch Mail.        (line 202)
@@ -3477,6 +3927,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * troubleshooting, Notmuch:              Notmuch Mail.        (line 331)
 * TTS:                                   Speech System.       (line   6)
 * Voice Lock:                            Voice Lock.          (line   6)
+* voice palettes:                        Voices And Routing.  (line   6)
+* Voice Workbench:                       Voices And Routing.  (line   6)
 * Web browsing:                          Web Browsing.        (line   6)
 * widgets, Notmuch Hello:                Notmuch Mail.        (line  38)
 * windows:                               Desktop Management.  (line   6)
@@ -3485,71 +3937,79 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 
 Tag Table:
 Node: Top384
-Node: Introduction2139
-Node: Installation5454
-Node: Obtaining Emacsvox6661
-Node: Building And Testing The Speech Server8061
-Node: Quick Installation9303
-Node: Confirming First Speech11535
-Node: Recovering From No Speech12852
-Node: Persistent Startup15493
-Node: Basic Usage16513
-Node: Overview19091
-Node: Working20468
-Ref: Working-Footnote-121810
-Ref: Working-Footnote-221903
-Node: Reading22013
-Node: Speech System23793
-Node: Controlling Echo24652
-Node: Speech Output Control25519
-Node: Miscellaneous27589
-Node: Voice-lock28711
-Node: Status Information29709
-Node: Speech Backends31102
-Node: Supported Platform Routes32399
-Node: Installing Omnivox From Source35111
-Node: Building Omnivox For WSL236970
-Node: Selecting And Checking Omnivox38553
-Node: Compatibility Speech Servers40294
-Node: Backend Diagnostics And Ownership42220
-Node: Audio Desktop44335
-Node: Desktop Objects45457
-Node: Object Oriented Desktop46682
-Node: Context-Sensitive Interaction47795
-Node: Voice Lock50872
-Node: How It All Works.53055
-Node: What this gives.54549
-Node: Using Online Help56138
-Node: Emacs Packages60192
-Node: Document Authoring61566
-Node: Structured Editing62120
-Node: Browsing Structure63103
-Node: Web Browsing63701
-Node: Messaging64536
-Node: Editing Code65034
-Node: Development Environment65553
-Node: Desktop Management66110
-Node: Personal Information Management66612
-Node: Desktop Applications67144
-Node: Notmuch Mail68693
-Ref: Notmuch fields and privacy78053
-Node: Agent Shell85524
-Node: EAT Terminal Access98014
-Node: Running Terminal Based Applications115273
-Node: Starting Term116228
-Node: Term Input Modes117067
-Node: Term Speech Feedback118227
-Node: Reviewing The Term Screen119421
-Node: Term Help And Recovery121322
-Node: Emacsvox Keyboard Commands122221
-Node: TTS Servers123627
-Node: Announce134076
-Node: Contributing134650
-Node: Authoring Guidelines135673
-Node: Credits138792
-Node: Copyright139155
-Node: Acknowledgments139724
-Node: Concept Index139869
+Node: Introduction2174
+Node: Installation5573
+Node: Obtaining Emacsvox6780
+Node: Building And Testing The Speech Server8180
+Node: Quick Installation9422
+Node: Confirming First Speech11654
+Node: Recovering From No Speech12971
+Node: Persistent Startup15612
+Node: Basic Usage16632
+Node: Overview19210
+Node: Working20595
+Ref: Working-Footnote-121937
+Ref: Working-Footnote-222030
+Node: Reading22140
+Node: Speech System23920
+Node: Controlling Echo24779
+Node: Speech Output Control25646
+Node: Miscellaneous27716
+Node: Voice-lock28838
+Node: Status Information29930
+Node: Speech Backends31323
+Node: Supported Platform Routes32620
+Node: Installing Omnivox From Source35332
+Node: Building Omnivox For WSL237191
+Node: Selecting And Checking Omnivox38774
+Node: Compatibility Speech Servers40515
+Node: Backend Diagnostics And Ownership42441
+Node: Audio Desktop44556
+Node: Desktop Objects45686
+Node: Object Oriented Desktop46911
+Node: Context-Sensitive Interaction48024
+Node: Aural Presentation51139
+Node: Presentation Model53338
+Node: Presentation Modalities55805
+Node: Aural Home57552
+Node: Explaining Presentation59440
+Node: Adjusting Presentation61425
+Node: Presentation Profiles64394
+Node: Voices And Routing66085
+Node: Sounds And Space68442
+Node: Presentation Troubleshooting70066
+Node: Voice Lock72104
+Node: Using Online Help75311
+Node: Emacs Packages79373
+Node: Document Authoring80747
+Node: Structured Editing81301
+Node: Browsing Structure82284
+Node: Web Browsing82882
+Node: Messaging83717
+Node: Editing Code84215
+Node: Development Environment84734
+Node: Desktop Management85291
+Node: Personal Information Management85793
+Node: Desktop Applications86325
+Node: Notmuch Mail87874
+Ref: Notmuch fields and privacy97234
+Node: Agent Shell104705
+Node: EAT Terminal Access117195
+Node: Running Terminal Based Applications134454
+Node: Starting Term135409
+Node: Term Input Modes136248
+Node: Term Speech Feedback137408
+Node: Reviewing The Term Screen138602
+Node: Term Help And Recovery140503
+Node: Emacsvox Keyboard Commands141402
+Node: TTS Servers142808
+Node: Announce153257
+Node: Contributing153831
+Node: Authoring Guidelines154854
+Node: Credits157973
+Node: Copyright158336
+Node: Acknowledgments158905
+Node: Concept Index159050
 
 End Tag Table
 
