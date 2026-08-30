@@ -49,6 +49,26 @@
            "Native Windows Emacs"))
       (should (string-match-p (regexp-quote required) guide)))))
 
+(ert-deftest emacsvox-native-windows-preview-guide-is-bounded-and-complete ()
+  "The native Windows preview should be reproducible without POSIX tooling."
+  (let ((guide
+         (emacsvox-backend-doc-tests--file-string
+          "docs/manual/chapters/speech-backends.org")))
+    (dolist
+        (required
+         '("** Trying Native Windows Emacsvox"
+           ":TEXINFO_NODE_NAME: Trying Native Windows Emacsvox"
+           "$Platform = \"windows-x64\""
+           "Get-FileHash -Algorithm SHA256"
+           "Expand-Archive -LiteralPath"
+           "$env:TTS_PROGRAM = $Omnivox"
+           "emacs.exe"
+           "M-x omnivox-list-voices RET"
+           "M-x emacsvox-toggle-icons RET"
+           "not yet the recommended first installation"
+           "Do not copy or load the archive's ~omnivox-voices.el~"))
+      (should (string-match-p (regexp-quote required) guide)))))
+
 (ert-deftest emacsvox-backend-guide-is-linked-from-user-entry-points ()
   "The README, installation chapter, and manual menu should share one owner."
   (let ((readme

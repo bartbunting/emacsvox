@@ -177,8 +177,9 @@ server is ready.  If either is missing@comma{} use
 @ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}
 before continuing.  @xref{Speech Backends} contains the complete platform
 matrix@comma{} build details@comma{} and compatibility alternatives.  Native Windows Emacs
-support remains a preview; consult that matrix before choosing it for a first
-installation.
+support remains a preview.  Evaluators can follow
+@ref{Trying Native Windows Emacsvox}; initial users should choose
+the WSL2 route.
 
 @node Quick Installation
 @section Build And Start Emacsvox
@@ -815,6 +816,7 @@ maintained in
 * Supported Platform Routes::    Choose the maintained route for this machine.
 * Install Omnivox From A Release Binary: Installing An Omnivox Release Binary.  Install the verified Omnivox 1.4.1 archive.
 * Install An Omnivox Windows Release Under WSL2: Installing An Omnivox Windows Release Under WSL2.  Use the verified Windows x64 archive without a build toolchain.
+* Trying Native Windows Emacsvox:: Evaluate native Windows Emacs and Omnivox with bounded checks.
 * Installing Omnivox From Source:: Build when a release archive does not match the host.
 * Building Omnivox For WSL2::    Stage the Windows runtime from WSL2.
 * Selecting And Checking Omnivox:: Prove speech before starting Emacsvox.
@@ -851,8 +853,8 @@ test.
 @tab Omnivox 1.4.1 Windows x64 release archive using WinRT
 @tab The published archive is checksum-protected and release CI verifies its architecture@comma{} adjacent data@comma{} WinRT and eSpeak synthesis.  The audible host check remains required.
 @item Native Windows Emacs
-@tab Omnivox executable on @code{exec-path}@comma{} using WinRT
-@tab Preview. Omnivox publishes Windows archives@comma{} but Emacsvox does not yet fresh-machine test a complete native-Windows setup. Initial users should use the WSL2 route.
+@tab Omnivox 1.4.1 Windows release using WinRT
+@tab Preview. Omnivox verifies its native Windows archive@comma{} and Emacsvox can start @code{omnivox.exe} directly@comma{} but the complete combination has not passed a fresh-machine acceptance test. Initial users should use WSL2; evaluators can follow the bounded trial below.
 @end multitable
 
 The release-archive routes below are the shortest installation on matching
@@ -1016,6 +1018,180 @@ DECtalk helpers or their runtimes.  They are not needed for normal WinRT
 speech.  Use the source-build route below when maintaining Emacsvox's pinned@comma{}
 content-addressed Windows bundle or its Eloquence and DECtalk bridges.  Piper
 has a separate optional build workflow in the Omnivox repository.
+
+@node Trying Native Windows Emacsvox
+@section Trying Native Windows Emacsvox
+
+This is a @emph{preview evaluation}@comma{} not yet the recommended first installation.
+It runs both Emacs and Omnivox directly on Windows; it does not use WSL2 or the
+POSIX @code{bin/emacsvox} and @code{servers/omnivox} launchers.  The procedure is
+self-contained so a useful result records exactly where success or failure
+occurred.
+
+You need a native Windows build of Emacs 31 or newer@comma{} PowerShell@comma{} Git@comma{} an
+Emacsvox checkout on the Windows filesystem@comma{} and network access for the
+Omnivox release download.  Windows audio must work and at least one Windows
+speech voice must be installed.  You do not need WSL2@comma{} Docker@comma{} Rust@comma{} MinGW@comma{}
+Visual Studio@comma{} or Windows .NET Framework.  Use @code{windows-x64} on an Intel or
+AMD Windows computer.  Use @code{windows-arm64} only on Windows on ARM@.
+
+If Emacsvox is not already checked out on Windows@comma{} open PowerShell and place a
+checkout on the Windows filesystem:
+
+@example
+$SourceRoot = Join-Path $env:USERPROFILE "src"
+New-Item -ItemType Directory -Force $SourceRoot | Out-Null
+Set-Location $SourceRoot
+git clone https://github.com/bartbunting/emacsvox.git
+$Emacsvox = Join-Path $SourceRoot "emacsvox"
+@end example
+
+If the checkout already exists@comma{} skip @code{git clone} and set @code{$Emacsvox} to its
+absolute Windows path instead.  Continue in the same PowerShell window.
+
+@subsection Download And Verify Omnivox
+
+Set @code{$Platform} for the computer.  The example below uses the usual Intel or
+AMD Windows x64 archive:
+
+@example
+$Version = "1.4.1"
+$Platform = "windows-x64" # Use windows-arm64 only on Windows on ARM.
+$DownloadDir = Join-Path $env:USERPROFILE "Downloads\omnivox-$Version"
+$Archive = "omnivox-$Version-$Platform.zip"
+$ReleaseUrl = "https://github.com/bartbunting/omnivox/releases/download/v$Version"
+
+New-Item -ItemType Directory -Force $DownloadDir | Out-Null
+$ArchivePath = Join-Path $DownloadDir $Archive
+$ChecksumPath = Join-Path $DownloadDir "sha256sums.txt"
+Invoke-WebRequest -UseBasicParsing "$ReleaseUrl/$Archive" -OutFile $ArchivePath
+Invoke-WebRequest -UseBasicParsing "$ReleaseUrl/sha256sums.txt" -OutFile $ChecksumPath
+
+$Pattern = '\s+\*?' + [regex]::Escape($Archive) + '$'
+$ChecksumLine = Get-Content $ChecksumPath |
+  Where-Object @{ $_ -match $Pattern @} |
+  Select-Object -First 1
+if (-not $ChecksumLine) @{ throw "No published checksum for $Archive" @}
+$Expected = ($ChecksumLine -split '\s+')[0].ToLowerInvariant()
+$Actual = (Get-FileHash -Algorithm SHA256 $ArchivePath).Hash.ToLowerInvariant()
+if ($Actual -ne $Expected) @{ throw "Checksum mismatch for $Archive" @}
+Write-Host "Checksum OK: $Archive"
+@end example
+
+Do not extract or run the archive unless the last line reports @code{Checksum OK}.
+The Windows release is not code-signed.  If Windows security or local policy
+refuses it@comma{} stop rather than weakening that policy.
+
+@subsection Install And Check The Native Server
+
+Continue in the same PowerShell window.  Extract the complete release into a
+versioned directory below the current user's @code{LocalAppData}:
+
+@example
+$InstallDir = Join-Path $env:LOCALAPPDATA "Emacsvox\Omnivox\releases\$Version-$Platform"
+New-Item -ItemType Directory -Force $InstallDir | Out-Null
+Expand-Archive -LiteralPath $ArchivePath -DestinationPath $InstallDir -Force
+$Omnivox = Join-Path $InstallDir "omnivox.exe"
+
+foreach ($Required in @@(
+  $Omnivox@comma{}
+  (Join-Path $InstallDir "espeak-ng-data\phontab")@comma{}
+  (Join-Path $InstallDir "third-party-licenses\THIRD-PARTY-NOTICES.md")
+)) @{
+  if (-not (Test-Path -LiteralPath $Required -PathType Leaf)) @{
+    throw "Incomplete Omnivox installation: $Required"
+  @}
+@}
+
+& $Omnivox --version
+if ($LASTEXITCODE -ne 0) @{ throw "Omnivox version check failed" @}
+& $Omnivox --list-voices
+if ($LASTEXITCODE -ne 0) @{ throw "Omnivox voice discovery failed" @}
+& $Omnivox --check
+if ($LASTEXITCODE -ne 0) @{ throw "Omnivox audio check failed" @}
+@end example
+
+The version must report 1.4.1@comma{} voice discovery must list at least one Windows
+voice@comma{} and the final check must produce both a tone and spoken confirmation.
+Keep @code{omnivox.exe}@comma{} @code{espeak-ng-data}@comma{} and @code{third-party-licenses} together.
+Do not copy or load the archive's @code{omnivox-voices.el}: it is the adapter for
+upstream Emacspeak@comma{} while Emacsvox supplies its own adapter.
+
+@subsection Start Native Emacsvox
+
+Keep the same PowerShell window so @code{$Omnivox} still identifies the verified
+executable.  Set @code{$Emacs} to the native @code{emacs.exe}.  If this window did not
+create the Emacsvox checkout above@comma{} also set @code{$Emacsvox} to that checkout:
+
+@example
+$Emacs = "C:\path\to\emacs\bin\emacs.exe"
+# If not set above@comma{} uncomment and edit the next line:
+# $Emacsvox = "C:\path\to\emacsvox"
+
+& $Emacs --version
+if ($LASTEXITCODE -ne 0) @{ throw "Could not run native Emacs" @}
+$env:TTS_PROGRAM = $Omnivox
+& $Emacs -Q --no-splash --load "$Emacsvox\lisp\emacsvox-setup.el"
+@end example
+
+The Emacs version must be 31 or newer.  Use @code{emacs.exe}@comma{} rather than
+@code{runemacs.exe}@comma{} for this first trial so startup errors remain visible in the
+PowerShell window.  Loading @code{emacsvox-setup.el} directly is intentional: the
+repository's @code{bin/emacsvox} launcher is a POSIX shell script and is not the
+native Windows entry point.
+
+@subsection Accept Or Report The Trial
+
+A successful trial satisfies every item below:
+
+@enumerate
+@item
+Emacsvox speaks its startup introduction.
+
+@item
+@kbd{C-h v tts-program RET} displays the absolute path to the
+verified @code{omnivox.exe}.
+
+@item
+@kbd{M-x tts-speak-version RET} speaks the Omnivox version
+response@comma{} and @kbd{M-x omnivox-list-voices RET} displays the
+Windows voices.
+
+@item
+@kbd{C-n} and @kbd{C-p} speak ordinary line
+movement@comma{} @kbd{C-e s} stops current speech@comma{} and
+@kbd{M-x tts-restart RET} restores speech without a process
+error.
+
+@item
+Type @kbd{M-x emacsvox-toggle-icons RET} twice.  The second
+toggle@comma{} which turns icons back on@comma{} plays a short auditory icon in addition
+to plain speech.
+@end enumerate
+
+If the direct @code{--check} fails@comma{} diagnose Omnivox or Windows audio before
+starting Emacs.  If it succeeds but Emacsvox reports that it cannot find the
+speech server@comma{} confirm in the same PowerShell window that
+@code{$env:TTS_PROGRAM} contains the absolute executable path and that
+@code{Test-Path $env:TTS_PROGRAM} returns @code{True}.  If the process starts and then
+exits@comma{} retain the PowerShell error@comma{} the Emacs @code{*Messages*} buffer@comma{} Windows
+version and architecture@comma{} the complete @code{emacs.exe --version} output@comma{} and
+@code{omnivox.exe --version} output.
+
+After a successful trial@comma{} the same absolute selection can be placed before
+loading Emacsvox in the user's Emacs initialization file:
+
+@lisp
+(setenv "TTS_PROGRAM"
+        "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.4.1-windows-x64/omnivox.exe")
+(load-file "C:/path/to/emacsvox/lisp/emacsvox-setup.el")
+@end lisp
+
+Replace both example paths.  This initial configuration deliberately uses an
+absolute executable path.  Adding the Omnivox directory to @code{exec-path} is
+optional and is needed only when later selecting it by the short name
+@code{omnivox}.  A successful report is evidence for promoting native Windows out
+of preview; it does not silently change the support status on its own.
 
 @node Installing Omnivox From Source
 @section Installing Omnivox From Source
@@ -1185,8 +1361,10 @@ shell startup file makes the choice persistent for later sessions.  On POSIX
 systems@comma{} Emacsvox's @code{servers/omnivox} launcher finds an installed
 @code{omnivox} on @code{PATH}; @code{OMNIVOX_PROGRAM} can instead name its
 absolute executable and takes precedence over a source-built staged runtime.
-Native Windows Emacs resolves @code{omnivox.exe}
-directly through @code{exec-path}@comma{} but that route remains preview.
+Native Windows Emacs resolves @code{omnivox.exe} directly through @code{exec-path}@comma{} or
+uses the absolute executable named by @code{TTS_PROGRAM}.  That route remains
+preview.  For its bounded evaluation procedure@comma{} see
+@ref{Trying Native Windows Emacsvox}.
 
 Inside a running Emacsvox session@comma{} @code{M-x omnivox} selects the same server
 temporarily.  Use @code{M-x tts-speak-version} to identify the live adapter

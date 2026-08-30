@@ -99,8 +99,9 @@ server is ready.  If either is missing, use
 @@texinfo:@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}@@
 before continuing.  @@texinfo:@xref{Speech Backends}@@ contains the complete platform
 matrix, build details, and compatibility alternatives.  Native Windows Emacs
-support remains a preview; consult that matrix before choosing it for a first
-installation.
+support remains a preview.  Evaluators can follow
+@@texinfo:@ref{Trying Native Windows Emacsvox}@@; initial users should choose
+the WSL2 route.
 
 ** Build And Start Emacsvox
 :PROPERTIES:
