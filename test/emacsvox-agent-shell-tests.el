@@ -156,6 +156,10 @@
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--prepare-speech-text
                   "emacsvox-agent-shell" (text))
+(declare-function emacsvox-agent-shell--chat-overlay-tag
+                  "emacsvox-agent-shell" (overlay))
+(declare-function emacsvox-agent-shell--chat-overlay-category
+                  "emacsvox-agent-shell" (overlay))
 (declare-function emacsvox-agent-shell--replace-status-icons-for-speech
                   "emacsvox-agent-shell" (text))
 (declare-function emacsvox-agent-shell--remove-visual-chrome-for-speech
@@ -7109,8 +7113,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should
          (seq-find
           (lambda (overlay)
-            (eq (overlay-get overlay 'category)
-                'agent-shell-chat-me-label))
+            (eq (emacsvox-agent-shell--chat-overlay-tag overlay)
+                'me-label))
           (overlays-in (1- prompt-start) prompt-start)))
         (let* ((emacsvox-agent-shell--chat-label-context
                 (emacsvox-agent-shell--chat-label-context-between
@@ -7292,8 +7296,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (let ((prompt-overlay
                (seq-find
                 (lambda (overlay)
-                  (eq (overlay-get overlay 'category)
-                      'agent-shell-chat-me))
+                  (eq (emacsvox-agent-shell--chat-overlay-tag overlay)
+                      'me))
                 (overlays-at prompt-start))))
           (should prompt-overlay)
           (should (equal (overlay-get prompt-overlay 'display) ""))
@@ -7483,6 +7487,48 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            (lambda (&rest _) (setq called t))))
         (should-not called)))))
 
+(ert-deftest emacsvox-agent-shell-chat-navigation-escapes-stalled-display-row ()
+  "Vertical motion should escape a chat row even when core motion stalls."
+  (with-temp-buffer
+    (insert "xabcdefghijy")
+    (setq major-mode 'agent-shell-mode)
+    (let ((bounds (cons 2 10)))
+      (dolist
+          (case
+           '((next-line emacsvox-agent-shell--next-line-around 2 11)
+             (previous-line
+              emacsvox-agent-shell--previous-line-around 10 1)))
+        (pcase-let ((`(,command ,wrapper ,origin ,destination) case))
+          (goto-char origin)
+          (let ((ems--interactive-fn-name command)
+                (line-move-visual t)
+                (visual-line-mode t)
+                (original-calls 0)
+                presentations)
+            (cl-letf
+                (((symbol-function
+                   'emacsvox-agent-shell--chat-navigation-source-bounds)
+                  (lambda ()
+                    (and (<= (car bounds) (point) (cdr bounds)) bounds)))
+                 ((symbol-function
+                   'emacsvox-agent-shell--end-of-prompt-marker-line-p)
+                  (lambda () nil))
+                 ((symbol-function
+                   'emacsvox-agent-shell--present-current-navigation-line)
+                  (lambda () (push (point) presentations))))
+              (should
+               (eq
+                (funcall
+                 wrapper
+                 (lambda (&rest _)
+                   (cl-incf original-calls)
+                   'stalled)
+                 1)
+                'stalled)))
+            (should (= original-calls 1))
+            (should (= (point) destination))
+            (should (equal presentations (list destination)))))))))
+
 (ert-deftest emacsvox-agent-shell-chat-navigation-skips-hidden-marker-row ()
   "One vertical command should cross the hidden prompt marker and speak."
   (skip-unless (require 'agent-shell-chat-mode nil t))
@@ -7610,8 +7656,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should
        (seq-find
         (lambda (overlay)
-          (eq (overlay-get overlay 'category)
-              'agent-shell-chat-me-label))
+          (eq (emacsvox-agent-shell--chat-overlay-tag overlay)
+              'me-label))
         (overlays-in (1- prompt-start) prompt-start)))
       ;; Model the live geometry: the display alias and first content row share
       ;; source bounds, followed by a distinct short continuation and another
@@ -7721,9 +7767,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (original-get-text-property
            (symbol-function 'get-text-property))
           (property-reads 0))
-      (overlay-put me-overlay 'category 'agent-shell-chat-me)
-      (overlay-put me-overlay 'display "Me> ")
-      (overlay-put agent-overlay 'category 'agent-shell-chat-agent)
+      (overlay-put me-overlay 'agent-shell-chat--tag 'me-label)
+      (overlay-put me-overlay 'before-string "Me> ")
+      (overlay-put agent-overlay 'agent-shell-chat--tag 'agent)
       (overlay-put agent-overlay 'before-string "Claude> ")
       (cl-letf
           (((symbol-function 'get-text-property)
@@ -7734,6 +7780,32 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          (equal (emacsvox-agent-shell--chat-label-context-at-point)
                 '(:category agent-shell-chat-me :text "Me>"))))
       (should (<= property-reads 4)))))
+
+(ert-deftest emacsvox-agent-shell-chat-overlay-identifiers-remain-compatible ()
+  "Current tags and legacy categories should share one structural identity."
+  (with-temp-buffer
+    (insert "overlay")
+    (dolist
+        (case
+         '((agent-shell-chat--tag me me agent-shell-chat-me)
+           (agent-shell-chat--tag me-label me-label agent-shell-chat-me)
+           (agent-shell-chat--tag me-surplus me-surplus nil)
+           (agent-shell-chat--tag me-input me-input nil)
+           (agent-shell-chat--tag agent agent agent-shell-chat-agent)
+           (category agent-shell-chat-me me agent-shell-chat-me)
+           (category agent-shell-chat-me-label me-label agent-shell-chat-me)
+           (category agent-shell-chat-me-surplus me-surplus nil)
+           (category agent-shell-chat-me-input me-input nil)
+           (category agent-shell-chat-agent agent agent-shell-chat-agent)))
+      (pcase-let ((`(,property ,value ,tag ,category) case))
+        (let ((overlay (make-overlay (point-min) (point-max))))
+          (overlay-put overlay property value)
+          (should
+           (eq (emacsvox-agent-shell--chat-overlay-tag overlay) tag))
+          (should
+           (eq (emacsvox-agent-shell--chat-overlay-category overlay)
+               category))
+          (delete-overlay overlay))))))
 
 (ert-deftest emacsvox-agent-shell-ui-face-voices-are-explicit ()
   "Configured faces should resolve to their declared voice personalities."

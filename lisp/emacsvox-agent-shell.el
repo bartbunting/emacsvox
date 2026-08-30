@@ -577,13 +577,24 @@ with Agent Shell's live input marker."
         (unless (string-empty-p label)
           (cons label trailing-p))))))
 
+(defun emacsvox-agent-shell--chat-overlay-tag (overlay)
+  "Return the normalized structural chat tag represented by OVERLAY.
+Current Agent Shell uses `agent-shell-chat--tag'.  Releases before
+2026-08-29 used overlay `category' values instead."
+  (or
+   (overlay-get overlay 'agent-shell-chat--tag)
+   (pcase (overlay-get overlay 'category)
+     ('agent-shell-chat-me 'me)
+     ('agent-shell-chat-me-label 'me-label)
+     ('agent-shell-chat-me-surplus 'me-surplus)
+     ('agent-shell-chat-me-input 'me-input)
+     ('agent-shell-chat-agent 'agent))))
+
 (defun emacsvox-agent-shell--chat-overlay-category (overlay)
   "Return the semantic chat category represented by OVERLAY."
-  (let ((category (overlay-get overlay 'category)))
-    (if (eq category 'agent-shell-chat-me-label)
-        'agent-shell-chat-me
-      (and (memq category '(agent-shell-chat-me agent-shell-chat-agent))
-           category))))
+  (pcase (emacsvox-agent-shell--chat-overlay-tag overlay)
+    ((or 'me 'me-label) 'agent-shell-chat-me)
+    ('agent 'agent-shell-chat-agent)))
 
 (defun emacsvox-agent-shell--chat-overlay-rendering (overlay)
   "Return the visible label rendering supplied by chat OVERLAY."
@@ -597,12 +608,13 @@ with Agent Shell's live input marker."
 (defun emacsvox-agent-shell--live-chat-prompt-overlay-p (overlay)
   "Return non-nil when OVERLAY carries Agent Shell's live prompt marker."
   (and
-   (eq (overlay-get overlay 'category) 'agent-shell-chat-me)
+   (eq (emacsvox-agent-shell--chat-overlay-tag overlay) 'me)
    (seq-some
     (lambda (candidate)
       (and (stringp candidate)
            (not (string-empty-p (string-trim candidate)))))
-    (list (overlay-get overlay 'line-prefix)
+    (list (overlay-get overlay 'display)
+          (overlay-get overlay 'line-prefix)
           (overlay-get overlay 'wrap-prefix)))))
 
 (defun emacsvox-agent-shell--chat-label-context-between
@@ -933,7 +945,7 @@ after that response row was already visited directly."
    (seq-some
     (lambda (overlay)
       (and
-       (eq (overlay-get overlay 'category) 'agent-shell-chat-agent)
+       (eq (emacsvox-agent-shell--chat-overlay-tag overlay) 'agent)
        (< (overlay-end overlay) end)))
     (overlays-in start end))))
 
@@ -1064,11 +1076,20 @@ a positive argument to the advised command."
             (apply original-function arguments)))
     (when normalize-p
       (let (previous)
+        ;; A folded or transient row can make core visual motion return while
+        ;; point remains at the row anchor.  Escape when source remains in the
+        ;; requested direction instead of presenting that anchor indefinitely.
         (while (and (or
                      (emacsvox-agent-shell--end-of-prompt-marker-line-p)
                      (and
                       origin-source-bounds
-                      (/= origin-point (point))
+                      (or
+                       (/= origin-point (point))
+                       (pcase direction
+                         ('forward
+                          (< (cdr origin-source-bounds) (point-max)))
+                         ('backward
+                          (> (car origin-source-bounds) (point-min)))))
                       (equal
                        origin-source-bounds
                        (emacsvox-agent-shell--chat-navigation-source-bounds))))
@@ -2796,10 +2817,8 @@ prompt's end and extends to `point-max'."
   (let (best)
     (dolist (overlay (overlays-at position))
       (when (and
-             (memq (overlay-get overlay 'category)
-                   '(agent-shell-chat-me
-                     agent-shell-chat-me-surplus
-                     agent-shell-chat-agent))
+             (memq (emacsvox-agent-shell--chat-overlay-tag overlay)
+                   '(me me-surplus agent))
              (equal (overlay-get overlay 'display) "")
              (< (overlay-start overlay) (overlay-end overlay))
              (or
