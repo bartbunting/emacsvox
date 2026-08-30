@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Integration Maintenance (Emacsvox User Manual)</title>
+
+<meta name="description" content="Integration Maintenance (Emacsvox User Manual)">
+<meta name="keywords" content="Integration Maintenance (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Developer-Guide.html" rel="up" title="Developer Guide">
+<link href="Speech-Server-Protocols.html" rel="prev" title="Speech Server Protocols">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Integration-Maintenance">
+<div class="nav-panel">
+<p>
+Previous: <a href="Speech-Server-Protocols.html" accesskey="p" rel="prev">Speech Server Protocols</a>, Up: <a href="Developer-Guide.html" accesskey="u" rel="up">Developer And Maintainer Guide</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Integration-Maintenance-1"><span>17.2 Integration Maintenance<a class="copiable-link" href="#Integration-Maintenance-1"> &para;</a></span></h3>
+
+<p>This chapter collects source-level contracts that are deliberately omitted
+from the user task guides.  Optional package APIs and renderers evolve, so
+recheck the upstream interfaces and keep compatibility behavior bounded when
+changing an integration.
+</p>
+<ul class="mini-toc">
+<li><a href="#Build-and-live_002dverification-boundary" accesskey="1">Build and live-verification boundary</a></li>
+<li><a href="#Notmuch-contracts" accesskey="2">Notmuch contracts</a></li>
+<li><a href="#Agent-Shell-contracts" accesskey="3">Agent Shell contracts</a></li>
+<li><a href="#WSL2-Omnivox-development-staging" accesskey="4">WSL2 Omnivox development staging</a></li>
+</ul>
+<div class="subsection-level-extent" id="Build-and-live_002dverification-boundary">
+<h4 class="subsection"><span>17.2.1 Build and live-verification boundary<a class="copiable-link" href="#Build-and-live_002dverification-boundary"> &para;</a></span></h4>
+
+<p>For a source checkout, use the Emacs selected by <code class="code">local.mk</code>.  Run
+<code class="code">make check-emacs</code> before diagnosing compilation, <code class="code">make bytecode</code> after an
+ordinary Lisp edit, and <code class="code">make bytecode-rebuild</code> after switching branches or
+changing a macro or public interface.  Tests deliberately prefer source and
+therefore do not prove that the byte-code used by a live profile is current.
+Verify the rebuilt byte-code in a fresh Emacs rather than relying on a file
+reload when compiled dependants may already be resident.
+</p>
+</div>
+<div class="subsection-level-extent" id="Notmuch-contracts">
+<h4 class="subsection"><span>17.2.2 Notmuch contracts<a class="copiable-link" href="#Notmuch-contracts"> &para;</a></span></h4>
+
+<p>The live module is registered as an optional package integration.  Its stable
+extension points are the Hello, Search, Show, and Tree mode hooks; Search and
+Show mode maps; public interactive commands; and public Search/Show accessors.
+Advice is installed only when a target exists and is target-aware, so a nested
+or programmatic upstream call does not claim the outer user&rsquo;s feedback.
+</p>
+<p>The Show landing and visibility paths also read renderer metadata such as
+<code class="code">:headers-overlay</code>, <code class="code">:message-visible</code>, message extents, <code class="code">:notmuch-part</code>,
+part-hidden state, and Notmuch part-button types.  Missing optional metadata
+should reduce presentation detail rather than authorize an operation.  Review
+these adapters whenever the Notmuch renderer changes.
+</p>
+<p>Each user-owned asynchronous Search process carries its own completion state
+as a process property.  The upstream sentinel renders first; Emacsvox then
+clears that property before delivering exactly one terminal result.  The
+owning buffer and process status are authoritative.  A killed owner remains
+silent, concurrent buffers cannot overwrite one another, and the global
+refresh-all path intentionally acquires no ownership.
+</p>
+<p>Run <code class="code">make notmuch-test</code> for the explicit source suite.  After current byte-code
+exists, run <code class="code">make compiled-notmuch-test</code>; it verifies the exact loaded
+<code class="code">emacsvox-notmuch.elc</code>, compiler version, and the same focused selector,
+including real displayed-window reading for both advance paths.
+</p>
+</div>
+<div class="subsection-level-extent" id="Agent-Shell-contracts">
+<h4 class="subsection"><span>17.2.3 Agent Shell contracts<a class="copiable-link" href="#Agent-Shell-contracts"> &para;</a></span></h4>
+
+<p>Use <code class="code">M-x emacsvox-agent-shell-enable</code> to reinstall speech hooks after
+deliberately disabling them or while testing live integration changes.
+</p>
+<p>The integration uses three deliberately different contract layers:
+</p>
+<table class="multitable">
+<thead><tr><th width="18%">Layer</th><th width="37%">Agent Shell owner</th><th width="45%">Emacsvox rule</th></tr></thead>
+<tbody><tr><td width="18%">Public structured API</td><td width="37%"><code class="code">agent-shell-subscribe-to</code>, <code class="code">agent-shell-unsubscribe</code>, <code class="code">agent-shell-status</code>, and <code class="code">agent-shell-shell-buffer</code>; lifecycle, permission, and tool events</td><td width="45%">Primary authority for processing, completion, errors, permission urgency, and tool status. The public turn boundary triggers inspection of renderer-owned response sections. Event and response data is treated as untrusted content and bounded before automatic Aural submission.</td></tr>
+<tr><td width="18%">Experimental renderer metadata</td><td width="37%"><code class="code">agent-shell-ui-state</code>, <code class="code">agent-shell-ui-section</code>, rendered Markdown table/source properties, and renderer-owned faces</td><td width="45%">Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority.</td></tr>
+<tr><td width="18%">Private compatibility fallback</td><td width="37%">The aggregate <code class="code">agent-shell--state</code>, the legacy viewport ownership resolver, viewport position helpers, and legacy face, prompt, or ID inference</td><td width="45%">Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response.</td></tr>
+</tbody>
+</table>
+
+<p>The lifecycle subscription currently consumes <code class="code">init-started</code>,
+<code class="code">init-finished</code>, <code class="code">session-selected</code>, <code class="code">session-restored</code>, <code class="code">input-submitted</code>,
+<code class="code">turn-complete</code>, and <code class="code">error</code>.  Dedicated subscriptions consume
+<code class="code">permission-request</code>, <code class="code">permission-response</code>, and <code class="code">tool-call-update</code>.  Add new
+semantic behavior at the public event layer when Agent Shell exposes it; keep
+renderer and private fallbacks isolated and covered by compatibility tests.
+</p>
+</div>
+<div class="subsection-level-extent" id="WSL2-Omnivox-development-staging">
+<h4 class="subsection"><span>17.2.4 WSL2 Omnivox development staging<a class="copiable-link" href="#WSL2-Omnivox-development-staging"> &para;</a></span></h4>
+
+<p>Maintainers testing tracked Emacsvox or Omnivox changes may use
+<code class="code">make windows-omnivox-dev</code>.  That target records both worktree-diff hashes and
+labels the result as a development build; it is not the clean release
+procedure.  See <code class="code">servers/omnivox-release/README.org</code> for the pinned toolchain,
+licensing, provenance, and restaging contract.
+</p>
+<p>Do not bypass the Omnivox release target manually or clean either repository
+to make its release guard pass.  Use <code class="code">make windows-omnivox</code> only for the
+reproducible clean-release path documented in the user-facing WSL2 route.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Speech-Server-Protocols.html">Speech Server Protocols</a>, Up: <a href="Developer-Guide.html">Developer And Maintainer Guide</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

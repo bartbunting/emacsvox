@@ -17,6 +17,8 @@ Basic-Usage.html
 Browsing-Structure.html
 Building-And-Testing-The-Speech-Server.html
 Building-Omnivox-For-WSL2.html
+Commands-That-Queue-Output.html
+Commands-That-Set-State.html
 Compatibility-Speech-Servers.html
 Concept-Index.html
 Conclusion-_002d_002d_002d-Turning-Twenty.html
@@ -32,6 +34,7 @@ Credits.html
 Desktop-Applications.html
 Desktop-Management.html
 Desktop-Objects.html
+Developer-Guide.html
 Development-Environment.html
 Document-Authoring.html
 EAT-Terminal-Access.html
@@ -59,6 +62,7 @@ Explaining-Presentation.html
 Function-Index.html
 Installation.html
 Installing-Omnivox-From-Source.html
+Integration-Maintenance.html
 Intro.html
 Introduction.html
 Key-Component-_002d_002d_002d-Text-To-Speech-_0028TTS_0029.html
@@ -94,6 +98,7 @@ Social-Web-_002d_002d_002d-EMail-Instant-Messaging-Blogging-And-Tweeting-Using-O
 Sounds-And-Space.html
 Speech-Backends.html
 Speech-Output-Control.html
+Speech-Server-Protocols.html
 Speech-System.html
 Speech_002dEnabling-Applications.html
 Speech_002dEnabling-Interactive-Games.html
@@ -102,11 +107,11 @@ Status-Information.html
 Structured-Editing.html
 Summary.html
 Supported-Platform-Routes.html
-TTS-Servers.html
 Template_002dbased-Authoring.html
 Term-Help-And-Recovery.html
 Term-Input-Modes.html
 Term-Speech-Feedback.html
+Testing-A-Direct-Legacy-Server.html
 The-RESTful-Web-_002d_002d_002d-Web-Wizards-And-URL-Templates-For-Faster-Access.html
 Turning-Twenty.html
 URL-Templates.html

@@ -63,7 +63,6 @@ follows the tasks a user performs in a session.
 <li><a href="#Read-and-copy-source-blocks" accesskey="6">Read and copy source blocks</a></li>
 <li><a href="#Navigate-and-copy-rendered-tables" accesskey="7">Navigate and copy rendered tables</a></li>
 <li><a href="#Recover-from-interruption-or-failure" accesskey="8">Recover from interruption or failure</a></li>
-<li><a href="#Integration-ownership-for-maintainers" accesskey="9">Integration ownership for maintainers</a></li>
 </ul>
 <div class="section-level-extent" id="Start-and-control-a-session">
 <h3 class="section"><span>10.1 Start and control a session<a class="copiable-link" href="#Start-and-control-a-session"> &para;</a></span></h3>
@@ -310,31 +309,12 @@ provider&rsquo;s details and edit the live prompt before resubmitting.
 </p>
 <p>Use <code class="code">M-x agent-shell-restart</code> when Agent Shell itself needs a fresh process
 for the same project.  Use <code class="code">M-x emacsvox-agent-shell-enable</code> to reinstall
-speech hooks after deliberately disabling them or during live integration
-development.  Neither recovery command discards transcript files or project
-work.
+speech hooks after deliberately disabling them.  Neither recovery command
+discards transcript files or project work.
 </p>
-</div>
-<div class="section-level-extent" id="Integration-ownership-for-maintainers">
-<h3 class="section"><span>10.9 Integration ownership for maintainers<a class="copiable-link" href="#Integration-ownership-for-maintainers"> &para;</a></span></h3>
-
-<p>The integration uses three deliberately different contract layers:
-</p>
-<table class="multitable">
-<thead><tr><th width="18%">Layer</th><th width="37%">Agent Shell owner</th><th width="45%">Emacsvox rule</th></tr></thead>
-<tbody><tr><td width="18%">Public structured API</td><td width="37%"><code class="code">agent-shell-subscribe-to</code>, <code class="code">agent-shell-unsubscribe</code>, <code class="code">agent-shell-status</code>, and <code class="code">agent-shell-shell-buffer</code>; lifecycle, permission, and tool events</td><td width="45%">Primary authority for processing, completion, errors, permission urgency, and tool status. The public turn boundary triggers inspection of renderer-owned response sections. Event and response data is treated as untrusted content and bounded before automatic Aural submission.</td></tr>
-<tr><td width="18%">Experimental renderer metadata</td><td width="37%"><code class="code">agent-shell-ui-state</code>, <code class="code">agent-shell-ui-section</code>, rendered Markdown table/source properties, and renderer-owned faces</td><td width="45%">Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority.</td></tr>
-<tr><td width="18%">Private compatibility fallback</td><td width="37%">The aggregate <code class="code">agent-shell--state</code>, the legacy viewport ownership resolver, viewport position helpers, and legacy face, prompt, or ID inference</td><td width="45%">Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response.</td></tr>
-</tbody>
-</table>
-
-<p>The lifecycle subscription currently consumes <code class="code">init-started</code>,
-<code class="code">init-finished</code>, <code class="code">session-selected</code>, <code class="code">session-restored</code>,
-<code class="code">input-submitted</code>, <code class="code">turn-complete</code>, and <code class="code">error</code>.  Dedicated
-subscriptions consume <code class="code">permission-request</code>, <code class="code">permission-response</code>,
-and <code class="code">tool-call-update</code>.  Add new semantic behavior at the public event
-layer when Agent Shell exposes it; keep renderer and private fallbacks isolated
-and covered by compatibility tests.
+<p>If you are changing the integration rather than using it, see
+<a class="ref" href="Integration-Maintenance.html">Integration Maintenance</a> for its public event, renderer, and
+compatibility contracts.
 </p>
 </div>
 </div>

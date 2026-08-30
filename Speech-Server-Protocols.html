@@ -3,10 +3,10 @@
 <!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>TTS Servers (Emacsvox User Manual)</title>
+<title>Speech Server Protocols (Emacsvox User Manual)</title>
 
-<meta name="description" content="TTS Servers (Emacsvox User Manual)">
-<meta name="keywords" content="TTS Servers (Emacsvox User Manual)">
+<meta name="description" content="Speech Server Protocols (Emacsvox User Manual)">
+<meta name="keywords" content="Speech Server Protocols (Emacsvox User Manual)">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
@@ -15,9 +15,8 @@
 <link href="index.html" rel="start" title="Top">
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
-<link href="index.html" rel="up" title="Top">
-<link href="Announce.html" rel="next" title="Announce">
-<link href="Emacsvox-Keyboard-Commands.html" rel="prev" title="Emacsvox Keyboard Commands">
+<link href="Developer-Guide.html" rel="up" title="Developer Guide">
+<link href="Integration-Maintenance.html" rel="next" title="Integration Maintenance">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -33,13 +32,13 @@ ul.mark-bullet {list-style-type: disc}
 </head>
 
 <body lang="en">
-<div class="chapter-level-extent" id="TTS-Servers">
+<div class="section-level-extent" id="Speech-Server-Protocols">
 <div class="nav-panel">
 <p>
-Next: <a href="Announce.html" accesskey="n" rel="next">Manual Provenance And Contributions</a>, Previous: <a href="Emacsvox-Keyboard-Commands.html" accesskey="p" rel="prev">Emacsvox Keyboard Commands.</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Integration-Maintenance.html" accesskey="n" rel="next">Integration Maintenance</a>, Up: <a href="Developer-Guide.html" accesskey="u" rel="up">Developer And Maintainer Guide</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Speech-Server-Protocols"><span>14 Speech Server Protocols<a class="copiable-link" href="#Speech-Server-Protocols"> &para;</a></span></h2>
+<h3 class="section" id="Speech-Server-Protocols-1"><span>17.1 Speech Server Protocols<a class="copiable-link" href="#Speech-Server-Protocols-1"> &para;</a></span></h3>
 
 <p>Emacsvox produces spoken output by communicating with one of several speech
 servers.  Two protocol families coexist:
@@ -66,8 +65,8 @@ the historical Emacspeak article at
 <li><a href="#Omnivox-Structured-Protocol" accesskey="1">Omnivox Structured Protocol</a></li>
 <li><a href="#Legacy-Line-Protocol" accesskey="2">Legacy Line Protocol</a></li>
 </ul>
-<div class="section-level-extent" id="Omnivox-Structured-Protocol">
-<h3 class="section"><span>14.1 Omnivox Structured Protocol<a class="copiable-link" href="#Omnivox-Structured-Protocol"> &para;</a></span></h3>
+<div class="subsection-level-extent" id="Omnivox-Structured-Protocol">
+<h4 class="subsection"><span>17.1.1 Omnivox Structured Protocol<a class="copiable-link" href="#Omnivox-Structured-Protocol"> &para;</a></span></h4>
 
 <p>At process startup the Emacsvox adapter requests capabilities and live engine
 inventory.  Features are used only after negotiation; an older server
@@ -105,8 +104,8 @@ of acoustic onset.
 </li></ul>
 
 </div>
-<div class="section-level-extent" id="Legacy-Line-Protocol">
-<h3 class="section"><span>14.2 Legacy Line Protocol<a class="copiable-link" href="#Legacy-Line-Protocol"> &para;</a></span></h3>
+<div class="subsection-level-extent" id="Legacy-Line-Protocol">
+<h4 class="subsection"><span>17.1.2 Legacy Line Protocol<a class="copiable-link" href="#Legacy-Line-Protocol"> &para;</a></span></h4>
 
 <p>The <abbr class="acronym">TTS</abbr> server reads commands from standard input.
 Script <strong class="strong">speech-server</strong> can be used to cause a <abbr class="acronym">TTS</abbr>
@@ -150,13 +149,9 @@ amounts of text (typically queued a clause at a time to achieve the
 best prosody), ask the <abbr class="acronym">TTS</abbr> server to start speaking, and
 interrupt the spoken output at any time.
 </p>
-<ul class="mini-toc">
-<li><a href="#Testing-A-Direct-Legacy-Server" accesskey="1">Testing A Direct Legacy Server</a></li>
-<li><a href="#Commands-That-Queue-Output_002e" accesskey="2">Commands That Queue Output.</a></li>
-<li><a href="#Commands-That-Set-State" accesskey="3">Commands That Set State</a></li>
-</ul>
-<div class="subsection-level-extent" id="Testing-A-Direct-Legacy-Server">
-<h4 class="subsection"><span>14.2.1 Testing A Direct Legacy Server<a class="copiable-link" href="#Testing-A-Direct-Legacy-Server"> &para;</a></span></h4>
+<ol class="enumerate">
+<li> <a class="anchor" id="Testing-A-Direct-Legacy-Server"></a>Testing A Direct Legacy Server
+
 
 <p>This protocol-level test is only for a retained direct Tcl-compatible server.
 Run its launcher from the Emacsvox repository root, for example:
@@ -178,9 +173,8 @@ s
 stronger diagnostic and should take precedence over this generic protocol
 test.
 </p>
-</div>
-<div class="subsection-level-extent" id="Commands-That-Queue-Output_002e">
-<h4 class="subsection"><span>14.2.2 Commands That Queue Output.<a class="copiable-link" href="#Commands-That-Queue-Output_002e"> &para;</a></span></h4>
+</li><li> <a class="anchor" id="Commands-That-Queue-Output"></a>Commands That Queue Output.
+
 
 <p>This section documents commands that either produce spoken output, or
 queue output to be produced on demand.  Commands that place the
@@ -287,9 +281,8 @@ specified in milliseconds.
 <p>Queues the specified duration of silence. Silence is specified in
 milliseconds.
 </p>
-</div>
-<div class="subsection-level-extent" id="Commands-That-Set-State">
-<h4 class="subsection"><span>14.2.3 Commands That Set State<a class="copiable-link" href="#Commands-That-Set-State"> &para;</a></span></h4>
+</li><li> <a class="anchor" id="Commands-That-Set-State"></a>Commands That Set State
+
 
 <div class="example">
 <pre class="example-preformatted">tts_reset
@@ -397,14 +390,14 @@ selected.
 
 <p><strong class="strong">Immediately</strong> set an alias in the TTS server mapping for
 example &quot;en&quot; to &quot;en<em class="math">_GB</em>&quot;. This can later be used by set<em class="math">_lang</em>.
-</p>
-</div>
+</p></li></ol>
+
 </div>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Announce.html">Manual Provenance And Contributions</a>, Previous: <a href="Emacsvox-Keyboard-Commands.html">Emacsvox Keyboard Commands.</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Integration-Maintenance.html">Integration Maintenance</a>, Up: <a href="Developer-Guide.html">Developer And Maintainer Guide</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

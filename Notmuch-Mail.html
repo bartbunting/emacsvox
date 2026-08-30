@@ -70,7 +70,6 @@ the tasks a user performs and explains when automatic feedback occurs.
 <li><a href="#Choose-fields_002c-status_002c-and-privacy" accesskey="6">Choose fields, status, and privacy</a></li>
 <li><a href="#Know-the-support-boundaries" accesskey="7">Know the support boundaries</a></li>
 <li><a href="#Troubleshoot-the-live-integration" accesskey="8">Troubleshoot the live integration</a></li>
-<li><a href="#Integration-contracts-for-maintainers" accesskey="9">Integration contracts for maintainers</a></li>
 </ul>
 <div class="section-level-extent" id="Start-Notmuch">
 <h3 class="section"><span>9.1 Start Notmuch<a class="copiable-link" href="#Start-Notmuch"> &para;</a></span></h3>
@@ -505,41 +504,9 @@ byte-code, Aural rules, sound resources, or the backend appear wrong.  Use
 presentation submitted for a Notmuch action.  These diagnostics do not query
 or modify the mail database.
 </p>
-<p>For a source checkout, use the Emacs selected by <code class="code">local.mk</code>.  Run
-<code class="code">make check-emacs</code> before diagnosing compilation, <code class="code">make bytecode</code>
-after an ordinary integration edit, and <code class="code">make bytecode-rebuild</code> after a
-branch switch or a macro or public-interface change.  A fresh Emacs must load
-the rebuilt byte-code before live verification.
-</p>
-</div>
-<div class="section-level-extent" id="Integration-contracts-for-maintainers">
-<h3 class="section"><span>9.9 Integration contracts for maintainers<a class="copiable-link" href="#Integration-contracts-for-maintainers"> &para;</a></span></h3>
-
-<a class="index-entry-id" id="index-Notmuch-integration-maintenance"></a>
-
-<p>The live module is registered as an optional package integration.  Its stable
-extension points are the Hello, Search, Show, and Tree mode hooks; Search and
-Show mode maps; public interactive commands; and public Search/Show accessors.
-Advice is installed only when a target exists and is target-aware, so a nested
-or programmatic upstream call does not claim the outer user&rsquo;s feedback.
-</p>
-<p>The Show landing and visibility paths also read renderer metadata such as
-<code class="code">:headers-overlay</code>, <code class="code">:message-visible</code>, message extents,
-<code class="code">:notmuch-part</code>, part-hidden state, and Notmuch part-button types.  Missing
-optional metadata should reduce presentation detail rather than authorize an
-operation.  Review these adapters whenever the Notmuch renderer changes.
-</p>
-<p>Each user-owned asynchronous Search process carries its own completion state
-as a process property.  The upstream sentinel renders first; Emacsvox then
-clears that property before delivering exactly one terminal result.  The
-owning buffer and process status are authoritative.  A killed owner remains
-silent, concurrent buffers cannot overwrite one another, and the global
-refresh-all path intentionally acquires no ownership.
-</p>
-<p>Run <code class="code">make notmuch-test</code> for the explicit source suite.  After current
-byte-code exists, run <code class="code">make compiled-notmuch-test</code>; it verifies the exact
-loaded <code class="code">emacsvox-notmuch.elc</code>, compiler version, and the same focused
-selector, including real displayed-window reading for both advance paths.
+<p>If you are changing the integration rather than using it, see
+<a class="ref" href="Integration-Maintenance.html">Integration Maintenance</a> for the build, test, renderer, and
+asynchronous lifecycle contracts.
 </p>
 </div>
 </div>
