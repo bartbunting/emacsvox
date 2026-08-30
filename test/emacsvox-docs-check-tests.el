@@ -287,6 +287,38 @@
         "Broken local link: docs/manual/chapters/example.org:3 -> missing.org"
         (error-message-string condition))))))
 
+(ert-deftest emacsvox-docs-check-rejects-broken-developer-links ()
+  "Maintained developer Org sources should participate in local-link checks."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (make-directory (expand-file-name "docs/developer" directory) t)
+    (with-temp-file (expand-file-name "docs/developer/example.org" directory)
+      (insert "* Developer chapter\n\n[[file:missing.org][Missing]]\n"))
+    (let* ((emacsvox-docs-check--public-org-entry-files nil)
+           (condition
+            (should-error
+             (emacsvox-docs-check--check-local-links directory))))
+      (should
+       (string-match-p
+        "Broken local link: docs/developer/example.org:3 -> missing.org"
+        (error-message-string condition))))))
+
+(ert-deftest emacsvox-docs-check-ignores-editor-transient-org-files ()
+  "Org lock and backup files should not become public documentation inputs."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((chapter-directory
+           (expand-file-name "docs/manual/chapters" directory)))
+      (make-directory chapter-directory t)
+      (with-temp-file (expand-file-name "example.org" chapter-directory)
+        (insert "* Chapter\n"))
+      (make-symbolic-link
+       "editor@host.123:456"
+       (expand-file-name ".#example.org" chapter-directory))
+      (with-temp-file (expand-file-name "#example.org#" chapter-directory)
+        (insert "* Backup\n"))
+      (let* ((emacsvox-docs-check--public-org-entry-files nil)
+             (files (emacsvox-docs-check--public-org-files directory)))
+        (should (equal files '("docs/manual/chapters/example.org")))))))
+
 (ert-deftest emacsvox-docs-check-rejects-publication-inside-source-tree ()
   "Publication must not overwrite a directory in the Emacsvox checkout."
   (emacsvox-docs-check-tests--with-directory (directory)

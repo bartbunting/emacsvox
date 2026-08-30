@@ -80,6 +80,27 @@ renderer and private fallbacks isolated and covered by compatibility tests.
 :TEXINFO_NODE: no
 :END:
 
+This section describes the reproducible source-build path, not the ordinary
+pre-built WSL2 installation.  The complete source-build prerequisite checklist
+is in
+@@texinfo:@ref{Building Omnivox For WSL2}@@.  Dependency ownership is deliberately
+split across three boundaries:
+
+#+attr_texinfo: :columns .18 .30 .52
+| Boundary | Supplied by | Dependencies |
+|---+---+---|
+| Windows and WSL host | Maintainer | WSL interoperation, ~powershell.exe~, ~wslpath~, Windows .NET Framework 4.7.2 or newer, Docker with Linux/AMD64 support, Git, Make, download and checksum tools, standard GNU shell utilities, network access, and writable Windows ~LocalAppData~. |
+| Pinned release toolchain | Emacsvox target | The immutable Rust/Debian container, MinGW cross tools and runtime DLLs, CMake, Clang and libclang, eSpeak build dependencies, Roslyn, and .NET 4.0 reference assemblies.  The exact versions and downloaded-package hashes live in ~servers/omnivox-release/toolchain.lock~. |
+| Build source | Git checkouts | The current Emacsvox checkout and the Omnivox checkout selected by ~OMNIVOX_DIR~, including Omnivox's locked Rust dependencies. |
+
+~make verify-windows-omnivox-toolchain~ prepares the cached Roslyn inputs,
+builds the Docker image, and validates this boundary before compilation.  The
+full target then builds the two 32-bit helpers deterministically, builds native
+and Windows Omnivox in the container, stages a content-addressed payload, and
+verifies the Windows-local copy.  A host Rust installation, MinGW installation,
+Visual Studio, .NET SDK, or system eSpeak installation is not an input to this
+release path.
+
 Maintainers testing tracked Emacsvox or Omnivox changes may use
 ~make windows-omnivox-dev~.  That target records both worktree-diff hashes and
 labels the result as a development build; it is not the clean release

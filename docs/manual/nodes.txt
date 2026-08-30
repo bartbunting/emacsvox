@@ -18,6 +18,8 @@ Voice-lock
 Status Information
 Speech Backends
 Supported Platform Routes
+Installing An Omnivox Release Binary
+Installing An Omnivox Windows Release Under WSL2
 Installing Omnivox From Source
 Building Omnivox For WSL2
 Selecting And Checking Omnivox

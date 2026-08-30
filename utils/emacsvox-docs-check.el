@@ -56,17 +56,33 @@
     "docs/manual/emacsvox.org")
   "Current public Org entry points whose local links must resolve.")
 
+(defconst emacsvox-docs-check--public-org-directories
+  '("docs/manual/chapters" "docs/developer")
+  "Directories containing maintained public Org sources.")
+
+(defun emacsvox-docs-check--editor-transient-p (file)
+  "Return non-nil when FILE has an editor lock or backup name."
+  (let ((name (file-name-nondirectory file)))
+    (or (string-prefix-p ".#" name)
+        (and (string-prefix-p "#" name)
+             (string-suffix-p "#" name)))))
+
 (defun emacsvox-docs-check--public-org-files (root)
   "Return public Org files below repository ROOT.
-Include every maintained manual chapter as well as the public entry points."
-  (let ((chapter-directory
-         (expand-file-name "docs/manual/chapters" root)))
-    (append
-     emacsvox-docs-check--public-org-entry-files
-     (when (file-directory-p chapter-directory)
-       (mapcar
-        (lambda (file) (file-relative-name file root))
-        (directory-files chapter-directory t "\\.org\\'" t))))))
+Include maintained user and developer chapters as well as the public entry
+points.  Ignore editor lock and backup files that are not documentation."
+  (append
+   emacsvox-docs-check--public-org-entry-files
+   (cl-loop
+    for relative-directory in emacsvox-docs-check--public-org-directories
+    for directory = (expand-file-name relative-directory root)
+    when (file-directory-p directory)
+    append
+    (mapcar
+     (lambda (file) (file-relative-name file root))
+     (cl-remove-if
+      #'emacsvox-docs-check--editor-transient-p
+      (directory-files directory t "\\.org\\'" t))))))
 
 (defconst emacsvox-docs-check--publish-manifest
   ".emacsvox-generated-html"

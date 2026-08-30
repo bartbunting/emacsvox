@@ -21,12 +21,14 @@ available before installation at
 ** Before You Begin
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Obtaining Emacsvox
-:DESCRIPTION: Prepare the tools and source checkouts.
+:DESCRIPTION: Prepare the required tools and Emacsvox checkout.
 :END:
 
 Install ~git~, ~make~, GNU Texinfo (which provides ~makeinfo~), and
-[[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].  The recommended Omnivox speech server also needs the
-Rust toolchain, Python 3, a C and C++ toolchain, CMake, and Clang with libclang.
+[[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].  Installing the Omnivox 1.4.1 release archive also
+requires ~curl~ and either ~sha256sum~ on GNU/Linux and WSL2 or ~shasum~ on
+macOS.  GNU/Linux and macOS use ~tar~; WSL2 uses ~unzip~.  It does not require
+a Rust or C++ build toolchain.
 
 To check the Emacs found by your shell, run:
 
@@ -42,21 +44,26 @@ or locate its executable.  You can check a specific executable in the same way:
 /path/to/emacs-31/bin/emacs --version
 #+end_example
 
-On GNU/Linux, install ~pkg-config~ and the ALSA development headers.  On
-macOS, install the Xcode command-line tools.  WSL2 has additional Docker and
-Windows requirements described in @@texinfo:@ref{Building Omnivox For WSL2}@@.
+The Linux x86-64 archive requires an Ubuntu 24.04-compatible glibc, libstdc++,
+libgcc, and ALSA runtime.  If the archive does not match the host, the Omnivox
+source route requires Rust, Python 3, a C and C++ toolchain, CMake, and Clang
+with libclang.  It additionally requires ~pkg-config~ and ALSA development
+headers on GNU/Linux or the Xcode command-line tools on macOS.  WSL2 has
+an easier pre-built Windows route described in
+@@texinfo:@ref{Installing An Omnivox Windows Release Under WSL2}@@.  Docker and
+Windows .NET Framework are required only for the reproducible source-build
+route in @@texinfo:@ref{Building Omnivox For WSL2}@@.
 
-Choose a permanent parent directory and clone Emacsvox and Omnivox beside one
-another:
+Choose a permanent parent directory and clone Emacsvox:
 
 #+begin_example
 cd /path/where/you/keep/source
 git clone https://github.com/bartbunting/emacsvox
-git clone https://github.com/bartbunting/omnivox
 #+end_example
 
 The Emacsvox checkout is the installation directory.  It builds in place and
-does not create a second tree to copy elsewhere.
+does not create a second tree to copy elsewhere.  Clone Omnivox beside it only
+when following the Omnivox source-build or reproducible WSL2 build route.
 
 ** Install And Check Omnivox
 :PROPERTIES:
@@ -64,24 +71,26 @@ does not create a second tree to copy elsewhere.
 :DESCRIPTION: Install the recommended server and hear its check.
 :END:
 
-On GNU/Linux or macOS, build and install Omnivox from its checkout:
+On a matching GNU/Linux x86-64 or macOS host, follow
+@@texinfo:@ref{Installing An Omnivox Release Binary}@@.  That procedure downloads and
+verifies the published 1.4.1 archive, keeps its runtime data beside the
+executable, and adds its versioned installation directory to ~PATH~.  Then run:
 
 #+begin_example
-cd /path/where/you/keep/source/omnivox
-make build
-make install
 omnivox --check
 #+end_example
 
-~make install~ normally places the executable below ~~/.cargo/bin~.  Make sure
-that directory is on ~PATH~ before running the check.  No proprietary speech
-runtime is needed for the recommended GNU/Linux or macOS route.
+Use @@texinfo:@ref{Installing Omnivox From Source}@@ instead on Linux ARM64, an
+incompatible Linux distribution, or a host whose security policy does not
+permit the unsigned macOS archive.  No proprietary speech runtime is needed
+for either GNU/Linux or macOS route.
 
-Under WSL2, build the staged Windows runtime from a clean Emacsvox checkout:
+Under WSL2, follow
+@@texinfo:@ref{Installing An Omnivox Windows Release Under WSL2}@@ to install and
+select the verified Windows x64 archive.  Then run:
 
 #+begin_example
 cd /path/where/you/keep/source/emacsvox
-make windows-omnivox
 ./servers/omnivox --check
 #+end_example
 
@@ -222,8 +231,10 @@ point and find the first command below that did not work:
   set ~EMACS~, correct ~EMACS=~ in ~local.mk~, or install Emacs 31
   or newer when the Emacs check fails.  When the speech backend is not
   executable, finish installing Omnivox, put it on ~PATH~, or set
-  ~OMNIVOX_PROGRAM~ to its absolute executable.  Under WSL2, rebuild or
-  verify the staged runtime described in @@texinfo:@ref{Building Omnivox For WSL2}@@.
+  ~OMNIVOX_PROGRAM~ to its absolute executable.  Under WSL2, confirm the
+  pre-built executable selected in
+  @@texinfo:@ref{Installing An Omnivox Windows Release Under WSL2}@@, or verify a
+  source-built staged runtime described in @@texinfo:@ref{Building Omnivox For WSL2}@@.
 - The diagnostic passes, but ~--check~ errors or is inaudible ::
 
   The speech server needs attention before Emacs configuration is relevant.

@@ -292,17 +292,20 @@
       (delete-directory directory t))))
 
 (ert-deftest emacsvox-launcher-honors-configured-omnivox-program ()
-  "A configured binary supports a Windows executable outside the staged tree."
+  "A configured binary takes precedence over the staged WSL runtime."
   (let* ((directory (make-temp-file "emacsvox configured launcher-" t))
          (server-directory (expand-file-name "servers" directory))
+         (runtime-directory
+          (expand-file-name "omnivox-bin/current" server-directory))
          (launcher (expand-file-name "omnivox" server-directory))
          (filter (expand-file-name "omnivox-log-filter" server-directory))
          (program (expand-file-name "custom-omnivox.Exe" directory))
+         (staged-program (expand-file-name "omnivox.exe" runtime-directory))
          (log-directory (expand-file-name "logs" directory))
          (process-environment (copy-sequence process-environment)))
     (unwind-protect
         (progn
-          (make-directory server-directory t)
+          (make-directory runtime-directory t)
           (copy-file
            (expand-file-name
             "servers/omnivox" emacsvox-launcher-tests--root)
@@ -313,7 +316,9 @@
            filter)
           (with-temp-file program
             (insert "#!/bin/sh\nprintf 'configured:%s\\n' \"$*\"\n"))
-          (dolist (file (list launcher filter program))
+          (with-temp-file staged-program
+            (insert "#!/bin/sh\nprintf 'staged:%s\\n' \"$*\"\n"))
+          (dolist (file (list launcher filter program staged-program))
             (set-file-modes file #o700))
           (setenv "OMNIVOX_PROGRAM" program)
           (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
