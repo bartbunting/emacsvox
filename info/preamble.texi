@@ -3,38 +3,49 @@
 @top Emacsvox
 
 @ifinfo 
-This manual combines current Emacsvox operating guidance and generated
-command reference with selected historical Emacspeak material.  Chapters
-labelled as heritage are preserved for background, not as current setup
-instructions.  For rapidly evolving Omnivox and Aural Presentation details,
-also consult @file{Readme.org} and
-@file{etc/aural-presentation-reference.org} in the source tree.
+This manual currently combines Emacsvox operating guidance, generated
+reference, and selected historical Emacspeak material.  Begin with Getting
+Started, then continue to Speech Backends and Basic Usage.  Generated
+reference and heritage are grouped separately after the current-user route;
+heritage is preserved for background, not as current setup instructions.
+For rapidly evolving Omnivox and Aural Presentation details, also consult
+@file{Readme.org} and @file{etc/aural-presentation-reference.org} in the source
+tree.
 
 The manual is divided into the following chapters:
 @end ifinfo
 
 @menu
-* Copying: Copyright.
-* Manual Provenance: Announce.
-* Emacspeak Heritage: Background.
-* Introduction: Introduction.
+Current-user path:
 * Installation: Installation.
 * Speech Backends: Speech Backends.
 * Basic Usage: Basic Usage.
+* Introduction: Introduction.
 * Audio Desktop: Audio Desktop.
 * Voice Lock: Voice Lock.
 * Using Online Help: Using Online Help.
+
+Current workflows:
 * Emacs Packages:  Emacs Packages.
 * Notmuch Mail: Notmuch Mail.
 * Agent Shell: Agent Shell.
-* Emacsvox Keymaps: Emacsvox Keymaps.
-* Emacsvox Commands And Options:  Emacsvox Commands And Options.
 * EAT Terminal Access: EAT Terminal Access.
 * Running Terminal Based Applications: Running Terminal Based Applications.
+
+Exact reference:
+* Emacsvox Keymaps: Emacsvox Keymaps.
+* Emacsvox Commands And Options:  Emacsvox Commands And Options.
 * Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
 * TTS Servers:  TTS Servers.
-* Emacspeak At Twenty (Historical): Emacspeak At Twenty.
+
+Project information:
+* Manual Provenance: Announce.
+* Copying: Copyright.
 * Acknowledgments: Acknowledgments.
+
+Heritage (not current operating guidance):
+* Emacspeak Heritage: Background.
+* Emacspeak At Twenty (Historical): Emacspeak At Twenty.
 
 Indices:
 * Concept Index: Concept Index.

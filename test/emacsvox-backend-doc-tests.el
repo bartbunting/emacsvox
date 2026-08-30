@@ -89,10 +89,13 @@
   (let* ((readme
           (emacsvox-backend-doc-tests--file-string "Readme.org"))
          (start (string-search "* Start Here: First Speech" readme))
-         (advanced (string-search "* TTS Namespace Upgrade" readme)))
+         (next (string-search "* Where To Go Next" readme))
+         (advanced
+          (string-search "* Advanced Technical And Migration Notes" readme)))
     (should start)
+    (should next)
     (should advanced)
-    (should (< start advanced))
+    (should (< start next advanced))
     (dolist
         (required
          '("make check-emacs"
@@ -105,6 +108,21 @@
            "(load-file \"/path/to/emacsvox/lisp/emacsvox-setup.el\")"
            "Recovering-From-No-Speech.html"))
       (should (string-match-p (regexp-quote required) readme)))))
+
+(ert-deftest emacsvox-first-use-manual-menu-precedes-reference-and-heritage ()
+  "The installed manual should present the finite current-user route first."
+  (let* ((menu
+          (emacsvox-backend-doc-tests--file-string "info/preamble.texi"))
+         (installation (string-search "* Installation: Installation." menu))
+         (backends
+          (string-search "* Speech Backends: Speech Backends." menu))
+         (basic (string-search "* Basic Usage: Basic Usage." menu))
+         (reference (string-search "Exact reference:" menu))
+         (heritage
+          (string-search "Heritage (not current operating guidance):" menu)))
+    (dolist (position (list installation backends basic reference heritage))
+      (should position))
+    (should (< installation backends basic reference heritage))))
 
 (ert-deftest emacsvox-first-use-manual-owns-success-and-recovery ()
   "The canonical manual should define first-speech acceptance and rollback."

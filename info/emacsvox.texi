@@ -35,27 +35,27 @@ This manual documents @strong{Emacsvox, The Complete Audio Desktop}.
 @contents
 
 @include preamble.texi
-@include copyright.texi
-@include announce.texi
-@include emacspeak-significance.texi
-@include introduction.texi
 @include install.texi
 @include backends.texi
 @include using.texi
+@include introduction.texi
 @include audio-desktop.texi
 @include voices.texi
 @include online-help.texi
 @include packages.texi
 @include notmuch.texi
 @include agent-shell.texi
-@include keys.texi
-@include docs.texi
 @include eat.texi
 @include eterm.texi
+@include keys.texi
+@include docs.texi
 @include keyboard.texi
 @include tts-server.texi
-@include inc-turning-twenty.texi
+@include announce.texi
+@include copyright.texi
 @include acknowledge.texi
+@include emacspeak-significance.texi
+@include inc-turning-twenty.texi
 @c trailer
 
 @node Concept Index

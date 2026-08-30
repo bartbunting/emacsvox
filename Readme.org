@@ -84,7 +84,31 @@ above and return to =./bin/emacsvox=.  The
 [[https://bartbunting.github.io/emacsvox/Recovering-From-No-Speech.html][no-speech recovery guide]]
 provides the complete symptom-by-symptom procedure.
 
-* TTS Namespace Upgrade
+* Where To Go Next
+
+After first speech, continue with the browser-readable
+[[https://bartbunting.github.io/emacsvox/Basic-Usage.html][Basic Usage chapter]].
+The [[https://bartbunting.github.io/emacsvox/Audio-Desktop.html][Audio Desktop]]
+and [[https://bartbunting.github.io/emacsvox/Using-Online-Help.html][Online Help]]
+chapters explain the main interaction model and how to discover commands from
+inside Emacs.  Task guides cover maintained workflows such as
+[[https://bartbunting.github.io/emacsvox/Notmuch-Mail.html][Notmuch Mail]]
+and [[https://bartbunting.github.io/emacsvox/Agent-Shell.html][Agent Shell]].
+
+For exact, machine-generated details, use the
+[[https://bartbunting.github.io/emacsvox/Emacsvox-Keymaps.html][key reference]]
+or [[https://bartbunting.github.io/emacsvox/Emacsvox-Commands-And-Options.html][command and option reference]].
+The [[https://bartbunting.github.io/emacsvox/Background.html][Emacspeak background]]
+and [[https://bartbunting.github.io/emacsvox/Emacspeak-At-Twenty.html][Emacspeak at Twenty]]
+pages are preserved heritage, not current setup instructions.
+
+* Advanced Technical And Migration Notes
+
+The remaining technical sections document migration contracts and advanced
+Omnivox and Aural Presentation facilities.  They are not required to install
+Emacsvox, obtain first speech, or begin ordinary use.
+
+** TTS Namespace Upgrade
 
 The generic speech interface now uses =tts-*= names and the
 =TTS_PROGRAM= environment variable.  This is an intentional breaking change:
@@ -93,7 +117,7 @@ Names for actual DECtalk backends, such as =dtk-exp= and =dtk-soft=, are
 unchanged.  See [[file:etc/tts-modernization.org][the migration record]] for
 the complete naming policy and migration table.
 
-* Emacsvox Namespace Upgrade
+** Emacsvox Namespace Upgrade
 
 Active project configuration uses the Emacsvox name.  Set =EMACSVOX_DIR= when
 a speech server or external utility needs the checkout root, and set
@@ -104,7 +128,7 @@ recognized.  This is an intentional breaking change; update user configuration
 to the Emacsvox names.  References to Emacspeak remain where they identify the
 upstream project, historical material, or the pinned comparison test checkout.
 
-* Omnivox And Portable Logical Voices
+** Omnivox And Portable Logical Voices
 
 Omnivox is Emacsvox's recommended multi-engine speech host for new
 installations.  Emacsvox talks to Omnivox while Omnivox uses the normal engine
@@ -293,7 +317,7 @@ a bounded cooldown and recovery probe succeeds.  Immediate =tts_say= and
 isolated-letter commands follow the current global engine policy and health
 snapshot; those commands do not carry a named logical-voice ID.
 
-* Aural Presentation
+** Aural Presentation
 
 Emacsvox can present registered meaning with speech, voices, auditory cues,
 pauses, and stereo placement.  A fixed internal =default= baseline preserves
