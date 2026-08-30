@@ -413,16 +413,6 @@ should speak the same acceptance sentence as the isolated launcher.  If
 it does not, remove or comment out the two init forms and return to the
 isolated launcher before trying another change.
 
-   Emacsvox distributions contain the ‘.el’ sources.  ‘make all’
-generates ignored ‘.elc’ files locally in the checkout; those build
-outputs are not distributed.  After an ordinary Lisp edit, run ‘make
-bytecode’.  After switching branches, pulling, or changing Lisp macros
-or public interfaces, run ‘make bytecode-rebuild’.  The non-mutating
-‘make bytecode-check’ verifies that local byte-code is current and was
-produced by the selected Emacs.  These commands matter when developing
-Emacsvox; ordinary users do not need to run them again unless the
-checkout changes.
-
 
 File: emacsvox.info,  Node: Basic Usage,  Next: Speech Backends,  Prev: Installation,  Up: Top
 
@@ -439,9 +429,9 @@ likely to need.
 * Overview::                     Understand the main kinds of Emacsvox feedback.
 * Working::                      Understand feedback while editing and completing text.
 * Reading::                      Reading chunks of information.
-* Speech System::                Controlling Speech Output.
-* Voice-lock::                   Audio Formatting.
-* Status Information::           Speaking Status Information.
+* Speech System::                Adjust speech for the way you are working.
+* Voice-lock::                   Hear document and program structure through voice changes.
+* Status Information::           Ask about the current buffer, position, and Emacs state.
 
 3.1 Key Notation And Emacs Words
 ================================
@@ -556,7 +546,7 @@ engine-independent speech controls.
 
 File: emacsvox.info,  Node: Reading,  Next: Speech System,  Prev: Working,  Up: Basic Usage
 
-3.5 Reading and Navigating
+3.5 Reading And Navigating
 ==========================
 
 Ordinary Emacs movement speaks the text crossed by point: moving by a
@@ -615,161 +605,132 @@ File: emacsvox.info,  Node: Speech System,  Next: Voice-lock,  Prev: Reading,  U
 3.6 Speech System Commands
 ==========================
 
-This section documents the main Emacsvox commands for controlling the
-text-to-speech (TTS) system.  The exact key bindings generated from the
-current keymaps appear in the *note (emacsvox-reference)Emacsvox
-Keymaps::.
+Start with the controls in this section when speech is too fast, too
+detailed, or inappropriate for the current task.  Most settings apply
+only to the current buffer.  Press ‘C-u’ before a command when its help
+says that a prefix argument changes the default for all buffers.
+
+   The generated *note (emacsvox-reference)Emacsvox Keymaps:: contains
+the complete speech keymap, including specialist server and
+text-chunking controls.
 
 * Menu:
 
-* Controlling Echo::             Character, Word and Line Echo.
-* Speech Output Control::        Indicating case, capitalization and indentation.
-* Miscellaneous::                Miscellaneous TTS Commands.
+* Controlling Echo::             Choose character, word, and line feedback while typing.
+* Speech Output Control::        Adjust rate and how textual detail is presented.
+* Miscellaneous::                Stop, silence, restart, or identify the speech server.
 
 
 File: emacsvox.info,  Node: Controlling Echo,  Next: Speech Output Control,  Up: Speech System
 
-3.6.1 Character, Word And Line Echo.
-------------------------------------
+3.6.1 Choose What Is Echoed While Typing
+----------------------------------------
 
-By default, Emacsvox speaks characters as they are typed -- this is
-called character echo; Words are spoken as they are completed -- this is
-called word echo.  Emacsvox can also optionally speak each line as it is
-typed -- this is called line echo.
+Character echo speaks each character you type.  Word echo speaks a word
+when you finish it, and optional line echo speaks a completed line.
+Toggle each kind independently to suit the buffer: character feedback
+may help in a form where accuracy matters, while word echo is often more
+fluent for prose.
 
-   Character, word and line echo can be toggled -- either in the current
-buffer -- or for all buffers (globally).  To toggle the specific echo
-functionality for all buffers, precede the specific command with ‘C-u’.
-Note that in the documentation below, this use of ‘C-u’ is indicated
-using the common Emacs terminology of *prefix arg* or *interactive
-prefix arg*.
+   The commands below affect the current buffer.  Press ‘C-u’ first to
+change the corresponding default and apply it to the current buffer.
 
 ‘C-e d k’
 
      ‘emacsvox-toggle-character-echo’
 
-     Toggle state of Emacsvox character echo.  Interactive PREFIX arg
-     means toggle the global default value, and then set the current
-     local value to the result.
+     Toggle character echo.
 ‘C-e d w’
 
      ‘emacsvox-toggle-word-echo’
 
-     Toggle state of Emacsvox word echo.  Interactive PREFIX arg means
-     toggle the global default value, and then set the current local
-     value to the result.
+     Toggle word echo.
 ‘C-e d l’
 
      ‘emacsvox-toggle-line-echo’
 
-     Toggle state of Emacsvox line echo.  Interactive PREFIX arg means
-     toggle the global default value, and then set the current local
-     value to the result.
+     Toggle line echo.
 
 
 File: emacsvox.info,  Node: Speech Output Control,  Next: Miscellaneous,  Prev: Controlling Echo,  Up: Speech System
 
-3.6.2 Setting TTS Characteristics.
-----------------------------------
+3.6.2 Adjust Rate, Punctuation, Capitals, And Indentation
+---------------------------------------------------------
 
-Emacsvox user commands can set different characteristics of the speech
-output such as speech rate and punctuations mode.
+Use these controls to match speech to the current material.  A faster
+rate may suit familiar prose; full punctuation can help when inspecting
+code or exact text.  Capitalization and indentation each have an on/off
+control and a separate choice of spoken or tonal presentation.
 
-   Emacsvox provides settings that affect how text attributes such as
-capitalization and indentation are conveyed.  Each feature has a master
-switch and a separately selected presentation, so enabling the feature
-does not force one fixed sound.  These settings can be made locally in a
-given buffer or be applied to all buffers by preceding these commands
-with ‘C-u’.
+   The commands affect the current buffer unless their interactive help
+describes a global prefix form.  Use ‘C-h k’ on a key before changing
+the global default.
 
 ‘C-e d r’
 
      ‘tts-set-rate’
 
-     Set speaking RATE for the TTS.  Interactive PREFIX arg means set
-     the global default value, and then set the current local value to
-     the result.
+     Enter a speech rate for the current buffer.
 ‘C-e d f’
 
      ‘tts-set-character-scale’
 
-     Set scale FACTOR for speech rate.  Speech rate is scaled by this
-     factor when speaking characters.  Interactive PREFIX arg means set
-     the global default value, and then set the current local value to
-     the result.
+     Set the rate multiplier used when speaking individual characters.
 ‘C-e d DIGIT’
 
      ‘tts-set-predefined-rate’
 
-     Set speech rate to one of nine predefined levels using digit keys
-     ‘0’ through ‘9’.  Interactive PREFIX arg says to set the rate
-     globally.
+     Choose one of ten predefined rates with ‘0’ through ‘9’.
 ‘C-e d p’
 
      ‘tts-set-punctuations’
 
-     Set punctuation mode to MODE.  Possible values are ‘some’, ‘all’,
-     or ‘none’.  Interactive PREFIX arg means set the global default
-     value, and then set the current local value to the result.
+     Choose ‘some’, ‘all’, or ‘none’ punctuation.
 ‘C-e d s’
 
      ‘tts-toggle-split-caps’
 
-     Toggle split caps mode.  Split caps mode is useful when reading
-     Hungarian notation in program source code.  Interactive PREFIX arg
-     means toggle the global default value, and then set the current
-     local value to the result.
+     Toggle splitting of mixed-capital identifiers into separate words.
 ‘C-e d c’
 
      ‘tts-toggle-caps’
 
-     Toggle capitalization indication.  Interactive PREFIX arg means
-     toggle the global default value, then set the current local value
-     to the result.
+     Toggle capitalization indication.
 ‘C-e d C’
 
      ‘emacsvox-set-capitalization-presentation’
 
-     Choose ‘spoken’, ‘tone’, ‘spoken-tone’, ‘custom’, or ‘none’, and
-     preview representative text.  ‘custom’ publishes facts for personal
-     Aural Presentation rules without adding built-in output.  A current
-     Omnivox server applies the selected capitalization presentation to
-     isolated letters as well as queued words; older speech servers
-     retain their engine-specific isolated-letter behavior.
+     Choose speech, a tone, both, a custom Aural rule, or no added
+     indication.  The command previews representative text before you
+     finish.
 
-   In addition, Emacsvox can convey the indentation of lines as they are
-spoken -- This is relevant when programming and is the default when
-working with program source.
+   Indentation feedback is especially useful in source code and other
+structured text.  You can switch it off independently or choose how
+indentation is presented.
 
 ‘C-e d i’
 
      ‘emacsvox-toggle-audio-indentation’
 
-     Toggle state of Emacsvox audio indentation.  Interactive PREFIX arg
-     means toggle the global default value, and then set the current
-     local value to the result.
+     Toggle indentation feedback.
 ‘C-e d I’
 
      ‘emacsvox-set-indentation-presentation’
 
-     Choose spoken column, duration-coded tone, rising-pitch tone,
-     either tone combined with speech, ‘custom’, or ‘none’.  The command
-     previews a four-column indentation sample.  Indentation tones
-     complete before the line is spoken so they do not mask its first
-     phoneme.
+     Choose a spoken column, one of the tone styles, speech and tone
+     together, a custom Aural rule, or no added indication.  The command
+     previews an indented sample before you finish.
 
 
 File: emacsvox.info,  Node: Miscellaneous,  Prev: Speech Output Control,  Up: Speech System
 
-3.6.3 Miscellaneous Speech Commands
------------------------------------
+3.6.3 Stop, Silence, Restart, Or Identify Speech
+------------------------------------------------
 
-Speech can be stopped explicitly using command ‘tts-stop’.  In normal
-navigation, replaceable speech supersedes older work in the same
-replacement domain while ordered and urgent output is preserved.  The
-speech server can be stopped and restarted for cases where the user
-wants to switch to a different server -- or in the rare case to nuke a
-runaway speech server.
+Stopping speech ends the current output without disabling future
+feedback.  Quiet mode is useful when you temporarily want to keep
+working without speech.  Restart the server after correcting a backend
+problem or changing the selected synthesizer.
 
 ‘C-e s’
 
@@ -780,76 +741,26 @@ runaway speech server.
 
      ‘tts-toggle-quiet’
 
-     Toggle state of the speech device between being quiet and
-     talkative.  Useful if you want to continue using an Emacs session
-     that has emacsvox loaded but wish to make the speech shut up.
-     Optional argument PREFIX specifies whether speech is turned off in
-     the current buffer or in all buffers.
+     Toggle speech in the current buffer.  Press ‘C-u’ first to toggle
+     it globally.
 ‘C-e C-s’
 
      ‘tts-restart’
 
-     Use this to stop the currently running speech server and restart
-     it.  Useful if you want to switch to another synthesizer while
-     emacsvox is running.  Also useful for emergency stopping of speech.
+     Stop and restart the selected speech server.
 
-   Finally, here are the remaining commands available via the TTS
-related keymap ‘C-e d’.
+   To hear which speech adapter is running, use:
 
-‘C-e d a’
-
-     ‘tts-add-cleanup-pattern’
-
-     Add this pattern to the list of repeating patterns that are cleaned
-     up.  Optional interactive prefix arg deletes this pattern if
-     previously added.  Cleaning up repeated patterns results in
-     emacsvox speaking the pattern followed by a repeat count instead of
-     speaking all the characters making up the pattern.  Thus, by adding
-     the repeating pattern '.'  (this is already added by default)
-     emacsvox will say "aw fifteen dot" when speaking the string
-     "..............." instead of "period period period period".
-‘C-e d d’
-
-     ‘tts-select-server’
-
-     Select a speech server interactively.  This will be the server that
-     is used when you next call either M-x tts-initialize or C-e C-s.
-     Argument PROGRAM specifies the speech server program.
-‘C-e d <SPACE>’
-
-     ‘tts-toggle-splitting-on-white-space’
-
-     Toggle splitting of speech on white space.  This affects the
-     internal state of emacsvox that decides if we split text purely by
-     clause boundaries, or also include whitespace.  By default,
-     emacsvox sends a clause at a time to the speech device.  This
-     produces fluent speech for normal use.  However in modes such as
-     'shell-mode' and some programming language modes, clause markers
-     appear infrequently, and this can result in large amounts of text
-     being sent to the speech device at once, making the system
-     unresponsive when asked to stop talking.  Splitting on white space
-     makes emacsvox's stop command responsive.  However, when splitting
-     on white space, the speech sounds choppy since the synthesizer is
-     getting a word at a time.
-‘C-e d <RETURN>’
-
-     ‘tts-set-chunk-separator-syntax’
-
-     Interactively set how text is split in chunks.  See the Emacs
-     documentation on syntax tables for details on how characters are
-     classified into various syntactic classes.  Argument S specifies
-     the syntax class.
 ‘C-e d V’
 
      ‘tts-speak-version’
 
-     Use this to find out which version of the TTS firmware you are
-     running.
-‘C-e d z’
+     Speak the selected adapter and its version information.
 
-     ‘emacsvox-zap-tts’
-
-     Send this command to the TTS engine directly.
+   Use ‘C-h m’ or the generated keymap reference for server selection,
+repeated-pattern cleanup, text splitting, language selection, and direct
+engine controls.  Those specialist settings are intentionally outside
+this starter guide.
 
 
 File: emacsvox.info,  Node: Voice-lock,  Next: Status Information,  Prev: Speech System,  Up: Basic Usage
@@ -857,81 +768,73 @@ File: emacsvox.info,  Node: Voice-lock,  Next: Status Information,  Prev: Speech
 3.7 Voice Lock Mode
 ===================
 
-Toggle voice lock globally with ‘M-x’ ‘global-voice-lock-mode’.  Its
-current default binding is in *note (emacsvox-reference)Emacsvox
-Keymaps::.
+Voice Lock is enabled automatically in supported buffers.  It maps faces
+and other structural text properties to speech personalities, allowing
+comments, strings, headings, links, and other elements to sound distinct
+without adding words to the document.
 
-   Voice-lock is turned on automatically in all buffers that support it
-when Emacsvox is started.
+   The exact personalities depend on the selected speech engine and your
+Aural Presentation settings.  Try Voice Lock in source code, Org, Info,
+or EWW to hear the active mode's structure.
 
-   Emacsvox can be set to disable voice lock in all of the major modes
-that support it.  To do so, insert the following statement into your
-Emacs initialization file:
+   To disable Voice Lock globally, run ‘M-x global-voice-lock-mode’ or
+add this form to your Emacs init file:
 
      (global-voice-lock-mode -1)
 
-   The characteristics of the different voice personalities used by
-voice lock mode vary according to the capabilities of the speech
-synthesizer.  The definitions applicable to the Dectalk family of
-synthesizers are contained in ‘dectalk-voices.el’, which is supplied as
-part of the Emacsvox distribution.  The Emacsvox distribution also
-contains voice definitions for many other synthesizers.
-
-   Voice-lock maps faces and other mode-provided text properties to
-speech personalities.  Integrations such as EWW use those properties and
-document structure to provide aural distinctions; the active mode and
-voice settings, not an inherited Web style sheet, determine current
-behavior.  For historical context on Aural CSS, see *note
+   The current binding and command reference are in *note
+(emacsvox-reference)Emacsvox Keymaps::.  For detailed configuration, see
+*note Voice Lock::.  For historical context on Aural CSS, see *note
 (emacsvox-heritage)Audio Formatting And Aural CSS::.
 
 
 File: emacsvox.info,  Node: Status Information,  Prev: Voice-lock,  Up: Basic Usage
 
-3.8 Status Commands
-===================
+3.8 Find Out Where You Are
+==========================
 
-These common commands answer frequent orientation questions.  Less
-common status commands are listed in the *note
-(emacsvox-reference)Emacsvox Keymaps::.
+Use these commands when you need context without moving point.  They
+repeat the last message, identify the current buffer and modes, or
+report your position.  Less common status commands are listed in the
+*note (emacsvox-reference)Emacsvox Keymaps::.
 
 ‘C-e a’
 
      ‘emacsvox-speak-message-again’
 
-     Speak the last message from Emacs once again.
+     Repeat the last Emacs message.
 ‘C-e m’
 
      ‘emacsvox-speak-mode-line’
 
-     Speak the mode-line.
+     Speak the mode line, including the buffer name and major mode.
 ‘C-e M’
 
      ‘emacsvox-speak-minor-mode-line’
 
-     Speak the minor mode-information.
+     Speak the active minor-mode information.
 ‘C-e C-x’
 
      ‘emacsvox-speak-header-line’
 
-     Speak the header-line.
+     Speak the header line when the current buffer has one.
 
 ‘C-e C-w’
 
      ‘emacsvox-speak-window-information’
 
-     Speaks information about current windows.
+     Describe the current Emacs window arrangement.
 ‘C-e f’
 
      ‘emacsvox-speak-buffer-filename’
 
-     Speak name of file being visited in current buffer.  Speak default
-     directory if invoked in a dired buffer, or when the buffer is not
-     visiting any file.
+     Speak the current file name, or the default directory when the
+     buffer is not visiting a file.
 ‘C-e C-l’
 
      ‘what-line’
 
-     reports the current line number and position in the buffer.
+     Report the current line number and position in the buffer.
 ‘C-e =’
 
      ‘emacsvox-speak-current-column’
@@ -1531,76 +1434,101 @@ aural styles.
 
 File: emacsvox.info,  Node: Using Online Help,  Next: Emacs Packages,  Prev: Voice Lock,  Up: Top
 
-7 Using Online Help With Emacsvox.
-**********************************
+7 Find Help While You Work
+**************************
 
-Emacs provides an extensive online help system for helping you learn
-about various aspects of using Emacs.  Emacsvox provides online help for
-its various extensions using this same help system.  This chapter
-explains how to use the online help facilities in order to empower you
-in discovering powerful and versatile working techniques that will make
-you more and more productive in your day to day computing.
+You do not need to memorize every Emacs or Emacsvox command.  Emacs can
+explain the key you are about to use, the modes active in the current
+buffer, and the commands and variables available in your running
+session.  This live help is usually more reliable than a copied key list
+because it includes installed packages and personal customizations.
 
-   The online help options are accessed via the ‘C-h’ prefix key, which
-must be followed by an additional letter or control character to
-designate the kind of help desired.  For example, ‘C-h t’
-‘help-with-tutorial’ visits the Emacs tutorial in a new buffer; ‘C-h i’
-‘info’ enters the Info documentation system, from which you can read
-Texinfo manuals that have been installed on your system, including the
-Emacs and Emacsvox documentation; and ‘C-h k’ ‘describe-key’ provides a
-description of the Emacs function which is bound to the next key that
-you type.  For learning about the various options that are available via
-the ‘C-h’ mechanism described above, view the online help for command
-‘help-for-help’ bound to ‘C-h C-h’ -- using what has been described so
-far, you would achieve this by pressing ‘C-h k’ followed by ‘C-h C-h’.
+   Most help commands begin with the ‘C-h’ prefix.  If you forget what
+can follow it, press ‘C-h C-h’ for ‘help-for-help’.
 
-   Emacsvox users should note that online help is typically displayed in
-a separate Emacs window.  Where it makes sense to do so, Emacsvox will
-automatically speak the displayed help.  Once you've asked for help, you
-can hear the displayed documentation as many times as you wish using
-Emacsvox command ‘emacsvox-speak-help’ bound to ‘C-e h’.  If you want to
-move through the displayed help a line at a time, switch to the buffer
-where the help is displayed -- the buffer is called ‘*Help*’.
+7.1 Ask About A Key, Command, Or Setting
+========================================
 
-   Often, in adding an auditory interface to an Emacs extension, such as
-a web browser or mail reader, Emacsvox defines additional commands and
-key bindings which enhance the functionality of the spoken feedback
-provided by the application.  This manual does not purport to document
-all such commands.  It is important, therefore, when learning to use the
-various Emacs extensions which comprise the 'audio desktop' (*note Audio
-Desktop::) that you take advantage of online help to obtain details of
-any context-specific features provided by Emacsvox.  The following two
-commands are of particular importance in this regard:
+Use the question you have to choose a help command:
 
-   • ‘C-h m’ ‘describe-mode’ explains which major and minor modes are
-     currently in effect, and lists the commands and key bindings
-     associated with them.
+   • ‘C-h k’ followed by a key runs ‘describe-key’ and explains the
+     command currently bound to that key.
 
-   • ‘C-h b’ ‘describe-bindings’ lists all of the key bindings which are
-     currently defined.
+   • ‘C-h f’ runs ‘describe-function’.  Enter a command or function name
+     to read its complete documentation.
 
-   For example, after entering Dired or EWW, use ‘C-h m’ to hear the
-mode-specific commands and every active minor mode.  Use ‘C-h b’ when
-you need the exact effective bindings, including local package maps and
-personal configuration.  These live descriptions are more reliable than
-copying a large binding table into a tutorial.
+   • ‘C-h v’ runs ‘describe-variable’.  Enter an option name to hear its
+     current value and documentation.
 
-   Emacsvox supplements the online help facilities available within
-Emacs by defining several commands of its own, as follows:
+   • ‘C-h w’ runs ‘where-is’ and reports the keys that invoke a command.
 
-   • ‘C-h C-e’ ‘emacsvox-describe-emacsvox’ presents a brief Emacsvox
+   For example, press ‘C-h k C-e l’ to ask what the current-line
+speaking key does.  If you know the command name but not its key, use
+‘C-h w’ and enter that name.
+
+7.2 Discover What The Current Buffer Can Do
+===========================================
+
+Two commands answer most questions about a buffer:
+
+   • ‘C-h m’ runs ‘describe-mode’.  It explains the major mode, active
+     minor modes, and their local commands.
+
+   • ‘C-h b’ runs ‘describe-bindings’.  It lists the effective key
+     bindings after local package maps and personal customizations are
+     applied.
+
+   After opening Dired, EWW, mail, a terminal, or another application,
+start with ‘C-h m’.  Use ‘C-h b’ when you need the exact keys available
+in that particular buffer.
+
+7.3 Read And Leave A Help Window
+================================
+
+Help usually appears in a separate ‘*Help*’ window, and Emacsvox speaks
+the most relevant initial result automatically.  Press ‘C-e h’
+‘emacsvox-speak-help’ to hear the displayed help again.
+
+   To explore the help text directly, press ‘C-x o’ to move to its
+window and use ordinary reading and navigation commands.  Press ‘q’ in
+the Help buffer when you are finished.  If another window is selected
+unexpectedly, ‘C-e C-w’ describes the current window arrangement.
+
+7.4 Learn Interactively And Read Manuals
+========================================
+
+   • ‘C-h t’ opens the interactive Emacs tutorial.  Emacsvox speaks the
+     tutorial and your navigation as you work through it.
+
+   • ‘C-h i’ opens Info, the manual reader used by Emacs and Emacsvox.
+     Press ‘d’ for the Info directory, then ‘m’ and enter ‘Emacsvox’ to
+     open this manual.
+
+   • ‘C-h C-l’ runs ‘emacsvox-learn-emacs’, a learning loop that speaks
+     the function of each key you press.  Leave the loop with ‘C-g’.
+
+   See the Emacs manual's help and Info chapters when you want to search
+manuals, follow cross-references, or keep a help buffer for later.
+
+7.5 Emacsvox-Specific Help
+==========================
+
+   • ‘C-h C-e’ ‘emacsvox-describe-emacsvox’ opens a concise Emacsvox
      overview.
 
-   • ‘C-e N’ ‘emacsvox-view-emacsvox-news’ opens the versioned Emacsvox
-     news, and ‘C-e T’ ‘emacsvox-view-emacsvox-tips’ opens the
-     productivity tips.
+   • ‘C-e N’ ‘emacsvox-view-emacsvox-news’ opens versioned project news,
+     while ‘C-e T’ ‘emacsvox-view-emacsvox-tips’ opens productivity
+     tips.
 
-   • ‘C-h C-l’ ‘emacsvox-learn-emacs’ enters a loop in which the
-     function of every key that you type is spoken; leave it with ‘C-g’.
+   • ‘C-e H’ ‘emacsvox-aural’ opens Aural Home for presentation options.
 
-   • ‘C-e H’ ‘emacsvox-aural’ opens Aural Home.  From an ordinary
-     buffer, ‘C-e E’ ‘emacsvox-aural-explain-presentation’ explains why
-     the object at point received its voices and auditory actions.
+   • ‘C-e E’ ‘emacsvox-aural-explain-presentation’ explains why the
+     object at point received its voices, sounds, and other auditory
+     actions.
+
+   The generated *note (emacsvox-reference)Emacsvox Keymaps:: records
+all default Emacsvox bindings.  Prefer ‘C-h k’, ‘C-h m’, and ‘C-h b’
+when a running package or customization changes those defaults.
 
 
 File: emacsvox.info,  Node: Emacs Packages,  Next: Notmuch Mail,  Prev: Using Online Help,  Up: Top
@@ -3590,63 +3518,63 @@ Node: Quick Installation9303
 Node: Confirming First Speech11535
 Node: Recovering From No Speech12852
 Node: Persistent Startup15493
-Node: Basic Usage17106
-Node: Overview19599
-Node: Working20976
-Ref: Working-Footnote-122318
-Ref: Working-Footnote-222411
-Node: Reading22521
-Node: Speech System24301
-Node: Controlling Echo24890
-Node: Speech Output Control26354
-Node: Miscellaneous29773
-Node: Voice-lock33298
-Node: Status Information34693
-Node: Speech Backends35968
-Node: Supported Platform Routes37265
-Node: Installing Omnivox From Source39977
-Node: Building Omnivox For WSL241836
-Node: Selecting And Checking Omnivox43419
-Node: Compatibility Speech Servers45160
-Node: Backend Diagnostics And Ownership47086
-Node: Audio Desktop49201
-Node: Desktop Objects51223
-Node: Object Oriented Desktop52050
-Node: Context-Sensitive Interaction52820
-Node: Voice Lock57947
-Node: How It All Works.60226
-Node: What this gives.61266
-Node: Using Online Help62012
-Node: Emacs Packages66009
-Node: Document Authoring67383
-Node: Structured Editing67937
-Node: Browsing Structure68920
-Node: Web Browsing69518
-Node: Messaging70353
-Node: Editing Code70851
-Node: Development Environment71366
-Node: Desktop Management71923
-Node: Personal Information Management72425
-Node: Desktop Applications72954
-Node: Notmuch Mail74503
-Ref: Notmuch fields and privacy83863
-Node: Agent Shell91334
-Node: EAT Terminal Access103824
-Node: Running Terminal Based Applications121083
-Node: Starting Term122038
-Node: Term Input Modes122877
-Node: Term Speech Feedback124037
-Node: Reviewing The Term Screen125231
-Node: Term Help And Recovery127132
-Node: Emacsvox Keyboard Commands128031
-Node: TTS Servers129437
-Node: Announce139886
-Node: Contributing140460
-Node: Authoring Guidelines141483
-Node: Credits144602
-Node: Copyright144965
-Node: Acknowledgments145534
-Node: Concept Index145679
+Node: Basic Usage16513
+Node: Overview19091
+Node: Working20468
+Ref: Working-Footnote-121810
+Ref: Working-Footnote-221903
+Node: Reading22013
+Node: Speech System23793
+Node: Controlling Echo24652
+Node: Speech Output Control25519
+Node: Miscellaneous27589
+Node: Voice-lock28711
+Node: Status Information29709
+Node: Speech Backends31102
+Node: Supported Platform Routes32399
+Node: Installing Omnivox From Source35111
+Node: Building Omnivox For WSL236970
+Node: Selecting And Checking Omnivox38553
+Node: Compatibility Speech Servers40294
+Node: Backend Diagnostics And Ownership42220
+Node: Audio Desktop44335
+Node: Desktop Objects46357
+Node: Object Oriented Desktop47184
+Node: Context-Sensitive Interaction47954
+Node: Voice Lock53081
+Node: How It All Works.55360
+Node: What this gives.56400
+Node: Using Online Help57146
+Node: Emacs Packages61200
+Node: Document Authoring62574
+Node: Structured Editing63128
+Node: Browsing Structure64111
+Node: Web Browsing64709
+Node: Messaging65544
+Node: Editing Code66042
+Node: Development Environment66557
+Node: Desktop Management67114
+Node: Personal Information Management67616
+Node: Desktop Applications68145
+Node: Notmuch Mail69694
+Ref: Notmuch fields and privacy79054
+Node: Agent Shell86525
+Node: EAT Terminal Access99015
+Node: Running Terminal Based Applications116274
+Node: Starting Term117229
+Node: Term Input Modes118068
+Node: Term Speech Feedback119228
+Node: Reviewing The Term Screen120422
+Node: Term Help And Recovery122323
+Node: Emacsvox Keyboard Commands123222
+Node: TTS Servers124628
+Node: Announce135077
+Node: Contributing135651
+Node: Authoring Guidelines136674
+Node: Credits139793
+Node: Copyright140156
+Node: Acknowledgments140725
+Node: Concept Index140870
 
 End Tag Table
 

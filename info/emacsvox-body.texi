@@ -362,16 +362,6 @@ same acceptance sentence as the isolated launcher.  If it does not@comma{} remov
 comment out the two init forms and return to the isolated launcher before
 trying another change.
 
-Emacsvox distributions contain the @code{.el} sources.  @code{make all}
-generates ignored @code{.elc} files locally in the checkout; those build
-outputs are not distributed.  After an ordinary Lisp edit@comma{} run
-@code{make bytecode}.  After switching branches@comma{} pulling@comma{} or changing Lisp
-macros or public interfaces@comma{} run @code{make bytecode-rebuild}.  The
-non-mutating @code{make bytecode-check} verifies that local byte-code is
-current and was produced by the selected Emacs.  These commands matter when
-developing Emacsvox; ordinary users do not need to run them again unless the
-checkout changes.
-
 @node Basic Usage
 @chapter Basic Usage
 
@@ -383,9 +373,9 @@ introduces the reading and speech controls you are most likely to need.
 * Overview::                     Understand the main kinds of Emacsvox feedback.
 * Working::                      Understand feedback while editing and completing text.
 * Reading::                      Reading chunks of information.
-* Speech System::                Controlling Speech Output.
-* Voice-lock::                   Audio Formatting.
-* Status Information::           Speaking Status Information.
+* Speech System::                Adjust speech for the way you are working.
+* Voice-lock::                   Hear document and program structure through voice changes.
+* Status Information::           Ask about the current buffer, position, and Emacs state.
 @end menu
 
 @section Key Notation And Emacs Words
@@ -497,7 +487,7 @@ the generated reference when you need the complete commands for a particular
 application.
 
 @node Reading
-@section Reading and Navigating
+@section Reading And Navigating
 
 Ordinary Emacs movement speaks the text crossed by point: moving by a
 character@comma{} word@comma{} line@comma{} or paragraph presents the corresponding unit.
@@ -597,19 +587,23 @@ with the command.
 
 @cindex speech settings
 
-This section documents the main Emacsvox commands for controlling the
-text-to-speech (@acronym{TTS}) system.  The exact key bindings generated from
-the current keymaps appear in the
-@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
+Start with the controls in this section when speech is too fast@comma{} too detailed@comma{}
+or inappropriate for the current task.  Most settings apply only to the current
+buffer.  Press @kbd{C-u} before a command when its help says that a prefix
+argument changes the default for all buffers.
+
+The generated
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual} contains the complete speech keymap@comma{} including specialist
+server and text-chunking controls.
 
 @menu
-* Controlling Echo::             Character, Word and Line Echo.
-* Speech Output Control::        Indicating case, capitalization and indentation.
-* Miscellaneous::                Miscellaneous TTS Commands.
+* Controlling Echo::             Choose character, word, and line feedback while typing.
+* Speech Output Control::        Adjust rate and how textual detail is presented.
+* Miscellaneous::                Stop, silence, restart, or identify the speech server.
 @end menu
 
 @node Controlling Echo
-@subsection Character@comma{} Word And Line Echo.
+@subsection Choose What Is Echoed While Typing
 
 @cindex line echo
 
@@ -617,17 +611,13 @@ the current keymaps appear in the
 
 @cindex word echo
 
-By default@comma{} Emacsvox speaks characters as they are typed  @MDash{}
-this is called character echo; Words are spoken as they are completed
- @MDash{} this is called word echo.  Emacsvox can also optionally
-speak each line as it is typed  @MDash{} this is called line echo.
+Character echo speaks each character you type.  Word echo speaks a word when
+you finish it@comma{} and optional line echo speaks a completed line.  Toggle each
+kind independently to suit the buffer: character feedback may help in a
+form where accuracy matters@comma{} while word echo is often more fluent for prose.
 
-Character@comma{} word and line echo can be toggled  @MDash{} either in the
-current buffer  @MDash{} or for all buffers (globally).  To toggle the
-specific echo functionality for all buffers@comma{} precede the specific
-command with @kbd{C-u}.  Note that in the documentation below@comma{} this
-use of @kbd{C-u} is indicated using the common Emacs terminology of
-@strong{prefix arg} or @strong{interactive prefix arg}.
+The commands below affect the current buffer.  Press @kbd{C-u} first to
+change the corresponding default and apply it to the current buffer.
 
 @table @kbd
 @item C-e d k
@@ -637,9 +627,7 @@ use of @kbd{C-u} is indicated using the common Emacs terminology of
 
 @code{emacsvox-toggle-character-echo}
 
-Toggle state of Emacsvox character echo.  Interactive PREFIX arg
-means toggle the global default value@comma{} and then set the current local
-value to the result.
+Toggle character echo.
 @item C-e d w
 @findex emacsvox-toggle-word-echo
 
@@ -647,9 +635,7 @@ value to the result.
 
 @code{emacsvox-toggle-word-echo}
 
-Toggle state of Emacsvox word echo.  Interactive PREFIX arg means
-toggle the global default value@comma{} and then set the current local value
-to the result.
+Toggle word echo.
 @item C-e d l
 @findex emacsvox-toggle-line-echo
 
@@ -657,23 +643,20 @@ to the result.
 
 @code{emacsvox-toggle-line-echo}
 
-Toggle state of Emacsvox line echo.  Interactive PREFIX arg means
-toggle the global default value@comma{} and then set the current local value
-to the result.
+Toggle line echo.
 @end table
 
 @node Speech Output Control
-@subsection Setting  TTS Characteristics.
+@subsection Adjust Rate@comma{} Punctuation@comma{} Capitals@comma{} And Indentation
 
-Emacsvox user commands can set different characteristics of the speech
-output such as speech rate and  punctuations mode.
+Use these controls to match speech to the current material.  A faster rate may
+suit familiar prose; full punctuation can help when inspecting code or exact
+text.  Capitalization and indentation each have an on/off control and a
+separate choice of spoken or tonal presentation.
 
-Emacsvox provides settings that affect how text attributes such as
-capitalization and indentation are conveyed.  Each feature has a master
-switch and a separately selected presentation@comma{} so enabling the feature does
-not force one fixed sound.
-These settings can be made locally in a given buffer or be applied to
-all buffers by preceding these commands with @kbd{C-u}.
+The commands affect the current buffer unless their interactive help describes
+a global prefix form.  Use @kbd{C-h k} on a key before changing the global
+default.
 
 @table @kbd
 @item C-e d r
@@ -683,9 +666,7 @@ all buffers by preceding these commands with @kbd{C-u}.
 
 @code{tts-set-rate}
 
-Set speaking RATE for the @acronym{TTS}.  Interactive PREFIX arg means set the
-global default value@comma{} and then set the current local value to the
-result.
+Enter a speech rate for the current buffer.
 @item C-e d f
 @findex tts-set-character-scale
 
@@ -693,10 +674,7 @@ result.
 
 @code{tts-set-character-scale}
 
-Set scale FACTOR for speech rate.  Speech rate is scaled by this
-factor when speaking characters.  Interactive PREFIX arg means set the
-global default value@comma{} and then set the current local value to the
-result.
+Set the rate multiplier used when speaking individual characters.
 @item C-e d DIGIT
 @findex tts-set-predefined-rate
 
@@ -704,9 +682,7 @@ result.
 
 @code{tts-set-predefined-rate}
 
-Set speech rate to one of nine predefined levels using digit keys
-@kbd{0} through @kbd{9}.  Interactive PREFIX arg says to set the rate
-globally.
+Choose one of ten predefined rates with @kbd{0} through @kbd{9}.
 @item C-e d p
 @findex tts-set-punctuations
 
@@ -714,9 +690,7 @@ globally.
 
 @code{tts-set-punctuations}
 
-Set punctuation mode to MODE@.  Possible values are @code{some}@comma{} @code{all}@comma{}
-or @code{none}.  Interactive PREFIX arg means set the global default value@comma{}
-and then set the current local value to the result.
+Choose @code{some}@comma{} @code{all}@comma{} or @code{none} punctuation.
 @item C-e d s
 @findex tts-toggle-split-caps
 
@@ -724,10 +698,7 @@ and then set the current local value to the result.
 
 @code{tts-toggle-split-caps}
 
-Toggle split caps mode.  Split caps mode is useful when reading
-Hungarian notation in program source code.  Interactive PREFIX arg
-means toggle the global default value@comma{} and then set the current local
-value to the result.
+Toggle splitting of mixed-capital identifiers into separate words.
 @item C-e d c
 @kindex C-e d c
 
@@ -735,8 +706,7 @@ value to the result.
 
 @code{tts-toggle-caps}
 
-Toggle capitalization indication.  Interactive PREFIX arg means toggle the
-global default value@comma{} then set the current local value to the result.
+Toggle capitalization indication.
 @item C-e d C
 @kindex C-e d C
 
@@ -744,17 +714,13 @@ global default value@comma{} then set the current local value to the result.
 
 @code{emacsvox-set-capitalization-presentation}
 
-Choose @code{spoken}@comma{} @code{tone}@comma{} @code{spoken-tone}@comma{} @code{custom}@comma{} or
-@code{none}@comma{} and preview representative text.  @code{custom} publishes facts
-for personal Aural Presentation rules without adding built-in output.  A
-current Omnivox server applies the selected capitalization presentation to
-isolated letters as well as queued words; older speech servers retain their
-engine-specific isolated-letter behavior.
+Choose speech@comma{} a tone@comma{} both@comma{} a custom Aural rule@comma{} or no added indication.
+The command previews representative text before you finish.
 @end table
 
-In addition@comma{} Emacsvox can convey the indentation of lines as they are
-spoken  @MDash{} This is relevant when programming and is the default
-when working with program source.
+Indentation feedback is especially useful in source code and other structured
+text.  You can switch it off independently or choose how indentation is
+presented.
 
 @table @kbd
 @item C-e d i
@@ -764,9 +730,7 @@ when working with program source.
 
 @code{emacsvox-toggle-audio-indentation}
 
-Toggle state of Emacsvox audio indentation.  Interactive PREFIX arg
-means toggle the global default value@comma{} and then set the current local
-value to the result.
+Toggle indentation feedback.
 @item C-e d I
 @findex emacsvox-set-indentation-presentation
 
@@ -774,21 +738,18 @@ value to the result.
 
 @code{emacsvox-set-indentation-presentation}
 
-Choose spoken column@comma{} duration-coded tone@comma{} rising-pitch tone@comma{} either tone
-combined with speech@comma{} @code{custom}@comma{} or @code{none}.  The command previews a
-four-column indentation sample.  Indentation tones complete before the line is
-spoken so they do not mask its first phoneme.
+Choose a spoken column@comma{} one of the tone styles@comma{} speech and tone together@comma{} a
+custom Aural rule@comma{} or no added indication.  The command previews an indented
+sample before you finish.
 @end table
 
 @node Miscellaneous
-@subsection Miscellaneous Speech Commands
+@subsection Stop@comma{} Silence@comma{} Restart@comma{} Or Identify Speech
 
-Speech can be stopped explicitly using command @code{tts-stop}.  In normal
-navigation@comma{} replaceable speech supersedes older work in the same replacement
-domain while ordered and urgent output is preserved.
-The speech server can be stopped and restarted for cases where the
-user wants to switch to a different server  @MDash{} or in the rare
-case to nuke a runaway speech server.
+Stopping speech ends the current output without disabling future feedback.
+Quiet mode is useful when you temporarily want to keep working without speech.
+Restart the server after correcting a backend problem or changing the selected
+synthesizer.
 
 @table @kbd
 @item C-e s
@@ -806,11 +767,8 @@ Stop speech now.
 
 @code{tts-toggle-quiet}
 
-Toggle state of the speech device between being quiet and talkative.
-Useful if you want to continue using an Emacs session that has
-emacsvox loaded but wish to make the speech shut up.  Optional
-argument PREFIX specifies whether speech is turned off in the current
-buffer or in all buffers.
+Toggle speech in the current buffer.  Press @kbd{C-u} first to toggle it
+globally.
 @item C-e C-s
 @findex tts-restart
 
@@ -818,69 +776,12 @@ buffer or in all buffers.
 
 @code{tts-restart}
 
-Use this to stop the currently running speech server and restart it.
-Useful if you want to switch to another synthesizer while emacsvox is
-running.  Also useful for emergency stopping of speech.
+Stop and restart the selected speech server.
 @end table
 
-Finally@comma{} here are the remaining commands available via the
-@acronym{TTS} related keymap @kbd{C-e d}.
+To hear which speech adapter is running@comma{} use:
 
 @table @kbd
-@item C-e d a
-@findex tts-add-cleanup-pattern
-
-@kindex C-e d a
-
-@code{tts-add-cleanup-pattern}
-
-Add this pattern to the list of repeating patterns that are cleaned
-up.  Optional interactive prefix arg deletes this pattern if
-previously added.  Cleaning up repeated patterns results in emacsvox
-speaking the pattern followed by a repeat count instead of speaking
-all the characters making up the pattern.  Thus@comma{} by adding the
-repeating pattern `.' (this is already added by default) emacsvox
-will say ``aw fifteen dot'' when speaking the string
-``@dots{}@dots{}@dots{}@dots{}@dots{}'' instead of ``period period period period''.
-@item C-e d d
-@findex tts-select-server
-
-@kindex C-e d d
-
-@code{tts-select-server}
-
-Select a speech server interactively.  This will be the server that is
-used when you next call either M-x tts-initialize or C-e C-s.
-Argument PROGRAM specifies the speech server program.
-@item C-e d @key{SPACE}
-@findex tts-toggle-splitting-on-white-space
-
-@kindex C-e d SPACE
-
-@code{tts-toggle-splitting-on-white-space}
-
-Toggle splitting of speech on white space.  This affects the internal
-state of emacsvox that decides if we split text purely by clause
-boundaries@comma{} or also include whitespace.  By default@comma{} emacsvox sends a
-clause at a time to the speech device.  This produces fluent speech
-for normal use.  However in modes such as `shell-mode' and some
-programming language modes@comma{} clause markers appear infrequently@comma{} and
-this can result in large amounts of text being sent to the speech
-device at once@comma{} making the system unresponsive when asked to stop
-talking.  Splitting on white space makes emacsvox's stop command
-responsive.  However@comma{} when splitting on white space@comma{} the speech sounds
-choppy since the synthesizer is getting a word at a time.
-@item C-e d @key{RETURN}
-@findex tts-set-chunk-separator-syntax
-
-@kindex C-e d RETURN
-
-@code{tts-set-chunk-separator-syntax}
-
-Interactively set how text is split in chunks.  See the Emacs
-documentation on syntax tables for details on how characters are
-classified into various syntactic classes.  Argument S specifies the
-syntax class.
 @item C-e d V
 @findex tts-speak-version
 
@@ -888,56 +789,44 @@ syntax class.
 
 @code{tts-speak-version}
 
-Use this to find out which version of the @acronym{TTS} firmware you
-are running.
-@item C-e d z
-@findex emacsvox-zap-tts
-
-@kindex C-e d z
-
-@code{emacsvox-zap-tts}
-
-Send this command to the @acronym{TTS} engine directly.
+Speak the selected adapter and its version information.
 @end table
+
+Use @kbd{C-h m} or the generated keymap reference for server selection@comma{}
+repeated-pattern cleanup@comma{} text splitting@comma{} language selection@comma{} and direct engine
+controls.  Those specialist settings are intentionally outside this starter
+guide.
 
 @node Voice-lock
 @section Voice Lock Mode
 
-Toggle voice lock globally with @kbd{M-x}
-@code{global-voice-lock-mode}.  Its current default binding is in
-@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
+Voice Lock is enabled automatically in supported buffers.  It maps faces and
+other structural text properties to speech personalities@comma{} allowing comments@comma{}
+strings@comma{} headings@comma{} links@comma{} and other elements to sound distinct without adding
+words to the document.
 
-Voice-lock is turned on automatically in all buffers that support it
-when Emacsvox is started.
+The exact personalities depend on the selected speech engine and your Aural
+Presentation settings.  Try Voice Lock in source code@comma{} Org@comma{} Info@comma{} or EWW to
+hear the active mode's structure.
 
-Emacsvox can be set to disable voice lock in all of the major modes
-that support it. To do so@comma{} insert the following statement into your
-Emacs initialization file:
+To disable Voice Lock globally@comma{} run @kbd{M-x global-voice-lock-mode} or
+add this form to your Emacs init file:
 
 @lisp
 (global-voice-lock-mode -1)
 @end lisp
 
-The characteristics of the different voice personalities used by voice
-lock mode vary according to the capabilities of the speech
-synthesizer. The definitions applicable to the Dectalk family of
-synthesizers are contained in @code{dectalk-voices.el}@comma{} which is
-supplied as part of the Emacsvox distribution. The Emacsvox
-distribution also contains voice definitions for many other
-synthesizers.
-
-Voice-lock maps faces and other mode-provided text properties to speech
-personalities.  Integrations such as EWW use those properties and document
-structure to provide aural distinctions; the active mode and voice settings@comma{}
-not an inherited Web style sheet@comma{} determine current behavior.  For historical
+The current binding and command reference are in
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.  For detailed configuration@comma{} see @ref{Voice Lock}.  For historical
 context on Aural CSS@comma{} see
 @ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}.
 
 @node Status Information
-@section Status  Commands
+@section Find Out Where You Are
 
-These common commands answer frequent orientation questions.  Less common
-status commands are listed in the
+Use these commands when you need context without moving point.  They repeat the
+last message@comma{} identify the current buffer and modes@comma{} or report your position.
+Less common status commands are listed in the
 @ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
 
 @table @kbd
@@ -948,7 +837,7 @@ status commands are listed in the
 
 @code{emacsvox-speak-message-again}
 
-Speak the last message from Emacs once again.
+Repeat the last Emacs message.
 @item C-e m
 @findex emacsvox-speak-mode-line
 
@@ -956,7 +845,7 @@ Speak the last message from Emacs once again.
 
 @code{emacsvox-speak-mode-line}
 
-Speak the mode-line.
+Speak the mode line@comma{} including the buffer name and major mode.
 @item C-e M
 @findex emacsvox-speak-minor-mode-line
 
@@ -964,7 +853,7 @@ Speak the mode-line.
 
 @code{emacsvox-speak-minor-mode-line}
 
-Speak the minor mode-information.
+Speak the active minor-mode information.
 @item C-e C-x
 @findex emacsvox-speak-header-line
 
@@ -972,7 +861,7 @@ Speak the minor mode-information.
 
 @code{emacsvox-speak-header-line}
 
-Speak the header-line.
+Speak the header line when the current buffer has one.
 
 @item C-e C-w
 @findex emacsvox-speak-window-information
@@ -981,7 +870,7 @@ Speak the header-line.
 
 @code{emacsvox-speak-window-information}
 
-Speaks information about current windows.
+Describe the current Emacs window arrangement.
 @item C-e f
 @findex emacsvox-speak-buffer-filename
 
@@ -989,9 +878,8 @@ Speaks information about current windows.
 
 @code{emacsvox-speak-buffer-filename}
 
-Speak name of file being visited in current buffer.
-Speak default directory if invoked in a dired buffer@comma{}
-or when the buffer is not visiting any file.
+Speak the current file name@comma{} or the default directory when the buffer is not
+visiting a file.
 @item C-e C-l
 @findex what-line
 
@@ -999,7 +887,7 @@ or when the buffer is not visiting any file.
 
 @code{what-line}
 
-reports the current line number and position in the buffer.
+Report the current line number and position in the buffer.
 @item C-e =
 @findex emacsvox-speak-current-column
 
@@ -1627,89 +1515,116 @@ Applied specified aural style to text in current region.
 @end enumerate
 
 @node Using Online Help
-@chapter Using Online Help With Emacsvox.
+@chapter Find Help While You Work
 
 @cindex Online Help
 
-Emacs provides an extensive online help system for helping you learn
-about various aspects of using Emacs.  Emacsvox provides online help
-for its various extensions using this same help system.  This chapter
-explains how to use the online help facilities in order to empower you
-in discovering powerful and versatile working techniques that will
-make you more and more productive in your day to day computing.
+You do not need to memorize every Emacs or Emacsvox command.  Emacs can explain
+the key you are about to use@comma{} the modes active in the current buffer@comma{} and the
+commands and variables available in your running session.  This live help is
+usually more reliable than a copied key list because it includes installed
+packages and personal customizations.
 
-The online help options are accessed via the @kbd{C-h} prefix key@comma{}
-which must be followed by an additional letter or control character to
-designate the kind of help desired.  For example@comma{} @kbd{C-h t}
-@code{help-with-tutorial} visits the Emacs tutorial in a new buffer;
-@kbd{C-h i} @code{info} enters the Info documentation system@comma{} from
-which you can read Texinfo manuals that have been installed on your
-system@comma{} including the Emacs and Emacsvox documentation; and @kbd{C-h k} @code{describe-key} provides a description of the Emacs function
-which is bound to the next key that you type.  For learning about the
-various options that are available via the @kbd{C-h} mechanism
-described above@comma{} view the online help for command @code{help-for-help}
-bound to @kbd{C-h C-h}  @MDash{} using what has been described so far@comma{}
-you would achieve this by pressing @kbd{C-h k} followed by @kbd{C-h C-h}.
+Most help commands begin with the @kbd{C-h} prefix.  If you forget what can
+follow it@comma{} press @kbd{C-h C-h} for @code{help-for-help}.
 
-Emacsvox users should note that online help is typically displayed in
-a separate Emacs window.  Where it makes sense to do so@comma{} Emacsvox
-will automatically speak the displayed help.  Once you've asked for
-help@comma{} you can hear the displayed documentation as many times as you
-wish using Emacsvox command @code{emacsvox-speak-help} bound to
-@kbd{C-e h}.  If you want to move through the displayed help a line at
-a time@comma{} switch to the buffer where the help is displayed  @MDash{} the
-buffer is called @code{*Help*}.
+@section Ask About A Key@comma{} Command@comma{} Or Setting
 
-Often@comma{} in adding an auditory interface to an Emacs extension@comma{} such as
-a web browser or mail reader@comma{} Emacsvox defines additional commands
-and key bindings which enhance the functionality of the spoken
-feedback provided by the application.  This manual does not purport to
-document all such commands.  It is important@comma{} therefore@comma{} when learning
-to use the various Emacs extensions which comprise the `audio desktop'
-(@pxref{Audio Desktop}) that you take advantage of online help to
-obtain details of any context-specific features provided by Emacsvox.
-The following two commands are of particular importance in this
-regard:
+Use the question you have to choose a help command:
 
 @itemize
 @item
-@kbd{C-h m} @code{describe-mode} explains which major and minor modes
-are currently in effect@comma{} and lists the commands and key bindings
-associated with them.
+@kbd{C-h k} followed by a key runs @code{describe-key} and explains the
+command currently bound to that key.
 
 @item
-@kbd{C-h b} @code{describe-bindings} lists all of the key bindings
-which are currently defined.
+@kbd{C-h f} runs @code{describe-function}.  Enter a command or function name
+to read its complete documentation.
+
+@item
+@kbd{C-h v} runs @code{describe-variable}.  Enter an option name to hear its
+current value and documentation.
+
+@item
+@kbd{C-h w} runs @code{where-is} and reports the keys that invoke a command.
 @end itemize
 
-For example@comma{} after entering Dired or EWW@comma{} use @kbd{C-h m} to hear the
-mode-specific commands and every active minor mode.  Use @kbd{C-h b} when you
-need the exact effective bindings@comma{} including local package maps and personal
-configuration.  These live descriptions are more reliable than copying a
-large binding table into a tutorial.
+For example@comma{} press @kbd{C-h k C-e l} to ask what the current-line speaking
+key does.  If you know the command name but not its key@comma{} use @kbd{C-h w} and
+enter that name.
 
-Emacsvox supplements the online help facilities available within
-Emacs by defining several commands of its own@comma{} as follows:
+@section Discover What The Current Buffer Can Do
+
+Two commands answer most questions about a buffer:
 
 @itemize
 @item
-@kbd{C-h C-e} @code{emacsvox-describe-emacsvox} presents a brief Emacsvox
+@kbd{C-h m} runs @code{describe-mode}.  It explains the major mode@comma{} active
+minor modes@comma{} and their local commands.
+
+@item
+@kbd{C-h b} runs @code{describe-bindings}.  It lists the effective key
+bindings after local package maps and personal customizations are applied.
+@end itemize
+
+After opening Dired@comma{} EWW@comma{} mail@comma{} a terminal@comma{} or another application@comma{} start with
+@kbd{C-h m}.  Use @kbd{C-h b} when you need the exact keys available in
+that particular buffer.
+
+@section Read And Leave A Help Window
+
+Help usually appears in a separate @code{*Help*} window@comma{} and Emacsvox speaks the
+most relevant initial result automatically.  Press @kbd{C-e h}
+@code{emacsvox-speak-help} to hear the displayed help again.
+
+To explore the help text directly@comma{} press @kbd{C-x o} to move to its window
+and use ordinary reading and navigation commands.  Press @kbd{q} in the Help
+buffer when you are finished.  If another window is selected unexpectedly@comma{}
+@kbd{C-e C-w} describes the current window arrangement.
+
+@section Learn Interactively And Read Manuals
+
+@itemize
+@item
+@kbd{C-h t} opens the interactive Emacs tutorial.  Emacsvox speaks the
+tutorial and your navigation as you work through it.
+
+@item
+@kbd{C-h i} opens Info@comma{} the manual reader used by Emacs and Emacsvox.
+Press @kbd{d} for the Info directory@comma{} then @kbd{m} and enter @code{Emacsvox}
+to open this manual.
+
+@item
+@kbd{C-h C-l} runs @code{emacsvox-learn-emacs}@comma{} a learning loop that speaks
+the function of each key you press.  Leave the loop with @kbd{C-g}.
+@end itemize
+
+See the Emacs manual's help and Info chapters when you want to search manuals@comma{}
+follow cross-references@comma{} or keep a help buffer for later.
+
+@section Emacsvox-Specific Help
+
+@itemize
+@item
+@kbd{C-h C-e} @code{emacsvox-describe-emacsvox} opens a concise Emacsvox
 overview.
 
 @item
-@kbd{C-e N} @code{emacsvox-view-emacsvox-news} opens the versioned Emacsvox
-news@comma{} and @kbd{C-e T} @code{emacsvox-view-emacsvox-tips} opens the productivity
-tips.
+@kbd{C-e N} @code{emacsvox-view-emacsvox-news} opens versioned project news@comma{}
+while @kbd{C-e T} @code{emacsvox-view-emacsvox-tips} opens productivity tips.
 
 @item
-@kbd{C-h C-l} @code{emacsvox-learn-emacs} enters a loop in which the function
-of every key that you type is spoken; leave it with @kbd{C-g}.
+@kbd{C-e H} @code{emacsvox-aural} opens Aural Home for presentation options.
 
 @item
-@kbd{C-e H} @code{emacsvox-aural} opens Aural Home.  From an ordinary buffer@comma{}
-@kbd{C-e E} @code{emacsvox-aural-explain-presentation} explains why the object
-at point received its voices and auditory actions.
+@kbd{C-e E} @code{emacsvox-aural-explain-presentation} explains why the
+object at point received its voices@comma{} sounds@comma{} and other auditory actions.
 @end itemize
+
+The generated
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual} records all default Emacsvox bindings.  Prefer @kbd{C-h k}@comma{}
+@kbd{C-h m}@comma{} and @kbd{C-h b} when a running package or customization
+changes those defaults.
 
 @node Emacs Packages
 @chapter Applications And Integrations

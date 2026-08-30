@@ -1,78 +1,109 @@
-* Using Online Help With Emacsvox.
+* Find Help While You Work
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Using Online Help
 :ALT_TITLE: Using Online Help
-:DESCRIPTION: Use Emacs help effectively with speech.
+:DESCRIPTION: Discover commands and solve problems with live Emacs help.
 :END:
 
 #+cindex: Online Help
 
-Emacs provides an extensive online help system for helping you learn
-about various aspects of using Emacs.  Emacsvox provides online help
-for its various extensions using this same help system.  This chapter
-explains how to use the online help facilities in order to empower you
-in discovering powerful and versatile working techniques that will
-make you more and more productive in your day to day computing.
+You do not need to memorize every Emacs or Emacsvox command.  Emacs can explain
+the key you are about to use, the modes active in the current buffer, and the
+commands and variables available in your running session.  This live help is
+usually more reliable than a copied key list because it includes installed
+packages and personal customizations.
 
-The online help options are accessed via the @@texinfo:@kbd{C-h}@@ prefix key,
-which must be followed by an additional letter or control character to
-designate the kind of help desired.  For example, @@texinfo:@kbd{C-h t}@@
-~help-with-tutorial~ visits the Emacs tutorial in a new buffer;
-@@texinfo:@kbd{C-h i}@@ ~info~ enters the Info documentation system, from
-which you can read Texinfo manuals that have been installed on your
-system, including the Emacs and Emacsvox documentation; and @@texinfo:@kbd{C-h k}@@ ~describe-key~ provides a description of the Emacs function
-which is bound to the next key that you type.  For learning about the
-various options that are available via the @@texinfo:@kbd{C-h}@@ mechanism
-described above, view the online help for command ~help-for-help~
-bound to @@texinfo:@kbd{C-h C-h}@@  @@texinfo:@MDash{}@@ using what has been described so far,
-you would achieve this by pressing @@texinfo:@kbd{C-h k}@@ followed by @@texinfo:@kbd{C-h C-h}@@.
+Most help commands begin with the @@texinfo:@kbd{C-h}@@ prefix.  If you forget what can
+follow it, press @@texinfo:@kbd{C-h C-h}@@ for ~help-for-help~.
 
-Emacsvox users should note that online help is typically displayed in
-a separate Emacs window.  Where it makes sense to do so, Emacsvox
-will automatically speak the displayed help.  Once you've asked for
-help, you can hear the displayed documentation as many times as you
-wish using Emacsvox command ~emacsvox-speak-help~ bound to
-@@texinfo:@kbd{C-e h}@@.  If you want to move through the displayed help a line at
-a time, switch to the buffer where the help is displayed  @@texinfo:@MDash{}@@ the
-buffer is called ~*Help*~.
+** Ask About A Key, Command, Or Setting
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-Often, in adding an auditory interface to an Emacs extension, such as
-a web browser or mail reader, Emacsvox defines additional commands
-and key bindings which enhance the functionality of the spoken
-feedback provided by the application.  This manual does not purport to
-document all such commands.  It is important, therefore, when learning
-to use the various Emacs extensions which comprise the `audio desktop'
-(@@texinfo:@pxref{Audio Desktop}@@) that you take advantage of online help to
-obtain details of any context-specific features provided by Emacsvox.
-The following two commands are of particular importance in this
-regard:
+Use the question you have to choose a help command:
 
-- @@texinfo:@kbd{C-h m}@@ ~describe-mode~ explains which major and minor modes
-   are currently in effect, and lists the commands and key bindings
-   associated with them.
+- @@texinfo:@kbd{C-h k}@@ followed by a key runs ~describe-key~ and explains the
+  command currently bound to that key.
 
-- @@texinfo:@kbd{C-h b}@@ ~describe-bindings~ lists all of the key bindings
-   which are currently defined.
+- @@texinfo:@kbd{C-h f}@@ runs ~describe-function~.  Enter a command or function name
+  to read its complete documentation.
 
-For example, after entering Dired or EWW, use @@texinfo:@kbd{C-h m}@@ to hear the
-mode-specific commands and every active minor mode.  Use @@texinfo:@kbd{C-h b}@@ when you
-need the exact effective bindings, including local package maps and personal
-configuration.  These live descriptions are more reliable than copying a
-large binding table into a tutorial.
+- @@texinfo:@kbd{C-h v}@@ runs ~describe-variable~.  Enter an option name to hear its
+  current value and documentation.
 
-Emacsvox supplements the online help facilities available within
-Emacs by defining several commands of its own, as follows:
+- @@texinfo:@kbd{C-h w}@@ runs ~where-is~ and reports the keys that invoke a command.
 
-- @@texinfo:@kbd{C-h C-e}@@ ~emacsvox-describe-emacsvox~ presents a brief Emacsvox
-   overview.
+For example, press @@texinfo:@kbd{C-h k C-e l}@@ to ask what the current-line speaking
+key does.  If you know the command name but not its key, use @@texinfo:@kbd{C-h w}@@ and
+enter that name.
 
-- @@texinfo:@kbd{C-e N}@@ ~emacsvox-view-emacsvox-news~ opens the versioned Emacsvox
-   news, and @@texinfo:@kbd{C-e T}@@ ~emacsvox-view-emacsvox-tips~ opens the productivity
-   tips.
+** Discover What The Current Buffer Can Do
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-- @@texinfo:@kbd{C-h C-l}@@ ~emacsvox-learn-emacs~ enters a loop in which the function
-   of every key that you type is spoken; leave it with @@texinfo:@kbd{C-g}@@.
+Two commands answer most questions about a buffer:
 
-- @@texinfo:@kbd{C-e H}@@ ~emacsvox-aural~ opens Aural Home.  From an ordinary buffer,
-   @@texinfo:@kbd{C-e E}@@ ~emacsvox-aural-explain-presentation~ explains why the object
-   at point received its voices and auditory actions.
+- @@texinfo:@kbd{C-h m}@@ runs ~describe-mode~.  It explains the major mode, active
+  minor modes, and their local commands.
+
+- @@texinfo:@kbd{C-h b}@@ runs ~describe-bindings~.  It lists the effective key
+  bindings after local package maps and personal customizations are applied.
+
+After opening Dired, EWW, mail, a terminal, or another application, start with
+@@texinfo:@kbd{C-h m}@@.  Use @@texinfo:@kbd{C-h b}@@ when you need the exact keys available in
+that particular buffer.
+
+** Read And Leave A Help Window
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Help usually appears in a separate ~*Help*~ window, and Emacsvox speaks the
+most relevant initial result automatically.  Press @@texinfo:@kbd{C-e h}@@
+~emacsvox-speak-help~ to hear the displayed help again.
+
+To explore the help text directly, press @@texinfo:@kbd{C-x o}@@ to move to its window
+and use ordinary reading and navigation commands.  Press @@texinfo:@kbd{q}@@ in the Help
+buffer when you are finished.  If another window is selected unexpectedly,
+@@texinfo:@kbd{C-e C-w}@@ describes the current window arrangement.
+
+** Learn Interactively And Read Manuals
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+- @@texinfo:@kbd{C-h t}@@ opens the interactive Emacs tutorial.  Emacsvox speaks the
+  tutorial and your navigation as you work through it.
+
+- @@texinfo:@kbd{C-h i}@@ opens Info, the manual reader used by Emacs and Emacsvox.
+  Press @@texinfo:@kbd{d}@@ for the Info directory, then @@texinfo:@kbd{m}@@ and enter ~Emacsvox~
+  to open this manual.
+
+- @@texinfo:@kbd{C-h C-l}@@ runs ~emacsvox-learn-emacs~, a learning loop that speaks
+  the function of each key you press.  Leave the loop with @@texinfo:@kbd{C-g}@@.
+
+See the Emacs manual's help and Info chapters when you want to search manuals,
+follow cross-references, or keep a help buffer for later.
+
+** Emacsvox-Specific Help
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+- @@texinfo:@kbd{C-h C-e}@@ ~emacsvox-describe-emacsvox~ opens a concise Emacsvox
+  overview.
+
+- @@texinfo:@kbd{C-e N}@@ ~emacsvox-view-emacsvox-news~ opens versioned project news,
+  while @@texinfo:@kbd{C-e T}@@ ~emacsvox-view-emacsvox-tips~ opens productivity tips.
+
+- @@texinfo:@kbd{C-e H}@@ ~emacsvox-aural~ opens Aural Home for presentation options.
+
+- @@texinfo:@kbd{C-e E}@@ ~emacsvox-aural-explain-presentation~ explains why the
+  object at point received its voices, sounds, and other auditory actions.
+
+The generated
+@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@ records all default Emacsvox bindings.  Prefer @@texinfo:@kbd{C-h k}@@,
+@@texinfo:@kbd{C-h m}@@, and @@texinfo:@kbd{C-h b}@@ when a running package or customization
+changes those defaults.
