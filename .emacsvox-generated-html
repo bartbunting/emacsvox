@@ -1,12 +1,15 @@
 Accessing-Media-Streams.html
 Acknowledgments.html
 Add_002dons.html
+Adjusting-Presentation.html
 Agent-Shell.html
 Announce.html
 Audio-Desktop.html
 Audio-Formatting-And-Aural-CSS.html
 Audio-Formatting-_002d_002d_002d-Generalizing-Aural-CSS.html
 Auditory-Icons.html
+Aural-Home.html
+Aural-Presentation.html
 Authoring-Guidelines.html
 Backend-Diagnostics-And-Ownership.html
 Background.html
@@ -52,8 +55,8 @@ Emacsvox-Keybindings-On-emacsvox_002dy_002dkeymap.html
 Emacsvox-Keybindings-On-emacsvox_002dz_002dkeymap.html
 Emacsvox-Keyboard-Commands.html
 Emacsvox-Keymaps.html
+Explaining-Presentation.html
 Function-Index.html
-How-It-All-Works_002e.html
 Installation.html
 Installing-Omnivox-From-Source.html
 Intro.html
@@ -74,6 +77,10 @@ Outline-Editing.html
 Overview.html
 Persistent-Startup.html
 Personal-Information-Management.html
+Presentation-Modalities.html
+Presentation-Model.html
+Presentation-Profiles.html
+Presentation-Troubleshooting.html
 Programming-Defensively.html
 Quick-Installation.html
 Reading.html
@@ -84,6 +91,7 @@ Running-Terminal-Based-Applications.html
 Search-replace-and-spell-check.html
 Selecting-And-Checking-Omnivox.html
 Social-Web-_002d_002d_002d-EMail-Instant-Messaging-Blogging-And-Tweeting-Using-Open-Protocols.html
+Sounds-And-Space.html
 Speech-Backends.html
 Speech-Output-Control.html
 Speech-System.html
@@ -107,8 +115,8 @@ Using-UNIX-With-Speech-Output-_002d_002d_002d-1994.html
 Variable-Index.html
 Voice-Lock.html
 Voice_002dlock.html
+Voices-And-Routing.html
 Web-Browsing.html
-What-this-gives_002e.html
 Working.html
 amixer.html
 bmk_002dmgr.html

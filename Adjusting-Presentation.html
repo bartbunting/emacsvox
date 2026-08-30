@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Adjusting Presentation (Emacsvox User Manual)</title>
+
+<meta name="description" content="Adjusting Presentation (Emacsvox User Manual)">
+<meta name="keywords" content="Adjusting Presentation (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Presentation-Profiles.html" rel="next" title="Presentation Profiles">
+<link href="Explaining-Presentation.html" rel="prev" title="Explaining Presentation">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Adjusting-Presentation">
+<div class="nav-panel">
+<p>
+Next: <a href="Presentation-Profiles.html" accesskey="n" rel="next">Save Complete Setups With Profiles</a>, Previous: <a href="Explaining-Presentation.html" accesskey="p" rel="prev">Understand Why Something Sounded That Way</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Make-A-Small-Change-Safely"><span>6.5 Make A Small Change Safely<a class="copiable-link" href="#Make-A-Small-Change-Safely"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-presentation-overrides"></a>
+
+<p>Start by choosing the narrowest tool that matches your intention:
+</p>
+<table class="multitable">
+<tbody><tr><td width="42%">Intention</td><td width="30%">Use</td><td width="28%">Scope</td></tr>
+<tr><td width="42%">Try an optional behavior supplied by Emacsvox or an integration</td><td width="30%">Presentation Options</td><td width="28%">Global configuration</td></tr>
+<tr><td width="42%">Change the voice or earcon for the object at point</td><td width="30%">Remap At Point</td><td width="28%">Personal, session, or current buffer</td></tr>
+<tr><td width="42%">Review or remove an existing precise change</td><td width="30%">Presentation Overrides</td><td width="28%">Its recorded scope</td></tr>
+<tr><td width="42%">Try rules only in the current work buffer</td><td width="30%">Current Buffer Rules</td><td width="28%">Life of that buffer</td></tr>
+<tr><td width="42%">Switch a complete reading or working setup</td><td width="30%">Presentation Profiles</td><td width="28%">Saved global configuration</td></tr>
+</tbody>
+</table>
+
+<ul class="mini-toc">
+<li><a href="#Remap-One-Item-At-Point" accesskey="1">Remap One Item At Point</a></li>
+<li><a href="#Try-A-Presentation-Option" accesskey="2">Try A Presentation Option</a></li>
+</ul>
+<div class="subsection-level-extent" id="Remap-One-Item-At-Point">
+<h4 class="subsection"><span>6.5.1 Remap One Item At Point<a class="copiable-link" href="#Remap-One-Item-At-Point"> &para;</a></span></h4>
+
+<ol class="enumerate">
+<li> Move to a representative object and press <kbd class="kbd">C-e E</kbd> so you know what
+currently controls it.
+
+</li><li> Press <kbd class="kbd">C-e H</kbd>.  Use <kbd class="kbd">r</kbd> to remap its voice or <kbd class="kbd">R</kbd> to
+remap one exact earcon.
+
+</li><li> Choose the scope deliberately:
+
+<ul class="itemize mark-bullet">
+<li>a <em class="emph">personal</em> override persists across Emacs sessions;
+</li><li>a <em class="emph">session</em> override lasts until this Emacs exits; and
+</li><li>a <em class="emph">buffer</em> override affects only the remembered live buffer.
+</li></ul>
+
+</li><li> Review the generated rule in the editor.  It is initially unwritten.  Use
+the editor&rsquo;s <kbd class="kbd">?</kbd> help, preview when offered, and press <kbd class="kbd">w</kbd> only
+when the target, scope, and change are correct.
+
+</li><li> Return to the source, repeat the action, and use <kbd class="kbd">C-e E</kbd> again to
+confirm which rule now wins.
+</li></ol>
+
+<p>Open <em class="emph">Presentation Overrides</em> to manage these changes together.  There,
+<kbd class="kbd">P</kbd> previews the complete current result, <kbd class="kbd">t</kbd> temporarily disables
+or enables a rule, and <kbd class="kbd">d</kbd> removes it.  Disabling or deleting an
+override restores the next weaker behavior; it does not leave a copied default
+behind.
+</p>
+</div>
+<div class="subsection-level-extent" id="Try-A-Presentation-Option">
+<h4 class="subsection"><span>6.5.2 Try A Presentation Option<a class="copiable-link" href="#Try-A-Presentation-Option"> &para;</a></span></h4>
+
+<p>Presentation Options are maintained additions such as richer heading feedback
+or integration-specific cues.  From Aural Home, open <em class="emph">Presentation Options</em>:
+</p>
+<ol class="enumerate">
+<li> Use <kbd class="key">TAB</kbd> or <kbd class="key">RET</kbd> on a collection to expand it.
+
+</li><li> Move to an option and press <kbd class="kbd">P</kbd> to preview it composed with the
+current configuration.  Press <kbd class="kbd">C-u P</kbd> to preview it in isolation.
+
+</li><li> Press <kbd class="kbd">t</kbd> to enable or disable it.  Press <kbd class="kbd">a</kbd> to hear
+enabled options in their exact weakest-to-strongest order.
+
+</li><li> Return to the source and test the original task.  Personal, session, and
+buffer overrides remain stronger than an enabled option.
+</li></ol>
+
+<p>Avoid reordering options merely to solve one exceptional object.  A narrow
+override usually expresses that intention more clearly.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Presentation-Profiles.html">Save Complete Setups With Profiles</a>, Previous: <a href="Explaining-Presentation.html">Understand Why Something Sounded That Way</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

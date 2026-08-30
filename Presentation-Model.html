@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Presentation Model (Emacsvox User Manual)</title>
+
+<meta name="description" content="Presentation Model (Emacsvox User Manual)">
+<meta name="keywords" content="Presentation Model (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Presentation-Modalities.html" rel="next" title="Presentation Modalities">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Presentation-Model">
+<div class="nav-panel">
+<p>
+Next: <a href="Presentation-Modalities.html" accesskey="n" rel="next">What You Can Hear</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="A-Practical-Model-Of-Presentation"><span>6.1 A Practical Model Of Presentation<a class="copiable-link" href="#A-Practical-Model-Of-Presentation"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-presentation-model"></a>
+
+<p>It helps to separate four questions that are often mixed together:
+</p>
+<table class="multitable">
+<tbody><tr><td width="22%">Layer</td><td width="30%">Question</td><td width="48%">Example</td></tr>
+<tr><td width="22%">Meaning</td><td width="30%">What happened or what is this?</td><td width="48%">A level-two heading was reached during navigation.</td></tr>
+<tr><td width="22%">Presentation</td><td width="30%">What should convey that meaning?</td><td width="48%">Speak the heading in a named voice and play a section cue first.</td></tr>
+<tr><td width="22%">Resources</td><td width="30%">Which voice and sound realize that request?</td><td width="48%">Resolve the logical voice through the active palette and the cue through the active sound pack.</td></tr>
+<tr><td width="22%">Output</td><td width="30%">What can this machine produce?</td><td width="48%">Route speech to an installed engine and apply supported spatial behavior.</td></tr>
+</tbody>
+</table>
+
+<p>An Emacs mode or Emacsvox integration supplies facts about an object or event.
+Facts can describe a role such as a heading, an event such as completion, a
+state such as unread, or an attribute such as heading level.  Context also says
+whether you are navigating, reading continuously, or receiving a state change.
+This allows the same object to receive concise feedback during continuous
+reading and more orientation when you move to it deliberately.
+</p>
+<p>Presentation rules match those facts and context.  A rule can choose a voice,
+add speech or a cue, insert a pause or tone, request spatial placement, or
+suppress something that is unhelpful.  Several matching rules can compose; a
+stronger, narrower rule need change only the relevant part rather than repeat
+the complete presentation.
+</p>
+<p>The user-visible configuration layers are:
+</p>
+<ol class="enumerate">
+<li> A fixed internal baseline that preserves established Emacsvox behavior.
+
+</li><li> Automatic integration behavior supplied by the active mode or package.
+
+</li><li> Enabled <em class="emph">Presentation Options</em> that add optional behavior in a stable
+weakest-to-strongest order.
+
+</li><li> Personal, session, and current-buffer <em class="emph">overrides</em>.  These are the strongest
+layers and are intended for precise changes.
+</li></ol>
+
+<p>A presentation profile is not another rule layer.  It records a complete set
+of selected options, sound pack, voice palette, and spatial choices so you can
+switch those choices together.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Presentation-Modalities.html">What You Can Hear</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

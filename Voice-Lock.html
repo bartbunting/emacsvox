@@ -15,9 +15,8 @@
 <link href="index.html" rel="start" title="Top">
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
-<link href="index.html" rel="up" title="Top">
-<link href="Using-Online-Help.html" rel="next" title="Using Online Help">
-<link href="Audio-Desktop.html" rel="prev" title="Audio Desktop">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Presentation-Troubleshooting.html" rel="prev" title="Presentation Troubleshooting">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -31,71 +30,74 @@ span:hover a.copiable-link {visibility: visible}
 </head>
 
 <body lang="en">
-<div class="chapter-level-extent" id="Voice-Lock">
+<div class="section-level-extent" id="Voice-Lock">
 <div class="nav-panel">
 <p>
-Next: <a href="Using-Online-Help.html" accesskey="n" rel="next">Find Help While You Work</a>, Previous: <a href="Audio-Desktop.html" accesskey="p" rel="prev">Work With The Audio Desktop</a>, Up: <a href="index.html" accesskey="u" rel="up">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="Presentation-Troubleshooting.html" accesskey="p" rel="prev">Diagnose Unexpected Presentation</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h2 class="chapter" id="Hear-Structure-With-Voice-Lock"><span>6 Hear Structure With Voice Lock<a class="copiable-link" href="#Hear-Structure-With-Voice-Lock"> &para;</a></span></h2>
+<h3 class="section" id="Voice-Lock-Compatibility"><span>6.10 Voice Lock Compatibility<a class="copiable-link" href="#Voice-Lock-Compatibility"> &para;</a></span></h3>
 
 <a class="index-entry-id" id="index-Voice-Lock"></a>
 
-<p>Voice Lock makes structure audible by applying different speech personalities
-to text properties supplied by Emacs modes and Emacsvox integrations.  Emacs
-calls its visual style labels <em class="emph">faces</em>; Emacsvox can use the same labels without
-requiring you to see them.  A comment can sound different from program code, a
-heading from body text, or a link from surrounding prose without inserting
-extra words into the document.
+<p>Voice Lock is one compatibility input to Aural Presentation, not the whole
+presentation system.  It maps established Emacs faces and <code class="code">personality</code> text
+properties to voices.  Emacs calls its visual style labels <em class="emph">faces</em>; Emacsvox
+can use those labels without requiring you to see them.
 </p>
-<p>Voice Lock is enabled automatically in supported buffers.  Its differences are
-easiest to hear in source code, Org, Info, or EWW, where the active mode already
-marks several kinds of content.
+<p>The three related policies are independent:
 </p>
+<table class="multitable">
+<tbody><tr><td width="28%">Policy</td><td width="42%">What it controls</td><td width="30%">How to inspect or change it</td></tr>
+<tr><td width="28%">Semantic presentation</td><td width="42%">Rules based on roles, events, states, and attributes supplied by integrations.</td><td width="30%">Use <kbd class="kbd">C-e E</kbd>, Presentation Options, and Overrides.</td></tr>
+<tr><td width="28%">Explicit face presentation</td><td width="42%">Aural rules that deliberately match a named Emacs face.</td><td width="30%">Run <code class="code">emacsvox-aural-toggle-face-presentation</code> or inspect it in Aural Doctor.</td></tr>
+<tr><td width="28%">Voice Lock</td><td width="42%">The historical face or personality-to-voice mapping in each buffer.</td><td width="30%">Use <kbd class="kbd">C-e d v</kbd> locally or <kbd class="kbd">C-e d C-v</kbd> globally.</td></tr>
+</tbody>
+</table>
 
-<ul class="mini-toc">
-<li><a href="#Try-It-In-One-Buffer" accesskey="1">Try It In One Buffer</a></li>
-<li><a href="How-It-All-Works_002e.html" accesskey="2">How Voice Lock Fits The Presentation</a></li>
-<li><a href="What-this-gives_002e.html" accesskey="3">Adjust Voice Lock In Small Steps</a></li>
-</ul>
-<div class="section-level-extent" id="Try-It-In-One-Buffer">
-<h3 class="section"><span>6.1 Try It In One Buffer<a class="copiable-link" href="#Try-It-In-One-Buffer"> &para;</a></span></h3>
+<p>To find out whether a distinction comes from Voice Lock:
+</p>
+<ol class="enumerate">
+<li> Move across two elements that the mode treats differently, such as a comment
+and string in source code or a heading and link in Org.
 
-<p>Move across a few elements that the mode treats differently, such as a comment
-and a string in source code or a heading and a link in Org.  Then use:
-</p>
-<dl class="table">
-<dt><kbd class="kbd">C-e d v</kbd></dt>
-<dd><p>Toggle Voice Lock in the current buffer.  Comparing the same text before and
-after the toggle is a quick way to confirm that a voice change comes from
-the established face-and-personality layer.
-</p>
-</dd>
-<dt><kbd class="kbd">C-e d C-v</kbd></dt>
-<dd><p>Toggle Voice Lock globally.  Existing and subsequently created buffers
-follow the new global state; an individual mode can still opt out when it
-starts.
-</p>
-</dd>
-<dt><kbd class="kbd">C-e E</kbd></dt>
-<dd><p>Explain the Aural Presentation at point.  The explanation can identify the
-semantic facts, matching rules, voices, sounds, and other actions that
-contributed to what you heard.
-</p></dd>
-</dl>
+</li><li> Press <kbd class="kbd">C-e d v</kbd> to toggle Voice Lock only in that buffer, then
+compare the same elements.
 
-<p>Voice Lock controls the compatibility mapping from faces and personality text
-properties to voices.  Turning it off does not disable semantic presentation,
-auditory icons, tones, or ordinary spoken status.  This distinction makes the
-current-buffer toggle a useful diagnostic rather than an all-or-nothing speech
-control.
+</li><li> Press <kbd class="kbd">C-e E</kbd> on the element.  The explanation reports the
+Voice Lock and explicit face-presentation state alongside the rules that
+contributed to the result.
+</li></ol>
+
+<p>Turning Voice Lock off removes only its compatibility voice contribution.  It
+does not disable semantic presentation, explicit face rules, auditory cues,
+tones, or ordinary spoken status.  The global Voice Lock command updates
+existing and new buffers; an individual mode can still opt out when it starts.
+Buffer-local Voice Lock state is not saved in a presentation profile.
+</p>
+<p>For new customization, prefer explanation, Aural Home, voice palettes, and
+Voice Workbench.  Older configurations can still customize a named legacy
+voice&rsquo;s <code class="code">-settings</code> option, such as <code class="code">voice-monotone-settings</code>.  Customize the
+settings option rather than a generated <code class="code">acss-...</code> voice symbol.  Historical
+background is preserved in
+<a data-manual="emacsvox-heritage" href="heritage/Audio-Formatting-And-Aural-CSS.html#Audio-Formatting-And-Aural-CSS">Audio Formatting And Aural CSS</a> in <cite class="cite">Emacspeak Heritage</cite>.
 </p>
 </div>
+<div class="section-level-extent" id="Further-Detail">
+<h3 class="section"><span>6.11 Further Detail<a class="copiable-link" href="#Further-Detail"> &para;</a></span></h3>
+
+<p>Every Aural manager and editor has live <kbd class="kbd">?</kbd> help.  The generated
+<a data-manual="emacsvox-reference" href="reference/Emacsvox-Commands-And-Options.html#Emacsvox-Commands-And-Options">Emacsvox Commands And Options</a> in <cite class="cite">Emacsvox Reference Manual</cite> records the exact public commands and options.  The source-tree file
+<code class="code">etc/aural-presentation-reference.org</code> documents the rule schema, selection
+order, queue behavior, extension contracts, and advanced data authoring.  Those
+details are useful when developing an integration or a reusable Presentation
+Option; they are not required for ordinary customization.
+</p>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Using-Online-Help.html">Find Help While You Work</a>, Previous: <a href="Audio-Desktop.html">Work With The Audio Desktop</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Previous: <a href="Presentation-Troubleshooting.html">Diagnose Unexpected Presentation</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

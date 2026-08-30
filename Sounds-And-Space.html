@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Sounds And Space (Emacsvox User Manual)</title>
+
+<meta name="description" content="Sounds And Space (Emacsvox User Manual)">
+<meta name="keywords" content="Sounds And Space (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Presentation-Troubleshooting.html" rel="next" title="Presentation Troubleshooting">
+<link href="Voices-And-Routing.html" rel="prev" title="Voices And Routing">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Sounds-And-Space">
+<div class="nav-panel">
+<p>
+Next: <a href="Presentation-Troubleshooting.html" accesskey="n" rel="next">Diagnose Unexpected Presentation</a>, Previous: <a href="Voices-And-Routing.html" accesskey="p" rel="prev">Choose Voices And Speech Engines</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Choose-Sounds-And-Spatial-Cues"><span>6.8 Choose Sounds And Spatial Cues<a class="copiable-link" href="#Choose-Sounds-And-Spatial-Cues"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-sound-packs"></a>
+
+<a class="index-entry-id" id="index-spatial-presentation"></a>
+
+<p>Presentation rules refer to auditory cues by semantic name.  A sound pack maps
+those names to concrete audio assets and can inherit missing cues from another
+pack.  This separation lets you change the overall sound character without
+rewriting every presentation rule.
+</p>
+<p>Open <em class="emph">Sound Packs</em> from Aural Home.  In the manager:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">P</kbd></dt>
+<dd><p>Audition a representative cue without activating the pack.
+</p></dd>
+<dt><kbd class="kbd">RET</kbd></dt>
+<dd><p>Browse the pack&rsquo;s individual cues and their source or fallback.
+</p></dd>
+<dt><kbd class="kbd">P or RET in the cue browser</kbd></dt>
+<dd><p>Audition the selected concrete cue.
+</p></dd>
+<dt><kbd class="kbd">v</kbd></dt>
+<dd><p>Validate the pack and report missing or invalid resources.
+</p></dd>
+<dt><kbd class="kbd">a</kbd></dt>
+<dd><p>Activate the selected pack.
+</p></dd>
+</dl>
+
+<p>Use a sound pack when you want to change a family of cues together.  Use
+<em class="emph">Remap Earcon At Point</em> or Presentation Overrides when one semantic event needs
+a different cue, suppression, or restoration.
+</p>
+<p>Spatial requests are portable descriptions rather than assumptions about one
+device.  Aural Home separates <em class="emph">Spatial Capabilities</em>, which reports what the
+current route can provide and how it falls back, from <em class="emph">Spatial Settings</em>, which
+controls output, separation, direction, speech, and cues.  Unsupported or mono
+output remains audible at the center rather than silently losing content.
+</p>
+<p>Named tones are another compact presentation resource.  They do not require a
+sampled sound file and may be used independently of the active sound pack.
+</p>
+</div>
+
+
+
+</body>
+</html>

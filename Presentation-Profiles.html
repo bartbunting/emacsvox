@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Presentation Profiles (Emacsvox User Manual)</title>
+
+<meta name="description" content="Presentation Profiles (Emacsvox User Manual)">
+<meta name="keywords" content="Presentation Profiles (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Voices-And-Routing.html" rel="next" title="Voices And Routing">
+<link href="Adjusting-Presentation.html" rel="prev" title="Adjusting Presentation">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Presentation-Profiles">
+<div class="nav-panel">
+<p>
+Next: <a href="Voices-And-Routing.html" accesskey="n" rel="next">Choose Voices And Speech Engines</a>, Previous: <a href="Adjusting-Presentation.html" accesskey="p" rel="prev">Make A Small Change Safely</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Save-Complete-Setups-With-Profiles"><span>6.6 Save Complete Setups With Profiles<a class="copiable-link" href="#Save-Complete-Setups-With-Profiles"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-presentation-profiles"></a>
+
+<p>A presentation profile records a coordinated setup: enabled Presentation
+Options and their order, the sound pack, the voice palette, and portable
+spatial settings.  This is useful for switching between focused work and
+leisure reading, between quiet and information-rich feedback, or between audio
+environments.
+</p>
+<p>To save and use a profile:
+</p>
+<ol class="enumerate">
+<li> Configure the live options, sound pack, voice palette, and spatial choices
+you want.
+
+</li><li> Open <em class="emph">Presentation Profiles</em> from Aural Home or press <kbd class="kbd">P</kbd> there.
+
+</li><li> Press <kbd class="kbd">N</kbd> to save the current live configuration as a new named
+profile.
+
+</li><li> Later, select that profile and press <kbd class="key">RET</kbd> or <kbd class="kbd">a</kbd> to apply
+its saved values.
+
+</li><li> If you deliberately change the live configuration and want the selected
+profile to adopt it, press <kbd class="kbd">w</kbd>.  If you instead want to discard the
+live differences, press <kbd class="kbd">a</kbd> to restore the saved profile; Emacsvox
+asks before replacing the diverged values.
+</li></ol>
+
+<p>Only one profile identity is selected.  <em class="emph">Active</em> means the selected profile&rsquo;s
+saved values match the live configuration.  <em class="emph">Diverged</em> means the same profile
+is still selected but the live values differ; it is a status, not an unsaved
+editor warning.
+</p>
+<p>Profiles do not copy presentation rules.  Edit rules in Presentation Options
+or Overrides.  They also do not capture buffer-local Voice Lock state or
+current-buffer rules, because those belong to an individual buffer rather than
+a global setup.
+</p>
+</div>
+
+
+
+</body>
+</html>

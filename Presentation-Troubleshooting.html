@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Presentation Troubleshooting (Emacsvox User Manual)</title>
+
+<meta name="description" content="Presentation Troubleshooting (Emacsvox User Manual)">
+<meta name="keywords" content="Presentation Troubleshooting (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Voice-Lock.html" rel="next" title="Voice Lock">
+<link href="Sounds-And-Space.html" rel="prev" title="Sounds And Space">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Presentation-Troubleshooting">
+<div class="nav-panel">
+<p>
+Next: <a href="Voice-Lock.html" accesskey="n" rel="next">Voice Lock Compatibility</a>, Previous: <a href="Sounds-And-Space.html" accesskey="p" rel="prev">Choose Sounds And Spatial Cues</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Diagnose-Unexpected-Presentation"><span>6.9 Diagnose Unexpected Presentation<a class="copiable-link" href="#Diagnose-Unexpected-Presentation"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-Aural-Doctor"></a>
+
+<p>Use the symptom to choose the shortest diagnostic route:
+</p>
+<table class="multitable">
+<tbody><tr><td width="43%">Symptom</td><td width="57%">First action</td></tr>
+<tr><td width="43%">The current object sounds wrong or too verbose</td><td width="57%">Press <kbd class="kbd">C-e E</kbd> and inspect the strongest matching rule.</td></tr>
+<tr><td width="43%">Something heard earlier was wrong</td><td width="57%">Open Recent Aural Feedback and explain its frozen record.</td></tr>
+<tr><td width="43%">A broad optional behavior is unwanted</td><td width="57%">Inspect Presentation Options and preview or disable the matching option.</td></tr>
+<tr><td width="43%">One narrow exception is unwanted</td><td width="57%">Open Presentation Overrides, preview it, then disable or remove it.</td></tr>
+<tr><td width="43%">A logical voice uses the wrong engine or physical voice</td><td width="57%">Inspect its route and engine health in Voice Workbench.</td></tr>
+<tr><td width="43%">A cue is missing or inappropriate</td><td width="57%">Validate and audition the active Sound Pack, then inspect earcon overrides.</td></tr>
+<tr><td width="43%">A saved setup no longer appears active</td><td width="57%">Check whether the selected Presentation Profile is active or diverged.</td></tr>
+<tr><td width="43%">Voice changes disappear only in some buffers</td><td width="57%">Compare Voice Lock and explicit face-presentation state.</td></tr>
+</tbody>
+</table>
+
+<p>Open <em class="emph">Aural Doctor</em> from Aural Home or press <kbd class="kbd">D</kbd> there.  The doctor
+checks live bindings, loaded source or byte-code, the compatibility baseline,
+options, profiles, personal data, sound resources, spatial fallback, and the
+speech backend.  It does not start the speech server or change settings
+automatically.  When one row offers a reviewed safe repair, press <kbd class="kbd">r</kbd>
+on that row to run it.
+</p>
+<p>Press <kbd class="kbd">?</kbd> in any Aural interface for its complete current keys.  If
+speech itself is absent rather than merely presented incorrectly, follow
+<a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend Diagnostics And Responsibilities</a>; presentation diagnostics assume that a speech route can run.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Voice-Lock.html">Voice Lock Compatibility</a>, Previous: <a href="Sounds-And-Space.html">Choose Sounds And Spatial Cues</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

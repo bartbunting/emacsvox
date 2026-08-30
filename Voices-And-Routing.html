@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Voices And Routing (Emacsvox User Manual)</title>
+
+<meta name="description" content="Voices And Routing (Emacsvox User Manual)">
+<meta name="keywords" content="Voices And Routing (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Aural-Presentation.html" rel="up" title="Aural Presentation">
+<link href="Sounds-And-Space.html" rel="next" title="Sounds And Space">
+<link href="Presentation-Profiles.html" rel="prev" title="Presentation Profiles">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Voices-And-Routing">
+<div class="nav-panel">
+<p>
+Next: <a href="Sounds-And-Space.html" accesskey="n" rel="next">Choose Sounds And Spatial Cues</a>, Previous: <a href="Presentation-Profiles.html" accesskey="p" rel="prev">Save Complete Setups With Profiles</a>, Up: <a href="Aural-Presentation.html" accesskey="u" rel="up">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Choose-Voices-And-Speech-Engines"><span>6.7 Choose Voices And Speech Engines<a class="copiable-link" href="#Choose-Voices-And-Speech-Engines"> &para;</a></span></h3>
+
+<a class="index-entry-id" id="index-voice-palettes"></a>
+
+<a class="index-entry-id" id="index-Voice-Workbench"></a>
+
+<p>Four terms help when adjusting voices:
+</p>
+<ul class="itemize mark-bullet">
+<li>A <em class="emph">logical voice</em> expresses a purpose such as boldening, annotation, or a
+heading distinction without naming one synthesizer voice.
+
+</li><li>A <em class="emph">voice palette</em> gives named logical voices portable style characteristics.
+Palettes can inherit from another palette and travel between machines.
+
+</li><li>A <em class="emph">physical voice</em> is an actual voice reported by an installed speech engine.
+Its exact identifier is usually machine-local.
+
+</li><li>An <em class="emph">engine route</em> decides which engine and physical voice realize a logical
+voice on the current machine.
+</li></ul>
+
+<p>Use the <em class="emph">Voice Palettes</em> manager when you want to choose or edit the portable
+style vocabulary.  Press <kbd class="key">RET</kbd> on a palette to browse its voices,
+preview them before editing, and use <kbd class="kbd">a</kbd> in the palette manager to
+activate a selected palette.  Built-in palettes remain intact; editing can
+create a personal copy.
+</p>
+<p>Use <em class="emph">Voice Workbench</em> when the question involves installed voices, engines, or
+routes.  Open it from Aural Home with <kbd class="kbd">W</kbd>.  Its main views are:
+</p>
+<dl class="table">
+<dt><kbd class="kbd">l</kbd></dt>
+<dd><p>Logical voices and their current routes.
+</p></dd>
+<dt><kbd class="kbd">v</kbd></dt>
+<dd><p>Physical voices reported by the engines.
+</p></dd>
+<dt><kbd class="kbd">e</kbd></dt>
+<dd><p>Engines, preference, fallback, and health.
+</p></dd>
+<dt><kbd class="kbd">s</kbd></dt>
+<dd><p>Portable styles and effects.
+</p></dd>
+</dl>
+
+<p>Press <kbd class="kbd">P</kbd> to preview a row, <kbd class="kbd">A</kbd> to preview all visible
+voices, <kbd class="kbd">B</kbd> to compare two, and <kbd class="kbd">S</kbd> to stop preview.
+Use <kbd class="kbd">a</kbd> to assign a physical voice and <kbd class="kbd">t</kbd> to tune the
+selected logical voice on its effective route.  Route changes are staged until
+you press <kbd class="kbd">w</kbd> or <kbd class="kbd">C-c C-c</kbd> to save and apply them.  Pressing
+<kbd class="kbd">q</kbd> with unsaved route changes warns that they remain staged.
+</p>
+<p>For a quick engine preference, <kbd class="kbd">C-e d e</kbd> chooses an available engine
+for the current Emacs session.  Press <kbd class="kbd">C-u</kbd> first to save the new
+preference.  Explicit logical-voice routes still take precedence.
+</p>
+<p>Judge voices in context.  The goal is usually to distinguish nearby kinds of
+content, not to identify every named voice in isolation.  Use a portable
+palette for the intended distinction and machine routing for the best local
+realization.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Sounds-And-Space.html">Choose Sounds And Spatial Cues</a>, Previous: <a href="Presentation-Profiles.html">Save Complete Setups With Profiles</a>, Up: <a href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>
