@@ -222,7 +222,7 @@ case $mode in
                 exec "$backend_program" --check
                 ;;
             *)
-                fail "--check supports the recommended Omnivox backend; see info/backends.texi for $tts_program"
+                fail "--check supports the recommended Omnivox backend; see docs/manual/chapters/speech-backends.org for $tts_program"
                 ;;
         esac
         ;;

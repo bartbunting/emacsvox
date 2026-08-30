@@ -268,7 +268,7 @@ Return the beginning of the inserted row."
   "The task guide should agree with current Notmuch maps and Customize."
   (let* ((guide
           (emacsvox-notmuch-test--repository-file-string
-           "info/notmuch.texi"))
+           "info/emacsvox-body.texi"))
          (searchable-guide
           (mapconcat #'identity (split-string (downcase guide)) " ")))
     (dolist
@@ -379,16 +379,16 @@ Return the beginning of the inserted row."
   "The manual, README, and generated reference should cross-link the guide."
   (let ((guide
          (emacsvox-notmuch-test--repository-file-string
-          "info/notmuch.texi"))
+          "info/emacsvox-body.texi"))
         (master
          (emacsvox-notmuch-test--repository-file-string
-          "info/emacsvox.texi"))
+          "docs/manual/emacsvox.org"))
         (menu
          (emacsvox-notmuch-test--repository-file-string
           "info/preamble.texi"))
         (applications
          (emacsvox-notmuch-test--repository-file-string
-          "info/applications.texi"))
+          "info/emacsvox-body.texi"))
         (generated
          (emacsvox-notmuch-test--repository-file-string
           "info/docs.texi"))
@@ -398,12 +398,15 @@ Return the beginning of the inserted row."
     (should
      (string-match-p
       "@ref{emacsvox-notmuch,,,emacsvox-reference" guide))
-    (should (string-match-p "@include notmuch.texi" master))
+    (should
+     (string-match-p
+      (regexp-quote "#+include: \"chapters/notmuch.org\"") master))
     (should (string-match-p "\\* Notmuch Mail: Notmuch Mail\\." menu))
     (should (string-match-p "@ref{Notmuch Mail}" applications))
     (should
      (string-match-p
-      "file:info/notmuch\\.texi.*Notmuch Mail workflow chapter" readme))
+      "file:docs/manual/chapters/notmuch\\.org.*Notmuch Mail workflow chapter"
+      readme))
     (should (string-match-p "@node emacsvox-notmuch" generated))
     (should
      (string-match-p "@ref{Notmuch Mail,,,emacsvox" generated))

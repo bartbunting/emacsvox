@@ -986,7 +986,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          (with-temp-buffer
            (insert-file-contents
             (expand-file-name
-             "info/agent-shell.texi"
+             "info/emacsvox-body.texi"
              emacsvox-agent-shell-test--repository-directory))
            (buffer-string))))
     (dolist

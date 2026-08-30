@@ -16,8 +16,9 @@ This checklist is sufficient to reach first speech without an installed Info
 manual.  The
 [[https://bartbunting.github.io/emacsvox/Installation.html][Getting Started manual]]
 owns the complete explanations and recovery procedure; its checked-in source
-is [[file:info/install.texi][info/install.texi]].  Texinfo remains the canonical
-manual source.  GitHub Pages serves browser-readable HTML generated from a
+is [[file:docs/manual/chapters/installation.org][the installation chapter]].  Org
+remains the canonical maintained manual source.  GitHub Pages serves
+browser-readable HTML generated from a
 committed =master= revision and committed separately on =gh-pages=; the
 checked-in Info files provide the same manual inside Emacs.
 
@@ -25,7 +26,7 @@ checked-in Info files provide the same manual inside Emacs.
    [[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].
    Install the platform prerequisites from the
    [[https://bartbunting.github.io/emacsvox/Speech-Backends.html][Speech Backends guide]]
-   ([[file:info/backends.texi][source]]) before building Omnivox.
+   ([[file:docs/manual/chapters/speech-backends.org][source]]) before building Omnivox.
 
 2. Clone Emacsvox into the permanent directory where you intend to use it.
    The checkout itself is the installation; there is no later copy step.
@@ -133,7 +134,7 @@ upstream project, historical material, or the pinned comparison test checkout.
 Omnivox is Emacsvox's recommended multi-engine speech host for new
 installations.  Emacsvox talks to Omnivox while Omnivox uses the normal engine
 for the platform: eSpeak NG on Linux, AVSpeechSynthesizer on macOS, and WinRT
-on Windows.  The [[file:info/backends.texi][Speech Backends guide]] owns the
+on Windows.  The [[file:docs/manual/chapters/speech-backends.org][Speech Backends guide]] owns the
 current support matrix, prerequisites, source installation, selection, and
 audible smoke test.
 
@@ -439,7 +440,7 @@ permission, source-block, table, viewport, and prompt-editor intent.  Agent
 Shell's visual chat glyphs are normalized to semantic labels: item speech uses
 the selected voice, visibility is announced after the item, and an empty live
 prompt says =Me. Ready for input.= without speaking decorative button names.
-The [[file:info/agent-shell.texi][Agent Shell workflow chapter]] covers setup,
+The [[file:docs/manual/chapters/agent-shell.org][Agent Shell workflow chapter]] covers setup,
 speech and privacy policy, urgent permissions, response inspection, transcript
 navigation, tables, source blocks, and recovery.  The generated
 =emacsvox-agent-shell= manual section remains the exhaustive command and option
@@ -452,7 +453,7 @@ Org exposes heading, content, list, paragraph, agenda, table, capture,
 source-edit, and export intent.  Its =org-action= attribute distinguishes
 navigation and lifecycle operations without hard-coding their presentation.
 Notmuch, Gnus, Dired, Magit, and Shell/Comint also expose workflow intent.
-The [[file:info/notmuch.texi][Notmuch Mail workflow chapter]] covers setup,
+The [[file:docs/manual/chapters/notmuch.org][Notmuch Mail workflow chapter]] covers setup,
 Hello/Search/Show tasks, asynchronous completion, keys, bounded automatic
 speech, privacy and history controls, support boundaries, and troubleshooting.
 Routine Dired next/previous-file navigation speaks the entry without the

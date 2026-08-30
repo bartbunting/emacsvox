@@ -22,6 +22,7 @@ servers/linux-outloud/atcleci.so
 servers/native-espeak/tclespeak.so
 servers/software-dtk/tcldtk.so
 .build.log
+.docs-preview/
 .cask/
 /etc/pickup-c/pickup
 /.ccls-cache/

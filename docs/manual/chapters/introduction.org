@@ -1,9 +1,10 @@
-@c $Id$
+* Introduction
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Introduction
+:DESCRIPTION: Understand the Emacsvox audio desktop.
+:END:
 
-@node Introduction
-@chapter Introduction
-
-@cindex Introduction
+#+cindex: Introduction
 
 Emacsvox is an Emacs 31-or-newer audio desktop derived from Emacspeak.  It is
 not a pixel-oriented screen reader.  It runs inside Emacs, where commands,
@@ -18,7 +19,10 @@ to the selected speech adapter.  Established direct speech paths remain
 available for compatibility, while migrated integrations can submit a complete
 Aural Presentation transaction.
 
-@section Aural Presentation
+** Aural Presentation
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 Aural Presentation separates semantic facts from their audible rendering.
 An integration records what an object or event means; providers and rules
@@ -27,12 +31,15 @@ presentation.  The fixed internal baseline preserves established Emacsvox
 feedback.  Users can compose Presentation Options, profiles, palettes, sound
 packs, spatial settings, and scoped overrides without replacing that baseline.
 
-Open Aural Home with @kbd{C-e H} or
-@code{M-x emacsvox-aural}.  Use @kbd{C-e E} to explain the presentation at
+Open Aural Home with @@texinfo:@kbd{C-e H}@@ or
+~M-x emacsvox-aural~.  Use @@texinfo:@kbd{C-e E}@@ to explain the presentation at
 point.  The generated author and lifecycle reference is
-@file{etc/aural-presentation-reference.org} in the source tree.
+~etc/aural-presentation-reference.org~ in the source tree.
 
-@section Speech Adapters And Omnivox
+** Speech Adapters And Omnivox
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 Emacsvox retains standalone speech servers for engines such as eSpeak,
 Eloquence, DECtalk, and SwiftMac.  Omnivox is the recommended multi-engine
@@ -43,19 +50,22 @@ replaceable timelines cancel only older work in the same replacement domain;
 ordered and urgent work are not placed behind the replaceable coalescing
 window.
 
-@xref{Speech Backends}, for Emacsvox's platform status, Omnivox installation,
+@@texinfo:@xref{Speech Backends}@@, for Emacsvox's platform status, Omnivox installation,
 selection, smoke test, and compatibility policy.  The Emacsvox
-@file{Readme.org} documents advanced portable voice routing.  Omnivox owns the
+~Readme.org~ documents advanced portable voice routing.  Omnivox owns the
 detailed control, helper, and presentation-timeline protocol contracts in its
 own repository.  The legacy line protocol remains supported for standalone
-and older speech servers; @xref{TTS Servers} explains the boundary between
+and older speech servers; @@texinfo:@xref{TTS Servers}@@ explains the boundary between
 those protocol families.
 
-@section Documentation Scope
+** Documentation Scope
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
 This manual includes generated command documentation as well as inherited
 Emacspeak essays and application guides.  Historical chapters are useful for
 design context but may describe software and Web services from their original
-period.  Current setup starts with @xref{Installation}; rapidly changing
-features are documented in @file{Readme.org}, @file{etc/NEWS}, and the generated
+period.  Current setup starts with @@texinfo:@xref{Installation}@@; rapidly changing
+features are documented in ~Readme.org~, ~etc/NEWS~, and the generated
 Aural Presentation reference.

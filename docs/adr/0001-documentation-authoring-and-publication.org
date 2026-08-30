@@ -1,0 +1,155 @@
+#+title: ADR 0001: Documentation Authoring, Artifacts, and Publication
+#+date: 2026-08-30
+#+startup: content
+
+* Status
+
+Accepted.
+
+* Context
+
+Emacsvox documentation combines three different concerns:
+
+1. Hand-written Texinfo and generated reference source on =master=.
+2. Generated Info files tracked on =master= so a source checkout has an
+   immediately usable offline manual.
+3. Generated HTML committed separately on =gh-pages= for public publication.
+
+Treating every documentation edit as a release operation made the authoring
+loop unnecessarily expensive.  It coupled prose changes to Emacsvox byte-code,
+complete reference regeneration, every manual format, and publication checks.
+
+Org provides a more approachable format for actively maintained prose while
+still exporting to Texinfo and Info.  Generated and historical material has
+different needs: the command and key reference is produced mechanically, and
+the heritage manual is stable Texinfo whose wholesale conversion would add
+risk without a comparable authoring benefit.
+
+The =gh-pages= branch provides useful deployment properties for this project.
+The exact public HTML is reviewable in Git, publication remains an explicit
+maintainer action, and a change to =master= cannot replace the public manual
+without a separate inspected commit.
+
+* Decision
+
+** Separate authoring from release validation
+
+Reports and internal notes require no Emacsvox build.  Maintained user-manual
+changes use =docs-org-preview= during iteration; it exports and compiles the
+manual without loading Emacsvox.  =docs-update= explicitly refreshes the
+tracked generated Texinfo body and Info artifact.  The non-mutating
+=docs-release-check= remains mandatory before review, merge, or deployment.
+
+The compatibility targets =docs-generate= and =docs-check= remain available.
+See [[file:../../Makefile][the root Makefile]] and
+[[file:../../AGENTS.md][the repository workflow]].
+
+** Use Org for maintained user-manual prose
+
+Org is the canonical format for the maintained current-user manual.  The
+master file includes one Org file per chapter.  Export produces the tracked
+=info/emacsvox-body.texi= consumed by the stable release wrapper; maintainers
+edit the Org source, not that generated body.
+
+The conversion was accepted only after the old and new manuals had identical
+node order, =Next=/=Prev=/=Up= navigation, semantic menu entries, and normalized
+non-menu content across all 63 Info nodes.  A checked node inventory now guards
+navigation compatibility, and the release gate rejects generated-body drift.
+
+The generated command and key reference remains generated Texinfo.  The
+heritage manual remains Texinfo.  Neither is to be converted merely for format
+uniformity.
+
+** Retain reviewed publication through =gh-pages=
+
+Public HTML continues to be generated from a clean, committed =master=
+worktree into a separate =gh-pages= worktree.  The publication target validates
+the source and publishes that same staged render, records provenance, and never
+commits or pushes.  A maintainer inspects, commits, and pushes =gh-pages=
+separately.
+
+GitHub CI may build documentation in an ephemeral checkout for validation.  It
+must not update tracked files, commit generated output, push =gh-pages=, or
+deploy the website.
+
+** Preserve offline Info during the transition
+
+Tracked Info files remain on =master= while Emacsvox relies on the repository
+=info/= directory for immediate offline help.  They may become untracked build
+artifacts only after all of the following are in place:
+
+- installation and release targets reliably generate and include Info output;
+- a source checkout has a documented, dependable way to build the manual;
+- Emacsvox locates installed or build-tree Info without reducing offline help;
+- CI and the release gate reproduce and validate the generated Info files.
+
+Removing tracked Info is therefore a later decision with explicit migration
+work, not an incidental consequence of adopting Org.
+
+* Consequences
+
+** Benefits
+
+- Prose and reports can be edited quickly with Org structure, folding, links,
+  lists, tables, and examples.
+- Expensive byte-code and reference work occurs only when Lisp documentation or
+  public interfaces require it.
+- Info, HTML, and future formats can share one canonical source for converted
+  chapters.
+- The exact deployed site remains reviewable and reversible on =gh-pages=.
+- Offline documentation remains available throughout the migration.
+
+** Costs and risks
+
+- Org-to-Texinfo output depends on the selected Emacs and Org exporter, so the
+  release toolchain must be pinned or its output normalized.
+- The tracked Texinfo body is generated output and must be updated with its Org
+  source change.
+- Texinfo-specific indexes, node topology, and cross-manual references require
+  explicit export conventions and regression checks.
+- Maintainers must continue the separate =gh-pages= inspection, commit, and
+  push step.
+
+* Alternatives considered
+
+** Keep all hand-written documentation in Texinfo
+
+This avoids conversion work but retains the least approachable authoring format
+for the material that changes most often.
+
+** Convert every manual and generated reference to Org
+
+Rejected.  Generated reference source gains no editing benefit, and converting
+stable heritage material introduces unnecessary risk.
+
+** Deploy Pages directly from GitHub Actions
+
+Not selected.  It would remove the generated branch and manual publication
+step, but it would also remove the repository's reviewed-deployment boundary.
+The =gh-pages= branch better matches the desired publication control.
+
+** Stop tracking Info immediately
+
+Rejected until installation, release packaging, and source-checkout help can
+provide the same dependable offline manual.
+
+* Follow-up
+
+1. Keep the Org exporter and node-compatibility behavior covered by focused
+   tests.
+2. Keep CI reproducing both the generated Texinfo body and checked Info output.
+3. Review the rendered manual with Emacs Info and a browser when changing
+   navigation or exporter conventions.
+4. Revisit tracked Info only after the transition conditions above are met.
+
+* Implementation status
+
+The canonical master now lives at
+[[file:../manual/emacsvox.org][docs/manual/emacsvox.org]], with maintained prose
+split below =docs/manual/chapters/=.  =docs-org-preview= lints and renders an
+isolated preview below =.docs-preview/org-manual/=.  =docs-org-check= verifies
+the generated release body and the accepted
+[[file:../manual/nodes.txt][node inventory]] and is a prerequisite of release
+validation and publication.  Generated reference and heritage manuals remain
+Texinfo, and public HTML still publishes through the reviewed =gh-pages=
+worktree.

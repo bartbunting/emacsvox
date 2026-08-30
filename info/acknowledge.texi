@@ -1,6 +1,0 @@
-@c $Id$
-@node Acknowledgments
-@chapter Acknowledgments
-
-
-Thanks.

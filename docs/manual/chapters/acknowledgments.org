@@ -1,0 +1,7 @@
+* Acknowledgments
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Acknowledgments
+:DESCRIPTION: Acknowledge project contributors.
+:END:
+
+Thanks.

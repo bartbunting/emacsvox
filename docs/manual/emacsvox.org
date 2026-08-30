@@ -1,0 +1,35 @@
+#+title: Emacsvox User Manual
+#+subtitle: The Complete Audio Desktop
+#+author: T. V. Raman
+#+language: en
+#+startup: content
+#+options: toc:t num:t creator:nil
+#+texinfo_filename: emacsvox-org.info
+#+texinfo_dir_category: Accessibility
+#+texinfo_dir_name: Emacsvox Org Manual
+#+texinfo_dir_desc: Speech-enabled audio desktop.
+#+texinfo_header: @include style.texi
+#+macro: kbd (eval (org-texinfo-kbd-macro $1))
+
+#+begin_comment
+This is the canonical source for the hand-maintained Emacsvox user
+manual.  Generated reference and heritage manuals remain Texinfo.
+#+end_comment
+
+#+include: "chapters/installation.org"
+#+include: "chapters/speech-backends.org"
+#+include: "chapters/basic-usage.org"
+#+include: "chapters/introduction.org"
+#+include: "chapters/audio-desktop.org"
+#+include: "chapters/voice-lock.org"
+#+include: "chapters/online-help.org"
+#+include: "chapters/applications.org"
+#+include: "chapters/notmuch.org"
+#+include: "chapters/agent-shell.org"
+#+include: "chapters/eat.org"
+#+include: "chapters/term.org"
+#+include: "chapters/keyboard.org"
+#+include: "chapters/tts-server.org"
+#+include: "chapters/provenance.org"
+#+include: "chapters/copyright.org"
+#+include: "chapters/acknowledgments.org"

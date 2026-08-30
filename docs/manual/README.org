@@ -1,0 +1,59 @@
+#+title: Emacsvox User Manual Authoring
+#+startup: content
+
+* Source layout
+
+[[file:emacsvox.org][emacsvox.org]] is the canonical master for the maintained
+Emacsvox user manual.  It supplies document metadata and includes the chapter
+files below [[file:chapters/][chapters/]].  Edit those Org files; do not edit the generated
+=info/emacsvox-body.texi= or =info/emacsvox.info= files directly.
+
+The generated command/key reference and the historical heritage manuals remain
+Texinfo.  They do not benefit from hand conversion to Org.
+
+* Fast authoring loop
+
+Edit one or more Org chapters, then run:
+
+#+begin_example
+make docs-org-preview
+#+end_example
+
+This uses the Emacs selected by =local.mk=, runs Org lint, exports the complete
+manual, and builds Info plus a single-page HTML preview.  It does not load or
+compile Emacsvox.  Ignored output lives below =.docs-preview/org-manual/=.
+
+When the text is ready, update the tracked export and Info artifact:
+
+#+begin_example
+make docs-update
+#+end_example
+
+Before review, merge, or publication, run the non-mutating release gate:
+
+#+begin_example
+make docs-release-check
+#+end_example
+
+That gate independently exports Org, rejects a stale generated Texinfo body,
+checks the accepted Info-node inventory in [[file:nodes.txt][nodes.txt]], and runs the
+full documentation validation.  Public HTML continues through the separately
+reviewed =gh-pages= worktree.
+
+* Export conventions
+
+- =TEXINFO_NODE_NAME= preserves a stable Info node name when it differs from
+  the Org heading.
+- =TEXINFO_NODE: no= creates a structural heading without an Info node.
+- =ALT_TITLE= gives a friendly printed heading while preserving the node name.
+- =DESCRIPTION= supplies an Info menu description.
+- Normal Org lists, tables, links, examples, source blocks, emphasis, and
+  inline code are preferred over raw Texinfo.
+- The =kbd= macro preserves keyboard notation that Org does not represent
+  natively.
+- Raw Texinfo is limited to compatibility cases such as cross-manual Info
+  references and index types not directly represented by Org.
+
+Changing an accepted node name or removing a node is a navigation compatibility
+change: update =nodes.txt= deliberately and review inbound links before doing
+so.

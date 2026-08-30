@@ -1,0 +1,41 @@
+* Emacsvox Keyboard Commands.
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Emacsvox Keyboard Commands
+:ALT_TITLE: Emacsvox Keyboard Commands
+:DESCRIPTION: Understand the Emacsvox key hierarchy.
+:END:
+
+#+cindex: Emacs Keyboard Commands
+
+This chapter explains how to discover the bindings that are current in
+your Emacs session.  For the small starter set, see @@texinfo:@ref{Basic Usage}@@.
+For the complete generated default bindings, see
+@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+
+Most Emacsvox commands use one of these two default prefixes:
+
+#+attr_texinfo: :indic kbd :compact t
+- C-e ::
+
+  The main Emacsvox keymap.
+- C-e d ::
+
+  The text-to-speech keymap.
+
+Emacsvox also defines integration-specific and optional convenience
+maps.  Which of those keys are available depends on the current major
+and minor modes, your window system or terminal, and your configuration;
+therefore this conceptual chapter does not duplicate their inventories.
+
+Use Emacs Help to inspect the effective result:
+
+- @@texinfo:@kbd{C-h m}@@ describes the modes and their bindings in the current buffer.
+
+- @@texinfo:@kbd{C-h k}@@, followed by a key, describes the command that key invokes.
+
+- After typing a prefix such as @@texinfo:@kbd{C-e}@@, type @@texinfo:@kbd{C-h}@@ to display that
+   prefix's current bindings.
+
+If live Help and this manual differ, live Help describes your running
+session.  Check customizations first, then compare the generated defaults
+in the @@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.

@@ -1,0 +1,690 @@
+* Basic Usage.
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Basic Usage
+:ALT_TITLE: Basic Usage
+:DESCRIPTION: Learn the basic Emacsvox interaction model.
+:END:
+
+This chapter gives a short, task-oriented introduction to Emacsvox.
+For the complete generated key reference, see
+@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+Use @@texinfo:@kbd{C-h m}@@ to inspect the modes and bindings active in the current
+buffer, or @@texinfo:@kbd{C-h k}@@ followed by a key to ask Emacs what that key does.
+These sections describe the speech-enabling extensions, but are not a
+substitute for the Emacs manual.
+
+All Emacs navigation and editing commands have been speech enabled.
+Thus, moving to the next or previous word, line or paragraph results
+in the text around point being spoken.  Exactly how much text is
+spoken is determined by the amount by which you moved.
+
+In addition, Emacsvox provides  basic reading functions that can be
+invoked to listen to chunks of text without moving.
+
+** Emacsvox Overview
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Overview
+:ALT_TITLE: Overview
+:DESCRIPTION: Basic Overview.
+:END:
+
+Emacsvox provides a small number of core services around which the
+remainder of the audio interface is constructed.  These essential
+features of the software are briefly outlined in the following
+paragraphs; the commands by which they can be controlled will be
+described later in the manual.
+
+Apart from providing a fluent spoken interface to all of Emacs' basic
+editing functions, Emacsvox also includes software modules which add
+speech feedback to a range of applications that can be run from within
+Emacs. In this sense, Emacsvox amounts to much more than a talking
+text editor; indeed, it can more aptly be characterized as a true
+``audio desktop'', in which speech is treated as a first-class output modality.
+
+Emacsvox implements a special minor mode, known as ``voice lock mode''
+(@@texinfo:@pxref{Voice-lock}@@) which uses distinct speech characteristics to
+provide aural highlighting of specific textual constructs, such as
+comments in program code, quoted strings and reserved words @@texinfo:@xref{Voice Lock}@@. This facility is further extended in the supported ~EWW~ Web
+browser, where semantic and structural distinctions captured by HTML markup
+can be communicated efficiently; see @@texinfo:@ref{Web Browsing}@@.
+
+It is often desirable to exercise control over the pronunciation of a
+word (E.G. a technical term or a reserved word in a programming
+language) within specific contexts. Emacsvox maintains pronunciation
+dictionaries for this purpose, which may be customized by the
+user. Moreover, individual dictionaries can be activated selectively,
+depending for example on the current major mode or the name of the
+file which is being visited; see
+@@texinfo:@ref{emacsvox-pronounce,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+
+In addition to spoken feedback, Emacsvox can generate ``auditory
+icons''  @@texinfo:@MDash{}@@ short sound cues which alert the user to significant
+events, for example the opening or deletion of a file, the completion
+of an action, the arrival of an electronic mail message or the
+creation of a completion buffer. Sound cues act as a supplement to the
+spoken interface, and are especially valuable to the experienced user
+in facilitating rapid interaction. Note that in order to support
+auditory icons, the computer must be equipped with sound hardware for
+which the operating system has been correctly configured; see
+@@texinfo:@ref{emacsvox-sounds,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+
+** Using Emacs Buffers
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Working
+:ALT_TITLE: Working
+:DESCRIPTION: Working in Emacsvox.
+:END:
+
+While typing in an Emacs buffer, hitting space speaks the recently
+typed word.  I use completion all the time; so Emacsvox will speak
+the completion just inserted as well as the next possible completion.
+In Emacs, use @@texinfo:@kbd{M-x load-library @key{RETURN} completion @key{RETURN}}@@ for loading the completion package.
+
+The standard Emacs prompting functions have also been speech-enabled.
+Emacs prompts with available lists of completions in response to partial
+input wherever appropriate   @@texinfo:@MDash{}@@ all forms of completion provide speech
+feedback.
+
+In addition, Emacsvox provides a number of commands for reading
+portions of the current buffer, getting status information, and
+modifying Emacsvox's state.
+
+All of the commands are documented in the subsequent sections.
+They can be classified into types:
+
+- Emacsvox commands for listening to chunks of information.  Most of
+   these command names start with ~emacsvox-speak-~.  Their default
+   bindings are grouped under the main Emacsvox prefix @@texinfo:@kbd{C-e}@@[fn::The prefix is inherited from Emacspeak, where C-e was mnemonic for the project name.].  The starter bindings are introduced in @@texinfo:@ref{Reading}@@;
+   the live Help system and generated key reference remain authoritative
+   when bindings are customized.
+
+- The second category manipulates the speech engine.  These commands
+   normally start with ~tts-~ and are grouped under @@texinfo:@kbd{C-e d}@@
+   [fn::Historically, d was mnemonic for DECtalk; the prefix now contains engine-independent speech controls.].
+
+Emacs and Emacsvox both expose their current commands through Emacs Help.
+Use the small set below to get oriented, then use Help or the generated
+reference instead of relying on a copied exhaustive list.
+
+** Reading and Navigating
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Reading
+:ALT_TITLE: Reading
+:DESCRIPTION: Reading chunks of information.
+:END:
+
+Ordinary Emacs movement speaks the text crossed by point: moving by a
+character, word, line, or paragraph presents the corresponding unit.
+The commands below let you inspect useful units without first moving.
+They use the default @@texinfo:@kbd{C-e}@@ prefix.
+
+This is deliberately a starter set, not a second complete key reference.
+If a binding below differs in your session, use @@texinfo:@kbd{C-h k}@@ on that key
+and check your customizations.  The complete generated defaults are in the
+@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+
+# basic-usage-live-keys-begin
+#+attr_texinfo: :indic kbd :compact t
+- C-e c ::
+
+  #+findex: emacsvox-speak-char
+
+  #+kindex: C-e c
+
+  ~emacsvox-speak-char~
+  speaks the character at point.
+- C-e w ::
+
+  #+findex: emacsvox-speak-word
+
+  #+kindex: C-e w
+
+  ~emacsvox-speak-word~
+  speaks the current word.  Repeating it at the same position spells the
+  word.
+- C-e l ::
+
+  #+findex: emacsvox-speak-line
+
+  #+kindex: C-e l
+
+  ~emacsvox-speak-line~
+  speaks the current line.
+- C-e [ ::
+
+  #+findex: emacsvox-speak-paragraph
+
+  #+kindex: C-e [
+
+  ~emacsvox-speak-paragraph~
+  speaks the current paragraph.
+- C-e ] ::
+
+  #+findex: emacsvox-speak-page
+
+  #+kindex: C-e ]
+
+  ~emacsvox-speak-page~
+  speaks the current page.
+- C-e r ::
+
+  #+findex: emacsvox-speak-region
+
+  #+kindex: C-e r
+
+  ~emacsvox-speak-region~
+  speaks the active region between point and mark.
+- C-e i ::
+
+  #+findex: emacsvox-speak-rest-of-buffer
+
+  #+kindex: C-e i
+
+  ~emacsvox-speak-rest-of-buffer~
+  speaks from point to the end of the buffer.
+- C-e b ::
+
+  #+findex: emacsvox-speak-buffer
+
+  #+kindex: C-e b
+
+  ~emacsvox-speak-buffer~
+  speaks the entire current buffer.
+- C-e s ::
+
+  #+findex: tts-stop
+
+  #+kindex: C-e s
+
+  ~tts-stop~
+  stops current speech.
+- C-e C-d ::
+
+  #+findex: emacsvox-toggle-show-point
+
+  #+kindex: C-e C-d
+
+  ~emacsvox-toggle-show-point~
+  toggles the aural indication of point within spoken text.
+
+# basic-usage-live-keys-end
+
+Many speaking commands accept a prefix argument to limit speech to the
+text before or after point.  Use @@texinfo:@kbd{C-h k}@@ on a command before relying
+on those variants, because their exact argument behavior is documented
+with the command.
+
+** Speech System Commands
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Speech System
+:ALT_TITLE: Speech System
+:DESCRIPTION: Controlling Speech Output.
+:END:
+
+#+cindex: TTS
+
+#+cindex: speech system
+
+#+cindex: speech settings
+
+This section documents the main Emacsvox commands for controlling the
+text-to-speech (@@texinfo:@acronym{TTS}@@) system.  The exact key bindings generated from
+the current keymaps appear in the
+@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+
+*** Character, Word And Line Echo.
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Controlling Echo
+:ALT_TITLE: Controlling Echo
+:DESCRIPTION: Character, Word and Line Echo.
+:END:
+
+#+cindex: line echo
+
+#+cindex: character echo
+
+#+cindex: word echo
+
+By default, Emacsvox speaks characters as they are typed  @@texinfo:@MDash{}@@
+this is called character echo; Words are spoken as they are completed
+ @@texinfo:@MDash{}@@ this is called word echo.  Emacsvox can also optionally
+speak each line as it is typed  @@texinfo:@MDash{}@@ this is called line echo.
+
+Character, word and line echo can be toggled  @@texinfo:@MDash{}@@ either in the
+current buffer  @@texinfo:@MDash{}@@ or for all buffers (globally).  To toggle the
+specific echo functionality for all buffers, precede the specific
+command with @@texinfo:@kbd{C-u}@@.  Note that in the documentation below, this
+use of @@texinfo:@kbd{C-u}@@ is indicated using the common Emacs terminology of
+*prefix arg* or *interactive prefix arg*.
+
+#+attr_texinfo: :indic kbd :compact t
+- C-e d k ::
+
+  #+findex: emacsvox-toggle-character-echo
+
+  #+kindex: C-e d k
+
+  ~emacsvox-toggle-character-echo~
+
+  Toggle state of Emacsvox character echo.  Interactive PREFIX arg
+  means toggle the global default value, and then set the current local
+  value to the result.
+- C-e d w ::
+
+  #+findex: emacsvox-toggle-word-echo
+
+  #+kindex: C-e d w
+
+  ~emacsvox-toggle-word-echo~
+
+  Toggle state of Emacsvox word echo.  Interactive PREFIX arg means
+  toggle the global default value, and then set the current local value
+  to the result.
+- C-e d l ::
+
+  #+findex: emacsvox-toggle-line-echo
+
+  #+kindex: C-e d l
+
+  ~emacsvox-toggle-line-echo~
+
+  Toggle state of Emacsvox line echo.  Interactive PREFIX arg means
+  toggle the global default value, and then set the current local value
+  to the result.
+
+*** Setting  TTS Characteristics.
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Speech Output Control
+:ALT_TITLE: Speech Output Control
+:DESCRIPTION: Indicating case, capitalization and indentation.
+:END:
+
+Emacsvox user commands can set different characteristics of the speech
+output such as speech rate and  punctuations mode.
+
+Emacsvox provides settings that affect how text attributes such as
+capitalization and indentation are conveyed.  Each feature has a master
+switch and a separately selected presentation, so enabling the feature does
+not force one fixed sound.
+These settings can be made locally in a given buffer or be applied to
+all buffers by preceding these commands with @@texinfo:@kbd{C-u}@@.
+
+#+attr_texinfo: :indic kbd :compact t
+- C-e d r ::
+
+  #+findex: tts-set-rate
+
+  #+kindex: C-e d r
+
+  ~tts-set-rate~
+
+  Set speaking RATE for the @@texinfo:@acronym{TTS}@@.  Interactive PREFIX arg means set the
+  global default value, and then set the current local value to the
+  result.
+- C-e d f ::
+
+  #+findex: tts-set-character-scale
+
+  #+kindex: C-e d f
+
+  ~tts-set-character-scale~
+
+  Set scale FACTOR for speech rate.  Speech rate is scaled by this
+  factor when speaking characters.  Interactive PREFIX arg means set the
+  global default value, and then set the current local value to the
+  result.
+- C-e d DIGIT ::
+
+  #+findex: tts-set-predefined-rate
+
+  #+kindex: C-e d DIGIT
+
+  ~tts-set-predefined-rate~
+
+  Set speech rate to one of nine predefined levels using digit keys
+  @@texinfo:@kbd{0}@@ through @@texinfo:@kbd{9}@@.  Interactive PREFIX arg says to set the rate
+  globally.
+- C-e d p ::
+
+  #+findex: tts-set-punctuations
+
+  #+kindex: C-e d p
+
+  ~tts-set-punctuations~
+
+  Set punctuation mode to MODE.  Possible values are ~some~, ~all~,
+  or ~none~.  Interactive PREFIX arg means set the global default value,
+  and then set the current local value to the result.
+- C-e d s ::
+
+  #+findex: tts-toggle-split-caps
+
+  #+kindex: C-e d s
+
+  ~tts-toggle-split-caps~
+
+  Toggle split caps mode.  Split caps mode is useful when reading
+  Hungarian notation in program source code.  Interactive PREFIX arg
+  means toggle the global default value, and then set the current local
+  value to the result.
+- C-e d c ::
+
+  #+kindex: C-e d c
+
+  #+findex: tts-toggle-caps
+
+  ~tts-toggle-caps~
+
+  Toggle capitalization indication.  Interactive PREFIX arg means toggle the
+  global default value, then set the current local value to the result.
+- C-e d C ::
+
+  #+kindex: C-e d C
+
+  #+findex: emacsvox-set-capitalization-presentation
+
+  ~emacsvox-set-capitalization-presentation~
+
+  Choose ~spoken~, ~tone~, ~spoken-tone~, ~custom~, or
+  ~none~, and preview representative text.  ~custom~ publishes facts
+  for personal Aural Presentation rules without adding built-in output.  A
+  current Omnivox server applies the selected capitalization presentation to
+  isolated letters as well as queued words; older speech servers retain their
+  engine-specific isolated-letter behavior.
+
+In addition, Emacsvox can convey the indentation of lines as they are
+spoken  @@texinfo:@MDash{}@@ This is relevant when programming and is the default
+when working with program source.
+
+#+attr_texinfo: :indic kbd :compact t
+- C-e d i ::
+
+  #+findex: emacsvox-toggle-audio-indentation
+
+  #+kindex: C-e d i
+
+  ~emacsvox-toggle-audio-indentation~
+
+  Toggle state of Emacsvox audio indentation.  Interactive PREFIX arg
+  means toggle the global default value, and then set the current local
+  value to the result.
+- C-e d I ::
+
+  #+findex: emacsvox-set-indentation-presentation
+
+  #+kindex: C-e d I
+
+  ~emacsvox-set-indentation-presentation~
+
+  Choose spoken column, duration-coded tone, rising-pitch tone, either tone
+  combined with speech, ~custom~, or ~none~.  The command previews a
+  four-column indentation sample.  Indentation tones complete before the line is
+  spoken so they do not mask its first phoneme.
+
+*** Miscellaneous Speech Commands
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Miscellaneous
+:ALT_TITLE: Miscellaneous
+:DESCRIPTION: Miscellaneous TTS Commands.
+:END:
+
+Speech can be stopped explicitly using command ~tts-stop~.  In normal
+navigation, replaceable speech supersedes older work in the same replacement
+domain while ordered and urgent output is preserved.
+The speech server can be stopped and restarted for cases where the
+user wants to switch to a different server  @@texinfo:@MDash{}@@ or in the rare
+case to nuke a runaway speech server.
+
+#+attr_texinfo: :indic kbd :compact t
+- C-e s ::
+
+  #+findex: tts-stop
+
+  #+kindex: C-e s
+
+  ~tts-stop~
+
+  Stop speech now.
+- C-e d q ::
+
+  #+findex: tts-toggle-quiet
+
+  #+kindex: C-e d q
+
+  ~tts-toggle-quiet~
+
+  Toggle state of the speech device between being quiet and talkative.
+  Useful if you want to continue using an Emacs session that has
+  emacsvox loaded but wish to make the speech shut up.  Optional
+  argument PREFIX specifies whether speech is turned off in the current
+  buffer or in all buffers.
+- C-e C-s ::
+
+  #+findex: tts-restart
+
+  #+kindex: C-e C-s
+
+  ~tts-restart~
+
+  Use this to stop the currently running speech server and restart it.
+  Useful if you want to switch to another synthesizer while emacsvox is
+  running.  Also useful for emergency stopping of speech.
+
+Finally, here are the remaining commands available via the
+@@texinfo:@acronym{TTS}@@ related keymap @@texinfo:@kbd{C-e d}@@.
+
+#+attr_texinfo: :indic kbd :compact t
+- C-e d a ::
+
+  #+findex: tts-add-cleanup-pattern
+
+  #+kindex: C-e d a
+
+  ~tts-add-cleanup-pattern~
+
+  Add this pattern to the list of repeating patterns that are cleaned
+  up.  Optional interactive prefix arg deletes this pattern if
+  previously added.  Cleaning up repeated patterns results in emacsvox
+  speaking the pattern followed by a repeat count instead of speaking
+  all the characters making up the pattern.  Thus, by adding the
+  repeating pattern `.' (this is already added by default) emacsvox
+  will say ``aw fifteen dot'' when speaking the string
+  ``...............'' instead of ``period period period period''.
+- C-e d d ::
+
+  #+findex: tts-select-server
+
+  #+kindex: C-e d d
+
+  ~tts-select-server~
+
+  Select a speech server interactively.  This will be the server that is
+  used when you next call either M-x tts-initialize or C-e C-s.
+  Argument PROGRAM specifies the speech server program.
+- C-e d @@texinfo:@key{SPACE}@@ ::
+
+  #+findex: tts-toggle-splitting-on-white-space
+
+  #+kindex: C-e d SPACE
+
+  ~tts-toggle-splitting-on-white-space~
+
+  Toggle splitting of speech on white space.  This affects the internal
+  state of emacsvox that decides if we split text purely by clause
+  boundaries, or also include whitespace.  By default, emacsvox sends a
+  clause at a time to the speech device.  This produces fluent speech
+  for normal use.  However in modes such as `shell-mode' and some
+  programming language modes, clause markers appear infrequently, and
+  this can result in large amounts of text being sent to the speech
+  device at once, making the system unresponsive when asked to stop
+  talking.  Splitting on white space makes emacsvox's stop command
+  responsive.  However, when splitting on white space, the speech sounds
+  choppy since the synthesizer is getting a word at a time.
+- C-e d @@texinfo:@key{RETURN}@@ ::
+
+  #+findex: tts-set-chunk-separator-syntax
+
+  #+kindex: C-e d RETURN
+
+  ~tts-set-chunk-separator-syntax~
+
+  Interactively set how text is split in chunks.  See the Emacs
+  documentation on syntax tables for details on how characters are
+  classified into various syntactic classes.  Argument S specifies the
+  syntax class.
+- C-e d V ::
+
+  #+findex: tts-speak-version
+
+  #+kindex: C-e d V
+
+  ~tts-speak-version~
+
+  Use this to find out which version of the @@texinfo:@acronym{TTS}@@ firmware you
+  are running.
+- C-e d z ::
+
+  #+findex: emacsvox-zap-tts
+
+  #+kindex: C-e d z
+
+  ~emacsvox-zap-tts~
+
+  Send this command to the @@texinfo:@acronym{TTS}@@ engine directly.
+
+** Voice Lock Mode
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Voice-lock
+:ALT_TITLE: Voice-lock
+:DESCRIPTION: Audio Formatting.
+:END:
+
+Toggle voice lock globally with @@texinfo:@kbd{M-x}@@
+~global-voice-lock-mode~.  Its current default binding is in
+@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+
+Voice-lock is turned on automatically in all buffers that support it
+when Emacsvox is started.
+
+Emacsvox can be set to disable voice lock in all of the major modes
+that support it. To do so, insert the following statement into your
+Emacs initialization file:
+
+#+begin_src emacs-lisp
+(global-voice-lock-mode -1)
+#+end_src
+
+The characteristics of the different voice personalities used by voice
+lock mode vary according to the capabilities of the speech
+synthesizer. The definitions applicable to the Dectalk family of
+synthesizers are contained in ~dectalk-voices.el~, which is
+supplied as part of the Emacsvox distribution. The Emacsvox
+distribution also contains voice definitions for many other
+synthesizers.
+
+Voice-lock maps faces and other mode-provided text properties to speech
+personalities.  Integrations such as EWW use those properties and document
+structure to provide aural distinctions; the active mode and voice settings,
+not an inherited Web style sheet, determine current behavior.  For historical
+context on Aural CSS, see
+@@texinfo:@ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}@@.
+
+** Status  Commands
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Status Information
+:ALT_TITLE: Status Information
+:DESCRIPTION: Speaking Status Information.
+:END:
+
+These common commands answer frequent orientation questions.  Less common
+status commands are listed in the
+@@texinfo:@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+
+# basic-usage-live-keys-begin
+#+attr_texinfo: :indic kbd :compact t
+- C-e a ::
+
+  #+findex: emacsvox-speak-message-again
+
+  #+kindex: C-e a
+
+  ~emacsvox-speak-message-again~
+
+  Speak the last message from Emacs once again.
+- C-e m ::
+
+  #+findex: emacsvox-speak-mode-line
+
+  #+kindex: C-e m
+
+  ~emacsvox-speak-mode-line~
+
+  Speak the mode-line.
+- C-e M ::
+
+  #+findex: emacsvox-speak-minor-mode-line
+
+  #+kindex: C-e M
+
+  ~emacsvox-speak-minor-mode-line~
+
+  Speak the minor mode-information.
+- C-e C-x ::
+
+  #+findex: emacsvox-speak-header-line
+
+  #+kindex: C-e C-x
+
+  ~emacsvox-speak-header-line~
+
+  Speak the header-line.
+
+- C-e C-w ::
+
+  #+findex: emacsvox-speak-window-information
+
+  #+kindex: C-e C-w
+
+  ~emacsvox-speak-window-information~
+
+  Speaks information about current windows.
+- C-e f ::
+
+  #+findex: emacsvox-speak-buffer-filename
+
+  #+kindex: C-e f
+
+  ~emacsvox-speak-buffer-filename~
+
+  Speak name of file being visited in current buffer.
+  Speak default directory if invoked in a dired buffer,
+  or when the buffer is not visiting any file.
+- C-e C-l ::
+
+  #+findex: what-line
+
+  #+kindex: C-e C-l
+
+  ~what-line~
+
+  reports the current line number and position in the buffer.
+- C-e = ::
+
+  #+findex: emacsvox-speak-current-column
+
+  #+kindex: C-e =
+
+  ~emacsvox-speak-current-column~
+
+  Speak the current column.
+- C-e % ::
+
+  #+findex: emacsvox-speak-current-percentage
+
+  #+kindex: C-e %
+
+  ~emacsvox-speak-current-percentage~
+
+  Announce the percentage into the current buffer.
+
+# basic-usage-live-keys-end

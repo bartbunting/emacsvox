@@ -41,6 +41,13 @@ EMACS ?= emacs
 MAKEINFO ?= makeinfo
 INSTALL_INFO ?= install-info
 DOCS_PUBLISH_DIR ?=
+DOCS_MANUAL ?= emacsvox
+DOCS_PREVIEW_DIR ?= $(CURDIR)/.docs-preview
+DOCS_ORG_SOURCE ?= $(CURDIR)/docs/manual/emacsvox.org
+DOCS_ORG_BODY ?= $(CURDIR)/info/emacsvox-body.texi
+DOCS_ORG_NODES ?= $(CURDIR)/docs/manual/nodes.txt
+DOCS_ORG_PREVIEW_DIR ?= $(DOCS_PREVIEW_DIR)/org-manual
+DOCS_ORG_HTMLXREF ?= $(CURDIR)/info/htmlxref.cnf
 README = README
 
 ### Tests
@@ -52,7 +59,10 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: compiled-aural-test build-aural-test trace trace-test
 .PHONY: reference-test advice-audit name-audit tts-audit
 .PHONY: check-emacs bytecode bytecode-check bytecode-rebuild generated-reference
-.PHONY: docs-generate docs-check docs-check-external docs-publish docs-publish-pages
+.PHONY: docs-preview docs-update docs-reference docs-generate
+.PHONY: docs-org-export docs-org-preview docs-org-generate docs-org-check
+.PHONY: docs-check docs-release-check docs-check-external
+.PHONY: docs-publish docs-publish-pages
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
 .PHONY: windows-omnivox-dev
 .PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers verify-windows-omnivox-runtime
@@ -115,36 +125,124 @@ generated-reference: bytecode-check
 		--eval '(setq file-name-handler-alist nil gc-cons-threshold 128000000)' \
 		-l ../utils/self-document.el -f self-document-all-modules-batch
 
-# Documentation generation, validation, and publication are deliberately
-# separate.  Neither validation nor publication creates Git commits.
-docs-generate: generated-reference
+# Keep the manual authoring loop independent of Emacsvox byte-code.  Preview
+# one complete manual as a single HTML file so included Texinfo chapters are
+# checked in their real context.
+docs-preview:
+	@set -eu; \
+		case "$(DOCS_MANUAL)" in \
+			emacsvox|emacsvox-reference|emacsvox-heritage|introducing-emacspeak) \
+				source="$(DOCS_MANUAL).texi" ;; \
+			*) \
+				echo "Unknown DOCS_MANUAL: $(DOCS_MANUAL)" >&2; \
+				echo "Choose emacsvox, emacsvox-reference, emacsvox-heritage, or introducing-emacspeak." >&2; \
+				exit 2 ;; \
+		esac; \
+		mkdir -p "$(DOCS_PREVIEW_DIR)"; \
+		cd info; \
+		$(MAKEINFO) --error-limit=0 --html --no-split \
+			-c HTMLXREF_MODE=file -c HTMLXREF_FILE=htmlxref.cnf \
+			--css-ref=https://www.w3.org/StyleSheets/Core/Modernist \
+			--output="$(DOCS_PREVIEW_DIR)/$(DOCS_MANUAL).html" "$$source"; \
+		echo "Previewed $(DOCS_MANUAL) at $(DOCS_PREVIEW_DIR)/$(DOCS_MANUAL).html"
+
+# Export the canonical maintained prose without loading or compiling Emacsvox.
+docs-org-export: check-emacs
+	@mkdir -p "$(DOCS_ORG_PREVIEW_DIR)"
+	EMACSVOX_ORG_SOURCE="$(DOCS_ORG_SOURCE)" \
+	EMACSVOX_ORG_OUTPUT="$(DOCS_ORG_PREVIEW_DIR)/emacsvox-org.texi" \
+	$(EMACS) -Q --batch -L utils -l utils/emacsvox-org-export.el \
+		-f emacsvox-org-export-batch
+
+docs-org-preview: docs-org-export
+	@set -eu; \
+		cd "$(DOCS_ORG_PREVIEW_DIR)"; \
+		$(MAKEINFO) --error-limit=0 -I "$(CURDIR)/info" \
+			--output=emacsvox-org.info \
+			emacsvox-org.texi; \
+		$(MAKEINFO) --error-limit=0 --html --no-split \
+			-I "$(CURDIR)/info" \
+			-c HTMLXREF_MODE=file \
+			-c HTMLXREF_FILE="$(DOCS_ORG_HTMLXREF)" \
+			--css-ref=https://www.w3.org/StyleSheets/Core/Modernist \
+			--output=emacsvox-org.html emacsvox-org.texi; \
+		echo "Previewed Org manual at $(DOCS_ORG_PREVIEW_DIR)/emacsvox-org.html"; \
+		echo "Built Org Info at $(DOCS_ORG_PREVIEW_DIR)/emacsvox-org.info"
+
+# Update the tracked Texinfo body consumed by the release wrapper.  This is an
+# explicit authoring action, analogous to updating tracked Info output.
+docs-org-generate: check-emacs
+	EMACSVOX_ORG_SOURCE="$(DOCS_ORG_SOURCE)" \
+	EMACSVOX_ORG_OUTPUT="$(DOCS_ORG_BODY)" \
+	EMACSVOX_ORG_BODY_ONLY=1 \
+	$(EMACS) -Q --batch -L utils -l utils/emacsvox-org-export.el \
+		-f emacsvox-org-export-batch
+
+docs-org-check: docs-org-preview
+	@set -eu; \
+		EMACSVOX_ORG_SOURCE="$(DOCS_ORG_SOURCE)" \
+		EMACSVOX_ORG_OUTPUT="$(DOCS_ORG_PREVIEW_DIR)/emacsvox-body.texi" \
+		EMACSVOX_ORG_BODY_ONLY=1 \
+		$(EMACS) -Q --batch -L utils -l utils/emacsvox-org-export.el \
+			-f emacsvox-org-export-batch; \
+		if ! cmp -s "$(DOCS_ORG_BODY)" \
+			"$(DOCS_ORG_PREVIEW_DIR)/emacsvox-body.texi"; then \
+			echo "Tracked info/emacsvox-body.texi is stale; run make docs-org-generate." >&2; \
+			exit 1; \
+		fi; \
+		actual_nodes="$$(sed -n 's/^@node //p' \
+			"$(DOCS_ORG_PREVIEW_DIR)/emacsvox-body.texi" | paste -sd '|' -)"; \
+		expected_nodes="$$(paste -sd '|' "$(DOCS_ORG_NODES)")"; \
+		if test "$$actual_nodes" != "$$expected_nodes"; then \
+			echo "Org manual changed the accepted Info node topology." >&2; \
+			echo "Expected: $$expected_nodes" >&2; \
+			echo "Actual:   $$actual_nodes" >&2; \
+			exit 1; \
+		fi; \
+		echo "Org-generated Texinfo is current and its Info node topology is compatible."
+
+# Update only checked Info files whose hand-written Texinfo inputs changed.
+# Generated Lisp references have their own explicit, byte-code-aware target.
+docs-update: docs-org-generate
 	$(MAKE) -C info MAKEINFO="$(MAKEINFO)" all heritage-standalone
 
-docs-check: bytecode-check
+docs-reference: generated-reference
+	$(MAKE) -C info MAKEINFO="$(MAKEINFO)" emacsvox-reference.info
+
+# Retain the comprehensive generation target for Lisp/public-interface
+# changes and release preparation.
+docs-generate: docs-reference
+	$(MAKE) docs-update
+
+docs-release-check: bytecode-check docs-org-check
 	EMACSVOX_MAKEINFO="$(MAKEINFO)" \
 	EMACSVOX_INSTALL_INFO="$(INSTALL_INFO)" \
 	$(EMACS) -Q --batch -L utils -l utils/emacsvox-docs-check.el \
 		-f emacsvox-docs-check-batch
 
-docs-check-external: docs-check
+docs-check: docs-release-check
+
+docs-check-external: docs-release-check
 	utils/check-required-doc-links.sh etc/docs-required-links.txt
 
-docs-publish: docs-check
+docs-publish: bytecode-check docs-org-check
 	@if test -z "$(DOCS_PUBLISH_DIR)"; then \
 		echo "Set DOCS_PUBLISH_DIR to an existing publication directory." >&2; \
 		exit 2; \
 	fi
 	EMACSVOX_MAKEINFO="$(MAKEINFO)" \
+	EMACSVOX_INSTALL_INFO="$(INSTALL_INFO)" \
 	EMACSVOX_DOCS_PUBLISH_DIR="$(DOCS_PUBLISH_DIR)" \
 	$(EMACS) -Q --batch -L utils -l utils/emacsvox-docs-check.el \
 		-f emacsvox-docs-publish-batch
 
-docs-publish-pages: docs-check
+docs-publish-pages: bytecode-check docs-org-check
 	@if test -z "$(DOCS_PUBLISH_DIR)"; then \
 		echo "Set DOCS_PUBLISH_DIR to an existing gh-pages worktree." >&2; \
 		exit 2; \
 	fi
 	EMACSVOX_MAKEINFO="$(MAKEINFO)" \
+	EMACSVOX_INSTALL_INFO="$(INSTALL_INFO)" \
 	EMACSVOX_DOCS_PUBLISH_DIR="$(DOCS_PUBLISH_DIR)" \
 	$(EMACS) -Q --batch -L utils -l utils/emacsvox-docs-check.el \
 		-f emacsvox-docs-publish-pages-batch

@@ -7,7 +7,7 @@ To install a specific version of Emacsvox:
      installation directory; run the remaining steps from that directory.
   2. Run =make all= to configure and build Emacsvox.
   3. Install and smoke-test the recommended Omnivox server by following the
-     [[file:../info/backends.texi][Speech Backends guide]].
+     [[file:../docs/manual/chapters/speech-backends.org][Speech Backends guide]].
   4. From the source tree, run =./bin/emacsvox --check= and continue only after
      hearing both the test tone and speech.  Then run =./bin/emacsvox= to prove
      first speech in an isolated Emacs that does not load personal init files.

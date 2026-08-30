@@ -1,0 +1,228 @@
+* Applications And Integrations
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Emacs Packages
+:ALT_TITLE: Emacs Packages
+:DESCRIPTION: Use speech-enabled applications and integrations.
+:END:
+
+#+cindex: applications
+
+#+cindex: integrations
+
+#+cindex: packages, speech support
+
+Emacsvox prepares speech support for many Emacs modes as their libraries are
+loaded.  Start the application normally; when its buffer appears, use
+@@texinfo:@kbd{C-h m}@@ for the active modes and their commands, @@texinfo:@kbd{C-h b}@@ for the
+effective bindings, and @@texinfo:@kbd{C-h k}@@ followed by a key to identify one binding.
+The generated
+@@texinfo:@ref{Emacsvox Commands And Options,,,emacsvox-reference,Emacsvox Reference Manual}@@ records the public Emacsvox commands and options.
+
+This chapter is a curated starting point, not a promise that every module in
+the generated reference has a maintained task guide.  Emacs itself or a
+third-party package owns the application's general operation; Emacsvox owns
+the additional speech feedback.  Consult both sets of help when diagnosing a
+problem.
+
+Earlier Emacspeak surveys, including their W3, Dismal, and scanner/OCR setup,
+are preserved as historical material in
+@@texinfo:@ref{Emacs Packages,Historical Application Survey,,emacsvox-heritage,Emacspeak Heritage}@@.  They are not current setup instructions.
+
+** Document Authoring
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Document Authoring
+:END:
+
+#+cindex: document authoring
+
+Emacs major modes provide the editing commands for each document format.
+Emacsvox speaks ordinary movement and editing, applies voice-lock where the
+mode exposes useful faces, and adds mode-specific feedback where an integration
+exists.  Open or create the document in its normal Emacs mode, then use
+@@texinfo:@kbd{C-h m}@@ to discover that mode's workflow.  For outlines and templates, see
+@@texinfo:@ref{Structured Editing}@@.
+
+** Structured Editing And Templates
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Structured Editing
+:ALT_TITLE: Structured Editing
+:END:
+
+#+cindex: Outline mode
+
+#+cindex: Tempo
+
+#+findex: outline-mode
+
+#+findex: outline-minor-mode
+
+Emacsvox has maintained integrations for the built-in Outline and Tempo
+libraries.  In Outline mode, heading navigation speaks the reached heading and
+visibility commands announce what was hidden or exposed.  Start a dedicated
+outline with @@texinfo:@kbd{M-x outline-mode}@@, or enable ~outline-minor-mode~ in a
+suitable document.  See
+@@texinfo:@ref{emacsvox-outline,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the
+Emacsvox integration and @@texinfo:@ref{Outline Mode,,,emacs,The GNU Emacs Manual}@@ for
+the underlying editor.
+
+Tempo supplies template fields for modes and packages that use it.  Emacsvox
+speaks inserted text and the line reached when moving between template marks.
+The package that supplied a template owns its insertion commands; use that
+package's mode help, together with
+@@texinfo:@ref{emacsvox-tempo,,,emacsvox-reference,Emacsvox Reference Manual}@@.
+
+** Browsing Structure
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Browsing Structure
+:END:
+
+#+cindex: structured navigation
+
+Use the structure exposed by the active Emacs mode rather than treating every
+buffer as plain text.  Info provides node and menu navigation, Outline provides
+heading and visibility commands, and EWW exposes HTML headings, links, lists,
+tables, and other document elements.  Begin with @@texinfo:@kbd{C-h m}@@ in the buffer;
+see @@texinfo:@ref{Using Online Help}@@ for the common discovery commands and
+@@texinfo:@ref{Web Browsing}@@ for the maintained Web route.
+
+** Web Browsing With EWW
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Web Browsing
+:ALT_TITLE: Web Browsing
+:END:
+
+#+cindex: EWW
+
+#+cindex: Web browsing
+
+#+findex: eww
+
+EWW is the built-in browser supported for current Emacsvox.  Run
+@@texinfo:@kbd{M-x eww @key{RET}}@@, enter a URL or search words, and press @@texinfo:@key{RET}@@.
+Emacsvox speaks EWW navigation and rendering feedback and adds commands for
+moving by HTML structure and filtering the displayed DOM.  In an EWW buffer,
+use @@texinfo:@kbd{C-h m}@@ for the live workflow and @@texinfo:@kbd{C-h b}@@ for its effective keys.
+See @@texinfo:@ref{EWW,,,emacs,The GNU Emacs Manual}@@ for browser operation and
+@@texinfo:@ref{emacsvox-eww,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the
+speech integration.
+
+The former Emacs/W3 and w3m survey is historical.  Do not install either one
+on the strength of the Heritage manual; use EWW unless a separately maintained
+integration says otherwise.
+
+** Messaging
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Messaging
+:END:
+
+#+cindex: messaging
+
+Emacsvox integrates with several Emacs mail and messaging modes.  The curated
+workflow for indexed mail search, asynchronous results, thread reading,
+attachments, and privacy controls is @@texinfo:@ref{Notmuch Mail}@@.  For another client,
+start with its own manual and @@texinfo:@kbd{C-h m}@@; use the generated reference to find
+an Emacsvox module with the same package or mode name.
+
+** Editing Code
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Editing Code
+:END:
+
+#+cindex: programming
+
+Programming modes own language-aware movement, indentation, compilation, and
+navigation.  Emacsvox speaks those operations and uses voice-lock to distinguish
+faces such as comments, strings, warnings, and language constructs.  Use
+@@texinfo:@kbd{C-h m}@@ in the source buffer for the language mode, and search the generated
+reference for an integration named after that mode.
+
+** Development Environment
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Development Environment
+:END:
+
+#+cindex: development tools
+
+Emacs can combine compilation, diagnostics, project navigation, version
+control, debuggers, and language servers into a development environment.
+Emacsvox supplies speech feedback to many of those components, but their own
+manuals remain authoritative for setup and operation.  Verify each component
+individually with its mode help before combining it into a larger workflow.
+
+** Desktop Management
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Desktop Management
+:END:
+
+#+cindex: buffers
+
+#+cindex: windows
+
+#+cindex: tabs
+
+Emacs buffers, windows, frames, and tabs provide the workspace.  Their standard
+commands receive speech feedback, and the active help describes any additional
+mode-specific bindings.  Use @@texinfo:@kbd{C-x b}@@ to select a buffer and @@texinfo:@kbd{C-h m}@@ in
+specialized buffer-list or tab interfaces to learn their local commands.
+
+** Personal Information Management
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Personal Information Management
+:END:
+
+#+cindex: personal information management
+
+Calendar, Org, and related packages own their data formats and workflows.
+Emacsvox integrations present navigation, state changes, and structured
+content when those modes are active.  Begin with the application's own manual
+and live mode help, then consult its matching Emacsvox module in the generated
+reference.
+
+** Desktop Applications
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Desktop Applications
+:END:
+
+*** Terminal Applications
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+For a new full-terminal workflow, use @@texinfo:@ref{EAT Terminal Access}@@.  When a
+built-in terminal with no additional package is preferable, use
+@@texinfo:@ref{Running Terminal Based Applications}@@.  For ordinary line-oriented shell
+commands, @@texinfo:@kbd{M-x shell}@@ is usually the simplest route.
+
+*** Forms Mode
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+#+cindex: Forms mode
+
+#+findex: forms-find-file
+
+The built-in Forms library presents records from a structured text file one at
+a time.  Emacsvox speaks field values, record movement, searches, and status
+changes while Forms mode is active.  Forms requires a format specification;
+see @@texinfo:@ref{Forms Mode,,,emacs,The GNU Emacs Manual}@@ for setup and operation, and
+@@texinfo:@ref{emacsvox-forms,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the
+speech integration.
+
+*** Experimental OCR Front End
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+#+cindex: OCR, experimental
+
+#+findex: emacsvox-ocr
+
+Module ~emacsvox-ocr~ is an experimental legacy front end, not a supported
+initial-user route.  Its scanner, image-processing, and OCR-engine workflow has
+not yet received a current integration review.  Do not rely on setup commands,
+program paths, or defaults in the historical survey.  If you evaluate the
+module, inspect its live command and option help first; the generated
+@@texinfo:@ref{emacsvox-ocr,,,emacsvox-reference,Emacsvox Reference Manual}@@ is an API
+inventory, not a validated deployment guide.  Report the exact platform,
+scanner backend, OCR engine, and Emacsvox revision when requesting help.

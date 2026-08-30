@@ -1,0 +1,3661 @@
+@node Installation
+@chapter Getting Started: Installation and First Speech
+
+@c Generated from docs/manual/emacsvox.org; do not edit.
+
+This is the canonical first-use procedure for a source-checkout installation.
+It starts before Emacsvox is available@comma{} establishes an audible acceptance
+checkpoint@comma{} and delays personal configuration until an isolated session has
+spoken successfully.  The same chapter is published for pre-installation web
+access at
+@uref{https://bartbunting.github.io/emacsvox/Installation.html}.
+
+@menu
+* Obtaining Emacsvox::           Obtaining Emacsvox.
+* Quick Installation::           Reach an isolated first spoken session.
+* Confirming First Speech::      Verify the live adapter and basic feedback.
+* Recovering From No Speech::    Diagnose the boundary at which speech failed.
+* Persistent Startup::           Add Emacsvox to personal configuration safely.
+* Building And Testing The Speech Server::
+@end menu
+
+@node Obtaining Emacsvox
+@section Obtaining Emacsvox
+
+Before beginning@comma{} install @code{git}@comma{} @code{make}@comma{} GNU Texinfo (which
+provides @code{makeinfo})@comma{} and
+@uref{https://www.gnu.org/software/emacs/download.html, Emacs 31 or newer}.
+The Speech Backends chapter lists the additional platform prerequisites for
+the recommended Omnivox server.
+
+The maintained source is
+@uref{https://github.com/bartbunting/emacsvox}.  Clone it into the permanent
+directory where it will be used:
+
+@example
+git clone https://github.com/bartbunting/emacsvox
+cd emacsvox
+@end example
+
+The checkout itself is the source-checkout installation.  The build operates
+in place; it does not create a second directory to copy elsewhere.
+
+@node Quick Installation
+@section First Speech Checklist
+
+@enumerate
+@item
+Select Emacs 31 or newer.  If it is not the system @code{emacs}@comma{} copy
+@code{local.mk.example} to the ignored @code{local.mk} and set @code{EMACS}:
+
+@example
+EMACS=/path/to/emacs-31/bin/emacs
+@end example
+
+Verify the selection before diagnosing a compiler failure:
+
+@example
+make check-emacs
+@end example
+
+@item
+Configure and compile the checkout:
+
+@example
+make all
+@end example
+
+Do not compile Emacsvox with an older system Emacs.  Tests prefer source and
+therefore do not prove that the byte-code used by a normal startup is current.
+
+@item
+Install the recommended Omnivox speech server.  @xref{Speech Backends}@comma{} for
+the supported platform matrix@comma{} exact prerequisite classes@comma{} source and WSL2
+build paths@comma{} and compatibility alternatives.
+
+@item
+Run the non-audible launcher preflight from the Emacsvox checkout:
+
+@example
+./bin/emacsvox --diagnose
+@end example
+
+It validates the checkout@comma{} Emacs@comma{} and backend without playing audio@comma{} creating
+an Omnivox session log@comma{} or opening interactive Emacs.  Before continuing@comma{}
+confirm that its report includes Emacs 31 or newer@comma{} the @code{omnivox} speech
+backend@comma{} and an isolated @code{-Q} startup.  Correct any path or version
+error that it prints.
+
+@item
+Run the deliberately audible backend check:
+
+@example
+./bin/emacsvox --check
+@end example
+
+The launcher prints its selections and explicitly announces that the audible
+check is starting.  Continue only after hearing both the tone and speech.  Do
+not diagnose Emacs configuration until this standalone Omnivox check passes.
+
+@item
+Prove a clean Emacsvox start:
+
+@example
+./bin/emacsvox
+@end example
+
+The launcher defaults to Omnivox@comma{} uses the selected Emacs 31 or newer@comma{} and
+loads the setup source by its absolute path.  The session uses @code{-Q}: it
+loads neither site files nor a personal Emacs init file.  This makes first
+speech a reproducible installation proof rather than a side effect of
+existing configuration.
+
+@code{./bin/emacsvox --diagnose} prints the selected root@comma{} setup source@comma{}
+Emacs version@comma{} and backend without playing audio or starting interactive
+Emacs.  @code{./bin/emacsvox --help} documents explicit @code{EMACS}@comma{}
+@code{TTS_PROGRAM}@comma{} and @code{EMACSVOX_DIR} overrides.  Arguments after
+@code{--} are passed to Emacs.
+@end enumerate
+
+@node Confirming First Speech
+@section Confirming First Speech
+
+A successful isolated start speaks a versioned introduction ending with:
+
+@quotation
+I am completely operational@comma{} and all my circuits are functioning perfectly!
+
+@end quotation
+
+The preceding overview key and version number can change.  The sentence above
+is the stable first-speech checkpoint.  A startup auditory icon may also play@comma{}
+but it depends on optional audio support and is not part of acceptance.
+
+Before changing personal configuration@comma{} make these checks in the isolated
+session:
+
+@enumerate
+@item
+Type @kbd{M-x tts-speak-version RET}.  The live speech adapter should speak its
+version response.
+
+@item
+Type @kbd{C-h v tts-program RET}.  The displayed current value should name
+@code{omnivox}.
+
+@item
+Use @kbd{C-n} and @kbd{C-p} to move over lines and confirm ordinary spoken
+navigation.  Type @kbd{M-x emacsvox-describe-emacsvox RET} for the Emacsvox
+overview.  @xref{Basic Usage}@comma{} for the tested starter commands.
+@end enumerate
+
+Only after these checks pass is the isolated first-use proof complete.
+
+@node Recovering From No Speech
+@section Recovering From No Speech
+
+Do not add Emacsvox to a personal init file while recovering.  Start at the
+first failing boundary:
+
+@table @asis
+@item @code{./bin/emacsvox --diagnose} fails
+No audio or interactive Emacs has started.  Follow the reported selection:
+set @code{EMACS}@comma{} correct @code{EMACS=} in @code{local.mk}@comma{} or install Emacs 31
+or newer when the Emacs check fails.  When the speech backend is not
+executable@comma{} finish installing Omnivox@comma{} put it on @code{PATH}@comma{} or set
+@code{OMNIVOX_PROGRAM} to its absolute executable.  Under WSL2@comma{} rebuild or
+verify the staged runtime described in @ref{Building Omnivox For WSL2}.
+@item The diagnostic passes@comma{} but @code{--check} errors or is inaudible
+The failure is below Emacsvox.  Do not edit the Emacs init file.  Follow
+@ref{Backend Diagnostics And Ownership} until the check produces both its tone
+and speech.  A zero exit status without both audible signals is not success.
+@item The audible check passes@comma{} but the isolated startup sentence is absent
+Run @code{./bin/emacsvox --diagnose} again from the same checkout and shell.
+Remove an unintended @code{TTS_PROGRAM} override if the report does not select
+@code{omnivox}.  Then request an Emacs startup backtrace with:
+
+@example
+./bin/emacsvox -- --debug-init
+@end example
+
+An error saying @code{Could not find speech server executable} means the
+backend visible during that start cannot be executed.  Correct the reported
+backend path rather than adding more init-file configuration.  For an Omnivox
+process error@comma{} inspect the private log directory described below.
+@item The startup sentence is heard@comma{} but speech later stops
+If Emacs reports that an Emacsvox speech server exited@comma{} inspect the Omnivox
+session log and type @kbd{M-x tts-restart RET} after correcting the backend
+problem.  Logs are below @code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
+@code{~/.local/state/emacsvox/omnivox}.  Spoken text is omitted unless explicit
+text logging is enabled.
+@item The isolated launcher works@comma{} but a customized Emacs start does not
+Remove or comment out the Emacsvox environment and @code{load-file} forms from
+the personal init file.  This is the rollback: it leaves the checkout and the
+known-good @code{./bin/emacsvox} path intact.  Re-add the forms in the order
+shown in @ref{Persistent Startup}; backend selection must happen before setup
+is loaded.
+@end table
+
+@node Persistent Startup
+@section Persistent Startup
+
+Configure a normal customized start only after @ref{Confirming First Speech}
+passes.  Add these forms to the user's Emacs init file@comma{} replacing the example
+path with the absolute path of the checkout:
+
+@lisp
+(setenv "TTS_PROGRAM" "omnivox")
+(load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
+@end lisp
+
+The order is significant: Emacsvox selects and starts the speech server while
+loading setup.  A shell alternative is to export the server name before
+launching Emacs:
+
+@example
+export TTS_PROGRAM=omnivox
+@end example
+
+Keep the explicit @code{load-file} form for a changing source checkout.  Its
+setup entry point can warn and prefer source when newer Lisp would otherwise
+be hidden by stale local byte-code.  A customized startup should speak the
+same acceptance sentence as the isolated launcher.  If it does not@comma{} remove or
+comment out the two init forms and return to the isolated launcher before
+trying another change.
+
+Emacsvox distributions contain the @code{.el} sources.  @code{make all}
+generates ignored @code{.elc} files locally in the checkout; those build
+outputs are not distributed.  After an ordinary Lisp edit@comma{} run
+@code{make bytecode}.  After switching branches@comma{} pulling@comma{} or changing Lisp
+macros or public interfaces@comma{} run @code{make bytecode-rebuild}.  The
+non-mutating @code{make bytecode-check} verifies that local byte-code is
+current and was produced by the selected Emacs.
+
+@node Building And Testing The Speech Server
+@section Building And Testing The Speech Server
+
+Speech-server launchers live in @code{servers/}.  Build them through the
+repository-root targets above so the selected paths and staging rules remain
+consistent.
+
+The Omnivox smoke test and its audible success condition are in
+@ref{Selecting And Checking Omnivox}.  The following protocol-level test is
+only for retained direct Tcl-compatible servers.  Run one of those launchers
+from the repository root@comma{} for example:
+
+@example
+./servers/espeak
+@end example
+
+Then enter:
+
+@example
+q @{This is a test.@}
+d
+s
+@end example
+
+The @code{q} command queues text@comma{} @code{d} dispatches it@comma{} and @code{s} stops
+speech.  Type @kbd{C-d} to close the server.  Backend-specific READMEs may
+provide stronger diagnostics and should take precedence over this generic
+smoke test.
+
+From Emacs@comma{} use @code{M-x tts-speak-version} to verify the selected adapter and
+@code{M-x tts-restart} after changing server configuration.  Omnivox also
+records per-process diagnostic logs below
+@code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
+@code{~/.local/state/emacsvox/omnivox}; spoken text is omitted unless explicit
+text logging is enabled.
+
+@node Speech Backends
+@chapter Speech Backends
+
+Emacsvox needs a speech-server process.  For a new installation@comma{} use
+@strong{Omnivox}.  Omnivox is the server that Emacsvox talks to; the engine
+that produces speech underneath it is platform-specific.  The normal engine
+is eSpeak NG on GNU/Linux@comma{} AVSpeechSynthesizer on macOS@comma{} and WinRT
+SpeechSynthesizer on Windows.
+
+This chapter owns Emacsvox's platform recommendation and first backend smoke
+test.  Omnivox owns its build internals@comma{} engine behavior@comma{} and versioned
+protocols.  The maintained Omnivox source and current status are at
+@uref{https://github.com/bartbunting/omnivox, the Omnivox repository}.
+
+@menu
+* Supported Platform Routes::    Choose the maintained route for this machine.
+* Installing Omnivox From Source:: Install on GNU/Linux or macOS.
+* Building Omnivox For WSL2::    Stage the Windows runtime from WSL2.
+* Selecting And Checking Omnivox:: Prove speech before starting Emacsvox.
+* Compatibility Speech Servers:: Understand the retained direct adapters.
+* Backend Diagnostics And Ownership:: Locate failures and authoritative detail.
+@end menu
+
+@node Supported Platform Routes
+@section Supported Platform Routes
+
+The following table describes Emacsvox support@comma{} not every platform that the
+Omnivox project can build.  ``Host check required'' means that the source path
+is maintained but an audible @code{omnivox --check} on the user's machine
+is still the acceptance test.
+
+@multitable @columnfractions .18 .31 .51
+@headitem Emacs platform
+@tab Recommended route
+@tab Current support evidence
+@item GNU/Linux
+@tab Source-built Omnivox using eSpeak NG
+@tab Supported source installation; host check required. Omnivox does not currently publish a Linux archive or run a Linux audio-runtime CI job.
+@item macOS on Apple silicon
+@tab Source-built Omnivox using AVSpeechSynthesizer
+@tab Supported source installation; Omnivox CI executes this native target@comma{} and the host check remains required.
+@item macOS on Intel
+@tab Source-built Omnivox using AVSpeechSynthesizer
+@tab Available source installation; current Omnivox CI cross-builds this target but does not execute it. Treat the host check as required validation.
+@item Emacs in WSL2 on x86-64 Windows
+@tab Emacsvox-staged Windows Omnivox using WinRT
+@tab Supported advanced deployment; the pinned build verifies its payload@comma{} but speech and audio must be accepted on the target Windows host.
+@item Native Windows Emacs
+@tab Omnivox executable on @code{exec-path}@comma{} using WinRT
+@tab Preview. The executable-resolution path exists@comma{} but Emacsvox does not yet publish or fresh-machine test a complete native-Windows setup. Initial users should use the WSL2 route.
+@end multitable
+
+There is no verified public binary-download path in this guide.  Build from
+source as described below.  A repository tag@comma{} a CI artifact@comma{} or an executable
+without its adjacent runtime data is not a substitute for a supported install
+payload.
+
+Do not set @code{OMNIVOX_ENGINE} during initial setup.  Its empty value selects
+the normal platform engine above.  Engine routing and optional Piper@comma{}
+Eloquence@comma{} or DECtalk support are later customizations@comma{} not prerequisites for
+first speech.
+
+@node Installing Omnivox From Source
+@section Installing Omnivox From Source
+
+Use this route on GNU/Linux and macOS@.  It requires network access for the
+initial clone@comma{} Rust toolchain@comma{} and locked dependency downloads.
+
+Install these prerequisite classes before building:
+
+@itemize
+@item
+@uref{https://rustup.rs/, rustup}; the checked-in
+@code{rust-toolchain.toml} selects the supported Rust release.
+
+@item
+Python 3@comma{} a C and C++ toolchain@comma{} CMake@comma{} and Clang with libclang.  The supported
+build wrapper uses these to build and stage eSpeak NG and its generated data.
+
+@item
+On GNU/Linux@comma{} @code{pkg-config} and ALSA development headers.  The ALSA
+package is commonly named @code{libasound2-dev} on Debian or Ubuntu and
+@code{alsa-lib-devel} on Fedora.
+
+@item
+On macOS@comma{} the Xcode command-line tools.  Install them with
+@code{xcode-select --install} if they are absent.
+@end itemize
+
+Keep the two repositories beside one another; this also matches the WSL2
+release layout:
+
+@example
+cd /path/containing/emacsvox
+git clone https://github.com/bartbunting/omnivox
+cd omnivox
+make build
+make install
+@end example
+
+@code{make build} performs the locked release build and stages the matching
+eSpeak data and third-party notices.  @code{make install} installs the
+binary and those adjacent directories@comma{} normally below @code{~/.cargo/bin}.
+Set @code{OMNIVOX_INSTALL_BIN} before @code{make install} only when the Cargo
+binary directory is elsewhere.  Do not use a bare @code{cargo build} as the
+installation procedure; it does not create the complete staged payload.
+
+Make the install directory visible on @code{PATH} before continuing.  No
+proprietary speech runtime is needed for the recommended Linux or macOS path.
+
+@node Building Omnivox For WSL2
+@section Building Omnivox For WSL2
+
+Use this route when Emacs runs inside WSL2 and speech should play through
+Windows.  Clone Omnivox beside Emacsvox as shown above.  The host must provide:
+
+@itemize
+@item
+WSL2 with working @code{powershell.exe} and @code{wslpath} interoperation;
+
+@item
+Docker with Linux/AMD64 container support;
+
+@item
+Windows .NET Framework 4.7.2 or newer; and
+
+@item
+@code{curl}@comma{} @code{unzip}@comma{} and @code{sha256sum} in WSL@comma{} plus network
+access for the pinned container and .NET toolchain inputs.
+@end itemize
+
+From a clean Emacsvox checkout whose sibling Omnivox checkout also has no
+tracked changes@comma{} run:
+
+@example
+cd /path/to/emacsvox
+make windows-omnivox
+@end example
+
+This is the reproducible release path.  It builds and verifies a pinned
+Windows-GNU executable and stages a content-addressed runtime beneath
+@code{servers/omnivox-bin}.  It also copies the runnable payload to a
+Windows-local directory so native voice and eSpeak data discovery do not pay
+the WSL filesystem cost.  Optional proprietary Eloquence and DECtalk runtimes
+are not downloaded or distributed.
+
+Maintainers testing tracked changes may use
+@code{make windows-omnivox-dev}.  That target records both worktree-diff
+hashes and labels the result as a development build; it is not the clean
+release procedure.  See @code{servers/omnivox-release/README.org} for the
+pinned toolchain@comma{} licensing@comma{} provenance@comma{} and restaging contract.
+
+@node Selecting And Checking Omnivox
+@section Selecting And Checking Omnivox
+
+First test Omnivox without Emacs.  On GNU/Linux or macOS@comma{} run the installed
+binary:
+
+@example
+omnivox --version
+omnivox --check
+omnivox --list-voices
+@end example
+
+Under WSL2@comma{} test the content-addressed launcher instead:
+
+@example
+./servers/omnivox --check
+@end example
+
+The check initializes the selected engine and audio output@comma{} then plays a tone
+and speech.  Success ends with a message saying that everything is working if
+both were heard.  Do not continue merely because the command exited zero:
+hearing both signals is the backend acceptance condition.
+
+Next select the server before loading Emacsvox:
+
+@example
+export TTS_PROGRAM=omnivox
+@end example
+
+Make that setting visible in the shell used to launch Emacs.  An
+@code{export} affects only that shell and its children; placing it in a
+shell startup file makes the choice persistent for later sessions.  On POSIX
+systems@comma{} Emacsvox's @code{servers/omnivox} launcher finds an installed
+@code{omnivox} on @code{PATH}; @code{OMNIVOX_PROGRAM} can instead name its
+absolute executable.  Native Windows Emacs resolves @code{omnivox.exe}
+directly through @code{exec-path}@comma{} but that route remains preview.
+
+Inside a running Emacsvox session@comma{} @code{M-x omnivox} selects the same server
+temporarily.  Use @code{M-x tts-speak-version} to identify the live adapter
+and @code{M-x tts-restart} after changing server configuration.  This backend
+contract stops at a proven speech server; the complete isolated Emacs start@comma{}
+expected startup speech@comma{} and no-speech recovery belong to the first-use
+procedure.
+
+@node Compatibility Speech Servers
+@section Compatibility Speech Servers
+
+Emacsvox retains direct speech servers for existing installations.  They are
+not the recommended first setup and are outside the initial-user platform
+matrix above:
+
+@table @code
+@item espeak
+The direct GNU/Linux Tcl server.  Building it with @code{make espeak}
+requires Tclx at runtime@comma{} Tcl 8.6 development headers@comma{} eSpeak NG development
+libraries@comma{} and a C++ compiler.  It remains useful for compatibility testing@comma{}
+but new users should install Omnivox instead.
+@item swiftmac
+The direct Swift macOS server.  It requires Swift 5.9 or newer and is built
+with @code{make swiftmac}.  It remains a compatibility alternative to
+Omnivox's AVSpeechSynthesizer engine; see
+@code{servers/mac-swiftmac/Readme.org}.
+@item mac
+The legacy Python/PyObjC macOS server.  The unset runtime selector still names
+it as a compatibility default on Darwin@comma{} but it is not the recommended or
+documented initial-user route.  It depends on Foundation@comma{} AppKit@comma{} and
+PyObjCTools availability.
+@item outloud
+The direct GNU/Linux IBM TTS or Eloquence adapter.  It requires a separately
+licensed compatible runtime@comma{} which Emacsvox does not distribute.  Voxin
+availability is documented at @uref{https://voxin.oralux.net}.
+@item dtk-soft
+The direct Software DECtalk adapter.  Install its runtime separately and see
+@code{servers/software-dtk/Readme.org}.  Emacsvox does not distribute licensed
+speech runtimes.
+@end table
+
+The native Windows audio@comma{} standalone Eloquence@comma{} and standalone DECtalk bridges
+under @code{servers/} are advanced WSL-specific compatibility paths.  Piper is
+an optional Omnivox engine and model workflow@comma{} not a primary Emacsvox server.
+
+@node Backend Diagnostics And Ownership
+@section Backend Diagnostics And Ownership
+
+Use the boundary at which speech failed to choose the next diagnostic:
+
+@table @asis
+@item @code{omnivox} is not found
+Check @code{PATH}; on POSIX@comma{} an absolute @code{OMNIVOX_PROGRAM} can identify the
+installed executable.  Keep its adjacent @code{espeak-ng-data} and
+@code{third-party-licenses} directories with it.
+@item @code{omnivox --check} reports an error or is inaudible
+The failure is below Emacsvox.  Consult Omnivox's
+@uref{https://github.com/bartbunting/omnivox/blob/main/README.md, build guide}@comma{}
+@uref{https://github.com/bartbunting/omnivox/blob/main/STATUS.md, platform status}@comma{}
+and
+@uref{https://github.com/bartbunting/omnivox/blob/main/docs/DIAGNOSTICS.md, diagnostics guide}.  Do not diagnose Emacs configuration until the tone and
+speech check passes.
+@item The check passes but Emacsvox is silent
+Confirm that @code{TTS_PROGRAM=omnivox} was present before Emacsvox loaded@comma{} then
+use @code{M-x tts-speak-version}.  Under WSL2@comma{} also run
+@code{make verify-windows-omnivox-runtime} and restart the speech process
+after restaging.
+@item A process starts and later fails
+The Emacsvox POSIX/WSL launcher writes private@comma{} bounded stderr logs below
+@code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
+@code{~/.local/state/emacsvox/omnivox}.  Spoken text is excluded unless
+@code{OMNIVOX_LOG_SYNTHESIS_TEXT} is explicitly enabled; enabling it can expose
+passwords@comma{} messages@comma{} and document contents.
+@end table
+
+Emacsvox owns server selection@comma{} its POSIX/WSL launcher@comma{} Windows staging@comma{} and
+the bundled Lisp adapter.  Omnivox owns its native builds@comma{} engines@comma{} command
+line@comma{} runtime data layout@comma{} and protocol specifications.  Backend-local
+READMEs own licensed-runtime and compatibility-adapter details.  Cross-link
+these owners rather than copying their versioned contracts into installation
+instructions.
+
+@node Basic Usage
+@chapter Basic Usage.
+
+This chapter gives a short@comma{} task-oriented introduction to Emacsvox.
+For the complete generated key reference@comma{} see
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
+Use @kbd{C-h m} to inspect the modes and bindings active in the current
+buffer@comma{} or @kbd{C-h k} followed by a key to ask Emacs what that key does.
+These sections describe the speech-enabling extensions@comma{} but are not a
+substitute for the Emacs manual.
+
+All Emacs navigation and editing commands have been speech enabled.
+Thus@comma{} moving to the next or previous word@comma{} line or paragraph results
+in the text around point being spoken.  Exactly how much text is
+spoken is determined by the amount by which you moved.
+
+In addition@comma{} Emacsvox provides  basic reading functions that can be
+invoked to listen to chunks of text without moving.
+
+@menu
+* Overview::                     Basic Overview.
+* Working::                      Working in Emacsvox.
+* Reading::                      Reading chunks of information.
+* Speech System::                Controlling Speech Output.
+* Voice-lock::                   Audio Formatting.
+* Status Information::           Speaking Status Information.
+@end menu
+
+@node Overview
+@section Emacsvox Overview
+
+Emacsvox provides a small number of core services around which the
+remainder of the audio interface is constructed.  These essential
+features of the software are briefly outlined in the following
+paragraphs; the commands by which they can be controlled will be
+described later in the manual.
+
+Apart from providing a fluent spoken interface to all of Emacs' basic
+editing functions@comma{} Emacsvox also includes software modules which add
+speech feedback to a range of applications that can be run from within
+Emacs. In this sense@comma{} Emacsvox amounts to much more than a talking
+text editor; indeed@comma{} it can more aptly be characterized as a true
+``audio desktop''@comma{} in which speech is treated as a first-class output modality.
+
+Emacsvox implements a special minor mode@comma{} known as ``voice lock mode''
+(@pxref{Voice-lock}) which uses distinct speech characteristics to
+provide aural highlighting of specific textual constructs@comma{} such as
+comments in program code@comma{} quoted strings and reserved words @xref{Voice Lock}. This facility is further extended in the supported @code{EWW} Web
+browser@comma{} where semantic and structural distinctions captured by HTML markup
+can be communicated efficiently; see @ref{Web Browsing}.
+
+It is often desirable to exercise control over the pronunciation of a
+word (E.G@. a technical term or a reserved word in a programming
+language) within specific contexts. Emacsvox maintains pronunciation
+dictionaries for this purpose@comma{} which may be customized by the
+user. Moreover@comma{} individual dictionaries can be activated selectively@comma{}
+depending for example on the current major mode or the name of the
+file which is being visited; see
+@ref{emacsvox-pronounce,,,emacsvox-reference,Emacsvox Reference Manual}.
+
+In addition to spoken feedback@comma{} Emacsvox can generate ``auditory
+icons''  @MDash{} short sound cues which alert the user to significant
+events@comma{} for example the opening or deletion of a file@comma{} the completion
+of an action@comma{} the arrival of an electronic mail message or the
+creation of a completion buffer. Sound cues act as a supplement to the
+spoken interface@comma{} and are especially valuable to the experienced user
+in facilitating rapid interaction. Note that in order to support
+auditory icons@comma{} the computer must be equipped with sound hardware for
+which the operating system has been correctly configured; see
+@ref{emacsvox-sounds,,,emacsvox-reference,Emacsvox Reference Manual}.
+
+@node Working
+@section Using Emacs Buffers
+
+While typing in an Emacs buffer@comma{} hitting space speaks the recently
+typed word.  I use completion all the time; so Emacsvox will speak
+the completion just inserted as well as the next possible completion.
+In Emacs@comma{} use @kbd{M-x load-library @key{RETURN} completion @key{RETURN}} for loading the completion package.
+
+The standard Emacs prompting functions have also been speech-enabled.
+Emacs prompts with available lists of completions in response to partial
+input wherever appropriate   @MDash{} all forms of completion provide speech
+feedback.
+
+In addition@comma{} Emacsvox provides a number of commands for reading
+portions of the current buffer@comma{} getting status information@comma{} and
+modifying Emacsvox's state.
+
+All of the commands are documented in the subsequent sections.
+They can be classified into types:
+
+@itemize
+@item
+Emacsvox commands for listening to chunks of information.  Most of
+these command names start with @code{emacsvox-speak-}.  Their default
+bindings are grouped under the main Emacsvox prefix @kbd{C-e}@footnote{The prefix is inherited from Emacspeak@comma{} where C-e was mnemonic for the project name.}.  The starter bindings are introduced in @ref{Reading};
+the live Help system and generated key reference remain authoritative
+when bindings are customized.
+
+@item
+The second category manipulates the speech engine.  These commands
+normally start with @code{tts-} and are grouped under @kbd{C-e d}
+@footnote{Historically@comma{} d was mnemonic for DECtalk; the prefix now contains engine-independent speech controls.}.
+@end itemize
+
+Emacs and Emacsvox both expose their current commands through Emacs Help.
+Use the small set below to get oriented@comma{} then use Help or the generated
+reference instead of relying on a copied exhaustive list.
+
+@node Reading
+@section Reading and Navigating
+
+Ordinary Emacs movement speaks the text crossed by point: moving by a
+character@comma{} word@comma{} line@comma{} or paragraph presents the corresponding unit.
+The commands below let you inspect useful units without first moving.
+They use the default @kbd{C-e} prefix.
+
+This is deliberately a starter set@comma{} not a second complete key reference.
+If a binding below differs in your session@comma{} use @kbd{C-h k} on that key
+and check your customizations.  The complete generated defaults are in the
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
+
+@table @kbd
+@item C-e c
+@findex emacsvox-speak-char
+
+@kindex C-e c
+
+@code{emacsvox-speak-char}
+speaks the character at point.
+@item C-e w
+@findex emacsvox-speak-word
+
+@kindex C-e w
+
+@code{emacsvox-speak-word}
+speaks the current word.  Repeating it at the same position spells the
+word.
+@item C-e l
+@findex emacsvox-speak-line
+
+@kindex C-e l
+
+@code{emacsvox-speak-line}
+speaks the current line.
+@item C-e [
+@findex emacsvox-speak-paragraph
+
+@kindex C-e [
+
+@code{emacsvox-speak-paragraph}
+speaks the current paragraph.
+@item C-e ]
+@findex emacsvox-speak-page
+
+@kindex C-e ]
+
+@code{emacsvox-speak-page}
+speaks the current page.
+@item C-e r
+@findex emacsvox-speak-region
+
+@kindex C-e r
+
+@code{emacsvox-speak-region}
+speaks the active region between point and mark.
+@item C-e i
+@findex emacsvox-speak-rest-of-buffer
+
+@kindex C-e i
+
+@code{emacsvox-speak-rest-of-buffer}
+speaks from point to the end of the buffer.
+@item C-e b
+@findex emacsvox-speak-buffer
+
+@kindex C-e b
+
+@code{emacsvox-speak-buffer}
+speaks the entire current buffer.
+@item C-e s
+@findex tts-stop
+
+@kindex C-e s
+
+@code{tts-stop}
+stops current speech.
+@item C-e C-d
+@findex emacsvox-toggle-show-point
+
+@kindex C-e C-d
+
+@code{emacsvox-toggle-show-point}
+toggles the aural indication of point within spoken text.
+@end table
+
+Many speaking commands accept a prefix argument to limit speech to the
+text before or after point.  Use @kbd{C-h k} on a command before relying
+on those variants@comma{} because their exact argument behavior is documented
+with the command.
+
+@node Speech System
+@section Speech System Commands
+
+@cindex TTS
+
+@cindex speech system
+
+@cindex speech settings
+
+This section documents the main Emacsvox commands for controlling the
+text-to-speech (@acronym{TTS}) system.  The exact key bindings generated from
+the current keymaps appear in the
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
+
+@menu
+* Controlling Echo::             Character, Word and Line Echo.
+* Speech Output Control::        Indicating case, capitalization and indentation.
+* Miscellaneous::                Miscellaneous TTS Commands.
+@end menu
+
+@node Controlling Echo
+@subsection Character@comma{} Word And Line Echo.
+
+@cindex line echo
+
+@cindex character echo
+
+@cindex word echo
+
+By default@comma{} Emacsvox speaks characters as they are typed  @MDash{}
+this is called character echo; Words are spoken as they are completed
+ @MDash{} this is called word echo.  Emacsvox can also optionally
+speak each line as it is typed  @MDash{} this is called line echo.
+
+Character@comma{} word and line echo can be toggled  @MDash{} either in the
+current buffer  @MDash{} or for all buffers (globally).  To toggle the
+specific echo functionality for all buffers@comma{} precede the specific
+command with @kbd{C-u}.  Note that in the documentation below@comma{} this
+use of @kbd{C-u} is indicated using the common Emacs terminology of
+@strong{prefix arg} or @strong{interactive prefix arg}.
+
+@table @kbd
+@item C-e d k
+@findex emacsvox-toggle-character-echo
+
+@kindex C-e d k
+
+@code{emacsvox-toggle-character-echo}
+
+Toggle state of Emacsvox character echo.  Interactive PREFIX arg
+means toggle the global default value@comma{} and then set the current local
+value to the result.
+@item C-e d w
+@findex emacsvox-toggle-word-echo
+
+@kindex C-e d w
+
+@code{emacsvox-toggle-word-echo}
+
+Toggle state of Emacsvox word echo.  Interactive PREFIX arg means
+toggle the global default value@comma{} and then set the current local value
+to the result.
+@item C-e d l
+@findex emacsvox-toggle-line-echo
+
+@kindex C-e d l
+
+@code{emacsvox-toggle-line-echo}
+
+Toggle state of Emacsvox line echo.  Interactive PREFIX arg means
+toggle the global default value@comma{} and then set the current local value
+to the result.
+@end table
+
+@node Speech Output Control
+@subsection Setting  TTS Characteristics.
+
+Emacsvox user commands can set different characteristics of the speech
+output such as speech rate and  punctuations mode.
+
+Emacsvox provides settings that affect how text attributes such as
+capitalization and indentation are conveyed.  Each feature has a master
+switch and a separately selected presentation@comma{} so enabling the feature does
+not force one fixed sound.
+These settings can be made locally in a given buffer or be applied to
+all buffers by preceding these commands with @kbd{C-u}.
+
+@table @kbd
+@item C-e d r
+@findex tts-set-rate
+
+@kindex C-e d r
+
+@code{tts-set-rate}
+
+Set speaking RATE for the @acronym{TTS}.  Interactive PREFIX arg means set the
+global default value@comma{} and then set the current local value to the
+result.
+@item C-e d f
+@findex tts-set-character-scale
+
+@kindex C-e d f
+
+@code{tts-set-character-scale}
+
+Set scale FACTOR for speech rate.  Speech rate is scaled by this
+factor when speaking characters.  Interactive PREFIX arg means set the
+global default value@comma{} and then set the current local value to the
+result.
+@item C-e d DIGIT
+@findex tts-set-predefined-rate
+
+@kindex C-e d DIGIT
+
+@code{tts-set-predefined-rate}
+
+Set speech rate to one of nine predefined levels using digit keys
+@kbd{0} through @kbd{9}.  Interactive PREFIX arg says to set the rate
+globally.
+@item C-e d p
+@findex tts-set-punctuations
+
+@kindex C-e d p
+
+@code{tts-set-punctuations}
+
+Set punctuation mode to MODE@.  Possible values are @code{some}@comma{} @code{all}@comma{}
+or @code{none}.  Interactive PREFIX arg means set the global default value@comma{}
+and then set the current local value to the result.
+@item C-e d s
+@findex tts-toggle-split-caps
+
+@kindex C-e d s
+
+@code{tts-toggle-split-caps}
+
+Toggle split caps mode.  Split caps mode is useful when reading
+Hungarian notation in program source code.  Interactive PREFIX arg
+means toggle the global default value@comma{} and then set the current local
+value to the result.
+@item C-e d c
+@kindex C-e d c
+
+@findex tts-toggle-caps
+
+@code{tts-toggle-caps}
+
+Toggle capitalization indication.  Interactive PREFIX arg means toggle the
+global default value@comma{} then set the current local value to the result.
+@item C-e d C
+@kindex C-e d C
+
+@findex emacsvox-set-capitalization-presentation
+
+@code{emacsvox-set-capitalization-presentation}
+
+Choose @code{spoken}@comma{} @code{tone}@comma{} @code{spoken-tone}@comma{} @code{custom}@comma{} or
+@code{none}@comma{} and preview representative text.  @code{custom} publishes facts
+for personal Aural Presentation rules without adding built-in output.  A
+current Omnivox server applies the selected capitalization presentation to
+isolated letters as well as queued words; older speech servers retain their
+engine-specific isolated-letter behavior.
+@end table
+
+In addition@comma{} Emacsvox can convey the indentation of lines as they are
+spoken  @MDash{} This is relevant when programming and is the default
+when working with program source.
+
+@table @kbd
+@item C-e d i
+@findex emacsvox-toggle-audio-indentation
+
+@kindex C-e d i
+
+@code{emacsvox-toggle-audio-indentation}
+
+Toggle state of Emacsvox audio indentation.  Interactive PREFIX arg
+means toggle the global default value@comma{} and then set the current local
+value to the result.
+@item C-e d I
+@findex emacsvox-set-indentation-presentation
+
+@kindex C-e d I
+
+@code{emacsvox-set-indentation-presentation}
+
+Choose spoken column@comma{} duration-coded tone@comma{} rising-pitch tone@comma{} either tone
+combined with speech@comma{} @code{custom}@comma{} or @code{none}.  The command previews a
+four-column indentation sample.  Indentation tones complete before the line is
+spoken so they do not mask its first phoneme.
+@end table
+
+@node Miscellaneous
+@subsection Miscellaneous Speech Commands
+
+Speech can be stopped explicitly using command @code{tts-stop}.  In normal
+navigation@comma{} replaceable speech supersedes older work in the same replacement
+domain while ordered and urgent output is preserved.
+The speech server can be stopped and restarted for cases where the
+user wants to switch to a different server  @MDash{} or in the rare
+case to nuke a runaway speech server.
+
+@table @kbd
+@item C-e s
+@findex tts-stop
+
+@kindex C-e s
+
+@code{tts-stop}
+
+Stop speech now.
+@item C-e d q
+@findex tts-toggle-quiet
+
+@kindex C-e d q
+
+@code{tts-toggle-quiet}
+
+Toggle state of the speech device between being quiet and talkative.
+Useful if you want to continue using an Emacs session that has
+emacsvox loaded but wish to make the speech shut up.  Optional
+argument PREFIX specifies whether speech is turned off in the current
+buffer or in all buffers.
+@item C-e C-s
+@findex tts-restart
+
+@kindex C-e C-s
+
+@code{tts-restart}
+
+Use this to stop the currently running speech server and restart it.
+Useful if you want to switch to another synthesizer while emacsvox is
+running.  Also useful for emergency stopping of speech.
+@end table
+
+Finally@comma{} here are the remaining commands available via the
+@acronym{TTS} related keymap @kbd{C-e d}.
+
+@table @kbd
+@item C-e d a
+@findex tts-add-cleanup-pattern
+
+@kindex C-e d a
+
+@code{tts-add-cleanup-pattern}
+
+Add this pattern to the list of repeating patterns that are cleaned
+up.  Optional interactive prefix arg deletes this pattern if
+previously added.  Cleaning up repeated patterns results in emacsvox
+speaking the pattern followed by a repeat count instead of speaking
+all the characters making up the pattern.  Thus@comma{} by adding the
+repeating pattern `.' (this is already added by default) emacsvox
+will say ``aw fifteen dot'' when speaking the string
+``@dots{}@dots{}@dots{}@dots{}@dots{}'' instead of ``period period period period''.
+@item C-e d d
+@findex tts-select-server
+
+@kindex C-e d d
+
+@code{tts-select-server}
+
+Select a speech server interactively.  This will be the server that is
+used when you next call either M-x tts-initialize or C-e C-s.
+Argument PROGRAM specifies the speech server program.
+@item C-e d @key{SPACE}
+@findex tts-toggle-splitting-on-white-space
+
+@kindex C-e d SPACE
+
+@code{tts-toggle-splitting-on-white-space}
+
+Toggle splitting of speech on white space.  This affects the internal
+state of emacsvox that decides if we split text purely by clause
+boundaries@comma{} or also include whitespace.  By default@comma{} emacsvox sends a
+clause at a time to the speech device.  This produces fluent speech
+for normal use.  However in modes such as `shell-mode' and some
+programming language modes@comma{} clause markers appear infrequently@comma{} and
+this can result in large amounts of text being sent to the speech
+device at once@comma{} making the system unresponsive when asked to stop
+talking.  Splitting on white space makes emacsvox's stop command
+responsive.  However@comma{} when splitting on white space@comma{} the speech sounds
+choppy since the synthesizer is getting a word at a time.
+@item C-e d @key{RETURN}
+@findex tts-set-chunk-separator-syntax
+
+@kindex C-e d RETURN
+
+@code{tts-set-chunk-separator-syntax}
+
+Interactively set how text is split in chunks.  See the Emacs
+documentation on syntax tables for details on how characters are
+classified into various syntactic classes.  Argument S specifies the
+syntax class.
+@item C-e d V
+@findex tts-speak-version
+
+@kindex C-e d V
+
+@code{tts-speak-version}
+
+Use this to find out which version of the @acronym{TTS} firmware you
+are running.
+@item C-e d z
+@findex emacsvox-zap-tts
+
+@kindex C-e d z
+
+@code{emacsvox-zap-tts}
+
+Send this command to the @acronym{TTS} engine directly.
+@end table
+
+@node Voice-lock
+@section Voice Lock Mode
+
+Toggle voice lock globally with @kbd{M-x}
+@code{global-voice-lock-mode}.  Its current default binding is in
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
+
+Voice-lock is turned on automatically in all buffers that support it
+when Emacsvox is started.
+
+Emacsvox can be set to disable voice lock in all of the major modes
+that support it. To do so@comma{} insert the following statement into your
+Emacs initialization file:
+
+@lisp
+(global-voice-lock-mode -1)
+@end lisp
+
+The characteristics of the different voice personalities used by voice
+lock mode vary according to the capabilities of the speech
+synthesizer. The definitions applicable to the Dectalk family of
+synthesizers are contained in @code{dectalk-voices.el}@comma{} which is
+supplied as part of the Emacsvox distribution. The Emacsvox
+distribution also contains voice definitions for many other
+synthesizers.
+
+Voice-lock maps faces and other mode-provided text properties to speech
+personalities.  Integrations such as EWW use those properties and document
+structure to provide aural distinctions; the active mode and voice settings@comma{}
+not an inherited Web style sheet@comma{} determine current behavior.  For historical
+context on Aural CSS@comma{} see
+@ref{Audio Formatting And Aural CSS,,,emacsvox-heritage,Emacspeak Heritage}.
+
+@node Status Information
+@section Status  Commands
+
+These common commands answer frequent orientation questions.  Less common
+status commands are listed in the
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
+
+@table @kbd
+@item C-e a
+@findex emacsvox-speak-message-again
+
+@kindex C-e a
+
+@code{emacsvox-speak-message-again}
+
+Speak the last message from Emacs once again.
+@item C-e m
+@findex emacsvox-speak-mode-line
+
+@kindex C-e m
+
+@code{emacsvox-speak-mode-line}
+
+Speak the mode-line.
+@item C-e M
+@findex emacsvox-speak-minor-mode-line
+
+@kindex C-e M
+
+@code{emacsvox-speak-minor-mode-line}
+
+Speak the minor mode-information.
+@item C-e C-x
+@findex emacsvox-speak-header-line
+
+@kindex C-e C-x
+
+@code{emacsvox-speak-header-line}
+
+Speak the header-line.
+
+@item C-e C-w
+@findex emacsvox-speak-window-information
+
+@kindex C-e C-w
+
+@code{emacsvox-speak-window-information}
+
+Speaks information about current windows.
+@item C-e f
+@findex emacsvox-speak-buffer-filename
+
+@kindex C-e f
+
+@code{emacsvox-speak-buffer-filename}
+
+Speak name of file being visited in current buffer.
+Speak default directory if invoked in a dired buffer@comma{}
+or when the buffer is not visiting any file.
+@item C-e C-l
+@findex what-line
+
+@kindex C-e C-l
+
+@code{what-line}
+
+reports the current line number and position in the buffer.
+@item C-e =
+@findex emacsvox-speak-current-column
+
+@kindex C-e =
+
+@code{emacsvox-speak-current-column}
+
+Speak the current column.
+@item C-e %
+@findex emacsvox-speak-current-percentage
+
+@kindex C-e %
+
+@code{emacsvox-speak-current-percentage}
+
+Announce the percentage into the current buffer.
+@end table
+
+@node Introduction
+@chapter Introduction
+
+@cindex Introduction
+
+Emacsvox is an Emacs 31-or-newer audio desktop derived from Emacspeak.  It is
+not a pixel-oriented screen reader.  It runs inside Emacs@comma{} where commands@comma{}
+buffers@comma{} text properties@comma{} faces@comma{} modes@comma{} and application state are available as
+structured information.  That context lets Emacsvox present the meaning and
+result of an interaction rather than merely reading the visible display.
+
+Application integrations adapt interactive commands and changing buffers to
+produce spoken text@comma{} voice changes@comma{} auditory icons@comma{} tones@comma{} pauses@comma{} and spatial
+feedback.  The core speech layer normalizes text and formatting and sends it
+to the selected speech adapter.  Established direct speech paths remain
+available for compatibility@comma{} while migrated integrations can submit a complete
+Aural Presentation transaction.
+
+@section Aural Presentation
+
+Aural Presentation separates semantic facts from their audible rendering.
+An integration records what an object or event means; providers and rules
+choose voices and actions; a planner and compiler produce a concrete ordered
+presentation.  The fixed internal baseline preserves established Emacsvox
+feedback.  Users can compose Presentation Options@comma{} profiles@comma{} palettes@comma{} sound
+packs@comma{} spatial settings@comma{} and scoped overrides without replacing that baseline.
+
+Open Aural Home with @kbd{C-e H} or
+@code{M-x emacsvox-aural}.  Use @kbd{C-e E} to explain the presentation at
+point.  The generated author and lifecycle reference is
+@code{etc/aural-presentation-reference.org} in the source tree.
+
+@section Speech Adapters And Omnivox
+
+Emacsvox retains standalone speech servers for engines such as eSpeak@comma{}
+Eloquence@comma{} DECtalk@comma{} and SwiftMac.  Omnivox is the recommended multi-engine
+server for new GNU/Linux@comma{} macOS@comma{} and WSL2 installations.  It negotiates
+capabilities@comma{} reports live engine and physical-voice inventory@comma{} routes portable
+logical voices@comma{} and accepts structured presentation timelines.  Keyed
+replaceable timelines cancel only older work in the same replacement domain;
+ordered and urgent work are not placed behind the replaceable coalescing
+window.
+
+@xref{Speech Backends}@comma{} for Emacsvox's platform status@comma{} Omnivox installation@comma{}
+selection@comma{} smoke test@comma{} and compatibility policy.  The Emacsvox
+@code{Readme.org} documents advanced portable voice routing.  Omnivox owns the
+detailed control@comma{} helper@comma{} and presentation-timeline protocol contracts in its
+own repository.  The legacy line protocol remains supported for standalone
+and older speech servers; @xref{TTS Servers} explains the boundary between
+those protocol families.
+
+@section Documentation Scope
+
+This manual includes generated command documentation as well as inherited
+Emacspeak essays and application guides.  Historical chapters are useful for
+design context but may describe software and Web services from their original
+period.  Current setup starts with @xref{Installation}; rapidly changing
+features are documented in @code{Readme.org}@comma{} @code{etc/NEWS}@comma{} and the generated
+Aural Presentation reference.
+
+@node Audio Desktop
+@chapter The Emacsvox Audio Desktop.
+
+@cindex Audio Desktop
+
+This chapter describes the Emacsvox audio desktop and gives tips and
+tricks for making use of many of Emacs' powerful features.
+
+The desktop is the work area where you organize the tools of your
+trade and the information objects relevant to your current activities.
+In the conventional world of visual @acronym{GUI,Graphical User Interface}-based computing@comma{} these tools and information objects
+manifest themselves as a collection of icons organized in a
+two-dimensional work-area  @MDash{} this organization is designed to
+place frequently used objects within easy reach.
+
+Notice that organizing one's work area in terms of visual icons
+arranged in a two-dimensional area where such an organization is
+optimized for the available ``conversational gestures'' of pointing and
+clicking is an artifact of visual interaction.
+
+In the spirit of a truly speech-enabled application@comma{} Emacsvox does
+not simply provide you spoken access to a particular presentation of
+your work environment that was initially designed with the ``sign
+language'' of visual interaction in mind.  Instead@comma{} Emacsvox enables
+you to work with documents and other information objects in a manner
+that is optimized to aural@comma{} eyes-free interaction.  A necessary
+consequence of this setup is that users accustomed to the purely
+visual manifestation of today's electronic desktop do not immediately
+perceive the Emacsvox environment as an electronic desktop.  This
+section of the manual hopes to introduce you to a work-style that
+encourages a different perspective on how one interacts with the
+computer in performing day-to-day computing tasks.
+
+The end result in my case has been a marked increase in personal
+productivity.
+
+@menu
+* Desktop Objects::              Desktop Objects
+* Object Oriented Desktop::      Object Oriented Desktop
+* Context-Sensitive Interaction:: Context-Sensitive Interaction
+@end menu
+
+@node Desktop Objects
+@section Objects Making Up The Emacsvox Desktop
+
+@cindex Desktop Objects
+
+A ``buffer'' is the basic building block of  the
+Emacsvox desktop.  Any information presented by Emacs is placed in a
+``buffer''.  For example@comma{} when perusing this manual within Emacs@comma{} the
+``file'' containing the documentation is presented in a ``buffer''.  All
+information objects such as @acronym{WWW} pages@comma{} email messages@comma{} output from
+user interaction with command-line shells etc.@comma{} are presented by Emacs
+in individual ``buffers''.
+
+Buffers provide a base level of user interaction; Emacs derives its
+power by allowing applications to specialize buffers to enable
+specific types of user-interaction that is optimized for a specific
+class of information.
+
+@node Object Oriented Desktop
+@section An Object-Oriented Desktop
+
+@cindex Object-Oriented Desktop
+
+The basic ``buffer object'' can be specialized by Emacs applications
+to provide optimal interaction.  This kind of specialization makes the
+Emacs environment an object-oriented environment; thus@comma{} the basic
+conversational gesture of ``move to the next statement'' can be
+assigned behavior that is appropriate to the content that the user is
+currently navigating.  As an example of such specialization@comma{} Emacs
+provides ``specialized modes'' for working with English text@comma{}
+programming languages@comma{} markup source e.g. @acronym{HTML,Hypertext Markup Language} or @LaTeX{} documents and so on.
+
+@node Context-Sensitive Interaction
+@section Emacsvox Specializes Aural Interaction
+
+@cindex Context-Sensitive Interaction
+
+The content-specific user interaction described above is a very
+powerful feature of Emacs@comma{} and this is where Emacsvox derives its
+power.  Traditionally@comma{} the ability to create buffers specialized for
+working with specific content-types has been used by the Emacs
+community to develop versatile programming environments@comma{} messaging
+applications such as mail and news readers@comma{} and authoring
+environments.  The clean design present in all of these Emacs
+extensions in terms of separating application functionality from the
+user-interface@comma{} combined with the availability of the entire source
+code making up these packages under the open-source model has laid the
+ground-work for developing Emacsvox as a versatile aural counterpart
+to the product of years of software engineering that has been invested
+by the Emacs community.  In short@comma{} Emacsvox would not exist in its
+present shape or form without this prior effort.
+
+@subsection Audio Formatted Output
+
+@cindex Audio Formatting
+
+Emacsvox takes advantage of the content-specific knowledge available
+within specialized buffers to produce ``audio formatted'' output
+designed to optimize user interaction.  A basic consequence of the
+above is ``voice locking'' in specialized modes; a more interesting
+consequence is the implementation of Aural Cascading Style Sheets
+(@acronym{ACSS}) in conjunction with the Emacs @acronym{EWW,Emacs Web Wowser} and @acronym{W3} Web browsers.
+
+@subsection Structured Navigation:
+
+@cindex Structured Navigation
+
+Emacsvox also exploits content-specific knowledge to provide
+structured navigation of different types of electronic content.  In
+many cases@comma{} such structured navigation is an extension of what Emacs
+provides by default; in other cases@comma{} Emacsvox implements the
+necessary extensions to provide the level of structural navigation
+needed to work efficiently in an eyes-free environment.
+
+Notable among such structured navigation is Emacs' powerful outline
+feature.
+
+An example of content-sensitive navigation is provided by the @code{imenu}
+package which dynamically creates a ``table of contents'' based on the
+content that is being displayed in a given buffer.  Emacs
+@dfn{Selective Display} lets one easily hide and expose portions of a
+buffer based on indentation  @MDash{} this feature can be used to
+advantage when working with program source code.
+
+@subsection Navigating The Desktop
+
+@cindex Desktop Navigation
+
+In addition to navigating individual information objects@comma{} the
+Emacsvox environment provides speech-enabled navigation of the
+various buffers that are currently open on the Emacsvox desktop via
+Emacs' built-in list-buffers feature.  Emacs' dired  @MDash{} directory
+editor  @MDash{} for browsing the file system@comma{} along with the new
+speedbar package that combines features from dired and imenu round off
+the suite of navigational tools.
+
+@subsection Everything Is Searchable:
+
+@cindex Searching
+
+@cindex Finding
+
+Emacs derives one final advantage from using buffers as the basic
+building block for the entire desktop.  Every Emacs buffer is
+searchable via a uniform and powerful search interface.  Emacs'
+incremental search works efficiently and consistently to enable you
+locate ``objects'' of interest either within a given document or to
+locate a given object from among the various objects that are
+currently open on the Emacsvox desktop.  This is @b{very powerful}
+ @MDash{} where a @acronym{GUI,Graphical User Interface} user is
+typically limited to quickly locating an object from a relatively
+small collection  @MDash{} the size of the collection being a direct
+function of available display real-estate  @MDash{} the Emacsvox user
+can typically work with a far larger collection of objects.  This is
+well-suited to the eyes-free environment@comma{} where display real-estate
+has no meaning; so bringing up a list of currently open buffers and
+performing an incremental search to locate a specific buffer is just
+as efficient independent of whether you have a few dozen or a few
+hundred buffers open.
+
+To illustrate the above@comma{} my typical working Emacs session lasts
+between two and three weeks  @MDash{} over that time I typically
+accumulate several hundred open buffers holding a large variety of
+content ranging from program source code to email messages and
+@acronym{WWW} pages.
+
+Ubiquitous search in the eyes-free environment is critical  @MDash{} as
+a comparison@comma{} when using a conventional@comma{} purely visual WWW browser@comma{}
+users have no means of easily ``searching'' for say the ``submit''
+button on a WWW page.  This inability is a minor annoyance in visual
+interaction@comma{} and the typical mouse-enabled user @b{never} uses the
+find dialog to find a submit button  @MDash{} it is simply more
+efficient to point at the submit button given the eye's ability to
+quickly scan the two-dimensional display.  This luxury is absent in an
+eyes-free environment; as a consequence@comma{} blind users confronted by the
+combination of a visual interface and screen-reader are typically
+limited to either tabbing through all the controls on a @acronym{WWW}
+page@comma{} or using the sub-optimal find dialog.
+
+@node Voice Lock
+@chapter Voice Lock
+
+See
+@uref{http://tvraman.github.io/emacspeak/blog/voice-lock-refreshed.html}
+for a high-level overview of how Emacsvox Voice-Lock has evolved over
+the years.
+
+@enumerate
+@item
+Emacsvox defines a number of voice overlays such as
+@code{voice-bolden}@comma{} and @code{voice-lighten} that can be applied to a
+given voice to change what it sounds like.
+
+@item
+Voice overlays are defined in terms of Aural CSS
+(@uref{http://www.w3.org/tr/css2/aural.html, ACSS}) to keep them
+independent of a specific TTS engine.
+
+@item
+For each such overlay there is a corresponding
+@code{<OVERLAY-NAME>-settings} variable that can be customized via
+custom.
+
+@item
+The numbers in @code{voice-bolden-settings} as an example:
+@end enumerate
+
+@multitable @columnfractions 0.5 0.5
+@item Setting
+@tab Value
+@item family
+@tab nil
+@item average-pitch
+@tab 1
+@item pitch-range
+@tab 6
+@item stress
+@tab 6
+@item richness
+@tab nil
+@item punctuation
+@tab nil
+@end multitable
+
+Unset values (@code{nil}) show up as ``unspecified'' in the customize
+interface.
+
+@enumerate
+@item
+Do not directly customize @code{voice-bolden} and friends@comma{} instead
+customize the corresponding @code{voice-bolden-settings}@comma{} since that
+ensures that all voices that are defined in terms of
+@code{voice-bolden} get correctly updated.
+
+@item
+Discovering what to customize:
+@end enumerate
+
+Command @code{emacsvox-show-personality-at-point} (bound by default
+to C-e M-v) will show you the value of properties personality and
+face at point.  Describe-variable on these names should tell you
+what to customize; so as an example:
+
+Put point on a comment line@comma{} and hit @kbd{C-e M-v}: you will hear
+
+@example
+Personality emacsvox-voice-lock-comment-personality
+Face font-lock-comment-delimiter-face
+@end example
+
+Describe-variable of @code{emacsvox-voice-lock-comment-personality} gives:
+
+@example
+emacsvox-voice-lock-comment-personality's value is acss-p0-s0-all
+
+Documentation: Personality used for font-lock-comment-face This
+personality uses voice-monotone whose effect can be changed globally
+by customizing voice-monotone-settings.
+@end example
+
+@menu
+* How It All Works.::
+* What this gives.::
+@end menu
+
+@node How It All Works.
+@section How It All Works
+
+Here is a brief explanation of the connection between
+@code{voice-bolden} and its associated @code{voice-bolden-settings}.
+
+@enumerate
+@item
+Voice settings are initially in @code{voice-bolden-settings} which is
+a list of numbers.
+
+@item
+That list of numbers needs to be translated to appropriate
+device-specific codes to send to the TTS engine.
+
+@item
+You do not want to do this translation @strong{each} time you
+speak something.
+
+@item
+So when @code{voice-bolden} is defined@comma{} the definition happens in
+two steps:
+
+@itemize
+@item
+The list of settings is stored away in
+@code{voice-bolden-settings}@comma{}
+
+@item
+A corresponding voice-name is generated   @MDash{}
+@code{acss-a<n>-p<n>-r<n>-s<n>} and the corresponding control codes to
+send to the device are stored away in a hash-table keyed by the above symbol.
+
+@item
+Finally@comma{} @code{voice-bolden} is assigned the above symbol.
+@end itemize
+@end enumerate
+
+@node What this gives.
+@section What this gives
+
+@enumerate
+@item
+The ability to customize the voice via custom by editing
+the list of numbers in @code{voice-bolden-settings}
+
+@item
+When that list is edited@comma{} @code{voice-bolden} is arranged to be
+updated automatically.
+@end enumerate
+
+The following additional commands from the
+@ref{emacsvox-wizards,,,emacsvox-reference,Emacsvox Reference Manual} module
+are useful when designing aural styles.
+
+@enumerate
+@item
+@code{emacsvox-wizards-generate-voice-sampler}
+
+Generate a buffer containing text that demonstrates the effect of
+various aural settings.
+
+@item
+@code{emacsvox-wizards-voice-sampler}
+
+Applied specified aural style to text in current region.
+@end enumerate
+
+@node Using Online Help
+@chapter Using Online Help With Emacsvox.
+
+@cindex Online Help
+
+Emacs provides an extensive online help system for helping you learn
+about various aspects of using Emacs.  Emacsvox provides online help
+for its various extensions using this same help system.  This chapter
+explains how to use the online help facilities in order to empower you
+in discovering powerful and versatile working techniques that will
+make you more and more productive in your day to day computing.
+
+The online help options are accessed via the @kbd{C-h} prefix key@comma{}
+which must be followed by an additional letter or control character to
+designate the kind of help desired.  For example@comma{} @kbd{C-h t}
+@code{help-with-tutorial} visits the Emacs tutorial in a new buffer;
+@kbd{C-h i} @code{info} enters the Info documentation system@comma{} from
+which you can read Texinfo manuals that have been installed on your
+system@comma{} including the Emacs and Emacsvox documentation; and @kbd{C-h k} @code{describe-key} provides a description of the Emacs function
+which is bound to the next key that you type.  For learning about the
+various options that are available via the @kbd{C-h} mechanism
+described above@comma{} view the online help for command @code{help-for-help}
+bound to @kbd{C-h C-h}  @MDash{} using what has been described so far@comma{}
+you would achieve this by pressing @kbd{C-h k} followed by @kbd{C-h C-h}.
+
+Emacsvox users should note that online help is typically displayed in
+a separate Emacs window.  Where it makes sense to do so@comma{} Emacsvox
+will automatically speak the displayed help.  Once you've asked for
+help@comma{} you can hear the displayed documentation as many times as you
+wish using Emacsvox command @code{emacsvox-speak-help} bound to
+@kbd{C-e h}.  If you want to move through the displayed help a line at
+a time@comma{} switch to the buffer where the help is displayed  @MDash{} the
+buffer is called @code{*Help*}.
+
+Often@comma{} in adding an auditory interface to an Emacs extension@comma{} such as
+a web browser or mail reader@comma{} Emacsvox defines additional commands
+and key bindings which enhance the functionality of the spoken
+feedback provided by the application.  This manual does not purport to
+document all such commands.  It is important@comma{} therefore@comma{} when learning
+to use the various Emacs extensions which comprise the `audio desktop'
+(@pxref{Audio Desktop}) that you take advantage of online help to
+obtain details of any context-specific features provided by Emacsvox.
+The following two commands are of particular importance in this
+regard:
+
+@itemize
+@item
+@kbd{C-h m} @code{describe-mode} explains which major and minor modes
+are currently in effect@comma{} and lists the commands and key bindings
+associated with them.
+
+@item
+@kbd{C-h b} @code{describe-bindings} lists all of the key bindings
+which are currently defined.
+@end itemize
+
+For example@comma{} after entering Dired or EWW@comma{} use @kbd{C-h m} to hear the
+mode-specific commands and every active minor mode.  Use @kbd{C-h b} when you
+need the exact effective bindings@comma{} including local package maps and personal
+configuration.  These live descriptions are more reliable than copying a
+large binding table into a tutorial.
+
+Emacsvox supplements the online help facilities available within
+Emacs by defining several commands of its own@comma{} as follows:
+
+@itemize
+@item
+@kbd{C-h C-e} @code{emacsvox-describe-emacsvox} presents a brief Emacsvox
+overview.
+
+@item
+@kbd{C-e N} @code{emacsvox-view-emacsvox-news} opens the versioned Emacsvox
+news@comma{} and @kbd{C-e T} @code{emacsvox-view-emacsvox-tips} opens the productivity
+tips.
+
+@item
+@kbd{C-h C-l} @code{emacsvox-learn-emacs} enters a loop in which the function
+of every key that you type is spoken; leave it with @kbd{C-g}.
+
+@item
+@kbd{C-e H} @code{emacsvox-aural} opens Aural Home.  From an ordinary buffer@comma{}
+@kbd{C-e E} @code{emacsvox-aural-explain-presentation} explains why the object
+at point received its voices and auditory actions.
+@end itemize
+
+@node Emacs Packages
+@chapter Applications And Integrations
+
+@cindex applications
+
+@cindex integrations
+
+@cindex packages, speech support
+
+Emacsvox prepares speech support for many Emacs modes as their libraries are
+loaded.  Start the application normally; when its buffer appears@comma{} use
+@kbd{C-h m} for the active modes and their commands@comma{} @kbd{C-h b} for the
+effective bindings@comma{} and @kbd{C-h k} followed by a key to identify one binding.
+The generated
+@ref{Emacsvox Commands And Options,,,emacsvox-reference,Emacsvox Reference Manual} records the public Emacsvox commands and options.
+
+This chapter is a curated starting point@comma{} not a promise that every module in
+the generated reference has a maintained task guide.  Emacs itself or a
+third-party package owns the application's general operation; Emacsvox owns
+the additional speech feedback.  Consult both sets of help when diagnosing a
+problem.
+
+Earlier Emacspeak surveys@comma{} including their W3@comma{} Dismal@comma{} and scanner/OCR setup@comma{}
+are preserved as historical material in
+@ref{Emacs Packages,Historical Application Survey,,emacsvox-heritage,Emacspeak Heritage}.  They are not current setup instructions.
+
+@menu
+* Document Authoring::
+* Structured Editing::
+* Browsing Structure::
+* Web Browsing::
+* Messaging::
+* Editing Code::
+* Development Environment::
+* Desktop Management::
+* Personal Information Management::
+* Desktop Applications::
+@end menu
+
+@node Document Authoring
+@section Document Authoring
+
+@cindex document authoring
+
+Emacs major modes provide the editing commands for each document format.
+Emacsvox speaks ordinary movement and editing@comma{} applies voice-lock where the
+mode exposes useful faces@comma{} and adds mode-specific feedback where an integration
+exists.  Open or create the document in its normal Emacs mode@comma{} then use
+@kbd{C-h m} to discover that mode's workflow.  For outlines and templates@comma{} see
+@ref{Structured Editing}.
+
+@node Structured Editing
+@section Structured Editing And Templates
+
+@cindex Outline mode
+
+@cindex Tempo
+
+@findex outline-mode
+
+@findex outline-minor-mode
+
+Emacsvox has maintained integrations for the built-in Outline and Tempo
+libraries.  In Outline mode@comma{} heading navigation speaks the reached heading and
+visibility commands announce what was hidden or exposed.  Start a dedicated
+outline with @kbd{M-x outline-mode}@comma{} or enable @code{outline-minor-mode} in a
+suitable document.  See
+@ref{emacsvox-outline,,,emacsvox-reference,Emacsvox Reference Manual} for the
+Emacsvox integration and @ref{Outline Mode,,,emacs,The GNU Emacs Manual} for
+the underlying editor.
+
+Tempo supplies template fields for modes and packages that use it.  Emacsvox
+speaks inserted text and the line reached when moving between template marks.
+The package that supplied a template owns its insertion commands; use that
+package's mode help@comma{} together with
+@ref{emacsvox-tempo,,,emacsvox-reference,Emacsvox Reference Manual}.
+
+@node Browsing Structure
+@section Browsing Structure
+
+@cindex structured navigation
+
+Use the structure exposed by the active Emacs mode rather than treating every
+buffer as plain text.  Info provides node and menu navigation@comma{} Outline provides
+heading and visibility commands@comma{} and EWW exposes HTML headings@comma{} links@comma{} lists@comma{}
+tables@comma{} and other document elements.  Begin with @kbd{C-h m} in the buffer;
+see @ref{Using Online Help} for the common discovery commands and
+@ref{Web Browsing} for the maintained Web route.
+
+@node Web Browsing
+@section Web Browsing With EWW
+
+@cindex EWW
+
+@cindex Web browsing
+
+@findex eww
+
+EWW is the built-in browser supported for current Emacsvox.  Run
+@kbd{M-x eww @key{RET}}@comma{} enter a URL or search words@comma{} and press @key{RET}.
+Emacsvox speaks EWW navigation and rendering feedback and adds commands for
+moving by HTML structure and filtering the displayed DOM@.  In an EWW buffer@comma{}
+use @kbd{C-h m} for the live workflow and @kbd{C-h b} for its effective keys.
+See @ref{EWW,,,emacs,The GNU Emacs Manual} for browser operation and
+@ref{emacsvox-eww,,,emacsvox-reference,Emacsvox Reference Manual} for the
+speech integration.
+
+The former Emacs/W3 and w3m survey is historical.  Do not install either one
+on the strength of the Heritage manual; use EWW unless a separately maintained
+integration says otherwise.
+
+@node Messaging
+@section Messaging
+
+@cindex messaging
+
+Emacsvox integrates with several Emacs mail and messaging modes.  The curated
+workflow for indexed mail search@comma{} asynchronous results@comma{} thread reading@comma{}
+attachments@comma{} and privacy controls is @ref{Notmuch Mail}.  For another client@comma{}
+start with its own manual and @kbd{C-h m}; use the generated reference to find
+an Emacsvox module with the same package or mode name.
+
+@node Editing Code
+@section Editing Code
+
+@cindex programming
+
+Programming modes own language-aware movement@comma{} indentation@comma{} compilation@comma{} and
+navigation.  Emacsvox speaks those operations and uses voice-lock to distinguish
+faces such as comments@comma{} strings@comma{} warnings@comma{} and language constructs.  Use
+@kbd{C-h m} in the source buffer for the language mode@comma{} and search the generated
+reference for an integration named after that mode.
+
+@node Development Environment
+@section Development Environment
+
+@cindex development tools
+
+Emacs can combine compilation@comma{} diagnostics@comma{} project navigation@comma{} version
+control@comma{} debuggers@comma{} and language servers into a development environment.
+Emacsvox supplies speech feedback to many of those components@comma{} but their own
+manuals remain authoritative for setup and operation.  Verify each component
+individually with its mode help before combining it into a larger workflow.
+
+@node Desktop Management
+@section Desktop Management
+
+@cindex buffers
+
+@cindex windows
+
+@cindex tabs
+
+Emacs buffers@comma{} windows@comma{} frames@comma{} and tabs provide the workspace.  Their standard
+commands receive speech feedback@comma{} and the active help describes any additional
+mode-specific bindings.  Use @kbd{C-x b} to select a buffer and @kbd{C-h m} in
+specialized buffer-list or tab interfaces to learn their local commands.
+
+@node Personal Information Management
+@section Personal Information Management
+
+@cindex personal information management
+
+Calendar@comma{} Org@comma{} and related packages own their data formats and workflows.
+Emacsvox integrations present navigation@comma{} state changes@comma{} and structured
+content when those modes are active.  Begin with the application's own manual
+and live mode help@comma{} then consult its matching Emacsvox module in the generated
+reference.
+
+@node Desktop Applications
+@section Desktop Applications
+
+@subsection Terminal Applications
+
+For a new full-terminal workflow@comma{} use @ref{EAT Terminal Access}.  When a
+built-in terminal with no additional package is preferable@comma{} use
+@ref{Running Terminal Based Applications}.  For ordinary line-oriented shell
+commands@comma{} @kbd{M-x shell} is usually the simplest route.
+
+@subsection Forms Mode
+
+@cindex Forms mode
+
+@findex forms-find-file
+
+The built-in Forms library presents records from a structured text file one at
+a time.  Emacsvox speaks field values@comma{} record movement@comma{} searches@comma{} and status
+changes while Forms mode is active.  Forms requires a format specification;
+see @ref{Forms Mode,,,emacs,The GNU Emacs Manual} for setup and operation@comma{} and
+@ref{emacsvox-forms,,,emacsvox-reference,Emacsvox Reference Manual} for the
+speech integration.
+
+@subsection Experimental OCR Front End
+
+@cindex OCR, experimental
+
+@findex emacsvox-ocr
+
+Module @code{emacsvox-ocr} is an experimental legacy front end@comma{} not a supported
+initial-user route.  Its scanner@comma{} image-processing@comma{} and OCR-engine workflow has
+not yet received a current integration review.  Do not rely on setup commands@comma{}
+program paths@comma{} or defaults in the historical survey.  If you evaluate the
+module@comma{} inspect its live command and option help first; the generated
+@ref{emacsvox-ocr,,,emacsvox-reference,Emacsvox Reference Manual} is an API
+inventory@comma{} not a validated deployment guide.  Report the exact platform@comma{}
+scanner backend@comma{} OCR engine@comma{} and Emacsvox revision when requesting help.
+
+@node Notmuch Mail
+@chapter Notmuch Mail
+
+@cindex Notmuch mail
+
+@cindex mail search, Notmuch
+
+@cindex asynchronous search, Notmuch
+
+@findex notmuch
+
+Notmuch is a separately installed mail index and Emacs interface.  Emacsvox
+adds speech and semantic presentation to its Hello@comma{} Search@comma{} and Show views; it
+does not configure a mail store@comma{} build the Notmuch database@comma{} fetch or send
+mail@comma{} or replace Notmuch's commands.  Install compatible Notmuch command-line
+and Emacs components and complete their setup first.  The
+@uref{https://notmuchmail.org/doc/latest/notmuch-emacs.html, official Notmuch Emacs manual} covers that setup and the complete upstream command set.
+
+The generated
+@ref{emacsvox-notmuch,,,emacsvox-reference,Emacsvox Reference Manual} section
+is the exhaustive Emacsvox command and option reference.  This chapter follows
+the tasks a user performs and explains when automatic feedback occurs.
+
+@section Start Notmuch
+
+@cindex starting Notmuch
+
+@cindex Notmuch Hello
+
+@findex notmuch-search
+
+Run @kbd{M-x notmuch} to open Notmuch Hello.  With the standard Emacsvox global
+maps loaded@comma{} @kbd{C-' m} runs @code{notmuch-search} directly and prompts for a
+query.  Emacsvox loads its live integration when Notmuch loads and marks new
+Hello@comma{} Search@comma{} Show@comma{} and Tree buffers with Notmuch semantic context.
+
+Notmuch remains the authority for every database@comma{} tag@comma{} archive@comma{} attachment@comma{}
+and message-composition operation.  Emacsvox observes the result of an
+explicit upstream command and presents it; loading the integration by itself
+does not alter mail@comma{} tags@comma{} files@comma{} or Notmuch configuration.
+
+@section Use Hello and start a search
+
+@cindex saved searches, Notmuch
+
+@cindex widgets, Notmuch Hello
+
+Moving among Hello widgets speaks a saved-search label and its displayed
+message count@comma{} or identifies the button or link reached.  These are the common
+Hello keys in the current Notmuch map:
+
+@table @kbd
+@item TAB
+Run @code{widget-forward} to reach the next saved search@comma{} entry field@comma{} button@comma{}
+or link.
+@item <backtab>
+Run @code{widget-backward} to reach the preceding widget.
+@item RET
+Run @code{widget-button-press}; on a saved search this starts its query.
+@item j
+Run @code{notmuch-jump-search} and choose a configured search.
+@item g
+Run @code{notmuch-refresh-this-buffer} to refresh Hello.
+@item m
+Run @code{notmuch-mua-new-mail}.  Composition then belongs to Message mode and
+the separate @code{emacsvox-message} integration.
+@end table
+
+Press @kbd{?} in any Notmuch view@comma{} or @kbd{C-h m}@comma{} for the complete bindings
+provided by the installed Notmuch version.
+
+@subsection Understand asynchronous search completion
+
+@cindex search results, asynchronous rendering
+
+@cindex notification stream, Notmuch
+
+@vindex emacsvox-notmuch-search-completion-style
+
+A Notmuch search buffer can appear before its rows have finished rendering.
+For a user-owned non-refresh search that remains selected@comma{} Emacsvox gives a
+progress cue and waits for Notmuch's process sentinel.  It does not announce an
+empty row or move point while the process is still producing results.
+
+The default @code{adaptive} completion policy distinguishes two interactions:
+
+@itemize
+@item
+If the search is still selected@comma{} no command has been issued in it@comma{} and no input
+is pending@comma{} completion uses the primary speech stream.  It reports the final
+thread count followed by the result at point@comma{} or an explicit zero-thread
+summary.
+
+@item
+If you navigate@comma{} invoke another command@comma{} leave the buffer@comma{} or refresh an
+existing search before it completes@comma{} the eventual completion is a generic
+count on the notification stream.  It does not reread the row you reached and
+does not disclose the query@comma{} sender@comma{} recipients@comma{} subject@comma{} tags@comma{} or attachment
+metadata.  Killing the owning search buffer cancels this delivery silently.
+@end itemize
+
+The notification stream uses @code{tts-notification-device} when one is
+available and otherwise falls back to the primary process.  The
+@code{summary} policy always sends a generic count there; @code{cue} sends only
+a completion cue; and @code{silent} suppresses successful completion.
+Failures remain audible and generic for every policy.  A normal refresh is
+always treated as background-style completion@comma{} while the deliberate global
+refresh-all command remains silent.
+
+@section Navigate and inspect Search results
+
+@cindex Notmuch Search
+
+@cindex search fields, Notmuch
+
+On thread movement@comma{} Emacsvox reads the configured semantic fields and presents
+status cues.  Reaching a boundary reports the beginning or end instead of
+repeating the current row.  Emacsvox makes the arrow keys equivalent to the
+standard next and previous thread commands.
+
+@table @kbd
+@item n
+Run @code{notmuch-search-next-thread}.
+@item <down>
+Also run @code{notmuch-search-next-thread}.
+@item p
+Run @code{notmuch-search-previous-thread}.
+@item <up>
+Also run @code{notmuch-search-previous-thread}.
+@item RET
+Run @code{notmuch-search-show-thread}.  The Show view lands on the first useful
+visible body line or leaf MIME part and presents the opened message.
+@item SPC
+Run @code{notmuch-search-scroll-up}.  This is upstream viewport scrolling
+rather than semantic thread selection.
+@item C-c C-p
+Run @code{emacsvox-notmuch-speak-search-details}.  This explicitly reads all
+configured fields for the result at point without the automatic content
+limits.
+@item +
+Run @code{notmuch-search-add-tag}.
+@item -
+Run @code{notmuch-search-remove-tag}.
+@item *
+Run @code{notmuch-search-tag-all} for the selected results.
+@item a
+Run @code{notmuch-search-archive-thread}.
+@item g
+Run @code{notmuch-refresh-this-buffer}; completion is delivered through the
+generic notification policy described above.
+@end table
+
+The default Search fields are authors@comma{} subject@comma{} relative date@comma{} matched and
+total message counts@comma{} and ordinary tags.  Status tags configured as auditory
+cues are not repeated as words.  See @ref{Notmuch fields and privacy}
+to omit or reorder potentially sensitive fields.
+
+@section Read a thread and its MIME parts
+
+@cindex Notmuch Show
+
+@cindex MIME parts, Notmuch
+
+@cindex attachments, Notmuch
+
+Opening a thread speaks one semantic message summary and the first visible body
+line.  Hidden alternative bodies are skipped.  If a message has no visible
+body text@comma{} point falls back to a leaf MIME-part button when possible.  Moving
+onto such a button identifies its bounded filename@comma{} content type@comma{} and size.
+
+@table @kbd
+@item n
+Run @code{notmuch-show-next-open-message}.
+@item p
+Run @code{notmuch-show-previous-open-message}.
+@item N
+Run @code{notmuch-show-next-message}@comma{} including closed messages.
+@item P
+Run @code{notmuch-show-previous-message}@comma{} including closed messages.
+@item SPC
+Run @code{notmuch-show-advance-and-archive}.  Within one message Emacsvox reads
+the newly visible page; on a message transition it reads the new message; at
+the thread end it reports the actual archive outcome and destination.
+@item DEL
+Run @code{notmuch-show-rewind} and read the resulting page or message.
+@item RET
+Run @code{notmuch-show-toggle-message} and cue the current message's resulting
+visibility.
+@item M-RET
+Run @code{notmuch-show-open-or-close-all}.  It opens every message and reports
+the resulting thread state and total@comma{} such as ``Opened all 5 messages.''  Use a
+prefix argument@comma{} @kbd{C-u M-RET}@comma{} to close every message and receive the
+corresponding total.
+@item C-c C-p
+Run @code{emacsvox-notmuch-speak-show-position}.  It reports the message
+ordinal and total plus complete configured message details.  On a MIME-part
+button it instead gives the complete part description@comma{} including its full
+filename.
+@item TAB
+Run @code{notmuch-show-next-button} and identify the button or MIME part.
+@item <backtab>
+Run @code{notmuch-show-previous-button} and identify the button or MIME part.
+@item w
+Run @code{notmuch-show-save-attachments}.  Emacsvox confirms when the upstream
+command returns@comma{} but Notmuch does not expose a per-attachment result through
+this command@comma{} so the confirmation cannot distinguish partial skips.
+@item . s
+Run @code{notmuch-show-save-part} on the current MIME part.
+@item . v
+Run @code{notmuch-show-view-part}.
+@item . o
+Run @code{notmuch-show-interactively-view-part} and choose an external action.
+@item . m
+Run @code{notmuch-show-choose-mime-of-part}.
+@end table
+
+Viewing@comma{} saving@comma{} overwriting@comma{} or launching a MIME part remains an explicit
+Notmuch operation.  Merely navigating or requesting details never opens an
+attachment or external viewer.
+
+@section Change tags and archive state
+
+@cindex tags, Notmuch
+
+@cindex archiving, Notmuch
+
+Emacsvox compares displayed tags before and after interactive mutation.  It
+reports only the actual additions and removals.  Adding an existing tag or
+removing an absent one reports ``Tags unchanged'' rather than claiming a
+change.  An error or cancelled upstream command does not produce success
+feedback.
+
+The following common Show commands receive that result-aware feedback:
+
+@table @kbd
+@item +
+Run @code{notmuch-show-add-tag} on the current message.
+@item -
+Run @code{notmuch-show-remove-tag}.
+@item *
+Run @code{notmuch-show-tag-all} across the thread.
+@item a
+Run @code{notmuch-show-archive-message-then-next-or-next-thread}.
+@item A
+Run @code{notmuch-show-archive-thread-then-next}.
+@end table
+
+Archive feedback distinguishes a real change@comma{} unchanged archive tags@comma{} and an
+unset @code{notmuch-archive-tags} configuration.  Movement wrappers give one
+combined result rather than duplicating feedback from their nested tag or
+archive command.
+
+@anchor{Notmuch fields and privacy}
+
+@section Choose fields@comma{} status@comma{} and privacy
+
+@cindex privacy, Notmuch speech
+
+@cindex fields, Notmuch speech
+
+@cindex status cues, Notmuch
+
+@cindex automatic speech limits, Notmuch
+
+Run @kbd{M-x customize-group RET emacsvox-notmuch RET} to change Notmuch speech
+without altering Notmuch's own database or display.
+
+@table @code
+@item emacsvox-notmuch-search-result-fields
+Defaults to @code{(authors subject date count tags)}.  Remove @code{subject} or
+another field to keep it out of Search navigation speech@comma{} reorder fields@comma{} or
+add a formatter function.
+@item emacsvox-notmuch-show-message-fields
+Defaults to @code{(from date to cc tags attachments)}.  The subject is omitted
+by default in Show@comma{} while To and Cc recipients are included.  Remove
+@code{to}@comma{} @code{cc}@comma{} or any other field when recipient privacy matters.
+@item emacsvox-notmuch-search-field-separator
+@itemx emacsvox-notmuch-show-field-separator
+Control the text placed between configured fields; both default to comma and
+space.
+@item emacsvox-notmuch-search-status-icons
+@itemx emacsvox-notmuch-show-status-icons
+Map unread@comma{} replied@comma{} forwarded@comma{} flagged@comma{} and personal status tags to cues or
+silence.  Removing an entry makes that status available to ordinary tag
+speech.  The optional Aural Presentation feature
+@code{mail-message-status-cues} can own shared semantic mail-state cues.
+@item emacsvox-notmuch-search-completion-style
+Choose @code{adaptive}@comma{} @code{summary}@comma{} @code{cue}@comma{} or @code{silent} as
+described under asynchronous completion.
+@end table
+
+Mail-controlled text is bounded before automatic speech and Aural history.
+The defaults are 256 characters and 1@comma{}024 UTF-8 bytes per field@comma{} then 1@comma{}000
+characters and 4@comma{}096 bytes for the complete automatic presentation:
+
+@table @code
+@item emacsvox-notmuch-automatic-field-character-limit
+@itemx emacsvox-notmuch-automatic-field-byte-limit
+Bound each automatic field before formatting and submission.
+@item emacsvox-notmuch-automatic-total-character-limit
+@itemx emacsvox-notmuch-automatic-total-byte-limit
+Provide the final defense for one automatic Notmuch presentation.
+@item emacsvox-notmuch-mime-node-limit
+@itemx emacsvox-notmuch-mime-depth-limit
+Default to 4@comma{}096 cons nodes and depth 64.  They keep malformed@comma{} cyclic@comma{} broad@comma{}
+or deeply nested MIME metadata from exhausting automatic inspection.  An
+incomplete scan reports a conservative attachment lower bound instead of
+claiming that no attachment exists.
+@end table
+
+A shortened Search or Show presentation states what was omitted and points to
+@kbd{C-c C-p} for explicit full configured details; a shortened Hello item
+points to @key{RET}.  The explicit Search and Show inspection commands
+deliberately bypass the automatic content limits; use them only when speaking
+the complete configured fields is appropriate.
+
+@subsection Understand retained and notification content
+
+@cindex Aural history, mail privacy
+
+Primary-stream Notmuch presentations can enter bounded Aural Presentation
+history.  By default Emacsvox retains at most 20 presentations and at most
+4@comma{}096 UTF-8 bytes of speech preview per record; records contain frozen data@comma{}
+source names@comma{} and positions@comma{} but never retain source buffers.  Run
+@kbd{M-x emacsvox-aural-list-recent-feedback} to inspect what was retained@comma{} or
+set @code{emacsvox-aural-presentation-history-limit} to zero to disable that
+history.
+
+Generic asynchronous completion uses the notification stream and contains no
+query or message metadata@comma{} but notification text may be retained by the
+notification subsystem.  Choose @code{cue} or @code{silent} when even a generic
+thread count is unwanted@comma{} and review the global notification-device and log
+settings separately.
+
+@section Know the support boundaries
+
+@cindex Notmuch Tree support
+
+@cindex message composition, Notmuch
+
+@table @asis
+@item Hello
+Widget navigation@comma{} view lifecycle@comma{} and searches have Notmuch-specific semantic
+feedback.
+@item Search
+Result navigation@comma{} asynchronous lifecycle@comma{} tags@comma{} archive operations@comma{} opening@comma{}
+and configured detail inspection have Notmuch-specific feedback.
+@item Show
+Message and part navigation@comma{} page reading@comma{} visibility@comma{} tags@comma{} archive operations@comma{}
+and explicit detail inspection have Notmuch-specific feedback.
+@item Tree
+Tree buffers receive @code{emacsvox-aural-module} context only.  Generic core
+speech can still operate@comma{} but this module currently has no Tree-specific row
+formatter@comma{} navigation@comma{} mutation@comma{} visibility@comma{} or asynchronous lifecycle.
+@item Composition
+Notmuch uses standard Message-mode composition.  Speech support after
+@code{notmuch-mua-new-mail}@comma{} reply@comma{} forward@comma{} or resume transitions belongs to
+@code{emacsvox-message}@comma{} not to the Notmuch integration.
+@end table
+
+There is no independent Notmuch speech disable or unload command.  Advice@comma{}
+hooks@comma{} and the Search arrow bindings remain installed for the Emacs session
+once the module loads.  Repeated loading is idempotent and does not duplicate
+them.
+
+@section Troubleshoot the live integration
+
+@cindex troubleshooting, Notmuch
+
+@cindex byte-code, Notmuch integration
+
+Use @kbd{?} or @kbd{C-h m} in the affected Notmuch buffer to confirm the keys
+owned by the installed Notmuch version.  Run @kbd{M-x notmuch-version} to
+identify that package@comma{} and use the official manual linked at the beginning of
+this chapter for its current behavior.
+
+Run @kbd{M-x emacsvox-aural-doctor} when speech bindings@comma{} loaded source versus
+byte-code@comma{} Aural rules@comma{} sound resources@comma{} or the backend appear wrong.  Use
+@kbd{M-x emacsvox-aural-list-recent-feedback} to inspect the exact bounded
+presentation submitted for a Notmuch action.  These diagnostics do not query
+or modify the mail database.
+
+For a source checkout@comma{} use the Emacs selected by @code{local.mk}.  Run
+@code{make check-emacs} before diagnosing compilation@comma{} @code{make bytecode}
+after an ordinary integration edit@comma{} and @code{make bytecode-rebuild} after a
+branch switch or a macro or public-interface change.  A fresh Emacs must load
+the rebuilt byte-code before live verification.
+
+@section Integration contracts for maintainers
+
+@cindex Notmuch integration maintenance
+
+The live module is registered as an optional package integration.  Its stable
+extension points are the Hello@comma{} Search@comma{} Show@comma{} and Tree mode hooks; Search and
+Show mode maps; public interactive commands; and public Search/Show accessors.
+Advice is installed only when a target exists and is target-aware@comma{} so a nested
+or programmatic upstream call does not claim the outer user's feedback.
+
+The Show landing and visibility paths also read renderer metadata such as
+@code{:headers-overlay}@comma{} @code{:message-visible}@comma{} message extents@comma{}
+@code{:notmuch-part}@comma{} part-hidden state@comma{} and Notmuch part-button types.  Missing
+optional metadata should reduce presentation detail rather than authorize an
+operation.  Review these adapters whenever the Notmuch renderer changes.
+
+Each user-owned asynchronous Search process carries its own completion state
+as a process property.  The upstream sentinel renders first; Emacsvox then
+clears that property before delivering exactly one terminal result.  The
+owning buffer and process status are authoritative.  A killed owner remains
+silent@comma{} concurrent buffers cannot overwrite one another@comma{} and the global
+refresh-all path intentionally acquires no ownership.
+
+Run @code{make notmuch-test} for the explicit source suite.  After current
+byte-code exists@comma{} run @code{make compiled-notmuch-test}; it verifies the exact
+loaded @code{emacsvox-notmuch.elc}@comma{} compiler version@comma{} and the same focused
+selector@comma{} including real displayed-window reading for both advance paths.
+
+@node Agent Shell
+@chapter Agent Shell
+
+@cindex Agent Shell
+
+@cindex artificial intelligence agents
+
+Agent Shell is a separately installed Emacs package for interactive AI-agent
+sessions.  Emacsvox adds speech and semantic presentation without replacing
+Agent Shell's provider setup@comma{} session management@comma{} prompt editor@comma{} or permission
+controls.  See @uref{https://github.com/xenodium/agent-shell, Agent Shell} for
+provider installation and configuration.
+
+The generated
+@ref{emacsvox-agent-shell,,,emacsvox-reference,Emacsvox Reference Manual}
+section is the exhaustive Emacsvox command and option reference.  This chapter
+follows the tasks a user performs in a session.
+
+@section Start and control a session
+
+Load Emacsvox and start Agent Shell with @code{M-x agent-shell}.  Emacsvox loads
+its integration after Agent Shell and activates both new and already existing
+shell buffers.  Run @code{M-x emacsvox-agent-shell-enable} only when manually
+re-enabling support after it was disabled or while diagnosing a live reload.
+
+Compose and submit prompts with Agent Shell's normal editing commands.  The
+live prompt retains Emacs undo.  Submitted transcript text is history rather
+than editable prompt input.  Press @kbd{C-c C-c} to ask Agent Shell to interrupt
+an active request; its normal confirmation setting still applies.
+
+Emacsvox speaks routine content only at complete turn boundaries.  A network
+pause does not make a partial answer sound complete.  A cancelled@comma{} refused@comma{} or
+failed turn reports its outcome without replacing the last successfully
+completed response.
+
+@section Choose automatic speech and privacy
+
+The focused session defaults to @code{response}: completed answers and routine
+completion feedback are presented@comma{} while thought@comma{} plan@comma{} and tool chatter is
+suppressed.  An unfocused session defaults to @code{notify}: its notification
+names the session but does not disclose response or tool content.
+
+@table @code
+@item full
+Speak responses plus configured thought@comma{} plan@comma{} and tool detail.  Full tool
+output can contain commands@comma{} file contents@comma{} or other sensitive provider data.
+@item response
+Speak completed agent responses while suppressing routine thought@comma{} plan@comma{} and
+tool content.
+@item notify
+Present routine completion without reading the response body.
+@item quiet
+Suppress routine automatic feedback.  Explicit inspection remains available.
+@item auto
+Use @code{emacsvox-agent-shell-foreground-speech-level} or
+@code{emacsvox-agent-shell-background-speech-level} according to focus.
+@end table
+
+Press @kbd{C-c C-q} to run
+@code{emacsvox-agent-shell-select-speech-level} and choose the current
+session's level@comma{} including @code{auto}.  Press @kbd{C-c C-S-q} to run
+@code{emacsvox-agent-shell-select-background-speech-level} and change the
+shared background default.
+@code{M-x emacsvox-agent-shell-cycle-speech-level} cycles toward less routine
+speech; use a prefix argument to restore @code{auto}.
+
+Thought content defaults to an icon under
+@code{emacsvox-agent-shell-speak-thought-process}.  Tool feedback is separately
+controlled by @code{emacsvox-agent-shell-speak-tool-calls} and
+@code{emacsvox-agent-shell-tool-output-verbosity}.  Selecting background
+@code{response} or @code{full}@comma{} thought @code{speak}@comma{} or full tool output is an
+explicit disclosure choice.
+
+Automatic response@comma{} tool@comma{} error@comma{} permission@comma{} and similar text is limited by
+@code{emacsvox-agent-shell-automatic-content-max-characters}@comma{} which defaults to
+2@comma{}000 characters.  A shortened presentation gives exact omitted character and
+line counts and tells you where to inspect the full content.  The complete text
+stays in the Agent Shell buffer; the limit is applied before Aural compiles the
+automatic speech copy.
+
+@section Respond to urgent permissions
+
+Permission requests are separate from routine speech levels because they can
+block the agent and require a decision.  With
+@code{emacsvox-agent-shell-speak-permissions} enabled@comma{} a request interrupts the
+appropriate speech stream@comma{} identifies the session and requested operation@comma{} and
+announces its choices.  Provider-controlled descriptions and choice labels are
+bounded@comma{} but the actual permission controls remain in Agent Shell.
+
+If the request belongs to another session@comma{} switch to the named buffer.  Use
+@code{M-x agent-shell-jump-to-latest-permission-button-row} to find its latest
+permission row@comma{} or use Agent Shell's @kbd{TAB} and @kbd{S-TAB} item navigation.
+Move among the buttons and press @kbd{RET}@comma{} or use a direct choice key displayed
+by Agent Shell.  Choice keys are supplied by Agent Shell and the provider@comma{} so
+the visible permission row is authoritative.
+
+Error blocks remain exceptional feedback rather than routine transcript
+chatter.  Lifecycle error announcements follow
+@code{emacsvox-agent-shell-signal-processing}; rendered error content remains
+available in the transcript even when routine response speech is quiet.
+
+@section Inspect a response on demand
+
+These commands work from the shell and its associated viewports:
+
+@table @kbd
+@item C-c r
+Run @code{emacsvox-agent-shell-speak-last-response}.  It reads the latest
+successfully completed response in full without moving point.  This deliberate
+operation does not inherit the automatic 2@comma{}000-character limit.  While a new
+turn is busy it explicitly identifies and reads the prior completed response.
+@item C-c R
+Run @code{emacsvox-agent-shell-speak-response-overview}.  It reports line@comma{}
+heading@comma{} source-block@comma{} and table counts plus a bounded opening preview.
+@end table
+
+These commands remain usable at @code{notify} and @code{quiet}.  If no turn has
+completed@comma{} they say that no completed response is available rather than
+presenting a streaming partial or failed answer.
+
+@section Navigate transcript blocks
+
+Agent Shell responses contain semantic prompt@comma{} response@comma{} thought@comma{} activity@comma{}
+tool@comma{} plan@comma{} permission@comma{} error@comma{} source-block@comma{} and table locations.  Emacsvox
+navigation reports the block type@comma{} visibility@comma{} and a bounded body preview.
+
+@table @kbd
+@item ]
+Run @code{emacsvox-agent-shell-next-block-at-point} to find the next block of
+the current semantic type.
+@item [
+Run @code{emacsvox-agent-shell-previous-block-at-point} to find the preceding
+block of the current semantic type.
+@item C-c ]
+Run @code{emacsvox-agent-shell-next-block-of-type}@comma{} choose a type@comma{} and move to
+its next occurrence.
+@item C-c [
+Run @code{emacsvox-agent-shell-previous-block-of-type}@comma{} choose a type@comma{} and move
+to its preceding occurrence.
+@end table
+
+After a successful typed jump@comma{} @kbd{]} and @kbd{[} repeat in that direction.
+At an editable live prompt@comma{} bare brackets insert themselves instead of taking
+over prompt editing.
+
+@section Read and copy source blocks
+
+Use typed block navigation to reach a source block@comma{} then:
+
+@table @kbd
+@item C-c C-b
+Run @code{emacsvox-agent-shell-speak-source-block} to read the complete rendered
+source block with its language and line count.
+@item C-c C-y
+Run @code{emacsvox-agent-shell-copy-source-block} to copy the logical source
+through Agent Shell's public copy operation.
+@end table
+
+The source commands are explicit operations and do not use the automatic
+content limit.  Ordinary line navigation retains its separate bounded speech
+policy.
+
+@section Navigate and copy rendered tables
+
+Moving into a rendered Markdown table activates a contextual table map.  It
+announces the table dimensions and current cell.  Leaving the table restores
+the ordinary Agent Shell keys.
+
+@table @kbd
+@item <right>
+Run @code{emacsvox-agent-shell-table-next-column}.
+@item <left>
+Run @code{emacsvox-agent-shell-table-previous-column}.
+@item <down>
+Run @code{emacsvox-agent-shell-table-next-row}.
+@item <up>
+Run @code{emacsvox-agent-shell-table-previous-row}.
+@item M-<down>
+Run @code{emacsvox-agent-shell-table-exit-forward}.
+@item M-<up>
+Run @code{emacsvox-agent-shell-table-exit-backward}.
+@item SPC
+Run @code{emacsvox-agent-shell-table-speak-cell}.
+@item r
+Run @code{emacsvox-agent-shell-table-speak-row}.
+@item c
+Run @code{emacsvox-agent-shell-table-speak-column}.
+@item .
+Run @code{emacsvox-agent-shell-table-speak-context} for row@comma{} column@comma{} and table
+position.
+@item =
+Run @code{emacsvox-agent-shell-table-speak-dimensions}.
+@item w
+Run @code{emacsvox-agent-shell-table-copy-cell}.
+@item k k
+Also run @code{emacsvox-agent-shell-table-copy-cell}.
+@item k r
+Run @code{emacsvox-agent-shell-table-copy-row}; copied cells are tab-separated.
+@item k c
+Run @code{emacsvox-agent-shell-table-copy-column}; copied cells are separated by
+newlines.
+@item a
+Run @code{emacsvox-agent-shell-table-select-speaking-method} to toggle column
+titles@comma{} row titles@comma{} or whether data is spoken before titles.
+@end table
+
+Copy commands use logical cell values@comma{} excluding renderer padding and Markdown
+borders.  Wrapped cell contents remain complete.
+
+@section Recover from interruption or failure
+
+If a request is taking the wrong path@comma{} press @kbd{C-c C-c} and confirm the
+Agent Shell interrupt.  A failed or interrupted partial response is not cached
+as complete.  Press @kbd{C-c r} for the preceding completed response@comma{} or
+@kbd{C-c R} for its overview.  Read the error block in the transcript for the
+provider's details and edit the live prompt before resubmitting.
+
+Use @code{M-x agent-shell-restart} when Agent Shell itself needs a fresh process
+for the same project.  Use @code{M-x emacsvox-agent-shell-enable} to reinstall
+speech hooks after deliberately disabling them or during live integration
+development.  Neither recovery command discards transcript files or project
+work.
+
+@section Integration ownership for maintainers
+
+The integration uses three deliberately different contract layers:
+
+@multitable @columnfractions .18 .37 .45
+@headitem Layer
+@tab Agent Shell owner
+@tab Emacsvox rule
+@item Public structured API
+@tab @code{agent-shell-subscribe-to}@comma{} @code{agent-shell-unsubscribe}@comma{} @code{agent-shell-status}@comma{} and @code{agent-shell-shell-buffer}; lifecycle@comma{} permission@comma{} and tool events
+@tab Primary authority for processing@comma{} completion@comma{} errors@comma{} permission urgency@comma{} and tool status. The public turn boundary triggers inspection of renderer-owned response sections. Event and response data is treated as untrusted content and bounded before automatic Aural submission.
+@item Experimental renderer metadata
+@tab @code{agent-shell-ui-state}@comma{} @code{agent-shell-ui-section}@comma{} rendered Markdown table/source properties@comma{} and renderer-owned faces
+@tab Feature-detected navigation and presentation input. Renderer group provenance outranks provider-controlled IDs; prose and IDs cannot manufacture structured permission or lifecycle authority.
+@item Private compatibility fallback
+@tab The aggregate @code{agent-shell--state}@comma{} the legacy viewport ownership resolver@comma{} viewport position helpers@comma{} and legacy face@comma{} prompt@comma{} or ID inference
+@tab Kept in narrow adapter functions for older Agent Shell releases or incomplete renderers. A missing optional detail may reduce header or navigation richness but must not create a permission action or completed response.
+@end multitable
+
+The lifecycle subscription currently consumes @code{init-started}@comma{}
+@code{init-finished}@comma{} @code{session-selected}@comma{} @code{session-restored}@comma{}
+@code{input-submitted}@comma{} @code{turn-complete}@comma{} and @code{error}.  Dedicated
+subscriptions consume @code{permission-request}@comma{} @code{permission-response}@comma{}
+and @code{tool-call-update}.  Add new semantic behavior at the public event
+layer when Agent Shell exposes it; keep renderer and private fallbacks isolated
+and covered by compatibility tests.
+
+@node EAT Terminal Access
+@chapter Speech Access To EAT
+
+@cindex EAT terminal emulator
+
+@cindex terminal accessibility
+
+@cindex speech access, terminal
+
+@findex eat
+
+EAT (Emulate A Terminal) is a third-party terminal emulator; it is not part of
+stock Emacs.  It is commonly installed from NonGNU ELPA@.  Start it with
+@kbd{M-x eat}; use a prefix argument to create or select another EAT terminal.
+See the EAT manual for terminal setup and EAT's complete command reference
+(@pxref{Top,,,eat,Eat User Manual}).
+
+Emacsvox observes EAT's bounded rendered screen.  It does not parse a shell's
+private state and it does not generate shell or router completion candidates.
+This distinction is important: EAT owns terminal emulation@comma{} the program on the
+other end owns terminal-side input and completion@comma{} and Emacsvox presents the
+visible result.
+
+@section Input Modes And Completion Ownership
+
+@cindex EAT input modes
+
+@cindex completion, EAT
+
+@cindex Corfu, EAT
+
+@findex eat-semi-char-mode
+
+@findex eat-char-mode
+
+@findex eat-emacs-mode
+
+@findex eat-line-mode
+
+@kindex C-c C-j (EAT)
+
+@kindex C-c M-d (EAT)
+
+@kindex C-c C-e (EAT)
+
+@kindex C-c C-l (EAT)
+
+EAT provides four input modes.  Emacsvox announces a human-readable mode name
+whenever you switch modes.
+
+@table @asis
+@item Semi-character mode
+This is EAT's default.  Most keys@comma{} including @key{TAB}@comma{} go to the terminal@comma{}
+while Emacs prefixes such as @kbd{C-x}@comma{} @kbd{C-c}@comma{} and @kbd{M-x} remain
+available.  Use @kbd{C-q} before a normally reserved key to send it to the
+terminal.  Switch here with @kbd{C-c C-j}.
+@item Character mode
+All supported keys go to the terminal@comma{} which is useful for applications that
+need Emacs-like keys.  Switch here with @kbd{C-c M-d}; return to semi-character
+mode with @kbd{C-M-m} or @kbd{M-@key{RET}}.
+@item Emacs mode
+Keys remain in Emacs and no input is sent to the terminal.  Use this for normal
+Emacs buffer motion and inspection.  Switch here with @kbd{C-c C-e}.
+@item Line mode
+The pending input line is edited locally and sent on @key{RET}.  @key{TAB} runs
+Emacs's @code{completion-at-point}@comma{} so a configured Emacs completion front end
+such as Corfu can display its result.  Switch here from semi-character or Emacs
+mode with @kbd{C-c C-l}.  Line mode is not available in EAT's embedded Eshell
+terminal.
+@end table
+
+In semi-character and character mode@comma{} @key{TAB} belongs to Bash Readline@comma{} a
+remote shell@comma{} a router CLI@comma{} or whichever terminal application is running.
+Corfu is not involved.  In line mode@comma{} @key{TAB} belongs to Emacs completion and
+does not ask a remote CLI for candidates.  Therefore semi-character mode is
+usually the right choice for SSH sessions and network-device CLIs.  If an
+Emacs completion backend blocks in line mode@comma{} @kbd{C-g} cancels that Emacs
+operation; switch to semi-character mode if terminal-side completion was
+intended.
+
+Shell completion must itself be configured.  For example@comma{} Bash can complete
+@code{git pul} to @code{git pull} only when the shell has suitable programmable
+completion definitions@comma{} often supplied by a system @code{bash-completion}
+package.  Emacsvox observes the result but neither installs nor substitutes for
+those definitions.
+
+@section Automatic Terminal Feedback
+
+@cindex EAT automatic speech
+
+@cindex terminal output, speech policy
+
+Automatic speech is restricted to the selected EAT buffer while its selected
+window follows the live terminal cursor.  Moving into scrollback prevents new
+output from interrupting review.  Output in another terminal or behind an
+active minibuffer is silent by default.
+
+On the main screen@comma{} Emacsvox coalesces a burst before classifying it.  Complete
+new output rows are spoken once@comma{} with an automatic limit of eight rows and
+1@comma{}000 characters.  Continued input rows and empty terminal placeholders are
+omitted without hiding the output or replaying earlier screen rows.  The
+redrawn prompt is not repeated.  Carriage-return progress and status rewrites
+use rate-limited replaceable speech.  Unchanged repaint and resize-only updates
+remain silent.  Terminal bells@comma{} paste actions@comma{} input-mode changes@comma{}
+application-screen boundaries@comma{} and process exit are content-free semantic
+events rather than arbitrary screen speech.
+
+In semi-character and character mode on the main screen@comma{} @key{RET} is silent.
+After a rendered Left or Right movement@comma{} Emacsvox names the character reached;
+after Up or Down@comma{} it speaks the resulting input or history row without the
+observed shell prompt.  @kbd{M-b}@comma{} @kbd{M-f}@comma{} and modified Left or Right word
+movement speak the exact rendered text crossed.  A boundary key that produces
+no movement stays silent.
+
+An echoed Space is named without reading the prompt or the rest of the line.
+For @key{BACKSPACE}@comma{} @key{DELETE}@comma{} @kbd{M-d}@comma{} and @kbd{C-k}@comma{} Emacsvox compares
+bounded public screen snapshots before and after the key.  When one same-row
+removal is unambiguous@comma{} it speaks the character or text actually removed.
+Otherwise it gives only a deletion tone; it never guesses from adjacent prompt
+or screen text.  Terminal padding and trailing input blanks do not prevent an
+otherwise unambiguous word deletion from being announced.  This also handles a
+no-echo peer safely: without a visible deletion there is no content to
+announce.  Feedback requires the selected window to follow the live cursor@comma{}
+and is silent during protected password input@comma{} in an unselected terminal@comma{} and
+on an alternate screen where the application owns the keys.
+
+On a full-screen or alternate-screen application@comma{} Emacsvox does not read every
+refresh.  A cursor row reached by correlated arrow-style navigation@comma{} or one
+compact high-confidence transfer of selection-like styling@comma{} can be announced.
+Ambiguous repaint remains silent and available through explicit review.  In
+particular@comma{} inverse video or a colored row alone is not treated as proof of the
+active item.
+
+@section Terminal-side Completion
+
+@cindex completion candidates, terminal
+
+@cindex router completion
+
+@kindex TAB (EAT terminal completion)
+
+On the main terminal screen@comma{} Emacsvox takes a public screen snapshot before a
+terminal-side @key{TAB} and waits briefly for EAT output to settle.
+
+@itemize
+@item
+A unique inline completion speaks the newly displayed field.  For example@comma{}
+@code{~/sr<TAB>} can speak @code{src slash} after the shell displays
+@code{~/src/}.
+
+@item
+An ambiguous completion that prints columns or help rows is presented as one
+candidate transaction after the input line is redrawn.  Small inferred lists
+speak up to eight candidates.  Descriptive router-style rows retain their
+layout instead of being forced into a shell-token model.
+
+@item
+Large lists are counted and truncated for automatic speech.  If candidates
+have already scrolled beyond the bounded visible screen@comma{} Emacsvox reports an
+honest lower bound such as ``at least N visible'' rather than inventing a total.
+
+@item
+Repeated identical lists@comma{} split output chunks@comma{} terminal bells@comma{} wrapping@comma{} and
+screen resize are coalesced without replaying the same candidate text.
+@end itemize
+
+The completion result is derived from the rendered screen@comma{} so the same design
+works with local Readline@comma{} SSH@comma{} and unstructured router help.  If the peer makes
+no visible change@comma{} there is nothing reliable to announce.  On an alternate
+screen@comma{} @key{TAB} is treated as navigation rather than shell completion.
+
+Use @kbd{C-e q c} to speak the latest retained candidate or help layout@comma{} or
+open frozen review with @kbd{C-e q r} and press @kbd{c}.  These commands are
+especially useful after a large or multi-column result.
+
+@section Explicit Review Commands
+
+@cindex EAT review commands
+
+@cindex terminal screen review
+
+@findex emacsvox-eat-speak-current-row
+
+@findex emacsvox-eat-speak-last-change
+
+@findex emacsvox-eat-speak-likely-focus
+
+@findex emacsvox-eat-speak-completion-output
+
+@findex emacsvox-eat-speak-visible-screen
+
+@findex emacsvox-eat-review-screen
+
+@findex emacsvox-eat-speak-retained-status
+
+@findex emacsvox-eat-speak-retained-metadata
+
+@findex emacsvox-eat-cycle-verbosity
+
+@findex emacsvox-eat-toggle-background-monitoring
+
+@kindex C-e q (EAT review)
+
+The default Emacsvox prefix is @kbd{C-e}.  In every EAT input mode@comma{}
+@kbd{C-e q} opens the terminal review prefix:
+
+@table @kbd
+@item C-e q l
+Speak the cursor row from the latest retained screen.
+@item C-e q d
+Speak the last classified screen change.
+@item C-e q h
+Speak the latest conservative likely-focus inference and its confidence.
+@item C-e q c
+Speak the retained completion candidates or help rows.
+@item C-e q s
+Speak a bounded copy of the retained visible screen.
+@item C-e q r
+Open a read-only frozen copy for line-by-line review.
+@item C-e q t
+Speak the retained progress@comma{} application@comma{} or shell-prompt status.
+@item C-e q i
+Speak the retained sanitized title or working-directory change.
+@item C-e q v
+Cycle terse@comma{} normal@comma{} and verbose automatic feedback for this terminal.
+@item C-e q m
+Toggle content-free background-output monitoring for this terminal.
+@end table
+
+These commands inspect concealed-redacted retained snapshots; they do not send
+terminal input.  Content is bounded when spoken.  The visible screen is
+retained@comma{} not arbitrary scrollback.
+
+@subsection Frozen Screen Review
+
+@cindex frozen EAT review
+
+@kbd{C-e q r} opens an immutable copy of the latest visible screen.  It does
+not refresh and navigation cannot move the live terminal cursor or send input.
+The copy preserves normalized terminal styling@comma{} cursor and likely-focus
+anchors@comma{} and the exact retained completion rows.  Opening and closing review
+play distinct object cues and announce the transition.
+
+@table @kbd
+@item n@comma{} p; C-n@comma{} C-p; down@comma{} up
+Move by captured terminal row and speak the destination@comma{} interrupting the
+previous row announcement when navigation continues.
+@item SPC@comma{} RET@comma{} .
+Speak the current captured row.
+@item a
+Speak a bounded form of the current screen or completion view.
+@item s@comma{} c
+Show captured screen rows or retained completion/help rows.
+@item C
+Go to the captured terminal cursor.
+@item h
+Go to the retained likely focus@comma{} when one exists.
+@item [@comma{} ]
+Move among selection-like inverse/background styled regions.  These regions
+are deliberately not labelled as focus.
+@item t@comma{} i
+Speak status or metadata copied when review was opened.
+@item v@comma{} m
+Change verbosity or background monitoring in the source terminal without
+sending terminal input.  The copied content itself remains frozen.
+@item ?
+Describe frozen review mode.
+@item q
+Kill the content-bearing review buffer and restore its window.
+@end table
+
+Starting secure input@comma{} resetting or restarting the terminal@comma{} killing the
+source@comma{} or leaving EAT mode also destroys its frozen review.  This bounds the
+lifetime of copied terminal content.
+
+@section Verbosity And Background Monitoring
+
+@vindex emacsvox-eat-verbosity
+
+@vindex emacsvox-eat-monitor-background-output
+
+@code{emacsvox-eat-verbosity} is buffer-local:
+
+@table @code
+@item terse
+Retain routine output and metadata for explicit review without speaking them
+automatically.  Actionable failures and content-free lifecycle feedback remain
+available.
+@item normal
+The default.  Speak bounded command output@comma{} progress/status@comma{} completion@comma{} and
+actionable failures.
+@item verbose
+Also speak bounded terminal title and working-directory changes and successful
+shell-command status when EAT shell integration provides it.
+@end table
+
+Background monitoring is off by default.  When enabled with @kbd{C-e q m}@comma{} an
+unselected terminal plays only a rate-limited content-free cue.  On returning@comma{}
+Emacsvox reports only the unread burst count@comma{} never the terminal's identity or
+output.  Cursor movement@comma{} style changes@comma{} repaint@comma{} resize@comma{} and process generation
+changes do not count as background output.
+
+@section Shell Integration And Command Status
+
+@cindex EAT shell integration
+
+@cindex shell command status
+
+EAT's Bash or Zsh shell integration is required for prompt annotation@comma{}
+directory tracking@comma{} and per-command running/success/failure status.  For Bash@comma{}
+EAT documents this initialization:
+
+@example
+[ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
+  source "$EAT_SHELL_INTEGRATION_DIR/bash"
+@end example
+
+For Zsh@comma{} source the @code{zsh} script instead:
+
+@example
+[ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
+  source "$EAT_SHELL_INTEGRATION_DIR/zsh"
+@end example
+
+@vindex eat-enable-shell-prompt-annotation
+
+With shell integration and @code{eat-enable-shell-prompt-annotation} enabled@comma{}
+Emacsvox retains running@comma{} successful@comma{} and failed command status.  A failure is
+announced automatically at every verbosity.  Success is automatic only in
+verbose mode and only after observed command activity; the initial successful
+prompt does not chatter.  Running state remains silent.  Use @kbd{C-e q t} for
+the retained current state.
+
+This status is not guessed from prompt characters.  A remote shell or router
+normally does not provide EAT's per-command integration@comma{} so remote commands can
+still have accessible screen output and completion while their individual exit
+status remains unavailable.
+
+@section Passwords And Sensitive Content
+
+@cindex password input, EAT
+
+@cindex terminal privacy
+
+@findex eat-send-password
+
+Use @kbd{M-x eat-send-password} for a terminal password.  EAT reads it with
+Emacs's protected password reader instead of recording the keystrokes in
+command lossage.  During this command Emacsvox suppresses terminal observation
+and bell speech@comma{} clears content-bearing retained state before and after@comma{} and
+announces only whether secure input was sent or cancelled.
+
+Emacsvox intentionally does not guess that arbitrary no-echo terminal input is
+a password: EAT exposes no public echo-state signal@comma{} and a quiet repaint is not
+proof.  Typing a secret through ordinary terminal input can leave keystrokes in
+Emacs lossage and does not establish the same privacy boundary.  Backspace or
+Delete in such input can produce a content-free deletion tone@comma{} but Emacsvox
+does not name text unless EAT exposes one unambiguous visible removal.
+
+Selected foreground output can contain sensitive information and may be
+spoken.  A frozen review is a real in-memory copy until it is killed@comma{} although
+visually concealed cells are redacted at snapshot time.  Verbose title and
+directory speech can disclose host or path metadata.  Background monitoring@comma{}
+by contrast@comma{} never speaks content or terminal identity.
+
+@section Terminal-Controlled Clipboard Trust
+
+@cindex clipboard security, EAT
+
+@cindex OSC 52, EAT
+
+@cindex remote terminal trust
+
+@vindex eat-enable-kill-from-terminal
+
+@vindex eat-enable-yank-to-terminal
+
+EAT supports terminal selection control sequences@comma{} commonly called OSC 52.
+Consequently@comma{} trust applies not only to a local shell but also to an SSH peer@comma{}
+router CLI@comma{} or any program whose output reaches EAT's terminal parser.  Even
+displaying an untrusted file can pass terminal control sequences through a
+program that does not sanitize them.
+
+In the audited EAT 0.9.4 release@comma{} @code{eat-enable-kill-from-terminal} defaults
+to non-@code{nil}.  Despite the potentially confusing name@comma{} this is the
+terminal-to-Emacs direction: it permits a terminal program to place text in
+Emacs's kill ring.  @code{eat-enable-yank-to-terminal} defaults to @code{nil}
+for security.  Enabling it permits a terminal program to request the current
+Emacs kill-ring text.  Verify these defaults after upgrading EAT@.
+
+For terminals connected to an endpoint whose output is not fully trusted@comma{}
+disable both directions.  They can be customized globally@comma{} or disabled only
+in the current EAT buffer with:
+
+@lisp
+(setq-local eat-enable-kill-from-terminal nil
+            eat-enable-yank-to-terminal nil)
+@end lisp
+
+Run that expression with @kbd{M-:} in the EAT buffer before processing
+untrusted output.  Enabling kill-ring read-back should be reserved for terminal
+programs and remote endpoints that are trusted with whatever Emacs currently
+holds in its kill ring.
+
+Emacsvox deliberately changes neither EAT option.  A terminal-originated
+selection payload is not an accessibility command: Emacsvox does not speak its
+contents or retain it as terminal screen text.  The content-free paste
+announcements described elsewhere apply to explicit user paste commands@comma{} not
+to terminal-originated selection control sequences.
+
+@section Full-screen Applications And Limitations
+
+@cindex curses applications, EAT
+
+@cindex alternate screen, EAT
+
+Programs such as pagers@comma{} editors@comma{} menus@comma{} and refreshing dashboards frequently
+rewrite existing cells instead of printing lines.  Emacsvox uses conservative
+cursor@comma{} style-change@comma{} input-direction@comma{} and timing evidence.  Arrow-key movement
+and clear paired highlight movement work best.  Printable navigation keys such
+as @kbd{h}@comma{} @kbd{j}@comma{} @kbd{k}@comma{} and @kbd{l} are not assumed to be navigation@comma{}
+because they may instead be application text.
+
+Use @kbd{C-e q l}@comma{} @kbd{C-e q d}@comma{} and @kbd{C-e q h} after a silent update.  For
+systematic review use @kbd{C-e q r}@comma{} then navigate rows and selection-like
+styled regions.  Rapid dashboards are intentionally not read on every refresh.
+Hyperlink targets@comma{} sixel/image semantics@comma{} an application's true accessibility
+focus@comma{} and exact update causes are not exposed by EAT's current public API@comma{} so
+Emacsvox cannot infer them reliably from pixels and faces alone.
+
+Remote programs also need terminal information compatible with EAT@.  Broken
+cursor addressing or screen layout caused by missing remote terminfo cannot be
+repaired by speech classification; consult EAT's manual when the visual
+terminal itself renders incorrectly.
+
+@section EAT In Eshell
+
+@cindex Eshell, EAT accessibility
+
+@findex eat-eshell-mode
+
+@findex eat-eshell-visual-command-mode
+
+When EAT's global @code{eat-eshell-mode} is enabled@comma{} Emacsvox uses the same
+screen observer for the terminal region embedded in Eshell.  Rendered command
+output is owned by one speech path@comma{} so it is not repeated by generic Eshell
+output feedback.
+
+With @code{eat-eshell-visual-command-mode}@comma{} an Eshell visual command runs in a
+separate EAT buffer.  Emacsvox announces its start@comma{} delivers eligible final
+output before the process-exit event@comma{} and labels its exit as an Eshell visual
+command.  EAT and Eshell still own the window-return policy.  In particular@comma{}
+@code{eshell-destroy-buffer-when-process-dies} determines whether a successful
+visual-command buffer is killed and Eshell is restored; Emacsvox does not
+change that option.
+
+@node Running Terminal Based Applications
+@chapter Term Terminal Access
+
+@cindex Term mode
+
+@cindex terminal applications
+
+@cindex Eterm, Emacsvox module name
+
+Emacsvox speech-enables the built-in Emacs Term terminal emulator through the
+module named @code{emacsvox-eterm}.  The module name is inherited; users do not
+install a separate Eterm package.
+
+For a new full-terminal workflow@comma{} prefer @ref{EAT Terminal Access}.  EAT has
+the richer current guide for bounded screen output@comma{} terminal-side completion@comma{}
+scrollback@comma{} alternate screens@comma{} and asynchronous rendering.  Use built-in Term
+when avoiding an additional package matters or an application specifically
+works better there.  For ordinary line-oriented shell commands@comma{} @kbd{M-x shell} is usually simpler than either terminal emulator.
+
+@menu
+* Starting Term::
+* Term Input Modes::
+* Term Speech Feedback::
+* Reviewing The Term Screen::
+* Term Help And Recovery::
+@end menu
+
+@node Starting Term
+@section Starting Term
+
+@findex term
+
+Run @kbd{M-x term @key{RET}}.  At the @code{Run program:} prompt@comma{} accept the
+proposed shell or enter another executable and press @key{RET}.  Emacsvox
+currently makes the selected Term window fill the frame when @code{term} or
+@code{ansi-term} starts.  This changes only the window layout: it does not kill
+the buffers that were displayed in the other windows.
+
+Term owns terminal emulation and the child program owns its prompts@comma{} input@comma{}
+and completion.  Emacsvox observes the rendered Term buffer and adds speech
+feedback and review commands.  See @ref{Term Mode,,,emacs,The GNU Emacs Manual} for the emulator itself and
+@ref{emacsvox-eterm,,,emacsvox-reference,Emacsvox Reference Manual} for the
+complete Emacsvox API inventory.
+
+@node Term Input Modes
+@section Character And Line Input Modes
+
+@cindex character mode, Term
+
+@cindex line mode, Term
+
+@findex term-char-mode
+
+@findex term-line-mode
+
+Term starts in character mode.  Choose the mode according to who should receive
+your keys:
+
+@table @asis
+@item Character mode
+Most keys are sent immediately to the terminal program.  Use this for
+full-screen or key-driven terminal applications.  Press @kbd{C-c C-j} to enter
+line mode.  Because normal Emacs prefixes may belong to the child program@comma{} use
+@kbd{C-c C-h m} for mode help and @kbd{C-c M-x} to run an Emacs command.
+@item Line mode
+Normal Emacs editing commands edit the pending input.  @key{RET} sends that
+input to the terminal program.  Use @kbd{C-h m} and other ordinary Emacs Help
+keys directly.  Press @kbd{C-c C-k} to return to character mode.
+@end table
+
+Emacsvox announces @code{Terminal line mode} or @code{Terminal character mode}
+after an interactive switch.  In either mode@comma{} @kbd{C-t} begins the Emacsvox
+Term review prefix.  To send a literal @kbd{C-t} to the child program in
+character mode@comma{} press @kbd{C-t C-t}.
+
+@node Term Speech Feedback
+@section Automatic Speech Feedback
+
+@cindex automatic speech, Term
+
+@vindex emacsvox-eterm-autospeak
+
+@findex emacsvox-toggle-eterm-autospeak
+
+Automatic feedback is controlled by the buffer-local setting
+@code{emacsvox-eterm-autospeak}@comma{} which is on by default.  Toggle it for the
+current Term buffer with @kbd{C-t C-q}.  The older spelling
+@code{eterm-autospeak} is not an Emacsvox variable.
+
+The Term buffer must be displayed in a live window for output to be spoken
+automatically.  A hidden Term buffer can continue running without speaking.
+In line mode@comma{} Emacsvox reads the newly inserted output range without
+interrupting it for every character.  In character mode@comma{} it presents rendered
+cursor movement@comma{} characters@comma{} words@comma{} or the reached line according to how the
+screen changed; new terminal activity can stop earlier speech.
+
+This feedback is based on Term's rendered buffer and cursor coordinates.  It
+does not provide EAT's bounded screen transactions@comma{} terminal-completion model@comma{}
+or alternate-screen policy.  Use explicit review whenever automatic output is
+too brief or an application redraw is ambiguous.
+
+@node Reviewing The Term Screen
+@section Reviewing The Term Screen
+
+@cindex review pointer, Term
+
+@cindex review mode, Term
+
+The Emacsvox review pointer is independent of the terminal cursor@comma{} so reviewing
+old screen text does not send keys or move the child application.  These core
+commands keep the normal @kbd{C-t} prefix:
+
+@table @kbd
+@item C-t .
+Move the review pointer to the terminal cursor and announce its coordinates.
+@item C-t p
+@itemx C-t n
+Move the review pointer to the previous or next line and speak it.  The Up and
+Down arrow keys are equivalent after the @kbd{C-t} prefix.
+@item C-t @key{LEFT}
+@itemx C-t @key{RIGHT}
+Move the pointer by a character and speak the character reached.
+@item C-t M-b
+@itemx C-t M-f
+Move the pointer backward or forward by a word and speak it.
+@item C-t l
+@itemx C-t w
+@itemx C-t c
+Speak the line@comma{} word@comma{} or character at the review pointer without moving it.
+@item C-t @key{SPC}
+Speak from the review pointer to the current end of the Term buffer.
+@item C-t s
+Prompt for text@comma{} search forward from the review pointer@comma{} and speak the matching
+line.
+@end table
+
+In character mode@comma{} @kbd{C-t q} enters dedicated review mode.  The terminal
+stops receiving ordinary keys while this review keymap is active.  Use
+@kbd{p}@comma{} @kbd{n}@comma{} the arrow keys@comma{} @kbd{M-b}@comma{} @kbd{M-f}@comma{} @kbd{l}@comma{} @kbd{w}@comma{}
+@kbd{c}@comma{} and @kbd{s} without the @kbd{C-t} prefix; press @kbd{q} to return to
+character mode.  To copy reviewed text@comma{} press @kbd{m} at one endpoint@comma{} move the
+pointer@comma{} and press @kbd{y} to copy the region to the kill ring.
+
+The integration also supports named rectangular screen regions and focus or
+filter windows.  Those are advanced@comma{} coordinate-based facilities; inspect the
+live @kbd{C-h m} output and the generated module reference before using them.
+
+@node Term Help And Recovery
+@section Help And Recovery
+
+@itemize
+@item
+If terminal output is visible but silent@comma{} press @kbd{C-t C-q} once and retry.
+Automatic speech applies only while the Term buffer is displayed.
+
+@item
+If an Emacs command is being sent to the child program@comma{} remember that you are
+probably in character mode.  Use @kbd{C-c C-h m}@comma{} @kbd{C-c M-x}@comma{} or switch to
+line mode with @kbd{C-c C-j}.
+
+@item
+If review has drifted away from live output@comma{} press @kbd{C-t .}.  If dedicated
+review mode owns the keys@comma{} press @kbd{q} first to return to character mode.
+
+@item
+If a full-screen application redraws in a way that Term cannot present
+reliably@comma{} retry it in @ref{EAT Terminal Access} and use EAT's explicit review
+commands.
+@end itemize
+
+@node Emacsvox Keyboard Commands
+@chapter Emacsvox Keyboard Commands.
+
+@cindex Emacs Keyboard Commands
+
+This chapter explains how to discover the bindings that are current in
+your Emacs session.  For the small starter set@comma{} see @ref{Basic Usage}.
+For the complete generated default bindings@comma{} see
+@ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
+
+Most Emacsvox commands use one of these two default prefixes:
+
+@table @kbd
+@item C-e
+The main Emacsvox keymap.
+@item C-e d
+The text-to-speech keymap.
+@end table
+
+Emacsvox also defines integration-specific and optional convenience
+maps.  Which of those keys are available depends on the current major
+and minor modes@comma{} your window system or terminal@comma{} and your configuration;
+therefore this conceptual chapter does not duplicate their inventories.
+
+Use Emacs Help to inspect the effective result:
+
+@itemize
+@item
+@kbd{C-h m} describes the modes and their bindings in the current buffer.
+
+@item
+@kbd{C-h k}@comma{} followed by a key@comma{} describes the command that key invokes.
+
+@item
+After typing a prefix such as @kbd{C-e}@comma{} type @kbd{C-h} to display that
+prefix's current bindings.
+@end itemize
+
+If live Help and this manual differ@comma{} live Help describes your running
+session.  Check customizations first@comma{} then compare the generated defaults
+in the @ref{Emacsvox Keymaps,,,emacsvox-reference,Emacsvox Reference Manual}.
+
+@node TTS Servers
+@chapter Speech Server Protocols
+
+Emacsvox produces spoken output by communicating with one of several speech
+servers.  Two protocol families coexist:
+
+@itemize
+@item
+The legacy command-and-queue line protocol is implemented by standalone Tcl
+servers and retained by Omnivox for compatibility.
+
+@item
+Capability-negotiated Omnivox control@comma{} marker@comma{} logical-voice@comma{} and structured
+presentation protocols carry bounded JSON records beside that legacy stream.
+@end itemize
+
+This chapter is primarily for speech-server and client developers.  The
+detailed Omnivox contracts are owned by the Omnivox repository; this manual
+summarizes their relationship to Emacsvox and then documents the legacy line
+protocol.
+
+For additional notes on how to log and view @acronym{TTS} server
+commands when developing a speech server@comma{} see
+the historical Emacspeak article at
+@uref{http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html}.
+
+@section Omnivox Structured Protocol
+
+At process startup the Emacsvox adapter requests capabilities and live engine
+inventory.  Features are used only after negotiation; an older server
+continues on the legacy path.  Current Emacsvox requires
+@code{presentation_timeline_v3} before it submits an Aural Presentation as a
+structured timeline.
+
+A complete timeline contains its delivery policy@comma{} replacement domain@comma{}
+generation@comma{} dispatch ID@comma{} speech spans@comma{} and positioned actions.  Small
+timelines use one bounded frame; large timelines use a bounded multipart
+envelope that is validated and admitted atomically.  Decodable rejected or
+stale direct timelines receive terminal status so Emacs callbacks can retire
+their dispatch records.
+
+@code{ordered} and @code{urgent} timelines are admitted immediately.  Only
+matching @code{replaceable} work uses the short server-side coalescing window.
+Receipt of a newer valid replaceable generation immediately cancels queued@comma{}
+synthesizing@comma{} and buffered work in the same replacement domain.  It does not
+globally stop ordered@comma{} urgent@comma{} legacy@comma{} or differently keyed output.
+
+Marker events distinguish dispatch admission@comma{} synthesis@comma{} playback start@comma{}
+positioned markers@comma{} and terminal completion.  Playback markers track mixer
+source consumption and may precede physical sound by the output device's
+buffer latency; a protocol write or terminal callback is therefore not proof
+of acoustic onset.
+
+The canonical protocol documents are:
+
+@itemize
+@item
+@uref{https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md, Omnivox Control Protocol}
+
+@item
+@uref{https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md, Omnivox Presentation Timeline Protocol}
+
+@item
+@uref{https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md, Omnivox Helper Protocol}
+@end itemize
+
+@section Legacy Line Protocol
+
+The @acronym{TTS} server reads commands from standard input.
+Script @strong{speech-server} can be used to cause a @acronym{TTS}
+server to communicate via a @acronym{TCP} socket. Speech server
+commands are used by the client application to make specific requests
+of the server; the server listens for these requests in a non-blocking
+read-eval-print (REPL)  loop and executes requests as they become available. Requests can
+be classified as follows:
+
+@itemize
+@item
+Commands that send text to be spoken.
+
+@item
+Commands that set @strong{state} of the @acronym{TTS} server.
+@end itemize
+
+All commands are of the form
+
+@example
+commandWord @{arguments@}
+@end example
+
+The braces are optional if the command argument contains no white
+space.  The speech server maintains a @strong{current state} that
+determines various characteristics of spoken output such as speech
+rate@comma{} punctuations mode etc. (see set of commands that manipulate
+speech state for complete list).  The client application
+@strong{queues} The text and non-speech audio output to be produced
+before asking the server to @strong{dispatch} the set of queued
+requests@comma{} i.e. start producing output.
+
+Once the server has been asked to produce output@comma{} it removes items
+from the front of the queue@comma{} sends the requisite commands to the
+underlying @acronym{TTS} engine@comma{} and waits for the engine to
+acknowledge that the request has been completely processed. This is a
+non-blocking operation@comma{} i.e.@comma{} if the client application generates
+additional requests@comma{} these are processed @strong{immediately}.
+
+This design allows a legacy Emacsvox @acronym{TTS} server to be
+@strong{highly} responsive; Client applications can queue large
+amounts of text (typically queued a clause at a time to achieve the
+best prosody)@comma{} ask the @acronym{TTS} server to start speaking@comma{} and
+interrupt the spoken output at any time.
+
+@subsection Commands That Queue Output.
+
+This section documents commands that either produce spoken output@comma{} or
+queue output to be produced on demand.  Commands that place the
+request on the queue are clearly marked.
+
+@example
+version
+@end example
+
+Speaks the @strong{version} of the @acronym{TTS} engine. Produces
+output immediately.
+
+@example
+tts_say text
+@end example
+
+Speaks the specified @strong{text} immediately. The text is not
+pre-processed in any way@comma{} contrast this with the primary way of
+speaking text which is to queue text before asking the server to
+process the queue.
+
+Note that this command needs to handle the special syntax for morpheme
+boundaries @code{[*]}.  The @code{[*]} syntax is specific to the
+Dectalk family of synthesizers; servers for other @acronym{TTS}
+engines need to map this pattern to the engine-specific code for each
+engine. As an example@comma{} see @code{servers/outloud} A morpheme boundary
+results in synthesizing compound words such as @strong{left bracket}
+with the right intonation; using a space would result in that phrase
+being synthesized as two separate words.
+
+@example
+l c
+@end example
+
+Speak @strong{c} a single character@comma{} as a letter.  The character is
+spoken immediately. This command uses the @acronym{TTS} engine's
+capability to speak a single character with the ability to flush
+speech @strong{immediately}.  Client applications wishing to produce
+character-at-a-time output@comma{} e.g.@comma{} when providing character echo during
+keyboard input should use this command.
+
+@example
+d
+@end example
+
+This command is used to @strong{dispatch} all queued requests.  It was
+renamed to a single character command (like many of the commonly used
+@acronym{TTS} server commands) to work more effectively over slow
+(9600) dialup lines.  The effect of calling this command is for the
+@acronym{TTS} server to start processing items that have been queued
+via earlier requests.
+
+@example
+s
+@end example
+
+Stop speech @strong{immediately}.  Spoken output is interrupted@comma{} and
+all pending requests are flushed from the queue.
+
+@example
+q text
+@end example
+
+Queues text to be spoken. No spoken output is produced until a
+@strong{dispatch} request is received via execution of command
+@strong{d}.
+
+@example
+c codes
+@end example
+
+Queues synthesis codes to be sent to the @acronym{TTS} engine.  Codes
+are sent to the engine with no further transformation or processing.
+The codes are inserted into the output queue and will be dispatched to
+the @acronym{TTS} engine at the appropriate point in the output
+stream.
+
+@example
+a filename
+@end example
+
+Cues the audio file identified by filename for playing@comma{}
+an @code{ogg} file.
+
+@example
+p filename
+@end example
+
+@strong{dispatch} play the audio file identified by filename for
+playing  @MDash{} @code{ogg} file.
+
+@example
+t freq length
+@end example
+
+Queues a tone to be played at the specified frequency and having the
+specified length.  Frequency is specified in hertz and length is
+specified in milliseconds.
+
+@example
+sh duration
+@end example
+
+Queues the specified duration of silence. Silence is specified in
+milliseconds.
+
+@subsection Commands That Set State
+
+@example
+tts_reset
+@end example
+
+@strong{Immediately} reset @acronym{TTS} engine to default settings.
+Stops all speech and clears the queue.
+
+@example
+tts_set_punctuations mode
+@end example
+
+Queues setting @acronym{TTS} engine to the specified punctuation
+mode. Typically@comma{} @acronym{TTS} servers provide at least three modes:
+
+@itemize
+@item
+None: Do not speak punctuation characters.
+
+@item
+Some: Speak some punctuation characters. Used for English prose.
+
+@item
+All: Speak out @strong{all} punctuation characters; useful in
+programming modes.
+@end itemize
+
+@example
+tts_set_speech_rate rate
+@end example
+
+@strong{Immediately} change speech rate. The interpretation of this
+value is typically engine specific.
+
+@example
+tts_set_character_scale factor
+@end example
+
+Queues changing the scale factor.  Scale factor applied to speech rate
+when speaking individual characters.Thus@comma{} setting speech rate to 500
+and character scale to 1.2 will cause command @strong{l} to use a
+speech rate of @strong{500 * 1.2 = 600}.
+
+@example
+tts_split_caps flag
+@end example
+
+Queues changing of the state of @strong{split caps} processing.  Turn
+this on to speak mixed-case (@acronym{AKA} Camel Case) identifiers.
+
+@example
+tts_sync_state punct splitcaps caps rate
+@end example
+
+@strong{Immediately} apply the passed settings.
+
+This ensures @strong{atomicity} i.e.@comma{} all state settings in the TTS
+engine happen at one shot. Note that failure to do this might result
+in some utterances being spoken with a partially set state.
+
+@itemize
+@item
+punct: see tts@math{_set}@math{_punctuations}
+
+@item
+splitcaps: see tts@math{_split}@math{_caps}
+
+@item
+caps: engine specific implementation of capital letter handling
+
+@item
+rate: see tts@math{_set}@math{_speech}@math{_rate}
+@end itemize
+
+@example
+set_next_lang say_it
+@end example
+
+@strong{Immediately} switch to the next language on the server@comma{}
+maintained internally on the TTS server. If say@math{_it} is non-nil say the
+language change via the TTS@.
+
+@example
+set_previous_lang say_it
+@end example
+
+@strong{Immediately} switch to the previous language on the server@comma{}
+maintained internally on the TTS server. If say@math{_it} is non-nil say the
+language change via the TTS@.
+
+@example
+set_lang language:voice say_it
+@end example
+
+@strong{Immediately} switch to the requested language and/or voice@comma{}
+separated by a colon. Examples
+
+@itemize
+@item
+set@math{_lang} "en"
+
+@item
+set@math{_lang} "en:whisper"
+
+@item
+set@math{_lang} ":whisper"
+@end itemize
+
+If say@math{_it} is non-nil@comma{} speak via the TTS the language and voice
+selected.
+
+@example
+set_preferred_lang alias lang
+@end example
+
+@strong{Immediately} set an alias in the TTS server mapping for
+example "en" to "en@math{_GB}". This can later be used by set@math{_lang}.
+
+@node Announce
+@chapter Manual Provenance And Contributions
+
+This manual began as the second-edition Emacspeak user manual and still
+contains selected chapters from that project.  Emacsvox-specific operating
+guidance@comma{} names@comma{} requirements@comma{} and generated command reference are maintained
+in this repository.  Historical chapters retain Emacspeak terminology where
+that identity and period context matter.
+
+@menu
+* Contributing::
+* Authoring Guidelines::
+* Credits::
+@end menu
+
+@node Contributing
+@section How To Contribute To This Manual
+
+The maintained Org chapters live under @code{docs/manual/chapters/}; the current
+project overview and installation summary live in @code{Readme.org} and
+@code{etc/install.org}.
+Submit changes through the Emacsvox repository at
+@uref{https://github.com/bartbunting/emacsvox}.  Read @code{AGENTS.md} before
+building or testing: Emacsvox requires Emacs 31 or newer and repository-local
+@code{local.mk} selects the compiler used by supported targets.
+
+Do not hand-edit generated references.  @code{info/docs.texi} and
+@code{info/keys.texi} come from the source documentation generator;
+@code{etc/aural-presentation-reference.org} comes from
+@code{utils/emacsvox-aural-audit.el}.
+The first two sources form the separately installed
+@code{emacsvox-reference.info} manual.
+The selected historical chapters form the separately installed
+@code{emacsvox-heritage.info} manual.
+
+@node Authoring Guidelines
+@section Authoring Guidelines
+
+Keep current operating instructions separate from historical accounts.  State
+which back end or platform a procedure applies to@comma{} avoid duplicating detailed
+protocol contracts across repositories@comma{} and link to the owning document.
+
+Reports and internal notes require no Emacsvox build.  While editing the Org
+manual@comma{} preview the complete user manual without inspecting or rebuilding Lisp
+byte-code:
+
+@example
+make docs-org-preview
+@end example
+
+The ignored Info@comma{} Texinfo@comma{} and HTML previews appear under
+@code{.docs-preview/org-manual/}.  Once the text settles@comma{} run
+@code{make docs-update} to update the tracked generated Texinfo body and checked
+Info files.  Do not edit those generated files directly.
+
+When public Lisp documentation or keys change@comma{} first bring byte-code current
+with @code{make bytecode}.  Use @code{make bytecode-rebuild} instead after
+changing macros or public interfaces@comma{} as described in @code{AGENTS.md}.  Then
+run @code{make docs-reference}.  @code{make docs-generate} remains the
+comprehensive reference and manual update.  Before review@comma{} merge@comma{} or
+deployment@comma{} run the non-mutating
+@code{make docs-release-check}; @code{make docs-check} is its
+compatibility alias.  Commit the regenerated @code{emacsvox.info}@comma{}
+@code{emacsvox-reference.info}@comma{} and @code{emacsvox-heritage.info} files with
+their source changes.
+
+@subsection Publishing The Browser Manual
+
+Org on @code{master} is the canonical maintained manual source.  GitHub Pages serves
+the generated static files committed on the separate @code{gh-pages} branch;
+never edit those HTML files as source.  Publishing is deliberately explicit:
+
+@enumerate
+@item
+Finish the manual change@comma{} update its checked Info output@comma{} run the release
+validation target above@comma{} and commit the complete source-side change on
+@code{master}.
+
+@item
+Check out that exact commit in a clean source worktree.  Build its local@comma{}
+ignored byte-code with the Emacs selected by @code{local.mk} or an
+@code{EMACS=} override.  Use a separate sibling worktree checked out on
+@code{gh-pages} as the publication directory.
+
+@item
+From the clean source worktree@comma{} run:
+
+@example
+make docs-publish-pages DOCS_PUBLISH_DIR=/path/to/emacsvox-pages
+@end example
+
+The target validates the manual and publishes that same staged render@comma{} replaces
+only its managed HTML files@comma{} writes @code{.nojekyll}@comma{} and records the source
+commit@comma{} Emacs version@comma{} and Texinfo version in @code{emacsvox-source.txt}.  It
+refuses an uncommitted source tree.
+
+@item
+Inspect the @code{gh-pages} worktree@comma{} including the provenance file and the
+main browser entry points.  Commit the generated site with the source commit
+in the commit message@comma{} then push @code{master} and @code{gh-pages}.  The GitHub
+Pages source setting must name the root of @code{gh-pages}.
+@end enumerate
+
+No documentation target creates a commit or pushes a branch.  This keeps the
+published bytes reviewable and makes publication a distinct maintainer action.
+
+@node Credits
+@section Credits
+
+The original manual drew heavily from the Emacspeak user manual and includes
+contributions from Jim Van Zandt and Jason White.  Emacsvox retains that work
+with attribution while maintaining its current project documentation in the
+Emacsvox repository.
+
+@node Copyright
+@chapter Copyright
+
+This manual documents Emacsvox@comma{} a speech extension to Emacs.
+
+Copyright (C)1994  @NDash{}  2024 T@. V@. Raman
+All Rights Reserved.
+
+Permission is granted to make and distribute verbatim copies of this
+manual without charge provided the copyright notice and this
+permission notice are preserved on all copies.  Sections of this
+manual are auto-generated from the source code@comma{} and the documentation
+inherits the same license as the original source code.
+
+@node Acknowledgments
+@chapter Acknowledgments
+
+Thanks.

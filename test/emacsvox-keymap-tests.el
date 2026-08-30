@@ -20,29 +20,30 @@
   (with-temp-buffer
     (insert-file-contents
      (expand-file-name
-      "info/using.texi" emacsvox-keymap-test--repository-directory))
+      "docs/manual/chapters/basic-usage.org"
+      emacsvox-keymap-test--repository-directory))
     (goto-char (point-min))
     (let (bindings)
-      (while
-          (re-search-forward
-           "^@c basic-usage-live-keys-begin$" nil t)
+      (while (re-search-forward "^# basic-usage-live-keys-begin$" nil t)
         (let ((start (line-beginning-position 2)))
           (unless
-              (re-search-forward
-               "^@c basic-usage-live-keys-end$" nil t)
+              (re-search-forward "^# basic-usage-live-keys-end$" nil t)
             (ert-fail "Unterminated Basic Usage live-key table"))
           (let ((end (match-beginning 0)))
             (save-excursion
               (goto-char start)
-              (while
-                  (re-search-forward
-                   "^@item \\([^\n]+\\)\n@code{\\([^}\n]+\\)}"
-                   end t)
-                (push
-                 (cons
-                  (match-string-no-properties 1)
-                  (intern (match-string-no-properties 2)))
-                 bindings))))))
+              (while (re-search-forward "^- \\([^\n]+\\) ::$" end t)
+                (let ((key (match-string-no-properties 1))
+                      (item-end
+                       (save-excursion
+                         (if (re-search-forward "^- [^\n]+ ::$" end t)
+                             (match-beginning 0)
+                           end))))
+                  (unless (re-search-forward "^  ~\\([^~\n]+\\)~$" item-end t)
+                    (ert-fail "Missing command for documented key %s" key))
+                  (push
+                   (cons key (intern (match-string-no-properties 1)))
+                   bindings)))))))
       (nreverse bindings))))
 
 (ert-deftest emacsvox-keymap-uses-canonical-tts-prefix ()
@@ -94,7 +95,10 @@
 
 (ert-deftest emacsvox-basic-usage-points-to-live-and-generated-help ()
   "Conceptual key guidance should lead to current, authoritative bindings."
-  (dolist (relative-name '("info/using.texi" "info/keyboard.texi"))
+  (dolist
+      (relative-name
+       '("docs/manual/chapters/basic-usage.org"
+         "docs/manual/chapters/keyboard.org"))
     (let ((guide
            (with-temp-buffer
              (insert-file-contents

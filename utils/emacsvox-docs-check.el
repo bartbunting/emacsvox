@@ -49,9 +49,24 @@
      :inventory "etc/docs-heritage-redirects.txt"))
   "Frozen inventories of legacy root HTML paths for moved manual nodes.")
 
-(defconst emacsvox-docs-check--public-org-files
-  '("Readme.org")
+(defconst emacsvox-docs-check--public-org-entry-files
+  '("Readme.org"
+    "docs/adr/0001-documentation-authoring-and-publication.org"
+    "docs/manual/README.org"
+    "docs/manual/emacsvox.org")
   "Current public Org entry points whose local links must resolve.")
+
+(defun emacsvox-docs-check--public-org-files (root)
+  "Return public Org files below repository ROOT.
+Include every maintained manual chapter as well as the public entry points."
+  (let ((chapter-directory
+         (expand-file-name "docs/manual/chapters" root)))
+    (append
+     emacsvox-docs-check--public-org-entry-files
+     (when (file-directory-p chapter-directory)
+       (mapcar
+        (lambda (file) (file-relative-name file root))
+        (directory-files chapter-directory t "\\.org\\'" t))))))
 
 (defconst emacsvox-docs-check--publish-manifest
   ".emacsvox-generated-html"
@@ -467,7 +482,7 @@ directory entry with INSTALL-INFO."
 
 (defun emacsvox-docs-check--check-local-links (root)
   "Require relative links in current public Org entry points below ROOT."
-  (dolist (relative emacsvox-docs-check--public-org-files)
+  (dolist (relative (emacsvox-docs-check--public-org-files root))
     (let ((document (expand-file-name relative root)))
       (unless (file-regular-p document)
         (error "Public documentation file is missing: %s" relative))
@@ -477,6 +492,22 @@ directory entry with INSTALL-INFO."
           (unless (file-exists-p target)
             (error "Broken local link: %s:%d -> %s"
                    relative (cadr link) (car link))))))))
+
+(defun emacsvox-docs-check--prepare
+    (root temporary-directory makeinfo install-info)
+  "Validate ROOT and prepare publishable HTML in TEMPORARY-DIRECTORY.
+Use MAKEINFO and INSTALL-INFO for strict compilation.  Return a plist naming
+the validated HTML staging directory and its managed files."
+  (emacsvox-docs-check--check-generated-reference root temporary-directory)
+  (emacsvox-docs-check--check-info
+   root temporary-directory makeinfo install-info)
+  (let* ((html-directory
+          (expand-file-name "html" temporary-directory))
+         (generated
+          (emacsvox-docs-check--check-html
+           root temporary-directory makeinfo)))
+    (emacsvox-docs-check--check-local-links root)
+    (list :html-directory html-directory :generated generated)))
 
 (defun emacsvox-docs-check-run
     (&optional root makeinfo install-info)
@@ -496,13 +527,8 @@ ROOT defaults to `emacsvox-docs-check--root'."
           (make-temp-file "emacsvox-docs-check-" t)))
     (unwind-protect
         (progn
-          (emacsvox-docs-check--check-generated-reference
-           root temporary-directory)
-          (emacsvox-docs-check--check-info
+          (emacsvox-docs-check--prepare
            root temporary-directory makeinfo install-info)
-          (emacsvox-docs-check--check-html
-           root temporary-directory makeinfo)
-          (emacsvox-docs-check--check-local-links root)
           t)
       (when (file-directory-p temporary-directory)
         (delete-directory temporary-directory t)))))
@@ -656,6 +682,32 @@ reported."
       (error "Texinfo version command returned no output"))
     line))
 
+(defun emacsvox-docs-check--publish-staged-html
+    (destination root staging generated)
+  "Copy validated HTML from STAGING into DESTINATION for ROOT.
+GENERATED is the managed relative file inventory.  Remove only files recorded
+by the previous publication manifest and absent from GENERATED."
+  (let* ((destination
+          (emacsvox-docs-check--validated-publish-directory root destination))
+         (previous
+          (emacsvox-docs-check--read-publish-manifest destination))
+         (stale
+          (cl-set-difference previous generated :test #'string=)))
+    (dolist (name generated)
+      (let ((target
+             (emacsvox-docs-check--managed-target
+              destination name "documentation publication")))
+        (make-directory (file-name-directory target) t)
+        (copy-file (expand-file-name name staging) target t)))
+    (dolist (name stale)
+      (let ((target
+             (emacsvox-docs-check--managed-target
+              destination name "stale documentation")))
+        (when (file-exists-p target)
+          (delete-file target))))
+    (emacsvox-docs-check--write-publish-manifest destination generated)
+    (list :written (length generated) :removed (length stale))))
+
 (defun emacsvox-docs-publish
     (destination &optional root makeinfo)
   "Render current HTML into explicit DESTINATION without committing or pushing."
@@ -672,31 +724,44 @@ reported."
     (unwind-protect
         (let* ((staging (expand-file-name "html" temporary-directory))
                (generated
-                (emacsvox-docs-check--compile-html root staging makeinfo))
-               (previous
-                (emacsvox-docs-check--read-publish-manifest destination))
-               (stale
-                (cl-set-difference previous generated :test #'string=)))
-          (dolist (name generated)
-            (let ((target
-                   (emacsvox-docs-check--managed-target
-                    destination name "documentation publication")))
-              (make-directory (file-name-directory target) t)
-              (copy-file (expand-file-name name staging) target t)))
-          (dolist (name stale)
-            (let ((target
-                   (emacsvox-docs-check--managed-target
-                    destination name "stale documentation")))
-              (when (file-exists-p target)
-                (delete-file target))))
-          (emacsvox-docs-check--write-publish-manifest
-           destination generated)
-          (list :written (length generated) :removed (length stale)))
+                (emacsvox-docs-check--compile-html root staging makeinfo)))
+          (emacsvox-docs-check--publish-staged-html
+           destination root staging generated))
+      (when (file-directory-p temporary-directory)
+        (delete-directory temporary-directory t)))))
+
+(defun emacsvox-docs-check-and-publish
+    (destination &optional root makeinfo install-info)
+  "Validate ROOT and publish its staged HTML once into DESTINATION.
+ROOT defaults to `emacsvox-docs-check--root'.  MAKEINFO and INSTALL-INFO
+default to the corresponding Emacsvox environment settings."
+  (let* ((root
+          (file-name-as-directory
+           (expand-file-name (or root emacsvox-docs-check--root))))
+         (makeinfo
+          (or makeinfo
+              (emacsvox-docs-check--program "EMACSVOX_MAKEINFO" "makeinfo")))
+         (install-info
+          (or install-info
+              (emacsvox-docs-check--program
+               "EMACSVOX_INSTALL_INFO" "install-info")))
+         (destination
+          (emacsvox-docs-check--validated-publish-directory root destination))
+         (temporary-directory
+          (make-temp-file "emacsvox-docs-release-" t)))
+    (unwind-protect
+        (let ((prepared
+               (emacsvox-docs-check--prepare
+                root temporary-directory makeinfo install-info)))
+          (emacsvox-docs-check--publish-staged-html
+           destination root
+           (plist-get prepared :html-directory)
+           (plist-get prepared :generated)))
       (when (file-directory-p temporary-directory)
         (delete-directory temporary-directory t)))))
 
 (defun emacsvox-docs-publish-pages
-    (destination &optional root makeinfo)
+    (destination &optional root makeinfo install-info)
   "Publish committed documentation and Pages metadata to DESTINATION.
 ROOT must be a clean Git worktree.  This function never commits or pushes."
   (let* ((root
@@ -705,13 +770,19 @@ ROOT must be a clean Git worktree.  This function never commits or pushes."
          (makeinfo
           (or makeinfo
               (emacsvox-docs-check--program "EMACSVOX_MAKEINFO" "makeinfo")))
+         (install-info
+          (or install-info
+              (emacsvox-docs-check--program
+               "EMACSVOX_INSTALL_INFO" "install-info")))
          (destination
           (emacsvox-docs-check--validated-publish-directory root destination)))
     (emacsvox-docs-check--validate-pages-metadata destination)
     (let* ((revision (emacsvox-docs-check--source-revision root))
            (texinfo-version
             (emacsvox-docs-check--makeinfo-version root makeinfo))
-           (result (emacsvox-docs-publish destination root makeinfo))
+           (result
+            (emacsvox-docs-check-and-publish
+             destination root makeinfo install-info))
            (provenance
             (format
              (concat
@@ -730,7 +801,7 @@ ROOT must be a clean Git worktree.  This function never commits or pushes."
   "Publish HTML to `EMACSVOX_DOCS_PUBLISH_DIR' as a batch command."
   (condition-case condition
       (let* ((destination (getenv "EMACSVOX_DOCS_PUBLISH_DIR"))
-             (result (emacsvox-docs-publish destination)))
+             (result (emacsvox-docs-check-and-publish destination)))
         (princ
          (format
           "Published %d HTML files to %s; removed %d stale HTML files.\n"

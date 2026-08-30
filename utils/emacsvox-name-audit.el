@@ -27,7 +27,6 @@
     "etc/NEWS"
     "etc/ai/"
     "html/"
-    "info/announce"
     "info/emacspeak-significance"
     "info/inc-turning-twenty"
     "info/introducing-emacspeak"
@@ -39,6 +38,8 @@
 (defconst ems-name-audit-excluded-files
   '("etc/advice-migration.org"
     "etc/tts-modernization.org"
+    "docs/manual/chapters/provenance.org"
+    "info/emacsvox-body.texi"
     "info/Makefile"
     "lisp/elpa-readme"
     "readme-attic"

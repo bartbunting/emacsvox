@@ -1,17 +1,14 @@
 #$Id$
-# Built Info pages are checked into GitHub.  Run `make docs-generate` from the
-# repository root after changing public Lisp documentation or manual sources.
+# Built Info pages are checked into GitHub.  Run `make docs-update` from the
+# repository root after changing hand-written manual sources.  Use the explicit
+# `make docs-reference` target after changing public Lisp documentation.
 # Historical Emacspeak documents retain their original names.
 SF_HOME= raman,emacspeak@web.sourceforge.net:/home/groups/e/em/emacspeak/htdocs/info
 # Compatibility input for the old info-level publication target.  Prefer the
 # root `docs-publish` target; this path is intentionally not defaulted.
 GH_PAGES ?=
 FILES=*.texi
-USER_INCLUDES= style.texi preamble.texi copyright.texi announce.texi \
-introduction.texi install.texi backends.texi using.texi audio-desktop.texi \
-voices.texi online-help.texi applications.texi \
-notmuch.texi agent-shell.texi eat.texi term.texi keyboard.texi \
-tts-server.texi acknowledge.texi tts.texi
+USER_INCLUDES= style.texi preamble.texi emacsvox-body.texi
 REFERENCE_INCLUDES= style.texi docs.texi keys.texi intro-docs.texi
 HERITAGE_INCLUDES= style.texi emacspeak-significance.texi \
 inc-turning-twenty.texi packages.texi documents.texi structure.texi \

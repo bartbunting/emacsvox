@@ -1,0 +1,179 @@
+* Term Terminal Access
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Running Terminal Based Applications
+:ALT_TITLE: Running Terminal Based Applications
+:DESCRIPTION: Use Term with speech and screen review.
+:END:
+
+#+cindex: Term mode
+
+#+cindex: terminal applications
+
+#+cindex: Eterm, Emacsvox module name
+
+Emacsvox speech-enables the built-in Emacs Term terminal emulator through the
+module named ~emacsvox-eterm~.  The module name is inherited; users do not
+install a separate Eterm package.
+
+For a new full-terminal workflow, prefer @@texinfo:@ref{EAT Terminal Access}@@.  EAT has
+the richer current guide for bounded screen output, terminal-side completion,
+scrollback, alternate screens, and asynchronous rendering.  Use built-in Term
+when avoiding an additional package matters or an application specifically
+works better there.  For ordinary line-oriented shell commands, @@texinfo:@kbd{M-x shell}@@ is usually simpler than either terminal emulator.
+
+** Starting Term
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Starting Term
+:END:
+
+#+findex: term
+
+Run @@texinfo:@kbd{M-x term @key{RET}}@@.  At the ~Run program:~ prompt, accept the
+proposed shell or enter another executable and press @@texinfo:@key{RET}@@.  Emacsvox
+currently makes the selected Term window fill the frame when ~term~ or
+~ansi-term~ starts.  This changes only the window layout: it does not kill
+the buffers that were displayed in the other windows.
+
+Term owns terminal emulation and the child program owns its prompts, input,
+and completion.  Emacsvox observes the rendered Term buffer and adds speech
+feedback and review commands.  See @@texinfo:@ref{Term Mode,,,emacs,The GNU Emacs Manual}@@ for the emulator itself and
+@@texinfo:@ref{emacsvox-eterm,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the
+complete Emacsvox API inventory.
+
+** Character And Line Input Modes
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Term Input Modes
+:ALT_TITLE: Term Input Modes
+:END:
+
+#+cindex: character mode, Term
+
+#+cindex: line mode, Term
+
+#+findex: term-char-mode
+
+#+findex: term-line-mode
+
+Term starts in character mode.  Choose the mode according to who should receive
+your keys:
+
+#+attr_texinfo: :indic asis :compact t
+- Character mode ::
+
+  Most keys are sent immediately to the terminal program.  Use this for
+  full-screen or key-driven terminal applications.  Press @@texinfo:@kbd{C-c C-j}@@ to enter
+  line mode.  Because normal Emacs prefixes may belong to the child program, use
+  @@texinfo:@kbd{C-c C-h m}@@ for mode help and @@texinfo:@kbd{C-c M-x}@@ to run an Emacs command.
+- Line mode ::
+
+  Normal Emacs editing commands edit the pending input.  @@texinfo:@key{RET}@@ sends that
+  input to the terminal program.  Use @@texinfo:@kbd{C-h m}@@ and other ordinary Emacs Help
+  keys directly.  Press @@texinfo:@kbd{C-c C-k}@@ to return to character mode.
+
+Emacsvox announces ~Terminal line mode~ or ~Terminal character mode~
+after an interactive switch.  In either mode, @@texinfo:@kbd{C-t}@@ begins the Emacsvox
+Term review prefix.  To send a literal @@texinfo:@kbd{C-t}@@ to the child program in
+character mode, press @@texinfo:@kbd{C-t C-t}@@.
+
+** Automatic Speech Feedback
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Term Speech Feedback
+:ALT_TITLE: Term Speech Feedback
+:END:
+
+#+cindex: automatic speech, Term
+
+#+vindex: emacsvox-eterm-autospeak
+
+#+findex: emacsvox-toggle-eterm-autospeak
+
+Automatic feedback is controlled by the buffer-local setting
+~emacsvox-eterm-autospeak~, which is on by default.  Toggle it for the
+current Term buffer with @@texinfo:@kbd{C-t C-q}@@.  The older spelling
+~eterm-autospeak~ is not an Emacsvox variable.
+
+The Term buffer must be displayed in a live window for output to be spoken
+automatically.  A hidden Term buffer can continue running without speaking.
+In line mode, Emacsvox reads the newly inserted output range without
+interrupting it for every character.  In character mode, it presents rendered
+cursor movement, characters, words, or the reached line according to how the
+screen changed; new terminal activity can stop earlier speech.
+
+This feedback is based on Term's rendered buffer and cursor coordinates.  It
+does not provide EAT's bounded screen transactions, terminal-completion model,
+or alternate-screen policy.  Use explicit review whenever automatic output is
+too brief or an application redraw is ambiguous.
+
+** Reviewing The Term Screen
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Reviewing The Term Screen
+:END:
+
+#+cindex: review pointer, Term
+
+#+cindex: review mode, Term
+
+The Emacsvox review pointer is independent of the terminal cursor, so reviewing
+old screen text does not send keys or move the child application.  These core
+commands keep the normal @@texinfo:@kbd{C-t}@@ prefix:
+
+#+attr_texinfo: :indic kbd :compact t
+- C-t . ::
+
+  Move the review pointer to the terminal cursor and announce its coordinates.
+- C-t p ::
+- C-t n ::
+
+  Move the review pointer to the previous or next line and speak it.  The Up and
+  Down arrow keys are equivalent after the @@texinfo:@kbd{C-t}@@ prefix.
+- C-t @@texinfo:@key{LEFT}@@ ::
+- C-t @@texinfo:@key{RIGHT}@@ ::
+
+  Move the pointer by a character and speak the character reached.
+- C-t M-b ::
+- C-t M-f ::
+
+  Move the pointer backward or forward by a word and speak it.
+- C-t l ::
+- C-t w ::
+- C-t c ::
+
+  Speak the line, word, or character at the review pointer without moving it.
+- C-t @@texinfo:@key{SPC}@@ ::
+
+  Speak from the review pointer to the current end of the Term buffer.
+- C-t s ::
+
+  Prompt for text, search forward from the review pointer, and speak the matching
+  line.
+
+In character mode, @@texinfo:@kbd{C-t q}@@ enters dedicated review mode.  The terminal
+stops receiving ordinary keys while this review keymap is active.  Use
+@@texinfo:@kbd{p}@@, @@texinfo:@kbd{n}@@, the arrow keys, @@texinfo:@kbd{M-b}@@, @@texinfo:@kbd{M-f}@@, @@texinfo:@kbd{l}@@, @@texinfo:@kbd{w}@@,
+@@texinfo:@kbd{c}@@, and @@texinfo:@kbd{s}@@ without the @@texinfo:@kbd{C-t}@@ prefix; press @@texinfo:@kbd{q}@@ to return to
+character mode.  To copy reviewed text, press @@texinfo:@kbd{m}@@ at one endpoint, move the
+pointer, and press @@texinfo:@kbd{y}@@ to copy the region to the kill ring.
+
+The integration also supports named rectangular screen regions and focus or
+filter windows.  Those are advanced, coordinate-based facilities; inspect the
+live @@texinfo:@kbd{C-h m}@@ output and the generated module reference before using them.
+
+** Help And Recovery
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Term Help And Recovery
+:ALT_TITLE: Term Help And Recovery
+:END:
+
+- If terminal output is visible but silent, press @@texinfo:@kbd{C-t C-q}@@ once and retry.
+   Automatic speech applies only while the Term buffer is displayed.
+
+- If an Emacs command is being sent to the child program, remember that you are
+   probably in character mode.  Use @@texinfo:@kbd{C-c C-h m}@@, @@texinfo:@kbd{C-c M-x}@@, or switch to
+   line mode with @@texinfo:@kbd{C-c C-j}@@.
+
+- If review has drifted away from live output, press @@texinfo:@kbd{C-t .}@@.  If dedicated
+   review mode owns the keys, press @@texinfo:@kbd{q}@@ first to return to character mode.
+
+- If a full-screen application redraws in a way that Term cannot present
+   reliably, retry it in @@texinfo:@ref{EAT Terminal Access}@@ and use EAT's explicit review
+   commands.

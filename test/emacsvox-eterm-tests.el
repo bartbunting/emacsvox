@@ -337,15 +337,17 @@
 
 (ert-deftest emacsvox-eterm-current-guide-owns-the-supported-workflow ()
   "Current Term guidance should be separate from the inherited survey."
-  (let ((guide (emacsvox-test--eterm-file-string "info/term.texi"))
+  (let ((guide (emacsvox-test--eterm-file-string "info/emacsvox-body.texi"))
         (survey (emacsvox-test--eterm-file-string "info/eterm.texi"))
-        (master (emacsvox-test--eterm-file-string "info/emacsvox.texi"))
+        (master (emacsvox-test--eterm-file-string "docs/manual/emacsvox.org"))
         (heritage
          (emacsvox-test--eterm-file-string "info/emacsvox-heritage.texi"))
         (menu (emacsvox-test--eterm-file-string "info/preamble.texi"))
         (applications
-         (emacsvox-test--eterm-file-string "info/applications.texi")))
-    (should (string-match-p "@include term\\.texi" master))
+         (emacsvox-test--eterm-file-string "info/emacsvox-body.texi")))
+    (should
+     (string-match-p
+      (regexp-quote "#+include: \"chapters/term.org\"") master))
     (should-not (string-match-p "@include eterm\\.texi" master))
     (should (string-match-p "@include eterm\\.texi" heritage))
     (should

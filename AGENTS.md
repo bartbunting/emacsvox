@@ -17,14 +17,26 @@
   reloading one file when compiled dependents may already be resident.
 - Local `.elc` files are build and preflight inputs only. They are ignored and
   never distributed; releases contain the `.el` sources.
-- Use `make docs-generate` to update tracked Texinfo and Info output, then run
-  the non-mutating `make docs-check`. Use `make docs-publish` only for an
-  explicit preview directory. Publish the public manual from a clean,
-  committed source worktree with `make docs-publish-pages
-  DOCS_PUBLISH_DIR=/path/to/gh-pages-worktree`; it records source and toolchain
-  provenance. Documentation targets never commit or push: inspect and commit
-  the `gh-pages` worktree separately. Run `make docs-check-external` only when
-  network link checking is intended.
+- Reports and internal notes do not require an Emacsvox build. The maintained
+  user-manual source is `docs/manual/emacsvox.org` plus its included files under
+  `docs/manual/chapters/`. Iterate with `make docs-org-preview`; it lints and
+  exports Org to Texinfo, Info, and HTML below ignored
+  `.docs-preview/org-manual/` without loading Emacsvox. Run `make docs-update`
+  once the text settles to update the tracked generated Texinfo body and Info
+  artifacts; never edit those generated files directly. For retained Texinfo
+  manuals, use `make docs-preview DOCS_MANUAL=...`.
+- When public Lisp documentation changes, first bring byte-code current under
+  the rules above, then run `make docs-reference`; `make docs-generate` remains
+  the comprehensive update.
+- Before review, merge, or deployment, run the non-mutating
+  `make docs-release-check` (`make docs-check` is a compatibility alias). Use
+  `make docs-publish` only for an explicit preview directory. Publish the public
+  manual from a clean, committed source worktree with `make docs-publish-pages
+  DOCS_PUBLISH_DIR=/path/to/gh-pages-worktree`; it validates and publishes one
+  staged render and records source and toolchain provenance. Documentation
+  targets never commit or push: inspect and commit the `gh-pages` worktree
+  separately. Run `make docs-check-external` only when network link checking is
+  intended.
 - `make windows-omnivox` is the reproducible clean-release path. For local
   testing from dirty Emacsvox or Omnivox worktrees, use
   `make windows-omnivox-dev`; it records both tracked-diff hashes in provenance.

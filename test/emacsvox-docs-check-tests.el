@@ -9,6 +9,7 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'emacsvox-docs-check)
+(require 'emacsvox-org-export)
 
 (cl-defmacro emacsvox-docs-check-tests--with-directory
     ((directory) &rest body)
@@ -18,6 +19,101 @@
      (unwind-protect
          (progn ,@body)
        (delete-directory ,directory t))))
+
+(cl-defmacro emacsvox-docs-check-tests--without-live-export-feedback
+    (&rest body)
+  "Run BODY without optional Emacsvox Org export-completion feedback."
+  (declare (indent 0) (debug body))
+  `(if (not (fboundp 'emacsvox-org--submit-message-feedback))
+       (progn ,@body)
+     (cl-letf
+         (((symbol-function 'emacsvox-org--submit-message-feedback)
+           (lambda (&rest _arguments) nil)))
+       ,@body)))
+
+(ert-deftest emacsvox-org-export-requires-batch-environment ()
+  "The batch exporter should identify a missing source setting."
+  (let ((process-environment (copy-sequence process-environment)))
+    (setenv "EMACSVOX_ORG_SOURCE" nil)
+    (should-error
+     (emacsvox-org-export--required-environment "EMACSVOX_ORG_SOURCE")
+     :type 'error)))
+
+(ert-deftest emacsvox-org-export-preserves-alternate-node-title ()
+  "An Org printed heading may retain a stable Info node name."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((source (expand-file-name "manual.org" directory))
+          (output (expand-file-name "build/manual.texi" directory)))
+      (with-temp-file source
+        (insert "#+title: Test Manual\n"
+                "#+texinfo_filename: test.info\n\n"
+                "* Friendly Printed Chapter\n"
+                ":PROPERTIES:\n"
+                ":ALT_TITLE: Stable Info Node\n"
+                ":END:\n\n"
+                "Text.\n"))
+      (emacsvox-docs-check-tests--without-live-export-feedback
+        (emacsvox-org-export source output))
+      (with-temp-buffer
+        (insert-file-contents output)
+        (should (search-forward "@node Stable Info Node" nil t))
+        (should (search-forward "@chapter Friendly Printed Chapter" nil t))))))
+
+(ert-deftest emacsvox-org-export-preserves-exact-node-names ()
+  "TEXINFO_NODE_NAME should preserve punctuation and historical spelling."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((source (expand-file-name "manual.org" directory))
+          (output (expand-file-name "manual.texi" directory)))
+      (with-temp-file source
+        (insert "#+title: Test Manual\n"
+                "#+texinfo_filename: test.info\n\n"
+                "* Friendly Heading\n"
+                ":PROPERTIES:\n"
+                ":TEXINFO_NODE_NAME: Stable node.\n"
+                ":END:\n\nText.\n"))
+      (emacsvox-docs-check-tests--without-live-export-feedback
+        (emacsvox-org-export source output))
+      (with-temp-buffer
+        (insert-file-contents output)
+        (should (search-forward "@node Stable node." nil t))))))
+
+(ert-deftest emacsvox-org-export-supports-structural-non-node-headings ()
+  "TEXINFO_NODE=no should omit both the node and automatic menu entry."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((source (expand-file-name "manual.org" directory))
+          (output (expand-file-name "manual.texi" directory)))
+      (with-temp-file source
+        (insert "#+title: Test Manual\n"
+                "#+texinfo_filename: test.info\n\n"
+                "* Chapter\n\n"
+                "** Structural Detail\n"
+                ":PROPERTIES:\n:TEXINFO_NODE: no\n:END:\n\nText.\n"))
+      (emacsvox-docs-check-tests--without-live-export-feedback
+        (emacsvox-org-export source output))
+      (with-temp-buffer
+        (insert-file-contents output)
+        (should (search-forward "@section Structural Detail" nil t))
+        (goto-char (point-min))
+        (should-not (search-forward "@node Structural Detail" nil t))
+        (goto-char (point-min))
+        (should-not (search-forward "* Structural Detail::" nil t))))))
+
+(ert-deftest emacsvox-org-export-can-write-a-release-body ()
+  "A body-only export should omit the standalone Texinfo wrapper."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((source (expand-file-name "manual.org" directory))
+          (output (expand-file-name "manual.texi" directory)))
+      (with-temp-file source
+        (insert "#+title: Test Manual\n"
+                "#+texinfo_filename: test.info\n\n* Chapter\n\nText.\n"))
+      (emacsvox-docs-check-tests--without-live-export-feedback
+        (emacsvox-org-export source output t))
+      (with-temp-buffer
+        (insert-file-contents output)
+        (should (search-forward "@node Chapter" nil t))
+        (goto-char (point-min))
+        (should-not (search-forward "\\input texinfo" nil t))
+        (should-not (search-forward "@bye" nil t))))))
 
 (ert-deftest emacsvox-docs-check-rejects-generated-drift ()
   "A changed generated artifact should name the stale checked file."
@@ -175,6 +271,22 @@
         "Broken local link: Readme.org:3 -> missing.org"
         (error-message-string condition))))))
 
+(ert-deftest emacsvox-docs-check-rejects-broken-manual-chapter-links ()
+  "Every maintained Org chapter should participate in local-link checks."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (make-directory (expand-file-name "docs/manual/chapters" directory) t)
+    (with-temp-file
+        (expand-file-name "docs/manual/chapters/example.org" directory)
+      (insert "* Chapter\n\n[[file:missing.org][Missing]]\n"))
+    (let* ((emacsvox-docs-check--public-org-entry-files nil)
+           (condition
+           (should-error
+            (emacsvox-docs-check--check-local-links directory))))
+      (should
+       (string-match-p
+        "Broken local link: docs/manual/chapters/example.org:3 -> missing.org"
+        (error-message-string condition))))))
+
 (ert-deftest emacsvox-docs-check-rejects-publication-inside-source-tree ()
   "Publication must not overwrite a directory in the Emacsvox checkout."
   (emacsvox-docs-check-tests--with-directory (directory)
@@ -249,6 +361,36 @@
         (emacsvox-docs-check--read-publish-manifest destination)
         '("heritage/index.html" "index.html"
           "reference/index.html"))))))
+
+(ert-deftest emacsvox-docs-check-and-publish-reuses-validated-html ()
+  "Release publication should copy the HTML produced by its validation pass."
+  (emacsvox-docs-check-tests--with-directory (root)
+    (emacsvox-docs-check-tests--with-directory (destination)
+      (let ((prepare-count 0))
+        (cl-letf
+            (((symbol-function 'emacsvox-docs-check--prepare)
+              (lambda (_root temporary-directory _makeinfo _install-info)
+                (setq prepare-count (1+ prepare-count))
+                (let ((staging
+                       (expand-file-name "html" temporary-directory)))
+                  (make-directory staging)
+                  (with-temp-file (expand-file-name "index.html" staging)
+                    (insert "validated\n"))
+                  (list :html-directory staging
+                        :generated '("index.html"))))))
+          (should
+           (equal
+            (emacsvox-docs-check-and-publish
+             destination root "makeinfo" "install-info")
+            '(:written 1 :removed 0))))
+        (should (= prepare-count 1))
+        (should
+         (equal
+          (with-temp-buffer
+            (insert-file-contents
+             (expand-file-name "index.html" destination))
+            (buffer-string))
+          "validated\n"))))))
 
 (ert-deftest emacsvox-docs-publish-rejects-manifest-traversal ()
   "Nested manual paths must not permit a manifest to escape publication."
@@ -373,8 +515,8 @@
               (lambda (_root) revision))
              ((symbol-function 'emacsvox-docs-check--makeinfo-version)
               (lambda (_root _makeinfo) "texi2any (GNU texinfo) 7.2"))
-             ((symbol-function 'emacsvox-docs-publish)
-              (lambda (_destination _root _makeinfo)
+             ((symbol-function 'emacsvox-docs-check-and-publish)
+              (lambda (_destination _root _makeinfo _install-info)
                 '(:written 387 :removed 0))))
           (let ((result
                  (emacsvox-docs-publish-pages

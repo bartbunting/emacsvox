@@ -82,11 +82,11 @@ published for pre-installation web access at
 
 * Menu:
 
-* Obtaining Emacsvox::         Obtaining Emacsvox.
-* Quick Installation::         Reach an isolated first spoken session.
-* Confirming First Speech::    Verify the live adapter and basic feedback.
-* Recovering From No Speech::  Diagnose the boundary at which speech failed.
-* Persistent Startup::         Add Emacsvox to personal configuration safely.
+* Obtaining Emacsvox::           Obtaining Emacsvox.
+* Quick Installation::           Reach an isolated first spoken session.
+* Confirming First Speech::      Verify the live adapter and basic feedback.
+* Recovering From No Speech::    Diagnose the boundary at which speech failed.
+* Persistent Startup::           Add Emacsvox to personal configuration safely.
 * Building And Testing The Speech Server::
 
 
@@ -195,8 +195,10 @@ isolated session:
 
   1. Type ‘M-x tts-speak-version RET’.  The live speech adapter should
      speak its version response.
+
   2. Type ‘C-h v tts-program RET’.  The displayed current value should
      name ‘omnivox’.
+
   3. Use ‘C-n’ and ‘C-p’ to move over lines and confirm ordinary spoken
      navigation.  Type ‘M-x emacsvox-describe-emacsvox RET’ for the
      Emacsvox overview.  *Note Basic Usage::, for the tested starter
@@ -222,13 +224,11 @@ the first failing boundary:
      ‘PATH’, or set ‘OMNIVOX_PROGRAM’ to its absolute executable.  Under
      WSL2, rebuild or verify the staged runtime described in *note
      Building Omnivox For WSL2::.
-
 The diagnostic passes, but ‘--check’ errors or is inaudible
      The failure is below Emacsvox.  Do not edit the Emacs init file.
      Follow *note Backend Diagnostics And Ownership:: until the check
      produces both its tone and speech.  A zero exit status without both
      audible signals is not success.
-
 The audible check passes, but the isolated startup sentence is absent
      Run ‘./bin/emacsvox --diagnose’ again from the same checkout and
      shell.  Remove an unintended ‘TTS_PROGRAM’ override if the report
@@ -242,7 +242,6 @@ The audible check passes, but the isolated startup sentence is absent
      reported backend path rather than adding more init-file
      configuration.  For an Omnivox process error, inspect the private
      log directory described below.
-
 The startup sentence is heard, but speech later stops
      If Emacs reports that an Emacsvox speech server exited, inspect the
      Omnivox session log and type ‘M-x tts-restart RET’ after correcting
@@ -250,7 +249,6 @@ The startup sentence is heard, but speech later stops
      ‘$XDG_STATE_HOME/emacsvox/omnivox’, defaulting to
      ‘~/.local/state/emacsvox/omnivox’.  Spoken text is omitted unless
      explicit text logging is enabled.
-
 The isolated launcher works, but a customized Emacs start does not
      Remove or comment out the Emacsvox environment and ‘load-file’
      forms from the personal init file.  This is the rollback: it leaves
@@ -347,12 +345,12 @@ status are at the Omnivox repository
 
 * Menu:
 
-* Supported Platform Routes::  Choose the maintained route for this machine.
-* Installing Omnivox From Source::  Install on GNU/Linux or macOS.
-* Building Omnivox For WSL2::  Stage the Windows runtime from WSL2.
-* Selecting And Checking Omnivox::  Prove speech before starting Emacsvox.
-* Compatibility Speech Servers::  Understand the retained direct adapters.
-* Backend Diagnostics And Ownership::  Locate failures and authoritative detail.
+* Supported Platform Routes::    Choose the maintained route for this machine.
+* Installing Omnivox From Source:: Install on GNU/Linux or macOS.
+* Building Omnivox For WSL2::    Stage the Windows runtime from WSL2.
+* Selecting And Checking Omnivox:: Prove speech before starting Emacsvox.
+* Compatibility Speech Servers:: Understand the retained direct adapters.
+* Backend Diagnostics And Ownership:: Locate failures and authoritative detail.
 
 
 File: emacsvox.info,  Node: Supported Platform Routes,  Next: Installing Omnivox From Source,  Up: Speech Backends
@@ -410,19 +408,22 @@ File: emacsvox.info,  Node: Installing Omnivox From Source,  Next: Building Omni
 2.2 Installing Omnivox From Source
 ==================================
 
-Use this route on GNU/Linux and macOS. It requires network access for
+Use this route on GNU/Linux and macOS.  It requires network access for
 the initial clone, Rust toolchain, and locked dependency downloads.
 
    Install these prerequisite classes before building:
 
    • rustup (https://rustup.rs/); the checked-in ‘rust-toolchain.toml’
      selects the supported Rust release.
+
    • Python 3, a C and C++ toolchain, CMake, and Clang with libclang.
      The supported build wrapper uses these to build and stage eSpeak NG
      and its generated data.
+
    • On GNU/Linux, ‘pkg-config’ and ALSA development headers.  The ALSA
      package is commonly named ‘libasound2-dev’ on Debian or Ubuntu and
      ‘alsa-lib-devel’ on Fedora.
+
    • On macOS, the Xcode command-line tools.  Install them with
      ‘xcode-select --install’ if they are absent.
 
@@ -458,8 +459,11 @@ through Windows.  Clone Omnivox beside Emacsvox as shown above.  The
 host must provide:
 
    • WSL2 with working ‘powershell.exe’ and ‘wslpath’ interoperation;
+
    • Docker with Linux/AMD64 container support;
+
    • Windows .NET Framework 4.7.2 or newer; and
+
    • ‘curl’, ‘unzip’, and ‘sha256sum’ in WSL, plus network access for
      the pinned container and .NET toolchain inputs.
 
@@ -664,7 +668,7 @@ browser, where semantic and structural distinctions captured by HTML
 markup can be communicated efficiently; see *note Web Browsing::.
 
    It is often desirable to exercise control over the pronunciation of a
-word (E.G. a technical term or a reserved word in a programming
+word (E.G.  a technical term or a reserved word in a programming
 language) within specific contexts.  Emacsvox maintains pronunciation
 dictionaries for this purpose, which may be customized by the user.
 Moreover, individual dictionaries can be activated selectively,
@@ -746,36 +750,37 @@ that key and check your customizations.  The complete generated defaults
 are in the *note (emacsvox-reference)Emacsvox Keymaps::.
 
 ‘C-e c’
-     ‘emacsvox-speak-char’ speaks the character at point.
 
+     ‘emacsvox-speak-char’ speaks the character at point.
 ‘C-e w’
+
      ‘emacsvox-speak-word’ speaks the current word.  Repeating it at the
      same position spells the word.
-
 ‘C-e l’
+
      ‘emacsvox-speak-line’ speaks the current line.
-
 ‘C-e [’
+
      ‘emacsvox-speak-paragraph’ speaks the current paragraph.
-
 ‘C-e ]’
-     ‘emacsvox-speak-page’ speaks the current page.
 
+     ‘emacsvox-speak-page’ speaks the current page.
 ‘C-e r’
+
      ‘emacsvox-speak-region’ speaks the active region between point and
      mark.
-
 ‘C-e i’
+
      ‘emacsvox-speak-rest-of-buffer’ speaks from point to the end of the
      buffer.
-
 ‘C-e b’
+
      ‘emacsvox-speak-buffer’ speaks the entire current buffer.
-
 ‘C-e s’
-     ‘tts-stop’ stops current speech.
 
+     ‘tts-stop’ stops current speech.
 ‘C-e C-d’
+
      ‘emacsvox-toggle-show-point’ toggles the aural indication of point
      within spoken text.
 
@@ -798,8 +803,8 @@ Keymaps::.
 * Menu:
 
 * Controlling Echo::             Character, Word and Line Echo.
-* Speech Output  Control::       Indicating case, capitalization and indentation.
-* Miscellaneous:: Miscellaneous TTS Commands.
+* Speech Output Control::        Indicating case, capitalization and indentation.
+* Miscellaneous::                Miscellaneous TTS Commands.
 
 
 File: emacsvox.info,  Node: Controlling Echo,  Next: Speech Output Control,  Up: Speech System
@@ -820,20 +825,21 @@ using the common Emacs terminology of *prefix arg* or *interactive
 prefix arg*.
 
 ‘C-e d k’
+
      ‘emacsvox-toggle-character-echo’
 
      Toggle state of Emacsvox character echo.  Interactive PREFIX arg
      means toggle the global default value, and then set the current
      local value to the result.
-
 ‘C-e d w’
+
      ‘emacsvox-toggle-word-echo’
 
      Toggle state of Emacsvox word echo.  Interactive PREFIX arg means
      toggle the global default value, and then set the current local
      value to the result.
-
 ‘C-e d l’
+
      ‘emacsvox-toggle-line-echo’
 
      Toggle state of Emacsvox line echo.  Interactive PREFIX arg means
@@ -857,50 +863,51 @@ given buffer or be applied to all buffers by preceding these commands
 with ‘C-u’.
 
 ‘C-e d r’
+
      ‘tts-set-rate’
 
      Set speaking RATE for the TTS.  Interactive PREFIX arg means set
      the global default value, and then set the current local value to
      the result.
-
 ‘C-e d f’
+
      ‘tts-set-character-scale’
 
      Set scale FACTOR for speech rate.  Speech rate is scaled by this
      factor when speaking characters.  Interactive PREFIX arg means set
      the global default value, and then set the current local value to
      the result.
-
 ‘C-e d DIGIT’
+
      ‘tts-set-predefined-rate’
 
      Set speech rate to one of nine predefined levels using digit keys
      ‘0’ through ‘9’.  Interactive PREFIX arg says to set the rate
      globally.
-
 ‘C-e d p’
+
      ‘tts-set-punctuations’
 
-     Set punctuation mode to MODE. Possible values are ‘some’, ‘all’, or
-     ‘none’.  Interactive PREFIX arg means set the global default value,
-     and then set the current local value to the result.
-
+     Set punctuation mode to MODE.  Possible values are ‘some’, ‘all’,
+     or ‘none’.  Interactive PREFIX arg means set the global default
+     value, and then set the current local value to the result.
 ‘C-e d s’
+
      ‘tts-toggle-split-caps’
 
      Toggle split caps mode.  Split caps mode is useful when reading
      Hungarian notation in program source code.  Interactive PREFIX arg
      means toggle the global default value, and then set the current
      local value to the result.
-
 ‘C-e d c’
+
      ‘tts-toggle-caps’
 
      Toggle capitalization indication.  Interactive PREFIX arg means
      toggle the global default value, then set the current local value
      to the result.
-
 ‘C-e d C’
+
      ‘emacsvox-set-capitalization-presentation’
 
      Choose ‘spoken’, ‘tone’, ‘spoken-tone’, ‘custom’, or ‘none’, and
@@ -915,13 +922,14 @@ spoken -- This is relevant when programming and is the default when
 working with program source.
 
 ‘C-e d i’
+
      ‘emacsvox-toggle-audio-indentation’
 
      Toggle state of Emacsvox audio indentation.  Interactive PREFIX arg
      means toggle the global default value, and then set the current
      local value to the result.
-
 ‘C-e d I’
+
      ‘emacsvox-set-indentation-presentation’
 
      Choose spoken column, duration-coded tone, rising-pitch tone,
@@ -944,11 +952,12 @@ wants to switch to a different server -- or in the rare case to nuke a
 runaway speech server.
 
 ‘C-e s’
+
      ‘tts-stop’
 
      Stop speech now.
-
 ‘C-e d q’
+
      ‘tts-toggle-quiet’
 
      Toggle state of the speech device between being quiet and
@@ -956,8 +965,8 @@ runaway speech server.
      that has emacsvox loaded but wish to make the speech shut up.
      Optional argument PREFIX specifies whether speech is turned off in
      the current buffer or in all buffers.
-
 ‘C-e C-s’
+
      ‘tts-restart’
 
      Use this to stop the currently running speech server and restart
@@ -968,6 +977,7 @@ runaway speech server.
 related keymap ‘C-e d’.
 
 ‘C-e d a’
+
      ‘tts-add-cleanup-pattern’
 
      Add this pattern to the list of repeating patterns that are cleaned
@@ -977,16 +987,16 @@ related keymap ‘C-e d’.
      speaking all the characters making up the pattern.  Thus, by adding
      the repeating pattern '.'  (this is already added by default)
      emacsvox will say "aw fifteen dot" when speaking the string
-     "..............."  instead of "period period period period".
-
+     "..............." instead of "period period period period".
 ‘C-e d d’
+
      ‘tts-select-server’
 
      Select a speech server interactively.  This will be the server that
      is used when you next call either M-x tts-initialize or C-e C-s.
      Argument PROGRAM specifies the speech server program.
-
 ‘C-e d <SPACE>’
+
      ‘tts-toggle-splitting-on-white-space’
 
      Toggle splitting of speech on white space.  This affects the
@@ -1001,22 +1011,22 @@ related keymap ‘C-e d’.
      makes emacsvox's stop command responsive.  However, when splitting
      on white space, the speech sounds choppy since the synthesizer is
      getting a word at a time.
-
 ‘C-e d <RETURN>’
+
      ‘tts-set-chunk-separator-syntax’
 
      Interactively set how text is split in chunks.  See the Emacs
      documentation on syntax tables for details on how characters are
      classified into various syntactic classes.  Argument S specifies
      the syntax class.
-
 ‘C-e d V’
+
      ‘tts-speak-version’
 
      Use this to find out which version of the TTS firmware you are
      running.
-
 ‘C-e d z’
+
      ‘emacsvox-zap-tts’
 
      Send this command to the TTS engine directly.
@@ -1065,48 +1075,50 @@ common status commands are listed in the *note
 (emacsvox-reference)Emacsvox Keymaps::.
 
 ‘C-e a’
+
      ‘emacsvox-speak-message-again’
 
      Speak the last message from Emacs once again.
-
 ‘C-e m’
+
      ‘emacsvox-speak-mode-line’
 
      Speak the mode-line.
-
 ‘C-e M’
+
      ‘emacsvox-speak-minor-mode-line’
 
      Speak the minor mode-information.
-
 ‘C-e C-x’
+
      ‘emacsvox-speak-header-line’
 
      Speak the header-line.
 
 ‘C-e C-w’
+
      ‘emacsvox-speak-window-information’
 
      Speaks information about current windows.
-
 ‘C-e f’
+
      ‘emacsvox-speak-buffer-filename’
 
      Speak name of file being visited in current buffer.  Speak default
      directory if invoked in a dired buffer, or when the buffer is not
      visiting any file.
-
 ‘C-e C-l’
+
      ‘what-line’
 
      reports the current line number and position in the buffer.
-
 ‘C-e =’
+
      ‘emacsvox-speak-current-column’
 
      Speak the current column.
-
 ‘C-e %’
+
      ‘emacsvox-speak-current-percentage’
 
      Announce the percentage into the current buffer.
@@ -1217,8 +1229,8 @@ productivity.
 
 * Menu:
 
-* Desktop Objects:: Desktop Objects
-* Object Oriented Desktop:: Object Oriented Desktop
+* Desktop Objects::              Desktop Objects
+* Object Oriented Desktop::      Object Oriented Desktop
 * Context-Sensitive Interaction:: Context-Sensitive Interaction
 
 
@@ -1643,7 +1655,7 @@ File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Stru
 EWW is the built-in browser supported for current Emacsvox.  Run ‘M-x
 eww <RET>’, enter a URL or search words, and press <RET>.  Emacsvox
 speaks EWW navigation and rendering feedback and adds commands for
-moving by HTML structure and filtering the displayed DOM. In an EWW
+moving by HTML structure and filtering the displayed DOM.  In an EWW
 buffer, use ‘C-h m’ for the live workflow and ‘C-h b’ for its effective
 keys.  See *note (emacs)EWW:: for browser operation and *note
 (emacsvox-reference)emacsvox-eww:: for the speech integration.
@@ -2409,7 +2421,7 @@ File: emacsvox.info,  Node: EAT Terminal Access,  Next: Running Terminal Based A
 ***********************
 
 EAT (Emulate A Terminal) is a third-party terminal emulator; it is not
-part of stock Emacs.  It is commonly installed from NonGNU ELPA. Start
+part of stock Emacs.  It is commonly installed from NonGNU ELPA.  Start
 it with ‘M-x eat’; use a prefix argument to create or select another EAT
 terminal.  See the EAT manual for terminal setup and EAT's complete
 command reference (*note (eat)Top::).
@@ -2431,17 +2443,14 @@ Semi-character mode
      terminal, while Emacs prefixes such as ‘C-x’, ‘C-c’, and ‘M-x’
      remain available.  Use ‘C-q’ before a normally reserved key to send
      it to the terminal.  Switch here with ‘C-c C-j’.
-
 Character mode
      All supported keys go to the terminal, which is useful for
      applications that need Emacs-like keys.  Switch here with ‘C-c
      M-d’; return to semi-character mode with ‘C-M-m’ or ‘M-<RET>’.
-
 Emacs mode
      Keys remain in Emacs and no input is sent to the terminal.  Use
      this for normal Emacs buffer motion and inspection.  Switch here
      with ‘C-c C-e’.
-
 Line mode
      The pending input line is edited locally and sent on <RET>.  <TAB>
      runs Emacs's ‘completion-at-point’, so a configured Emacs
@@ -2831,7 +2840,6 @@ Character mode
      C-j’ to enter line mode.  Because normal Emacs prefixes may belong
      to the child program, use ‘C-c C-h m’ for mode help and ‘C-c M-x’
      to run an Emacs command.
-
 Line mode
      Normal Emacs editing commands edit the pending input.  <RET> sends
      that input to the terminal program.  Use ‘C-h m’ and other ordinary
@@ -2881,30 +2889,24 @@ application.  These core commands keep the normal ‘C-t’ prefix:
 ‘C-t .’
      Move the review pointer to the terminal cursor and announce its
      coordinates.
-
 ‘C-t p’
 ‘C-t n’
      Move the review pointer to the previous or next line and speak it.
      The Up and Down arrow keys are equivalent after the ‘C-t’ prefix.
-
 ‘C-t <LEFT>’
 ‘C-t <RIGHT>’
      Move the pointer by a character and speak the character reached.
-
 ‘C-t M-b’
 ‘C-t M-f’
      Move the pointer backward or forward by a word and speak it.
-
 ‘C-t l’
 ‘C-t w’
 ‘C-t c’
      Speak the line, word, or character at the review pointer without
      moving it.
-
 ‘C-t <SPC>’
      Speak from the review pointer to the current end of the Term
      buffer.
-
 ‘C-t s’
      Prompt for text, search forward from the review pointer, and speak
      the matching line.
@@ -2955,6 +2957,7 @@ For the complete generated default bindings, see *note
 (emacsvox-reference)Emacsvox Keymaps::.
 
    Most Emacsvox commands use one of these two default prefixes:
+
 ‘C-e’
      The main Emacsvox keymap.
 ‘C-e d’
@@ -2969,7 +2972,9 @@ therefore this conceptual chapter does not duplicate their inventories.
 
    • ‘C-h m’ describes the modes and their bindings in the current
      buffer.
+
    • ‘C-h k’, followed by a key, describes the command that key invokes.
+
    • After typing a prefix such as ‘C-e’, type ‘C-h’ to display that
      prefix's current bindings.
 
@@ -3035,8 +3040,10 @@ therefore not proof of acoustic onset.
 
    • Omnivox Control Protocol
      (https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md)
+
    • Omnivox Presentation Timeline Protocol
      (https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md)
+
    • Omnivox Helper Protocol
      (https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md)
 
@@ -3204,6 +3211,7 @@ on to speak mixed-case (AKA Camel Case) identifiers.
    This ensures *atomicity* i.e., all state settings in the TTS engine
 happen at one shot.  Note that failure to do this might result in some
 utterances being spoken with a partially set state.
+
    • punct: see tts_set_punctuations
 
    • splitcaps: see tts_split_caps
@@ -3257,9 +3265,9 @@ terminology where that identity and period context matter.
 
 * Menu:
 
-* Contributing: Contributing.
-* Authoring Guidelines: Authoring Guidelines.
-* Credits: Credits.
+* Contributing::
+* Authoring Guidelines::
+* Credits::
 
 
 File: emacsvox.info,  Node: Contributing,  Next: Authoring Guidelines,  Up: Announce
@@ -3267,10 +3275,10 @@ File: emacsvox.info,  Node: Contributing,  Next: Authoring Guidelines,  Up: Anno
 15.1 How To Contribute To This Manual
 =====================================
 
-The Texinfo chapters live under ‘info/’; the current project overview
-and installation summary live in ‘Readme.org’ and ‘etc/install.org’.
-Submit changes through the Emacsvox repository at
-<https://github.com/bartbunting/emacsvox>.  Read ‘AGENTS.md’ before
+The maintained Org chapters live under ‘docs/manual/chapters/’; the
+current project overview and installation summary live in ‘Readme.org’
+and ‘etc/install.org’.  Submit changes through the Emacsvox repository
+at <https://github.com/bartbunting/emacsvox>.  Read ‘AGENTS.md’ before
 building or testing: Emacsvox requires Emacs 31 or newer and
 repository-local ‘local.mk’ selects the compiler used by supported
 targets.
@@ -3292,21 +3300,40 @@ File: emacsvox.info,  Node: Authoring Guidelines,  Next: Credits,  Prev: Contrib
 Keep current operating instructions separate from historical accounts.
 State which back end or platform a procedure applies to, avoid
 duplicating detailed protocol contracts across repositories, and link to
-the owning document.  Run ‘make docs-generate’ after editing Texinfo,
-then run ‘make docs-check’.  Commit the regenerated ‘emacsvox.info’ and
-‘emacsvox-reference.info’ and ‘emacsvox-heritage.info’ files with their
-source changes.
+the owning document.
+
+   Reports and internal notes require no Emacsvox build.  While editing
+the Org manual, preview the complete user manual without inspecting or
+rebuilding Lisp byte-code:
+
+     make docs-org-preview
+
+   The ignored Info, Texinfo, and HTML previews appear under
+‘.docs-preview/org-manual/’.  Once the text settles, run ‘make
+docs-update’ to update the tracked generated Texinfo body and checked
+Info files.  Do not edit those generated files directly.
+
+   When public Lisp documentation or keys change, first bring byte-code
+current with ‘make bytecode’.  Use ‘make bytecode-rebuild’ instead after
+changing macros or public interfaces, as described in ‘AGENTS.md’.  Then
+run ‘make docs-reference’.  ‘make docs-generate’ remains the
+comprehensive reference and manual update.  Before review, merge, or
+deployment, run the non-mutating ‘make docs-release-check’; ‘make
+docs-check’ is its compatibility alias.  Commit the regenerated
+‘emacsvox.info’, ‘emacsvox-reference.info’, and ‘emacsvox-heritage.info’
+files with their source changes.
 
 15.2.1 Publishing The Browser Manual
 ------------------------------------
 
-Texinfo on ‘master’ is the canonical manual source.  GitHub Pages serves
-the generated static files committed on the separate ‘gh-pages’ branch;
-never edit those HTML files as source.  Publishing is deliberately
-explicit:
+Org on ‘master’ is the canonical maintained manual source.  GitHub Pages
+serves the generated static files committed on the separate ‘gh-pages’
+branch; never edit those HTML files as source.  Publishing is
+deliberately explicit:
 
-  1. Finish the manual change, run the generation and validation targets
-     above, and commit the complete source-side change on ‘master’.
+  1. Finish the manual change, update its checked Info output, run the
+     release validation target above, and commit the complete
+     source-side change on ‘master’.
 
   2. Check out that exact commit in a clean source worktree.  Build its
      local, ignored byte-code with the Emacs selected by ‘local.mk’ or
@@ -3317,10 +3344,10 @@ explicit:
 
           make docs-publish-pages DOCS_PUBLISH_DIR=/path/to/emacsvox-pages
 
-     The target validates the manual, replaces only its managed HTML
-     files, writes ‘.nojekyll’, and records the source commit, Emacs
-     version, and Texinfo version in ‘emacsvox-source.txt’.  It refuses
-     an uncommitted source tree.
+     The target validates the manual and publishes that same staged
+     render, replaces only its managed HTML files, writes ‘.nojekyll’,
+     and records the source commit, Emacs version, and Texinfo version
+     in ‘emacsvox-source.txt’.  It refuses an uncommitted source tree.
 
   4. Inspect the ‘gh-pages’ worktree, including the provenance file and
      the main browser entry points.  Commit the generated site with the
@@ -3351,7 +3378,7 @@ File: emacsvox.info,  Node: Copyright,  Next: Acknowledgments,  Prev: Announce, 
 
 This manual documents Emacsvox, a speech extension to Emacs.
 
-   Copyright (C)1994 - 2024 T. V. Raman All Rights Reserved.
+   Copyright (C)1994 - 2024 T.  V.  Raman All Rights Reserved.
 
    Permission is granted to make and distribute verbatim copies of this
 manual without charge provided the copyright notice and this permission
@@ -3377,7 +3404,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * Menu:
 
 * Agent Shell:                           Agent Shell.         (line   6)
-* alternate screen, EAT:                 EAT Terminal Access. (line 334)
+* alternate screen, EAT:                 EAT Terminal Access. (line 331)
 * applications:                          Emacs Packages.      (line   6)
 * archiving, Notmuch:                    Notmuch Mail.        (line 202)
 * artificial intelligence agents:        Agent Shell.         (line   6)
@@ -3394,27 +3421,27 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * byte-code, Notmuch integration:        Notmuch Mail.        (line 331)
 * character echo:                        Controlling Echo.    (line   6)
 * character mode, Term:                  Term Input Modes.    (line   6)
-* clipboard security, EAT:               EAT Terminal Access. (line 298)
-* completion candidates, terminal:       EAT Terminal Access. (line 111)
+* clipboard security, EAT:               EAT Terminal Access. (line 295)
+* completion candidates, terminal:       EAT Terminal Access. (line 108)
 * completion, EAT:                       EAT Terminal Access. (line  21)
 * Context-Sensitive Interaction:         Context-Sensitive Interaction.
                                                               (line   6)
 * Corfu, EAT:                            EAT Terminal Access. (line  21)
-* curses applications, EAT:              EAT Terminal Access. (line 334)
+* curses applications, EAT:              EAT Terminal Access. (line 331)
 * Desktop Navigation:                    Context-Sensitive Interaction.
                                                               (line  54)
 * Desktop Objects:                       Desktop Objects.     (line   6)
 * development tools:                     Development Environment.
                                                               (line   6)
 * document authoring:                    Document Authoring.  (line   6)
-* EAT automatic speech:                  EAT Terminal Access. (line  65)
+* EAT automatic speech:                  EAT Terminal Access. (line  62)
 * EAT input modes:                       EAT Terminal Access. (line  21)
-* EAT review commands:                   EAT Terminal Access. (line 146)
-* EAT shell integration:                 EAT Terminal Access. (line 245)
+* EAT review commands:                   EAT Terminal Access. (line 143)
+* EAT shell integration:                 EAT Terminal Access. (line 242)
 * EAT terminal emulator:                 EAT Terminal Access. (line   6)
 * Emacs Keyboard Commands:               Emacsvox Keyboard Commands.
                                                               (line   6)
-* Eshell, EAT accessibility:             EAT Terminal Access. (line 357)
+* Eshell, EAT accessibility:             EAT Terminal Access. (line 354)
 * Eterm, Emacsvox module name:           Running Terminal Based Applications.
                                                               (line   6)
 * EWW:                                   Web Browsing.        (line   6)
@@ -3423,7 +3450,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
                                                               (line  64)
 * Forms mode:                            Desktop Applications.
                                                               (line  17)
-* frozen EAT review:                     EAT Terminal Access. (line 179)
+* frozen EAT review:                     EAT Terminal Access. (line 176)
 * integrations:                          Emacs Packages.      (line   6)
 * Introduction:                          Introduction.        (line   6)
 * line echo:                             Controlling Echo.    (line   6)
@@ -3444,26 +3471,26 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * OCR, experimental:                     Desktop Applications.
                                                               (line  27)
 * Online Help:                           Using Online Help.   (line   6)
-* OSC 52, EAT:                           EAT Terminal Access. (line 298)
+* OSC 52, EAT:                           EAT Terminal Access. (line 295)
 * Outline mode:                          Structured Editing.  (line   6)
 * packages, speech support:              Emacs Packages.      (line   6)
-* password input, EAT:                   EAT Terminal Access. (line 273)
+* password input, EAT:                   EAT Terminal Access. (line 270)
 * personal information management:       Personal Information Management.
                                                               (line   6)
 * privacy, Notmuch speech:               Notmuch Mail.        (line 230)
 * programming:                           Editing Code.        (line   6)
-* remote terminal trust:                 EAT Terminal Access. (line 298)
+* remote terminal trust:                 EAT Terminal Access. (line 295)
 * review mode, Term:                     Reviewing The Term Screen.
                                                               (line   6)
 * review pointer, Term:                  Reviewing The Term Screen.
                                                               (line   6)
-* router completion:                     EAT Terminal Access. (line 111)
+* router completion:                     EAT Terminal Access. (line 108)
 * saved searches, Notmuch:               Notmuch Mail.        (line  38)
 * search fields, Notmuch:                Notmuch Mail.        (line  95)
 * search results, asynchronous rendering: Notmuch Mail.       (line  63)
 * Searching:                             Context-Sensitive Interaction.
                                                               (line  64)
-* shell command status:                  EAT Terminal Access. (line 245)
+* shell command status:                  EAT Terminal Access. (line 242)
 * speech access, terminal:               EAT Terminal Access. (line   6)
 * speech settings:                       Speech System.       (line   6)
 * speech system:                         Speech System.       (line   6)
@@ -3480,9 +3507,9 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 * terminal accessibility:                EAT Terminal Access. (line   6)
 * terminal applications:                 Running Terminal Based Applications.
                                                               (line   6)
-* terminal output, speech policy:        EAT Terminal Access. (line  65)
-* terminal privacy:                      EAT Terminal Access. (line 273)
-* terminal screen review:                EAT Terminal Access. (line 146)
+* terminal output, speech policy:        EAT Terminal Access. (line  62)
+* terminal privacy:                      EAT Terminal Access. (line 270)
+* terminal screen review:                EAT Terminal Access. (line 143)
 * troubleshooting, Notmuch:              Notmuch Mail.        (line 331)
 * TTS:                                   Speech System.       (line   6)
 * Web browsing:                          Web Browsing.        (line   6)
@@ -3494,70 +3521,70 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Acknowledgments,  Up: Top
 Tag Table:
 Node: Top384
 Node: Installation2015
-Node: Obtaining Emacsvox2986
-Node: Quick Installation3761
-Node: Confirming First Speech6231
-Node: Recovering From No Speech7424
-Node: Persistent Startup10050
-Node: Building And Testing The Speech Server11629
-Node: Speech Backends12927
-Node: Supported Platform Routes14113
-Node: Installing Omnivox From Source16825
-Node: Building Omnivox For WSL218680
-Node: Selecting And Checking Omnivox20260
-Node: Compatibility Speech Servers22001
-Node: Backend Diagnostics And Ownership23927
-Node: Basic Usage25962
-Node: Overview27238
-Node: Working29701
-Ref: Working-Footnote-131424
-Ref: Working-Footnote-231517
-Node: Reading31627
-Node: Speech System33406
-Node: Controlling Echo33980
-Node: Speech Output Control35443
-Node: Miscellaneous38859
-Node: Voice-lock42383
-Node: Status Information43778
-Node: Introduction45051
-Node: Audio Desktop48245
-Node: Desktop Objects50246
-Node: Object Oriented Desktop51073
-Node: Context-Sensitive Interaction51843
-Node: Voice Lock56970
-Node: How It All Works.59249
-Node: What this gives.60289
-Node: Using Online Help61035
-Node: Emacs Packages65032
-Node: Document Authoring66413
-Node: Structured Editing66967
-Node: Browsing Structure67941
-Node: Web Browsing68539
-Node: Messaging69373
-Node: Editing Code69871
-Node: Development Environment70386
-Node: Desktop Management70943
-Node: Personal Information Management71445
-Node: Desktop Applications71974
-Node: Notmuch Mail73523
-Ref: Notmuch fields and privacy82883
-Node: Agent Shell90351
-Node: EAT Terminal Access102841
-Node: Running Terminal Based Applications120070
-Node: Starting Term121025
-Node: Term Input Modes121855
-Node: Term Speech Feedback123016
-Node: Reviewing The Term Screen124210
-Node: Term Help And Recovery126117
-Node: Emacsvox Keyboard Commands127012
-Node: TTS Servers128415
-Node: Announce138317
-Node: Contributing138933
-Node: Authoring Guidelines139932
-Node: Credits142122
-Node: Copyright142485
-Node: Acknowledgments143052
-Node: Concept Index143197
+Node: Obtaining Emacsvox2996
+Node: Quick Installation3771
+Node: Confirming First Speech6241
+Node: Recovering From No Speech7436
+Node: Persistent Startup10058
+Node: Building And Testing The Speech Server11637
+Node: Speech Backends12935
+Node: Supported Platform Routes14121
+Node: Installing Omnivox From Source16833
+Node: Building Omnivox For WSL218692
+Node: Selecting And Checking Omnivox20275
+Node: Compatibility Speech Servers22016
+Node: Backend Diagnostics And Ownership23942
+Node: Basic Usage25977
+Node: Overview27253
+Node: Working29717
+Ref: Working-Footnote-131440
+Ref: Working-Footnote-231533
+Node: Reading31643
+Node: Speech System33423
+Node: Controlling Echo34012
+Node: Speech Output Control35476
+Node: Miscellaneous38895
+Node: Voice-lock42420
+Node: Status Information43815
+Node: Introduction45090
+Node: Audio Desktop48284
+Node: Desktop Objects50303
+Node: Object Oriented Desktop51130
+Node: Context-Sensitive Interaction51900
+Node: Voice Lock57027
+Node: How It All Works.59306
+Node: What this gives.60346
+Node: Using Online Help61092
+Node: Emacs Packages65089
+Node: Document Authoring66470
+Node: Structured Editing67024
+Node: Browsing Structure67998
+Node: Web Browsing68596
+Node: Messaging69431
+Node: Editing Code69929
+Node: Development Environment70444
+Node: Desktop Management71001
+Node: Personal Information Management71503
+Node: Desktop Applications72032
+Node: Notmuch Mail73581
+Ref: Notmuch fields and privacy82941
+Node: Agent Shell90409
+Node: EAT Terminal Access102899
+Node: Running Terminal Based Applications120126
+Node: Starting Term121081
+Node: Term Input Modes121911
+Node: Term Speech Feedback123071
+Node: Reviewing The Term Screen124265
+Node: Term Help And Recovery126166
+Node: Emacsvox Keyboard Commands127061
+Node: TTS Servers128467
+Node: Announce138372
+Node: Contributing138946
+Node: Authoring Guidelines139969
+Node: Credits143088
+Node: Copyright143451
+Node: Acknowledgments144020
+Node: Concept Index144165
 
 End Tag Table
 

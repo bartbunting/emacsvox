@@ -7,6 +7,40 @@ on:
     branches: [master]
 
 jobs:
+  docs:
+    name: Documentation authoring gate (Emacs 31.1, Texinfo 7.2)
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: '31.1'
+      - name: Install Texinfo
+        run: sudo apt-get update && sudo apt-get install --yes texinfo
+      - name: Verify authoring toolchain
+        run: makeinfo --version | grep --fixed-strings 'texi2any (GNU texinfo) 7.2'
+      - name: Render every manual without Emacsvox byte-code
+        run: |
+          make docs-org-check
+          for docs_manual in \
+            emacsvox emacsvox-reference emacsvox-heritage \
+            introducing-emacspeak; do
+            make docs-preview DOCS_MANUAL="$docs_manual"
+          done
+      - name: Reproduce checked Info output
+        run: |
+          make -B docs-update
+          git diff --exit-code -- info/emacsvox-body.texi info/*.info*
+      - name: Check documentation utilities and public local links
+        run: |
+          emacs -Q --batch -L utils -L test \
+            -l utils/emacsvox-docs-check.el \
+            -l test/emacsvox-docs-check-tests.el \
+            -f ert-run-tests-batch-and-exit
+          emacs -Q --batch -L utils \
+            -l utils/emacsvox-docs-check.el \
+            --eval '(emacsvox-docs-check--check-local-links default-directory)'
+
   byte-compile:
     name: Byte-compile (Emacs ${{ matrix.emacs }})
     runs-on: ubuntu-latest

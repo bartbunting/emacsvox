@@ -34,11 +34,11 @@
 (ert-deftest emacsvox-backend-guide-owns-the-omnivox-first-route ()
   "The canonical guide should recommend and visibly accept Omnivox."
   (let ((guide
-         (emacsvox-backend-doc-tests--file-string "info/backends.texi")))
+         (emacsvox-backend-doc-tests--file-string "info/emacsvox-body.texi")))
     (dolist
         (required
          '("@node Speech Backends"
-           "For a new installation, use\n@strong{Omnivox}"
+           "For a new installation@comma{} use\n@strong{Omnivox}"
            "make build"
            "make install"
            "make windows-omnivox"
@@ -54,25 +54,28 @@
   (let ((readme
          (emacsvox-backend-doc-tests--file-string "Readme.org"))
         (installation
-         (emacsvox-backend-doc-tests--file-string "info/install.texi"))
+         (emacsvox-backend-doc-tests--file-string "info/emacsvox-body.texi"))
         (source-installation
          (emacsvox-backend-doc-tests--file-string "etc/install.org"))
         (master
-         (emacsvox-backend-doc-tests--file-string "info/emacsvox.texi"))
+         (emacsvox-backend-doc-tests--file-string "docs/manual/emacsvox.org"))
         (menu
          (emacsvox-backend-doc-tests--file-string "info/preamble.texi")))
     (should
      (string-match-p
-      "file:info/backends\\.texi.*Speech Backends guide" readme))
+      "file:docs/manual/chapters/speech-backends\\.org.*Speech Backends guide"
+      readme))
     (should (string-match-p "@xref{Speech Backends}" installation))
     (should
      (string-match-p
-      "file:../info/backends\\.texi.*Speech Backends guide"
+      "file:../docs/manual/chapters/speech-backends\\.org.*Speech Backends guide"
       source-installation))
     (should
      (string-match-p
       (regexp-quote "export TTS_PROGRAM=omnivox") installation))
-    (should (string-match-p "@include backends\\.texi" master))
+    (should
+     (string-match-p
+      (regexp-quote "#+include: \"chapters/speech-backends.org\"") master))
     (should
      (string-match-p "\\* Speech Backends: Speech Backends\\." menu))))
 
@@ -140,14 +143,14 @@
 (ert-deftest emacsvox-first-use-manual-owns-success-and-recovery ()
   "The canonical manual should define first-speech acceptance and rollback."
   (let ((guide
-         (emacsvox-backend-doc-tests--file-string "info/install.texi")))
+         (emacsvox-backend-doc-tests--file-string "info/emacsvox-body.texi")))
     (dolist
         (required
          '("@chapter Getting Started: Installation and First Speech"
            "@node Confirming First Speech"
            "@node Recovering From No Speech"
            "@node Persistent Startup"
-           "without playing audio, creating\nan Omnivox session log"
+           "without playing audio@comma{} creating\nan Omnivox session log"
            "A zero exit status without both audible signals is not success."
            "Could not find speech server executable"
            "M-x tts-restart RET"
@@ -171,7 +174,8 @@
         (readme
          (emacsvox-backend-doc-tests--file-string "Readme.org"))
         (guide
-         (emacsvox-backend-doc-tests--file-string "info/install.texi"))
+         (emacsvox-backend-doc-tests--file-string
+          "docs/manual/chapters/installation.org"))
         (startup
          (emacsvox-backend-doc-tests--file-string "lisp/emacsvox.el")))
     (dolist (text (list readme guide startup))
@@ -183,14 +187,16 @@
 (ert-deftest emacsvox-current-applications-own-maintained-user-routes ()
   "The user manual should present verified routes without inherited setup."
   (let ((guide
-         (emacsvox-backend-doc-tests--file-string "info/applications.texi"))
+         (emacsvox-backend-doc-tests--file-string "info/emacsvox-body.texi"))
         (master
-         (emacsvox-backend-doc-tests--file-string "info/emacsvox.texi"))
+         (emacsvox-backend-doc-tests--file-string "docs/manual/emacsvox.org"))
         (menu
          (emacsvox-backend-doc-tests--file-string "info/preamble.texi"))
         (using
-         (emacsvox-backend-doc-tests--file-string "info/using.texi")))
-    (should (string-match-p "@include applications\\.texi" master))
+         (emacsvox-backend-doc-tests--file-string "info/emacsvox-body.texi")))
+    (should
+     (string-match-p
+      (regexp-quote "#+include: \"chapters/applications.org\"") master))
     (should-not (string-match-p "@include packages\\.texi" master))
     (should
      (string-match-p

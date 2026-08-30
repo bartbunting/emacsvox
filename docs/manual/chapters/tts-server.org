@@ -1,0 +1,324 @@
+* Speech Server Protocols
+:PROPERTIES:
+:TEXINFO_NODE_NAME: TTS Servers
+:ALT_TITLE: TTS Servers
+:DESCRIPTION: Understand speech-server protocols.
+:END:
+
+Emacsvox produces spoken output by communicating with one of several speech
+servers.  Two protocol families coexist:
+
+- The legacy command-and-queue line protocol is implemented by standalone Tcl
+   servers and retained by Omnivox for compatibility.
+
+- Capability-negotiated Omnivox control, marker, logical-voice, and structured
+   presentation protocols carry bounded JSON records beside that legacy stream.
+
+This chapter is primarily for speech-server and client developers.  The
+detailed Omnivox contracts are owned by the Omnivox repository; this manual
+summarizes their relationship to Emacsvox and then documents the legacy line
+protocol.
+
+For additional notes on how to log and view @@texinfo:@acronym{TTS}@@ server
+commands when developing a speech server, see
+the historical Emacspeak article at
+[[http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html]].
+
+** Omnivox Structured Protocol
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+At process startup the Emacsvox adapter requests capabilities and live engine
+inventory.  Features are used only after negotiation; an older server
+continues on the legacy path.  Current Emacsvox requires
+~presentation_timeline_v3~ before it submits an Aural Presentation as a
+structured timeline.
+
+A complete timeline contains its delivery policy, replacement domain,
+generation, dispatch ID, speech spans, and positioned actions.  Small
+timelines use one bounded frame; large timelines use a bounded multipart
+envelope that is validated and admitted atomically.  Decodable rejected or
+stale direct timelines receive terminal status so Emacs callbacks can retire
+their dispatch records.
+
+~ordered~ and ~urgent~ timelines are admitted immediately.  Only
+matching ~replaceable~ work uses the short server-side coalescing window.
+Receipt of a newer valid replaceable generation immediately cancels queued,
+synthesizing, and buffered work in the same replacement domain.  It does not
+globally stop ordered, urgent, legacy, or differently keyed output.
+
+Marker events distinguish dispatch admission, synthesis, playback start,
+positioned markers, and terminal completion.  Playback markers track mixer
+source consumption and may precede physical sound by the output device's
+buffer latency; a protocol write or terminal callback is therefore not proof
+of acoustic onset.
+
+The canonical protocol documents are:
+
+- [[https://github.com/bartbunting/omnivox/blob/main/CONTROL-PROTOCOL.md][Omnivox Control Protocol]]
+
+- [[https://github.com/bartbunting/omnivox/blob/main/PRESENTATION-TIMELINE-PROTOCOL.md][Omnivox Presentation Timeline Protocol]]
+
+- [[https://github.com/bartbunting/omnivox/blob/main/HELPER-PROTOCOL.md][Omnivox Helper Protocol]]
+
+** Legacy Line Protocol
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The @@texinfo:@acronym{TTS}@@ server reads commands from standard input.
+Script *speech-server* can be used to cause a @@texinfo:@acronym{TTS}@@
+server to communicate via a @@texinfo:@acronym{TCP}@@ socket. Speech server
+commands are used by the client application to make specific requests
+of the server; the server listens for these requests in a non-blocking
+read-eval-print (REPL)  loop and executes requests as they become available. Requests can
+be classified as follows:
+
+- Commands that send text to be spoken.
+
+- Commands that set *state* of the @@texinfo:@acronym{TTS}@@ server.
+
+All commands are of the form
+
+#+begin_example
+commandWord {arguments}
+#+end_example
+
+The braces are optional if the command argument contains no white
+space.  The speech server maintains a *current state* that
+determines various characteristics of spoken output such as speech
+rate, punctuations mode etc. (see set of commands that manipulate
+speech state for complete list).  The client application
+*queues* The text and non-speech audio output to be produced
+before asking the server to *dispatch* the set of queued
+requests, i.e. start producing output.
+
+Once the server has been asked to produce output, it removes items
+from the front of the queue, sends the requisite commands to the
+underlying @@texinfo:@acronym{TTS}@@ engine, and waits for the engine to
+acknowledge that the request has been completely processed. This is a
+non-blocking operation, i.e., if the client application generates
+additional requests, these are processed *immediately*.
+
+This design allows a legacy Emacsvox @@texinfo:@acronym{TTS}@@ server to be
+*highly* responsive; Client applications can queue large
+amounts of text (typically queued a clause at a time to achieve the
+best prosody), ask the @@texinfo:@acronym{TTS}@@ server to start speaking, and
+interrupt the spoken output at any time.
+
+*** Commands That Queue Output.
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+This section documents commands that either produce spoken output, or
+queue output to be produced on demand.  Commands that place the
+request on the queue are clearly marked.
+
+#+begin_example
+version
+#+end_example
+
+Speaks the *version* of the @@texinfo:@acronym{TTS}@@ engine. Produces
+output immediately.
+
+#+begin_example
+tts_say text
+#+end_example
+
+Speaks the specified *text* immediately. The text is not
+pre-processed in any way, contrast this with the primary way of
+speaking text which is to queue text before asking the server to
+process the queue.
+
+Note that this command needs to handle the special syntax for morpheme
+boundaries ~[*]~.  The ~[*]~ syntax is specific to the
+Dectalk family of synthesizers; servers for other @@texinfo:@acronym{TTS}@@
+engines need to map this pattern to the engine-specific code for each
+engine. As an example, see ~servers/outloud~ A morpheme boundary
+results in synthesizing compound words such as *left bracket*
+with the right intonation; using a space would result in that phrase
+being synthesized as two separate words.
+
+#+begin_example
+l c
+#+end_example
+
+Speak *c* a single character, as a letter.  The character is
+spoken immediately. This command uses the @@texinfo:@acronym{TTS}@@ engine's
+capability to speak a single character with the ability to flush
+speech *immediately*.  Client applications wishing to produce
+character-at-a-time output, e.g., when providing character echo during
+keyboard input should use this command.
+
+#+begin_example
+d
+#+end_example
+
+This command is used to *dispatch* all queued requests.  It was
+renamed to a single character command (like many of the commonly used
+@@texinfo:@acronym{TTS}@@ server commands) to work more effectively over slow
+(9600) dialup lines.  The effect of calling this command is for the
+@@texinfo:@acronym{TTS}@@ server to start processing items that have been queued
+via earlier requests.
+
+#+begin_example
+s
+#+end_example
+
+Stop speech *immediately*.  Spoken output is interrupted, and
+all pending requests are flushed from the queue.
+
+#+begin_example
+q text
+#+end_example
+
+Queues text to be spoken. No spoken output is produced until a
+*dispatch* request is received via execution of command
+*d*.
+
+#+begin_example
+c codes
+#+end_example
+
+Queues synthesis codes to be sent to the @@texinfo:@acronym{TTS}@@ engine.  Codes
+are sent to the engine with no further transformation or processing.
+The codes are inserted into the output queue and will be dispatched to
+the @@texinfo:@acronym{TTS}@@ engine at the appropriate point in the output
+stream.
+
+#+begin_example
+a filename
+#+end_example
+
+Cues the audio file identified by filename for playing,
+an ~ogg~ file.
+
+#+begin_example
+p filename
+#+end_example
+
+*dispatch* play the audio file identified by filename for
+playing  @@texinfo:@MDash{}@@ ~ogg~ file.
+
+#+begin_example
+t freq length
+#+end_example
+
+Queues a tone to be played at the specified frequency and having the
+specified length.  Frequency is specified in hertz and length is
+specified in milliseconds.
+
+#+begin_example
+sh duration
+#+end_example
+
+Queues the specified duration of silence. Silence is specified in
+milliseconds.
+
+*** Commands That Set State
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+#+begin_example
+tts_reset
+#+end_example
+
+*Immediately* reset @@texinfo:@acronym{TTS}@@ engine to default settings.
+Stops all speech and clears the queue.
+
+#+begin_example
+tts_set_punctuations mode
+#+end_example
+
+Queues setting @@texinfo:@acronym{TTS}@@ engine to the specified punctuation
+mode. Typically, @@texinfo:@acronym{TTS}@@ servers provide at least three modes:
+
+- None: Do not speak punctuation characters.
+
+- Some: Speak some punctuation characters. Used for English prose.
+
+- All: Speak out *all* punctuation characters; useful in
+   programming modes.
+
+#+begin_example
+tts_set_speech_rate rate
+#+end_example
+
+*Immediately* change speech rate. The interpretation of this
+value is typically engine specific.
+
+#+begin_example
+tts_set_character_scale factor
+#+end_example
+
+Queues changing the scale factor.  Scale factor applied to speech rate
+when speaking individual characters.Thus, setting speech rate to 500
+and character scale to 1.2 will cause command *l* to use a
+speech rate of *500 * 1.2 = 600*.
+
+#+begin_example
+tts_split_caps flag
+#+end_example
+
+Queues changing of the state of *split caps* processing.  Turn
+this on to speak mixed-case (@@texinfo:@acronym{AKA}@@ Camel Case) identifiers.
+
+#+begin_example
+tts_sync_state punct splitcaps caps rate
+#+end_example
+
+*Immediately* apply the passed settings.
+
+This ensures *atomicity* i.e., all state settings in the TTS
+engine happen at one shot. Note that failure to do this might result
+in some utterances being spoken with a partially set state.
+
+- punct: see tts_set_punctuations
+
+- splitcaps: see tts_split_caps
+
+- caps: engine specific implementation of capital letter handling
+
+- rate: see tts_set_speech_rate
+
+#+begin_example
+set_next_lang say_it
+#+end_example
+
+*Immediately* switch to the next language on the server,
+maintained internally on the TTS server. If say_it is non-nil say the
+language change via the TTS.
+
+#+begin_example
+set_previous_lang say_it
+#+end_example
+
+*Immediately* switch to the previous language on the server,
+maintained internally on the TTS server. If say_it is non-nil say the
+language change via the TTS.
+
+#+begin_example
+set_lang language:voice say_it
+#+end_example
+
+*Immediately* switch to the requested language and/or voice,
+separated by a colon. Examples
+
+- set_lang "en"
+
+- set_lang "en:whisper"
+
+- set_lang ":whisper"
+
+If say_it is non-nil, speak via the TTS the language and voice
+selected.
+
+#+begin_example
+set_preferred_lang alias lang
+#+end_example
+
+*Immediately* set an alias in the TTS server mapping for
+example "en" to "en_GB". This can later be used by set_lang.
