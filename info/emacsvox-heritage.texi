@@ -38,11 +38,13 @@ Copying terms are in
 @ref{Copyright,Copyright,,emacsvox,Emacsvox User Manual}.
 
 @menu
+* Historical Application Survey: Emacs Packages.
 * Background::                 Emacspeak's significance and design lessons.
 * Emacspeak At Twenty::       A twenty-year retrospective.
 * Heritage Concept Index::
 @end menu
 
+@include packages.texi
 @include emacspeak-significance.texi
 @include inc-turning-twenty.texi
 

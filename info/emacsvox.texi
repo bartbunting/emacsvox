@@ -42,7 +42,7 @@ This manual documents @strong{Emacsvox, The Complete Audio Desktop}.
 @include audio-desktop.texi
 @include voices.texi
 @include online-help.texi
-@include packages.texi
+@include applications.texi
 @include notmuch.texi
 @include agent-shell.texi
 @include eat.texi

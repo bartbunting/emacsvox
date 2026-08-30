@@ -180,5 +180,66 @@
         (regexp-quote checkpoint)
         (emacsvox-backend-doc-tests--normalize-whitespace text))))))
 
+(ert-deftest emacsvox-current-applications-own-maintained-user-routes ()
+  "The user manual should present verified routes without inherited setup."
+  (let ((guide
+         (emacsvox-backend-doc-tests--file-string "info/applications.texi"))
+        (master
+         (emacsvox-backend-doc-tests--file-string "info/emacsvox.texi"))
+        (menu
+         (emacsvox-backend-doc-tests--file-string "info/preamble.texi"))
+        (using
+         (emacsvox-backend-doc-tests--file-string "info/using.texi")))
+    (should (string-match-p "@include applications\\.texi" master))
+    (should-not (string-match-p "@include packages\\.texi" master))
+    (should
+     (string-match-p
+      "\\* Applications And Integrations: Emacs Packages\\." menu))
+    (dolist
+        (required
+         '("@chapter Applications And Integrations"
+           "@kbd{M-x eww @key{RET}}"
+           "@ref{emacsvox-eww,,,emacsvox-reference"
+           "@ref{emacsvox-outline,,,emacsvox-reference"
+           "@ref{emacsvox-tempo,,,emacsvox-reference"
+           "@ref{emacsvox-forms,,,emacsvox-reference"
+           "@ref{Notmuch Mail}"
+           "experimental legacy front end"
+           "not a validated deployment guide"))
+      (should (string-match-p (regexp-quote required) guide)))
+    (dolist
+        (obsolete
+         '("ftp://cs.nyu.edu"
+           "/home/"
+           "/usr/bin/ocr"
+           "~/ocr"
+           "emacsvox-ocr-scan-image-program"
+           "Emacsvox/W3"))
+      (should-not (string-match-p (regexp-quote obsolete) guide)))
+    (should-not (string-match-p "@code{W3}" using))
+    (should-not (string-match-p "Emacsvox/W3" using))
+    (should-not (string-match-p "REC-CSS2" using))))
+
+(ert-deftest emacsvox-heritage-owns-inherited-application-surveys ()
+  "Historical workflows should remain available only from Heritage."
+  (let ((heritage
+         (emacsvox-backend-doc-tests--file-string
+          "info/emacsvox-heritage.texi"))
+        (survey
+         (emacsvox-backend-doc-tests--file-string "info/packages.texi")))
+    (should (string-match-p "@include packages\\.texi" heritage))
+    (should
+     (string-match-p
+      "\\* Historical Application Survey: Emacs Packages\\." heritage))
+    (dolist
+        (required
+         '("@chapter Historical Emacs Application Survey"
+           "They are not current Emacsvox\noperating instructions"
+           "ftp://cs.nyu.edu/pub/local/fox/dismal"
+           "emacsvox-ocr-scan-image-program"
+           "/usr/bin/ocr"
+           "@include web-browsing.texi"))
+      (should (string-match-p (regexp-quote required) survey)))))
+
 (provide 'emacsvox-backend-doc-tests)
 ;;; emacsvox-backend-doc-tests.el ends here

@@ -386,9 +386,9 @@ Return the beginning of the inserted row."
         (menu
          (emacsvox-notmuch-test--repository-file-string
           "info/preamble.texi"))
-        (packages
+        (applications
          (emacsvox-notmuch-test--repository-file-string
-          "info/packages.texi"))
+          "info/applications.texi"))
         (generated
          (emacsvox-notmuch-test--repository-file-string
           "info/docs.texi"))
@@ -400,7 +400,7 @@ Return the beginning of the inserted row."
       "@ref{emacsvox-notmuch,,,emacsvox-reference" guide))
     (should (string-match-p "@include notmuch.texi" master))
     (should (string-match-p "\\* Notmuch Mail: Notmuch Mail\\." menu))
-    (should (string-match-p "@ref{Notmuch Mail}" packages))
+    (should (string-match-p "@ref{Notmuch Mail}" applications))
     (should
      (string-match-p
       "file:info/notmuch\\.texi.*Notmuch Mail workflow chapter" readme))

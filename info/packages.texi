@@ -1,8 +1,19 @@
 @c $Id$
 @node Emacs Packages
-@chapter Emacs Packages.
+@chapter Historical Emacs Application Survey
 
 @cindex Emacs Packages
+
+@quotation Historical status
+This chapter and its included essays are preserved from the Emacspeak
+application survey.  They contain period software, personal paths, obsolete
+network locations, and setup assumptions.  They are not current Emacsvox
+operating instructions.  For maintained guidance, see
+@ref{Emacs Packages,Applications And Integrations,,emacsvox,Emacsvox User
+Manual}; for current public command and option names, see
+@ref{Emacsvox Commands And Options,,,emacsvox-reference,Emacsvox Reference
+Manual}.
+@end quotation
 
 Emacs @MDash{} The extensible, self-documenting editor, derives its
 functionality from its powerful extension mechanism.  This extension
@@ -14,15 +25,6 @@ sections that each pertain to a specific class of tasks; in individual
 subsections within a section give a brief overview of particular Emacs
 packages that have been speech-enabled.
 
-Several application essays in this chapter are inherited historical surveys.
-They are labelled where their named software is no longer current.  Use the
-generated module reference and each live mode's @kbd{C-h m} output for the
-authoritative current commands and bindings.
-
-For the current speech-enabled module inventory, use the generated
-@ref{Emacsvox Commands And Options,,,emacsvox-reference,Emacsvox Reference
-Manual}.  Emacsvox 60 requires Emacs 31 or newer, whose built-in package
-manager can install and update external packages.
 The original Emacspeak application list at
 @url{http://emacspeak.sf.net/applications.html} is retained only as historical
 background.
@@ -81,7 +83,7 @@ habits when dealing with content in your messaging application.
 
 For current task-oriented guidance to indexed mail search, thread reading,
 attachments, asynchronous results, and privacy controls, see
-@ref{Notmuch Mail}.
+@ref{Notmuch Mail,,,emacsvox,Emacsvox User Manual}.
 
 @node Editing Code
 @section Editing Code
