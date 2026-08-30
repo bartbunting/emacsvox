@@ -149,8 +149,10 @@ ACCEPTED-DIAGNOSTICS may name one exact successful output pattern."
     (error "%s is stale: %s (run make docs-generate)"
            description expected)))
 
-(defun emacsvox-docs-check--normalize-info-file (file)
-  "Remove trailing whitespace and excess final newlines from temporary FILE."
+(defun emacsvox-docs-check--normalize-generated-text-file
+    (file &optional collapse-final-newlines)
+  "Remove trailing horizontal whitespace from generated FILE.
+When COLLAPSE-FINAL-NEWLINES is non-nil, leave exactly one final newline."
   (with-temp-buffer
     (set-buffer-multibyte nil)
     (insert-file-contents-literally file)
@@ -159,16 +161,21 @@ ACCEPTED-DIAGNOSTICS may name one exact successful output pattern."
       (while (re-search-forward "[ \t]+$" nil t)
         (replace-match "" nil nil)
         (setq changed t))
-      (goto-char (point-max))
-      (let ((end (point)))
-        (skip-chars-backward "\n")
-        (unless (= (- end (point)) 1)
-          (delete-region (point) end)
-          (insert "\n")
-          (setq changed t)))
+      (when collapse-final-newlines
+        (goto-char (point-max))
+        (let ((end (point)))
+          (skip-chars-backward "\n")
+          (unless (= (- end (point)) 1)
+            (delete-region (point) end)
+            (insert "\n")
+            (setq changed t))))
       (when changed
         (let ((coding-system-for-write 'no-conversion))
           (write-region (point-min) (point-max) file nil 'silent))))))
+
+(defun emacsvox-docs-check--normalize-info-file (file)
+  "Remove trailing whitespace and excess final newlines from temporary FILE."
+  (emacsvox-docs-check--normalize-generated-text-file file t))
 
 (defun emacsvox-docs-check--assert-portable-reference (file root temporary-root)
   "Reject machine-local paths in generated FILE.
@@ -297,9 +304,13 @@ directory entry with INSTALL-INFO."
      "-c" (concat "HTMLXREF_FILE=" htmlxref)
      "--css-ref=https://www.w3.org/StyleSheets/Core/Modernist"
      (concat "--output=" output-directory) source)
-    (mapcar
-     (lambda (file) (file-relative-name file output-root))
-     (directory-files-recursively output-directory "\\.html\\'"))))
+    (let ((files
+           (directory-files-recursively output-directory "\\.html\\'")))
+      (dolist (file files)
+        (emacsvox-docs-check--normalize-generated-text-file file))
+      (mapcar
+       (lambda (file) (file-relative-name file output-root))
+       files))))
 
 (defun emacsvox-docs-check--html-escape (string)
   "Return STRING escaped for HTML text and attribute contexts."

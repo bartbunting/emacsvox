@@ -49,6 +49,20 @@
           (buffer-string))
         "first\nsecond\n")))))
 
+(ert-deftest emacsvox-docs-check-normalizes-generated-html-lines ()
+  "Generated HTML should be clean without changing its final blank lines."
+  (emacsvox-docs-check-tests--with-directory (directory)
+    (let ((file (expand-file-name "page.html" directory)))
+      (with-temp-file file
+        (insert "<p>first</p>  \n<p>&nbsp;</p> \n\n"))
+      (emacsvox-docs-check--normalize-generated-text-file file)
+      (should
+       (equal
+        (with-temp-buffer
+          (insert-file-contents-literally file)
+          (buffer-string))
+        "<p>first</p>\n<p>&nbsp;</p>\n\n")))))
+
 (ert-deftest emacsvox-docs-check-rejects-successful-process-warnings ()
   "A publication warning should fail even when makeinfo exits zero."
   (let ((condition
