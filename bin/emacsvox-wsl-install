@@ -1,0 +1,512 @@
+#!/bin/sh
+
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of Emacsvox.
+
+set -eu
+
+program_name=emacsvox-wsl-install
+mode=install
+audio_check=true
+
+usage()
+{
+    cat <<'EOF'
+Usage: bin/emacsvox-wsl-install [OPTION]
+
+Prepare the supported WSL2 installation of Emacsvox and the verified Omnivox
+Windows release.  The installer makes only per-user changes.  It never invokes
+sudo or edits a shell startup file.
+
+Options:
+  --check           inspect prerequisites and planned paths without changes
+  --no-audio-check  install and diagnose, but do not play the final check
+  -h, --help        show this help and exit
+
+When Emacs 31 or newer is unavailable, the installer builds the pinned stable
+GNU Emacs release below ~/.local/opt.  Missing Ubuntu build packages are
+reported as one explicit apt command for the user to review and run.
+EOF
+}
+
+fail()
+{
+    printf '%s: %s\n' "$program_name" "$1" >&2
+    exit "${2:-1}"
+}
+
+note()
+{
+    printf '\n%s\n' "$1"
+}
+
+case ${1-} in
+    '') ;;
+    --check)
+        mode=check
+        ;;
+    --no-audio-check)
+        audio_check=false
+        ;;
+    -h|--help)
+        usage
+        exit 0
+        ;;
+    *)
+        usage >&2
+        fail "unknown option: $1" 2
+        ;;
+esac
+if [ "$#" -gt 1 ]; then
+    usage >&2
+    fail "only one option may be supplied" 2
+fi
+
+script_directory=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd) ||
+    fail "cannot resolve the installer directory"
+emacsvox_root=$(CDPATH='' cd -- "$script_directory/.." && pwd) ||
+    fail "cannot resolve the Emacsvox checkout"
+manifest=$emacsvox_root/etc/wsl-install.conf
+[ -r "$manifest" ] || fail "missing release manifest: $manifest"
+# The manifest is maintained in the same trusted source tree as this script.
+# The resolved manifest is in this trusted checkout.
+# shellcheck disable=SC1090
+. "$manifest"
+
+validate_hash()
+{
+    case $1 in
+        ''|*[!0123456789abcdef]*)
+            fail "release manifest contains an invalid SHA-256 value"
+            ;;
+    esac
+    [ "${#1}" -eq 64 ] ||
+        fail "release manifest contains an invalid SHA-256 length"
+}
+
+[ "${EMACSVOX_WSL_INSTALL_SCHEMA-}" = 1 ] ||
+    fail "unsupported WSL installation manifest schema"
+validate_hash "$EMACSVOX_WSL_EMACS_SHA256"
+validate_hash "$EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_SHA256"
+validate_hash "$EMACSVOX_WSL_OMNIVOX_WINDOWS_ARM64_SHA256"
+
+proc_version_file=${EMACSVOX_WSL_PROC_VERSION_FILE:-/proc/version}
+if [ ! -r "$proc_version_file" ] ||
+   ! grep -qi microsoft "$proc_version_file"; then
+    fail "this installer supports Emacs running under WSL2"
+fi
+if [ -r /proc/sys/kernel/osrelease ] &&
+   grep -qi microsoft-standard-WSL /proc/sys/kernel/osrelease; then
+    :
+elif [ -z "${WSL_INTEROP-}" ]; then
+    fail "WSL2 with Windows interoperability enabled is required"
+fi
+
+missing_interoperation_tools=
+for tool in powershell.exe wslpath; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        missing_interoperation_tools="${missing_interoperation_tools}${missing_interoperation_tools:+ }$tool"
+    fi
+done
+if [ -n "$missing_interoperation_tools" ]; then
+    fail "WSL interoperability is missing required commands: $missing_interoperation_tools"
+fi
+
+windows_architecture=${EMACSVOX_WSL_WINDOWS_ARCHITECTURE-}
+if [ -z "$windows_architecture" ]; then
+    windows_architecture=$(
+        powershell.exe -NoProfile -NonInteractive -Command \
+            '[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()' |
+            tr -d '\r'
+    ) || fail "could not determine the Windows architecture"
+fi
+case $windows_architecture in
+    X64|x64|AMD64|amd64)
+        omnivox_platform=windows-x64
+        omnivox_archive=$EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_ARCHIVE
+        omnivox_sha256=$EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_SHA256
+        ;;
+    Arm64|ARM64|arm64)
+        omnivox_platform=windows-arm64
+        omnivox_archive=$EMACSVOX_WSL_OMNIVOX_WINDOWS_ARM64_ARCHIVE
+        omnivox_sha256=$EMACSVOX_WSL_OMNIVOX_WINDOWS_ARM64_SHA256
+        ;;
+    *) fail "unsupported Windows architecture: $windows_architecture" ;;
+esac
+
+windows_local_app_data=${EMACSVOX_WSL_WINDOWS_LOCAL_APP_DATA-}
+if [ -z "$windows_local_app_data" ]; then
+    windows_local_app_data=$(
+        powershell.exe -NoProfile -NonInteractive -Command \
+            '[Environment]::GetFolderPath("LocalApplicationData")' | tr -d '\r'
+    ) || fail "could not locate Windows LocalAppData"
+fi
+[ -n "$windows_local_app_data" ] || fail "Windows LocalAppData is empty"
+windows_local_app_data_wsl=$(wslpath -u "$windows_local_app_data") ||
+    fail "could not translate Windows LocalAppData for WSL"
+omnivox_install_directory=$windows_local_app_data_wsl/Emacsvox/Omnivox/releases/$EMACSVOX_WSL_OMNIVOX_VERSION-$omnivox_platform
+omnivox_program=$omnivox_install_directory/omnivox.exe
+
+config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
+omnivox_config_directory=$config_home/emacsvox
+omnivox_config_file=$omnivox_config_directory/omnivox-program
+cache_home=${XDG_CACHE_HOME:-"$HOME/.cache"}
+download_directory=$cache_home/emacsvox/downloads
+emacs_install_directory=$HOME/.local/opt/emacs-$EMACSVOX_WSL_EMACS_VERSION
+
+emacs_version()
+{
+    "$1" -Q --batch --eval '(princ emacs-version)' 2>/dev/null
+}
+
+resolve_emacs()
+{
+    emacs_candidate=
+    emacs_selection=
+    if [ "${EMACS+x}" = x ] && [ -n "$EMACS" ]; then
+        emacs_candidate=$EMACS
+        emacs_selection='EMACS environment variable'
+    elif [ -r "$emacsvox_root/local.mk" ]; then
+        emacs_candidate=$(
+            sed -n \
+                's/^[[:space:]]*EMACS[[:space:]]*=[[:space:]]*//; s/[[:space:]]*$//; p' \
+                "$emacsvox_root/local.mk" | sed -n '$p'
+        )
+        if [ -n "$emacs_candidate" ]; then
+            emacs_selection=local.mk
+        fi
+    fi
+    if [ -z "$emacs_candidate" ]; then
+        emacs_candidate=$(command -v emacs 2>/dev/null || :)
+        emacs_selection=PATH
+    fi
+    case $emacs_candidate in
+        /*|'') ;;
+        */*) emacs_candidate=$emacsvox_root/$emacs_candidate ;;
+        *) emacs_candidate=$(command -v "$emacs_candidate" 2>/dev/null || :) ;;
+    esac
+    selected_emacs_version=
+    if [ -n "$emacs_candidate" ] && [ -x "$emacs_candidate" ]; then
+        selected_emacs_version=$(emacs_version "$emacs_candidate" || :)
+    fi
+    selected_emacs_major=${selected_emacs_version%%.*}
+    case $selected_emacs_major in
+        ''|*[!0-9]*) emacs_supported=false ;;
+        *)
+            if [ "$selected_emacs_major" -ge 31 ]; then
+                emacs_supported=true
+            else
+                emacs_supported=false
+            fi
+            ;;
+    esac
+}
+
+resolve_emacs
+if ! $emacs_supported &&
+   { [ "$emacs_selection" = 'EMACS environment variable' ] ||
+     [ "$emacs_selection" = local.mk ]; }; then
+    fail "$emacs_selection selects unsupported Emacs ${selected_emacs_version:-unknown}; preserve or update that explicit setting before continuing"
+fi
+
+required_packages='curl make coreutils tar unzip'
+emacs_build_packages='build-essential pkg-config texinfo xz-utils libgtk-3-dev libgnutls28-dev libtree-sitter-dev libjansson-dev libncurses-dev libxml2-dev libsqlite3-dev libacl1-dev libharfbuzz-dev libotf-dev libxpm-dev libjpeg-dev libpng-dev libgif-dev libtiff-dev librsvg2-dev libwebp-dev libasound2-dev libgmp-dev'
+if ! $emacs_supported; then
+    required_packages="$required_packages $emacs_build_packages"
+fi
+missing_packages=
+for package in $required_packages; do
+    if ! command -v dpkg-query >/dev/null 2>&1; then
+        case $package in
+            curl) command -v curl >/dev/null 2>&1 || missing_packages="$missing_packages curl" ;;
+            make) command -v make >/dev/null 2>&1 || missing_packages="$missing_packages make" ;;
+            coreutils) command -v sha256sum >/dev/null 2>&1 || missing_packages="$missing_packages coreutils" ;;
+            tar) command -v tar >/dev/null 2>&1 || missing_packages="$missing_packages tar" ;;
+            unzip) command -v unzip >/dev/null 2>&1 || missing_packages="$missing_packages unzip" ;;
+            *)
+                fail "automatic Emacs installation currently requires an Ubuntu or Debian WSL distribution"
+                ;;
+        esac
+    elif ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null |
+         grep -qx 'install ok installed'; then
+        case " $missing_packages " in
+            *" $package "*) ;;
+            *) missing_packages="${missing_packages}${missing_packages:+ }$package" ;;
+        esac
+    fi
+done
+if ! $emacs_supported && ! command -v dpkg-query >/dev/null 2>&1; then
+    command -v dpkg-query >/dev/null 2>&1 ||
+        fail "automatic Emacs installation currently requires an Ubuntu or Debian WSL distribution"
+fi
+
+note "WSL installation plan"
+printf '  Emacsvox checkout: %s\n' "$emacsvox_root"
+if $emacs_supported; then
+    printf '  Emacs: %s (%s, selected by %s)\n' \
+        "$emacs_candidate" "$selected_emacs_version" "$emacs_selection"
+else
+    printf '  Emacs: build verified GNU Emacs %s into %s\n' \
+        "$EMACSVOX_WSL_EMACS_VERSION" "$emacs_install_directory"
+fi
+printf '  Omnivox: %s %s into %s\n' \
+    "$EMACSVOX_WSL_OMNIVOX_VERSION" "$omnivox_platform" \
+    "$omnivox_install_directory"
+printf '  Persistent selection: %s\n' "$omnivox_config_file"
+
+if [ -n "$missing_packages" ]; then
+    cat <<EOF
+
+The supported WSL installation needs additional packages.  Review and run:
+
+  sudo apt update
+  sudo apt install $missing_packages
+
+Then run $program_name again.  No packages were installed automatically.
+EOF
+    exit 2
+fi
+
+if [ "$mode" = check ]; then
+    if [ -x "$omnivox_program" ]; then
+        installed_omnivox_version=$(
+            "$omnivox_program" --version 2>/dev/null | sed -n '1p'
+        ) || :
+        printf '  Installed Omnivox: %s\n' \
+            "${installed_omnivox_version:-not runnable}"
+    else
+        printf '  Installed Omnivox: not present; the installer will add it\n'
+    fi
+    printf '\nNo files were changed.  Run ./bin/%s to install.\n' "$program_name"
+    exit 0
+fi
+
+download_verified()
+{
+    url=$1
+    destination=$2
+    expected=$3
+    mkdir -p -- "$(dirname -- "$destination")"
+    if [ -f "$destination" ] &&
+       printf '%s  %s\n' "$expected" "$destination" | sha256sum --check --status -;
+    then
+        printf 'Using verified cached download: %s\n' "$destination"
+        return
+    fi
+    temporary=$destination.part.$$
+    curl --fail --location --retry 3 --show-error --silent \
+        --output "$temporary" "$url"
+    if ! printf '%s  %s\n' "$expected" "$temporary" |
+         sha256sum --check --status -; then
+        rm -f -- "$temporary"
+        fail "checksum verification failed for $(basename -- "$destination")"
+    fi
+    mv -f -- "$temporary" "$destination"
+}
+
+cleanup_build_directory=
+cleanup_omnivox_directory=
+cleanup()
+{
+    if [ -n "$cleanup_build_directory" ]; then
+        case $cleanup_build_directory in
+            "${TMPDIR:-/tmp}"/emacsvox-emacs-*)
+                rm -rf -- "$cleanup_build_directory"
+                ;;
+        esac
+    fi
+    if [ -n "$cleanup_omnivox_directory" ]; then
+        case $cleanup_omnivox_directory in
+            "$windows_local_app_data_wsl"/Emacsvox/Omnivox/releases/.install-*)
+                rm -rf -- "$cleanup_omnivox_directory"
+                ;;
+            "$omnivox_install_directory")
+                rm -rf -- "$cleanup_omnivox_directory"
+                ;;
+        esac
+    fi
+}
+trap cleanup 0 1 2 15
+
+install_emacs()
+{
+    if [ -x "$emacs_install_directory/bin/emacs" ]; then
+        installed_version=$(emacs_version "$emacs_install_directory/bin/emacs" || :)
+        if [ "$installed_version" = "$EMACSVOX_WSL_EMACS_VERSION" ]; then
+            emacs_candidate=$emacs_install_directory/bin/emacs
+            selected_emacs_version=$installed_version
+            emacs_supported=true
+            printf 'Using existing GNU Emacs %s installation.\n' "$installed_version"
+            return
+        fi
+        fail "existing Emacs installation is not the pinned version: $emacs_install_directory"
+    elif [ -e "$emacs_install_directory" ]; then
+        fail "existing Emacs installation is incomplete: $emacs_install_directory"
+    fi
+
+    archive=$download_directory/$EMACSVOX_WSL_EMACS_ARCHIVE
+    download_verified "$EMACSVOX_WSL_EMACS_URL" "$archive" \
+        "$EMACSVOX_WSL_EMACS_SHA256"
+    cleanup_build_directory=$(mktemp -d \
+        "${TMPDIR:-/tmp}/emacsvox-emacs-$EMACSVOX_WSL_EMACS_VERSION.XXXXXX")
+    tar -xf "$archive" -C "$cleanup_build_directory"
+    source_directory=$cleanup_build_directory/emacs-$EMACSVOX_WSL_EMACS_VERSION
+    [ -x "$source_directory/configure" ] ||
+        fail "the verified Emacs archive has an unexpected layout"
+    staging_directory=$cleanup_build_directory/stage
+    mkdir -p -- "$staging_directory" "$(dirname -- "$emacs_install_directory")"
+    log_directory=$cache_home/emacsvox/logs
+    build_log=$log_directory/emacs-$EMACSVOX_WSL_EMACS_VERSION-build.log
+    mkdir -p -- "$log_directory"
+    : >"$build_log"
+    chmod 600 "$build_log"
+    note "Building GNU Emacs $EMACSVOX_WSL_EMACS_VERSION"
+    jobs=2
+    if command -v nproc >/dev/null 2>&1; then
+        jobs=$(nproc)
+    fi
+    if ! (
+        cd "$source_directory" &&
+        ./configure \
+            --prefix="$emacs_install_directory" \
+            --with-x-toolkit=gtk3 \
+            --with-tree-sitter \
+            --with-sound=alsa \
+            --without-native-compilation &&
+        make -j"$jobs" &&
+        make install DESTDIR="$staging_directory"
+    ) >"$build_log" 2>&1; then
+        tail -n 30 "$build_log" >&2
+        fail "GNU Emacs build failed; complete output is in $build_log"
+    fi
+    staged_install=$staging_directory$emacs_install_directory
+    [ -x "$staged_install/bin/emacs" ] ||
+        fail "the staged Emacs installation is incomplete"
+    mv -- "$staged_install" "$emacs_install_directory"
+    emacs_candidate=$emacs_install_directory/bin/emacs
+    selected_emacs_version=$(emacs_version "$emacs_candidate") ||
+        fail "the installed Emacs executable did not start"
+    [ "$selected_emacs_version" = "$EMACSVOX_WSL_EMACS_VERSION" ] ||
+        fail "installed Emacs reports unexpected version $selected_emacs_version"
+    emacs_supported=true
+    printf 'Installed GNU Emacs %s.\n' "$selected_emacs_version"
+}
+
+if ! $emacs_supported; then
+    install_emacs
+fi
+
+configure_local_emacs()
+{
+    local_settings=$emacsvox_root/local.mk
+    if [ ! -e "$local_settings" ]; then
+        temporary=$local_settings.tmp.$$
+        printf 'EMACS=%s\n' "$emacs_candidate" >"$temporary"
+        chmod 600 "$temporary"
+        mv -- "$temporary" "$local_settings"
+        printf 'Selected Emacs in %s.\n' "$local_settings"
+        return
+    fi
+    configured=$(
+        sed -n \
+            's/^[[:space:]]*EMACS[[:space:]]*=[[:space:]]*//; s/[[:space:]]*$//; p' \
+            "$local_settings" | sed -n '$p'
+    )
+    if [ -z "$configured" ]; then
+        printf '\nEMACS=%s\n' "$emacs_candidate" >>"$local_settings"
+        printf 'Added the Emacs selection to existing %s.\n' "$local_settings"
+    fi
+}
+
+configure_local_emacs
+
+install_omnivox()
+{
+    if [ -x "$omnivox_program" ]; then
+        installed_version=$("$omnivox_program" --version 2>/dev/null || :)
+        case $installed_version in
+            *" $EMACSVOX_WSL_OMNIVOX_VERSION")
+                [ -d "$omnivox_install_directory/espeak-ng-data" ] ||
+                    fail "existing Omnivox installation lacks espeak-ng-data"
+                printf 'Using existing %s.\n' "$installed_version"
+                return
+                ;;
+        esac
+        fail "existing Omnivox installation is not version $EMACSVOX_WSL_OMNIVOX_VERSION: $omnivox_install_directory"
+    elif [ -e "$omnivox_install_directory" ]; then
+        fail "existing Omnivox installation is incomplete: $omnivox_install_directory"
+    fi
+
+    archive=$download_directory/$omnivox_archive
+    download_verified \
+        "$EMACSVOX_WSL_OMNIVOX_RELEASE_URL/$omnivox_archive" \
+        "$archive" "$omnivox_sha256"
+    install_parent=$(dirname -- "$omnivox_install_directory")
+    mkdir -p -- "$install_parent"
+    staging_directory=$install_parent/.install-$EMACSVOX_WSL_OMNIVOX_VERSION-$omnivox_platform-$$
+    [ ! -e "$staging_directory" ] ||
+        fail "temporary Omnivox directory already exists: $staging_directory"
+    mkdir -- "$staging_directory"
+    cleanup_omnivox_directory=$staging_directory
+    unzip -q "$archive" -d "$staging_directory"
+    [ -f "$staging_directory/omnivox.exe" ] ||
+        fail "the verified Omnivox archive has an unexpected layout"
+    [ -d "$staging_directory/espeak-ng-data" ] ||
+        fail "the verified Omnivox archive lacks espeak-ng-data"
+    chmod 755 "$staging_directory/omnivox.exe"
+    # Rename the complete tree before starting its Windows executable.  DrvFS
+    # can temporarily refuse to rename a directory from which an executable
+    # has just run, even after that process has exited.
+    mv -- "$staging_directory" "$omnivox_install_directory"
+    cleanup_omnivox_directory=$omnivox_install_directory
+    staged_version=$("$omnivox_program" --version 2>/dev/null || :)
+    case $staged_version in
+        *" $EMACSVOX_WSL_OMNIVOX_VERSION") ;;
+        *) fail "the staged Omnivox executable reports an unexpected version" ;;
+    esac
+    cleanup_omnivox_directory=
+    printf 'Installed %s.\n' "$staged_version"
+}
+
+install_omnivox
+
+mkdir -p -- "$omnivox_config_directory"
+chmod 700 "$omnivox_config_directory" 2>/dev/null || :
+config_temporary=$omnivox_config_file.tmp.$$
+printf '%s\n' "$omnivox_program" >"$config_temporary"
+chmod 600 "$config_temporary"
+mv -f -- "$config_temporary" "$omnivox_config_file"
+printf 'Recorded the Omnivox path in %s.\n' "$omnivox_config_file"
+
+note 'Compiling Emacsvox'
+compile_log=$cache_home/emacsvox/logs/emacsvox-bytecode.log
+mkdir -p -- "$(dirname -- "$compile_log")"
+: >"$compile_log"
+chmod 600 "$compile_log"
+if ! make -C "$emacsvox_root" EMACS="$emacs_candidate" bytecode \
+     >"$compile_log" 2>&1; then
+    tail -n 30 "$compile_log" >&2
+    fail "Emacsvox compilation failed; complete output is in $compile_log"
+fi
+printf 'Compiled Emacsvox; build details are in %s.\n' "$compile_log"
+
+note 'Checking the installed launch path'
+env -u EMACS -u EMACSVOX_DIR -u OMNIVOX_PROGRAM -u TTS_PROGRAM \
+    "$emacsvox_root/bin/emacsvox" --diagnose
+if $audio_check; then
+    env -u EMACS -u EMACSVOX_DIR -u OMNIVOX_PROGRAM -u TTS_PROGRAM \
+        "$emacsvox_root/bin/emacsvox" --check
+fi
+
+cat <<EOF
+
+WSL installation complete.
+
+Start an isolated Emacsvox session with:
+
+  $emacsvox_root/bin/emacsvox
+
+The Omnivox selection is persistent and does not depend on a shell startup file.
+EOF

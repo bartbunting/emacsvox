@@ -179,5 +179,30 @@
     (should (string-match-p "work.*Unavailable pack" (cadr warning)))
     (should (eq (caddr warning) :warning))))
 
+(ert-deftest emacsvox-startup-announces-readiness-after-omnivox-negotiation ()
+  "The stable welcome checkpoint is deferred beyond the process filter."
+  (let ((process 'speaker)
+        (tts-speaker-process 'speaker)
+        (emacsvox-speak-ready-message t)
+        (emacsvox--ready-announcement-timer nil)
+        scheduled)
+    (cl-letf (((symbol-function 'run-at-time)
+               (lambda (delay repeat function &rest arguments)
+                 (setq scheduled (list delay repeat function arguments))
+                 'timer)))
+      (emacsvox--omnivox-ready process))
+    (should (equal (car scheduled) 0))
+    (should-not (cadr scheduled))
+    (should (eq (caddr scheduled) #'emacsvox--speak-ready-message))))
+
+(ert-deftest emacsvox-startup-ready-message-is-a-stable-spoken-checkpoint ()
+  "The post-negotiation checkpoint is concise and user-facing."
+  (let ((emacsvox-speak-ready-message t)
+        spoken)
+    (cl-letf (((symbol-function 'tts-speak)
+               (lambda (text) (setq spoken text))))
+      (emacsvox--speak-ready-message))
+    (should (equal spoken "Emacsvox is ready."))))
+
 (provide 'emacsvox-startup-tests)
 ;;; emacsvox-startup-tests.el ends here

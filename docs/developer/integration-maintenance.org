@@ -80,6 +80,23 @@ renderer and private fallbacks isolated and covered by compatibility tests.
 :TEXINFO_NODE: no
 :END:
 
+The ordinary WSL2 user route is implemented by
+~bin/emacsvox-wsl-install~ and pinned by ~etc/wsl-install.conf~.  Treat either
+file as release tooling.  When advancing GNU Emacs or Omnivox, update the
+version, archive name, URL, and SHA-256 together; exercise x64 and ARM64
+selection in the isolated installer tests; and perform one real installation
+of the newly pinned archive before updating the user manual.  The installer
+must remain per-user, must not invoke ~sudo~ or edit shell startup files, and
+must preserve an explicit ~EMACS~ or ~local.mk~ selection rather than silently
+replacing it.
+
+The installed Omnivox executable is recorded as an absolute WSL path in the
+data-only ~$XDG_CONFIG_HOME/emacsvox/omnivox-program~ file.  Launcher selection
+is explicit ~OMNIVOX_PROGRAM~, that per-user file, developer staging, then
+~PATH~.  Keep the selection tests synchronized with this order.  A configured
+but invalid path is a visible configuration error; silently falling through
+would hide a stale or damaged user installation.
+
 This section describes the reproducible source-build path, not the ordinary
 pre-built WSL2 installation.  The complete source-build prerequisite checklist
 is in

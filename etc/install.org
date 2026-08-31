@@ -5,14 +5,22 @@ To install a specific version of Emacsvox:
   1. Choose a permanent directory for Emacsvox, clone the repository there,
      and check out the desired tag or commit.  The checkout itself is the
      installation directory; run the remaining steps from that directory.
-  2. Run =make all= to configure and build Emacsvox.
-  3. Install and smoke-test the recommended Omnivox server by following the
+  2. Under WSL2, run =./bin/emacsvox-wsl-install --check= and then
+     =./bin/emacsvox-wsl-install=.  This guided route selects or builds a
+     supported Emacs, installs the verified Omnivox Windows release per user,
+     compiles Emacsvox, and performs the checks below without editing a shell
+     startup file.  If it reports missing packages, review and run the one
+     =apt= command it prints, then repeat the installer.
+  3. On GNU/Linux or macOS, select Emacs 31 or newer, run =make bytecode=, and
+     install the recommended Omnivox server by following the
      [[file:../docs/manual/chapters/speech-backends.org][Speech Backends guide]].
-  4. From the source tree, run =./bin/emacsvox --check= and continue only after
+  4. If the guided WSL2 installer was not used, run
+     =./bin/emacsvox --diagnose= and =./bin/emacsvox --check= from the source
+     tree.  Continue only after
      hearing both the test tone and speech.  Then run =./bin/emacsvox= to prove
      first speech in an isolated Emacs that does not load personal init files.
-     =./bin/emacsvox --diagnose= reports the selected Emacs, backend, and paths
-     without producing audio or starting interactive Emacs.
+     The diagnostic reports the selected Emacs, backend, and paths without
+     producing audio or starting interactive Emacs.
   5. Keep the built checkout in that location; there is no separate copy or
      install step.  For normal customized starts, export
      =TTS_PROGRAM=omnivox= and load =lisp/emacsvox-setup.el= from that checkout

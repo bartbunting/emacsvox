@@ -42,6 +42,28 @@ a deprecated forwarding command for the Emacsvox 60 transition and will be
 removed after this release; unlike its former personal workflow, it now has
 the same isolated, Omnivox-first behavior as ~bin/emacsvox~.
 
+** Guided WSL2 Installation
+
+~bin/emacsvox-wsl-install --check~ now reports the complete recommended WSL2
+installation plan without changing the machine.  Running
+~bin/emacsvox-wsl-install~ uses an existing Emacs 31 or newer, or builds the
+checksum-pinned stable GNU Emacs 31.1 release per user when necessary.  It then
+downloads and verifies the matching Omnivox 1.5.0 Windows x64 or ARM64 archive,
+installs its intact runtime below Windows ~LocalAppData~, compiles Emacsvox,
+and performs the launcher and audible backend checks.
+
+The installer never invokes ~sudo~ or edits a shell startup file.  It prints
+one package command for the user to review when Ubuntu or Debian build
+dependencies are missing, stores routine compiler output in a private cache
+log, and records the Omnivox executable as a data-only XDG configuration file.
+The launcher still accepts ~OMNIVOX_PROGRAM~ as an explicit test override,
+followed by the per-user release, a source-built development runtime, and
+~PATH~.
+
+After successful Omnivox capability negotiation, Emacsvox now speaks the
+stable first-use checkpoint, ``Emacsvox is ready.''  Set
+~emacsvox-speak-ready-message~ to nil to disable that announcement.
+
 ** Native Windows Speech Under WSL
 
 Emacsvox now owns its native Windows speech stack.  The bundled

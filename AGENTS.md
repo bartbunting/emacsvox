@@ -58,5 +58,9 @@
 - `make windows-omnivox` is the reproducible clean-release path. For local
   testing from dirty Emacsvox or Omnivox worktrees, use
   `make windows-omnivox-dev`; it records both tracked-diff hashes in provenance.
+- The ordinary WSL2 binary-install route is `bin/emacsvox-wsl-install`; its
+  pinned inputs and hashes live in `etc/wsl-install.conf`. Treat both as release
+  tooling, keep the installer per-user, and run its isolated x64/ARM64 tests
+  plus one real newly pinned archive check before changing the public guide.
 - Do not bypass the Omnivox release target manually or clean either repository
   to make the release guard pass.

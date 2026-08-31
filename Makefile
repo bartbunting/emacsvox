@@ -816,7 +816,7 @@ README:
 	@echo "Emacsvox  Revision $(GITVERSION)" > $(README)
 	@echo "This release requires Emacs 31 or later." >> $(README)
 	@echo "Distribution created by `whoami` at `date`" >> $(README)
-	@echo "Unpack the distribution and type make all" >> $(README)
+	@echo "Unpack the distribution and follow Readme.org for the supported platform route." >> $(README)
 dist: release-artifact
 
 ###  User level target--  config
@@ -940,9 +940,10 @@ release-publish: release-artifact-check
 
 install:
 	@echo "This release requires Emacs 31 or later."
-	@echo "You need SoX installed to play OGG and WAV files."
-	@echo "You need curl installed for some Internet features."
-	@echo "Install and smoke-test the recommended Omnivox backend first."
+	@echo "On WSL2, inspect and run the guided binary installation with:"
+	@echo "  ./bin/emacsvox-wsl-install --check"
+	@echo "  ./bin/emacsvox-wsl-install"
+	@echo "On other platforms, run make bytecode and install Omnivox as described in the manual."
 	@echo "For an audible backend check, run: ./bin/emacsvox --check"
 	@echo "For an isolated first start, run: ./bin/emacsvox"
 	@echo "For normal customized starts, export TTS_PROGRAM=omnivox and add:"

@@ -27,6 +27,7 @@ Launcher options:
 Selection order:
   Emacs       $EMACS, then EMACS= in local.mk, then emacs on PATH
   backend     $TTS_PROGRAM, otherwise the recommended omnivox backend
+  Omnivox     $OMNIVOX_PROGRAM, the per-user config, a staged runtime, PATH
   source tree $EMACSVOX_DIR, otherwise the parent of this bin directory
 
 Use -- before an Emacs argument that is also a launcher option.  A normal

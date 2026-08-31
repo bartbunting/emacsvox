@@ -344,6 +344,36 @@ This cannot be set via custom; set this in your startup file before
    emacsvox-version)
   "Emacsvox startup message.")
 
+(defconst emacsvox-ready-message "Emacsvox is ready."
+  "Stable spoken checkpoint after the recommended server becomes ready.")
+
+(defcustom emacsvox-speak-ready-message t
+  "Whether to speak `emacsvox-ready-message' after Omnivox is ready.
+The announcement occurs after capability negotiation, so it is a dependable
+first-start checkpoint rather than an optimistic startup message."
+  :type 'boolean
+  :group 'emacsvox)
+
+(defvar emacsvox--ready-announcement-timer nil
+  "Timer holding a pending post-negotiation readiness announcement.")
+
+(defun emacsvox--speak-ready-message ()
+  "Speak the stable post-negotiation readiness checkpoint."
+  (setq emacsvox--ready-announcement-timer nil)
+  (when emacsvox-speak-ready-message
+    (tts-speak emacsvox-ready-message)))
+
+(defun emacsvox--omnivox-ready (process)
+  "Schedule the readiness checkpoint for the main Omnivox PROCESS."
+  (when (and emacsvox-speak-ready-message
+             (eq process tts-speaker-process))
+    (when (timerp emacsvox--ready-announcement-timer)
+      (cancel-timer emacsvox--ready-announcement-timer))
+    ;; Avoid writing a speech transaction from inside Omnivox's process
+    ;; filter while it is dispatching the capability response.
+    (setq emacsvox--ready-announcement-timer
+          (run-at-time 0 nil #'emacsvox--speak-ready-message))))
+
 (defcustom emacsvox-pip-enable
   (executable-find "piper")
   "Load pip if Piper-TTS is available."
@@ -430,6 +460,7 @@ commands and options."
    'kill-emacs-hook
    #'(lambda nil (setq-default emacsvox-speak-messages nil))
    -10)
+  (add-hook 'omnivox-ready-hook #'emacsvox--omnivox-ready)
   (tts-initialize)
   (emacsvox-aural-load-user-data)
   (emacsvox-aural-load-routing-profiles nil t)

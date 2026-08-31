@@ -68,9 +68,15 @@
 (defun emacsvox-launcher-tests--call (program &rest arguments)
   "Call PROGRAM with ARGUMENTS and return its status and combined output."
   (with-temp-buffer
-    (let ((status
-           (apply #'call-process program nil '(t t) nil arguments)))
-      (list status (buffer-string)))))
+    (let ((process-environment (copy-sequence process-environment)))
+      (unless (getenv "EMACSVOX_OMNIVOX_CONFIG_FILE")
+        (setenv
+         "EMACSVOX_OMNIVOX_CONFIG_FILE"
+         (expand-file-name
+          "missing-user-config" emacsvox-launcher-tests--root)))
+      (let ((status
+             (apply #'call-process program nil '(t t) nil arguments)))
+        (list status (buffer-string))))))
 
 (defun emacsvox-launcher-tests--wsl-p ()
   "Return non-nil when these tests are running under WSL."
@@ -177,6 +183,8 @@
           (dolist (file (list launcher filter program))
             (set-file-modes file #o700))
           (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
+          (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE"
+                  (expand-file-name "missing-config" directory))
           (setenv "OMNIVOX_LOG_MAX_FILE_BYTES" "512")
           (setenv "OMNIVOX_LOG_RETAINED_FILES" "16")
           (setenv "OMNIVOX_LOG_RETAINED_BYTES" "8192")
@@ -283,6 +291,8 @@
          (setenv "PATH"
                   (concat binary-directory path-separator (getenv "PATH")))
           (setenv "OMNIVOX_PROGRAM" nil)
+          (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE"
+                  (expand-file-name "missing-config" directory))
           (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
           (with-temp-buffer
             (should
@@ -321,6 +331,8 @@
           (dolist (file (list launcher filter program staged-program))
             (set-file-modes file #o700))
           (setenv "OMNIVOX_PROGRAM" program)
+          (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE"
+                  (expand-file-name "missing-config" directory))
           (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
           (with-temp-buffer
             (should
@@ -362,6 +374,9 @@
             (set-file-modes file #o700))
           (dolist (name '("OMNIVOX_PIPER_MODEL" "WSLENV"))
             (setenv name nil))
+          (setenv "OMNIVOX_PROGRAM" nil)
+          (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE"
+                  (expand-file-name "missing-config" directory))
           (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
           (with-temp-buffer
             (should (zerop (call-process launcher nil t)))
@@ -374,6 +389,71 @@
                  (string-match-p
                   (concat "WSLENV=.*\\(?:^\\|:\\)" name "\\(?:$\\|:\\)")
                   output))))))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-launcher-uses-persistent-user-omnivox-config ()
+  "The plain per-user path selects a release without shell configuration."
+  (let* ((directory (make-temp-file "emacsvox user config launcher-" t))
+         (server-directory (expand-file-name "servers" directory))
+         (runtime-directory
+          (expand-file-name "omnivox-bin/current" server-directory))
+         (launcher (expand-file-name "omnivox" server-directory))
+         (filter (expand-file-name "omnivox-log-filter" server-directory))
+         (configured-program (expand-file-name "installed omnivox.exe" directory))
+         (staged-program (expand-file-name "omnivox.exe" runtime-directory))
+         (config-file (expand-file-name "config/omnivox-program" directory))
+         (log-directory (expand-file-name "logs" directory))
+         (process-environment (copy-sequence process-environment)))
+    (unwind-protect
+        (progn
+          (make-directory runtime-directory t)
+          (make-directory (file-name-directory config-file) t)
+          (copy-file
+           (expand-file-name "servers/omnivox" emacsvox-launcher-tests--root)
+           launcher)
+          (copy-file
+           (expand-file-name
+            "servers/omnivox-log-filter" emacsvox-launcher-tests--root)
+           filter)
+          (with-temp-file configured-program
+            (insert "#!/bin/sh\nprintf 'user-config:%s\\n' \"$*\"\n"))
+          (with-temp-file staged-program
+            (insert "#!/bin/sh\nprintf 'staged:%s\\n' \"$*\"\n"))
+          (with-temp-file config-file
+            (insert configured-program "\n"))
+          (dolist (file (list launcher filter configured-program staged-program))
+            (set-file-modes file #o700))
+          (setenv "OMNIVOX_PROGRAM" nil)
+          (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE" config-file)
+          (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
+          (with-temp-buffer
+            (should (zerop (call-process launcher nil t nil "--configured")))
+            (should (equal (buffer-string) "user-config:--configured\n"))))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-launcher-rejects-relative-user-omnivox-config ()
+  "Persistent configuration cannot depend on the caller's directory."
+  (let* ((directory (make-temp-file "emacsvox bad user config-" t))
+         (server-directory (expand-file-name "servers" directory))
+         (launcher (expand-file-name "omnivox" server-directory))
+         (config-file (expand-file-name "omnivox-program" directory))
+         (process-environment (copy-sequence process-environment)))
+    (unwind-protect
+        (progn
+          (make-directory server-directory t)
+          (copy-file
+           (expand-file-name "servers/omnivox" emacsvox-launcher-tests--root)
+           launcher)
+          (set-file-modes launcher #o700)
+          (with-temp-file config-file (insert "relative/omnivox.exe\n"))
+          (setenv "OMNIVOX_PROGRAM" nil)
+          (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE" config-file)
+          (with-temp-buffer
+            (let ((status (call-process launcher nil '(t t))))
+              (should (and (integerp status) (not (zerop status))))
+              (should
+               (string-search "must contain an absolute path"
+                              (buffer-string))))))
       (delete-directory directory t))))
 
 (ert-deftest emacsvox-launcher-starts-portably-and-in-isolation ()

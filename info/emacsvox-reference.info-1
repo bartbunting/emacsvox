@@ -417,7 +417,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1467 commands and 191 options.
+   This chapter documents a total of 1467 commands and 192 options.
 
 * Menu:
 
@@ -860,6 +860,16 @@ the main emacsvox module.  It actually does very little:
      Default Value:
 
      nil
+
+
+ -- Variable: User Option emacsvox-speak-ready-message
+     Whether to speak ‘emacsvox-ready-message’ after Omnivox is ready.
+     The announcement occurs after capability negotiation, so it is a dependable
+     first-start checkpoint rather than an optimistic startup message.
+
+     Default Value:
+
+     t
 
 
 

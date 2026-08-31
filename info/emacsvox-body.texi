@@ -105,11 +105,15 @@ available before installation at
 @node Obtaining Emacsvox
 @section Before You Begin
 
-Install @code{git}@comma{} @code{make}@comma{} GNU Texinfo (which provides @code{makeinfo})@comma{} and
-@uref{https://www.gnu.org/software/emacs/download.html, Emacs 31 or newer}.  Installing the Omnivox 1.5.0 release archive also
-requires @code{curl} and either @code{sha256sum} on GNU/Linux and WSL2 or @code{shasum} on
-macOS@.  GNU/Linux and macOS use @code{tar}; WSL2 uses @code{unzip}.  It does not require
-a Rust or C++ build toolchain.
+Install @code{git} so you can obtain the Emacsvox checkout.  Emacsvox requires
+@uref{https://www.gnu.org/software/emacs/download.html, Emacs 31 or newer}@comma{} but WSL2 users do not need to find a separate Emacs
+package before beginning.  The guided installer below uses an existing
+supported Emacs or builds the pinned stable release for the current user.
+
+On GNU/Linux and macOS@comma{} install Emacs 31 or newer and @code{make}.  Installing the
+Omnivox 1.5.0 release archive also requires @code{curl} and either @code{sha256sum} on
+GNU/Linux or @code{shasum} on macOS@comma{} plus @code{tar}.  GNU Texinfo is needed only when
+building or editing the documentation@comma{} not for an ordinary installation.
 
 To check the Emacs found by your shell@comma{} run:
 
@@ -129,11 +133,10 @@ The Linux x86-64 archive requires an Ubuntu 24.04-compatible glibc@comma{} libst
 libgcc@comma{} and ALSA runtime.  If the archive does not match the host@comma{} the Omnivox
 source route requires Rust@comma{} Python 3@comma{} a C and C++ toolchain@comma{} CMake@comma{} and Clang
 with libclang.  It additionally requires @code{pkg-config} and ALSA development
-headers on GNU/Linux or the Xcode command-line tools on macOS@.  WSL2 has
-an easier pre-built Windows route described in
-@ref{Installing An Omnivox Windows Release Under WSL2}.  Docker and
-Windows .NET Framework are required only for the reproducible source-build
-route in @ref{Building Omnivox For WSL2}.
+headers on GNU/Linux or the Xcode command-line tools on macOS@.  These are not
+requirements for the recommended WSL2 binary route.  Docker and Windows .NET
+Framework are needed only for the advanced reproducible source-build route in
+@ref{Building Omnivox For WSL2}.
 
 Choose a permanent parent directory and clone Emacsvox:
 
@@ -146,8 +149,39 @@ The Emacsvox checkout is the installation directory.  It builds in place and
 does not create a second tree to copy elsewhere.  Clone Omnivox beside it only
 when following the Omnivox source-build or reproducible WSL2 build route.
 
+Under WSL2@comma{} first ask the guided installer to inspect the machine without
+changing it:
+
+@example
+cd /path/where/you/keep/source/emacsvox
+./bin/emacsvox-wsl-install --check
+@end example
+
+The report names the Emacs it will use@comma{} the matching Omnivox Windows archive@comma{}
+and the per-user installation paths.  If Emacs build packages are missing@comma{} it
+prints one @code{apt} command for you to review and run.  The installer never invokes
+@code{sudo} itself.  After resolving any reported prerequisite@comma{} run:
+
+@example
+./bin/emacsvox-wsl-install
+@end example
+
+It builds the pinned stable Emacs only when Emacs 31 or newer is unavailable@comma{}
+downloads and verifies the matching Omnivox 1.5.0 Windows archive@comma{} records its
+path without editing a shell startup file@comma{} compiles Emacsvox@comma{} runs a diagnostic@comma{}
+and plays the final backend check.  The Emacs build can take a while on a fresh
+machine; later runs reuse it and the verified downloads.  Routine compiler
+output is kept below @code{$XDG_CACHE_HOME/emacsvox/logs}@comma{} normally
+@code{~/.cache/emacsvox/logs}.  If a build fails@comma{} the installer shows its final log
+lines and the complete log path.  Continue only after hearing both the final
+tone and speech.  You can then skip to the last step in
+@ref{Quick Installation} and start Emacsvox.
+
 @node Building And Testing The Speech Server
 @section Install And Check Omnivox
+
+If you used the guided WSL2 installer above@comma{} Omnivox is already installed and
+checked.  Continue to @ref{Quick Installation}.
 
 On a matching GNU/Linux x86-64 or macOS host@comma{} follow
 @ref{Installing An Omnivox Release Binary}.  That procedure downloads and
@@ -163,14 +197,9 @@ incompatible Linux distribution@comma{} or a host whose security policy does not
 permit the unsigned macOS archive.  No proprietary speech runtime is needed
 for either GNU/Linux or macOS route.
 
-Under WSL2@comma{} follow
-@ref{Installing An Omnivox Windows Release Under WSL2} to install and
-select the verified Windows x64 archive.  Then run:
-
-@example
-cd /path/where/you/keep/source/emacsvox
-./servers/omnivox --check
-@end example
+For a manual WSL2 installation@comma{} or to understand exactly what the guided
+installer verifies@comma{} see
+@ref{Installing An Omnivox Windows Release Under WSL2}.
 
 The check plays a tone followed by speech.  When you hear both@comma{} the speech
 server is ready.  If either is missing@comma{} use
@@ -183,6 +212,11 @@ the WSL2 route.
 
 @node Quick Installation
 @section Build And Start Emacsvox
+
+The guided WSL2 installer has already selected Emacs@comma{} compiled Emacsvox@comma{} and
+run both checks below.  You may go directly to the final step and start the
+isolated session.  The full sequence remains useful for GNU/Linux@comma{} macOS@comma{} a
+manual WSL2 installation@comma{} or later diagnosis.
 
 @enumerate
 @item
@@ -217,10 +251,10 @@ make check-emacs
 executable and version@comma{} and confirms whether Emacsvox supports it.
 
 @item
-Configure and compile Emacsvox:
+Compile Emacsvox:
 
 @example
-make all
+make bytecode
 @end example
 
 A successful build returns to the shell without an error.  Emacsvox must be
@@ -267,17 +301,18 @@ are passed to Emacs.
 @node Confirming First Speech
 @section Confirming First Speech
 
-You will know the isolated start succeeded when it speaks an introduction
-ending with:
+You will know the isolated start succeeded when Omnivox finishes negotiating
+and Emacsvox speaks:
 
 @quotation
-I am completely operational@comma{} and all my circuits are functioning perfectly!
+Emacsvox is ready.
 
 @end quotation
 
-The preceding overview key and version number can change.  The sentence above
-is the stable first-speech checkpoint.  A startup auditory icon may also play@comma{}
-depending on the available audio support.
+An earlier introduction@comma{} overview key@comma{} version number@comma{} and startup auditory
+icon may also be heard.  Those can change; the sentence above is the stable
+first-speech checkpoint because it occurs after the speech server is ready for
+ordinary aural delivery.
 
 You now have a working Emacsvox session.  Try these checks before connecting
 it to your personal configuration:
@@ -309,20 +344,22 @@ point and find the first command below that did not work:
 
 @table @asis
 @item @code{./bin/emacsvox --diagnose} fails
-No audio or interactive Emacs has started.  Follow the reported selection:
+No audio or interactive Emacs has started.  Under WSL2@comma{} begin with
+@code{./bin/emacsvox-wsl-install --check} and resolve the first item it reports.
+Otherwise@comma{} follow the launcher selection:
 set @code{EMACS}@comma{} correct @code{EMACS=} in @code{local.mk}@comma{} or install Emacs 31
 or newer when the Emacs check fails.  When the speech backend is not
 executable@comma{} finish installing Omnivox@comma{} put it on @code{PATH}@comma{} or set
-@code{OMNIVOX_PROGRAM} to its absolute executable.  Under WSL2@comma{} confirm the
-pre-built executable selected in
-@ref{Installing An Omnivox Windows Release Under WSL2}@comma{} or verify a
-source-built staged runtime described in @ref{Building Omnivox For WSL2}.
+@code{OMNIVOX_PROGRAM} to its absolute executable.  The guided WSL2 installer
+records the verified executable in a per-user configuration file; rerunning
+it repairs a missing installation or selection without requiring a shell
+startup edit.
 @item The diagnostic passes@comma{} but @code{--check} errors or is inaudible
 The speech server needs attention before Emacs configuration is relevant.
 Follow
 @ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities} until the check produces both its tone
 and speech.
-@item The audible check passes@comma{} but the isolated startup sentence is absent
+@item The audible check passes@comma{} but ``Emacsvox is ready'' is absent
 Run @code{./bin/emacsvox --diagnose} again from the same checkout and shell.
 Remove an unintended @code{TTS_PROGRAM} override if the report does not select
 @code{omnivox}.  Then request an Emacs startup backtrace with:
@@ -335,7 +372,7 @@ An error saying @code{Could not find speech server executable} means the
 backend visible during that start cannot be executed.  Correct the reported
 backend path rather than adding more init-file configuration.  For an Omnivox
 process error@comma{} inspect the private log directory described below.
-@item The startup sentence is heard@comma{} but speech later stops
+@item The ready message is heard@comma{} but speech later stops
 If Emacs reports that an Emacsvox speech server exited@comma{} inspect the Omnivox
 session log and type @kbd{M-x tts-restart RET} after correcting the backend
 problem.  Logs are below @code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
@@ -371,7 +408,7 @@ export TTS_PROGRAM=omnivox
 Keep the explicit @code{load-file} form for a changing source checkout.  Its
 setup entry point can warn and prefer source when newer Lisp would otherwise
 be hidden by stale local byte-code.  A customized startup should speak the
-same acceptance sentence as the isolated launcher.  If it does not@comma{} remove or
+same ready message as the isolated launcher.  If it does not@comma{} remove or
 comment out the two init forms and return to the isolated launcher before
 trying another change.
 
@@ -815,7 +852,7 @@ maintained in
 @menu
 * Supported Platform Routes::    Choose the maintained route for this machine.
 * Install Omnivox From A Release Binary: Installing An Omnivox Release Binary.  Install the verified Omnivox 1.5.0 archive.
-* Install An Omnivox Windows Release Under WSL2: Installing An Omnivox Windows Release Under WSL2.  Use the verified Windows x64 archive without a build toolchain.
+* Install An Omnivox Windows Release Under WSL2: Installing An Omnivox Windows Release Under WSL2.  Use the matching verified Windows archive without a build toolchain.
 * Trying Native Windows Emacsvox:: Evaluate native Windows Emacs and Omnivox with bounded checks.
 * Installing Omnivox From Source:: Build when a release archive does not match the host.
 * Building Omnivox For WSL2::    Stage the Windows runtime from WSL2.
@@ -852,6 +889,9 @@ test.
 @item Emacs in WSL2 on x86-64 Windows
 @tab Omnivox 1.5.0 Windows x64 release archive using WinRT
 @tab The published archive is checksum-protected and release CI verifies its architecture@comma{} adjacent data@comma{} WinRT and eSpeak synthesis.  The audible host check remains required.
+@item Emacs in WSL2 on Windows on ARM
+@tab Omnivox 1.5.0 Windows ARM64 release archive using WinRT
+@tab Release CI verifies the ARM64 archive@comma{} adjacent data@comma{} WinRT and eSpeak synthesis@comma{} and the guided installer selects it automatically.  A complete WSL2 host and audible check remains required.
 @item Native Windows Emacs
 @tab Omnivox 1.5.0 Windows release using WinRT
 @tab Preview. Omnivox verifies its native Windows archive@comma{} and Emacsvox can start @code{omnivox.exe} directly@comma{} but the complete combination has not passed a fresh-machine acceptance test. Initial users should use WSL2; evaluators can follow the bounded trial below.
@@ -958,10 +998,47 @@ uses the verified Windows archive without requiring a compiler or Docker.
 @node Installing An Omnivox Windows Release Under WSL2
 @section Install An Omnivox Windows Release Under WSL2
 
-This is the recommended WSL2 route for ordinary use on x86-64 Windows.  It
-needs @code{curl}@comma{} @code{unzip}@comma{} @code{sha256sum}@comma{} working @code{powershell.exe} and @code{wslpath}
-interoperation@comma{} and the Emacsvox checkout.  It does not need the Omnivox source
-checkout@comma{} Docker@comma{} Rust@comma{} MinGW@comma{} Visual Studio@comma{} or Windows .NET Framework.
+This is the recommended WSL2 route for ordinary use on x86-64 Windows and
+Windows on ARM@.  From the Emacsvox checkout@comma{} inspect the planned installation
+without changing anything:
+
+@example
+./bin/emacsvox-wsl-install --check
+@end example
+
+The doctor detects the Windows architecture@comma{} chooses the matching Omnivox
+1.5.0 archive@comma{} and reports the Emacs and per-user paths it will use.  If Linux
+packages are missing@comma{} it prints one @code{apt} command for you to review and run.
+Working @code{powershell.exe} and @code{wslpath} interoperation are required.  After
+resolving any reported prerequisite@comma{} run:
+
+@example
+./bin/emacsvox-wsl-install
+@end example
+
+The installer downloads and checksum-verifies the appropriate Windows archive@comma{}
+installs the complete payload below the Windows user's @code{LocalAppData}@comma{} and
+records its absolute WSL path in
+@code{$XDG_CONFIG_HOME/emacsvox/omnivox-program}@comma{} normally
+@code{~/.config/emacsvox/omnivox-program}.  It does not invoke @code{sudo} or edit a shell
+startup file.  It also compiles Emacsvox@comma{} runs the non-audible launcher
+diagnostic@comma{} and finishes with the audible backend check.  The normal acceptance
+condition is hearing both its tone and speech.
+
+This binary route does not need the Omnivox source checkout@comma{} Docker@comma{} Rust@comma{}
+MinGW@comma{} Visual Studio@comma{} Windows .NET Framework@comma{} or an optional/proprietary speech
+runtime.  WinRT speech is included in Windows.  Use
+@code{./bin/emacsvox-wsl-install --no-audio-check} only for a controlled or headless
+installation where a separate audible check will be performed later.
+
+@subsection Manual Release Installation
+
+The following procedure is the manual equivalent.  Use it when reviewing the
+installer's actions@comma{} working around a local restriction@comma{} or repairing one
+layer independently.  It needs @code{curl}@comma{} @code{unzip}@comma{} @code{sha256sum}@comma{} and working
+@code{powershell.exe} and @code{wslpath} interoperation.  The commands show Windows x64;
+on Windows on ARM@comma{} use @code{windows-arm64} in both the archive and versioned install
+directory and verify that archive's published checksum.
 
 Download the Windows x64 archive and the release checksum file in WSL:
 
@@ -983,19 +1060,23 @@ versioned directory on the Windows filesystem:
 @example
 windows_local_app_data="$(powershell.exe -NoProfile -NonInteractive \
   -Command '[Environment]::GetFolderPath("LocalApplicationData")' | tr -d '\r')"
-install_dir="$(wslpath -u "$windows_local_app_data")/Emacsvox/Omnivox/releases/$omnivox_version"
+install_dir="$(wslpath -u "$windows_local_app_data")/Emacsvox/Omnivox/releases/$omnivox_version-windows-x64"
 mkdir -p "$install_dir"
 unzip -q -o "$archive" -d "$install_dir"
 chmod 755 "$install_dir/omnivox.exe"
-export OMNIVOX_PROGRAM="$install_dir/omnivox.exe"
+config_home=$@{XDG_CONFIG_HOME:-"$HOME/.config"@}
+mkdir -p "$config_home/emacsvox"
+printf '%s\n' "$install_dir/omnivox.exe" > \
+  "$config_home/emacsvox/omnivox-program"
 @end example
 
 Keep @code{omnivox.exe}@comma{} @code{espeak-ng-data}@comma{} and @code{third-party-licenses} together in
 that directory.  Do not copy or load the archive's @code{omnivox-voices.el};
-Emacsvox uses its bundled adapter.  Add the @code{OMNIVOX_PROGRAM} assignment@comma{} with
-the resulting absolute WSL path@comma{} to the shell startup file used to launch
-Emacs.  An explicit @code{OMNIVOX_PROGRAM} takes precedence over an older
-source-built runtime beneath @code{servers/omnivox-bin}.
+Emacsvox uses its bundled adapter.  The data-only configuration file makes the
+selection persistent without changing shell initialization.  Use
+@code{$XDG_CONFIG_HOME} instead of @code{~/.config} when it is set.  An explicit
+@code{OMNIVOX_PROGRAM} remains a temporary override and takes precedence over this
+file.
 
 From the Emacsvox checkout@comma{} verify the selected release and listen to its
 physical audio check:
@@ -1367,8 +1448,10 @@ omnivox --check
 omnivox --list-voices
 @end example
 
-Under WSL2@comma{} test the Emacsvox launcher.  It selects an explicit pre-built
-@code{OMNIVOX_PROGRAM} first@comma{} otherwise the content-addressed source-built runtime:
+Under WSL2@comma{} test the Emacsvox launcher.  It selects an explicit
+@code{OMNIVOX_PROGRAM} first@comma{} then the per-user installation recorded by the guided
+installer@comma{} then a content-addressed source-built runtime@comma{} and finally an
+@code{omnivox} command on @code{PATH}:
 
 @example
 ./servers/omnivox --check
@@ -1387,10 +1470,12 @@ export TTS_PROGRAM=omnivox
 
 Make that setting visible in the shell used to launch Emacs.  An
 @code{export} affects only that shell and its children; placing it in a
-shell startup file makes the choice persistent for later sessions.  On POSIX
-systems@comma{} Emacsvox's @code{servers/omnivox} launcher finds an installed
-@code{omnivox} on @code{PATH}; @code{OMNIVOX_PROGRAM} can instead name its
-absolute executable and takes precedence over a source-built staged runtime.
+shell startup file makes the server choice persistent for later sessions.  On
+POSIX systems@comma{} Emacsvox's @code{servers/omnivox} launcher also finds an installed
+@code{omnivox} on @code{PATH}.  @code{OMNIVOX_PROGRAM} can name an absolute executable as an
+explicit override.  Under WSL2@comma{} the guided installer's data-only configuration
+file is persistent across launching shells and takes precedence over a
+source-built staged runtime.
 Native Windows Emacs resolves @code{omnivox.exe} directly through @code{exec-path}@comma{} or
 uses the absolute executable named by @code{TTS_PROGRAM}.  That route remains
 preview.  For its bounded evaluation procedure@comma{} see
@@ -1447,8 +1532,9 @@ Use the boundary at which speech failed to choose the next diagnostic:
 
 @table @asis
 @item @code{omnivox} is not found
-Check @code{PATH}; on POSIX@comma{} an absolute @code{OMNIVOX_PROGRAM} can identify the
-installed executable.  Keep its adjacent @code{espeak-ng-data} and
+Under WSL2@comma{} run @code{./bin/emacsvox-wsl-install --check} and confirm its persistent
+path.  On other POSIX systems@comma{} check @code{PATH}; an absolute @code{OMNIVOX_PROGRAM} can
+identify the installed executable.  Keep its adjacent @code{espeak-ng-data} and
 @code{third-party-licenses} directories with it.
 @item @code{omnivox --check} reports an error or is inaudible
 The failure is below Emacsvox.  Consult Omnivox's
@@ -1459,9 +1545,10 @@ and
 speech check passes.
 @item The check passes but Emacsvox is silent
 Confirm that @code{TTS_PROGRAM=omnivox} was present before Emacsvox loaded@comma{} then
-use @code{M-x tts-speak-version}.  Under WSL2@comma{} also run
-@code{make verify-windows-omnivox-runtime} and restart the speech process
-after restaging.
+use @code{M-x tts-speak-version}.  Under WSL2 with a release binary@comma{} rerun
+@code{./bin/emacsvox-wsl-install --check}.  For a source-built development
+runtime@comma{} run @code{make verify-windows-omnivox-runtime} and restart the speech
+process after restaging.
 @item A process starts and later fails
 The Emacsvox POSIX/WSL launcher writes private@comma{} bounded stderr logs below
 @code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
@@ -4430,6 +4517,23 @@ semantic behavior at the public event layer when Agent Shell exposes it; keep
 renderer and private fallbacks isolated and covered by compatibility tests.
 
 @subsection WSL2 Omnivox development staging
+
+The ordinary WSL2 user route is implemented by
+@code{bin/emacsvox-wsl-install} and pinned by @code{etc/wsl-install.conf}.  Treat either
+file as release tooling.  When advancing GNU Emacs or Omnivox@comma{} update the
+version@comma{} archive name@comma{} URL@comma{} and SHA-256 together; exercise x64 and ARM64
+selection in the isolated installer tests; and perform one real installation
+of the newly pinned archive before updating the user manual.  The installer
+must remain per-user@comma{} must not invoke @code{sudo} or edit shell startup files@comma{} and
+must preserve an explicit @code{EMACS} or @code{local.mk} selection rather than silently
+replacing it.
+
+The installed Omnivox executable is recorded as an absolute WSL path in the
+data-only @code{$XDG_CONFIG_HOME/emacsvox/omnivox-program} file.  Launcher selection
+is explicit @code{OMNIVOX_PROGRAM}@comma{} that per-user file@comma{} developer staging@comma{} then
+@code{PATH}.  Keep the selection tests synchronized with this order.  A configured
+but invalid path is a visible configuration error; silently falling through
+would hide a stale or damaged user installation.
 
 This section describes the reproducible source-build path@comma{} not the ordinary
 pre-built WSL2 installation.  The complete source-build prerequisite checklist

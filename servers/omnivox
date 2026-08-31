@@ -12,9 +12,35 @@ set -eu
 server_directory=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 program="$server_directory/omnivox-bin/current/omnivox.exe"
 windows_runtime=false
+omnivox_config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
+omnivox_config_file=${EMACSVOX_OMNIVOX_CONFIG_FILE:-"$omnivox_config_home/emacsvox/omnivox-program"}
 
 if [ -n "${OMNIVOX_PROGRAM-}" ]; then
     resolved_program=$OMNIVOX_PROGRAM
+    if [ ! -x "$resolved_program" ]; then
+        echo "Configured Omnivox executable is not runnable: $resolved_program" >&2
+        exit 127
+    fi
+    case $resolved_program in
+        *.[eE][xX][eE]) windows_runtime=true ;;
+    esac
+elif [ -e "$omnivox_config_file" ]; then
+    if [ ! -r "$omnivox_config_file" ]; then
+        echo "Omnivox configuration is not readable: $omnivox_config_file" >&2
+        exit 127
+    fi
+    resolved_program=$(sed -n '1p' "$omnivox_config_file")
+    case $resolved_program in
+        /*) ;;
+        '')
+            echo "Omnivox configuration is empty: $omnivox_config_file" >&2
+            exit 127
+            ;;
+        *)
+            echo "Omnivox configuration must contain an absolute path: $omnivox_config_file" >&2
+            exit 127
+            ;;
+    esac
     if [ ! -x "$resolved_program" ]; then
         echo "Configured Omnivox executable is not runnable: $resolved_program" >&2
         exit 127

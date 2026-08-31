@@ -24,11 +24,15 @@ available before installation at
 :DESCRIPTION: Prepare the required tools and Emacsvox checkout.
 :END:
 
-Install ~git~, ~make~, GNU Texinfo (which provides ~makeinfo~), and
-[[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].  Installing the Omnivox 1.5.0 release archive also
-requires ~curl~ and either ~sha256sum~ on GNU/Linux and WSL2 or ~shasum~ on
-macOS.  GNU/Linux and macOS use ~tar~; WSL2 uses ~unzip~.  It does not require
-a Rust or C++ build toolchain.
+Install ~git~ so you can obtain the Emacsvox checkout.  Emacsvox requires
+[[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]], but WSL2 users do not need to find a separate Emacs
+package before beginning.  The guided installer below uses an existing
+supported Emacs or builds the pinned stable release for the current user.
+
+On GNU/Linux and macOS, install Emacs 31 or newer and ~make~.  Installing the
+Omnivox 1.5.0 release archive also requires ~curl~ and either ~sha256sum~ on
+GNU/Linux or ~shasum~ on macOS, plus ~tar~.  GNU Texinfo is needed only when
+building or editing the documentation, not for an ordinary installation.
 
 To check the Emacs found by your shell, run:
 
@@ -48,11 +52,10 @@ The Linux x86-64 archive requires an Ubuntu 24.04-compatible glibc, libstdc++,
 libgcc, and ALSA runtime.  If the archive does not match the host, the Omnivox
 source route requires Rust, Python 3, a C and C++ toolchain, CMake, and Clang
 with libclang.  It additionally requires ~pkg-config~ and ALSA development
-headers on GNU/Linux or the Xcode command-line tools on macOS.  WSL2 has
-an easier pre-built Windows route described in
-@@texinfo:@ref{Installing An Omnivox Windows Release Under WSL2}@@.  Docker and
-Windows .NET Framework are required only for the reproducible source-build
-route in @@texinfo:@ref{Building Omnivox For WSL2}@@.
+headers on GNU/Linux or the Xcode command-line tools on macOS.  These are not
+requirements for the recommended WSL2 binary route.  Docker and Windows .NET
+Framework are needed only for the advanced reproducible source-build route in
+@@texinfo:@ref{Building Omnivox For WSL2}@@.
 
 Choose a permanent parent directory and clone Emacsvox:
 
@@ -65,11 +68,42 @@ The Emacsvox checkout is the installation directory.  It builds in place and
 does not create a second tree to copy elsewhere.  Clone Omnivox beside it only
 when following the Omnivox source-build or reproducible WSL2 build route.
 
+Under WSL2, first ask the guided installer to inspect the machine without
+changing it:
+
+#+begin_example
+cd /path/where/you/keep/source/emacsvox
+./bin/emacsvox-wsl-install --check
+#+end_example
+
+The report names the Emacs it will use, the matching Omnivox Windows archive,
+and the per-user installation paths.  If Emacs build packages are missing, it
+prints one ~apt~ command for you to review and run.  The installer never invokes
+~sudo~ itself.  After resolving any reported prerequisite, run:
+
+#+begin_example
+./bin/emacsvox-wsl-install
+#+end_example
+
+It builds the pinned stable Emacs only when Emacs 31 or newer is unavailable,
+downloads and verifies the matching Omnivox 1.5.0 Windows archive, records its
+path without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
+and plays the final backend check.  The Emacs build can take a while on a fresh
+machine; later runs reuse it and the verified downloads.  Routine compiler
+output is kept below ~$XDG_CACHE_HOME/emacsvox/logs~, normally
+~~/.cache/emacsvox/logs~.  If a build fails, the installer shows its final log
+lines and the complete log path.  Continue only after hearing both the final
+tone and speech.  You can then skip to the last step in
+@@texinfo:@ref{Quick Installation}@@ and start Emacsvox.
+
 ** Install And Check Omnivox
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Building And Testing The Speech Server
 :DESCRIPTION: Install the recommended server and hear its check.
 :END:
+
+If you used the guided WSL2 installer above, Omnivox is already installed and
+checked.  Continue to @@texinfo:@ref{Quick Installation}@@.
 
 On a matching GNU/Linux x86-64 or macOS host, follow
 @@texinfo:@ref{Installing An Omnivox Release Binary}@@.  That procedure downloads and
@@ -85,14 +119,9 @@ incompatible Linux distribution, or a host whose security policy does not
 permit the unsigned macOS archive.  No proprietary speech runtime is needed
 for either GNU/Linux or macOS route.
 
-Under WSL2, follow
-@@texinfo:@ref{Installing An Omnivox Windows Release Under WSL2}@@ to install and
-select the verified Windows x64 archive.  Then run:
-
-#+begin_example
-cd /path/where/you/keep/source/emacsvox
-./servers/omnivox --check
-#+end_example
+For a manual WSL2 installation, or to understand exactly what the guided
+installer verifies, see
+@@texinfo:@ref{Installing An Omnivox Windows Release Under WSL2}@@.
 
 The check plays a tone followed by speech.  When you hear both, the speech
 server is ready.  If either is missing, use
@@ -109,6 +138,11 @@ the WSL2 route.
 :ALT_TITLE: Quick Installation
 :DESCRIPTION: Build Emacsvox and reach an isolated speaking session.
 :END:
+
+The guided WSL2 installer has already selected Emacs, compiled Emacsvox, and
+run both checks below.  You may go directly to the final step and start the
+isolated session.  The full sequence remains useful for GNU/Linux, macOS, a
+manual WSL2 installation, or later diagnosis.
 
 1. Enter the Emacsvox checkout:
 
@@ -139,10 +173,10 @@ the WSL2 route.
    ~make check-emacs~ uses ~local.mk~ when present, prints the selected
    executable and version, and confirms whether Emacsvox supports it.
 
-1. Configure and compile Emacsvox:
+1. Compile Emacsvox:
 
    #+begin_example
-   make all
+   make bytecode
    #+end_example
 
    A successful build returns to the shell without an error.  Emacsvox must be
@@ -188,16 +222,17 @@ are passed to Emacs.
 :DESCRIPTION: Verify the live adapter and basic feedback.
 :END:
 
-You will know the isolated start succeeded when it speaks an introduction
-ending with:
+You will know the isolated start succeeded when Omnivox finishes negotiating
+and Emacsvox speaks:
 
 #+begin_quote
-I am completely operational, and all my circuits are functioning perfectly!
+Emacsvox is ready.
 #+end_quote
 
-The preceding overview key and version number can change.  The sentence above
-is the stable first-speech checkpoint.  A startup auditory icon may also play,
-depending on the available audio support.
+An earlier introduction, overview key, version number, and startup auditory
+icon may also be heard.  Those can change; the sentence above is the stable
+first-speech checkpoint because it occurs after the speech server is ready for
+ordinary aural delivery.
 
 You now have a working Emacsvox session.  Try these checks before connecting
 it to your personal configuration:
@@ -228,21 +263,23 @@ point and find the first command below that did not work:
 #+attr_texinfo: :indic asis :compact t
 - ~./bin/emacsvox --diagnose~ fails ::
 
-  No audio or interactive Emacs has started.  Follow the reported selection:
+  No audio or interactive Emacs has started.  Under WSL2, begin with
+  ~./bin/emacsvox-wsl-install --check~ and resolve the first item it reports.
+  Otherwise, follow the launcher selection:
   set ~EMACS~, correct ~EMACS=~ in ~local.mk~, or install Emacs 31
   or newer when the Emacs check fails.  When the speech backend is not
   executable, finish installing Omnivox, put it on ~PATH~, or set
-  ~OMNIVOX_PROGRAM~ to its absolute executable.  Under WSL2, confirm the
-  pre-built executable selected in
-  @@texinfo:@ref{Installing An Omnivox Windows Release Under WSL2}@@, or verify a
-  source-built staged runtime described in @@texinfo:@ref{Building Omnivox For WSL2}@@.
+  ~OMNIVOX_PROGRAM~ to its absolute executable.  The guided WSL2 installer
+  records the verified executable in a per-user configuration file; rerunning
+  it repairs a missing installation or selection without requiring a shell
+  startup edit.
 - The diagnostic passes, but ~--check~ errors or is inaudible ::
 
   The speech server needs attention before Emacs configuration is relevant.
   Follow
   @@texinfo:@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}@@ until the check produces both its tone
   and speech.
-- The audible check passes, but the isolated startup sentence is absent ::
+- The audible check passes, but ``Emacsvox is ready'' is absent ::
 
   Run ~./bin/emacsvox --diagnose~ again from the same checkout and shell.
   Remove an unintended ~TTS_PROGRAM~ override if the report does not select
@@ -256,7 +293,7 @@ point and find the first command below that did not work:
   backend visible during that start cannot be executed.  Correct the reported
   backend path rather than adding more init-file configuration.  For an Omnivox
   process error, inspect the private log directory described below.
-- The startup sentence is heard, but speech later stops ::
+- The ready message is heard, but speech later stops ::
 
   If Emacs reports that an Emacsvox speech server exited, inspect the Omnivox
   session log and type @@texinfo:@kbd{M-x tts-restart RET}@@ after correcting the backend
@@ -296,6 +333,6 @@ export TTS_PROGRAM=omnivox
 Keep the explicit ~load-file~ form for a changing source checkout.  Its
 setup entry point can warn and prefer source when newer Lisp would otherwise
 be hidden by stale local byte-code.  A customized startup should speak the
-same acceptance sentence as the isolated launcher.  If it does not, remove or
+same ready message as the isolated launcher.  If it does not, remove or
 comment out the two init forms and return to the isolated launcher before
 trying another change.

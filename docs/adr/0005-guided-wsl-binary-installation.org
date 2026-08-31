@@ -1,0 +1,148 @@
+#+title: ADR 0005: Guided WSL Binary Installation
+#+date: 2026-09-01
+#+startup: content
+
+* Status
+
+Accepted.
+
+* Context
+
+The recommended WSL2 arrangement runs Emacsvox and Emacs in WSL while a native
+Windows Omnivox process performs synthesis and playback.  Published Omnivox
+archives make that route substantially smaller than the reproducible
+source-build workflow, but the documented procedure still required users to
+locate or build a supported Emacs, download and verify the correct Windows
+archive, translate Windows paths, edit a shell startup file, compile Emacsvox,
+and test several layers independently.
+
+That exposed release-engineering detail before first speech and created several
+persistent configuration states.  In particular, an =OMNIVOX_PROGRAM= export
+could be present in one launching shell but absent in another.  A successful
+process start also did not provide a short, stable spoken checkpoint tied to
+the completion of Omnivox capability negotiation.
+
+Emacsvox and Omnivox remain separate projects with independent releases.
+Emacsvox nevertheless owns the complete user journey because its launcher must
+connect the WSL Emacs process to the native Windows server.
+
+* Decision
+
+** Provide one guided WSL2 entry point
+
+=bin/emacsvox-wsl-install= is the recommended installation entry point after a
+user clones Emacsvox under WSL2.  It has two modes:
+
+- =--check= is a non-mutating doctor.  It reports the selected Emacs, missing
+  prerequisites, Windows architecture, Omnivox release, installation
+  directory, and persistent configuration path.
+- The default mode installs and verifies the supported route.  It compiles
+  Emacsvox, performs the launcher diagnostic, and finishes with an audible
+  backend check.  =--no-audio-check= is available for controlled or headless
+  environments, but audible confirmation remains the normal acceptance test.
+
+The installer makes only per-user changes.  It never invokes =sudo= and never
+edits a shell startup file.  When distribution packages are missing, it prints
+one explicit package-manager command for the user to review and run.
+
+** Pin installation inputs in Emacsvox
+
+=etc/wsl-install.conf= records the installer schema, supported GNU Emacs source
+release, Omnivox release archives, download locations, and SHA-256 hashes.  The
+installer verifies every downloaded archive before extracting or running it.
+Changes to this manifest are release-tooling changes and must receive the same
+review and testing as changes to the installer.
+
+An already selected Emacs 31 or newer is preserved.  If no supported Emacs is
+available, the installer builds the pinned stable GNU Emacs source into a
+versioned directory below =~/.local/opt= and records its executable in the
+checkout's ignored =local.mk=.  It does not replace a system Emacs or override
+an explicit unsupported =EMACS= or =local.mk= selection without the user's
+action.
+
+The matching Omnivox Windows archive is chosen from the actual Windows
+architecture and installed intact in a versioned directory below the Windows
+user's =LocalAppData=.  The ordinary binary route does not require an Omnivox
+source checkout, Docker, Rust, MinGW, Visual Studio, .NET Framework, Piper, or
+proprietary speech runtimes.
+
+** Persist only the executable path
+
+The installer atomically writes the absolute WSL path of =omnivox.exe= to
+=$XDG_CONFIG_HOME/emacsvox/omnivox-program=, defaulting to
+=~/.config/emacsvox/omnivox-program=.  This small data file is independent of
+shell initialization and contains no executable configuration syntax.
+
+The POSIX/WSL Omnivox launcher resolves the native executable in this order:
+
+1. the explicit =OMNIVOX_PROGRAM= environment override;
+2. the per-user Emacsvox configuration file;
+3. Emacsvox's content-addressed developer staging runtime; and
+4. an =omnivox= executable on =PATH=.
+
+An explicit override therefore remains available for testing, while an
+ordinary installed release consistently outranks a possibly stale development
+runtime.  A missing, unreadable, empty, relative, or non-executable configured
+path is reported as a configuration error instead of silently selecting a
+different server.
+
+** Announce negotiated readiness
+
+Omnivox exposes =omnivox-ready-hook= after successful capability negotiation
+for the main speech process.  Emacsvox uses it to speak the stable checkpoint
+``Emacsvox is ready.'' outside the process filter.  The announcement is tied to
+a server that can accept ordinary aural delivery, not merely to Lisp startup.
+Users may disable it with =emacsvox-speak-ready-message=.
+
+* Consequences
+
+- The ordinary WSL2 path becomes doctor, installer, and launcher rather than a
+  sequence of manual downloads and persistent shell edits.
+- A fresh WSL distribution may still require one reviewed =apt= invocation and
+  a source build of GNU Emacs because distribution Emacs packages can lag the
+  required version.
+- Emacs and Omnivox downloads are reproducible and cacheable, but their hashes
+  must be deliberately updated for each supported release.
+- The per-user configuration file becomes part of launcher diagnostics and
+  must be considered when testing server selection.
+- The manual archive-install procedure and reproducible source-build workflow
+  remain documented as advanced alternatives and recovery paths.
+- Native Windows Emacs remains a separate preview route; this decision covers
+  Emacs running inside WSL2.
+
+* Alternatives considered
+
+** Continue the manual binary procedure
+
+Rejected as the primary route.  It is auditable but asks first-time users to
+perform architecture selection, checksum verification, Windows path
+translation, persistent shell configuration, and separate build checks by
+hand.  It remains useful as an advanced fallback.
+
+** Build Omnivox from source for every WSL user
+
+Rejected.  The source-build route is valuable for maintainers and optional
+engine helpers, but Docker, cross-compilation, and additional toolchains do not
+improve the normal WinRT installation when verified release binaries exist.
+
+** Copy Omnivox into the Emacsvox checkout
+
+Rejected.  The projects release independently, Windows executables and runtime
+data belong on the Windows filesystem, and generated binaries must not become
+source-tree state or release contents.
+
+** Edit the user's shell startup file automatically
+
+Rejected.  Shell choice and initialization order vary, automatic edits are
+intrusive, and a data-only XDG configuration file provides a smaller and more
+predictable contract.
+
+* Follow-up
+
+1. Exercise both x64 and ARM64 selection in isolated automated tests.
+2. Run the installer against every newly pinned Omnivox release before updating
+   the public manual.
+3. Keep the user guide focused on the guided route and maintain the manual
+   archive and source-build instructions as advanced material.
+4. Reconsider distribution packages only if they can preserve the same pinned,
+   per-user, cross-WSL/Windows behavior with less user effort.

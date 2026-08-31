@@ -45,6 +45,8 @@
            "OMNIVOX_PIPER_MODEL"
            "C-e d e"
            "omnivox --check"
+           "./bin/emacsvox-wsl-install --check"
+           "$XDG_CONFIG_HOME/emacsvox/omnivox-program"
            "export TTS_PROGRAM=omnivox"
            "Direct GNU/Linux Tcl server"
            "legacy Python/PyObjC macOS server"
@@ -124,7 +126,9 @@
     (dolist
         (required
          '("make check-emacs"
-           "make all"
+           "make bytecode"
+           "./bin/emacsvox-wsl-install --check"
+           "./bin/emacsvox-wsl-install"
            "./bin/emacsvox --diagnose"
            "./bin/emacsvox --check"
            "M-x tts-speak-version RET"
@@ -160,7 +164,7 @@
      (string-match-p
       (regexp-quote "@ref{Top,Emacspeak Heritage,,emacsvox-heritage")
       menu))
-    (should (< installation backends basic reference heritage))))
+    (should (< installation basic backends reference heritage))))
 
 (ert-deftest emacsvox-first-use-manual-owns-success-and-recovery ()
   "The canonical manual should define first-speech acceptance and rollback."
@@ -172,12 +176,13 @@
            "@node Confirming First Speech"
            "@node Recovering From No Speech"
            "@node Persistent Startup"
-           "without playing audio@comma{} creating\nan Omnivox session log"
-           "A zero exit status without both audible signals is not success."
+           "without playing audio or\nopening interactive Emacs"
+           "Do not continue merely because the command exited zero"
+           "Emacsvox is ready."
            "Could not find speech server executable"
            "M-x tts-restart RET"
            "This is the rollback"
-           "build\noutputs are not distributed"))
+           "records the verified executable in a per-user configuration file"))
       (should (string-match-p (regexp-quote required) guide)))
     (let ((selection
            (string-search "(setenv \"TTS_PROGRAM\" \"omnivox\")" guide))
@@ -190,9 +195,9 @@
       (should (< selection setup)))))
 
 (ert-deftest emacsvox-first-use-docs-match-the-live-startup-checkpoint ()
-  "The documented acceptance sentence should match the startup source."
+  "The documented readiness checkpoint should match the startup source."
   (let ((checkpoint
-         "I am completely operational, and all my circuits are functioning perfectly!")
+         "Emacsvox is ready.")
         (readme
          (emacsvox-backend-doc-tests--file-string "Readme.org"))
         (guide

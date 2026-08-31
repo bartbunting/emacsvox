@@ -258,6 +258,10 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 (defvar omnivox-voice-configuration-applied-hook nil
   "Hook run with a terminal complete-configuration apply result.")
 
+(defvar omnivox-ready-hook nil
+  "Hook run with the main Omnivox process after capability negotiation.
+The process is ready for ordinary aural delivery when this hook runs.")
+
 (defcustom omnivox-voice-configuration-timeout 5
   "Seconds allowed for a complete multi-process configuration apply."
   :group 'omnivox
@@ -1442,7 +1446,9 @@ logical registry is replaced, so partial failure is explicit and retryable."
                 process omnivox--control-negotiation-timer-property)))
     (cancel-timer timer))
   (process-put process omnivox--control-negotiation-timer-property nil)
-  (emacsvox-aural-set-delivery-readiness process readiness))
+  (emacsvox-aural-set-delivery-readiness process readiness)
+  (when (and (eq readiness 'ready) (eq process tts-speaker-process))
+    (run-hook-with-args 'omnivox-ready-hook process)))
 
 (defun omnivox--capability-negotiation-timeout (process)
   "Fail pending capability negotiation for live Omnivox PROCESS."

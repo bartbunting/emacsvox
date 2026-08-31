@@ -22,58 +22,56 @@ browser-readable HTML generated from a
 committed =master= revision and committed separately on =gh-pages=; the
 checked-in Info files provide the same manual inside Emacs.
 
-1. Install Git, Make, GNU Texinfo (which provides =makeinfo=), and
-   [[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].
-   Install the platform prerequisites from the
-   [[https://bartbunting.github.io/emacsvox/Speech-Backends.html][Speech Backends guide]]
-   ([[file:docs/manual/chapters/speech-backends.org][source]]) before building Omnivox.
-
-2. Clone Emacsvox into the permanent directory where you intend to use it.
+1. Clone Emacsvox into the permanent directory where you intend to use it.
    The checkout itself is the installation; there is no later copy step.
    #+BEGIN_SRC sh
    git clone https://github.com/bartbunting/emacsvox
    cd emacsvox
    #+END_SRC
 
-3. If Emacs 31 is not the system =emacs=, copy =local.mk.example= to the
-   ignored =local.mk= and set its =EMACS= value.  Then build with that Emacs:
+2. Under WSL2, inspect the short binary installation path and then run it:
+   #+BEGIN_SRC sh
+   ./bin/emacsvox-wsl-install --check
+   ./bin/emacsvox-wsl-install
+   #+END_SRC
+   The doctor changes nothing.  If build packages are missing, it prints one
+   =apt= command for you to review and run; then repeat the installer.  The
+   installer uses an existing Emacs 31 or newer when available.  Otherwise it
+   builds the pinned stable Emacs for your user, downloads and verifies the
+   matching Omnivox Windows release, records both paths without editing a shell
+   startup file, compiles Emacsvox, and finishes with an audible check.
+
+   On GNU/Linux or macOS, install Emacs 31 or newer and follow the
+   [[https://bartbunting.github.io/emacsvox/Speech-Backends.html][Speech Backends guide]]
+   ([[file:docs/manual/chapters/speech-backends.org][source]]) for the matching Omnivox
+   release.  If Emacs 31 is not the system =emacs=, set =EMACS= in the ignored
+   =local.mk=.  Then run:
    #+BEGIN_SRC sh
    make check-emacs
-   make all
-   #+END_SRC
-
-4. Install Omnivox, the recommended speech server, by following the Speech
-   Backends guide for GNU/Linux, macOS, or WSL2.  Then run the silent launcher
-   preflight:
-   #+BEGIN_SRC sh
+   make bytecode
    ./bin/emacsvox --diagnose
-   #+END_SRC
-   It should report Emacs 31 or newer, the =omnivox= backend, and an isolated
-   startup.  It neither plays audio nor opens Emacs.
-
-5. Run the deliberately audible backend check:
-   #+BEGIN_SRC sh
    ./bin/emacsvox --check
    #+END_SRC
-   Continue only after hearing both the test tone and speech.
+   The diagnostic neither plays audio nor opens Emacs.  Continue only after
+   the final command produces both its test tone and speech.
 
-6. Start the isolated first session:
+3. Start the isolated first session:
    #+BEGIN_SRC sh
    ./bin/emacsvox
    #+END_SRC
-   Success includes the spoken sentence, ``I am completely operational, and
-   all my circuits are functioning perfectly!''  An auditory icon is optional
-   and is not part of this acceptance check.  Type =M-x tts-speak-version RET=
-   to hear the live adapter version.  Type =C-h v tts-program RET=; its current
-   value should name =omnivox=.
+   Once Omnivox negotiation completes, success includes the stable spoken
+   checkpoint, ``Emacsvox is ready.''  An earlier introduction and an auditory
+   icon may also be heard, but neither is the acceptance checkpoint.  Type
+   =M-x tts-speak-version RET= to hear the live adapter version.  Type
+   =C-h v tts-program RET=; its current value should name =omnivox=.
 
-7. Only after that clean session works, add the following to the user's Emacs
+4. Only after that clean session works, add the following to the user's Emacs
    init file, replacing the example path with this checkout's absolute path:
    #+BEGIN_SRC elisp
    (setenv "TTS_PROGRAM" "omnivox")
    (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
    #+END_SRC
-   A normal customized start should speak the same startup sentence.  Use
+   A normal customized start should speak the same ready message.  Use
    =C-n= and =C-p= to try spoken line movement, and type
    =M-x emacsvox-describe-emacsvox RET= for an overview.
 
