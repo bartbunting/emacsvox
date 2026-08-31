@@ -42,6 +42,8 @@
            "make build"
            "make install"
            "make windows-omnivox"
+           "OMNIVOX_PIPER_MODEL"
+           "C-e d e"
            "omnivox --check"
            "export TTS_PROGRAM=omnivox"
            "Direct GNU/Linux Tcl server"

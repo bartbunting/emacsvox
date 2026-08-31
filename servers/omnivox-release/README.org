@@ -17,6 +17,10 @@ the official Roslyn Framework compiler and .NET 4.0 reference-assembly NuGet
 packages by version and SHA-256.  They are downloaded into the ignored
 =cache/= directory and run through the .NET Framework already present on
 Windows; they are neither installed system-wide nor staged with Omnivox.
+The same lock pins the official Omnivox 1.5.0 Windows Piper companion by
+release URL, archive SHA-256, and source commit.  The preparation target
+rejects an Omnivox checkout at another commit before combining the helper with
+the Piper-enabled Windows-GNU executable.
 The Windows Rust link disables GNU ld's otherwise variable PE timestamp.
 The staged executable is stripped with the pinned MinGW =strip= because GNU
 ld emits the remaining COFF symbols in a variable order.  The exact
@@ -45,19 +49,31 @@ Licensed runtime binaries are never committed to Emacsvox or Omnivox.
   extracted DLL and dictionary hashes are recorded in the staged bundle.
 - The open helper executables are rebuilt from the committed C# sources with
   the pinned compiler.  They are not treated as opaque runtime inputs.
+- Piper's open native companion is a checksum-pinned official Omnivox release
+  input.  Its source provenance, internal checksums, helper, DLLs, private
+  eSpeak data, and complete staged tree are verified.  Voice models remain
+  external user-supplied inputs and are not added to the runtime manifest.
 
 * Staging and verification
 
 =make windows-omnivox= refuses tracked source changes, performs locked builds,
 validates and recreates only its literal dedicated generated Cargo target,
-creates a content-addressed version, and writes =PROVENANCE= and =SHA256SUMS=
-beside the payload.  Symlinked or unexpected clean targets are rejected.  The
-dependency download cache is retained.  The provenance file contains source
-revisions, toolchain and lock identities, artifact hashes, and the
-licensed-runtime policy, but no machine-local paths.  It records the
+creates a content-addressed version containing the matching Piper companion,
+and writes =PROVENANCE= and =SHA256SUMS= beside the payload.  Symlinked or
+unexpected clean targets are rejected.  The dependency download cache is
+retained.  The provenance file contains source revisions, toolchain and lock
+identities, artifact hashes, and the licensed-runtime policy, but no
+machine-local paths.  It records the
 deterministic stripped executable hash; the deliberately non-reproducible
 unstripped hash is kept only in its local diagnostics manifest so it cannot
 perturb the staged build identity.
+
+Set =OMNIVOX_PIPER_MODEL= to an absolute =.onnx= path when staging a locally
+reviewed voice.  Its adjacent configuration is required.  The target copies
+both into a separate content-addressed Windows =LocalAppData= cache, records
+their hashes, and writes a launcher path pointer.  It does not include either
+file in the runtime payload.  Omitting the setting stages Piper support without
+registering a Piper engine.
 
 For local testing from active changes, use =make windows-omnivox-dev=.  It uses
 the same pinned build and staging path without requiring either worktree to be

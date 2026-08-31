@@ -25,7 +25,7 @@ available before installation at
 :END:
 
 Install ~git~, ~make~, GNU Texinfo (which provides ~makeinfo~), and
-[[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].  Installing the Omnivox 1.4.1 release archive also
+[[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]].  Installing the Omnivox 1.5.0 release archive also
 requires ~curl~ and either ~sha256sum~ on GNU/Linux and WSL2 or ~shasum~ on
 macOS.  GNU/Linux and macOS use ~tar~; WSL2 uses ~unzip~.  It does not require
 a Rust or C++ build toolchain.
@@ -73,7 +73,7 @@ when following the Omnivox source-build or reproducible WSL2 build route.
 
 On a matching GNU/Linux x86-64 or macOS host, follow
 @@texinfo:@ref{Installing An Omnivox Release Binary}@@.  That procedure downloads and
-verifies the published 1.4.1 archive, keeps its runtime data beside the
+verifies the published 1.5.0 archive, keeps its runtime data beside the
 executable, and adds its versioned installation directory to ~PATH~.  Then run:
 
 #+begin_example
