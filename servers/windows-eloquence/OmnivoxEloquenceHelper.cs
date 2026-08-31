@@ -6,9 +6,26 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
 {
+    private sealed class SynthesisJob
+    {
+        internal string Text;
+        internal string VoiceId;
+        internal int Rate;
+        internal int Pitch;
+        internal string VoiceParameters;
+        internal int Volume;
+        internal OmnivoxHelperAnchor[] Anchors;
+        internal volatile bool Cancelled;
+        internal OmnivoxCaptureResult Result;
+        internal Exception Error;
+        internal readonly ManualResetEvent Completed =
+            new ManualResetEvent(false);
+    }
+
     private static readonly OmnivoxHelperVoice[] EngineVoices =
         new OmnivoxHelperVoice[]
         {
@@ -59,16 +76,39 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
     private static readonly int[] RichnessVolume =
         { 60, 78, 80, 84, 88, 92, 93, 95, 97, 100 };
 
-    private readonly OmnivoxEloquenceCapture capture;
+    private readonly object stateLock = new object();
+    private readonly AutoResetEvent workReady = new AutoResetEvent(false);
+    private readonly ManualResetEvent initialized =
+        new ManualResetEvent(false);
+    private readonly Thread owner;
+    private SynthesisJob active;
+    private Exception ownerError;
+    private string version;
+    private bool shuttingDown;
+
+    // ECI instances use a single-threaded-apartment contract.  OwnerLoop is
+    // the only thread that constructs, calls, and disposes the native handle;
+    // protocol synthesis threads submit one serialized job and wait for it.
 
     internal OmnivoxEloquenceAdapter(string dllPath)
     {
-        capture = new OmnivoxEloquenceCapture(dllPath);
+        owner = new Thread(delegate() { OwnerLoop(dllPath); });
+        owner.Name = "omnivox-eloquence-owner";
+        owner.IsBackground = true;
+        owner.Start();
+        initialized.WaitOne();
+        if (ownerError != null)
+        {
+            workReady.Close();
+            initialized.Close();
+            throw new InvalidOperationException(
+                "Eloquence owner thread failed to initialize", ownerError);
+        }
     }
 
     public string EngineId { get { return "eloquence"; } }
     public string DisplayName { get { return "Eloquence"; } }
-    public string Version { get { return capture.Version; } }
+    public string Version { get { return version; } }
     public string HelperName { get { return "Omnivox Eloquence x86 helper"; } }
     public string DefaultVoiceId { get { return "v1"; } }
     public int SampleRate
@@ -98,8 +138,38 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
         nativePitch = Math.Max(0, Math.Min(100, nativePitch));
         string voiceParameters = MapExtendedAcss(pitchRange, stress, richness);
         int nativeVolume = MapVolume(volume, richness);
-        return capture.Synthesize(text, voiceId, nativeRate, nativePitch,
-            voiceParameters, nativeVolume, anchors);
+        SynthesisJob job = new SynthesisJob();
+        job.Text = text;
+        job.VoiceId = voiceId;
+        job.Rate = nativeRate;
+        job.Pitch = nativePitch;
+        job.VoiceParameters = voiceParameters;
+        job.Volume = nativeVolume;
+        job.Anchors = anchors;
+        lock (stateLock)
+        {
+            if (shuttingDown || ownerError != null)
+            {
+                job.Completed.Close();
+                throw new InvalidOperationException(
+                    "Eloquence owner thread is not available", ownerError);
+            }
+            if (active != null)
+            {
+                job.Completed.Close();
+                throw new InvalidOperationException(
+                    "Eloquence owner thread is already synthesizing");
+            }
+            active = job;
+        }
+        workReady.Set();
+        job.Completed.WaitOne();
+        job.Completed.Close();
+        if (job.Error != null)
+        {
+            throw job.Error;
+        }
+        return job.Result;
     }
 
     internal static string MapExtendedAcss(double? pitchRange,
@@ -144,12 +214,112 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
 
     public void Stop()
     {
-        capture.Stop();
+        lock (stateLock)
+        {
+            if (active != null)
+            {
+                active.Cancelled = true;
+            }
+        }
     }
 
     public void Dispose()
     {
-        capture.Dispose();
+        lock (stateLock)
+        {
+            shuttingDown = true;
+            if (active != null)
+            {
+                active.Cancelled = true;
+            }
+        }
+        workReady.Set();
+        bool joined = owner.Join(TimeSpan.FromSeconds(10));
+        OmnivoxHelperLog.Event("native_owner_stopped",
+            "engine=eloquence joined=" + (joined ? "true" : "false"));
+        if (joined)
+        {
+            workReady.Close();
+            initialized.Close();
+        }
+    }
+
+    private void OwnerLoop(string dllPath)
+    {
+        SynthesisJob failed = null;
+        try
+        {
+            using (OmnivoxEloquenceCapture capture =
+                new OmnivoxEloquenceCapture(dllPath))
+            {
+                version = capture.Version;
+                initialized.Set();
+                while (true)
+                {
+                    workReady.WaitOne();
+                    SynthesisJob job;
+                    lock (stateLock)
+                    {
+                        job = active;
+                        if (job == null && shuttingDown)
+                        {
+                            break;
+                        }
+                    }
+                    if (job == null)
+                    {
+                        continue;
+                    }
+                    bool stop = false;
+                    try
+                    {
+                        job.Result = capture.Synthesize(job.Text, job.VoiceId,
+                            job.Rate, job.Pitch, job.VoiceParameters,
+                            job.Volume, job.Anchors,
+                            delegate() { return job.Cancelled; });
+                    }
+                    catch (Exception error)
+                    {
+                        job.Error = error;
+                    }
+                    finally
+                    {
+                        lock (stateLock)
+                        {
+                            if (Object.ReferenceEquals(active, job))
+                            {
+                                active = null;
+                            }
+                            stop = shuttingDown;
+                        }
+                        job.Completed.Set();
+                    }
+                    if (stop)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception error)
+        {
+            lock (stateLock)
+            {
+                ownerError = error;
+                shuttingDown = true;
+                failed = active;
+                active = null;
+            }
+            if (failed != null)
+            {
+                failed.Error = error;
+                failed.Completed.Set();
+            }
+        }
+        finally
+        {
+            initialized.Set();
+        }
     }
 }
 

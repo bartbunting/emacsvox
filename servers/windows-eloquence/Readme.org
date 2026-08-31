@@ -164,6 +164,14 @@ a word stay attached.  Phoneme and caller-defined native indexes remain
 unavailable.  Omnivox remains responsible for fallback, effects, mixing,
 playback, and playback completion.
 
+The capture adapter confines its ECI instance to one persistent owner thread,
+as required by ECI's single-threaded-apartment contract.  Protocol worker
+threads submit serialized jobs to that owner.  Cancellation sets a shared flag
+that the ECI callback observes on the owner thread and returns as a native
+abort; it never calls the ECI instance from the protocol thread.  A native call
+that stops producing callbacks remains contained by Omnivox's helper-process
+retirement watchdog.
+
 Helper protocol version 2 and later also advertise exact requested anchors.
 Each bounded opaque ID and UTF-8 source boundary is merged with the automatic
 word indexes and inserted through ECI's index API, so Eloquence returns its

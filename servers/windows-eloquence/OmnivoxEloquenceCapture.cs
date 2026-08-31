@@ -124,6 +124,7 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
     private Dictionary<int, OmnivoxHelperMarker> pendingMarkers;
     private List<OmnivoxHelperMarker> reachedMarkers;
     private Exception callbackError;
+    private Func<bool> cancellationRequested;
 
     internal OmnivoxEloquenceCapture(string dllPath)
     {
@@ -184,11 +185,17 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
 
     internal OmnivoxCaptureResult Synthesize(string text, string voiceId,
         int rate, int pitch, string voiceParameters, int volume,
-        OmnivoxHelperAnchor[] anchors)
+        OmnivoxHelperAnchor[] anchors, Func<bool> cancellationRequested)
     {
         lock (synthesisLock)
         {
+            if (cancellationRequested())
+            {
+                throw new OperationCanceledException(
+                    "Eloquence synthesis was cancelled before dispatch");
+            }
             callbackError = null;
+            this.cancellationRequested = cancellationRequested;
             capture = new MemoryStream();
             pendingMarkers = new Dictionary<int, OmnivoxHelperMarker>();
             reachedMarkers = new List<OmnivoxHelperMarker>();
@@ -208,7 +215,17 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
                 Check(OmnivoxNativeEci.Synthesize(handle), "eciSynthesize");
                 OmnivoxHelperLog.Event("native_call_started",
                     "engine=eloquence call=eciSynchronize");
-                Check(OmnivoxNativeEci.Synchronize(handle), "eciSynchronize");
+                // ECI invokes this instance's callback on its owner thread.
+                // A cancellation therefore aborts from OnEciCallback without
+                // making an unsupported cross-thread native call.
+                bool synchronized = OmnivoxNativeEci.Synchronize(handle);
+                if (cancellationRequested())
+                {
+                    OmnivoxNativeEci.Stop(handle);
+                    throw new OperationCanceledException(
+                        "Eloquence synthesis was cancelled");
+                }
+                Check(synchronized, "eciSynchronize");
                 OmnivoxHelperLog.Event("native_call_completed",
                     "engine=eloquence call=eciSynchronize frames=" +
                     (capture.Length / 2).ToString(
@@ -223,19 +240,9 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
                 capture = null;
                 pendingMarkers = null;
                 reachedMarkers = null;
+                this.cancellationRequested = null;
                 OmnivoxNativeEci.ClearInput(handle);
             }
-        }
-    }
-
-    /// <summary>
-    /// Interrupt the ECI synchronization call from the protocol thread.
-    /// </summary>
-    internal void Stop()
-    {
-        if (handle != IntPtr.Zero)
-        {
-            OmnivoxNativeEci.Stop(handle);
         }
     }
 
@@ -453,6 +460,10 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
     private int OnEciCallback(IntPtr callbackHandle, int message,
         int parameter, IntPtr data)
     {
+        if (cancellationRequested != null && cancellationRequested())
+        {
+            return CallbackAbort;
+        }
         if (message == IndexReplyMessage)
         {
             OmnivoxHelperMarker marker;
