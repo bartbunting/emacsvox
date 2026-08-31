@@ -476,6 +476,63 @@ windows-omnivox:
 			echo "Could not locate Windows LocalAppData" >&2; \
 			exit 1; \
 		fi; \
+		piper_model_state=external-user-supplied-not-configured; \
+		piper_model_digest=not-configured; \
+		piper_model_sha256=not-observed; \
+		piper_model_config_sha256=not-observed; \
+		piper_model_windows_path=; \
+		piper_model_config_windows_path=; \
+		if [ -n "$${OMNIVOX_PIPER_MODEL:-}" ]; then \
+			piper_model_source="$$OMNIVOX_PIPER_MODEL"; \
+			if [ ! -f "$$piper_model_source" ]; then \
+				piper_model_source="$$(wslpath -u "$$OMNIVOX_PIPER_MODEL" 2>/dev/null || :)"; \
+			fi; \
+			case "$$piper_model_source" in \
+				*.onnx) ;; \
+				*) \
+					echo "OMNIVOX_PIPER_MODEL must identify a readable .onnx file" >&2; \
+					exit 1 ;; \
+			esac; \
+			if [ ! -f "$$piper_model_source" ]; then \
+				echo "OMNIVOX_PIPER_MODEL does not identify a readable file" >&2; \
+				exit 1; \
+			fi; \
+			if [ -f "$$piper_model_source.json" ]; then \
+				piper_model_config_source="$$piper_model_source.json"; \
+			elif [ -f "$${piper_model_source%.onnx}.json" ]; then \
+				piper_model_config_source="$${piper_model_source%.onnx}.json"; \
+			else \
+				echo "Piper model configuration is not adjacent to $$piper_model_source" >&2; \
+				exit 1; \
+			fi; \
+			piper_model_sha256="$$(sha256sum "$$piper_model_source" | cut -d ' ' -f1)"; \
+			piper_model_config_sha256="$$(sha256sum \
+				"$$piper_model_config_source" | cut -d ' ' -f1)"; \
+			piper_model_digest="$$(printf '%s\n%s\n' \
+				"$$piper_model_sha256" "$$piper_model_config_sha256" | \
+				sha256sum | cut -d ' ' -f1)"; \
+			piper_model_cache="$$(wslpath -u "$$windows_local_app_data")/Emacsvox/Omnivox/piper-models/$$piper_model_digest"; \
+			mkdir -p "$$piper_model_cache"; \
+			install_model_input() { \
+				model_source=$$1; \
+				model_destination="$$piper_model_cache/$${model_source##*/}"; \
+				if [ ! -f "$$model_destination" ]; then \
+					cp "$$model_source" "$$model_destination.new.$$$$"; \
+					mv "$$model_destination.new.$$$$" "$$model_destination"; \
+				fi; \
+				if ! cmp -s "$$model_source" "$$model_destination"; then \
+					echo "Existing content-addressed Piper model differs: $$model_destination" >&2; \
+					exit 1; \
+				fi; \
+			}; \
+			install_model_input "$$piper_model_source"; \
+			install_model_input "$$piper_model_config_source"; \
+			piper_model_windows_path="$$(wslpath -w \
+				"$$piper_model_cache/$${piper_model_source##*/}")"; \
+			piper_model_config_windows_path="$$(wslpath -w \
+				"$$piper_model_cache/$${piper_model_config_source##*/}")"; \
+			piper_model_state=external-user-supplied-windows-cache; \
+		fi; \
 		windows_cache_parent="$$(wslpath -u "$$windows_local_app_data")/Emacsvox/Omnivox/espeak-data/$$data_digest"; \
 		mkdir -p "$$windows_cache_parent"; \
 		if [ ! -f "$$windows_cache_parent/espeak-ng-data/phontab" ]; then \
@@ -536,7 +593,8 @@ windows-omnivox:
 				"$(reference_assemblies_nupkg_sha256)" \
 				"$$eloquence_runtime_digest" \
 				"$(omnivox_piper_archive_sha256)" \
-				"$$piper_companion_digest"; \
+				"$$piper_companion_digest" \
+				"$$piper_model_digest"; \
 		} | sha256sum | cut -c1-16)"; \
 		version_dir="$(OMNIVOX_RUNTIME_DIR)/versions/$$build_id"; \
 		diagnostics_dir="$(OMNIVOX_RELEASE_DIR)/cache/diagnostics/$$build_id"; \
@@ -620,6 +678,16 @@ windows-omnivox:
 			> "$$version_dir/espeak-ng-data.path.new"; \
 		mv -f "$$version_dir/espeak-ng-data.path.new" \
 			"$$version_dir/espeak-ng-data.path"; \
+		if [ -n "$$piper_model_windows_path" ]; then \
+			printf '%s\n' "$$piper_model_windows_path" \
+				> "$$version_dir/piper-model.path.new"; \
+			mv -f "$$version_dir/piper-model.path.new" \
+				"$$version_dir/piper-model.path"; \
+			printf '%s\n' "$$piper_model_config_windows_path" \
+				> "$$version_dir/piper-model-config.path.new"; \
+			mv -f "$$version_dir/piper-model-config.path.new" \
+				"$$version_dir/piper-model-config.path"; \
+		fi; \
 		dectalk_runtime=not-bundled; \
 		if [ -f "$$version_dir/DECtalk.dll" ] && \
 			[ -f "$$version_dir/dtalk_us.dic" ]; then \
@@ -656,7 +724,9 @@ windows-omnivox:
 				"piper_companion_commit=$(omnivox_piper_commit)" \
 				"piper_companion_archive_sha256=$(omnivox_piper_archive_sha256)" \
 				"piper_companion_tree_sha256=$$piper_companion_digest" \
-				"piper_model=external-user-supplied-not-bundled" \
+				"piper_model=$$piper_model_state" \
+				"piper_model_sha256=$$piper_model_sha256" \
+				"piper_model_config_sha256=$$piper_model_config_sha256" \
 				"eloquence_runtime=external-user-supplied-not-bundled" \
 				"eloquence_runtime_sha256=$$eloquence_runtime_digest" \
 				"dectalk_runtime=$$dectalk_runtime"; \

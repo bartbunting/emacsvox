@@ -161,6 +161,59 @@ if [ "$actual_espeak_digest" != "$expected_espeak_digest" ]; then
     exit 1
 fi
 
+if find "$current" -type f \( -name '*.onnx' -o -name '*.onnx.json' \) |
+    grep -q .; then
+    echo "A Piper voice model was bundled inside the Omnivox runtime" >&2
+    exit 1
+fi
+piper_model_state=$(sed -n 's/^piper_model=//p' "$current/PROVENANCE")
+case "$piper_model_state" in
+    external-user-supplied-not-configured) ;;
+    external-user-supplied-windows-cache)
+        for path_file in piper-model.path piper-model-config.path; do
+            if [ ! -s "$current/$path_file" ]; then
+                echo "Configured Piper model path is missing: $current/$path_file" >&2
+                exit 1
+            fi
+        done
+        piper_model=$(wslpath -u "$(sed -n '1p' "$current/piper-model.path")")
+        piper_model_config=$(
+            wslpath -u "$(sed -n '1p' "$current/piper-model-config.path")"
+        )
+        if [ ! -f "$piper_model" ] || [ ! -f "$piper_model_config" ]; then
+            echo "Windows-local Piper model or configuration is missing" >&2
+            exit 1
+        fi
+        case "$piper_model_config" in
+            "$piper_model.json" | "${piper_model%.onnx}.json") ;;
+            *)
+                echo "Windows-local Piper configuration is not adjacent to its model" >&2
+                exit 1
+                ;;
+        esac
+        expected_model_sha256=$(
+            sed -n 's/^piper_model_sha256=//p' "$current/PROVENANCE"
+        )
+        expected_model_config_sha256=$(
+            sed -n 's/^piper_model_config_sha256=//p' "$current/PROVENANCE"
+        )
+        actual_model_sha256=$(sha256sum "$piper_model" | cut -d ' ' -f1)
+        actual_model_config_sha256=$(
+            sha256sum "$piper_model_config" | cut -d ' ' -f1
+        )
+        if [ "$actual_model_sha256" != "$expected_model_sha256" ] ||
+           [ "$actual_model_config_sha256" != \
+             "$expected_model_config_sha256" ]; then
+            echo "Windows-local Piper model does not match provenance" >&2
+            exit 1
+        fi
+        ;;
+    *)
+        echo "Unknown Piper model provenance state: $piper_model_state" >&2
+        exit 1
+        ;;
+esac
+
 printf '%s\n' \
     "verified_build_id=$build_id" \
     "repository_runtime=$current" \
