@@ -73,7 +73,7 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: docs-publish docs-publish-pages
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
 .PHONY: windows-omnivox-dev
-.PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers verify-windows-omnivox-runtime
+.PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers prepare-windows-omnivox-piper verify-windows-omnivox-runtime
 .PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
 .PHONY: dist release release-source-check release-check release-artifact
 .PHONY: release-artifact-check
@@ -363,6 +363,7 @@ OMNIVOX_BUILD_KIND ?= release-clean-worktree
 include $(OMNIVOX_RELEASE_DIR)/toolchain.lock
 OMNIVOX_CSC = $(OMNIVOX_RELEASE_DIR)/cache/roslyn-$(roslyn_version)/tasks/net472/csc.exe
 OMNIVOX_REFERENCE_DIR = $(OMNIVOX_RELEASE_DIR)/cache/net40-reference-assemblies-$(reference_assemblies_version)/build/.NETFramework/v4.0
+OMNIVOX_PIPER_DIR = $(OMNIVOX_RELEASE_DIR)/cache/piper-$(omnivox_piper_version)/companion-$(omnivox_piper_archive_sha256)/piper
 
 verify-windows-omnivox-toolchain:
 	OMNIVOX_RELEASE_IMAGE="$(OMNIVOX_RELEASE_IMAGE)" \
@@ -371,6 +372,10 @@ verify-windows-omnivox-toolchain:
 verify-windows-omnivox-helpers:
 	"$(OMNIVOX_RELEASE_DIR)/verify-helper-determinism.sh" \
 		"$(CURDIR)" "$(OMNIVOX_CSC)" "$(OMNIVOX_REFERENCE_DIR)"
+
+prepare-windows-omnivox-piper:
+	"$(OMNIVOX_RELEASE_DIR)/prepare-piper-companion.sh" \
+		"$(OMNIVOX_RELEASE_DIR)" "$(OMNIVOX_DIR)"
 
 windows-omnivox-dev:
 	$(MAKE) OMNIVOX_ALLOW_DIRTY=1 \
@@ -390,6 +395,7 @@ windows-omnivox:
 		fi
 	$(MAKE) verify-windows-omnivox-toolchain
 	$(MAKE) verify-windows-omnivox-helpers
+	$(MAKE) prepare-windows-omnivox-piper
 	docker run --rm --platform linux/amd64 \
 		--user "$$(id -u):$$(id -g)" \
 		--env HOME=/workspace/omnivox/target/emacsvox-home \
@@ -421,7 +427,7 @@ windows-omnivox:
 			export AR_x86_64_pc_windows_gnu=x86_64-w64-mingw32-ar; \
 			export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc-win32; \
 			export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS="-C link-arg=-Wl,--no-insert-timestamp"; \
-			cargo build --locked --release -p omnivox-cli \
+			cargo build --locked --release -p omnivox-cli --features piper \
 				--target $(OMNIVOX_TARGET); \
 			cp "$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.exe" \
 				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.unstripped.exe"; \
@@ -442,6 +448,15 @@ windows-omnivox:
 		dectalk_dictionary="$(CURDIR)/servers/windows-dectalk/runtime/dtalk_us.dic"; \
 		stdlib="$(OMNIVOX_RELEASE_TARGET_DIR)/windows-runtime/libstdc++-6.dll"; \
 		gcc_runtime="$(OMNIVOX_RELEASE_TARGET_DIR)/windows-runtime/libgcc_s_seh-1.dll"; \
+		piper_companion="$(OMNIVOX_PIPER_DIR)"; \
+		if [ ! -f "$$piper_companion/omnivox-piper-helper.exe" ] || \
+			[ ! -f "$$piper_companion/espeak-ng-data/phontab" ]; then \
+			echo "Prepared Piper companion is incomplete: $$piper_companion" >&2; \
+			exit 1; \
+		fi; \
+		piper_companion_digest="$$(cd "$$piper_companion" && \
+			find . -type f -print0 | LC_ALL=C sort -z | \
+			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
 		espeak_phontab="$$(find \
 			"$(OMNIVOX_RELEASE_TARGET_DIR)/release/build" \
 			-path '*/espeak-rs-sys-*/out/share/espeak-ng-data/phontab' \
@@ -519,7 +534,9 @@ windows-omnivox:
 				"$$release_image_id" "$$csc_digest" \
 				"$(roslyn_nupkg_sha256)" \
 				"$(reference_assemblies_nupkg_sha256)" \
-				"$$eloquence_runtime_digest"; \
+				"$$eloquence_runtime_digest" \
+				"$(omnivox_piper_archive_sha256)" \
+				"$$piper_companion_digest"; \
 		} | sha256sum | cut -c1-16)"; \
 		version_dir="$(OMNIVOX_RUNTIME_DIR)/versions/$$build_id"; \
 		diagnostics_dir="$(OMNIVOX_RELEASE_DIR)/cache/diagnostics/$$build_id"; \
@@ -574,6 +591,18 @@ windows-omnivox:
 			install_payload "$$dectalk_dictionary" \
 				"$$version_dir/dtalk_us.dic" regular; \
 		fi; \
+		if [ ! -d "$$version_dir/piper" ]; then \
+			piper_stage="$$version_dir/piper.new.$$$$"; \
+			cp -a "$$piper_companion" "$$piper_stage"; \
+			mv "$$piper_stage" "$$version_dir/piper"; \
+		fi; \
+		version_piper_digest="$$(cd "$$version_dir/piper" && \
+			find . -type f -print0 | LC_ALL=C sort -z | \
+			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+		if [ "$$version_piper_digest" != "$$piper_companion_digest" ]; then \
+			echo "Staged Piper companion does not match its pinned input" >&2; \
+			exit 1; \
+		fi; \
 		if [ ! -f "$$version_dir/espeak-ng-data/phontab" ]; then \
 			rm -rf "$$version_dir/espeak-ng-data.new"; \
 			cp -a "$$espeak_data" "$$version_dir/espeak-ng-data.new"; \
@@ -616,11 +645,18 @@ windows-omnivox:
 				"roslyn_nupkg_sha256=$(roslyn_nupkg_sha256)" \
 				"net40_reference_assemblies_nupkg_sha256=$(reference_assemblies_nupkg_sha256)" \
 				"target=$(OMNIVOX_TARGET)" \
+				"omnivox_features=piper" \
 				"windows_rustflags=-C link-arg=-Wl,--no-insert-timestamp" \
 				"windows_strip=SOURCE_DATE_EPOCH=0 x86_64-w64-mingw32-strip --strip-all" \
 				"omnivox_executable_sha256=$$executable_digest" \
 				"unstripped_diagnostics=retained-local-not-staged" \
 				"espeak_data_sha256=$$data_digest" \
+				"piper_companion=official-omnivox-release" \
+				"piper_companion_version=$(omnivox_piper_version)" \
+				"piper_companion_commit=$(omnivox_piper_commit)" \
+				"piper_companion_archive_sha256=$(omnivox_piper_archive_sha256)" \
+				"piper_companion_tree_sha256=$$piper_companion_digest" \
+				"piper_model=external-user-supplied-not-bundled" \
 				"eloquence_runtime=external-user-supplied-not-bundled" \
 				"eloquence_runtime_sha256=$$eloquence_runtime_digest" \
 				"dectalk_runtime=$$dectalk_runtime"; \
@@ -630,30 +666,41 @@ windows-omnivox:
 		if [ "$$dectalk_runtime" = bundled-pinned-archive ]; then \
 			payload_files="$$payload_files DECtalk.dll dtalk_us.dic"; \
 		fi; \
-		(cd "$$version_dir" && sha256sum $$payload_files) \
-			> "$$version_dir/SHA256SUMS.new"; \
+		( \
+			cd "$$version_dir"; \
+			sha256sum $$payload_files; \
+			find piper -type f -print0 | LC_ALL=C sort -z | \
+				xargs -0 sha256sum; \
+		) > "$$version_dir/SHA256SUMS.new"; \
 		mv -f "$$version_dir/SHA256SUMS.new" "$$version_dir/SHA256SUMS"; \
 		(cd "$$version_dir" && sha256sum --check SHA256SUMS); \
 		mkdir -p "$$windows_runtime_dir"; \
-		for runtime_file in omnivox.exe libstdc++-6.dll libgcc_s_seh-1.dll \
-			OmnivoxEloquenceHelper32.exe OmnivoxDectalkHelper32.exe \
-			PROVENANCE SHA256SUMS; do \
-			if [ ! -f "$$windows_runtime_dir/$$runtime_file" ]; then \
+		if [ ! -f "$$windows_runtime_dir/SHA256SUMS" ]; then \
+			cp "$$version_dir/SHA256SUMS" \
+				"$$windows_runtime_dir/SHA256SUMS.new.$$$$"; \
+			mv "$$windows_runtime_dir/SHA256SUMS.new.$$$$" \
+				"$$windows_runtime_dir/SHA256SUMS"; \
+		fi; \
+		if ! cmp -s "$$version_dir/SHA256SUMS" \
+			"$$windows_runtime_dir/SHA256SUMS"; then \
+			echo "Existing Windows-local SHA256SUMS differs" >&2; \
+			exit 1; \
+		fi; \
+		while read -r _checksum runtime_file; do \
+			runtime_destination="$$windows_runtime_dir/$$runtime_file"; \
+			mkdir -p "$${runtime_destination%/*}"; \
+			if [ ! -f "$$runtime_destination" ]; then \
 				cp "$$version_dir/$$runtime_file" \
-					"$$windows_runtime_dir/$$runtime_file.new.$$$$"; \
-				mv "$$windows_runtime_dir/$$runtime_file.new.$$$$" \
-					"$$windows_runtime_dir/$$runtime_file"; \
+					"$$runtime_destination.new.$$$$"; \
+				mv "$$runtime_destination.new.$$$$" \
+					"$$runtime_destination"; \
 			fi; \
-		done; \
-		for runtime_file in DECtalk.dll dtalk_us.dic; do \
-			if [ -f "$$version_dir/$$runtime_file" ] && \
-				[ ! -f "$$windows_runtime_dir/$$runtime_file" ]; then \
-				cp "$$version_dir/$$runtime_file" \
-					"$$windows_runtime_dir/$$runtime_file.new.$$$$"; \
-				mv "$$windows_runtime_dir/$$runtime_file.new.$$$$" \
-					"$$windows_runtime_dir/$$runtime_file"; \
+			if ! cmp -s "$$version_dir/$$runtime_file" \
+				"$$runtime_destination"; then \
+				echo "Existing Windows-local payload differs: $$runtime_destination" >&2; \
+				exit 1; \
 			fi; \
-		done; \
+		done < "$$version_dir/SHA256SUMS"; \
 		windows_runtime_path="$$(wslpath -w "$$windows_runtime_dir")"; \
 		printf '%s\n' "$$windows_runtime_path" \
 			> "$$version_dir/windows-runtime.path.new"; \

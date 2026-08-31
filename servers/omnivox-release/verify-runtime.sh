@@ -8,6 +8,8 @@ fi
 
 runtime_root=$1
 release_root=$2
+# shellcheck source=toolchain.lock
+. "$release_root/toolchain.lock"
 current=$(readlink -f -- "$runtime_root/current")
 versions_root=$(readlink -f -- "$runtime_root/versions")
 case "$current/" in
@@ -19,12 +21,40 @@ case "$current/" in
 esac
 
 for required in PROVENANCE SHA256SUMS espeak-ng-data.path \
-    windows-runtime.path omnivox.exe; do
+    windows-runtime.path omnivox.exe piper/omnivox-piper-helper.exe \
+    piper/piper.dll piper/onnxruntime.dll \
+    piper/onnxruntime_providers_shared.dll piper/SOURCE-PROVENANCE.json \
+    piper/espeak-ng-data/phontab; do
     if [ ! -f "$current/$required" ]; then
         echo "Staged Omnivox file is missing: $current/$required" >&2
         exit 1
     fi
 done
+
+for expected in \
+    "omnivox_commit=$omnivox_piper_commit" \
+    'omnivox_features=piper' \
+    "piper_companion_version=$omnivox_piper_version" \
+    "piper_companion_commit=$omnivox_piper_commit" \
+    "piper_companion_archive_sha256=$omnivox_piper_archive_sha256"; do
+    if ! grep -Fxq "$expected" "$current/PROVENANCE"; then
+        echo "Staged Omnivox provenance is missing: $expected" >&2
+        exit 1
+    fi
+done
+
+expected_piper_digest=$(
+    sed -n 's/^piper_companion_tree_sha256=//p' "$current/PROVENANCE"
+)
+actual_piper_digest=$(
+    cd "$current/piper"
+    find . -type f -print0 | LC_ALL=C sort -z |
+        xargs -0 sha256sum | sha256sum | cut -d ' ' -f1
+)
+if [ "$actual_piper_digest" != "$expected_piper_digest" ]; then
+    echo "Staged Piper companion does not match provenance" >&2
+    exit 1
+fi
 
 (cd "$current" && sha256sum --check SHA256SUMS)
 
