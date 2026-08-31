@@ -328,6 +328,54 @@
             (should (equal (buffer-string) "configured:--configured\n"))))
       (delete-directory directory t))))
 
+(ert-deftest emacsvox-launcher-configures-staged-windows-piper ()
+  "A staged Piper model and overrides should reach Windows Omnivox."
+  (let* ((directory (make-temp-file "emacsvox piper launcher-" t))
+         (server-directory (expand-file-name "servers" directory))
+         (runtime-directory
+          (expand-file-name "omnivox-bin/current" server-directory))
+         (launcher (expand-file-name "omnivox" server-directory))
+         (filter (expand-file-name "omnivox-log-filter" server-directory))
+         (program (expand-file-name "omnivox.exe" runtime-directory))
+         (model "C:\\Models\\voice.onnx")
+         (log-directory (expand-file-name "logs" directory))
+         (process-environment (copy-sequence process-environment)))
+    (unwind-protect
+        (progn
+          (make-directory runtime-directory t)
+          (copy-file
+           (expand-file-name
+            "servers/omnivox" emacsvox-launcher-tests--root)
+           launcher)
+          (copy-file
+           (expand-file-name
+            "servers/omnivox-log-filter" emacsvox-launcher-tests--root)
+           filter)
+          (with-temp-file (expand-file-name "piper-model.path" runtime-directory)
+            (insert model "\n"))
+          (with-temp-file program
+            (insert
+             "#!/bin/sh\n"
+             "printf 'MODEL=%s\\n' \"${OMNIVOX_PIPER_MODEL-}\"\n"
+             "printf 'WSLENV=%s\\n' \"${WSLENV-}\"\n"))
+          (dolist (file (list launcher filter program))
+            (set-file-modes file #o700))
+          (dolist (name '("OMNIVOX_PIPER_MODEL" "WSLENV"))
+            (setenv name nil))
+          (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
+          (with-temp-buffer
+            (should (zerop (call-process launcher nil t)))
+            (let ((output (buffer-string)))
+              (should (string-search (concat "MODEL=" model "\n") output))
+              (dolist (name '("OMNIVOX_PIPER_MODEL"
+                              "OMNIVOX_PIPER_HELPER"
+                              "OMNIVOX_PIPER_ESPEAK_DATA"))
+                (should
+                 (string-match-p
+                  (concat "WSLENV=.*\\(?:^\\|:\\)" name "\\(?:$\\|:\\)")
+                  output))))))
+      (delete-directory directory t))))
+
 (ert-deftest emacsvox-launcher-starts-portably-and-in-isolation ()
   "The canonical launcher works outside a checkout whose path has spaces."
   (let* ((root (emacsvox-launcher-tests--make-checkout))
