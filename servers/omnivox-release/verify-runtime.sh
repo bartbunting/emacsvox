@@ -22,6 +22,7 @@ esac
 
 for required in PROVENANCE SHA256SUMS espeak-ng-data.path \
     windows-runtime.path omnivox.exe piper/omnivox-piper-helper.exe \
+    WINDOWS-HELPERS-COPYING \
     piper/piper.dll piper/onnxruntime.dll \
     piper/onnxruntime_providers_shared.dll piper/SOURCE-PROVENANCE.json \
     piper/espeak-ng-data/phontab; do

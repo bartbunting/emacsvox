@@ -50,6 +50,8 @@
 (declare-function tts--protocol-queue-code "tts-speak" (code))
 (declare-function tts--protocol-queue-text "tts-speak" (text))
 (declare-function tts--protocol-silence "tts-speak" (duration &optional force))
+(declare-function tts--protocol-tone "tts-speak"
+                  (pitch duration &optional force))
 (declare-function tts--prepare-structured-dispatch
                   "tts-speak"
                   (marker-callback completion-callback semantic-actions))
@@ -239,7 +241,11 @@ server still produces the relevant protocol diagnostic."
     'pending)))
 
 (defun emacsvox-aural--protocol-presentation-tone (pitch duration mode)
-  "Queue a bounded PITCH/DURATION tone using explicit presentation MODE."
+  "Queue a bounded PITCH/DURATION tone using presentation MODE.
+
+Use the explicit presentation-tone protocol when the speaker advertises it.
+Otherwise lower both modes to the legacy ordered tone command; this preserves
+the tone and surrounding speech but cannot preserve overlay timing."
   (unless (memq mode '(insert overlay))
     (emacsvox-aural--transport-error
      "Presentation tone mode must be insert or overlay: %S" mode))
@@ -259,7 +265,7 @@ server still produces the relevant protocol diagnostic."
     (emacsvox-aural--transport-error
      "Presentation tone duration must be from 1 through %d ms: %S"
      emacsvox-aural--presentation-tone-max-duration-ms duration))
-  (unless
+  (if
       (and
        (processp tts-speaker-process)
        (=
@@ -269,13 +275,12 @@ server still produces the relevant protocol diagnostic."
           emacsvox-aural--presentation-tone-process-property)
          0)
         emacsvox-aural--presentation-tone-version))
-    (emacsvox-aural--transport-error
-     "This presentation requires Omnivox presentation_tone_v1; rebuild and restart the server"))
-  (emacsvox-aural-delivery-send
-   tts-speaker-process
-   (format
-    "emacsvox_tone %d %s %s %d\n"
-    emacsvox-aural--presentation-tone-version mode pitch duration)))
+      (emacsvox-aural-delivery-send
+       tts-speaker-process
+       (format
+        "emacsvox_tone %d %s %s %d\n"
+        emacsvox-aural--presentation-tone-version mode pitch duration))
+    (tts--protocol-tone (max 1 (round pitch)) duration)))
 
 (defun emacsvox-aural-delivery-send (process command &optional kind)
   "Send COMMAND to PROCESS through the current delivery transaction.

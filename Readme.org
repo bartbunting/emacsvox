@@ -145,9 +145,10 @@ runtime from this checkout with:
 make windows-omnivox
 #+END_SRC
 
-This builds the Piper-enabled Windows executable, separate 32-bit Eloquence
-and DECtalk capture helpers, a native copy of the platform-neutral eSpeak
-voice data, and the checksum-pinned official Piper companion, then stages them
+This builds the Piper-enabled Windows executable, the separate 32-bit
+Eloquence and DECtalk capture helpers from the Omnivox checkout, a native copy
+of the platform-neutral eSpeak voice data, and the checksum-pinned official
+Piper companion, then stages them
 with the required MinGW runtime DLLs under =servers/omnivox-bin=.  To register
 a reviewed, user-supplied Piper model during staging, keep its JSON
 configuration beside it and run

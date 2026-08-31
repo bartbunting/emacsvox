@@ -67,13 +67,6 @@ Third-party binaries are not stored in the =emacsvox= repository.
 The bridge itself is compiled with the .NET Framework C# compiler included
 with Windows; Visual Studio and DECtalk headers are not required.
 
-The Omnivox capture helper can be rebuilt without replacing either executable
-used by a running standalone server:
-
-#+begin_src sh
-make -C servers/windows-dectalk omnivox-helper
-#+end_src
-
 Windows prevents replacement of a bridge executable while it is running.
 Before rebuilding, select a different speech server with
 =M-x tts-select-server=.  Build =windows-dtk=, then select it again.  Do not
@@ -168,58 +161,9 @@ redistributing it.
 
 ** Omnivox capture helper
 
-=OmnivoxDectalkHelper32.exe= uses the same bounded, versioned helper host as
-Eloquence and returns DECtalk's 11.025 kHz mono signed 16-bit in-memory PCM to
-Omnivox.  It does not own playback and does not change the existing
-=windows-dtk= bridge.  The engine ID is =dectalk=; its stable voice IDs are
-=paul=, =betty=, =harry=, =frank=, =kit=, =rita=, =ursula=, =dennis=, and
-=wendy=, with =paul= as the default.
-
-All helper protocol versions map normalized rate across DECtalk's
-75-through-600 WPM range while preserving 225 WPM at the normal midpoint.
-Protocol version 4 accepts the shared extended rate range but clamps values
-above 1.0 at DECtalk's native 600 WPM maximum.
-Average pitch is mapped from each DECtalk personality's documented baseline to
-the native =ap= voice parameter.  Normalized volume is applied as gain to the
-captured PCM because DECtalk's volume commands do not affect speech written to
-memory.  Protocol version 3 maps pitch range to native =pr/as=, stress to
-=hr/sr/qu/bf=, and richness to =ri/sm=.  The mapping reproduces the original
-Emacspeak ten-level tables exactly and interpolates between their points for
-arbitrary normalized values; an absent dimension preserves the personality's
-native default.  The helper also captures DECtalk's native phoneme changes and
-explicitly inserted
-=[:index mark N]= records.  It reports their utterance-relative sample numbers
-as =phoneme= and =native_index= marker frames; the marker value is DECtalk's
-numeric phoneme or index value.  Those native records do not identify a
-source-text span, so their optional UTF-8 source ranges are left absent rather
-than guessed.
-
-The descriptor advertises =iso_8859_1= as its lossless text repertoire.
-Omnivox resolves each chunk around this helper when the exact UTF-8 text needs
-a Unicode-capable route, preserving text and requested anchor offsets.  The
-native encoder uses exception fallback as a final guard, so an unexpected
-out-of-repertoire request fails and can be rerouted instead of becoming =?=.
-
-The helper creates word markers by inserting private DECtalk indexes immediately
-before bounded Unicode words and translating only those callbacks back to the
-original UTF-8 source ranges.  Apostrophes, curly apostrophes, and hyphens remain
-inside a word when surrounded by word characters.  Balanced DECtalk command and
-phonetic spans are copied without internal indexes; a word crossing such a span
-is conservatively left unmarked.  Private values are selected from 28672 through
-32767 after excluding numbers already present in native spans, so caller-supplied
-indexes retain their =native_index= identity.  The same mechanism inserts
-sentence indexes at conservative line-break and common-terminator boundaries;
-it deliberately avoids language-specific sentence analysis.  A real-helper
-regression produced identical PCM with and without the generated indexes.
-Combined marker storage is bounded to 4096 records per utterance.
-
-Protocol version 2 advertises requested anchors at word-boundary precision.
-Omnivox resolves them from the returned word markers; it does not claim exact
-in-word placement.  Version 1 remains available without an anchor field.
-
-The helper accepts a DLL path as its first argument.  Otherwise it checks
-=OMNIVOX_DECTALK_DLL=, then =EMACSVOX_DECTALK_DLL=, then =DECtalk.dll= beside
-the helper, and finally the repository =runtime= directory.  =dtalk_us.dic=
-must be beside the DLL.  Cancellation calls the native reset API from the
-protocol thread while synthesis waits on its worker, then reports a distinct
-=synthesis_cancelled= terminal result.
+The separate =OmnivoxDectalkHelper32.exe= capture process does not alter this
+standalone playback backend.  Its source, shared helper-protocol host, build
+targets, tests, and detailed behavior documentation are maintained under
+=windows-helpers= in the sibling Omnivox repository.  Emacsvox retains the
+pinned Windows toolchain, optional local runtime preparation, and final
+=make windows-omnivox= bundle orchestration.

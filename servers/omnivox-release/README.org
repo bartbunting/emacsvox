@@ -2,9 +2,11 @@
 
 * Ownership
 
-Omnivox owns its committed =Cargo.lock= and exact Rust version.  Emacsvox owns
-the complete Windows bundle it stages: the Windows-GNU cross environment,
-32-bit helper builds, runtime DLLs, eSpeak data, content hashes, and launcher
+Omnivox owns its committed =Cargo.lock=, exact Rust version, and the C# source,
+build targets, tests, and GPL notice for its 32-bit Eloquence and DECtalk
+helpers.  Emacsvox owns the complete Windows bundle it stages: the pinned
+Windows-GNU and helper compiler inputs, invocation and deterministic validation
+of those builds, runtime DLLs, eSpeak data, content hashes, and launcher
 selection.
 
 * Pinned tools
@@ -47,8 +49,9 @@ Licensed runtime binaries are never committed to Emacsvox or Omnivox.
 - The DECtalk release archive is downloaded to an ignored directory and must
   match the reviewed SHA-256 supplied to its Makefile by =toolchain.lock=.  Its
   extracted DLL and dictionary hashes are recorded in the staged bundle.
-- The open helper executables are rebuilt from the committed C# sources with
-  the pinned compiler.  They are not treated as opaque runtime inputs.
+- The open helper executables are rebuilt from Omnivox's committed C# sources
+  with the pinned compiler.  They are not treated as opaque runtime inputs,
+  and their GPL-2.0-or-later license text is staged beside them.
 - Piper's open native companion is a checksum-pinned official Omnivox release
   input.  Its source provenance, internal checksums, helper, DLLs, private
   eSpeak data, and complete staged tree are verified.  Voice models remain

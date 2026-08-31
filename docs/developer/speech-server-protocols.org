@@ -34,6 +34,18 @@ continues on the legacy path.  Current Emacsvox requires
 ~presentation_timeline_v3~ before it submits an Aural Presentation as a
 structured timeline.
 
+Concrete Aural plans retain a bounded compatibility lowering when those
+features are absent.  Speech, voice commands, silence, tones, dispatch, and
+interruption use the established legacy queue commands.  A legacy tone cannot
+preserve the explicit overlay clock: both insert and overlay modes become an
+ordered ~t~ command, and a fractional frequency is rounded to the nearest
+hertz.  The surrounding speech continues rather than being rejected for that
+loss of presentation precision.
+
+Guarantee-bearing operations do not invent success on a legacy server.
+Playback completion, source markers, and domain-scoped replacement remain
+unavailable when the selected server cannot acknowledge them truthfully.
+
 A complete timeline contains its delivery policy, replacement domain,
 generation, dispatch ID, speech spans, and positioned actions.  Small
 timelines use one bounded frame; large timelines use a bounded multipart

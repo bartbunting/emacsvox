@@ -358,6 +358,7 @@ OMNIVOX_RUNTIME_DIR = $(CURDIR)/servers/omnivox-bin
 OMNIVOX_RELEASE_DIR = $(CURDIR)/servers/omnivox-release
 OMNIVOX_RELEASE_IMAGE ?= emacsvox-omnivox-windows-gnu:rust-1.97.1
 OMNIVOX_RELEASE_TARGET_DIR = $(OMNIVOX_DIR)/target/emacsvox-release
+OMNIVOX_HELPER_DIR = $(OMNIVOX_DIR)/windows-helpers
 OMNIVOX_ALLOW_DIRTY ?= 0
 OMNIVOX_BUILD_KIND ?= release-clean-worktree
 include $(OMNIVOX_RELEASE_DIR)/toolchain.lock
@@ -371,7 +372,7 @@ verify-windows-omnivox-toolchain:
 
 verify-windows-omnivox-helpers:
 	"$(OMNIVOX_RELEASE_DIR)/verify-helper-determinism.sh" \
-		"$(CURDIR)" "$(OMNIVOX_CSC)" "$(OMNIVOX_REFERENCE_DIR)"
+		"$(OMNIVOX_DIR)" "$(OMNIVOX_CSC)" "$(OMNIVOX_REFERENCE_DIR)"
 
 prepare-windows-omnivox-piper:
 	"$(OMNIVOX_RELEASE_DIR)/prepare-piper-companion.sh" \
@@ -442,8 +443,9 @@ windows-omnivox:
 	@set -eu; \
 		executable="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/omnivox.exe"; \
 		unstripped_executable="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/omnivox.unstripped.exe"; \
-		eloquence_helper="$(CURDIR)/servers/windows-eloquence/bin/OmnivoxEloquenceHelper32.exe"; \
-		dectalk_helper="$(CURDIR)/servers/windows-dectalk/bin/OmnivoxDectalkHelper32.exe"; \
+		eloquence_helper="$(OMNIVOX_HELPER_DIR)/bin/OmnivoxEloquenceHelper32.exe"; \
+		dectalk_helper="$(OMNIVOX_HELPER_DIR)/bin/OmnivoxDectalkHelper32.exe"; \
+		helper_license="$(OMNIVOX_HELPER_DIR)/COPYING"; \
 		dectalk_dll="$(CURDIR)/servers/windows-dectalk/runtime/DECtalk.dll"; \
 		dectalk_dictionary="$(CURDIR)/servers/windows-dectalk/runtime/dtalk_us.dic"; \
 		stdlib="$(OMNIVOX_RELEASE_TARGET_DIR)/windows-runtime/libstdc++-6.dll"; \
@@ -577,6 +579,7 @@ windows-omnivox:
 		fi; \
 		build_id="$$( { \
 			sha256sum "$$executable" "$$eloquence_helper" "$$dectalk_helper" \
+				"$$helper_license" \
 				"$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
 			if [ -f "$$dectalk_dll" ] && [ -f "$$dectalk_dictionary" ]; then \
 				sha256sum "$$dectalk_dll" "$$dectalk_dictionary" | cut -d ' ' -f1; \
@@ -643,6 +646,8 @@ windows-omnivox:
 			"$$version_dir/OmnivoxEloquenceHelper32.exe" executable; \
 		install_payload "$$dectalk_helper" \
 			"$$version_dir/OmnivoxDectalkHelper32.exe" executable; \
+		install_payload "$$helper_license" \
+			"$$version_dir/WINDOWS-HELPERS-COPYING" regular; \
 		if [ -f "$$dectalk_dll" ] && [ -f "$$dectalk_dictionary" ]; then \
 			install_payload "$$dectalk_dll" \
 				"$$version_dir/DECtalk.dll" regular; \
@@ -729,10 +734,12 @@ windows-omnivox:
 				"piper_model_config_sha256=$$piper_model_config_sha256" \
 				"eloquence_runtime=external-user-supplied-not-bundled" \
 				"eloquence_runtime_sha256=$$eloquence_runtime_digest" \
-				"dectalk_runtime=$$dectalk_runtime"; \
+				"dectalk_runtime=$$dectalk_runtime" \
+				'windows_helpers_source=omnivox' \
+				'windows_helpers_license=GPL-2.0-or-later'; \
 		} > "$$version_dir/PROVENANCE.new"; \
 		mv -f "$$version_dir/PROVENANCE.new" "$$version_dir/PROVENANCE"; \
-		payload_files='omnivox.exe libstdc++-6.dll libgcc_s_seh-1.dll OmnivoxEloquenceHelper32.exe OmnivoxDectalkHelper32.exe PROVENANCE'; \
+		payload_files='omnivox.exe libstdc++-6.dll libgcc_s_seh-1.dll OmnivoxEloquenceHelper32.exe OmnivoxDectalkHelper32.exe WINDOWS-HELPERS-COPYING PROVENANCE'; \
 		if [ "$$dectalk_runtime" = bundled-pinned-archive ]; then \
 			payload_files="$$payload_files DECtalk.dll dtalk_us.dic"; \
 		fi; \

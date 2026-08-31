@@ -823,27 +823,11 @@ Return the server's standard output."
        (expand-file-name file emacsvox-servers-directory))
       (should-not (search-forward "EMACSPEAK_" nil t)))))
 
-(ert-deftest emacsvox-windows-helpers-advertise-and-enforce-text-repertoires ()
-  "Native helper input must be routed or rejected without replacement."
-  (dolist
-      (entry
-       '(("windows-eloquence/OmnivoxEloquenceHelper.cs"
-          "TextRepertoire = \"windows_1252\"")
-         ("windows-dectalk/OmnivoxDectalkHelper.cs"
-          "TextRepertoire = \"iso_8859_1\"")
-         ("windows-speech-common/OmnivoxHelperHost.cs"
-          "capabilities[\"text_repertoire\"]")
-         ("windows-speech-common/OmnivoxHelperHost.cs"
-          "IsWellFormedUnicode(value)")))
-    (with-temp-buffer
-      (insert-file-contents
-       (expand-file-name (car entry) emacsvox-servers-directory))
-      (should (search-forward (cadr entry) nil t))))
+(ert-deftest emacsvox-windows-bridges-enforce-text-repertoires ()
+  "Standalone native bridges must reject unencodable text."
   (dolist
       (file
-       '("windows-eloquence/OmnivoxEloquenceCapture.cs"
-         "windows-eloquence/EloquenceBridge.cs"
-         "windows-dectalk/OmnivoxDectalkCapture.cs"
+       '("windows-eloquence/EloquenceBridge.cs"
          "windows-dectalk/DectalkBridge.cs"))
     (with-temp-buffer
       (insert-file-contents
@@ -852,6 +836,30 @@ Return the server's standard output."
       (goto-char (point-min))
       (should-not
        (search-forward "EncoderFallback.ReplacementFallback" nil t)))))
+
+(ert-deftest emacsvox-windows-omnivox-build-consumes-owned-helpers ()
+  "The final Windows bundle should build helpers from the Omnivox checkout."
+  (with-temp-buffer
+    (insert-file-contents
+     (expand-file-name "../Makefile" emacsvox-servers-directory))
+    (should
+     (search-forward
+      "OMNIVOX_HELPER_DIR = $(OMNIVOX_DIR)/windows-helpers" nil t))
+    (should
+     (search-forward
+      "eloquence_helper=\"$(OMNIVOX_HELPER_DIR)/bin/" nil t))
+    (should
+     (search-forward
+      "dectalk_helper=\"$(OMNIVOX_HELPER_DIR)/bin/" nil t))
+    (should (search-forward "WINDOWS-HELPERS-COPYING" nil t)))
+  (with-temp-buffer
+    (insert-file-contents
+     (expand-file-name
+      "omnivox-release/verify-helper-determinism.sh"
+      emacsvox-servers-directory))
+    (should (search-forward "make -C \"$omnivox_root\"" nil t))
+    (should-not (search-forward "servers/windows-eloquence" nil t))
+    (should-not (search-forward "servers/windows-dectalk" nil t))))
 
 (provide 'emacsvox-windows-speech-tests)
 

@@ -3822,6 +3822,19 @@ server continues on the legacy path.  Current Emacsvox requires
 ‘presentation_timeline_v3’ before it submits an Aural Presentation as a
 structured timeline.
 
+   Concrete Aural plans retain a bounded compatibility lowering when
+those features are absent.  Speech, voice commands, silence, tones,
+dispatch, and interruption use the established legacy queue commands.  A
+legacy tone cannot preserve the explicit overlay clock: both insert and
+overlay modes become an ordered ‘t’ command, and a fractional frequency
+is rounded to the nearest hertz.  The surrounding speech continues
+rather than being rejected for that loss of presentation precision.
+
+   Guarantee-bearing operations do not invent success on a legacy
+server.  Playback completion, source markers, and domain-scoped
+replacement remain unavailable when the selected server cannot
+acknowledge them truthfully.
+
    A complete timeline contains its delivery policy, replacement domain,
 generation, dispatch ID, speech spans, and positioned actions.  Small
 timelines use one bounded frame; large timelines use a bounded multipart
@@ -4215,13 +4228,13 @@ source                               the Omnivox checkout selected by
 
    ‘make verify-windows-omnivox-toolchain’ prepares the cached Roslyn
 inputs, builds the Docker image, and validates this boundary before
-compilation.  The full target then builds the two 32-bit helpers
-deterministically, builds native and Piper-enabled Windows Omnivox in
-the container, verifies that the pinned companion and main executable
-identify the same Omnivox source commit, stages a content-addressed
-payload, and verifies the Windows-local copy.  A host Rust installation,
-MinGW installation, Visual Studio, .NET SDK, or system eSpeak
-installation is not an input to this release path.
+compilation.  The full target then builds Omnivox's two 32-bit helper
+sources deterministically, builds native and Piper-enabled Windows
+Omnivox in the container, verifies that the pinned companion and main
+executable identify the same Omnivox source commit, stages a
+content-addressed payload, and verifies the Windows-local copy.  A host
+Rust installation, MinGW installation, Visual Studio, .NET SDK, or
+system eSpeak installation is not an input to this release path.
 
    ‘OMNIVOX_PIPER_MODEL’ is an optional staging input, not a release
 payload.  When supplied, the target validates the adjacent
@@ -4462,11 +4475,11 @@ Node: Acknowledgments158439
 Node: Developer Guide159465
 Node: Documentation Maintenance160629
 Node: Speech Server Protocols165275
-Ref: Testing A Direct Legacy Server170008
-Ref: Commands That Queue Output170567
-Ref: Commands That Set State173601
-Node: Integration Maintenance176195
-Node: Concept Index185302
+Ref: Testing A Direct Legacy Server170725
+Ref: Commands That Queue Output171284
+Ref: Commands That Set State174318
+Node: Integration Maintenance176912
+Node: Concept Index186032
 
 End Tag Table
 

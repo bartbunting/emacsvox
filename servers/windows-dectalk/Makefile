@@ -15,13 +15,7 @@ endif
 all: runtime
 	$(POWERSHELL) -NoProfile -ExecutionPolicy Bypass -File "$(BUILD_SCRIPT)" \
 		$(COMPILER_ARGS)
-	chmod +x bin/DectalkBridge.exe bin/DectalkBridge32.exe \
-		bin/OmnivoxDectalkHelper32.exe
-
-omnivox-helper:
-	$(POWERSHELL) -NoProfile -ExecutionPolicy Bypass -File "$(BUILD_SCRIPT)" \
-		$(COMPILER_ARGS) -HelperOnly
-	chmod +x bin/OmnivoxDectalkHelper32.exe
+	chmod +x bin/DectalkBridge.exe bin/DectalkBridge32.exe
 
 $(RUNTIME_ARCHIVE):
 	mkdir -p $(RUNTIME_DIR)
@@ -39,4 +33,4 @@ clean:
 clean-runtime:
 	rm -rf $(RUNTIME_DIR)
 
-.PHONY: all omnivox-helper runtime clean clean-runtime
+.PHONY: all runtime clean clean-runtime

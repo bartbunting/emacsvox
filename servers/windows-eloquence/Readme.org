@@ -61,18 +61,11 @@ cd servers/windows-eloquence
 make
 #+end_src
 
-The build uses the 64-bit .NET Framework C# compiler included with Windows;
-it produces the two standalone-server bridge executables and the 32-bit
-=OmnivoxEloquenceHelper32.exe= capture helper under
+The build uses the 64-bit .NET Framework C# compiler included with Windows and
+produces the two standalone-server bridge executables under
 =servers/windows-eloquence/bin=.  No ECI headers, libraries, or additional
-.NET SDK are required at build time.
-
-The capture helper can be rebuilt without replacing either bridge used by a
-running Emacsvox session:
-
-#+begin_src sh
-make -C servers/windows-eloquence omnivox-helper
-#+end_src
+.NET SDK are required at build time.  Omnivox's separate Eloquence capture
+helper is built from the sibling Omnivox repository by =make windows-omnivox=.
 
 Windows prevents replacement of a bridge executable while it is running.
 Before rebuilding, select a different speech server with
@@ -143,61 +136,11 @@ will start a fresh one on the next speech request.
 
 ** Omnivox capture helper
 
-=OmnivoxEloquenceHelper32.exe= hosts ECI out of process for Omnivox and writes
-captured 11.025 kHz mono signed 16-bit PCM to the versioned Omnivox helper
-protocol.  It does not play that audio itself and does not alter the existing
-=windows-outloud= playback bridge.  Its inventory keeps the engine ID
-=eloquence= separate from native voice IDs =v1= through =v8=, with =v1= as the
-default.  Protocol versions 1 through 3 map normalized speech rate through
-1.0; protocol version 4 extends it through 2.0, mapping to native ECI speed
-240 within the engine's 0-through-250 range.  All versions map average pitch
-and volume to ECI's native voice controls.  Protocol version 3 additionally
-maps pitch range to =vf=, stress to =vr= roughness, and richness to =vy=
-breathiness plus the original =vv= compensation.  These reproduce the
-original Emacspeak ten-level tables and interpolate arbitrary normalized
-values; independent volume is multiplied by the richness compensation rather
-than overwritten.  It advertises word and sentence markers, inserts bounded
-ECI indexes at Unicode word starts and conservative source sentence starts,
-and records each index reply at the current captured PCM frame.  Marker source ranges are
-UTF-8 byte ranges into the exact helper request; apostrophes and hyphens inside
-a word stay attached.  Phoneme and caller-defined native indexes remain
-unavailable.  Omnivox remains responsible for fallback, effects, mixing,
-playback, and playback completion.
-
-The capture adapter confines its ECI instance to one persistent owner thread,
-as required by ECI's single-threaded-apartment contract.  Protocol worker
-threads submit serialized jobs to that owner.  Cancellation sets a shared flag
-that the ECI callback observes on the owner thread and returns as a native
-abort; it never calls the ECI instance from the protocol thread.  A native call
-that stops producing callbacks remains contained by Omnivox's helper-process
-retirement watchdog.
-
-Helper protocol version 2 and later also advertise exact requested anchors.
-Each bounded opaque ID and UTF-8 source boundary is merged with the automatic
-word indexes and inserted through ECI's index API, so Eloquence returns its
-exact PCM frame without splitting the utterance.  Version 1 remains available
-unchanged for an older Omnivox host and truthfully omits anchor support.
-
-The descriptor advertises =windows_1252= as its lossless text repertoire.
-Omnivox resolves each chunk around this helper when the exact UTF-8 text needs
-a Unicode-capable route, preserving text and requested anchor offsets.  The
-native encoder uses exception fallback as a final guard, so an unexpected
-out-of-repertoire request fails and can be rerouted instead of becoming =?=.
-
-The bounded JSON loop, negotiation, inventory framing, PCM chunking, request
-validation, marker framing, and cancellation coordination live in the engine-neutral
-=servers/windows-speech-common/OmnivoxHelperHost.cs=.  The Eloquence-specific
-adapter supplies ECI inventory, rate mapping, PCM/index capture, and stop
-behavior; the DECtalk capture helper uses the same host contract.  The shared
-source boundary pass recognizes line breaks and common sentence terminators;
-it deliberately does not try to perform language-specific sentence analysis.
-
-The helper accepts the ECI DLL path as its first argument.  Otherwise it checks
-=OMNIVOX_ECI_DLL=, then =EMACSVOX_ECI_DLL=, then the normal Freedom Scientific
-installation path.  Standard output is reserved for protocol JSON and errors
-go to standard error.  Synthesis runs on a separate worker so =cancel=, =ping=,
-and =shutdown= remain responsive while ECI is synchronizing.  Captured audio
-is bounded to 128 MiB and emitted in chunks no larger than 256 KiB.
+The separate =OmnivoxEloquenceHelper32.exe= capture process does not alter this
+standalone playback backend.  Its source, shared helper-protocol host, build
+targets, tests, and detailed behavior documentation are maintained under
+=windows-helpers= in the sibling Omnivox repository.  Emacsvox retains the
+pinned Windows toolchain and final =make windows-omnivox= bundle orchestration.
 
 Replaceable aural submissions use one =emacsvox_tx= line containing a
 generation and a Base64-encoded UTF-8 server packet.  The Tcl front-end

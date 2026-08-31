@@ -1629,6 +1629,43 @@ write.  State synchronization lines in a combined write are ignored."
             (should-not (string-match-p "emacsvox_timeline" wire))))
       (delete-process process))))
 
+(ert-deftest emacsvox-aural-legacy-tone-does-not-drop-surrounding-speech ()
+  "A legacy speaker receives its ordered tone and the complete speech packet."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-legacy-tone-fallback-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (emacsvox-aural--delivery-sequence 0)
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :before
+           (list
+            (emacsvox-aural--make-concrete-action
+             :kind 'tone :pitch 130.8 :duration 150
+             :audio-mode 'overlay))
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text "legacy" :speak t)))
+         writes)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'process-send-string)
+              (lambda (_owner command) (push command writes)))
+             ((symbol-function 'tts-voice-reset-code)
+              (lambda () "")))
+          (emacsvox-aural-call-with-delivery-transaction
+           process
+           (lambda ()
+             (emacsvox-aural-queue-concrete-plan plan "legacy")
+             (tts--protocol-dispatch)))
+          (let ((wire (apply #'concat (nreverse writes))))
+            (should (string-prefix-p "t 131 150\n" wire))
+            (should (string-match-p "q {legacy }" wire))
+            (should (string-suffix-p "d\n" wire))
+            (should-not (string-match-p "emacsvox_tone" wire))))
+      (delete-process process))))
+
 (ert-deftest emacsvox-aural-delivery-keeps-stops-immediate-and-cancellable ()
   "Stops bypass collection and prevent pending speech from returning later."
   (let ((emacsvox-aural--pending-deliveries
@@ -3964,8 +4001,8 @@ is the default inherited by a newly created TTS scratch buffer."
       '((speaker "emacsvox_tone 1 insert 297.3018 150\n")
         (speaker "emacsvox_tone 1 overlay 880 35\n"))))))
 
-(ert-deftest emacsvox-aural-transport-rejects-unsupported-presentation-tones ()
-  "Missing capability and invalid audio are rejected before a process write."
+(ert-deftest emacsvox-aural-transport-lowers-unnegotiated-presentation-tones ()
+  "Missing presentation-tone capability uses the ordered legacy command."
   (let ((tts-speaker-process 'speaker)
         writes)
     (cl-letf
@@ -3973,9 +4010,18 @@ is the default inherited by a newly created TTS scratch buffer."
          ((symbol-function 'process-get) (lambda (&rest _) nil))
          ((symbol-function 'emacsvox-aural-delivery-send)
           (lambda (&rest arguments) (push arguments writes))))
-      (should-error
-       (emacsvox-aural--protocol-presentation-tone 440 50 'insert)
-       :type 'emacsvox-aural-transport-error))
+      (emacsvox-aural--protocol-presentation-tone 297.3018 150 'insert)
+      (emacsvox-aural--protocol-presentation-tone 880 35 'overlay))
+    (should
+     (equal
+      (nreverse writes)
+      '((speaker "t 297 150\n")
+        (speaker "t 880 35\n"))))))
+
+(ert-deftest emacsvox-aural-transport-rejects-invalid-presentation-tones ()
+  "Invalid presentation-tone values are rejected before a process write."
+  (let ((tts-speaker-process 'speaker)
+        writes)
     (cl-letf
         (((symbol-function 'processp) (lambda (_process) t))
          ((symbol-function 'process-get) (lambda (&rest _) 1))
