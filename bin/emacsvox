@@ -19,14 +19,14 @@ Start an isolated Emacsvox session from this source tree.  The launcher does
 not load site files or personal Emacs configuration.
 
 Launcher options:
-  --diagnose  validate and print the selected Emacs, backend, and setup paths
-  --check     validate the launcher, then run Omnivox's audible backend check
+  --diagnose  validate and print the selected Emacs, speech server, and paths
+  --check     validate the launcher, then run Omnivox's audible server check
   -h, --help  show this help and exit
   --          pass all following arguments to Emacs
 
 Selection order:
   Emacs       $EMACS, then EMACS= in local.mk, then emacs on PATH
-  backend     $TTS_PROGRAM, otherwise the recommended omnivox backend
+  speech server  $TTS_PROGRAM, otherwise the recommended omnivox server
   Omnivox     $OMNIVOX_PROGRAM, the per-user config, a staged runtime, PATH
   source tree $EMACSVOX_DIR, otherwise the parent of this bin directory
 
@@ -169,7 +169,7 @@ case $tts_program in
         ;;
 esac
 if [ -z "${backend_program-}" ] || [ ! -x "$backend_program" ]; then
-    fail "speech backend is not executable: $tts_program" 127
+    fail "speech server is not executable: $tts_program" 127
 fi
 
 omnivox_runtime=
@@ -178,7 +178,7 @@ case $backend_program in
         if ! omnivox_runtime=$(
             EMACSVOX_OMNIVOX_PROBE_ONLY=1 "$backend_program"
         ); then
-            fail "the Omnivox launcher could not find a runnable Omnivox backend" 127
+            fail "the Omnivox launcher could not find a runnable Omnivox executable" 127
         fi
         ;;
 esac
@@ -201,11 +201,18 @@ diagnose()
     printf 'Emacs: %s\n' "$emacs_bin"
     printf 'Emacs selection: %s\n' "$emacs_selection"
     printf 'Emacs version: %s\n' "$emacs_version"
-    printf 'Speech backend: %s\n' "$tts_program"
-    printf 'Backend selection: %s\n' "$tts_selection"
-    printf 'Backend executable: %s\n' "$backend_program"
+    printf 'Speech server: %s\n' "$tts_program"
+    printf 'Speech server selected by: %s\n' "$tts_selection"
+    case $backend_program in
+        "$emacsvox_root"/servers/*)
+            printf 'Emacsvox server launcher: %s\n' "$backend_program"
+            ;;
+        *)
+            printf 'Speech server executable: %s\n' "$backend_program"
+            ;;
+    esac
     if [ -n "$omnivox_runtime" ]; then
-        printf 'Omnivox runtime: %s\n' "$omnivox_runtime"
+        printf 'Omnivox executable: %s\n' "$omnivox_runtime"
     fi
     printf 'Startup configuration: isolated (-Q); no site or personal init files\n'
 }
@@ -223,7 +230,7 @@ case $mode in
                 exec "$backend_program" --check
                 ;;
             *)
-                fail "--check supports the recommended Omnivox backend; see docs/manual/chapters/speech-backends.org for $tts_program"
+                fail "--check supports the recommended Omnivox speech server; see docs/manual/chapters/speech-backends.org for $tts_program"
                 ;;
         esac
         ;;

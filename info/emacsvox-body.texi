@@ -169,9 +169,9 @@ prints one @code{apt} command for you to review and run.  The installer never in
 It builds the pinned stable Emacs only when Emacs 31 or newer is unavailable@comma{}
 downloads and verifies the matching Omnivox 1.5.0 Windows archive@comma{} records its
 path without editing a shell startup file@comma{} compiles Emacsvox@comma{} runs a diagnostic@comma{}
-and plays the final backend check.  The Emacs build can take a while on a fresh
-machine; later runs reuse it and the verified downloads.  Routine compiler
-output is kept below @code{$XDG_CACHE_HOME/emacsvox/logs}@comma{} normally
+and plays the final speech-server check.  The Emacs build can take a while on
+a fresh machine; later runs reuse it and the verified downloads.  Routine
+compiler output is kept below @code{$XDG_CACHE_HOME/emacsvox/logs}@comma{} normally
 @code{~/.cache/emacsvox/logs}.  If a build fails@comma{} the installer shows its final log
 lines and the complete log path.  Continue only after hearing both the final
 tone and speech.  You can then skip to the last step in
@@ -348,7 +348,7 @@ No audio or interactive Emacs has started.  Under WSL2@comma{} begin with
 @code{./bin/emacsvox-wsl-install --check} and resolve the first item it reports.
 Otherwise@comma{} follow the launcher selection:
 set @code{EMACS}@comma{} correct @code{EMACS=} in @code{local.mk}@comma{} or install Emacs 31
-or newer when the Emacs check fails.  When the speech backend is not
+or newer when the Emacs check fails.  When the speech server is not
 executable@comma{} finish installing Omnivox@comma{} put it on @code{PATH}@comma{} or set
 @code{OMNIVOX_PROGRAM} to its absolute executable.  The guided WSL2 installer
 records the verified executable in a per-user configuration file; rerunning
@@ -369,21 +369,22 @@ Remove an unintended @code{TTS_PROGRAM} override if the report does not select
 @end example
 
 An error saying @code{Could not find speech server executable} means the
-backend visible during that start cannot be executed.  Correct the reported
-backend path rather than adding more init-file configuration.  For an Omnivox
-process error@comma{} inspect the private log directory described below.
+speech server visible during that start cannot be executed.  Correct the
+reported speech-server path rather than adding more init-file configuration.
+For an Omnivox process error@comma{} inspect the private log directory described
+below.
 @item The ready message is heard@comma{} but speech later stops
 If Emacs reports that an Emacsvox speech server exited@comma{} inspect the Omnivox
-session log and type @kbd{M-x tts-restart RET} after correcting the backend
-problem.  Logs are below @code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
+session log and type @kbd{M-x tts-restart RET} after correcting the
+speech-server problem.  Logs are below @code{$XDG_STATE_HOME/emacsvox/omnivox}@comma{} defaulting to
 @code{~/.local/state/emacsvox/omnivox}.  Spoken text is omitted unless explicit
 text logging is enabled.
 @item The isolated launcher works@comma{} but a customized Emacs start does not
 Remove or comment out the Emacsvox environment and @code{load-file} forms from
 the personal init file.  This is the rollback: it leaves the checkout and the
 known-good @code{./bin/emacsvox} path intact.  Re-add the forms in the order
-shown in @ref{Persistent Startup}; backend selection must happen before setup
-is loaded.
+shown in @ref{Persistent Startup}; speech-server selection must happen before
+setup is loaded.
 @end table
 
 @node Persistent Startup
@@ -3979,12 +3980,14 @@ live under @code{docs/manual/chapters/}@comma{} while developer and maintainer c
 live under @code{docs/developer/}.  The source layout and fast authoring loop are
 summarized in @code{docs/manual/README.org}.
 
-The current project overview and installation summary live in @code{Readme.org} and
-@code{etc/install.org}.  Submit changes through the Emacsvox repository at
-@uref{https://github.com/bartbunting/emacsvox}.  Before changing a governed
-workflow or architecture@comma{} read @code{AGENTS.md} and every accepted record under
-@code{docs/adr/}.  Repository-local @code{local.mk} selects the Emacs used by supported
-targets; Emacsvox requires Emacs 31 or newer.
+The current project overview lives in @code{Readme.org}@comma{} and the complete user
+installation path lives in @code{docs/manual/chapters/installation.org}.  Source
+checkout@comma{} byte-code@comma{} and release procedures live in
+@code{docs/developer/integration-maintenance.org}.  Submit changes through the
+Emacsvox repository at @uref{https://github.com/bartbunting/emacsvox}.  Before
+changing a governed workflow or architecture@comma{} read @code{AGENTS.md} and every
+accepted record under @code{docs/adr/}.  Repository-local @code{local.mk} selects the
+Emacs used by supported targets; Emacsvox requires Emacs 31 or newer.
 
 Do not hand-edit generated references.  @code{info/docs.texi} and @code{info/keys.texi}
 come from the source documentation generator@comma{} and
@@ -4451,15 +4454,118 @@ from the user task guides.  Optional package APIs and renderers evolve@comma{} s
 recheck the upstream interfaces and keep compatibility behavior bounded when
 changing an integration.
 
-@subsection Build and live-verification boundary
+@subsection Source checkout and byte-code lifecycle
 
-For a source checkout@comma{} use the Emacs selected by @code{local.mk}.  Run
-@code{make check-emacs} before diagnosing compilation@comma{} @code{make bytecode} after an
-ordinary Lisp edit@comma{} and @code{make bytecode-rebuild} after switching branches or
-changing a macro or public interface.  Tests deliberately prefer source and
-therefore do not prove that the byte-code used by a live profile is current.
-Verify the rebuilt byte-code in a fresh Emacs rather than relying on a file
-reload when compiled dependants may already be resident.
+Use the Emacs selected by the ignored repository-local @code{local.mk}.  When Emacs
+31 or newer is not the system @code{emacs}@comma{} set its absolute path there:
+
+@example
+EMACS=/path/to/emacs-31/bin/emacs
+@end example
+
+Run @code{make check-emacs} before diagnosing compilation.  After an ordinary Lisp
+edit@comma{} use the incremental build:
+
+@example
+make bytecode
+@end example
+
+After switching branches@comma{} pulling changes@comma{} or changing a macro or public
+interface@comma{} use:
+
+@example
+make bytecode-rebuild
+@end example
+
+That target removes ignored generated @code{.elc} files and recompiles them with
+the selected Emacs; it does not clean or discard source changes.
+@code{make bytecode-check} is the non-mutating preflight for startup or deployment.
+It reports missing@comma{} stale@comma{} orphaned@comma{} or wrong-Emacs byte-code.
+
+Tests deliberately prefer source and therefore do not prove that the
+byte-code used by a live profile is current.  Verify rebuilt byte-code in a
+fresh Emacs rather than relying on a file reload when compiled dependants may
+already be resident.
+
+During development@comma{} load the changing setup source explicitly:
+
+@lisp
+(load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
+@end lisp
+
+The setup entry point warns and prefers source when newer Lisp would otherwise
+be hidden by stale local byte-code.  In a stable checkout with current @code{.elc}
+files@comma{} @code{(load-library "emacsvox-setup")} may be used.  Do not use
+@code{load-library} as the first load after editing the source tree: Emacs can
+select an old @code{emacsvox-setup.elc} before the newer source checker runs.
+
+@subsection Emacsvox release staging and publication
+
+The repository-level @code{VERSION} file is the canonical stable release
+identifier.  Calendar-versioning policy@comma{} including delayed patches and
+backports@comma{} is recorded in
+@uref{../adr/0002-calendar-versioning.org, ADR 0002}.  When advancing a release@comma{} update @code{VERSION}@comma{} the literal
+package header in @code{lisp/emacsvox.el}@comma{} and the current heading in @code{etc/NEWS}
+together@comma{} then run:
+
+@example
+make version-check
+@end example
+
+Prepare an artifact only from a separate clean@comma{} committed worktree.  Build
+fresh byte-code and run the guarded artifact target:
+
+@example
+make bytecode-rebuild
+make release-artifact
+@end example
+
+@code{release-artifact} runs the complete test and documentation gates before
+creating @code{dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2}@comma{} its SHA-256 checksum@comma{} and a
+provenance record naming the checked source commit.  For a patch-zero feature
+release@comma{} the series must match the current month.  A corrective or backport
+release retains its original non-future series as required by ADR 0002.
+Inspect the archive@comma{} checksum@comma{} and provenance before proceeding.
+
+Stop after artifact inspection unless fresh explicit permission names the
+release to be tagged and published.  Preparing an artifact@comma{} committing or
+pushing a branch@comma{} publishing documentation@comma{} or receiving a general instruction
+to continue is not permission to create or push a release tag.  Once that
+separate authorization has been given@comma{} the guarded commands are:
+
+@example
+make release-tag
+make release-publish
+@end example
+
+@code{release-tag} validates the artifact against the still-clean @code{HEAD} and creates
+a local signed tag; it requires a configured signing identity and does not push
+the tag.  @code{release-publish} repeats the artifact and source-commit validation@comma{}
+pushes only that exact tag@comma{} and creates the GitHub release.  No release target
+pushes @code{master} or the documentation branch.  Use @code{make release-check} alone
+when a non-mutating preflight is wanted without creating an artifact.
+
+@subsection Future Aural contract decisions
+
+The completed Aural implementation diary is preserved under
+@code{archive/emacsvox/migrations/} rather than serving as current instructions.
+Three questions from that diary remain deliberately undecided and require an
+explicit architecture decision before implementation:
+
+@itemize
+@item
+whether a critical alert may be completely suppressed or must retain an
+alternative presentation;
+@item
+which deterministic ordering policy would apply before minor-mode selectors
+can participate in the presentation cascade; and
+@item
+whether a new presentation occasion belongs to the core semantic contract
+or to a module-owned extension.
+@end itemize
+
+Do not infer answers from the archived proposals.  Current behavior is defined
+by the Aural implementation@comma{} its generated reference@comma{} and accepted ADRs.
 
 @subsection Notmuch contracts
 

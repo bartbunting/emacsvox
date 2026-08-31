@@ -31,9 +31,9 @@
 
 (defconst ems-tts-audit-active-text-exclusions
   '("announcements/"
+    "archive/"
     "blog-archive/"
     "etc/NEWS"
-    "etc/tts-modernization.org"
     "lisp/"
     "test/"
     "utils/tts-audit.el")

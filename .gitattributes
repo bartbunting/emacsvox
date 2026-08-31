@@ -5,6 +5,7 @@
 /.excludes export-ignore
 /android export-ignore
 /announcements export-ignore
+/archive/** export-ignore
 /git-hooks export-ignore
 /html export-ignore
 /js/node/auto export-ignore

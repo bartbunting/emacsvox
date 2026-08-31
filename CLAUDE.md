@@ -15,18 +15,19 @@ identifiers, and the pinned behavioral comparison checkout.
 The canonical current documents are:
 
 - `Readme.org` — user overview, Omnivox integration, and quick installation.
-- `etc/install.org` — source-checkout and byte-code lifecycle.
+- `docs/developer/integration-maintenance.org` — source-checkout, byte-code,
+  integration, and release lifecycle.
 - `etc/NEWS` — current user-visible changes.
 - `etc/aural-presentation-reference.org` — generated Aural user and author
   contract.
 - `servers/omnivox-release/README.org` — reproducible Windows bundle contract.
 - `test/README.org` — local and pinned-reference test workflows.
 
-`etc/advice-migration.org`, `etc/tts-modernization.org`,
-`etc/aural-presentation-schemes.org`, and `emacsvox-aural-report.org` retain
-point-in-time migration or design history. Do not infer current behavior from
-their historical checkpoints when a canonical document or current code says
-otherwise.
+`archive/emacsvox/migrations/` and `emacsvox-aural-report.org` retain
+point-in-time migration or design history. `archive/emacspeak/` preserves
+inherited release notes, experiments, and machine-specific audio material.
+Do not infer current behavior from an archive when a canonical document or
+current code says otherwise.
 
 ## Build and checks
 

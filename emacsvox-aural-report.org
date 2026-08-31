@@ -132,7 +132,8 @@ Ignored byte-code was also inspected because it affects normal startup. Several 
 
 ** Intended data flow
 
-The design document correctly specifies this flow at =etc/aural-presentation-schemes.org:32-74=:
+The archived design document specifies this flow at
+=archive/emacsvox/migrations/aural-presentation-schemes.org:32-74=:
 
 #+begin_example
 source text or semantic event

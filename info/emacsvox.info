@@ -240,9 +240,9 @@ prerequisite, run:
    It builds the pinned stable Emacs only when Emacs 31 or newer is
 unavailable, downloads and verifies the matching Omnivox 1.5.0 Windows
 archive, records its path without editing a shell startup file, compiles
-Emacsvox, runs a diagnostic, and plays the final backend check.  The
-Emacs build can take a while on a fresh machine; later runs reuse it and
-the verified downloads.  Routine compiler output is kept below
+Emacsvox, runs a diagnostic, and plays the final speech-server check.
+The Emacs build can take a while on a fresh machine; later runs reuse it
+and the verified downloads.  Routine compiler output is kept below
 ‘$XDG_CACHE_HOME/emacsvox/logs’, normally ‘~/.cache/emacsvox/logs’.  If
 a build fails, the installer shows its final log lines and the complete
 log path.  Continue only after hearing both the final tone and speech.
@@ -401,7 +401,7 @@ starting point and find the first command below that did not work:
      ‘./bin/emacsvox-wsl-install --check’ and resolve the first item it
      reports.  Otherwise, follow the launcher selection: set ‘EMACS’,
      correct ‘EMACS=’ in ‘local.mk’, or install Emacs 31 or newer when
-     the Emacs check fails.  When the speech backend is not executable,
+     the Emacs check fails.  When the speech server is not executable,
      finish installing Omnivox, put it on ‘PATH’, or set
      ‘OMNIVOX_PROGRAM’ to its absolute executable.  The guided WSL2
      installer records the verified executable in a per-user
@@ -421,14 +421,14 @@ The audible check passes, but "Emacsvox is ready" is absent
           ./bin/emacsvox -- --debug-init
 
      An error saying ‘Could not find speech server executable’ means the
-     backend visible during that start cannot be executed.  Correct the
-     reported backend path rather than adding more init-file
-     configuration.  For an Omnivox process error, inspect the private
-     log directory described below.
+     speech server visible during that start cannot be executed.
+     Correct the reported speech-server path rather than adding more
+     init-file configuration.  For an Omnivox process error, inspect the
+     private log directory described below.
 The ready message is heard, but speech later stops
      If Emacs reports that an Emacsvox speech server exited, inspect the
      Omnivox session log and type ‘M-x tts-restart RET’ after correcting
-     the backend problem.  Logs are below
+     the speech-server problem.  Logs are below
      ‘$XDG_STATE_HOME/emacsvox/omnivox’, defaulting to
      ‘~/.local/state/emacsvox/omnivox’.  Spoken text is omitted unless
      explicit text logging is enabled.
@@ -437,7 +437,7 @@ The isolated launcher works, but a customized Emacs start does not
      forms from the personal init file.  This is the rollback: it leaves
      the checkout and the known-good ‘./bin/emacsvox’ path intact.
      Re-add the forms in the order shown in *note Persistent Startup::;
-     backend selection must happen before setup is loaded.
+     speech-server selection must happen before setup is loaded.
 
 
 File: emacsvox.info,  Node: Persistent Startup,  Prev: Recovering From No Speech,  Up: Installation
@@ -3798,13 +3798,15 @@ chapters live under ‘docs/manual/chapters/’, while developer and
 maintainer chapters live under ‘docs/developer/’.  The source layout and
 fast authoring loop are summarized in ‘docs/manual/README.org’.
 
-   The current project overview and installation summary live in
-‘Readme.org’ and ‘etc/install.org’.  Submit changes through the Emacsvox
-repository at <https://github.com/bartbunting/emacsvox>.  Before
-changing a governed workflow or architecture, read ‘AGENTS.md’ and every
-accepted record under ‘docs/adr/’.  Repository-local ‘local.mk’ selects
-the Emacs used by supported targets; Emacsvox requires Emacs 31 or
-newer.
+   The current project overview lives in ‘Readme.org’, and the complete
+user installation path lives in ‘docs/manual/chapters/installation.org’.
+Source checkout, byte-code, and release procedures live in
+‘docs/developer/integration-maintenance.org’.  Submit changes through
+the Emacsvox repository at <https://github.com/bartbunting/emacsvox>.
+Before changing a governed workflow or architecture, read ‘AGENTS.md’
+and every accepted record under ‘docs/adr/’.  Repository-local
+‘local.mk’ selects the Emacs used by supported targets; Emacsvox
+requires Emacs 31 or newer.
 
    Do not hand-edit generated references.  ‘info/docs.texi’ and
 ‘info/keys.texi’ come from the source documentation generator, and
@@ -4195,19 +4197,112 @@ omitted from the user task guides.  Optional package APIs and renderers
 evolve, so recheck the upstream interfaces and keep compatibility
 behavior bounded when changing an integration.
 
-16.3.1 Build and live-verification boundary
--------------------------------------------
+16.3.1 Source checkout and byte-code lifecycle
+----------------------------------------------
 
-For a source checkout, use the Emacs selected by ‘local.mk’.  Run ‘make
-check-emacs’ before diagnosing compilation, ‘make bytecode’ after an
-ordinary Lisp edit, and ‘make bytecode-rebuild’ after switching branches
-or changing a macro or public interface.  Tests deliberately prefer
-source and therefore do not prove that the byte-code used by a live
-profile is current.  Verify the rebuilt byte-code in a fresh Emacs
-rather than relying on a file reload when compiled dependants may
-already be resident.
+Use the Emacs selected by the ignored repository-local ‘local.mk’.  When
+Emacs 31 or newer is not the system ‘emacs’, set its absolute path
+there:
 
-16.3.2 Notmuch contracts
+     EMACS=/path/to/emacs-31/bin/emacs
+
+   Run ‘make check-emacs’ before diagnosing compilation.  After an
+ordinary Lisp edit, use the incremental build:
+
+     make bytecode
+
+   After switching branches, pulling changes, or changing a macro or
+public interface, use:
+
+     make bytecode-rebuild
+
+   That target removes ignored generated ‘.elc’ files and recompiles
+them with the selected Emacs; it does not clean or discard source
+changes.  ‘make bytecode-check’ is the non-mutating preflight for
+startup or deployment.  It reports missing, stale, orphaned, or
+wrong-Emacs byte-code.
+
+   Tests deliberately prefer source and therefore do not prove that the
+byte-code used by a live profile is current.  Verify rebuilt byte-code
+in a fresh Emacs rather than relying on a file reload when compiled
+dependants may already be resident.
+
+   During development, load the changing setup source explicitly:
+
+     (load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
+
+   The setup entry point warns and prefers source when newer Lisp would
+otherwise be hidden by stale local byte-code.  In a stable checkout with
+current ‘.elc’ files, ‘(load-library "emacsvox-setup")’ may be used.  Do
+not use ‘load-library’ as the first load after editing the source tree:
+Emacs can select an old ‘emacsvox-setup.elc’ before the newer source
+checker runs.
+
+16.3.2 Emacsvox release staging and publication
+-----------------------------------------------
+
+The repository-level ‘VERSION’ file is the canonical stable release
+identifier.  Calendar-versioning policy, including delayed patches and
+backports, is recorded in ADR 0002
+(../adr/0002-calendar-versioning.org).  When advancing a release, update
+‘VERSION’, the literal package header in ‘lisp/emacsvox.el’, and the
+current heading in ‘etc/NEWS’ together, then run:
+
+     make version-check
+
+   Prepare an artifact only from a separate clean, committed worktree.
+Build fresh byte-code and run the guarded artifact target:
+
+     make bytecode-rebuild
+     make release-artifact
+
+   ‘release-artifact’ runs the complete test and documentation gates
+before creating ‘dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2’, its SHA-256
+checksum, and a provenance record naming the checked source commit.  For
+a patch-zero feature release, the series must match the current month.
+A corrective or backport release retains its original non-future series
+as required by ADR 0002.  Inspect the archive, checksum, and provenance
+before proceeding.
+
+   Stop after artifact inspection unless fresh explicit permission names
+the release to be tagged and published.  Preparing an artifact,
+committing or pushing a branch, publishing documentation, or receiving a
+general instruction to continue is not permission to create or push a
+release tag.  Once that separate authorization has been given, the
+guarded commands are:
+
+     make release-tag
+     make release-publish
+
+   ‘release-tag’ validates the artifact against the still-clean ‘HEAD’
+and creates a local signed tag; it requires a configured signing
+identity and does not push the tag.  ‘release-publish’ repeats the
+artifact and source-commit validation, pushes only that exact tag, and
+creates the GitHub release.  No release target pushes ‘master’ or the
+documentation branch.  Use ‘make release-check’ alone when a
+non-mutating preflight is wanted without creating an artifact.
+
+16.3.3 Future Aural contract decisions
+--------------------------------------
+
+The completed Aural implementation diary is preserved under
+‘archive/emacsvox/migrations/’ rather than serving as current
+instructions.  Three questions from that diary remain deliberately
+undecided and require an explicit architecture decision before
+implementation:
+
+   • whether a critical alert may be completely suppressed or must
+     retain an alternative presentation;
+   • which deterministic ordering policy would apply before minor-mode
+     selectors can participate in the presentation cascade; and
+   • whether a new presentation occasion belongs to the core semantic
+     contract or to a module-owned extension.
+
+   Do not infer answers from the archived proposals.  Current behavior
+is defined by the Aural implementation, its generated reference, and
+accepted ADRs.
+
+16.3.4 Notmuch contracts
 ------------------------
 
 The live module is registered as an optional package integration.  Its
@@ -4238,7 +4333,7 @@ exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
 focused selector, including real displayed-window reading for both
 advance paths.
 
-16.3.3 Agent Shell contracts
+16.3.5 Agent Shell contracts
 ----------------------------
 
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
@@ -4284,7 +4379,7 @@ subscriptions consume ‘permission-request’, ‘permission-response’, and
 when Agent Shell exposes it; keep renderer and private fallbacks
 isolated and covered by compatibility tests.
 
-16.3.4 WSL2 Omnivox development staging
+16.3.6 WSL2 Omnivox development staging
 ---------------------------------------
 
 The ordinary WSL2 user route is implemented by
@@ -4514,81 +4609,81 @@ Node: Top384
 Node: Introduction2198
 Node: Installation5597
 Node: Obtaining Emacsvox6814
-Node: Building And Testing The Speech Server10232
-Node: Quick Installation11788
-Node: Confirming First Speech14287
-Node: Recovering From No Speech15610
-Node: Persistent Startup18460
-Node: Basic Usage19474
-Node: Overview22098
-Node: Working23236
-Ref: Working-Footnote-124578
-Ref: Working-Footnote-224671
-Node: Reading24781
-Node: Speech System26561
-Node: Controlling Echo27473
-Node: Speech Output Control28308
-Node: Miscellaneous30038
-Node: Voice-lock30985
-Node: Status Information32235
-Node: Speech Backends33298
-Node: Supported Platform Routes35009
-Node: Installing An Omnivox Release Binary38777
-Node: Installing An Omnivox Windows Release Under WSL242162
-Node: Trying Native Windows Emacsvox47367
-Node: Installing Omnivox From Source55079
-Node: Building Omnivox For WSL256943
-Node: Selecting And Checking Omnivox62014
-Node: Compatibility Speech Servers64282
-Node: Backend Diagnostics And Ownership66208
-Node: Audio Desktop68553
-Node: Desktop Objects69683
-Node: Object Oriented Desktop70908
-Node: Context-Sensitive Interaction72021
-Node: Aural Presentation75136
-Node: Presentation Model77335
-Node: Presentation Modalities79802
-Node: Aural Home81549
-Node: Explaining Presentation83437
-Node: Adjusting Presentation85422
-Node: Presentation Profiles88391
-Node: Voices And Routing90082
-Node: Sounds And Space92439
-Node: Presentation Troubleshooting94063
-Node: Voice Lock96101
-Node: Using Online Help99308
-Node: Emacs Packages103370
-Node: Document Authoring104744
-Node: Structured Editing105298
-Node: Browsing Structure106281
-Node: Web Browsing106879
-Node: Messaging107714
-Node: Editing Code108212
-Node: Development Environment108731
-Node: Desktop Management109288
-Node: Personal Information Management109790
-Node: Desktop Applications110322
-Node: Notmuch Mail111871
-Ref: Notmuch fields and privacy121231
-Node: Agent Shell126939
-Node: EAT Terminal Access136933
-Node: Running Terminal Based Applications154192
-Node: Starting Term155147
-Node: Term Input Modes155986
-Node: Term Speech Feedback157146
-Node: Reviewing The Term Screen158340
-Node: Term Help And Recovery160241
-Node: Emacsvox Keyboard Commands161140
-Node: Copyright162544
-Node: Acknowledgments163131
-Node: Developer Guide164157
-Node: Documentation Maintenance165321
-Node: Speech Server Protocols169967
-Ref: Testing A Direct Legacy Server175417
-Ref: Commands That Queue Output175976
-Ref: Commands That Set State179010
-Node: Integration Maintenance181604
-Node: Concept Index191794
+Node: Building And Testing The Speech Server10237
+Node: Quick Installation11793
+Node: Confirming First Speech14292
+Node: Recovering From No Speech15615
+Node: Persistent Startup18487
+Node: Basic Usage19501
+Node: Overview22125
+Node: Working23263
+Ref: Working-Footnote-124605
+Ref: Working-Footnote-224698
+Node: Reading24808
+Node: Speech System26588
+Node: Controlling Echo27500
+Node: Speech Output Control28335
+Node: Miscellaneous30065
+Node: Voice-lock31012
+Node: Status Information32262
+Node: Speech Backends33325
+Node: Supported Platform Routes35036
+Node: Installing An Omnivox Release Binary38804
+Node: Installing An Omnivox Windows Release Under WSL242189
+Node: Trying Native Windows Emacsvox47394
+Node: Installing Omnivox From Source55106
+Node: Building Omnivox For WSL256970
+Node: Selecting And Checking Omnivox62041
+Node: Compatibility Speech Servers64309
+Node: Backend Diagnostics And Ownership66235
+Node: Audio Desktop68580
+Node: Desktop Objects69710
+Node: Object Oriented Desktop70935
+Node: Context-Sensitive Interaction72048
+Node: Aural Presentation75163
+Node: Presentation Model77362
+Node: Presentation Modalities79829
+Node: Aural Home81576
+Node: Explaining Presentation83464
+Node: Adjusting Presentation85449
+Node: Presentation Profiles88418
+Node: Voices And Routing90109
+Node: Sounds And Space92466
+Node: Presentation Troubleshooting94090
+Node: Voice Lock96128
+Node: Using Online Help99335
+Node: Emacs Packages103397
+Node: Document Authoring104771
+Node: Structured Editing105325
+Node: Browsing Structure106308
+Node: Web Browsing106906
+Node: Messaging107741
+Node: Editing Code108239
+Node: Development Environment108758
+Node: Desktop Management109315
+Node: Personal Information Management109817
+Node: Desktop Applications110349
+Node: Notmuch Mail111898
+Ref: Notmuch fields and privacy121258
+Node: Agent Shell126966
+Node: EAT Terminal Access136960
+Node: Running Terminal Based Applications154219
+Node: Starting Term155174
+Node: Term Input Modes156013
+Node: Term Speech Feedback157173
+Node: Reviewing The Term Screen158367
+Node: Term Help And Recovery160268
+Node: Emacsvox Keyboard Commands161167
+Node: Copyright162571
+Node: Acknowledgments163158
+Node: Developer Guide164184
+Node: Documentation Maintenance165348
+Node: Speech Server Protocols170146
+Ref: Testing A Direct Legacy Server175596
+Ref: Commands That Queue Output176155
+Ref: Commands That Set State179189
+Node: Integration Maintenance181783
+Node: Concept Index195905
 
 End Tag Table
 

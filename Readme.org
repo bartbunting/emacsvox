@@ -113,8 +113,8 @@ The generic speech interface now uses =tts-*= names and the
 =TTS_PROGRAM= environment variable.  This is an intentional breaking change:
 configuration written for the old generic =dtk-*= interface must be updated.
 Names for actual DECtalk backends, such as =dtk-exp= and =dtk-soft=, are
-unchanged.  See [[file:etc/tts-modernization.org][the migration record]] for
-the complete naming policy and migration table.
+unchanged.  See
+[[file:archive/emacsvox/migrations/tts-modernization.org][the migration record]] for the complete naming policy and migration table.
 
 ** Emacsvox Namespace Upgrade
 

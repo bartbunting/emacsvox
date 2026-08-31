@@ -32,7 +32,11 @@
   release worktree, run `make bytecode-rebuild`; `make release-artifact` then
   runs the guarded release gate and records the checked source commit. Inspect
   it before `make release-tag` and `make release-publish`. Never tag or push
-  around a failed gate.
+  around a failed gate. Treat release preparation and release publication as
+  separate approvals: never create or push a release tag, or run
+  `make release-publish`, without fresh explicit user permission naming the
+  release. A general instruction to continue, commit, push a branch, or publish
+  documentation is not permission to publish a tagged release.
 - Reports and internal notes do not require an Emacsvox build. The maintained
   manual source is `docs/manual/emacsvox.org`, its included user chapters under
   `docs/manual/chapters/`, and its final developer guide under

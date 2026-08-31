@@ -9,18 +9,122 @@ from the user task guides.  Optional package APIs and renderers evolve, so
 recheck the upstream interfaces and keep compatibility behavior bounded when
 changing an integration.
 
-** Build and live-verification boundary
+** Source checkout and byte-code lifecycle
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-For a source checkout, use the Emacs selected by ~local.mk~.  Run
-~make check-emacs~ before diagnosing compilation, ~make bytecode~ after an
-ordinary Lisp edit, and ~make bytecode-rebuild~ after switching branches or
-changing a macro or public interface.  Tests deliberately prefer source and
-therefore do not prove that the byte-code used by a live profile is current.
-Verify the rebuilt byte-code in a fresh Emacs rather than relying on a file
-reload when compiled dependants may already be resident.
+Use the Emacs selected by the ignored repository-local ~local.mk~.  When Emacs
+31 or newer is not the system ~emacs~, set its absolute path there:
+
+#+begin_example
+EMACS=/path/to/emacs-31/bin/emacs
+#+end_example
+
+Run ~make check-emacs~ before diagnosing compilation.  After an ordinary Lisp
+edit, use the incremental build:
+
+#+begin_example
+make bytecode
+#+end_example
+
+After switching branches, pulling changes, or changing a macro or public
+interface, use:
+
+#+begin_example
+make bytecode-rebuild
+#+end_example
+
+That target removes ignored generated ~.elc~ files and recompiles them with
+the selected Emacs; it does not clean or discard source changes.
+~make bytecode-check~ is the non-mutating preflight for startup or deployment.
+It reports missing, stale, orphaned, or wrong-Emacs byte-code.
+
+Tests deliberately prefer source and therefore do not prove that the
+byte-code used by a live profile is current.  Verify rebuilt byte-code in a
+fresh Emacs rather than relying on a file reload when compiled dependants may
+already be resident.
+
+During development, load the changing setup source explicitly:
+
+#+begin_src emacs-lisp
+(load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
+#+end_src
+
+The setup entry point warns and prefers source when newer Lisp would otherwise
+be hidden by stale local byte-code.  In a stable checkout with current ~.elc~
+files, ~(load-library "emacsvox-setup")~ may be used.  Do not use
+~load-library~ as the first load after editing the source tree: Emacs can
+select an old ~emacsvox-setup.elc~ before the newer source checker runs.
+
+** Emacsvox release staging and publication
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The repository-level ~VERSION~ file is the canonical stable release
+identifier.  Calendar-versioning policy, including delayed patches and
+backports, is recorded in
+[[file:../adr/0002-calendar-versioning.org][ADR 0002]].  When advancing a release, update ~VERSION~, the literal
+package header in ~lisp/emacsvox.el~, and the current heading in ~etc/NEWS~
+together, then run:
+
+#+begin_example
+make version-check
+#+end_example
+
+Prepare an artifact only from a separate clean, committed worktree.  Build
+fresh byte-code and run the guarded artifact target:
+
+#+begin_example
+make bytecode-rebuild
+make release-artifact
+#+end_example
+
+~release-artifact~ runs the complete test and documentation gates before
+creating ~dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2~, its SHA-256 checksum, and a
+provenance record naming the checked source commit.  For a patch-zero feature
+release, the series must match the current month.  A corrective or backport
+release retains its original non-future series as required by ADR 0002.
+Inspect the archive, checksum, and provenance before proceeding.
+
+Stop after artifact inspection unless fresh explicit permission names the
+release to be tagged and published.  Preparing an artifact, committing or
+pushing a branch, publishing documentation, or receiving a general instruction
+to continue is not permission to create or push a release tag.  Once that
+separate authorization has been given, the guarded commands are:
+
+#+begin_example
+make release-tag
+make release-publish
+#+end_example
+
+~release-tag~ validates the artifact against the still-clean ~HEAD~ and creates
+a local signed tag; it requires a configured signing identity and does not push
+the tag.  ~release-publish~ repeats the artifact and source-commit validation,
+pushes only that exact tag, and creates the GitHub release.  No release target
+pushes ~master~ or the documentation branch.  Use ~make release-check~ alone
+when a non-mutating preflight is wanted without creating an artifact.
+
+** Future Aural contract decisions
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The completed Aural implementation diary is preserved under
+~archive/emacsvox/migrations/~ rather than serving as current instructions.
+Three questions from that diary remain deliberately undecided and require an
+explicit architecture decision before implementation:
+
+- whether a critical alert may be completely suppressed or must retain an
+  alternative presentation;
+- which deterministic ordering policy would apply before minor-mode selectors
+  can participate in the presentation cascade; and
+- whether a new presentation occasion belongs to the core semantic contract
+  or to a module-owned extension.
+
+Do not infer answers from the archived proposals.  Current behavior is defined
+by the Aural implementation, its generated reference, and accepted ADRs.
 
 ** Notmuch contracts
 :PROPERTIES:

@@ -79,8 +79,6 @@
          (emacsvox-backend-doc-tests--file-string "Readme.org"))
         (installation
          (emacsvox-backend-doc-tests--file-string "info/emacsvox-body.texi"))
-        (source-installation
-         (emacsvox-backend-doc-tests--file-string "etc/install.org"))
         (master
          (emacsvox-backend-doc-tests--file-string "docs/manual/emacsvox.org"))
         (menu
@@ -90,10 +88,6 @@
       "file:docs/manual/chapters/speech-backends\\.org.*Speech Backends guide"
       readme))
     (should (string-match-p "@xref{Speech Backends}" installation))
-    (should
-     (string-match-p
-      "file:../docs/manual/chapters/speech-backends\\.org.*Speech Backends guide"
-      source-installation))
     (should
      (string-match-p
       (regexp-quote "export TTS_PROGRAM=omnivox") installation))

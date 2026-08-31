@@ -4,7 +4,7 @@ About a year ago I switched from using raw ALSA to pulseaudio.
 Linux on my laptop just cut over to using pipewire with pipewire-pulse
 providing a compatibility drop-in.
 However that drop-in does not automatically provide all my pulse
-customizations --- see [[../pulse/readme.org][pulse readme]] for details.
+customizations --- see [[../pulse/README.org][pulse readme]] for details.
 These notes document what broke and how I fix them.
 
 * Out-Of-The-Box Breakages

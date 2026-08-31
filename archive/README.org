@@ -1,0 +1,35 @@
+#+title: Emacsvox Historical Archive
+#+startup: content
+
+* Purpose
+
+This directory preserves material that is useful for project history but is
+not current Emacsvox installation, operation, architecture, or maintenance
+guidance.  Archived files remain tracked in Git and retain their original
+attribution.  They are excluded from release archives so users receive the
+maintained manuals and current release notes rather than obsolete procedures.
+
+Use ~Readme.org~, ~docs/manual/~, ~docs/developer/~, ~docs/adr/~, and
+~etc/NEWS~ for current information.  Historical commands, paths, dependency
+claims, test counts, and implementation plans below may no longer describe the
+working tree.
+
+* Emacspeak material
+
+~emacspeak/news/~ contains the 51 inherited Emacspeak NEWS files from releases
+8.0 through 60.0, including the original combined and unpadded filenames.
+~emacspeak/ai/~ preserves a 2024 generated-poetry experiment and its audio.
+~emacspeak/audio/~ preserves T. V. Raman's machine-specific PulseAudio and
+PipeWire notes together with their companion configurations and scripts.
+
+These files document Emacspeak and their original environments.  Moving them
+here does not transfer authorship or make their procedures supported Emacsvox
+configuration.
+
+* Emacsvox migration records
+
+~emacsvox/migrations/~ contains completed implementation diaries for the
+Emacs 31 advice conversion, the generic DTK-to-TTS namespace transition, and
+the Aural Presentation architecture.  Their durable results are reflected in
+current code, tests, documentation, and accepted ADRs.  The maintained
+developer guide records any still-open question that remains relevant.

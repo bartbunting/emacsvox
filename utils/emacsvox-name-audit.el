@@ -23,9 +23,9 @@
 
 (defconst ems-name-audit-excluded-prefixes
   '("announcements/"
+    "archive/"
     "blog-archive/"
     "etc/NEWS"
-    "etc/ai/"
     "html/"
     "info/emacspeak-significance"
     "info/inc-turning-twenty"
@@ -36,9 +36,7 @@
   "Tracked historical path prefixes excluded from the audit.")
 
 (defconst ems-name-audit-excluded-files
-  '("etc/advice-migration.org"
-    "etc/tts-modernization.org"
-    "docs/manual/chapters/provenance.org"
+  '("docs/manual/chapters/provenance.org"
     "info/emacsvox-body.texi"
     "info/Makefile"
     "lisp/elpa-readme"
@@ -55,14 +53,16 @@
   "Individual historical, migration, and comparison files excluded.")
 
 (defconst ems-name-audit-allowed-names
-  '(("CLAUDE.md" "EMACSPEAK_DIR" "EMACSPEAK_PLAY")
+  '(("CLAUDE.md" "EMACSPEAK_DIR" "EMACSPEAK_PLAY" "/emacspeak/")
     ("Makefile" "EMACSPEAK_DIR" "EMACSPEAK_TRACE_GOLDEN")
     ("Readme.org" "EMACSPEAK_DIR" "EMACSPEAK_PLAY")
     ("info/dir" "emacspeak-significance")
     ("info/emacsvox-heritage.texi" "emacspeak-significance")
     ("servers/windows-speech-NOTICE.md" "emacspeak-support")
+    ("pipewire/readme.org" "/emacspeak/")
     ("test/emacsvox-launcher-tests.el"
-     "EMACSPEAK_DIR" "EMACSPEAK_PLAY"))
+     "EMACSPEAK_DIR" "EMACSPEAK_PLAY")
+    ("test/emacsvox-tts-audit-tests.el" "/emacspeak/"))
   "Removed names intentionally documented in otherwise active files.")
 
 (defun ems-name-audit--tracked-files (directory)

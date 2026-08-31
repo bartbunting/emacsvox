@@ -537,9 +537,16 @@
              (string-search (format "Emacs: %s\n" fake-emacs) output))
             (should (string-search "Emacs selection: local.mk\n" output))
             (should (string-search "Emacs version: 31.2\n" output))
-            (should (string-search "Speech backend: omnivox\n" output))
+            (should (string-search "Speech server: omnivox\n" output))
             (should (string-search
-                     (format "Omnivox runtime: %s\n" fake-omnivox)
+                     "Speech server selected by: recommended default\n"
+                     output))
+            (should (string-search
+                     (format "Emacsvox server launcher: %s/servers/omnivox\n"
+                             (directory-file-name root))
+                     output))
+            (should (string-search
+                     (format "Omnivox executable: %s\n" fake-omnivox)
                      output))
             (should-not (file-exists-p log-directory))))
       (delete-directory root t))))
@@ -591,7 +598,7 @@
               "Configured Omnivox executable is not runnable" output))
             (should
              (string-search
-              "could not find a runnable Omnivox backend" output))))
+              "could not find a runnable Omnivox executable" output))))
       (delete-directory root t))))
 
 (ert-deftest emacsvox-launcher-honors-root-and-backend-overrides ()
@@ -622,11 +629,16 @@
               (format "Emacsvox root: %s\n" (directory-file-name root))
               output))
             (should
-             (string-search (format "Speech backend: %s\n" backend) output))
+             (string-search (format "Speech server: %s\n" backend) output))
             (should
              (string-search
-              "Backend selection: TTS_PROGRAM environment variable\n"
-              output))))
+              "Speech server selected by: TTS_PROGRAM environment variable\n"
+              output))
+            (should
+             (string-search
+              (format "Speech server executable: %s\n" backend)
+              output))
+            (should-not (string-search "Emacsvox server launcher:" output))))
       (delete-directory root t))))
 
 (ert-deftest emacsvox-launcher-check-runs-audible-omnivox-check ()

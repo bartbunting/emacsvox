@@ -10,5 +10,6 @@ I have this directory symlinked in ~/.config
 1. You'll likely need to restart Emacs
 2. If things break and you lose audio, remove the symlink and
       restart the pipewire and pipewire-pulse service as above.
-3. Additional filters can be found in _../etc/pipewire/unused_.
+3. Historical experimental filters are preserved in
+   _../archive/emacspeak/audio/pipewire/unused_.
    

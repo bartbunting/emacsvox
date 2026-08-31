@@ -62,7 +62,9 @@
   (should (ems-tts-audit--active-text-path-p "servers/tts-lib.tcl"))
   (should (ems-tts-audit--active-text-path-p "tvr/emacs-startup.el"))
   (should-not (ems-tts-audit--active-text-path-p "announcements/old.org"))
-  (should-not (ems-tts-audit--active-text-path-p "etc/NEWS-59.0"))
+  (should-not
+   (ems-tts-audit--active-text-path-p
+    "archive/emacspeak/news/NEWS-59.0"))
   (should-not (ems-tts-audit--active-text-path-p "test/example.el")))
 
 (ert-deftest emacsvox-tts-audit-identifies-definitions ()

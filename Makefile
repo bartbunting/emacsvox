@@ -944,11 +944,11 @@ install:
 	@echo "  ./bin/emacsvox-wsl-install --check"
 	@echo "  ./bin/emacsvox-wsl-install"
 	@echo "On other platforms, run make bytecode and install Omnivox as described in the manual."
-	@echo "For an audible backend check, run: ./bin/emacsvox --check"
+	@echo "For an audible speech-server check, run: ./bin/emacsvox --check"
 	@echo "For an isolated first start, run: ./bin/emacsvox"
 	@echo "For normal customized starts, export TTS_PROGRAM=omnivox and add:"
 	@echo "(load-file \"`pwd`/lisp/emacsvox-setup.el\")"
-	@echo "Package maintainers: see etc/install.org for instructions."
+	@echo "Package maintainers: see docs/developer/integration-maintenance.org for instructions."
 
 ### Worktree:
 # Usage make wk TAG=tag

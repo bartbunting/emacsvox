@@ -88,9 +88,9 @@ prints one ~apt~ command for you to review and run.  The installer never invokes
 It builds the pinned stable Emacs only when Emacs 31 or newer is unavailable,
 downloads and verifies the matching Omnivox 1.5.0 Windows archive, records its
 path without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
-and plays the final backend check.  The Emacs build can take a while on a fresh
-machine; later runs reuse it and the verified downloads.  Routine compiler
-output is kept below ~$XDG_CACHE_HOME/emacsvox/logs~, normally
+and plays the final speech-server check.  The Emacs build can take a while on
+a fresh machine; later runs reuse it and the verified downloads.  Routine
+compiler output is kept below ~$XDG_CACHE_HOME/emacsvox/logs~, normally
 ~~/.cache/emacsvox/logs~.  If a build fails, the installer shows its final log
 lines and the complete log path.  Continue only after hearing both the final
 tone and speech.  You can then skip to the last step in
@@ -267,7 +267,7 @@ point and find the first command below that did not work:
   ~./bin/emacsvox-wsl-install --check~ and resolve the first item it reports.
   Otherwise, follow the launcher selection:
   set ~EMACS~, correct ~EMACS=~ in ~local.mk~, or install Emacs 31
-  or newer when the Emacs check fails.  When the speech backend is not
+  or newer when the Emacs check fails.  When the speech server is not
   executable, finish installing Omnivox, put it on ~PATH~, or set
   ~OMNIVOX_PROGRAM~ to its absolute executable.  The guided WSL2 installer
   records the verified executable in a per-user configuration file; rerunning
@@ -290,14 +290,15 @@ point and find the first command below that did not work:
   #+end_example
 
   An error saying ~Could not find speech server executable~ means the
-  backend visible during that start cannot be executed.  Correct the reported
-  backend path rather than adding more init-file configuration.  For an Omnivox
-  process error, inspect the private log directory described below.
+  speech server visible during that start cannot be executed.  Correct the
+  reported speech-server path rather than adding more init-file configuration.
+  For an Omnivox process error, inspect the private log directory described
+  below.
 - The ready message is heard, but speech later stops ::
 
   If Emacs reports that an Emacsvox speech server exited, inspect the Omnivox
-  session log and type @@texinfo:@kbd{M-x tts-restart RET}@@ after correcting the backend
-  problem.  Logs are below ~$XDG_STATE_HOME/emacsvox/omnivox~, defaulting to
+  session log and type @@texinfo:@kbd{M-x tts-restart RET}@@ after correcting the
+  speech-server problem.  Logs are below ~$XDG_STATE_HOME/emacsvox/omnivox~, defaulting to
   ~~/.local/state/emacsvox/omnivox~.  Spoken text is omitted unless explicit
   text logging is enabled.
 - The isolated launcher works, but a customized Emacs start does not ::
@@ -305,8 +306,8 @@ point and find the first command below that did not work:
   Remove or comment out the Emacsvox environment and ~load-file~ forms from
   the personal init file.  This is the rollback: it leaves the checkout and the
   known-good ~./bin/emacsvox~ path intact.  Re-add the forms in the order
-  shown in @@texinfo:@ref{Persistent Startup}@@; backend selection must happen before setup
-  is loaded.
+  shown in @@texinfo:@ref{Persistent Startup}@@; speech-server selection must happen before
+  setup is loaded.
 
 ** Persistent Startup
 :PROPERTIES:

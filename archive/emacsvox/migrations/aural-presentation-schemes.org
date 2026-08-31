@@ -14,7 +14,7 @@ This file is the design and implementation diary for that migration.  Dated
 test counts, environment limitations, proposed work, and references to
 selectable schemes below record their individual slice and are not current
 operational documentation.  Use
-[[file:aural-presentation-reference.org][the generated Aural Presentation Reference]]
+[[file:../../../etc/aural-presentation-reference.org][the generated Aural Presentation Reference]]
 for the maintained user and extension contract.
 
 Build one semantic aural-presentation system for Emacsvox.

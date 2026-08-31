@@ -44,6 +44,9 @@
   "Archives are excluded while active implementation paths are audited."
   (should (ems-name-audit--excluded-path-p "announcements/old.org"))
   (should
+   (ems-name-audit--excluded-path-p
+    "archive/emacsvox/migrations/tts-modernization.org"))
+  (should
    (ems-name-audit--excluded-path-p "test/run-scenarios.el"))
   (should
    (ems-name-audit--excluded-path-p "info/emacsvox-reference.info-2"))
@@ -58,6 +61,8 @@
   "Breaking names are allowed only in their explicit documentation."
   (should
    (ems-name-audit--allowed-name-p "Readme.org" "EMACSPEAK_DIR"))
+  (should
+   (ems-name-audit--allowed-name-p "CLAUDE.md" "/emacspeak/"))
   (should-not
    (ems-name-audit--allowed-name-p "run" "EMACSPEAK_DIR")))
 
