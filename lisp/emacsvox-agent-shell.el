@@ -479,10 +479,11 @@ Zebra striping is purely visual and should not alter table data speech.")
 ;;;  Helper Functions
 
 (defun emacsvox-agent-shell--speech-copy-without-yank-handler (text)
-  "Return TEXT prepared for speech without invoking its clipboard handler.
-Agent-shell Markdown uses `yank-handler' to make pasted content plain.  Speech
-must bypass that handler so `tts-speak' retains faces and other aural display
-properties while copying TEXT into its private scratch buffer."
+  "Return TEXT prepared for speech without invoking a clipboard handler.
+Current Agent Shell strips presentation properties through its buffer copy
+filter.  Releases before 2026-08-31 instead attached `yank-handler' to rendered
+Markdown.  Bypass that legacy handler so `tts-speak' retains faces and other
+aural display properties while copying TEXT into its private scratch buffer."
   (if (and (stringp text)
            (> (length text) 0)
            (text-property-not-all 0 (length text) 'yank-handler nil text))
@@ -515,6 +516,10 @@ Both current and legacy Agent Shell wait icons are recognized.")
 
 (defvar emacsvox-agent-shell--chat-label-context nil
   "Dynamically bound visible chat label for the current line speech.")
+
+(defconst emacsvox-agent-shell--end-of-prompt-marker
+  "<shell-maker-end-of-prompt>"
+  "Text of Shell Maker's property-authenticated prompt delimiter.")
 
 (defun emacsvox-agent-shell--prompt-face-spec-p (spec)
   "Return non-nil when face SPEC denotes an Agent Shell prompt."
@@ -642,8 +647,8 @@ ending at SOURCE-START labels the content that follows it."
              'agent-shell-chat-me)
             ((save-excursion
                (goto-char source-start)
-               (search-forward
-                "<shell-maker-end-of-prompt>" source-end t))
+               (text-property-any
+                source-start source-end 'shell-maker--marker t))
              'agent-shell-chat-agent))))
          (overlay
           (or
@@ -727,11 +732,24 @@ ending at SOURCE-START labels the content that follows it."
                   (emacsvox-agent-shell--without-leading-chat-prompt text)
                 text))
              (plain (substring-no-properties content))
-             (marker "<shell-maker-end-of-prompt>"))
-        (when (and (eq category 'agent-shell-chat-agent)
-                   (string-match
-                    (concat "\\`[[:space:]]*" (regexp-quote marker)) plain))
-          (setq content (substring content (match-end 0))))
+             (marker-start
+              (and
+               (eq category 'agent-shell-chat-agent)
+               (string-match "\\`[ \t\n\r]*" plain)
+               (match-end 0)))
+             (marker-end
+              (and
+               marker-start
+               (< marker-start (length content))
+               (get-text-property
+                marker-start 'shell-maker--marker content)
+               (string-prefix-p
+                emacsvox-agent-shell--end-of-prompt-marker
+                plain marker-start)
+               (+ marker-start
+                  (length emacsvox-agent-shell--end-of-prompt-marker)))))
+        (when marker-end
+          (setq content (substring content marker-end)))
         (setq content (string-trim-left content))
         (if (string-empty-p (string-trim (substring-no-properties content)))
             (if (plist-get context :editable)
@@ -1209,6 +1227,9 @@ available so a timer created by an older loaded version can finish safely.")
 
 (defvar-local emacsvox-agent-shell--latest-turn-outcome nil
   "Observed latest turn state: `active', `completed', `failed', or nil.")
+
+(defvar-local emacsvox-agent-shell--setting-warning-cache nil
+  "Hash table mapping announced Agent Shell setting-warning IDs to digests.")
 
 (defvar-local emacsvox-agent-shell--out-of-turn-speech-timer nil
   "Timer coalescing the latest rendered out-of-turn message updates.")
@@ -2137,10 +2158,59 @@ the body retains semantic faces and omits markup that is no longer displayed."
   (emacsvox-agent-shell--schedule-out-of-turn-delivery
    qualified-id))
 
+(defun emacsvox-agent-shell--setting-warning-id-p (qualified-id)
+  "Return non-nil when QUALIFIED-ID is a default-setting warning fragment."
+  (and
+   (stringp qualified-id)
+   (string-prefix-p "bootstrapping-" qualified-id)
+   (string-match-p "-unapplied\\(?:-\\|\\'\\)" qualified-id)))
+
+(defun emacsvox-agent-shell--setting-warning-text (text)
+  "Return the concise Agent Shell setting warning represented by TEXT."
+  (when (stringp text)
+    (let ((plain (substring-no-properties text)))
+      (when (string-match "Warning:[^\n\r]*" plain)
+        (string-trim-right (match-string 0 plain) "[ \t│]+")))))
+
+(defun emacsvox-agent-shell--record-setting-warning-section (range)
+  "Announce a changed default-setting warning represented by section RANGE."
+  (when-let* ((body-start (map-nested-elt range '(:body :start)))
+              ((< body-start (point-max)))
+              ((eq (get-text-property body-start 'agent-shell-ui-section)
+                   'body))
+              (state (get-text-property body-start 'agent-shell-ui-state))
+              (qualified-id (map-elt state :qualified-id))
+              ((emacsvox-agent-shell--setting-warning-id-p qualified-id))
+              (body-end
+               (or
+                (next-single-property-change
+                 body-start 'agent-shell-ui-section nil (point-max))
+                (point-max)))
+              ((< body-start body-end))
+              (warning
+               (emacsvox-agent-shell--setting-warning-text
+                (buffer-substring body-start body-end)))
+              (digest (secure-hash 'sha256 warning)))
+    (unless (hash-table-p emacsvox-agent-shell--setting-warning-cache)
+      (setq emacsvox-agent-shell--setting-warning-cache
+            (make-hash-table :test #'equal)))
+    (unless
+        (equal
+         digest
+         (gethash qualified-id emacsvox-agent-shell--setting-warning-cache))
+      (puthash qualified-id digest
+               emacsvox-agent-shell--setting-warning-cache)
+      (when emacsvox-agent-shell-signal-processing
+        (emacsvox-agent-shell--deliver-announcement
+         (emacsvox-agent-shell--presentation-facts
+          'agent-error 'operation-failed)
+         'notification 'warn-user warning)))))
+
 (defun emacsvox-agent-shell--record-response-section (range)
   "Remember semantic turn content or an out-of-turn message in RANGE.
 Only buffer markers are updated while a response streams.  Rendered text is
 copied once, when the turn completes or the out-of-turn debounce timer fires."
+  (emacsvox-agent-shell--record-setting-warning-section range)
   (when-let* ((body-start (map-nested-elt range '(:body :start)))
               ((< body-start (point-max)))
               ((eq (get-text-property body-start 'agent-shell-ui-section)
@@ -2218,9 +2288,12 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
   "Remove semantic rendered turn-content capture from the current shell."
   (remove-hook 'agent-shell-section-functions
                #'emacsvox-agent-shell--record-response-section t)
+  (when (hash-table-p emacsvox-agent-shell--setting-warning-cache)
+    (clrhash emacsvox-agent-shell--setting-warning-cache))
   (setq emacsvox-agent-shell--response-turn-active-p nil
         emacsvox-agent-shell--last-completed-answer nil
-        emacsvox-agent-shell--latest-turn-outcome nil)
+        emacsvox-agent-shell--latest-turn-outcome nil
+        emacsvox-agent-shell--setting-warning-cache nil)
   (emacsvox-agent-shell--out-of-turn-cleanup))
 
 (defun emacsvox-agent-shell--begin-response-turn ()

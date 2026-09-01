@@ -29,6 +29,7 @@
 (defvar emacsvox-agent-shell--response-turn-active-p)
 (defvar emacsvox-agent-shell--last-completed-answer)
 (defvar emacsvox-agent-shell--latest-turn-outcome)
+(defvar emacsvox-agent-shell--setting-warning-cache)
 (defvar emacsvox-agent-shell--out-of-turn-bodies)
 (defvar emacsvox-agent-shell--out-of-turn-delivered-ids)
 (defvar emacsvox-agent-shell--out-of-turn-delivered-order)
@@ -3667,6 +3668,60 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (icon progress)
         (icon task-done))))))
 
+(ert-deftest emacsvox-agent-shell-setting-warnings-are-semantic-and-deduplicated ()
+  "Default-setting warnings should be announced without failing the session."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local
+     agent-shell-section-functions
+     '(emacsvox-agent-shell--record-response-section)
+     emacsvox-agent-shell--latest-turn-outcome 'completed)
+    (let* ((emacsvox-agent-shell-signal-processing t)
+           (body
+            (concat
+             "╭────────────────────────────────────────╮\n"
+             "│ Warning: Could not set model to bad: refused │\n"
+             "╰────────────────────────────────────────╯"))
+           (presentations
+            (emacsvox-agent-shell-test--capture-presentations
+              (emacsvox-agent-shell-test--render-response-section
+               :namespace-id "bootstrapping"
+               :block-id "set-model-unapplied"
+               :body body))))
+      (should (= (length presentations) 1))
+      (let ((presentation (car presentations)))
+        (should (eq (nth 0 presentation) 'submit))
+        (should
+         (equal
+          (nth 1 presentation)
+          "Warning: Could not set model to bad: refused"))
+        (should (eq (plist-get (nth 2 presentation) :role) 'agent-error))
+        (should
+         (equal (plist-get (nth 2 presentation) :events)
+                '(operation-failed)))
+        (should (eq (nth 3 presentation) 'agent-shell))
+        (should (eq (nth 4 presentation) 'notification)))
+      (should
+       (equal
+        (emacsvox-agent-shell-test--capture-events
+          (emacsvox-agent-shell-test--render-response-section
+           :namespace-id "bootstrapping"
+           :block-id "set-model-unapplied"
+           :body body))
+        nil))
+      (should
+       (equal
+        (emacsvox-agent-shell-test--capture-events
+          (emacsvox-agent-shell-test--render-response-section
+           :namespace-id "turn-1"
+           :block-id "set-model-unapplied"
+           :body body :create-new t))
+        nil))
+      (should (eq emacsvox-agent-shell--latest-turn-outcome 'completed))
+      (should (= (hash-table-count
+                  emacsvox-agent-shell--setting-warning-cache)
+                 1)))))
+
 (ert-deftest emacsvox-agent-shell-focused-announcement-is-one-submission ()
   "Focused icon and speech feedback use one native aural transaction."
   (let (captured direct-output)
@@ -7011,7 +7066,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       "Claude> " 'font-lock-face
       '(comint-highlight-prompt comint-highlight-prompt))
      "hello\n"
-     (propertize "<shell-maker-end-of-prompt>" 'invisible t)
+     (propertize
+      "<shell-maker-end-of-prompt>"
+      'invisible t 'shell-maker--marker t)
      "hi there\n")
     (agent-shell-chat--relabel)
     (goto-char (point-min))
@@ -7055,7 +7112,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       "Claude> " 'font-lock-face
       '(comint-highlight-prompt comint-highlight-prompt))
      "\n\nhello\n"
-     (propertize "<shell-maker-end-of-prompt>" 'invisible t)
+     (propertize
+      "<shell-maker-end-of-prompt>"
+      'invisible t 'shell-maker--marker t)
      "\nhi there\n\n"
      (propertize
       "Claude> " 'font-lock-face
@@ -7084,6 +7143,31 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should (eq (get-text-property 0 'face spoken)
                     'agent-shell-chat-agent-label))))))
 
+(ert-deftest emacsvox-agent-shell-chat-quoted-marker-remains-content ()
+  "Only Shell Maker's property-authenticated marker should be suppressed."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (let* ((label
+            (propertize "Claude" 'face 'agent-shell-chat-agent-label))
+           (emacsvox-agent-shell--chat-label-context
+            (list :category 'agent-shell-chat-agent :text label))
+           (marker "<shell-maker-end-of-prompt>")
+           (actual
+            (concat
+             (propertize marker 'shell-maker--marker t 'invisible t)
+             "answer"))
+           (quoted (concat marker " is the delimiter")))
+      (should
+       (equal
+        (substring-no-properties
+         (emacsvox-agent-shell--prepare-speech-text actual))
+        "Claude. answer"))
+      (should
+       (equal
+        (substring-no-properties
+         (emacsvox-agent-shell--prepare-speech-text quoted))
+        "Claude. <shell-maker-end-of-prompt> is the delimiter")))))
+
 (ert-deftest emacsvox-agent-shell-live-chat-prompt-announces-editability ()
   "The live chat prompt should speak its role without decorative glyphs."
   (skip-unless (require 'agent-shell-chat-mode nil t))
@@ -7110,6 +7194,16 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          (car case))
         (let ((agent-shell-prompt-bar-mode nil))
           (agent-shell-chat--relabel))
+        (when (equal (car case) "draft")
+          (let ((draft-overlay
+                 (seq-find
+                  (lambda (overlay)
+                    (eq (emacsvox-agent-shell--chat-overlay-tag overlay)
+                        'me-draft))
+                  (overlays-in prompt-start (point-max)))))
+            (should draft-overlay)
+            (should-not
+             (emacsvox-agent-shell--chat-overlay-category draft-overlay))))
         (should
          (seq-find
           (lambda (overlay)
@@ -7791,6 +7885,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            (agent-shell-chat--tag me-label me-label agent-shell-chat-me)
            (agent-shell-chat--tag me-surplus me-surplus nil)
            (agent-shell-chat--tag me-input me-input nil)
+           (agent-shell-chat--tag me-draft me-draft nil)
            (agent-shell-chat--tag agent agent agent-shell-chat-agent)
            (category agent-shell-chat-me me agent-shell-chat-me)
            (category agent-shell-chat-me-label me-label agent-shell-chat-me)
@@ -8038,20 +8133,22 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should (equal (get-text-property (point) 'face)
                        (get-text-property (point) 'font-lock-face)))))))
 
-(ert-deftest emacsvox-agent-shell-speech-copy-bypasses-plain-yank-handler ()
-  "Speech copies should retain rendered faces without changing normal paste."
+(ert-deftest emacsvox-agent-shell-speech-copy-preserves-current-and-legacy-faces ()
+  "Speech copies should retain rendered faces across Agent Shell copy schemes."
   (with-temp-buffer
     (insert "# Heading\n\n| Name | Value |\n| --- | --- |\n| One | 1 |\n")
     (agent-shell-markdown-replace-markup)
     (let ((rendered (buffer-string)))
       (should (eq (emacsvox-agent-shell--prepare-speech-text rendered)
                   rendered))
+      ;; Current Agent Shell centralizes plain copying in the buffer's
+      ;; substring filter; rendered Markdown no longer carries a yank handler.
+      (should-not
+       (text-property-not-all
+        0 (length rendered) 'yank-handler nil rendered))
       (setq major-mode 'agent-shell-mode)
       (let ((spoken
              (emacsvox-agent-shell--prepare-speech-text rendered)))
-        (should
-         (text-property-not-all
-          0 (length rendered) 'yank-handler nil rendered))
         (should-not
          (text-property-not-all
           0 (length spoken) 'yank-handler nil spoken))
@@ -8061,16 +8158,30 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should
          (eq (emacsvox-agent-shell-test--face-at-text spoken "│")
              'agent-shell-markdown-table-border))
-        ;; Preparing speech must not change agent-shell's clipboard contract.
-        (should
-         (text-property-not-all
-          0 (length (buffer-string)) 'yank-handler nil (buffer-string)))
         ;; Exercise the same copy primitive used by `tts-speak'.
         (with-temp-buffer
           (let ((yank-excluded-properties tts-yank-excluded-properties))
             (insert-for-yank spoken))
           (goto-char (point-min))
-          (should (eq (tts-get-style) 'voice-brighten)))))))
+          (should (eq (tts-get-style) 'voice-brighten))))
+      ;; Older Agent Shell renderers attached a handler that made paste plain.
+      ;; Retain the compatibility path without mutating the source string.
+      (let ((legacy (copy-sequence rendered)))
+        (put-text-property
+         0 (length legacy) 'yank-handler
+         (list (lambda (text) (insert (substring-no-properties text))))
+         legacy)
+        (let ((spoken
+               (emacsvox-agent-shell--prepare-speech-text legacy)))
+          (should
+           (text-property-not-all
+            0 (length legacy) 'yank-handler nil legacy))
+          (should-not
+           (text-property-not-all
+            0 (length spoken) 'yank-handler nil spoken))
+          (should
+           (eq (emacsvox-agent-shell-test--face-at-text spoken "Heading")
+               'agent-shell-markdown-header-1)))))))
 
 (ert-deftest emacsvox-agent-shell-disable-cleans-existing-buffer-state ()
   "Disabling support should cancel pending work in existing shell buffers."
@@ -8100,6 +8211,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                         (make-hash-table :test #'equal))
             (puthash "tool" "in_progress"
                      emacsvox-agent-shell--tool-call-status-cache)
+            (setq-local emacsvox-agent-shell--setting-warning-cache
+                        (make-hash-table :test #'equal))
+            (puthash "bootstrapping-set-model-unapplied" "digest"
+                     emacsvox-agent-shell--setting-warning-cache)
             (setq timer (run-with-timer 0.1 nil
                                         (lambda () (setq fired t))))
             (setq-local emacsvox-agent-shell--pending-speech-timer timer))
@@ -8140,6 +8255,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (should-not emacsvox-agent-shell--lifecycle-subscription)
             (should-not emacsvox-agent-shell--tool-call-subscription)
             (should-not emacsvox-agent-shell--tool-call-status-cache)
+            (should-not emacsvox-agent-shell--setting-warning-cache)
             (should-not (map-elt agent-shell--state
                                  :event-subscriptions))
             (should-not (memq #'emacsvox-agent-shell--buffer-cleanup
