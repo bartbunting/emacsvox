@@ -21,3 +21,7 @@ Released notes are preserved in [[file:NEWS-2026.9.0][NEWS for Emacsvox 2026.9.0
   session log supplies the matching server admission, queue, synthesis, and
   playback-stage breakdown without a speech protocol change.  Use =C-e d D=
   to toggle the sensitive, full-text diagnostic log for the current session.
+
+- The source-built Windows Omnivox runtime now includes the checksum-locked
+  RuTTS 6.3.3 companion and its built-in male and female Russian voices.  RuLex
+  remains excluded.

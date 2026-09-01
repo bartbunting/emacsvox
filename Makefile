@@ -455,18 +455,27 @@ windows-omnivox:
 				--target $(OMNIVOX_TARGET); \
 			python3 tools/build_flite.py --release \
 				--target $(OMNIVOX_TARGET); \
+			python3 tools/build_rutts.py --release \
+				--target $(OMNIVOX_TARGET); \
 			cp "$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.exe" \
 				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.unstripped.exe"; \
 			SOURCE_DATE_EPOCH=0 x86_64-w64-mingw32-strip --strip-all \
 				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.exe" \
 				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/rhvoice/omnivox-rhvoice-helper.exe" \
-				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/flite/omnivox-flite-helper.exe"; \
+				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/flite/omnivox-flite-helper.exe" \
+				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/rutts/omnivox-rutts-helper.exe"; \
 			flite_dir="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/flite"; \
 			flite_manifest="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/flite-SHA256SUMS"; \
 			(cd "$$flite_dir" && \
 				find . -type f ! -name SHA256SUMS -print0 | LC_ALL=C sort -z | \
 				xargs -0 sha256sum) > "$$flite_manifest"; \
 			mv "$$flite_manifest" "$$flite_dir/SHA256SUMS"; \
+			rutts_dir="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/rutts"; \
+			rutts_manifest="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/rutts-SHA256SUMS"; \
+			(cd "$$rutts_dir" && \
+				find . -type f ! -name SHA256SUMS -print0 | LC_ALL=C sort -z | \
+				xargs -0 sha256sum) > "$$rutts_manifest"; \
+			mv "$$rutts_manifest" "$$rutts_dir/SHA256SUMS"; \
 			mkdir -p "$$CARGO_TARGET_DIR/windows-runtime"; \
 			cp "$$(x86_64-w64-mingw32-g++-win32 -print-file-name=libstdc++-6.dll)" \
 				"$$CARGO_TARGET_DIR/windows-runtime/libstdc++-6.dll"; \
@@ -478,6 +487,7 @@ windows-omnivox:
 		unstripped_executable="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/omnivox.unstripped.exe"; \
 		rhvoice_companion="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/rhvoice"; \
 		flite_companion="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/flite"; \
+		rutts_companion="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/rutts"; \
 		omnivox_license="$(OMNIVOX_DIR)/LICENSE"; \
 		eloquence_helper="$(OMNIVOX_HELPER_DIR)/bin/OmnivoxEloquenceHelper32.exe"; \
 		dectalk_helper="$(OMNIVOX_HELPER_DIR)/bin/OmnivoxDectalkHelper32.exe"; \
@@ -492,6 +502,10 @@ windows-omnivox:
 			"$$flite_companion/SHA256SUMS" \
 			"$$flite_companion/SOURCE-PROVENANCE.json" \
 			"$$flite_companion/third-party-licenses/Flite-COPYING.txt" \
+			"$$rutts_companion/omnivox-rutts-helper.exe" \
+			"$$rutts_companion/SHA256SUMS" \
+			"$$rutts_companion/SOURCE-PROVENANCE.json" \
+			"$$rutts_companion/third-party-licenses/RuTTS-LICENSE.txt" \
 			"$$omnivox_license"; do \
 			if [ ! -f "$$required" ]; then \
 				echo "Prepared companion file is missing: $$required" >&2; \
@@ -502,6 +516,9 @@ windows-omnivox:
 			find . -type f -print0 | LC_ALL=C sort -z | \
 			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
 		flite_companion_digest="$$(cd "$$flite_companion" && \
+			find . -type f -print0 | LC_ALL=C sort -z | \
+			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+		rutts_companion_digest="$$(cd "$$rutts_companion" && \
 			find . -type f -print0 | LC_ALL=C sort -z | \
 			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
 		piper_companion=; \
@@ -715,7 +732,8 @@ windows-omnivox:
 				"$$helper_license" "$$omnivox_license" \
 				"$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
 			printf '%s\n' "$$rhvoice_companion_digest" \
-				"$$flite_companion_digest"; \
+				"$$flite_companion_digest" \
+				"$$rutts_companion_digest"; \
 			if [ -f "$$dectalk_dll" ] && [ -f "$$dectalk_dictionary" ]; then \
 				sha256sum "$$dectalk_dll" "$$dectalk_dictionary" | cut -d ' ' -f1; \
 			else \
@@ -819,6 +837,8 @@ windows-omnivox:
 			"$$rhvoice_companion_digest"; \
 		stage_companion flite "$$flite_companion" \
 			"$$flite_companion_digest"; \
+		stage_companion rutts "$$rutts_companion" \
+			"$$rutts_companion_digest"; \
 		if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
 			if [ ! -d "$$version_dir/piper" ]; then \
 				piper_stage="$$version_dir/piper.new.$$$$"; \
@@ -930,6 +950,12 @@ windows-omnivox:
 				"flite_companion_tree_sha256=$$flite_companion_digest" \
 				'flite_target=x86_64-pc-windows-gnu' \
 				'flite_compiled_voice=cmu_us_slt' \
+				'rutts_companion=local-omnivox-build' \
+				"rutts_companion_tree_sha256=$$rutts_companion_digest" \
+				'rutts_target=x86_64-pc-windows-gnu' \
+				'rutts_version=6.3.3' \
+				'rutts_built_in_voices=male,female' \
+				'rutts_rulex=not-included' \
 				"piper_companion=$$piper_companion_state" \
 				"piper_companion_version=$$piper_version" \
 				"piper_companion_commit=$$piper_commit" \
@@ -952,7 +978,7 @@ windows-omnivox:
 		( \
 			cd "$$version_dir"; \
 			sha256sum $$payload_files; \
-			find rhvoice flite -type f -print0 | LC_ALL=C sort -z | \
+			find rhvoice flite rutts -type f -print0 | LC_ALL=C sort -z | \
 				xargs -0 sha256sum; \
 			if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
 				find piper -type f -print0 | LC_ALL=C sort -z | \

@@ -26,6 +26,9 @@ for required in PROVENANCE SHA256SUMS espeak-ng-data.path \
     flite/omnivox-flite-helper.exe flite/SHA256SUMS \
     flite/SOURCE-PROVENANCE.json \
     flite/third-party-licenses/Flite-COPYING.txt \
+    rutts/omnivox-rutts-helper.exe rutts/SHA256SUMS \
+    rutts/SOURCE-PROVENANCE.json \
+    rutts/third-party-licenses/RuTTS-LICENSE.txt \
     WINDOWS-HELPERS-COPYING OMNIVOX-LICENSE; do
     if [ ! -f "$current/$required" ]; then
         echo "Staged Omnivox file is missing: $current/$required" >&2
@@ -38,14 +41,19 @@ for expected in \
     'rhvoice_runtime=external-user-supplied-not-bundled' \
     'flite_companion=local-omnivox-build' \
     'flite_target=x86_64-pc-windows-gnu' \
-    'flite_compiled_voice=cmu_us_slt'; do
+    'flite_compiled_voice=cmu_us_slt' \
+    'rutts_companion=local-omnivox-build' \
+    'rutts_target=x86_64-pc-windows-gnu' \
+    'rutts_version=6.3.3' \
+    'rutts_built_in_voices=male,female' \
+    'rutts_rulex=not-included'; do
     if ! grep -Fxq "$expected" "$current/PROVENANCE"; then
         echo "Staged Omnivox provenance is missing: $expected" >&2
         exit 1
     fi
 done
 
-for companion in rhvoice flite; do
+for companion in rhvoice flite rutts; do
     expected_companion_digest=$(
         sed -n "s/^${companion}_companion_tree_sha256=//p" \
             "$current/PROVENANCE"
@@ -67,6 +75,19 @@ if ! grep -Fq '"target": "x86_64-pc-windows-gnu"' \
    ! grep -Fq '"compiled_voice": "cmu_us_slt"' \
     "$current/flite/SOURCE-PROVENANCE.json"; then
     echo "Staged Flite companion provenance is wrong" >&2
+    exit 1
+fi
+
+(cd "$current/rutts" && sha256sum --check SHA256SUMS >/dev/null)
+if ! grep -Fq '"target": "x86_64-pc-windows-gnu"' \
+    "$current/rutts/SOURCE-PROVENANCE.json" ||
+   ! grep -Fq '"version": "6.3.3"' \
+    "$current/rutts/SOURCE-PROVENANCE.json" ||
+   ! grep -Fq '"rulex_included": false' \
+    "$current/rutts/SOURCE-PROVENANCE.json" ||
+   ! grep -Fq '"male"' "$current/rutts/SOURCE-PROVENANCE.json" ||
+   ! grep -Fq '"female"' "$current/rutts/SOURCE-PROVENANCE.json"; then
+    echo "Staged RuTTS companion provenance is wrong" >&2
     exit 1
 fi
 

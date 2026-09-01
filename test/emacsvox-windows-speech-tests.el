@@ -859,6 +859,9 @@ Return the server's standard output."
       "python3 tools/build_flite.py --release" nil t))
     (should
      (search-forward
+      "python3 tools/build_rutts.py --release" nil t))
+    (should
+     (search-forward
       "eloquence_helper=\"$(OMNIVOX_HELPER_DIR)/bin/" nil t))
     (should
      (search-forward
@@ -867,7 +870,9 @@ Return the server's standard output."
     (should (search-forward "OMNIVOX-LICENSE" nil t))
     (should (search-forward "rhvoice_companion=local-omnivox-build" nil t))
     (should (search-forward "rhvoice_configuration=" nil t))
-    (should (search-forward "flite_companion=local-omnivox-build" nil t)))
+    (should (search-forward "flite_companion=local-omnivox-build" nil t))
+    (should (search-forward "rutts_companion=local-omnivox-build" nil t))
+    (should (search-forward "rutts_built_in_voices=male,female" nil t)))
   (with-temp-buffer
     (insert-file-contents
      (expand-file-name
