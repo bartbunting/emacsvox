@@ -64,9 +64,11 @@ checked-in Info files provide the same manual inside Emacs.
    #+BEGIN_SRC sh
    ./bin/emacsvox
    #+END_SRC
-   Once Omnivox negotiation completes, success includes the stable spoken
-   checkpoint, ``Emacsvox is ready.''  An earlier introduction and an auditory
-   icon may also be heard, but neither is the acceptance checkpoint.  Type
+   Once Omnivox acknowledges the initial engine inventory, routing policy, and
+   logical voices, success includes the stable spoken checkpoint, ``Emacsvox
+   is ready.''  It therefore normally uses the restored routing policy.  An
+   earlier introduction and an auditory icon may also be heard, but neither is
+   the acceptance checkpoint.  Type
    =M-x tts-speak-version RET= to hear the live adapter version.  Type
    =C-h v tts-program RET=; its current value should name =omnivox=.
 

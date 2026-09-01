@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1468 commands and 192 options.
+   This chapter documents a total of 1468 commands and 193 options.
 
 * Menu:
 
@@ -863,10 +863,19 @@ the main emacsvox module.  It actually does very little:
      nil
 
 
+ -- Variable: User Option emacsvox-ready-message-routing-timeout
+     Seconds the startup announcement waits for acknowledged Omnivox routing.
+
+     Default Value:
+
+     5
+
+
  -- Variable: User Option emacsvox-speak-ready-message
      Whether to speak ‘emacsvox-ready-message’ after Omnivox is ready.
-     The announcement occurs after capability negotiation, so it is a dependable
-     first-start checkpoint rather than an optimistic startup message.
+     The announcement normally occurs after initial routing is acknowledged.  If
+     routing does not become ready within ‘emacsvox-ready-message-routing-timeout’,
+     the capability-ready route announces the bounded fallback checkpoint.
 
      Default Value:
 

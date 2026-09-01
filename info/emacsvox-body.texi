@@ -302,8 +302,9 @@ are passed to Emacs.
 @node Confirming First Speech
 @section Confirming First Speech
 
-You will know the isolated start succeeded when Omnivox finishes negotiating
-and Emacsvox speaks:
+You will know the isolated start succeeded when Omnivox acknowledges the
+initial engine inventory@comma{} routing policy@comma{} and logical voices@comma{} and Emacsvox
+speaks:
 
 @quotation
 Emacsvox is ready.
@@ -312,8 +313,10 @@ Emacsvox is ready.
 
 An earlier introduction@comma{} overview key@comma{} version number@comma{} and startup auditory
 icon may also be heard.  Those can change; the sentence above is the stable
-first-speech checkpoint because it occurs after the speech server is ready for
-ordinary aural delivery.
+first-speech checkpoint because it normally occurs after initial routing is
+acknowledged and therefore uses the restored engine policy.  If routing does
+not finish within five seconds@comma{} Emacsvox speaks the checkpoint through the
+capability-ready fallback so a routing error cannot suppress it indefinitely.
 
 You now have a working Emacsvox session.  Try these checks before connecting
 it to your personal configuration:

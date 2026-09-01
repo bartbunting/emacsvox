@@ -349,30 +349,56 @@ This cannot be set via custom; set this in your startup file before
 
 (defcustom emacsvox-speak-ready-message t
   "Whether to speak `emacsvox-ready-message' after Omnivox is ready.
-The announcement occurs after capability negotiation, so it is a dependable
-first-start checkpoint rather than an optimistic startup message."
+The announcement normally occurs after initial routing is acknowledged.  If
+routing does not become ready within `emacsvox-ready-message-routing-timeout',
+the capability-ready route announces the bounded fallback checkpoint."
   :type 'boolean
   :group 'emacsvox)
 
+(defcustom emacsvox-ready-message-routing-timeout 5
+  "Seconds the startup announcement waits for acknowledged Omnivox routing."
+  :type 'number
+  :group 'emacsvox)
+
 (defvar emacsvox--ready-announcement-timer nil
-  "Timer holding a pending post-negotiation readiness announcement.")
+  "Timer holding a pending routing-ready or fallback announcement.")
 
-(defun emacsvox--speak-ready-message ()
-  "Speak the stable post-negotiation readiness checkpoint."
+(defvar emacsvox--ready-announced-process nil
+  "Omnivox process that most recently received the startup announcement.")
+
+(defun emacsvox--speak-ready-message (&optional process)
+  "Speak the stable readiness checkpoint for Omnivox PROCESS."
   (setq emacsvox--ready-announcement-timer nil)
-  (when emacsvox-speak-ready-message
-    (tts-speak emacsvox-ready-message)))
+  (let ((process (or process tts-speaker-process)))
+    (when (and emacsvox-speak-ready-message
+               (eq process tts-speaker-process)
+               (not (eq process emacsvox--ready-announced-process)))
+      (setq emacsvox--ready-announced-process process)
+      (tts-speak emacsvox-ready-message))))
 
-(defun emacsvox--omnivox-ready (process)
-  "Schedule the readiness checkpoint for the main Omnivox PROCESS."
+(defun emacsvox--omnivox-protocol-ready (process)
+  "Schedule a bounded fallback checkpoint for Omnivox PROCESS."
   (when (and emacsvox-speak-ready-message
              (eq process tts-speaker-process))
     (when (timerp emacsvox--ready-announcement-timer)
       (cancel-timer emacsvox--ready-announcement-timer))
-    ;; Avoid writing a speech transaction from inside Omnivox's process
-    ;; filter while it is dispatching the capability response.
     (setq emacsvox--ready-announcement-timer
-          (run-at-time 0 nil #'emacsvox--speak-ready-message))))
+          (run-at-time
+           emacsvox-ready-message-routing-timeout nil
+           #'emacsvox--speak-ready-message process))))
+
+(defun emacsvox--omnivox-routing-ready (process)
+  "Schedule the routing-ready checkpoint for the main Omnivox PROCESS."
+  (when (and emacsvox-speak-ready-message
+             (eq process tts-speaker-process)
+             (not (eq process emacsvox--ready-announced-process)))
+    (when (timerp emacsvox--ready-announcement-timer)
+      (cancel-timer emacsvox--ready-announcement-timer))
+    ;; Avoid writing a speech transaction from inside Omnivox's process
+    ;; filter while it is dispatching the registration response.
+    (setq emacsvox--ready-announcement-timer
+          (run-at-time
+           0 nil #'emacsvox--speak-ready-message process))))
 
 (defcustom emacsvox-pip-enable
   (executable-find "piper")
@@ -460,7 +486,9 @@ commands and options."
    'kill-emacs-hook
    #'(lambda nil (setq-default emacsvox-speak-messages nil))
    -10)
-  (add-hook 'omnivox-ready-hook #'emacsvox--omnivox-ready)
+  (add-hook 'omnivox-ready-hook #'emacsvox--omnivox-protocol-ready)
+  (add-hook
+   'omnivox-initial-routing-ready-hook #'emacsvox--omnivox-routing-ready)
   (tts-initialize)
   (emacsvox-aural-load-user-data)
   (emacsvox-aural-load-routing-profiles nil t)

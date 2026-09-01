@@ -502,7 +502,9 @@
          (omnivox--logical-registry-signature nil)
          (omnivox-control-last-error nil)
          (omnivox-ready-hook nil)
+         (omnivox-initial-routing-ready-hook nil)
          ready-process
+         routing-ready-process
          (tts-handle-unicode t)
          (omnivox--control-request-sequence 80)
          writes)
@@ -510,6 +512,8 @@
              omnivox--logical-acss-table)
     (add-hook 'omnivox-ready-hook
               (lambda (ready) (setq ready-process ready)))
+    (add-hook 'omnivox-initial-routing-ready-hook
+              (lambda (ready) (setq routing-ready-process ready)))
     (unwind-protect
         (cl-letf
             (((symbol-function 'process-send-string)
@@ -553,6 +557,7 @@
            (process-get
             process omnivox--control-negotiation-timer-property))
           (should (eq ready-process process))
+          (should-not routing-ready-process)
           (should-not tts-handle-unicode)
           (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
                  (identifier (plist-get request :request_id)))
@@ -581,6 +586,7 @@
                :inventory_generation 3
                :registration
                '(:registry_generation 1 :bindings [])))))
+          (should (eq routing-ready-process process))
           (should (equal (plist-get omnivox-control-capabilities :type)
                          "capabilities"))
           (should

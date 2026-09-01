@@ -262,6 +262,15 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
   "Hook run with the main Omnivox process after capability negotiation.
 The process is ready for ordinary aural delivery when this hook runs.")
 
+(defvar omnivox-initial-routing-ready-hook nil
+  "Hook run once after the main Omnivox process acknowledges initial routing.
+Inventory discovery, the desired routing policy, and logical-voice registration
+have completed successfully when this hook runs.")
+
+(defconst omnivox--initial-routing-ready-property
+  'omnivox--initial-routing-ready
+  "Process property recording initial acknowledged Omnivox routing.")
+
 (defcustom omnivox-voice-configuration-timeout 5
   "Seconds allowed for a complete multi-process configuration apply."
   :group 'omnivox
@@ -1125,7 +1134,13 @@ Return the number of processes sent a generation-safe policy replacement."
       (progn
         (process-put process omnivox--control-registration-property response)
         (when (eq process tts-speaker-process)
-          (setq omnivox-logical-voice-registration response)))
+          (setq omnivox-logical-voice-registration response)
+          (unless
+              (process-get process omnivox--initial-routing-ready-property)
+            (process-put
+             process omnivox--initial-routing-ready-property t)
+            (run-hook-with-args
+             'omnivox-initial-routing-ready-hook process))))
     (omnivox--record-control-error process response)))
 
 (defun omnivox--registration-processes ()

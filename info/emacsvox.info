@@ -360,15 +360,19 @@ File: emacsvox.info,  Node: Confirming First Speech,  Next: Recovering From No S
 2.4 Confirming First Speech
 ===========================
 
-You will know the isolated start succeeded when Omnivox finishes
-negotiating and Emacsvox speaks:
+You will know the isolated start succeeded when Omnivox acknowledges the
+initial engine inventory, routing policy, and logical voices, and
+Emacsvox speaks:
 
      Emacsvox is ready.
 
    An earlier introduction, overview key, version number, and startup
 auditory icon may also be heard.  Those can change; the sentence above
-is the stable first-speech checkpoint because it occurs after the speech
-server is ready for ordinary aural delivery.
+is the stable first-speech checkpoint because it normally occurs after
+initial routing is acknowledged and therefore uses the restored engine
+policy.  If routing does not finish within five seconds, Emacsvox speaks
+the checkpoint through the capability-ready fallback so a routing error
+cannot suppress it indefinitely.
 
    You now have a working Emacsvox session.  Try these checks before
 connecting it to your personal configuration:
@@ -4719,78 +4723,78 @@ Node: Obtaining Emacsvox6814
 Node: Building And Testing The Speech Server10287
 Node: Quick Installation11843
 Node: Confirming First Speech14342
-Node: Recovering From No Speech15665
-Node: Persistent Startup18537
-Node: Basic Usage19551
-Node: Overview22175
-Node: Working23313
-Ref: Working-Footnote-124655
-Ref: Working-Footnote-224748
-Node: Reading24858
-Node: Speech System26638
-Node: Controlling Echo27550
-Node: Speech Output Control28385
-Node: Miscellaneous30115
-Node: Voice-lock31062
-Node: Status Information32312
-Node: Speech Backends33375
-Node: Supported Platform Routes35304
-Node: Installing An Omnivox Release Binary39072
-Node: Installing An Omnivox Windows Release Under WSL242465
-Node: Trying Native Windows Emacsvox47924
-Node: Installing Omnivox From Source55645
-Node: Building Omnivox For WSL257509
-Node: Selecting And Checking Omnivox64710
-Node: Compatibility Speech Servers66978
-Node: Backend Diagnostics And Ownership68904
-Node: Audio Desktop72081
-Node: Desktop Objects73211
-Node: Object Oriented Desktop74436
-Node: Context-Sensitive Interaction75549
-Node: Aural Presentation78664
-Node: Presentation Model80863
-Node: Presentation Modalities83330
-Node: Aural Home85077
-Node: Explaining Presentation86965
-Node: Adjusting Presentation88950
-Node: Presentation Profiles91919
-Node: Voices And Routing93610
-Node: Sounds And Space95967
-Node: Presentation Troubleshooting97591
-Node: Voice Lock99629
-Node: Using Online Help102836
-Node: Emacs Packages106898
-Node: Document Authoring108272
-Node: Structured Editing108826
-Node: Browsing Structure109809
-Node: Web Browsing110407
-Node: Messaging111242
-Node: Editing Code111740
-Node: Development Environment112259
-Node: Desktop Management112816
-Node: Personal Information Management113318
-Node: Desktop Applications113850
-Node: Notmuch Mail115399
-Ref: Notmuch fields and privacy124759
-Node: Agent Shell130467
-Node: EAT Terminal Access140461
-Node: Running Terminal Based Applications157720
-Node: Starting Term158675
-Node: Term Input Modes159514
-Node: Term Speech Feedback160674
-Node: Reviewing The Term Screen161868
-Node: Term Help And Recovery163769
-Node: Emacsvox Keyboard Commands164668
-Node: Copyright166072
-Node: Acknowledgments166659
-Node: Developer Guide167685
-Node: Documentation Maintenance168849
-Node: Speech Server Protocols173647
-Ref: Testing A Direct Legacy Server179554
-Ref: Commands That Queue Output180113
-Ref: Commands That Set State183147
-Node: Integration Maintenance185741
-Node: Concept Index202646
+Node: Recovering From No Speech15925
+Node: Persistent Startup18797
+Node: Basic Usage19811
+Node: Overview22435
+Node: Working23573
+Ref: Working-Footnote-124915
+Ref: Working-Footnote-225008
+Node: Reading25118
+Node: Speech System26898
+Node: Controlling Echo27810
+Node: Speech Output Control28645
+Node: Miscellaneous30375
+Node: Voice-lock31322
+Node: Status Information32572
+Node: Speech Backends33635
+Node: Supported Platform Routes35564
+Node: Installing An Omnivox Release Binary39332
+Node: Installing An Omnivox Windows Release Under WSL242725
+Node: Trying Native Windows Emacsvox48184
+Node: Installing Omnivox From Source55905
+Node: Building Omnivox For WSL257769
+Node: Selecting And Checking Omnivox64970
+Node: Compatibility Speech Servers67238
+Node: Backend Diagnostics And Ownership69164
+Node: Audio Desktop72341
+Node: Desktop Objects73471
+Node: Object Oriented Desktop74696
+Node: Context-Sensitive Interaction75809
+Node: Aural Presentation78924
+Node: Presentation Model81123
+Node: Presentation Modalities83590
+Node: Aural Home85337
+Node: Explaining Presentation87225
+Node: Adjusting Presentation89210
+Node: Presentation Profiles92179
+Node: Voices And Routing93870
+Node: Sounds And Space96227
+Node: Presentation Troubleshooting97851
+Node: Voice Lock99889
+Node: Using Online Help103096
+Node: Emacs Packages107158
+Node: Document Authoring108532
+Node: Structured Editing109086
+Node: Browsing Structure110069
+Node: Web Browsing110667
+Node: Messaging111502
+Node: Editing Code112000
+Node: Development Environment112519
+Node: Desktop Management113076
+Node: Personal Information Management113578
+Node: Desktop Applications114110
+Node: Notmuch Mail115659
+Ref: Notmuch fields and privacy125019
+Node: Agent Shell130727
+Node: EAT Terminal Access140721
+Node: Running Terminal Based Applications157980
+Node: Starting Term158935
+Node: Term Input Modes159774
+Node: Term Speech Feedback160934
+Node: Reviewing The Term Screen162128
+Node: Term Help And Recovery164029
+Node: Emacsvox Keyboard Commands164928
+Node: Copyright166332
+Node: Acknowledgments166919
+Node: Developer Guide167945
+Node: Documentation Maintenance169109
+Node: Speech Server Protocols173907
+Ref: Testing A Direct Legacy Server179814
+Ref: Commands That Queue Output180373
+Ref: Commands That Set State183407
+Node: Integration Maintenance186001
+Node: Concept Index202906
 
 End Tag Table
 

@@ -64,7 +64,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1468 commands and 192 options.
+This chapter documents a total of 1468 commands and 193 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -559,11 +559,26 @@ nil
 
 @end defvar
 
+@defvar {User Option} emacsvox-ready-message-routing-timeout
+@verbatim
+Seconds the startup announcement waits for acknowledged Omnivox routing.
+@end verbatim
+
+Default Value:
+@verbatim
+
+5
+
+@end verbatim
+
+@end defvar
+
 @defvar {User Option} emacsvox-speak-ready-message
 @verbatim
 Whether to speak ‘emacsvox-ready-message’ after Omnivox is ready.
-The announcement occurs after capability negotiation, so it is a dependable
-first-start checkpoint rather than an optimistic startup message.
+The announcement normally occurs after initial routing is acknowledged.  If
+routing does not become ready within ‘emacsvox-ready-message-routing-timeout’,
+the capability-ready route announces the bounded fallback checkpoint.
 @end verbatim
 
 Default Value:

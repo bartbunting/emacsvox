@@ -1,0 +1,103 @@
+#+title: ADR 0007: Routing-Ready Startup Checkpoint
+#+date: 2026-09-02
+#+startup: content
+
+* Status
+
+Accepted.
+
+* Context
+
+ADR 0005 introduced =omnivox-ready-hook= as a stable post-capability signal
+and used it to schedule the spoken ``Emacsvox is ready.'' checkpoint outside
+the Omnivox process filter.  Capability negotiation proves that the main
+server can accept ordinary aural delivery, but it precedes engine inventory,
+the desired routing policy, and logical-voice registration.
+
+That distinction became audible after startup was made faster.  On Windows,
+Omnivox can initially prefer WinRT while Emacsvox is still restoring the user's
+saved routing order.  The readiness utterance can therefore reach WinRT even
+when the acknowledged initial policy prefers Eloquence, DECtalk, or another
+engine.  Later speech uses the saved policy, making the checkpoint sound like a
+routing failure when it is actually an ordering race.
+
+* Decision
+
+** Preserve protocol readiness as a separate signal
+
+=omnivox-ready-hook= continues to run after successful capability negotiation.
+Code that needs to know when the server protocol is usable may continue to use
+that hook.  Capability readiness does not claim that initial routing is fully
+configured.
+
+** Add an acknowledged initial-routing signal
+
+The main Omnivox process runs =omnivox-initial-routing-ready-hook= once, after
+it successfully acknowledges logical-voice registration.  At that point the
+same startup transaction has already completed engine inventory discovery and
+application of the desired routing policy.  The hook receives the main Omnivox
+process and is not run for auxiliary speech processes.
+
+Emacsvox schedules the spoken readiness checkpoint from this routing-ready
+hook, outside the process filter.  The announcement is emitted at most once for
+each main process, so duplicate acknowledgements cannot duplicate first speech.
+
+** Retain a bounded fallback
+
+Capability readiness starts a fallback timer controlled by
+=emacsvox-ready-message-routing-timeout=.  The default is five seconds.  A
+successful routing acknowledgement cancels that timer and schedules the
+checkpoint immediately.  If routing never completes, the fallback preserves
+an audible indication that the server itself is usable instead of suppressing
+the checkpoint indefinitely.
+
+The existing =emacsvox-speak-ready-message= option continues to disable both
+the routing-ready checkpoint and its fallback.
+
+* Consequences
+
+** Benefits
+
+- Normal first speech uses the user's acknowledged initial routing policy.
+- Protocol clients retain the earlier capability-ready lifecycle signal.
+- A failed or incompatible routing transaction cannot postpone the spoken
+  server checkpoint forever.
+- Startup emits only one readiness utterance per main Omnivox process.
+
+** Costs and risks
+
+- Normal readiness speech occurs after the additional inventory, policy, and
+  registration round trips rather than immediately after capabilities.
+- If initial routing takes longer than the configured timeout, fallback speech
+  can still use Omnivox's pre-policy engine order.
+- Consumers must choose the lifecycle hook that matches whether they need
+  protocol availability or acknowledged routing.
+
+* Alternatives considered
+
+** Announce immediately after capability negotiation
+
+Rejected for the user-facing checkpoint because it races with saved routing
+and can speak with an engine the user did not select.
+
+** Delay for a fixed interval
+
+Rejected as the primary mechanism.  A delay guesses at machine performance and
+does not prove that routing was accepted.
+
+** Wait indefinitely for routing
+
+Rejected because a registration error or version mismatch would remove the
+otherwise useful audible server checkpoint.
+
+** Change =omnivox-ready-hook= to mean routing-ready
+
+Rejected because it would silently change the lifecycle contract for existing
+hook consumers.  Separate hooks make both milestones explicit.
+
+* Follow-up
+
+1. Keep focused tests for fallback scheduling, routing acknowledgement, and
+   once-per-process speech.
+2. Document the two lifecycle milestones wherever the startup checkpoint is
+   described.
