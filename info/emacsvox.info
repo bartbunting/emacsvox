@@ -1442,18 +1442,24 @@ and successfully loaded its model and helper.
 in *note Integration Maintenance:: rather than weakening the
 clean-release guard:
 
-     make windows-omnivox-dev
+     OMNIVOX_RHVOICE_LIBRARY=/mnt/c/path/to/RHVoice.dll \
+       OMNIVOX_RHVOICE_DATA=/mnt/c/path/to/RHVoice/data \
+       make windows-omnivox-dev
      ./servers/omnivox --engine flite --list-voices
 
    This route builds current Omnivox source, stages the RHVoice helper
 and Flite with its SLT voice, and deliberately omits the older pinned
 Piper companion.  RHVoice appears only after installing a compatible
-Windows ‘RHVoice.dll’ plus language and voice data and setting
-‘OMNIVOX_RHVOICE_LIBRARY’, ‘OMNIVOX_RHVOICE_DATA’, and
-‘OMNIVOX_RHVOICE_CONFIG’ before starting Emacsvox.  The corresponding
-installation and validation instructions are in Omnivox's checkout under
+Windows ‘RHVoice.dll’ plus language and voice data.  When its library
+and data variables are supplied to the development target, staging
+validates them and records Windows path pointers beside that local
+runtime; the launcher restores them for later fresh Emacsvox processes.
+Also supply ‘OMNIVOX_RHVOICE_CONFIG’ when the installation has a
+separate configuration directory.  The library, data, and configuration
+remain external and are not copied into the Omnivox payload.
+Installation and validation instructions are in Omnivox's checkout under
 ‘docs/RHVOICE.md’.  Restart both speech processes or Emacs after
-restaging or changing those variables, then use ‘C-e d e’ to inspect the
+restaging or changing those inputs, then use ‘C-e d e’ to inspect the
 engines reported by the new process.
 
 
@@ -4494,6 +4500,17 @@ commit together before these integrations enter the clean release path.
 See ‘servers/omnivox-release/README.org’ for the pinned toolchain,
 licensing, provenance, and restaging contract.
 
+   The development target accepts ‘OMNIVOX_RHVOICE_LIBRARY’ and
+‘OMNIVOX_RHVOICE_DATA’ together, plus an optional
+‘OMNIVOX_RHVOICE_CONFIG’ directory.  It resolves WSL or Windows absolute
+paths, requires the C API DLL and the language/voice data layout,
+records content digests in provenance and machine-local Windows path
+pointers beside the selected runtime, and leaves all RHVoice files
+external.  Those pointers let the launcher restore the variables for
+every fresh Emacsvox process.  The runtime verifier rejects missing or
+changed external inputs.  Omitting all three variables leaves RHVoice
+unconfigured without affecting Flite or the other engines.
+
    Do not bypass the Omnivox release target manually or clean either
 repository to make its release guard pass.  Use ‘make windows-omnivox’
 only for the reproducible clean-release path documented in the
@@ -4671,57 +4688,57 @@ Node: Installing An Omnivox Windows Release Under WSL242465
 Node: Trying Native Windows Emacsvox47826
 Node: Installing Omnivox From Source55547
 Node: Building Omnivox For WSL257411
-Node: Selecting And Checking Omnivox63612
-Node: Compatibility Speech Servers65880
-Node: Backend Diagnostics And Ownership67806
-Node: Audio Desktop70151
-Node: Desktop Objects71281
-Node: Object Oriented Desktop72506
-Node: Context-Sensitive Interaction73619
-Node: Aural Presentation76734
-Node: Presentation Model78933
-Node: Presentation Modalities81400
-Node: Aural Home83147
-Node: Explaining Presentation85035
-Node: Adjusting Presentation87020
-Node: Presentation Profiles89989
-Node: Voices And Routing91680
-Node: Sounds And Space94037
-Node: Presentation Troubleshooting95661
-Node: Voice Lock97699
-Node: Using Online Help100906
-Node: Emacs Packages104968
-Node: Document Authoring106342
-Node: Structured Editing106896
-Node: Browsing Structure107879
-Node: Web Browsing108477
-Node: Messaging109312
-Node: Editing Code109810
-Node: Development Environment110329
-Node: Desktop Management110886
-Node: Personal Information Management111388
-Node: Desktop Applications111920
-Node: Notmuch Mail113469
-Ref: Notmuch fields and privacy122829
-Node: Agent Shell128537
-Node: EAT Terminal Access138531
-Node: Running Terminal Based Applications155790
-Node: Starting Term156745
-Node: Term Input Modes157584
-Node: Term Speech Feedback158744
-Node: Reviewing The Term Screen159938
-Node: Term Help And Recovery161839
-Node: Emacsvox Keyboard Commands162738
-Node: Copyright164142
-Node: Acknowledgments164729
-Node: Developer Guide165755
-Node: Documentation Maintenance166919
-Node: Speech Server Protocols171717
-Ref: Testing A Direct Legacy Server177167
-Ref: Commands That Queue Output177726
-Ref: Commands That Set State180760
-Node: Integration Maintenance183354
-Node: Concept Index198300
+Node: Selecting And Checking Omnivox64005
+Node: Compatibility Speech Servers66273
+Node: Backend Diagnostics And Ownership68199
+Node: Audio Desktop70544
+Node: Desktop Objects71674
+Node: Object Oriented Desktop72899
+Node: Context-Sensitive Interaction74012
+Node: Aural Presentation77127
+Node: Presentation Model79326
+Node: Presentation Modalities81793
+Node: Aural Home83540
+Node: Explaining Presentation85428
+Node: Adjusting Presentation87413
+Node: Presentation Profiles90382
+Node: Voices And Routing92073
+Node: Sounds And Space94430
+Node: Presentation Troubleshooting96054
+Node: Voice Lock98092
+Node: Using Online Help101299
+Node: Emacs Packages105361
+Node: Document Authoring106735
+Node: Structured Editing107289
+Node: Browsing Structure108272
+Node: Web Browsing108870
+Node: Messaging109705
+Node: Editing Code110203
+Node: Development Environment110722
+Node: Desktop Management111279
+Node: Personal Information Management111781
+Node: Desktop Applications112313
+Node: Notmuch Mail113862
+Ref: Notmuch fields and privacy123222
+Node: Agent Shell128930
+Node: EAT Terminal Access138924
+Node: Running Terminal Based Applications156183
+Node: Starting Term157138
+Node: Term Input Modes157977
+Node: Term Speech Feedback159137
+Node: Reviewing The Term Screen160331
+Node: Term Help And Recovery162232
+Node: Emacsvox Keyboard Commands163131
+Node: Copyright164535
+Node: Acknowledgments165122
+Node: Developer Guide166148
+Node: Documentation Maintenance167312
+Node: Speech Server Protocols172110
+Ref: Testing A Direct Legacy Server177560
+Ref: Commands That Queue Output178119
+Ref: Commands That Set State181153
+Node: Integration Maintenance183747
+Node: Concept Index199364
 
 End Tag Table
 

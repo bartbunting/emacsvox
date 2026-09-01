@@ -97,6 +97,16 @@ Piper lock to a companion built from the same Omnivox commit before using the
 clean release path for these integrations.  The development target does not
 weaken the clean-worktree requirement of =make windows-omnivox=.
 
+To preserve an external RHVoice installation across fresh Emacsvox processes,
+pass =OMNIVOX_RHVOICE_LIBRARY= and =OMNIVOX_RHVOICE_DATA= to
+=windows-omnivox-dev=; pass =OMNIVOX_RHVOICE_CONFIG= too when that installation
+uses a separate configuration directory.  The target validates WSL or Windows
+absolute paths, includes content digests and the recorded path values in the
+local build identity, and writes machine-local Windows path pointers beside
+the selected repository runtime.  The launcher reads those pointers only when
+the corresponding environment variable is unset.  RHVoice itself remains
+external and is not added to =SHA256SUMS= or copied into the Windows runtime.
+
 =make verify-windows-omnivox-runtime= verifies the repository stage, build-kind
 and worktree-digest agreement with local diagnostics, the Windows-local runtime
 copy, the external eSpeak cache digest, and launcher selection through

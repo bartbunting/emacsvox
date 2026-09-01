@@ -79,6 +79,33 @@ elif [ -x "$program" ]; then
         fi
     fi
 
+    # Development staging can record an external RHVoice installation without
+    # copying its library or licensed voice data into the Omnivox payload.
+    rhvoice_library_path_file="$server_directory/omnivox-bin/current/rhvoice-library.path"
+    if [ -z "${OMNIVOX_RHVOICE_LIBRARY-}" ] &&
+       [ -r "$rhvoice_library_path_file" ]; then
+        OMNIVOX_RHVOICE_LIBRARY=$(sed -n '1p' "$rhvoice_library_path_file")
+        if [ -n "$OMNIVOX_RHVOICE_LIBRARY" ]; then
+            export OMNIVOX_RHVOICE_LIBRARY
+        fi
+    fi
+    rhvoice_data_path_file="$server_directory/omnivox-bin/current/rhvoice-data.path"
+    if [ -z "${OMNIVOX_RHVOICE_DATA-}" ] &&
+       [ -r "$rhvoice_data_path_file" ]; then
+        OMNIVOX_RHVOICE_DATA=$(sed -n '1p' "$rhvoice_data_path_file")
+        if [ -n "$OMNIVOX_RHVOICE_DATA" ]; then
+            export OMNIVOX_RHVOICE_DATA
+        fi
+    fi
+    rhvoice_config_path_file="$server_directory/omnivox-bin/current/rhvoice-config.path"
+    if [ -z "${OMNIVOX_RHVOICE_CONFIG-}" ] &&
+       [ -r "$rhvoice_config_path_file" ]; then
+        OMNIVOX_RHVOICE_CONFIG=$(sed -n '1p' "$rhvoice_config_path_file")
+        if [ -n "$OMNIVOX_RHVOICE_CONFIG" ]; then
+            export OMNIVOX_RHVOICE_CONFIG
+        fi
+    fi
+
     # A locally staged Piper model remains separate from the runtime payload,
     # but the staging target records its Windows-readable content-addressed
     # path so each new speech process can discover it without shell setup.

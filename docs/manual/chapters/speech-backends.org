@@ -593,19 +593,24 @@ Maintainers testing tracked changes should use the development route in
 guard:
 
 #+begin_example
-make windows-omnivox-dev
+OMNIVOX_RHVOICE_LIBRARY=/mnt/c/path/to/RHVoice.dll \
+  OMNIVOX_RHVOICE_DATA=/mnt/c/path/to/RHVoice/data \
+  make windows-omnivox-dev
 ./servers/omnivox --engine flite --list-voices
 #+end_example
 
 This route builds current Omnivox source, stages the RHVoice helper and Flite
 with its SLT voice, and deliberately omits the older pinned Piper companion.
 RHVoice appears only after installing a compatible Windows ~RHVoice.dll~ plus
-language and voice data and setting ~OMNIVOX_RHVOICE_LIBRARY~,
-~OMNIVOX_RHVOICE_DATA~, and ~OMNIVOX_RHVOICE_CONFIG~ before starting Emacsvox.
-The corresponding installation and validation instructions are in Omnivox's
-checkout under ~docs/RHVOICE.md~.  Restart both speech processes or Emacs after
-restaging or changing those variables, then use ~C-e d e~ to inspect the
-engines reported by the new process.
+language and voice data.  When its library and data variables are supplied to
+the development target, staging validates them and records Windows path
+pointers beside that local runtime; the launcher restores them for later fresh
+Emacsvox processes.  Also supply ~OMNIVOX_RHVOICE_CONFIG~ when the installation
+has a separate configuration directory.  The library, data, and configuration
+remain external and are not copied into the Omnivox payload.  Installation and
+validation instructions are in Omnivox's checkout under ~docs/RHVOICE.md~.
+Restart both speech processes or Emacs after restaging or changing those
+inputs, then use ~C-e d e~ to inspect the engines reported by the new process.
 
 ** Selecting And Checking Omnivox
 :PROPERTIES:

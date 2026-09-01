@@ -225,6 +225,97 @@ if [ "$actual_espeak_digest" != "$expected_espeak_digest" ]; then
     exit 1
 fi
 
+rhvoice_configuration=$(
+    sed -n 's/^rhvoice_configuration=//p' "$current/PROVENANCE"
+)
+case "$rhvoice_configuration" in
+    not-recorded)
+        for path_file in rhvoice-library.path rhvoice-data.path \
+            rhvoice-config.path; do
+            if [ -e "$current/$path_file" ]; then
+                echo "Unrecorded RHVoice configuration has a path pointer: $path_file" >&2
+                exit 1
+            fi
+        done
+        ;;
+    recorded-windows-paths)
+        for path_file in rhvoice-library.path rhvoice-data.path; do
+            if [ ! -s "$current/$path_file" ]; then
+                echo "Configured RHVoice path is missing: $current/$path_file" >&2
+                exit 1
+            fi
+        done
+        rhvoice_library=$(
+            wslpath -u "$(sed -n '1p' "$current/rhvoice-library.path")"
+        )
+        rhvoice_data=$(
+            wslpath -u "$(sed -n '1p' "$current/rhvoice-data.path")"
+        )
+        if [ ! -f "$rhvoice_library" ] ||
+           [ ! -d "$rhvoice_data/languages" ] ||
+           [ ! -d "$rhvoice_data/voices" ]; then
+            echo "Recorded RHVoice library or data is unavailable" >&2
+            exit 1
+        fi
+        expected_rhvoice_library_digest=$(
+            sed -n 's/^rhvoice_library_sha256=//p' "$current/PROVENANCE"
+        )
+        expected_rhvoice_data_digest=$(
+            sed -n 's/^rhvoice_data_tree_sha256=//p' "$current/PROVENANCE"
+        )
+        actual_rhvoice_library_digest=$(
+            sha256sum "$rhvoice_library" | cut -d ' ' -f1
+        )
+        actual_rhvoice_data_digest=$(
+            cd "$rhvoice_data"
+            find . -type f -print0 | LC_ALL=C sort -z |
+                xargs -0 sha256sum | sha256sum | cut -d ' ' -f1
+        )
+        if [ "$actual_rhvoice_library_digest" != \
+             "$expected_rhvoice_library_digest" ] ||
+           [ "$actual_rhvoice_data_digest" != \
+             "$expected_rhvoice_data_digest" ]; then
+            echo "Recorded RHVoice runtime does not match provenance" >&2
+            exit 1
+        fi
+        expected_rhvoice_config_digest=$(
+            sed -n 's/^rhvoice_config_tree_sha256=//p' "$current/PROVENANCE"
+        )
+        if [ "$expected_rhvoice_config_digest" = not-configured ]; then
+            if [ -e "$current/rhvoice-config.path" ]; then
+                echo "RHVoice configuration path exists without provenance" >&2
+                exit 1
+            fi
+        else
+            if [ ! -s "$current/rhvoice-config.path" ]; then
+                echo "Configured RHVoice path is missing: $current/rhvoice-config.path" >&2
+                exit 1
+            fi
+            rhvoice_config=$(
+                wslpath -u "$(sed -n '1p' "$current/rhvoice-config.path")"
+            )
+            if [ ! -d "$rhvoice_config" ]; then
+                echo "Recorded RHVoice configuration is unavailable" >&2
+                exit 1
+            fi
+            actual_rhvoice_config_digest=$(
+                cd "$rhvoice_config"
+                find . -type f -print0 | LC_ALL=C sort -z |
+                    xargs -0 sha256sum | sha256sum | cut -d ' ' -f1
+            )
+            if [ "$actual_rhvoice_config_digest" != \
+                 "$expected_rhvoice_config_digest" ]; then
+                echo "Recorded RHVoice configuration does not match provenance" >&2
+                exit 1
+            fi
+        fi
+        ;;
+    *)
+        echo "Unknown RHVoice configuration state: $rhvoice_configuration" >&2
+        exit 1
+        ;;
+esac
+
 if find "$current" -type f \( -name '*.onnx' -o -name '*.onnx.json' \) |
     grep -q .; then
     echo "A Piper voice model was bundled inside the Omnivox runtime" >&2

@@ -350,6 +350,9 @@
          (filter (expand-file-name "omnivox-log-filter" server-directory))
          (program (expand-file-name "omnivox.exe" runtime-directory))
          (model "C:\\Models\\voice.onnx")
+         (rhvoice-library "C:\\RHVoice\\RHVoice.dll")
+         (rhvoice-data "C:\\RHVoice\\data")
+         (rhvoice-config "C:\\RHVoice\\config")
          (log-directory (expand-file-name "logs" directory))
          (process-environment (copy-sequence process-environment)))
     (unwind-protect
@@ -365,14 +368,30 @@
            filter)
           (with-temp-file (expand-file-name "piper-model.path" runtime-directory)
             (insert model "\n"))
+          (with-temp-file
+              (expand-file-name "rhvoice-library.path" runtime-directory)
+            (insert rhvoice-library "\n"))
+          (with-temp-file
+              (expand-file-name "rhvoice-data.path" runtime-directory)
+            (insert rhvoice-data "\n"))
+          (with-temp-file
+              (expand-file-name "rhvoice-config.path" runtime-directory)
+            (insert rhvoice-config "\n"))
           (with-temp-file program
             (insert
              "#!/bin/sh\n"
              "printf 'MODEL=%s\\n' \"${OMNIVOX_PIPER_MODEL-}\"\n"
+             "printf 'RHVOICE_LIBRARY=%s\\n' \"${OMNIVOX_RHVOICE_LIBRARY-}\"\n"
+             "printf 'RHVOICE_DATA=%s\\n' \"${OMNIVOX_RHVOICE_DATA-}\"\n"
+             "printf 'RHVOICE_CONFIG=%s\\n' \"${OMNIVOX_RHVOICE_CONFIG-}\"\n"
              "printf 'WSLENV=%s\\n' \"${WSLENV-}\"\n"))
           (dolist (file (list launcher filter program))
             (set-file-modes file #o700))
-          (dolist (name '("OMNIVOX_PIPER_MODEL" "WSLENV"))
+          (dolist (name '("OMNIVOX_PIPER_MODEL"
+                          "OMNIVOX_RHVOICE_LIBRARY"
+                          "OMNIVOX_RHVOICE_DATA"
+                          "OMNIVOX_RHVOICE_CONFIG"
+                          "WSLENV"))
             (setenv name nil))
           (setenv "OMNIVOX_PROGRAM" nil)
           (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE"
@@ -382,6 +401,15 @@
             (should (zerop (call-process launcher nil t)))
             (let ((output (buffer-string)))
               (should (string-search (concat "MODEL=" model "\n") output))
+              (should
+               (string-search
+                (concat "RHVOICE_LIBRARY=" rhvoice-library "\n") output))
+              (should
+               (string-search
+                (concat "RHVOICE_DATA=" rhvoice-data "\n") output))
+              (should
+               (string-search
+                (concat "RHVOICE_CONFIG=" rhvoice-config "\n") output))
               (dolist (name '("OMNIVOX_RHVOICE_HELPER"
                               "OMNIVOX_RHVOICE_LIBRARY"
                               "OMNIVOX_RHVOICE_DATA"

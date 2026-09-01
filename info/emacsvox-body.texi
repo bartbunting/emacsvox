@@ -1451,19 +1451,24 @@ Maintainers testing tracked changes should use the development route in
 guard:
 
 @example
-make windows-omnivox-dev
+OMNIVOX_RHVOICE_LIBRARY=/mnt/c/path/to/RHVoice.dll \
+  OMNIVOX_RHVOICE_DATA=/mnt/c/path/to/RHVoice/data \
+  make windows-omnivox-dev
 ./servers/omnivox --engine flite --list-voices
 @end example
 
 This route builds current Omnivox source@comma{} stages the RHVoice helper and Flite
 with its SLT voice@comma{} and deliberately omits the older pinned Piper companion.
 RHVoice appears only after installing a compatible Windows @code{RHVoice.dll} plus
-language and voice data and setting @code{OMNIVOX_RHVOICE_LIBRARY}@comma{}
-@code{OMNIVOX_RHVOICE_DATA}@comma{} and @code{OMNIVOX_RHVOICE_CONFIG} before starting Emacsvox.
-The corresponding installation and validation instructions are in Omnivox's
-checkout under @code{docs/RHVOICE.md}.  Restart both speech processes or Emacs after
-restaging or changing those variables@comma{} then use @code{C-e d e} to inspect the
-engines reported by the new process.
+language and voice data.  When its library and data variables are supplied to
+the development target@comma{} staging validates them and records Windows path
+pointers beside that local runtime; the launcher restores them for later fresh
+Emacsvox processes.  Also supply @code{OMNIVOX_RHVOICE_CONFIG} when the installation
+has a separate configuration directory.  The library@comma{} data@comma{} and configuration
+remain external and are not copied into the Omnivox payload.  Installation and
+validation instructions are in Omnivox's checkout under @code{docs/RHVOICE.md}.
+Restart both speech processes or Emacs after restaging or changing those
+inputs@comma{} then use @code{C-e d e} to inspect the engines reported by the new process.
 
 @node Selecting And Checking Omnivox
 @section Selecting And Checking Omnivox
@@ -4724,6 +4729,17 @@ not be mixed with later Omnivox source.  It also rejects
 together before these integrations enter the clean release path.  See
 @code{servers/omnivox-release/README.org} for the pinned toolchain@comma{} licensing@comma{}
 provenance@comma{} and restaging contract.
+
+The development target accepts @code{OMNIVOX_RHVOICE_LIBRARY} and
+@code{OMNIVOX_RHVOICE_DATA} together@comma{} plus an optional
+@code{OMNIVOX_RHVOICE_CONFIG} directory.  It resolves WSL or Windows absolute paths@comma{}
+requires the C API DLL and the language/voice data layout@comma{} records content
+digests in provenance and machine-local Windows path pointers beside the
+selected runtime@comma{} and leaves all RHVoice files external.  Those pointers let
+the launcher restore the variables for every fresh Emacsvox process.  The
+runtime verifier rejects missing or changed external inputs.  Omitting all
+three variables leaves RHVoice unconfigured without affecting Flite or the
+other engines.
 
 Do not bypass the Omnivox release target manually or clean either repository
 to make its release guard pass.  Use @code{make windows-omnivox} only for the

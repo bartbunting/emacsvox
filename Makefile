@@ -362,6 +362,7 @@ OMNIVOX_HELPER_DIR = $(OMNIVOX_DIR)/windows-helpers
 OMNIVOX_ALLOW_DIRTY ?= 0
 OMNIVOX_BUILD_KIND ?= release-clean-worktree
 OMNIVOX_INCLUDE_PINNED_PIPER ?= 1
+OMNIVOX_RECORD_RHVOICE ?= 0
 include $(OMNIVOX_RELEASE_DIR)/toolchain.lock
 OMNIVOX_CSC = $(OMNIVOX_RELEASE_DIR)/cache/roslyn-$(roslyn_version)/tasks/net472/csc.exe
 OMNIVOX_REFERENCE_DIR = $(OMNIVOX_RELEASE_DIR)/cache/net40-reference-assemblies-$(reference_assemblies_version)/build/.NETFramework/v4.0
@@ -382,6 +383,7 @@ prepare-windows-omnivox-piper:
 windows-omnivox-dev:
 	$(MAKE) OMNIVOX_ALLOW_DIRTY=1 \
 		OMNIVOX_BUILD_KIND=local-dirty-worktree \
+		OMNIVOX_RECORD_RHVOICE=1 \
 		OMNIVOX_INCLUDE_PINNED_PIPER=0 windows-omnivox
 
 windows-omnivox:
@@ -389,6 +391,10 @@ windows-omnivox:
 		case "$(OMNIVOX_INCLUDE_PINNED_PIPER)" in \
 			0 | 1) ;; \
 			*) echo "OMNIVOX_INCLUDE_PINNED_PIPER must be 0 or 1" >&2; exit 1 ;; \
+		esac; \
+		case "$(OMNIVOX_RECORD_RHVOICE)" in \
+			0 | 1) ;; \
+			*) echo "OMNIVOX_RECORD_RHVOICE must be 0 or 1" >&2; exit 1 ;; \
 		esac; \
 		if [ "$(OMNIVOX_ALLOW_DIRTY)" != 1 ] && \
 			[ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" != 1 ]; then \
@@ -533,6 +539,74 @@ windows-omnivox:
 			echo "Could not locate Windows LocalAppData" >&2; \
 			exit 1; \
 		fi; \
+		rhvoice_configuration_state=not-recorded; \
+		rhvoice_library_digest=not-observed; \
+		rhvoice_data_digest=not-observed; \
+		rhvoice_config_digest=not-configured; \
+		rhvoice_library_windows_path=; \
+		rhvoice_data_windows_path=; \
+		rhvoice_config_windows_path=; \
+		if [ "$(OMNIVOX_RECORD_RHVOICE)" = 1 ] && \
+			{ [ -n "$${OMNIVOX_RHVOICE_LIBRARY:-}" ] || \
+			  [ -n "$${OMNIVOX_RHVOICE_DATA:-}" ] || \
+			  [ -n "$${OMNIVOX_RHVOICE_CONFIG:-}" ]; }; then \
+			if [ -z "$${OMNIVOX_RHVOICE_LIBRARY:-}" ] || \
+				[ -z "$${OMNIVOX_RHVOICE_DATA:-}" ]; then \
+				echo "Recording RHVoice requires OMNIVOX_RHVOICE_LIBRARY and OMNIVOX_RHVOICE_DATA" >&2; \
+				exit 1; \
+			fi; \
+			rhvoice_library_source="$$OMNIVOX_RHVOICE_LIBRARY"; \
+			if [ ! -f "$$rhvoice_library_source" ]; then \
+				rhvoice_library_source="$$(wslpath -u \
+					"$$OMNIVOX_RHVOICE_LIBRARY" 2>/dev/null || :)"; \
+			fi; \
+			case "$$rhvoice_library_source" in \
+				*.[dD][lL][lL]) ;; \
+				*) \
+					echo "OMNIVOX_RHVOICE_LIBRARY must identify a readable RHVoice.dll" >&2; \
+					exit 1 ;; \
+			esac; \
+			if [ ! -f "$$rhvoice_library_source" ]; then \
+				echo "OMNIVOX_RHVOICE_LIBRARY does not identify a readable file" >&2; \
+				exit 1; \
+			fi; \
+			rhvoice_data_source="$$OMNIVOX_RHVOICE_DATA"; \
+			if [ ! -d "$$rhvoice_data_source" ]; then \
+				rhvoice_data_source="$$(wslpath -u \
+					"$$OMNIVOX_RHVOICE_DATA" 2>/dev/null || :)"; \
+			fi; \
+			if [ ! -d "$$rhvoice_data_source/languages" ] || \
+				[ ! -d "$$rhvoice_data_source/voices" ]; then \
+				echo "OMNIVOX_RHVOICE_DATA must contain languages and voices directories" >&2; \
+				exit 1; \
+			fi; \
+			rhvoice_library_digest="$$(sha256sum \
+				"$$rhvoice_library_source" | cut -d ' ' -f1)"; \
+			rhvoice_data_digest="$$(cd "$$rhvoice_data_source" && \
+				find . -type f -print0 | LC_ALL=C sort -z | \
+				xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+			rhvoice_library_windows_path="$$(wslpath -w \
+				"$$rhvoice_library_source")"; \
+			rhvoice_data_windows_path="$$(wslpath -w \
+				"$$rhvoice_data_source")"; \
+			if [ -n "$${OMNIVOX_RHVOICE_CONFIG:-}" ]; then \
+				rhvoice_config_source="$$OMNIVOX_RHVOICE_CONFIG"; \
+				if [ ! -d "$$rhvoice_config_source" ]; then \
+					rhvoice_config_source="$$(wslpath -u \
+						"$$OMNIVOX_RHVOICE_CONFIG" 2>/dev/null || :)"; \
+				fi; \
+				if [ ! -d "$$rhvoice_config_source" ]; then \
+					echo "OMNIVOX_RHVOICE_CONFIG does not identify a readable directory" >&2; \
+					exit 1; \
+				fi; \
+				rhvoice_config_digest="$$(cd "$$rhvoice_config_source" && \
+					find . -type f -print0 | LC_ALL=C sort -z | \
+					xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+				rhvoice_config_windows_path="$$(wslpath -w \
+					"$$rhvoice_config_source")"; \
+			fi; \
+			rhvoice_configuration_state=recorded-windows-paths; \
+		fi; \
 		piper_model_state=not-included; \
 		piper_model_digest=not-configured; \
 		piper_model_sha256=not-observed; \
@@ -662,7 +736,13 @@ windows-omnivox:
 				"$(OMNIVOX_INCLUDE_PINNED_PIPER)" \
 				"$(omnivox_piper_archive_sha256)" \
 				"$$piper_companion_digest" \
-				"$$piper_model_digest"; \
+				"$$piper_model_digest" \
+				"$$rhvoice_configuration_state" \
+				"$$rhvoice_library_digest" "$$rhvoice_data_digest" \
+				"$$rhvoice_config_digest" \
+				"$$rhvoice_library_windows_path" \
+				"$$rhvoice_data_windows_path" \
+				"$$rhvoice_config_windows_path"; \
 		} | sha256sum | cut -c1-16)"; \
 		version_dir="$(OMNIVOX_RUNTIME_DIR)/versions/$$build_id"; \
 		diagnostics_dir="$(OMNIVOX_RELEASE_DIR)/cache/diagnostics/$$build_id"; \
@@ -773,6 +853,22 @@ windows-omnivox:
 			> "$$version_dir/espeak-ng-data.path.new"; \
 		mv -f "$$version_dir/espeak-ng-data.path.new" \
 			"$$version_dir/espeak-ng-data.path"; \
+		if [ -n "$$rhvoice_library_windows_path" ]; then \
+			printf '%s\n' "$$rhvoice_library_windows_path" \
+				> "$$version_dir/rhvoice-library.path.new"; \
+			mv -f "$$version_dir/rhvoice-library.path.new" \
+				"$$version_dir/rhvoice-library.path"; \
+			printf '%s\n' "$$rhvoice_data_windows_path" \
+				> "$$version_dir/rhvoice-data.path.new"; \
+			mv -f "$$version_dir/rhvoice-data.path.new" \
+				"$$version_dir/rhvoice-data.path"; \
+			if [ -n "$$rhvoice_config_windows_path" ]; then \
+				printf '%s\n' "$$rhvoice_config_windows_path" \
+					> "$$version_dir/rhvoice-config.path.new"; \
+				mv -f "$$version_dir/rhvoice-config.path.new" \
+					"$$version_dir/rhvoice-config.path"; \
+			fi; \
+		fi; \
 		if [ -n "$$piper_model_windows_path" ]; then \
 			printf '%s\n' "$$piper_model_windows_path" \
 				> "$$version_dir/piper-model.path.new"; \
@@ -829,6 +925,10 @@ windows-omnivox:
 				'rhvoice_companion=local-omnivox-build' \
 				"rhvoice_companion_tree_sha256=$$rhvoice_companion_digest" \
 				'rhvoice_runtime=external-user-supplied-not-bundled' \
+				"rhvoice_configuration=$$rhvoice_configuration_state" \
+				"rhvoice_library_sha256=$$rhvoice_library_digest" \
+				"rhvoice_data_tree_sha256=$$rhvoice_data_digest" \
+				"rhvoice_config_tree_sha256=$$rhvoice_config_digest" \
 				'flite_companion=local-omnivox-build' \
 				"flite_companion_tree_sha256=$$flite_companion_digest" \
 				'flite_target=x86_64-pc-windows-gnu' \
