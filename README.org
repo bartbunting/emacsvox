@@ -12,6 +12,11 @@ features.
 
 * Start Here: First Speech
 
+If you use WSL2 and do not yet have Emacs 31, this is the path you want.  Do
+not install a separate Emacs package first: the guided Emacsvox installer uses
+an existing Emacs 31 or newer when available and otherwise downloads and builds
+the pinned stable Emacs release for your user.
+
 This checklist is sufficient to reach first speech without an installed Info
 manual.  The
 [[https://bartbunting.github.io/emacsvox/Installation.html][Getting Started manual]]

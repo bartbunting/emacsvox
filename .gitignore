@@ -7,7 +7,6 @@ announcements/auto
 *.fas
 *.o
 # ignore generated files:
-README
 /local.mk
 etc/emacsvox.sh
 lisp/emacsvox-loaddefs.el

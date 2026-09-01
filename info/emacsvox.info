@@ -28,7 +28,7 @@ Manual: (emacsvox-reference)Top.  Selected historical Emacspeak material
 is in the separate *note Emacspeak Heritage: (emacsvox-heritage)Top.
 manual and is not current setup guidance.  For rapidly evolving
 development and Aural Presentation rule-authoring details, also consult
-‘Readme.org’ and ‘etc/aural-presentation-reference.org’ in the source
+‘README.org’ and ‘etc/aural-presentation-reference.org’ in the source
 tree.
 
    The manual is divided into the following chapters:
@@ -143,7 +143,7 @@ essays and application guides for their historical and design value.
 Historical material may describe software or Web services from its
 original period.
 
-   Rapidly changing features are also documented in ‘Readme.org’,
+   Rapidly changing features are also documented in ‘README.org’,
 ‘etc/NEWS’, and the generated Aural Presentation reference.  When a
 copied key binding differs from your running Emacs, prefer the live help
 shown by ‘C-h m’ or ‘C-h k’.
@@ -3830,7 +3830,7 @@ chapters live under ‘docs/manual/chapters/’, while developer and
 maintainer chapters live under ‘docs/developer/’.  The source layout and
 fast authoring loop are summarized in ‘docs/manual/README.org’.
 
-   The current project overview lives in ‘Readme.org’, and the complete
+   The current project overview lives in ‘README.org’, and the complete
 user installation path lives in ‘docs/manual/chapters/installation.org’.
 Source checkout, byte-code, and release procedures live in
 ‘docs/developer/integration-maintenance.org’.  Submit changes through

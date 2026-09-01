@@ -74,7 +74,7 @@ the source, while the heritage manual preserves Emacspeak essays and
 application guides for their historical and design value.  Historical material
 may describe software or Web services from its original period.
 
-Rapidly changing features are also documented in ~Readme.org~, ~etc/NEWS~,
+Rapidly changing features are also documented in ~README.org~, ~etc/NEWS~,
 and the generated Aural Presentation reference.  When a copied key binding
 differs from your running Emacs, prefer the live help shown by @@texinfo:@kbd{C-h m}@@ or
 @@texinfo:@kbd{C-h k}@@.

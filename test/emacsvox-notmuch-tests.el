@@ -393,7 +393,7 @@ Return the beginning of the inserted row."
          (emacsvox-notmuch-test--repository-file-string
           "info/docs.texi"))
         (readme
-         (emacsvox-notmuch-test--repository-file-string "Readme.org")))
+         (emacsvox-notmuch-test--repository-file-string "README.org")))
     (should (string-match-p "@node Notmuch Mail" guide))
     (should
      (string-match-p

@@ -261,14 +261,14 @@
 (ert-deftest emacsvox-docs-check-rejects-broken-public-local-links ()
   "A missing README-local target should report its source line and path."
   (emacsvox-docs-check-tests--with-directory (directory)
-    (with-temp-file (expand-file-name "Readme.org" directory)
+    (with-temp-file (expand-file-name "README.org" directory)
       (insert "#+title: Fixture\n\n[[file:missing.org][Missing]]\n"))
     (let ((condition
            (should-error
             (emacsvox-docs-check--check-local-links directory))))
       (should
        (string-match-p
-        "Broken local link: Readme.org:3 -> missing.org"
+        "Broken local link: README.org:3 -> missing.org"
         (error-message-string condition))))))
 
 (ert-deftest emacsvox-docs-check-rejects-broken-manual-chapter-links ()
@@ -527,7 +527,7 @@
       (((symbol-function 'emacsvox-docs-check--capture-process)
         (lambda (_label _program _directory &rest arguments)
           (if (member "status" arguments)
-              " M Readme.org"
+              " M README.org"
             (make-string 40 ?a)))))
     (let ((condition
            (should-error

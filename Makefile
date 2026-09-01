@@ -48,7 +48,6 @@ DOCS_ORG_BODY ?= $(CURDIR)/info/emacsvox-body.texi
 DOCS_ORG_NODES ?= $(CURDIR)/docs/manual/nodes.txt
 DOCS_ORG_PREVIEW_DIR ?= $(DOCS_PREVIEW_DIR)/org-manual
 DOCS_ORG_HTMLXREF ?= $(CURDIR)/info/htmlxref.cnf
-README = README
 VERSION_FILE ?= $(CURDIR)/VERSION
 VERSION = $(shell sed -n '1p' "$(VERSION_FILE)" 2>/dev/null)
 DIST_DIR ?= $(CURDIR)/dist
@@ -322,8 +321,6 @@ aural-reference:
 
 emacsvox: check-emacs config
 	@cd lisp && $(MAKE) $(MAKEFLAGS)
-	@make   $(README)
-	@chmod 644 $(README)
 	@echo "See the NEWS file for a  summary of new features — Control e cap n in Emacs"
 	@echo "See Emacsvox Customizations for customizations — control e cap C in Emacs"
 	@echo  "Read the Emacsvox Manual — Control e TAB in Emacs"
@@ -1021,15 +1018,6 @@ clean-windows-dtk:
 clean-windows-omnivox:
 	rm -rf "$(OMNIVOX_RUNTIME_DIR)"
 
-###   Maintenance targets: distribution identity
-
-GITVERSION=$(shell git show HEAD | head -1  | cut -b 8- )
-README: 
-	@rm -f README
-	@echo "Emacsvox  Revision $(GITVERSION)" > $(README)
-	@echo "This release requires Emacs 31 or later." >> $(README)
-	@echo "Distribution created by `whoami` at `date`" >> $(README)
-	@echo "Unpack the distribution and follow Readme.org for the supported platform route." >> $(README)
 dist: release-artifact
 
 ###  User level target--  config

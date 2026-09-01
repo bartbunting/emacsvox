@@ -11,7 +11,7 @@ separate
 Manual}.  Selected historical Emacspeak material is in the separate
 @ref{Top,Emacspeak Heritage,,emacsvox-heritage,Emacspeak Heritage} manual and
 is not current setup guidance.  For rapidly evolving development and Aural
-Presentation rule-authoring details, also consult @file{Readme.org} and
+Presentation rule-authoring details, also consult @file{README.org} and
 @file{etc/aural-presentation-reference.org} in the source tree.
 
 The manual is divided into the following chapters:

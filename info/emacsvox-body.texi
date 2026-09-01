@@ -74,7 +74,7 @@ the source@comma{} while the heritage manual preserves Emacspeak essays and
 application guides for their historical and design value.  Historical material
 may describe software or Web services from its original period.
 
-Rapidly changing features are also documented in @code{Readme.org}@comma{} @code{etc/NEWS}@comma{}
+Rapidly changing features are also documented in @code{README.org}@comma{} @code{etc/NEWS}@comma{}
 and the generated Aural Presentation reference.  When a copied key binding
 differs from your running Emacs@comma{} prefer the live help shown by @kbd{C-h m} or
 @kbd{C-h k}.
@@ -4013,7 +4013,7 @@ live under @code{docs/manual/chapters/}@comma{} while developer and maintainer c
 live under @code{docs/developer/}.  The source layout and fast authoring loop are
 summarized in @code{docs/manual/README.org}.
 
-The current project overview lives in @code{Readme.org}@comma{} and the complete user
+The current project overview lives in @code{README.org}@comma{} and the complete user
 installation path lives in @code{docs/manual/chapters/installation.org}.  Source
 checkout@comma{} byte-code@comma{} and release procedures live in
 @code{docs/developer/integration-maintenance.org}.  Submit changes through the

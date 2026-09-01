@@ -6,7 +6,7 @@
 This is a point-in-time audit of commit =1677de0cf=, retained as an historical
 review record.  Its line numbers, test counts, open findings, and architectural
 recommendations do not describe the current tree.  Use
-[[file:Readme.org][the current overview]] and the generated
+[[file:README.org][the current overview]] and the generated
 [[file:etc/aural-presentation-reference.org][Aural Presentation Reference]]
 for supported behavior, and re-verify any finding against current code and
 history before acting on it.

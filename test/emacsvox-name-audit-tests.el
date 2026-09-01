@@ -60,7 +60,7 @@
 (ert-deftest emacsvox-name-audit-allows-documented-breaking-names ()
   "Breaking names are allowed only in their explicit documentation."
   (should
-   (ems-name-audit--allowed-name-p "Readme.org" "EMACSPEAK_DIR"))
+   (ems-name-audit--allowed-name-p "README.org" "EMACSPEAK_DIR"))
   (should
    (ems-name-audit--allowed-name-p "CLAUDE.md" "/emacspeak/"))
   (should-not

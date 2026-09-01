@@ -55,7 +55,7 @@
 (defconst ems-name-audit-allowed-names
   '(("CLAUDE.md" "EMACSPEAK_DIR" "EMACSPEAK_PLAY" "/emacspeak/")
     ("Makefile" "EMACSPEAK_DIR" "EMACSPEAK_TRACE_GOLDEN")
-    ("Readme.org" "EMACSPEAK_DIR" "EMACSPEAK_PLAY")
+    ("README.org" "EMACSPEAK_DIR" "EMACSPEAK_PLAY")
     ("info/dir" "emacspeak-significance")
     ("info/emacsvox-heritage.texi" "emacspeak-significance")
     ("servers/windows-speech-NOTICE.md" "emacspeak-support")

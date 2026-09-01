@@ -50,7 +50,7 @@
   "Frozen inventories of legacy root HTML paths for moved manual nodes.")
 
 (defconst emacsvox-docs-check--public-org-entry-files
-  '("Readme.org"
+  '("README.org"
     "docs/adr/0001-documentation-authoring-and-publication.org"
     "docs/manual/README.org"
     "docs/manual/emacsvox.org")

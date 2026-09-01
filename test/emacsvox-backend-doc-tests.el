@@ -76,7 +76,7 @@
 (ert-deftest emacsvox-backend-guide-is-linked-from-user-entry-points ()
   "The README, installation chapter, and manual menu should share one owner."
   (let ((readme
-         (emacsvox-backend-doc-tests--file-string "Readme.org"))
+         (emacsvox-backend-doc-tests--file-string "README.org"))
         (installation
          (emacsvox-backend-doc-tests--file-string "info/emacsvox-body.texi"))
         (master
@@ -108,7 +108,7 @@
 (ert-deftest emacsvox-first-use-bootstrap-is-visible-before-advanced-material ()
   "The rendered repository entry point should expose first speech immediately."
   (let* ((readme
-          (emacsvox-backend-doc-tests--file-string "Readme.org"))
+          (emacsvox-backend-doc-tests--file-string "README.org"))
          (start (string-search "* Start Here: First Speech" readme))
          (next (string-search "* Where To Go Next" readme))
          (advanced
@@ -193,7 +193,7 @@
   (let ((checkpoint
          "Emacsvox is ready.")
         (readme
-         (emacsvox-backend-doc-tests--file-string "Readme.org"))
+         (emacsvox-backend-doc-tests--file-string "README.org"))
         (guide
          (emacsvox-backend-doc-tests--file-string
           "docs/manual/chapters/installation.org"))

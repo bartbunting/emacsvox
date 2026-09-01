@@ -19,7 +19,7 @@ live under ~docs/manual/chapters/~, while developer and maintainer chapters
 live under ~docs/developer/~.  The source layout and fast authoring loop are
 summarized in ~docs/manual/README.org~.
 
-The current project overview lives in ~Readme.org~, and the complete user
+The current project overview lives in ~README.org~, and the complete user
 installation path lives in ~docs/manual/chapters/installation.org~.  Source
 checkout, byte-code, and release procedures live in
 ~docs/developer/integration-maintenance.org~.  Submit changes through the

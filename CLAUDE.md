@@ -14,7 +14,7 @@ identifiers, and the pinned behavioral comparison checkout.
 
 The canonical current documents are:
 
-- `Readme.org` — user overview, Omnivox integration, and quick installation.
+- `README.org` — user overview, Omnivox integration, and quick installation.
 - `docs/developer/integration-maintenance.org` — source-checkout, byte-code,
   integration, and release lifecycle.
 - `etc/NEWS` — current user-visible changes.
