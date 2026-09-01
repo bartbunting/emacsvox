@@ -872,7 +872,8 @@ Return the server's standard output."
     (should (search-forward "rhvoice_configuration=" nil t))
     (should (search-forward "flite_companion=local-omnivox-build" nil t))
     (should (search-forward "rutts_companion=local-omnivox-build" nil t))
-    (should (search-forward "rutts_built_in_voices=male,female" nil t)))
+    (should (search-forward "rutts_built_in_voices=male,female" nil t))
+    (should (search-forward "verify-windows-omnivox-live" nil t)))
   (with-temp-buffer
     (insert-file-contents
      (expand-file-name
@@ -881,6 +882,16 @@ Return the server's standard output."
     (should (search-forward "make -C \"$omnivox_root\"" nil t))
     (should-not (search-forward "servers/windows-eloquence" nil t))
     (should-not (search-forward "servers/windows-dectalk" nil t))))
+  (with-temp-buffer
+    (insert-file-contents
+     (expand-file-name
+      "omnivox-release/verify-runtime-live.sh"
+      emacsvox-servers-directory))
+    (dolist (contract '("--engine flite --list-voices-alist"
+                        "--engine rutts --list-voices-alist"
+                        "--engine flite --dump-wav"
+                        "--engine rutts --dump-wav"))
+      (should (search-forward contract nil t))))
 
 (provide 'emacsvox-windows-speech-tests)
 

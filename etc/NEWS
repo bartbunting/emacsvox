@@ -24,4 +24,6 @@ Released notes are preserved in [[file:NEWS-2026.9.0][NEWS for Emacsvox 2026.9.0
 
 - The source-built Windows Omnivox runtime now includes the checksum-locked
   RuTTS 6.3.3 companion and its built-in male and female Russian voices.  RuLex
-  remains excluded.
+  remains excluded.  Staging now finishes with live Flite and RuTTS voice
+  discovery and WAV-synthesis checks against the Windows-local payload, and
+  the WSL launcher forwards an explicit =OMNIVOX_RUTTS_HELPER= override.

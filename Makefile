@@ -72,7 +72,7 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: docs-publish docs-publish-pages
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
 .PHONY: windows-omnivox-dev
-.PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers prepare-windows-omnivox-piper verify-windows-omnivox-runtime
+.PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers prepare-windows-omnivox-piper verify-windows-omnivox-runtime verify-windows-omnivox-live
 .PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
 .PHONY: dist release release-source-check release-check release-artifact
 .PHONY: release-artifact-check
@@ -1025,9 +1025,14 @@ windows-omnivox:
 		chmod +x servers/omnivox; \
 		echo "Staged Omnivox runtime $$build_id"
 	$(MAKE) verify-windows-omnivox-runtime
+	$(MAKE) verify-windows-omnivox-live
 
 verify-windows-omnivox-runtime:
 	"$(OMNIVOX_RELEASE_DIR)/verify-runtime.sh" \
+		"$(OMNIVOX_RUNTIME_DIR)" "$(OMNIVOX_RELEASE_DIR)"
+
+verify-windows-omnivox-live:
+	"$(OMNIVOX_RELEASE_DIR)/verify-runtime-live.sh" \
 		"$(OMNIVOX_RUNTIME_DIR)" "$(OMNIVOX_RELEASE_DIR)"
 
 clean-windows-speech: clean-windows-audio clean-windows-outloud clean-windows-dtk

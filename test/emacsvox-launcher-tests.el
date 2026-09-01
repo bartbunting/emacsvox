@@ -417,6 +417,7 @@
                               "OMNIVOX_RHVOICE_RESOURCES"
                               "OMNIVOX_FLITE_HELPER"
                               "OMNIVOX_FLITE_VOICES"
+                              "OMNIVOX_RUTTS_HELPER"
                               "OMNIVOX_PIPER_MODEL"
                               "OMNIVOX_PIPER_HELPER"
                               "OMNIVOX_PIPER_ESPEAK_DATA"))
