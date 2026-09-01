@@ -1424,6 +1424,11 @@ directory so native voice and eSpeak data discovery do not pay the WSL
 filesystem cost.  Optional Eloquence@comma{} DECtalk@comma{} and RHVoice runtimes are not
 downloaded by this target or required for normal WinRT speech.
 
+The build does not report success on file checks alone.  Its final live gate
+starts the exact Windows-local runtime@comma{} discovers Flite's SLT voice and both
+RuTTS voices@comma{} and requires each helper to synthesize a non-empty WAV@.  Repeat
+that gate without rebuilding by running @code{make verify-windows-omnivox-live}.
+
 To register Piper@comma{} review a model and its model card@comma{} keep its adjacent
 @code{.onnx.json} or @code{.json} configuration with it@comma{} and supply an absolute path
 while staging:
@@ -4742,6 +4747,12 @@ languages@comma{} and voices remain external user-supplied runtime inputs.  Flit
 CMU US SLT voice is compiled into its checksum-locked helper.  RuTTS's built-in
 male and female Russian voices are compiled from the checksum-locked 6.3.3
 source; RuLex is not included.
+
+After staging@comma{} the static verifier rechecks manifests@comma{} provenance@comma{} the
+Windows-local copy@comma{} and all configured external inputs.  The separate live
+verifier executes that exact Windows-local runtime@comma{} discovers the compiled
+Flite and RuTTS voices@comma{} and requires real WAV synthesis from both helpers.
+Use @code{make verify-windows-omnivox-live} to repeat only the executable smoke gate.
 
 @code{OMNIVOX_PIPER_MODEL} is an optional staging input@comma{} not a release payload.
 When supplied@comma{} the target validates the adjacent configuration@comma{} copies both

@@ -239,6 +239,12 @@ CMU US SLT voice is compiled into its checksum-locked helper.  RuTTS's built-in
 male and female Russian voices are compiled from the checksum-locked 6.3.3
 source; RuLex is not included.
 
+After staging, the static verifier rechecks manifests, provenance, the
+Windows-local copy, and all configured external inputs.  The separate live
+verifier executes that exact Windows-local runtime, discovers the compiled
+Flite and RuTTS voices, and requires real WAV synthesis from both helpers.
+Use ~make verify-windows-omnivox-live~ to repeat only the executable smoke gate.
+
 ~OMNIVOX_PIPER_MODEL~ is an optional staging input, not a release payload.
 When supplied, the target validates the adjacent configuration, copies both
 files into a content-addressed Windows-local model cache, records their hashes,

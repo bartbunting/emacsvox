@@ -1420,6 +1420,12 @@ voice and eSpeak data discovery do not pay the WSL filesystem cost.
 Optional Eloquence, DECtalk, and RHVoice runtimes are not downloaded by
 this target or required for normal WinRT speech.
 
+   The build does not report success on file checks alone.  Its final
+live gate starts the exact Windows-local runtime, discovers Flite's SLT
+voice and both RuTTS voices, and requires each helper to synthesize a
+non-empty WAV.  Repeat that gate without rebuilding by running ‘make
+verify-windows-omnivox-live’.
+
    To register Piper, review a model and its model card, keep its
 adjacent ‘.onnx.json’ or ‘.json’ configuration with it, and supply an
 absolute path while staging:
@@ -4516,6 +4522,13 @@ inputs.  Flite's CMU US SLT voice is compiled into its checksum-locked
 helper.  RuTTS's built-in male and female Russian voices are compiled
 from the checksum-locked 6.3.3 source; RuLex is not included.
 
+   After staging, the static verifier rechecks manifests, provenance,
+the Windows-local copy, and all configured external inputs.  The
+separate live verifier executes that exact Windows-local runtime,
+discovers the compiled Flite and RuTTS voices, and requires real WAV
+synthesis from both helpers.  Use ‘make verify-windows-omnivox-live’ to
+repeat only the executable smoke gate.
+
    ‘OMNIVOX_PIPER_MODEL’ is an optional staging input, not a release
 payload.  When supplied, the target validates the adjacent
 configuration, copies both files into a content-addressed Windows-local
@@ -4726,57 +4739,57 @@ Node: Installing An Omnivox Windows Release Under WSL242465
 Node: Trying Native Windows Emacsvox47924
 Node: Installing Omnivox From Source55645
 Node: Building Omnivox For WSL257509
-Node: Selecting And Checking Omnivox64394
-Node: Compatibility Speech Servers66662
-Node: Backend Diagnostics And Ownership68588
-Node: Audio Desktop71765
-Node: Desktop Objects72895
-Node: Object Oriented Desktop74120
-Node: Context-Sensitive Interaction75233
-Node: Aural Presentation78348
-Node: Presentation Model80547
-Node: Presentation Modalities83014
-Node: Aural Home84761
-Node: Explaining Presentation86649
-Node: Adjusting Presentation88634
-Node: Presentation Profiles91603
-Node: Voices And Routing93294
-Node: Sounds And Space95651
-Node: Presentation Troubleshooting97275
-Node: Voice Lock99313
-Node: Using Online Help102520
-Node: Emacs Packages106582
-Node: Document Authoring107956
-Node: Structured Editing108510
-Node: Browsing Structure109493
-Node: Web Browsing110091
-Node: Messaging110926
-Node: Editing Code111424
-Node: Development Environment111943
-Node: Desktop Management112500
-Node: Personal Information Management113002
-Node: Desktop Applications113534
-Node: Notmuch Mail115083
-Ref: Notmuch fields and privacy124443
-Node: Agent Shell130151
-Node: EAT Terminal Access140145
-Node: Running Terminal Based Applications157404
-Node: Starting Term158359
-Node: Term Input Modes159198
-Node: Term Speech Feedback160358
-Node: Reviewing The Term Screen161552
-Node: Term Help And Recovery163453
-Node: Emacsvox Keyboard Commands164352
-Node: Copyright165756
-Node: Acknowledgments166343
-Node: Developer Guide167369
-Node: Documentation Maintenance168533
-Node: Speech Server Protocols173331
-Ref: Testing A Direct Legacy Server179238
-Ref: Commands That Queue Output179797
-Ref: Commands That Set State182831
-Node: Integration Maintenance185425
-Node: Concept Index201859
+Node: Selecting And Checking Omnivox64710
+Node: Compatibility Speech Servers66978
+Node: Backend Diagnostics And Ownership68904
+Node: Audio Desktop72081
+Node: Desktop Objects73211
+Node: Object Oriented Desktop74436
+Node: Context-Sensitive Interaction75549
+Node: Aural Presentation78664
+Node: Presentation Model80863
+Node: Presentation Modalities83330
+Node: Aural Home85077
+Node: Explaining Presentation86965
+Node: Adjusting Presentation88950
+Node: Presentation Profiles91919
+Node: Voices And Routing93610
+Node: Sounds And Space95967
+Node: Presentation Troubleshooting97591
+Node: Voice Lock99629
+Node: Using Online Help102836
+Node: Emacs Packages106898
+Node: Document Authoring108272
+Node: Structured Editing108826
+Node: Browsing Structure109809
+Node: Web Browsing110407
+Node: Messaging111242
+Node: Editing Code111740
+Node: Development Environment112259
+Node: Desktop Management112816
+Node: Personal Information Management113318
+Node: Desktop Applications113850
+Node: Notmuch Mail115399
+Ref: Notmuch fields and privacy124759
+Node: Agent Shell130467
+Node: EAT Terminal Access140461
+Node: Running Terminal Based Applications157720
+Node: Starting Term158675
+Node: Term Input Modes159514
+Node: Term Speech Feedback160674
+Node: Reviewing The Term Screen161868
+Node: Term Help And Recovery163769
+Node: Emacsvox Keyboard Commands164668
+Node: Copyright166072
+Node: Acknowledgments166659
+Node: Developer Guide167685
+Node: Documentation Maintenance168849
+Node: Speech Server Protocols173647
+Ref: Testing A Direct Legacy Server179554
+Ref: Commands That Queue Output180113
+Ref: Commands That Set State183147
+Node: Integration Maintenance185741
+Node: Concept Index202561
 
 End Tag Table
 

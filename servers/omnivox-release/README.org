@@ -121,6 +121,13 @@ and worktree-digest agreement with local diagnostics, the Windows-local runtime
 copy, the external eSpeak cache digest, and launcher selection through
 =servers/omnivox-bin/current=.
 
+=make verify-windows-omnivox-live= then bypasses any per-user Omnivox selection
+and executes that exact Windows-local payload.  It requires the staged Flite
+SLT and RuTTS male/female voices to be discoverable and requires both helpers
+to produce non-empty RIFF/WAVE output in a private Windows temporary directory.
+Both source-build staging targets run the static and live verifiers before
+returning success.
+
 Staging changes what a newly launched speech process selects.  An existing
 Omnivox process continues running the content-addressed executable with which
 it started, so restart Emacsvox, or otherwise start a fresh speech server,

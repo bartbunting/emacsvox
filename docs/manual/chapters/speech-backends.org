@@ -566,6 +566,11 @@ directory so native voice and eSpeak data discovery do not pay the WSL
 filesystem cost.  Optional Eloquence, DECtalk, and RHVoice runtimes are not
 downloaded by this target or required for normal WinRT speech.
 
+The build does not report success on file checks alone.  Its final live gate
+starts the exact Windows-local runtime, discovers Flite's SLT voice and both
+RuTTS voices, and requires each helper to synthesize a non-empty WAV.  Repeat
+that gate without rebuilding by running ~make verify-windows-omnivox-live~.
+
 To register Piper, review a model and its model card, keep its adjacent
 ~.onnx.json~ or ~.json~ configuration with it, and supply an absolute path
 while staging:
