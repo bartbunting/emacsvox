@@ -137,6 +137,17 @@
    (string-match-p
     (regexp-quote emacsvox-version-number) emacsvox-startup)))
 
+(ert-deftest emacsvox-release-tag-policy-is-annotated-and-unsigned ()
+  "The guarded release target creates the tag form accepted by ADR 0006."
+  (let ((makefile (emacsvox-version-tests--file-string "Makefile")))
+    (should
+     (string-match-p
+      (regexp-quote
+       "git tag -a \"$(VERSION)\" -m \"Emacsvox $(VERSION)\"")
+      makefile))
+    (should-not
+     (string-match-p (regexp-quote "git tag -s") makefile))))
+
 (ert-deftest emacsvox-version-checker-accepts-the-repository ()
   "The fast non-mutating checker accepts all maintained version metadata."
   (pcase-let ((`(,status ,output) (emacsvox-version-tests--run-checker)))

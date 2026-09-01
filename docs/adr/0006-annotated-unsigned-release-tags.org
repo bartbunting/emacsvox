@@ -1,0 +1,110 @@
+#+title: ADR 0006: Annotated Unsigned Release Tags
+#+date: 2026-09-01
+#+startup: content
+
+* Status
+
+Accepted.
+
+* Context
+
+The guarded Emacsvox release workflow separates source validation, artifact
+creation, local tagging, and publication.  The initial implementation required
+~git tag -s~, but the repository had not established a signing-key identity,
+distribution procedure, rotation policy, or user verification instructions.
+The first calendar-version release consequently passed every source, test,
+documentation, artifact, checksum, and provenance check but could not be tagged
+on the release machine because no matching private GPG key was available.
+
+A mandatory signature is useful only when users know which key to trust and how
+to verify it.  Making signing depend on whichever private key happens to be
+available on one maintainer machine creates an undocumented release dependency
+without completing that trust model.  The release must still have an immutable
+name, identify the checked source commit, and preserve the boundary between
+artifact preparation and externally visible publication.
+
+* Decision
+
+** Use annotated, unsigned release tags
+
+The guarded ~release-tag~ target creates an annotated Git tag using the exact
+~VERSION~ value and the message ~Emacsvox VERSION~.  It does not request a GPG
+or SSH signature.  Release tags are therefore intentionally unsigned, not
+silently downgraded when signing fails.
+
+Tag creation remains available only after ~release-artifact-check~ validates
+the clean committed source, release version, archive checksum, and provenance.
+The tag target creates only a local tag.  ~release-publish~ independently
+repeats those checks, requires the exact tag to identify ~HEAD~, pushes only
+that tag, and asks GitHub to verify that the tag exists before creating the
+release.
+
+** Make artifact integrity and provenance explicit
+
+Each GitHub release includes the source archive, its SHA-256 checksum, and the
+generated provenance record containing the exact source commit and artifact
+hash.  These files remain the documented integrity materials for an Emacsvox
+release.  Repository and GitHub access controls establish who may publish; an
+unsigned tag does not provide independent cryptographic proof of maintainer
+identity outside that hosting trust boundary.
+
+** Treat future signing as a complete trust-policy change
+
+Cryptographic signing may be adopted later only with a reviewed decision that
+defines the signing technology, public verification identity, private-key
+handling, rotation and revocation, maintainer access, automated checks, and
+user-facing verification procedure.  Agents and maintainers must not add an
+ad hoc signing flag or manually bypass the guarded tag and publication targets.
+
+* Consequences
+
+** Benefits
+
+- Releases do not depend on an undocumented private key being present on a
+  particular workstation.
+- Annotated tags retain a dedicated tag object, release message, tagger, and
+  exact version-to-commit identity.
+- The existing clean-source, comprehensive test, documentation, checksum,
+  provenance, tag-lineage, and explicit-publication gates remain mandatory.
+- The release behavior is deterministic rather than changing according to
+  local signing configuration.
+
+** Costs and risks
+
+- A tag fetched outside GitHub cannot independently prove which maintainer
+  created it.
+- Users must trust the GitHub repository and compare the published SHA-256 when
+  verifying the release archive.
+- Adding meaningful cryptographic authentication later requires both release
+  machinery and public key-management documentation.
+
+* Alternatives considered
+
+** Keep mandatory GPG signing
+
+Rejected for the current workflow.  No project signing identity or operational
+key policy has been established, and the release machine has no matching
+private key.
+
+** Fall back to unsigned tags only when signing fails
+
+Rejected.  A release's trust properties must be deliberate and consistent;
+failure-dependent behavior would be difficult to audit.
+
+** Select an arbitrary available personal key
+
+Rejected.  Key availability alone does not establish that users recognize the
+key as the Emacsvox release identity or know how to verify and recover from its
+rotation or compromise.
+
+** Sign only the release archive
+
+Deferred with other signing approaches until the project defines a complete
+verification and key-management policy.
+
+* Follow-up
+
+1. Keep a focused regression check on the annotated unsigned tag command.
+2. Keep checksum and provenance files attached to every GitHub release.
+3. Revisit signing only when the project can publish and maintain a complete
+   verification identity and operating procedure.

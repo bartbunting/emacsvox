@@ -32,8 +32,10 @@
   release worktree, run `make bytecode-rebuild`; `make release-artifact` then
   runs the guarded release gate and records the checked source commit. Inspect
   it before `make release-tag` and `make release-publish`. Never tag or push
-  around a failed gate. Treat release preparation and release publication as
-  separate approvals: never create or push a release tag, or run
+  around a failed gate. Release tags are annotated but unsigned as recorded in
+  the accepted release-tag ADR; do not add or bypass ad hoc signing behavior.
+  Treat release preparation and release publication as separate approvals:
+  never create or push a release tag, or run
   `make release-publish`, without fresh explicit user permission naming the
   release. A general instruction to continue, commit, push a branch, or publish
   documentation is not permission to publish a tagged release.

@@ -24,6 +24,12 @@ and documentation gates, and creates a checked artifact before allowing an
 explicit tag or GitHub publication step.  See
 =docs/adr/0002-calendar-versioning.org= for the policy.
 
+Release tags are annotated but intentionally unsigned.  Published releases
+include the source archive, its SHA-256 checksum, and a provenance record that
+names the exact checked source commit and artifact hash.  The trust boundary
+and the requirements for any future signing policy are recorded in
+=docs/adr/0006-annotated-unsigned-release-tags.org=.
+
 ** Portable First-use Launcher
 
 ~bin/emacsvox~ is now the one supported source-checkout launcher.  It works

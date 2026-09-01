@@ -100,11 +100,13 @@ make release-publish
 #+end_example
 
 ~release-tag~ validates the artifact against the still-clean ~HEAD~ and creates
-a local signed tag; it requires a configured signing identity and does not push
-the tag.  ~release-publish~ repeats the artifact and source-commit validation,
-pushes only that exact tag, and creates the GitHub release.  No release target
-pushes ~master~ or the documentation branch.  Use ~make release-check~ alone
-when a non-mutating preflight is wanted without creating an artifact.
+a local annotated, unsigned tag; it does not push the tag.  The unsigned-tag
+policy and its trust boundary are recorded in
+[[file:../adr/0006-annotated-unsigned-release-tags.org][ADR 0006]].  ~release-publish~
+repeats the artifact and source-commit validation, pushes only that exact tag,
+and creates the GitHub release.  No release target pushes ~master~ or the
+documentation branch.  Use ~make release-check~ alone when a non-mutating
+preflight is wanted without creating an artifact.
 
 ** Future Aural contract decisions
 :PROPERTIES:
