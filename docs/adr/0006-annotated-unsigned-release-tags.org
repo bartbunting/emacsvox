@@ -37,7 +37,9 @@ the clean committed source, release version, archive checksum, and provenance.
 The tag target creates only a local tag.  ~release-publish~ independently
 repeats those checks, requires the exact tag to identify ~HEAD~, pushes only
 that tag, and asks GitHub to verify that the tag exists before creating the
-release.
+release.  GitHub publication resolves the repository from the configured
+~RELEASE_REMOTE~ URL and passes it explicitly to the GitHub CLI.  It does not
+allow the CLI to choose a different upstream repository for a fork.
 
 ** Make artifact integrity and provenance explicit
 

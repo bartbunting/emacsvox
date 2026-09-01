@@ -4284,9 +4284,12 @@ and creates a local annotated, unsigned tag; it does not push the tag.
 The unsigned-tag policy and its trust boundary are recorded in ADR 0006
 (../adr/0006-annotated-unsigned-release-tags.org).  ‘release-publish’
 repeats the artifact and source-commit validation, pushes only that
-exact tag, and creates the GitHub release.  No release target pushes
-‘master’ or the documentation branch.  Use ‘make release-check’ alone
-when a non-mutating preflight is wanted without creating an artifact.
+exact tag, and creates the GitHub release in the repository identified
+by ‘RELEASE_REMOTE’.  This explicit selection prevents the GitHub CLI
+from choosing an ‘upstream’ remote when releasing from a fork.  No
+release target pushes ‘master’ or the documentation branch.  Use ‘make
+release-check’ alone when a non-mutating preflight is wanted without
+creating an artifact.
 
 16.3.3 Future Aural contract decisions
 --------------------------------------
@@ -4689,7 +4692,7 @@ Ref: Testing A Direct Legacy Server175895
 Ref: Commands That Queue Output176454
 Ref: Commands That Set State179488
 Node: Integration Maintenance182082
-Node: Concept Index196297
+Node: Concept Index196466
 
 End Tag Table
 

@@ -139,14 +139,31 @@
 
 (ert-deftest emacsvox-release-tag-policy-is-annotated-and-unsigned ()
   "The guarded release target creates the tag form accepted by ADR 0006."
-  (let ((makefile (emacsvox-version-tests--file-string "Makefile")))
+  (let* ((makefile (emacsvox-version-tests--file-string "Makefile"))
+         (repository-resolution
+          (string-match
+           (regexp-quote
+            "$$(git remote get-url \"$(RELEASE_REMOTE)\")")
+           makefile))
+         (tag-push
+          (string-match
+           (regexp-quote
+            "git push \"$(RELEASE_REMOTE)\" \"refs/tags/$(VERSION)\"")
+           makefile)))
     (should
      (string-match-p
       (regexp-quote
        "git tag -a \"$(VERSION)\" -m \"Emacsvox $(VERSION)\"")
       makefile))
     (should-not
-     (string-match-p (regexp-quote "git tag -s") makefile))))
+     (string-match-p (regexp-quote "git tag -s") makefile))
+    (should repository-resolution)
+    (should tag-push)
+    (should (< repository-resolution tag-push))
+    (should
+     (string-match-p
+      (regexp-quote "--repo \"$$release_repository\"")
+      makefile))))
 
 (ert-deftest emacsvox-version-checker-accepts-the-repository ()
   "The fast non-mutating checker accepts all maintained version metadata."

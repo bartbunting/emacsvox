@@ -931,10 +931,20 @@ release-publish: release-artifact-check
 	@utils/emacsvox-version-check --publish
 	@command -v gh >/dev/null 2>&1 || { \
 		echo "GitHub CLI 'gh' is required for publication." >&2; exit 1; }
-	git push "$(RELEASE_REMOTE)" "refs/tags/$(VERSION)"
-	gh release create "$(VERSION)" \
-		"$(RELEASE_ARCHIVE)" "$(RELEASE_CHECKSUM)" "$(RELEASE_PROVENANCE)" \
-		--verify-tag --title "Emacsvox $(VERSION)" --notes-file etc/NEWS
+	@set -eu; \
+		release_repository="$$(gh repo view \
+		"$$(git remote get-url "$(RELEASE_REMOTE)")" \
+		--json nameWithOwner --jq .nameWithOwner)"; \
+		test -n "$$release_repository" || { \
+			echo "Could not resolve GitHub repository for $(RELEASE_REMOTE)." >&2; \
+			exit 1; \
+		}; \
+		git push "$(RELEASE_REMOTE)" "refs/tags/$(VERSION)"; \
+		gh release create "$(VERSION)" \
+			"$(RELEASE_ARCHIVE)" "$(RELEASE_CHECKSUM)" \
+			"$(RELEASE_PROVENANCE)" \
+			--repo "$$release_repository" --verify-tag \
+			--title "Emacsvox $(VERSION)" --notes-file etc/NEWS
 
 ### Install: 
 

@@ -4548,9 +4548,11 @@ a local annotated@comma{} unsigned tag; it does not push the tag.  The unsigned-
 policy and its trust boundary are recorded in
 @uref{../adr/0006-annotated-unsigned-release-tags.org, ADR 0006}.  @code{release-publish}
 repeats the artifact and source-commit validation@comma{} pushes only that exact tag@comma{}
-and creates the GitHub release.  No release target pushes @code{master} or the
-documentation branch.  Use @code{make release-check} alone when a non-mutating
-preflight is wanted without creating an artifact.
+and creates the GitHub release in the repository identified by
+@code{RELEASE_REMOTE}.  This explicit selection prevents the GitHub CLI from
+choosing an @code{upstream} remote when releasing from a fork.  No release target
+pushes @code{master} or the documentation branch.  Use @code{make release-check} alone
+when a non-mutating preflight is wanted without creating an artifact.
 
 @subsection Future Aural contract decisions
 

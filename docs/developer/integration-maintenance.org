@@ -104,9 +104,11 @@ a local annotated, unsigned tag; it does not push the tag.  The unsigned-tag
 policy and its trust boundary are recorded in
 [[file:../adr/0006-annotated-unsigned-release-tags.org][ADR 0006]].  ~release-publish~
 repeats the artifact and source-commit validation, pushes only that exact tag,
-and creates the GitHub release.  No release target pushes ~master~ or the
-documentation branch.  Use ~make release-check~ alone when a non-mutating
-preflight is wanted without creating an artifact.
+and creates the GitHub release in the repository identified by
+~RELEASE_REMOTE~.  This explicit selection prevents the GitHub CLI from
+choosing an ~upstream~ remote when releasing from a fork.  No release target
+pushes ~master~ or the documentation branch.  Use ~make release-check~ alone
+when a non-mutating preflight is wanted without creating an artifact.
 
 ** Future Aural contract decisions
 :PROPERTIES:
