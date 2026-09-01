@@ -63,7 +63,7 @@ run_staged()
 
 espeak_voices=$(run_staged --engine espeak --list-voices-alist)
 if ! printf '%s\n' "$espeak_voices" |
-    grep -Fq '("espeak:gmw\en-US" "English (America)" "en-us" "Compact")'; then
+    grep -Fq '("espeak:gmw\\en-US" "English (America)" "en-us" "Compact")'; then
     echo "Staged eSpeak did not report its default English voice" >&2
     exit 1
 fi
