@@ -223,19 +223,21 @@ split across three boundaries:
 |---+---+---|
 | Windows and WSL host | Maintainer | WSL interoperation, ~powershell.exe~, ~wslpath~, Windows .NET Framework 4.7.2 or newer, Docker with Linux/AMD64 support, Git, Make, download and checksum tools, standard GNU shell utilities, network access, and writable Windows ~LocalAppData~. |
 | Pinned release toolchain | Emacsvox target | The immutable Rust/Debian container, MinGW cross tools and runtime DLLs, CMake, Clang and libclang, eSpeak build dependencies, Roslyn, .NET 4.0 reference assemblies, and official Windows Piper companion.  The exact versions, source commit, and downloaded-package hashes live in ~servers/omnivox-release/toolchain.lock~. |
-| Build source | Git checkouts | The current Emacsvox checkout and the Omnivox checkout selected by ~OMNIVOX_DIR~, including Omnivox's locked Rust dependencies and checksum-locked Flite source input. |
+| Build source | Git checkouts | The current Emacsvox checkout and the Omnivox checkout selected by ~OMNIVOX_DIR~, including Omnivox's locked Rust dependencies and checksum-locked Flite and RuTTS source inputs. |
 
 ~make verify-windows-omnivox-toolchain~ prepares the cached Roslyn inputs,
 builds the Docker image, and validates this boundary before compilation.  The
 full target then builds Omnivox's two 32-bit helper sources deterministically,
-builds native Windows Omnivox plus its RHVoice and Flite helpers in the
+builds native Windows Omnivox plus its RHVoice, Flite, and RuTTS helpers in the
 container, and stages their licenses, provenance, and checksums.  The clean
 target also builds Piper support and verifies that the pinned companion and
 main executable identify the same Omnivox source commit.  A host Rust
 installation, MinGW installation, Visual Studio, .NET SDK, or system eSpeak
 installation is not an input to this release path.  RHVoice's native library,
-languages, and voices remain external user-supplied runtime inputs; Flite's CMU
-US SLT voice is compiled into its checksum-locked helper.
+languages, and voices remain external user-supplied runtime inputs.  Flite's
+CMU US SLT voice is compiled into its checksum-locked helper.  RuTTS's built-in
+male and female Russian voices are compiled from the checksum-locked 6.3.3
+source; RuLex is not included.
 
 ~OMNIVOX_PIPER_MODEL~ is an optional staging input, not a release payload.
 When supplied, the target validates the adjacent configuration, copies both
@@ -248,9 +250,9 @@ that bounded test purpose and is not a model-distribution default.
 
 Maintainers testing tracked Emacsvox or Omnivox changes may use
 ~make windows-omnivox-dev~.  That target records both worktree-diff hashes and
-labels the result as a development build.  It builds the RHVoice and Flite
-companions but omits Piper, because the currently pinned Piper companion must
-not be mixed with later Omnivox source.  It also rejects
+labels the result as a development build.  It builds the RHVoice, Flite, and
+RuTTS companions but omits Piper, because the currently pinned Piper companion
+must not be mixed with later Omnivox source.  It also rejects
 ~OMNIVOX_PIPER_MODEL~.  Advance the checked Piper companion and source commit
 together before these integrations enter the clean release path.  See
 ~servers/omnivox-release/README.org~ for the pinned toolchain, licensing,
@@ -264,8 +266,10 @@ digests in provenance and machine-local Windows path pointers beside the
 selected runtime, and leaves all RHVoice files external.  Those pointers let
 the launcher restore the variables for every fresh Emacsvox process.  The
 runtime verifier rejects missing or changed external inputs.  Omitting all
-three variables leaves RHVoice unconfigured without affecting Flite or the
-other engines.
+three variables leaves RHVoice unconfigured without affecting Flite, RuTTS,
+or the other engines.  RuTTS requires no external installation; the staged
+helper always provides its built-in male and female Russian voices without
+RuLex.
 
 Do not bypass the Omnivox release target manually or clean either repository
 to make its release guard pass.  Use ~make windows-omnivox~ only for the
