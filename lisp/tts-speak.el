@@ -52,8 +52,11 @@
 (defvar emacsvox-capitalization-presentation)
 (defvar emacsvox-capitalization-presentation-values)
 (defvar emacsvox-aural-source-invisible-property)
+(defvar emacsvox-aural--current-submission-id)
 
 (declare-function ems--fastload "emacsvox-preamble" (file))
+(declare-function emacsvox-aural-diagnostic-log-event
+                  "emacsvox-aural-submission" (event &rest fields))
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
 (declare-function emacsvox-icon "emacsvox-sounds.el" (icon))
 (declare-function emacsvox-queue-icon "emacsvox-sounds.el" (icon))
@@ -176,12 +179,97 @@ a `cancelled' record when pending input interrupts that wait.")
 (defvar tts--tracked-dispatches (make-hash-table :test #'eql)
   "Tracked speech callbacks indexed by dispatch identifier.")
 
+(cl-defstruct (tts--dispatch-lifecycle
+               (:constructor tts--dispatch-lifecycle-create))
+  process submission-id submitted-at source-observed-at)
+
+(defvar tts--dispatch-lifecycles (make-hash-table :test #'eql)
+  "Client-observed lifecycle timing indexed by dispatch identifier.")
+
 (cl-defstruct (tts--marker-dispatch
                (:constructor tts--marker-dispatch-create))
   process callback semantic-actions (last-sequence 0))
 
 (defvar tts--marker-dispatches (make-hash-table :test #'eql)
   "Marker callback state indexed by tracked dispatch identifier.")
+
+(defun tts--diagnostic-log-dispatch-event (event &rest fields)
+  "Append diagnostic dispatch EVENT and FIELDS when logging is available."
+  (when (fboundp 'emacsvox-aural-diagnostic-log-event)
+    (condition-case error-data
+        (apply #'emacsvox-aural-diagnostic-log-event event fields)
+      (error
+       (message "Speech lifecycle diagnostic failed: %s"
+                (error-message-string error-data))))))
+
+(defun tts--register-dispatch-lifecycle
+    (identifier process submission-id)
+  "Record successful send of dispatch IDENTIFIER to PROCESS.
+SUBMISSION-ID identifies the native aural submission when one owns it."
+  (let* ((submitted-at (float-time))
+         (lifecycle
+          (tts--dispatch-lifecycle-create
+           :process process
+           :submission-id submission-id
+           :submitted-at submitted-at)))
+    (puthash identifier lifecycle tts--dispatch-lifecycles)
+    (tts--diagnostic-log-dispatch-event
+     'dispatch-sent
+     :submission-id submission-id
+     :dispatch-id identifier
+     :process-name (and (processp process) (process-name process))
+     :process-generation
+     (and
+      (processp process)
+      (process-get process 'tts--speech-process-generation))
+     :server-program tts-program)
+    lifecycle))
+
+(defun tts--observe-dispatch-source (process identifier event)
+  "Record first source-consumption EVENT for IDENTIFIER owned by PROCESS."
+  (when-let* ((lifecycle (gethash identifier tts--dispatch-lifecycles)))
+    (when
+        (and
+         (eq process (tts--dispatch-lifecycle-process lifecycle))
+         (equal (plist-get event :type) "utterance_started")
+         (null (tts--dispatch-lifecycle-source-observed-at lifecycle)))
+      (let ((observed-at (float-time)))
+        (setf
+         (tts--dispatch-lifecycle-source-observed-at lifecycle)
+         observed-at)
+        (tts--diagnostic-log-dispatch-event
+         'mixer-source-observed
+         :submission-id (tts--dispatch-lifecycle-submission-id lifecycle)
+         :dispatch-id identifier
+         :dispatch-elapsed-ms
+         (* 1000.0
+            (- observed-at
+               (tts--dispatch-lifecycle-submitted-at lifecycle)))
+         :utterance-id (plist-get event :utterance_id)
+         :engine-id (plist-get event :engine_id)
+         :actual-voice (plist-get event :actual_voice)
+         :logical-voice-id (plist-get event :logical_voice_id))))))
+
+(defun tts--finish-dispatch-lifecycle (process identifier status)
+  "Record terminal STATUS for dispatch IDENTIFIER owned by PROCESS."
+  (when-let* ((lifecycle (gethash identifier tts--dispatch-lifecycles)))
+    (when (eq process (tts--dispatch-lifecycle-process lifecycle))
+      (remhash identifier tts--dispatch-lifecycles)
+      (let* ((finished-at (float-time))
+             (submitted-at
+              (tts--dispatch-lifecycle-submitted-at lifecycle))
+             (source-at
+              (tts--dispatch-lifecycle-source-observed-at lifecycle)))
+        (tts--diagnostic-log-dispatch-event
+         'playback-terminal-observed
+         :submission-id (tts--dispatch-lifecycle-submission-id lifecycle)
+         :dispatch-id identifier
+         :status status
+         :dispatch-elapsed-ms (* 1000.0 (- finished-at submitted-at))
+         :onset-elapsed-ms
+         (and source-at (* 1000.0 (- source-at submitted-at)))
+         :source-to-terminal-ms
+         (and source-at (* 1000.0 (- finished-at source-at))))))))
 
 (defvar tts--speech-process-generation 0
   "Sequence distinguishing speech-server process instances.")
@@ -262,6 +350,7 @@ Return non-nil when LINE is a tracked status record."
            (status (intern (match-string 2 line)))
            (entry (gethash identifier tts--tracked-dispatches))
            (marker-entry (gethash identifier tts--marker-dispatches)))
+      (tts--finish-dispatch-lifecycle process identifier status)
       (when (and marker-entry
                  (eq process (tts--marker-dispatch-process marker-entry)))
         (remhash identifier tts--marker-dispatches))
@@ -287,6 +376,8 @@ Return non-nil when EVENT belongs to a live marker dispatch."
          (entry
           (and (integerp identifier)
                (gethash identifier tts--marker-dispatches))))
+    (when (integerp identifier)
+      (tts--observe-dispatch-source process identifier event))
     (when
         (and
          entry
@@ -345,6 +436,9 @@ Return non-nil when EVENT belongs to a live marker dispatch."
 
 (defun tts-cancel-tracked-dispatch (identifier)
   "Forget tracked speech dispatch IDENTIFIER."
+  (when-let* ((lifecycle (gethash identifier tts--dispatch-lifecycles)))
+    (tts--finish-dispatch-lifecycle
+     (tts--dispatch-lifecycle-process lifecycle) identifier 'cancelled))
   (remhash identifier tts--tracked-dispatches)
   (remhash identifier tts--marker-dispatches))
 
@@ -355,7 +449,7 @@ Entries are removed before callbacks run, so reentrant stop and server output
 cannot deliver a second terminal result."
   (unless (memq status '(completed cancelled failed))
     (error "Invalid tracked dispatch terminal status: %S" status))
-  (let (entries marker-identifiers)
+  (let (entries marker-identifiers lifecycle-identifiers)
     (maphash
      (lambda (identifier entry)
        (when (eq process (car entry))
@@ -371,6 +465,13 @@ cannot deliver a second terminal result."
      tts--marker-dispatches)
     (dolist (identifier marker-identifiers)
       (remhash identifier tts--marker-dispatches))
+    (maphash
+     (lambda (identifier lifecycle)
+       (when (eq process (tts--dispatch-lifecycle-process lifecycle))
+         (push identifier lifecycle-identifiers)))
+     tts--dispatch-lifecycles)
+    (dolist (identifier lifecycle-identifiers)
+      (tts--finish-dispatch-lifecycle process identifier status))
     (dolist (entry (nreverse entries))
       (tts--call-tracked-dispatch-callback
        (cdr entry) (car entry) status))))
@@ -478,7 +579,11 @@ or `failed'.  Return the identifier allocated to this dispatch."
   (tts--require-tracked-playback-completion)
   (tts--ensure-tracked-process-filter tts-speaker-process)
   (let ((identifier (cl-incf tts--tracked-dispatch-sequence))
-        (process tts-speaker-process))
+        (process tts-speaker-process)
+        (submission-id
+         (and
+          (boundp 'emacsvox-aural--current-submission-id)
+          emacsvox-aural--current-submission-id)))
     (condition-case error-data
         (progn
           (emacsvox-aural-delivery-send
@@ -488,7 +593,9 @@ or `failed'.  Return the identifier allocated to this dispatch."
            (lambda ()
              (puthash
               identifier (cons process callback)
-              tts--tracked-dispatches))))
+              tts--tracked-dispatches)
+             (tts--register-dispatch-lifecycle
+              identifier process submission-id))))
       (error
        (tts-cancel-tracked-dispatch identifier)
        (signal (car error-data) (cdr error-data))))
@@ -506,7 +613,11 @@ COMPLETION-CALLBACK receives the identifier and terminal status."
   (tts--require-tracked-playback-completion)
   (tts--ensure-tracked-process-filter tts-speaker-process)
   (let ((identifier (cl-incf tts--tracked-dispatch-sequence))
-        (process tts-speaker-process))
+        (process tts-speaker-process)
+        (submission-id
+         (and
+          (boundp 'emacsvox-aural--current-submission-id)
+          emacsvox-aural--current-submission-id)))
     (condition-case error-data
         (progn
           (emacsvox-aural-delivery-send
@@ -521,7 +632,9 @@ COMPLETION-CALLBACK receives the identifier and terminal status."
               identifier
               (tts--marker-dispatch-create
                :process process :callback marker-callback)
-              tts--marker-dispatches))))
+              tts--marker-dispatches)
+             (tts--register-dispatch-lifecycle
+              identifier process submission-id))))
       (error
        (tts-cancel-tracked-dispatch identifier)
        (signal (car error-data) (cdr error-data))))
@@ -541,7 +654,11 @@ effect must run only after the complete timeline command has been sent."
   (when marker-callback (tts--require-marker-playback-events))
   (tts--ensure-tracked-process-filter tts-speaker-process)
   (let ((identifier (cl-incf tts--tracked-dispatch-sequence))
-        (process tts-speaker-process))
+        (process tts-speaker-process)
+        (submission-id
+         (and
+          (boundp 'emacsvox-aural--current-submission-id)
+          emacsvox-aural--current-submission-id)))
     (cons
      identifier
      (lambda ()
@@ -556,7 +673,9 @@ effect must run only after the complete timeline command has been sent."
            :process process
            :callback marker-callback
            :semantic-actions (copy-tree semantic-actions))
-          tts--marker-dispatches))))))
+          tts--marker-dispatches))
+       (tts--register-dispatch-lifecycle
+        identifier process submission-id)))))
 
 ;;;;  say
 

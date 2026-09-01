@@ -61,13 +61,18 @@
 (defvar emacsvox-aural--submission-sequence 0
   "Sequence used to identify native aural submissions.")
 
+(defvar emacsvox-aural--current-submission-id nil
+  "Native submission ID dynamically owning the current speech dispatch.")
+
 (defcustom emacsvox-aural-diagnostic-log-file nil
   "File receiving opt-in aural submission diagnostics.
 
-When non-nil, Emacsvox appends one Lisp plist per line with command timing,
-submission timing, and complete submitted text.  The log can therefore contain
-sensitive material and is disabled by default.  Emacsvox creates the file with
-owner-only permissions and tightens an existing file before appending to it."
+When non-nil, Emacsvox appends one Lisp plist per line with command,
+submission, dispatch-send, mixer-source observation, and terminal timing, plus
+complete submitted text.  Dispatch records carry the native submission and
+Omnivox dispatch IDs when available.  The log can therefore contain sensitive
+material and is disabled by default.  Emacsvox creates the file with owner-only
+permissions and tightens an existing file before appending to it."
   :type '(choice (const :tag "Disabled" nil) file)
   :group 'emacsvox-aural)
 
@@ -401,8 +406,9 @@ PHASE is `before' by default and may alternatively be `after'."
              (emacsvox-aural--presented-plan-collector
               (lambda (presented-plan)
                 (push presented-plan presented-plans))))
-        (emacsvox-aural-call-with-presentation-transaction
-         id #'tts-speak prepared)
+        (let ((emacsvox-aural--current-submission-id id))
+          (emacsvox-aural-call-with-presentation-transaction
+           id #'tts-speak prepared))
         (when presented-plans
           (setf
            (emacsvox-aural-submission-plans submission)
@@ -428,9 +434,10 @@ PHASE is `before' by default and may alternatively be `after'."
           (lambda (presented-plan)
             (push presented-plan presented-plans)))
          (plan
-          (emacsvox-aural-call-with-presentation-transaction
-           id #'emacsvox-aural-present facts plan-context
-           (emacsvox-aural--source-compatibility-actions actions))))
+          (let ((emacsvox-aural--current-submission-id id))
+            (emacsvox-aural-call-with-presentation-transaction
+             id #'emacsvox-aural-present facts plan-context
+             (emacsvox-aural--source-compatibility-actions actions)))))
     (emacsvox-aural--make-submission
      :id id
      :delivery-policy emacsvox-aural-submission-delivery-policy

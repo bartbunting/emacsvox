@@ -1589,6 +1589,16 @@ A process starts and later fails
      ‘~/.local/state/emacsvox/omnivox’.  Spoken text is excluded unless
      ‘OMNIVOX_LOG_SYNTHESIS_TEXT’ is explicitly enabled; enabling it can
      expose passwords, messages, and document contents.
+Speech works but feels delayed
+     Set ‘emacsvox-aural-diagnostic-log-file’ to a private file and
+     reproduce one short presentation.  Its ‘dispatch-sent’,
+     ‘mixer-source-observed’, and ‘playback-terminal-observed’ records
+     share an Omnivox dispatch ID.  Match that ID in the ordinary
+     Omnivox session log to separate Emacs submission, server queueing,
+     synthesis, and mixer-source delay.  The Emacs log is disabled by
+     default because its submission records include complete spoken
+     text.  A mixer-source observation is not physical audible output;
+     device and hardware buffers can add latency afterward.
 
    Server selection, the POSIX/WSL launcher, Windows staging, and the
 bundled Lisp adapter are implemented and documented in Emacsvox.  Native
@@ -3974,11 +3984,18 @@ cancels queued, synthesizing, and buffered work in the same replacement
 domain.  It does not globally stop ordered, urgent, legacy, or
 differently keyed output.
 
-   Marker events distinguish dispatch admission, synthesis, playback
-start, positioned markers, and terminal completion.  Playback markers
-track mixer source consumption and may precede physical sound by the
-output device's buffer latency; a protocol write or terminal callback is
-therefore not proof of acoustic onset.
+   Marker events report playback start and positioned playback
+boundaries; tracked status reports terminal completion.  With opt-in
+Aural diagnostics, Emacs records successful dispatch send, first
+received ‘utterance_started’, and terminal observation under the same
+dispatch ID.  Omnivox's normal session log records protocol admission,
+worker queue wait, individual engine attempts, audio queueing, first
+mixer-source consumption, and terminal playback under that ID.  This
+correlation uses existing marker and terminal records rather than adding
+a wire-protocol version.  Playback markers track mixer-source
+consumption and may precede physical sound by the output device's buffer
+latency; a protocol write or terminal callback is therefore not proof of
+acoustic onset.
 
    The canonical protocol documents are:
 
@@ -4699,54 +4716,54 @@ Node: Building Omnivox For WSL257411
 Node: Selecting And Checking Omnivox64005
 Node: Compatibility Speech Servers66273
 Node: Backend Diagnostics And Ownership68199
-Node: Audio Desktop70544
-Node: Desktop Objects71674
-Node: Object Oriented Desktop72899
-Node: Context-Sensitive Interaction74012
-Node: Aural Presentation77127
-Node: Presentation Model79326
-Node: Presentation Modalities81793
-Node: Aural Home83540
-Node: Explaining Presentation85428
-Node: Adjusting Presentation87413
-Node: Presentation Profiles90382
-Node: Voices And Routing92073
-Node: Sounds And Space94430
-Node: Presentation Troubleshooting96054
-Node: Voice Lock98092
-Node: Using Online Help101299
-Node: Emacs Packages105361
-Node: Document Authoring106735
-Node: Structured Editing107289
-Node: Browsing Structure108272
-Node: Web Browsing108870
-Node: Messaging109705
-Node: Editing Code110203
-Node: Development Environment110722
-Node: Desktop Management111279
-Node: Personal Information Management111781
-Node: Desktop Applications112313
-Node: Notmuch Mail113862
-Ref: Notmuch fields and privacy123222
-Node: Agent Shell128930
-Node: EAT Terminal Access138924
-Node: Running Terminal Based Applications156183
-Node: Starting Term157138
-Node: Term Input Modes157977
-Node: Term Speech Feedback159137
-Node: Reviewing The Term Screen160331
-Node: Term Help And Recovery162232
-Node: Emacsvox Keyboard Commands163131
-Node: Copyright164535
-Node: Acknowledgments165122
-Node: Developer Guide166148
-Node: Documentation Maintenance167312
-Node: Speech Server Protocols172110
-Ref: Testing A Direct Legacy Server177560
-Ref: Commands That Queue Output178119
-Ref: Commands That Set State181153
-Node: Integration Maintenance183747
-Node: Concept Index199850
+Node: Audio Desktop71198
+Node: Desktop Objects72328
+Node: Object Oriented Desktop73553
+Node: Context-Sensitive Interaction74666
+Node: Aural Presentation77781
+Node: Presentation Model79980
+Node: Presentation Modalities82447
+Node: Aural Home84194
+Node: Explaining Presentation86082
+Node: Adjusting Presentation88067
+Node: Presentation Profiles91036
+Node: Voices And Routing92727
+Node: Sounds And Space95084
+Node: Presentation Troubleshooting96708
+Node: Voice Lock98746
+Node: Using Online Help101953
+Node: Emacs Packages106015
+Node: Document Authoring107389
+Node: Structured Editing107943
+Node: Browsing Structure108926
+Node: Web Browsing109524
+Node: Messaging110359
+Node: Editing Code110857
+Node: Development Environment111376
+Node: Desktop Management111933
+Node: Personal Information Management112435
+Node: Desktop Applications112967
+Node: Notmuch Mail114516
+Ref: Notmuch fields and privacy123876
+Node: Agent Shell129584
+Node: EAT Terminal Access139578
+Node: Running Terminal Based Applications156837
+Node: Starting Term157792
+Node: Term Input Modes158631
+Node: Term Speech Feedback159791
+Node: Reviewing The Term Screen160985
+Node: Term Help And Recovery162886
+Node: Emacsvox Keyboard Commands163785
+Node: Copyright165189
+Node: Acknowledgments165776
+Node: Developer Guide166802
+Node: Documentation Maintenance167966
+Node: Speech Server Protocols172764
+Ref: Testing A Direct Legacy Server178671
+Ref: Commands That Queue Output179230
+Ref: Commands That Set State182264
+Node: Integration Maintenance184858
+Node: Concept Index200961
 
 End Tag Table
 

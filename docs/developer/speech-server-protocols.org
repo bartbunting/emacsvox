@@ -59,9 +59,15 @@ Receipt of a newer valid replaceable generation immediately cancels queued,
 synthesizing, and buffered work in the same replacement domain.  It does not
 globally stop ordered, urgent, legacy, or differently keyed output.
 
-Marker events distinguish dispatch admission, synthesis, playback start,
-positioned markers, and terminal completion.  Playback markers track mixer
-source consumption and may precede physical sound by the output device's
+Marker events report playback start and positioned playback boundaries;
+tracked status reports terminal completion.  With opt-in Aural diagnostics,
+Emacs records successful dispatch send, first received ~utterance_started~,
+and terminal observation under the same dispatch ID.  Omnivox's normal
+session log records protocol admission, worker queue wait, individual engine
+attempts, audio queueing, first mixer-source consumption, and terminal
+playback under that ID.  This correlation uses existing marker and terminal
+records rather than adding a wire-protocol version.  Playback markers track
+mixer-source consumption and may precede physical sound by the output device's
 buffer latency; a protocol write or terminal callback is therefore not proof
 of acoustic onset.
 

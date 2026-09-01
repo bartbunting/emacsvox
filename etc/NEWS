@@ -14,3 +14,9 @@ advance.  Before a release, replace =Unreleased= with the exact value from
 =VERSION= and complete the release notes.
 
 Released notes are preserved in [[file:NEWS-2026.9.0][NEWS for Emacsvox 2026.9.0]].
+
+- Opt-in Aural Presentation diagnostics now correlate native submission IDs
+  with Omnivox dispatch IDs and record actual dispatch send, first observed
+  mixer-source consumption, and terminal playback timing.  Omnivox's normal
+  session log supplies the matching server admission, queue, synthesis, and
+  playback-stage breakdown without a speech protocol change.

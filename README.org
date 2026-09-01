@@ -324,6 +324,15 @@ unreached events and retire both callbacks.  Older servers reject
 =tts-speak-marked= before text is submitted and continue using ordinary or
 tracked speech unchanged.
 
+For latency diagnosis, set =emacsvox-aural-diagnostic-log-file= to a private
+file.  Successfully sent presentations then record their native submission
+and Omnivox dispatch IDs, first observed =utterance_started= event, and terminal
+status.  Match the dispatch ID with Omnivox's session log to separate Emacs
+submission, server queueing, synthesis, and mixer-source delay.  This log is
+disabled by default because its submission records contain complete spoken
+text.  Mixer-source observation can still precede acoustic output by device
+buffering.
+
 For queued logical voices, current Omnivox servers re-resolve a missing voice
 or failed engine against the dispatched registry snapshot and retry the same
 text chunk on the selected fallback.  Retries are limited to four total

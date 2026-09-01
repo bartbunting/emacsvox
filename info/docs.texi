@@ -4211,10 +4211,12 @@ adapters until their callers migrate to this service.
 @verbatim
 File receiving opt-in aural submission diagnostics.
 
-When non-nil, Emacsvox appends one Lisp plist per line with command timing,
-submission timing, and complete submitted text.  The log can therefore contain
-sensitive material and is disabled by default.  Emacsvox creates the file with
-owner-only permissions and tightens an existing file before appending to it.
+When non-nil, Emacsvox appends one Lisp plist per line with command,
+submission, dispatch-send, mixer-source observation, and terminal timing, plus
+complete submitted text.  Dispatch records carry the native submission and
+Omnivox dispatch IDs when available.  The log can therefore contain sensitive
+material and is disabled by default.  Emacsvox creates the file with owner-only
+permissions and tightens an existing file before appending to it.
 @end verbatim
 
 Default Value:

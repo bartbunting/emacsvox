@@ -748,6 +748,16 @@ Use the boundary at which speech failed to choose the next diagnostic:
   ~~/.local/state/emacsvox/omnivox~.  Spoken text is excluded unless
   ~OMNIVOX_LOG_SYNTHESIS_TEXT~ is explicitly enabled; enabling it can expose
   passwords, messages, and document contents.
+- Speech works but feels delayed ::
+
+  Set ~emacsvox-aural-diagnostic-log-file~ to a private file and reproduce one
+  short presentation.  Its ~dispatch-sent~, ~mixer-source-observed~, and
+  ~playback-terminal-observed~ records share an Omnivox dispatch ID.  Match
+  that ID in the ordinary Omnivox session log to separate Emacs submission,
+  server queueing, synthesis, and mixer-source delay.  The Emacs log is
+  disabled by default because its submission records include complete spoken
+  text.  A mixer-source observation is not physical audible output; device and
+  hardware buffers can add latency afterward.
 
 Server selection, the POSIX/WSL launcher, Windows staging, and the bundled
 Lisp adapter are implemented and documented in Emacsvox.  Native builds,

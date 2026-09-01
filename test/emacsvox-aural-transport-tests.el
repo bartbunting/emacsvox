@@ -2460,6 +2460,20 @@ write.  State synchronization lines in a combined write are ignored."
              (eq (plist-get (cadr records) :status) 'completed)))
         (delete-directory directory t)))))
 
+(ert-deftest emacsvox-aural-submission-binds-its-id-through-dispatch ()
+  "The transport can correlate a native submission with its wire dispatch."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-aural--submission-sequence 0)
+          observed-id
+          submission)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (_text)
+              (setq observed-id emacsvox-aural--current-submission-id))))
+        (setq submission (emacsvox-aural-submit "correlated speech")))
+      (should (= (emacsvox-aural-submission-id submission) 1))
+      (should (= observed-id 1)))))
+
 (ert-deftest emacsvox-aural-diagnostics-tighten-existing-log-permissions ()
   "Appending sensitive diagnostics should first secure an existing log."
   (let* ((file (make-temp-file "emacsvox-aural-diagnostics-"))

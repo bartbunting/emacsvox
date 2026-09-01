@@ -1385,6 +1385,8 @@
          (tts--tracked-dispatch-sequence 40)
          (tts--tracked-dispatches (make-hash-table :test #'eql))
          (tts--marker-dispatches (make-hash-table :test #'eql))
+         (tts--dispatch-lifecycles (make-hash-table :test #'eql))
+         (emacsvox-aural--current-submission-id 88)
          identifier
          writes)
     (unwind-protect
@@ -1403,8 +1405,89 @@
           (should (= identifier 41))
           (should (equal writes '("emacsvox_marker_dispatch 41\n")))
           (should (gethash identifier tts--tracked-dispatches))
-          (should (gethash identifier tts--marker-dispatches)))
+          (should (gethash identifier tts--marker-dispatches))
+          (should
+           (=
+            (tts--dispatch-lifecycle-submission-id
+             (gethash identifier tts--dispatch-lifecycles))
+            88)))
       (tts-cancel-tracked-dispatch identifier)
+      (delete-process process))))
+
+(ert-deftest emacsvox-tts-records-dispatch-onset-and-terminal-diagnostics ()
+  "One sent dispatch records first observed source and one terminal outcome."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-lifecycle-diagnostic-test"
+           :buffer nil :noquery t))
+         (tts-program "omnivox")
+         (tts--dispatch-lifecycles (make-hash-table :test #'eql))
+         events)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-diagnostic-log-event)
+              (lambda (event &rest fields)
+                (push (cons event fields) events))))
+          (tts--register-dispatch-lifecycle 73 process 19)
+          (should-not
+           (tts--dispatch-playback-marker-event
+            process
+            '(:dispatch_id 73 :sequence 1 :type "utterance_started"
+              :utterance_id 4 :engine_id "flite"
+              :actual_voice (:engine_id "flite" :voice_id "slt")
+              :logical_voice_id "voice-animate")))
+          (tts--dispatch-playback-marker-event
+           process
+           '(:dispatch_id 73 :sequence 2 :type "utterance_started"
+             :utterance_id 5 :engine_id "flite"))
+          (should
+           (tts--complete-tracked-dispatch
+            process "__EMACSVOX_TRACKED__ 73 completed"))
+          (setq events (nreverse events))
+          (should
+           (equal
+            (mapcar #'car events)
+            '(dispatch-sent
+              mixer-source-observed
+              playback-terminal-observed)))
+          (should
+           (= (plist-get (cdr (nth 1 events)) :submission-id) 19))
+          (should
+           (equal (plist-get (cdr (nth 1 events)) :engine-id) "flite"))
+          (should
+           (numberp
+            (plist-get (cdr (nth 1 events)) :dispatch-elapsed-ms)))
+          (should
+           (eq (plist-get (cdr (nth 2 events)) :status) 'completed))
+          (should
+           (numberp (plist-get (cdr (nth 2 events)) :onset-elapsed-ms)))
+          (should-not (gethash 73 tts--dispatch-lifecycles)))
+      (delete-process process))))
+
+(ert-deftest emacsvox-tts-records-local-dispatch-cancellation ()
+  "Forgetting a sent dispatch records one local cancellation outcome."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-lifecycle-cancellation-test"
+           :buffer nil :noquery t))
+         (tts--dispatch-lifecycles (make-hash-table :test #'eql))
+         events)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-diagnostic-log-event)
+              (lambda (event &rest fields)
+                (push (cons event fields) events))))
+          (tts--register-dispatch-lifecycle 74 process 20)
+          (tts-cancel-tracked-dispatch 74)
+          (tts-cancel-tracked-dispatch 74)
+          (setq events (nreverse events))
+          (should
+           (equal
+            (mapcar #'car events)
+            '(dispatch-sent playback-terminal-observed)))
+          (should
+           (eq (plist-get (cdr (nth 1 events)) :status) 'cancelled))
+          (should-not (gethash 74 tts--dispatch-lifecycles)))
       (delete-process process))))
 
 (ert-deftest emacsvox-tts-omnivox-delivers-bounded-marker-events-in-order ()
