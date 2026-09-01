@@ -228,7 +228,8 @@ while read -r _checksum payload; do
 done < "$current/SHA256SUMS"
 
 espeak_cache_path=$(sed -n '1p' "$current/espeak-ng-data.path")
-espeak_cache=$(wslpath -u "$espeak_cache_path")/espeak-ng-data
+espeak_cache_parent=$(wslpath -u "$espeak_cache_path")
+espeak_cache=$espeak_cache_parent/espeak-ng-data
 if [ ! -f "$espeak_cache/phontab" ]; then
     echo "Windows-local eSpeak data is incomplete: $espeak_cache" >&2
     exit 1
@@ -243,6 +244,13 @@ actual_espeak_digest=$(
 )
 if [ "$actual_espeak_digest" != "$expected_espeak_digest" ]; then
     echo "Windows-local eSpeak data does not match provenance" >&2
+    exit 1
+fi
+espeak_identity=$espeak_cache_parent/omnivox-espeak-data.sha256
+if [ ! -f "$espeak_identity" ] ||
+   [ "$(wc -l < "$espeak_identity")" -ne 1 ] ||
+   [ "$(sed -n '1p' "$espeak_identity")" != "$expected_espeak_digest" ]; then
+    echo "Windows-local eSpeak cache identity does not match provenance" >&2
     exit 1
 fi
 

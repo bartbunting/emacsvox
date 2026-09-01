@@ -241,7 +241,8 @@ source; RuLex is not included.
 
 After staging, the static verifier rechecks manifests, provenance, the
 Windows-local copy, and all configured external inputs.  The separate live
-verifier executes that exact Windows-local runtime, discovers the compiled
+verifier executes that exact Windows-local runtime, prewarms the bounded eSpeak
+voice cache tied to the verified content-addressed data, discovers the compiled
 Flite and RuTTS voices, and requires real WAV synthesis from both helpers.
 Use ~make verify-windows-omnivox-live~ to repeat only the executable smoke gate.
 

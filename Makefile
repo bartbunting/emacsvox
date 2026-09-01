@@ -692,6 +692,16 @@ windows-omnivox:
 			cp -a "$$espeak_data" "$$cache_stage"; \
 			mv "$$cache_stage" "$$windows_cache_parent/espeak-ng-data"; \
 		fi; \
+		espeak_identity="$$windows_cache_parent/omnivox-espeak-data.sha256"; \
+		if [ ! -f "$$espeak_identity" ]; then \
+			printf '%s\n' "$$data_digest" > "$$espeak_identity.new.$$$$"; \
+			mv "$$espeak_identity.new.$$$$" "$$espeak_identity"; \
+		fi; \
+		if [ "$$(wc -l < "$$espeak_identity")" -ne 1 ] || \
+			[ "$$(sed -n '1p' "$$espeak_identity")" != "$$data_digest" ]; then \
+			echo "Existing eSpeak cache identity differs: $$espeak_identity" >&2; \
+			exit 1; \
+		fi; \
 		windows_cache_path="$$(wslpath -w "$$windows_cache_parent")"; \
 		emacsvox_commit="$$(git -C "$(CURDIR)" rev-parse HEAD)"; \
 		omnivox_commit="$$(git -C "$(OMNIVOX_DIR)" rev-parse HEAD)"; \

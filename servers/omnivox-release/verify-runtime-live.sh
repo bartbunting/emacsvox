@@ -31,6 +31,8 @@ if [ ! -x "$windows_program" ]; then
     echo "Windows-local Omnivox is not executable: $windows_program" >&2
     exit 1
 fi
+espeak_data_path=$(sed -n '1p' "$current/espeak-ng-data.path")
+espeak_cache=$(wslpath -u "$espeak_data_path")/omnivox-espeak-voices-v1.json
 
 windows_temp_path=$(
     powershell.exe -NoProfile -NonInteractive -Command \
@@ -55,8 +57,20 @@ run_staged()
         -u OMNIVOX_RUTTS_HELPER \
         OMNIVOX_PROGRAM="$windows_program" \
         OMNIVOX_LOG_DIRECTORY="$log_directory" \
+        ESPEAK_NG_DATA="$espeak_data_path" \
         "$launcher" "$@"
 }
+
+espeak_voices=$(run_staged --engine espeak --list-voices-alist)
+if ! printf '%s\n' "$espeak_voices" |
+    grep -Fq '("espeak:gmw\en-US" "English (America)" "en-us" "Compact")'; then
+    echo "Staged eSpeak did not report its default English voice" >&2
+    exit 1
+fi
+if [ ! -f "$espeak_cache" ] || [ "$(wc -c < "$espeak_cache")" -gt 1048576 ]; then
+    echo "Staged eSpeak did not create a bounded voice cache: $espeak_cache" >&2
+    exit 1
+fi
 
 flite_voices=$(run_staged --engine flite --list-voices-alist)
 if ! printf '%s\n' "$flite_voices" |
@@ -91,6 +105,7 @@ for wav in "$flite_wav" "$rutts_wav"; do
 done
 
 printf '%s\n' \
+    "live_espeak_cache=$espeak_cache" \
     'live_flite_voice=cmu_us_slt' \
     'live_rutts_voices=male,female' \
     "live_runtime=$windows_runtime"
