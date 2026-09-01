@@ -112,7 +112,7 @@
     (concat emacsvox-version-number "\n"))))
 
 (ert-deftest emacsvox-version-derived-metadata-is-consistent ()
-  "Package metadata and current NEWS agree with the canonical version."
+  "Package metadata and the released and current NEWS identities agree."
   (let ((package-source
          (emacsvox-version-tests--file-string "lisp/emacsvox.el"))
         (news (emacsvox-version-tests--file-string "etc/NEWS")))
@@ -121,12 +121,24 @@
       (concat
        "^;; Version: " (regexp-quote emacsvox-version-number) "$")
       package-source))
-    (should
-     (string-match-p
-      (concat
-       "^\\* Emacsvox " (regexp-quote emacsvox-version-number)
-       " --- Current User-Visible Changes$")
-      news))))
+    (if (string-match-p
+         "^\\* Emacsvox Unreleased --- Current User-Visible Changes$"
+         news)
+        (let ((released-news
+               (emacsvox-version-tests--file-string
+                (format "etc/NEWS-%s" emacsvox-version-number))))
+          (should
+           (string-match-p
+            (concat
+             "^\\* Emacsvox " (regexp-quote emacsvox-version-number)
+             " --- Current User-Visible Changes$")
+            released-news)))
+      (should
+       (string-match-p
+        (concat
+         "^\\* Emacsvox " (regexp-quote emacsvox-version-number)
+         " --- Current User-Visible Changes$")
+        news)))))
 
 (ert-deftest emacsvox-version-runtime-display-uses-canonical-version ()
   "Spoken and startup versions cannot retain a compiled legacy number."
@@ -200,6 +212,29 @@
                 (emacsvox-version-tests--run-checker root)))
             (should-not (equal status 0))
             (should (string-match-p "Version is.*expected" output))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-version-checker-separates-development-and-release-news ()
+  "Ordinary checks allow Unreleased NEWS, but release mode requires VERSION."
+  (let* ((root (make-temp-file "emacsvox-version-unreleased-" t))
+         (version (emacsvox-version-tests--current-release)))
+    (unwind-protect
+        (progn
+          (emacsvox-version-tests--write-fixture
+           root version version "Unreleased")
+          (pcase-let
+              ((`(,status ,output)
+                (emacsvox-version-tests--run-checker root)))
+            (should (equal status 0))
+            (should (string-match-p "valid for check" output)))
+          (emacsvox-version-tests--initialize-repository root)
+          (pcase-let
+              ((`(,status ,output)
+                (emacsvox-version-tests--run-checker root "--release")))
+            (should-not (equal status 0))
+            (should
+             (string-match-p
+              "release requires etc/NEWS identity" output))))
       (delete-directory root t))))
 
 (ert-deftest emacsvox-version-release-check-requires-clean-current-series ()

@@ -53,8 +53,19 @@ news_versions=$(
         's/^\* Emacsvox \([^ ]*\) --- Current User-Visible Changes$/\1/p' \
         "$news_file"
 )
-[ "$news_versions" = "$version" ] ||
-    fail "etc/NEWS current version is '$news_versions', expected '$version'"
+if [ "$mode" = check ]; then
+    case $news_versions in
+        "$version"|Unreleased) ;;
+        *)
+            fail \
+                "etc/NEWS identity is '$news_versions', expected 'Unreleased' or '$version'"
+            ;;
+    esac
+else
+    [ "$news_versions" = "$version" ] ||
+        fail \
+            "release requires etc/NEWS identity '$version', found '$news_versions'"
+fi
 
 if [ "$mode" != check ]; then
     command -v git >/dev/null 2>&1 || fail "git is required for a release"

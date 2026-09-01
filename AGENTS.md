@@ -28,7 +28,10 @@
   never distributed; releases contain the `.el` sources.
 - `VERSION` is the canonical release identifier; accepted calendar-versioning
   policy is recorded under `docs/adr/`. Run `make version-check` after changing
-  it, package metadata, or the current NEWS heading. In a separate clean
+  it, package metadata, or the current NEWS heading. During development,
+  `etc/NEWS` uses the accepted `Unreleased` heading and published notes remain
+  in `etc/NEWS-VERSION`; every release gate requires the current NEWS heading
+  to equal `VERSION`. In a separate clean
   release worktree, run `make bytecode-rebuild`; `make release-artifact` then
   runs the guarded release gate and records the checked source commit. Inspect
   it before `make release-tag` and `make release-publish`. Never tag or push

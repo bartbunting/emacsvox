@@ -4282,6 +4282,14 @@ current heading in ‘etc/NEWS’ together, then run:
 
      make version-check
 
+   Between releases, ‘etc/NEWS’ uses the ‘Emacsvox Unreleased’ heading,
+so changes can be recorded before deciding whether the next publication
+is a patch or a new feature-release series.  After publishing, preserve
+those notes verbatim as ‘etc/NEWS-VERSION’ and start a new unreleased
+file.  Ordinary ‘version-check’ accepts that state; ‘release-check’,
+‘release-tag’, and ‘release-publish’ require the current NEWS heading to
+match ‘VERSION’ exactly.
+
    Prepare an artifact only from a separate clean, committed worktree.
 Build fresh byte-code and run the guarded artifact target:
 
@@ -4738,7 +4746,7 @@ Ref: Testing A Direct Legacy Server177560
 Ref: Commands That Queue Output178119
 Ref: Commands That Set State181153
 Node: Integration Maintenance183747
-Node: Concept Index199364
+Node: Concept Index199850
 
 End Tag Table
 

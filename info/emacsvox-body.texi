@@ -4545,6 +4545,13 @@ together@comma{} then run:
 make version-check
 @end example
 
+Between releases@comma{} @code{etc/NEWS} uses the @code{Emacsvox Unreleased} heading@comma{} so changes
+can be recorded before deciding whether the next publication is a patch or a
+new feature-release series.  After publishing@comma{} preserve those notes verbatim
+as @code{etc/NEWS-VERSION} and start a new unreleased file.  Ordinary
+@code{version-check} accepts that state; @code{release-check}@comma{} @code{release-tag}@comma{} and
+@code{release-publish} require the current NEWS heading to match @code{VERSION} exactly.
+
 Prepare an artifact only from a separate clean@comma{} committed worktree.  Build
 fresh byte-code and run the guarded artifact target:
 

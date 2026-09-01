@@ -77,6 +77,20 @@ released.  If the first release is published in September 2026, it is
 =2026.9.0=.  Existing historical version numbers and release records remain
 unchanged.
 
+** Separate unreleased and released NEWS
+
+During ordinary development, =etc/NEWS= uses the heading =Emacsvox Unreleased=
+and accumulates user-visible changes without guessing whether the next release
+will be a patch or a new feature-release series.  The ordinary version check
+accepts that development identity while continuing to require =VERSION= and
+package metadata to agree.
+
+Release preparation replaces =Unreleased= with the exact =VERSION= value.  The
+release, tag, and publication gates reject an unreleased heading.  After the
+release is published, its notes are preserved verbatim as
+=etc/NEWS-VERSION=, and a new =etc/NEWS= starts with the unreleased heading.
+Historical release notes are not rewritten to describe later development.
+
 * Consequences
 
 ** Benefits
@@ -97,6 +111,8 @@ unchanged.
 - Release tooling, package metadata, runtime output, tests, documentation, and
   automation must be migrated from the legacy version values consistently.
 - Consumers that assume the old numbering or tag format may require updates.
+- Maintainers must archive each published NEWS file and start a fresh
+  unreleased file after publication.
 
 * Alternatives considered
 
