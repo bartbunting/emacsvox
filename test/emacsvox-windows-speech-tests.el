@@ -847,11 +847,23 @@ Return the server's standard output."
       "OMNIVOX_HELPER_DIR = $(OMNIVOX_DIR)/windows-helpers" nil t))
     (should
      (search-forward
+      "OMNIVOX_INCLUDE_PINNED_PIPER=0 windows-omnivox" nil t))
+    (should
+     (search-forward
+      "python3 tools/build_rhvoice.py --release" nil t))
+    (should
+     (search-forward
+      "python3 tools/build_flite.py --release" nil t))
+    (should
+     (search-forward
       "eloquence_helper=\"$(OMNIVOX_HELPER_DIR)/bin/" nil t))
     (should
      (search-forward
       "dectalk_helper=\"$(OMNIVOX_HELPER_DIR)/bin/" nil t))
-    (should (search-forward "WINDOWS-HELPERS-COPYING" nil t)))
+    (should (search-forward "WINDOWS-HELPERS-COPYING" nil t))
+    (should (search-forward "OMNIVOX-LICENSE" nil t))
+    (should (search-forward "rhvoice_companion=local-omnivox-build" nil t))
+    (should (search-forward "flite_companion=local-omnivox-build" nil t)))
   (with-temp-buffer
     (insert-file-contents
      (expand-file-name

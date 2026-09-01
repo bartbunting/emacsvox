@@ -361,6 +361,7 @@ OMNIVOX_RELEASE_TARGET_DIR = $(OMNIVOX_DIR)/target/emacsvox-release
 OMNIVOX_HELPER_DIR = $(OMNIVOX_DIR)/windows-helpers
 OMNIVOX_ALLOW_DIRTY ?= 0
 OMNIVOX_BUILD_KIND ?= release-clean-worktree
+OMNIVOX_INCLUDE_PINNED_PIPER ?= 1
 include $(OMNIVOX_RELEASE_DIR)/toolchain.lock
 OMNIVOX_CSC = $(OMNIVOX_RELEASE_DIR)/cache/roslyn-$(roslyn_version)/tasks/net472/csc.exe
 OMNIVOX_REFERENCE_DIR = $(OMNIVOX_RELEASE_DIR)/cache/net40-reference-assemblies-$(reference_assemblies_version)/build/.NETFramework/v4.0
@@ -380,10 +381,20 @@ prepare-windows-omnivox-piper:
 
 windows-omnivox-dev:
 	$(MAKE) OMNIVOX_ALLOW_DIRTY=1 \
-		OMNIVOX_BUILD_KIND=local-dirty-worktree windows-omnivox
+		OMNIVOX_BUILD_KIND=local-dirty-worktree \
+		OMNIVOX_INCLUDE_PINNED_PIPER=0 windows-omnivox
 
 windows-omnivox:
 	@set -eu; \
+		case "$(OMNIVOX_INCLUDE_PINNED_PIPER)" in \
+			0 | 1) ;; \
+			*) echo "OMNIVOX_INCLUDE_PINNED_PIPER must be 0 or 1" >&2; exit 1 ;; \
+		esac; \
+		if [ "$(OMNIVOX_ALLOW_DIRTY)" != 1 ] && \
+			[ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" != 1 ]; then \
+			echo "The clean Windows runtime must include its matching Piper companion" >&2; \
+			exit 1; \
+		fi; \
 		if [ "$(OMNIVOX_ALLOW_DIRTY)" != 1 ]; then \
 			for repository in "$(CURDIR)" "$(OMNIVOX_DIR)"; do \
 				if ! git -C "$$repository" diff --quiet --ignore-submodules -- || \
@@ -396,7 +407,9 @@ windows-omnivox:
 		fi
 	$(MAKE) verify-windows-omnivox-toolchain
 	$(MAKE) verify-windows-omnivox-helpers
-	$(MAKE) prepare-windows-omnivox-piper
+	@if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
+		$(MAKE) prepare-windows-omnivox-piper; \
+	fi
 	docker run --rm --platform linux/amd64 \
 		--user "$$(id -u):$$(id -g)" \
 		--env HOME=/workspace/omnivox/target/emacsvox-home \
@@ -428,12 +441,29 @@ windows-omnivox:
 			export AR_x86_64_pc_windows_gnu=x86_64-w64-mingw32-ar; \
 			export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc-win32; \
 			export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS="-C link-arg=-Wl,--no-insert-timestamp"; \
-			cargo build --locked --release -p omnivox-cli --features piper \
+			if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
+				cargo build --locked --release -p omnivox-cli --features piper \
+					--target $(OMNIVOX_TARGET); \
+			else \
+				cargo build --locked --release -p omnivox-cli \
+					--target $(OMNIVOX_TARGET); \
+			fi; \
+			python3 tools/build_rhvoice.py --release \
+				--target $(OMNIVOX_TARGET); \
+			python3 tools/build_flite.py --release \
 				--target $(OMNIVOX_TARGET); \
 			cp "$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.exe" \
 				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.unstripped.exe"; \
 			SOURCE_DATE_EPOCH=0 x86_64-w64-mingw32-strip --strip-all \
-				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.exe"; \
+				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.exe" \
+				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/rhvoice/omnivox-rhvoice-helper.exe" \
+				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/flite/omnivox-flite-helper.exe"; \
+			flite_dir="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/flite"; \
+			flite_manifest="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/flite-SHA256SUMS"; \
+			(cd "$$flite_dir" && \
+				find . -type f ! -name SHA256SUMS -print0 | LC_ALL=C sort -z | \
+				xargs -0 sha256sum) > "$$flite_manifest"; \
+			mv "$$flite_manifest" "$$flite_dir/SHA256SUMS"; \
 			mkdir -p "$$CARGO_TARGET_DIR/windows-runtime"; \
 			cp "$$(x86_64-w64-mingw32-g++-win32 -print-file-name=libstdc++-6.dll)" \
 				"$$CARGO_TARGET_DIR/windows-runtime/libstdc++-6.dll"; \
@@ -443,6 +473,9 @@ windows-omnivox:
 	@set -eu; \
 		executable="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/omnivox.exe"; \
 		unstripped_executable="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/omnivox.unstripped.exe"; \
+		rhvoice_companion="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/rhvoice"; \
+		flite_companion="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/flite"; \
+		omnivox_license="$(OMNIVOX_DIR)/LICENSE"; \
 		eloquence_helper="$(OMNIVOX_HELPER_DIR)/bin/OmnivoxEloquenceHelper32.exe"; \
 		dectalk_helper="$(OMNIVOX_HELPER_DIR)/bin/OmnivoxDectalkHelper32.exe"; \
 		helper_license="$(OMNIVOX_HELPER_DIR)/COPYING"; \
@@ -450,15 +483,37 @@ windows-omnivox:
 		dectalk_dictionary="$(CURDIR)/servers/windows-dectalk/runtime/dtalk_us.dic"; \
 		stdlib="$(OMNIVOX_RELEASE_TARGET_DIR)/windows-runtime/libstdc++-6.dll"; \
 		gcc_runtime="$(OMNIVOX_RELEASE_TARGET_DIR)/windows-runtime/libgcc_s_seh-1.dll"; \
-		piper_companion="$(OMNIVOX_PIPER_DIR)"; \
-		if [ ! -f "$$piper_companion/omnivox-piper-helper.exe" ] || \
-			[ ! -f "$$piper_companion/espeak-ng-data/phontab" ]; then \
-			echo "Prepared Piper companion is incomplete: $$piper_companion" >&2; \
-			exit 1; \
-		fi; \
-		piper_companion_digest="$$(cd "$$piper_companion" && \
+		for required in \
+			"$$rhvoice_companion/omnivox-rhvoice-helper.exe" \
+			"$$flite_companion/omnivox-flite-helper.exe" \
+			"$$flite_companion/SHA256SUMS" \
+			"$$flite_companion/SOURCE-PROVENANCE.json" \
+			"$$flite_companion/third-party-licenses/Flite-COPYING.txt" \
+			"$$omnivox_license"; do \
+			if [ ! -f "$$required" ]; then \
+				echo "Prepared companion file is missing: $$required" >&2; \
+				exit 1; \
+			fi; \
+		done; \
+		rhvoice_companion_digest="$$(cd "$$rhvoice_companion" && \
 			find . -type f -print0 | LC_ALL=C sort -z | \
 			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+		flite_companion_digest="$$(cd "$$flite_companion" && \
+			find . -type f -print0 | LC_ALL=C sort -z | \
+			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+		piper_companion=; \
+		piper_companion_digest=not-included; \
+		if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
+			piper_companion="$(OMNIVOX_PIPER_DIR)"; \
+			if [ ! -f "$$piper_companion/omnivox-piper-helper.exe" ] || \
+				[ ! -f "$$piper_companion/espeak-ng-data/phontab" ]; then \
+				echo "Prepared Piper companion is incomplete: $$piper_companion" >&2; \
+				exit 1; \
+			fi; \
+			piper_companion_digest="$$(cd "$$piper_companion" && \
+				find . -type f -print0 | LC_ALL=C sort -z | \
+				xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+		fi; \
 		espeak_phontab="$$(find \
 			"$(OMNIVOX_RELEASE_TARGET_DIR)/release/build" \
 			-path '*/espeak-rs-sys-*/out/share/espeak-ng-data/phontab' \
@@ -478,13 +533,20 @@ windows-omnivox:
 			echo "Could not locate Windows LocalAppData" >&2; \
 			exit 1; \
 		fi; \
-		piper_model_state=external-user-supplied-not-configured; \
+		piper_model_state=not-included; \
 		piper_model_digest=not-configured; \
 		piper_model_sha256=not-observed; \
 		piper_model_config_sha256=not-observed; \
 		piper_model_windows_path=; \
 		piper_model_config_windows_path=; \
-		if [ -n "$${OMNIVOX_PIPER_MODEL:-}" ]; then \
+		if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
+			piper_model_state=external-user-supplied-not-configured; \
+		elif [ -n "$${OMNIVOX_PIPER_MODEL:-}" ]; then \
+			echo "OMNIVOX_PIPER_MODEL cannot be used when the development runtime omits Piper" >&2; \
+			exit 1; \
+		fi; \
+		if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ] && \
+			[ -n "$${OMNIVOX_PIPER_MODEL:-}" ]; then \
 			piper_model_source="$$OMNIVOX_PIPER_MODEL"; \
 			if [ ! -f "$$piper_model_source" ]; then \
 				piper_model_source="$$(wslpath -u "$$OMNIVOX_PIPER_MODEL" 2>/dev/null || :)"; \
@@ -579,8 +641,10 @@ windows-omnivox:
 		fi; \
 		build_id="$$( { \
 			sha256sum "$$executable" "$$eloquence_helper" "$$dectalk_helper" \
-				"$$helper_license" \
+				"$$helper_license" "$$omnivox_license" \
 				"$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
+			printf '%s\n' "$$rhvoice_companion_digest" \
+				"$$flite_companion_digest"; \
 			if [ -f "$$dectalk_dll" ] && [ -f "$$dectalk_dictionary" ]; then \
 				sha256sum "$$dectalk_dll" "$$dectalk_dictionary" | cut -d ' ' -f1; \
 			else \
@@ -595,6 +659,7 @@ windows-omnivox:
 				"$(roslyn_nupkg_sha256)" \
 				"$(reference_assemblies_nupkg_sha256)" \
 				"$$eloquence_runtime_digest" \
+				"$(OMNIVOX_INCLUDE_PINNED_PIPER)" \
 				"$(omnivox_piper_archive_sha256)" \
 				"$$piper_companion_digest" \
 				"$$piper_model_digest"; \
@@ -648,23 +713,48 @@ windows-omnivox:
 			"$$version_dir/OmnivoxDectalkHelper32.exe" executable; \
 		install_payload "$$helper_license" \
 			"$$version_dir/WINDOWS-HELPERS-COPYING" regular; \
+		install_payload "$$omnivox_license" \
+			"$$version_dir/OMNIVOX-LICENSE" regular; \
 		if [ -f "$$dectalk_dll" ] && [ -f "$$dectalk_dictionary" ]; then \
 			install_payload "$$dectalk_dll" \
 				"$$version_dir/DECtalk.dll" regular; \
 			install_payload "$$dectalk_dictionary" \
 				"$$version_dir/dtalk_us.dic" regular; \
 		fi; \
-		if [ ! -d "$$version_dir/piper" ]; then \
-			piper_stage="$$version_dir/piper.new.$$$$"; \
-			cp -a "$$piper_companion" "$$piper_stage"; \
-			mv "$$piper_stage" "$$version_dir/piper"; \
-		fi; \
-		version_piper_digest="$$(cd "$$version_dir/piper" && \
-			find . -type f -print0 | LC_ALL=C sort -z | \
-			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
-		if [ "$$version_piper_digest" != "$$piper_companion_digest" ]; then \
-			echo "Staged Piper companion does not match its pinned input" >&2; \
-			exit 1; \
+		stage_companion() { \
+			companion_name=$$1; \
+			companion_source=$$2; \
+			expected_companion_digest=$$3; \
+			if [ ! -d "$$version_dir/$$companion_name" ]; then \
+				companion_stage="$$version_dir/$$companion_name.new.$$$$"; \
+				cp -a "$$companion_source" "$$companion_stage"; \
+				mv "$$companion_stage" "$$version_dir/$$companion_name"; \
+			fi; \
+			version_companion_digest="$$(cd "$$version_dir/$$companion_name" && \
+				find . -type f -print0 | LC_ALL=C sort -z | \
+				xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+			if [ "$$version_companion_digest" != "$$expected_companion_digest" ]; then \
+				echo "Staged $$companion_name companion does not match its build output" >&2; \
+				exit 1; \
+			fi; \
+		}; \
+		stage_companion rhvoice "$$rhvoice_companion" \
+			"$$rhvoice_companion_digest"; \
+		stage_companion flite "$$flite_companion" \
+			"$$flite_companion_digest"; \
+		if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
+			if [ ! -d "$$version_dir/piper" ]; then \
+				piper_stage="$$version_dir/piper.new.$$$$"; \
+				cp -a "$$piper_companion" "$$piper_stage"; \
+				mv "$$piper_stage" "$$version_dir/piper"; \
+			fi; \
+			version_piper_digest="$$(cd "$$version_dir/piper" && \
+				find . -type f -print0 | LC_ALL=C sort -z | \
+				xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+			if [ "$$version_piper_digest" != "$$piper_companion_digest" ]; then \
+				echo "Staged Piper companion does not match its pinned input" >&2; \
+				exit 1; \
+			fi; \
 		fi; \
 		if [ ! -f "$$version_dir/espeak-ng-data/phontab" ]; then \
 			rm -rf "$$version_dir/espeak-ng-data.new"; \
@@ -698,6 +788,18 @@ windows-omnivox:
 			[ -f "$$version_dir/dtalk_us.dic" ]; then \
 			dectalk_runtime=bundled-pinned-archive; \
 		fi; \
+		omnivox_features=none; \
+		piper_companion_state=not-included; \
+		piper_version=not-included; \
+		piper_commit=not-included; \
+		piper_archive_digest=not-included; \
+		if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
+			omnivox_features=piper; \
+			piper_companion_state=official-omnivox-release; \
+			piper_version=$(omnivox_piper_version); \
+			piper_commit=$(omnivox_piper_commit); \
+			piper_archive_digest=$(omnivox_piper_archive_sha256); \
+		fi; \
 		{ \
 			printf '%s\n' \
 				'format=emacsvox-omnivox-provenance-v1' \
@@ -718,16 +820,23 @@ windows-omnivox:
 				"roslyn_nupkg_sha256=$(roslyn_nupkg_sha256)" \
 				"net40_reference_assemblies_nupkg_sha256=$(reference_assemblies_nupkg_sha256)" \
 				"target=$(OMNIVOX_TARGET)" \
-				"omnivox_features=piper" \
+				"omnivox_features=$$omnivox_features" \
 				"windows_rustflags=-C link-arg=-Wl,--no-insert-timestamp" \
 				"windows_strip=SOURCE_DATE_EPOCH=0 x86_64-w64-mingw32-strip --strip-all" \
 				"omnivox_executable_sha256=$$executable_digest" \
 				"unstripped_diagnostics=retained-local-not-staged" \
 				"espeak_data_sha256=$$data_digest" \
-				"piper_companion=official-omnivox-release" \
-				"piper_companion_version=$(omnivox_piper_version)" \
-				"piper_companion_commit=$(omnivox_piper_commit)" \
-				"piper_companion_archive_sha256=$(omnivox_piper_archive_sha256)" \
+				'rhvoice_companion=local-omnivox-build' \
+				"rhvoice_companion_tree_sha256=$$rhvoice_companion_digest" \
+				'rhvoice_runtime=external-user-supplied-not-bundled' \
+				'flite_companion=local-omnivox-build' \
+				"flite_companion_tree_sha256=$$flite_companion_digest" \
+				'flite_target=x86_64-pc-windows-gnu' \
+				'flite_compiled_voice=cmu_us_slt' \
+				"piper_companion=$$piper_companion_state" \
+				"piper_companion_version=$$piper_version" \
+				"piper_companion_commit=$$piper_commit" \
+				"piper_companion_archive_sha256=$$piper_archive_digest" \
 				"piper_companion_tree_sha256=$$piper_companion_digest" \
 				"piper_model=$$piper_model_state" \
 				"piper_model_sha256=$$piper_model_sha256" \
@@ -739,15 +848,19 @@ windows-omnivox:
 				'windows_helpers_license=GPL-2.0-or-later'; \
 		} > "$$version_dir/PROVENANCE.new"; \
 		mv -f "$$version_dir/PROVENANCE.new" "$$version_dir/PROVENANCE"; \
-		payload_files='omnivox.exe libstdc++-6.dll libgcc_s_seh-1.dll OmnivoxEloquenceHelper32.exe OmnivoxDectalkHelper32.exe WINDOWS-HELPERS-COPYING PROVENANCE'; \
+		payload_files='omnivox.exe libstdc++-6.dll libgcc_s_seh-1.dll OmnivoxEloquenceHelper32.exe OmnivoxDectalkHelper32.exe WINDOWS-HELPERS-COPYING OMNIVOX-LICENSE PROVENANCE'; \
 		if [ "$$dectalk_runtime" = bundled-pinned-archive ]; then \
 			payload_files="$$payload_files DECtalk.dll dtalk_us.dic"; \
 		fi; \
 		( \
 			cd "$$version_dir"; \
 			sha256sum $$payload_files; \
-			find piper -type f -print0 | LC_ALL=C sort -z | \
+			find rhvoice flite -type f -print0 | LC_ALL=C sort -z | \
 				xargs -0 sha256sum; \
+			if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
+				find piper -type f -print0 | LC_ALL=C sort -z | \
+					xargs -0 sha256sum; \
+			fi; \
 		) > "$$version_dir/SHA256SUMS.new"; \
 		mv -f "$$version_dir/SHA256SUMS.new" "$$version_dir/SHA256SUMS"; \
 		(cd "$$version_dir" && sha256sum --check SHA256SUMS); \

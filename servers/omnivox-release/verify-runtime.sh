@@ -21,11 +21,12 @@ case "$current/" in
 esac
 
 for required in PROVENANCE SHA256SUMS espeak-ng-data.path \
-    windows-runtime.path omnivox.exe piper/omnivox-piper-helper.exe \
-    WINDOWS-HELPERS-COPYING \
-    piper/piper.dll piper/onnxruntime.dll \
-    piper/onnxruntime_providers_shared.dll piper/SOURCE-PROVENANCE.json \
-    piper/espeak-ng-data/phontab; do
+    windows-runtime.path omnivox.exe \
+    rhvoice/omnivox-rhvoice-helper.exe \
+    flite/omnivox-flite-helper.exe flite/SHA256SUMS \
+    flite/SOURCE-PROVENANCE.json \
+    flite/third-party-licenses/Flite-COPYING.txt \
+    WINDOWS-HELPERS-COPYING OMNIVOX-LICENSE; do
     if [ ! -f "$current/$required" ]; then
         echo "Staged Omnivox file is missing: $current/$required" >&2
         exit 1
@@ -33,29 +34,91 @@ for required in PROVENANCE SHA256SUMS espeak-ng-data.path \
 done
 
 for expected in \
-    "omnivox_commit=$omnivox_piper_commit" \
-    'omnivox_features=piper' \
-    "piper_companion_version=$omnivox_piper_version" \
-    "piper_companion_commit=$omnivox_piper_commit" \
-    "piper_companion_archive_sha256=$omnivox_piper_archive_sha256"; do
+    'rhvoice_companion=local-omnivox-build' \
+    'rhvoice_runtime=external-user-supplied-not-bundled' \
+    'flite_companion=local-omnivox-build' \
+    'flite_target=x86_64-pc-windows-gnu' \
+    'flite_compiled_voice=cmu_us_slt'; do
     if ! grep -Fxq "$expected" "$current/PROVENANCE"; then
         echo "Staged Omnivox provenance is missing: $expected" >&2
         exit 1
     fi
 done
 
-expected_piper_digest=$(
-    sed -n 's/^piper_companion_tree_sha256=//p' "$current/PROVENANCE"
-)
-actual_piper_digest=$(
-    cd "$current/piper"
-    find . -type f -print0 | LC_ALL=C sort -z |
-        xargs -0 sha256sum | sha256sum | cut -d ' ' -f1
-)
-if [ "$actual_piper_digest" != "$expected_piper_digest" ]; then
-    echo "Staged Piper companion does not match provenance" >&2
+for companion in rhvoice flite; do
+    expected_companion_digest=$(
+        sed -n "s/^${companion}_companion_tree_sha256=//p" \
+            "$current/PROVENANCE"
+    )
+    actual_companion_digest=$(
+        cd "$current/$companion"
+        find . -type f -print0 | LC_ALL=C sort -z |
+            xargs -0 sha256sum | sha256sum | cut -d ' ' -f1
+    )
+    if [ "$actual_companion_digest" != "$expected_companion_digest" ]; then
+        echo "Staged $companion companion does not match provenance" >&2
+        exit 1
+    fi
+done
+
+(cd "$current/flite" && sha256sum --check SHA256SUMS >/dev/null)
+if ! grep -Fq '"target": "x86_64-pc-windows-gnu"' \
+    "$current/flite/SOURCE-PROVENANCE.json" ||
+   ! grep -Fq '"compiled_voice": "cmu_us_slt"' \
+    "$current/flite/SOURCE-PROVENANCE.json"; then
+    echo "Staged Flite companion provenance is wrong" >&2
     exit 1
 fi
+
+piper_companion_state=$(
+    sed -n 's/^piper_companion=//p' "$current/PROVENANCE"
+)
+case "$piper_companion_state" in
+    official-omnivox-release)
+        for required in piper/omnivox-piper-helper.exe piper/piper.dll \
+            piper/onnxruntime.dll piper/onnxruntime_providers_shared.dll \
+            piper/SOURCE-PROVENANCE.json piper/espeak-ng-data/phontab; do
+            if [ ! -f "$current/$required" ]; then
+                echo "Staged Piper file is missing: $current/$required" >&2
+                exit 1
+            fi
+        done
+        for expected in \
+            "omnivox_commit=$omnivox_piper_commit" \
+            'omnivox_features=piper' \
+            "piper_companion_version=$omnivox_piper_version" \
+            "piper_companion_commit=$omnivox_piper_commit" \
+            "piper_companion_archive_sha256=$omnivox_piper_archive_sha256"; do
+            if ! grep -Fxq "$expected" "$current/PROVENANCE"; then
+                echo "Staged Omnivox provenance is missing: $expected" >&2
+                exit 1
+            fi
+        done
+        expected_piper_digest=$(
+            sed -n 's/^piper_companion_tree_sha256=//p' "$current/PROVENANCE"
+        )
+        actual_piper_digest=$(
+            cd "$current/piper"
+            find . -type f -print0 | LC_ALL=C sort -z |
+                xargs -0 sha256sum | sha256sum | cut -d ' ' -f1
+        )
+        if [ "$actual_piper_digest" != "$expected_piper_digest" ]; then
+            echo "Staged Piper companion does not match provenance" >&2
+            exit 1
+        fi
+        ;;
+    not-included)
+        if [ -e "$current/piper" ] ||
+           ! grep -Fxq 'omnivox_features=none' "$current/PROVENANCE"; then
+            echo "Piper exclusion is inconsistent with the staged runtime" >&2
+            exit 1
+        fi
+        ;;
+    *)
+        echo "Unknown Piper companion state: $piper_companion_state" >&2
+        exit 1
+        ;;
+esac
 
 (cd "$current" && sha256sum --check SHA256SUMS)
 
@@ -169,6 +232,14 @@ if find "$current" -type f \( -name '*.onnx' -o -name '*.onnx.json' \) |
 fi
 piper_model_state=$(sed -n 's/^piper_model=//p' "$current/PROVENANCE")
 case "$piper_model_state" in
+    not-included)
+        if [ "$piper_companion_state" != not-included ] ||
+           [ -e "$current/piper-model.path" ] ||
+           [ -e "$current/piper-model-config.path" ]; then
+            echo "Piper model exclusion is inconsistent with the staged runtime" >&2
+            exit 1
+        fi
+        ;;
     external-user-supplied-not-configured) ;;
     external-user-supplied-windows-cache)
         for path_file in piper-model.path piper-model-config.path; do

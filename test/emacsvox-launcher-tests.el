@@ -340,8 +340,8 @@
             (should (equal (buffer-string) "configured:--configured\n"))))
       (delete-directory directory t))))
 
-(ert-deftest emacsvox-launcher-configures-staged-windows-piper ()
-  "A staged Piper model and overrides should reach Windows Omnivox."
+(ert-deftest emacsvox-launcher-configures-staged-windows-companions ()
+  "Staged companion settings should reach Windows Omnivox."
   (let* ((directory (make-temp-file "emacsvox piper launcher-" t))
          (server-directory (expand-file-name "servers" directory))
          (runtime-directory
@@ -382,7 +382,14 @@
             (should (zerop (call-process launcher nil t)))
             (let ((output (buffer-string)))
               (should (string-search (concat "MODEL=" model "\n") output))
-              (dolist (name '("OMNIVOX_PIPER_MODEL"
+              (dolist (name '("OMNIVOX_RHVOICE_HELPER"
+                              "OMNIVOX_RHVOICE_LIBRARY"
+                              "OMNIVOX_RHVOICE_DATA"
+                              "OMNIVOX_RHVOICE_CONFIG"
+                              "OMNIVOX_RHVOICE_RESOURCES"
+                              "OMNIVOX_FLITE_HELPER"
+                              "OMNIVOX_FLITE_VOICES"
+                              "OMNIVOX_PIPER_MODEL"
                               "OMNIVOX_PIPER_HELPER"
                               "OMNIVOX_PIPER_ESPEAK_DATA"))
                 (should
