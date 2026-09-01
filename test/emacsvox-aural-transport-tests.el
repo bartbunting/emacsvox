@@ -2485,6 +2485,30 @@ write.  State synchronization lines in a combined write are ignored."
           (should (= (file-modes file) #o600)))
       (when (file-exists-p file) (delete-file file)))))
 
+(ert-deftest emacsvox-aural-diagnostics-interactive-toggle-remembers-file ()
+  "The interactive toggle should enable, disable, and reuse its log file."
+  (let* ((directory (make-temp-file "emacsvox-aural-toggle-" t))
+         (file (expand-file-name "chosen.log" directory))
+         (emacsvox-aural-diagnostic-log-file nil)
+         (emacsvox-aural--diagnostic-log-toggle-file file)
+         (emacsvox-aural-last-diagnostic-log-error 'stale-error))
+    (unwind-protect
+        (progn
+          (emacsvox-aural-toggle-diagnostic-logging)
+          (should (equal emacsvox-aural-diagnostic-log-file file))
+          (should-not emacsvox-aural-last-diagnostic-log-error)
+          (should (= (file-modes file) #o600))
+          (with-temp-buffer
+            (insert-file-contents file)
+            (should (eq (plist-get (read (current-buffer)) :event)
+                        'diagnostics-enabled)))
+          (emacsvox-aural-toggle-diagnostic-logging)
+          (should-not emacsvox-aural-diagnostic-log-file)
+          (should (equal emacsvox-aural--diagnostic-log-toggle-file file))
+          (emacsvox-aural-toggle-diagnostic-logging)
+          (should (equal emacsvox-aural-diagnostic-log-file file)))
+      (delete-directory directory t))))
+
 (ert-deftest emacsvox-aural-diagnostics-rotate-and-bound-archives ()
   "Sensitive diagnostics should retain only the configured recent archives."
   (let* ((directory (make-temp-file "emacsvox-aural-diagnostics-" t))

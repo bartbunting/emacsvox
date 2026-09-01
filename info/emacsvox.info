@@ -1590,15 +1590,18 @@ A process starts and later fails
      ‘OMNIVOX_LOG_SYNTHESIS_TEXT’ is explicitly enabled; enabling it can
      expose passwords, messages, and document contents.
 Speech works but feels delayed
-     Set ‘emacsvox-aural-diagnostic-log-file’ to a private file and
-     reproduce one short presentation.  Its ‘dispatch-sent’,
-     ‘mixer-source-observed’, and ‘playback-terminal-observed’ records
-     share an Omnivox dispatch ID.  Match that ID in the ordinary
-     Omnivox session log to separate Emacs submission, server queueing,
-     synthesis, and mixer-source delay.  The Emacs log is disabled by
-     default because its submission records include complete spoken
-     text.  A mixer-source observation is not physical audible output;
-     device and hardware buffers can add latency afterward.
+     Press ‘C-e d D’ to enable a private diagnostic log, then reproduce
+     one short presentation and press ‘C-e d D’ again to disable
+     logging.  The default file is ‘~/.emacsvox-aural-diagnostics.log’;
+     use ‘C-u C-e d D’ when enabling to choose another file.  Its
+     ‘dispatch-sent’, ‘mixer-source-observed’, and
+     ‘playback-terminal-observed’ records share an Omnivox dispatch ID.
+     Match that ID in the ordinary Omnivox session log to separate Emacs
+     submission, server queueing, synthesis, and mixer-source delay.
+     The Emacs log is disabled by default because its submission records
+     include complete spoken text.  A mixer-source observation is not
+     physical audible output; device and hardware buffers can add
+     latency afterward.
 
    Server selection, the POSIX/WSL launcher, Windows staging, and the
 bundled Lisp adapter are implemented and documented in Emacsvox.  Native
@@ -4716,54 +4719,54 @@ Node: Building Omnivox For WSL257411
 Node: Selecting And Checking Omnivox64005
 Node: Compatibility Speech Servers66273
 Node: Backend Diagnostics And Ownership68199
-Node: Audio Desktop71198
-Node: Desktop Objects72328
-Node: Object Oriented Desktop73553
-Node: Context-Sensitive Interaction74666
-Node: Aural Presentation77781
-Node: Presentation Model79980
-Node: Presentation Modalities82447
-Node: Aural Home84194
-Node: Explaining Presentation86082
-Node: Adjusting Presentation88067
-Node: Presentation Profiles91036
-Node: Voices And Routing92727
-Node: Sounds And Space95084
-Node: Presentation Troubleshooting96708
-Node: Voice Lock98746
-Node: Using Online Help101953
-Node: Emacs Packages106015
-Node: Document Authoring107389
-Node: Structured Editing107943
-Node: Browsing Structure108926
-Node: Web Browsing109524
-Node: Messaging110359
-Node: Editing Code110857
-Node: Development Environment111376
-Node: Desktop Management111933
-Node: Personal Information Management112435
-Node: Desktop Applications112967
-Node: Notmuch Mail114516
-Ref: Notmuch fields and privacy123876
-Node: Agent Shell129584
-Node: EAT Terminal Access139578
-Node: Running Terminal Based Applications156837
-Node: Starting Term157792
-Node: Term Input Modes158631
-Node: Term Speech Feedback159791
-Node: Reviewing The Term Screen160985
-Node: Term Help And Recovery162886
-Node: Emacsvox Keyboard Commands163785
-Node: Copyright165189
-Node: Acknowledgments165776
-Node: Developer Guide166802
-Node: Documentation Maintenance167966
-Node: Speech Server Protocols172764
-Ref: Testing A Direct Legacy Server178671
-Ref: Commands That Queue Output179230
-Ref: Commands That Set State182264
-Node: Integration Maintenance184858
-Node: Concept Index200961
+Node: Audio Desktop71376
+Node: Desktop Objects72506
+Node: Object Oriented Desktop73731
+Node: Context-Sensitive Interaction74844
+Node: Aural Presentation77959
+Node: Presentation Model80158
+Node: Presentation Modalities82625
+Node: Aural Home84372
+Node: Explaining Presentation86260
+Node: Adjusting Presentation88245
+Node: Presentation Profiles91214
+Node: Voices And Routing92905
+Node: Sounds And Space95262
+Node: Presentation Troubleshooting96886
+Node: Voice Lock98924
+Node: Using Online Help102131
+Node: Emacs Packages106193
+Node: Document Authoring107567
+Node: Structured Editing108121
+Node: Browsing Structure109104
+Node: Web Browsing109702
+Node: Messaging110537
+Node: Editing Code111035
+Node: Development Environment111554
+Node: Desktop Management112111
+Node: Personal Information Management112613
+Node: Desktop Applications113145
+Node: Notmuch Mail114694
+Ref: Notmuch fields and privacy124054
+Node: Agent Shell129762
+Node: EAT Terminal Access139756
+Node: Running Terminal Based Applications157015
+Node: Starting Term157970
+Node: Term Input Modes158809
+Node: Term Speech Feedback159969
+Node: Reviewing The Term Screen161163
+Node: Term Help And Recovery163064
+Node: Emacsvox Keyboard Commands163963
+Node: Copyright165367
+Node: Acknowledgments165954
+Node: Developer Guide166980
+Node: Documentation Maintenance168144
+Node: Speech Server Protocols172942
+Ref: Testing A Direct Legacy Server178849
+Ref: Commands That Queue Output179408
+Ref: Commands That Set State182442
+Node: Integration Maintenance185036
+Node: Concept Index201139
 
 End Tag Table
 

@@ -296,6 +296,7 @@
    ("C-o" outloud)
    ("C-v" global-voice-lock-mode)
    ("C" emacsvox-set-capitalization-presentation)
+   ("D" emacsvox-aural-toggle-diagnostic-logging)
    ("I" emacsvox-set-indentation-presentation)
    ("d" tts-select-server)
    ("e" emacsvox-aural-prefer-engine)

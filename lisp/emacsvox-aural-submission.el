@@ -108,6 +108,48 @@ The active log is additional to this number."
 (defvar emacsvox-aural-last-diagnostic-log-error nil
   "Most recent error encountered while writing aural diagnostics.")
 
+(defvar emacsvox-aural--diagnostic-log-toggle-file nil
+  "Diagnostic log file most recently used by the interactive toggle.")
+
+(defun emacsvox-aural--default-diagnostic-log-file ()
+  "Return the default file used by the diagnostic logging toggle."
+  (expand-file-name "~/.emacsvox-aural-diagnostics.log"))
+
+(defun emacsvox-aural-toggle-diagnostic-logging (&optional choose-file)
+  "Toggle sensitive aural diagnostic logging for this Emacs session.
+
+When enabling logging, reuse the last configured file or default to
+~/.emacsvox-aural-diagnostics.log.  With prefix argument CHOOSE-FILE, prompt
+for the log file.  Diagnostic records include complete spoken text."
+  (interactive "P")
+  (if emacsvox-aural-diagnostic-log-file
+      (let ((file (expand-file-name emacsvox-aural-diagnostic-log-file)))
+        (setq emacsvox-aural--diagnostic-log-toggle-file file
+              emacsvox-aural-diagnostic-log-file nil)
+        (message "Aural diagnostic logging disabled; log: %s" file))
+    (let* ((default
+            (or emacsvox-aural--diagnostic-log-toggle-file
+                (emacsvox-aural--default-diagnostic-log-file)))
+           (file
+            (expand-file-name
+             (if choose-file
+                 (read-file-name
+                  "Aural diagnostic log file: "
+                  (file-name-directory default) default)
+               default))))
+      (setq emacsvox-aural--diagnostic-log-toggle-file file
+            emacsvox-aural-diagnostic-log-file file
+            emacsvox-aural-last-diagnostic-log-error nil)
+      (emacsvox-aural-diagnostic-log-event 'diagnostics-enabled)
+      (when emacsvox-aural-last-diagnostic-log-error
+        (setq emacsvox-aural-diagnostic-log-file nil)
+        (user-error
+         "Could not enable aural diagnostic logging: %s"
+         (error-message-string emacsvox-aural-last-diagnostic-log-error)))
+      (message
+       "Aural diagnostic logging enabled; complete spoken text will be saved to %s"
+       file))))
+
 (defun emacsvox-aural--diagnostic-elapsed-ms (start &optional end)
   "Return milliseconds elapsed from numeric START through END."
   (when (numberp start)

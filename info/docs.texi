@@ -64,7 +64,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1467 commands and 192 options.
+This chapter documents a total of 1468 commands and 192 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -4204,6 +4204,28 @@ t
 Combine semantic content and explicitly ordered compatibility actions at
 one frozen source boundary.  Legacy entry points remain independent
 adapters until their callers migrate to this service.
+
+@subsection Emacsvox-Aural-Submission Commands
+
+@subsubsection emacsvox-aural-toggle-diagnostic-logging
+@deffn {Command} emacsvox-aural-toggle-diagnostic-logging  (&optional choose-file)
+@table @kbd
+@item C-e d D
+@kindex C-e d D
+@end table
+
+@findex emacsvox-aural-toggle-diagnostic-logging
+
+@format
+Toggle sensitive aural diagnostic logging for this Emacs session.
+
+When enabling logging, reuse the last configured file or default to
+~/.emacsvox-aural-diagnostics.log.  With prefix argument CHOOSE-FILE, prompt
+for the log file.  Diagnostic records include complete spoken text.
+
+(fn &optional CHOOSE-FILE)
+@end format
+@end deffn
 
 @subsection emacsvox-aural-submission Options
 

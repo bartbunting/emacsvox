@@ -140,6 +140,7 @@
          ("C-c" . tts-cloud)
          ("C-j" . tts-set-chunk-separator-syntax)
          ("C" . emacsvox-set-capitalization-presentation)
+         ("D" . emacsvox-aural-toggle-diagnostic-logging)
          ("I" . emacsvox-set-indentation-presentation)
          ("d" . tts-select-server)
          ("e" . emacsvox-aural-prefer-engine)
@@ -171,7 +172,11 @@
   (should
    (eq (lookup-key emacsvox-tts-submap (kbd "C-d")) 'dectalk))
   (should
-   (eq (lookup-key emacsvox-tts-submap (kbd "C-s")) 'dectalk-soft)))
+   (eq (lookup-key emacsvox-tts-submap (kbd "C-s")) 'dectalk-soft))
+  (should
+   (eq
+    (key-binding (kbd "C-e d D"))
+    'emacsvox-aural-toggle-diagnostic-logging)))
 
 (provide 'emacsvox-keymap-tests)
 ;;; emacsvox-keymap-tests.el ends here

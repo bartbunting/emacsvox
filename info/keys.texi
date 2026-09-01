@@ -114,6 +114,7 @@
 @item 9  tts-set-predefined-rate
 @item =  tts-rate-adjust
 @item C  emacsvox-set-capitalization-presentation
+@item D  emacsvox-aural-toggle-diagnostic-logging
 @item I  emacsvox-set-indentation-presentation
 @item L  tts-local-server
 @item N  tts-set-next-language

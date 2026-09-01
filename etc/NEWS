@@ -19,4 +19,5 @@ Released notes are preserved in [[file:NEWS-2026.9.0][NEWS for Emacsvox 2026.9.0
   with Omnivox dispatch IDs and record actual dispatch send, first observed
   mixer-source consumption, and terminal playback timing.  Omnivox's normal
   session log supplies the matching server admission, queue, synthesis, and
-  playback-stage breakdown without a speech protocol change.
+  playback-stage breakdown without a speech protocol change.  Use =C-e d D=
+  to toggle the sensitive, full-text diagnostic log for the current session.

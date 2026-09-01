@@ -1590,8 +1590,10 @@ The Emacsvox POSIX/WSL launcher writes private@comma{} bounded stderr logs below
 @code{OMNIVOX_LOG_SYNTHESIS_TEXT} is explicitly enabled; enabling it can expose
 passwords@comma{} messages@comma{} and document contents.
 @item Speech works but feels delayed
-Set @code{emacsvox-aural-diagnostic-log-file} to a private file and reproduce one
-short presentation.  Its @code{dispatch-sent}@comma{} @code{mixer-source-observed}@comma{} and
+Press @code{C-e d D} to enable a private diagnostic log@comma{} then reproduce one short
+presentation and press @code{C-e d D} again to disable logging.  The default file
+is @code{~/.emacsvox-aural-diagnostics.log}; use @code{C-u C-e d D} when enabling to
+choose another file.  Its @code{dispatch-sent}@comma{} @code{mixer-source-observed}@comma{} and
 @code{playback-terminal-observed} records share an Omnivox dispatch ID@.  Match
 that ID in the ordinary Omnivox session log to separate Emacs submission@comma{}
 server queueing@comma{} synthesis@comma{} and mixer-source delay.  The Emacs log is

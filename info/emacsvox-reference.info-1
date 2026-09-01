@@ -171,6 +171,7 @@ File: emacsvox-reference.info,  Node: Emacsvox Keybindings On emacsvox-tts-subma
 ‘9 tts-set-predefined-rate’
 ‘= tts-rate-adjust’
 ‘C emacsvox-set-capitalization-presentation’
+‘D emacsvox-aural-toggle-diagnostic-logging’
 ‘I emacsvox-set-indentation-presentation’
 ‘L tts-local-server’
 ‘N tts-set-next-language’
@@ -417,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1467 commands and 192 options.
+   This chapter documents a total of 1468 commands and 192 options.
 
 * Menu:
 
@@ -3947,7 +3948,25 @@ Combine semantic content and explicitly ordered compatibility actions at
 one frozen source boundary.  Legacy entry points remain independent
 adapters until their callers migrate to this service.
 
-2.47.1 emacsvox-aural-submission Options
+2.47.1 Emacsvox-Aural-Submission Commands
+-----------------------------------------
+
+2.47.1.1 emacsvox-aural-toggle-diagnostic-logging
+.................................................
+
+ -- Command: emacsvox-aural-toggle-diagnostic-logging (&optional
+          choose-file)
+     ‘C-e d D’
+
+     Toggle sensitive aural diagnostic logging for this Emacs session.
+
+     When enabling logging, reuse the last configured file or default to
+     ~/.emacsvox-aural-diagnostics.log.  With prefix argument CHOOSE-FILE, prompt
+     for the log file.  Diagnostic records include complete spoken text.
+
+     (fn &optional CHOOSE-FILE)
+
+2.47.2 emacsvox-aural-submission Options
 ----------------------------------------
 
  -- Variable: User Option emacsvox-aural-diagnostic-log-file
