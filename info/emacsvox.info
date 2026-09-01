@@ -187,10 +187,11 @@ installer below uses an existing supported Emacs or builds the pinned
 stable release for the current user.
 
    On GNU/Linux and macOS, install Emacs 31 or newer and ‘make’.
-Installing the Omnivox 1.5.0 release archive also requires ‘curl’ and
-either ‘sha256sum’ on GNU/Linux or ‘shasum’ on macOS, plus ‘tar’.  GNU
-Texinfo is needed only when building or editing the documentation, not
-for an ordinary installation.
+Omnivox 1.5.1 or newer is the supported speech-server baseline.
+Installing its release archive also requires ‘curl’ and either
+‘sha256sum’ on GNU/Linux or ‘shasum’ on macOS, plus ‘tar’.  GNU Texinfo
+is needed only when building or editing the documentation, not for an
+ordinary installation.
 
    To check the Emacs found by your shell, run:
 
@@ -238,7 +239,7 @@ prerequisite, run:
      ./bin/emacsvox-wsl-install
 
    It builds the pinned stable Emacs only when Emacs 31 or newer is
-unavailable, downloads and verifies the matching Omnivox 1.5.0 Windows
+unavailable, downloads and verifies the matching Omnivox 1.5.1 Windows
 archive, records its path without editing a shell startup file, compiles
 Emacsvox, runs a diagnostic, and plays the final speech-server check.
 The Emacs build can take a while on a fresh machine; later runs reuse it
@@ -260,7 +261,7 @@ installed and checked.  Continue to *note Quick Installation::.
 
    On a matching GNU/Linux x86-64 or macOS host, follow *note Installing
 An Omnivox Release Binary::.  That procedure downloads and verifies the
-published 1.5.0 archive, keeps its runtime data beside the executable,
+published 1.5.1 archive, keeps its runtime data beside the executable,
 and adds its versioned installation directory to ‘PATH’.  Then run:
 
      omnivox --check
@@ -845,6 +846,10 @@ that produces speech underneath it is platform-specific.  The normal
 engine is eSpeak NG on GNU/Linux, AVSpeechSynthesizer on macOS, and
 WinRT SpeechSynthesizer on Windows.
 
+   Omnivox 1.5.1 is the minimum supported release for Emacsvox 2026.9.0.
+A newer compatible Omnivox release may be used, but the binary examples
+and guided WSL2 installer below pin the tested 1.5.1 artifacts exactly.
+
    For a first installation, follow the linear procedure in *note
 Installation::.  Return here when you need platform-specific build
 details, compatibility servers, or deeper diagnostics.  Omnivox build
@@ -855,7 +860,7 @@ maintained in the Omnivox repository
 * Menu:
 
 * Supported Platform Routes::    Choose the maintained route for this machine.
-* Install Omnivox From A Release Binary: Installing An Omnivox Release Binary.  Install the verified Omnivox 1.5.0 archive.
+* Install Omnivox From A Release Binary: Installing An Omnivox Release Binary.  Install the verified Omnivox 1.5.1 archive.
 * Install An Omnivox Windows Release Under WSL2: Installing An Omnivox Windows Release Under WSL2.  Use the matching verified Windows archive without a build toolchain.
 * Trying Native Windows Emacsvox:: Evaluate native Windows Emacs and Omnivox with bounded checks.
 * Installing Omnivox From Source:: Build when a release archive does not match the host.
@@ -879,7 +884,7 @@ remains the acceptance test.
 Emacs         Recommended route      Current support evidence
 platform
 ---------------------------------------------------------------------------
-GNU/Linux     Omnivox 1.5.0          The published archive is built and
+GNU/Linux     Omnivox 1.5.1          The published archive is built and
 x86-64 with   release archive        verified on Ubuntu 24.04.
 an Ubuntu     using eSpeak NG        Compatible glibc, libstdc++,
 24.04-compatible                     libgcc, and ALSA runtime libraries
@@ -889,27 +894,27 @@ Other         Source-built Omnivox   Use the source route for Linux
 GNU/Linux     using eSpeak NG        ARM64, an older distribution ABI,
 systems                              or a host that cannot run the
                                      published x86-64 archive.
-macOS on      Omnivox 1.5.0          The published ARM64 archive is
+macOS on      Omnivox 1.5.1          The published ARM64 archive is
 Apple         release archive        built and verified on a native
 silicon       using                  macOS runner; the audible host
               AVSpeechSynthesizer    check remains required.
-macOS on      Omnivox 1.5.0          The published x64 archive is built
+macOS on      Omnivox 1.5.1          The published x64 archive is built
 Intel         release archive        and verified on a native macOS
               using                  runner; the audible host check
               AVSpeechSynthesizer    remains required.
-Emacs in      Omnivox 1.5.0          The published archive is
+Emacs in      Omnivox 1.5.1          The published archive is
 WSL2 on       Windows x64 release    checksum-protected and release CI
 x86-64        archive using WinRT    verifies its architecture, adjacent
 Windows                              data, WinRT and eSpeak synthesis.
                                      The audible host check remains
                                      required.
-Emacs in      Omnivox 1.5.0          Release CI verifies the ARM64
+Emacs in      Omnivox 1.5.1          Release CI verifies the ARM64
 WSL2 on       Windows ARM64          archive, adjacent data, WinRT and
 Windows on    release archive        eSpeak synthesis, and the guided
 ARM           using WinRT            installer selects it automatically.
                                      A complete WSL2 host and audible
                                      check remains required.
-Native        Omnivox 1.5.0          Preview.  Omnivox verifies its
+Native        Omnivox 1.5.1          Preview.  Omnivox verifies its
 Windows       Windows release        native Windows archive, and
 Emacs         using WinRT            Emacsvox can start ‘omnivox.exe’
                                      directly, but the complete
@@ -937,25 +942,25 @@ File: emacsvox.info,  Node: Installing An Omnivox Release Binary,  Next: Install
 =========================================
 
 Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible
-runtime, macOS on Apple silicon, or macOS on Intel.  The Omnivox 1.5.0
-release (https://github.com/bartbunting/omnivox/releases/tag/v1.5.0)
+runtime, macOS on Apple silicon, or macOS on Intel.  The Omnivox 1.5.1
+release (https://github.com/bartbunting/omnivox/releases/tag/v1.5.1)
 provides these archive names:
 
 Host                 Set ‘platform’ to   Archive
 --------------------------------------------------------------------------
-GNU/Linux x86-64     ‘linux-x64’         ‘omnivox-1.5.0-linux-x64.tar.gz’
-macOS Apple          ‘macos-arm64’       ‘omnivox-1.5.0-macos-arm64.tar.gz’
+GNU/Linux x86-64     ‘linux-x64’         ‘omnivox-1.5.1-linux-x64.tar.gz’
+macOS Apple          ‘macos-arm64’       ‘omnivox-1.5.1-macos-arm64.tar.gz’
 silicon
-macOS Intel          ‘macos-x64’         ‘omnivox-1.5.0-macos-x64.tar.gz’
+macOS Intel          ‘macos-x64’         ‘omnivox-1.5.1-macos-x64.tar.gz’
 
    Run ‘uname -m’ if the Mac architecture is uncertain: ‘arm64’
 identifies Apple silicon and ‘x86_64’ identifies Intel.  Create a
 download directory, select the matching platform value, and fetch both
 the archive and published checksum file:
 
-     mkdir -p "$HOME/Downloads/omnivox-1.5.0"
-     cd "$HOME/Downloads/omnivox-1.5.0"
-     omnivox_version=1.5.0
+     mkdir -p "$HOME/Downloads/omnivox-1.5.1"
+     cd "$HOME/Downloads/omnivox-1.5.1"
+     omnivox_version=1.5.1
      platform=linux-x64
      archive="omnivox-${omnivox_version}-${platform}.tar.gz"
      release_url="https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}"
@@ -994,12 +999,12 @@ do not load or copy the release's ‘omnivox-voices.el’ into Emacsvox.
      omnivox --check
      omnivox --list-voices
 
-   The version must report 1.5.0, and the check must produce both its
-tone and spoken confirmation.  The macOS archives are not code-signed or
-notarized; if local security policy refuses the verified binary, use the
-source route below rather than weakening that policy.  On GNU/Linux, a
-missing runtime library or incompatible glibc also means that the source
-route is the appropriate path.
+   The version must report 1.5.1 or newer, and the check must produce
+both its tone and spoken confirmation.  The macOS archives are not
+code-signed or notarized; if local security policy refuses the verified
+binary, use the source route below rather than weakening that policy.
+On GNU/Linux, a missing runtime library or incompatible glibc also means
+that the source route is the appropriate path.
 
    For Emacs running under WSL2, continue to *note Installing An Omnivox
 Windows Release Under WSL2::.  That route uses the verified Windows
@@ -1018,7 +1023,7 @@ installation without changing anything:
      ./bin/emacsvox-wsl-install --check
 
    The doctor detects the Windows architecture, chooses the matching
-Omnivox 1.5.0 archive, and reports the Emacs and per-user paths it will
+Omnivox 1.5.1 archive, and reports the Emacs and per-user paths it will
 use.  If Linux packages are missing, it prints one ‘apt’ command for you
 to review and run.  Working ‘powershell.exe’ and ‘wslpath’
 interoperation are required.  After resolving any reported prerequisite,
@@ -1032,8 +1037,8 @@ archive, installs the complete payload below the Windows user's
 ‘$XDG_CONFIG_HOME/emacsvox/omnivox-program’, normally
 ‘~/.config/emacsvox/omnivox-program’.  It does not invoke ‘sudo’ or edit
 a shell startup file.  It also compiles Emacsvox, runs the non-audible
-launcher diagnostic, and finishes with the audible backend check.  The
-normal acceptance condition is hearing both its tone and speech.
+launcher diagnostic, and finishes with the audible speech-server check.
+The normal acceptance condition is hearing both its tone and speech.
 
    This binary route does not need the Omnivox source checkout, Docker,
 Rust, MinGW, Visual Studio, Windows .NET Framework, or an
@@ -1056,9 +1061,9 @@ archive's published checksum.
    Download the Windows x64 archive and the release checksum file in
 WSL:
 
-     mkdir -p "$HOME/Downloads/omnivox-1.5.0"
-     cd "$HOME/Downloads/omnivox-1.5.0"
-     omnivox_version=1.5.0
+     mkdir -p "$HOME/Downloads/omnivox-1.5.1"
+     cd "$HOME/Downloads/omnivox-1.5.1"
+     omnivox_version=1.5.1
      archive="omnivox-${omnivox_version}-windows-x64.zip"
      release_url="https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}"
      curl -fLO "$release_url/$archive"
@@ -1095,17 +1100,17 @@ its physical audio check:
      ./servers/omnivox --list-voices
      ./servers/omnivox --check
 
-   The version must report 1.5.0.  The check must produce both its tone
-and spoken confirmation.  Release CI verifies the downloaded archive,
-Windows x64 architecture, adjacent eSpeak data, voice discovery, and
-headless synthesis through both WinRT and eSpeak, but only this audible
-check proves the local audio path.  The Windows archive is not
-code-signed.  If Windows security or local policy refuses it, do not
-weaken that policy to complete the install.
+   The version must report 1.5.1 or newer.  The check must produce both
+its tone and spoken confirmation.  Release CI verifies the downloaded
+archive, Windows x64 architecture, adjacent eSpeak data, voice
+discovery, and headless synthesis through both WinRT and eSpeak, but
+only this audible check proves the local audio path.  The Windows
+archive is not code-signed.  If Windows security or local policy refuses
+it, do not weaken that policy to complete the install.
 
    The generic archive does not contain optional Piper, Eloquence, or
 DECtalk helpers or their runtimes.  They are not needed for normal WinRT
-speech.  Omnivox 1.5.0 publishes a separate matching Piper companion,
+speech.  Omnivox 1.5.1 publishes a separate matching Piper companion,
 while Emacsvox's source-build route below verifies and stages that
 companion as part of its content-addressed Windows bundle.  A Piper
 voice model remains a separate user-supplied file and is never included
@@ -1150,7 +1155,7 @@ window.
 Set ‘$Platform’ for the computer.  The example below uses the usual
 Intel or AMD Windows x64 archive:
 
-     $Version = "1.5.0"
+     $Version = "1.5.1"
      $Platform = "windows-x64" # Use windows-arm64 only on Windows on ARM.
      $DownloadDir = Join-Path $env:USERPROFILE "Downloads\omnivox-$Version"
      $Archive = "omnivox-$Version-$Platform.zip"
@@ -1205,9 +1210,9 @@ into a versioned directory below the current user's ‘LocalAppData’:
      & $Omnivox --check
      if ($LASTEXITCODE -ne 0) { throw "Omnivox audio check failed" }
 
-   The version must report 1.5.0, voice discovery must list at least one
-Windows voice, and the final check must produce both a tone and spoken
-confirmation.  Keep ‘omnivox.exe’, ‘espeak-ng-data’, and
+   The version must report 1.5.1 or newer, voice discovery must list at
+least one Windows voice, and the final check must produce both a tone
+and spoken confirmation.  Keep ‘omnivox.exe’, ‘espeak-ng-data’, and
 ‘third-party-licenses’ together.  Do not copy or load the archive's
 ‘omnivox-voices.el’: it is the adapter for upstream Emacspeak, while
 Emacsvox supplies its own adapter.
@@ -1269,7 +1274,7 @@ output, and ‘omnivox.exe --version’ output.
 before loading Emacsvox in the user's Emacs initialization file:
 
      (setenv "TTS_PROGRAM"
-             "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.5.0-windows-x64/omnivox.exe")
+             "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.5.1-windows-x64/omnivox.exe")
      (load-file "C:/path/to/emacsvox/lisp/emacsvox-setup.el")
 
    Replace both example paths.  This initial configuration deliberately
@@ -4609,81 +4614,81 @@ Node: Top384
 Node: Introduction2198
 Node: Installation5597
 Node: Obtaining Emacsvox6814
-Node: Building And Testing The Speech Server10237
-Node: Quick Installation11793
-Node: Confirming First Speech14292
-Node: Recovering From No Speech15615
-Node: Persistent Startup18487
-Node: Basic Usage19501
-Node: Overview22125
-Node: Working23263
-Ref: Working-Footnote-124605
-Ref: Working-Footnote-224698
-Node: Reading24808
-Node: Speech System26588
-Node: Controlling Echo27500
-Node: Speech Output Control28335
-Node: Miscellaneous30065
-Node: Voice-lock31012
-Node: Status Information32262
-Node: Speech Backends33325
-Node: Supported Platform Routes35036
-Node: Installing An Omnivox Release Binary38804
-Node: Installing An Omnivox Windows Release Under WSL242189
-Node: Trying Native Windows Emacsvox47394
-Node: Installing Omnivox From Source55106
-Node: Building Omnivox For WSL256970
-Node: Selecting And Checking Omnivox62041
-Node: Compatibility Speech Servers64309
-Node: Backend Diagnostics And Ownership66235
-Node: Audio Desktop68580
-Node: Desktop Objects69710
-Node: Object Oriented Desktop70935
-Node: Context-Sensitive Interaction72048
-Node: Aural Presentation75163
-Node: Presentation Model77362
-Node: Presentation Modalities79829
-Node: Aural Home81576
-Node: Explaining Presentation83464
-Node: Adjusting Presentation85449
-Node: Presentation Profiles88418
-Node: Voices And Routing90109
-Node: Sounds And Space92466
-Node: Presentation Troubleshooting94090
-Node: Voice Lock96128
-Node: Using Online Help99335
-Node: Emacs Packages103397
-Node: Document Authoring104771
-Node: Structured Editing105325
-Node: Browsing Structure106308
-Node: Web Browsing106906
-Node: Messaging107741
-Node: Editing Code108239
-Node: Development Environment108758
-Node: Desktop Management109315
-Node: Personal Information Management109817
-Node: Desktop Applications110349
-Node: Notmuch Mail111898
-Ref: Notmuch fields and privacy121258
-Node: Agent Shell126966
-Node: EAT Terminal Access136960
-Node: Running Terminal Based Applications154219
-Node: Starting Term155174
-Node: Term Input Modes156013
-Node: Term Speech Feedback157173
-Node: Reviewing The Term Screen158367
-Node: Term Help And Recovery160268
-Node: Emacsvox Keyboard Commands161167
-Node: Copyright162571
-Node: Acknowledgments163158
-Node: Developer Guide164184
-Node: Documentation Maintenance165348
-Node: Speech Server Protocols170146
-Ref: Testing A Direct Legacy Server175596
-Ref: Commands That Queue Output176155
-Ref: Commands That Set State179189
-Node: Integration Maintenance181783
-Node: Concept Index195905
+Node: Building And Testing The Speech Server10287
+Node: Quick Installation11843
+Node: Confirming First Speech14342
+Node: Recovering From No Speech15665
+Node: Persistent Startup18537
+Node: Basic Usage19551
+Node: Overview22175
+Node: Working23313
+Ref: Working-Footnote-124655
+Ref: Working-Footnote-224748
+Node: Reading24858
+Node: Speech System26638
+Node: Controlling Echo27550
+Node: Speech Output Control28385
+Node: Miscellaneous30115
+Node: Voice-lock31062
+Node: Status Information32312
+Node: Speech Backends33375
+Node: Supported Platform Routes35304
+Node: Installing An Omnivox Release Binary39072
+Node: Installing An Omnivox Windows Release Under WSL242465
+Node: Trying Native Windows Emacsvox47684
+Node: Installing Omnivox From Source55405
+Node: Building Omnivox For WSL257269
+Node: Selecting And Checking Omnivox62340
+Node: Compatibility Speech Servers64608
+Node: Backend Diagnostics And Ownership66534
+Node: Audio Desktop68879
+Node: Desktop Objects70009
+Node: Object Oriented Desktop71234
+Node: Context-Sensitive Interaction72347
+Node: Aural Presentation75462
+Node: Presentation Model77661
+Node: Presentation Modalities80128
+Node: Aural Home81875
+Node: Explaining Presentation83763
+Node: Adjusting Presentation85748
+Node: Presentation Profiles88717
+Node: Voices And Routing90408
+Node: Sounds And Space92765
+Node: Presentation Troubleshooting94389
+Node: Voice Lock96427
+Node: Using Online Help99634
+Node: Emacs Packages103696
+Node: Document Authoring105070
+Node: Structured Editing105624
+Node: Browsing Structure106607
+Node: Web Browsing107205
+Node: Messaging108040
+Node: Editing Code108538
+Node: Development Environment109057
+Node: Desktop Management109614
+Node: Personal Information Management110116
+Node: Desktop Applications110648
+Node: Notmuch Mail112197
+Ref: Notmuch fields and privacy121557
+Node: Agent Shell127265
+Node: EAT Terminal Access137259
+Node: Running Terminal Based Applications154518
+Node: Starting Term155473
+Node: Term Input Modes156312
+Node: Term Speech Feedback157472
+Node: Reviewing The Term Screen158666
+Node: Term Help And Recovery160567
+Node: Emacsvox Keyboard Commands161466
+Node: Copyright162870
+Node: Acknowledgments163457
+Node: Developer Guide164483
+Node: Documentation Maintenance165647
+Node: Speech Server Protocols170445
+Ref: Testing A Direct Legacy Server175895
+Ref: Commands That Queue Output176454
+Ref: Commands That Set State179488
+Node: Integration Maintenance182082
+Node: Concept Index196204
 
 End Tag Table
 

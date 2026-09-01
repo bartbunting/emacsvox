@@ -10,6 +10,10 @@ that produces speech underneath it is platform-specific.  The normal engine
 is eSpeak NG on GNU/Linux, AVSpeechSynthesizer on macOS, and WinRT
 SpeechSynthesizer on Windows.
 
+Omnivox 1.5.1 is the minimum supported release for Emacsvox 2026.9.0.  A
+newer compatible Omnivox release may be used, but the binary examples and
+guided WSL2 installer below pin the tested 1.5.1 artifacts exactly.
+
 For a first installation, follow the linear procedure in
 @@texinfo:@ref{Installation}@@.  Return here when you need platform-specific build
 details, compatibility servers, or deeper diagnostics.  Omnivox build
@@ -32,13 +36,13 @@ test.
 #+attr_texinfo: :columns .18 .31 .51
 | Emacs platform | Recommended route | Current support evidence |
 |---+---+---|
-| GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime | Omnivox 1.5.0 release archive using eSpeak NG | The published archive is built and verified on Ubuntu 24.04. Compatible glibc, libstdc++, libgcc, and ALSA runtime libraries are required; the audible host check remains required. |
+| GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime | Omnivox 1.5.1 release archive using eSpeak NG | The published archive is built and verified on Ubuntu 24.04. Compatible glibc, libstdc++, libgcc, and ALSA runtime libraries are required; the audible host check remains required. |
 | Other GNU/Linux systems | Source-built Omnivox using eSpeak NG | Use the source route for Linux ARM64, an older distribution ABI, or a host that cannot run the published x86-64 archive. |
-| macOS on Apple silicon | Omnivox 1.5.0 release archive using AVSpeechSynthesizer | The published ARM64 archive is built and verified on a native macOS runner; the audible host check remains required. |
-| macOS on Intel | Omnivox 1.5.0 release archive using AVSpeechSynthesizer | The published x64 archive is built and verified on a native macOS runner; the audible host check remains required. |
-| Emacs in WSL2 on x86-64 Windows | Omnivox 1.5.0 Windows x64 release archive using WinRT | The published archive is checksum-protected and release CI verifies its architecture, adjacent data, WinRT and eSpeak synthesis.  The audible host check remains required. |
-| Emacs in WSL2 on Windows on ARM | Omnivox 1.5.0 Windows ARM64 release archive using WinRT | Release CI verifies the ARM64 archive, adjacent data, WinRT and eSpeak synthesis, and the guided installer selects it automatically.  A complete WSL2 host and audible check remains required. |
-| Native Windows Emacs | Omnivox 1.5.0 Windows release using WinRT | Preview. Omnivox verifies its native Windows archive, and Emacsvox can start ~omnivox.exe~ directly, but the complete combination has not passed a fresh-machine acceptance test. Initial users should use WSL2; evaluators can follow the bounded trial below. |
+| macOS on Apple silicon | Omnivox 1.5.1 release archive using AVSpeechSynthesizer | The published ARM64 archive is built and verified on a native macOS runner; the audible host check remains required. |
+| macOS on Intel | Omnivox 1.5.1 release archive using AVSpeechSynthesizer | The published x64 archive is built and verified on a native macOS runner; the audible host check remains required. |
+| Emacs in WSL2 on x86-64 Windows | Omnivox 1.5.1 Windows x64 release archive using WinRT | The published archive is checksum-protected and release CI verifies its architecture, adjacent data, WinRT and eSpeak synthesis.  The audible host check remains required. |
+| Emacs in WSL2 on Windows on ARM | Omnivox 1.5.1 Windows ARM64 release archive using WinRT | Release CI verifies the ARM64 archive, adjacent data, WinRT and eSpeak synthesis, and the guided installer selects it automatically.  A complete WSL2 host and audible check remains required. |
+| Native Windows Emacs | Omnivox 1.5.1 Windows release using WinRT | Preview. Omnivox verifies its native Windows archive, and Emacsvox can start ~omnivox.exe~ directly, but the complete combination has not passed a fresh-machine acceptance test. Initial users should use WSL2; evaluators can follow the bounded trial below. |
 
 The release-archive routes below are the shortest installation on matching
 GNU/Linux, macOS, and WSL2 hosts.  A bare executable, a repository tag, or an
@@ -53,20 +57,20 @@ first speech.
 ** Install Omnivox From A Release Binary
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Installing An Omnivox Release Binary
-:DESCRIPTION: Install the verified Omnivox 1.5.0 archive.
+:DESCRIPTION: Install the verified Omnivox 1.5.1 archive.
 :END:
 
 Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime,
 macOS on Apple silicon, or macOS on Intel.  The
-[[https://github.com/bartbunting/omnivox/releases/tag/v1.5.0][Omnivox 1.5.0 release]]
+[[https://github.com/bartbunting/omnivox/releases/tag/v1.5.1][Omnivox 1.5.1 release]]
 provides these archive names:
 
 #+attr_texinfo: :columns .28 .27 .45
 | Host | Set ~platform~ to | Archive |
 |---+---+---|
-| GNU/Linux x86-64 | ~linux-x64~ | ~omnivox-1.5.0-linux-x64.tar.gz~ |
-| macOS Apple silicon | ~macos-arm64~ | ~omnivox-1.5.0-macos-arm64.tar.gz~ |
-| macOS Intel | ~macos-x64~ | ~omnivox-1.5.0-macos-x64.tar.gz~ |
+| GNU/Linux x86-64 | ~linux-x64~ | ~omnivox-1.5.1-linux-x64.tar.gz~ |
+| macOS Apple silicon | ~macos-arm64~ | ~omnivox-1.5.1-macos-arm64.tar.gz~ |
+| macOS Intel | ~macos-x64~ | ~omnivox-1.5.1-macos-x64.tar.gz~ |
 
 Run ~uname -m~ if the Mac architecture is uncertain: ~arm64~ identifies Apple
 silicon and ~x86_64~ identifies Intel.  Create a download directory, select the
@@ -74,9 +78,9 @@ matching platform value, and fetch both the archive and published checksum
 file:
 
 #+begin_example
-mkdir -p "$HOME/Downloads/omnivox-1.5.0"
-cd "$HOME/Downloads/omnivox-1.5.0"
-omnivox_version=1.5.0
+mkdir -p "$HOME/Downloads/omnivox-1.5.1"
+cd "$HOME/Downloads/omnivox-1.5.1"
+omnivox_version=1.5.1
 platform=linux-x64
 archive="omnivox-${omnivox_version}-${platform}.tar.gz"
 release_url="https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}"
@@ -123,8 +127,8 @@ omnivox --check
 omnivox --list-voices
 #+end_example
 
-The version must report 1.5.0, and the check must produce both its tone and
-spoken confirmation.  The macOS archives are not code-signed or notarized; if
+The version must report 1.5.1 or newer, and the check must produce both its
+tone and spoken confirmation.  The macOS archives are not code-signed or notarized; if
 local security policy refuses the verified binary, use the source route below
 rather than weakening that policy.  On GNU/Linux, a missing runtime library or
 incompatible glibc also means that the source route is the appropriate path.
@@ -148,7 +152,7 @@ without changing anything:
 #+end_example
 
 The doctor detects the Windows architecture, chooses the matching Omnivox
-1.5.0 archive, and reports the Emacs and per-user paths it will use.  If Linux
+1.5.1 archive, and reports the Emacs and per-user paths it will use.  If Linux
 packages are missing, it prints one ~apt~ command for you to review and run.
 Working ~powershell.exe~ and ~wslpath~ interoperation are required.  After
 resolving any reported prerequisite, run:
@@ -163,8 +167,8 @@ records its absolute WSL path in
 ~$XDG_CONFIG_HOME/emacsvox/omnivox-program~, normally
 ~~/.config/emacsvox/omnivox-program~.  It does not invoke ~sudo~ or edit a shell
 startup file.  It also compiles Emacsvox, runs the non-audible launcher
-diagnostic, and finishes with the audible backend check.  The normal acceptance
-condition is hearing both its tone and speech.
+diagnostic, and finishes with the audible speech-server check.  The normal
+acceptance condition is hearing both its tone and speech.
 
 This binary route does not need the Omnivox source checkout, Docker, Rust,
 MinGW, Visual Studio, Windows .NET Framework, or an optional/proprietary speech
@@ -187,9 +191,9 @@ directory and verify that archive's published checksum.
 Download the Windows x64 archive and the release checksum file in WSL:
 
 #+begin_example
-mkdir -p "$HOME/Downloads/omnivox-1.5.0"
-cd "$HOME/Downloads/omnivox-1.5.0"
-omnivox_version=1.5.0
+mkdir -p "$HOME/Downloads/omnivox-1.5.1"
+cd "$HOME/Downloads/omnivox-1.5.1"
+omnivox_version=1.5.1
 archive="omnivox-${omnivox_version}-windows-x64.zip"
 release_url="https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}"
 curl -fLO "$release_url/$archive"
@@ -231,8 +235,8 @@ physical audio check:
 ./servers/omnivox --check
 #+end_example
 
-The version must report 1.5.0.  The check must produce both its tone and spoken
-confirmation.  Release CI verifies the downloaded archive, Windows x64
+The version must report 1.5.1 or newer.  The check must produce both its tone
+and spoken confirmation.  Release CI verifies the downloaded archive, Windows x64
 architecture, adjacent eSpeak data, voice discovery, and headless synthesis
 through both WinRT and eSpeak, but only this audible check proves the local
 audio path.  The Windows archive is not code-signed.  If Windows security or
@@ -240,7 +244,7 @@ local policy refuses it, do not weaken that policy to complete the install.
 
 The generic archive does not contain optional Piper, Eloquence, or DECtalk
 helpers or their runtimes.  They are not needed for normal WinRT speech.
-Omnivox 1.5.0 publishes a separate matching Piper companion, while Emacsvox's
+Omnivox 1.5.1 publishes a separate matching Piper companion, while Emacsvox's
 source-build route below verifies and stages that companion as part of its
 content-addressed Windows bundle.  A Piper voice model remains a separate
 user-supplied file and is never included in either runtime archive.
@@ -287,7 +291,7 @@ Set ~$Platform~ for the computer.  The example below uses the usual Intel or
 AMD Windows x64 archive:
 
 #+begin_src powershell
-$Version = "1.5.0"
+$Version = "1.5.1"
 $Platform = "windows-x64" # Use windows-arm64 only on Windows on ARM.
 $DownloadDir = Join-Path $env:USERPROFILE "Downloads\omnivox-$Version"
 $Archive = "omnivox-$Version-$Platform.zip"
@@ -346,8 +350,8 @@ if ($LASTEXITCODE -ne 0) { throw "Omnivox voice discovery failed" }
 if ($LASTEXITCODE -ne 0) { throw "Omnivox audio check failed" }
 #+end_src
 
-The version must report 1.5.0, voice discovery must list at least one Windows
-voice, and the final check must produce both a tone and spoken confirmation.
+The version must report 1.5.1 or newer, voice discovery must list at least one
+Windows voice, and the final check must produce both a tone and spoken confirmation.
 Keep ~omnivox.exe~, ~espeak-ng-data~, and ~third-party-licenses~ together.
 Do not copy or load the archive's ~omnivox-voices.el~: it is the adapter for
 upstream Emacspeak, while Emacsvox supplies its own adapter.
@@ -417,7 +421,7 @@ loading Emacsvox in the user's Emacs initialization file:
 
 #+begin_src emacs-lisp
 (setenv "TTS_PROGRAM"
-        "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.5.0-windows-x64/omnivox.exe")
+        "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.5.1-windows-x64/omnivox.exe")
 (load-file "C:/path/to/emacsvox/lisp/emacsvox-setup.el")
 #+end_src
 

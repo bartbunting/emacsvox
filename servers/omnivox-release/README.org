@@ -19,7 +19,7 @@ the official Roslyn Framework compiler and .NET 4.0 reference-assembly NuGet
 packages by version and SHA-256.  They are downloaded into the ignored
 =cache/= directory and run through the .NET Framework already present on
 Windows; they are neither installed system-wide nor staged with Omnivox.
-The same lock pins the official Omnivox 1.5.0 Windows Piper companion by
+The same lock pins the official Omnivox 1.5.1 Windows Piper companion by
 release URL, archive SHA-256, and source commit.  The preparation target
 rejects an Omnivox checkout at another commit before combining the helper with
 the Piper-enabled Windows-GNU executable.

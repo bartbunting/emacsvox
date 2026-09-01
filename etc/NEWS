@@ -8,7 +8,8 @@ Maintained by Emacsvox Contributors.
 
 * Emacsvox 2026.9.0 --- Current User-Visible Changes
 
-This version requires Emacs 31 or later.
+This version requires Emacs 31 or later.  Omnivox 1.5.1 or newer is the
+supported Omnivox baseline.
 
 ** Calendar Versioning And Release Safety
 
@@ -28,7 +29,7 @@ explicit tag or GitHub publication step.  See
 ~bin/emacsvox~ is now the one supported source-checkout launcher.  It works
 from any calling directory, honors an explicit ~EMACS~ setting or the
 ~EMACS=~ selection in ~local.mk~, rejects Emacs older than 31, defaults to the
-recommended Omnivox backend, and reports a missing backend before opening
+recommended Omnivox speech server, and reports a missing server before opening
 interactive Emacs.  It always starts an isolated ~-Q~ session and loads the
 tracked ~lisp/emacsvox-setup.el~ source; it never reads a maintainer-specific
 or personal Emacs init file.
@@ -48,14 +49,16 @@ the same isolated, Omnivox-first behavior as ~bin/emacsvox~.
 installation plan without changing the machine.  Running
 ~bin/emacsvox-wsl-install~ uses an existing Emacs 31 or newer, or builds the
 checksum-pinned stable GNU Emacs 31.1 release per user when necessary.  It then
-downloads and verifies the matching Omnivox 1.5.0 Windows x64 or ARM64 archive,
+downloads and verifies the matching Omnivox 1.5.1 Windows x64 or ARM64 archive,
 installs its intact runtime below Windows ~LocalAppData~, compiles Emacsvox,
-and performs the launcher and audible backend checks.
+and performs the launcher and audible speech-server checks.
 
 The installer never invokes ~sudo~ or edits a shell startup file.  It prints
 one package command for the user to review when Ubuntu or Debian build
 dependencies are missing, stores routine compiler output in a private cache
 log, and records the Omnivox executable as a data-only XDG configuration file.
+Later ~--check~ runs recognize when the pinned release is already installed
+and selected instead of directing the user to reinstall it.
 The launcher still accepts ~OMNIVOX_PROGRAM~ as an explicit test override,
 followed by the per-user release, a source-built development runtime, and
 ~PATH~.
@@ -66,11 +69,16 @@ stable first-use checkpoint, ``Emacsvox is ready.''  Set
 
 ** Native Windows Speech Under WSL
 
-Emacsvox now owns its native Windows speech stack.  The bundled
+Emacsvox now owns its standalone native Windows speech stack.  The bundled
 ~windows-outloud~ and ~windows-dtk~ servers provide Eloquence and Software
 DECtalk through native Windows bridges, while ~windows-play~ provides ordered,
 interruptible auditory icons.  Main and notification speech can use separate
 native streams with configurable stereo positions.
+
+The separate Eloquence and DECtalk capture helpers that expose those engines
+inside Omnivox are now maintained and built in the Omnivox repository.
+Emacsvox continues to own their pinned WSL build environment and stages the
+verified helpers as part of ~make windows-omnivox~.
 
 Use ~make windows-speech~ to build the complete stack, or the
 ~windows-audio~, ~windows-outloud~, and ~windows-dtk~ targets separately.
@@ -123,6 +131,12 @@ Ordered, urgent, legacy, and differently keyed output remain intact.  The
 reader's short coalescing delay applies only to matching replaceable work;
 ordered and urgent timelines execute immediately.  ~emacsvox_tx~ remains the
 bounded legacy fallback for a server without timeline v3.
+
+Presentation tones now remain usable with a legacy speech server.  When the
+server lacks the explicit presentation-tone protocol, Emacsvox lowers both
+insert and overlay tones to its ordered legacy tone command instead of
+rejecting the surrounding presentation.  The fallback cannot preserve overlay
+timing and rounds a fractional pitch to the nearest hertz.
 
 Queued logical voices now re-resolve after a runtime missing-voice,
 unavailable-engine, or synthesis failure and retry the identical chunk on the

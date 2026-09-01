@@ -41,11 +41,11 @@
      "EMACSVOX_WSL_EMACS_ARCHIVE=emacs-31.1.tar.xz\n"
      "EMACSVOX_WSL_EMACS_URL=https://example.invalid/emacs-31.1.tar.xz\n"
      "EMACSVOX_WSL_EMACS_SHA256=" (make-string 64 ?a) "\n"
-     "EMACSVOX_WSL_OMNIVOX_VERSION=1.5.0\n"
-     "EMACSVOX_WSL_OMNIVOX_RELEASE_URL=https://example.invalid/v1.5.0\n"
-     "EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_ARCHIVE=omnivox-1.5.0-windows-x64.zip\n"
+     "EMACSVOX_WSL_OMNIVOX_VERSION=1.5.1\n"
+     "EMACSVOX_WSL_OMNIVOX_RELEASE_URL=https://example.invalid/v1.5.1\n"
+     "EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_ARCHIVE=omnivox-1.5.1-windows-x64.zip\n"
      "EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_SHA256=" omnivox-sha256 "\n"
-     "EMACSVOX_WSL_OMNIVOX_WINDOWS_ARM64_ARCHIVE=omnivox-1.5.0-windows-arm64.zip\n"
+     "EMACSVOX_WSL_OMNIVOX_WINDOWS_ARM64_ARCHIVE=omnivox-1.5.1-windows-arm64.zip\n"
      "EMACSVOX_WSL_OMNIVOX_WINDOWS_ARM64_SHA256=" omnivox-sha256 "\n")))
 
 (defun emacsvox-wsl-install-tests--make-checkout (&optional omnivox-sha256)
@@ -185,6 +185,45 @@
               (expand-file-name "config/emacsvox/omnivox-program" home)))))
       (delete-directory root t))))
 
+(ert-deftest emacsvox-wsl-installer-check-recognizes-selected-release ()
+  "Doctor mode should not recommend reinstalling the selected release."
+  (let* ((root (emacsvox-wsl-install-tests--make-checkout))
+         (tools (emacsvox-wsl-install-tests--make-tools root))
+         (home (expand-file-name "home" root))
+         (windows-root (expand-file-name "windows" root))
+         (proc-version (expand-file-name "proc-version" root))
+         (installer (expand-file-name "bin/emacsvox-wsl-install" root))
+         (installed-program
+          (expand-file-name
+           "Emacsvox/Omnivox/releases/1.5.1-windows-x64/omnivox.exe"
+           windows-root))
+         (config-file
+          (expand-file-name "config/emacsvox/omnivox-program" home)))
+    (unwind-protect
+        (progn
+          (make-directory home t)
+          (with-temp-file proc-version (insert "Microsoft WSL2\n"))
+          (emacsvox-wsl-install-tests--write-executable
+           installed-program
+           "#!/bin/sh\nprintf 'omnivox 1.5.1\\n'\n")
+          (make-directory (file-name-directory config-file) t)
+          (with-temp-file config-file
+            (insert installed-program "\n"))
+          (let* ((environment
+                  (emacsvox-wsl-install-tests--environment
+                   root tools home windows-root proc-version))
+                 (result
+                  (emacsvox-wsl-install-tests--call
+                   installer environment "--check"))
+                 (status (car result))
+                 (output (cadr result)))
+            (should (zerop status))
+            (should
+             (string-search
+              "Omnivox 1.5.1 is already installed and selected" output))
+            (should-not (string-search "to install" output))))
+      (delete-directory root t))))
+
 (ert-deftest emacsvox-wsl-installer-installs-a-verified-release-per-user ()
   "The complete binary route should persist selection without shell edits."
   (skip-unless (executable-find "zip"))
@@ -200,7 +239,7 @@
            (concat
             "#!/bin/sh\n"
             "case ${1-} in\n"
-            "  --version) printf 'omnivox 1.5.0\\n' ;;\n"
+            "  --version) printf 'omnivox 1.5.1\\n' ;;\n"
             "  *) printf 'omnivox:%s\\n' \"$*\" ;;\n"
             "esac\n"))
           (with-temp-file (expand-file-name "espeak-ng-data/data" payload)
@@ -220,7 +259,7 @@
                   (expand-file-name
                    (concat
                     "Emacsvox/Omnivox/releases/"
-                    "1.5.0-windows-x64/omnivox.exe")
+                    "1.5.1-windows-x64/omnivox.exe")
                    windows-root)))
             (unwind-protect
                 (progn

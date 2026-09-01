@@ -270,16 +270,35 @@ EOF
 fi
 
 if [ "$mode" = check ]; then
+    installed_omnivox_current=false
     if [ -x "$omnivox_program" ]; then
         installed_omnivox_version=$(
             "$omnivox_program" --version 2>/dev/null | sed -n '1p'
         ) || :
         printf '  Installed Omnivox: %s\n' \
             "${installed_omnivox_version:-not runnable}"
+        case $installed_omnivox_version in
+            *" $EMACSVOX_WSL_OMNIVOX_VERSION")
+                installed_omnivox_current=true
+                ;;
+        esac
     else
         printf '  Installed Omnivox: not present; the installer will add it\n'
     fi
-    printf '\nNo files were changed.  Run ./bin/%s to install.\n' "$program_name"
+    configured_omnivox_program=
+    if [ -r "$omnivox_config_file" ]; then
+        configured_omnivox_program=$(sed -n '1p' "$omnivox_config_file")
+    fi
+    if $installed_omnivox_current &&
+       [ "$configured_omnivox_program" = "$omnivox_program" ]; then
+        printf '\nNo files were changed.  Omnivox %s is already installed and selected.\n' \
+            "$EMACSVOX_WSL_OMNIVOX_VERSION"
+    elif $installed_omnivox_current; then
+        printf '\nNo files were changed.  Run ./bin/%s to record and verify this installation.\n' \
+            "$program_name"
+    else
+        printf '\nNo files were changed.  Run ./bin/%s to install.\n' "$program_name"
+    fi
     exit 0
 fi
 
