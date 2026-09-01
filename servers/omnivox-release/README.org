@@ -6,8 +6,8 @@ Omnivox owns its committed =Cargo.lock=, exact Rust version, and the C# source,
 build targets, tests, and GPL notice for its 32-bit Eloquence and DECtalk
 helpers.  Emacsvox owns the complete Windows bundle it stages: the pinned
 Windows-GNU and helper compiler inputs, invocation and deterministic validation
-of those builds, runtime DLLs, eSpeak data, content hashes, and launcher
-selection.
+of those builds, the Omnivox-built RHVoice and Flite companions, runtime DLLs,
+eSpeak data, content hashes, and launcher selection.
 
 * Pinned tools
 
@@ -22,7 +22,9 @@ Windows; they are neither installed system-wide nor staged with Omnivox.
 The same lock pins the official Omnivox 1.5.1 Windows Piper companion by
 release URL, archive SHA-256, and source commit.  The preparation target
 rejects an Omnivox checkout at another commit before combining the helper with
-the Piper-enabled Windows-GNU executable.
+the Piper-enabled Windows-GNU executable.  Flite's source archive, source tree,
+and compiled SLT voice are separately locked and verified by the Omnivox
+checkout.
 The Windows Rust link disables GNU ld's otherwise variable PE timestamp.
 The staged executable is stripped with the pinned MinGW =strip= because GNU
 ld emits the remaining COFF symbols in a variable order.  The exact
@@ -52,6 +54,12 @@ Licensed runtime binaries are never committed to Emacsvox or Omnivox.
 - The open helper executables are rebuilt from Omnivox's committed C# sources
   with the pinned compiler.  They are not treated as opaque runtime inputs,
   and their GPL-2.0-or-later license text is staged beside them.
+- The MIT-licensed RHVoice helper is built from the selected Omnivox source.
+  RHVoice itself, its language data, and its voices remain user supplied and
+  are never copied into this payload.
+- The Flite helper and its compiled-in CMU US SLT voice are built from
+  Omnivox's checksum-locked Flite 2.2 source input.  Its source provenance,
+  complete upstream license, and internal checksums are staged with it.
 - Piper's open native companion is a checksum-pinned official Omnivox release
   input.  Its source provenance, internal checksums, helper, DLLs, private
   eSpeak data, and complete staged tree are verified.  Voice models remain
@@ -61,12 +69,12 @@ Licensed runtime binaries are never committed to Emacsvox or Omnivox.
 
 =make windows-omnivox= refuses tracked source changes, performs locked builds,
 validates and recreates only its literal dedicated generated Cargo target,
-creates a content-addressed version containing the matching Piper companion,
-and writes =PROVENANCE= and =SHA256SUMS= beside the payload.  Symlinked or
-unexpected clean targets are rejected.  The dependency download cache is
-retained.  The provenance file contains source revisions, toolchain and lock
-identities, artifact hashes, and the licensed-runtime policy, but no
-machine-local paths.  It records the
+builds the RHVoice and Flite companions, creates a content-addressed version
+containing the matching Piper companion, and writes =PROVENANCE= and
+=SHA256SUMS= beside the payload.  Symlinked or unexpected clean targets are
+rejected.  The dependency download cache is retained.  The provenance file
+contains source revisions, toolchain and lock identities, artifact hashes, and
+the licensed-runtime policy, but no machine-local paths.  It records the
 deterministic stripped executable hash; the deliberately non-reproducible
 unstripped hash is kept only in its local diagnostics manifest so it cannot
 perturb the staged build identity.
@@ -82,7 +90,12 @@ For local testing from active changes, use =make windows-omnivox-dev=.  It uses
 the same pinned build and staging path without requiring either worktree to be
 clean, labels the result =local-dirty-worktree=, and records SHA-256 hashes of
 both repositories' tracked diffs in the runtime provenance and build identity.
-It does not weaken the clean-worktree requirement of =make windows-omnivox=.
+It builds RHVoice and Flite, including Flite's SLT voice, but deliberately
+omits Piper so a current Omnivox checkout is never combined with the 1.5.1
+Piper companion.  It therefore rejects =OMNIVOX_PIPER_MODEL=.  Advance the
+Piper lock to a companion built from the same Omnivox commit before using the
+clean release path for these integrations.  The development target does not
+weaken the clean-worktree requirement of =make windows-omnivox=.
 
 =make verify-windows-omnivox-runtime= verifies the repository stage, build-kind
 and worktree-digest agreement with local diagnostics, the Windows-local runtime

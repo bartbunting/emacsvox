@@ -1108,13 +1108,15 @@ only this audible check proves the local audio path.  The Windows
 archive is not code-signed.  If Windows security or local policy refuses
 it, do not weaken that policy to complete the install.
 
-   The generic archive does not contain optional Piper, Eloquence, or
-DECtalk helpers or their runtimes.  They are not needed for normal WinRT
-speech.  Omnivox 1.5.1 publishes a separate matching Piper companion,
-while Emacsvox's source-build route below verifies and stages that
-companion as part of its content-addressed Windows bundle.  A Piper
-voice model remains a separate user-supplied file and is never included
-in either runtime archive.
+   The generic Omnivox 1.5.1 archive does not contain optional Piper,
+Eloquence, DECtalk, RHVoice, or Flite helpers or runtimes.  They are not
+needed for normal WinRT speech.  Omnivox 1.5.1 publishes a separate
+matching Piper companion, while Emacsvox's clean source-build route
+below verifies and stages that companion as part of its
+content-addressed Windows bundle.  The development route builds the
+newer RHVoice and Flite integrations while deliberately omitting that
+older Piper companion.  A Piper voice model and the RHVoice runtime and
+voices remain separate user-supplied files.
 
 
 File: emacsvox.info,  Node: Trying Native Windows Emacsvox,  Next: Installing Omnivox From Source,  Prev: Installing An Omnivox Windows Release Under WSL2,  Up: Speech Backends
@@ -1373,16 +1375,18 @@ produces an x86-64 Windows runtime.
      maintainers can set ‘OMNIVOX_DIR’ to an alternate Omnivox checkout.
      The Omnivox checkout must be at the exact source commit recorded
      for the checksum-pinned Piper companion in
-     ‘servers/omnivox-release/toolchain.lock’.  The preparation target
-     rejects a different revision instead of combining unmatched native
-     components.  Both checkouts need enough free space for the Docker
-     image, native and cross-compiled build products, and caches.
+     ‘servers/omnivox-release/toolchain.lock’ when using the clean
+     release target.  The preparation target rejects a different
+     revision instead of combining unmatched native components.  The
+     development target described below accepts current source by
+     omitting Piper.  Both checkouts need enough free space for the
+     Docker image, native and cross-compiled build products, and caches.
 
    You do _not_ need to install Rust, MinGW, CMake, Clang, libclang,
 eSpeak NG, Roslyn, Visual Studio, or the .NET reference assemblies in
 WSL.  The target pins or builds those inside its controlled toolchain.
-Eloquence and DECtalk runtimes are optional and are not needed for the
-normal Windows WinRT voice.
+Eloquence and DECtalk runtimes and the RHVoice runtime and voice data
+are optional and are not needed for the normal Windows WinRT voice.
 
    The quickest prerequisite check is:
 
@@ -1404,12 +1408,15 @@ has no tracked changes, run:
 
    This is the reproducible release path.  It builds and verifies a
 pinned Windows-GNU executable and stages a content-addressed runtime
-beneath ‘servers/omnivox-bin’.  The payload includes the matching,
-checksum-pinned Piper companion but no voice model.  It also copies the
-runnable payload to a Windows-local directory so native voice and eSpeak
-data discovery do not pay the WSL filesystem cost.  Optional Eloquence
-and DECtalk runtimes are not downloaded by this target or required for
-normal WinRT speech.
+beneath ‘servers/omnivox-bin’.  Once the Piper lock identifies an
+Omnivox revision that contains these integrations, the payload includes
+the matching, checksum-pinned Piper companion, the RHVoice helper
+without an RHVoice runtime, and the Flite helper with its compiled CMU
+US SLT voice.  It contains no Piper model.  It also copies the runnable
+payload to a Windows-local directory so native voice and eSpeak data
+discovery do not pay the WSL filesystem cost.  Optional Eloquence,
+DECtalk, and RHVoice runtimes are not downloaded by this target or
+required for normal WinRT speech.
 
    To register Piper, review a model and its model card, keep its
 adjacent ‘.onnx.json’ or ‘.json’ configuration with it, and supply an
@@ -1433,7 +1440,21 @@ and successfully loaded its model and helper.
 
    Maintainers testing tracked changes should use the development route
 in *note Integration Maintenance:: rather than weakening the
-clean-release guard.
+clean-release guard:
+
+     make windows-omnivox-dev
+     ./servers/omnivox --engine flite --list-voices
+
+   This route builds current Omnivox source, stages the RHVoice helper
+and Flite with its SLT voice, and deliberately omits the older pinned
+Piper companion.  RHVoice appears only after installing a compatible
+Windows ‘RHVoice.dll’ plus language and voice data and setting
+‘OMNIVOX_RHVOICE_LIBRARY’, ‘OMNIVOX_RHVOICE_DATA’, and
+‘OMNIVOX_RHVOICE_CONFIG’ before starting Emacsvox.  The corresponding
+installation and validation instructions are in Omnivox's checkout under
+‘docs/RHVOICE.md’.  Restart both speech processes or Emacs after
+restaging or changing those variables, then use ‘C-e d e’ to inspect the
+engines reported by the new process.
 
 
 File: emacsvox.info,  Node: Selecting And Checking Omnivox,  Next: Compatibility Speech Servers,  Prev: Building Omnivox For WSL2,  Up: Speech Backends
@@ -4437,17 +4458,21 @@ toolchain                            runtime DLLs, CMake, Clang and
 Build         Git checkouts          The current Emacsvox checkout and
 source                               the Omnivox checkout selected by
                                      ‘OMNIVOX_DIR’, including Omnivox's
-                                     locked Rust dependencies.
+                                     locked Rust dependencies and
+                                     checksum-locked Flite source input.
 
    ‘make verify-windows-omnivox-toolchain’ prepares the cached Roslyn
 inputs, builds the Docker image, and validates this boundary before
 compilation.  The full target then builds Omnivox's two 32-bit helper
-sources deterministically, builds native and Piper-enabled Windows
-Omnivox in the container, verifies that the pinned companion and main
-executable identify the same Omnivox source commit, stages a
-content-addressed payload, and verifies the Windows-local copy.  A host
-Rust installation, MinGW installation, Visual Studio, .NET SDK, or
-system eSpeak installation is not an input to this release path.
+sources deterministically, builds native Windows Omnivox plus its
+RHVoice and Flite helpers in the container, and stages their licenses,
+provenance, and checksums.  The clean target also builds Piper support
+and verifies that the pinned companion and main executable identify the
+same Omnivox source commit.  A host Rust installation, MinGW
+installation, Visual Studio, .NET SDK, or system eSpeak installation is
+not an input to this release path.  RHVoice's native library, languages,
+and voices remain external user-supplied runtime inputs; Flite's CMU US
+SLT voice is compiled into its checksum-locked helper.
 
    ‘OMNIVOX_PIPER_MODEL’ is an optional staging input, not a release
 payload.  When supplied, the target validates the adjacent
@@ -4461,9 +4486,13 @@ test purpose and is not a model-distribution default.
 
    Maintainers testing tracked Emacsvox or Omnivox changes may use ‘make
 windows-omnivox-dev’.  That target records both worktree-diff hashes and
-labels the result as a development build; it is not the clean release
-procedure.  See ‘servers/omnivox-release/README.org’ for the pinned
-toolchain, licensing, provenance, and restaging contract.
+labels the result as a development build.  It builds the RHVoice and
+Flite companions but omits Piper, because the currently pinned Piper
+companion must not be mixed with later Omnivox source.  It also rejects
+‘OMNIVOX_PIPER_MODEL’.  Advance the checked Piper companion and source
+commit together before these integrations enter the clean release path.
+See ‘servers/omnivox-release/README.org’ for the pinned toolchain,
+licensing, provenance, and restaging contract.
 
    Do not bypass the Omnivox release target manually or clean either
 repository to make its release guard pass.  Use ‘make windows-omnivox’
@@ -4639,60 +4668,60 @@ Node: Speech Backends33375
 Node: Supported Platform Routes35304
 Node: Installing An Omnivox Release Binary39072
 Node: Installing An Omnivox Windows Release Under WSL242465
-Node: Trying Native Windows Emacsvox47684
-Node: Installing Omnivox From Source55405
-Node: Building Omnivox For WSL257269
-Node: Selecting And Checking Omnivox62340
-Node: Compatibility Speech Servers64608
-Node: Backend Diagnostics And Ownership66534
-Node: Audio Desktop68879
-Node: Desktop Objects70009
-Node: Object Oriented Desktop71234
-Node: Context-Sensitive Interaction72347
-Node: Aural Presentation75462
-Node: Presentation Model77661
-Node: Presentation Modalities80128
-Node: Aural Home81875
-Node: Explaining Presentation83763
-Node: Adjusting Presentation85748
-Node: Presentation Profiles88717
-Node: Voices And Routing90408
-Node: Sounds And Space92765
-Node: Presentation Troubleshooting94389
-Node: Voice Lock96427
-Node: Using Online Help99634
-Node: Emacs Packages103696
-Node: Document Authoring105070
-Node: Structured Editing105624
-Node: Browsing Structure106607
-Node: Web Browsing107205
-Node: Messaging108040
-Node: Editing Code108538
-Node: Development Environment109057
-Node: Desktop Management109614
-Node: Personal Information Management110116
-Node: Desktop Applications110648
-Node: Notmuch Mail112197
-Ref: Notmuch fields and privacy121557
-Node: Agent Shell127265
-Node: EAT Terminal Access137259
-Node: Running Terminal Based Applications154518
-Node: Starting Term155473
-Node: Term Input Modes156312
-Node: Term Speech Feedback157472
-Node: Reviewing The Term Screen158666
-Node: Term Help And Recovery160567
-Node: Emacsvox Keyboard Commands161466
-Node: Copyright162870
-Node: Acknowledgments163457
-Node: Developer Guide164483
-Node: Documentation Maintenance165647
-Node: Speech Server Protocols170445
-Ref: Testing A Direct Legacy Server175895
-Ref: Commands That Queue Output176454
-Ref: Commands That Set State179488
-Node: Integration Maintenance182082
-Node: Concept Index196466
+Node: Trying Native Windows Emacsvox47826
+Node: Installing Omnivox From Source55547
+Node: Building Omnivox For WSL257411
+Node: Selecting And Checking Omnivox63612
+Node: Compatibility Speech Servers65880
+Node: Backend Diagnostics And Ownership67806
+Node: Audio Desktop70151
+Node: Desktop Objects71281
+Node: Object Oriented Desktop72506
+Node: Context-Sensitive Interaction73619
+Node: Aural Presentation76734
+Node: Presentation Model78933
+Node: Presentation Modalities81400
+Node: Aural Home83147
+Node: Explaining Presentation85035
+Node: Adjusting Presentation87020
+Node: Presentation Profiles89989
+Node: Voices And Routing91680
+Node: Sounds And Space94037
+Node: Presentation Troubleshooting95661
+Node: Voice Lock97699
+Node: Using Online Help100906
+Node: Emacs Packages104968
+Node: Document Authoring106342
+Node: Structured Editing106896
+Node: Browsing Structure107879
+Node: Web Browsing108477
+Node: Messaging109312
+Node: Editing Code109810
+Node: Development Environment110329
+Node: Desktop Management110886
+Node: Personal Information Management111388
+Node: Desktop Applications111920
+Node: Notmuch Mail113469
+Ref: Notmuch fields and privacy122829
+Node: Agent Shell128537
+Node: EAT Terminal Access138531
+Node: Running Terminal Based Applications155790
+Node: Starting Term156745
+Node: Term Input Modes157584
+Node: Term Speech Feedback158744
+Node: Reviewing The Term Screen159938
+Node: Term Help And Recovery161839
+Node: Emacsvox Keyboard Commands162738
+Node: Copyright164142
+Node: Acknowledgments164729
+Node: Developer Guide165755
+Node: Documentation Maintenance166919
+Node: Speech Server Protocols171717
+Ref: Testing A Direct Legacy Server177167
+Ref: Commands That Queue Output177726
+Ref: Commands That Set State180760
+Node: Integration Maintenance183354
+Node: Concept Index198300
 
 End Tag Table
 

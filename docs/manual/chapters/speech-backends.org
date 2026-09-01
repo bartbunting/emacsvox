@@ -242,12 +242,14 @@ through both WinRT and eSpeak, but only this audible check proves the local
 audio path.  The Windows archive is not code-signed.  If Windows security or
 local policy refuses it, do not weaken that policy to complete the install.
 
-The generic archive does not contain optional Piper, Eloquence, or DECtalk
-helpers or their runtimes.  They are not needed for normal WinRT speech.
-Omnivox 1.5.1 publishes a separate matching Piper companion, while Emacsvox's
-source-build route below verifies and stages that companion as part of its
-content-addressed Windows bundle.  A Piper voice model remains a separate
-user-supplied file and is never included in either runtime archive.
+The generic Omnivox 1.5.1 archive does not contain optional Piper, Eloquence,
+DECtalk, RHVoice, or Flite helpers or runtimes.  They are not needed for normal
+WinRT speech.  Omnivox 1.5.1 publishes a separate matching Piper companion,
+while Emacsvox's clean source-build route below verifies and stages that
+companion as part of its content-addressed Windows bundle.  The development
+route builds the newer RHVoice and Flite integrations while deliberately
+omitting that older Piper companion.  A Piper voice model and the RHVoice
+runtime and voices remain separate user-supplied files.
 
 ** Trying Native Windows Emacsvox
 :PROPERTIES:
@@ -516,15 +518,18 @@ Before running it, install or configure all of the following:
   directories named ~emacsvox~ and ~omnivox~, although maintainers can set
   ~OMNIVOX_DIR~ to an alternate Omnivox checkout.  The Omnivox checkout must
   be at the exact source commit recorded for the checksum-pinned Piper
-  companion in ~servers/omnivox-release/toolchain.lock~.  The preparation
-  target rejects a different revision instead of combining unmatched native
-  components.  Both checkouts need enough free space for the Docker image,
-  native and cross-compiled build products, and caches.
+  companion in ~servers/omnivox-release/toolchain.lock~ when using the clean
+  release target.  The preparation target rejects a different revision instead
+  of combining unmatched native components.  The development target described
+  below accepts current source by omitting Piper.  Both checkouts need enough
+  free space for the Docker image, native and cross-compiled build products,
+  and caches.
 
 You do /not/ need to install Rust, MinGW, CMake, Clang, libclang, eSpeak NG,
 Roslyn, Visual Studio, or the .NET reference assemblies in WSL.  The target
 pins or builds those inside its controlled toolchain.  Eloquence and DECtalk
-runtimes are optional and are not needed for the normal Windows WinRT voice.
+runtimes and the RHVoice runtime and voice data are optional and are not needed
+for the normal Windows WinRT voice.
 
 The quickest prerequisite check is:
 
@@ -550,11 +555,14 @@ make windows-omnivox
 
 This is the reproducible release path.  It builds and verifies a pinned
 Windows-GNU executable and stages a content-addressed runtime beneath
-~servers/omnivox-bin~.  The payload includes the matching, checksum-pinned
-Piper companion but no voice model.  It also copies the runnable payload to a
-Windows-local directory so native voice and eSpeak data discovery do not pay
-the WSL filesystem cost.  Optional Eloquence and DECtalk runtimes are not
-downloaded by this target or required for normal WinRT speech.
+~servers/omnivox-bin~.  Once the Piper lock identifies an Omnivox revision that
+contains these integrations, the payload includes the matching,
+checksum-pinned Piper companion, the RHVoice helper without an RHVoice runtime,
+and the Flite helper with its compiled CMU US SLT voice.  It contains no Piper
+model.  It also copies the runnable payload to a Windows-local directory so
+native voice and eSpeak data discovery do not pay the WSL filesystem cost.
+Optional Eloquence, DECtalk, and RHVoice runtimes are not downloaded by this
+target or required for normal WinRT speech.
 
 To register Piper, review a model and its model card, keep its adjacent
 ~.onnx.json~ or ~.json~ configuration with it, and supply an absolute path
@@ -582,7 +590,22 @@ loaded its model and helper.
 
 Maintainers testing tracked changes should use the development route in
 @@texinfo:@ref{Integration Maintenance}@@ rather than weakening the clean-release
-guard.
+guard:
+
+#+begin_example
+make windows-omnivox-dev
+./servers/omnivox --engine flite --list-voices
+#+end_example
+
+This route builds current Omnivox source, stages the RHVoice helper and Flite
+with its SLT voice, and deliberately omits the older pinned Piper companion.
+RHVoice appears only after installing a compatible Windows ~RHVoice.dll~ plus
+language and voice data and setting ~OMNIVOX_RHVOICE_LIBRARY~,
+~OMNIVOX_RHVOICE_DATA~, and ~OMNIVOX_RHVOICE_CONFIG~ before starting Emacsvox.
+The corresponding installation and validation instructions are in Omnivox's
+checkout under ~docs/RHVOICE.md~.  Restart both speech processes or Emacs after
+restaging or changing those variables, then use ~C-e d e~ to inspect the
+engines reported by the new process.
 
 ** Selecting And Checking Omnivox
 :PROPERTIES:
