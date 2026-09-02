@@ -504,7 +504,7 @@ compile_log=$cache_home/emacsvox/logs/emacsvox-bytecode.log
 mkdir -p -- "$(dirname -- "$compile_log")"
 : >"$compile_log"
 chmod 600 "$compile_log"
-if ! make -C "$emacsvox_root" EMACS="$emacs_candidate" bytecode \
+if ! make -C "$emacsvox_root" EMACS="$emacs_candidate" bytecode-rebuild \
      >"$compile_log" 2>&1; then
     tail -n 30 "$compile_log" >&2
     fail "Emacsvox compilation failed; complete output is in $compile_log"

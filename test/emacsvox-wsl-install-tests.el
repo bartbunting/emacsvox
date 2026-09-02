@@ -314,7 +314,9 @@
                                    (expand-file-name ".profile" home)))
                       (with-temp-buffer
                         (insert-file-contents make-log)
-                        (should (string-search "bytecode" (buffer-string)))))))
+                        (should
+                         (string-search
+                          "bytecode-rebuild" (buffer-string)))))))
               (delete-directory root t))))
       (delete-directory fixture t))))
 
