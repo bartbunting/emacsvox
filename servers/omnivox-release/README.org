@@ -19,7 +19,7 @@ the official Roslyn Framework compiler and .NET 4.0 reference-assembly NuGet
 packages by version and SHA-256.  They are downloaded into the ignored
 =cache/= directory and run through the .NET Framework already present on
 Windows; they are neither installed system-wide nor staged with Omnivox.
-The same lock pins the official Omnivox 1.5.1 Windows Piper companion by
+The same lock pins the official Omnivox 1.6.4 Windows Piper companion by
 release URL, archive SHA-256, and source commit.  The preparation target
 rejects an Omnivox checkout at another commit before combining the helper with
 the Piper-enabled Windows-GNU executable.  Flite's source archive, source tree,
@@ -98,13 +98,13 @@ the same pinned build and staging path without requiring either worktree to be
 clean, labels the result =local-dirty-worktree=, and records SHA-256 hashes of
 both repositories' tracked diffs in the runtime provenance and build identity.
 It builds RHVoice, Flite with its SLT voice, and RuTTS with its built-in male
-and female Russian voices, but deliberately omits Piper so a current Omnivox
-checkout is never combined with the 1.5.1 Piper companion.  RuTTS needs no
-external installation, and RuLex is not included.  The target rejects
-=OMNIVOX_PIPER_MODEL=.  Advance the Piper lock to a companion built from the
-same Omnivox commit before using the clean release path for these integrations.
-The development target does not weaken the clean-worktree requirement of
-=make windows-omnivox=.
+and female Russian voices, but deliberately omits Piper so a development
+Omnivox checkout is never combined with the release-pinned 1.6.4 companion.
+RuTTS needs no external installation, and RuLex is not included.  The target
+rejects =OMNIVOX_PIPER_MODEL=.  The clean release path instead requires the
+exact Omnivox 1.6.4 source commit recorded beside its Piper companion.  Advance
+both pins together for a later Omnivox release.  The development target does
+not weaken the clean-worktree requirement of =make windows-omnivox=.
 
 To preserve an external RHVoice installation across fresh Emacsvox processes,
 pass =OMNIVOX_RHVOICE_LIBRARY= and =OMNIVOX_RHVOICE_DATA= to

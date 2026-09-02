@@ -41,11 +41,11 @@
      "EMACSVOX_WSL_EMACS_ARCHIVE=emacs-31.1.tar.xz\n"
      "EMACSVOX_WSL_EMACS_URL=https://example.invalid/emacs-31.1.tar.xz\n"
      "EMACSVOX_WSL_EMACS_SHA256=" (make-string 64 ?a) "\n"
-     "EMACSVOX_WSL_OMNIVOX_VERSION=1.5.1\n"
-     "EMACSVOX_WSL_OMNIVOX_RELEASE_URL=https://example.invalid/v1.5.1\n"
-     "EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_ARCHIVE=omnivox-1.5.1-windows-x64.zip\n"
+     "EMACSVOX_WSL_OMNIVOX_VERSION=1.6.4\n"
+     "EMACSVOX_WSL_OMNIVOX_RELEASE_URL=https://example.invalid/v1.6.4\n"
+     "EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_ARCHIVE=omnivox-1.6.4-windows-x64.zip\n"
      "EMACSVOX_WSL_OMNIVOX_WINDOWS_X64_SHA256=" omnivox-sha256 "\n"
-     "EMACSVOX_WSL_OMNIVOX_WINDOWS_ARM64_ARCHIVE=omnivox-1.5.1-windows-arm64.zip\n"
+     "EMACSVOX_WSL_OMNIVOX_WINDOWS_ARM64_ARCHIVE=omnivox-1.6.4-windows-arm64.zip\n"
      "EMACSVOX_WSL_OMNIVOX_WINDOWS_ARM64_SHA256=" omnivox-sha256 "\n")))
 
 (defun emacsvox-wsl-install-tests--make-checkout (&optional omnivox-sha256)
@@ -195,7 +195,7 @@
          (installer (expand-file-name "bin/emacsvox-wsl-install" root))
          (installed-program
           (expand-file-name
-           "Emacsvox/Omnivox/releases/1.5.1-windows-x64/omnivox.exe"
+           "Emacsvox/Omnivox/releases/1.6.4-windows-x64/omnivox.exe"
            windows-root))
          (config-file
           (expand-file-name "config/emacsvox/omnivox-program" home)))
@@ -205,7 +205,7 @@
           (with-temp-file proc-version (insert "Microsoft WSL2\n"))
           (emacsvox-wsl-install-tests--write-executable
            installed-program
-           "#!/bin/sh\nprintf 'omnivox 1.5.1\\n'\n")
+           "#!/bin/sh\nprintf 'omnivox 1.6.4\\n'\n")
           (make-directory (file-name-directory config-file) t)
           (with-temp-file config-file
             (insert installed-program "\n"))
@@ -220,7 +220,7 @@
             (should (zerop status))
             (should
              (string-search
-              "Omnivox 1.5.1 is already installed and selected" output))
+              "Omnivox 1.6.4 is already installed and selected" output))
             (should-not (string-search "to install" output))))
       (delete-directory root t))))
 
@@ -239,7 +239,7 @@
            (concat
             "#!/bin/sh\n"
             "case ${1-} in\n"
-            "  --version) printf 'omnivox 1.5.1\\n' ;;\n"
+            "  --version) printf 'omnivox 1.6.4\\n' ;;\n"
             "  *) printf 'omnivox:%s\\n' \"$*\" ;;\n"
             "esac\n"))
           (with-temp-file (expand-file-name "espeak-ng-data/data" payload)
@@ -259,7 +259,7 @@
                   (expand-file-name
                    (concat
                     "Emacsvox/Omnivox/releases/"
-                    "1.5.1-windows-x64/omnivox.exe")
+                    "1.6.4-windows-x64/omnivox.exe")
                    windows-root)))
             (unwind-protect
                 (progn

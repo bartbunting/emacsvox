@@ -2,18 +2,15 @@
 Programming is the art of telling another human being what one wants
 the computer to do.   [[https://www.azquotes.com/quote/964459][(DEK)]]
 
-Emacsvox News -- Unreleased User-Visible Changes
+Emacsvox News -- History Of User-Visible Changes
 
 Maintained by Emacsvox Contributors.
 
-* Emacsvox Unreleased --- Current User-Visible Changes
+* Emacsvox 2026.9.1 --- Current User-Visible Changes
 
-This file records user-visible changes made after Emacsvox 2026.9.0.  Add new
-entries here during development without choosing the next release series in
-advance.  Before a release, replace =Unreleased= with the exact value from
-=VERSION= and complete the release notes.
-
-Released notes are preserved in [[file:NEWS-2026.9.0][NEWS for Emacsvox 2026.9.0]].
+This corrective release requires Emacs 31 or later and Omnivox 1.6.4 or newer.
+The guided WSL2 installer pins the matching verified Omnivox 1.6.4 Windows x64
+or ARM64 archive.
 
 - The spoken ``Emacsvox is ready.'' checkpoint now waits for acknowledged
   initial engine inventory, routing policy, and logical voices, so normal first
@@ -31,8 +28,9 @@ Released notes are preserved in [[file:NEWS-2026.9.0][NEWS for Emacsvox 2026.9.0
   playback-stage breakdown without a speech protocol change.  Use =C-e d D=
   to toggle the sensitive, full-text diagnostic log for the current session.
 
-- The source-built Windows Omnivox runtime now includes the checksum-locked
-  RuTTS 6.3.3 companion and its built-in male and female Russian voices.  RuLex
-  remains excluded.  Staging now finishes with live Flite and RuTTS voice
-  discovery and WAV-synthesis checks against the Windows-local payload, and
-  the WSL launcher forwards an explicit =OMNIVOX_RUTTS_HELPER= override.
+- The source-built Windows Omnivox runtime now uses the Omnivox 1.6.4 source
+  and matching checksum-locked Piper companion.  It includes RuTTS 6.3.3 and
+  its built-in male and female Russian voices; RuLex remains excluded.  Staging
+  now finishes with live Flite and RuTTS voice discovery and WAV-synthesis
+  checks against the Windows-local payload, and the WSL launcher forwards an
+  explicit =OMNIVOX_RUTTS_HELPER= override.
