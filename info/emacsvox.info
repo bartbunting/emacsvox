@@ -2175,9 +2175,20 @@ remain staged.
 
    The tuner names neutral effect values instead of speaking an
 ambiguous number: gain five is _unchanged_, low-pass nine is _disabled_,
-high-pass zero is _disabled_, pan five is _centre_, and reverb or echo
-zero is _disabled_.  These portable levels are translated to the exact
-neutral values required by the active adapter.
+high-pass zero is _disabled_, pan five is _centre_, and reverb, echo, or
+chorus zero is _disabled_.  Chorus adds a bounded doubled-voice
+modulation without changing speech duration or marker positions.  It is
+applied by Omnivox to buffered audio; the tuner reports when the
+selected route cannot apply it.  These portable levels are translated to
+the exact values required by the active adapter.
+
+   The built-in ‘acss-default’ palette also includes a ‘telephone’
+logical voice.  It combines high-pass and low-pass filtering to give any
+buffered Omnivox engine a narrow-band telephone sound while preserving
+its selected physical voice, duration, and markers.  Preview it in
+_Voice Palettes_ or _Voice Workbench_ before assigning it to content.
+Adapters without post-synthesis filtering preserve the portable style
+but do not apply the filters.
 
    Omnivox average-pitch differences use the customizable
 ‘omnivox-average-pitch-contrast’.  Its default value, ‘0.5’, keeps
@@ -4774,42 +4785,42 @@ Node: Explaining Presentation87262
 Node: Adjusting Presentation89247
 Node: Presentation Profiles92216
 Node: Voices And Routing93907
-Node: Sounds And Space97043
-Node: Presentation Troubleshooting98667
-Node: Voice Lock100705
-Node: Using Online Help103912
-Node: Emacs Packages107974
-Node: Document Authoring109348
-Node: Structured Editing109902
-Node: Browsing Structure110885
-Node: Web Browsing111483
-Node: Messaging112318
-Node: Editing Code112816
-Node: Development Environment113335
-Node: Desktop Management113892
-Node: Personal Information Management114394
-Node: Desktop Applications114926
-Node: Notmuch Mail116475
-Ref: Notmuch fields and privacy125835
-Node: Agent Shell131543
-Node: EAT Terminal Access141537
-Node: Running Terminal Based Applications158796
-Node: Starting Term159751
-Node: Term Input Modes160590
-Node: Term Speech Feedback161750
-Node: Reviewing The Term Screen162944
-Node: Term Help And Recovery164845
-Node: Emacsvox Keyboard Commands165744
-Node: Copyright167148
-Node: Acknowledgments167735
-Node: Developer Guide168761
-Node: Documentation Maintenance169925
-Node: Speech Server Protocols174723
-Ref: Testing A Direct Legacy Server180630
-Ref: Commands That Queue Output181189
-Ref: Commands That Set State184223
-Node: Integration Maintenance186817
-Node: Concept Index203722
+Node: Sounds And Space97707
+Node: Presentation Troubleshooting99331
+Node: Voice Lock101369
+Node: Using Online Help104576
+Node: Emacs Packages108638
+Node: Document Authoring110012
+Node: Structured Editing110566
+Node: Browsing Structure111549
+Node: Web Browsing112147
+Node: Messaging112982
+Node: Editing Code113480
+Node: Development Environment113999
+Node: Desktop Management114556
+Node: Personal Information Management115058
+Node: Desktop Applications115590
+Node: Notmuch Mail117139
+Ref: Notmuch fields and privacy126499
+Node: Agent Shell132207
+Node: EAT Terminal Access142201
+Node: Running Terminal Based Applications159460
+Node: Starting Term160415
+Node: Term Input Modes161254
+Node: Term Speech Feedback162414
+Node: Reviewing The Term Screen163608
+Node: Term Help And Recovery165509
+Node: Emacsvox Keyboard Commands166408
+Node: Copyright167812
+Node: Acknowledgments168399
+Node: Developer Guide169425
+Node: Documentation Maintenance170589
+Node: Speech Server Protocols175387
+Ref: Testing A Direct Legacy Server181294
+Ref: Commands That Queue Output181853
+Ref: Commands That Set State184887
+Node: Integration Maintenance187481
+Node: Concept Index204386
 
 End Tag Table
 

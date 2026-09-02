@@ -27,6 +27,11 @@ The voice tuner now names neutral post-synthesis values such as /unchanged/ and
 Omnivox wire values instead of treating every dimension as the same linear
 zero-to-nine scale.
 
+Portable voice styles can now request Omnivox chorus.  The default voice
+palette also includes a ~telephone~ logical voice that combines the existing
+high-pass and low-pass filters for a narrow-band sound without changing speech
+duration or markers.
+
 Omnivox average-pitch differences are gentler by default.  Customize
 =omnivox-average-pitch-contrast= to =1.0= for the historical curve, =0= for
 neutral average pitch, or a value through =2.0= for stronger contrast.

@@ -2219,9 +2219,19 @@ you press @kbd{w} or @kbd{C-c C-c} to save and apply them.  Pressing
 
 The tuner names neutral effect values instead of speaking an ambiguous number:
 gain five is @emph{unchanged}@comma{} low-pass nine is @emph{disabled}@comma{} high-pass zero is
-@emph{disabled}@comma{} pan five is @emph{centre}@comma{} and reverb or echo zero is @emph{disabled}.  These
-portable levels are translated to the exact neutral values required by the
-active adapter.
+@emph{disabled}@comma{} pan five is @emph{centre}@comma{} and reverb@comma{} echo@comma{} or chorus zero is
+@emph{disabled}.  Chorus adds a bounded doubled-voice modulation without changing
+speech duration or marker positions.  It is applied by Omnivox to buffered
+audio; the tuner reports when the selected route cannot apply it.  These
+portable levels are translated to the exact values required by the active
+adapter.
+
+The built-in @code{acss-default} palette also includes a @code{telephone} logical voice.
+It combines high-pass and low-pass filtering to give any buffered Omnivox
+engine a narrow-band telephone sound while preserving its selected physical
+voice@comma{} duration@comma{} and markers.  Preview it in @emph{Voice Palettes} or @emph{Voice
+Workbench} before assigning it to content.  Adapters without post-synthesis
+filtering preserve the portable style but do not apply the filters.
 
 Omnivox average-pitch differences use the customizable
 @samp{omnivox-average-pitch-contrast}.  Its default value@comma{} @samp{0.5}@comma{} keeps palette
