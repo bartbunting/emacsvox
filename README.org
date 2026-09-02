@@ -108,6 +108,9 @@ The [[https://bartbunting.github.io/emacsvox/heritage/Background.html][Emacspeak
 and [[https://bartbunting.github.io/emacsvox/heritage/Emacspeak-At-Twenty.html][Emacspeak at Twenty]]
 pages are preserved heritage, not current setup instructions.
 
+Maintainer work that is not yet scheduled for a release is tracked in
+[[file:BACKLOG.org][BACKLOG.org]].
+
 * Advanced Technical And Migration Notes
 
 The remaining technical sections document migration contracts and advanced
