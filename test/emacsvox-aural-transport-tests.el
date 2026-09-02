@@ -529,7 +529,7 @@ write.  State synchronization lines in a combined write are ignored."
     (should-not (plist-member (plist-get span :acss) :rate))
     (should (= (plist-get span :rate_offset) -4))
     (should
-     (= (plist-get (plist-get span :acss) :average_pitch) (/ 3.0 9.0)))
+     (= (plist-get (plist-get span :acss) :average_pitch) (/ 4.0 9.0)))
     (should (equal (plist-get (plist-get span :effects) :mode) "replace"))
     (should
      (=
@@ -556,6 +556,29 @@ write.  State synchronization lines in a combined write are ignored."
         actions))
       2))
     (should (= (length (cadr built)) 4))))
+
+(ert-deftest emacsvox-aural-normalizes-effect-neutral-points-exactly ()
+  "Portable effect levels preserve every documented neutral point on wire."
+  (should
+   (equal
+    (emacsvox-aural--timeline-style-effects
+     '(:gain 5 :low-pass 9 :high-pass 0 :pan 5 :reverb 0 :echo 0))
+    '(:gain 0.5 :low_pass 1.0 :high_pass 0.0
+      :pan 0.5 :reverb 0.0 :echo 0.0))))
+
+(ert-deftest emacsvox-aural-timeline-applies-omnivox-pitch-contrast ()
+  "Structured Omnivox timelines use the configured average-pitch scaling."
+  (cl-letf
+      (((symbol-function 'tts--omnivox-program-p) (lambda (&optional _) t))
+       ((symbol-function 'omnivox-scale-average-pitch)
+        (lambda (value)
+          (let ((neutral (/ 5.0 9.0)))
+            (+ neutral (* 0.5 (- value neutral)))))))
+    (let ((acss (emacsvox-aural--timeline-style-acss
+                 '(:average-pitch 6 :stress 4))))
+      (should
+       (< (abs (- (plist-get acss :average_pitch) (/ 5.5 9.0))) 1e-9))
+      (should (= (plist-get acss :stress) (/ 4.0 9.0))))))
 
 (ert-deftest emacsvox-aural-structured-timeline-coalesces-css-face-runs ()
   "Equivalent CSS face boundaries do not split words into synthesis calls."

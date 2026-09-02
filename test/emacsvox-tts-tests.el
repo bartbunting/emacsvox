@@ -329,6 +329,7 @@
          (tts-notify-process nil)
          (omnivox--control-request-sequence 300)
          (omnivox--logical-registry-generation 17)
+         (omnivox-average-pitch-contrast 1.0)
          writes
          result)
     (unwind-protect
@@ -876,6 +877,53 @@
     (should-error
      (omnivox--logical-voice-directive "invalid voice") :type 'error)))
 
+(ert-deftest emacsvox-tts-omnivox-scales-average-pitch-contrast ()
+  "Average-pitch contrast is consistent across structured and inline speech."
+  (let ((omnivox-average-pitch-contrast 0.5)
+        (omnivox-voice-table (make-hash-table))
+        (omnivox--logical-acss-table (make-hash-table :test #'equal))
+        (omnivox--generated-average-pitch-table (make-hash-table :test #'eq)))
+    (should
+     (< (abs (- (omnivox-scale-average-pitch (/ 5.0 9.0))
+                (/ 5.0 9.0)))
+        1e-9))
+    (should
+     (< (abs (- (omnivox-scale-average-pitch (/ 6.0 9.0))
+                (/ 5.5 9.0)))
+        1e-9))
+    (should
+     (< (abs (- (omnivox-scale-average-pitch 1.0) (/ 7.0 9.0)))
+        1e-9))
+    (should
+     (< (abs (- (plist-get
+                 (omnivox--scale-acss-json '(:average_pitch 0.4 :stress 0.7))
+                 :average_pitch)
+                (+ (/ 5.0 9.0) (* 0.5 (- 0.4 (/ 5.0 9.0))))))
+        1e-9))
+    (cl-letf (((symbol-function 'omnivox--schedule-logical-registration)
+               #'ignore))
+      (omnivox-define-voice-from-acss
+       'emacsvox-test-pitch (make-acss :average-pitch 6)))
+    (should
+     (equal
+      (omnivox-get-voice-command 'emacsvox-test-pitch)
+      "[[logical_voice emacsvox-test-pitch]] [[pitch 1.1]]"))
+    (let ((omnivox-average-pitch-contrast 1.0))
+      (should
+       (equal
+        (omnivox-get-voice-command 'emacsvox-test-pitch)
+        "[[logical_voice emacsvox-test-pitch]] [[pitch 1.2]]")))))
+
+(ert-deftest emacsvox-tts-omnivox-zero-pitch-contrast-is-neutral ()
+  "Zero contrast suppresses average-pitch variation without losing identity."
+  (let ((omnivox-average-pitch-contrast 0.0))
+    (should
+     (= (omnivox-scale-average-pitch 0.0) (/ 5.0 9.0)))
+    (should
+     (= (omnivox-scale-average-pitch 1.0) (/ 5.0 9.0)))
+    (should (equal (omnivox--average-pitch-command 0) "[[pitch 1.0]]"))
+    (should (equal (omnivox--average-pitch-command 9) "[[pitch 1.0]]"))))
+
 (ert-deftest emacsvox-tts-omnivox-registers-stable-logical-voice-aliases ()
   "Portable and personality names retain identity and share ACSS style."
   (let ((semantic-name 'emacsvox-test-semantic-voice)
@@ -884,6 +932,7 @@
             (engine-default "espeak"))))
         (omnivox-logical-voice-languages
          '((emacsvox-test-semantic-voice . "en-US")))
+        (omnivox-average-pitch-contrast 1.0)
         (omnivox--logical-acss-table (make-hash-table :test #'equal))
         (voice-setup-defined-voices '(emacsvox-test-semantic-voice)))
     (set semantic-name 'acss-a4-s6)

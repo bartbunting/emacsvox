@@ -78,6 +78,20 @@
   '(gain low-pass high-pass pan reverb echo)
   "Portable post-synthesis dimensions carried with aural voice styles.")
 
+(defun emacsvox-aural-normalize-post-synthesis-value (dimension value)
+  "Normalize portable DIMENSION VALUE for the post-synthesis wire.
+
+Portable values use integer levels zero through nine.  Gain and pan use level
+five as their exact neutral point, while retaining zero and nine as the wire
+endpoints.  The other dimensions use the ordinary linear mapping."
+  (when (numberp value)
+    (let ((level (float (max 0 (min 9 value)))))
+      (if (memq dimension '(gain pan))
+          (if (<= level 5.0)
+              (/ level 10.0)
+            (+ 0.5 (/ (- level 5.0) 8.0)))
+        (/ level 9.0)))))
+
 (defconst emacsvox-aural-rich-voice-dimensions
   (append emacsvox-aural-voice-dimensions
           emacsvox-aural-voice-rate-dimensions

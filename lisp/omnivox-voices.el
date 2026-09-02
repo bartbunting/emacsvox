@@ -78,10 +78,33 @@
   :group 'tts
   :prefix "omnivox-")
 
+(defun omnivox--custom-set-average-pitch-contrast (symbol value)
+  "Set SYMBOL to average-pitch contrast VALUE and refresh live registration."
+  (unless (and (numberp value) (<= 0 value 2))
+    (error "Omnivox average-pitch contrast must be from 0 through 2"))
+  (set-default symbol (float value))
+  (when
+      (and
+       (featurep 'omnivox-voices)
+       (fboundp 'omnivox--schedule-logical-registration))
+    (omnivox--schedule-logical-registration)))
+
 (defcustom omnivox-default-speech-rate 60
   "Default Omnivox speech rate on its zero-to-100 scale."
   :group 'omnivox
   :type 'integer)
+
+(defcustom omnivox-average-pitch-contrast 0.5
+  "Scale Omnivox ACSS average-pitch distance from neutral.
+
+Zero makes every average-pitch level neutral, 0.5 provides the gentler default,
+and 1.0 restores the historical Emacsvox/Omnivox pitch curve.  Values above
+one increase contrast and are clamped at the supported pitch endpoints.
+Changing this option schedules live logical-voice registration; subsequent
+structured speech, previews, and legacy inline voices use the new value."
+  :group 'omnivox
+  :type 'number
+  :set #'omnivox--custom-set-average-pitch-contrast)
 
 (defcustom omnivox-default-voice-id ""
   "Default physical voice identifier for the current Omnivox engine.
@@ -286,6 +309,9 @@ cannot overtake server initialization or fail capability checks prematurely."
 
 (defvar omnivox--logical-acss-table (make-hash-table :test #'equal)
   "Normalized ACSS styles indexed by logical voice ID.")
+
+(defvar omnivox--generated-average-pitch-table (make-hash-table :test #'eq)
+  "Portable average-pitch levels indexed by generated Omnivox voice name.")
 
 (defvar omnivox--logical-registry-generation 0
   "Generation of the current Emacsvox-owned logical voice registry.")
@@ -721,9 +747,10 @@ SEEN prevents malformed personality-variable cycles."
            (:richness . :richness)
            (:volume . :volume)))
       (when (plist-member acss (car mapping))
-        (setq result
-              (plist-put result (cdr mapping)
-                         (plist-get acss (car mapping))))))
+        (let ((value (plist-get acss (car mapping))))
+          (when (and (eq (car mapping) :average-pitch) (numberp value))
+            (setq value (omnivox-scale-average-pitch value)))
+          (setq result (plist-put result (cdr mapping) value)))))
     (or result (make-hash-table :test #'equal))))
 
 (defun omnivox--preview-effects-json (effects)
@@ -916,7 +943,7 @@ inside this logical definition."
      :id id
      :language (or language :null)
      :preferences (vconcat (mapcar #'omnivox--selector-json selectors))
-     :acss (omnivox--logical-acss id))))
+     :acss (omnivox--scale-acss-json (omnivox--logical-acss id)))))
 
 (defun omnivox--fallback-policy-json (&optional runtime-routing-policy)
   "Return the configured logical voice fallback policy as JSON data."
@@ -1987,10 +2014,53 @@ Return the number of distinct processes that received the command."
    "[[pitch 1.4]]"
    "[[pitch 1.7]]"
    "[[pitch 2.0]]"]
-  "Map normalized ACSS average pitch to Omnivox pitch multipliers.")
+  "Map unscaled ACSS average pitch to Omnivox pitch multipliers.")
+
+(defconst omnivox--average-pitch-multipliers
+  [0.5 0.6 0.7 0.8 0.9 1.0 1.2 1.4 1.7 2.0]
+  "Numeric form of the established Omnivox average-pitch curve.")
+
+(defun omnivox-scale-average-pitch (value)
+  "Scale normalized average-pitch VALUE around ACSS neutral level five."
+  (when (numberp value)
+    (let* ((neutral (/ 5.0 9.0))
+           (contrast (max 0.0 (min 2.0 omnivox-average-pitch-contrast))))
+      (max 0.0
+           (min 1.0 (+ neutral (* contrast (- value neutral))))))))
+
+(defun omnivox--average-pitch-multiplier (level)
+  "Return the configured Omnivox pitch multiplier for ACSS LEVEL."
+  (let* ((normalized
+          (omnivox-scale-average-pitch
+           (/ (float (max 0 (min 9 level))) 9.0)))
+         (position (* normalized 9.0))
+         (lower (floor position))
+         (upper (min 9 (1+ lower)))
+         (fraction (- position lower))
+         (lower-value (aref omnivox--average-pitch-multipliers lower))
+         (upper-value (aref omnivox--average-pitch-multipliers upper)))
+    (+ lower-value (* fraction (- upper-value lower-value)))))
+
+(defun omnivox--average-pitch-command (level)
+  "Return an inline Omnivox pitch command for portable ACSS LEVEL."
+  (let ((text (format "%.3g" (omnivox--average-pitch-multiplier level))))
+    (format "[[pitch %s]]"
+            (if (string-match-p "\\." text) text (concat text ".0")))))
+
+(defun omnivox--scale-acss-json (acss)
+  "Return isolated normalized ACSS with configured average-pitch contrast."
+  (let ((result (copy-tree acss)))
+    (when (numberp (plist-get result :average_pitch))
+      (setq result
+            (plist-put
+             result :average_pitch
+             (omnivox-scale-average-pitch
+              (plist-get result :average_pitch)))))
+    result))
 
 (defun omnivox-define-voice (name command &optional normalized-acss)
   "Define Omnivox voice NAME using inline COMMAND and NORMALIZED-ACSS."
+  (remhash name omnivox--generated-average-pitch-table)
   (puthash
    name (concat (omnivox--logical-voice-directive name) " " command)
    omnivox-voice-table)
@@ -2005,8 +2075,12 @@ Return the number of distinct processes that received the command."
    ((listp name)
     (mapconcat #'omnivox-get-voice-command name " "))
    (t
-    (or (gethash name omnivox-voice-table)
-        omnivox-default-voice-string))))
+    (if-let* ((pitch (gethash name omnivox--generated-average-pitch-table)))
+        (concat
+         (omnivox--logical-voice-directive name) " "
+         (omnivox--average-pitch-command pitch))
+      (or (gethash name omnivox-voice-table)
+          omnivox-default-voice-string)))))
 
 (defun omnivox-voice-defined-p (name)
   "Return non-nil when Omnivox voice NAME is defined."
@@ -2041,9 +2115,11 @@ Return the number of distinct processes that received the command."
     (omnivox-define-voice
      name
      (if pitch
-         (aref omnivox-average-pitch-table pitch)
+         (omnivox--average-pitch-command pitch)
        omnivox-default-voice-string)
-     (omnivox--normalized-acss-json style))))
+     (omnivox--normalized-acss-json style))
+    (when (numberp pitch)
+      (puthash name pitch omnivox--generated-average-pitch-table))))
 
 ;;;###autoload
 (defun omnivox-configure-tts ()

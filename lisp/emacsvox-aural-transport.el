@@ -44,6 +44,8 @@
                   "emacsvox-sounds" (resource sample-id &optional balance))
 (declare-function emacsvox-queue-resource
                   "emacsvox-sounds" (resource))
+(declare-function omnivox-scale-average-pitch
+                  "omnivox-voices" (value))
 (declare-function tts--protocol-dispatch "tts-speak" ())
 (declare-function tts--interrupt-process "tts-speak"
                   (process &optional notifications))
@@ -52,6 +54,7 @@
 (declare-function tts--protocol-silence "tts-speak" (duration &optional force))
 (declare-function tts--protocol-tone "tts-speak"
                   (pitch duration &optional force))
+(declare-function tts--omnivox-program-p "tts-speak" (&optional program))
 (declare-function tts--prepare-structured-dispatch
                   "tts-speak"
                   (marker-callback completion-callback semantic-actions))
@@ -733,14 +736,20 @@ Signal a clear installation error when negotiation found an older version."
   (let (result)
     (dolist
         (mapping
-         '((:average-pitch . :average_pitch)
-           (:pitch-range . :pitch_range)
-           (:stress . :stress)
-           (:richness . :richness)))
+         '((average-pitch :average-pitch :average_pitch)
+           (pitch-range :pitch-range :pitch_range)
+           (stress :stress :stress)
+           (richness :richness :richness)))
       (when-let* ((value
                    (emacsvox-aural--timeline-normalize-value
-                    (plist-get style (car mapping)))))
-        (setq result (plist-put result (cdr mapping) value))))
+                    (plist-get style (cadr mapping)))))
+        (when
+            (and
+             (eq (car mapping) 'average-pitch)
+             (fboundp 'omnivox-scale-average-pitch)
+             (tts--omnivox-program-p))
+          (setq value (omnivox-scale-average-pitch value)))
+        (setq result (plist-put result (caddr mapping) value))))
     (or result (make-hash-table :test #'equal))))
 
 (defun emacsvox-aural--timeline-rate-offset (style)
@@ -759,16 +768,17 @@ Signal a clear installation error when negotiation found an older version."
   (let (result)
     (dolist
         (mapping
-         '((:gain . :gain)
-           (:low-pass . :low_pass)
-           (:high-pass . :high_pass)
-           (:pan . :pan)
-           (:reverb . :reverb)
-           (:echo . :echo)))
+         '((gain :gain :gain)
+           (low-pass :low-pass :low_pass)
+           (high-pass :high-pass :high_pass)
+           (pan :pan :pan)
+           (reverb :reverb :reverb)
+           (echo :echo :echo)))
       (when-let* ((value
-                   (emacsvox-aural--timeline-normalize-value
-                    (plist-get style (car mapping)))))
-        (setq result (plist-put result (cdr mapping) value))))
+                   (emacsvox-aural-normalize-post-synthesis-value
+                    (car mapping)
+                    (plist-get style (cadr mapping)))))
+        (setq result (plist-put result (caddr mapping) value))))
     (when (numberp balance)
       (setq
        result

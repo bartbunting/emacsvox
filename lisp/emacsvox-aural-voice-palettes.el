@@ -76,12 +76,12 @@
     (stress . "Word emphasis from zero through nine")
     (richness . "Spectral richness from zero through nine")
     (rate-offset . "Relative rate from twenty points slower through twenty points faster; zero is unchanged")
-    (gain . "Post-synthesis gain; five is neutral")
-    (low-pass . "Low-pass cutoff; higher values retain more high frequencies")
-    (high-pass . "High-pass cutoff; higher values remove more low frequencies")
+    (gain . "Post-synthesis gain; five is unchanged")
+    (low-pass . "Low-pass cutoff; nine disables filtering")
+    (high-pass . "High-pass cutoff; zero disables filtering")
     (pan . "Stereo position; zero is left, five centre, and nine right")
-    (reverb . "Post-synthesis reverberation from zero through nine")
-    (echo . "Post-synthesis echo from zero through nine"))
+    (reverb . "Post-synthesis reverberation; zero is disabled")
+    (echo . "Post-synthesis echo; zero is disabled"))
   "Spoken descriptions of tunable voice dimensions.")
 
 (defvar-local emacsvox-aural-voice-tuner-palette nil
@@ -1235,6 +1235,19 @@ in that overlay so subsequent edits do not create more palettes."
    (t
     (format "%d point%s faster" value (if (= value 1) "" "s")))))
 
+(defun emacsvox-aural-voice-tuner--value-description (dimension value)
+  "Return the concise tuner description of DIMENSION VALUE."
+  (cond
+   ((null value) "adapter default")
+   ((eq dimension 'rate-offset)
+    (emacsvox-aural-voice-tuner--rate-offset-description value))
+   ((and (eq dimension 'gain) (= value 5)) "unchanged")
+   ((and (eq dimension 'low-pass) (= value 9)) "disabled")
+   ((and (memq dimension '(high-pass reverb echo)) (zerop value))
+    "disabled")
+   ((and (eq dimension 'pan) (= value 5)) "centre")
+   (t (emacsvox-aural-voice-tuner--display-value value))))
+
 (defun emacsvox-aural-voice-tuner--dimension-label (dimension)
   "Return the user-facing tuner label for DIMENSION."
   (pcase dimension
@@ -1273,9 +1286,7 @@ in that overlay so subsequent edits do not create more palettes."
   (let ((value (emacsvox-aural-voice-tuner--value dimension)))
     (pcase dimension
       ('family (emacsvox-aural-voice-tuner--family-description value))
-      ('rate-offset
-       (emacsvox-aural-voice-tuner--rate-offset-description value))
-      (_ (emacsvox-aural-voice-tuner--display-value value)))))
+      (_ (emacsvox-aural-voice-tuner--value-description dimension value)))))
 
 (defun emacsvox-aural-voice-tuner--support-description (dimension)
   "Describe active adapter support for DIMENSION."
@@ -1329,11 +1340,9 @@ in that overlay so subsequent edits do not create more palettes."
                 "adapter default; requested family unavailable")
                (t
                 (emacsvox-aural-voice-tuner--family-description value t))))
-          (if (eq dimension 'rate-offset)
-              (emacsvox-aural-voice-tuner--rate-offset-description
-               (emacsvox-aural-voice-tuner--value dimension))
-            (emacsvox-aural-voice-tuner--display-value
-             (emacsvox-aural-voice-tuner--value dimension))))
+          (emacsvox-aural-voice-tuner--value-description
+           dimension
+           (emacsvox-aural-voice-tuner--value dimension)))
       "not applied")))
 
 (defun emacsvox-aural-voice-tuner--route-description ()
@@ -1495,7 +1504,9 @@ in that overlay so subsequent edits do not create more palettes."
             (when (numberp value)
               (setq effects
                     (plist-put
-                     effects key (/ (float (max 0 (min 9 value))) 9.0))))))
+                     effects key
+                     (emacsvox-aural-normalize-post-synthesis-value
+                      dimension value))))))
         (setq emacsvox-aural-voice-tuner-preview-result '(:status running))
         (tts-preview-voice
          text emacsvox-aural-voice-tuner-route-selector
@@ -1586,9 +1597,7 @@ ANNOUNCEMENT overrides the normal setting description."
       (user-error "%s is already at %s" dimension maximum))
     (emacsvox-aural-voice-tuner--set-value
      dimension value
-     (if rate-offset-p
-         (emacsvox-aural-voice-tuner--rate-offset-description value)
-       (number-to-string value)))))
+     (emacsvox-aural-voice-tuner--value-description dimension value))))
 
 (defun emacsvox-aural-voice-tuner-decrease ()
   "Decrease the current numeric dimension and audition its new value."
@@ -1604,17 +1613,16 @@ ANNOUNCEMENT overrides the normal setting description."
       (user-error "%s is already at %s" dimension minimum))
     (emacsvox-aural-voice-tuner--set-value
      dimension value
-     (if rate-offset-p
-         (emacsvox-aural-voice-tuner--rate-offset-description value)
-       (number-to-string value)))))
+     (emacsvox-aural-voice-tuner--value-description dimension value))))
 
 (defun emacsvox-aural-voice-tuner-set-digit ()
   "Set the current numeric dimension from the typed digit and audition it."
   (interactive)
-  (emacsvox-aural-voice-tuner--set-value
-   (emacsvox-aural-voice-tuner--numeric-dimension)
-   (- last-command-event ?0)
-   (char-to-string last-command-event)))
+  (let ((dimension (emacsvox-aural-voice-tuner--numeric-dimension))
+        (value (- last-command-event ?0)))
+    (emacsvox-aural-voice-tuner--set-value
+     dimension value
+     (emacsvox-aural-voice-tuner--value-description dimension value))))
 
 (defun emacsvox-aural-voice-tuner-use-default ()
   "Use the adapter default for the current dimension and audition it."
@@ -1864,6 +1872,10 @@ ANNOUNCEMENT overrides the normal setting description."
       "Relative Rate is a signed offset from the current global 0-to-100 rate.\n"
       "For example, global 75 plus minus 1 is 74; plus 4 is 79.  Zero or\n"
       "adapter default means unchanged.  Left and right adjust one point.\n"
+      "Gain five is unchanged; low-pass nine is disabled; high-pass, reverb,\n"
+      "and echo zero are disabled; pan five is centre.\n"
+      "Omnivox pitch contrast defaults to a gentle 0.5; customize\n"
+      "omnivox-average-pitch-contrast to use zero through two.\n"
       "For a routed adapter, Portable Fallback Family is retained for other\n"
       "adapters but does not replace the physical voice chosen in Workbench.\n"
       "Saving a changed personality converts this palette entry to a complete\n"

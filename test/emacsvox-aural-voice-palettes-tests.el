@@ -611,6 +611,31 @@
           (emacsvox-aural-voice-tuner-set-digit)))
       (should (equal (nreverse announcements) '("8" "7" "9"))))))
 
+(ert-deftest emacsvox-aural-voice-tuner-names-neutral-effect-values ()
+  "Effect rows and adjustments describe their actual neutral states."
+  (should
+   (equal
+    (mapcar
+     (lambda (entry)
+       (emacsvox-aural-voice-tuner--value-description
+        (car entry) (cdr entry)))
+     '((gain . 5) (low-pass . 9) (high-pass . 0)
+       (pan . 5) (reverb . 0) (echo . 0)))
+    '("unchanged" "disabled" "disabled"
+      "centre" "disabled" "disabled")))
+  (with-temp-buffer
+    (emacsvox-aural-voice-tuner-mode)
+    (setq emacsvox-aural-voice-tuner-working-style '(:gain 4))
+    (let (announcement)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-voice-tuner--current-dimension)
+            (lambda () 'gain))
+           ((symbol-function 'emacsvox-aural-voice-tuner-refresh) #'ignore)
+           ((symbol-function 'emacsvox-aural-voice-tuner-audition)
+            (lambda (&optional value) (setq announcement value))))
+        (emacsvox-aural-voice-tuner-increase))
+      (should (equal announcement "unchanged")))))
+
 (ert-deftest emacsvox-aural-voice-tuner-adjusts-relative-rate-by-direct-points ()
   "Relative rate crosses zero in single points with concise announcements."
   (with-temp-buffer
@@ -692,7 +717,7 @@
         (should-not (plist-member acss :family)))
       (should (= (plist-get (nth 2 request) :rate-offset) -7))
       (let ((effects (plist-get (nth 2 request) :effects)))
-        (should (= (plist-get effects :gain) (/ 5.0 9.0)))
+        (should (= (plist-get effects :gain) 0.5))
         (should (= (plist-get effects :reverb) (/ 4.0 9.0))))
       (should
        (equal emacsvox-aural-voice-tuner-route-realized
