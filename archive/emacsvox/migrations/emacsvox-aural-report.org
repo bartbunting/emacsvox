@@ -6,8 +6,8 @@
 This is a point-in-time audit of commit =1677de0cf=, retained as an historical
 review record.  Its line numbers, test counts, open findings, and architectural
 recommendations do not describe the current tree.  Use
-[[file:README.org][the current overview]] and the generated
-[[file:etc/aural-presentation-reference.org][Aural Presentation Reference]]
+[[file:../../../README.org][the current overview]] and the generated
+[[file:../../../etc/aural-presentation-reference.org][Aural Presentation Reference]]
 for supported behavior, and re-verify any finding against current code and
 history before acting on it.
 #+end_quote
@@ -824,19 +824,19 @@ Outcome: failed. The checkout was at the required =7482f8e2713b5b8ea87132d9d2fce
 * 9. Open questions
 
 1. Which external packages or user configurations directly call =emacsvox-sounds-cache-get=, =emacsvox-serve-icon=, =emacsvox-queue-icon=, =tts-audio-format=, or mutate Voice Lock variables?
-unknown although they would all be in this repo.
-mm
+   unknown although they would all be in this repo.
+   mm
 2. How common are arbitrary private sound directories versus registered packs?
-not very
+   not very
 
 3. Should “icons disabled” suppress only cue actions, or also spoken/pause fallback actions contributed by a legacy-icon rule?
-likely both
+   likely both
 
 4. Is global Voice Lock intended to control every future buffer, or only modes enabled by the globalized-mode predicate?
-not sure
+   not sure
 
 5. What compatibility and deprecation period is required for long-standing Emacspeak-derived APIs?
-none
+   none
 
 6. What latency budget is acceptable for continuous reading and heavily styled buffers?
-As low as possible.
+   As low as possible.

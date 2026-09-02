@@ -23,8 +23,8 @@ The canonical current documents are:
 - `servers/omnivox-release/README.org` — reproducible Windows bundle contract.
 - `test/README.org` — local and pinned-reference test workflows.
 
-`archive/emacsvox/migrations/` and `emacsvox-aural-report.org` retain
-point-in-time migration or design history. `archive/emacspeak/` preserves
+`archive/emacsvox/migrations/` retains point-in-time migration and design
+history. `archive/emacspeak/` preserves
 inherited release notes, experiments, and machine-specific audio material.
 Do not infer current behavior from an archive when a canonical document or
 current code says otherwise.

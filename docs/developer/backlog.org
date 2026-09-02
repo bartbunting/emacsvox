@@ -12,16 +12,17 @@ Collect representative prose, code, shell, and structured-text examples before
 changing punctuation defaults.  Preserve an easy path to literal punctuation
 when it carries meaning.
 
-** TODO Complete EAT phase 9 live-evaluation feedback
+** TODO Collect live feedback on EAT phase 9
 
-Implement and test the remaining live feedback described in
-[[file:docs/developer/eat-support-plan.org][the EAT support plan]], including concise spoken state changes without
-duplicating terminal output.
+Collect and triage live feedback on the validated Phase 9 support recorded in
+[[file:../../archive/emacsvox/migrations/eat_accessibility_plan.org][the archived EAT implementation plan]].  Scope any resulting implementation
+separately, preserving the documented privacy and conservative-speech
+boundaries.
 
 * Aural contract decisions
 
 Resolve the remaining ownership questions recorded in
-[[file:docs/developer/integration-maintenance.org][integration maintenance]]:
+[[file:integration-maintenance.org][integration maintenance]]:
 
 ** TODO Decide ownership of critical-alert interruption
 
@@ -34,5 +35,5 @@ Resolve the remaining ownership questions recorded in
 ** TODO Expand the licence and provenance audit
 
 Continue the repository-wide audit required by
-[[file:docs/adr/0003-attribution-and-licensing-policy.org][ADR 0003]], preserving named authors, copyright holders, and documented
+[[file:../adr/0003-source-attribution-and-licensing.org][ADR 0003]], preserving named authors, copyright holders, and documented
 third-party exceptions.

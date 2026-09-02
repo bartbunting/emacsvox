@@ -3,6 +3,15 @@
 #+date: 2026-08-23
 #+options: toc:3 num:t
 
+#+begin_quote
+This is the point-in-time audit that preceded the completed
+[[file:eat_accessibility_plan.org][EAT accessibility implementation plan]].  Its source line numbers, package
+paths, test counts, findings, and proposed patches do not describe the current
+tree.  Use the
+[[file:../../../docs/manual/chapters/eat.org][maintained EAT manual chapter]], current code, and current tests for supported
+behavior.
+#+end_quote
+
 * Executive summary
 
 This audit found that EAT itself has a capable terminal model, but the current
@@ -22,7 +31,7 @@ The most important conclusions are:
    reproduced ~wrong-type-argument number-or-marker-p nil~.  In the reset case
    this prevents the existing after-advice from announcing success.  The direct
    cause is ~((= char 32) ...)~ with ~char~ nil at
-   [[file:lisp/emacsvox-eat.el::270][emacsvox-eat.el:270]].
+   [[file:../../../lisp/emacsvox-eat.el::270][emacsvox-eat.el:270]].
 2. *Ordinary output is not reliably conveyed.*  A real Python REPL printed
    ~42~, but Emacsvox spoke only the redrawn ~>>> ~ prompt.  Multiline shell
    output likewise loses all but the cursor context.  ~less~ and Vim content
@@ -100,7 +109,7 @@ device, or safe to disclose.
 | Item | Exact value | Evidence |
 |------+-------------+----------|
 | Host | Ubuntu 26.04 LTS under WSL2, x86_64; kernel ~6.18.33.2-microsoft-standard-WSL2~ | Observed locally |
-| Configured Emacs | ~/home/bart/opt/emacs-31/bin/emacs~ | [[file:local.mk::1][local.mk:1]] |
+| Configured Emacs | ~/home/bart/opt/emacs-31/bin/emacs~ | [[file:../../../local.mk::1][local.mk:1]] |
 | Emacs version | GNU Emacs 31.0.90, development commit ~1bd56ff93273f754e72e9a50cbefae3b218d2260~, build 2026-07-22 | ~emacs --version~ and live server |
 | Emacsvox branch/commit | ~master~, ~0a19bac66dfc5e0b519f0157a28d271878ea2304~ | ~git rev-parse HEAD~ |
 | EAT package | 0.9.4, package commit/tag ~c91451f2d17453c19d3fa76faa4945cbe54e14ce~ | Installed package metadata and [[https://codeberg.org/akib/emacs-eat/src/tag/v0.9.4][upstream v0.9.4 tag]] |
@@ -167,7 +176,7 @@ stash, discard, or modify them.
 - Full ~make unit-test~: 2356 tests, 2354 expected passes, one skip, and one
   unrelated failure:
   ~emacsvox-agent-shell-live-chat-prompt-announces-editability~ at
-  [[file:test/emacsvox-agent-shell-tests.el::5757][emacsvox-agent-shell-tests.el:5757]].
+  [[file:../../../test/emacsvox-agent-shell-tests.el::5757][emacsvox-agent-shell-tests.el:5757]].
   This failure does not exercise EAT.
 
 ** EAT upstream version and activity
@@ -292,17 +301,17 @@ The integration has four independent mechanisms:
 
 1. Face-to-voice mappings for three shell-prompt annotation faces plus bold and
    italic terminal faces
-   ([[file:lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]]).
+   ([[file:../../../lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]]).
 2. Installation of the Emacsvox prefix key in EAT's mode maps
-   ([[file:lisp/emacsvox-eat.el::71][emacsvox-eat.el:71-80]]).
+   ([[file:../../../lisp/emacsvox-eat.el::71][emacsvox-eat.el:71-80]]).
 3. Native after-advice for two yank commands, reset/reload, mode switches, and
    opening EAT
-   ([[file:lisp/emacsvox-eat.el::120][emacsvox-eat.el:120-184]]).
+   ([[file:../../../lisp/emacsvox-eat.el::120][emacsvox-eat.el:120-184]]).
 4. Before-advice on ~eat-self-input~ to capture a Tab snapshot, and one
    ~eat-update-hook~ implementation
-   ([[file:lisp/emacsvox-eat.el::186][emacsvox-eat.el:186-273]]).
+   ([[file:../../../lisp/emacsvox-eat.el::186][emacsvox-eat.el:186-273]]).
 
-The quoted list at [[file:lisp/emacsvox-eat.el::84][emacsvox-eat.el:84-118]]
+The quoted list at [[file:../../../lisp/emacsvox-eat.el::84][emacsvox-eat.el:84-118]]
 is data, not executable advice registration.  Commands named there but absent
 from ~emacsvox-eat--advice-targets~ receive no EAT-specific speech.
 
@@ -354,19 +363,19 @@ correlation is retained.
 The fallback mixes speech paths with different semantics:
 
 - ~emacsvox-speak-this-char~ at
-  [[file:lisp/emacsvox-speak.el::1532][emacsvox-speak.el:1532]] sends character
+  [[file:../../../lisp/emacsvox-speak.el::1532][emacsvox-speak.el:1532]] sends character
   feedback without an EAT-specific role or deduplication key.
 - ~emacsvox-speak-line~ at
-  [[file:lisp/emacsvox-speak.el::1291][emacsvox-speak.el:1291]] goes through
+  [[file:../../../lisp/emacsvox-speak.el::1291][emacsvox-speak.el:1291]] goes through
   native source capture and a navigation occasion, which is replaceable.
 - Completion calls bare ~tts-speak~ at
-  [[file:lisp/emacsvox-eat.el::244][emacsvox-eat.el:244]].  Its default occasion
+  [[file:../../../lisp/emacsvox-eat.el::244][emacsvox-eat.el:244]].  Its default occasion
   is continuous
-  ([[file:lisp/tts-speak.el::2816][tts-speak.el:2816-2832]]), while the
+  ([[file:../../../lisp/tts-speak.el::2816][tts-speak.el:2816-2832]]), while the
   compatibility delivery path normally stops current speech because
   ~tts-stop-immediately~ defaults to true
-  ([[file:lisp/tts-speak.el::1790][tts-speak.el:1790-1793]] and
-  [[file:lisp/tts-speak.el::2891][tts-speak.el:2891-2905]]).
+  ([[file:../../../lisp/tts-speak.el::1790][tts-speak.el:1790-1793]] and
+  [[file:../../../lisp/tts-speak.el::2891][tts-speak.el:2891-2905]]).
 
 Consequently, a rapid sequence may combine queued characters, replaceable
 navigation lines, and hard-interrupting completions.  It has no common terminal
@@ -429,10 +438,10 @@ regression coverage, and compatibility risk.
   ~eat-reset~ on the same terminal reaches EAT's update hook at
   [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::5010][eat.el:5010-5017]]
   and produces the same error, so the after-advice at
-  [[file:lisp/emacsvox-eat.el::140][emacsvox-eat.el:140-143]] does not run.
+  [[file:../../../lisp/emacsvox-eat.el::140][emacsvox-eat.el:140-143]] does not run.
 - *Exact cause:* ~cursor~ can be nil, so ~char~ is nil at
-  [[file:lisp/emacsvox-eat.el::265][emacsvox-eat.el:265-267]], but
-  [[file:lisp/emacsvox-eat.el::270][line 270]] calls numeric ~=~ on it.
+  [[file:../../../lisp/emacsvox-eat.el::265][emacsvox-eat.el:265-267]], but
+  [[file:../../../lisp/emacsvox-eat.el::270][line 270]] calls numeric ~=~ on it.
 - *Upstream relevance:* EAT's public cursor getter is behaving within the state
   observed during an empty display; this integration must tolerate nil.  The
   getter was made public following
@@ -458,7 +467,7 @@ regression coverage, and compatibility risk.
   had the same last-cursor-context behavior.
 - *Exact references:* The sole automatic path reads only
   ~char-before cursor~ and at most ~emacsvox-speak-line~
-  ([[file:lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]]).  It never
+  ([[file:../../../lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]]).  It never
   records EAT's display bounds or previous contents, although public getters
   exist at
   [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::4166][eat.el:4166-4209]].
@@ -488,7 +497,7 @@ disruptive speech
   useful event.  Five carriage-return progress rewrites spoke the final digit
   repeatedly rather than “Progress N of 5.”
 - *Exact references:* All update types converge on
-  [[file:lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]].  EAT's output
+  [[file:../../../lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]].  EAT's output
   batching is only 8--33 ms
   ([[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::608][eat.el:608-628]]),
   appropriate for visual responsiveness but not a speech quiescence policy.
@@ -525,9 +534,9 @@ disruptive speech
   ~route  routing-table~ columns and ~?~-help descriptions were silent except
   for the redrawn prompt.
 - *Exact references:* The implementation explicitly rejects another physical
-  line at [[file:lisp/emacsvox-eat.el::229][emacsvox-eat.el:229-245]].  The
+  line at [[file:../../../lisp/emacsvox-eat.el::229][emacsvox-eat.el:229-245]].  The
   current test calls this expected behavior and asserts ~((char 47))~ at
-  [[file:test/emacsvox-eat-tests.el::68][emacsvox-eat-tests.el:68-90]].
+  [[file:../../../test/emacsvox-eat-tests.el::68][emacsvox-eat-tests.el:68-90]].
 - *Root cause:* The code recognizes only strict same-line token growth and
   immediately discards its snapshot.  It assumes ordinary fallback will make a
   candidate display accessible, but F-02 disproves that assumption.
@@ -557,9 +566,9 @@ update
   produced bell then ~src/~; a later separate BEL produced completion, bell,
   then duplicate slash fallback.
 - *Exact references:* The snapshot is set at
-  [[file:lisp/emacsvox-eat.el::203][emacsvox-eat.el:203-218]] and unconditionally
+  [[file:../../../lisp/emacsvox-eat.el::203][emacsvox-eat.el:203-218]] and unconditionally
   cleared before determining whether the update completes the transaction at
-  [[file:lisp/emacsvox-eat.el::234][emacsvox-eat.el:234-245]].  EAT explicitly
+  [[file:../../../lisp/emacsvox-eat.el::234][emacsvox-eat.el:234-245]].  EAT explicitly
   batches arbitrary process chunks at
   [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6816][eat.el:6816-6839]]
   and independently invokes the same hook on resize at
@@ -596,11 +605,11 @@ update
   - Pipes and simple separators happen to split, but quoting/redirection/
     parentheses/semicolon combinations do not model Bash grammar.
 - *Exact references:* The separator-only parser is
-  [[file:lisp/emacsvox-eat.el::193][emacsvox-eat.el:193-201]]; snapshot identity
+  [[file:../../../lisp/emacsvox-eat.el::193][emacsvox-eat.el:193-201]]; snapshot identity
   is numeric ~line-number-at-pos~ at
-  [[file:lisp/emacsvox-eat.el::203][lines 203-208]]; matching requires longer
+  [[file:../../../lisp/emacsvox-eat.el::203][lines 203-208]]; matching requires longer
   strict prefix and equal physical line at
-  [[file:lisp/emacsvox-eat.el::237][lines 237-244]].  EAT marks visual wrap
+  [[file:../../../lisp/emacsvox-eat.el::237][lines 237-244]].  EAT marks visual wrap
   newlines privately as ~eat--t-wrap-line~, for example
   [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::1018][eat.el:1018-1050]].
 - *Root cause:* Local character-class tokenization attempts to reconstruct
@@ -631,11 +640,11 @@ update
   The user's [[file:/home/bart/.bashrc::108][.bashrc:108-115]] loads Bash
   completion but does not source ~$EAT_SHELL_INTEGRATION_DIR/bash~.
 - *Exact references:* Emacsvox declares prompt maps at
-  [[file:lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]].  EAT's shell
+  [[file:../../../lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]].  EAT's shell
   integration and prompt annotations are documented in the official
   [[https://elpa.nongnu.org/nongnu/doc/eat.html][manual]].  Emacsvox source
   capture only retains named faces or named ~:inherit~ members around
-  [[file:lisp/emacsvox-aural-source.el::225][emacsvox-aural-source.el:225-243]].
+  [[file:../../../lisp/emacsvox-aural-source.el::225][emacsvox-aural-source.el:225-243]].
 - *Root cause:* Prompt status is a margin ~before-string~/overlay presentation,
   not named face text on the prompt characters sampled for speech.
 - *Recommended remedy:* First enable/document EAT shell integration where its
@@ -669,7 +678,7 @@ update
   and composes anonymous face plists at
   [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::2668][eat.el:2668-2706]].
   Emacsvox maps only bold and italic terminal faces at
-  [[file:lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]].  Upstream
+  [[file:../../../lisp/emacsvox-eat.el::62][emacsvox-eat.el:62-68]].  Upstream
   [[https://codeberg.org/akib/emacs-eat/issues/248][issue 248]] also documents
   cursor/reverse-video highlight mismatch in ncurses applications.
 - *Root cause:* Text equality and a small named-face map cannot represent
@@ -730,7 +739,7 @@ update
   and on Eshell resize at
   [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6907][eat.el:6907-6911]].
   Emacsvox registers only normal EAT at
-  [[file:lisp/emacsvox-eat.el::273][emacsvox-eat.el:273]].
+  [[file:../../../lisp/emacsvox-eat.el::273][emacsvox-eat.el:273]].
 - *Root cause:* EAT deliberately has parallel normal and Eshell lifecycles;
   Emacsvox wired only one.
 - *Recommended remedy:* Share an observer/classifier between both hooks with
@@ -747,12 +756,12 @@ update
 - *Evidence status:* Background and minibuffer suppression reproduced; multiple
   windows/frames, scrollback review, and timer/focus timing inferred from code.
 - *Reproduction and evidence:* The focused regression test at
-  [[file:test/emacsvox-eat-tests.el::92][emacsvox-eat-tests.el:92-111]] passes
+  [[file:../../../test/emacsvox-eat-tests.el::92][emacsvox-eat-tests.el:92-111]] passes
   and clears completion state without speech.  Selecting a minibuffer makes its
   window selected, so a terminal update is silent.
 - *Exact cause:* The predicate compares current buffer to
   ~(window-buffer (selected-window))~ at
-  [[file:lisp/emacsvox-eat.el::247][emacsvox-eat.el:247-249]].  It does not ask
+  [[file:../../../lisp/emacsvox-eat.el::247][emacsvox-eat.el:247-249]].  It does not ask
   whether the selected window's point follows the live terminal cursor, whether
   the frame has input focus, or whether output arrived before a delayed batch.
 - *Recommended remedy:* Keep the silent-by-default guard.  Add explicit
@@ -782,7 +791,7 @@ or under-described
   its bell callback is configured at
   [[file:/home/bart/.emacs.d/elpa/eat-0.9.4/eat.el::6946][eat.el:6946-6960]].
   Emacsvox advice targets are at
-  [[file:lisp/emacsvox-eat.el::120][emacsvox-eat.el:120-184]].
+  [[file:../../../lisp/emacsvox-eat.el::120][emacsvox-eat.el:120-184]].
 - *Root cause:* Input intent and terminal callbacks are not represented in a
   common event model.  The update hook sees only final cells.
 - *Recommended remedy:* Correlate recent input with screen change; give bell,
@@ -808,8 +817,8 @@ files.  It does *not* invoke Bash programmable completion, remote-host
 completion, or a router CLI's ~?~/Tab behavior.  Emacsvox's Corfu integration is
 substantially richer: it submits semantic candidate facts, counts, annotations,
 selection/acceptance events, and deduplicated navigation at
-[[file:lisp/emacsvox-corfu.el::182][emacsvox-corfu.el:182-249]] and
-[[file:lisp/emacsvox-corfu.el::277][emacsvox-corfu.el:277-459]].
+[[file:../../../lisp/emacsvox-corfu.el::182][emacsvox-corfu.el:182-249]] and
+[[file:../../../lisp/emacsvox-corfu.el::277][emacsvox-corfu.el:277-459]].
 
 In *semi-character and character modes*, Tab is sent through the PTY.  The
 underlying program owns completion.  Bash/readline can therefore provide
@@ -971,8 +980,8 @@ rate-limited policy.
 
 The current production integration declares and reads private
 ~eat--semi-char-mode~ at
-[[file:lisp/emacsvox-eat.el::50][emacsvox-eat.el:50]] and
-[[file:lisp/emacsvox-eat.el::214][line 214]].  That is the only material private
+[[file:../../../lisp/emacsvox-eat.el::50][emacsvox-eat.el:50]] and
+[[file:../../../lisp/emacsvox-eat.el::214][line 214]].  That is the only material private
 dependency in the recent completion change.  EAT offers interactive mode
 commands but no stable mode predicate/hook; upstream
 [[https://codeberg.org/akib/emacs-eat/issues/158][issue 158]] requests public
@@ -1165,7 +1174,7 @@ therefore treat privacy and denial-of-speech as first-class policy.
   possible design risk because the existing snapshot retains a short token.
 - *Evidence status:* Possible.
 - *References:* Current buffer-local completion state is defined at
-  [[file:lisp/emacsvox-eat.el::186][emacsvox-eat.el:186-187]].
+  [[file:../../../lisp/emacsvox-eat.el::186][emacsvox-eat.el:186-187]].
 - *Root cause:* Screen snapshots necessarily include terminal text, which may
   contain passwords, tokens, private paths, router configuration, or pasted
   secrets.
@@ -1186,9 +1195,9 @@ therefore treat privacy and denial-of-speech as first-class policy.
 - *Evidence status:* Reproduced for speech flooding with ~top~; auditory
   spoofing is inferred.
 - *References:* The unclassified speech path is
-  [[file:lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]] and the hard-stop
+  [[file:../../../lisp/emacsvox-eat.el::261][emacsvox-eat.el:261-271]] and the hard-stop
   compatibility behavior is
-  [[file:lisp/tts-speak.el::2891][tts-speak.el:2891-2905]].
+  [[file:../../../lisp/tts-speak.el::2891][tts-speak.el:2891-2905]].
 - *Root cause:* Arbitrary terminal output can trigger high-priority-looking
   speech and repeatedly interrupt other modules; it has no terminal source role
   or rate budget.
@@ -1301,7 +1310,7 @@ addition
 This isolates uncertain terminal inference from speech delivery and makes each
 piece testable.  The current Corfu implementation demonstrates the target
 pattern: candidate facts and lifecycle are separate from presentation at
-[[file:lisp/emacsvox-corfu.el::182][emacsvox-corfu.el:182-215]].
+[[file:../../../lisp/emacsvox-corfu.el::182][emacsvox-corfu.el:182-215]].
 
 ** Buffer-local state
 
@@ -1477,7 +1486,7 @@ versioned fixtures are non-negotiable.
 
 ** Assessment of current tests
 
-[[file:test/emacsvox-eat-tests.el::1][test/emacsvox-eat-tests.el]] contains six
+[[file:../../../test/emacsvox-eat-tests.el::1][test/emacsvox-eat-tests.el]] contains six
 ERT tests:
 
 1. advice inventory;
@@ -1496,7 +1505,7 @@ cursor, reset, resize, exit, alternate screen, style, bell, title/CWD,
 chunk-split, wrap, Unicode, shell, or interactive-app coverage.
 
 The test file explicitly loads source at
-[[file:test/emacsvox-eat-tests.el::8][emacsvox-eat-tests.el:8-10]].  Six passing
+[[file:../../../test/emacsvox-eat-tests.el::8][emacsvox-eat-tests.el:8-10]].  Six passing
 tests therefore do not prove the live ~emacsvox-eat.elc~ is current.  The
 project's byte-code checks and a fresh compiled Emacs verification are separate
 required layers.
@@ -1679,7 +1688,7 @@ Add tests that use a real ~eat-term-make~ for:
 - *Severity addressed:* High correctness/accessibility.
 - *Evidence:* Reproduced (F-01).
 - *Root cause:* Numeric ~=~ applied to nil at
-  [[file:lisp/emacsvox-eat.el::270][emacsvox-eat.el:270]].
+  [[file:../../../lisp/emacsvox-eat.el::270][emacsvox-eat.el:270]].
 - *Compatibility risk:* Low.
 - *Why this is the smallest patch:* It removes a concrete exception without
   changing output verbosity, timing, completion classification, public APIs, or
