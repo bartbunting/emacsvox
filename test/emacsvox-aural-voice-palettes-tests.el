@@ -60,7 +60,9 @@
       (tabulated-list-print t)
       (goto-char (point-min))
       (emacsvox-aural-ui-goto-tabulated-column 0)
-      (cl-letf (((symbol-function 'tts-speak) #'ignore))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-voice-tuner--play-text)
+            #'ignore))
         (emacsvox-aural-voice-palette-previews-tune)))
     (list source (get-buffer "*Aural Voice Tuner*"))))
 
@@ -522,7 +524,9 @@
                 (should (derived-mode-p 'emacsvox-aural-voice-tuner-mode))
                 (should
                  (derived-mode-p 'emacsvox-aural-tabulated-mode))
-                (should (= (length tabulated-list-entries) 12))
+                (should
+                 (= (length tabulated-list-entries)
+                    (length emacsvox-aural-rich-voice-dimensions)))
                 (should-not emacsvox-aural-voice-tuner-dirty)
                 (should
                  (equal
@@ -545,7 +549,13 @@
                   (lookup-key
                    emacsvox-aural-voice-tuner-mode-map
                    (kbd "7"))
-                  #'emacsvox-aural-voice-tuner-set-digit)))))
+                  #'emacsvox-aural-voice-tuner-set-digit))
+                (should
+                 (eq
+                  (lookup-key
+                   emacsvox-aural-voice-tuner-mode-map
+                   (kbd "B"))
+                  #'emacsvox-aural-voice-tuner-compare)))))
         (dolist (buffer buffers)
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
 
@@ -554,7 +564,7 @@
   (emacsvox-test--with-voice-palettes
     (emacsvox-aural-register-voice-palette-data
      emacsvox-test--voice-palette-data)
-    (let (buffers spoken)
+    (let (buffers spoken style)
       (unwind-protect
           (save-window-excursion
             (cl-letf
@@ -563,8 +573,10 @@
                     '(:adapter outloud
                       :dimensions
                       (family average-pitch pitch-range stress richness))))
-                 ((symbol-function 'tts-speak)
-                  (lambda (text) (setq spoken text)))
+                 ((symbol-function 'emacsvox-aural-voice-tuner--play-text)
+                  (lambda (text working-style &optional _)
+                    (setq spoken text
+                          style (copy-tree working-style))))
                  ((symbol-function 'emacsvox-icon) #'ignore))
               (setq buffers (emacsvox-test--open-reading-voice-tuner 'aside))
               (with-current-buffer (cadr buffers)
@@ -581,6 +593,7 @@
                  (equal
                   spoken
                   "Average Pitch 9. Supported By Outloud."))
+                (should (= (plist-get style :average-pitch) 9))
                 (emacsvox-aural-voice-tuner-next)
                 (should (eq (tabulated-list-get-id) 'pitch-range))
                 (emacsvox-aural-voice-tuner-previous)
@@ -591,6 +604,74 @@
                   "Average Pitch 9. Supported By Outloud.")))))
         (dolist (buffer buffers)
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
+
+(ert-deftest emacsvox-aural-voice-tuner-uses-working-voice-for-shared-ui ()
+  "Cells and boundaries use the current unsaved style in the tuner buffer."
+  (with-temp-buffer
+    (emacsvox-aural-voice-tuner-mode)
+    (setq
+     emacsvox-aural-voice-tuner-working-style '(:average-pitch 8)
+     tabulated-list-format [("Setting" 12 nil)]
+     tabulated-list-entries '((pitch ["Pitch"])))
+    (tabulated-list-init-header)
+    (tabulated-list-print t)
+    (goto-char (point-min))
+    (let (requests)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-voice-tuner--play-text)
+            (lambda (text style &optional _)
+              (push (list text (copy-tree style)) requests)))
+           ((symbol-function 'emacsvox-icon) #'ignore))
+        (emacsvox-aural-ui-speak-current-cell)
+        (emacsvox-aural-ui-announce-boundary "Top of voice settings."))
+      (should
+       (equal
+        (nreverse requests)
+        '(("Setting, Pitch" (:average-pitch 8))
+          ("Top of voice settings." (:average-pitch 8))))))))
+
+(ert-deftest emacsvox-aural-voice-tuner-compares-opening-and-working-styles ()
+  "Repeated comparison alternates the opening and unsaved working voices."
+  (with-temp-buffer
+    (emacsvox-aural-voice-tuner-mode)
+    (setq
+     emacsvox-aural-voice-tuner-voice 'aside
+     emacsvox-aural-voice-tuner-preview-text "Shared sample."
+     emacsvox-aural-voice-tuner-initial-style '(:average-pitch 3)
+     emacsvox-aural-voice-tuner-working-style '(:average-pitch 8)
+     emacsvox-aural-voice-tuner-compare-reference-next-p t)
+    (let (requests)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-voice-tuner--play-text)
+            (lambda (text style &optional _)
+              (push (list text (copy-tree style)) requests)))
+           ((symbol-function 'emacsvox-aural-preview-message) #'ignore))
+        (emacsvox-aural-voice-tuner-compare)
+        (emacsvox-aural-voice-tuner-compare))
+      (setq requests (nreverse requests))
+      (should (string-prefix-p "Opening voice." (caar requests)))
+      (should (equal (cadar requests) '(:average-pitch 3)))
+      (should (string-prefix-p "Working voice." (caadr requests)))
+      (should (equal (cadadr requests) '(:average-pitch 8)))
+      (should emacsvox-aural-voice-tuner-compare-reference-next-p))))
+
+(ert-deftest emacsvox-aural-voice-tuner-falls-back-to-operable-speech ()
+  "Broken staged previews leave ordinary tuner navigation audible."
+  (with-temp-buffer
+    (emacsvox-aural-voice-tuner-mode)
+    (setq emacsvox-aural-voice-tuner-working-style '(:average-pitch 9))
+    (let (spoken)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-voice-tuner--play-text)
+            (lambda (&rest _) (error "Preview failed")))
+           ((symbol-function 'emacsvox-aural-preview-message) #'ignore)
+           ((symbol-function 'tts-speak)
+            (lambda (text) (setq spoken text))))
+        (should
+         (equal
+          (emacsvox-aural-voice-tuner--speak-text "Recovery speech")
+          "Recovery speech")))
+      (should (equal spoken "Recovery speech")))))
 
 (ert-deftest emacsvox-aural-voice-tuner-adjustments-announce-only-values ()
   "Horizontal and digit adjustments omit repeated setting descriptions."
@@ -831,7 +912,7 @@
                       :dimensions
                       (average-pitch pitch-range stress richness))))
                  ((symbol-function 'voice-from-acss)
-                  (lambda (_) 'voice-tuned))
+                  (lambda (_style &optional _logical-voice) 'voice-tuned))
                  ((symbol-function 'make-acss)
                   (lambda (&rest settings) settings))
                  ((symbol-function 'tts-get-voice-command)
@@ -901,7 +982,7 @@
                       :dimensions
                       (average-pitch pitch-range stress richness))))
                  ((symbol-function 'voice-from-acss)
-                  (lambda (_) 'voice-tuned))
+                  (lambda (_style &optional _logical-voice) 'voice-tuned))
                  ((symbol-function 'make-acss)
                   (lambda (&rest settings) settings))
                  ((symbol-function 'tts-get-voice-command)

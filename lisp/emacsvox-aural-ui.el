@@ -59,6 +59,12 @@
 (defvar-local emacsvox-aural-ui-list-name "list"
   "Spoken name of the current tabulated interface.")
 
+(defvar-local emacsvox-aural-ui-speech-function nil
+  "Optional function used to speak text in the current interface.
+
+The function receives one string.  When nil, interface feedback uses
+`tts-speak'.")
+
 (defvar-local emacsvox-aural-ui-row-speaker nil
   "Function that speaks the complete current row.")
 
@@ -322,6 +328,17 @@ When VALUE-FIRST is non-nil, put the cell value before its column title."
           (format "%s, %s" value name)
         (format "%s, %s" name value)))))
 
+(defun emacsvox-aural-ui-speak (text)
+  "Speak interface feedback TEXT through the current buffer's renderer."
+  (cond
+   (emacsvox-aural-ui-speech-function
+    (funcall emacsvox-aural-ui-speech-function text))
+   ((fboundp 'tts-speak)
+    (tts-speak text))
+   (t
+    (message "%s" text)))
+  text)
+
 (defun emacsvox-aural-ui-speak-current-cell (&optional value-first)
   "Speak the current tabulated cell.
 
@@ -332,9 +349,7 @@ the cell value first."
          (emacsvox-aural-ui-tabulated-cell-description value-first)))
     (when (fboundp 'emacsvox-icon)
       (emacsvox-icon 'select-object))
-    (if (fboundp 'tts-speak)
-        (tts-speak description)
-      (message "%s" description))
+    (emacsvox-aural-ui-speak description)
     description))
 
 (defun emacsvox-aural-ui-speak-current-row ()
@@ -349,9 +364,7 @@ the cell value first."
   "Announce tabulated-list boundary MESSAGE."
   (when (fboundp 'emacsvox-icon)
     (emacsvox-icon 'warn-user))
-  (if (fboundp 'tts-speak)
-      (tts-speak message)
-    (message "%s" message))
+  (emacsvox-aural-ui-speak message)
   message)
 
 (defun emacsvox-aural-ui-move-row

@@ -130,6 +130,9 @@
 (defvar-local emacsvox-aural-voice-tuner-legacy-rate nil
   "Ignored nonzero legacy absolute rate found when this tuner opened.")
 
+(defvar-local emacsvox-aural-voice-tuner-compare-reference-next-p t
+  "Non-nil when the next tuner comparison should use the opening style.")
+
 (defun emacsvox-aural-voice-palettes--active-id ()
   "Return the currently effective voice palette."
   (or
@@ -1435,9 +1438,7 @@ in that overlay so subsequent edits do not create more palettes."
            (aref row 2)
            (aref row 3)
            (aref row 4))))
-    (if (fboundp 'tts-speak)
-        (tts-speak summary)
-      (message "%s" summary))
+    (emacsvox-aural-ui-speak summary)
     summary))
 
 (defun emacsvox-aural-voice-tuner-next ()
@@ -1473,76 +1474,126 @@ in that overlay so subsequent edits do not create more palettes."
           (emacsvox-aural-voice-tuner--current-dimension))))
     (when (fboundp 'emacsvox-icon)
       (emacsvox-icon 'select-object))
-    (if (fboundp 'tts-speak)
-        (tts-speak summary)
-      (message "%s" summary))
+    (emacsvox-aural-ui-speak summary)
     summary))
+
+(defun emacsvox-aural-voice-tuner--normalized-acss (style)
+  "Return normalized routed ACSS values from tuner STYLE."
+  (let (acss)
+    (dolist (dimension '(average-pitch pitch-range stress richness))
+      (let* ((key (emacsvox-aural--voice-dimension-key dimension))
+             (value (plist-get style key)))
+        (when (numberp value)
+          (setq
+           acss
+           (plist-put
+            acss key (/ (float (max 0 (min 9 value))) 9.0))))))
+    acss))
+
+(defun emacsvox-aural-voice-tuner--normalized-effects (style)
+  "Return normalized routed post-synthesis effects from tuner STYLE."
+  (let (effects)
+    (dolist (dimension emacsvox-aural-post-synthesis-dimensions)
+      (let* ((key (emacsvox-aural--voice-dimension-key dimension))
+             (value (plist-get style key)))
+        (when (numberp value)
+          (setq
+           effects
+           (plist-put
+            effects key
+            (emacsvox-aural-normalize-post-synthesis-value
+             dimension value))))))
+    effects))
+
+(defun emacsvox-aural-voice-tuner--play-text
+    (text style &optional record-result)
+  "Speak TEXT through unsaved tuner STYLE.
+
+When RECORD-RESULT is non-nil, retain routed realization and degradation
+information for the working tuner display."
+  (if emacsvox-aural-voice-tuner-route-selector
+      (let ((buffer (current-buffer)))
+        (when record-result
+          (setq emacsvox-aural-voice-tuner-preview-result
+                '(:status running)))
+        (tts-preview-voice
+         text emacsvox-aural-voice-tuner-route-selector
+         :acss (emacsvox-aural-voice-tuner--normalized-acss style)
+         :rate-offset (plist-get style :rate-offset)
+         :effects (emacsvox-aural-voice-tuner--normalized-effects style)
+         :language emacsvox-aural-voice-tuner-route-language
+         :callback
+         (when record-result
+           (lambda (result)
+             (when (buffer-live-p buffer)
+               (with-current-buffer buffer
+                 (setq emacsvox-aural-voice-tuner-preview-result result)
+                 (when-let* ((realized (plist-get result :realized)))
+                   (setq emacsvox-aural-voice-tuner-route-realized realized))
+                 (when (derived-mode-p 'emacsvox-aural-voice-tuner-mode)
+                   (emacsvox-aural-voice-tuner-refresh
+                    (tabulated-list-get-id))))))))
+        (and record-result emacsvox-aural-voice-tuner-preview-result))
+    (let* ((compiled
+            (emacsvox-aural-compile-voice-style
+             style emacsvox-aural-voice-tuner-palette))
+           (plan
+            (emacsvox-aural-preview-compiled-voice-plan compiled text)))
+      (emacsvox-aural-preview-play-plan plan)
+      compiled)))
+
+(defun emacsvox-aural-voice-tuner--speak-text (text)
+  "Speak ordinary tuner feedback TEXT through the current working style.
+
+If the staged route cannot be previewed, fall back to normal speech so that
+the tuner remains operable."
+  (condition-case error-data
+      (emacsvox-aural-voice-tuner--play-text
+       text emacsvox-aural-voice-tuner-working-style t)
+    (error
+     (emacsvox-aural-preview-message
+      "Tuned voice unavailable; using normal speech: %s"
+      (error-message-string error-data))
+     (if (fboundp 'tts-speak)
+         (tts-speak text)
+       (message "%s" text))))
+  text)
 
 (defun emacsvox-aural-voice-tuner-audition (&optional announcement)
   "Audition the unsaved working style after optional ANNOUNCEMENT."
   (interactive)
-  (if emacsvox-aural-voice-tuner-route-selector
-      (let ((buffer (current-buffer))
-            (text
-             (concat
-              (and announcement (concat announcement " "))
-              (emacsvox-aural-voice-palettes--preview-sample
-               emacsvox-aural-voice-tuner-voice
-               emacsvox-aural-voice-tuner-preview-text)))
-            acss effects)
-        (dolist (dimension '(average-pitch pitch-range stress richness))
-          (let* ((key (emacsvox-aural--voice-dimension-key dimension))
-                 (value
-                  (plist-get emacsvox-aural-voice-tuner-working-style key)))
-            (when (numberp value)
-              (setq acss
-                    (plist-put
-                     acss key (/ (float (max 0 (min 9 value))) 9.0))))))
-        (dolist (dimension emacsvox-aural-post-synthesis-dimensions)
-          (let* ((key (emacsvox-aural--voice-dimension-key dimension))
-                 (value
-                  (plist-get emacsvox-aural-voice-tuner-working-style key)))
-            (when (numberp value)
-              (setq effects
-                    (plist-put
-                     effects key
-                     (emacsvox-aural-normalize-post-synthesis-value
-                      dimension value))))))
-        (setq emacsvox-aural-voice-tuner-preview-result '(:status running))
-        (tts-preview-voice
-         text emacsvox-aural-voice-tuner-route-selector
-         :acss acss
-         :rate-offset
-         (plist-get emacsvox-aural-voice-tuner-working-style :rate-offset)
-         :effects effects
-         :language emacsvox-aural-voice-tuner-route-language
-         :callback
-         (lambda (result)
-           (when (buffer-live-p buffer)
-             (with-current-buffer buffer
-               (setq emacsvox-aural-voice-tuner-preview-result result)
-               (when-let* ((realized (plist-get result :realized)))
-                 (setq emacsvox-aural-voice-tuner-route-realized realized))
-               (when (derived-mode-p 'emacsvox-aural-voice-tuner-mode)
-                 (emacsvox-aural-voice-tuner-refresh
-                  (tabulated-list-get-id)))))))
-        emacsvox-aural-voice-tuner-preview-result)
-    (let* ((compiled
-            (emacsvox-aural-compile-voice-style
-             emacsvox-aural-voice-tuner-working-style
-             emacsvox-aural-voice-tuner-palette))
-           (text
-            (concat
-             (and announcement (concat announcement " "))
-             (emacsvox-aural-voice-palettes--preview-sample
-              emacsvox-aural-voice-tuner-voice
-              emacsvox-aural-voice-tuner-preview-text)))
-           (plan
-            (emacsvox-aural-preview-compiled-voice-plan compiled text)))
-      (emacsvox-aural-preview-play-plan plan)
+  (let ((text
+         (concat
+          (and announcement (concat announcement " "))
+          (emacsvox-aural-voice-palettes--preview-sample
+           emacsvox-aural-voice-tuner-voice
+           emacsvox-aural-voice-tuner-preview-text))))
+    (prog1
+        (emacsvox-aural-voice-tuner--play-text
+         text emacsvox-aural-voice-tuner-working-style t)
       (when announcement
-        (emacsvox-aural-preview-message "%s" announcement))
-      compiled)))
+        (emacsvox-aural-preview-message "%s" announcement)))))
+
+(defun emacsvox-aural-voice-tuner-compare ()
+  "Alternate an opening-style and working-style comparison sample."
+  (interactive)
+  (let* ((reference emacsvox-aural-voice-tuner-compare-reference-next-p)
+         (label (if reference "Opening voice" "Working voice"))
+         (style
+          (if reference
+              emacsvox-aural-voice-tuner-initial-style
+            emacsvox-aural-voice-tuner-working-style))
+         (text
+          (concat
+           label ". "
+           (emacsvox-aural-voice-palettes--preview-sample
+            emacsvox-aural-voice-tuner-voice
+            emacsvox-aural-voice-tuner-preview-text))))
+    (setq emacsvox-aural-voice-tuner-compare-reference-next-p
+          (not reference))
+    (prog1
+        (emacsvox-aural-voice-tuner--play-text text style)
+      (emacsvox-aural-preview-message "%s comparison" label))))
 
 (defun emacsvox-aural-voice-tuner--update-dirty ()
   "Update and return the tuner dirty state."
@@ -1568,7 +1619,8 @@ ANNOUNCEMENT overrides the normal setting description."
        emacsvox-aural-voice-tuner-working-style
        (plist-put
         (copy-tree emacsvox-aural-voice-tuner-working-style)
-        key value))
+        key value)
+       emacsvox-aural-voice-tuner-compare-reference-next-p t)
       (emacsvox-aural-voice-tuner--update-dirty)
       (emacsvox-aural-voice-tuner-refresh dimension)
       (emacsvox-aural-voice-tuner-audition
@@ -1749,7 +1801,8 @@ ANNOUNCEMENT overrides the normal setting description."
   (let ((dimension (emacsvox-aural-voice-tuner--current-dimension)))
     (setq
      emacsvox-aural-voice-tuner-working-style
-     (pop emacsvox-aural-voice-tuner-history))
+     (pop emacsvox-aural-voice-tuner-history)
+     emacsvox-aural-voice-tuner-compare-reference-next-p t)
     (emacsvox-aural-voice-tuner--update-dirty)
     (emacsvox-aural-voice-tuner-refresh dimension)
     (emacsvox-aural-voice-tuner-audition "Undid the last voice change.")))
@@ -1768,7 +1821,8 @@ ANNOUNCEMENT overrides the normal setting description."
      emacsvox-aural-voice-tuner-history)
     (setq
      emacsvox-aural-voice-tuner-working-style
-     (copy-tree emacsvox-aural-voice-tuner-initial-style))
+     (copy-tree emacsvox-aural-voice-tuner-initial-style)
+     emacsvox-aural-voice-tuner-compare-reference-next-p t)
     (emacsvox-aural-voice-tuner--update-dirty)
     (emacsvox-aural-voice-tuner-refresh dimension)
     (emacsvox-aural-voice-tuner-audition
@@ -1862,39 +1916,43 @@ ANNOUNCEMENT overrides the normal setting description."
 (defun emacsvox-aural-voice-tuner-help ()
   "Display and speak voice tuner help."
   (interactive)
-  (emacsvox-aural-ui-with-help-window
-    (princ
-     (concat
-      "Aural Voice Tuner\n\n"
-      "Changes are temporary until saved.  Navigation announces the setting,\n"
-      "value, and support.  Adjustment announces only its new value, then\n"
-      "auditions the same comparison text.\n"
-      "Unsupported dimensions remain portable but do not affect this adapter.\n"
-      "Relative Rate is a signed offset from the current global 0-to-100 rate.\n"
-      "For example, global 75 plus minus 1 is 74; plus 4 is 79.  Zero or\n"
-      "adapter default means unchanged.  Left and right adjust one point.\n"
-      "Gain five is unchanged; low-pass nine is disabled; high-pass, reverb,\n"
-      "echo, and chorus zero are disabled; pan five is centre.\n"
-      "Omnivox pitch contrast defaults to a gentle 0.5; customize\n"
-      "omnivox-average-pitch-contrast to use zero through two.\n"
-      "For a routed adapter, Portable Fallback Family is retained for other\n"
-      "adapters but does not replace the physical voice chosen in Workbench.\n"
-      "Saving a changed personality converts this palette entry to a complete\n"
-      "custom ACSS style; cancelling preserves its original definition.\n\n"
-      "Tuner w saves only this portable style.  If its physical route is\n"
-      "staged in Voice Workbench, return there and press w to save and apply\n"
-      "that separate machine-local route.\n\n"
-      "n or down next       p or up previous\n"
-      "left/right decrease/increase numeric value\n"
-      "0 through 9 set a nonnegative numeric value directly\n"
-      "RET or e edit        d use adapter default\n"
-      "P audition           u undo last change\n"
-      "R restore opening style\n"
-      "w save style, return C-c C-c save style, return\n"
-      "q or C-c C-k cancel and return\n"
-      "h aural home         ? help\n")))
-  (when (fboundp 'emacsvox-speak-help)
-    (emacsvox-speak-help)))
+  (let* ((tuner (current-buffer))
+         (help
+          (concat
+           "Aural Voice Tuner\n\n"
+           "Changes are temporary until saved.  While this tuner is active,\n"
+           "its navigation, cells, rows, boundaries, and help use the current\n"
+           "unsaved working voice.  Adjustment announces only its new value,\n"
+           "then auditions the same comparison text.\n"
+           "Unsupported dimensions remain portable but do not affect this adapter.\n"
+           "Relative Rate is a signed offset from the current global 0-to-100 rate.\n"
+           "For example, global 75 plus minus 1 is 74; plus 4 is 79.  Zero or\n"
+           "adapter default means unchanged.  Left and right adjust one point.\n"
+           "Gain five is unchanged; low-pass nine is disabled; high-pass, reverb,\n"
+           "echo, and chorus zero are disabled; pan five is centre.\n"
+           "Omnivox pitch contrast defaults to a gentle 0.5; customize\n"
+           "omnivox-average-pitch-contrast to use zero through two.\n"
+           "For a routed adapter, Portable Fallback Family is retained for other\n"
+           "adapters but does not replace the physical voice chosen in Workbench.\n"
+           "Saving a changed personality converts this palette entry to a complete\n"
+           "custom ACSS style; cancelling preserves its original definition.\n\n"
+           "Tuner w saves only this portable style.  If its physical route is\n"
+           "staged in Voice Workbench, return there and press w to save and apply\n"
+           "that separate machine-local route.\n\n"
+           "n or down next       p or up previous\n"
+           "left/right decrease/increase numeric value\n"
+           "0 through 9 set a nonnegative numeric value directly\n"
+           "RET or e edit        d use adapter default\n"
+           "P audition           B alternate opening/working comparison\n"
+           "u undo last change   R restore opening style\n"
+           "w save style, return C-c C-c save style, return\n"
+           "q or C-c C-k cancel and return\n"
+           "h aural home         ? help\n")))
+    (emacsvox-aural-ui-with-help-window
+      (princ help))
+    (when (buffer-live-p tuner)
+      (with-current-buffer tuner
+        (emacsvox-aural-voice-tuner--speak-text help)))))
 
 (define-derived-mode
     emacsvox-aural-voice-tuner-mode
@@ -1917,6 +1975,8 @@ ANNOUNCEMENT overrides the normal setting description."
   (setq-local
    mode-line-process
    '(:eval (when emacsvox-aural-voice-tuner-dirty " [modified]")))
+  (setq-local emacsvox-aural-ui-speech-function
+              #'emacsvox-aural-voice-tuner--speak-text)
   (add-hook
    'tabulated-list-revert-hook
    #'emacsvox-aural-voice-tuner--set-entries nil t)
@@ -1930,6 +1990,7 @@ ANNOUNCEMENT overrides the normal setting description."
        ("e" . emacsvox-aural-voice-tuner-edit)
        ("d" . emacsvox-aural-voice-tuner-use-default)
        ("P" . emacsvox-aural-voice-tuner-audition)
+       ("B" . emacsvox-aural-voice-tuner-compare)
        ("u" . emacsvox-aural-voice-tuner-undo)
        ("R" . emacsvox-aural-voice-tuner-restore)
        ("w" . emacsvox-aural-voice-tuner-save)
@@ -2001,6 +2062,7 @@ identity."
          emacsvox-aural-voice-tuner-route-engine (copy-tree engine)
          emacsvox-aural-voice-tuner-route-realized (copy-tree realized)
          emacsvox-aural-voice-tuner-preview-result nil
+         emacsvox-aural-voice-tuner-compare-reference-next-p t
          emacsvox-aural-voice-tuner-legacy-rate
          (and
           (emacsvox-aural-voice-style-p definition)

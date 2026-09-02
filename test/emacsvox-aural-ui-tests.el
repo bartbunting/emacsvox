@@ -203,6 +203,21 @@
           "Value, two"
           "one, Value"))))))
 
+(ert-deftest emacsvox-aural-ui-supports-buffer-local-speech-renderers ()
+  "Shared feedback can use a renderer confined to one interface buffer."
+  (with-temp-buffer
+    (emacsvox-test-aural-ui-mode)
+    (let (spoken)
+      (setq-local emacsvox-aural-ui-speech-function
+                  (lambda (text) (push text spoken)))
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (_) (ert-fail "Used global speech")))
+                ((symbol-function 'emacsvox-icon) #'ignore))
+        (emacsvox-aural-ui-speak "Local feedback")
+        (emacsvox-aural-ui-announce-boundary "Top of list."))
+      (should (equal (nreverse spoken)
+                     '("Local feedback" "Top of list."))))))
+
 (ert-deftest emacsvox-aural-ui-refresh-preserves-compound-row-and-window-point ()
   "Refresh should preserve an equal row ID, column, and visible window point."
   (save-window-excursion
