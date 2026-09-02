@@ -239,6 +239,9 @@
            "table structure matters"
            "customize-group @key{RET} emacsvox-ocr"
            "emacsvox-ocr-paddleocr-use-table-recognition"
+           "it is not an OCR model"
+           "every recognition feature remains enabled"
+           "trade-off is speed@comma{} not recognition capability"
            "not as the primary Emacs configuration interface"))
       (should (string-match-p (regexp-quote required) guide)))
     (dolist

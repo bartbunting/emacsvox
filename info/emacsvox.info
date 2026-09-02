@@ -2681,10 +2681,16 @@ packages:
 
    The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the
 CPU device.  A warning that ‘ccache’ is absent is harmless for normal
-inference.  The launcher deliberately leaves oneDNN/MKL-DNN acceleration
-disabled because the tested Paddle 3.3.0 CPU runtime cannot initialize
-the complete formula model with it on WSL.  Recognition itself,
-including tables and formulas, remains enabled.
+inference.  oneDNN, formerly called MKL-DNN, is Paddle's optional
+optimized CPU execution backend; it is not an OCR model.  The launcher
+deliberately leaves it disabled because the stable PaddlePaddle 3.3.0
+CPU runtime has an upstream PIR-to-oneDNN conversion defect
+(https://github.com/PaddlePaddle/Paddle/issues/77340).  In the tested
+pipeline the defect aborts initialization when PP-StructureV3 reaches
+its formula model, but the model itself is not at fault.  With oneDNN
+disabled, Paddle uses its standard CPU kernels and every recognition
+feature remains enabled, including tables and formulas.  The trade-off
+is speed, not recognition capability.
 
    To recognize one image at the shell, redirect the clean Markdown
 result to a file.  Paddle downloads its models on the first real command
@@ -2737,8 +2743,8 @@ normal choices:
      ‘emacsvox-ocr-paddleocr-use-text-line-orientation’ control image
      correction.
    • ‘emacsvox-ocr-paddleocr-enable-mkldnn’ enables oneDNN/MKL-DNN
-     acceleration.  Keep it disabled for the tested PaddlePaddle 3.3.0
-     CPU setup on WSL.
+     acceleration.  It does not enable or disable any OCR model.  Keep
+     it disabled for the tested PaddlePaddle 3.3.0 CPU setup on WSL.
 
    The PaddleOCR options apply only while ‘emacsvox-ocr-engine’ names
 the bundled adapter.  Selecting a different engine preserves the generic
@@ -4915,27 +4921,27 @@ Node: Development Environment113999
 Node: Desktop Management114556
 Node: Personal Information Management115058
 Node: Desktop Applications115590
-Node: Notmuch Mail122533
-Ref: Notmuch fields and privacy131893
-Node: Agent Shell137601
-Node: EAT Terminal Access147595
-Node: Running Terminal Based Applications164854
-Node: Starting Term165809
-Node: Term Input Modes166648
-Node: Term Speech Feedback167808
-Node: Reviewing The Term Screen169002
-Node: Term Help And Recovery170903
-Node: Emacsvox Keyboard Commands171802
-Node: Copyright173206
-Node: Acknowledgments173793
-Node: Developer Guide174819
-Node: Documentation Maintenance175983
-Node: Speech Server Protocols180781
-Ref: Testing A Direct Legacy Server186688
-Ref: Commands That Queue Output187247
-Ref: Commands That Set State190281
-Node: Integration Maintenance192875
-Node: Concept Index209780
+Node: Notmuch Mail122978
+Ref: Notmuch fields and privacy132338
+Node: Agent Shell138046
+Node: EAT Terminal Access148040
+Node: Running Terminal Based Applications165299
+Node: Starting Term166254
+Node: Term Input Modes167093
+Node: Term Speech Feedback168253
+Node: Reviewing The Term Screen169447
+Node: Term Help And Recovery171348
+Node: Emacsvox Keyboard Commands172247
+Node: Copyright173651
+Node: Acknowledgments174238
+Node: Developer Guide175264
+Node: Documentation Maintenance176428
+Node: Speech Server Protocols181226
+Ref: Testing A Direct Legacy Server187133
+Ref: Commands That Queue Output187692
+Ref: Commands That Set State190726
+Node: Integration Maintenance193320
+Node: Concept Index210225
 
 End Tag Table
 

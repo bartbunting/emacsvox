@@ -266,10 +266,14 @@ From the Emacsvox checkout, verify that the launcher finds both packages:
 
 The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the CPU
 device.  A warning that ~ccache~ is absent is harmless for normal inference.
-The launcher deliberately leaves oneDNN/MKL-DNN acceleration disabled because
-the tested Paddle 3.3.0 CPU runtime cannot initialize the complete formula
-model with it on WSL.  Recognition itself, including tables and formulas,
-remains enabled.
+oneDNN, formerly called MKL-DNN, is Paddle's optional optimized CPU execution
+backend; it is not an OCR model.  The launcher deliberately leaves it disabled
+because the stable PaddlePaddle 3.3.0 CPU runtime has an
+[[https://github.com/PaddlePaddle/Paddle/issues/77340][upstream PIR-to-oneDNN conversion defect]].  In the tested pipeline the defect
+aborts initialization when PP-StructureV3 reaches its formula model, but the
+model itself is not at fault.  With oneDNN disabled, Paddle uses its standard
+CPU kernels and every recognition feature remains enabled, including tables
+and formulas.  The trade-off is speed, not recognition capability.
 
 To recognize one image at the shell, redirect the clean Markdown result to a
 file.  Paddle downloads its models on the first real command and writes
@@ -321,7 +325,8 @@ has typed options for its normal choices:
   ~emacsvox-ocr-paddleocr-use-document-unwarping~, and
   ~emacsvox-ocr-paddleocr-use-text-line-orientation~ control image correction.
 - ~emacsvox-ocr-paddleocr-enable-mkldnn~ enables oneDNN/MKL-DNN acceleration.
-  Keep it disabled for the tested PaddlePaddle 3.3.0 CPU setup on WSL.
+  It does not enable or disable any OCR model.  Keep it disabled for the tested
+  PaddlePaddle 3.3.0 CPU setup on WSL.
 
 The PaddleOCR options apply only while ~emacsvox-ocr-engine~ names the bundled
 adapter.  Selecting a different engine preserves the generic engine interface.
