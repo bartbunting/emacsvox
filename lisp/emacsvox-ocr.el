@@ -27,18 +27,9 @@
 
 ;;; Commentary:
 
-;; This module defines Emacsvox front-end to OCR.
-;; This module assumes that sane is installed and working
-;; for image acquisition,
-;; and that there is an OCR engine that can take acquired
-;; images and produce text.
-;;; Prerequisites:
-;; Sane installed and working.
-;; scanimage to generate tiff files from scanner.
-;; tiffcp to compress the tiff file.
-;; working ocr executable 
-;; by default this module assumes that the OCR executable
-;; is named "ocr"
+;; This module defines the Emacsvox front end to OCR.  PaddleOCR
+;; PP-StructureV3 is the default engine and accepts images and PDFs.  SANE
+;; remains available as an optional image-acquisition route.
 
 ;;; Code:
 
@@ -51,6 +42,7 @@
 (defvar emacsvox-ocr-current-page-number)
 (defvar emacsvox-ocr-document-name)
 (defvar emacsvox-ocr-engine)
+(defvar emacsvox-ocr-error-buffer)
 (defvar emacsvox-ocr-engine-options)
 (defvar emacsvox-ocr-image-extension)
 (defvar emacsvox-ocr-image-flipflop)
@@ -73,10 +65,8 @@
 
 ;;;   Customization variables
 (defgroup emacsvox-ocr nil
-  "Emacsvox front end for scanning and OCR.
-Pre-requisites:
-SANE for image acquisition.
-OCR engine for optical character recognition."
+  "Emacsvox front end for image and PDF OCR.
+PaddleOCR PP-StructureV3 is the default recognition engine."
   :group 'emacsvox
   :prefix "emacsvox-ocr-")
 
@@ -107,16 +97,78 @@ OCR engine for optical character recognition."
   :type 'string
   :group 'emacsvox-ocr)
 
+(defconst emacsvox-ocr-paddleocr-engine
+  (expand-file-name "bin/emacsvox-paddleocr" emacsvox-directory)
+  "Bundled PaddleOCR adapter executable.")
+
 (defcustom emacsvox-ocr-engine
-  (expand-file-name "tesseract.pl" emacsvox-etc-directory)
-  "OCR engine to process acquired image."
+  emacsvox-ocr-paddleocr-engine
+  "OCR engine used to process an image or PDF."
   :type 'string
   :group 'emacsvox-ocr)
 
+(defcustom emacsvox-ocr-paddleocr-python nil
+  "Python executable used by the bundled PaddleOCR adapter.
+When nil, the launcher uses its default isolated environment.  This option has
+no effect when `emacsvox-ocr-engine' selects another OCR engine."
+  :type '(choice
+          (const :tag "Default isolated environment" nil)
+          (file :tag "Python executable"))
+  :group 'emacsvox-ocr)
+
+(defcustom emacsvox-ocr-paddleocr-language "en"
+  "Language used by the bundled PaddleOCR adapter."
+  :type 'string
+  :group 'emacsvox-ocr)
+
+(defcustom emacsvox-ocr-paddleocr-device "cpu"
+  "Paddle device used by the bundled adapter.
+Examples include `cpu', `gpu', and `gpu:0'."
+  :type 'string
+  :group 'emacsvox-ocr)
+
+(defcustom emacsvox-ocr-paddleocr-use-document-orientation t
+  "Whether PaddleOCR should classify document orientation."
+  :type 'boolean
+  :group 'emacsvox-ocr)
+
+(defcustom emacsvox-ocr-paddleocr-use-document-unwarping t
+  "Whether PaddleOCR should correct warped document images."
+  :type 'boolean
+  :group 'emacsvox-ocr)
+
+(defcustom emacsvox-ocr-paddleocr-use-text-line-orientation t
+  "Whether PaddleOCR should classify individual text-line orientation."
+  :type 'boolean
+  :group 'emacsvox-ocr)
+
+(defcustom emacsvox-ocr-paddleocr-use-table-recognition t
+  "Whether PaddleOCR should recognize and preserve tables."
+  :type 'boolean
+  :group 'emacsvox-ocr)
+
+(defcustom emacsvox-ocr-paddleocr-use-formula-recognition t
+  "Whether PaddleOCR should recognize mathematical formulas."
+  :type 'boolean
+  :group 'emacsvox-ocr)
+
+(defcustom emacsvox-ocr-paddleocr-enable-mkldnn nil
+  "Whether to enable oneDNN/MKL-DNN acceleration for PaddleOCR.
+Keep this disabled for the tested PaddlePaddle 3.3.0 CPU setup on WSL."
+  :type 'boolean
+  :group 'emacsvox-ocr)
+
 (defcustom emacsvox-ocr-engine-options nil
-  "Command line options to pass to OCR engine."
+  "Additional command-line arguments passed literally to the OCR engine.
+For the bundled PaddleOCR adapter, these follow the typed customization
+options and can override them."
   :type'(repeat
          (string :tag "Option"))
+  :group 'emacsvox-ocr)
+
+(defcustom emacsvox-ocr-error-buffer "*Emacsvox OCR Errors*"
+  "Buffer that receives diagnostics from the OCR engine."
+  :type 'string
   :group 'emacsvox-ocr)
 
 (defcustom emacsvox-ocr-working-directory
@@ -228,52 +280,26 @@ will be placed."
 
 (define-derived-mode emacsvox-ocr-mode text-mode 
   "Major mode for document scanning and  OCR.\n"
-  " An OCR front-end for the Emacsvox desktop.
+  "An OCR front end for the Emacsvox desktop.
 
-Pre-requisites:
+The default engine is PaddleOCR PP-StructureV3.  It recognizes images and
+PDFs, preserves reading order, and represents detected tables in Markdown.
+Install it as described in the Emacsvox user manual, then use `o' to choose a
+file.  OCR runs asynchronously; engine diagnostics go to the buffer named by
+`emacsvox-ocr-error-buffer'.
 
-1) A working scanner back-end like SANE on Linux.
+The optional scanner commands require a working scanner back end such as SANE
+on Linux.  `emacsvox-ocr-scan-image' uses `scanimage' to acquire a TIFF file;
+customize `emacsvox-ocr-scan-image' and its related options if necessary.
 
-2) An OCR engine.
+Launch this front end with `emacsvox-ocr', bound to \\[emacsvox-ocr].  The
+result buffer uses single-keystroke commands; see the key-binding list below.
+Recognized text and optional acquired images are saved under
+`emacsvox-ocr-working-directory'.  Command
+`emacsvox-ocr-open-working-directory', bound to
+\\[emacsvox-ocr-open-working-directory], opens that directory.
 
-1: Make sure your scanner back-end works, and that you have
-the utilities to scan a document and acquire an image as a
-tiff file.  Then set variable
-emacsvox-ocr-scan-image-program to point at this utility.
-By default, this is set to `scanimage' which is the image
-scanning utility provided by SANE.
-
-By default, this front-end attempts to compress the acquired
-tiff image; make sure you have a utility like tiffcp.
-Variable emacsvox-ocr-compress-image is set to `tiffcp' by
-default; if you use something else, you should customize
-this variable.
-
-2: Next, make sure you have an OCR engine installed and
-working.  By default this front-end assumes that OCR is
-available as /usr/bin/ocr.
-
-Once you have ensured that acquiring an image and applying
-OCR to it work independently of Emacs, you can use this
-Emacsvox front-end to enable easy OCR access from within
-Emacsvox.
-
-The Emacsvox OCR front-end is launched by command
-emacsvox-ocr bound to \\[emacsvox-ocr].  
-
-This command switches to a special buffer that has OCR
-commands bounds to single keystrokes-- see the key-binding
-list at the end of this description.  Use Emacs online help
-facility to look up help on these commands.
-
-emacsvox-ocr-mode provides the necessary functionality to
-scan, OCR, read and save documents.  By default, scanned
-images and the resulting text are saved under directory
-~/ocr; see variable emacsvox-ocr-working-directory.
-Invoking command emacsvox-ocr-open-working-directory bound
-to \\[emacsvox-ocr-open-working-directory] will open this directory.
-
-By default, the document being scanned is named `untitled'.
+By default, the document is named from the current date.
 You can name the document by using command
 emacsvox-ocr-name-document bound to
 \\[emacsvox-ocr-name-document].  The document name is used
@@ -287,7 +313,7 @@ See \\{emacsvox-ocr-mode-map}.
     (setq emacsvox-ocr-current-page-number 0
           emacsvox-ocr-last-page-number 0
           emacsvox-ocr-page-positions
-          (make-vector 25 nil))
+          (make-vector 32 nil))
     (emacsvox-ocr-update-mode-line)))
 
 (define-key emacsvox-ocr-mode-map "?" 'describe-mode)
@@ -297,7 +323,7 @@ See \\{emacsvox-ocr-mode-map}.
 (define-key emacsvox-ocr-mode-map "\C-m"  'emacsvox-ocr-scan-and-recognize)
 (define-key emacsvox-ocr-mode-map "i" 'emacsvox-ocr-scan-image)
 (define-key emacsvox-ocr-mode-map "j" 'emacsvox-ocr-scan-photo)
-(define-key emacsvox-ocr-mode-map "o" 'emacsvox-ocr-recognize-image)
+(define-key emacsvox-ocr-mode-map "o" 'emacsvox-ocr-recognize-file)
 (define-key emacsvox-ocr-mode-map
             "f" 'emacsvox-ocr-flipflop-and-recognize-image)
 (define-key emacsvox-ocr-mode-map "n" 'emacsvox-ocr-name-document)
@@ -333,12 +359,11 @@ See \\{emacsvox-ocr-mode-map}.
 
 ;;;###autoload
 (defun emacsvox-ocr ()
-  "An OCR front-end for the Emacsvox desktop.  
+  "Open the Emacsvox front end for image and PDF OCR.
 
-Page image is acquired using tools from the SANE package.
-The acquired image is run through the OCR engine if one is
-available, and the results placed in a buffer that is
-suitable for browsing the results.
+The selected file is run through `emacsvox-ocr-engine' and the result is
+placed in a buffer suitable for reading and saving.  Optional image
+acquisition commands use tools from the SANE package.
 
 For detailed help, invoke command emacsvox-ocr bound to
 \\[emacsvox-ocr] to launch emacsvox-ocr-mode, and press
@@ -347,8 +372,8 @@ For detailed help, invoke command emacsvox-ocr bound to
   (let  ((buffer (emacsvox-ocr-get-buffer)))
     (with-current-buffer buffer
       (emacsvox-ocr-mode)
-      (when (file-exists-p emacsvox-ocr-working-directory)
-        (cd emacsvox-ocr-working-directory))
+      (make-directory emacsvox-ocr-working-directory t)
+      (cd emacsvox-ocr-working-directory)
       (switch-to-buffer buffer)
       (setq buffer-read-only t)
       (emacsvox-icon 'open-object)
@@ -444,6 +469,17 @@ The scanned image is converted to JPEG."
 (defvar emacsvox-ocr-process nil
   "Handle to OCR process.")
 
+(make-variable-buffer-local 'emacsvox-ocr-process)
+
+(defun emacsvox-ocr--ensure-page-capacity (page)
+  "Ensure that the page position vector can hold PAGE."
+  (when (>= page (length emacsvox-ocr-page-positions))
+    (let* ((old-length (length emacsvox-ocr-page-positions))
+           (new-length (max (1+ page) (* 2 old-length) 32)))
+      (setq emacsvox-ocr-page-positions
+            (vconcat emacsvox-ocr-page-positions
+                     (make-vector (- new-length old-length) nil))))))
+
 (defun emacsvox-ocr-write-document ()
   "Writes out recognized text from all pages in current document."
   (interactive)
@@ -474,50 +510,132 @@ to an appropriately named file."
        (emacsvox-ocr-get-page-name))
       (emacsvox-icon 'save-object))))
 
-(defun emacsvox-ocr-process-sentinel  (_process _state)
-  "Alert user when OCR is complete."
-  (setq emacsvox-ocr-current-page-number
-        emacsvox-ocr-last-page-number)
-  (emacsvox-icon 'task-done)
-  (goto-char (aref emacsvox-ocr-page-positions
-                   emacsvox-ocr-current-page-number))
-  (emacsvox-ocr-save-current-page)
-  (emacsvox-ocr-update-mode-line)
-  (emacsvox-speak-line))
+(defun emacsvox-ocr-process-sentinel (process _state)
+  "Update the OCR buffer after PROCESS exits."
+  (when (and (memq (process-status process) '(exit signal))
+             (not (process-get process 'emacsvox-ocr-handled)))
+    (process-put process 'emacsvox-ocr-handled t)
+    (let ((buffer (process-buffer process))
+          (page (process-get process 'emacsvox-ocr-page))
+          (header-start (process-get process 'emacsvox-ocr-header-start)))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (setq emacsvox-ocr-process nil)
+          (if (= 0 (process-exit-status process))
+              (progn
+                (setq emacsvox-ocr-current-page-number page)
+                (emacsvox-icon 'task-done)
+                (goto-char (aref emacsvox-ocr-page-positions page))
+                (emacsvox-ocr-save-current-page)
+                (emacsvox-ocr-update-mode-line)
+                (emacsvox-speak-line))
+            (let ((inhibit-read-only t))
+              (delete-region header-start (point-max)))
+            (aset emacsvox-ocr-page-positions page nil)
+            (setq emacsvox-ocr-last-page-number (1- page)
+                  emacsvox-ocr-current-page-number
+                  (min emacsvox-ocr-current-page-number
+                       emacsvox-ocr-last-page-number))
+            (emacsvox-ocr-update-mode-line)
+            (emacsvox-icon 'warn-user)
+            (message
+             "OCR failed; see %s"
+             emacsvox-ocr-error-buffer)))))))
+
+(defun emacsvox-ocr--default-input-file ()
+  "Return the expected page image, or prompt for an image or PDF."
+  (let ((expected
+         (emacsvox-ocr-get-image-name emacsvox-ocr-image-extension)))
+    (if (file-exists-p expected)
+        (expand-file-name expected)
+      (expand-file-name
+       (read-file-name "Image or PDF to recognize: ")))))
+
+(defun emacsvox-ocr--using-paddleocr-p ()
+  "Return non-nil when the bundled PaddleOCR adapter is selected."
+  (equal (expand-file-name emacsvox-ocr-engine)
+         emacsvox-ocr-paddleocr-engine))
+
+(defun emacsvox-ocr--paddleocr-arguments ()
+  "Return arguments derived from the typed PaddleOCR options."
+  (append
+   (list "--lang" emacsvox-ocr-paddleocr-language
+         "--device" emacsvox-ocr-paddleocr-device)
+   (unless emacsvox-ocr-paddleocr-use-document-orientation
+     '("--no-doc-orientation"))
+   (unless emacsvox-ocr-paddleocr-use-document-unwarping
+     '("--no-doc-unwarping"))
+   (unless emacsvox-ocr-paddleocr-use-text-line-orientation
+     '("--no-textline-orientation"))
+   (unless emacsvox-ocr-paddleocr-use-table-recognition
+     '("--no-tables"))
+   (unless emacsvox-ocr-paddleocr-use-formula-recognition
+     '("--no-formulas"))
+   (when emacsvox-ocr-paddleocr-enable-mkldnn
+     '("--enable-mkldnn"))))
+
+(defun emacsvox-ocr--engine-command (input-file)
+  "Return the OCR command list for INPUT-FILE."
+  (append
+   (list emacsvox-ocr-engine input-file)
+   (when (emacsvox-ocr--using-paddleocr-p)
+     (emacsvox-ocr--paddleocr-arguments))
+   emacsvox-ocr-engine-options))
+
+(defun emacsvox-ocr--engine-process-environment ()
+  "Return the environment to use for the selected OCR engine."
+  (let ((process-environment (copy-sequence process-environment)))
+    (when (and (emacsvox-ocr--using-paddleocr-p)
+               emacsvox-ocr-paddleocr-python)
+      (setenv "EMACSVOX_PADDLEOCR_PYTHON"
+              (expand-file-name emacsvox-ocr-paddleocr-python)))
+    process-environment))
+
+(defun emacsvox-ocr-recognize-file (input-file)
+  "Run the OCR engine asynchronously on image or PDF INPUT-FILE."
+  (interactive (list (emacsvox-ocr--default-input-file)))
+  (when (process-live-p emacsvox-ocr-process)
+    (user-error "OCR is already running in this buffer"))
+  (unless (file-readable-p input-file)
+    (user-error "Cannot read OCR input: %s" input-file))
+  (unless (or (file-executable-p emacsvox-ocr-engine)
+              (executable-find emacsvox-ocr-engine))
+    (user-error "OCR engine is not executable: %s" emacsvox-ocr-engine))
+  (let* ((inhibit-read-only t)
+         (process-environment (emacsvox-ocr--engine-process-environment))
+         (header-start (point-max))
+         (page (1+ emacsvox-ocr-last-page-number))
+         (error-buffer (get-buffer-create emacsvox-ocr-error-buffer)))
+    (with-current-buffer error-buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)))
+    (goto-char header-start)
+    (emacsvox-icon 'select-object)
+    (emacsvox-ocr--ensure-page-capacity page)
+    (setq emacsvox-ocr-last-page-number page)
+    (insert (format "\n%c\nPage %s\n" 12 page))
+    (aset emacsvox-ocr-page-positions page (+ 3 header-start))
+    (setq emacsvox-ocr-process
+          (make-process
+           :name "emacsvox-ocr"
+           :buffer (current-buffer)
+           :command (emacsvox-ocr--engine-command input-file)
+           :connection-type 'pipe
+           :noquery t
+           :stderr error-buffer
+           :sentinel #'ignore))
+    (let ((process emacsvox-ocr-process))
+      (process-put process 'emacsvox-ocr-page page)
+      (process-put process 'emacsvox-ocr-header-start header-start)
+      (set-process-sentinel process #'emacsvox-ocr-process-sentinel)
+      (when (memq (process-status process) '(exit signal))
+        (emacsvox-ocr-process-sentinel process "finished\n")))
+    (message "Launched OCR engine.")))
 
 (defun emacsvox-ocr-recognize-image ()
-  "Run OCR engine on current image.
-Prompts for image file if file corresponding to the expected
-`current page' is not found."
+  "Compatibility command that recognizes an image or PDF."
   (interactive)
-  (let ((inhibit-read-only t)
-        (image-name
-         (if
-             (file-exists-p
-              (emacsvox-ocr-get-image-name emacsvox-ocr-image-extension))
-             (emacsvox-ocr-get-image-name emacsvox-ocr-image-extension)
-           (expand-file-name 
-            (read-file-name "Image file to recognize: ")))))
-    (goto-char (point-max))
-    (emacsvox-icon 'select-object)
-    (setq emacsvox-ocr-last-page-number
-          (1+ emacsvox-ocr-last-page-number))
-    (aset emacsvox-ocr-page-positions
-          emacsvox-ocr-last-page-number
-          (+ 3 (point)))
-    (insert
-     (format "\n%c\nPage %s\n" 12
-             emacsvox-ocr-last-page-number))
-    (setq emacsvox-ocr-process
-          (apply 'start-process 
-                 "ocr"
-                 (current-buffer)
-                 emacsvox-ocr-engine
-                 image-name
-                 emacsvox-ocr-engine-options))
-    (set-process-sentinel emacsvox-ocr-process
-                          'emacsvox-ocr-process-sentinel)
-    (message "Launched OCR engine.")))
+  (call-interactively #'emacsvox-ocr-recognize-file))
 
 (defconst emacsvox-ocr-image-flipflop
   (executable-find "mogrify")
@@ -531,37 +649,19 @@ need the imagemagik family of tools --- we use mogrify to
 transform the image.  Prompts for image file if file
 corresponding to the expected `current page' is not found."
   (interactive)
-  (let ((inhibit-read-only t)
-        (image-name
+  (let ((image-name
          (if
              (file-exists-p
               (emacsvox-ocr-get-image-name emacsvox-ocr-image-extension))
              (emacsvox-ocr-get-image-name emacsvox-ocr-image-extension)
            (expand-file-name 
             (read-file-name "Image file to recognize: ")))))
-    (goto-char (point-max))
-    (emacsvox-icon 'select-object)
-    (setq emacsvox-ocr-last-page-number
-          (1+ emacsvox-ocr-last-page-number))
-    (aset emacsvox-ocr-page-positions
-          emacsvox-ocr-last-page-number
-          (+ 3 (point)))
-    (insert
-     (format "\n%c\nPage %s\n" 12
-             emacsvox-ocr-last-page-number))
-    (shell-command
-     (format "%s -flip -flop %s"
-             emacsvox-ocr-image-flipflop image-name))
-    (setq emacsvox-ocr-process
-          (apply 'start-process 
-                 "ocr"
-                 (current-buffer)
-                 emacsvox-ocr-engine
-                 image-name
-                 emacsvox-ocr-engine-options))
-    (set-process-sentinel emacsvox-ocr-process
-                          'emacsvox-ocr-process-sentinel)
-    (message "Launched OCR engine.")))
+    (unless emacsvox-ocr-image-flipflop
+      (user-error "ImageMagick mogrify is not installed"))
+    (unless (= 0 (process-file emacsvox-ocr-image-flipflop nil nil nil
+                               "-flip" "-flop" image-name))
+      (user-error "Could not rotate image: %s" image-name))
+    (emacsvox-ocr-recognize-file image-name)))
 
 (defun emacsvox-ocr-scan-and-recognize ()
   "Scan in a page and run OCR engine on it.

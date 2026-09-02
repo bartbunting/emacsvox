@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of Emacsvox.
+
+# Run the Emacsvox PaddleOCR adapter from its isolated Python environment.
+
+set -eu
+
+script_directory=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+emacsvox_directory=$(CDPATH= cd -- "$script_directory/.." && pwd)
+data_home=${XDG_DATA_HOME:-"$HOME/.local/share"}
+venv_directory=${EMACSVOX_PADDLEOCR_VENV:-"$data_home/emacsvox/paddleocr-venv"}
+python=${EMACSVOX_PADDLEOCR_PYTHON:-"$venv_directory/bin/python"}
+
+if [ ! -x "$python" ]; then
+    printf '%s\n' \
+        "Emacsvox PaddleOCR Python was not found at: $python" \
+        "Install PaddleOCR as described in the Emacsvox user manual, or set" \
+        "EMACSVOX_PADDLEOCR_PYTHON to the Python executable to use." >&2
+    exit 127
+fi
+
+exec "$python" "$emacsvox_directory/etc/emacsvox-paddleocr.py" "$@"
