@@ -27,9 +27,12 @@ browser-readable HTML generated from a
 committed =master= revision and committed separately on =gh-pages=; the
 checked-in Info files provide the same manual inside Emacs.
 
-1. Clone Emacsvox into the permanent directory where you intend to use it.
-   The checkout itself is the installation; there is no later copy step.
+1. From a WSL terminal, clone Emacsvox below your Linux home directory.  The
+   checkout itself is the installation; there is no later copy step.  Avoid a
+   Windows-mounted path such as =/mnt/c= for the ordinary WSL2 build.
    #+BEGIN_SRC sh
+   mkdir -p ~/src
+   cd ~/src
    git clone https://github.com/bartbunting/emacsvox
    cd emacsvox
    #+END_SRC
@@ -89,6 +92,41 @@ but a customized start does not, remove or comment out the two init lines
 above and return to =./bin/emacsvox=.  The
 [[https://bartbunting.github.io/emacsvox/Recovering-From-No-Speech.html][no-speech recovery guide]]
 provides the complete symptom-by-symptom procedure.
+
+* Updating An Existing WSL2 Installation
+
+The installer compiles the source already in the checkout; it does not fetch
+newer Emacsvox source.  Keep the current speaking Emacsvox session open and,
+from =M-x shell RET= in that session or another accessible WSL terminal, update
+the same checkout and rerun the installer:
+
+#+BEGIN_SRC sh
+cd ~/src/emacsvox
+git pull --ff-only
+./bin/emacsvox-wsl-install --check
+./bin/emacsvox-wsl-install
+#+END_SRC
+
+Replace =~/src/emacsvox= if you cloned elsewhere on the Linux filesystem.  If
+Git refuses the fast-forward-only pull because the checkout contains local or
+divergent work, stop and review it rather than resetting or discarding files.
+The update changes files on disk but does not stop the Emacsvox process already
+providing speech.  After the installer succeeds and you hear its final check,
+leave the old session open and start a second, isolated session with
+=./bin/emacsvox=.  Confirm that the new session speaks and reports the expected
+versions.  Only then save your work and exit the old session.  If the update or
+new session fails, leave the old session running while you inspect the reported
+error.
+
+For an Emacsvox-only manual rebuild, run =make check-emacs=, =make
+bytecode-rebuild=, =./bin/emacsvox --diagnose=, and =./bin/emacsvox --check=
+after the pull.  This does not install a newly pinned Omnivox release.  The
+[[https://bartbunting.github.io/emacsvox/Installing-An-Omnivox-Windows-Release-Under-WSL2.html][manual WSL2 Omnivox instructions]]
+give the checksum-verified archive procedure when that layer must be updated
+independently.
+
+Inside Emacs, =M-x emacsvox-speak-version RET= reports the Emacsvox version and
+=M-x tts-speak-version RET= reports the live speech-server version.
 
 * Where To Go Next
 

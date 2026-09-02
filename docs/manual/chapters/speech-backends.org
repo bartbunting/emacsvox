@@ -161,6 +161,11 @@ resolving any reported prerequisite, run:
 ./bin/emacsvox-wsl-install
 #+end_example
 
+The release manifest ~etc/wsl-install.conf~ pins the Omnivox version, GitHub
+release URL, x64 and ARM64 archive names, and both SHA-256 hashes.  The installer
+asks Windows for its architecture, chooses that matching published archive, and
+verifies its pinned hash; it does not build Omnivox from source.
+
 The installer downloads and checksum-verifies the appropriate Windows archive,
 installs the complete payload below the Windows user's ~LocalAppData~, and
 records its absolute WSL path in

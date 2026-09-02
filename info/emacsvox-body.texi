@@ -95,6 +95,7 @@ available before installation at
 
 @menu
 * Before You Begin: Obtaining Emacsvox.  Prepare the required tools and Emacsvox checkout.
+* Updating An Existing WSL2 Installation: Updating Emacsvox Under WSL2.  Update the source checkout and rerun the guided installer.
 * Install And Check Omnivox: Building And Testing The Speech Server.  Install the recommended server and hear its check.
 * Quick Installation::           Build Emacsvox and reach an isolated speaking session.
 * Confirming First Speech::      Verify the live adapter and basic feedback.
@@ -139,22 +140,29 @@ requirements for the recommended WSL2 binary route.  Docker and Windows .NET
 Framework are needed only for the advanced reproducible source-build route in
 @ref{Building Omnivox For WSL2}.
 
-Choose a permanent parent directory and clone Emacsvox:
+Run the clone from a WSL terminal and keep the checkout on the Linux
+filesystem.  The following concrete location works for an ordinary per-user
+installation:
 
 @example
-cd /path/where/you/keep/source
+mkdir -p ~/src
+cd ~/src
 git clone https://github.com/bartbunting/emacsvox
+cd emacsvox
 @end example
 
 The Emacsvox checkout is the installation directory.  It builds in place and
-does not create a second tree to copy elsewhere.  Clone Omnivox beside it only
-when following the Omnivox source-build or reproducible WSL2 build route.
+does not create a second tree to copy elsewhere.  Do not put the ordinary WSL2
+checkout below a Windows-mounted path such as @code{/mnt/c}; Windows filesystem
+semantics can interfere with Unix executable permissions and build tools.
+Clone Omnivox beside Emacsvox only when following the Omnivox source-build or
+reproducible WSL2 build route.
 
 Under WSL2@comma{} first ask the guided installer to inspect the machine without
 changing it:
 
 @example
-cd /path/where/you/keep/source/emacsvox
+cd ~/src/emacsvox
 ./bin/emacsvox-wsl-install --check
 @end example
 
@@ -177,6 +185,73 @@ compiler output is kept below @code{$XDG_CACHE_HOME/emacsvox/logs}@comma{} norma
 lines and the complete log path.  Continue only after hearing both the final
 tone and speech.  You can then skip to the last step in
 @ref{Quick Installation} and start Emacsvox.
+
+@node Updating Emacsvox Under WSL2
+@section Updating An Existing WSL2 Installation
+
+The guided installer recompiles the source already present in the Emacsvox
+checkout@comma{} but it does not fetch newer source itself.  Keep the current speaking
+Emacsvox session open while updating.  Run the commands from
+@kbd{M-x shell RET} in that session@comma{} or from another accessible WSL terminal:
+
+@example
+cd ~/src/emacsvox
+git pull --ff-only
+./bin/emacsvox-wsl-install --check
+./bin/emacsvox-wsl-install
+@end example
+
+Replace @code{~/src/emacsvox} if you chose another Linux-filesystem location.  The
+fast-forward-only pull does not create a merge commit.  If Git reports local
+changes@comma{} a divergent branch@comma{} or another error@comma{} stop and review that checkout;
+do not reset or discard files merely to complete an update.
+
+Rerunning the installer reuses supported Emacs and verified cached downloads@comma{}
+installs a newly pinned Omnivox release when necessary@comma{} rebuilds Emacsvox
+byte-code from scratch so files from the previous source revision cannot
+survive@comma{} and repeats the launch checks.  These operations change files on disk
+but do not stop the Emacsvox process already providing speech.  If the update
+fails@comma{} leave that session running while using it to inspect the reported error
+and the named log file.
+
+After the installer succeeds and you hear its final check@comma{} leave the old
+Emacsvox session open and start a second@comma{} isolated process from the updated
+checkout:
+
+@example
+cd ~/src/emacsvox
+./bin/emacsvox
+@end example
+
+Running both sessions temporarily is deliberate: the old session remains the
+known-good source of speech while you test the replacement.  The new process
+cannot retain Lisp loaded from the previous version.  Confirm that it speaks
+the ready message and ordinary buffer contents.  In the new session@comma{} use
+@kbd{M-x emacsvox-speak-version RET} to hear the Emacsvox version and
+@kbd{M-x tts-speak-version RET} to hear the live speech-server version.  Only
+after these checks pass should you save work in the old session and exit it.
+You can then continue in the isolated session or start Emacsvox through your
+normal customized entry point.  If the new session does not speak@comma{} close it but
+leave the old session running while you inspect the diagnostic and installer
+logs.
+
+For an Emacsvox-only manual update@comma{} keep the current session running and replace
+the two guided-installer commands after @code{git pull --ff-only} with:
+
+@example
+make check-emacs
+make bytecode-rebuild
+./bin/emacsvox --diagnose
+./bin/emacsvox --check
+@end example
+
+All four commands must succeed@comma{} and the final check must produce both its tone
+and speech@comma{} before performing the second-session test above.  This manual route
+rebuilds Emacsvox but does not download or select a newly pinned Omnivox
+release.  When Omnivox also needs to be updated independently@comma{} follow the
+@emph{Manual Release Installation} subsection in
+@ref{Installing An Omnivox Windows Release Under WSL2}@comma{} then repeat
+the diagnostic and audible check above.
 
 @node Building And Testing The Speech Server
 @section Install And Check Omnivox
@@ -335,6 +410,13 @@ Use @kbd{C-n} and @kbd{C-p} to move over lines and confirm ordinary spoken
 navigation.  Type @kbd{M-x emacsvox-describe-emacsvox RET} for the Emacsvox
 overview.  @xref{Basic Usage}@comma{} for the tested starter commands.
 @end enumerate
+
+If the initial speech is too fast@comma{} press @kbd{C-e d -} and then repeat
+@kbd{-} to slow the current buffer@comma{} or use @kbd{C-e d r} to enter an exact
+rate such as @code{40}.  For individually echoed characters@comma{} use
+@kbd{C-e d f} and try a multiplier below one@comma{} such as @code{0.7}.  Put
+@kbd{C-u} before the exact-rate or character-factor command to change the
+global default rather than only the current buffer.
 
 When these checks pass@comma{} continue to @ref{Basic Usage} for a short guided
 first session@comma{} or use @ref{Persistent Startup} to connect Emacsvox to your
@@ -1024,6 +1106,11 @@ resolving any reported prerequisite@comma{} run:
 @example
 ./bin/emacsvox-wsl-install
 @end example
+
+The release manifest @code{etc/wsl-install.conf} pins the Omnivox version@comma{} GitHub
+release URL@comma{} x64 and ARM64 archive names@comma{} and both SHA-256 hashes.  The installer
+asks Windows for its architecture@comma{} chooses that matching published archive@comma{} and
+verifies its pinned hash; it does not build Omnivox from source.
 
 The installer downloads and checksum-verifies the appropriate Windows archive@comma{}
 installs the complete payload below the Windows user's @code{LocalAppData}@comma{} and
@@ -2242,7 +2329,10 @@ setting applies to previews@comma{} structured speech@comma{} and legacy inline 
 
 For a quick engine preference@comma{} @kbd{C-e d e} chooses an available engine
 for the current Emacs session.  Press @kbd{C-u} first to save the new
-preference.  Explicit logical-voice routes still take precedence.
+preference.  On a first run with no saved routing profile@comma{} the ordinary command
+uses the live Omnivox policy as an in-memory baseline and writes no file; the
+prefixed command explicitly saves that baseline and the selected preference.
+Explicit logical-voice routes still take precedence.
 
 Judge voices in context.  The goal is usually to distinguish nearby kinds of
 content@comma{} not to identify every named voice in isolation.  Use a portable

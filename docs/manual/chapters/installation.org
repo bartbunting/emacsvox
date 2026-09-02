@@ -58,22 +58,29 @@ requirements for the recommended WSL2 binary route.  Docker and Windows .NET
 Framework are needed only for the advanced reproducible source-build route in
 @@texinfo:@ref{Building Omnivox For WSL2}@@.
 
-Choose a permanent parent directory and clone Emacsvox:
+Run the clone from a WSL terminal and keep the checkout on the Linux
+filesystem.  The following concrete location works for an ordinary per-user
+installation:
 
 #+begin_example
-cd /path/where/you/keep/source
+mkdir -p ~/src
+cd ~/src
 git clone https://github.com/bartbunting/emacsvox
+cd emacsvox
 #+end_example
 
 The Emacsvox checkout is the installation directory.  It builds in place and
-does not create a second tree to copy elsewhere.  Clone Omnivox beside it only
-when following the Omnivox source-build or reproducible WSL2 build route.
+does not create a second tree to copy elsewhere.  Do not put the ordinary WSL2
+checkout below a Windows-mounted path such as ~/mnt/c~; Windows filesystem
+semantics can interfere with Unix executable permissions and build tools.
+Clone Omnivox beside Emacsvox only when following the Omnivox source-build or
+reproducible WSL2 build route.
 
 Under WSL2, first ask the guided installer to inspect the machine without
 changing it:
 
 #+begin_example
-cd /path/where/you/keep/source/emacsvox
+cd ~/src/emacsvox
 ./bin/emacsvox-wsl-install --check
 #+end_example
 
@@ -96,6 +103,76 @@ compiler output is kept below ~$XDG_CACHE_HOME/emacsvox/logs~, normally
 lines and the complete log path.  Continue only after hearing both the final
 tone and speech.  You can then skip to the last step in
 @@texinfo:@ref{Quick Installation}@@ and start Emacsvox.
+
+** Updating An Existing WSL2 Installation
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Updating Emacsvox Under WSL2
+:DESCRIPTION: Update the source checkout and rerun the guided installer.
+:END:
+
+The guided installer recompiles the source already present in the Emacsvox
+checkout, but it does not fetch newer source itself.  Keep the current speaking
+Emacsvox session open while updating.  Run the commands from
+@@texinfo:@kbd{M-x shell RET}@@ in that session, or from another accessible WSL terminal:
+
+#+begin_example
+cd ~/src/emacsvox
+git pull --ff-only
+./bin/emacsvox-wsl-install --check
+./bin/emacsvox-wsl-install
+#+end_example
+
+Replace ~~/src/emacsvox~ if you chose another Linux-filesystem location.  The
+fast-forward-only pull does not create a merge commit.  If Git reports local
+changes, a divergent branch, or another error, stop and review that checkout;
+do not reset or discard files merely to complete an update.
+
+Rerunning the installer reuses supported Emacs and verified cached downloads,
+installs a newly pinned Omnivox release when necessary, rebuilds Emacsvox
+byte-code from scratch so files from the previous source revision cannot
+survive, and repeats the launch checks.  These operations change files on disk
+but do not stop the Emacsvox process already providing speech.  If the update
+fails, leave that session running while using it to inspect the reported error
+and the named log file.
+
+After the installer succeeds and you hear its final check, leave the old
+Emacsvox session open and start a second, isolated process from the updated
+checkout:
+
+#+begin_example
+cd ~/src/emacsvox
+./bin/emacsvox
+#+end_example
+
+Running both sessions temporarily is deliberate: the old session remains the
+known-good source of speech while you test the replacement.  The new process
+cannot retain Lisp loaded from the previous version.  Confirm that it speaks
+the ready message and ordinary buffer contents.  In the new session, use
+@@texinfo:@kbd{M-x emacsvox-speak-version RET}@@ to hear the Emacsvox version and
+@@texinfo:@kbd{M-x tts-speak-version RET}@@ to hear the live speech-server version.  Only
+after these checks pass should you save work in the old session and exit it.
+You can then continue in the isolated session or start Emacsvox through your
+normal customized entry point.  If the new session does not speak, close it but
+leave the old session running while you inspect the diagnostic and installer
+logs.
+
+For an Emacsvox-only manual update, keep the current session running and replace
+the two guided-installer commands after ~git pull --ff-only~ with:
+
+#+begin_example
+make check-emacs
+make bytecode-rebuild
+./bin/emacsvox --diagnose
+./bin/emacsvox --check
+#+end_example
+
+All four commands must succeed, and the final check must produce both its tone
+and speech, before performing the second-session test above.  This manual route
+rebuilds Emacsvox but does not download or select a newly pinned Omnivox
+release.  When Omnivox also needs to be updated independently, follow the
+/Manual Release Installation/ subsection in
+@@texinfo:@ref{Installing An Omnivox Windows Release Under WSL2}@@, then repeat
+the diagnostic and audible check above.
 
 ** Install And Check Omnivox
 :PROPERTIES:
@@ -250,6 +327,13 @@ it to your personal configuration:
 1. Use @@texinfo:@kbd{C-n}@@ and @@texinfo:@kbd{C-p}@@ to move over lines and confirm ordinary spoken
    navigation.  Type @@texinfo:@kbd{M-x emacsvox-describe-emacsvox RET}@@ for the Emacsvox
    overview.  @@texinfo:@xref{Basic Usage}@@, for the tested starter commands.
+
+If the initial speech is too fast, press @@texinfo:@kbd{C-e d -}@@ and then repeat
+@@texinfo:@kbd{-}@@ to slow the current buffer, or use @@texinfo:@kbd{C-e d r}@@ to enter an exact
+rate such as ~40~.  For individually echoed characters, use
+@@texinfo:@kbd{C-e d f}@@ and try a multiplier below one, such as ~0.7~.  Put
+@@texinfo:@kbd{C-u}@@ before the exact-rate or character-factor command to change the
+global default rather than only the current buffer.
 
 When these checks pass, continue to @@texinfo:@ref{Basic Usage}@@ for a short guided
 first session, or use @@texinfo:@ref{Persistent Startup}@@ to connect Emacsvox to your

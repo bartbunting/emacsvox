@@ -393,7 +393,10 @@ setting applies to previews, structured speech, and legacy inline voices.
 
 For a quick engine preference, @@texinfo:@kbd{C-e d e}@@ chooses an available engine
 for the current Emacs session.  Press @@texinfo:@kbd{C-u}@@ first to save the new
-preference.  Explicit logical-voice routes still take precedence.
+preference.  On a first run with no saved routing profile, the ordinary command
+uses the live Omnivox policy as an in-memory baseline and writes no file; the
+prefixed command explicitly saves that baseline and the selected preference.
+Explicit logical-voice routes still take precedence.
 
 Judge voices in context.  The goal is usually to distinguish nearby kinds of
 content, not to identify every named voice in isolation.  Use a portable

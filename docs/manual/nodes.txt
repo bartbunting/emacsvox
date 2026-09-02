@@ -1,6 +1,7 @@
 Introduction
 Installation
 Obtaining Emacsvox
+Updating Emacsvox Under WSL2
 Building And Testing The Speech Server
 Quick Installation
 Confirming First Speech

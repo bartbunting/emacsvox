@@ -15,6 +15,19 @@ advance.  Before a release, replace =Unreleased= with the exact value from
 
 Released notes are preserved in [[file:NEWS-2026.9.1][NEWS for Emacsvox 2026.9.1]].
 
+** First-run engine selection and WSL setup
+
+~C-e d e~ now works before a machine routing profile has been saved.  It uses
+the live Omnivox policy as a transient session baseline and writes no file;
+~C-u C-e d e~ explicitly saves the baseline with the selected engine order.
+
+The WSL2 installation guide now gives a concrete Linux-filesystem checkout
+location, an update procedure that leaves the current speaking session running
+until its replacement is ready, manual rebuild steps, separate Emacsvox and
+Omnivox version checks, and immediate controls for slowing general speech and
+echoed characters.  The guided installer now fully rebuilds byte-code so an
+update cannot retain generated Lisp from the previous source revision.
+
 ** Org link transitions
 
 Opening an Org link into another buffer now plays one opening cue while leaving
