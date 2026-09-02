@@ -2173,6 +2173,20 @@ Route changes are staged until you press ‘w’ or ‘C-c C-c’ to save and
 apply them.  Pressing ‘q’ with unsaved route changes warns that they
 remain staged.
 
+   The tuner names neutral effect values instead of speaking an
+ambiguous number: gain five is _unchanged_, low-pass nine is _disabled_,
+high-pass zero is _disabled_, pan five is _centre_, and reverb or echo
+zero is _disabled_.  These portable levels are translated to the exact
+neutral values required by the active adapter.
+
+   Omnivox average-pitch differences use the customizable
+‘omnivox-average-pitch-contrast’.  Its default value, ‘0.5’, keeps
+palette distinctions while making them gentler.  Set it to ‘1.0’ for the
+historical contrast, or ‘0’ to make average pitch neutral.  Values
+through ‘2.0’ are accepted.  Changing it refreshes logical-voice
+registration, and the same setting applies to previews, structured
+speech, and legacy inline voices.
+
    For a quick engine preference, ‘C-e d e’ chooses an available engine
 for the current Emacs session.  Press ‘C-u’ first to save the new
 preference.  Explicit logical-voice routes still take precedence.
@@ -4760,42 +4774,42 @@ Node: Explaining Presentation87262
 Node: Adjusting Presentation89247
 Node: Presentation Profiles92216
 Node: Voices And Routing93907
-Node: Sounds And Space96264
-Node: Presentation Troubleshooting97888
-Node: Voice Lock99926
-Node: Using Online Help103133
-Node: Emacs Packages107195
-Node: Document Authoring108569
-Node: Structured Editing109123
-Node: Browsing Structure110106
-Node: Web Browsing110704
-Node: Messaging111539
-Node: Editing Code112037
-Node: Development Environment112556
-Node: Desktop Management113113
-Node: Personal Information Management113615
-Node: Desktop Applications114147
-Node: Notmuch Mail115696
-Ref: Notmuch fields and privacy125056
-Node: Agent Shell130764
-Node: EAT Terminal Access140758
-Node: Running Terminal Based Applications158017
-Node: Starting Term158972
-Node: Term Input Modes159811
-Node: Term Speech Feedback160971
-Node: Reviewing The Term Screen162165
-Node: Term Help And Recovery164066
-Node: Emacsvox Keyboard Commands164965
-Node: Copyright166369
-Node: Acknowledgments166956
-Node: Developer Guide167982
-Node: Documentation Maintenance169146
-Node: Speech Server Protocols173944
-Ref: Testing A Direct Legacy Server179851
-Ref: Commands That Queue Output180410
-Ref: Commands That Set State183444
-Node: Integration Maintenance186038
-Node: Concept Index202943
+Node: Sounds And Space97043
+Node: Presentation Troubleshooting98667
+Node: Voice Lock100705
+Node: Using Online Help103912
+Node: Emacs Packages107974
+Node: Document Authoring109348
+Node: Structured Editing109902
+Node: Browsing Structure110885
+Node: Web Browsing111483
+Node: Messaging112318
+Node: Editing Code112816
+Node: Development Environment113335
+Node: Desktop Management113892
+Node: Personal Information Management114394
+Node: Desktop Applications114926
+Node: Notmuch Mail116475
+Ref: Notmuch fields and privacy125835
+Node: Agent Shell131543
+Node: EAT Terminal Access141537
+Node: Running Terminal Based Applications158796
+Node: Starting Term159751
+Node: Term Input Modes160590
+Node: Term Speech Feedback161750
+Node: Reviewing The Term Screen162944
+Node: Term Help And Recovery164845
+Node: Emacsvox Keyboard Commands165744
+Node: Copyright167148
+Node: Acknowledgments167735
+Node: Developer Guide168761
+Node: Documentation Maintenance169925
+Node: Speech Server Protocols174723
+Ref: Testing A Direct Legacy Server180630
+Ref: Commands That Queue Output181189
+Ref: Commands That Set State184223
+Node: Integration Maintenance186817
+Node: Concept Index203722
 
 End Tag Table
 

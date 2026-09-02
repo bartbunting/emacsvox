@@ -368,6 +368,19 @@ selected logical voice on its effective route.  Route changes are staged until
 you press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ to save and apply them.  Pressing
 @@texinfo:@kbd{q}@@ with unsaved route changes warns that they remain staged.
 
+The tuner names neutral effect values instead of speaking an ambiguous number:
+gain five is /unchanged/, low-pass nine is /disabled/, high-pass zero is
+/disabled/, pan five is /centre/, and reverb or echo zero is /disabled/.  These
+portable levels are translated to the exact neutral values required by the
+active adapter.
+
+Omnivox average-pitch differences use the customizable
+=omnivox-average-pitch-contrast=.  Its default value, =0.5=, keeps palette
+distinctions while making them gentler.  Set it to =1.0= for the historical
+contrast, or =0= to make average pitch neutral.  Values through =2.0= are
+accepted.  Changing it refreshes logical-voice registration, and the same
+setting applies to previews, structured speech, and legacy inline voices.
+
 For a quick engine preference, @@texinfo:@kbd{C-e d e}@@ chooses an available engine
 for the current Emacs session.  Press @@texinfo:@kbd{C-u}@@ first to save the new
 preference.  Explicit logical-voice routes still take precedence.

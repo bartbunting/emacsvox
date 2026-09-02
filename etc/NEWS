@@ -14,3 +14,19 @@ advance.  Before a release, replace =Unreleased= with the exact value from
 =VERSION= and complete the release notes.
 
 Released notes are preserved in [[file:NEWS-2026.9.1][NEWS for Emacsvox 2026.9.1]].
+
+** Org link transitions
+
+Opening an Org link into another buffer now plays one opening cue while leaving
+the destination integration responsible for speaking its content.
+
+** Voice tuning
+
+The voice tuner now names neutral post-synthesis values such as /unchanged/ and
+/disabled/.  Gain, pan, and filter endpoints are translated to their exact
+Omnivox wire values instead of treating every dimension as the same linear
+zero-to-nine scale.
+
+Omnivox average-pitch differences are gentler by default.  Customize
+=omnivox-average-pitch-contrast= to =1.0= for the historical curve, =0= for
+neutral average pitch, or a value through =2.0= for stronger contrast.
