@@ -55,6 +55,22 @@ run_staged()
 {
     env -u OMNIVOX_FLITE_HELPER -u OMNIVOX_FLITE_VOICES \
         -u OMNIVOX_RUTTS_HELPER \
+        -u OMNIVOX_TGSPEECHBOX_HELPER -u OMNIVOX_TGSPEECHBOX_DATA \
+        -u OMNIVOX_TGSPEECHBOX_SAMPLE_RATE \
+        OMNIVOX_PROGRAM="$windows_program" \
+        OMNIVOX_LOG_DIRECTORY="$log_directory" \
+        ESPEAK_NG_DATA="$espeak_data_path" \
+        "$launcher" "$@"
+}
+
+run_staged_tgspeechbox()
+{
+    sample_rate=$1
+    shift
+    env -u OMNIVOX_FLITE_HELPER -u OMNIVOX_FLITE_VOICES \
+        -u OMNIVOX_RUTTS_HELPER \
+        -u OMNIVOX_TGSPEECHBOX_HELPER -u OMNIVOX_TGSPEECHBOX_DATA \
+        OMNIVOX_TGSPEECHBOX_SAMPLE_RATE="$sample_rate" \
         OMNIVOX_PROGRAM="$windows_program" \
         OMNIVOX_LOG_DIRECTORY="$log_directory" \
         ESPEAK_NG_DATA="$espeak_data_path" \
@@ -91,12 +107,51 @@ done
 
 flite_wav=$smoke_directory/flite.wav
 rutts_wav=$smoke_directory/rutts.wav
+companion_wavs="$flite_wav $rutts_wav"
 run_staged --engine flite --dump-wav cmu_us_slt \
     "$(wslpath -w "$flite_wav")" "Flite is ready." >/dev/null
 run_staged --engine rutts --dump-wav male \
     "$(wslpath -w "$rutts_wav")" "Привет, мир!" >/dev/null
 
-for wav in "$flite_wav" "$rutts_wav"; do
+tgspeechbox_companion_state=$(
+    sed -n 's/^tgspeechbox_companion=//p' "$current/PROVENANCE"
+)
+case "$tgspeechbox_companion_state" in
+    local-omnivox-experimental-build)
+        for sample_rate in 44100 22050; do
+            tgspeechbox_voices=$(
+                run_staged_tgspeechbox "$sample_rate" \
+                    --engine tgspeechbox --list-voices-alist
+            )
+            for voice in \
+                '("en-us/beth" "TGSpeechBox Beth (en-us)" "en-us" "Compact")' \
+                '("en-us/bobby" "TGSpeechBox Bobby (en-us)" "en-us" "Compact")'; do
+                if ! printf '%s\n' "$tgspeechbox_voices" | grep -Fq "$voice"; then
+                    echo "Staged TGSpeechBox helper at $sample_rate Hz did not report $voice" >&2
+                    exit 1
+                fi
+            done
+            tgspeechbox_wav=$smoke_directory/tgspeechbox-$sample_rate.wav
+            run_staged_tgspeechbox "$sample_rate" \
+                --engine tgspeechbox --dump-wav en-us/beth \
+                "$(wslpath -w "$tgspeechbox_wav")" \
+                "TG Speech Box is ready." >/dev/null
+            companion_wavs="$companion_wavs $tgspeechbox_wav"
+        done
+        live_tgspeechbox_voice=en-us/beth
+        live_tgspeechbox_sample_rates=44100,22050
+        ;;
+    not-included)
+        live_tgspeechbox_voice=not-included
+        live_tgspeechbox_sample_rates=not-included
+        ;;
+    *)
+        echo "Unknown TGSpeechBox companion state: $tgspeechbox_companion_state" >&2
+        exit 1
+        ;;
+esac
+
+for wav in $companion_wavs; do
     if [ ! -f "$wav" ] || [ "$(wc -c < "$wav")" -le 44 ] ||
        [ "$(dd if="$wav" bs=1 count=4 2>/dev/null)" != RIFF ]; then
         echo "Staged companion did not create valid WAV output: $wav" >&2
@@ -108,4 +163,6 @@ printf '%s\n' \
     "live_espeak_cache=$espeak_cache" \
     'live_flite_voice=cmu_us_slt' \
     'live_rutts_voices=male,female' \
+    "live_tgspeechbox_voice=$live_tgspeechbox_voice" \
+    "live_tgspeechbox_sample_rates=$live_tgspeechbox_sample_rates" \
     "live_runtime=$windows_runtime"

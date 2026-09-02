@@ -359,6 +359,8 @@ OMNIVOX_HELPER_DIR = $(OMNIVOX_DIR)/windows-helpers
 OMNIVOX_ALLOW_DIRTY ?= 0
 OMNIVOX_BUILD_KIND ?= release-clean-worktree
 OMNIVOX_INCLUDE_PINNED_PIPER ?= 1
+OMNIVOX_INCLUDE_TGSPEECHBOX ?= 0
+OMNIVOX_TGSPEECHBOX_CXX ?= x86_64-w64-mingw32-g++-posix
 OMNIVOX_RECORD_RHVOICE ?= 0
 include $(OMNIVOX_RELEASE_DIR)/toolchain.lock
 OMNIVOX_CSC = $(OMNIVOX_RELEASE_DIR)/cache/roslyn-$(roslyn_version)/tasks/net472/csc.exe
@@ -381,6 +383,7 @@ windows-omnivox-dev:
 	$(MAKE) OMNIVOX_ALLOW_DIRTY=1 \
 		OMNIVOX_BUILD_KIND=local-dirty-worktree \
 		OMNIVOX_RECORD_RHVOICE=1 \
+		OMNIVOX_INCLUDE_TGSPEECHBOX=1 \
 		OMNIVOX_INCLUDE_PINNED_PIPER=0 windows-omnivox
 
 windows-omnivox:
@@ -389,6 +392,10 @@ windows-omnivox:
 			0 | 1) ;; \
 			*) echo "OMNIVOX_INCLUDE_PINNED_PIPER must be 0 or 1" >&2; exit 1 ;; \
 		esac; \
+		case "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" in \
+			0 | 1) ;; \
+			*) echo "OMNIVOX_INCLUDE_TGSPEECHBOX must be 0 or 1" >&2; exit 1 ;; \
+		esac; \
 		case "$(OMNIVOX_RECORD_RHVOICE)" in \
 			0 | 1) ;; \
 			*) echo "OMNIVOX_RECORD_RHVOICE must be 0 or 1" >&2; exit 1 ;; \
@@ -396,6 +403,11 @@ windows-omnivox:
 		if [ "$(OMNIVOX_ALLOW_DIRTY)" != 1 ] && \
 			[ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" != 1 ]; then \
 			echo "The clean Windows runtime must include its matching Piper companion" >&2; \
+			exit 1; \
+		fi; \
+		if [ "$(OMNIVOX_ALLOW_DIRTY)" != 1 ] && \
+			[ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" != 0 ]; then \
+			echo "TGSpeechBox is experimental and may only be staged by windows-omnivox-dev" >&2; \
 			exit 1; \
 		fi; \
 		if [ "$(OMNIVOX_ALLOW_DIRTY)" != 1 ]; then \
@@ -410,6 +422,16 @@ windows-omnivox:
 		fi
 	$(MAKE) verify-windows-omnivox-toolchain
 	$(MAKE) verify-windows-omnivox-helpers
+	@if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
+		command -v "$(OMNIVOX_TGSPEECHBOX_CXX)" >/dev/null || { \
+			echo "TGSpeechBox requires the MinGW POSIX C++ compiler: $(OMNIVOX_TGSPEECHBOX_CXX)" >&2; \
+			exit 1; \
+		}; \
+		cd "$(OMNIVOX_DIR)" && \
+			CXX_x86_64_pc_windows_gnu="$(OMNIVOX_TGSPEECHBOX_CXX)" \
+			python3 tools/build_tgspeechbox.py --release \
+				--target $(OMNIVOX_TARGET); \
+	fi
 	@if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
 		$(MAKE) prepare-windows-omnivox-piper; \
 	fi
@@ -457,6 +479,18 @@ windows-omnivox:
 				--target $(OMNIVOX_TARGET); \
 			python3 tools/build_rutts.py --release \
 				--target $(OMNIVOX_TARGET); \
+			if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
+				tgspeechbox_source="/workspace/omnivox/target/$(OMNIVOX_TARGET)/release/tgspeechbox"; \
+				tgspeechbox_destination="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/tgspeechbox"; \
+				if [ ! -f "$$tgspeechbox_source/omnivox-tgspeechbox-helper.exe" ] || \
+					[ ! -f "$$tgspeechbox_source/VOICE-INVENTORY.json" ] || \
+					[ ! -f "$$tgspeechbox_source/VOICE-INVENTORY-22050.json" ] || \
+					[ ! -f "$$tgspeechbox_source/VOICE-INVENTORY-44100.json" ]; then \
+					echo "Host-built TGSpeechBox companion is incomplete: $$tgspeechbox_source" >&2; \
+					exit 1; \
+				fi; \
+				cp -a "$$tgspeechbox_source" "$$tgspeechbox_destination"; \
+			fi; \
 			cp "$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.exe" \
 				"$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/omnivox.unstripped.exe"; \
 			SOURCE_DATE_EPOCH=0 x86_64-w64-mingw32-strip --strip-all \
@@ -476,6 +510,16 @@ windows-omnivox:
 				find . -type f ! -name SHA256SUMS -print0 | LC_ALL=C sort -z | \
 				xargs -0 sha256sum) > "$$rutts_manifest"; \
 			mv "$$rutts_manifest" "$$rutts_dir/SHA256SUMS"; \
+			if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
+				tgspeechbox_dir="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/tgspeechbox"; \
+				SOURCE_DATE_EPOCH=0 x86_64-w64-mingw32-strip --strip-all \
+					"$$tgspeechbox_dir/omnivox-tgspeechbox-helper.exe"; \
+				tgspeechbox_manifest="$$CARGO_TARGET_DIR/$(OMNIVOX_TARGET)/release/tgspeechbox-SHA256SUMS"; \
+				(cd "$$tgspeechbox_dir" && \
+					find . -type f ! -name SHA256SUMS -print0 | LC_ALL=C sort -z | \
+					xargs -0 sha256sum) > "$$tgspeechbox_manifest"; \
+				mv "$$tgspeechbox_manifest" "$$tgspeechbox_dir/SHA256SUMS"; \
+			fi; \
 			mkdir -p "$$CARGO_TARGET_DIR/windows-runtime"; \
 			cp "$$(x86_64-w64-mingw32-g++-win32 -print-file-name=libstdc++-6.dll)" \
 				"$$CARGO_TARGET_DIR/windows-runtime/libstdc++-6.dll"; \
@@ -488,6 +532,7 @@ windows-omnivox:
 		rhvoice_companion="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/rhvoice"; \
 		flite_companion="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/flite"; \
 		rutts_companion="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/rutts"; \
+		tgspeechbox_companion="$(OMNIVOX_RELEASE_TARGET_DIR)/$(OMNIVOX_TARGET)/release/tgspeechbox"; \
 		omnivox_license="$(OMNIVOX_DIR)/LICENSE"; \
 		eloquence_helper="$(OMNIVOX_HELPER_DIR)/bin/OmnivoxEloquenceHelper32.exe"; \
 		dectalk_helper="$(OMNIVOX_HELPER_DIR)/bin/OmnivoxDectalkHelper32.exe"; \
@@ -521,6 +566,42 @@ windows-omnivox:
 		rutts_companion_digest="$$(cd "$$rutts_companion" && \
 			find . -type f -print0 | LC_ALL=C sort -z | \
 			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+		tgspeechbox_companion_digest=not-included; \
+		tgspeechbox_build_environment=not-included; \
+		tgspeechbox_cxx=not-included; \
+		tgspeechbox_cxx_digest=not-included; \
+		if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
+			for required in \
+				"$$tgspeechbox_companion/omnivox-tgspeechbox-helper.exe" \
+				"$$tgspeechbox_companion/VOICE-INVENTORY.json" \
+				"$$tgspeechbox_companion/VOICE-INVENTORY-22050.json" \
+				"$$tgspeechbox_companion/VOICE-INVENTORY-44100.json" \
+				"$$tgspeechbox_companion/SHA256SUMS" \
+				"$$tgspeechbox_companion/SOURCE-PROVENANCE.json" \
+				"$$tgspeechbox_companion/espeak-ng-data/phontab" \
+				"$$tgspeechbox_companion/packs/lang/en-us.yaml" \
+				"$$tgspeechbox_companion/third-party-licenses/TGSpeechBox-LICENSE.txt" \
+				"$$tgspeechbox_companion/third-party-licenses/eSpeak-NG-GPL-3.0.txt"; do \
+				if [ ! -f "$$required" ]; then \
+					echo "Prepared TGSpeechBox companion file is missing: $$required" >&2; \
+					exit 1; \
+				fi; \
+			done; \
+			if x86_64-w64-mingw32-objdump -p \
+				"$$tgspeechbox_companion/omnivox-tgspeechbox-helper.exe" | \
+				grep -Eiq 'DLL Name: (libstdc\+\+|libgcc|libwinpthread)'; then \
+				echo "TGSpeechBox helper imports an unbundled MinGW runtime DLL" >&2; \
+				exit 1; \
+			fi; \
+			tgspeechbox_companion_digest="$$(cd "$$tgspeechbox_companion" && \
+				find . -type f -print0 | LC_ALL=C sort -z | \
+				xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+			tgspeechbox_build_environment=wsl-host-development-only; \
+			tgspeechbox_cxx="$$("$(OMNIVOX_TGSPEECHBOX_CXX)" --version | sed -n '1p')"; \
+			tgspeechbox_cxx_path="$$(command -v "$(OMNIVOX_TGSPEECHBOX_CXX)")"; \
+			tgspeechbox_cxx_digest="$$(sha256sum \
+				"$$(readlink -f "$$tgspeechbox_cxx_path")" | cut -d ' ' -f1)"; \
+		fi; \
 		piper_companion=; \
 		piper_companion_digest=not-included; \
 		if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
@@ -743,7 +824,10 @@ windows-omnivox:
 				"$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
 			printf '%s\n' "$$rhvoice_companion_digest" \
 				"$$flite_companion_digest" \
-				"$$rutts_companion_digest"; \
+				"$$rutts_companion_digest" \
+				"$$tgspeechbox_companion_digest" \
+				"$$tgspeechbox_cxx" \
+				"$$tgspeechbox_cxx_digest"; \
 			if [ -f "$$dectalk_dll" ] && [ -f "$$dectalk_dictionary" ]; then \
 				sha256sum "$$dectalk_dll" "$$dectalk_dictionary" | cut -d ' ' -f1; \
 			else \
@@ -759,6 +843,7 @@ windows-omnivox:
 				"$(reference_assemblies_nupkg_sha256)" \
 				"$$eloquence_runtime_digest" \
 				"$(OMNIVOX_INCLUDE_PINNED_PIPER)" \
+				"$(OMNIVOX_INCLUDE_TGSPEECHBOX)" \
 				"$(omnivox_piper_archive_sha256)" \
 				"$$piper_companion_digest" \
 				"$$piper_model_digest" \
@@ -849,6 +934,10 @@ windows-omnivox:
 			"$$flite_companion_digest"; \
 		stage_companion rutts "$$rutts_companion" \
 			"$$rutts_companion_digest"; \
+		if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
+			stage_companion tgspeechbox "$$tgspeechbox_companion" \
+				"$$tgspeechbox_companion_digest"; \
+		fi; \
 		if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
 			if [ ! -d "$$version_dir/piper" ]; then \
 				piper_stage="$$version_dir/piper.new.$$$$"; \
@@ -923,6 +1012,16 @@ windows-omnivox:
 			piper_commit=$(omnivox_piper_commit); \
 			piper_archive_digest=$(omnivox_piper_archive_sha256); \
 		fi; \
+		tgspeechbox_companion_state=not-included; \
+		tgspeechbox_target=not-included; \
+		tgspeechbox_markers=not-included; \
+		tgspeechbox_rate_mapping=not-included; \
+		if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
+			tgspeechbox_companion_state=local-omnivox-experimental-build; \
+			tgspeechbox_target=$(OMNIVOX_TARGET); \
+			tgspeechbox_markers=none; \
+			tgspeechbox_rate_mapping=provisional; \
+		fi; \
 		{ \
 			printf '%s\n' \
 				'format=emacsvox-omnivox-provenance-v1' \
@@ -966,6 +1065,14 @@ windows-omnivox:
 				'rutts_version=6.3.3' \
 				'rutts_built_in_voices=male,female' \
 				'rutts_rulex=not-included' \
+				"tgspeechbox_companion=$$tgspeechbox_companion_state" \
+				"tgspeechbox_companion_tree_sha256=$$tgspeechbox_companion_digest" \
+				"tgspeechbox_target=$$tgspeechbox_target" \
+				"tgspeechbox_markers=$$tgspeechbox_markers" \
+				"tgspeechbox_rate_mapping=$$tgspeechbox_rate_mapping" \
+				"tgspeechbox_build_environment=$$tgspeechbox_build_environment" \
+				"tgspeechbox_cxx=$$tgspeechbox_cxx" \
+				"tgspeechbox_cxx_sha256=$$tgspeechbox_cxx_digest" \
 				"piper_companion=$$piper_companion_state" \
 				"piper_companion_version=$$piper_version" \
 				"piper_companion_commit=$$piper_commit" \
@@ -990,6 +1097,10 @@ windows-omnivox:
 			sha256sum $$payload_files; \
 			find rhvoice flite rutts -type f -print0 | LC_ALL=C sort -z | \
 				xargs -0 sha256sum; \
+			if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
+				find tgspeechbox -type f -print0 | LC_ALL=C sort -z | \
+					xargs -0 sha256sum; \
+			fi; \
 			if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
 				find piper -type f -print0 | LC_ALL=C sort -z | \
 					xargs -0 sha256sum; \

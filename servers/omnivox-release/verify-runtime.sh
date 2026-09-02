@@ -91,6 +91,127 @@ if ! grep -Fq '"target": "x86_64-pc-windows-gnu"' \
     exit 1
 fi
 
+tgspeechbox_companion_state=$(
+    sed -n 's/^tgspeechbox_companion=//p' "$current/PROVENANCE"
+)
+case "$tgspeechbox_companion_state" in
+    local-omnivox-experimental-build)
+        for required in tgspeechbox/omnivox-tgspeechbox-helper.exe \
+            tgspeechbox/VOICE-INVENTORY.json \
+            tgspeechbox/VOICE-INVENTORY-22050.json \
+            tgspeechbox/VOICE-INVENTORY-44100.json \
+            tgspeechbox/SHA256SUMS tgspeechbox/SOURCE-PROVENANCE.json \
+            tgspeechbox/espeak-ng-data/phontab \
+            tgspeechbox/packs/lang/en-us.yaml \
+            tgspeechbox/third-party-licenses/TGSpeechBox-LICENSE.txt \
+            tgspeechbox/third-party-licenses/eSpeak-NG-GPL-3.0.txt; do
+            if [ ! -f "$current/$required" ]; then
+                echo "Staged TGSpeechBox file is missing: $current/$required" >&2
+                exit 1
+            fi
+        done
+        for expected in \
+            'build_kind=local-dirty-worktree' \
+            'tgspeechbox_target=x86_64-pc-windows-gnu' \
+            'tgspeechbox_markers=none' \
+            'tgspeechbox_rate_mapping=provisional' \
+            'tgspeechbox_build_environment=wsl-host-development-only'; do
+            if ! grep -Fxq "$expected" "$current/PROVENANCE"; then
+                echo "Staged Omnivox provenance is missing: $expected" >&2
+                exit 1
+            fi
+        done
+        expected_tgspeechbox_digest=$(
+            sed -n 's/^tgspeechbox_companion_tree_sha256=//p' \
+                "$current/PROVENANCE"
+        )
+        actual_tgspeechbox_digest=$(
+            cd "$current/tgspeechbox"
+            find . -type f -print0 | LC_ALL=C sort -z |
+                xargs -0 sha256sum | sha256sum | cut -d ' ' -f1
+        )
+        if [ "$actual_tgspeechbox_digest" != \
+             "$expected_tgspeechbox_digest" ]; then
+            echo "Staged TGSpeechBox companion does not match provenance" >&2
+            exit 1
+        fi
+        tgspeechbox_cxx=$(sed -n 's/^tgspeechbox_cxx=//p' \
+            "$current/PROVENANCE")
+        tgspeechbox_cxx_digest=$(sed -n 's/^tgspeechbox_cxx_sha256=//p' \
+            "$current/PROVENANCE")
+        if [ -z "$tgspeechbox_cxx" ] || \
+           [ "$tgspeechbox_cxx" = not-included ]; then
+            echo "Staged TGSpeechBox provenance does not identify its C++ compiler" >&2
+            exit 1
+        fi
+        case "$tgspeechbox_cxx_digest" in
+            *[!0-9a-f]* | '')
+                echo "Invalid TGSpeechBox C++ compiler digest" >&2
+                exit 1
+                ;;
+        esac
+        if [ "${#tgspeechbox_cxx_digest}" -ne 64 ]; then
+            echo "Invalid TGSpeechBox C++ compiler digest length" >&2
+            exit 1
+        fi
+        (cd "$current/tgspeechbox" && \
+            sha256sum --check SHA256SUMS >/dev/null)
+        if ! cmp -s "$current/tgspeechbox/VOICE-INVENTORY.json" \
+            "$current/tgspeechbox/VOICE-INVENTORY-44100.json"; then
+            echo "Default TGSpeechBox inventory is not the 44.1 kHz inventory" >&2
+            exit 1
+        fi
+        for sample_rate in 22050 44100; do
+            inventory="$current/tgspeechbox/VOICE-INVENTORY-$sample_rate.json"
+            if ! grep -Fq "native $sample_rate Hz" "$inventory"; then
+                echo "TGSpeechBox inventory has the wrong native rate: $inventory" >&2
+                exit 1
+            fi
+        done
+        for expected in \
+            '"artifact": "omnivox-tgspeechbox-companion-windows-x64-gnu"' \
+            '"default_native_sample_rate_hz": 44100' \
+            '"markers_advertised": false' \
+            '"rate_mapping": "provisional"' \
+            '"VOICE-INVENTORY-22050.json"' \
+            '"VOICE-INVENTORY-44100.json"' \
+            '"generated_by_packaged_helper": true' \
+            '"voices": 154' \
+            '"target": "x86_64-pc-windows-gnu"' \
+            '"commit": "7515ae055e45d2d15cae01d7fe081ce951dcd5cd"' \
+            '"release": "v-310b802"'; do
+            if ! grep -Fq "$expected" \
+                "$current/tgspeechbox/SOURCE-PROVENANCE.json"; then
+                echo "Staged TGSpeechBox companion provenance is wrong: $expected" >&2
+                exit 1
+            fi
+        done
+        ;;
+    not-included)
+        for expected in \
+            'tgspeechbox_companion_tree_sha256=not-included' \
+            'tgspeechbox_target=not-included' \
+            'tgspeechbox_markers=not-included' \
+            'tgspeechbox_rate_mapping=not-included' \
+            'tgspeechbox_build_environment=not-included' \
+            'tgspeechbox_cxx=not-included' \
+            'tgspeechbox_cxx_sha256=not-included'; do
+            if ! grep -Fxq "$expected" "$current/PROVENANCE"; then
+                echo "TGSpeechBox exclusion is missing provenance: $expected" >&2
+                exit 1
+            fi
+        done
+        if [ -e "$current/tgspeechbox" ]; then
+            echo "TGSpeechBox exclusion is inconsistent with the staged runtime" >&2
+            exit 1
+        fi
+        ;;
+    *)
+        echo "Unknown TGSpeechBox companion state: $tgspeechbox_companion_state" >&2
+        exit 1
+        ;;
+esac
+
 piper_companion_state=$(
     sed -n 's/^piper_companion=//p' "$current/PROVENANCE"
 )
