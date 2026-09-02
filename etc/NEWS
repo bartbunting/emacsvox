@@ -35,3 +35,12 @@ duration or markers.
 Omnivox average-pitch differences are gentler by default.  Customize
 =omnivox-average-pitch-contrast= to =1.0= for the historical curve, =0= for
 neutral average pitch, or a value through =2.0= for stronger contrast.
+
+** Image and PDF OCR
+
+The Emacsvox OCR front end now uses PaddleOCR PP-StructureV3 by default.  It
+accepts images and PDFs, preserves reading order, emits table-aware Markdown,
+and keeps engine diagnostics separate from recognized text.  The user manual
+includes the tested x86-64 WSL2 installation for =paddleocr[all]=.  Language,
+device, table, formula, orientation, unwarping, acceleration, and Python
+selection are available as typed Emacs customization options.

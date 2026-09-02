@@ -208,20 +208,135 @@ see @@texinfo:@ref{Forms Mode,,,emacs,The GNU Emacs Manual}@@ for setup and oper
 @@texinfo:@ref{emacsvox-forms,,,emacsvox-reference,Emacsvox Reference Manual}@@ for the
 speech integration.
 
-*** Experimental OCR Front End
+*** OCR And PDF-To-Text With PaddleOCR
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-#+cindex: OCR, experimental
+#+cindex: OCR
+
+#+cindex: PaddleOCR
+
+#+cindex: PDF, converting to text
+
+#+cindex: tables, OCR
 
 #+findex: emacsvox-ocr
 
-Module ~emacsvox-ocr~ is an experimental legacy front end, not a supported
-initial-user route.  Its scanner, image-processing, and OCR-engine workflow has
-not yet received a current integration review.  Do not rely on setup commands,
-program paths, or defaults in the historical survey.  If you evaluate the
-module, inspect its live command and option help first; the generated
-@@texinfo:@ref{emacsvox-ocr,,,emacsvox-reference,Emacsvox Reference Manual}@@ is an API
-inventory, not a validated deployment guide.  Report the exact platform,
-scanner backend, OCR engine, and Emacsvox revision when requesting help.
+Emacsvox uses PaddleOCR PP-StructureV3 to turn an image or PDF into UTF-8
+Markdown text.  PP-StructureV3 recovers document reading order and represents
+recognized tables as Markdown or embedded HTML, so keep the ~.md~ output when
+table structure matters.  Markdown is plain text and can instead be named
+~.txt~ when its lightweight markup is acceptable.
+
+The supported baseline below is CPU-only x86-64 WSL2 or GNU/Linux.  Paddle's
+Linux wheel requires an AVX-capable x86-64 processor and Python 3.9 through
+3.13.  In particular, do not use Ubuntu 26.04's Python 3.14 for this environment.
+The commands install a separate Python 3.13 so that they do not alter Emacsvox,
+system Python, or another project's packages.  The initial installation uses
+about 1.7 GB.  The first complete PP-StructureV3 run downloads approximately
+another 1.8 GB of models; later runs reuse that cache.
+
+Follow the [[https://docs.astral.sh/uv/getting-started/installation/][official uv installation guide]] if command ~uv~ is not already available,
+then create the isolated environment:
+
+#+begin_src sh
+uv python install 3.13
+uv venv --python 3.13 --seed \
+  "$HOME/.local/share/emacsvox/paddleocr-venv"
+#+end_src
+
+Install the tested CPU runtime and the PaddleOCR ~all~ variant.  The ~all~
+extra includes the document-parsing dependencies needed by PP-StructureV3,
+including table and formula support.
+
+#+begin_src sh
+"$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
+  paddlepaddle==3.3.0 \
+  -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+"$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
+  'paddleocr[all]==3.7.0'
+#+end_src
+
+From the Emacsvox checkout, verify that the launcher finds both packages:
+
+#+begin_src sh
+./bin/emacsvox-paddleocr --check
+#+end_src
+
+The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the CPU
+device.  A warning that ~ccache~ is absent is harmless for normal inference.
+The launcher deliberately leaves oneDNN/MKL-DNN acceleration disabled because
+the tested Paddle 3.3.0 CPU runtime cannot initialize the complete formula
+model with it on WSL.  Recognition itself, including tables and formulas,
+remains enabled.
+
+To recognize one image at the shell, redirect the clean Markdown result to a
+file.  Paddle downloads its models on the first real command and writes
+progress messages to standard error without mixing them into the recognized
+text.
+
+#+begin_src sh
+./bin/emacsvox-paddleocr "/path/to/page.png" > page.md
+#+end_src
+
+PDF input uses the same command.  Paddle renders and recognizes every page,
+then joins the pages in reading order:
+
+#+begin_src sh
+./bin/emacsvox-paddleocr "/path/to/scanned-document.pdf" > document.md
+#+end_src
+
+This route is intended for scanned or image-only PDFs.  For a born-digital PDF
+that already has a trustworthy text layer, extracting that layer is faster and
+usually more exact than OCR.  OCR quality still depends on scan quality;
+300-DPI, upright, high-contrast source pages are a good starting point.  A
+large PDF can take substantial CPU time because table, layout, formula,
+orientation, and unwarping models are all active by default.
+
+Within Emacsvox, press @@texinfo:@kbd{C-e C-o}@@ or run
+@@texinfo:@kbd{M-x emacsvox-ocr @key{RET}}@@.  In the OCR buffer:
+
+- Press ~o~, choose an image or PDF, and wait for the completion cue.  OCR runs
+  asynchronously, and the result appears as a new page in the buffer.
+- Press @@texinfo:@key{SPC}@@ to read the current result, ~s~ to save it, or ~w~ to
+  save the complete OCR buffer.  Press ~[~ and ~]~ to move between results.
+- Press ~d~ to open the per-user OCR directory.  Engine progress and errors are
+  kept separately in buffer ~*Emacsvox OCR Errors*~.
+
+For ordinary use inside Emacs, customize OCR in Emacs rather than setting shell
+environment variables.  Run
+@@texinfo:@kbd{M-x customize-group @key{RET} emacsvox-ocr @key{RET}}@@.  The bundled adapter
+has typed options for its normal choices:
+
+- ~emacsvox-ocr-paddleocr-python~ selects an exact Python executable when the
+  default isolated environment is not appropriate.  Leave it at ~nil~ for the
+  installation path used above.
+- ~emacsvox-ocr-paddleocr-language~ and ~emacsvox-ocr-paddleocr-device~ select
+  the recognition language and Paddle device.
+- ~emacsvox-ocr-paddleocr-use-table-recognition~ and
+  ~emacsvox-ocr-paddleocr-use-formula-recognition~ control the structural
+  models.  Both are enabled by default.
+- ~emacsvox-ocr-paddleocr-use-document-orientation~,
+  ~emacsvox-ocr-paddleocr-use-document-unwarping~, and
+  ~emacsvox-ocr-paddleocr-use-text-line-orientation~ control image correction.
+- ~emacsvox-ocr-paddleocr-enable-mkldnn~ enables oneDNN/MKL-DNN acceleration.
+  Keep it disabled for the tested PaddlePaddle 3.3.0 CPU setup on WSL.
+
+The PaddleOCR options apply only while ~emacsvox-ocr-engine~ names the bundled
+adapter.  Selecting a different engine preserves the generic engine interface.
+~emacsvox-ocr-engine-options~ remains an advanced list of literal arguments;
+for the bundled adapter it follows, and can override, the typed options.
+
+The environment variables are retained for direct shell or automation use of
+~bin/emacsvox-paddleocr~, not as the primary Emacs configuration interface.
+~EMACSVOX_PADDLEOCR_VENV~ changes the launcher's environment directory,
+~EMACSVOX_PADDLEOCR_PYTHON~ selects an exact Python executable, and
+~EMACSVOX_PADDLEOCR_LANGUAGE~ or ~EMACSVOX_PADDLEOCR_DEVICE~ changes the
+standalone defaults.  See ~./bin/emacsvox-paddleocr --help~ for command-line
+switches.
+
+The direct SANE scanner-acquisition commands are retained for compatibility
+but are not part of this tested WSL baseline.  It is usually simpler to scan
+with a Windows application and choose the resulting image or PDF with ~o~.
+Scanner configuration is independent of PaddleOCR.

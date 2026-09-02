@@ -2638,18 +2638,127 @@ specification; see *note (emacs)Forms Mode:: for setup and operation,
 and *note (emacsvox-reference)emacsvox-forms:: for the speech
 integration.
 
-8.10.3 Experimental OCR Front End
----------------------------------
+8.10.3 OCR And PDF-To-Text With PaddleOCR
+-----------------------------------------
 
-Module ‘emacsvox-ocr’ is an experimental legacy front end, not a
-supported initial-user route.  Its scanner, image-processing, and
-OCR-engine workflow has not yet received a current integration review.
-Do not rely on setup commands, program paths, or defaults in the
-historical survey.  If you evaluate the module, inspect its live command
-and option help first; the generated *note
-(emacsvox-reference)emacsvox-ocr:: is an API inventory, not a validated
-deployment guide.  Report the exact platform, scanner backend, OCR
-engine, and Emacsvox revision when requesting help.
+Emacsvox uses PaddleOCR PP-StructureV3 to turn an image or PDF into
+UTF-8 Markdown text.  PP-StructureV3 recovers document reading order and
+represents recognized tables as Markdown or embedded HTML, so keep the
+‘.md’ output when table structure matters.  Markdown is plain text and
+can instead be named ‘.txt’ when its lightweight markup is acceptable.
+
+   The supported baseline below is CPU-only x86-64 WSL2 or GNU/Linux.
+Paddle's Linux wheel requires an AVX-capable x86-64 processor and Python
+3.9 through 3.13.  In particular, do not use Ubuntu 26.04's Python 3.14
+for this environment.  The commands install a separate Python 3.13 so
+that they do not alter Emacsvox, system Python, or another project's
+packages.  The initial installation uses about 1.7 GB.  The first
+complete PP-StructureV3 run downloads approximately another 1.8 GB of
+models; later runs reuse that cache.
+
+   Follow the official uv installation guide
+(https://docs.astral.sh/uv/getting-started/installation/) if command
+‘uv’ is not already available, then create the isolated environment:
+
+     uv python install 3.13
+     uv venv --python 3.13 --seed \
+       "$HOME/.local/share/emacsvox/paddleocr-venv"
+
+   Install the tested CPU runtime and the PaddleOCR ‘all’ variant.  The
+‘all’ extra includes the document-parsing dependencies needed by
+PP-StructureV3, including table and formula support.
+
+     "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
+       paddlepaddle==3.3.0 \
+       -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+     "$HOME/.local/share/emacsvox/paddleocr-venv/bin/python" -m pip install \
+       'paddleocr[all]==3.7.0'
+
+   From the Emacsvox checkout, verify that the launcher finds both
+packages:
+
+     ./bin/emacsvox-paddleocr --check
+
+   The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the
+CPU device.  A warning that ‘ccache’ is absent is harmless for normal
+inference.  The launcher deliberately leaves oneDNN/MKL-DNN acceleration
+disabled because the tested Paddle 3.3.0 CPU runtime cannot initialize
+the complete formula model with it on WSL.  Recognition itself,
+including tables and formulas, remains enabled.
+
+   To recognize one image at the shell, redirect the clean Markdown
+result to a file.  Paddle downloads its models on the first real command
+and writes progress messages to standard error without mixing them into
+the recognized text.
+
+     ./bin/emacsvox-paddleocr "/path/to/page.png" > page.md
+
+   PDF input uses the same command.  Paddle renders and recognizes every
+page, then joins the pages in reading order:
+
+     ./bin/emacsvox-paddleocr "/path/to/scanned-document.pdf" > document.md
+
+   This route is intended for scanned or image-only PDFs.  For a
+born-digital PDF that already has a trustworthy text layer, extracting
+that layer is faster and usually more exact than OCR.  OCR quality still
+depends on scan quality; 300-DPI, upright, high-contrast source pages
+are a good starting point.  A large PDF can take substantial CPU time
+because table, layout, formula, orientation, and unwarping models are
+all active by default.
+
+   Within Emacsvox, press ‘C-e C-o’ or run ‘M-x emacsvox-ocr <RET>’.  In
+the OCR buffer:
+
+   • Press ‘o’, choose an image or PDF, and wait for the completion cue.
+     OCR runs asynchronously, and the result appears as a new page in
+     the buffer.
+   • Press <SPC> to read the current result, ‘s’ to save it, or ‘w’ to
+     save the complete OCR buffer.  Press ‘[’ and ‘]’ to move between
+     results.
+   • Press ‘d’ to open the per-user OCR directory.  Engine progress and
+     errors are kept separately in buffer ‘*Emacsvox OCR Errors*’.
+
+   For ordinary use inside Emacs, customize OCR in Emacs rather than
+setting shell environment variables.  Run ‘M-x customize-group <RET>
+emacsvox-ocr <RET>’.  The bundled adapter has typed options for its
+normal choices:
+
+   • ‘emacsvox-ocr-paddleocr-python’ selects an exact Python executable
+     when the default isolated environment is not appropriate.  Leave it
+     at ‘nil’ for the installation path used above.
+   • ‘emacsvox-ocr-paddleocr-language’ and
+     ‘emacsvox-ocr-paddleocr-device’ select the recognition language and
+     Paddle device.
+   • ‘emacsvox-ocr-paddleocr-use-table-recognition’ and
+     ‘emacsvox-ocr-paddleocr-use-formula-recognition’ control the
+     structural models.  Both are enabled by default.
+   • ‘emacsvox-ocr-paddleocr-use-document-orientation’,
+     ‘emacsvox-ocr-paddleocr-use-document-unwarping’, and
+     ‘emacsvox-ocr-paddleocr-use-text-line-orientation’ control image
+     correction.
+   • ‘emacsvox-ocr-paddleocr-enable-mkldnn’ enables oneDNN/MKL-DNN
+     acceleration.  Keep it disabled for the tested PaddlePaddle 3.3.0
+     CPU setup on WSL.
+
+   The PaddleOCR options apply only while ‘emacsvox-ocr-engine’ names
+the bundled adapter.  Selecting a different engine preserves the generic
+engine interface.  ‘emacsvox-ocr-engine-options’ remains an advanced
+list of literal arguments; for the bundled adapter it follows, and can
+override, the typed options.
+
+   The environment variables are retained for direct shell or automation
+use of ‘bin/emacsvox-paddleocr’, not as the primary Emacs configuration
+interface.  ‘EMACSVOX_PADDLEOCR_VENV’ changes the launcher's environment
+directory, ‘EMACSVOX_PADDLEOCR_PYTHON’ selects an exact Python
+executable, and ‘EMACSVOX_PADDLEOCR_LANGUAGE’ or
+‘EMACSVOX_PADDLEOCR_DEVICE’ changes the standalone defaults.  See
+‘./bin/emacsvox-paddleocr --help’ for command-line switches.
+
+   The direct SANE scanner-acquisition commands are retained for
+compatibility but are not part of this tested WSL baseline.  It is
+usually simpler to scan with a Windows application and choose the
+resulting image or PDF with ‘o’.  Scanner configuration is independent
+of PaddleOCR.
 
 
 File: emacsvox.info,  Node: Notmuch Mail,  Next: Agent Shell,  Prev: Emacs Packages,  Up: Top
@@ -4679,13 +4788,17 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Notmuch Search:                        Notmuch Mail.        (line  95)
 * Notmuch Show:                          Notmuch Mail.        (line 140)
 * Notmuch Tree support:                  Notmuch Mail.        (line 302)
-* OCR, experimental:                     Desktop Applications.
+* OCR:                                   Desktop Applications.
                                                               (line  27)
 * Online Help:                           Using Online Help.   (line   6)
 * OSC 52, EAT:                           EAT Terminal Access. (line 295)
 * Outline mode:                          Structured Editing.  (line   6)
 * packages, speech support:              Emacs Packages.      (line   6)
+* PaddleOCR:                             Desktop Applications.
+                                                              (line  27)
 * password input, EAT:                   EAT Terminal Access. (line 270)
+* PDF, converting to text:               Desktop Applications.
+                                                              (line  27)
 * personal information management:       Personal Information Management.
                                                               (line   6)
 * presentation modalities:               Presentation Modalities.
@@ -4719,6 +4832,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * structured navigation:                 Context-Sensitive Interaction.
                                                               (line  28)
 * structured navigation <1>:             Browsing Structure.  (line   6)
+* tables, OCR:                           Desktop Applications.
+                                                              (line  27)
 * tabs:                                  Desktop Management.  (line   6)
 * tags, Notmuch:                         Notmuch Mail.        (line 202)
 * Tempo:                                 Structured Editing.  (line   6)
@@ -4800,27 +4915,27 @@ Node: Development Environment113999
 Node: Desktop Management114556
 Node: Personal Information Management115058
 Node: Desktop Applications115590
-Node: Notmuch Mail117139
-Ref: Notmuch fields and privacy126499
-Node: Agent Shell132207
-Node: EAT Terminal Access142201
-Node: Running Terminal Based Applications159460
-Node: Starting Term160415
-Node: Term Input Modes161254
-Node: Term Speech Feedback162414
-Node: Reviewing The Term Screen163608
-Node: Term Help And Recovery165509
-Node: Emacsvox Keyboard Commands166408
-Node: Copyright167812
-Node: Acknowledgments168399
-Node: Developer Guide169425
-Node: Documentation Maintenance170589
-Node: Speech Server Protocols175387
-Ref: Testing A Direct Legacy Server181294
-Ref: Commands That Queue Output181853
-Ref: Commands That Set State184887
-Node: Integration Maintenance187481
-Node: Concept Index204386
+Node: Notmuch Mail122533
+Ref: Notmuch fields and privacy131893
+Node: Agent Shell137601
+Node: EAT Terminal Access147595
+Node: Running Terminal Based Applications164854
+Node: Starting Term165809
+Node: Term Input Modes166648
+Node: Term Speech Feedback167808
+Node: Reviewing The Term Screen169002
+Node: Term Help And Recovery170903
+Node: Emacsvox Keyboard Commands171802
+Node: Copyright173206
+Node: Acknowledgments173793
+Node: Developer Guide174819
+Node: Documentation Maintenance175983
+Node: Speech Server Protocols180781
+Ref: Testing A Direct Legacy Server186688
+Ref: Commands That Queue Output187247
+Ref: Commands That Set State190281
+Node: Integration Maintenance192875
+Node: Concept Index209780
 
 End Tag Table
 

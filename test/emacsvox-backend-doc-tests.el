@@ -233,8 +233,13 @@
            "@ref{Notmuch Mail}"
            "@ref{EAT Terminal Access}"
            "@ref{Running Terminal Based Applications}"
-           "experimental legacy front end"
-           "not a validated deployment guide"))
+           "OCR And PDF-To-Text With PaddleOCR"
+           "paddleocr[all]==3.7.0"
+           "scanned-document.pdf"
+           "table structure matters"
+           "customize-group @key{RET} emacsvox-ocr"
+           "emacsvox-ocr-paddleocr-use-table-recognition"
+           "not as the primary Emacs configuration interface"))
       (should (string-match-p (regexp-quote required) guide)))
     (dolist
         (obsolete
@@ -243,6 +248,7 @@
            "/usr/bin/ocr"
            "~/ocr"
            "emacsvox-ocr-scan-image-program"
+           "experimental legacy front end"
            "Emacsvox/W3"))
       (should-not (string-match-p (regexp-quote obsolete) guide)))
     (should-not (string-match-p "@code{W3}" using))

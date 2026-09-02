@@ -3205,9 +3205,9 @@ File: emacsvox-reference.info,  Node: emacsvox-ocr,  Next: emacsvox-org,  Prev: 
 2.176 emacsvox-ocr
 ==================
 
-This module defines Emacsvox front-end to OCR. This module assumes that
-sane is installed and working for image acquisition, and that there is
-an OCR engine that can take acquired images and produce text.
+This module defines the Emacsvox front end to OCR. PaddleOCR
+PP-StructureV3 is the default engine and accepts images and PDFs.  SANE
+remains available as an optional image-acquisition route.
 
 2.176.1 Emacsvox-Ocr Commands
 -----------------------------
@@ -3218,12 +3218,11 @@ an OCR engine that can take acquired images and produce text.
  -- Command: emacsvox-ocr
      ‘C-e C-o’
 
-     An OCR front-end for the Emacsvox desktop.
+     Open the Emacsvox front end for image and PDF OCR.
 
-     Page image is acquired using tools from the SANE package.
-     The acquired image is run through the OCR engine if one is
-     available, and the results placed in a buffer that is
-     suitable for browsing the results.
+     The selected file is run through ‘emacsvox-ocr-engine’ and the result is
+     placed in a buffer suitable for reading and saving.  Optional image
+     acquisition commands use tools from the SANE package.
 
      For detailed help, invoke command emacsvox-ocr bound to
      C-e C-o to launch emacsvox-ocr-mode, and press
@@ -3271,52 +3270,26 @@ an OCR engine that can take acquired images and produce text.
 
  -- Command: emacsvox-ocr-mode
 
-      An OCR front-end for the Emacsvox desktop.
+     An OCR front end for the Emacsvox desktop.
 
-     Pre-requisites:
+     The default engine is PaddleOCR PP-StructureV3.  It recognizes images and
+     PDFs, preserves reading order, and represents detected tables in Markdown.
+     Install it as described in the Emacsvox user manual, then use ‘o’ to choose a
+     file.  OCR runs asynchronously; engine diagnostics go to the buffer named by
+     ‘emacsvox-ocr-error-buffer’.
 
-     1) A working scanner back-end like SANE on Linux.
+     The optional scanner commands require a working scanner back end such as SANE
+     on Linux.  ‘emacsvox-ocr-scan-image’ uses ‘scanimage’ to acquire a TIFF file;
+     customize ‘emacsvox-ocr-scan-image’ and its related options if necessary.
 
-     2) An OCR engine.
+     Launch this front end with ‘emacsvox-ocr’, bound to C-e C-o.  The
+     result buffer uses single-keystroke commands; see the key-binding list below.
+     Recognized text and optional acquired images are saved under
+     ‘emacsvox-ocr-working-directory’.  Command
+     ‘emacsvox-ocr-open-working-directory’, bound to
+     M-x emacsvox-ocr-open-working-directory, opens that directory.
 
-     1: Make sure your scanner back-end works, and that you have
-     the utilities to scan a document and acquire an image as a
-     tiff file.  Then set variable
-     emacsvox-ocr-scan-image-program to point at this utility.
-     By default, this is set to ‘scanimage’ which is the image
-     scanning utility provided by SANE.
-
-     By default, this front-end attempts to compress the acquired
-     tiff image; make sure you have a utility like tiffcp.
-     Variable emacsvox-ocr-compress-image is set to ‘tiffcp’ by
-     default; if you use something else, you should customize
-     this variable.
-
-     2: Next, make sure you have an OCR engine installed and
-     working.  By default this front-end assumes that OCR is
-     available as /usr/bin/ocr.
-
-     Once you have ensured that acquiring an image and applying
-     OCR to it work independently of Emacs, you can use this
-     Emacsvox front-end to enable easy OCR access from within
-     Emacsvox.
-
-     The Emacsvox OCR front-end is launched by command
-     emacsvox-ocr bound to C-e C-o.
-
-     This command switches to a special buffer that has OCR
-     commands bounds to single keystrokes- see the key-binding
-     list at the end of this description.  Use Emacs online help
-     facility to look up help on these commands.
-
-     emacsvox-ocr-mode provides the necessary functionality to
-     scan, OCR, read and save documents.  By default, scanned
-     images and the resulting text are saved under directory
-     ~/ocr; see variable emacsvox-ocr-working-directory.
-     Invoking command emacsvox-ocr-open-working-directory bound
-     to M-x emacsvox-ocr-open-working-directory will open this directory.
-
-     By default, the document being scanned is named ‘untitled’.
+     By default, the document is named from the current date.
      You can name the document by using command
      emacsvox-ocr-name-document bound to
      M-x emacsvox-ocr-name-document.  The document name is used
@@ -3341,7 +3314,7 @@ an OCR engine that can take acquired images and produce text.
      i		emacsvox-ocr-scan-image
      j		emacsvox-ocr-scan-photo
      n		emacsvox-ocr-name-document
-     o		emacsvox-ocr-recognize-image
+     o		emacsvox-ocr-recognize-file
      p		emacsvox-ocr-page
      q		bury-buffer
      s		emacsvox-ocr-save-current-page
@@ -3383,16 +3356,23 @@ an OCR engine that can take acquired images and produce text.
 
      Speaks current page.
 
-2.176.1.11 emacsvox-ocr-recognize-image
+2.176.1.11 emacsvox-ocr-recognize-file
+......................................
+
+ -- Command: emacsvox-ocr-recognize-file (input-file)
+
+     Run the OCR engine asynchronously on image or PDF INPUT-FILE.
+
+     (fn INPUT-FILE)
+
+2.176.1.12 emacsvox-ocr-recognize-image
 .......................................
 
  -- Command: emacsvox-ocr-recognize-image
 
-     Run OCR engine on current image.
-     Prompts for image file if file corresponding to the expected
-     ‘current page’ is not found.
+     Compatibility command that recognizes an image or PDF.
 
-2.176.1.12 emacsvox-ocr-save-current-page
+2.176.1.13 emacsvox-ocr-save-current-page
 .........................................
 
  -- Command: emacsvox-ocr-save-current-page
@@ -3400,7 +3380,7 @@ an OCR engine that can take acquired images and produce text.
      Writes out recognized text from current page
      to an appropriately named file.
 
-2.176.1.13 emacsvox-ocr-scan-and-recognize
+2.176.1.14 emacsvox-ocr-scan-and-recognize
 ..........................................
 
  -- Command: emacsvox-ocr-scan-and-recognize
@@ -3410,14 +3390,14 @@ an OCR engine that can take acquired images and produce text.
      steps of acquiring an image and running the OCR engine work
      correctly by themselves.
 
-2.176.1.14 emacsvox-ocr-scan-image
+2.176.1.15 emacsvox-ocr-scan-image
 ..................................
 
  -- Command: emacsvox-ocr-scan-image
 
      Acquire page image.
 
-2.176.1.15 emacsvox-ocr-scan-photo
+2.176.1.16 emacsvox-ocr-scan-photo
 ..................................
 
  -- Command: emacsvox-ocr-scan-photo (&optional metadata)
@@ -3427,7 +3407,7 @@ an OCR engine that can take acquired images and produce text.
 
      (fn &optional METADATA)
 
-2.176.1.16 emacsvox-ocr-set-compress-image-options
+2.176.1.17 emacsvox-ocr-set-compress-image-options
 ..................................................
 
  -- Command: emacsvox-ocr-set-compress-image-options (setting)
@@ -3438,7 +3418,7 @@ an OCR engine that can take acquired images and produce text.
 
      (fn SETTING)
 
-2.176.1.17 emacsvox-ocr-set-scan-image-options
+2.176.1.18 emacsvox-ocr-set-scan-image-options
 ..............................................
 
  -- Command: emacsvox-ocr-set-scan-image-options (setting)
@@ -3449,7 +3429,7 @@ an OCR engine that can take acquired images and produce text.
 
      (fn SETTING)
 
-2.176.1.18 emacsvox-ocr-write-document
+2.176.1.19 emacsvox-ocr-write-document
 ......................................
 
  -- Command: emacsvox-ocr-write-document
@@ -3484,19 +3464,29 @@ an OCR engine that can take acquired images and produce text.
 
 
  -- Variable: User Option emacsvox-ocr-engine
-     OCR engine to process acquired image.
+     OCR engine used to process an image or PDF.
 
      Default Value:
 
-     "<emacsvox-root>/etc/tesseract.pl"
+     "<emacsvox-root>/bin/emacsvox-paddleocr"
 
 
  -- Variable: User Option emacsvox-ocr-engine-options
-     Command line options to pass to OCR engine.
+     Additional command-line arguments passed literally to the OCR engine.
+     For the bundled PaddleOCR adapter, these follow the typed customization
+     options and can override them.
 
      Default Value:
 
      nil
+
+
+ -- Variable: User Option emacsvox-ocr-error-buffer
+     Buffer that receives diagnostics from the OCR engine.
+
+     Default Value:
+
+     "*Emacsvox OCR Errors*"
 
 
  -- Variable: User Option emacsvox-ocr-image-extension
@@ -3521,6 +3511,84 @@ an OCR engine that can take acquired images and produce text.
      Default Value:
 
      nil
+
+
+ -- Variable: User Option emacsvox-ocr-paddleocr-device
+     Paddle device used by the bundled adapter.
+     Examples include ‘cpu’, ‘gpu’, and ‘gpu:0’.
+
+     Default Value:
+
+     "cpu"
+
+
+ -- Variable: User Option emacsvox-ocr-paddleocr-enable-mkldnn
+     Whether to enable oneDNN/MKL-DNN acceleration for PaddleOCR.
+     Keep this disabled for the tested PaddlePaddle 3.3.0 CPU setup on WSL.
+
+     Default Value:
+
+     nil
+
+
+ -- Variable: User Option emacsvox-ocr-paddleocr-language
+     Language used by the bundled PaddleOCR adapter.
+
+     Default Value:
+
+     "en"
+
+
+ -- Variable: User Option emacsvox-ocr-paddleocr-python
+     Python executable used by the bundled PaddleOCR adapter.
+     When nil, the launcher uses its default isolated environment.  This option has
+     no effect when ‘emacsvox-ocr-engine’ selects another OCR engine.
+
+     Default Value:
+
+     nil
+
+
+ -- Variable: User Option
+          emacsvox-ocr-paddleocr-use-document-orientation
+     Whether PaddleOCR should classify document orientation.
+
+     Default Value:
+
+     t
+
+
+ -- Variable: User Option emacsvox-ocr-paddleocr-use-document-unwarping
+     Whether PaddleOCR should correct warped document images.
+
+     Default Value:
+
+     t
+
+
+ -- Variable: User Option emacsvox-ocr-paddleocr-use-formula-recognition
+     Whether PaddleOCR should recognize mathematical formulas.
+
+     Default Value:
+
+     t
+
+
+ -- Variable: User Option emacsvox-ocr-paddleocr-use-table-recognition
+     Whether PaddleOCR should recognize and preserve tables.
+
+     Default Value:
+
+     t
+
+
+ -- Variable: User Option
+          emacsvox-ocr-paddleocr-use-text-line-orientation
+     Whether PaddleOCR should classify individual text-line orientation.
+
+     Default Value:
+
+     t
 
 
  -- Variable: User Option emacsvox-ocr-photo-compress
