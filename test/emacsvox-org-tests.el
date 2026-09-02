@@ -1188,11 +1188,12 @@
           :org-action link-opened)))
       (should (eq (plist-get (cdar submissions) :occasion) 'navigation)))))
 
-(ert-deftest emacsvox-org-external-link-defers-to-destination ()
-  "A link that changes buffers leaves feedback to the destination module."
+(ert-deftest emacsvox-org-external-link-cues-transition-once ()
+  "A link that changes buffers cues opening without claiming destination text."
   (let ((source (generate-new-buffer " *Org link source*"))
         (destination (generate-new-buffer " *Org link destination*"))
-        submissions)
+        text-submissions
+        action-submissions)
     (unwind-protect
         (with-current-buffer source
           (insert "[[file:destination]]")
@@ -1201,12 +1202,29 @@
             (cl-letf
                 (((symbol-function 'emacsvox-aural-submit)
                   (lambda (content &rest arguments)
-                    (push (cons content arguments) submissions))))
+                    (push (cons content arguments) text-submissions)))
+                 ((symbol-function 'emacsvox-aural-submit-actions)
+                  (lambda (&rest arguments)
+                    (push arguments action-submissions))))
               (emacsvox--advice-org-open-at-point-around
                (lambda (&rest _) (set-buffer destination))))))
       (kill-buffer destination)
       (kill-buffer source))
-    (should-not submissions)))
+    (should-not text-submissions)
+    (should (= (length action-submissions) 1))
+    (let ((submission (car action-submissions)))
+      (should
+       (equal
+        (plist-get submission :facts)
+        '(:role org-link :events (focus-entered)
+          :org-action link-opened)))
+      (should (eq (plist-get submission :module) 'org))
+      (should (eq (plist-get submission :occasion) 'navigation))
+      (let ((action (car (plist-get submission :compatibility-actions))))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value action)
+          'open-object))))))
 
 (ert-deftest emacsvox-org-refile-preserves-completion-message ()
   "Refiling submits Org's completion message once through native policy."

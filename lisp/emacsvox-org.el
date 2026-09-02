@@ -2005,7 +2005,10 @@ execution."
 
 (defun emacsvox--advice-org-open-at-point-around
     (original &rest arguments)
-  "Open an Org link with feedback owned by its actual destination."
+  "Open an Org link with destination content and one transition cue.
+
+When the link changes buffers, the destination integration owns its content
+while Org owns the single `open-object' cue confirming the transition."
   (if (not (eq ems--interactive-fn-name 'org-open-at-point))
       (apply original arguments)
     (let ((source-buffer (current-buffer))
@@ -2014,22 +2017,22 @@ execution."
           (emacsvox-speak-messages nil))
       (prog1
           (apply original arguments)
-        (when (eq source-buffer (current-buffer))
-          (let ((message
-                 (emacsvox-org--new-current-message prior-message)))
-            (cond
-             ((/= source-point (point))
-              (emacsvox-org--submit-text
-               (emacsvox-org--line-content)
+        (let ((facts
                (emacsvox-org--feedback-facts
-                'org-link 'focus-entered 'link-opened)
-               'navigation 'large-movement))
-             (message
-              (emacsvox-org--submit-text
-               message
-               (emacsvox-org--feedback-facts
-                'org-link 'focus-entered 'link-opened)
-               'notification 'open-object)))))))))
+                'org-link 'focus-entered 'link-opened)))
+          (if (not (eq source-buffer (current-buffer)))
+              (emacsvox-org--submit-actions
+               facts 'navigation 'open-object)
+            (let ((message
+                   (emacsvox-org--new-current-message prior-message)))
+              (cond
+               ((/= source-point (point))
+                (emacsvox-org--submit-text
+                 (emacsvox-org--line-content)
+                 facts 'navigation 'large-movement))
+               (message
+                (emacsvox-org--submit-text
+                 message facts 'notification 'open-object))))))))))
 
 (advice-add
  'org-open-at-point :around
