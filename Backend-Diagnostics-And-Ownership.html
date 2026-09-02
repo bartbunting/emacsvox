@@ -41,8 +41,9 @@ Previous: <a href="Compatibility-Speech-Servers.html" accesskey="p" rel="prev">C
 </p>
 <dl class="table">
 <dt><code class="code">omnivox</code> is not found</dt>
-<dd><p>Check <code class="code">PATH</code>; on POSIX, an absolute <code class="code">OMNIVOX_PROGRAM</code> can identify the
-installed executable.  Keep its adjacent <code class="code">espeak-ng-data</code> and
+<dd><p>Under WSL2, run <code class="code">./bin/emacsvox-wsl-install --check</code> and confirm its persistent
+path.  On other POSIX systems, check <code class="code">PATH</code>; an absolute <code class="code">OMNIVOX_PROGRAM</code> can
+identify the installed executable.  Keep its adjacent <code class="code">espeak-ng-data</code> and
 <code class="code">third-party-licenses</code> directories with it.
 </p></dd>
 <dt><code class="code">omnivox --check</code> reports an error or is inaudible</dt>
@@ -55,9 +56,10 @@ speech check passes.
 </p></dd>
 <dt>The check passes but Emacsvox is silent</dt>
 <dd><p>Confirm that <code class="code">TTS_PROGRAM=omnivox</code> was present before Emacsvox loaded, then
-use <code class="code">M-x tts-speak-version</code>.  Under WSL2, also run
-<code class="code">make verify-windows-omnivox-runtime</code> and restart the speech process
-after restaging.
+use <code class="code">M-x tts-speak-version</code>.  Under WSL2 with a release binary, rerun
+<code class="code">./bin/emacsvox-wsl-install --check</code>.  For a source-built development
+runtime, run <code class="code">make verify-windows-omnivox-runtime</code> and restart the speech
+process after restaging.
 </p></dd>
 <dt>A process starts and later fails</dt>
 <dd><p>The Emacsvox POSIX/WSL launcher writes private, bounded stderr logs below
@@ -65,6 +67,18 @@ after restaging.
 <code class="code">~/.local/state/emacsvox/omnivox</code>.  Spoken text is excluded unless
 <code class="code">OMNIVOX_LOG_SYNTHESIS_TEXT</code> is explicitly enabled; enabling it can expose
 passwords, messages, and document contents.
+</p></dd>
+<dt>Speech works but feels delayed</dt>
+<dd><p>Press <code class="code">C-e d D</code> to enable a private diagnostic log, then reproduce one short
+presentation and press <code class="code">C-e d D</code> again to disable logging.  The default file
+is <code class="code">~/.emacsvox-aural-diagnostics.log</code>; use <code class="code">C-u C-e d D</code> when enabling to
+choose another file.  Its <code class="code">dispatch-sent</code>, <code class="code">mixer-source-observed</code>, and
+<code class="code">playback-terminal-observed</code> records share an Omnivox dispatch ID.  Match
+that ID in the ordinary Omnivox session log to separate Emacs submission,
+server queueing, synthesis, and mixer-source delay.  The Emacs log is
+disabled by default because its submission records include complete spoken
+text.  A mixer-source observation is not physical audible output; device and
+hardware buffers can add latency afterward.
 </p></dd>
 </dl>
 
@@ -76,6 +90,11 @@ licensed runtimes and compatibility adapters.  Follow those sources for
 versioned details rather than copying their contracts into installation
 instructions.
 </p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Previous: <a href="Compatibility-Speech-Servers.html">Compatibility Speech Servers</a>, Up: <a href="Speech-Backends.html">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

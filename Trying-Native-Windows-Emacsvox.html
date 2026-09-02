@@ -80,7 +80,7 @@ absolute Windows path instead.  Continue in the same PowerShell window.
 AMD Windows x64 archive:
 </p>
 <div class="example">
-<pre class="example-preformatted">$Version = &quot;1.4.1&quot;
+<pre class="example-preformatted">$Version = &quot;1.6.4&quot;
 $Platform = &quot;windows-x64&quot; # Use windows-arm64 only on Windows on ARM.
 $DownloadDir = Join-Path $env:USERPROFILE &quot;Downloads\omnivox-$Version&quot;
 $Archive = &quot;omnivox-$Version-$Platform.zip&quot;
@@ -138,8 +138,8 @@ if ($LASTEXITCODE -ne 0) { throw &quot;Omnivox voice discovery failed&quot; }
 if ($LASTEXITCODE -ne 0) { throw &quot;Omnivox audio check failed&quot; }
 </pre></div>
 
-<p>The version must report 1.4.1, voice discovery must list at least one Windows
-voice, and the final check must produce both a tone and spoken confirmation.
+<p>The version must report 1.6.4 or newer, voice discovery must list at least one
+Windows voice, and the final check must produce both a tone and spoken confirmation.
 Keep <code class="code">omnivox.exe</code>, <code class="code">espeak-ng-data</code>, and <code class="code">third-party-licenses</code> together.
 Do not copy or load the archive&rsquo;s <code class="code">omnivox-voices.el</code>: it is the adapter for
 upstream Emacspeak, while Emacsvox supplies its own adapter.
@@ -209,7 +209,7 @@ loading Emacsvox in the user&rsquo;s Emacs initialization file:
 </p>
 <div class="example lisp">
 <pre class="lisp-preformatted">(setenv &quot;TTS_PROGRAM&quot;
-        &quot;C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.4.1-windows-x64/omnivox.exe&quot;)
+        &quot;C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.6.4-windows-x64/omnivox.exe&quot;)
 (load-file &quot;C:/path/to/emacsvox/lisp/emacsvox-setup.el&quot;)
 </pre></div>
 

@@ -39,17 +39,21 @@ Next: <a href="Recovering-From-No-Speech.html" accesskey="n" rel="next">Recoveri
 <hr>
 <h3 class="section" id="Confirming-First-Speech-1"><span>2.4 Confirming First Speech<a class="copiable-link" href="#Confirming-First-Speech-1"> &para;</a></span></h3>
 
-<p>You will know the isolated start succeeded when it speaks an introduction
-ending with:
+<p>You will know the isolated start succeeded when Omnivox acknowledges the
+initial engine inventory, routing policy, and logical voices, and Emacsvox
+speaks:
 </p>
 <blockquote class="quotation">
-<p>I am completely operational, and all my circuits are functioning perfectly!
+<p>Emacsvox is ready.
 </p>
 </blockquote>
 
-<p>The preceding overview key and version number can change.  The sentence above
-is the stable first-speech checkpoint.  A startup auditory icon may also play,
-depending on the available audio support.
+<p>An earlier introduction, overview key, version number, and startup auditory
+icon may also be heard.  Those can change; the sentence above is the stable
+first-speech checkpoint because it normally occurs after initial routing is
+acknowledged and therefore uses the restored engine policy.  If routing does
+not finish within five seconds, Emacsvox speaks the checkpoint through the
+capability-ready fallback so a routing error cannot suppress it indefinitely.
 </p>
 <p>You now have a working Emacsvox session.  Try these checks before connecting
 it to your personal configuration:

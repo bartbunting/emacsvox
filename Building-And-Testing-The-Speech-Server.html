@@ -39,9 +39,12 @@ Next: <a href="Quick-Installation.html" accesskey="n" rel="next">Build And Start
 <hr>
 <h3 class="section" id="Install-And-Check-Omnivox"><span>2.2 Install And Check Omnivox<a class="copiable-link" href="#Install-And-Check-Omnivox"> &para;</a></span></h3>
 
+<p>If you used the guided WSL2 installer above, Omnivox is already installed and
+checked.  Continue to <a class="ref" href="Quick-Installation.html">Build And Start Emacsvox</a>.
+</p>
 <p>On a matching GNU/Linux x86-64 or macOS host, follow
 <a class="ref" href="Installing-An-Omnivox-Release-Binary.html">Install Omnivox From A Release Binary</a>.  That procedure downloads and
-verifies the published 1.4.1 archive, keeps its runtime data beside the
+verifies the published 1.6.4 archive, keeps its runtime data beside the
 executable, and adds its versioned installation directory to <code class="code">PATH</code>.  Then run:
 </p>
 <div class="example">
@@ -53,15 +56,10 @@ incompatible Linux distribution, or a host whose security policy does not
 permit the unsigned macOS archive.  No proprietary speech runtime is needed
 for either GNU/Linux or macOS route.
 </p>
-<p>Under WSL2, follow
-<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a> to install and
-select the verified Windows x64 archive.  Then run:
+<p>For a manual WSL2 installation, or to understand exactly what the guided
+installer verifies, see
+<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>.
 </p>
-<div class="example">
-<pre class="example-preformatted">cd /path/where/you/keep/source/emacsvox
-./servers/omnivox --check
-</pre></div>
-
 <p>The check plays a tone followed by speech.  When you hear both, the speech
 server is ready.  If either is missing, use
 <a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend Diagnostics And Responsibilities</a>

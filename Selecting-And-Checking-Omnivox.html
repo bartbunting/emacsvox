@@ -48,8 +48,10 @@ omnivox --check
 omnivox --list-voices
 </pre></div>
 
-<p>Under WSL2, test the Emacsvox launcher.  It selects an explicit pre-built
-<code class="code">OMNIVOX_PROGRAM</code> first, otherwise the content-addressed source-built runtime:
+<p>Under WSL2, test the Emacsvox launcher.  It selects an explicit
+<code class="code">OMNIVOX_PROGRAM</code> first, then the per-user installation recorded by the guided
+installer, then a content-addressed source-built runtime, and finally an
+<code class="code">omnivox</code> command on <code class="code">PATH</code>:
 </p>
 <div class="example">
 <pre class="example-preformatted">./servers/omnivox --check
@@ -68,10 +70,12 @@ hearing both signals is the backend acceptance condition.
 
 <p>Make that setting visible in the shell used to launch Emacs.  An
 <code class="code">export</code> affects only that shell and its children; placing it in a
-shell startup file makes the choice persistent for later sessions.  On POSIX
-systems, Emacsvox&rsquo;s <code class="code">servers/omnivox</code> launcher finds an installed
-<code class="code">omnivox</code> on <code class="code">PATH</code>; <code class="code">OMNIVOX_PROGRAM</code> can instead name its
-absolute executable and takes precedence over a source-built staged runtime.
+shell startup file makes the server choice persistent for later sessions.  On
+POSIX systems, Emacsvox&rsquo;s <code class="code">servers/omnivox</code> launcher also finds an installed
+<code class="code">omnivox</code> on <code class="code">PATH</code>.  <code class="code">OMNIVOX_PROGRAM</code> can name an absolute executable as an
+explicit override.  Under WSL2, the guided installer&rsquo;s data-only configuration
+file is persistent across launching shells and takes precedence over a
+source-built staged runtime.
 Native Windows Emacs resolves <code class="code">omnivox.exe</code> directly through <code class="code">exec-path</code>, or
 uses the absolute executable named by <code class="code">TTS_PROGRAM</code>.  That route remains
 preview.  For its bounded evaluation procedure, see

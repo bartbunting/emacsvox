@@ -39,6 +39,11 @@ Next: <a href="Confirming-First-Speech.html" accesskey="n" rel="next">Confirming
 <hr>
 <h3 class="section" id="Build-And-Start-Emacsvox"><span>2.3 Build And Start Emacsvox<a class="copiable-link" href="#Build-And-Start-Emacsvox"> &para;</a></span></h3>
 
+<p>The guided WSL2 installer has already selected Emacs, compiled Emacsvox, and
+run both checks below.  You may go directly to the final step and start the
+isolated session.  The full sequence remains useful for GNU/Linux, macOS, a
+manual WSL2 installation, or later diagnosis.
+</p>
 <ol class="enumerate">
 <li> Enter the Emacsvox checkout:
 
@@ -69,10 +74,10 @@ the executable selected by the Emacsvox build separately:
 <p><code class="code">make check-emacs</code> uses <code class="code">local.mk</code> when present, prints the selected
 executable and version, and confirms whether Emacsvox supports it.
 </p>
-</li><li> Configure and compile Emacsvox:
+</li><li> Compile Emacsvox:
 
 <div class="example">
-<pre class="example-preformatted">make all
+<pre class="example-preformatted">make bytecode
 </pre></div>
 
 <p>A successful build returns to the shell without an error.  Emacsvox must be

@@ -75,6 +75,18 @@ continues on the legacy path.  Current Emacsvox requires
 <code class="code">presentation_timeline_v3</code> before it submits an Aural Presentation as a
 structured timeline.
 </p>
+<p>Concrete Aural plans retain a bounded compatibility lowering when those
+features are absent.  Speech, voice commands, silence, tones, dispatch, and
+interruption use the established legacy queue commands.  A legacy tone cannot
+preserve the explicit overlay clock: both insert and overlay modes become an
+ordered <code class="code">t</code> command, and a fractional frequency is rounded to the nearest
+hertz.  The surrounding speech continues rather than being rejected for that
+loss of presentation precision.
+</p>
+<p>Guarantee-bearing operations do not invent success on a legacy server.
+Playback completion, source markers, and domain-scoped replacement remain
+unavailable when the selected server cannot acknowledge them truthfully.
+</p>
 <p>A complete timeline contains its delivery policy, replacement domain,
 generation, dispatch ID, speech spans, and positioned actions.  Small
 timelines use one bounded frame; large timelines use a bounded multipart
@@ -88,9 +100,15 @@ Receipt of a newer valid replaceable generation immediately cancels queued,
 synthesizing, and buffered work in the same replacement domain.  It does not
 globally stop ordered, urgent, legacy, or differently keyed output.
 </p>
-<p>Marker events distinguish dispatch admission, synthesis, playback start,
-positioned markers, and terminal completion.  Playback markers track mixer
-source consumption and may precede physical sound by the output device&rsquo;s
+<p>Marker events report playback start and positioned playback boundaries;
+tracked status reports terminal completion.  With opt-in Aural diagnostics,
+Emacs records successful dispatch send, first received <code class="code">utterance_started</code>,
+and terminal observation under the same dispatch ID.  Omnivox&rsquo;s normal
+session log records protocol admission, worker queue wait, individual engine
+attempts, audio queueing, first mixer-source consumption, and terminal
+playback under that ID.  This correlation uses existing marker and terminal
+records rather than adding a wire-protocol version.  Playback markers track
+mixer-source consumption and may precede physical sound by the output device&rsquo;s
 buffer latency; a protocol write or terminal callback is therefore not proof
 of acoustic onset.
 </p>

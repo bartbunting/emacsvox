@@ -20,7 +20,9 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
 span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -43,25 +45,142 @@ recheck the upstream interfaces and keep compatibility behavior bounded when
 changing an integration.
 </p>
 <ul class="mini-toc">
-<li><a href="#Build-and-live_002dverification-boundary" accesskey="1">Build and live-verification boundary</a></li>
-<li><a href="#Notmuch-contracts" accesskey="2">Notmuch contracts</a></li>
-<li><a href="#Agent-Shell-contracts" accesskey="3">Agent Shell contracts</a></li>
-<li><a href="#WSL2-Omnivox-development-staging" accesskey="4">WSL2 Omnivox development staging</a></li>
+<li><a href="#Source-checkout-and-byte_002dcode-lifecycle" accesskey="1">Source checkout and byte-code lifecycle</a></li>
+<li><a href="#Emacsvox-release-staging-and-publication" accesskey="2">Emacsvox release staging and publication</a></li>
+<li><a href="#Future-Aural-contract-decisions" accesskey="3">Future Aural contract decisions</a></li>
+<li><a href="#Notmuch-contracts" accesskey="4">Notmuch contracts</a></li>
+<li><a href="#Agent-Shell-contracts" accesskey="5">Agent Shell contracts</a></li>
+<li><a href="#WSL2-Omnivox-development-staging" accesskey="6">WSL2 Omnivox development staging</a></li>
 </ul>
-<div class="subsection-level-extent" id="Build-and-live_002dverification-boundary">
-<h4 class="subsection"><span>16.3.1 Build and live-verification boundary<a class="copiable-link" href="#Build-and-live_002dverification-boundary"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Source-checkout-and-byte_002dcode-lifecycle">
+<h4 class="subsection"><span>16.3.1 Source checkout and byte-code lifecycle<a class="copiable-link" href="#Source-checkout-and-byte_002dcode-lifecycle"> &para;</a></span></h4>
 
-<p>For a source checkout, use the Emacs selected by <code class="code">local.mk</code>.  Run
-<code class="code">make check-emacs</code> before diagnosing compilation, <code class="code">make bytecode</code> after an
-ordinary Lisp edit, and <code class="code">make bytecode-rebuild</code> after switching branches or
-changing a macro or public interface.  Tests deliberately prefer source and
-therefore do not prove that the byte-code used by a live profile is current.
-Verify the rebuilt byte-code in a fresh Emacs rather than relying on a file
-reload when compiled dependants may already be resident.
+<p>Use the Emacs selected by the ignored repository-local <code class="code">local.mk</code>.  When Emacs
+31 or newer is not the system <code class="code">emacs</code>, set its absolute path there:
+</p>
+<div class="example">
+<pre class="example-preformatted">EMACS=/path/to/emacs-31/bin/emacs
+</pre></div>
+
+<p>Run <code class="code">make check-emacs</code> before diagnosing compilation.  After an ordinary Lisp
+edit, use the incremental build:
+</p>
+<div class="example">
+<pre class="example-preformatted">make bytecode
+</pre></div>
+
+<p>After switching branches, pulling changes, or changing a macro or public
+interface, use:
+</p>
+<div class="example">
+<pre class="example-preformatted">make bytecode-rebuild
+</pre></div>
+
+<p>That target removes ignored generated <code class="code">.elc</code> files and recompiles them with
+the selected Emacs; it does not clean or discard source changes.
+<code class="code">make bytecode-check</code> is the non-mutating preflight for startup or deployment.
+It reports missing, stale, orphaned, or wrong-Emacs byte-code.
+</p>
+<p>Tests deliberately prefer source and therefore do not prove that the
+byte-code used by a live profile is current.  Verify rebuilt byte-code in a
+fresh Emacs rather than relying on a file reload when compiled dependants may
+already be resident.
+</p>
+<p>During development, load the changing setup source explicitly:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(load-file &quot;/path/to/emacsvox/lisp/emacsvox-setup.el&quot;)
+</pre></div>
+
+<p>The setup entry point warns and prefers source when newer Lisp would otherwise
+be hidden by stale local byte-code.  In a stable checkout with current <code class="code">.elc</code>
+files, <code class="code">(load-library &quot;emacsvox-setup&quot;)</code> may be used.  Do not use
+<code class="code">load-library</code> as the first load after editing the source tree: Emacs can
+select an old <code class="code">emacsvox-setup.elc</code> before the newer source checker runs.
+</p>
+</div>
+<div class="subsection-level-extent" id="Emacsvox-release-staging-and-publication">
+<h4 class="subsection"><span>16.3.2 Emacsvox release staging and publication<a class="copiable-link" href="#Emacsvox-release-staging-and-publication"> &para;</a></span></h4>
+
+<p>The repository-level <code class="code">VERSION</code> file is the canonical stable release
+identifier.  Calendar-versioning policy, including delayed patches and
+backports, is recorded in
+<a class="uref" href="../adr/0002-calendar-versioning.org">ADR 0002</a>.  When advancing a release, update <code class="code">VERSION</code>, the literal
+package header in <code class="code">lisp/emacsvox.el</code>, and the current heading in <code class="code">etc/NEWS</code>
+together, then run:
+</p>
+<div class="example">
+<pre class="example-preformatted">make version-check
+</pre></div>
+
+<p>Between releases, <code class="code">etc/NEWS</code> uses the <code class="code">Emacsvox Unreleased</code> heading, so changes
+can be recorded before deciding whether the next publication is a patch or a
+new feature-release series.  After publishing, preserve those notes verbatim
+as <code class="code">etc/NEWS-VERSION</code> and start a new unreleased file.  Ordinary
+<code class="code">version-check</code> accepts that state; <code class="code">release-check</code>, <code class="code">release-tag</code>, and
+<code class="code">release-publish</code> require the current NEWS heading to match <code class="code">VERSION</code> exactly.
+</p>
+<p>Prepare an artifact only from a separate clean, committed worktree.  Build
+fresh byte-code and run the guarded artifact target:
+</p>
+<div class="example">
+<pre class="example-preformatted">make bytecode-rebuild
+make release-artifact
+</pre></div>
+
+<p><code class="code">release-artifact</code> runs the complete test and documentation gates before
+creating <code class="code">dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2</code>, its SHA-256 checksum, and a
+provenance record naming the checked source commit.  For a patch-zero feature
+release, the series must match the current month.  A corrective or backport
+release retains its original non-future series as required by ADR 0002.
+Inspect the archive, checksum, and provenance before proceeding.
+</p>
+<p>Stop after artifact inspection unless fresh explicit permission names the
+release to be tagged and published.  Preparing an artifact, committing or
+pushing a branch, publishing documentation, or receiving a general instruction
+to continue is not permission to create or push a release tag.  Once that
+separate authorization has been given, the guarded commands are:
+</p>
+<div class="example">
+<pre class="example-preformatted">make release-tag
+make release-publish
+</pre></div>
+
+<p><code class="code">release-tag</code> validates the artifact against the still-clean <code class="code">HEAD</code> and creates
+a local annotated, unsigned tag; it does not push the tag.  The unsigned-tag
+policy and its trust boundary are recorded in
+<a class="uref" href="../adr/0006-annotated-unsigned-release-tags.org">ADR 0006</a>.  <code class="code">release-publish</code>
+repeats the artifact and source-commit validation, pushes only that exact tag,
+and creates the GitHub release in the repository identified by
+<code class="code">RELEASE_REMOTE</code>.  This explicit selection prevents the GitHub CLI from
+choosing an <code class="code">upstream</code> remote when releasing from a fork.  No release target
+pushes <code class="code">master</code> or the documentation branch.  Use <code class="code">make release-check</code> alone
+when a non-mutating preflight is wanted without creating an artifact.
+</p>
+</div>
+<div class="subsection-level-extent" id="Future-Aural-contract-decisions">
+<h4 class="subsection"><span>16.3.3 Future Aural contract decisions<a class="copiable-link" href="#Future-Aural-contract-decisions"> &para;</a></span></h4>
+
+<p>The completed Aural implementation diary is preserved under
+<code class="code">archive/emacsvox/migrations/</code> rather than serving as current instructions.
+Three questions from that diary remain deliberately undecided and require an
+explicit architecture decision before implementation:
+</p>
+<ul class="itemize mark-bullet">
+<li>whether a critical alert may be completely suppressed or must retain an
+alternative presentation;
+</li><li>which deterministic ordering policy would apply before minor-mode selectors
+can participate in the presentation cascade; and
+</li><li>whether a new presentation occasion belongs to the core semantic contract
+or to a module-owned extension.
+</li></ul>
+
+<p>Do not infer answers from the archived proposals.  Current behavior is defined
+by the Aural implementation, its generated reference, and accepted ADRs.
 </p>
 </div>
 <div class="subsection-level-extent" id="Notmuch-contracts">
-<h4 class="subsection"><span>16.3.2 Notmuch contracts<a class="copiable-link" href="#Notmuch-contracts"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.4 Notmuch contracts<a class="copiable-link" href="#Notmuch-contracts"> &para;</a></span></h4>
 
 <p>The live module is registered as an optional package integration.  Its stable
 extension points are the Hello, Search, Show, and Tree mode hooks; Search and
@@ -89,7 +208,7 @@ including real displayed-window reading for both advance paths.
 </p>
 </div>
 <div class="subsection-level-extent" id="Agent-Shell-contracts">
-<h4 class="subsection"><span>16.3.3 Agent Shell contracts<a class="copiable-link" href="#Agent-Shell-contracts"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.5 Agent Shell contracts<a class="copiable-link" href="#Agent-Shell-contracts"> &para;</a></span></h4>
 
 <p>Use <code class="code">M-x emacsvox-agent-shell-enable</code> to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
@@ -113,8 +232,25 @@ renderer and private fallbacks isolated and covered by compatibility tests.
 </p>
 </div>
 <div class="subsection-level-extent" id="WSL2-Omnivox-development-staging">
-<h4 class="subsection"><span>16.3.4 WSL2 Omnivox development staging<a class="copiable-link" href="#WSL2-Omnivox-development-staging"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.6 WSL2 Omnivox development staging<a class="copiable-link" href="#WSL2-Omnivox-development-staging"> &para;</a></span></h4>
 
+<p>The ordinary WSL2 user route is implemented by
+<code class="code">bin/emacsvox-wsl-install</code> and pinned by <code class="code">etc/wsl-install.conf</code>.  Treat either
+file as release tooling.  When advancing GNU Emacs or Omnivox, update the
+version, archive name, URL, and SHA-256 together; exercise x64 and ARM64
+selection in the isolated installer tests; and perform one real installation
+of the newly pinned archive before updating the user manual.  The installer
+must remain per-user, must not invoke <code class="code">sudo</code> or edit shell startup files, and
+must preserve an explicit <code class="code">EMACS</code> or <code class="code">local.mk</code> selection rather than silently
+replacing it.
+</p>
+<p>The installed Omnivox executable is recorded as an absolute WSL path in the
+data-only <code class="code">$XDG_CONFIG_HOME/emacsvox/omnivox-program</code> file.  Launcher selection
+is explicit <code class="code">OMNIVOX_PROGRAM</code>, that per-user file, developer staging, then
+<code class="code">PATH</code>.  Keep the selection tests synchronized with this order.  A configured
+but invalid path is a visible configuration error; silently falling through
+would hide a stale or damaged user installation.
+</p>
 <p>This section describes the reproducible source-build path, not the ordinary
 pre-built WSL2 installation.  The complete source-build prerequisite checklist
 is in
@@ -124,24 +260,63 @@ split across three boundaries:
 <table class="multitable">
 <thead><tr><th width="18%">Boundary</th><th width="30%">Supplied by</th><th width="52%">Dependencies</th></tr></thead>
 <tbody><tr><td width="18%">Windows and WSL host</td><td width="30%">Maintainer</td><td width="52%">WSL interoperation, <code class="code">powershell.exe</code>, <code class="code">wslpath</code>, Windows .NET Framework 4.7.2 or newer, Docker with Linux/AMD64 support, Git, Make, download and checksum tools, standard GNU shell utilities, network access, and writable Windows <code class="code">LocalAppData</code>.</td></tr>
-<tr><td width="18%">Pinned release toolchain</td><td width="30%">Emacsvox target</td><td width="52%">The immutable Rust/Debian container, MinGW cross tools and runtime DLLs, CMake, Clang and libclang, eSpeak build dependencies, Roslyn, and .NET 4.0 reference assemblies.  The exact versions and downloaded-package hashes live in <code class="code">servers/omnivox-release/toolchain.lock</code>.</td></tr>
-<tr><td width="18%">Build source</td><td width="30%">Git checkouts</td><td width="52%">The current Emacsvox checkout and the Omnivox checkout selected by <code class="code">OMNIVOX_DIR</code>, including Omnivox&rsquo;s locked Rust dependencies.</td></tr>
+<tr><td width="18%">Pinned release toolchain</td><td width="30%">Emacsvox target</td><td width="52%">The immutable Rust/Debian container, MinGW cross tools and runtime DLLs, CMake, Clang and libclang, eSpeak build dependencies, Roslyn, .NET 4.0 reference assemblies, and official Windows Piper companion.  The exact versions, source commit, and downloaded-package hashes live in <code class="code">servers/omnivox-release/toolchain.lock</code>.</td></tr>
+<tr><td width="18%">Build source</td><td width="30%">Git checkouts</td><td width="52%">The current Emacsvox checkout and the Omnivox checkout selected by <code class="code">OMNIVOX_DIR</code>, including Omnivox&rsquo;s locked Rust dependencies and checksum-locked Flite and RuTTS source inputs.</td></tr>
 </tbody>
 </table>
 
 <p><code class="code">make verify-windows-omnivox-toolchain</code> prepares the cached Roslyn inputs,
 builds the Docker image, and validates this boundary before compilation.  The
-full target then builds the two 32-bit helpers deterministically, builds native
-and Windows Omnivox in the container, stages a content-addressed payload, and
-verifies the Windows-local copy.  A host Rust installation, MinGW installation,
-Visual Studio, .NET SDK, or system eSpeak installation is not an input to this
-release path.
+full target then builds Omnivox&rsquo;s two 32-bit helper sources deterministically,
+builds native Windows Omnivox plus its RHVoice, Flite, and RuTTS helpers in the
+container, and stages their licenses, provenance, and checksums.  The clean
+target also builds Piper support and verifies that the pinned companion and
+main executable identify the same Omnivox source commit.  A host Rust
+installation, MinGW installation, Visual Studio, .NET SDK, or system eSpeak
+installation is not an input to this release path.  RHVoice&rsquo;s native library,
+languages, and voices remain external user-supplied runtime inputs.  Flite&rsquo;s
+CMU US SLT voice is compiled into its checksum-locked helper.  RuTTS&rsquo;s built-in
+male and female Russian voices are compiled from the checksum-locked 6.3.3
+source; RuLex is not included.
+</p>
+<p>After staging, the static verifier rechecks manifests, provenance, the
+Windows-local copy, and all configured external inputs.  The separate live
+verifier executes that exact Windows-local runtime, prewarms the bounded eSpeak
+voice cache tied to the verified content-addressed data, discovers the compiled
+Flite and RuTTS voices, and requires real WAV synthesis from both helpers.
+Use <code class="code">make verify-windows-omnivox-live</code> to repeat only the executable smoke gate.
+</p>
+<p><code class="code">OMNIVOX_PIPER_MODEL</code> is an optional staging input, not a release payload.
+When supplied, the target validates the adjacent configuration, copies both
+files into a content-addressed Windows-local model cache, records their hashes,
+and writes the Windows path used by the launcher.  The recursive runtime
+manifest deliberately excludes model files.  A different model therefore
+creates a distinct local build identity without changing the pinned companion.
+The public-domain engineering voice used in Omnivox CI is approved only for
+that bounded test purpose and is not a model-distribution default.
 </p>
 <p>Maintainers testing tracked Emacsvox or Omnivox changes may use
 <code class="code">make windows-omnivox-dev</code>.  That target records both worktree-diff hashes and
-labels the result as a development build; it is not the clean release
-procedure.  See <code class="code">servers/omnivox-release/README.org</code> for the pinned toolchain,
-licensing, provenance, and restaging contract.
+labels the result as a development build.  It builds the RHVoice, Flite, and
+RuTTS companions but omits Piper, because the currently pinned Piper companion
+must not be mixed with later Omnivox source.  It also rejects
+<code class="code">OMNIVOX_PIPER_MODEL</code>.  Advance the checked Piper companion and source commit
+together before these integrations enter the clean release path.  See
+<code class="code">servers/omnivox-release/README.org</code> for the pinned toolchain, licensing,
+provenance, and restaging contract.
+</p>
+<p>The development target accepts <code class="code">OMNIVOX_RHVOICE_LIBRARY</code> and
+<code class="code">OMNIVOX_RHVOICE_DATA</code> together, plus an optional
+<code class="code">OMNIVOX_RHVOICE_CONFIG</code> directory.  It resolves WSL or Windows absolute paths,
+requires the C API DLL and the language/voice data layout, records content
+digests in provenance and machine-local Windows path pointers beside the
+selected runtime, and leaves all RHVoice files external.  Those pointers let
+the launcher restore the variables for every fresh Emacsvox process.  The
+runtime verifier rejects missing or changed external inputs.  Omitting all
+three variables leaves RHVoice unconfigured without affecting Flite, RuTTS,
+or the other engines.  RuTTS requires no external installation; the staged
+helper always provides its built-in male and female Russian voices without
+RuLex.
 </p>
 <p>Do not bypass the Omnivox release target manually or clean either repository
 to make its release guard pass.  Use <code class="code">make windows-omnivox</code> only for the

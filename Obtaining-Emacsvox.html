@@ -38,11 +38,16 @@ Next: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="n" rel="n
 <hr>
 <h3 class="section" id="Before-You-Begin"><span>2.1 Before You Begin<a class="copiable-link" href="#Before-You-Begin"> &para;</a></span></h3>
 
-<p>Install <code class="code">git</code>, <code class="code">make</code>, GNU Texinfo (which provides <code class="code">makeinfo</code>), and
-<a class="uref" href="https://www.gnu.org/software/emacs/download.html">Emacs 31 or newer</a>.  Installing the Omnivox 1.4.1 release archive also
-requires <code class="code">curl</code> and either <code class="code">sha256sum</code> on GNU/Linux and WSL2 or <code class="code">shasum</code> on
-macOS.  GNU/Linux and macOS use <code class="code">tar</code>; WSL2 uses <code class="code">unzip</code>.  It does not require
-a Rust or C++ build toolchain.
+<p>Install <code class="code">git</code> so you can obtain the Emacsvox checkout.  Emacsvox requires
+<a class="uref" href="https://www.gnu.org/software/emacs/download.html">Emacs 31 or newer</a>, but WSL2 users do not need to find a separate Emacs
+package before beginning.  The guided installer below uses an existing
+supported Emacs or builds the pinned stable release for the current user.
+</p>
+<p>On GNU/Linux and macOS, install Emacs 31 or newer and <code class="code">make</code>.  Omnivox 1.6.4
+or newer is the supported speech-server baseline.  Installing its release
+archive also requires <code class="code">curl</code> and either <code class="code">sha256sum</code> on GNU/Linux or <code class="code">shasum</code>
+on macOS, plus <code class="code">tar</code>.  GNU Texinfo is needed only when building or editing the
+documentation, not for an ordinary installation.
 </p>
 <p>To check the Emacs found by your shell, run:
 </p>
@@ -62,11 +67,10 @@ or locate its executable.  You can check a specific executable in the same way:
 libgcc, and ALSA runtime.  If the archive does not match the host, the Omnivox
 source route requires Rust, Python 3, a C and C++ toolchain, CMake, and Clang
 with libclang.  It additionally requires <code class="code">pkg-config</code> and ALSA development
-headers on GNU/Linux or the Xcode command-line tools on macOS.  WSL2 has
-an easier pre-built Windows route described in
-<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>.  Docker and
-Windows .NET Framework are required only for the reproducible source-build
-route in <a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
+headers on GNU/Linux or the Xcode command-line tools on macOS.  These are not
+requirements for the recommended WSL2 binary route.  Docker and Windows .NET
+Framework are needed only for the advanced reproducible source-build route in
+<a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
 </p>
 <p>Choose a permanent parent directory and clone Emacsvox:
 </p>
@@ -78,6 +82,34 @@ git clone https://github.com/bartbunting/emacsvox
 <p>The Emacsvox checkout is the installation directory.  It builds in place and
 does not create a second tree to copy elsewhere.  Clone Omnivox beside it only
 when following the Omnivox source-build or reproducible WSL2 build route.
+</p>
+<p>Under WSL2, first ask the guided installer to inspect the machine without
+changing it:
+</p>
+<div class="example">
+<pre class="example-preformatted">cd /path/where/you/keep/source/emacsvox
+./bin/emacsvox-wsl-install --check
+</pre></div>
+
+<p>The report names the Emacs it will use, the matching Omnivox Windows archive,
+and the per-user installation paths.  If Emacs build packages are missing, it
+prints one <code class="code">apt</code> command for you to review and run.  The installer never invokes
+<code class="code">sudo</code> itself.  After resolving any reported prerequisite, run:
+</p>
+<div class="example">
+<pre class="example-preformatted">./bin/emacsvox-wsl-install
+</pre></div>
+
+<p>It builds the pinned stable Emacs only when Emacs 31 or newer is unavailable,
+downloads and verifies the matching Omnivox 1.6.4 Windows archive, records its
+path without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
+and plays the final speech-server check.  The Emacs build can take a while on
+a fresh machine; later runs reuse it and the verified downloads.  Routine
+compiler output is kept below <code class="code">$XDG_CACHE_HOME/emacsvox/logs</code>, normally
+<code class="code">~/.cache/emacsvox/logs</code>.  If a build fails, the installer shows its final log
+lines and the complete log path.  Continue only after hearing both the final
+tone and speech.  You can then skip to the last step in
+<a class="ref" href="Quick-Installation.html">Build And Start Emacsvox</a> and start Emacsvox.
 </p>
 </div>
 <hr>

@@ -39,17 +39,58 @@ Next: <a href="Trying-Native-Windows-Emacsvox.html" accesskey="n" rel="next">Try
 <hr>
 <h3 class="section" id="Install-An-Omnivox-Windows-Release-Under-WSL2"><span>4.3 Install An Omnivox Windows Release Under WSL2<a class="copiable-link" href="#Install-An-Omnivox-Windows-Release-Under-WSL2"> &para;</a></span></h3>
 
-<p>This is the recommended WSL2 route for ordinary use on x86-64 Windows.  It
-needs <code class="code">curl</code>, <code class="code">unzip</code>, <code class="code">sha256sum</code>, working <code class="code">powershell.exe</code> and <code class="code">wslpath</code>
-interoperation, and the Emacsvox checkout.  It does not need the Omnivox source
-checkout, Docker, Rust, MinGW, Visual Studio, or Windows .NET Framework.
+<p>This is the recommended WSL2 route for ordinary use on x86-64 Windows and
+Windows on ARM.  From the Emacsvox checkout, inspect the planned installation
+without changing anything:
+</p>
+<div class="example">
+<pre class="example-preformatted">./bin/emacsvox-wsl-install --check
+</pre></div>
+
+<p>The doctor detects the Windows architecture, chooses the matching Omnivox
+1.6.4 archive, and reports the Emacs and per-user paths it will use.  If Linux
+packages are missing, it prints one <code class="code">apt</code> command for you to review and run.
+Working <code class="code">powershell.exe</code> and <code class="code">wslpath</code> interoperation are required.  After
+resolving any reported prerequisite, run:
+</p>
+<div class="example">
+<pre class="example-preformatted">./bin/emacsvox-wsl-install
+</pre></div>
+
+<p>The installer downloads and checksum-verifies the appropriate Windows archive,
+installs the complete payload below the Windows user&rsquo;s <code class="code">LocalAppData</code>, and
+records its absolute WSL path in
+<code class="code">$XDG_CONFIG_HOME/emacsvox/omnivox-program</code>, normally
+<code class="code">~/.config/emacsvox/omnivox-program</code>.  It does not invoke <code class="code">sudo</code> or edit a shell
+startup file.  It also compiles Emacsvox, runs the non-audible launcher
+diagnostic, and finishes with the audible speech-server check.  The normal
+acceptance condition is hearing both its tone and speech.
+</p>
+<p>This binary route does not need the Omnivox source checkout, Docker, Rust,
+MinGW, Visual Studio, Windows .NET Framework, or an optional/proprietary speech
+runtime.  WinRT speech is included in Windows.  Use
+<code class="code">./bin/emacsvox-wsl-install --no-audio-check</code> only for a controlled or headless
+installation where a separate audible check will be performed later.
+</p>
+<ul class="mini-toc">
+<li><a href="#Manual-Release-Installation" accesskey="1">Manual Release Installation</a></li>
+</ul>
+<div class="subsection-level-extent" id="Manual-Release-Installation">
+<h4 class="subsection"><span>4.3.1 Manual Release Installation<a class="copiable-link" href="#Manual-Release-Installation"> &para;</a></span></h4>
+
+<p>The following procedure is the manual equivalent.  Use it when reviewing the
+installer&rsquo;s actions, working around a local restriction, or repairing one
+layer independently.  It needs <code class="code">curl</code>, <code class="code">unzip</code>, <code class="code">sha256sum</code>, and working
+<code class="code">powershell.exe</code> and <code class="code">wslpath</code> interoperation.  The commands show Windows x64;
+on Windows on ARM, use <code class="code">windows-arm64</code> in both the archive and versioned install
+directory and verify that archive&rsquo;s published checksum.
 </p>
 <p>Download the Windows x64 archive and the release checksum file in WSL:
 </p>
 <div class="example">
-<pre class="example-preformatted">mkdir -p &quot;$HOME/Downloads/omnivox-1.4.1&quot;
-cd &quot;$HOME/Downloads/omnivox-1.4.1&quot;
-omnivox_version=1.4.1
+<pre class="example-preformatted">mkdir -p &quot;$HOME/Downloads/omnivox-1.6.4&quot;
+cd &quot;$HOME/Downloads/omnivox-1.6.4&quot;
+omnivox_version=1.6.4
 archive=&quot;omnivox-${omnivox_version}-windows-x64.zip&quot;
 release_url=&quot;https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}&quot;
 curl -fLO &quot;$release_url/$archive&quot;
@@ -64,19 +105,23 @@ versioned directory on the Windows filesystem:
 <div class="example">
 <pre class="example-preformatted">windows_local_app_data=&quot;$(powershell.exe -NoProfile -NonInteractive \
   -Command '[Environment]::GetFolderPath(&quot;LocalApplicationData&quot;)' | tr -d '\r')&quot;
-install_dir=&quot;$(wslpath -u &quot;$windows_local_app_data&quot;)/Emacsvox/Omnivox/releases/$omnivox_version&quot;
+install_dir=&quot;$(wslpath -u &quot;$windows_local_app_data&quot;)/Emacsvox/Omnivox/releases/$omnivox_version-windows-x64&quot;
 mkdir -p &quot;$install_dir&quot;
 unzip -q -o &quot;$archive&quot; -d &quot;$install_dir&quot;
 chmod 755 &quot;$install_dir/omnivox.exe&quot;
-export OMNIVOX_PROGRAM=&quot;$install_dir/omnivox.exe&quot;
+config_home=${XDG_CONFIG_HOME:-&quot;$HOME/.config&quot;}
+mkdir -p &quot;$config_home/emacsvox&quot;
+printf '%s\n' &quot;$install_dir/omnivox.exe&quot; &gt; \
+  &quot;$config_home/emacsvox/omnivox-program&quot;
 </pre></div>
 
 <p>Keep <code class="code">omnivox.exe</code>, <code class="code">espeak-ng-data</code>, and <code class="code">third-party-licenses</code> together in
 that directory.  Do not copy or load the archive&rsquo;s <code class="code">omnivox-voices.el</code>;
-Emacsvox uses its bundled adapter.  Add the <code class="code">OMNIVOX_PROGRAM</code> assignment, with
-the resulting absolute WSL path, to the shell startup file used to launch
-Emacs.  An explicit <code class="code">OMNIVOX_PROGRAM</code> takes precedence over an older
-source-built runtime beneath <code class="code">servers/omnivox-bin</code>.
+Emacsvox uses its bundled adapter.  The data-only configuration file makes the
+selection persistent without changing shell initialization.  Use
+<code class="code">$XDG_CONFIG_HOME</code> instead of <code class="code">~/.config</code> when it is set.  An explicit
+<code class="code">OMNIVOX_PROGRAM</code> remains a temporary override and takes precedence over this
+file.
 </p>
 <p>From the Emacsvox checkout, verify the selected release and listen to its
 physical audio check:
@@ -87,19 +132,25 @@ physical audio check:
 ./servers/omnivox --check
 </pre></div>
 
-<p>The version must report 1.4.1.  The check must produce both its tone and spoken
-confirmation.  Release CI verifies the downloaded archive, Windows x64
+<p>The version must report 1.6.4 or newer.  The check must produce both its tone
+and spoken confirmation.  Release CI verifies the downloaded archive, Windows x64
 architecture, adjacent eSpeak data, voice discovery, and headless synthesis
 through both WinRT and eSpeak, but only this audible check proves the local
 audio path.  The Windows archive is not code-signed.  If Windows security or
 local policy refuses it, do not weaken that policy to complete the install.
 </p>
-<p>The published archive does not contain the optional Piper, Eloquence, or
-DECtalk helpers or their runtimes.  They are not needed for normal WinRT
-speech.  Use the source-build route below when maintaining Emacsvox&rsquo;s pinned,
-content-addressed Windows bundle or its Eloquence and DECtalk bridges.  Piper
-has a separate optional build workflow in the Omnivox repository.
+<p>The generic Omnivox 1.6.4 archive includes the portable RHVoice helper, but not
+the RHVoice runtime, language data, or voices.  It does not contain the optional
+Piper, Flite, or RuTTS companions; none is needed for normal WinRT speech.
+Omnivox 1.6.4 publishes separate matching companions for those engines.
+Emacsvox&rsquo;s clean source-build route below verifies and stages the official
+Piper companion and builds RHVoice, Flite, and RuTTS from the matching 1.6.4
+source.  A Piper voice model and the RHVoice runtime and voices remain separate
+user-supplied files.  Flite and RuTTS need no external runtime installation in
+the source-built bundle.  Eloquence and DECtalk remain separately licensed,
+user-supplied runtimes.
 </p>
+</div>
 </div>
 <hr>
 <div class="nav-panel">

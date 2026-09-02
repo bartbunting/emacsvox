@@ -45,14 +45,16 @@ point and find the first command below that did not work:
 </p>
 <dl class="table">
 <dt><code class="code">./bin/emacsvox --diagnose</code> fails</dt>
-<dd><p>No audio or interactive Emacs has started.  Follow the reported selection:
+<dd><p>No audio or interactive Emacs has started.  Under WSL2, begin with
+<code class="code">./bin/emacsvox-wsl-install --check</code> and resolve the first item it reports.
+Otherwise, follow the launcher selection:
 set <code class="code">EMACS</code>, correct <code class="code">EMACS=</code> in <code class="code">local.mk</code>, or install Emacs 31
-or newer when the Emacs check fails.  When the speech backend is not
+or newer when the Emacs check fails.  When the speech server is not
 executable, finish installing Omnivox, put it on <code class="code">PATH</code>, or set
-<code class="code">OMNIVOX_PROGRAM</code> to its absolute executable.  Under WSL2, confirm the
-pre-built executable selected in
-<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>, or verify a
-source-built staged runtime described in <a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
+<code class="code">OMNIVOX_PROGRAM</code> to its absolute executable.  The guided WSL2 installer
+records the verified executable in a per-user configuration file; rerunning
+it repairs a missing installation or selection without requiring a shell
+startup edit.
 </p></dd>
 <dt>The diagnostic passes, but <code class="code">--check</code> errors or is inaudible</dt>
 <dd><p>The speech server needs attention before Emacs configuration is relevant.
@@ -60,7 +62,7 @@ Follow
 <a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend Diagnostics And Responsibilities</a> until the check produces both its tone
 and speech.
 </p></dd>
-<dt>The audible check passes, but the isolated startup sentence is absent</dt>
+<dt>The audible check passes, but &ldquo;Emacsvox is ready&rdquo; is absent</dt>
 <dd><p>Run <code class="code">./bin/emacsvox --diagnose</code> again from the same checkout and shell.
 Remove an unintended <code class="code">TTS_PROGRAM</code> override if the report does not select
 <code class="code">omnivox</code>.  Then request an Emacs startup backtrace with:
@@ -70,14 +72,15 @@ Remove an unintended <code class="code">TTS_PROGRAM</code> override if the repor
 </pre></div>
 
 <p>An error saying <code class="code">Could not find speech server executable</code> means the
-backend visible during that start cannot be executed.  Correct the reported
-backend path rather than adding more init-file configuration.  For an Omnivox
-process error, inspect the private log directory described below.
+speech server visible during that start cannot be executed.  Correct the
+reported speech-server path rather than adding more init-file configuration.
+For an Omnivox process error, inspect the private log directory described
+below.
 </p></dd>
-<dt>The startup sentence is heard, but speech later stops</dt>
+<dt>The ready message is heard, but speech later stops</dt>
 <dd><p>If Emacs reports that an Emacsvox speech server exited, inspect the Omnivox
-session log and type <kbd class="kbd">M-x tts-restart RET</kbd> after correcting the backend
-problem.  Logs are below <code class="code">$XDG_STATE_HOME/emacsvox/omnivox</code>, defaulting to
+session log and type <kbd class="kbd">M-x tts-restart RET</kbd> after correcting the
+speech-server problem.  Logs are below <code class="code">$XDG_STATE_HOME/emacsvox/omnivox</code>, defaulting to
 <code class="code">~/.local/state/emacsvox/omnivox</code>.  Spoken text is omitted unless explicit
 text logging is enabled.
 </p></dd>
@@ -85,8 +88,8 @@ text logging is enabled.
 <dd><p>Remove or comment out the Emacsvox environment and <code class="code">load-file</code> forms from
 the personal init file.  This is the rollback: it leaves the checkout and the
 known-good <code class="code">./bin/emacsvox</code> path intact.  Re-add the forms in the order
-shown in <a class="ref" href="Persistent-Startup.html">Persistent Startup</a>; backend selection must happen before setup
-is loaded.
+shown in <a class="ref" href="Persistent-Startup.html">Persistent Startup</a>; speech-server selection must happen before
+setup is loaded.
 </p></dd>
 </dl>
 

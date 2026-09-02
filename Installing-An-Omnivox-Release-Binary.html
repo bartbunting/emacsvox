@@ -41,14 +41,14 @@ Next: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" accesskey=
 
 <p>Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible runtime,
 macOS on Apple silicon, or macOS on Intel.  The
-<a class="uref" href="https://github.com/bartbunting/omnivox/releases/tag/v1.4.1">Omnivox 1.4.1 release</a>
+<a class="uref" href="https://github.com/bartbunting/omnivox/releases/tag/v1.6.4">Omnivox 1.6.4 release</a>
 provides these archive names:
 </p>
 <table class="multitable">
 <thead><tr><th width="28%">Host</th><th width="27%">Set <code class="code">platform</code> to</th><th width="45%">Archive</th></tr></thead>
-<tbody><tr><td width="28%">GNU/Linux x86-64</td><td width="27%"><code class="code">linux-x64</code></td><td width="45%"><code class="code">omnivox-1.4.1-linux-x64.tar.gz</code></td></tr>
-<tr><td width="28%">macOS Apple silicon</td><td width="27%"><code class="code">macos-arm64</code></td><td width="45%"><code class="code">omnivox-1.4.1-macos-arm64.tar.gz</code></td></tr>
-<tr><td width="28%">macOS Intel</td><td width="27%"><code class="code">macos-x64</code></td><td width="45%"><code class="code">omnivox-1.4.1-macos-x64.tar.gz</code></td></tr>
+<tbody><tr><td width="28%">GNU/Linux x86-64</td><td width="27%"><code class="code">linux-x64</code></td><td width="45%"><code class="code">omnivox-1.6.4-linux-x64.tar.gz</code></td></tr>
+<tr><td width="28%">macOS Apple silicon</td><td width="27%"><code class="code">macos-arm64</code></td><td width="45%"><code class="code">omnivox-1.6.4-macos-arm64.tar.gz</code></td></tr>
+<tr><td width="28%">macOS Intel</td><td width="27%"><code class="code">macos-x64</code></td><td width="45%"><code class="code">omnivox-1.6.4-macos-x64.tar.gz</code></td></tr>
 </tbody>
 </table>
 
@@ -58,9 +58,9 @@ matching platform value, and fetch both the archive and published checksum
 file:
 </p>
 <div class="example">
-<pre class="example-preformatted">mkdir -p &quot;$HOME/Downloads/omnivox-1.4.1&quot;
-cd &quot;$HOME/Downloads/omnivox-1.4.1&quot;
-omnivox_version=1.4.1
+<pre class="example-preformatted">mkdir -p &quot;$HOME/Downloads/omnivox-1.6.4&quot;
+cd &quot;$HOME/Downloads/omnivox-1.6.4&quot;
+omnivox_version=1.6.4
 platform=linux-x64
 archive=&quot;omnivox-${omnivox_version}-${platform}.tar.gz&quot;
 release_url=&quot;https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}&quot;
@@ -107,8 +107,8 @@ omnivox --check
 omnivox --list-voices
 </pre></div>
 
-<p>The version must report 1.4.1, and the check must produce both its tone and
-spoken confirmation.  The macOS archives are not code-signed or notarized; if
+<p>The version must report 1.6.4 or newer, and the check must produce both its
+tone and spoken confirmation.  The macOS archives are not code-signed or notarized; if
 local security policy refuses the verified binary, use the source route below
 rather than weakening that policy.  On GNU/Linux, a missing runtime library or
 incompatible glibc also means that the source route is the appropriate path.

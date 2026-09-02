@@ -20,6 +20,8 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+kbd.kbd {font-style: oblique}
+pre.format-preformatted {font-family: inherit}
 span:hover a.copiable-link {visibility: visible}
 strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
 -->
@@ -43,19 +45,51 @@ one frozen source boundary.  Legacy entry points remain independent
 adapters until their callers migrate to this service.
 </p>
 <ul class="mini-toc">
-<li><a href="#emacsvox_002daural_002dsubmission-Options" accesskey="1">emacsvox-aural-submission Options</a></li>
+<li><a href="#Emacsvox_002dAural_002dSubmission-Commands" accesskey="1">Emacsvox-Aural-Submission Commands</a></li>
+<li><a href="#emacsvox_002daural_002dsubmission-Options" accesskey="2">emacsvox-aural-submission Options</a></li>
 </ul>
+<div class="subsection-level-extent" id="Emacsvox_002dAural_002dSubmission-Commands">
+<h4 class="subsection"><span>2.47.1 Emacsvox-Aural-Submission Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dSubmission-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dtoggle_002ddiagnostic_002dlogging" accesskey="1">emacsvox-aural-toggle-diagnostic-logging</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dtoggle_002ddiagnostic_002dlogging">
+<h4 class="subsubsection"><span>2.47.1.1 emacsvox-aural-toggle-diagnostic-logging<a class="copiable-link" href="#emacsvox_002daural_002dtoggle_002ddiagnostic_002dlogging"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dtoggle_002ddiagnostic_002dlogging"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-toggle-diagnostic-logging</strong> <var class="def-var-arguments">(&amp;optional choose-file)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dtoggle_002ddiagnostic_002dlogging"> &para;</a></span></dt>
+<dd><dl class="table">
+<dt><a id="index-C_002de-d-D"></a><span><kbd class="kbd">C-e d D</kbd><a class="copiable-link" href="#index-C_002de-d-D"> &para;</a></span></dt>
+</dl>
+
+<a class="index-entry-id" id="index-emacsvox_002daural_002dtoggle_002ddiagnostic_002dlogging-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Toggle sensitive aural diagnostic logging for this Emacs session.
+
+When enabling logging, reuse the last configured file or default to
+~/.emacsvox-aural-diagnostics.log.  With prefix argument CHOOSE-FILE, prompt
+for the log file.  Diagnostic records include complete spoken text.
+
+(fn &amp;optional CHOOSE-FILE)
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
 <div class="subsection-level-extent" id="emacsvox_002daural_002dsubmission-Options">
-<h4 class="subsection"><span>2.47.1 emacsvox-aural-submission Options<a class="copiable-link" href="#emacsvox_002daural_002dsubmission-Options"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.47.2 emacsvox-aural-submission Options<a class="copiable-link" href="#emacsvox_002daural_002dsubmission-Options"> &para;</a></span></h4>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-39"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-diagnostic-log-file</var><a class="copiable-link" href="#index-User-Option-39"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-41"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-diagnostic-log-file</var><a class="copiable-link" href="#index-User-Option-41"> &para;</a></span></dt>
 <dd><pre class="verbatim">File receiving opt-in aural submission diagnostics.
 
-When non-nil, Emacsvox appends one Lisp plist per line with command timing,
-submission timing, and complete submitted text.  The log can therefore contain
-sensitive material and is disabled by default.  Emacsvox creates the file with
-owner-only permissions and tightens an existing file before appending to it.
+When non-nil, Emacsvox appends one Lisp plist per line with command,
+submission, dispatch-send, mixer-source observation, and terminal timing, plus
+complete submitted text.  Dispatch records carry the native submission and
+Omnivox dispatch IDs when available.  The log can therefore contain sensitive
+material and is disabled by default.  Emacsvox creates the file with owner-only
+permissions and tightens an existing file before appending to it.
 </pre>
 <p>Default Value:
 </p><pre class="verbatim">
@@ -65,7 +99,7 @@ nil
 </dd></dl>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-40"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-diagnostic-log-max-bytes</var><a class="copiable-link" href="#index-User-Option-40"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-42"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-diagnostic-log-max-bytes</var><a class="copiable-link" href="#index-User-Option-42"> &para;</a></span></dt>
 <dd><pre class="verbatim">Soft size limit for one aural diagnostic log file.
 
 Before appending a record that would cross this limit, Emacsvox renames the
@@ -80,7 +114,7 @@ intact and may exceed the limit.  Set this to nil to disable rotation.
 </dd></dl>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-41"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-diagnostic-log-retained-files</var><a class="copiable-link" href="#index-User-Option-41"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-43"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-diagnostic-log-retained-files</var><a class="copiable-link" href="#index-User-Option-43"> &para;</a></span></dt>
 <dd><pre class="verbatim">Number of rotated aural diagnostic log files to retain.
 
 The active log is additional to this number.
@@ -93,6 +127,11 @@ The active log is additional to this number.
 </dd></dl>
 
 </div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002daural_002dtools.html">emacsvox-aural-tools</a>, Previous: <a href="emacsvox_002daural_002dspatial.html">emacsvox-aural-spatial</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

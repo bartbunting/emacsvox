@@ -73,14 +73,21 @@ Cargo, and .NET package caches.
 
 </li><li>Emacsvox and Omnivox Git checkouts.  By default they must be sibling
 directories named <code class="code">emacsvox</code> and <code class="code">omnivox</code>, although maintainers can set
-<code class="code">OMNIVOX_DIR</code> to an alternate Omnivox checkout.  Both need enough free space
-for the Docker image, native and cross-compiled build products, and caches.
+<code class="code">OMNIVOX_DIR</code> to an alternate Omnivox checkout.  The Omnivox checkout must
+be at the exact source commit recorded for the checksum-pinned Piper
+companion in <code class="code">servers/omnivox-release/toolchain.lock</code> when using the clean
+release target.  The preparation target rejects a different revision instead
+of combining unmatched native components.  The development target described
+below accepts current source by omitting Piper.  Both checkouts need enough
+free space for the Docker image, native and cross-compiled build products,
+and caches.
 </li></ul>
 
 <p>You do <em class="emph">not</em> need to install Rust, MinGW, CMake, Clang, libclang, eSpeak NG,
 Roslyn, Visual Studio, or the .NET reference assemblies in WSL.  The target
 pins or builds those inside its controlled toolchain.  Eloquence and DECtalk
-runtimes are optional and are not needed for the normal Windows WinRT voice.
+runtimes and the RHVoice runtime and voice data are optional and are not needed
+for the normal Windows WinRT voice.
 </p>
 <p>The quickest prerequisite check is:
 </p>
@@ -106,14 +113,72 @@ make windows-omnivox
 
 <p>This is the reproducible release path.  It builds and verifies a pinned
 Windows-GNU executable and stages a content-addressed runtime beneath
-<code class="code">servers/omnivox-bin</code>.  It also copies the runnable payload to a
-Windows-local directory so native voice and eSpeak data discovery do not pay
-the WSL filesystem cost.  Optional Eloquence and DECtalk runtimes are not
+<code class="code">servers/omnivox-bin</code>.  Once the Piper lock identifies an Omnivox revision that
+contains these integrations, the payload includes the matching,
+checksum-pinned Piper companion, the RHVoice helper without an RHVoice runtime,
+the Flite helper with its compiled CMU US SLT voice, and the RuTTS helper with
+its built-in male and female Russian voices.  It contains no Piper model and no
+RuLex component.  It also copies the runnable payload to a Windows-local
+directory so native voice and eSpeak data discovery do not pay the WSL
+filesystem cost.  Optional Eloquence, DECtalk, and RHVoice runtimes are not
 downloaded by this target or required for normal WinRT speech.
+</p>
+<p>The build does not report success on file checks alone.  Its final live gate
+starts the exact Windows-local runtime, discovers Flite&rsquo;s SLT voice and both
+RuTTS voices, and requires each helper to synthesize a non-empty WAV.  Repeat
+that gate without rebuilding by running <code class="code">make verify-windows-omnivox-live</code>.
+</p>
+<p>To register Piper, review a model and its model card, keep its adjacent
+<code class="code">.onnx.json</code> or <code class="code">.json</code> configuration with it, and supply an absolute path
+while staging:
+</p>
+<div class="example">
+<pre class="example-preformatted">OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx make windows-omnivox
+</pre></div>
+
+<p>The target copies the model and configuration into a separate,
+content-addressed directory below Windows <code class="code">LocalAppData</code> and records their
+hashes without bundling them into the runtime.  Omitting
+<code class="code">OMNIVOX_PIPER_MODEL</code> installs the companion but leaves Piper unregistered.
+After a configured build, start a fresh speech process and confirm that the
+physical voice is present:
+</p>
+<div class="example">
+<pre class="example-preformatted">./servers/omnivox --engine piper --list-voices
+</pre></div>
+
+<p>In Emacsvox, restart both speech processes or restart Emacs, then press
+<code class="code">C-e d e</code>.  That command lists the engines reported by the live process, so
+Piper appears only after the newly staged server has started and successfully
+loaded its model and helper.
 </p>
 <p>Maintainers testing tracked changes should use the development route in
 <a class="ref" href="Integration-Maintenance.html">Integration Maintenance</a> rather than weakening the clean-release
-guard.
+guard:
+</p>
+<div class="example">
+<pre class="example-preformatted">OMNIVOX_RHVOICE_LIBRARY=/mnt/c/path/to/RHVoice.dll \
+  OMNIVOX_RHVOICE_DATA=/mnt/c/path/to/RHVoice/data \
+  make windows-omnivox-dev
+./servers/omnivox --engine flite --list-voices
+./servers/omnivox --engine rutts --list-voices
+</pre></div>
+
+<p>This route builds current Omnivox source, stages the RHVoice helper, Flite with
+its SLT voice, and RuTTS 6.3.3 with its built-in male and female Russian voices,
+and deliberately omits the older pinned Piper companion.  RuTTS needs no
+separate installation; RuLex is not included.  RHVoice appears only after
+installing a compatible Windows <code class="code">RHVoice.dll</code> plus language and voice data.
+When its library and data variables are supplied to the development target,
+staging validates them and records Windows path pointers beside that local
+runtime; the launcher restores them for later fresh Emacsvox processes.  Also
+supply <code class="code">OMNIVOX_RHVOICE_CONFIG</code> when the installation has a separate
+configuration directory.  The library, data, and configuration remain external
+and are not copied into the Omnivox payload.  Installation and validation
+instructions are in Omnivox&rsquo;s checkout under <code class="code">docs/RHVOICE.md</code> and
+<code class="code">docs/RUTTS.md</code>.  Restart both speech processes or Emacs after restaging or
+changing those inputs, then use <code class="code">C-e d e</code> to inspect the engines reported by the
+new process.
 </p>
 </div>
 <hr>

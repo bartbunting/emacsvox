@@ -56,12 +56,14 @@ live under <code class="code">docs/manual/chapters/</code>, while developer and 
 live under <code class="code">docs/developer/</code>.  The source layout and fast authoring loop are
 summarized in <code class="code">docs/manual/README.org</code>.
 </p>
-<p>The current project overview and installation summary live in <code class="code">Readme.org</code> and
-<code class="code">etc/install.org</code>.  Submit changes through the Emacsvox repository at
-<a class="uref" href="https://github.com/bartbunting/emacsvox">https://github.com/bartbunting/emacsvox</a>.  Before changing a governed
-workflow or architecture, read <code class="code">AGENTS.md</code> and every accepted record under
-<code class="code">docs/adr/</code>.  Repository-local <code class="code">local.mk</code> selects the Emacs used by supported
-targets; Emacsvox requires Emacs 31 or newer.
+<p>The current project overview lives in <code class="code">README.org</code>, and the complete user
+installation path lives in <code class="code">docs/manual/chapters/installation.org</code>.  Source
+checkout, byte-code, and release procedures live in
+<code class="code">docs/developer/integration-maintenance.org</code>.  Submit changes through the
+Emacsvox repository at <a class="uref" href="https://github.com/bartbunting/emacsvox">https://github.com/bartbunting/emacsvox</a>.  Before
+changing a governed workflow or architecture, read <code class="code">AGENTS.md</code> and every
+accepted record under <code class="code">docs/adr/</code>.  Repository-local <code class="code">local.mk</code> selects the
+Emacs used by supported targets; Emacsvox requires Emacs 31 or newer.
 </p>
 <p>Do not hand-edit generated references.  <code class="code">info/docs.texi</code> and <code class="code">info/keys.texi</code>
 come from the source documentation generator, and
