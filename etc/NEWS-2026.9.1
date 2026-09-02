@@ -1,0 +1,36 @@
+#    -*- mode: org -*-
+Programming is the art of telling another human being what one wants
+the computer to do.   [[https://www.azquotes.com/quote/964459][(DEK)]]
+
+Emacsvox News -- History Of User-Visible Changes
+
+Maintained by Emacsvox Contributors.
+
+* Emacsvox 2026.9.1 --- Current User-Visible Changes
+
+This corrective release requires Emacs 31 or later and Omnivox 1.6.4 or newer.
+The guided WSL2 installer pins the matching verified Omnivox 1.6.4 Windows x64
+or ARM64 archive.
+
+- The spoken ``Emacsvox is ready.'' checkpoint now waits for acknowledged
+  initial engine inventory, routing policy, and logical voices, so normal first
+  speech uses the restored engine preference.  A bounded capability-ready
+  fallback retains an audible checkpoint if routing does not complete.
+
+- Windows Omnivox staging now authenticates and prewarms the bounded eSpeak
+  voice cache for its verified content-addressed data, avoiding repeated native
+  voice discovery during later fresh Emacsvox launches.
+
+- Opt-in Aural Presentation diagnostics now correlate native submission IDs
+  with Omnivox dispatch IDs and record actual dispatch send, first observed
+  mixer-source consumption, and terminal playback timing.  Omnivox's normal
+  session log supplies the matching server admission, queue, synthesis, and
+  playback-stage breakdown without a speech protocol change.  Use =C-e d D=
+  to toggle the sensitive, full-text diagnostic log for the current session.
+
+- The source-built Windows Omnivox runtime now uses the Omnivox 1.6.4 source
+  and matching checksum-locked Piper companion.  It includes RuTTS 6.3.3 and
+  its built-in male and female Russian voices; RuLex remains excluded.  Staging
+  now finishes with live Flite and RuTTS voice discovery and WAV-synthesis
+  checks against the Windows-local payload, and the WSL launcher forwards an
+  explicit =OMNIVOX_RUTTS_HELPER= override.
