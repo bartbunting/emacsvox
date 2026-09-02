@@ -459,8 +459,11 @@ themed overrides below an active sound pack."
     (overlay-3 . voice-overlay-3)
     (smoothen . voice-smoothen)
     (smoothen-extra . voice-smoothen-extra)
-    (smoothen-medium . voice-smoothen-medium))
-  "The existing ACSS personalities exposed as the default voice palette.")
+    (smoothen-medium . voice-smoothen-medium)
+    (telephone
+     . (:family nil :average-pitch nil :pitch-range nil :stress nil
+        :richness nil :low-pass 5 :high-pass 5)))
+  "Built-in ACSS personalities and styles in the default voice palette.")
 
 (cl-defun emacsvox-aural-register-cue
     (id &key summary (kind 'cue) fallback (owner 'core))

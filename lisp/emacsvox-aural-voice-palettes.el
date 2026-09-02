@@ -81,7 +81,8 @@
     (high-pass . "High-pass cutoff; zero disables filtering")
     (pan . "Stereo position; zero is left, five centre, and nine right")
     (reverb . "Post-synthesis reverberation; zero is disabled")
-    (echo . "Post-synthesis echo; zero is disabled"))
+    (echo . "Post-synthesis echo; zero is disabled")
+    (chorus . "Post-synthesis chorus; zero is disabled"))
   "Spoken descriptions of tunable voice dimensions.")
 
 (defvar-local emacsvox-aural-voice-tuner-palette nil
@@ -1243,7 +1244,7 @@ in that overlay so subsequent edits do not create more palettes."
     (emacsvox-aural-voice-tuner--rate-offset-description value))
    ((and (eq dimension 'gain) (= value 5)) "unchanged")
    ((and (eq dimension 'low-pass) (= value 9)) "disabled")
-   ((and (memq dimension '(high-pass reverb echo)) (zerop value))
+   ((and (memq dimension '(high-pass reverb echo chorus)) (zerop value))
     "disabled")
    ((and (eq dimension 'pan) (= value 5)) "centre")
    (t (emacsvox-aural-voice-tuner--display-value value))))
@@ -1873,7 +1874,7 @@ ANNOUNCEMENT overrides the normal setting description."
       "For example, global 75 plus minus 1 is 74; plus 4 is 79.  Zero or\n"
       "adapter default means unchanged.  Left and right adjust one point.\n"
       "Gain five is unchanged; low-pass nine is disabled; high-pass, reverb,\n"
-      "and echo zero are disabled; pan five is centre.\n"
+      "echo, and chorus zero are disabled; pan five is centre.\n"
       "Omnivox pitch contrast defaults to a gentle 0.5; customize\n"
       "omnivox-average-pitch-contrast to use zero through two.\n"
       "For a routed adapter, Portable Fallback Family is retained for other\n"

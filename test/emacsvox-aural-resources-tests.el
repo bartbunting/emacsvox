@@ -821,12 +821,17 @@
      :type 'emacsvox-aural-resource-error)))
 
 (ert-deftest emacsvox-aural-resources-expose-existing-acss-palette ()
-  "The default palette names all 25 existing ACSS personalities."
+  "The default palette exposes the ACSS personalities and built-in styles."
   (let ((entries
          (emacsvox-aural-effective-voice-entries 'acss-default)))
-    (should (= (length entries) 25))
+    (should (= (length entries) 26))
     (should (eq (alist-get 'bolden entries) 'voice-bolden))
-    (should (eq (emacsvox-aural-voice 'smoothen) 'voice-smoothen))))
+    (should (eq (emacsvox-aural-voice 'smoothen) 'voice-smoothen))
+    (should
+     (equal
+      (emacsvox-aural-voice 'telephone)
+      '(:family nil :average-pitch nil :pitch-range nil :stress nil
+        :richness nil :low-pass 5 :high-pass 5)))))
 
 (ert-deftest emacsvox-aural-resources-compile-safe-personal-voice-palette ()
   "Personal palette data supports inherited personalities and complete styles."

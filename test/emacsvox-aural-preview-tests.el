@@ -51,7 +51,7 @@
           (emacsvox-aural--make-compiled-voice
            :command "[[logical_voice lighten-extra]]"
            :request 'lighten-extra
-           :style '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5)
+           :style '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5 :chorus 4)
            :capability '(:adapter omnivox)
            :degradations nil))
          (plan
@@ -66,10 +66,12 @@
     (should (equal (emacsvox-aural-concrete-content-text content)
                    "Lighten extra voice."))
     (should (equal (emacsvox-aural-concrete-content-voice-style content)
-                   '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5)))
+                   '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5
+                     :chorus 4)))
     (should (= (plist-get effects :high_pass) (/ 5.0 9.0)))
     (should (= (plist-get effects :reverb) (/ 7.0 9.0)))
-    (should (= (plist-get effects :echo) (/ 5.0 9.0)))))
+    (should (= (plist-get effects :echo) (/ 5.0 9.0)))
+    (should (= (plist-get effects :chorus) (/ 4.0 9.0)))))
 
 (ert-deftest emacsvox-aural-preview-runs-retain-one-transaction ()
   "A multi-run preview queues and dispatches within one history transaction."

@@ -562,9 +562,9 @@ write.  State synchronization lines in a combined write are ignored."
   (should
    (equal
     (emacsvox-aural--timeline-style-effects
-     '(:gain 5 :low-pass 9 :high-pass 0 :pan 5 :reverb 0 :echo 0))
+     '(:gain 5 :low-pass 9 :high-pass 0 :pan 5 :reverb 0 :echo 0 :chorus 0))
     '(:gain 0.5 :low_pass 1.0 :high_pass 0.0
-      :pan 0.5 :reverb 0.0 :echo 0.0))))
+      :pan 0.5 :reverb 0.0 :echo 0.0 :chorus 0.0))))
 
 (ert-deftest emacsvox-aural-timeline-applies-omnivox-pitch-contrast ()
   "Structured Omnivox timelines use the configured average-pitch scaling."
@@ -4216,7 +4216,7 @@ is the default inherited by a newly created TTS scratch buffer."
     (let ((custom
            '(:family nil :average-pitch 6 :pitch-range nil :stress 4
              :richness nil :rate-offset -4 :gain nil :low-pass nil :high-pass 5
-             :pan nil :reverb 5 :echo 0))
+             :pan nil :reverb 5 :echo 0 :chorus 6))
           generated)
       (cl-letf
           (((symbol-function 'emacsvox-aural-voice)
@@ -4228,7 +4228,7 @@ is the default inherited by a newly created TTS scratch buffer."
                 :dimensions
                 (average-pitch pitch-range stress richness rate-offset)
                 :post-synthesis-dimensions
-                (gain low-pass high-pass pan reverb echo))))
+                (gain low-pass high-pass pan reverb echo chorus))))
            ((symbol-function 'voice-from-acss)
             (lambda (style)
               (setq generated style)

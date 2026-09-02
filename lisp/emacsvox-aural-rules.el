@@ -75,7 +75,7 @@
   "Portable relative speech-rate dimensions carried with voice styles.")
 
 (defconst emacsvox-aural-post-synthesis-dimensions
-  '(gain low-pass high-pass pan reverb echo)
+  '(gain low-pass high-pass pan reverb echo chorus)
   "Portable post-synthesis dimensions carried with aural voice styles.")
 
 (defun emacsvox-aural-normalize-post-synthesis-value (dimension value)
@@ -101,7 +101,7 @@ endpoints.  The other dimensions use the ordinary linear mapping."
 (defconst emacsvox-aural--voice-style-keys
   '(:preset :family :average-pitch :pitch-range :stress :richness
     :rate-offset :rate
-    :gain :low-pass :high-pass :pan :reverb :echo)
+    :gain :low-pass :high-pass :pan :reverb :echo :chorus)
   "Properties accepted in an explicit aural voice style.
 
 `:rate' is accepted only to load legacy palettes.  New styles use the signed

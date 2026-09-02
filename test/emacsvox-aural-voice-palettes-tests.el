@@ -620,9 +620,9 @@
        (emacsvox-aural-voice-tuner--value-description
         (car entry) (cdr entry)))
      '((gain . 5) (low-pass . 9) (high-pass . 0)
-       (pan . 5) (reverb . 0) (echo . 0)))
+       (pan . 5) (reverb . 0) (echo . 0) (chorus . 0)))
     '("unchanged" "disabled" "disabled"
-      "centre" "disabled" "disabled")))
+      "centre" "disabled" "disabled" "disabled")))
   (with-temp-buffer
     (emacsvox-aural-voice-tuner-mode)
     (setq emacsvox-aural-voice-tuner-working-style '(:gain 4))
@@ -668,7 +668,7 @@
      emacsvox-aural-voice-tuner-voice 'aside
      emacsvox-aural-voice-tuner-working-style
      '(:family paul :average-pitch 4 :pitch-range 3
-       :stress nil :richness 6 :rate-offset -7 :gain 5 :reverb 4)
+       :stress nil :richness 6 :rate-offset -7 :gain 5 :reverb 4 :chorus 6)
      emacsvox-aural-voice-tuner-preview-text "Shared sample."
      emacsvox-aural-voice-tuner-route-selector
      '(:kind exact :scope local :engine-id "eloquence"
@@ -677,7 +677,7 @@
      emacsvox-aural-voice-tuner-route-engine
      '(:engine-id "eloquence"
        :acss-dimensions (rate average-pitch pitch-range richness)
-       :post-synthesis-dimensions ("gain" "reverb" "echo")))
+       :post-synthesis-dimensions ("gain" "reverb" "echo" "chorus")))
     (emacsvox-aural-voice-tuner-refresh 'average-pitch)
     (should
      (equal
@@ -718,7 +718,8 @@
       (should (= (plist-get (nth 2 request) :rate-offset) -7))
       (let ((effects (plist-get (nth 2 request) :effects)))
         (should (= (plist-get effects :gain) 0.5))
-        (should (= (plist-get effects :reverb) (/ 4.0 9.0))))
+        (should (= (plist-get effects :reverb) (/ 4.0 9.0)))
+        (should (= (plist-get effects :chorus) (/ 6.0 9.0))))
       (should
        (equal emacsvox-aural-voice-tuner-route-realized
               '(:engine-id "eloquence" :voice-id "eci:Reed")))
@@ -743,7 +744,7 @@
      emacsvox-aural-voice-tuner-palette 'test
      emacsvox-aural-voice-tuner-voice 'lighten-extra
      emacsvox-aural-voice-tuner-working-style
-     '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5)
+     '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5 :chorus 4)
      emacsvox-aural-voice-tuner-preview-text "Shared sample."
      emacsvox-aural-voice-tuner-route-selector nil)
     (let (preview-plan)
@@ -762,7 +763,7 @@
         (should
          (equal
           (emacsvox-aural-concrete-content-voice-style content)
-          '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5)))
+          '(:average-pitch 6 :high-pass 5 :reverb 7 :echo 5 :chorus 4)))
         (should
          (equal
           (emacsvox-aural-concrete-content-text content)
@@ -806,13 +807,14 @@
        '(:style
          (:family nil :average-pitch 4 :pitch-range 3
           :stress nil :richness 6 :rate-offset -7 :gain 5
-          :low-pass 8 :high-pass nil :pan 2 :reverb 4 :echo 1)))
+          :low-pass 8 :high-pass nil :pan 2 :reverb 4 :echo 1 :chorus 6)))
       (emacsvox-aural-register-voice-palette-data data)
       (let ((style (emacsvox-aural-voice 'aside 'reading)))
         (should (= (plist-get style :rate-offset) -7))
         (should (= (plist-get style :gain) 5))
         (should (= (plist-get style :reverb) 4))
-        (should (= (plist-get style :echo) 1))))))
+        (should (= (plist-get style :echo) 1))
+        (should (= (plist-get style :chorus) 6))))))
 
 (ert-deftest emacsvox-aural-voice-tuner-adjusts-auditions-and-undoes ()
   "Adjustments remain temporary, audition immediately, and can be undone."

@@ -458,7 +458,8 @@
               (:kind exact :scope session
                :engine-id "dectalk" :voice-id "Paul")
               :acss nil
-              :effects (:gain 0.5 :low-pass 0.75 :reverb 0.4)))
+              :effects
+              (:gain 0.5 :low-pass 0.75 :reverb 0.4 :chorus 0.6)))
            (lambda (value) (setq result value)))
           (let* ((request
                   (emacsvox-test--omnivox-decode-command (car writes)))
@@ -467,6 +468,7 @@
             (should (= (plist-get effects :gain) 0.5))
             (should (= (plist-get effects :low_pass) 0.75))
             (should (= (plist-get effects :reverb) 0.4))
+            (should (= (plist-get effects :chorus) 0.6))
             (omnivox--control-process-filter
              process
              (emacsvox-test--omnivox-event
@@ -628,7 +630,7 @@
              :capabilities
              (:acss (:rate t :average_pitch t)
               :post_synthesis_dimensions
-              ["gain" "low_pass" "reverb"]))
+              ["gain" "low_pass" "reverb" "chorus"]))
             (:id "dectalk"
              :capabilities
              (:acss (:rate t :pitch_range t)
@@ -643,7 +645,7 @@
               '(rate-offset average-pitch pitch-range volume)))
       (should
        (equal (plist-get capabilities :post-synthesis-dimensions)
-              '(echo gain high-pass low-pass reverb))))))
+              '(chorus echo gain high-pass low-pass reverb))))))
 
 (ert-deftest emacsvox-tts-omnivox-negotiates-independent-routing-policy ()
   "Modern Omnivox receives global policy before selector-only registration."

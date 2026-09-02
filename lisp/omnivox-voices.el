@@ -763,7 +763,8 @@ SEEN prevents malformed personality-variable cycles."
            (:high-pass . :high_pass)
            (:pan . :pan)
            (:reverb . :reverb)
-           (:echo . :echo)))
+           (:echo . :echo)
+           (:chorus . :chorus)))
       (when (plist-member effects (car mapping))
         (setq result
               (plist-put result (cdr mapping)

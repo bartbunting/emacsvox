@@ -25,7 +25,7 @@
       :anchor-support "exact/native-index"
       :default-voice-id "eci:Reed" :inventory-kind "live"
       :acss-dimensions (rate average-pitch pitch-range stress richness volume)
-      :post-synthesis-dimensions (reverb echo)
+      :post-synthesis-dimensions (reverb echo chorus)
       :preview-support "logical-route" :routing-policy-support "logical-voice"
       :capabilities (:markers (:word t :native_index t))
       :voices
@@ -715,7 +715,7 @@
             '(annotate
               :rate-offset -6 :average-pitch 4 :pitch-range nil :stress 2
               :richness 7 :gain 5 :low-pass 8 :high-pass 1 :pan 5
-              :reverb 7 :echo 3))))
+              :reverb 7 :echo 3 :chorus 6))))
       (let* ((entry
               (emacsvox-aural-voice-workbench--logical-preview-entry
                "voice-annotate"))
@@ -732,7 +732,8 @@
         (should (= (plist-get effects :low-pass) (/ 8.0 9.0)))
         (should (= (plist-get effects :high-pass) (/ 1.0 9.0)))
         (should (= (plist-get effects :reverb) (/ 7.0 9.0)))
-        (should (= (plist-get effects :echo) (/ 3.0 9.0)))))))
+        (should (= (plist-get effects :echo) (/ 3.0 9.0)))
+        (should (= (plist-get effects :chorus) (/ 6.0 9.0)))))))
 
 (ert-deftest emacsvox-aural-voice-workbench-opens-route-aware-tuner ()
   "Logical tuning passes the staged selector and realized engine unchanged."

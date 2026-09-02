@@ -588,6 +588,7 @@ Existing device-independent ACSS personalities
 | =smoothen= | =voice-smoothen= |
 | =smoothen-extra= | =voice-smoothen-extra= |
 | =smoothen-medium= | =voice-smoothen-medium= |
+| =telephone= | =:family=, =nil=, =:average-pitch=, =nil=, =:pitch-range=, =nil=, =:stress=, =nil=, =:richness=, =nil=, =:low-pass=, =5=, =:high-pass=, =5= |
 
 * Compatibility, Migration, and Rollout
 

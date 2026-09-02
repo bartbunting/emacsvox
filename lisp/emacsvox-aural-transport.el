@@ -773,7 +773,8 @@ Signal a clear installation error when negotiation found an older version."
            (high-pass :high-pass :high_pass)
            (pan :pan :pan)
            (reverb :reverb :reverb)
-           (echo :echo :echo)))
+           (echo :echo :echo)
+           (chorus :chorus :chorus)))
       (when-let* ((value
                    (emacsvox-aural-normalize-post-synthesis-value
                     (car mapping)
