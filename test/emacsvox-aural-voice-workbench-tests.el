@@ -161,6 +161,75 @@
        (equal spoken
               "Saved engine order restored; Eloquence is preferred")))))
 
+(ert-deftest emacsvox-aural-voice-workbench-prefers-engine-on-first-run ()
+  "Quick preference uses a transient runtime profile on first run."
+  (emacsvox-test--with-voice-workbench
+    (clrhash emacsvox-aural-routing-profile-registry)
+    (setq emacsvox-aural-active-routing-profile nil
+          omnivox-engine-priority-ids nil
+          omnivox-fallback-engine-ids '("espeak"))
+    (let* ((directory (make-temp-file "emacsvox-first-engine-" t))
+           (emacsvox-aural-routing-profiles-file
+            (expand-file-name "routing.el" directory))
+           spoken)
+      (unwind-protect
+          (cl-letf (((symbol-function 'tts-speak)
+                     (lambda (text) (setq spoken text))))
+            (should
+             (equal
+              (mapcar
+               #'cdr
+               (emacsvox-aural-voice-workbench--engine-candidates))
+              '("eloquence" "winrt")))
+            (emacsvox-aural-prefer-engine "winrt")
+            (should
+             (equal emacsvox-aural-session-engine-order
+                    '("winrt" "eloquence")))
+            (should (equal omnivox-fallback-engine-ids '("winrt")))
+            (let ((entry
+                   (emacsvox-aural-routing-profile
+                    emacsvox-aural-active-routing-profile)))
+              (should entry)
+              (should
+               (eq (emacsvox-aural-routing-profile-entry-source entry)
+                   emacsvox-aural-voice-workbench--session-profile-source)))
+            (should-not (file-exists-p emacsvox-aural-routing-profiles-file))
+            (should
+             (equal spoken
+                    "Windows Speech is now preferred for this session"))
+            (emacsvox-aural-restore-saved-engine-order)
+            (should-not emacsvox-aural-session-engine-order)
+            (should
+             (equal spoken
+                    "Initial engine order restored; Eloquence is preferred")))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-voice-workbench-saves-first-engine-preference ()
+  "A prefixed first-run preference creates the requested saved profile."
+  (emacsvox-test--with-voice-workbench
+    (clrhash emacsvox-aural-routing-profile-registry)
+    (setq emacsvox-aural-active-routing-profile nil
+          omnivox-engine-priority-ids nil
+          omnivox-fallback-engine-ids '("espeak"))
+    (let* ((directory (make-temp-file "emacsvox-first-saved-engine-" t))
+           (emacsvox-aural-routing-profiles-file
+            (expand-file-name "routing.el" directory)))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-prefer-engine "winrt" t)
+            (should (file-exists-p emacsvox-aural-routing-profiles-file))
+            (let* ((saved
+                    (emacsvox-aural-read-routing-profiles
+                     emacsvox-aural-routing-profiles-file))
+                   (profile (car (plist-get saved :profiles))))
+              (should
+               (eq (plist-get saved :active-profile)
+                   emacsvox-aural-active-routing-profile))
+              (should
+               (equal (plist-get profile :engine-order)
+                      '("winrt" "eloquence")))))
+        (delete-directory directory t)))))
+
 (ert-deftest emacsvox-aural-voice-workbench-saves-engine-preference ()
   "A prefix saves only promoted global order and clears the session overlay."
   (emacsvox-test--with-voice-workbench
@@ -782,6 +851,29 @@
         (should (eq (plist-get selector :scope) 'session))
         (should (equal (plist-get selector :engine-id) "eloquence"))
         (should (equal (plist-get engine :engine-id) "eloquence")))
+      (should
+       (equal emacsvox-aural-voice-workbench-staged-profile before)))))
+
+(ert-deftest emacsvox-aural-voice-workbench-tunes-on-session-preference ()
+  "An unrouted voice honors temporary engine order without staging it."
+  (emacsvox-test--with-voice-workbench
+    (should (emacsvox-aural-ui-goto-row "voice-annotate"))
+    (setq emacsvox-aural-session-engine-order '("winrt" "eloquence"))
+    (let ((before
+           (copy-tree emacsvox-aural-voice-workbench-staged-profile))
+          arguments)
+      (cl-letf
+          (((symbol-function
+             'emacsvox-aural-voice-workbench--editable-palette)
+            (lambda (palette _logical) palette))
+           ((symbol-function 'emacsvox-aural-voice-tuner-open)
+            (lambda (&rest values) (setq arguments values))))
+        (emacsvox-aural-voice-workbench-tune))
+      (let ((selector (plist-get (nthcdr 4 arguments) :selector))
+            (engine (plist-get (nthcdr 4 arguments) :engine)))
+        (should (eq (plist-get selector :kind) 'engine-default))
+        (should (equal (plist-get selector :engine-id) "winrt"))
+        (should (equal (plist-get engine :engine-id) "winrt")))
       (should
        (equal emacsvox-aural-voice-workbench-staged-profile before)))))
 

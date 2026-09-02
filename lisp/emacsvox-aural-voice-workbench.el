@@ -130,6 +130,10 @@
 (defvar-local emacsvox-aural-voice-workbench-provenance nil
   "Ephemeral explanations for imported, preset, and suggested staged edits.")
 
+(defconst emacsvox-aural-voice-workbench--session-profile-source
+  'current-runtime-session
+  "Source marker for an in-memory first-run routing profile.")
+
 (defun emacsvox-aural-voice-workbench--active-palette ()
   "Return the currently effective portable voice palette."
   (or
@@ -137,14 +141,39 @@
    (emacsvox-aural-effective-scheme-provider 'voice-palette)
    'acss-default))
 
-(defun emacsvox-aural-voice-workbench--current-profile-data ()
-  "Return a safe routing snapshot for a newly opened workbench."
+(defun emacsvox-aural-voice-workbench--current-profile-data (&optional inventory)
+  "Return a safe routing snapshot using optional live INVENTORY."
   (if-let* ((entry
              (emacsvox-aural-routing-profile
               emacsvox-aural-active-routing-profile)))
       (copy-tree (emacsvox-aural-routing-profile-entry-data entry))
-    (emacsvox-aural-routing-profile-from-omnivox
-     'current-runtime "Current unsaved adapter routing")))
+    (let* ((inventory (or inventory (tts-voice-inventory)))
+           (profile
+            (emacsvox-aural-routing-profile-from-omnivox
+             (let ((id 'current-runtime)
+                   (suffix 2))
+               (while (emacsvox-aural-routing-profile id)
+                 (setq id (intern (format "current-runtime-%d" suffix))
+                       suffix (1+ suffix)))
+               id)
+             "Current unsaved adapter routing"))
+           (preferred
+            (or (copy-sequence
+                 (plist-get inventory :preferred-engine-order))
+                (and-let* ((engine-id
+                            (plist-get inventory :preferred-engine-id)))
+                  (list engine-id))))
+           (fallback
+            (copy-sequence (plist-get inventory :fallback-engine-order)))
+           (disabled
+            (copy-sequence (plist-get inventory :disabled-engine-ids))))
+      (when preferred
+        (setq profile (plist-put profile :engine-order preferred)))
+      (when fallback
+        (setf (plist-get (plist-get profile :fallback) :engines) fallback))
+      (when disabled
+        (setq profile (plist-put profile :disabled-engines disabled)))
+      (emacsvox-aural-validate-routing-profile-data profile))))
 
 (defun emacsvox-aural-voice-workbench--dirty-p ()
   "Return non-nil when staged routing differs from committed routing."
@@ -266,7 +295,10 @@
 (defun emacsvox-aural-voice-workbench--selectors (logical-voice)
   "Return staged effective selectors for LOGICAL-VOICE."
   (emacsvox-aural-routing-selectors-from-data
-   logical-voice emacsvox-aural-voice-workbench-staged-profile t))
+   logical-voice
+   (emacsvox-aural-routing-effective-profile-data
+    emacsvox-aural-voice-workbench-staged-profile)
+   t))
 
 (defun emacsvox-aural-voice-workbench--logical-voices ()
   "Return stable logical voice names visible in the current workbench."
@@ -913,7 +945,8 @@ or persisting a routing choice."
   "Return readable usable-engine candidates from INVENTORY under PROFILE."
   (let* ((inventory (or inventory (tts-voice-inventory)))
          (profile (or profile
-                      (emacsvox-aural-voice-workbench--active-profile)))
+                      (emacsvox-aural-voice-workbench--current-profile-data
+                       inventory)))
          (effective
           (emacsvox-aural-routing-effective-profile-data profile))
          (order (plist-get effective :engine-order))
@@ -984,13 +1017,18 @@ or persisting a routing choice."
   (lambda (status)
     (pcase (plist-get status :status)
       ('applied
-       (if (and (eq scope 'restored) (not display-name))
+       (if (and (memq scope '(restored runtime-restored))
+                (not display-name))
            (emacsvox-aural-voice-workbench--announce
-            "Saved engine order restored")
+            (if (eq scope 'runtime-restored)
+                "Initial engine order restored"
+              "Saved engine order restored"))
          (emacsvox-aural-voice-workbench--announce
           (pcase scope
             ('saved "%s is now the saved preferred engine")
             ('restored "Saved engine order restored; %s is preferred")
+            ('runtime-restored
+             "Initial engine order restored; %s is preferred")
             (_ "%s is now preferred for this session"))
           display-name)))
       ('partial
@@ -1008,15 +1046,23 @@ or persisting a routing choice."
 By default the change lasts for this Emacs session.  With prefix argument
 SAVE, atomically save it in the active routing profile.  Remaining engines
 keep their relative order; explicit logical-voice routes and fallback policy
-are unchanged.  The command does not stop speech already playing."
+are unchanged.  When no profile has been saved yet, the live adapter policy
+becomes an in-memory baseline; SAVE explicitly persists that baseline.  The
+command does not stop speech already playing."
   (interactive
    (progn
      (emacsvox-aural-voice-workbench--ensure-clean)
      (list (emacsvox-aural-voice-workbench--read-engine)
            current-prefix-arg)))
   (emacsvox-aural-voice-workbench--ensure-clean)
-  (let* ((profile (emacsvox-aural-voice-workbench--active-profile))
+  (let* ((active-entry
+          (emacsvox-aural-routing-profile
+           emacsvox-aural-active-routing-profile))
          (inventory (tts-voice-inventory))
+         (profile
+          (if active-entry
+              (emacsvox-aural-routing-profile-entry-data active-entry)
+            (emacsvox-aural-voice-workbench--current-profile-data inventory)))
          (engine-id
           (emacsvox-aural-voice-workbench--validate-engine
            engine-id inventory profile))
@@ -1024,10 +1070,18 @@ are unchanged.  The command does not stop speech already playing."
           (emacsvox-aural-voice-workbench--engine-display-name
            engine-id inventory)))
     (if (not save)
-        (emacsvox-aural-prefer-engine-for-session
-         engine-id
-         (emacsvox-aural-voice-workbench--preference-callback
-          display-name 'session))
+        (progn
+          (unless active-entry
+            (emacsvox-aural-register-routing-profile-data
+             profile
+             emacsvox-aural-voice-workbench--session-profile-source)
+            (setq emacsvox-aural-active-routing-profile
+                  (plist-get profile :id))
+            (run-hooks 'emacsvox-aural-routing-profile-changed-hook))
+          (emacsvox-aural-prefer-engine-for-session
+           engine-id
+           (emacsvox-aural-voice-workbench--preference-callback
+            display-name 'session)))
       (let ((previous-session
              (copy-sequence emacsvox-aural-session-engine-order))
             (preferred
@@ -1045,20 +1099,28 @@ are unchanged.  The command does not stop speech already playing."
     engine-id))
 
 (defun emacsvox-aural-restore-saved-engine-order ()
-  "Clear the temporary engine preference and reapply the saved order."
+  "Clear the temporary preference and restore the saved or initial order."
   (interactive)
   (emacsvox-aural-voice-workbench--ensure-clean)
   (unless emacsvox-aural-session-engine-order
     (user-error "No temporary engine preference is active"))
-  (let* ((profile (emacsvox-aural-voice-workbench--active-profile))
+  (let* ((entry
+          (emacsvox-aural-routing-profile
+           emacsvox-aural-active-routing-profile))
+         (profile (emacsvox-aural-voice-workbench--active-profile))
          (engine-id (car (plist-get profile :engine-order)))
          (inventory (tts-voice-inventory))
          (display-name
           (emacsvox-aural-voice-workbench--engine-display-name
-           engine-id inventory)))
+           engine-id inventory))
+         (scope
+          (if (eq (emacsvox-aural-routing-profile-entry-source entry)
+                  emacsvox-aural-voice-workbench--session-profile-source)
+              'runtime-restored
+            'restored)))
     (emacsvox-aural-clear-session-engine-order
      (emacsvox-aural-voice-workbench--preference-callback
-      display-name 'restored))))
+      display-name scope))))
 
 (defun emacsvox-aural-voice-workbench--stage
     (description mutation &optional provenance)

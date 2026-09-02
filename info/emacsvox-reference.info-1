@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1469 commands and 203 options.
+   This chapter documents a total of 1470 commands and 203 options.
 
 * Menu:
 
@@ -4681,35 +4681,42 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ANNOUNCEMENT)
 
-2.52.1.42 emacsvox-aural-voice-tuner-decrease
+2.52.1.42 emacsvox-aural-voice-tuner-compare
+............................................
+
+ -- Command: emacsvox-aural-voice-tuner-compare
+
+     Alternate an opening-style and working-style comparison sample.
+
+2.52.1.43 emacsvox-aural-voice-tuner-decrease
 .............................................
 
  -- Command: emacsvox-aural-voice-tuner-decrease
 
      Decrease the current numeric dimension and audition its new value.
 
-2.52.1.43 emacsvox-aural-voice-tuner-edit
+2.52.1.44 emacsvox-aural-voice-tuner-edit
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-edit
 
      Edit the current dimension and audition the new value.
 
-2.52.1.44 emacsvox-aural-voice-tuner-help
+2.52.1.45 emacsvox-aural-voice-tuner-help
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-help
 
      Display and speak voice tuner help.
 
-2.52.1.45 emacsvox-aural-voice-tuner-increase
+2.52.1.46 emacsvox-aural-voice-tuner-increase
 .............................................
 
  -- Command: emacsvox-aural-voice-tuner-increase
 
      Increase the current numeric dimension and audition its new value.
 
-2.52.1.46 emacsvox-aural-voice-tuner-mode
+2.52.1.47 emacsvox-aural-voice-tuner-mode
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-mode
@@ -4728,6 +4735,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      -		emacsvox-aural-voice-tuner-decrease
      0 .. 9		emacsvox-aural-voice-tuner-set-digit
      ?		emacsvox-aural-voice-tuner-help
+     B		emacsvox-aural-voice-tuner-compare
      P		emacsvox-aural-voice-tuner-audition
      R		emacsvox-aural-voice-tuner-restore
      d		emacsvox-aural-voice-tuner-use-default
@@ -4742,28 +4750,28 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      C-c C-c		emacsvox-aural-voice-tuner-save
      C-c C-k		emacsvox-aural-voice-tuner-quit
 
-2.52.1.47 emacsvox-aural-voice-tuner-next
+2.52.1.48 emacsvox-aural-voice-tuner-next
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-next
 
      Move to and speak the next tunable dimension.
 
-2.52.1.48 emacsvox-aural-voice-tuner-previous
+2.52.1.49 emacsvox-aural-voice-tuner-previous
 .............................................
 
  -- Command: emacsvox-aural-voice-tuner-previous
 
      Move to and speak the previous tunable dimension.
 
-2.52.1.49 emacsvox-aural-voice-tuner-quit
+2.52.1.50 emacsvox-aural-voice-tuner-quit
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-quit
 
      Cancel tuning, asking before discarding unsaved changes.
 
-2.52.1.50 emacsvox-aural-voice-tuner-refresh
+2.52.1.51 emacsvox-aural-voice-tuner-refresh
 ............................................
 
  -- Command: emacsvox-aural-voice-tuner-refresh (&optional dimension)
@@ -4772,42 +4780,42 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional DIMENSION)
 
-2.52.1.51 emacsvox-aural-voice-tuner-restore
+2.52.1.52 emacsvox-aural-voice-tuner-restore
 ............................................
 
  -- Command: emacsvox-aural-voice-tuner-restore
 
      Restore and audition the style present when the tuner opened.
 
-2.52.1.52 emacsvox-aural-voice-tuner-save
+2.52.1.53 emacsvox-aural-voice-tuner-save
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-save
 
      Atomically save the portable style and return to the voice preview.
 
-2.52.1.53 emacsvox-aural-voice-tuner-set-digit
+2.52.1.54 emacsvox-aural-voice-tuner-set-digit
 ..............................................
 
  -- Command: emacsvox-aural-voice-tuner-set-digit
 
      Set the current numeric dimension from the typed digit and audition it.
 
-2.52.1.54 emacsvox-aural-voice-tuner-speak-current
+2.52.1.55 emacsvox-aural-voice-tuner-speak-current
 ..................................................
 
  -- Command: emacsvox-aural-voice-tuner-speak-current
 
      Speak the complete tuner row at point.
 
-2.52.1.55 emacsvox-aural-voice-tuner-undo
+2.52.1.56 emacsvox-aural-voice-tuner-undo
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-undo
 
      Undo the most recent unsaved tuner change and audition it.
 
-2.52.1.56 emacsvox-aural-voice-tuner-use-default
+2.52.1.57 emacsvox-aural-voice-tuner-use-default
 ................................................
 
  -- Command: emacsvox-aural-voice-tuner-use-default
@@ -4850,7 +4858,9 @@ palettes or routing profiles.
      By default the change lasts for this Emacs session.  With prefix argument
      SAVE, atomically save it in the active routing profile.  Remaining engines
      keep their relative order; explicit logical-voice routes and fallback policy
-     are unchanged.  The command does not stop speech already playing.
+     are unchanged.  When no profile has been saved yet, the live adapter policy
+     becomes an in-memory baseline; SAVE explicitly persists that baseline.  The
+     command does not stop speech already playing.
 
      (fn ENGINE-ID &optional SAVE)
 
@@ -4859,7 +4869,7 @@ palettes or routing profiles.
 
  -- Command: emacsvox-aural-restore-saved-engine-order
 
-     Clear the temporary engine preference and reapply the saved order.
+     Clear the temporary preference and restore the saved or initial order.
 
 2.53.1.3 emacsvox-aural-voice-workbench
 .......................................

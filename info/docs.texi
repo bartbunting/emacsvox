@@ -64,7 +64,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1469 commands and 203 options.
+This chapter documents a total of 1470 commands and 203 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -5076,6 +5076,15 @@ Audition the unsaved working style after optional ANNOUNCEMENT.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-voice-tuner-compare
+@deffn {Command} emacsvox-aural-voice-tuner-compare
+@findex emacsvox-aural-voice-tuner-compare
+
+@format
+Alternate an opening-style and working-style comparison sample.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-voice-tuner-decrease
 @deffn {Command} emacsvox-aural-voice-tuner-decrease
 @findex emacsvox-aural-voice-tuner-decrease
@@ -5131,6 +5140,7 @@ RET		emacsvox-aural-voice-tuner-edit
 -		emacsvox-aural-voice-tuner-decrease
 0 .. 9		emacsvox-aural-voice-tuner-set-digit
 ?		emacsvox-aural-voice-tuner-help
+B		emacsvox-aural-voice-tuner-compare
 P		emacsvox-aural-voice-tuner-audition
 R		emacsvox-aural-voice-tuner-restore
 d		emacsvox-aural-voice-tuner-use-default
@@ -5280,7 +5290,9 @@ Prefer ENGINE-ID globally while preserving explicit voice routes.
 By default the change lasts for this Emacs session.  With prefix argument
 SAVE, atomically save it in the active routing profile.  Remaining engines
 keep their relative order; explicit logical-voice routes and fallback policy
-are unchanged.  The command does not stop speech already playing.
+are unchanged.  When no profile has been saved yet, the live adapter policy
+becomes an in-memory baseline; SAVE explicitly persists that baseline.  The
+command does not stop speech already playing.
 
 (fn ENGINE-ID &optional SAVE)
 @end format
@@ -5291,7 +5303,7 @@ are unchanged.  The command does not stop speech already playing.
 @findex emacsvox-aural-restore-saved-engine-order
 
 @format
-Clear the temporary engine preference and reapply the saved order.
+Clear the temporary preference and restore the saved or initial order.
 @end format
 @end deffn
 
