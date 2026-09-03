@@ -101,6 +101,76 @@
       (should
        (equal emacsvox-vertico--prev-candidate "candidate")))))
 
+(ert-deftest emacsvox-vertico-history-recall-suppresses-follow-up-exhibit ()
+  "Generic history feedback owns the following Vertico display update."
+  (with-temp-buffer
+    (insert "magit")
+    (let ((vertico--input t)
+          (vertico--index 0)
+          (vertico--base "")
+          (ems--interactive-fn-name 'previous-history-element)
+          events)
+      (setq-local
+       emacsvox-vertico--prev-candidate "old"
+       emacsvox-vertico--prev-index 1)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (content) (push (list 'history content) events)))
+           ((symbol-function 'emacsvox-icon) #'ignore)
+           ((symbol-function 'vertico--candidate)
+            (lambda (&optional _) "magit"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest _)
+              (ert-fail "Vertico repeated generic history feedback"))))
+        (emacsvox--advice-previous-history-element-after)
+        (should emacsvox-vertico--suppress-next-exhibit-p)
+        (emacsvox--advice-vertico--exhibit-after))
+      (should (equal (nreverse events) '((history "magit"))))
+      (should-not emacsvox-vertico--suppress-next-exhibit-p)
+      (should (equal emacsvox-vertico--prev-candidate "magit"))
+      (should (= emacsvox-vertico--prev-index 0)))))
+
+(ert-deftest emacsvox-vertico-free-form-history-remains-spoken ()
+  "Unselected Vertico history still receives generic history feedback."
+  (with-temp-buffer
+    (insert "printf free-form")
+    (let ((vertico--input t)
+          (vertico--index -1)
+          (vertico--base "")
+          (ems--interactive-fn-name 'previous-history-element)
+          spoken)
+      (setq-local
+       emacsvox-vertico--prev-candidate "old"
+       emacsvox-vertico--prev-index -1)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (content) (setq spoken content)))
+           ((symbol-function 'emacsvox-icon) #'ignore)
+           ((symbol-function 'vertico--candidate)
+            (lambda (&optional _) "printf free-form"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest _)
+              (ert-fail "Unselected input produced Vertico speech"))))
+        (emacsvox--advice-previous-history-element-after)
+        (emacsvox--advice-vertico--exhibit-after))
+      (should (equal spoken "printf free-form"))
+      (should-not emacsvox-vertico--suppress-next-exhibit-p))))
+
+(ert-deftest emacsvox-vertico-inactive-does-not-suppress-history-refresh ()
+  "Loading Vertico alone does not mark generic history as its feedback."
+  (with-temp-buffer
+    (insert "history")
+    (let ((vertico--input nil)
+          (ems--interactive-fn-name 'previous-history-element)
+          spoken)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (content) (setq spoken content)))
+           ((symbol-function 'emacsvox-icon) #'ignore))
+        (emacsvox--advice-previous-history-element-after))
+      (should (equal spoken "history"))
+      (should-not emacsvox-vertico--suppress-next-exhibit-p))))
+
 (ert-deftest emacsvox-vertico-empty-insert-is-action-only ()
   "An unchanged direct insertion creates one native action transaction."
   (with-temp-buffer

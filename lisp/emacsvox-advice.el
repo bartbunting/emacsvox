@@ -807,6 +807,9 @@ ARGUMENTS are passed to ORIGINAL unchanged."
  #'emacsvox--advice-read-multiple-choice-before
  '((name . emacsvox)))
 
+(declare-function emacsvox-vertico--note-minibuffer-content-presented
+                  "emacsvox-vertico" nil)
+
 (emacsvox-advice--define-interactive-after-advice
     (minibuffer-complete-history
      next-history-element previous-history-element
@@ -818,7 +821,10 @@ ARGUMENTS are passed to ORIGINAL unchanged."
    'all
    (tts-speak
     (or (minibuffer-contents)
-        (emacsvox-get-current-completion)))))
+        (emacsvox-get-current-completion))))
+  (when
+      (fboundp 'emacsvox-vertico--note-minibuffer-content-presented)
+    (emacsvox-vertico--note-minibuffer-content-presented)))
 
 (emacsvox-advice--define-interactive-after-advice
     (minibuffer-next-completion minibuffer-previous-completion

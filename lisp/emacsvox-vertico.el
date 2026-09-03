@@ -75,6 +75,13 @@ Vertico sets `vertico--input' buffer-locally from its setup hook before the
 appended Emacsvox minibuffer setup hook runs."
   (bound-and-true-p vertico--input))
 
+(defun emacsvox-vertico--note-minibuffer-content-presented ()
+  "Suppress Vertico's next display presentation when its content was spoken.
+
+The next `vertico--exhibit' still updates Emacsvox's candidate bookkeeping."
+  (when (emacsvox-vertico--owns-minibuffer-content-p)
+    (setq-local emacsvox-vertico--suppress-next-exhibit-p t)))
+
 ;;; 
 (declare-function 'vertico--candidate "vertico.el" (&optional hl))
 (declare-function 'vertico--match-p "vertico.el" (input))
