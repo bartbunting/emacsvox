@@ -1168,6 +1168,57 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (substring-no-properties emacsvox-agent-shell--last-completed-answer)
         answer)))))
 
+(ert-deftest emacsvox-agent-shell-automatic-response-is-navigation-replaceable ()
+  "Automatic response speech should share navigation's replacement domain."
+  (let ((emacsvox-agent-shell-speech-level 'response)
+        submission)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (text &rest arguments)
+            (setq submission (cons text arguments)))))
+      (emacsvox-agent-shell--speak-content "Answer" 'agent-message))
+    (should (equal (car submission) "Answer"))
+    (should (eq (plist-get (cdr submission) :delivery-policy) 'replaceable))
+    (should (eq (plist-get (cdr submission) :replacement-key) 'speaker))
+    (should (eq (plist-get (cdr submission) :occasion) 'continuous))))
+
+(ert-deftest emacsvox-agent-shell-response-level-applies-one-turn-budget ()
+  "Multiple answer fragments should consume one automatic speech budget."
+  (let* ((emacsvox-agent-shell-automatic-content-max-characters 160)
+         (emacsvox-agent-shell-signal-processing nil)
+         (first (concat "Progress update. " (make-string 100 ?a)))
+         (second (concat "Final answer. " (make-string 100 ?b)))
+         (answer (concat first "\n" second)))
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-mode)
+      (setq-local emacsvox-comint-autospeak t)
+      (setq-local emacsvox-agent-shell-speech-level 'response)
+      (setq-local agent-shell-section-functions
+                  '(emacsvox-agent-shell--record-response-section))
+      (let ((presentations
+             (emacsvox-agent-shell-test--capture-presentations
+               (emacsvox-agent-shell--handle-lifecycle-event
+                '((:event . input-submitted)))
+               (emacsvox-agent-shell-test--render-response-section
+                :namespace-id "bounded-turn"
+                :block-id "1-agent_message_chunk" :body first)
+               (emacsvox-agent-shell-test--render-response-section
+                :namespace-id "bounded-turn"
+                :block-id "2-agent_message_chunk" :body second
+                :create-new t)
+               (emacsvox-agent-shell--handle-lifecycle-event
+                '((:event . turn-complete)
+                  (:data (:stop-reason . "end_turn")))))))
+        (should (= (length presentations) 1))
+        (pcase-let ((`(submit ,spoken ,_facts ,_module ,_occasion ,_context)
+                     (car presentations)))
+          (emacsvox-agent-shell-test--assert-automatic-preview
+           answer spoken emacsvox-agent-shell-automatic-content-max-characters)))
+      (should
+       (equal
+        (substring-no-properties emacsvox-agent-shell--last-completed-answer)
+        answer)))))
+
 (ert-deftest emacsvox-agent-shell-automatic-tool-output-is-bounded-before-aural ()
   "Structured tool events should preserve status before bounded full output."
   (let* ((emacsvox-agent-shell-automatic-content-max-characters 300)
@@ -2191,7 +2242,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should-not (marker-buffer (cdr marker-pair)))))))
 
 (ert-deftest emacsvox-agent-shell-turn-sections-use-real-id-and-order ()
-  "Turn content should retain qualified IDs while response policy stays quiet."
+  "Turn content should retain qualified IDs and combine response-only speech."
   (let ((emacsvox-agent-shell-signal-processing nil))
     (with-temp-buffer
       (setq major-mode 'agent-shell-mode)
@@ -2225,8 +2276,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (emacsvox-agent-shell--handle-lifecycle-event
            '((:event . turn-complete)
              (:data (:stop-reason . "end_turn")))))
-        '((speak "First answer")
-          (speak "Second answer")))))))
+        '((speak "First answer\nSecond answer")))))))
 
 (ert-deftest emacsvox-agent-shell-provider-tool-ids-cannot-spoof-semantics ()
   "Renderer-owned groups should keep reserved-looking tool IDs untrusted."

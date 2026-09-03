@@ -2614,7 +2614,13 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
 Clear the stored bodies after taking their final rendered snapshots."
   (when (and buffer (buffer-live-p buffer))
     (with-current-buffer buffer
-      (let ((speak-p (emacsvox-agent-shell--should-speak-p buffer))
+      (let* ((speak-p (emacsvox-agent-shell--should-speak-p buffer))
+             (response-only-p
+              (and
+               speak-p
+               (eq
+                (emacsvox-agent-shell--effective-speech-level buffer)
+                'response)))
             answer-bodies)
         (dolist (qualified-id qualified-ids)
           (let* ((pair
@@ -2657,18 +2663,30 @@ Clear the stored bodies after taking their final rendered snapshots."
                 (when (not (string-empty-p trimmed))
                   (when (eq block-type 'agent-message)
                     (push trimmed answer-bodies))
-                  (when speak-p
+                  (when (and
+                         speak-p
+                         (not
+                          (and response-only-p
+                               (eq block-type 'agent-message))))
                     (emacsvox-agent-shell--speak-content
                      trimmed block-type)))))))
-        (emacsvox-agent-shell--clear-section-markers
-         emacsvox-agent-shell--pending-section-markers)
-        (when emacsvox-agent-shell--pending-bodies
-          (clrhash emacsvox-agent-shell--pending-bodies))
-        (setq emacsvox-agent-shell--pending-section-markers nil
-              emacsvox-agent-shell--pending-speech-qualified-ids nil
-              emacsvox-agent-shell--pending-speech-timer nil)
-        (when answer-bodies
-          (string-join (nreverse answer-bodies) "\n"))))))
+        (let ((answer
+               (when answer-bodies
+                 (string-join (nreverse answer-bodies) "\n"))))
+          ;; At the ordinary response level, all rendered answer fragments are
+          ;; one automatic response.  This applies the unsolicited-content
+          ;; budget once per turn and avoids queueing progress updates ahead of
+          ;; the final answer.  Full mode retains semantic per-block ordering.
+          (when (and response-only-p answer)
+            (emacsvox-agent-shell--speak-content answer 'agent-message))
+          (emacsvox-agent-shell--clear-section-markers
+           emacsvox-agent-shell--pending-section-markers)
+          (when emacsvox-agent-shell--pending-bodies
+            (clrhash emacsvox-agent-shell--pending-bodies))
+          (setq emacsvox-agent-shell--pending-section-markers nil
+                emacsvox-agent-shell--pending-speech-qualified-ids nil
+                emacsvox-agent-shell--pending-speech-timer nil)
+          answer)))))
 
 (defun emacsvox-agent-shell--execute-delayed-speech (buffer qualified-ids)
   "Deliver pending QUALIFIED-IDS left by an older timer in BUFFER.
@@ -2719,28 +2737,32 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
    (list (emacsvox-aural-compatibility-icon icon))))
 
 (defun emacsvox-agent-shell--submit-text-feedback
-    (text facts occasion &optional icon)
+    (text facts occasion &optional icon delivery-policy replacement-key)
   "Submit Agent Shell TEXT with FACTS, OCCASION, and optional compatibility ICON."
   (emacsvox-aural-submit
    text
    :facts facts
    :module 'agent-shell
    :occasion occasion
+   :delivery-policy delivery-policy
+   :replacement-key replacement-key
    :compatibility-actions
    (when icon
      (list (emacsvox-aural-compatibility-icon icon)))))
 
 (defun emacsvox-agent-shell--submit-automatic-text-feedback
-    (text facts occasion &optional icon inspection-hint)
+    (text facts occasion
+          &optional icon inspection-hint delivery-policy replacement-key)
   "Submit bounded automatic TEXT with semantic and compatibility context.
 
 FACTS, OCCASION, and ICON have the same meanings as in
 `emacsvox-agent-shell--submit-text-feedback'.  INSPECTION-HINT overrides the
-role-sensitive route announced when content is shortened."
+role-sensitive route announced when content is shortened.  DELIVERY-POLICY
+and REPLACEMENT-KEY control interruption of the complete bounded submission."
   (emacsvox-agent-shell--submit-text-feedback
    (emacsvox-agent-shell--limit-automatic-content
     text facts inspection-hint)
-   facts occasion icon))
+   facts occasion icon delivery-policy replacement-key))
 
 (defun emacsvox-agent-shell--present-content
     (content block-type facts occasion)
@@ -2750,7 +2772,7 @@ role-sensitive route announced when content is shortened."
       ('agent-message
        (when (emacsvox-agent-shell--speech-level-at-least-p 'response)
          (emacsvox-agent-shell--submit-automatic-text-feedback
-          trimmed-content facts occasion)))
+          trimmed-content facts occasion nil nil 'replaceable 'speaker)))
       ('user-message
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
          (emacsvox-agent-shell--submit-automatic-text-feedback

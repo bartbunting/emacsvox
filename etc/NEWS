@@ -33,6 +33,15 @@ update cannot retain generated Lisp from the previous source revision.
 Opening an Org link into another buffer now plays one opening cue while leaving
 the destination integration responsible for speaking its content.
 
+** Agent Shell response speech
+
+At the default response speech level, one completed turn now produces one
+bounded automatic presentation instead of queueing every rendered answer
+fragment separately.  Automatic response speech shares navigation's
+replacement domain, so ordinary Up and Down movement promptly interrupts it.
+Full speech level retains its detailed per-block ordering, and explicit
+~C-c r~ reading still speaks the complete response.
+
 ** Notmuch search navigation
 
 Speaking each search-result row no longer copies the complete Omnivox engine
