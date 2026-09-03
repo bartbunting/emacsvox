@@ -113,8 +113,8 @@ case "$tgspeechbox_companion_state" in
         for expected in \
             'build_kind=local-dirty-worktree' \
             'tgspeechbox_target=x86_64-pc-windows-gnu' \
-            'tgspeechbox_markers=none' \
-            'tgspeechbox_rate_mapping=provisional' \
+            'tgspeechbox_markers=exact_requested_anchors' \
+            'tgspeechbox_rate_mapping=calibrated_eloquence_v1' \
             'tgspeechbox_build_environment=wsl-host-development-only'; do
             if ! grep -Fxq "$expected" "$current/PROVENANCE"; then
                 echo "Staged Omnivox provenance is missing: $expected" >&2
@@ -171,15 +171,16 @@ case "$tgspeechbox_companion_state" in
         for expected in \
             '"artifact": "omnivox-tgspeechbox-companion-windows-x64-gnu"' \
             '"default_native_sample_rate_hz": 44100' \
-            '"markers_advertised": false' \
-            '"rate_mapping": "provisional"' \
+            '"markers_advertised": true' \
+            '"marker_support": "exact_requested_anchors"' \
+            '"rate_mapping": "calibrated_eloquence_v1"' \
             '"VOICE-INVENTORY-22050.json"' \
             '"VOICE-INVENTORY-44100.json"' \
             '"generated_by_packaged_helper": true' \
             '"voices": 154' \
             '"target": "x86_64-pc-windows-gnu"' \
-            '"commit": "7515ae055e45d2d15cae01d7fe081ce951dcd5cd"' \
-            '"release": "v-310b802"'; do
+            '"commit": "f5ec247bca50507ab1e2ed661136395538dc3e97"' \
+            '"release": "v-310@f5ec247"'; do
             if ! grep -Fq "$expected" \
                 "$current/tgspeechbox/SOURCE-PROVENANCE.json"; then
                 echo "Staged TGSpeechBox companion provenance is wrong: $expected" >&2

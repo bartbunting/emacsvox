@@ -1083,8 +1083,8 @@ windows-omnivox:
 		if [ "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" = 1 ]; then \
 			tgspeechbox_companion_state=local-omnivox-experimental-build; \
 			tgspeechbox_target=$(OMNIVOX_TARGET); \
-			tgspeechbox_markers=none; \
-			tgspeechbox_rate_mapping=provisional; \
+			tgspeechbox_markers=exact_requested_anchors; \
+			tgspeechbox_rate_mapping=calibrated_eloquence_v1; \
 		fi; \
 		{ \
 			printf '%s\n' \
