@@ -647,6 +647,22 @@
        (equal (plist-get capabilities :post-synthesis-dimensions)
               '(chorus echo gain high-pass low-pass reverb))))))
 
+(ert-deftest emacsvox-tts-omnivox-keeps-inventory-out-of-capabilities ()
+  "Capability lookup does not construct or embed the full voice inventory."
+  (let ((omnivox-control-capabilities '(:features ("relative_rate_v1")))
+        (omnivox-engine-inventory
+         '(:engines
+           [(:id "eloquence"
+             :capabilities
+             (:acss (:rate t :average_pitch t)
+              :post_synthesis_dimensions ["reverb"]))])))
+    (cl-letf (((symbol-function 'omnivox-voice-inventory)
+               (lambda ()
+                 (ert-fail "Capability lookup constructed the inventory"))))
+      (let ((capabilities (omnivox-voice-capabilities)))
+        (should (eq (plist-get capabilities :adapter) 'omnivox))
+        (should-not (plist-member capabilities :inventory))))))
+
 (ert-deftest emacsvox-tts-omnivox-negotiates-independent-routing-policy ()
   "Modern Omnivox receives global policy before selector-only registration."
   (let* ((process

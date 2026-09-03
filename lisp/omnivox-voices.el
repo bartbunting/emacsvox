@@ -1989,8 +1989,7 @@ Return the number of distinct processes that received the command."
         (if (eq dimension 'rate-offset)
             (list dimension :type 'integer :minimum -20 :maximum 20 :default 0)
           (list dimension :type 'integer :minimum 0 :maximum 9 :default 5)))
-      dimensions)
-     :inventory (omnivox-voice-inventory))))
+      dimensions))))
 
 ;;;###autoload
 (defun omnivox ()

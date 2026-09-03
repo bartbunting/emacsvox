@@ -3493,6 +3493,80 @@ Return the beginning of the inserted row."
            (alist-get emacsvox-notmuch--search-process-property properties)))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
+(ert-deftest emacsvox-notmuch-search-completion-compiles-view-and-row-facts ()
+  "A search summary and its first row compile as distinct semantic objects."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-completion-test*"))
+        (emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments nil)
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (emacsvox-aural--submission-sequence 0)
+        (emacsvox-use-icons t)
+        (emacsvox-aural-face-presentation-enabled t)
+        (voice-lock-mode t)
+        spoken
+        submission)
+    (unwind-protect
+        (progn
+          (with-current-buffer buffer
+            (setq major-mode 'notmuch-search-mode))
+          (cl-letf
+              (((symbol-function 'notmuch-search-get-result)
+                (lambda ()
+                  (copy-tree emacsvox-notmuch-test--search-result)))
+               ((symbol-function 'tts-speak)
+                (lambda (prepared) (setq spoken prepared))))
+            (setq submission
+                  (emacsvox-notmuch--announce-foreground-search-complete
+                   buffer 2)))
+          (should (emacsvox-aural-submission-p submission))
+          (should
+           (eq spoken
+               (emacsvox-aural-submission-prepared-content submission)))
+          (let* ((plans (emacsvox-aural-submission-plans submission))
+                 (summary-plans
+                  (cl-remove-if-not
+                   (lambda (plan)
+                     (eq
+                      (emacsvox-aural-concrete-plan-object-id plan)
+                      'search-summary))
+                   plans))
+                 (result-plans
+                  (cl-remove-if-not
+                   (lambda (plan)
+                     (eq
+                      (emacsvox-aural-concrete-plan-object-id plan)
+                      'search-result))
+                   plans)))
+            (should summary-plans)
+            (should result-plans)
+            (should
+             (cl-every
+              (lambda (plan)
+                (let ((facts (emacsvox-aural-concrete-plan-facts plan)))
+                  (and
+                   (eq (plist-get facts :role) 'mail-view)
+                   (eq (plist-get facts :mail-view-kind) 'search))))
+              summary-plans))
+            (should
+             (cl-every
+              (lambda (plan)
+                (not
+                 (plist-member
+                  (emacsvox-aural-concrete-plan-facts plan)
+                  :mail-view-kind)))
+              result-plans))
+            (should
+             (cl-some
+              (lambda (plan)
+                (let ((facts (emacsvox-aural-concrete-plan-facts plan)))
+                  (and
+                   (eq (plist-get facts :role) 'field)
+                   (eq (plist-get facts :field-kind) 'authors))))
+              result-plans))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
 (ert-deftest emacsvox-notmuch-empty-search-is-explicit-after-completion ()
   "An untouched empty search reports zero only after its sentinel."
   (let ((buffer (generate-new-buffer " *emacsvox-notmuch-empty-test*"))

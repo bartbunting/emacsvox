@@ -2617,19 +2617,37 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
   (with-current-buffer buffer
     (let* ((summary (emacsvox-notmuch--search-summary 'search count))
            (result (notmuch-search-get-result))
-           (facts
+           (view-facts
             (emacsvox-notmuch--search-completion-facts
              'search 'mail-view-opened)))
       (if result
-          (emacsvox-notmuch--submit-content
-           (concat summary "\n" (emacsvox-notmuch-format-search-result result))
-           facts 'state-change
-           (append
-            (emacsvox-notmuch--leading-compatibility-actions 'task-done)
-            (emacsvox-notmuch--status-compatibility-actions
-             result emacsvox-notmuch-search-status-icons 'state-change)))
+          (let* ((summary-content (concat summary "\n"))
+                 (result-content
+                  (emacsvox-notmuch-format-search-result result))
+                 (shared-facts
+                  (cl-loop
+                   for (key value) on view-facts by #'cddr
+                   unless (memq key '(:role :mail-view-kind))
+                   append (list key value))))
+            (add-text-properties
+             0 (length summary-content)
+             (list
+              emacsvox-aural-object-property 'search-summary
+              emacsvox-aural-facts-property view-facts)
+             summary-content)
+            (add-text-properties
+             0 (length result-content)
+             (list emacsvox-aural-object-property 'search-result)
+             result-content)
+            (emacsvox-notmuch--submit-content
+             (concat summary-content result-content)
+             shared-facts 'state-change
+             (append
+              (emacsvox-notmuch--leading-compatibility-actions 'task-done)
+              (emacsvox-notmuch--status-compatibility-actions
+               result emacsvox-notmuch-search-status-icons 'state-change))))
         (emacsvox-notmuch--submit-text-feedback
-         facts 'state-change 'task-done summary)))))
+         view-facts 'state-change 'task-done summary)))))
 
 (defun emacsvox-notmuch--announce-search-complete (state buffer)
   "Announce a successful completed search described by STATE in BUFFER."
