@@ -271,7 +271,7 @@ revision and run its ~Piper Native Validation~ workflow.  Download the
 ~piper-sha256sums.txt~, then stage it with a reviewed model:
 
 #+begin_example
-OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.6.4-piper-windows-x64.zip \
+OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.7.0-piper-windows-x64.zip \
   OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256=64-character-sha256 \
   OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx \
   make windows-omnivox-piper-dev

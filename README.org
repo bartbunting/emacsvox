@@ -180,8 +180,8 @@ upstream project, historical material, or the pinned comparison test checkout.
 Omnivox is Emacsvox's recommended multi-engine speech host for new
 installations.  Emacsvox talks to Omnivox while Omnivox uses the normal engine
 for the platform: eSpeak NG on Linux, AVSpeechSynthesizer on macOS, and WinRT
-on Windows.  Emacsvox 2026.9.1 supports Omnivox 1.6.4 or newer; the guided
-WSL2 installer pins the tested 1.6.4 release.  The
+on Windows.  Emacsvox 2026.9.2 supports Omnivox 1.7.0 or newer; the guided
+WSL2 installer pins the tested 1.7.0 release.  The
 [[file:docs/manual/chapters/speech-backends.org][Speech Backends guide]] owns the
 current support matrix, prerequisites, source installation, selection, and
 audible smoke test.

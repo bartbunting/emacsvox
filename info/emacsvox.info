@@ -188,7 +188,7 @@ installer below uses an existing supported Emacs or builds the pinned
 stable release for the current user.
 
    On GNU/Linux and macOS, install Emacs 31 or newer and ‘make’.
-Omnivox 1.6.4 or newer is the supported speech-server baseline.
+Omnivox 1.7.0 or newer is the supported speech-server baseline.
 Installing its release archive also requires ‘curl’ and either
 ‘sha256sum’ on GNU/Linux or ‘shasum’ on macOS, plus ‘tar’.  GNU Texinfo
 is needed only when building or editing the documentation, not for an
@@ -247,7 +247,7 @@ prerequisite, run:
      ./bin/emacsvox-wsl-install
 
    It builds the pinned stable Emacs only when Emacs 31 or newer is
-unavailable, downloads and verifies the matching Omnivox 1.6.4 Windows
+unavailable, downloads and verifies the matching Omnivox 1.7.0 Windows
 archive, records its path without editing a shell startup file, compiles
 Emacsvox, runs a diagnostic, and plays the final speech-server check.
 The Emacs build can take a while on a fresh machine; later runs reuse it
@@ -337,7 +337,7 @@ installed and checked.  Continue to *note Quick Installation::.
 
    On a matching GNU/Linux x86-64 or macOS host, follow *note Installing
 An Omnivox Release Binary::.  That procedure downloads and verifies the
-published 1.6.4 archive, keeps its runtime data beside the executable,
+published 1.7.0 archive, keeps its runtime data beside the executable,
 and adds its versioned installation directory to ‘PATH’.  Then run:
 
      omnivox --check
@@ -933,9 +933,9 @@ that produces speech underneath it is platform-specific.  The normal
 engine is eSpeak NG on GNU/Linux, AVSpeechSynthesizer on macOS, and
 WinRT SpeechSynthesizer on Windows.
 
-   Omnivox 1.6.4 is the minimum supported release for Emacsvox 2026.9.1.
+   Omnivox 1.7.0 is the minimum supported release for Emacsvox 2026.9.2.
 A newer compatible Omnivox release may be used, but the binary examples
-and guided WSL2 installer below pin the tested 1.6.4 artifacts exactly.
+and guided WSL2 installer below pin the tested 1.7.0 artifacts exactly.
 
    For a first installation, follow the linear procedure in *note
 Installation::.  Return here when you need platform-specific build
@@ -947,7 +947,7 @@ maintained in the Omnivox repository
 * Menu:
 
 * Supported Platform Routes::    Choose the maintained route for this machine.
-* Install Omnivox From A Release Binary: Installing An Omnivox Release Binary.  Install the verified Omnivox 1.6.4 archive.
+* Install Omnivox From A Release Binary: Installing An Omnivox Release Binary.  Install the verified Omnivox 1.7.0 archive.
 * Install An Omnivox Windows Release Under WSL2: Installing An Omnivox Windows Release Under WSL2.  Use the matching verified Windows archive without a build toolchain.
 * Trying Native Windows Emacsvox:: Evaluate native Windows Emacs and Omnivox with bounded checks.
 * Installing Omnivox From Source:: Build when a release archive does not match the host.
@@ -971,7 +971,7 @@ remains the acceptance test.
 Emacs         Recommended route      Current support evidence
 platform
 ---------------------------------------------------------------------------
-GNU/Linux     Omnivox 1.6.4          The published archive is built and
+GNU/Linux     Omnivox 1.7.0          The published archive is built and
 x86-64 with   release archive        verified on Ubuntu 24.04.
 an Ubuntu     using eSpeak NG        Compatible glibc, libstdc++,
 24.04-compatible                     libgcc, and ALSA runtime libraries
@@ -981,27 +981,27 @@ Other         Source-built Omnivox   Use the source route for Linux
 GNU/Linux     using eSpeak NG        ARM64, an older distribution ABI,
 systems                              or a host that cannot run the
                                      published x86-64 archive.
-macOS on      Omnivox 1.6.4          The published ARM64 archive is
+macOS on      Omnivox 1.7.0          The published ARM64 archive is
 Apple         release archive        built and verified on a native
 silicon       using                  macOS runner; the audible host
               AVSpeechSynthesizer    check remains required.
-macOS on      Omnivox 1.6.4          The published x64 archive is built
+macOS on      Omnivox 1.7.0          The published x64 archive is built
 Intel         release archive        and verified on a native macOS
               using                  runner; the audible host check
               AVSpeechSynthesizer    remains required.
-Emacs in      Omnivox 1.6.4          The published archive is
+Emacs in      Omnivox 1.7.0          The published archive is
 WSL2 on       Windows x64 release    checksum-protected and release CI
 x86-64        archive using WinRT    verifies its architecture, adjacent
 Windows                              data, WinRT and eSpeak synthesis.
                                      The audible host check remains
                                      required.
-Emacs in      Omnivox 1.6.4          Release CI verifies the ARM64
+Emacs in      Omnivox 1.7.0          Release CI verifies the ARM64
 WSL2 on       Windows ARM64          archive, adjacent data, WinRT and
 Windows on    release archive        eSpeak synthesis, and the guided
 ARM           using WinRT            installer selects it automatically.
                                      A complete WSL2 host and audible
                                      check remains required.
-Native        Omnivox 1.6.4          Preview.  Omnivox verifies its
+Native        Omnivox 1.7.0          Preview.  Omnivox verifies its
 Windows       Windows release        native Windows archive, and
 Emacs         using WinRT            Emacsvox can start ‘omnivox.exe’
                                      directly, but the complete
@@ -1029,25 +1029,25 @@ File: emacsvox.info,  Node: Installing An Omnivox Release Binary,  Next: Install
 =========================================
 
 Use this route for GNU/Linux x86-64 with an Ubuntu 24.04-compatible
-runtime, macOS on Apple silicon, or macOS on Intel.  The Omnivox 1.6.4
-release (https://github.com/bartbunting/omnivox/releases/tag/v1.6.4)
+runtime, macOS on Apple silicon, or macOS on Intel.  The Omnivox 1.7.0
+release (https://github.com/bartbunting/omnivox/releases/tag/v1.7.0)
 provides these archive names:
 
 Host                 Set ‘platform’ to   Archive
 --------------------------------------------------------------------------
-GNU/Linux x86-64     ‘linux-x64’         ‘omnivox-1.6.4-linux-x64.tar.gz’
-macOS Apple          ‘macos-arm64’       ‘omnivox-1.6.4-macos-arm64.tar.gz’
+GNU/Linux x86-64     ‘linux-x64’         ‘omnivox-1.7.0-linux-x64.tar.gz’
+macOS Apple          ‘macos-arm64’       ‘omnivox-1.7.0-macos-arm64.tar.gz’
 silicon
-macOS Intel          ‘macos-x64’         ‘omnivox-1.6.4-macos-x64.tar.gz’
+macOS Intel          ‘macos-x64’         ‘omnivox-1.7.0-macos-x64.tar.gz’
 
    Run ‘uname -m’ if the Mac architecture is uncertain: ‘arm64’
 identifies Apple silicon and ‘x86_64’ identifies Intel.  Create a
 download directory, select the matching platform value, and fetch both
 the archive and published checksum file:
 
-     mkdir -p "$HOME/Downloads/omnivox-1.6.4"
-     cd "$HOME/Downloads/omnivox-1.6.4"
-     omnivox_version=1.6.4
+     mkdir -p "$HOME/Downloads/omnivox-1.7.0"
+     cd "$HOME/Downloads/omnivox-1.7.0"
+     omnivox_version=1.7.0
      platform=linux-x64
      archive="omnivox-${omnivox_version}-${platform}.tar.gz"
      release_url="https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}"
@@ -1086,7 +1086,7 @@ do not load or copy the release's ‘omnivox-voices.el’ into Emacsvox.
      omnivox --check
      omnivox --list-voices
 
-   The version must report 1.6.4 or newer, and the check must produce
+   The version must report 1.7.0 or newer, and the check must produce
 both its tone and spoken confirmation.  The macOS archives are not
 code-signed or notarized; if local security policy refuses the verified
 binary, use the source route below rather than weakening that policy.
@@ -1110,7 +1110,7 @@ installation without changing anything:
      ./bin/emacsvox-wsl-install --check
 
    The doctor detects the Windows architecture, chooses the matching
-Omnivox 1.6.4 archive, and reports the Emacs and per-user paths it will
+Omnivox 1.7.0 archive, and reports the Emacs and per-user paths it will
 use.  If Linux packages are missing, it prints one ‘apt’ command for you
 to review and run.  Working ‘powershell.exe’ and ‘wslpath’
 interoperation are required.  After resolving any reported prerequisite,
@@ -1154,9 +1154,9 @@ archive's published checksum.
    Download the Windows x64 archive and the release checksum file in
 WSL:
 
-     mkdir -p "$HOME/Downloads/omnivox-1.6.4"
-     cd "$HOME/Downloads/omnivox-1.6.4"
-     omnivox_version=1.6.4
+     mkdir -p "$HOME/Downloads/omnivox-1.7.0"
+     cd "$HOME/Downloads/omnivox-1.7.0"
+     omnivox_version=1.7.0
      archive="omnivox-${omnivox_version}-windows-x64.zip"
      release_url="https://github.com/bartbunting/omnivox/releases/download/v${omnivox_version}"
      curl -fLO "$release_url/$archive"
@@ -1193,7 +1193,7 @@ its physical audio check:
      ./servers/omnivox --list-voices
      ./servers/omnivox --check
 
-   The version must report 1.6.4 or newer.  The check must produce both
+   The version must report 1.7.0 or newer.  The check must produce both
 its tone and spoken confirmation.  Release CI verifies the downloaded
 archive, Windows x64 architecture, adjacent eSpeak data, voice
 discovery, and headless synthesis through both WinRT and eSpeak, but
@@ -1201,13 +1201,13 @@ only this audible check proves the local audio path.  The Windows
 archive is not code-signed.  If Windows security or local policy refuses
 it, do not weaken that policy to complete the install.
 
-   The generic Omnivox 1.6.4 archive includes the portable RHVoice
+   The generic Omnivox 1.7.0 archive includes the portable RHVoice
 helper, but not the RHVoice runtime, language data, or voices.  It does
 not contain the optional Piper, Flite, or RuTTS companions; none is
-needed for normal WinRT speech.  Omnivox 1.6.4 publishes separate
+needed for normal WinRT speech.  Omnivox 1.7.0 publishes separate
 matching companions for those engines.  Emacsvox's clean source-build
 route below verifies and stages the official Piper companion and builds
-RHVoice, Flite, and RuTTS from the matching 1.6.4 source.  A Piper voice
+RHVoice, Flite, and RuTTS from the matching 1.7.0 source.  A Piper voice
 model and the RHVoice runtime and voices remain separate user-supplied
 files.  Flite and RuTTS need no external runtime installation in the
 source-built bundle.  Eloquence and DECtalk remain separately licensed,
@@ -1252,7 +1252,7 @@ window.
 Set ‘$Platform’ for the computer.  The example below uses the usual
 Intel or AMD Windows x64 archive:
 
-     $Version = "1.6.4"
+     $Version = "1.7.0"
      $Platform = "windows-x64" # Use windows-arm64 only on Windows on ARM.
      $DownloadDir = Join-Path $env:USERPROFILE "Downloads\omnivox-$Version"
      $Archive = "omnivox-$Version-$Platform.zip"
@@ -1307,7 +1307,7 @@ into a versioned directory below the current user's ‘LocalAppData’:
      & $Omnivox --check
      if ($LASTEXITCODE -ne 0) { throw "Omnivox audio check failed" }
 
-   The version must report 1.6.4 or newer, voice discovery must list at
+   The version must report 1.7.0 or newer, voice discovery must list at
 least one Windows voice, and the final check must produce both a tone
 and spoken confirmation.  Keep ‘omnivox.exe’, ‘espeak-ng-data’, and
 ‘third-party-licenses’ together.  Do not copy or load the archive's
@@ -1371,7 +1371,7 @@ output, and ‘omnivox.exe --version’ output.
 before loading Emacsvox in the user's Emacs initialization file:
 
      (setenv "TTS_PROGRAM"
-             "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.6.4-windows-x64/omnivox.exe")
+             "C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.7.0-windows-x64/omnivox.exe")
      (load-file "C:/path/to/emacsvox/lisp/emacsvox-setup.el")
 
    Replace both example paths.  This initial configuration deliberately
@@ -4802,7 +4802,7 @@ Download the ‘omnivox-piper-windows-x64’ artifact, which contains the
 companion archive and ‘piper-sha256sums.txt’, then stage it with a
 reviewed model:
 
-     OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.6.4-piper-windows-x64.zip \
+     OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.7.0-piper-windows-x64.zip \
        OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256=64-character-sha256 \
        OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx \
        make windows-omnivox-piper-dev

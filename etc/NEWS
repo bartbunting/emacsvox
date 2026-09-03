@@ -2,16 +2,15 @@
 Programming is the art of telling another human being what one wants
 the computer to do.   [[https://www.azquotes.com/quote/964459][(DEK)]]
 
-Emacsvox News -- Unreleased User-Visible Changes
+Emacsvox News -- History Of User-Visible Changes
 
 Maintained by Emacsvox Contributors.
 
-* Emacsvox Unreleased --- Current User-Visible Changes
+* Emacsvox 2026.9.2 --- Current User-Visible Changes
 
-This file records user-visible changes made after Emacsvox 2026.9.1.  Add new
-entries here during development without choosing the next release series in
-advance.  Before a release, replace =Unreleased= with the exact value from
-=VERSION= and complete the release notes.
+This patch release requires Emacs 31 or later and Omnivox 1.7.0 or newer.  The
+guided WSL2 installer pins the matching verified Omnivox 1.7.0 Windows x64 or
+ARM64 archive.
 
 Released notes are preserved in [[file:NEWS-2026.9.1][NEWS for Emacsvox 2026.9.1]].
 
@@ -27,6 +26,14 @@ until its replacement is ready, manual rebuild steps, separate Emacsvox and
 Omnivox version checks, and immediate controls for slowing general speech and
 echoed characters.  The guided installer now fully rebuilds byte-code so an
 update cannot retain generated Lisp from the previous source revision.
+
+** Omnivox 1.7.0
+
+The supported speech-server baseline is now Omnivox 1.7.0.  The guided WSL2
+installer pins the published generic Windows archives and their checksums, and
+the clean source-built Windows runtime pins the matching source commit and
+Piper companion.  This aligns Emacsvox's portable chorus styles and native
+helper integrations with Omnivox's 1.7.0 protocol and engine support.
 
 ** Org link transitions
 
@@ -50,6 +57,14 @@ large Notmuch result buffers and avoids the associated long garbage-collection
 pauses.  Foreground search completion now keeps its view summary and selected
 message fields in separate semantic objects, avoiding an invalid presentation
 rule error when the first result is announced.
+
+Quitting a Notmuch view with ~q~ now interrupts message or search-result speech
+before playing the close cue.
+
+** Vertico history
+
+Recalling minibuffer history while Vertico is active now speaks the recalled
+entry once instead of repeating it during Vertico's following display update.
 
 ** Terminal completion
 
