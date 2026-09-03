@@ -261,7 +261,7 @@ user-supplied runtimes.
 *** Optional Omnivox Engine Modules
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Optional Omnivox Engine Modules
-:DESCRIPTION: Choose and install version-matched optional engines from Emacs.
+:DESCRIPTION: Install, check, remove, and reinstall optional engines from Emacs.
 :END:
 
 The ordinary WSL2 archive is the Omnivox core, not a claim that every supported
@@ -278,19 +278,33 @@ M-x emacsvox-omnivox-manage-components RET
 You can also press @@texinfo:@kbd{C-e H}@@ for Aural Home and then
 @@texinfo:@kbd{I}@@ on /Omnivox engine modules/.  The spoken table reports each
 engine as installed, downloadable, unavailable on this architecture, needing a
-core update, or needing a separately supplied runtime or model.  Use
-@@texinfo:@kbd{i}@@ to install the selected downloadable module and
-@@texinfo:@kbd{u}@@ to uninstall a module previously installed by the manager.
-Uninstall requires confirmation and removes the module's complete managed
-directory, including anything manually added inside it.  It does not remove
-the Omnivox core, user-supplied runtimes or models stored elsewhere, or the
-verified download cache.  Use @@texinfo:@kbd{t}@@ to ask Omnivox to list voices
-through the selected engine.
-The voice check announces the number found and selects an accessible buffer
-containing the complete list.  If it fails, Emacsvox announces Omnivox's actual
-diagnostic and opens it in the same buffer; press @@texinfo:@kbd{q}@@ to return
-or @@texinfo:@kbd{h}@@ for Aural Home.  Downloads and checks run asynchronously
-so Emacs remains responsive.
+core update, or needing a separately supplied runtime or model.  Move to an
+engine row, then choose the task you want:
+
+- To install an /available/ module, press @@texinfo:@kbd{i}@@ and confirm.  The
+  manager downloads the version matched to your Omnivox core, verifies it, and
+  announces when installation is complete.
+- To check any engine, press @@texinfo:@kbd{t}@@.  Emacsvox announces how many
+  voices Omnivox found and selects an accessible buffer containing the complete
+  list.  If the check fails, it announces and displays the actual diagnostic
+  instead of only an exit code.  Press @@texinfo:@kbd{q}@@ to return to the
+  manager or @@texinfo:@kbd{h}@@ for Aural Home.
+- To remove an /installed/ module, press @@texinfo:@kbd{u}@@ and confirm.  This
+  is available only for Flite, RuTTS, Piper, and TGSpeechBox modules installed
+  by this manager.  It cannot remove the Omnivox core, built-in engines, or
+  runtime bridges.
+
+Removal keeps the verified download in the local cache.  If you change your
+mind, select the module again---its state will now be /available/---and press
+@@texinfo:@kbd{i}@@ to reinstall it.  A valid cached download is reused.
+
+The module's whole managed directory is removed.  Move anything you placed
+inside that directory somewhere else before confirming.  User-supplied
+runtimes and models stored outside it are not touched; remove those separately
+using their supplier's instructions.  After a successful installation or
+removal, the manager refreshes the table and restarts Omnivox when it is the
+running speech server.  Operations run asynchronously so Emacs remains
+responsive.
 
 The manager reads =etc/omnivox-components.conf=.  Every archive name, byte size,
 and SHA-256 hash is pinned to the same Omnivox version as the installed core.
