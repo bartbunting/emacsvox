@@ -94,7 +94,7 @@ prints one ~apt~ command for you to review and run.  The installer never invokes
 #+end_example
 
 It builds the pinned stable Emacs only when Emacs 31 or newer is unavailable,
-downloads and verifies the matching Omnivox 1.7.0 Windows archive, records its
+downloads and verifies the matching Omnivox 1.7.1 Windows archive, records its
 path without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
 and plays the final speech-server check.  The Emacs build can take a while on
 a fresh machine; later runs reuse it and the verified downloads.  Routine
@@ -199,7 +199,7 @@ checked.  Continue to @@texinfo:@ref{Quick Installation}@@.
 
 On a matching GNU/Linux x86-64 or macOS host, follow
 @@texinfo:@ref{Installing An Omnivox Release Binary}@@.  That procedure downloads and
-verifies the published 1.7.0 archive, keeps its runtime data beside the
+verifies the published 1.7.1 archive, keeps its runtime data beside the
 executable, and adds its versioned installation directory to ~PATH~.  Then run:
 
 #+begin_example

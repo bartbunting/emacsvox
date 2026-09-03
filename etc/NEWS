@@ -9,7 +9,7 @@ Maintained by Emacsvox Contributors.
 * Emacsvox 2026.9.2 --- Current User-Visible Changes
 
 This patch release requires Emacs 31 or later and Omnivox 1.7.0 or newer.  The
-guided WSL2 installer pins the matching verified Omnivox 1.7.0 Windows x64 or
+guided WSL2 installer pins the matching verified Omnivox 1.7.1 Windows x64 or
 ARM64 archive.
 
 Released notes are preserved in [[file:NEWS-2026.9.1][NEWS for Emacsvox 2026.9.1]].
@@ -27,13 +27,14 @@ Omnivox version checks, and immediate controls for slowing general speech and
 echoed characters.  The guided installer now fully rebuilds byte-code so an
 update cannot retain generated Lisp from the previous source revision.
 
-** Omnivox 1.7.0
+** Omnivox 1.7.1 integration
 
-The supported speech-server baseline is now Omnivox 1.7.0.  The guided WSL2
-installer pins the published generic Windows archives and their checksums, and
-the clean source-built Windows runtime pins the matching source commit and
-Piper companion.  This aligns Emacsvox's portable chorus styles and native
-helper integrations with Omnivox's 1.7.0 protocol and engine support.
+The supported speech-server baseline remains Omnivox 1.7.0.  The guided WSL2
+installer, downloadable engine modules, and clean source-built Windows runtime
+now pin the published Omnivox 1.7.1 artifacts and matching source commit.  That
+release calibrates TGSpeechBox rate control to the Eloquence scale and reports
+exact requested text anchors, enabling Emacsvox capitalization and timed
+presentation while the TGSpeechBox module remains experimental.
 
 The new ~M-x emacsvox-omnivox-manage-components~ command, also available as
 ~I~ from Aural Home, presents a spoken list of built-in, downloadable, and
