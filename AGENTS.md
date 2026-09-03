@@ -69,6 +69,12 @@
 - `make windows-omnivox` is the reproducible clean-release path. For local
   testing from dirty Emacsvox or Omnivox worktrees, use
   `make windows-omnivox-dev`; it records both tracked-diff hashes in provenance.
+  When only the main Rust server or its main-only audio output changed and a
+  verified development runtime is already staged, prefer
+  `make windows-omnivox-main-dev`. It rebuilds only `omnivox.exe`, records the
+  reused payload identity, and rejects helper, protocol, dependency,
+  toolchain, or companion changes. Use the full development target whenever
+  that guard rejects reuse; release builds always use the clean full target.
 - The ordinary WSL2 binary-install route is `bin/emacsvox-wsl-install`; its
   pinned inputs and hashes live in `etc/wsl-install.conf`. Treat both as release
   tooling, keep the installer per-user, and run its isolated x64/ARM64 tests

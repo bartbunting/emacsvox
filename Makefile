@@ -71,7 +71,7 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: docs-check docs-release-check docs-check-external
 .PHONY: docs-publish docs-publish-pages
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
-.PHONY: windows-omnivox-dev
+.PHONY: windows-omnivox-dev windows-omnivox-main-dev
 .PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers prepare-windows-omnivox-piper verify-windows-omnivox-runtime verify-windows-omnivox-live
 .PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
 .PHONY: dist release release-source-check release-check release-artifact
@@ -385,6 +385,14 @@ windows-omnivox-dev:
 		OMNIVOX_RECORD_RHVOICE=1 \
 		OMNIVOX_INCLUDE_TGSPEECHBOX=1 \
 		OMNIVOX_INCLUDE_PINNED_PIPER=0 windows-omnivox
+
+windows-omnivox-main-dev:
+	"$(OMNIVOX_RELEASE_DIR)/stage-main-dev.sh" \
+		"$(CURDIR)" "$(OMNIVOX_DIR)" "$(OMNIVOX_RUNTIME_DIR)" \
+		"$(OMNIVOX_RELEASE_DIR)" "$(OMNIVOX_RELEASE_IMAGE)" \
+		"$(OMNIVOX_TARGET)"
+	$(MAKE) verify-windows-omnivox-runtime
+	$(MAKE) verify-windows-omnivox-live
 
 windows-omnivox:
 	@set -eu; \

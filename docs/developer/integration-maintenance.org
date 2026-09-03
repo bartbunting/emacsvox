@@ -265,6 +265,17 @@ together before these integrations enter the clean release path.  See
 ~servers/omnivox-release/README.org~ for the pinned toolchain, licensing,
 provenance, and restaging contract.
 
+After one complete development runtime has been staged, use
+~make windows-omnivox-main-dev~ for changes confined to the main Rust server or
+its main-only audio output.  This guarded path uses the same pinned toolchain
+to rebuild only ~omnivox.exe~, derives a new content-addressed runtime from the
+current hash-verified development payload, records the original complete build
+and reused manifest in provenance, and reruns the static and live runtime
+checks.  It refuses reuse when helper, helper-protocol, dependency, toolchain,
+or companion inputs changed; in that case rerun ~make windows-omnivox-dev~.
+The clean ~make windows-omnivox~ release path always rebuilds every payload and
+never uses incremental reuse.
+
 The development target accepts ~OMNIVOX_RHVOICE_LIBRARY~ and
 ~OMNIVOX_RHVOICE_DATA~ together, plus an optional
 ~OMNIVOX_RHVOICE_CONFIG~ directory.  It resolves WSL or Windows absolute paths,
