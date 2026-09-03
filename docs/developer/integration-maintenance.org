@@ -265,6 +265,36 @@ together before these integrations enter the clean release path.  See
 ~servers/omnivox-release/README.org~ for the pinned toolchain, licensing,
 provenance, and restaging contract.
 
+To test Piper before that release-pin advance, commit and push a clean Omnivox
+revision and run its ~Piper Native Validation~ workflow.  Download the
+~omnivox-piper-windows-x64~ artifact, which contains the companion archive and
+~piper-sha256sums.txt~, then stage it with a reviewed model:
+
+#+begin_example
+OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.6.4-piper-windows-x64.zip \
+  OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256=64-character-sha256 \
+  OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx \
+  make windows-omnivox-piper-dev
+#+end_example
+
+This is a development-only bridge, not a release-pin bypass.  It verifies the
+outer archive hash, rejects unsafe archive members and symbolic links, checks
+the companion's internal manifest, and requires its source provenance to name
+the exact clean Omnivox ~HEAD~ and the Windows MSVC target.  The staged runtime
+records the artifact hash and companion tree hash and labels the companion
+~github-actions-native-development-build~ with version ~development-ci~.  The
+version-looking archive filename comes from Omnivox's current package metadata
+and does not assert that post-tag code was released.  The final live gate loads
+the separately cached model and requires Piper to enumerate that voice and
+synthesize a non-empty WAV.
+
+The ordinary ~windows-omnivox-dev~ target remains appropriate for uncommitted
+Omnivox work because it rebuilds all included companions locally and omits
+Piper.  The CI-artifact target deliberately rejects a dirty Omnivox checkout:
+commit and push the change, let the native workflow build that exact commit,
+then use its new artifact.  Emacsvox itself may contain tracked changes; their
+diff hash remains part of the local runtime identity.
+
 After one complete development runtime has been staged, use
 ~make windows-omnivox-main-dev~ for changes confined to the main Rust server or
 its main-only audio output.  This guarded path uses the same pinned toolchain

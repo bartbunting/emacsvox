@@ -203,6 +203,12 @@ configuration beside it and run
 =OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx make windows-omnivox=.
 The model is copied to a separate content-addressed Windows-local cache; it is
 not bundled into the runtime.
+Maintainers testing a newer committed Omnivox revision can use its native
+Windows CI companion with =make windows-omnivox-piper-dev=.  That separate
+development target requires the downloaded archive, its SHA-256, and a reviewed
+model; it rejects an artifact whose recorded source commit does not exactly
+match the clean Omnivox checkout.  See the Integration Maintenance chapter for
+the complete command and provenance contract.
 The voice data is required for the Windows eSpeak fallback to initialize.  The
 Eloquence helper uses a user-installed 32-bit ECI runtime; no proprietary ECI
 DLL is copied or distributed.  If the ignored local DECtalk runtime directory

@@ -629,6 +629,14 @@ instructions are in Omnivox's checkout under ~docs/RHVOICE.md~ and
 changing those inputs, then use ~C-e d e~ to inspect the engines reported by the
 new process.
 
+Piper testing from a newer committed Omnivox revision uses the separate
+~windows-omnivox-piper-dev~ target and its native Windows CI artifact.  The
+target requires the archive's published SHA-256 and a reviewed external model,
+and rejects a dirty or different Omnivox checkout.  See
+@@texinfo:@ref{Integration Maintenance}@@ for the complete command and
+provenance checks.  This development path does not change the companion pinned
+for reproducible releases.
+
 ** Selecting And Checking Omnivox
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Selecting And Checking Omnivox

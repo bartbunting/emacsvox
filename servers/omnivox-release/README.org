@@ -106,6 +106,38 @@ exact Omnivox 1.6.4 source commit recorded beside its Piper companion.  Advance
 both pins together for a later Omnivox release.  The development target does
 not weaken the clean-worktree requirement of =make windows-omnivox=.
 
+For Piper testing at a newer committed Omnivox revision, obtain the
+=omnivox-piper-windows-x64= artifact from that exact revision's successful
+=Piper Native Validation= workflow.  The artifact contains the companion ZIP
+and =piper-sha256sums.txt=.  Supply both the archive identity and a reviewed
+external voice model:
+
+#+begin_example
+OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.6.4-piper-windows-x64.zip \
+  OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256=64-character-sha256 \
+  OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx \
+  make windows-omnivox-piper-dev
+#+end_example
+
+The target requires the Omnivox checkout to be completely clean and its =HEAD=
+to equal the commit in =SOURCE-PROVENANCE.json=.  It validates the outer
+archive hash, member paths, absence of symbolic links, Windows MSVC target,
+clean CI source record, and internal =SHA256SUMS= before caching the companion.
+It then builds the Piper-enabled Windows-GNU server from the same commit and
+stages the native companion as a separate executable payload.  Provenance
+labels it =github-actions-native-development-build= and =development-ci= and
+records both the archive and staged-tree hashes.  The artifact's filename uses
+the current Omnivox package version; it is not evidence that later commits have
+shipped in that release.
+
+Unlike =windows-omnivox-dev=, this target requires =OMNIVOX_PIPER_MODEL= so its
+live gate can enumerate the configured voice and require real non-empty WAV
+synthesis.  The model and adjacent JSON remain in the external
+content-addressed Windows cache.  The target may record a dirty Emacsvox
+worktree, but it never accepts dirty Omnivox source because native CI cannot
+have built those uncommitted inputs.  Neither this path nor its cached artifact
+changes =toolchain.lock= or the clean =windows-omnivox= release contract.
+
 When only the main Rust server changed, =make windows-omnivox-main-dev= rebuilds
 and strips only =omnivox.exe= in the pinned Windows toolchain.  It derives a new
 content-addressed runtime from the current hash-verified development runtime,
@@ -137,7 +169,9 @@ copy, the external eSpeak cache digest, and launcher selection through
 and executes that exact Windows-local payload.  It requires the staged Flite
 SLT and RuTTS male/female voices to be discoverable and requires both helpers
 to produce non-empty RIFF/WAVE output in a private Windows temporary directory.
-Both source-build staging targets run the static and live verifiers before
+When a Piper model is configured, it also requires the staged Piper helper to
+enumerate that model and synthesize a non-empty WAV.
+All source-build staging targets run the static and live verifiers before
 returning success.
 
 Staging changes what a newly launched speech process selects.  An existing

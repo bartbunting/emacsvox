@@ -1567,6 +1567,14 @@ validation instructions are in Omnivox's checkout under
 Emacs after restaging or changing those inputs, then use ‘C-e d e’ to
 inspect the engines reported by the new process.
 
+   Piper testing from a newer committed Omnivox revision uses the
+separate ‘windows-omnivox-piper-dev’ target and its native Windows CI
+artifact.  The target requires the archive's published SHA-256 and a
+reviewed external model, and rejects a dirty or different Omnivox
+checkout.  See *note Integration Maintenance:: for the complete command
+and provenance checks.  This development path does not change the
+companion pinned for reproducible releases.
+
 
 File: emacsvox.info,  Node: Selecting And Checking Omnivox,  Next: Compatibility Speech Servers,  Prev: Building Omnivox For WSL2,  Up: Speech Backends
 
@@ -4788,6 +4796,37 @@ commit together before these integrations enter the clean release path.
 See ‘servers/omnivox-release/README.org’ for the pinned toolchain,
 licensing, provenance, and restaging contract.
 
+   To test Piper before that release-pin advance, commit and push a
+clean Omnivox revision and run its ‘Piper Native Validation’ workflow.
+Download the ‘omnivox-piper-windows-x64’ artifact, which contains the
+companion archive and ‘piper-sha256sums.txt’, then stage it with a
+reviewed model:
+
+     OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.6.4-piper-windows-x64.zip \
+       OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256=64-character-sha256 \
+       OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx \
+       make windows-omnivox-piper-dev
+
+   This is a development-only bridge, not a release-pin bypass.  It
+verifies the outer archive hash, rejects unsafe archive members and
+symbolic links, checks the companion's internal manifest, and requires
+its source provenance to name the exact clean Omnivox ‘HEAD’ and the
+Windows MSVC target.  The staged runtime records the artifact hash and
+companion tree hash and labels the companion
+‘github-actions-native-development-build’ with version ‘development-ci’.
+The version-looking archive filename comes from Omnivox's current
+package metadata and does not assert that post-tag code was released.
+The final live gate loads the separately cached model and requires Piper
+to enumerate that voice and synthesize a non-empty WAV.
+
+   The ordinary ‘windows-omnivox-dev’ target remains appropriate for
+uncommitted Omnivox work because it rebuilds all included companions
+locally and omits Piper.  The CI-artifact target deliberately rejects a
+dirty Omnivox checkout: commit and push the change, let the native
+workflow build that exact commit, then use its new artifact.  Emacsvox
+itself may contain tracked changes; their diff hash remains part of the
+local runtime identity.
+
    After one complete development runtime has been staged, use ‘make
 windows-omnivox-main-dev’ for changes confined to the main Rust server
 or its main-only audio output.  This guarded path uses the same pinned
@@ -4999,57 +5038,57 @@ Node: Installing An Omnivox Windows Release Under WSL246702
 Node: Trying Native Windows Emacsvox52510
 Node: Installing Omnivox From Source60231
 Node: Building Omnivox For WSL262095
-Node: Selecting And Checking Omnivox69296
-Node: Compatibility Speech Servers71564
-Node: Backend Diagnostics And Ownership73490
-Node: Audio Desktop76667
-Node: Desktop Objects77797
-Node: Object Oriented Desktop79022
-Node: Context-Sensitive Interaction80135
-Node: Aural Presentation83250
-Node: Presentation Model85449
-Node: Presentation Modalities87916
-Node: Aural Home89663
-Node: Explaining Presentation91551
-Node: Adjusting Presentation93536
-Node: Presentation Profiles96505
-Node: Voices And Routing98196
-Node: Sounds And Space102219
-Node: Presentation Troubleshooting103843
-Node: Voice Lock105881
-Node: Using Online Help109088
-Node: Emacs Packages113150
-Node: Document Authoring114524
-Node: Structured Editing115078
-Node: Browsing Structure116061
-Node: Web Browsing116659
-Node: Messaging117494
-Node: Editing Code117992
-Node: Development Environment118511
-Node: Desktop Management119068
-Node: Personal Information Management119570
-Node: Desktop Applications120102
-Node: Notmuch Mail127490
-Ref: Notmuch fields and privacy136850
-Node: Agent Shell142558
-Node: EAT Terminal Access152552
-Node: Running Terminal Based Applications169811
-Node: Starting Term170766
-Node: Term Input Modes171605
-Node: Term Speech Feedback172765
-Node: Reviewing The Term Screen173959
-Node: Term Help And Recovery175860
-Node: Emacsvox Keyboard Commands176759
-Node: Copyright178163
-Node: Acknowledgments178750
-Node: Developer Guide179776
-Node: Documentation Maintenance180940
-Node: Speech Server Protocols185738
-Ref: Testing A Direct Legacy Server191645
-Ref: Commands That Queue Output192204
-Ref: Commands That Set State195238
-Node: Integration Maintenance197832
-Node: Concept Index215660
+Node: Selecting And Checking Omnivox69754
+Node: Compatibility Speech Servers72022
+Node: Backend Diagnostics And Ownership73948
+Node: Audio Desktop77125
+Node: Desktop Objects78255
+Node: Object Oriented Desktop79480
+Node: Context-Sensitive Interaction80593
+Node: Aural Presentation83708
+Node: Presentation Model85907
+Node: Presentation Modalities88374
+Node: Aural Home90121
+Node: Explaining Presentation92009
+Node: Adjusting Presentation93994
+Node: Presentation Profiles96963
+Node: Voices And Routing98654
+Node: Sounds And Space102677
+Node: Presentation Troubleshooting104301
+Node: Voice Lock106339
+Node: Using Online Help109546
+Node: Emacs Packages113608
+Node: Document Authoring114982
+Node: Structured Editing115536
+Node: Browsing Structure116519
+Node: Web Browsing117117
+Node: Messaging117952
+Node: Editing Code118450
+Node: Development Environment118969
+Node: Desktop Management119526
+Node: Personal Information Management120028
+Node: Desktop Applications120560
+Node: Notmuch Mail127948
+Ref: Notmuch fields and privacy137308
+Node: Agent Shell143016
+Node: EAT Terminal Access153010
+Node: Running Terminal Based Applications170269
+Node: Starting Term171224
+Node: Term Input Modes172063
+Node: Term Speech Feedback173223
+Node: Reviewing The Term Screen174417
+Node: Term Help And Recovery176318
+Node: Emacsvox Keyboard Commands177217
+Node: Copyright178621
+Node: Acknowledgments179208
+Node: Developer Guide180234
+Node: Documentation Maintenance181398
+Node: Speech Server Protocols186196
+Ref: Testing A Direct Legacy Server192103
+Ref: Commands That Queue Output192662
+Ref: Commands That Set State195696
+Node: Integration Maintenance198290
+Node: Concept Index217877
 
 End Tag Table
 
