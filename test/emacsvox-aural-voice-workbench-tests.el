@@ -385,6 +385,31 @@
      (string-match-p "routing workstation, staged"
                      (emacsvox-aural-voice-workbench--header)))))
 
+(ert-deftest emacsvox-aural-voice-workbench-reuses-first-run-inventory ()
+  "First-run profile setup should reuse the mode's inventory snapshot."
+  (let* ((emacsvox-aural-routing-profile-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-active-routing-profile nil)
+         (omnivox-logical-voice-preferences nil)
+         (omnivox-logical-voice-languages nil)
+         (omnivox-engine-priority-ids nil)
+         (omnivox-fallback-engine-ids '("espeak"))
+         (omnivox-disabled-engine-ids nil)
+         (omnivox-global-default-selector nil)
+         (omnivox-allow-same-language-fallback t)
+         (calls 0)
+         (tts-voice-inventory-function
+          (lambda ()
+            (cl-incf calls)
+            (copy-tree emacsvox-test--workbench-inventory))))
+    (with-temp-buffer
+      (cl-letf (((symbol-function 'tts-speak) #'ignore))
+        (emacsvox-aural-voice-workbench-mode))
+      (should (= calls 1))
+      (should
+       (equal emacsvox-aural-voice-workbench-inventory
+              emacsvox-test--workbench-inventory)))))
+
 (ert-deftest emacsvox-aural-voice-workbench-filters-physical-inventory ()
   "Physical rows filter by voice traits and engine health."
   (emacsvox-test--with-voice-workbench

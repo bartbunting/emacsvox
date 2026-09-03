@@ -2698,7 +2698,8 @@ refreshing the Workbench at LOGICAL-VOICE."
   (setq-local emacsvox-aural-voice-workbench-view 'logical)
   (setq-local emacsvox-aural-voice-workbench-inventory (tts-voice-inventory))
   (setq-local emacsvox-aural-voice-workbench-committed-profile
-              (emacsvox-aural-voice-workbench--current-profile-data))
+              (emacsvox-aural-voice-workbench--current-profile-data
+               emacsvox-aural-voice-workbench-inventory))
   (setq-local emacsvox-aural-voice-workbench-staged-profile
               (copy-tree emacsvox-aural-voice-workbench-committed-profile))
   (setq-local emacsvox-aural-voice-workbench-selections

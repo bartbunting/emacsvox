@@ -1103,7 +1103,11 @@ through its input row remains as a prefix after scroll alignment, and
                 (new-start-row (plist-get new-input :start-row))
                 ((integerp old-cursor-row))
                 ((integerp new-start-row)))
-      (let* ((old-through-input
+      (let* ((old-leading
+              (emacsvox-eat--list-slice
+               (plist-get old :rows) 0
+               (plist-get old-input :start-row)))
+             (old-through-input
               (emacsvox-eat--list-slice
                (plist-get old :rows) 0
                (min (length (plist-get old :rows))
@@ -1116,9 +1120,14 @@ through its input row remains as a prefix after scroll alignment, and
               (emacsvox-eat--suffix-prefix-row-overlap
                old-through-input new-leading))
              (rows
-              (if (> overlap 0)
-                  (nthcdr overlap new-leading)
-                new-leading)))
+              (cond
+               ((> overlap 0) (nthcdr overlap new-leading))
+               ;; Inline completion can repaint in multiple chunks.  If its
+               ;; input redraw is observed before the inline classifier can
+               ;; settle, unchanged history above the prompt is not candidate
+               ;; output and must not consume the completion transaction.
+               ((equal old-leading new-leading) nil)
+               (t new-leading))))
         (when (cl-some
                (lambda (row) (not (string-empty-p (string-trim row))))
                rows)

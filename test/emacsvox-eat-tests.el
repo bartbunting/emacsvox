@@ -1753,6 +1753,13 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
         (should (equal (plist-get result :items) items))
         (should (eq (plist-get result :confidence) 'anchored))))))
 
+(ert-deftest emacsvox-eat-inline-completion-does-not-reclassify-history ()
+  "Unchanged rows above an inline redraw are not completion candidates."
+  (let* ((old (emacsvox-eat-test--screen "history\n$ git pul" 80))
+         (new (emacsvox-eat-test--screen "history\n$ git pull " 80)))
+    (should (emacsvox-eat--inline-completion-change old new))
+    (should-not (emacsvox-eat--completion-output-change old new))))
+
 (ert-deftest emacsvox-eat-completion-output-aligns-scroll-and-fails-closed ()
   "Retained history is removed; a lost old anchor is explicitly uncertain."
   (let* ((old

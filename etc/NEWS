@@ -51,7 +51,16 @@ pauses.  Foreground search completion now keeps its view summary and selected
 message fields in separate semantic objects, avoiding an invalid presentation
 rule error when the first result is announced.
 
+** Terminal completion
+
+EAT no longer mistakes unchanged terminal history above the prompt for
+completion candidates when an inline Bash completion redraw arrives in
+multiple chunks.
+
 ** Voice tuning
+
+Opening Voice Workbench without a saved routing profile now reuses its initial
+voice-inventory snapshot instead of copying the complete inventory twice.
 
 The voice tuner now names neutral post-synthesis values such as /unchanged/ and
 /disabled/.  Gain, pan, and filter endpoints are translated to their exact
