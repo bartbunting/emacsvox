@@ -42,6 +42,9 @@ and install the version-matched Flite, RuTTS, Piper, or experimental
 TGSpeechBox companions per user.  It never downloads proprietary Eloquence,
 DECtalk, or RHVoice runtimes or chooses a Piper voice model.
 
+Engine checks now select an accessible result buffer, announce the number of
+voices found, and report Omnivox's actual diagnostic when a check fails.
+
 ** Org link transitions
 
 Opening an Org link into another buffer now plays one opening cue while leaving

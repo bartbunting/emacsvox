@@ -177,6 +177,42 @@
        (boundp 'tts-program)
        (string-match-p "omnivox" (format "%s" tts-program))))
 
+(defun emacsvox-omnivox-components--last-output-line (output)
+  "Return the last nonempty line in installer OUTPUT, or nil."
+  (car (last (split-string output "[\r\n]+" t "[[:space:]]+"))))
+
+(defun emacsvox-omnivox-components--result-message
+    (name operation success output event)
+  "Describe the result for NAME and OPERATION.
+
+SUCCESS is non-nil for a successful process.  Prefer useful details from
+OUTPUT to the generic process sentinel EVENT."
+  (let ((last-line
+         (emacsvox-omnivox-components--last-output-line output)))
+    (cond
+     ((and success (eq operation 'test)
+           (string-match "Found \\([0-9]+\\) voices:" output))
+      (format "%s is available with %s voices. Voice list opened"
+              name (match-string 1 output)))
+     ((and success (eq operation 'test))
+      (format "%s voice check succeeded%s. Results opened"
+              name (if last-line (format ": %s" last-line) "")))
+     (success
+      (format "%s installation completed" name))
+     (t
+      (format "%s %s failed: %s. Details opened"
+              name operation
+              (or last-line (string-trim event) "unknown error"))))))
+
+(defun emacsvox-omnivox-components--show-output (output)
+  "Select installer OUTPUT as an accessible result buffer."
+  (when (buffer-live-p output)
+    (with-current-buffer output
+      (emacsvox-aural-interface-mode)
+      (local-set-key (kbd "h") #'emacsvox-aural)
+      (goto-char (point-min)))
+    (emacsvox-aural-ui-pop-to-buffer output)))
+
 (defun emacsvox-omnivox-components--finish (process event)
   "Handle completion of component PROCESS described by EVENT."
   (when (memq (process-status process) '(exit signal))
@@ -187,11 +223,13 @@
            (output (process-buffer process))
            (success (and (eq (process-status process) 'exit)
                          (zerop (process-exit-status process))))
+           (output-text
+            (if (buffer-live-p output)
+                (with-current-buffer output (buffer-string))
+              ""))
            (message-text
-            (if success
-                (format "%s %s completed" name operation)
-              (format "%s %s failed: %s" name operation
-                      (string-trim event)))))
+            (emacsvox-omnivox-components--result-message
+             name operation success output-text event)))
       (when (buffer-live-p manager)
         (with-current-buffer manager
           (setq emacsvox-omnivox-components--process nil)
@@ -213,9 +251,7 @@
                  (format "%s; Omnivox restart failed: %s"
                          message-text (error-message-string err))))))
       (when (or (not success) (eq operation 'test))
-        (with-current-buffer output
-          (special-mode))
-        (display-buffer output))
+        (emacsvox-omnivox-components--show-output output))
       (message "%s" message-text)
       (emacsvox-omnivox-components--speak message-text))))
 
@@ -305,7 +341,7 @@
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET install available module, otherwise test engine\n"
-      "i install module     t test engine and show voices\n"
+      "i install module     t check engine; open voices or error\n"
       "g refresh            h aural home\n"
       "? help               q quit\n")))
   (when (fboundp 'emacsvox-speak-help)

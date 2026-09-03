@@ -272,6 +272,43 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
     (should (equal (aref (cadar entries) 2) "2.9 MiB"))
     (should (equal (aref (cadadr entries) 1) "runtime required"))))
 
+(ert-deftest emacsvox-omnivox-components-test-result-announces-voices ()
+  "A successful voice check reports the count and points to its list."
+  (should
+   (equal
+    (emacsvox-omnivox-components--result-message
+     "TGSpeechBox" 'test t
+     "Found 154 voices:\n\n en (1 voice):\n  TGSpeechBox Adam [en/adam]\n"
+     "finished\n")
+    "TGSpeechBox is available with 154 voices. Voice list opened")))
+
+(ert-deftest emacsvox-omnivox-components-failure-announces-diagnostic ()
+  "A failed voice check reports Omnivox's diagnostic, not only its exit code."
+  (let ((message
+         (emacsvox-omnivox-components--result-message
+          "RHVoice" 'test nil
+          (concat
+           "Error: rhvoice TTS helper is not available: "
+           "RHVoice native library was not found\n")
+          "exited abnormally with code 1\n")))
+    (should (string-search "RHVoice native library was not found" message))
+    (should-not (string-search "code 1" message))))
+
+(ert-deftest emacsvox-omnivox-components-output-is-accessible ()
+  "Voice and error results use aural dismissal and home navigation."
+  (let ((buffer (generate-new-buffer " *Omnivox component result test*")))
+    (unwind-protect
+        (cl-letf (((symbol-function 'emacsvox-aural-ui-pop-to-buffer)
+                   (lambda (candidate) candidate)))
+          (with-current-buffer buffer
+            (insert "Found 1 voice:\n"))
+          (emacsvox-omnivox-components--show-output buffer)
+          (with-current-buffer buffer
+            (should emacsvox-aural-ui-interface-buffer)
+            (should (eq (key-binding (kbd "q")) #'emacsvox-aural-quit))
+            (should (eq (key-binding (kbd "h")) #'emacsvox-aural))))
+      (kill-buffer buffer))))
+
 (ert-deftest emacsvox-omnivox-components-manager-is-spoken-and-actionable ()
   "The component manager exposes common aural navigation and module actions."
   (with-temp-buffer
