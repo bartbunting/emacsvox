@@ -109,11 +109,14 @@ not weaken the clean-worktree requirement of =make windows-omnivox=.
 When only the main Rust server changed, =make windows-omnivox-main-dev= rebuilds
 and strips only =omnivox.exe= in the pinned Windows toolchain.  It derives a new
 content-addressed runtime from the current hash-verified development runtime,
-records that base and the reused payload manifest in provenance, and reruns the
-static and live runtime verifiers.  It rejects helper, helper-protocol,
-dependency, toolchain, companion, or other non-main changes; use the full
-=windows-omnivox-dev= target in those cases.  The clean =windows-omnivox=
-release path always rebuilds and verifies every payload.
+records that base and the reused payload manifest in provenance, hard-links the
+unchanged payload, and runs a focused live check of the new Windows main
+executable.  It rejects helper, helper-protocol, dependency, toolchain,
+companion, or other non-main changes; use the full =windows-omnivox-dev= target
+in those cases.  Run
+=make verify-windows-omnivox-runtime verify-windows-omnivox-live= whenever a
+complete development audit is useful.  The clean =windows-omnivox= release path
+always rebuilds and verifies every payload.
 
 To preserve an external RHVoice installation across fresh Emacsvox processes,
 pass =OMNIVOX_RHVOICE_LIBRARY= and =OMNIVOX_RHVOICE_DATA= to

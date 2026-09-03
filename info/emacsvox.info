@@ -4793,12 +4793,14 @@ windows-omnivox-main-dev’ for changes confined to the main Rust server
 or its main-only audio output.  This guarded path uses the same pinned
 toolchain to rebuild only ‘omnivox.exe’, derives a new content-addressed
 runtime from the current hash-verified development payload, records the
-original complete build and reused manifest in provenance, and reruns
-the static and live runtime checks.  It refuses reuse when helper,
-helper-protocol, dependency, toolchain, or companion inputs changed; in
-that case rerun ‘make windows-omnivox-dev’.  The clean ‘make
-windows-omnivox’ release path always rebuilds every payload and never
-uses incremental reuse.
+original complete build and reused manifest in provenance, hard-links
+the unchanged payload, and runs a focused live check of the new Windows
+main executable.  It refuses reuse when helper, helper-protocol,
+dependency, toolchain, or companion inputs changed; in that case rerun
+‘make windows-omnivox-dev’.  Run ‘make verify-windows-omnivox-runtime
+verify-windows-omnivox-live’ when a complete development audit is
+useful.  The clean ‘make windows-omnivox’ release path always rebuilds
+and verifies every payload and never uses incremental reuse.
 
    The development target accepts ‘OMNIVOX_RHVOICE_LIBRARY’ and
 ‘OMNIVOX_RHVOICE_DATA’ together, plus an optional
@@ -5047,7 +5049,7 @@ Ref: Testing A Direct Legacy Server191645
 Ref: Commands That Queue Output192204
 Ref: Commands That Set State195238
 Node: Integration Maintenance197832
-Node: Concept Index215474
+Node: Concept Index215660
 
 End Tag Table
 

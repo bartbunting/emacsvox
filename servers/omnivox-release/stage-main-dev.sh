@@ -41,7 +41,6 @@ for required in PROVENANCE SHA256SUMS omnivox.exe windows-runtime.path; do
         exit 1
     fi
 done
-(cd "$base_runtime" && sha256sum --check SHA256SUMS >/dev/null)
 
 provenance_value()
 {
@@ -74,6 +73,14 @@ reused_manifest_digest=$(provenance_value reused_payload_manifest_sha256)
 if [ -z "$reused_manifest_digest" ]; then
     reused_manifest_digest=$(sha256sum "$base_runtime/SHA256SUMS" | cut -d ' ' -f1)
 fi
+complete_base_runtime=$versions_root/$reused_base_build_id
+if [ ! -f "$complete_base_runtime/SHA256SUMS" ] ||
+   [ "$(sha256sum "$complete_base_runtime/SHA256SUMS" | cut -d ' ' -f1)" != \
+       "$reused_manifest_digest" ]; then
+    echo "Original verified Omnivox development runtime is unavailable or changed" >&2
+    echo "Run make windows-omnivox-dev to create a new complete base runtime" >&2
+    exit 1
+fi
 
 base_omnivox_commit=$(provenance_value omnivox_commit)
 if ! git -C "$omnivox_dir" cat-file -e "$base_omnivox_commit^{commit}" 2>/dev/null ||
@@ -87,8 +94,12 @@ fi
 temporary_root=$(mktemp -d "$versions_root/.main-dev.XXXXXX")
 changed_paths=$temporary_root/changed-paths
 stage_runtime=$temporary_root/runtime
+windows_temporary_root=
 cleanup()
 {
+    if [ -n "$windows_temporary_root" ]; then
+        rm -rf -- "$windows_temporary_root"
+    fi
     rm -rf -- "$temporary_root"
 }
 trap cleanup EXIT HUP INT TERM
@@ -189,9 +200,10 @@ version_runtime=$versions_root/$build_id
 diagnostics=$release_root/cache/diagnostics/$build_id
 
 mkdir "$stage_runtime"
-cp -a "$base_runtime/." "$stage_runtime/"
-cp "$executable" "$stage_runtime/omnivox.exe"
-chmod +x "$stage_runtime/omnivox.exe"
+cp -al "$base_runtime/." "$stage_runtime/"
+cp "$executable" "$stage_runtime/omnivox.exe.new"
+chmod +x "$stage_runtime/omnivox.exe.new"
+mv -f "$stage_runtime/omnivox.exe.new" "$stage_runtime/omnivox.exe"
 awk \
     -v build_id="$build_id" \
     -v emacsvox_commit="$emacsvox_commit" \
@@ -224,26 +236,24 @@ awk \
             print "incremental_base_build_id=" base
             print "reused_payload_manifest_sha256=" base_manifest
         }
-    ' "$base_runtime/PROVENANCE" > "$stage_runtime/PROVENANCE"
+    ' "$base_runtime/PROVENANCE" > "$stage_runtime/PROVENANCE.new"
+mv -f "$stage_runtime/PROVENANCE.new" "$stage_runtime/PROVENANCE"
 
+provenance_digest=$(sha256sum "$stage_runtime/PROVENANCE" | cut -d ' ' -f1)
+awk \
+    -v executable="$executable_digest" \
+    -v provenance="$provenance_digest" '
+        $2 == "omnivox.exe" { print executable "  " $2; next }
+        $2 == "PROVENANCE" { print provenance "  " $2; next }
+        { print }
+    ' "$base_runtime/SHA256SUMS" > "$stage_runtime/SHA256SUMS.new"
+mv "$stage_runtime/SHA256SUMS.new" "$stage_runtime/SHA256SUMS"
 (
     cd "$stage_runtime"
-    while read -r _checksum payload; do
-        case "$payload" in
-            /* | *../*)
-                echo "Unsafe payload path in reusable manifest: $payload" >&2
-                exit 1
-                ;;
-        esac
-        if [ ! -f "$payload" ]; then
-            echo "Reusable payload is missing after staging: $payload" >&2
-            exit 1
-        fi
-        sha256sum "$payload"
-    done < "$base_runtime/SHA256SUMS"
-) > "$stage_runtime/SHA256SUMS.new"
-mv "$stage_runtime/SHA256SUMS.new" "$stage_runtime/SHA256SUMS"
-(cd "$stage_runtime" && sha256sum --check SHA256SUMS >/dev/null)
+    printf '%s  %s\n' \
+        "$executable_digest" omnivox.exe \
+        "$provenance_digest" PROVENANCE | sha256sum --check --status
+)
 
 if [ -e "$version_runtime" ]; then
     if ! cmp -s "$stage_runtime/SHA256SUMS" "$version_runtime/SHA256SUMS"; then
@@ -253,6 +263,23 @@ if [ -e "$version_runtime" ]; then
 else
     mv "$stage_runtime" "$version_runtime"
 fi
+
+base_reused_manifest=$temporary_root/base-reused-SHA256SUMS
+version_reused_manifest=$temporary_root/version-reused-SHA256SUMS
+awk 'substr($0, 67) != "omnivox.exe" && substr($0, 67) != "PROVENANCE"' \
+    "$base_runtime/SHA256SUMS" > "$base_reused_manifest"
+awk 'substr($0, 67) != "omnivox.exe" && substr($0, 67) != "PROVENANCE"' \
+    "$version_runtime/SHA256SUMS" > "$version_reused_manifest"
+if ! cmp -s "$base_reused_manifest" "$version_reused_manifest"; then
+    echo "Main-only reused payload manifest differs from its verified base" >&2
+    exit 1
+fi
+(
+    cd "$version_runtime"
+    printf '%s  %s\n' \
+        "$executable_digest" omnivox.exe \
+        "$provenance_digest" PROVENANCE | sha256sum --check --status
+)
 
 mkdir -p "$diagnostics"
 cp "$unstripped_executable" "$diagnostics/omnivox.unstripped.exe.new"
@@ -281,19 +308,35 @@ if [ "$(basename -- "$base_windows_runtime")" != "$base_build_id" ]; then
     exit 1
 fi
 windows_runtime=$windows_runtime_parent/$build_id
-mkdir -p "$windows_runtime"
-while read -r _checksum payload; do
-    destination=$windows_runtime/$payload
-    mkdir -p "${destination%/*}"
-    if [ ! -f "$destination" ]; then
-        cp "$version_runtime/$payload" "$destination.new.$$"
-        mv "$destination.new.$$" "$destination"
-    fi
-    if ! cmp -s "$version_runtime/$payload" "$destination"; then
-        echo "Existing Windows-local payload differs: $destination" >&2
+windows_complete=$windows_runtime/.main-dev-complete
+if [ ! -e "$windows_runtime" ]; then
+    windows_temporary_root=$(mktemp -d \
+        "$windows_runtime_parent/.main-dev.$build_id.XXXXXX")
+    cp -al "$base_windows_runtime/." "$windows_temporary_root/"
+    for payload in omnivox.exe PROVENANCE; do
+        cp "$version_runtime/$payload" \
+            "$windows_temporary_root/$payload.new.$$"
+        mv -f "$windows_temporary_root/$payload.new.$$" \
+            "$windows_temporary_root/$payload"
+    done
+    printf '%s\n' "$build_id" > \
+        "$windows_temporary_root/.main-dev-complete.new.$$"
+    mv -f "$windows_temporary_root/.main-dev-complete.new.$$" \
+        "$windows_temporary_root/.main-dev-complete"
+    mv "$windows_temporary_root" "$windows_runtime"
+    windows_temporary_root=
+fi
+if [ ! -f "$windows_complete" ] ||
+   [ "$(sed -n '1p' "$windows_complete")" != "$build_id" ]; then
+    echo "Windows-local main-only runtime is incomplete: $windows_runtime" >&2
+    exit 1
+fi
+for payload in omnivox.exe PROVENANCE; do
+    if ! cmp -s "$version_runtime/$payload" "$windows_runtime/$payload"; then
+        echo "Windows-local main payload differs: $payload" >&2
         exit 1
     fi
-done < "$version_runtime/SHA256SUMS"
+done
 windows_runtime_path=$(wslpath -w "$windows_runtime")
 printf '%s\n' "$windows_runtime_path" > "$version_runtime/windows-runtime.path.new"
 mv -f "$version_runtime/windows-runtime.path.new" \

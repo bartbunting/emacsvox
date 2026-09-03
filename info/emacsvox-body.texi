@@ -5028,11 +5028,14 @@ After one complete development runtime has been staged@comma{} use
 its main-only audio output.  This guarded path uses the same pinned toolchain
 to rebuild only @code{omnivox.exe}@comma{} derives a new content-addressed runtime from the
 current hash-verified development payload@comma{} records the original complete build
-and reused manifest in provenance@comma{} and reruns the static and live runtime
-checks.  It refuses reuse when helper@comma{} helper-protocol@comma{} dependency@comma{} toolchain@comma{}
-or companion inputs changed; in that case rerun @code{make windows-omnivox-dev}.
-The clean @code{make windows-omnivox} release path always rebuilds every payload and
-never uses incremental reuse.
+and reused manifest in provenance@comma{} hard-links the unchanged payload@comma{} and runs a
+focused live check of the new Windows main executable.  It refuses reuse when
+helper@comma{} helper-protocol@comma{} dependency@comma{} toolchain@comma{} or companion inputs changed; in
+that case rerun @code{make windows-omnivox-dev}.  Run
+@code{make verify-windows-omnivox-runtime verify-windows-omnivox-live} when a
+complete development audit is useful.  The clean @code{make windows-omnivox} release
+path always rebuilds and verifies every payload and never uses incremental
+reuse.
 
 The development target accepts @code{OMNIVOX_RHVOICE_LIBRARY} and
 @code{OMNIVOX_RHVOICE_DATA} together@comma{} plus an optional
