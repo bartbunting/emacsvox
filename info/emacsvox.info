@@ -264,7 +264,9 @@ manager is the _Omnivox engine modules_ row in Aural Home, opened with
 ‘C-e H’ and then ‘I’.  It distinguishes engines already included in the
 core, downloadable modules, and bridges that still need a user-supplied
 runtime.  Press ‘i’ on a downloadable row to confirm, checksum-verify,
-install, and test that module without ‘sudo’.  *Note Optional Omnivox
+install, and test that module without ‘sudo’.  Press ‘u’ on a
+manager-installed module to confirm and remove its managed directory
+while retaining the verified download cache.  *Note Optional Omnivox
 Engine Modules:: explains the choices and licensing boundaries.
 
 
@@ -1246,12 +1248,17 @@ chosen data.
 engine modules_.  The spoken table reports each engine as installed,
 downloadable, unavailable on this architecture, needing a core update,
 or needing a separately supplied runtime or model.  Use ‘i’ to install
-the selected downloadable module and ‘t’ to ask Omnivox to list voices
-through the selected engine.  The voice check announces the number found
-and selects an accessible buffer containing the complete list.  If it
-fails, Emacsvox announces Omnivox's actual diagnostic and opens it in
-the same buffer; press ‘q’ to return or ‘h’ for Aural Home.  Downloads
-and checks run asynchronously so Emacs remains responsive.
+the selected downloadable module and ‘u’ to uninstall a module
+previously installed by the manager.  Uninstall requires confirmation
+and removes the module's complete managed directory, including anything
+manually added inside it.  It does not remove the Omnivox core,
+user-supplied runtimes or models stored elsewhere, or the verified
+download cache.  Use ‘t’ to ask Omnivox to list voices through the
+selected engine.  The voice check announces the number found and selects
+an accessible buffer containing the complete list.  If it fails,
+Emacsvox announces Omnivox's actual diagnostic and opens it in the same
+buffer; press ‘q’ to return or ‘h’ for Aural Home.  Downloads and checks
+run asynchronously so Emacs remains responsive.
 
    The manager reads ‘etc/omnivox-components.conf’.  Every archive name,
 byte size, and SHA-256 hash is pinned to the same Omnivox version as the
@@ -1280,11 +1287,13 @@ invoke ‘sudo’ or edit shell startup files.
    For a terminal-only installation, run
 ‘./bin/emacsvox-omnivox-components --list’ and then, for example,
 ‘./bin/emacsvox-omnivox-components --install flite’.  Multiple module
-names may follow ‘--install’.  Restart Omnivox after a terminal
-installation, then use ‘--test ENGINE’ or the Emacs manager's ‘t’
-command.  The direct Omnivox release assets remain available for
-maintainers and recovery, but the manager is the recommended way to
-select them.
+names may follow ‘--install’ or ‘--uninstall’.  For example, use
+‘./bin/emacsvox-omnivox-components --uninstall flite’ to remove the
+managed Flite directory while retaining its cached archive.  Restart
+Omnivox after a terminal installation or removal, then use ‘--test
+ENGINE’ or the Emacs manager's ‘t’ command.  The direct Omnivox release
+assets remain available for maintainers and recovery, but the manager is
+the recommended way to select them.
 
 
 File: emacsvox.info,  Node: Trying Native Windows Emacsvox,  Next: Installing Omnivox From Source,  Prev: Installing An Omnivox Windows Release Under WSL2,  Up: Speech Backends
@@ -5086,83 +5095,83 @@ Node: Top384
 Node: Introduction2198
 Node: Installation5597
 Node: Obtaining Emacsvox6946
-Node: Updating Emacsvox Under WSL211272
-Node: Building And Testing The Speech Server14422
-Node: Quick Installation15988
-Node: Confirming First Speech18487
-Node: Recovering From No Speech20480
-Node: Persistent Startup23352
-Node: Basic Usage24366
-Node: Overview26990
-Node: Working28128
-Ref: Working-Footnote-129470
-Ref: Working-Footnote-229563
-Node: Reading29673
-Node: Speech System31453
-Node: Controlling Echo32365
-Node: Speech Output Control33200
-Node: Miscellaneous34930
-Node: Voice-lock35877
-Node: Status Information37127
-Node: Speech Backends38190
-Node: Supported Platform Routes40119
-Node: Installing An Omnivox Release Binary43887
-Node: Installing An Omnivox Windows Release Under WSL247280
-Node: Optional Omnivox Engine Modules53198
-Node: Trying Native Windows Emacsvox56157
-Node: Installing Omnivox From Source63878
-Node: Building Omnivox For WSL265742
-Node: Selecting And Checking Omnivox73401
-Node: Compatibility Speech Servers75669
-Node: Backend Diagnostics And Ownership77595
-Node: Audio Desktop80772
-Node: Desktop Objects81902
-Node: Object Oriented Desktop83127
-Node: Context-Sensitive Interaction84240
-Node: Aural Presentation87355
-Node: Presentation Model89554
-Node: Presentation Modalities92021
-Node: Aural Home93768
-Node: Explaining Presentation95656
-Node: Adjusting Presentation97641
-Node: Presentation Profiles100610
-Node: Voices And Routing102301
-Node: Sounds And Space106324
-Node: Presentation Troubleshooting107948
-Node: Voice Lock109986
-Node: Using Online Help113193
-Node: Emacs Packages117255
-Node: Document Authoring118629
-Node: Structured Editing119183
-Node: Browsing Structure120166
-Node: Web Browsing120764
-Node: Messaging121599
-Node: Editing Code122097
-Node: Development Environment122616
-Node: Desktop Management123173
-Node: Personal Information Management123675
-Node: Desktop Applications124207
-Node: Notmuch Mail131595
-Ref: Notmuch fields and privacy140955
-Node: Agent Shell146663
-Node: EAT Terminal Access156657
-Node: Running Terminal Based Applications173916
-Node: Starting Term174871
-Node: Term Input Modes175710
-Node: Term Speech Feedback176870
-Node: Reviewing The Term Screen178064
-Node: Term Help And Recovery179965
-Node: Emacsvox Keyboard Commands180864
-Node: Copyright182268
-Node: Acknowledgments182855
-Node: Developer Guide183881
-Node: Documentation Maintenance185045
-Node: Speech Server Protocols189843
-Ref: Testing A Direct Legacy Server195750
-Ref: Commands That Queue Output196309
-Ref: Commands That Set State199343
-Node: Integration Maintenance201937
-Node: Concept Index221524
+Node: Updating Emacsvox Under WSL211406
+Node: Building And Testing The Speech Server14556
+Node: Quick Installation16122
+Node: Confirming First Speech18621
+Node: Recovering From No Speech20614
+Node: Persistent Startup23486
+Node: Basic Usage24500
+Node: Overview27124
+Node: Working28262
+Ref: Working-Footnote-129604
+Ref: Working-Footnote-229697
+Node: Reading29807
+Node: Speech System31587
+Node: Controlling Echo32499
+Node: Speech Output Control33334
+Node: Miscellaneous35064
+Node: Voice-lock36011
+Node: Status Information37261
+Node: Speech Backends38324
+Node: Supported Platform Routes40253
+Node: Installing An Omnivox Release Binary44021
+Node: Installing An Omnivox Windows Release Under WSL247414
+Node: Optional Omnivox Engine Modules53332
+Node: Trying Native Windows Emacsvox56797
+Node: Installing Omnivox From Source64518
+Node: Building Omnivox For WSL266382
+Node: Selecting And Checking Omnivox74041
+Node: Compatibility Speech Servers76309
+Node: Backend Diagnostics And Ownership78235
+Node: Audio Desktop81412
+Node: Desktop Objects82542
+Node: Object Oriented Desktop83767
+Node: Context-Sensitive Interaction84880
+Node: Aural Presentation87995
+Node: Presentation Model90194
+Node: Presentation Modalities92661
+Node: Aural Home94408
+Node: Explaining Presentation96296
+Node: Adjusting Presentation98281
+Node: Presentation Profiles101250
+Node: Voices And Routing102941
+Node: Sounds And Space106964
+Node: Presentation Troubleshooting108588
+Node: Voice Lock110626
+Node: Using Online Help113833
+Node: Emacs Packages117895
+Node: Document Authoring119269
+Node: Structured Editing119823
+Node: Browsing Structure120806
+Node: Web Browsing121404
+Node: Messaging122239
+Node: Editing Code122737
+Node: Development Environment123256
+Node: Desktop Management123813
+Node: Personal Information Management124315
+Node: Desktop Applications124847
+Node: Notmuch Mail132235
+Ref: Notmuch fields and privacy141595
+Node: Agent Shell147303
+Node: EAT Terminal Access157297
+Node: Running Terminal Based Applications174556
+Node: Starting Term175511
+Node: Term Input Modes176350
+Node: Term Speech Feedback177510
+Node: Reviewing The Term Screen178704
+Node: Term Help And Recovery180605
+Node: Emacsvox Keyboard Commands181504
+Node: Copyright182908
+Node: Acknowledgments183495
+Node: Developer Guide184521
+Node: Documentation Maintenance185685
+Node: Speech Server Protocols190483
+Ref: Testing A Direct Legacy Server196390
+Ref: Commands That Queue Output196949
+Ref: Commands That Set State199983
+Node: Integration Maintenance202577
+Node: Concept Index222164
 
 End Tag Table
 

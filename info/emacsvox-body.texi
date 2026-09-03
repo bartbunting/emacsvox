@@ -193,6 +193,8 @@ is the @emph{Omnivox engine modules} row in Aural Home@comma{} opened with
 already included in the core@comma{} downloadable modules@comma{} and bridges that still
 need a user-supplied runtime.  Press @kbd{i} on a downloadable row
 to confirm@comma{} checksum-verify@comma{} install@comma{} and test that module without @samp{sudo}.
+Press @kbd{u} on a manager-installed module to confirm and remove
+its managed directory while retaining the verified download cache.
 @xref{Optional Omnivox Engine Modules} explains the choices and
 licensing boundaries.
 
@@ -1234,7 +1236,12 @@ You can also press @kbd{C-e H} for Aural Home and then
 engine as installed@comma{} downloadable@comma{} unavailable on this architecture@comma{} needing a
 core update@comma{} or needing a separately supplied runtime or model.  Use
 @kbd{i} to install the selected downloadable module and
-@kbd{t} to ask Omnivox to list voices through the selected engine.
+@kbd{u} to uninstall a module previously installed by the manager.
+Uninstall requires confirmation and removes the module's complete managed
+directory@comma{} including anything manually added inside it.  It does not remove
+the Omnivox core@comma{} user-supplied runtimes or models stored elsewhere@comma{} or the
+verified download cache.  Use @kbd{t} to ask Omnivox to list voices
+through the selected engine.
 The voice check announces the number found and selects an accessible buffer
 containing the complete list.  If it fails@comma{} Emacsvox announces Omnivox's actual
 diagnostic and opens it in the same buffer; press @kbd{q} to return
@@ -1270,10 +1277,13 @@ Supply those only when you have the appropriate distribution and licence.
 For a terminal-only installation@comma{} run
 @samp{./bin/emacsvox-omnivox-components --list} and then@comma{} for example@comma{}
 @samp{./bin/emacsvox-omnivox-components --install flite}.  Multiple module names may
-follow @samp{--install}.  Restart Omnivox after a terminal installation@comma{} then use
-@samp{--test ENGINE} or the Emacs manager's @kbd{t} command.  The direct
-Omnivox release assets remain available for maintainers and recovery@comma{} but the
-manager is the recommended way to select them.
+follow @samp{--install} or @samp{--uninstall}.  For example@comma{} use
+@samp{./bin/emacsvox-omnivox-components --uninstall flite} to remove the managed
+Flite directory while retaining its cached archive.  Restart Omnivox after a
+terminal installation or removal@comma{} then use @samp{--test ENGINE} or the Emacs
+manager's @kbd{t} command.  The direct Omnivox release assets remain
+available for maintainers and recovery@comma{} but the manager is the recommended way
+to select them.
 
 @node Trying Native Windows Emacsvox
 @section Trying Native Windows Emacsvox

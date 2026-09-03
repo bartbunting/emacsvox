@@ -65,7 +65,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1479 commands and 205 options.
+This chapter documents a total of 1480 commands and 205 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -15394,7 +15394,7 @@ Default Value:
 @section emacsvox-omnivox-components
 
 Spoken front end to the pinned, verified WSL2 Omnivox component
-installer.  Proprietary runtimes and voice models remain user supplied.
+manager.  Proprietary runtimes and voice models remain user supplied.
 
 @subsection Emacsvox-Omnivox-Components Commands
 
@@ -15444,6 +15444,7 @@ RET		emacsvox-omnivox-components-activate
 h		emacsvox-aural
 i		emacsvox-omnivox-components-install
 t		emacsvox-omnivox-components-test
+u		emacsvox-omnivox-components-uninstall
 
 @end format
 @end deffn
@@ -15477,6 +15478,15 @@ Ask Omnivox to list voices through the selected engine.
 @end format
 @end deffn
 
+@subsubsection emacsvox-omnivox-components-uninstall
+@deffn {Command} emacsvox-omnivox-components-uninstall
+@findex emacsvox-omnivox-components-uninstall
+
+@format
+Confirm and uninstall the selected manager-installed engine module.
+@end format
+@end deffn
+
 @subsubsection emacsvox-omnivox-manage-components
 @deffn {Command} emacsvox-omnivox-manage-components
 @findex emacsvox-omnivox-manage-components
@@ -15490,7 +15500,7 @@ Open the accessible Omnivox engine-module manager.
 
 @defvar {User Option} emacsvox-omnivox-component-installer
 @verbatim
-Program that lists, installs, and tests Omnivox engine modules.
+Program that lists, installs, uninstalls, and tests Omnivox modules.
 @end verbatim
 
 Default Value:
@@ -15504,7 +15514,7 @@ Default Value:
 
 @defvar {User Option} emacsvox-omnivox-restart-after-component-install
 @verbatim
-Whether to restart a running Omnivox server after installing a module.
+Whether to restart running Omnivox after a managed module change.
 @end verbatim
 
 Default Value:

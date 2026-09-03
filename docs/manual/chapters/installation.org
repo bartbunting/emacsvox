@@ -111,6 +111,8 @@ is the /Omnivox engine modules/ row in Aural Home, opened with
 already included in the core, downloadable modules, and bridges that still
 need a user-supplied runtime.  Press @@texinfo:@kbd{i}@@ on a downloadable row
 to confirm, checksum-verify, install, and test that module without =sudo=.
+Press @@texinfo:@kbd{u}@@ on a manager-installed module to confirm and remove
+its managed directory while retaining the verified download cache.
 @@texinfo:@xref{Optional Omnivox Engine Modules}@@ explains the choices and
 licensing boundaries.
 

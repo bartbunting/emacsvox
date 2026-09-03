@@ -26,7 +26,7 @@
 ;;; Commentary:
 
 ;; Spoken front end to the pinned, verified WSL2 Omnivox component
-;; installer.  Proprietary runtimes and voice models remain user supplied.
+;; manager.  Proprietary runtimes and voice models remain user supplied.
 
 ;;; Code:
 
@@ -51,17 +51,17 @@
 (defvar tts-speaker-process)
 
 (defgroup emacsvox-omnivox-components nil
-  "Install optional Omnivox engine modules."
+  "Manage optional Omnivox engine modules."
   :group 'emacsvox)
 
 (defcustom emacsvox-omnivox-component-installer
   (expand-file-name "bin/emacsvox-omnivox-components" emacsvox-directory)
-  "Program that lists, installs, and tests Omnivox engine modules."
+  "Program that lists, installs, uninstalls, and tests Omnivox modules."
   :type 'file
   :group 'emacsvox-omnivox-components)
 
 (defcustom emacsvox-omnivox-restart-after-component-install t
-  "Whether to restart a running Omnivox server after installing a module."
+  "Whether to restart running Omnivox after a managed module change."
   :type 'boolean
   :group 'emacsvox-omnivox-components)
 
@@ -69,10 +69,14 @@
   "Component records displayed in the current manager buffer.")
 
 (defvar-local emacsvox-omnivox-components--process nil
-  "Active installer or engine-test process for the current manager.")
+  "Active install, uninstall, or engine-test process for this manager.")
 
 (defconst emacsvox-omnivox-components--output-buffer
   "*Omnivox Component Output*")
+
+(defconst emacsvox-omnivox-components--managed-ids
+  '("flite" "rutts" "piper" "tgspeechbox")
+  "Component identifiers that this manager may install and uninstall.")
 
 (defun emacsvox-omnivox-components--speak (text)
   "Speak TEXT when speech is available, otherwise display it."
@@ -197,8 +201,12 @@ OUTPUT to the generic process sentinel EVENT."
      ((and success (eq operation 'test))
       (format "%s voice check succeeded%s. Results opened"
               name (if last-line (format ": %s" last-line) "")))
+     ((and success (eq operation 'installation))
+      (format "%s installed" name))
+     ((and success (eq operation 'uninstallation))
+      (format "%s uninstalled" name))
      (success
-      (format "%s installation completed" name))
+      (format "%s %s completed" name operation))
      (t
       (format "%s %s failed: %s. Details opened"
               name operation
@@ -240,7 +248,8 @@ OUTPUT to the generic process sentinel EVENT."
                (setq message-text
                      (format "%s; refresh failed: %s"
                              message-text (error-message-string err))))))))
-      (when (and success (eq operation 'installation)
+      (when (and success
+                 (memq operation '(installation uninstallation))
                  emacsvox-omnivox-restart-after-component-install
                  (emacsvox-omnivox-components--running-omnivox-p)
                  (fboundp 'tts-restart))
@@ -311,6 +320,27 @@ OUTPUT to the generic process sentinel EVENT."
       (emacsvox-omnivox-components--start
        record 'installation (list "--install" id)))))
 
+(defun emacsvox-omnivox-components-uninstall ()
+  "Confirm and uninstall the selected manager-installed engine module."
+  (interactive)
+  (let* ((record (emacsvox-omnivox-components--record))
+         (state (plist-get record :state))
+         (name (plist-get record :name))
+         (id (plist-get record :id)))
+    (unless (member id emacsvox-omnivox-components--managed-ids)
+      (user-error
+       "%s is part of the core or uses a user-supplied runtime" name))
+    (unless (member state '("installed" "model-required"))
+      (user-error "%s is not installed by this manager: %s" name state))
+    (when
+        (yes-or-no-p
+         (concat
+          (format "Uninstall %s? " name)
+          "Its verified download remains cached. "
+          "Files manually added inside its managed directory are also removed. "))
+      (emacsvox-omnivox-components--start
+       record 'uninstallation (list "--uninstall" id)))))
+
 (defun emacsvox-omnivox-components-test ()
   "Ask Omnivox to list voices through the selected engine."
   (interactive)
@@ -342,6 +372,7 @@ OUTPUT to the generic process sentinel EVENT."
       "left/right column    . speak titled cell\n"
       "RET install available module, otherwise test engine\n"
       "i install module     t check engine; open voices or error\n"
+      "u uninstall a manager-installed module\n"
       "g refresh            h aural home\n"
       "? help               q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
@@ -369,6 +400,7 @@ OUTPUT to the generic process sentinel EVENT."
     (binding
      '(("RET" . emacsvox-omnivox-components-activate)
        ("i" . emacsvox-omnivox-components-install)
+       ("u" . emacsvox-omnivox-components-uninstall)
        ("t" . emacsvox-omnivox-components-test)
        ("h" . emacsvox-aural)
        ("?" . emacsvox-omnivox-components-help)))

@@ -4750,21 +4750,25 @@ Function Index
 * emacsvox-omnivox-components-mode <1>:  emacsvox-omnivox-components.
                                                              (line   37)
 * emacsvox-omnivox-components-refresh:   emacsvox-omnivox-components.
-                                                             (line   56)
-* emacsvox-omnivox-components-refresh <1>: emacsvox-omnivox-components.
                                                              (line   57)
+* emacsvox-omnivox-components-refresh <1>: emacsvox-omnivox-components.
+                                                             (line   58)
 * emacsvox-omnivox-components-speak-current: emacsvox-omnivox-components.
-                                                             (line   65)
-* emacsvox-omnivox-components-speak-current <1>: emacsvox-omnivox-components.
                                                              (line   66)
+* emacsvox-omnivox-components-speak-current <1>: emacsvox-omnivox-components.
+                                                             (line   67)
 * emacsvox-omnivox-components-test:      emacsvox-omnivox-components.
-                                                             (line   72)
-* emacsvox-omnivox-components-test <1>:  emacsvox-omnivox-components.
                                                              (line   73)
-* emacsvox-omnivox-manage-components:    emacsvox-omnivox-components.
-                                                             (line   79)
-* emacsvox-omnivox-manage-components <1>: emacsvox-omnivox-components.
+* emacsvox-omnivox-components-test <1>:  emacsvox-omnivox-components.
+                                                             (line   74)
+* emacsvox-omnivox-components-uninstall: emacsvox-omnivox-components.
                                                              (line   80)
+* emacsvox-omnivox-components-uninstall <1>: emacsvox-omnivox-components.
+                                                             (line   81)
+* emacsvox-omnivox-manage-components:    emacsvox-omnivox-components.
+                                                             (line   87)
+* emacsvox-omnivox-manage-components <1>: emacsvox-omnivox-components.
+                                                             (line   88)
 * emacsvox-open-info:                    emacsvox-speak.     (line  116)
 * emacsvox-open-info <1>:                emacsvox-speak.     (line  119)
 * emacsvox-orca-toggle:                  emacsvox-dbus.      (line   90)

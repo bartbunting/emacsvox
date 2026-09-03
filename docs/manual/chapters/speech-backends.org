@@ -280,7 +280,12 @@ You can also press @@texinfo:@kbd{C-e H}@@ for Aural Home and then
 engine as installed, downloadable, unavailable on this architecture, needing a
 core update, or needing a separately supplied runtime or model.  Use
 @@texinfo:@kbd{i}@@ to install the selected downloadable module and
-@@texinfo:@kbd{t}@@ to ask Omnivox to list voices through the selected engine.
+@@texinfo:@kbd{u}@@ to uninstall a module previously installed by the manager.
+Uninstall requires confirmation and removes the module's complete managed
+directory, including anything manually added inside it.  It does not remove
+the Omnivox core, user-supplied runtimes or models stored elsewhere, or the
+verified download cache.  Use @@texinfo:@kbd{t}@@ to ask Omnivox to list voices
+through the selected engine.
 The voice check announces the number found and selects an accessible buffer
 containing the complete list.  If it fails, Emacsvox announces Omnivox's actual
 diagnostic and opens it in the same buffer; press @@texinfo:@kbd{q}@@ to return
@@ -309,10 +314,13 @@ The choices have different boundaries:
 For a terminal-only installation, run
 =./bin/emacsvox-omnivox-components --list= and then, for example,
 =./bin/emacsvox-omnivox-components --install flite=.  Multiple module names may
-follow =--install=.  Restart Omnivox after a terminal installation, then use
-=--test ENGINE= or the Emacs manager's @@texinfo:@kbd{t}@@ command.  The direct
-Omnivox release assets remain available for maintainers and recovery, but the
-manager is the recommended way to select them.
+follow =--install= or =--uninstall=.  For example, use
+=./bin/emacsvox-omnivox-components --uninstall flite= to remove the managed
+Flite directory while retaining its cached archive.  Restart Omnivox after a
+terminal installation or removal, then use =--test ENGINE= or the Emacs
+manager's @@texinfo:@kbd{t}@@ command.  The direct Omnivox release assets remain
+available for maintainers and recovery, but the manager is the recommended way
+to select them.
 
 ** Trying Native Windows Emacsvox
 :PROPERTIES:

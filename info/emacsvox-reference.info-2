@@ -3630,8 +3630,8 @@ File: emacsvox-reference.info,  Node: emacsvox-omnivox-components,  Next: emacsv
 2.177 emacsvox-omnivox-components
 =================================
 
-Spoken front end to the pinned, verified WSL2 Omnivox component
-installer.  Proprietary runtimes and voice models remain user supplied.
+Spoken front end to the pinned, verified WSL2 Omnivox component manager.
+Proprietary runtimes and voice models remain user supplied.
 
 2.177.1 Emacsvox-Omnivox-Components Commands
 --------------------------------------------
@@ -3676,6 +3676,7 @@ installer.  Proprietary runtimes and voice models remain user supplied.
      h		emacsvox-aural
      i		emacsvox-omnivox-components-install
      t		emacsvox-omnivox-components-test
+     u		emacsvox-omnivox-components-uninstall
 
 2.177.1.5 emacsvox-omnivox-components-refresh
 .............................................
@@ -3700,7 +3701,14 @@ installer.  Proprietary runtimes and voice models remain user supplied.
 
      Ask Omnivox to list voices through the selected engine.
 
-2.177.1.8 emacsvox-omnivox-manage-components
+2.177.1.8 emacsvox-omnivox-components-uninstall
+...............................................
+
+ -- Command: emacsvox-omnivox-components-uninstall
+
+     Confirm and uninstall the selected manager-installed engine module.
+
+2.177.1.9 emacsvox-omnivox-manage-components
 ............................................
 
  -- Command: emacsvox-omnivox-manage-components
@@ -3711,7 +3719,7 @@ installer.  Proprietary runtimes and voice models remain user supplied.
 -------------------------------------------
 
  -- Variable: User Option emacsvox-omnivox-component-installer
-     Program that lists, installs, and tests Omnivox engine modules.
+     Program that lists, installs, uninstalls, and tests Omnivox modules.
 
      Default Value:
 
@@ -3720,7 +3728,7 @@ installer.  Proprietary runtimes and voice models remain user supplied.
 
  -- Variable: User Option
           emacsvox-omnivox-restart-after-component-install
-     Whether to restart a running Omnivox server after installing a module.
+     Whether to restart running Omnivox after a managed module change.
 
      Default Value:
 

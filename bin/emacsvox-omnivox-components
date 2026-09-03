@@ -17,14 +17,15 @@ usage()
     cat <<'EOF'
 Usage: bin/emacsvox-omnivox-components [OPTION] [COMPONENT...]
 
-List, install, or test optional Omnivox engine components for the supported
-WSL2 Windows speech-server installation. Changes are per-user and every
-download is pinned by the Emacsvox release manifest.
+List, install, uninstall, or test optional Omnivox engine components for the
+supported WSL2 Windows speech-server installation. Changes are per-user and
+every download is pinned by the Emacsvox release manifest.
 
 Options:
   --list                 list built-in, bridge, and downloadable engines
   --machine              emit tab-separated --list output for Emacs
   --install COMPONENT... install flite, rutts, piper, or tgspeechbox
+  --uninstall COMPONENT... remove installed optional components
   --test COMPONENT       list voices through the selected engine
   -h, --help             show this help and exit
 
@@ -54,6 +55,13 @@ case ${1-} in
         mode=install
         shift
         [ "$#" -gt 0 ] || fail "--install requires at least one component" 2
+        requested_components=$*
+        set --
+        ;;
+    --uninstall)
+        mode=uninstall
+        shift
+        [ "$#" -gt 0 ] || fail "--uninstall requires at least one component" 2
         requested_components=$*
         set --
         ;;
@@ -473,6 +481,14 @@ install_component()
         fail "$component_name archive lacks $component_helper"
     [ -f "$staged_directory/SOURCE-PROVENANCE.json" ] ||
         fail "$component_name archive lacks source provenance"
+    {
+        printf '%s\n' \
+            'EMACSVOX_OMNIVOX_COMPONENT_RECEIPT=1' \
+            "component=$component_id" \
+            "version=$EMACSVOX_WSL_OMNIVOX_VERSION" \
+            "platform=$omnivox_platform" \
+            "archive_sha256=$component_sha256"
+    } >"$staged_directory/.emacsvox-component"
     chmod 755 "$staged_helper"
     verify_staged_component "$component_id" "$staged_helper" ||
         fail "$component_name failed its staged voice check"
@@ -487,6 +503,49 @@ install_component()
     rmdir -- "$staging_directory"
     staging_directory=
     printf 'Installed %s for Omnivox %s.\n' \
+        "$component_name" "$EMACSVOX_WSL_OMNIVOX_VERSION"
+}
+
+uninstall_component()
+{
+    component_metadata "$1"
+    destination=$omnivox_install_directory/$component_directory
+    case $destination in
+        "$omnivox_install_directory"/flite|\
+        "$omnivox_install_directory"/rutts|\
+        "$omnivox_install_directory"/piper|\
+        "$omnivox_install_directory"/tgspeechbox) ;;
+        *) fail "refusing unsafe component removal path: $destination" ;;
+    esac
+    if [ ! -e "$destination" ] && [ ! -L "$destination" ]; then
+        printf '%s is not installed.\n' "$component_name"
+        return
+    fi
+    [ ! -L "$destination" ] ||
+        fail "refusing to remove a symbolic-link component: $destination"
+    [ -d "$destination" ] ||
+        fail "refusing to remove a non-directory component: $destination"
+    [ -f "$destination/$component_helper" ] ||
+        fail "refusing to remove an unrecognized $component_name directory: $destination"
+    [ -f "$destination/SOURCE-PROVENANCE.json" ] ||
+        fail "refusing to remove $component_name without source provenance: $destination"
+    receipt=$destination/.emacsvox-component
+    if [ -f "$receipt" ]; then
+        if ! {
+            grep -Fxq 'EMACSVOX_OMNIVOX_COMPONENT_RECEIPT=1' "$receipt" &&
+                grep -Fxq "component=$component_id" "$receipt" &&
+                grep -Fxq "version=$EMACSVOX_WSL_OMNIVOX_VERSION" "$receipt" &&
+                grep -Fxq "platform=$omnivox_platform" "$receipt" &&
+                grep -Fxq "archive_sha256=$component_sha256" "$receipt"
+        }; then
+            fail "refusing to remove $component_name with an invalid install receipt"
+        fi
+    fi
+    rm -rf -- "$destination" ||
+        fail "could not remove $component_name; stop active speech and try again"
+    [ ! -e "$destination" ] ||
+        fail "could not completely remove $component_name: $destination"
+    printf 'Uninstalled %s from Omnivox %s.\n' \
         "$component_name" "$EMACSVOX_WSL_OMNIVOX_VERSION"
 }
 
@@ -515,6 +574,18 @@ case $mode in
             install_component "$component"
         done
         printf '\nRestart Omnivox to refresh its engine inventory.\n'
+        ;;
+    uninstall)
+        seen=' '
+        for component in $requested_components; do
+            case $seen in
+                *" $component "*) continue ;;
+            esac
+            seen="$seen$component "
+            uninstall_component "$component"
+        done
+        printf '\nThe verified download cache was kept for reinstall.\n'
+        printf 'Restart Omnivox to refresh its engine inventory.\n'
         ;;
     test) test_component "$requested_components" ;;
 esac

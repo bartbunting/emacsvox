@@ -219,6 +219,105 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
         (should (zerop (car again)))
         (should (string-search "already installed" (cadr again)))))))
 
+(ert-deftest emacsvox-omnivox-component-uninstaller-removes-managed-module ()
+  "Uninstall removes the selected module while retaining its download cache."
+  (emacsvox-omnivox-components-tests--with-fixture
+      (root installer environment windows-root archive)
+    (ignore root archive)
+    (emacsvox-omnivox-components-tests--install-core windows-root)
+    (let* ((install
+            (emacsvox-wsl-install-tests--call
+             installer environment "--install" "flite"))
+           (destination
+            (expand-file-name
+             "Emacsvox/Omnivox/releases/1.7.0-windows-x64/flite"
+             windows-root))
+           (receipt (expand-file-name ".emacsvox-component" destination)))
+      (ert-info ((cadr install))
+        (should (zerop (car install))))
+      (should (file-readable-p receipt))
+      (let ((uninstall
+             (emacsvox-wsl-install-tests--call
+              installer environment "--uninstall" "flite")))
+        (ert-info ((cadr uninstall))
+          (should (zerop (car uninstall))))
+        (should (string-search "Uninstalled Flite" (cadr uninstall)))
+        (should (string-search "download cache was kept" (cadr uninstall)))
+        (should-not (file-exists-p destination))
+        (should
+         (file-exists-p
+          (expand-file-name
+           "home/cache/emacsvox/downloads/flite-x64.zip" root))))
+      (let ((again
+             (emacsvox-wsl-install-tests--call
+              installer environment "--uninstall" "flite")))
+        (should (zerop (car again)))
+        (should (string-search "Flite is not installed" (cadr again)))))))
+
+(ert-deftest emacsvox-omnivox-component-uninstaller-refuses-unowned-directory ()
+  "Uninstall leaves a component-shaped directory without provenance intact."
+  (emacsvox-omnivox-components-tests--with-fixture
+      (root installer environment windows-root archive)
+    (ignore root archive)
+    (let* ((destination
+            (expand-file-name
+             "Emacsvox/Omnivox/releases/1.7.0-windows-x64/flite"
+             windows-root))
+           (helper (expand-file-name "omnivox-flite-helper.exe" destination)))
+      (emacsvox-wsl-install-tests--write-executable helper "#!/bin/sh\n")
+      (let ((result
+             (emacsvox-wsl-install-tests--call
+              installer environment "--uninstall" "flite")))
+        (should-not (zerop (car result)))
+        (should (string-search "without source provenance" (cadr result)))
+        (should (file-exists-p helper))))))
+
+(ert-deftest emacsvox-omnivox-component-uninstaller-supports-legacy-install ()
+  "A pinned pre-receipt module remains removable using its provenance marker."
+  (emacsvox-omnivox-components-tests--with-fixture
+      (root installer environment windows-root archive)
+    (ignore root archive)
+    (let* ((destination
+            (expand-file-name
+             "Emacsvox/Omnivox/releases/1.7.0-windows-x64/flite"
+             windows-root))
+           (helper (expand-file-name "omnivox-flite-helper.exe" destination)))
+      (emacsvox-wsl-install-tests--write-executable helper "#!/bin/sh\n")
+      (with-temp-file (expand-file-name "SOURCE-PROVENANCE.json" destination)
+        (insert "{\"source\":\"legacy fixture\"}\n"))
+      (let ((result
+             (emacsvox-wsl-install-tests--call
+              installer environment "--uninstall" "flite")))
+        (ert-info ((cadr result))
+          (should (zerop (car result))))
+        (should-not (file-exists-p destination))))))
+
+(ert-deftest emacsvox-omnivox-component-uninstaller-rejects-wrong-receipt ()
+  "Uninstall leaves a managed-looking directory with a mismatched receipt."
+  (emacsvox-omnivox-components-tests--with-fixture
+      (root installer environment windows-root archive)
+    (ignore root archive)
+    (let* ((destination
+            (expand-file-name
+             "Emacsvox/Omnivox/releases/1.7.0-windows-x64/flite"
+             windows-root))
+           (helper (expand-file-name "omnivox-flite-helper.exe" destination)))
+      (emacsvox-wsl-install-tests--write-executable helper "#!/bin/sh\n")
+      (with-temp-file (expand-file-name "SOURCE-PROVENANCE.json" destination)
+        (insert "{\"source\":\"fixture\"}\n"))
+      (with-temp-file (expand-file-name ".emacsvox-component" destination)
+        (insert
+         "EMACSVOX_OMNIVOX_COMPONENT_RECEIPT=1\n"
+         "component=rutts\n"
+         "version=1.7.0\n"
+         "platform=windows-x64\n"))
+      (let ((result
+             (emacsvox-wsl-install-tests--call
+              installer environment "--uninstall" "flite")))
+        (should-not (zerop (car result)))
+        (should (string-search "invalid install receipt" (cadr result)))
+        (should (file-exists-p helper))))))
+
 (ert-deftest emacsvox-omnivox-component-installer-rejects-bad-checksum ()
   "A checksum mismatch leaves neither a module nor a staging directory."
   (let* ((outer (make-temp-file "emacsvox bad component " t))
@@ -282,6 +381,14 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
      "finished\n")
     "TGSpeechBox is available with 154 voices. Voice list opened")))
 
+(ert-deftest emacsvox-omnivox-components-uninstall-result-is-concise ()
+  "A successful removal has an unambiguous spoken result."
+  (should
+   (equal
+    (emacsvox-omnivox-components--result-message
+     "Flite" 'uninstallation t "Uninstalled Flite.\n" "finished\n")
+    "Flite uninstalled")))
+
 (ert-deftest emacsvox-omnivox-components-failure-announces-diagnostic ()
   "A failed voice check reports Omnivox's diagnostic, not only its exit code."
   (let ((message
@@ -317,6 +424,7 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
         (binding
          '(("RET" . emacsvox-omnivox-components-activate)
            ("i" . emacsvox-omnivox-components-install)
+           ("u" . emacsvox-omnivox-components-uninstall)
            ("t" . emacsvox-omnivox-components-test)
            ("h" . emacsvox-aural)
            ("q" . emacsvox-aural-quit)))
@@ -342,6 +450,29 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
         (emacsvox-omnivox-components-install))
       (should (eq (cadr started) 'installation))
       (should (equal (caddr started) '("--install" "flite"))))))
+
+(ert-deftest emacsvox-omnivox-components-uninstall-requires-explicit-consent ()
+  "Uninstalling a managed module requires consent and uses its exact ID."
+  (with-temp-buffer
+    (emacsvox-omnivox-components-mode)
+    (setq emacsvox-omnivox-components--records
+          '((:id "flite" :name "Flite" :state "installed"
+             :size 1024 :detail "fixture"))
+          tabulated-list-entries
+          (emacsvox-omnivox-components--entries
+           emacsvox-omnivox-components--records))
+    (tabulated-list-print)
+    (goto-char (point-min))
+    (let (started prompt)
+      (cl-letf (((symbol-function 'yes-or-no-p)
+                 (lambda (text) (setq prompt text) t))
+                ((symbol-function 'emacsvox-omnivox-components--start)
+                 (lambda (record operation arguments)
+                   (setq started (list record operation arguments)))))
+        (emacsvox-omnivox-components-uninstall))
+      (should (string-search "manually added" prompt))
+      (should (eq (cadr started) 'uninstallation))
+      (should (equal (caddr started) '("--uninstall" "flite"))))))
 
 (provide 'emacsvox-omnivox-components-tests)
 ;;; emacsvox-omnivox-components-tests.el ends here

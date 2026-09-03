@@ -44,6 +44,8 @@ DECtalk, or RHVoice runtimes or chooses a Piper voice model.
 
 Engine checks now select an accessible result buffer, announce the number of
 voices found, and report Omnivox's actual diagnostic when a check fails.
+Manager-installed modules can be removed with ~u~ after explicit confirmation;
+core engines, runtime bridges, and the verified download cache are preserved.
 
 ** Org link transitions
 
