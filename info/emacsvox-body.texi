@@ -186,6 +186,16 @@ lines and the complete log path.  Continue only after hearing both the final
 tone and speech.  You can then skip to the last step in
 @ref{Quick Installation} and start Emacsvox.
 
+After the core installation works@comma{} optional speech engines are available from
+@kbd{M-x emacsvox-omnivox-manage-components RET}.  The same manager
+is the @emph{Omnivox engine modules} row in Aural Home@comma{} opened with
+@kbd{C-e H} and then @kbd{I}.  It distinguishes engines
+already included in the core@comma{} downloadable modules@comma{} and bridges that still
+need a user-supplied runtime.  Press @kbd{i} on a downloadable row
+to confirm@comma{} checksum-verify@comma{} install@comma{} and test that module without @samp{sudo}.
+@xref{Optional Omnivox Engine Modules} explains the choices and
+licensing boundaries.
+
 @node Updating Emacsvox Under WSL2
 @section Updating An Existing WSL2 Installation
 
@@ -1127,6 +1137,10 @@ runtime.  WinRT speech is included in Windows.  Use
 @code{./bin/emacsvox-wsl-install --no-audio-check} only for a controlled or headless
 installation where a separate audible check will be performed later.
 
+@menu
+* Optional Omnivox Engine Modules:: Choose and install version-matched optional engines from Emacs.
+@end menu
+
 @subsection Manual Release Installation
 
 The following procedure is the manual equivalent.  Use it when reviewing the
@@ -1200,6 +1214,62 @@ source.  A Piper voice model and the RHVoice runtime and voices remain separate
 user-supplied files.  Flite and RuTTS need no external runtime installation in
 the source-built bundle.  Eloquence and DECtalk remain separately licensed@comma{}
 user-supplied runtimes.
+
+@node Optional Omnivox Engine Modules
+@subsection Optional Omnivox Engine Modules
+
+The ordinary WSL2 archive is the Omnivox core@comma{} not a claim that every supported
+engine is installed.  It keeps first speech small while matching companion
+archives provide engines that are larger@comma{} experimental@comma{} architecture-specific@comma{}
+or incomplete without separately chosen data.
+
+From a running Emacsvox session@comma{} open:
+
+@example
+M-x emacsvox-omnivox-manage-components RET
+@end example
+
+You can also press @kbd{C-e H} for Aural Home and then
+@kbd{I} on @emph{Omnivox engine modules}.  The spoken table reports each
+engine as installed@comma{} downloadable@comma{} unavailable on this architecture@comma{} needing a
+core update@comma{} or needing a separately supplied runtime or model.  Use
+@kbd{i} to install the selected downloadable module and
+@kbd{t} to ask Omnivox to list voices through the selected engine.
+Downloads run asynchronously so Emacs remains responsive.
+
+The manager reads @samp{etc/omnivox-components.conf}.  Every archive name@comma{} byte size@comma{}
+and SHA-256 hash is pinned to the same Omnivox version as the installed core.
+The WSL2 installer rejects a mismatched core@comma{} an unsafe archive layout@comma{} missing
+source provenance@comma{} or a helper that cannot pass its staged voice-discovery
+check.  It then installs the module below the same versioned Windows
+@samp{LocalAppData} release directory.  It does not invoke @samp{sudo} or edit shell
+startup files.
+
+The choices have different boundaries:
+
+@itemize
+@item
+Flite includes its compact English SLT voice and needs no external runtime.
+@item
+RuTTS includes its compact Russian voices and needs no external runtime.
+@item
+Piper installs native engine support@comma{} but appears only after you separately
+review and configure an ONNX voice model and its model card.
+@item
+TGSpeechBox is an explicitly experimental multilingual formant engine.
+@item
+RHVoice@comma{} Eloquence@comma{} and DECtalk use distributable bridges@comma{} but Emacsvox never
+downloads their external runtimes@comma{} voices@comma{} dictionaries@comma{} or licence material.
+Supply those only when you have the appropriate distribution and licence.
+@end itemize
+
+For a terminal-only installation@comma{} run
+@samp{./bin/emacsvox-omnivox-components --list} and then@comma{} for example@comma{}
+@samp{./bin/emacsvox-omnivox-components --install flite}.  Multiple module names may
+follow @samp{--install}.  Restart Omnivox after a terminal installation@comma{} then use
+@samp{--test ENGINE} or the Emacs manager's @kbd{t} command.  The direct
+Omnivox release assets remain available for maintainers and recovery@comma{} but the
+manager is the recommended way to select them.
 
 @node Trying Native Windows Emacsvox
 @section Trying Native Windows Emacsvox

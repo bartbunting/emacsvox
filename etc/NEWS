@@ -35,6 +35,13 @@ the clean source-built Windows runtime pins the matching source commit and
 Piper companion.  This aligns Emacsvox's portable chorus styles and native
 helper integrations with Omnivox's 1.7.0 protocol and engine support.
 
+The new ~M-x emacsvox-omnivox-manage-components~ command, also available as
+~I~ from Aural Home, presents a spoken list of built-in, downloadable, and
+user-runtime speech engines.  On WSL2 it can checksum-verify, stage, validate,
+and install the version-matched Flite, RuTTS, Piper, or experimental
+TGSpeechBox companions per user.  It never downloads proprietary Eloquence,
+DECtalk, or RHVoice runtimes or chooses a Piper voice model.
+
 ** Org link transitions
 
 Opening an Org link into another buffer now plays one opening cue while leaving

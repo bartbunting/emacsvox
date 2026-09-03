@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1470 commands and 203 options.
+   This chapter documents a total of 1479 commands and 205 options.
 
 * Menu:
 
@@ -598,6 +598,7 @@ when learning to use the Emacs Web Browser (EWW), read the *Note
 * emacsvox-nov:: Speech-enable NOV.
 * emacsvox-nxml:: Speech enable nxml mode.
 * emacsvox-ocr:: ocr Front-end desktop.
+* emacsvox-omnivox-components:: Install Omnivox engine modules.
 * emacsvox-org:: Speech-enable org.
 * emacsvox-org-srs:: Speech-enable Org-srs reviews.
 * emacsvox-orgalist:: Speech-enable ORGALIST.
@@ -2699,21 +2700,28 @@ diagnosis, and contextual remapping.
 
      Perform the primary operation for the aural home row at point.
 
-2.25.1.3 emacsvox-aural-home-explain
+2.25.1.3 emacsvox-aural-home-engine-modules
+...........................................
+
+ -- Command: emacsvox-aural-home-engine-modules
+
+     Open the verified Omnivox engine-module manager.
+
+2.25.1.4 emacsvox-aural-home-explain
 ....................................
 
  -- Command: emacsvox-aural-home-explain
 
      Explain presentation at point in the remembered source buffer.
 
-2.25.1.4 emacsvox-aural-home-help
+2.25.1.5 emacsvox-aural-home-help
 .................................
 
  -- Command: emacsvox-aural-home-help
 
      Display and speak aural home commands and discovery guidance.
 
-2.25.1.5 emacsvox-aural-home-mode
+2.25.1.6 emacsvox-aural-home-mode
 .................................
 
  -- Command: emacsvox-aural-home-mode
@@ -2731,6 +2739,7 @@ diagnosis, and contextual remapping.
      ?		emacsvox-aural-home-help
      D		emacsvox-aural-doctor
      H		emacsvox-aural-home-recent-feedback
+     I		emacsvox-aural-home-engine-modules
      O		emacsvox-aural-home-overrides
      P		emacsvox-aural-home-profiles
      R		emacsvox-aural-home-remap-earcon
@@ -2739,56 +2748,56 @@ diagnosis, and contextual remapping.
      r		emacsvox-aural-home-remap-voice
      x		emacsvox-aural-home-explain
 
-2.25.1.6 emacsvox-aural-home-next
+2.25.1.7 emacsvox-aural-home-next
 .................................
 
  -- Command: emacsvox-aural-home-next
 
      Move to and speak the next aural home row.
 
-2.25.1.7 emacsvox-aural-home-next-column
+2.25.1.8 emacsvox-aural-home-next-column
 ........................................
 
  -- Command: emacsvox-aural-home-next-column
 
      Move right and speak the next aural home column.
 
-2.25.1.8 emacsvox-aural-home-overrides
+2.25.1.9 emacsvox-aural-home-overrides
 ......................................
 
  -- Command: emacsvox-aural-home-overrides
 
      Open unified presentation overrides from Aural Home.
 
-2.25.1.9 emacsvox-aural-home-previous
-.....................................
+2.25.1.10 emacsvox-aural-home-previous
+......................................
 
  -- Command: emacsvox-aural-home-previous
 
      Move to and speak the previous aural home row.
 
-2.25.1.10 emacsvox-aural-home-previous-column
+2.25.1.11 emacsvox-aural-home-previous-column
 .............................................
 
  -- Command: emacsvox-aural-home-previous-column
 
      Move left and speak the previous aural home column.
 
-2.25.1.11 emacsvox-aural-home-profiles
+2.25.1.12 emacsvox-aural-home-profiles
 ......................................
 
  -- Command: emacsvox-aural-home-profiles
 
      Open the complete presentation-profile manager.
 
-2.25.1.12 emacsvox-aural-home-recent-feedback
+2.25.1.13 emacsvox-aural-home-recent-feedback
 .............................................
 
  -- Command: emacsvox-aural-home-recent-feedback
 
      Open bounded retained presentations from Aural Home.
 
-2.25.1.13 emacsvox-aural-home-refresh
+2.25.1.14 emacsvox-aural-home-refresh
 .....................................
 
  -- Command: emacsvox-aural-home-refresh (&optional id)
@@ -2797,42 +2806,42 @@ diagnosis, and contextual remapping.
 
      (fn &optional ID)
 
-2.25.1.14 emacsvox-aural-home-remap-earcon
+2.25.1.15 emacsvox-aural-home-remap-earcon
 ..........................................
 
  -- Command: emacsvox-aural-home-remap-earcon
 
      Prepare an earcon override for the remembered source item.
 
-2.25.1.15 emacsvox-aural-home-remap-voice
+2.25.1.16 emacsvox-aural-home-remap-voice
 .........................................
 
  -- Command: emacsvox-aural-home-remap-voice
 
      Prepare a voice override for the remembered source item.
 
-2.25.1.16 emacsvox-aural-home-speak-current
+2.25.1.17 emacsvox-aural-home-speak-current
 ...........................................
 
  -- Command: emacsvox-aural-home-speak-current
 
      Speak the complete aural home row at point.
 
-2.25.1.17 emacsvox-aural-home-speak-current-cell
+2.25.1.18 emacsvox-aural-home-speak-current-cell
 ................................................
 
  -- Command: emacsvox-aural-home-speak-current-cell
 
      Speak the current aural home column title and value.
 
-2.25.1.18 emacsvox-aural-home-voice-palettes
+2.25.1.19 emacsvox-aural-home-voice-palettes
 ............................................
 
  -- Command: emacsvox-aural-home-voice-palettes
 
      Open the accessible voice-palette manager.
 
-2.25.1.19 emacsvox-aural-home-voice-workbench
+2.25.1.20 emacsvox-aural-home-voice-workbench
 .............................................
 
  -- Command: emacsvox-aural-home-voice-workbench

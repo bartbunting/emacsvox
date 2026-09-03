@@ -49,6 +49,12 @@ checked-in Info files provide the same manual inside Emacs.
    matching Omnivox Windows release, records both paths without editing a shell
    startup file, compiles Emacsvox, and finishes with an audible check.
 
+   Once first speech works, =M-x emacsvox-omnivox-manage-components RET= (or
+   =C-e H= followed by =I=) opens the spoken optional-engine manager.  It can
+   download, checksum-verify, and install matching Flite, RuTTS, Piper, and
+   experimental TGSpeechBox modules per user.  Proprietary Eloquence, DECtalk,
+   and RHVoice runtimes and Piper voice models remain user supplied.
+
    On GNU/Linux or macOS, install Emacs 31 or newer and follow the
    [[https://bartbunting.github.io/emacsvox/Speech-Backends.html][Speech Backends guide]]
    ([[file:docs/manual/chapters/speech-backends.org][source]]) for the matching Omnivox

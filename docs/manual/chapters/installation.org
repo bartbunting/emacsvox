@@ -104,6 +104,16 @@ lines and the complete log path.  Continue only after hearing both the final
 tone and speech.  You can then skip to the last step in
 @@texinfo:@ref{Quick Installation}@@ and start Emacsvox.
 
+After the core installation works, optional speech engines are available from
+@@texinfo:@kbd{M-x emacsvox-omnivox-manage-components RET}@@.  The same manager
+is the /Omnivox engine modules/ row in Aural Home, opened with
+@@texinfo:@kbd{C-e H}@@ and then @@texinfo:@kbd{I}@@.  It distinguishes engines
+already included in the core, downloadable modules, and bridges that still
+need a user-supplied runtime.  Press @@texinfo:@kbd{i}@@ on a downloadable row
+to confirm, checksum-verify, install, and test that module without =sudo=.
+@@texinfo:@xref{Optional Omnivox Engine Modules}@@ explains the choices and
+licensing boundaries.
+
 ** Updating An Existing WSL2 Installation
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Updating Emacsvox Under WSL2

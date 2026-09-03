@@ -22,6 +22,7 @@
 (require 'emacsvox-aural-overrides)
 (require 'emacsvox-aural-voice-palettes)
 (require 'emacsvox-aural-voice-workbench)
+(require 'emacsvox-omnivox-components)
 
 (defconst emacsvox-test--core-default-rule-ids
   '(core-point-voice
@@ -2000,7 +2001,7 @@
                (equal
                 (mapcar #'car tabulated-list-entries)
                 '(explain remap remap-earcon overrides recent-feedback profiles
-                  voices voice-workbench features buffer-rules
+                  voices voice-workbench engine-modules features buffer-rules
                   semantics sounds spatial spatial-settings training
                   diagnostics)))
               (dolist
@@ -2013,6 +2014,7 @@
                      ("H" . emacsvox-aural-home-recent-feedback)
                      ("V" . emacsvox-aural-home-voice-palettes)
                      ("W" . emacsvox-aural-home-voice-workbench)
+                     ("I" . emacsvox-aural-home-engine-modules)
                      ("?" . emacsvox-aural-home-help)))
                 (should
                  (eq
@@ -2099,6 +2101,7 @@
         emacsvox-aural-recent-feedback-mode-map
         emacsvox-aural-voice-palettes-mode-map
         emacsvox-aural-voice-workbench-mode-map
+        emacsvox-omnivox-components-mode-map
         emacsvox-aural-voice-palette-previews-mode-map
         emacsvox-aural-voice-tuner-mode-map
         emacsvox-aural-scheme-editor-mode-map))
@@ -2116,6 +2119,7 @@
          emacsvox-aural-recent-feedback-mode
          emacsvox-aural-voice-palettes-mode
          emacsvox-aural-voice-workbench-mode
+         emacsvox-omnivox-components-mode
          emacsvox-aural-voice-palette-previews-mode))
     (with-temp-buffer
       (funcall mode)

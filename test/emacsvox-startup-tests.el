@@ -66,7 +66,8 @@
          "emacsvox-aural-providers.el"
          "emacsvox-aural-compiler.el"
          "emacsvox-aural-source.el"
-         "emacsvox-aural-planner.el"))
+         "emacsvox-aural-planner.el"
+         "emacsvox-omnivox-components.el"))
     (should (member source emacsvox-setup--startup-sources))))
 
 (ert-deftest emacsvox-setup-prefers-source-while-loading-stale-tree ()

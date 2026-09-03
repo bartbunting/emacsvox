@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 275 loaded; 0 intentionally omitted.
+@c Modules: 276 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell.elc emacsvox-amark.elc
 @c Loaded: emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-compatibility-voice.elc emacsvox-aural-compiler.elc
@@ -37,26 +37,27 @@
 @c Loaded: emacsvox-man.elc emacsvox-marginalia.elc emacsvox-markdown.elc emacsvox-maths.elc emacsvox-message.elc
 @c Loaded: emacsvox-mines.elc emacsvox-mu4e.elc emacsvox-multiple-cursors.elc emacsvox-net-utils.elc emacsvox-newsticker.elc
 @c Loaded: emacsvox-nm.elc emacsvox-notmuch.elc emacsvox-nov.elc emacsvox-nxml.elc emacsvox-ocr.elc
-@c Loaded: emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc emacsvox-outline.elc emacsvox-package.elc
-@c Loaded: emacsvox-perl.elc emacsvox-pipewire.elc emacsvox-popup.elc emacsvox-preamble.elc emacsvox-proced.elc
-@c Loaded: emacsvox-project.elc emacsvox-projectile.elc emacsvox-pronounce.elc emacsvox-py.elc emacsvox-pydoc.elc
-@c Loaded: emacsvox-python.elc emacsvox-racket.elc emacsvox-re-builder.elc emacsvox-reftex.elc emacsvox-related.elc
-@c Loaded: emacsvox-rg.elc emacsvox-rmail.elc emacsvox-rpm-spec.elc emacsvox-rst.elc emacsvox-ruby.elc
-@c Loaded: emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc emacsvox-setup.elc
-@c Loaded: emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc
-@c Loaded: emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-sql.elc emacsvox-sudoku.elc
-@c Loaded: emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-ui.elc emacsvox-table.elc
-@c Loaded: emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc emacsvox-tempo.elc
-@c Loaded: emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc emacsvox-treesit.elc
-@c Loaded: emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc
-@c Loaded: emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc
-@c Loaded: emacsvox-webspace.elc emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc
-@c Loaded: emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc
-@c Loaded: emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc
-@c Loaded: gm-nnir.elc gmaps.elc gweb.elc ladspa.elc light.elc
-@c Loaded: mac-voices.elc omaps.elc omnivox-voices.elc outloud-voices.elc pip.elc
-@c Loaded: plain-voices.elc soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc
-@c Loaded: tetris.elc tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
+@c Loaded: emacsvox-omnivox-components.elc emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc emacsvox-outline.elc
+@c Loaded: emacsvox-package.elc emacsvox-perl.elc emacsvox-pipewire.elc emacsvox-popup.elc emacsvox-preamble.elc
+@c Loaded: emacsvox-proced.elc emacsvox-project.elc emacsvox-projectile.elc emacsvox-pronounce.elc emacsvox-py.elc
+@c Loaded: emacsvox-pydoc.elc emacsvox-python.elc emacsvox-racket.elc emacsvox-re-builder.elc emacsvox-reftex.elc
+@c Loaded: emacsvox-related.elc emacsvox-rg.elc emacsvox-rmail.elc emacsvox-rpm-spec.elc emacsvox-rst.elc
+@c Loaded: emacsvox-ruby.elc emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc emacsvox-ses.elc
+@c Loaded: emacsvox-setup.elc emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-slime.elc emacsvox-smartparens.elc
+@c Loaded: emacsvox-solitaire.elc emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc emacsvox-sql.elc
+@c Loaded: emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc emacsvox-table-ui.elc
+@c Loaded: emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc emacsvox-tcl.elc
+@c Loaded: emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc emacsvox-transient.elc
+@c Loaded: emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc emacsvox-version.elc
+@c Loaded: emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc emacsvox-we.elc
+@c Loaded: emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-which-key.elc emacsvox-widget.elc emacsvox-windmove.elc
+@c Loaded: emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc
+@c Loaded: emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc
+@c Loaded: g-utils.elc gm-nnir.elc gmaps.elc gweb.elc ladspa.elc
+@c Loaded: light.elc mac-voices.elc omaps.elc omnivox-voices.elc outloud-voices.elc
+@c Loaded: pip.elc plain-voices.elc soundscape.elc sox-gen.elc sox.elc
+@c Loaded: swiftmac-voices.elc tetris.elc tts-speak.elc voice-defs.elc voice-setup.elc
+@c Loaded: xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -64,7 +65,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1470 commands and 203 options.
+This chapter documents a total of 1479 commands and 205 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -243,6 +244,7 @@ This chapter documents a total of 1470 commands and 203 options.
 * emacsvox-nov:: Speech-enable NOV.
 * emacsvox-nxml:: Speech enable nxml mode.
 * emacsvox-ocr:: ocr Front-end desktop.
+* emacsvox-omnivox-components:: Install Omnivox engine modules.
 * emacsvox-org:: Speech-enable org.
 * emacsvox-org-srs:: Speech-enable Org-srs reviews.
 * emacsvox-orgalist:: Speech-enable ORGALIST.
@@ -2773,6 +2775,15 @@ Perform the primary operation for the aural home row at point.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-home-engine-modules
+@deffn {Command} emacsvox-aural-home-engine-modules
+@findex emacsvox-aural-home-engine-modules
+
+@format
+Open the verified Omnivox engine-module manager.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-home-explain
 @deffn {Command} emacsvox-aural-home-explain
 @findex emacsvox-aural-home-explain
@@ -2809,6 +2820,7 @@ RET		emacsvox-aural-home-activate
 ?		emacsvox-aural-home-help
 D		emacsvox-aural-doctor
 H		emacsvox-aural-home-recent-feedback
+I		emacsvox-aural-home-engine-modules
 O		emacsvox-aural-home-overrides
 P		emacsvox-aural-home-profiles
 R		emacsvox-aural-home-remap-earcon
@@ -15373,6 +15385,132 @@ Default Value:
 @verbatim
 
 "~/.emacsvox/ocr/"
+
+@end verbatim
+
+@end defvar
+
+@node emacsvox-omnivox-components
+@section emacsvox-omnivox-components
+
+Spoken front end to the pinned, verified WSL2 Omnivox component
+installer.  Proprietary runtimes and voice models remain user supplied.
+
+@subsection Emacsvox-Omnivox-Components Commands
+
+@subsubsection emacsvox-omnivox-components-activate
+@deffn {Command} emacsvox-omnivox-components-activate
+@findex emacsvox-omnivox-components-activate
+
+@format
+Install an available module, or test any other selected engine.
+@end format
+@end deffn
+
+@subsubsection emacsvox-omnivox-components-help
+@deffn {Command} emacsvox-omnivox-components-help
+@findex emacsvox-omnivox-components-help
+
+@format
+Display and speak Omnivox engine-module manager help.
+@end format
+@end deffn
+
+@subsubsection emacsvox-omnivox-components-install
+@deffn {Command} emacsvox-omnivox-components-install
+@findex emacsvox-omnivox-components-install
+
+@format
+Download, verify, and install the selected optional engine module.
+@end format
+@end deffn
+
+@subsubsection emacsvox-omnivox-components-mode
+@deffn {Command} emacsvox-omnivox-components-mode
+@findex emacsvox-omnivox-components-mode
+
+@format
+Spoken manager for verified Omnivox engine modules.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-omnivox-components-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-omnivox-components-activate
+?		emacsvox-omnivox-components-help
+h		emacsvox-aural
+i		emacsvox-omnivox-components-install
+t		emacsvox-omnivox-components-test
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-omnivox-components-refresh
+@deffn {Command} emacsvox-omnivox-components-refresh  (&optional id)
+@findex emacsvox-omnivox-components-refresh
+
+@format
+Refresh Omnivox module status, preserving row ID and current column.
+
+(fn &optional ID)
+@end format
+@end deffn
+
+@subsubsection emacsvox-omnivox-components-speak-current
+@deffn {Command} emacsvox-omnivox-components-speak-current
+@findex emacsvox-omnivox-components-speak-current
+
+@format
+Speak the complete Omnivox component row at point.
+@end format
+@end deffn
+
+@subsubsection emacsvox-omnivox-components-test
+@deffn {Command} emacsvox-omnivox-components-test
+@findex emacsvox-omnivox-components-test
+
+@format
+Ask Omnivox to list voices through the selected engine.
+@end format
+@end deffn
+
+@subsubsection emacsvox-omnivox-manage-components
+@deffn {Command} emacsvox-omnivox-manage-components
+@findex emacsvox-omnivox-manage-components
+
+@format
+Open the accessible Omnivox engine-module manager.
+@end format
+@end deffn
+
+@subsection emacsvox-omnivox-components Options
+
+@defvar {User Option} emacsvox-omnivox-component-installer
+@verbatim
+Program that lists, installs, and tests Omnivox engine modules.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"<emacsvox-root>/bin/emacsvox-omnivox-components"
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-omnivox-restart-after-component-install
+@verbatim
+Whether to restart a running Omnivox server after installing a module.
+@end verbatim
+
+Default Value:
+@verbatim
+
+t
 
 @end verbatim
 

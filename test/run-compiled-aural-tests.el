@@ -54,6 +54,7 @@
           "emacsvox-aural-tools.el"
           "emacsvox-aural-recent-feedback.el"
           "emacsvox-aural-feature-fragments.el"
+          "emacsvox-omnivox-components.el"
           "emacsvox-aural-home.el"
           "emacsvox-aural-editor.el"
           "emacsvox-aural-overrides.el"

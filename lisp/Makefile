@@ -102,6 +102,7 @@ emacsvox-aural-explanation.elc \
 emacsvox-aural-tools.elc \
 emacsvox-aural-recent-feedback.elc \
 emacsvox-aural-feature-fragments.elc \
+emacsvox-omnivox-components.elc \
 emacsvox-aural-home.elc \
 emacsvox-aural-editor.elc \
 emacsvox-aural-overrides.elc \
@@ -423,6 +424,8 @@ emacsvox-aural-feature-fragments.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-preview.elc \
 emacsvox-aural-validation.elc emacsvox-aural-description.elc
+emacsvox-omnivox-components.elc: \
+emacsvox-aural-ui.elc emacsvox-aural-inspection.elc
 emacsvox-aural-home.elc: \
 emacsvox-aural-tools.elc emacsvox-aural-explanation.elc \
 emacsvox-aural-recent-feedback.elc \
@@ -480,7 +483,7 @@ emacs -batch -q \
 
 ### build time target --loaddefs
 
-emacsvox-loaddefs.el:
+emacsvox-loaddefs.el: emacsvox-omnivox-components.el
 	@$(EMACS) $(BATCH)  -l ./emacsvox-preamble.el  \
 	-l ./emacsvox-autoload.el  \
 	-f emacsvox-auto-generate-autoloads

@@ -1,0 +1,520 @@
+#!/bin/sh
+
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of Emacsvox.
+
+set -eu
+
+program_name=emacsvox-omnivox-components
+mode=list
+machine=false
+requested_components=
+
+usage()
+{
+    cat <<'EOF'
+Usage: bin/emacsvox-omnivox-components [OPTION] [COMPONENT...]
+
+List, install, or test optional Omnivox engine components for the supported
+WSL2 Windows speech-server installation. Changes are per-user and every
+download is pinned by the Emacsvox release manifest.
+
+Options:
+  --list                 list built-in, bridge, and downloadable engines
+  --machine              emit tab-separated --list output for Emacs
+  --install COMPONENT... install flite, rutts, piper, or tgspeechbox
+  --test COMPONENT       list voices through the selected engine
+  -h, --help             show this help and exit
+
+Piper installs its native companion but still requires a separately reviewed
+voice model. TGSpeechBox is experimental. Eloquence, DECtalk, and RHVoice
+require user-supplied runtimes; this installer never downloads them.
+EOF
+}
+
+fail()
+{
+    printf '%s: %s\n' "$program_name" "$1" >&2
+    exit "${2:-1}"
+}
+
+case ${1-} in
+    ''|--list)
+        [ "$#" -eq 0 ] || shift
+        mode=list
+        ;;
+    --machine)
+        mode=list
+        machine=true
+        shift
+        ;;
+    --install)
+        mode=install
+        shift
+        [ "$#" -gt 0 ] || fail "--install requires at least one component" 2
+        requested_components=$*
+        set --
+        ;;
+    --test)
+        mode='test'
+        shift
+        [ "$#" -eq 1 ] || fail "--test requires exactly one component" 2
+        requested_components=$1
+        set --
+        ;;
+    -h|--help)
+        usage
+        exit 0
+        ;;
+    *)
+        usage >&2
+        fail "unknown option: $1" 2
+        ;;
+esac
+if [ "$#" -gt 0 ]; then
+    case $1 in
+        --machine)
+            [ "$mode" = list ] || fail "--machine is valid only with --list" 2
+            machine=true
+            shift
+            ;;
+        *) fail "unexpected argument: $1" 2 ;;
+    esac
+fi
+[ "$#" -eq 0 ] || fail "unexpected extra arguments" 2
+
+script_directory=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd) ||
+    fail "cannot resolve the installer directory"
+emacsvox_root=$(CDPATH='' cd -- "$script_directory/.." && pwd) ||
+    fail "cannot resolve the Emacsvox checkout"
+wsl_manifest=$emacsvox_root/etc/wsl-install.conf
+component_manifest=$emacsvox_root/etc/omnivox-components.conf
+[ -r "$wsl_manifest" ] || fail "missing release manifest: $wsl_manifest"
+[ -r "$component_manifest" ] ||
+    fail "missing component manifest: $component_manifest"
+# Both manifests are maintained in this trusted source checkout.
+# shellcheck disable=SC1090
+. "$wsl_manifest"
+# shellcheck disable=SC1090
+. "$component_manifest"
+
+[ "${EMACSVOX_WSL_INSTALL_SCHEMA-}" = 1 ] ||
+    fail "unsupported WSL installation manifest schema"
+[ "${EMACSVOX_OMNIVOX_COMPONENTS_SCHEMA-}" = 1 ] ||
+    fail "unsupported Omnivox component manifest schema"
+[ "$EMACSVOX_OMNIVOX_COMPONENTS_VERSION" = "$EMACSVOX_WSL_OMNIVOX_VERSION" ] ||
+    fail "the Omnivox component and core manifests name different versions"
+
+validate_hash()
+{
+    case $1 in
+        ''|*[!0123456789abcdef]*)
+            fail "component manifest contains an invalid SHA-256 value"
+            ;;
+    esac
+    [ "${#1}" -eq 64 ] ||
+        fail "component manifest contains an invalid SHA-256 length"
+}
+
+validate_size()
+{
+    case $1 in
+        ''|*[!0123456789]*)
+            fail "component manifest contains an invalid archive size"
+            ;;
+    esac
+}
+
+for hash in \
+    "$EMACSVOX_OMNIVOX_FLITE_WINDOWS_X64_SHA256" \
+    "$EMACSVOX_OMNIVOX_FLITE_WINDOWS_ARM64_SHA256" \
+    "$EMACSVOX_OMNIVOX_RUTTS_WINDOWS_X64_SHA256" \
+    "$EMACSVOX_OMNIVOX_RUTTS_WINDOWS_ARM64_SHA256" \
+    "$EMACSVOX_OMNIVOX_PIPER_WINDOWS_X64_SHA256" \
+    "$EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_X64_SHA256"
+do
+    validate_hash "$hash"
+done
+for size in \
+    "$EMACSVOX_OMNIVOX_FLITE_WINDOWS_X64_SIZE" \
+    "$EMACSVOX_OMNIVOX_FLITE_WINDOWS_ARM64_SIZE" \
+    "$EMACSVOX_OMNIVOX_RUTTS_WINDOWS_X64_SIZE" \
+    "$EMACSVOX_OMNIVOX_RUTTS_WINDOWS_ARM64_SIZE" \
+    "$EMACSVOX_OMNIVOX_PIPER_WINDOWS_X64_SIZE" \
+    "$EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_X64_SIZE"
+do
+    validate_size "$size"
+done
+
+proc_version_file=${EMACSVOX_WSL_PROC_VERSION_FILE:-/proc/version}
+if [ ! -r "$proc_version_file" ] ||
+   ! grep -qi microsoft "$proc_version_file"; then
+    fail "this component installer supports Emacs running under WSL2"
+fi
+for tool in powershell.exe wslpath curl sha256sum unzip; do
+    command -v "$tool" >/dev/null 2>&1 ||
+        fail "WSL interoperability is missing required command: $tool"
+done
+
+windows_architecture=${EMACSVOX_WSL_WINDOWS_ARCHITECTURE-}
+if [ -z "$windows_architecture" ]; then
+    windows_architecture=$(
+        powershell.exe -NoProfile -NonInteractive -Command \
+            '[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()' |
+            tr -d '\r'
+    ) || fail "could not determine the Windows architecture"
+fi
+case $windows_architecture in
+    X64|x64|AMD64|amd64) omnivox_platform=windows-x64 ;;
+    Arm64|ARM64|arm64) omnivox_platform=windows-arm64 ;;
+    *) fail "unsupported Windows architecture: $windows_architecture" ;;
+esac
+
+windows_local_app_data=${EMACSVOX_WSL_WINDOWS_LOCAL_APP_DATA-}
+if [ -z "$windows_local_app_data" ]; then
+    windows_local_app_data=$(
+        powershell.exe -NoProfile -NonInteractive -Command \
+            '[Environment]::GetFolderPath("LocalApplicationData")' | tr -d '\r'
+    ) || fail "could not locate Windows LocalAppData"
+fi
+[ -n "$windows_local_app_data" ] || fail "Windows LocalAppData is empty"
+windows_local_app_data_wsl=$(wslpath -u "$windows_local_app_data") ||
+    fail "could not translate Windows LocalAppData for WSL"
+omnivox_install_directory=$windows_local_app_data_wsl/Emacsvox/Omnivox/releases/$EMACSVOX_WSL_OMNIVOX_VERSION-$omnivox_platform
+omnivox_program=$omnivox_install_directory/omnivox.exe
+cache_home=${XDG_CACHE_HOME:-"$HOME/.cache"}
+download_directory=$cache_home/emacsvox/downloads
+
+component_metadata()
+{
+    component_id=$1
+    component_supported=true
+    component_archive=
+    component_sha256=
+    component_size=0
+    component_directory=
+    component_helper=
+    component_name=
+    component_detail=
+    case $component_id in
+        flite)
+            component_name=Flite
+            component_directory=flite
+            component_helper=omnivox-flite-helper.exe
+            component_detail='Compact English SLT voice; no external runtime'
+            case $omnivox_platform in
+                windows-x64)
+                    component_archive=$EMACSVOX_OMNIVOX_FLITE_WINDOWS_X64_ARCHIVE
+                    component_sha256=$EMACSVOX_OMNIVOX_FLITE_WINDOWS_X64_SHA256
+                    component_size=$EMACSVOX_OMNIVOX_FLITE_WINDOWS_X64_SIZE
+                    ;;
+                windows-arm64)
+                    component_archive=$EMACSVOX_OMNIVOX_FLITE_WINDOWS_ARM64_ARCHIVE
+                    component_sha256=$EMACSVOX_OMNIVOX_FLITE_WINDOWS_ARM64_SHA256
+                    component_size=$EMACSVOX_OMNIVOX_FLITE_WINDOWS_ARM64_SIZE
+                    ;;
+            esac
+            ;;
+        rutts)
+            component_name=RuTTS
+            component_directory=rutts
+            component_helper=omnivox-rutts-helper.exe
+            component_detail='Compact Russian male and female voices; no external runtime'
+            case $omnivox_platform in
+                windows-x64)
+                    component_archive=$EMACSVOX_OMNIVOX_RUTTS_WINDOWS_X64_ARCHIVE
+                    component_sha256=$EMACSVOX_OMNIVOX_RUTTS_WINDOWS_X64_SHA256
+                    component_size=$EMACSVOX_OMNIVOX_RUTTS_WINDOWS_X64_SIZE
+                    ;;
+                windows-arm64)
+                    component_archive=$EMACSVOX_OMNIVOX_RUTTS_WINDOWS_ARM64_ARCHIVE
+                    component_sha256=$EMACSVOX_OMNIVOX_RUTTS_WINDOWS_ARM64_SHA256
+                    component_size=$EMACSVOX_OMNIVOX_RUTTS_WINDOWS_ARM64_SIZE
+                    ;;
+            esac
+            ;;
+        piper)
+            component_name=Piper
+            component_directory=piper
+            component_helper=omnivox-piper-helper.exe
+            component_detail='Neural engine companion; a reviewed ONNX model is still required'
+            if [ "$omnivox_platform" = windows-x64 ]; then
+                component_archive=$EMACSVOX_OMNIVOX_PIPER_WINDOWS_X64_ARCHIVE
+                component_sha256=$EMACSVOX_OMNIVOX_PIPER_WINDOWS_X64_SHA256
+                component_size=$EMACSVOX_OMNIVOX_PIPER_WINDOWS_X64_SIZE
+            else
+                component_supported=false
+            fi
+            ;;
+        tgspeechbox)
+            component_name=TGSpeechBox
+            component_directory=tgspeechbox
+            component_helper=omnivox-tgspeechbox-helper.exe
+            component_detail='Experimental multilingual formant engine'
+            if [ "$omnivox_platform" = windows-x64 ]; then
+                component_archive=$EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_X64_ARCHIVE
+                component_sha256=$EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_X64_SHA256
+                component_size=$EMACSVOX_OMNIVOX_TGSPEECHBOX_WINDOWS_X64_SIZE
+            else
+                component_supported=false
+            fi
+            ;;
+        *) fail "unknown Omnivox component: $component_id" 2 ;;
+    esac
+}
+
+emit_status()
+{
+    status_id=$1
+    status_name=$2
+    status_state=$3
+    status_size=$4
+    status_detail=$5
+    if $machine; then
+        printf '%s\t%s\t%s\t%s\t%s\n' \
+            "$status_id" "$status_name" "$status_state" "$status_size" \
+            "$status_detail"
+    else
+        printf '%-13s %-20s %8s  %s\n' \
+            "$status_name" "$status_state" "$status_size" "$status_detail"
+    fi
+}
+
+list_status()
+{
+    if ! $machine; then
+        printf 'Omnivox %s components for %s\n\n' \
+            "$EMACSVOX_WSL_OMNIVOX_VERSION" "$omnivox_platform"
+        printf '%-13s %-20s %8s  %s\n' Engine State Bytes Details
+    fi
+    if [ -x "$omnivox_program" ]; then
+        emit_status windows Windows installed 0 'Built-in Windows WinRT engine'
+    else
+        emit_status windows Windows core-missing 0 'Run bin/emacsvox-wsl-install first'
+    fi
+    if [ -f "$omnivox_install_directory/espeak-ng-data/phontab" ]; then
+        emit_status espeak eSpeak installed 0 'Built-in portable fallback'
+    else
+        emit_status espeak eSpeak core-missing 0 'Core eSpeak data is absent'
+    fi
+    if [ -f "$omnivox_install_directory/rhvoice/omnivox-rhvoice-helper.exe" ]; then
+        emit_status rhvoice RHVoice runtime-required 0 'Bridge installed; runtime and voices are user supplied'
+    else
+        emit_status rhvoice RHVoice core-missing 0 'Core RHVoice bridge is absent'
+    fi
+    for bridge in eloquence dectalk; do
+        case $bridge in
+            eloquence)
+                bridge_name=Eloquence
+                bridge_file=OmnivoxEloquenceHelper32.exe
+                bridge_detail='Bridge installed; licensed ECI runtime is user supplied'
+                ;;
+            dectalk)
+                bridge_name=DECtalk
+                bridge_file=OmnivoxDectalkHelper32.exe
+                bridge_detail='Bridge installed; matched DLL and dictionary are user supplied'
+                ;;
+        esac
+        if [ -f "$omnivox_install_directory/$bridge_file" ]; then
+            emit_status "$bridge" "$bridge_name" runtime-required 0 "$bridge_detail"
+        else
+            emit_status "$bridge" "$bridge_name" core-update-required 0 \
+                'Bridge will be included in Omnivox 1.7.1 Windows core archives'
+        fi
+    done
+    for component in flite rutts piper tgspeechbox; do
+        component_metadata "$component"
+        if ! $component_supported; then
+            emit_status "$component_id" "$component_name" unavailable 0 \
+                "Not published for $omnivox_platform"
+        elif [ -f "$omnivox_install_directory/$component_directory/$component_helper" ]; then
+            if [ "$component" = piper ]; then
+                emit_status "$component_id" "$component_name" model-required \
+                    "$component_size" "$component_detail"
+            else
+                emit_status "$component_id" "$component_name" installed \
+                    "$component_size" "$component_detail"
+            fi
+        else
+            emit_status "$component_id" "$component_name" available \
+                "$component_size" "$component_detail"
+        fi
+    done
+}
+
+download_verified()
+{
+    download_url=$1
+    download_path=$2
+    download_expected=$3
+    mkdir -p -- "$(dirname -- "$download_path")"
+    if [ -f "$download_path" ] &&
+       printf '%s  %s\n' "$download_expected" "$download_path" |
+           sha256sum --check --status -; then
+        printf 'Using verified cached download: %s\n' "$download_path"
+        return
+    fi
+    download_temporary=$download_path.part.$$
+    curl --fail --location --retry 3 --show-error --silent \
+        --output "$download_temporary" "$download_url"
+    if ! printf '%s  %s\n' "$download_expected" "$download_temporary" |
+         sha256sum --check --status -; then
+        rm -f -- "$download_temporary"
+        fail "checksum verification failed for $(basename -- "$download_path")"
+    fi
+    mv -f -- "$download_temporary" "$download_path"
+}
+
+staging_directory=
+cleanup()
+{
+    if [ -n "$staging_directory" ]; then
+        case $staging_directory in
+            "$omnivox_install_directory"/.component-install-*)
+                rm -rf -- "$staging_directory"
+                ;;
+        esac
+    fi
+}
+trap cleanup 0 1 2 15
+
+validate_archive_layout()
+{
+    archive=$1
+    expected_root=$2
+    members=$(unzip -Z1 "$archive") || fail "cannot inspect $(basename -- "$archive")"
+    [ -n "$members" ] || fail "component archive is empty"
+    member_count=$(printf '%s\n' "$members" | wc -l)
+    [ "$member_count" -le 10000 ] || fail "component archive has too many entries"
+    duplicates=$(printf '%s\n' "$members" | sort | uniq -d)
+    [ -z "$duplicates" ] || fail "component archive contains duplicate paths"
+    while IFS= read -r member; do
+        case $member in
+            /*|*\\*) fail "component archive contains an unsafe path" ;;
+        esac
+        case /$member/ in
+            */../*) fail "component archive contains an unsafe path" ;;
+        esac
+        case $member in
+            "$expected_root"|"$expected_root"/*) ;;
+            *) fail "component archive has an unexpected root entry: $member" ;;
+        esac
+    done <<EOF
+$members
+EOF
+}
+
+require_core()
+{
+    [ -x "$omnivox_program" ] ||
+        fail "Omnivox core is not installed; run bin/emacsvox-wsl-install first"
+    installed_version=$("$omnivox_program" --version 2>/dev/null || :)
+    [ "$installed_version" = "omnivox $EMACSVOX_WSL_OMNIVOX_VERSION" ] ||
+        fail "installed Omnivox does not match the component manifest: ${installed_version:-not runnable}"
+}
+
+verify_staged_component()
+{
+    component=$1
+    helper=$2
+    windows_helper=$(wslpath -w "$helper") ||
+        fail "could not translate the staged $component helper path"
+    case $component in
+        flite)
+            WSLENV="${WSLENV:+$WSLENV:}OMNIVOX_FLITE_HELPER" \
+                OMNIVOX_FLITE_HELPER="$windows_helper" \
+                "$omnivox_program" --engine flite --list-voices >/dev/null
+            ;;
+        rutts)
+            WSLENV="${WSLENV:+$WSLENV:}OMNIVOX_RUTTS_HELPER" \
+                OMNIVOX_RUTTS_HELPER="$windows_helper" \
+                "$omnivox_program" --engine rutts --list-voices >/dev/null
+            ;;
+        tgspeechbox)
+            WSLENV="${WSLENV:+$WSLENV:}OMNIVOX_TGSPEECHBOX_HELPER" \
+                OMNIVOX_TGSPEECHBOX_HELPER="$windows_helper" \
+                "$omnivox_program" --engine tgspeechbox --list-voices >/dev/null
+            ;;
+        piper)
+            [ -f "$(dirname -- "$helper")/SOURCE-PROVENANCE.json" ] ||
+                fail "Piper companion lacks source provenance"
+            ;;
+    esac
+}
+
+install_component()
+{
+    component_metadata "$1"
+    $component_supported ||
+        fail "$component_name is not published for $omnivox_platform"
+    destination=$omnivox_install_directory/$component_directory
+    installed_helper=$destination/$component_helper
+    if [ -f "$installed_helper" ]; then
+        printf '%s is already installed.\n' "$component_name"
+        return
+    fi
+    [ ! -e "$destination" ] ||
+        fail "existing $component_name component is incomplete: $destination"
+    archive=$download_directory/$component_archive
+    download_verified \
+        "$EMACSVOX_WSL_OMNIVOX_RELEASE_URL/$component_archive" \
+        "$archive" "$component_sha256"
+    validate_archive_layout "$archive" "$component_directory"
+    staging_directory=$omnivox_install_directory/.component-install-$component_id-$$
+    [ ! -e "$staging_directory" ] ||
+        fail "temporary component directory already exists: $staging_directory"
+    mkdir -- "$staging_directory"
+    unzip -q "$archive" -d "$staging_directory"
+    staged_directory=$staging_directory/$component_directory
+    staged_helper=$staged_directory/$component_helper
+    [ -f "$staged_helper" ] ||
+        fail "$component_name archive lacks $component_helper"
+    [ -f "$staged_directory/SOURCE-PROVENANCE.json" ] ||
+        fail "$component_name archive lacks source provenance"
+    chmod 755 "$staged_helper"
+    verify_staged_component "$component_id" "$staged_helper" ||
+        fail "$component_name failed its staged voice check"
+    move_attempt=0
+    while ! mv -- "$staged_directory" "$destination" 2>/dev/null; do
+        move_attempt=$((move_attempt + 1))
+        [ "$move_attempt" -lt 10 ] ||
+            fail "could not commit $component_name after staged validation"
+        # Native helper shutdown can retain a Windows file handle briefly.
+        sleep 1
+    done
+    rmdir -- "$staging_directory"
+    staging_directory=
+    printf 'Installed %s for Omnivox %s.\n' \
+        "$component_name" "$EMACSVOX_WSL_OMNIVOX_VERSION"
+}
+
+test_component()
+{
+    engine=$1
+    case $engine in
+        windows) engine=native ;;
+        espeak|rhvoice|eloquence|dectalk|flite|rutts|piper|tgspeechbox) ;;
+        *) fail "unknown Omnivox engine: $engine" 2 ;;
+    esac
+    require_core
+    "$omnivox_program" --engine "$engine" --list-voices
+}
+
+case $mode in
+    list) list_status ;;
+    install)
+        require_core
+        seen=' '
+        for component in $requested_components; do
+            case $seen in
+                *" $component "*) continue ;;
+            esac
+            seen="$seen$component "
+            install_component "$component"
+        done
+        printf '\nRestart Omnivox to refresh its engine inventory.\n'
+        ;;
+    test) test_component "$requested_components" ;;
+esac

@@ -1,0 +1,146 @@
+#+title: ADR 0008: Modular Omnivox Engine Installation
+#+date: 2026-09-03
+#+startup: content
+
+* Status
+
+Accepted.
+
+* Context
+
+ADR 0005 made one checksum-pinned generic Omnivox archive the ordinary WSL2
+installation path.  That archive intentionally keeps first speech small and
+predictable, but Omnivox also supports engines with very different
+distribution constraints:
+
+- Flite and RuTTS can be distributed as self-contained open-source companion
+  archives.
+- Piper's native companion is distributable, but a reviewed model and model
+  card remain a separate user choice.
+- RHVoice's bridge is distributable, while its runtime, language data, and
+  voices remain separately installed.
+- Eloquence and DECtalk use small distributable bridge executables, but their
+  proprietary DLLs, dictionaries, voices, and licences must be supplied by the
+  user.
+- Experimental engines should remain visibly optional rather than silently
+  joining the first-speech baseline.
+
+Publishing every open-source companion as a separate release artifact avoids
+unnecessary downloads, but asking users to discover archive names, match
+architectures, verify checksums, and merge directory layouts by hand is not an
+accessible installation experience.  Conversely, putting every companion in
+the generic archive increases its size and support surface even when most
+users need only Windows speech and eSpeak.
+
+* Decision
+
+** Keep one small core and offer verified modules
+
+The generic Omnivox Windows archive remains the required core.  It contains
+the main server, required data, notices, and distributable runtime bridges
+that are small and meaningful without bundling their proprietary runtimes.
+Larger or experimental self-contained engines remain separately published,
+version-matched Omnivox release artifacts.
+
+Emacsvox calls those optional artifacts /engine modules/.  The separation is
+about download and installation choice; it does not create an independent
+version line.  A module must match the exact Omnivox core version and Windows
+architecture.
+
+** Pin one component manifest
+
+=etc/omnivox-components.conf= records the manifest schema, exact Omnivox
+version, architecture-specific archive names, byte sizes, and SHA-256 hashes.
+It must name the same Omnivox version as =etc/wsl-install.conf=.  Only reviewed
+release artifacts may be added.  Arbitrary URLs, unpinned versions, and
+unverified downloads are outside this interface.
+
+The manifest may describe an architecture as unavailable.  It does not imply
+that a companion exists for every architecture merely because the core does.
+
+** Provide command-line and spoken installers
+
+=bin/emacsvox-omnivox-components= is the WSL2 per-user implementation.  It can
+list all known engines, install one or more downloadable modules, and test an
+engine by asking the installed Omnivox core to list its voices.  Installation:
+
+- requires an already installed, exact-version core;
+- uses the Windows user's versioned =LocalAppData= release directory;
+- downloads only from the pinned Omnivox release URL;
+- verifies the archive checksum and a bounded, single-root archive layout;
+- requires source provenance and the expected helper executable;
+- tests voice discovery through the core where an engine can operate without
+  additional user data; and
+- moves the staged module into place only after validation succeeds.
+
+The installer never invokes =sudo=, modifies shell startup files, downloads a
+proprietary runtime, or selects a Piper model.
+
+=M-x emacsvox-omnivox-manage-components= presents the same manifest as a spoken
+tabulated interface.  It is also reachable from Aural Home.  Downloads begin
+only after explicit confirmation, run asynchronously, and report completion
+or failure.  Installing a module may restart an already running Omnivox server
+so its inventory is refreshed.
+
+** Keep runtime ownership explicit
+
+An installed bridge and an installed engine runtime are separate states.  The
+manager reports =runtime required= for Eloquence, DECtalk, and RHVoice bridges
+until the user supplies the corresponding licensed or separately distributed
+runtime.  It reports =model required= for a Piper companion without a model.
+The manager's engine test is the final local check; archive presence alone
+does not claim that a user-supplied runtime is usable.
+
+* Consequences
+
+- The ordinary core download stays compact while optional engines become
+  discoverable and installable from inside Emacs.
+- Users no longer need to identify, verify, or merge companion archives by
+  hand.
+- One Omnivox release can have multiple artifacts without presenting them as
+  multiple product releases or independent versions.
+- Emacsvox release preparation must pin and test every exposed component
+  archive as well as the generic core.
+- A module cannot be offered until its exact-version release artifact exists,
+  so Omnivox publication must precede the corresponding Emacsvox manifest
+  update.
+- Proprietary runtime acquisition remains outside Emacsvox and Omnivox, but
+  the distributable bridge binaries and their corresponding source and notices
+  belong in the Omnivox core release.
+- Native Windows Emacs remains a preview and does not yet use the POSIX WSL2
+  installer, although the installed directory layout is compatible.
+
+* Alternatives considered
+
+** Put every engine in the generic archive
+
+Rejected.  It removes one selection step but makes every user download large,
+architecture-specific, and experimental companions, including Piper native
+code that is unusable without a separately reviewed model.
+
+** Continue publishing unexplained separate artifacts
+
+Rejected as the user interface.  Separate artifacts are a sound release
+mechanism, but manual architecture matching, checksums, extraction, and engine
+validation are unnecessary barriers.  They remain directly available for
+maintainers and recovery.
+
+** Download proprietary runtimes or a default Piper model
+
+Rejected.  Distribution rights, licences, model provenance, language, quality,
+and trust are user-specific.  The installer handles only artifacts the
+projects can review and distribute.
+
+** Maintain independent module versions
+
+Rejected.  Helpers share Omnivox's protocol and discovery contracts.  Exact
+release matching gives a smaller and more testable compatibility boundary.
+
+* Follow-up
+
+1. Publish the generic Windows bridge helpers and their exact corresponding
+   GPL source in the next Omnivox release.
+2. Run isolated x64 and ARM64 installer tests and one real newly pinned module
+   check before changing the public manifest.
+3. Consider a native PowerShell implementation if native Windows Emacs moves
+   beyond preview status.

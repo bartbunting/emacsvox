@@ -63,6 +63,8 @@
                   "emacsvox-aural-voice-workbench" (&optional view))
 (declare-function emacsvox-aural-voice-workbench-status
                   "emacsvox-aural-voice-workbench" ())
+(declare-function emacsvox-omnivox-manage-components
+                  "emacsvox-omnivox-components" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
@@ -198,6 +200,11 @@
        "Voice Workbench"
        (emacsvox-aural-home--voice-workbench-status)
        "Browse logical voices, installed physical voices, engines, routes, styles, and effects"))
+     (list
+      'engine-modules
+      (vector
+       "Omnivox engine modules" "WSL2 per-user manager"
+       "Browse, download, verify, install, and test optional speech engines"))
      (list
       'features
       (vector
@@ -355,6 +362,12 @@
   (require 'emacsvox-aural-voice-workbench)
   (emacsvox-aural-voice-workbench))
 
+(defun emacsvox-aural-home-engine-modules ()
+  "Open the verified Omnivox engine-module manager."
+  (interactive)
+  (require 'emacsvox-omnivox-components)
+  (emacsvox-omnivox-manage-components))
+
 (defun emacsvox-aural-home-activate ()
   "Perform the primary operation for the aural home row at point."
   (interactive)
@@ -373,6 +386,7 @@
     ('profiles (emacsvox-aural-home-profiles))
     ('voices (emacsvox-aural-home-voice-palettes))
     ('voice-workbench (emacsvox-aural-home-voice-workbench))
+    ('engine-modules (emacsvox-aural-home-engine-modules))
     ('features (emacsvox-aural-list-feature-fragments))
     ('buffer-rules
      (let ((source (emacsvox-aural-home--source-buffer)))
@@ -418,6 +432,7 @@
       "P presentation profiles\n"
       "V voice palettes\n"
       "W voice workbench\n"
+      "I Omnivox engine modules\n"
       "D aural doctor\n"
       "g refresh\n"
       "? display and speak this help\n"
@@ -460,6 +475,7 @@
        ("P" . emacsvox-aural-home-profiles)
        ("V" . emacsvox-aural-home-voice-palettes)
        ("W" . emacsvox-aural-home-voice-workbench)
+       ("I" . emacsvox-aural-home-engine-modules)
        ("D" . emacsvox-aural-doctor)
        ("?" . emacsvox-aural-home-help)))
   (define-key

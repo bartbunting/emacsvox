@@ -124,6 +124,7 @@
          "emacsvox-aural-tools"
          "emacsvox-aural-recent-feedback"
          "emacsvox-aural-feature-fragments"
+         "emacsvox-omnivox-components"
          "emacsvox-aural-home"
          "emacsvox-aural-routing-profiles"
          "emacsvox-aural-editor"
@@ -199,6 +200,7 @@
          emacsvox-aural-feature-fragments-install-state
          emacsvox-aural-feature-fragments-refresh-if-live
          emacsvox-aural-feature-fragments--set-entries
+         emacsvox-omnivox-components--parse
          emacsvox-aural-home--entries
          emacsvox-aural-editor--scope-label
          emacsvox-aural-editor-open-prefilled-rule

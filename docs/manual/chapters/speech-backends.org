@@ -258,6 +258,58 @@ user-supplied files.  Flite and RuTTS need no external runtime installation in
 the source-built bundle.  Eloquence and DECtalk remain separately licensed,
 user-supplied runtimes.
 
+*** Optional Omnivox Engine Modules
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Optional Omnivox Engine Modules
+:DESCRIPTION: Choose and install version-matched optional engines from Emacs.
+:END:
+
+The ordinary WSL2 archive is the Omnivox core, not a claim that every supported
+engine is installed.  It keeps first speech small while matching companion
+archives provide engines that are larger, experimental, architecture-specific,
+or incomplete without separately chosen data.
+
+From a running Emacsvox session, open:
+
+#+begin_example
+M-x emacsvox-omnivox-manage-components RET
+#+end_example
+
+You can also press @@texinfo:@kbd{C-e H}@@ for Aural Home and then
+@@texinfo:@kbd{I}@@ on /Omnivox engine modules/.  The spoken table reports each
+engine as installed, downloadable, unavailable on this architecture, needing a
+core update, or needing a separately supplied runtime or model.  Use
+@@texinfo:@kbd{i}@@ to install the selected downloadable module and
+@@texinfo:@kbd{t}@@ to ask Omnivox to list voices through the selected engine.
+Downloads run asynchronously so Emacs remains responsive.
+
+The manager reads =etc/omnivox-components.conf=.  Every archive name, byte size,
+and SHA-256 hash is pinned to the same Omnivox version as the installed core.
+The WSL2 installer rejects a mismatched core, an unsafe archive layout, missing
+source provenance, or a helper that cannot pass its staged voice-discovery
+check.  It then installs the module below the same versioned Windows
+=LocalAppData= release directory.  It does not invoke =sudo= or edit shell
+startup files.
+
+The choices have different boundaries:
+
+- Flite includes its compact English SLT voice and needs no external runtime.
+- RuTTS includes its compact Russian voices and needs no external runtime.
+- Piper installs native engine support, but appears only after you separately
+  review and configure an ONNX voice model and its model card.
+- TGSpeechBox is an explicitly experimental multilingual formant engine.
+- RHVoice, Eloquence, and DECtalk use distributable bridges, but Emacsvox never
+  downloads their external runtimes, voices, dictionaries, or licence material.
+  Supply those only when you have the appropriate distribution and licence.
+
+For a terminal-only installation, run
+=./bin/emacsvox-omnivox-components --list= and then, for example,
+=./bin/emacsvox-omnivox-components --install flite=.  Multiple module names may
+follow =--install=.  Restart Omnivox after a terminal installation, then use
+=--test ENGINE= or the Emacs manager's @@texinfo:@kbd{t}@@ command.  The direct
+Omnivox release assets remain available for maintainers and recovery, but the
+manager is the recommended way to select them.
+
 ** Trying Native Windows Emacsvox
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Trying Native Windows Emacsvox
