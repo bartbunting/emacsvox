@@ -46,6 +46,11 @@ Engine checks now select an accessible result buffer, announce the number of
 voices found, and report Omnivox's actual diagnostic when a check fails.
 Manager-installed modules can be removed with ~u~ after explicit confirmation;
 core engines, runtime bridges, and the verified download cache are preserved.
+Removal now stops and restores the active Omnivox streams around deletion, so
+Windows does not retain a lock on the companion executable.  A narrowly
+recognized helper-only residue from an interrupted removal can be removed on
+the next attempt, and Emacs process-status text no longer hides the useful
+diagnostic.
 
 ** Org link transitions
 

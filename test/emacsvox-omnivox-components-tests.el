@@ -265,12 +265,87 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
              windows-root))
            (helper (expand-file-name "omnivox-flite-helper.exe" destination)))
       (emacsvox-wsl-install-tests--write-executable helper "#!/bin/sh\n")
+      (with-temp-file (expand-file-name "user-file.txt" destination)
+        (insert "not owned by the component manager\n"))
       (let ((result
              (emacsvox-wsl-install-tests--call
               installer environment "--uninstall" "flite")))
         (should-not (zerop (car result)))
         (should (string-search "without source provenance" (cadr result)))
         (should (file-exists-p helper))))))
+
+(ert-deftest emacsvox-omnivox-component-uninstaller-recovers-interrupted-removal ()
+  "Uninstall completes when an earlier locked helper is the only residue."
+  (emacsvox-omnivox-components-tests--with-fixture
+      (root installer environment windows-root archive)
+    (ignore root archive)
+    (let* ((destination
+            (expand-file-name
+             "Emacsvox/Omnivox/releases/1.7.0-windows-x64/flite"
+             windows-root))
+           (helper (expand-file-name "omnivox-flite-helper.exe" destination)))
+      (emacsvox-wsl-install-tests--write-executable helper "#!/bin/sh\n")
+      (let ((result
+             (emacsvox-wsl-install-tests--call
+              installer environment "--uninstall" "flite")))
+        (ert-info ((cadr result))
+          (should (zerop (car result))))
+        (should (string-search "Completing interrupted removal of Flite"
+                               (cadr result)))
+        (should-not (file-exists-p destination))))))
+
+(ert-deftest emacsvox-omnivox-component-uninstaller-retries-locked-helper-first ()
+  "Transient helper locks do not remove module metadata prematurely."
+  (emacsvox-omnivox-components-tests--with-fixture
+      (root installer environment windows-root archive)
+    (ignore archive)
+    (let* ((destination
+            (expand-file-name
+             "Emacsvox/Omnivox/releases/1.7.0-windows-x64/flite"
+             windows-root))
+           (helper (expand-file-name "omnivox-flite-helper.exe" destination))
+           (provenance (expand-file-name "SOURCE-PROVENANCE.json" destination))
+           (counter (expand-file-name "remove-attempts" root))
+           (tool-directory tools))
+      (emacsvox-wsl-install-tests--write-executable helper "#!/bin/sh\n")
+      (with-temp-file provenance
+        (insert "{\"source\":\"fixture\"}\n"))
+      (emacsvox-wsl-install-tests--write-executable
+       (expand-file-name "rm" tool-directory)
+       (concat
+        "#!/bin/sh\n"
+        "for argument do last=$argument; done\n"
+        "case $last in\n"
+        "  *omnivox-flite-helper.exe)\n"
+        "    [ -f \"$EMACSVOX_COMPONENT_TEST_PROVENANCE\" ] || exit 9\n"
+        "    count=0\n"
+        "    [ ! -f \"$EMACSVOX_COMPONENT_TEST_RM_COUNT\" ] || "
+        "count=$(cat \"$EMACSVOX_COMPONENT_TEST_RM_COUNT\")\n"
+        "    count=$((count + 1))\n"
+        "    printf '%s\\n' \"$count\" >\"$EMACSVOX_COMPONENT_TEST_RM_COUNT\"\n"
+        "    [ \"$count\" -ge 3 ] || exit 1\n"
+        "    ;;\n"
+        "esac\n"
+        "exec /bin/rm \"$@\"\n"))
+      (emacsvox-wsl-install-tests--write-executable
+       (expand-file-name "sleep" tool-directory) "#!/bin/sh\nexit 0\n")
+      (setq environment
+            (emacsvox-wsl-install-tests--setenv
+             environment "EMACSVOX_COMPONENT_TEST_PROVENANCE" provenance)
+            environment
+            (emacsvox-wsl-install-tests--setenv
+             environment "EMACSVOX_COMPONENT_TEST_RM_COUNT" counter))
+      (let ((result
+             (emacsvox-wsl-install-tests--call
+              installer environment "--uninstall" "flite")))
+        (ert-info ((cadr result))
+          (should (zerop (car result))))
+        (should (equal (string-trim
+                        (with-temp-buffer
+                          (insert-file-contents counter)
+                          (buffer-string)))
+                       "3"))
+        (should-not (file-exists-p destination))))))
 
 (ert-deftest emacsvox-omnivox-component-uninstaller-supports-legacy-install ()
   "A pinned pre-receipt module remains removable using its provenance marker."
@@ -400,6 +475,72 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
           "exited abnormally with code 1\n")))
     (should (string-search "RHVoice native library was not found" message))
     (should-not (string-search "code 1" message))))
+
+(ert-deftest emacsvox-omnivox-components-failure-ignores-process-marker ()
+  "A stderr-process marker does not hide the installer's diagnostic."
+  (should
+   (string-search
+    "its helper is still in use"
+    (emacsvox-omnivox-components--result-message
+     "Flite" 'uninstallation nil
+     (concat
+      "emacsvox-omnivox-components: could not remove Flite; "
+      "its helper is still in use by an Omnivox session\n\n"
+      "Process emacsvox-omnivox-component stderr finished\n")
+     "exited abnormally with code 1\n"))))
+
+(ert-deftest emacsvox-omnivox-components-suspends-both-omnivox-streams ()
+  "Removal retires speaker and notification streams before deleting files."
+  (let* ((speaker (make-pipe-process :name "omnivox speaker fixture"))
+         (notifier (make-pipe-process :name "omnivox notifier fixture"))
+         retired)
+    (unwind-protect
+        (cl-progv '(tts-speaker-process tts-notify-process tts-program)
+            (list speaker notifier "omnivox")
+          (cl-letf (((symbol-function 'tts--retire-process)
+                     (lambda (process) (push process retired))))
+            (should (emacsvox-omnivox-components--suspend-omnivox))
+            (should (equal retired (list speaker notifier)))
+            (should-not tts-speaker-process)
+            (should-not tts-notify-process)))
+      (dolist (process (list speaker notifier))
+        (when (process-live-p process)
+          (delete-process process))))))
+
+(ert-deftest emacsvox-omnivox-components-restores-omnivox-after-failure ()
+  "A failed removal restores the Omnivox stream stopped for file release."
+  (let ((output (get-buffer-create
+                 emacsvox-omnivox-components--output-buffer))
+        restarted)
+    (unwind-protect
+        (with-temp-buffer
+          (cl-letf (((symbol-function
+                      'emacsvox-omnivox-components--check-installer)
+                     (lambda () "/bin/false"))
+                    ((symbol-function
+                      'emacsvox-omnivox-components--running-omnivox-p)
+                     (lambda () t))
+                    ((symbol-function
+                      'emacsvox-omnivox-components--suspend-omnivox)
+                     (lambda () t))
+                    ((symbol-function
+                      'emacsvox-omnivox-components--show-output)
+                     #'ignore)
+                    ((symbol-function
+                      'emacsvox-omnivox-components--speak)
+                     #'identity)
+                    ((symbol-function 'tts-restart)
+                     (lambda () (setq restarted t))))
+            (let ((process
+                   (emacsvox-omnivox-components--start
+                    '(:id "flite" :name "Flite")
+                    'uninstallation '("--uninstall" "flite"))))
+              (while (process-live-p process)
+                (accept-process-output process 0.1))
+              (accept-process-output process 0.1)
+              (should restarted))))
+      (when (buffer-live-p output)
+        (kill-buffer output)))))
 
 (ert-deftest emacsvox-omnivox-components-output-is-accessible ()
   "Voice and error results use aural dismissal and home navigation."

@@ -43,10 +43,12 @@
 (declare-function emacsvox-aural-inspection-attach-source
                   "emacsvox-aural-inspection" (source-buffer))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
+(declare-function tts--retire-process "tts-speak" (process))
 (declare-function tts-restart "tts-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
 (defvar emacsvox-directory)
+(defvar tts-notify-process)
 (defvar tts-program)
 (defvar tts-speaker-process)
 
@@ -181,9 +183,36 @@
        (boundp 'tts-program)
        (string-match-p "omnivox" (format "%s" tts-program))))
 
+(defun emacsvox-omnivox-components--suspend-omnivox ()
+  "Retire active Omnivox streams and return non-nil when any were stopped.
+
+This releases persistent Windows helper executables before module removal."
+  (when (emacsvox-omnivox-components--running-omnivox-p)
+    (unless (fboundp 'tts--retire-process)
+      (error "Cannot safely stop Omnivox before module removal"))
+    (let ((speaker tts-speaker-process)
+          (notifier (and (boundp 'tts-notify-process)
+                         tts-notify-process)))
+      (when (and (processp notifier) (not (eq notifier speaker)))
+        (tts--retire-process notifier))
+      (when (processp speaker)
+        (tts--retire-process speaker))
+      (setq tts-speaker-process nil)
+      (when (boundp 'tts-notify-process)
+        (setq tts-notify-process nil))
+      t)))
+
 (defun emacsvox-omnivox-components--last-output-line (output)
-  "Return the last nonempty line in installer OUTPUT, or nil."
-  (car (last (split-string output "[\r\n]+" t "[[:space:]]+"))))
+  "Return the last useful nonempty line in installer OUTPUT, or nil."
+  (cl-find-if
+   (lambda (line)
+     (not
+      (string-match-p
+       (concat
+        "\\`Process emacsvox-omnivox-component\\(?: stderr\\)? "
+        "\\(?:finished\\|exited abnormally.*\\)\\'")
+       line)))
+   (reverse (split-string output "[\r\n]+" t "[[:space:]]+"))))
 
 (defun emacsvox-omnivox-components--result-message
     (name operation success output event)
@@ -228,6 +257,8 @@ OUTPUT to the generic process sentinel EVENT."
            (operation (process-get process 'emacsvox-operation))
            (name (process-get process 'emacsvox-component-name))
            (id (process-get process 'emacsvox-component-id))
+           (restore-omnivox
+            (process-get process 'emacsvox-restore-omnivox))
            (output (process-buffer process))
            (success (and (eq (process-status process) 'exit)
                          (zerop (process-exit-status process))))
@@ -248,10 +279,12 @@ OUTPUT to the generic process sentinel EVENT."
                (setq message-text
                      (format "%s; refresh failed: %s"
                              message-text (error-message-string err))))))))
-      (when (and success
-                 (memq operation '(installation uninstallation))
-                 emacsvox-omnivox-restart-after-component-install
-                 (emacsvox-omnivox-components--running-omnivox-p)
+      (when (and (or restore-omnivox
+                     (and success
+                          (memq operation
+                                '(installation uninstallation))
+                          emacsvox-omnivox-restart-after-component-install
+                          (emacsvox-omnivox-components--running-omnivox-p)))
                  (fboundp 'tts-restart))
         (condition-case err
             (tts-restart)
@@ -271,21 +304,35 @@ OUTPUT to the generic process sentinel EVENT."
   (let* ((program (emacsvox-omnivox-components--check-installer))
          (output (get-buffer-create
                   emacsvox-omnivox-components--output-buffer))
-         (manager (current-buffer)))
+         (manager (current-buffer))
+         (restore-omnivox nil))
     (with-current-buffer output
       (let ((inhibit-read-only t))
         (erase-buffer)
         (fundamental-mode)))
-    (setq emacsvox-omnivox-components--process
-          (make-process
-           :name "emacsvox-omnivox-component"
-           :buffer output
-           :stderr output
-           :command (cons program arguments)
-           :connection-type 'pipe
-           :coding 'utf-8
-           :noquery t
-           :sentinel #'emacsvox-omnivox-components--finish))
+    (emacsvox-omnivox-components--speak
+     (format "%s %s started" (plist-get record :name) operation))
+    (condition-case err
+        (progn
+          (when (eq operation 'uninstallation)
+            (setq restore-omnivox
+                  (emacsvox-omnivox-components--running-omnivox-p))
+            (when restore-omnivox
+              (emacsvox-omnivox-components--suspend-omnivox)))
+          (setq emacsvox-omnivox-components--process
+                (make-process
+                 :name "emacsvox-omnivox-component"
+                 :buffer output
+                 :stderr output
+                 :command (cons program arguments)
+                 :connection-type 'pipe
+                 :coding 'utf-8
+                 :noquery t
+                 :sentinel #'emacsvox-omnivox-components--finish)))
+      (error
+       (when (and restore-omnivox (fboundp 'tts-restart))
+         (tts-restart))
+       (signal (car err) (cdr err))))
     (process-put emacsvox-omnivox-components--process
                  'emacsvox-manager-buffer manager)
     (process-put emacsvox-omnivox-components--process
@@ -294,8 +341,8 @@ OUTPUT to the generic process sentinel EVENT."
                  'emacsvox-component-id (plist-get record :id))
     (process-put emacsvox-omnivox-components--process
                  'emacsvox-component-name (plist-get record :name))
-    (emacsvox-omnivox-components--speak
-     (format "%s %s started" (plist-get record :name) operation))
+    (process-put emacsvox-omnivox-components--process
+                 'emacsvox-restore-omnivox restore-omnivox)
     emacsvox-omnivox-components--process))
 
 (defun emacsvox-omnivox-components-install ()

@@ -525,10 +525,28 @@ uninstall_component()
         fail "refusing to remove a symbolic-link component: $destination"
     [ -d "$destination" ] ||
         fail "refusing to remove a non-directory component: $destination"
-    [ -f "$destination/$component_helper" ] ||
+    installed_helper=$destination/$component_helper
+    [ -f "$installed_helper" ] ||
         fail "refusing to remove an unrecognized $component_name directory: $destination"
-    [ -f "$destination/SOURCE-PROVENANCE.json" ] ||
-        fail "refusing to remove $component_name without source provenance: $destination"
+    [ ! -L "$installed_helper" ] ||
+        fail "refusing to remove a symbolic-link helper: $installed_helper"
+    if [ ! -f "$destination/SOURCE-PROVENANCE.json" ]; then
+        # A Windows executable lock can make an older rm -rf attempt remove
+        # the receipt and provenance before failing on the helper.  Accept
+        # only that exact one-file residue; never generalize this to an
+        # otherwise unowned component-shaped directory.
+        for residue in \
+            "$destination"/.[!.]* \
+            "$destination"/..?* \
+            "$destination"/*
+        do
+            if { [ -e "$residue" ] || [ -L "$residue" ]; } &&
+               [ "$residue" != "$installed_helper" ]; then
+                fail "refusing to remove $component_name without source provenance: $destination"
+            fi
+        done
+        printf 'Completing interrupted removal of %s.\n' "$component_name"
+    fi
     receipt=$destination/.emacsvox-component
     if [ -f "$receipt" ]; then
         if ! {
@@ -541,8 +559,19 @@ uninstall_component()
             fail "refusing to remove $component_name with an invalid install receipt"
         fi
     fi
+    remove_attempt=0
+    while ! rm -f -- "$installed_helper" 2>/dev/null; do
+        remove_attempt=$((remove_attempt + 1))
+        if [ "$remove_attempt" -ge 10 ]; then
+            rm -f -- "$installed_helper" ||
+                fail "could not remove $component_name; its helper is still in use by an Omnivox session"
+        fi
+        # The Emacs manager stops its Omnivox streams first, but Windows can
+        # retain the executable handle briefly while their children exit.
+        sleep 1
+    done
     rm -rf -- "$destination" ||
-        fail "could not remove $component_name; stop active speech and try again"
+        fail "could not completely remove $component_name: $destination"
     [ ! -e "$destination" ] ||
         fail "could not completely remove $component_name: $destination"
     printf 'Uninstalled %s from Omnivox %s.\n' \

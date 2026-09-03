@@ -301,10 +301,18 @@ mind, select the module again---its state will now be /available/---and press
 The module's whole managed directory is removed.  Move anything you placed
 inside that directory somewhere else before confirming.  User-supplied
 runtimes and models stored outside it are not touched; remove those separately
-using their supplier's instructions.  After a successful installation or
-removal, the manager refreshes the table and restarts Omnivox when it is the
-running speech server.  Operations run asynchronously so Emacs remains
-responsive.
+using their supplier's instructions.  Before removal, the manager announces
+the operation and briefly stops its active Omnivox speech streams so Windows
+can release the module helper.  It restores speech when removal finishes,
+including after an error.  After a successful installation, it also refreshes
+the table and restarts a running Omnivox server.  Operations run asynchronously
+so Emacs remains responsive.
+
+If a removal reports that its helper is still in use, close any other Emacsvox
+or Omnivox session using that release and press @@texinfo:@kbd{u}@@ again.  The
+manager safely recognizes an interrupted removal when the expected helper is
+the only file left; it continues to refuse directories containing unrecognized
+files.
 
 The manager reads =etc/omnivox-components.conf=.  Every archive name, byte size,
 and SHA-256 hash is pinned to the same Omnivox version as the installed core.

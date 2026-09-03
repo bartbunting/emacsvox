@@ -1273,10 +1273,19 @@ reused.
    The module's whole managed directory is removed.  Move anything you
 placed inside that directory somewhere else before confirming.
 User-supplied runtimes and models stored outside it are not touched;
-remove those separately using their supplier's instructions.  After a
-successful installation or removal, the manager refreshes the table and
-restarts Omnivox when it is the running speech server.  Operations run
-asynchronously so Emacs remains responsive.
+remove those separately using their supplier's instructions.  Before
+removal, the manager announces the operation and briefly stops its
+active Omnivox speech streams so Windows can release the module helper.
+It restores speech when removal finishes, including after an error.
+After a successful installation, it also refreshes the table and
+restarts a running Omnivox server.  Operations run asynchronously so
+Emacs remains responsive.
+
+   If a removal reports that its helper is still in use, close any other
+Emacsvox or Omnivox session using that release and press ‘u’ again.  The
+manager safely recognizes an interrupted removal when the expected
+helper is the only file left; it continues to refuse directories
+containing unrecognized files.
 
    The manager reads ‘etc/omnivox-components.conf’.  Every archive name,
 byte size, and SHA-256 hash is pinned to the same Omnivox version as the
@@ -5136,60 +5145,60 @@ Node: Supported Platform Routes40348
 Node: Installing An Omnivox Release Binary44116
 Node: Installing An Omnivox Windows Release Under WSL247509
 Node: Optional Omnivox Engine Modules53430
-Node: Trying Native Windows Emacsvox57654
-Node: Installing Omnivox From Source65375
-Node: Building Omnivox For WSL267239
-Node: Selecting And Checking Omnivox74898
-Node: Compatibility Speech Servers77166
-Node: Backend Diagnostics And Ownership79092
-Node: Audio Desktop82269
-Node: Desktop Objects83399
-Node: Object Oriented Desktop84624
-Node: Context-Sensitive Interaction85737
-Node: Aural Presentation88852
-Node: Presentation Model91051
-Node: Presentation Modalities93518
-Node: Aural Home95265
-Node: Explaining Presentation97153
-Node: Adjusting Presentation99138
-Node: Presentation Profiles102107
-Node: Voices And Routing103798
-Node: Sounds And Space107821
-Node: Presentation Troubleshooting109445
-Node: Voice Lock111483
-Node: Using Online Help114690
-Node: Emacs Packages118752
-Node: Document Authoring120126
-Node: Structured Editing120680
-Node: Browsing Structure121663
-Node: Web Browsing122261
-Node: Messaging123096
-Node: Editing Code123594
-Node: Development Environment124113
-Node: Desktop Management124670
-Node: Personal Information Management125172
-Node: Desktop Applications125704
-Node: Notmuch Mail133092
-Ref: Notmuch fields and privacy142452
-Node: Agent Shell148160
-Node: EAT Terminal Access158154
-Node: Running Terminal Based Applications175413
-Node: Starting Term176368
-Node: Term Input Modes177207
-Node: Term Speech Feedback178367
-Node: Reviewing The Term Screen179561
-Node: Term Help And Recovery181462
-Node: Emacsvox Keyboard Commands182361
-Node: Copyright183765
-Node: Acknowledgments184352
-Node: Developer Guide185378
-Node: Documentation Maintenance186542
-Node: Speech Server Protocols191340
-Ref: Testing A Direct Legacy Server197247
-Ref: Commands That Queue Output197806
-Ref: Commands That Set State200840
-Node: Integration Maintenance203434
-Node: Concept Index223021
+Node: Trying Native Windows Emacsvox58147
+Node: Installing Omnivox From Source65868
+Node: Building Omnivox For WSL267732
+Node: Selecting And Checking Omnivox75391
+Node: Compatibility Speech Servers77659
+Node: Backend Diagnostics And Ownership79585
+Node: Audio Desktop82762
+Node: Desktop Objects83892
+Node: Object Oriented Desktop85117
+Node: Context-Sensitive Interaction86230
+Node: Aural Presentation89345
+Node: Presentation Model91544
+Node: Presentation Modalities94011
+Node: Aural Home95758
+Node: Explaining Presentation97646
+Node: Adjusting Presentation99631
+Node: Presentation Profiles102600
+Node: Voices And Routing104291
+Node: Sounds And Space108314
+Node: Presentation Troubleshooting109938
+Node: Voice Lock111976
+Node: Using Online Help115183
+Node: Emacs Packages119245
+Node: Document Authoring120619
+Node: Structured Editing121173
+Node: Browsing Structure122156
+Node: Web Browsing122754
+Node: Messaging123589
+Node: Editing Code124087
+Node: Development Environment124606
+Node: Desktop Management125163
+Node: Personal Information Management125665
+Node: Desktop Applications126197
+Node: Notmuch Mail133585
+Ref: Notmuch fields and privacy142945
+Node: Agent Shell148653
+Node: EAT Terminal Access158647
+Node: Running Terminal Based Applications175906
+Node: Starting Term176861
+Node: Term Input Modes177700
+Node: Term Speech Feedback178860
+Node: Reviewing The Term Screen180054
+Node: Term Help And Recovery181955
+Node: Emacsvox Keyboard Commands182854
+Node: Copyright184258
+Node: Acknowledgments184845
+Node: Developer Guide185871
+Node: Documentation Maintenance187035
+Node: Speech Server Protocols191833
+Ref: Testing A Direct Legacy Server197740
+Ref: Commands That Queue Output198299
+Ref: Commands That Set State201333
+Node: Integration Maintenance203927
+Node: Concept Index223514
 
 End Tag Table
 
