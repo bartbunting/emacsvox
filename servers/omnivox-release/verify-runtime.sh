@@ -236,18 +236,52 @@ case "$piper_companion_state" in
                 exit 1
             fi
         done
-        expected_piper_digest=$(
-            sed -n 's/^piper_companion_tree_sha256=//p' "$current/PROVENANCE"
-        )
-        actual_piper_digest=$(
-            cd "$current/piper"
-            find . -type f -print0 | LC_ALL=C sort -z |
-                xargs -0 sha256sum | sha256sum | cut -d ' ' -f1
-        )
-        if [ "$actual_piper_digest" != "$expected_piper_digest" ]; then
-            echo "Staged Piper companion does not match provenance" >&2
+        verify_piper_payload=true
+        ;;
+    github-actions-native-development-build)
+        for required in piper/omnivox-piper-helper.exe piper/piper.dll \
+            piper/onnxruntime.dll piper/onnxruntime_providers_shared.dll \
+            piper/SOURCE-PROVENANCE.json piper/SHA256SUMS \
+            piper/espeak-ng-data/phontab; do
+            if [ ! -f "$current/$required" ]; then
+                echo "Staged Piper development file is missing: $current/$required" >&2
+                exit 1
+            fi
+        done
+        omnivox_commit=$(sed -n 's/^omnivox_commit=//p' "$current/PROVENANCE")
+        for expected in \
+            'build_kind=local-dirty-worktree' \
+            'omnivox_features=piper' \
+            'piper_companion_version=development-ci' \
+            "piper_companion_commit=$omnivox_commit"; do
+            if ! grep -Fxq "$expected" "$current/PROVENANCE"; then
+                echo "Staged Piper development provenance is missing: $expected" >&2
+                exit 1
+            fi
+        done
+        piper_archive_digest=$(sed -n \
+            's/^piper_companion_archive_sha256=//p' "$current/PROVENANCE")
+        case "$piper_archive_digest" in
+            *[!0-9a-f]* | '')
+                echo "Invalid Piper development archive digest" >&2
+                exit 1
+                ;;
+        esac
+        if [ "${#piper_archive_digest}" -ne 64 ]; then
+            echo "Invalid Piper development archive digest length" >&2
             exit 1
         fi
+        for expected in \
+            '"artifact": "omnivox-piper-companion-windows-x64"' \
+            '"target": "x86_64-pc-windows-msvc"' \
+            '"tracked_worktree_dirty": false' \
+            "\"commit\": \"$omnivox_commit\""; do
+            if ! grep -Fq "$expected" "$current/piper/SOURCE-PROVENANCE.json"; then
+                echo "Staged Piper development source provenance is wrong: $expected" >&2
+                exit 1
+            fi
+        done
+        verify_piper_payload=true
         ;;
     not-included)
         if [ -e "$current/piper" ] ||
@@ -261,6 +295,22 @@ case "$piper_companion_state" in
         exit 1
         ;;
 esac
+
+if [ "${verify_piper_payload:-false}" = true ]; then
+    expected_piper_digest=$(
+        sed -n 's/^piper_companion_tree_sha256=//p' "$current/PROVENANCE"
+    )
+    actual_piper_digest=$(
+        cd "$current/piper"
+        find . -type f -print0 | LC_ALL=C sort -z |
+            xargs -0 sha256sum | sha256sum | cut -d ' ' -f1
+    )
+    if [ "$actual_piper_digest" != "$expected_piper_digest" ]; then
+        echo "Staged Piper companion does not match provenance" >&2
+        exit 1
+    fi
+    (cd "$current/piper" && sha256sum --check SHA256SUMS >/dev/null)
+fi
 
 (cd "$current" && sha256sum --check SHA256SUMS)
 

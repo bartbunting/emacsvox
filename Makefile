@@ -71,7 +71,7 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: docs-check docs-release-check docs-check-external
 .PHONY: docs-publish docs-publish-pages
 .PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
-.PHONY: windows-omnivox-dev windows-omnivox-main-dev
+.PHONY: windows-omnivox-dev windows-omnivox-piper-dev windows-omnivox-main-dev
 .PHONY: verify-windows-omnivox-toolchain verify-windows-omnivox-helpers prepare-windows-omnivox-piper verify-windows-omnivox-runtime verify-windows-omnivox-live
 .PHONY: verify-windows-omnivox-main-live
 .PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
@@ -360,6 +360,9 @@ OMNIVOX_HELPER_DIR = $(OMNIVOX_DIR)/windows-helpers
 OMNIVOX_ALLOW_DIRTY ?= 0
 OMNIVOX_BUILD_KIND ?= release-clean-worktree
 OMNIVOX_INCLUDE_PINNED_PIPER ?= 1
+OMNIVOX_PIPER_PREPARED ?= 0
+OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE ?=
+OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256 ?=
 OMNIVOX_INCLUDE_TGSPEECHBOX ?= 0
 OMNIVOX_TGSPEECHBOX_CXX ?= x86_64-w64-mingw32-g++-posix
 OMNIVOX_RECORD_RHVOICE ?= 0
@@ -367,6 +370,10 @@ include $(OMNIVOX_RELEASE_DIR)/toolchain.lock
 OMNIVOX_CSC = $(OMNIVOX_RELEASE_DIR)/cache/roslyn-$(roslyn_version)/tasks/net472/csc.exe
 OMNIVOX_REFERENCE_DIR = $(OMNIVOX_RELEASE_DIR)/cache/net40-reference-assemblies-$(reference_assemblies_version)/build/.NETFramework/v4.0
 OMNIVOX_PIPER_DIR = $(OMNIVOX_RELEASE_DIR)/cache/piper-$(omnivox_piper_version)/companion-$(omnivox_piper_archive_sha256)/piper
+OMNIVOX_PIPER_COMPANION_STATE ?= official-omnivox-release
+OMNIVOX_PIPER_COMPANION_VERSION ?= $(omnivox_piper_version)
+OMNIVOX_PIPER_COMPANION_COMMIT ?= $(omnivox_piper_commit)
+OMNIVOX_PIPER_COMPANION_ARCHIVE_SHA256 ?= $(omnivox_piper_archive_sha256)
 
 verify-windows-omnivox-toolchain:
 	OMNIVOX_RELEASE_IMAGE="$(OMNIVOX_RELEASE_IMAGE)" \
@@ -387,6 +394,35 @@ windows-omnivox-dev:
 		OMNIVOX_INCLUDE_TGSPEECHBOX=1 \
 		OMNIVOX_INCLUDE_PINNED_PIPER=0 windows-omnivox
 
+windows-omnivox-piper-dev:
+	@set -eu; \
+		if [ -z "$(OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE)" ] || \
+			[ -z "$(OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256)" ]; then \
+			echo "Set OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE and OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256" >&2; \
+			exit 1; \
+		fi; \
+		if [ -z "$${OMNIVOX_PIPER_MODEL:-}" ]; then \
+			echo "Set OMNIVOX_PIPER_MODEL to a reviewed Piper .onnx voice" >&2; \
+			exit 1; \
+		fi; \
+		piper_dir="$$("$(OMNIVOX_RELEASE_DIR)/prepare-piper-development-companion.sh" \
+			"$(OMNIVOX_RELEASE_DIR)" "$(OMNIVOX_DIR)" \
+			"$(OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE)" \
+			"$(OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256)")"; \
+		omnivox_commit="$$(git -C "$(OMNIVOX_DIR)" rev-parse HEAD)"; \
+		$(MAKE) OMNIVOX_ALLOW_DIRTY=1 \
+			OMNIVOX_BUILD_KIND=local-dirty-worktree \
+			OMNIVOX_RECORD_RHVOICE=1 \
+			OMNIVOX_INCLUDE_TGSPEECHBOX=1 \
+			OMNIVOX_INCLUDE_PINNED_PIPER=1 \
+			OMNIVOX_PIPER_PREPARED=1 \
+			OMNIVOX_PIPER_DIR="$$piper_dir" \
+			OMNIVOX_PIPER_COMPANION_STATE=github-actions-native-development-build \
+			OMNIVOX_PIPER_COMPANION_VERSION=development-ci \
+			OMNIVOX_PIPER_COMPANION_COMMIT="$$omnivox_commit" \
+			OMNIVOX_PIPER_COMPANION_ARCHIVE_SHA256="$(OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256)" \
+			windows-omnivox
+
 windows-omnivox-main-dev:
 	"$(OMNIVOX_RELEASE_DIR)/stage-main-dev.sh" \
 		"$(CURDIR)" "$(OMNIVOX_DIR)" "$(OMNIVOX_RUNTIME_DIR)" \
@@ -400,6 +436,22 @@ windows-omnivox:
 			0 | 1) ;; \
 			*) echo "OMNIVOX_INCLUDE_PINNED_PIPER must be 0 or 1" >&2; exit 1 ;; \
 		esac; \
+		case "$(OMNIVOX_PIPER_PREPARED)" in \
+			0 | 1) ;; \
+			*) echo "OMNIVOX_PIPER_PREPARED must be 0 or 1" >&2; exit 1 ;; \
+		esac; \
+		case "$(OMNIVOX_PIPER_COMPANION_STATE)" in \
+			official-omnivox-release | github-actions-native-development-build) ;; \
+			*) echo "Unknown OMNIVOX_PIPER_COMPANION_STATE" >&2; exit 1 ;; \
+		esac; \
+		if [ "$(OMNIVOX_PIPER_COMPANION_STATE)" = \
+			github-actions-native-development-build ] && \
+			{ [ "$(OMNIVOX_ALLOW_DIRTY)" != 1 ] || \
+			  [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" != 1 ] || \
+			  [ "$(OMNIVOX_PIPER_PREPARED)" != 1 ]; }; then \
+			echo "Native development Piper requires its guarded development target" >&2; \
+			exit 1; \
+		fi; \
 		case "$(OMNIVOX_INCLUDE_TGSPEECHBOX)" in \
 			0 | 1) ;; \
 			*) echo "OMNIVOX_INCLUDE_TGSPEECHBOX must be 0 or 1" >&2; exit 1 ;; \
@@ -440,7 +492,8 @@ windows-omnivox:
 			python3 tools/build_tgspeechbox.py --release \
 				--target $(OMNIVOX_TARGET); \
 	fi
-	@if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
+	@if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ] && \
+		[ "$(OMNIVOX_PIPER_PREPARED)" != 1 ]; then \
 		$(MAKE) prepare-windows-omnivox-piper; \
 	fi
 	docker run --rm --platform linux/amd64 \
@@ -852,7 +905,10 @@ windows-omnivox:
 				"$$eloquence_runtime_digest" \
 				"$(OMNIVOX_INCLUDE_PINNED_PIPER)" \
 				"$(OMNIVOX_INCLUDE_TGSPEECHBOX)" \
-				"$(omnivox_piper_archive_sha256)" \
+				"$(OMNIVOX_PIPER_COMPANION_STATE)" \
+				"$(OMNIVOX_PIPER_COMPANION_VERSION)" \
+				"$(OMNIVOX_PIPER_COMPANION_COMMIT)" \
+				"$(OMNIVOX_PIPER_COMPANION_ARCHIVE_SHA256)" \
 				"$$piper_companion_digest" \
 				"$$piper_model_digest" \
 				"$$rhvoice_configuration_state" \
@@ -1015,10 +1071,10 @@ windows-omnivox:
 		piper_archive_digest=not-included; \
 		if [ "$(OMNIVOX_INCLUDE_PINNED_PIPER)" = 1 ]; then \
 			omnivox_features=piper; \
-			piper_companion_state=official-omnivox-release; \
-			piper_version=$(omnivox_piper_version); \
-			piper_commit=$(omnivox_piper_commit); \
-			piper_archive_digest=$(omnivox_piper_archive_sha256); \
+			piper_companion_state=$(OMNIVOX_PIPER_COMPANION_STATE); \
+			piper_version=$(OMNIVOX_PIPER_COMPANION_VERSION); \
+			piper_commit=$(OMNIVOX_PIPER_COMPANION_COMMIT); \
+			piper_archive_digest=$(OMNIVOX_PIPER_COMPANION_ARCHIVE_SHA256); \
 		fi; \
 		tgspeechbox_companion_state=not-included; \
 		tgspeechbox_target=not-included; \

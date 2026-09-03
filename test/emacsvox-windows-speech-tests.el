@@ -851,6 +851,11 @@ Return the server's standard output."
     (should
      (search-forward
       "OMNIVOX_INCLUDE_PINNED_PIPER=0 windows-omnivox" nil t))
+    (should (search-forward "windows-omnivox-piper-dev:" nil t))
+    (should
+     (search-forward
+      "OMNIVOX_PIPER_COMPANION_STATE=github-actions-native-development-build"
+      nil t))
     (should
      (search-forward
       "python3 tools/build_rhvoice.py --release" nil t))
@@ -892,6 +897,24 @@ Return the server's standard output."
                         "--engine flite --dump-wav"
                         "--engine rutts --dump-wav"))
       (should (search-forward contract nil t))))
+  (with-temp-buffer
+    (insert-file-contents
+     (expand-file-name
+      "omnivox-release/prepare-piper-development-companion.sh"
+      emacsvox-servers-directory))
+    (dolist (contract '("sha256sum --check SHA256SUMS"
+                        "x86_64-pc-windows-msvc"
+                        "tracked_worktree_dirty"
+                        "status --porcelain --untracked-files=normal"))
+      (goto-char (point-min))
+      (should (search-forward contract nil t))))
+  (with-temp-buffer
+    (insert-file-contents
+     (expand-file-name
+      "omnivox-release/verify-runtime.sh"
+      emacsvox-servers-directory))
+    (should
+     (search-forward "github-actions-native-development-build" nil t)))
 
 (provide 'emacsvox-windows-speech-tests)
 
