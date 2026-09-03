@@ -57,6 +57,8 @@ run_staged()
         -u OMNIVOX_RUTTS_HELPER \
         -u OMNIVOX_TGSPEECHBOX_HELPER -u OMNIVOX_TGSPEECHBOX_DATA \
         -u OMNIVOX_TGSPEECHBOX_SAMPLE_RATE \
+        -u OMNIVOX_PIPER_HELPER -u OMNIVOX_PIPER_MODEL \
+        -u OMNIVOX_PIPER_ESPEAK_DATA \
         OMNIVOX_PROGRAM="$windows_program" \
         OMNIVOX_LOG_DIRECTORY="$log_directory" \
         ESPEAK_NG_DATA="$espeak_data_path" \
@@ -70,7 +72,25 @@ run_staged_tgspeechbox()
     env -u OMNIVOX_FLITE_HELPER -u OMNIVOX_FLITE_VOICES \
         -u OMNIVOX_RUTTS_HELPER \
         -u OMNIVOX_TGSPEECHBOX_HELPER -u OMNIVOX_TGSPEECHBOX_DATA \
+        -u OMNIVOX_PIPER_HELPER -u OMNIVOX_PIPER_MODEL \
+        -u OMNIVOX_PIPER_ESPEAK_DATA \
         OMNIVOX_TGSPEECHBOX_SAMPLE_RATE="$sample_rate" \
+        OMNIVOX_PROGRAM="$windows_program" \
+        OMNIVOX_LOG_DIRECTORY="$log_directory" \
+        ESPEAK_NG_DATA="$espeak_data_path" \
+        "$launcher" "$@"
+}
+
+run_staged_piper()
+{
+    piper_model=$1
+    shift
+    env -u OMNIVOX_FLITE_HELPER -u OMNIVOX_FLITE_VOICES \
+        -u OMNIVOX_RUTTS_HELPER \
+        -u OMNIVOX_TGSPEECHBOX_HELPER -u OMNIVOX_TGSPEECHBOX_DATA \
+        -u OMNIVOX_TGSPEECHBOX_SAMPLE_RATE \
+        -u OMNIVOX_PIPER_HELPER -u OMNIVOX_PIPER_ESPEAK_DATA \
+        OMNIVOX_PIPER_MODEL="$piper_model" \
         OMNIVOX_PROGRAM="$windows_program" \
         OMNIVOX_LOG_DIRECTORY="$log_directory" \
         ESPEAK_NG_DATA="$espeak_data_path" \
@@ -151,6 +171,43 @@ case "$tgspeechbox_companion_state" in
         ;;
 esac
 
+piper_companion_state=$(
+    sed -n 's/^piper_companion=//p' "$current/PROVENANCE"
+)
+piper_model_state=$(sed -n 's/^piper_model=//p' "$current/PROVENANCE")
+case "$piper_companion_state:$piper_model_state" in
+    official-omnivox-release:external-user-supplied-windows-cache | \
+    github-actions-native-development-build:external-user-supplied-windows-cache)
+        piper_model=$(sed -n '1p' "$current/piper-model.path")
+        piper_model_file=$(wslpath -u "$piper_model")
+        piper_voice_name=${piper_model_file##*/}
+        piper_voice="piper:${piper_voice_name%.onnx}"
+        piper_voices=$(run_staged_piper "$piper_model" \
+            --engine piper --list-voices-alist)
+        if ! printf '%s\n' "$piper_voices" | \
+            grep -Fq "(\"$piper_voice\""; then
+            echo "Staged Piper helper did not report $piper_voice" >&2
+            exit 1
+        fi
+        piper_wav=$smoke_directory/piper.wav
+        run_staged_piper "$piper_model" --engine piper --dump-wav \
+            "$piper_voice" "$(wslpath -w "$piper_wav")" \
+            "Piper is ready." >/dev/null
+        companion_wavs="$companion_wavs $piper_wav"
+        live_piper_voice=$piper_voice
+        ;;
+    official-omnivox-release:external-user-supplied-not-configured)
+        live_piper_voice=not-configured
+        ;;
+    not-included:not-included)
+        live_piper_voice=not-included
+        ;;
+    *)
+        echo "Unsupported live Piper state: $piper_companion_state:$piper_model_state" >&2
+        exit 1
+        ;;
+esac
+
 for wav in $companion_wavs; do
     if [ ! -f "$wav" ] || [ "$(wc -c < "$wav")" -le 44 ] ||
        [ "$(dd if="$wav" bs=1 count=4 2>/dev/null)" != RIFF ]; then
@@ -165,4 +222,5 @@ printf '%s\n' \
     'live_rutts_voices=male,female' \
     "live_tgspeechbox_voice=$live_tgspeechbox_voice" \
     "live_tgspeechbox_sample_rates=$live_tgspeechbox_sample_rates" \
+    "live_piper_voice=$live_piper_voice" \
     "live_runtime=$windows_runtime"

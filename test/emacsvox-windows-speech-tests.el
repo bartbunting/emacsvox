@@ -894,8 +894,11 @@ Return the server's standard output."
       emacsvox-servers-directory))
     (dolist (contract '("--engine flite --list-voices-alist"
                         "--engine rutts --list-voices-alist"
+                        "--engine piper --list-voices-alist"
                         "--engine flite --dump-wav"
-                        "--engine rutts --dump-wav"))
+                        "--engine rutts --dump-wav"
+                        "--engine piper --dump-wav"))
+      (goto-char (point-min))
       (should (search-forward contract nil t))))
   (with-temp-buffer
     (insert-file-contents
