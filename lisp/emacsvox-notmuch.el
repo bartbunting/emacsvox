@@ -533,24 +533,30 @@ bounded copy of a larger source buffer."
    "automatic Notmuch speech"))
 
 (defun emacsvox-notmuch--submit-content
-    (text facts occasion compatibility-actions)
-  "Submit TEXT and COMPATIBILITY-ACTIONS under FACTS and OCCASION."
+    (text facts occasion compatibility-actions &optional delivery-policy)
+  "Submit TEXT and COMPATIBILITY-ACTIONS under FACTS and OCCASION.
+DELIVERY-POLICY, when non-nil, controls whole-transaction delivery."
   (let ((text
          (and text
               (emacsvox-notmuch--limit-automatic-presentation text)))
         (arguments
-         (list :facts facts :module 'notmuch :occasion occasion
-               :compatibility-actions compatibility-actions)))
+         (append
+          (list :facts facts :module 'notmuch :occasion occasion
+                :compatibility-actions compatibility-actions)
+          (when delivery-policy
+            (list :delivery-policy delivery-policy)))))
     (if (and (stringp text) (not (string-empty-p text)))
         (apply #'emacsvox-aural-submit text arguments)
       (apply #'emacsvox-aural-submit-actions arguments))))
 
 (defun emacsvox-notmuch--submit-text-feedback
-    (facts occasion icon text)
-  "Submit explicit TEXT with FACTS, OCCASION, and leading ICON."
+    (facts occasion icon text &optional delivery-policy)
+  "Submit explicit TEXT with FACTS, OCCASION, and leading ICON.
+DELIVERY-POLICY, when non-nil, controls whole-transaction delivery."
   (emacsvox-notmuch--submit-content
    text facts occasion
-   (emacsvox-notmuch--leading-compatibility-actions icon)))
+   (emacsvox-notmuch--leading-compatibility-actions icon)
+   delivery-policy))
 
 (defun emacsvox-notmuch--leading-compatibility-actions (icon)
   "Return a leading compatibility action for ICON, when non-nil."
@@ -1464,7 +1470,8 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
   (emacsvox-notmuch--submit-text-feedback
    (emacsvox-notmuch-view-facts 'other 'close 'mail-view-closed)
    'state-change 'close-object
-   (emacsvox-notmuch--view-summary)))
+   (emacsvox-notmuch--view-summary)
+   'urgent))
 
 (emacsvox-notmuch--register-after-group
  '(notmuch-bury-or-kill-this-buffer)

@@ -257,6 +257,29 @@ Return the beginning of the inserted row."
       (should (fboundp target))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-notmuch-quit-interrupts-before-close-feedback ()
+  "Quitting a Notmuch view urgently replaces speech already in progress."
+  (with-temp-buffer
+    (rename-buffer "*notmuch quit test*" t)
+    (setq major-mode 'notmuch-search-mode)
+    (let ((ems--interactive-fn-name 'notmuch-bury-or-kill-this-buffer)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments)))))
+        (emacsvox--advice-notmuch-bury-or-kill-this-buffer-after))
+      (pcase-let* ((`(,content . ,arguments) captured)
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (string-match-p "notmuch quit test" content))
+        (should (eq (plist-get arguments :delivery-policy) 'urgent))
+        (should (= (length actions) 1))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value (car actions))
+          'close-object))))))
+
 (ert-deftest emacsvox-notmuch-mode-hooks-set-semantic-module ()
   "Notmuch buffers identify their semantic module independently of text."
   (with-temp-buffer
