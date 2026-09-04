@@ -75,6 +75,9 @@
 (defvar-local emacsvox-corfu--session-active-p nil
   "Non-nil after the current Corfu completion session is announced.")
 
+(defvar-local emacsvox-corfu--pending-expansion nil
+  "Initial completion expansion awaiting Corfu's candidate update.")
+
 ;;;  Helper functions:
 
 (defun emacsvox-corfu--reset-state ()
@@ -82,7 +85,8 @@
   (setq emacsvox-corfu--prev-candidate nil
         emacsvox-corfu--prev-index -1
         emacsvox-corfu--prev-total 0
-        emacsvox-corfu--session-active-p nil))
+        emacsvox-corfu--session-active-p nil
+        emacsvox-corfu--pending-expansion nil))
 
 (defun emacsvox-corfu--total ()
   "Return the number of current Corfu candidates."
@@ -268,7 +272,6 @@ audible.  SNAPSHOT, when non-nil, is the already formatted candidate text."
 CHANGED-P is non-nil when common-prefix expansion changed the input."
   (if changed-p
       (concat
-       (emacsvox-corfu--voice "Expanded to " voice-annotate)
        (emacsvox-corfu--voice input voice-bolden)
        (emacsvox-corfu--voice
         (format ", %d completion%s"
@@ -413,6 +416,30 @@ CHANGED-P is non-nil when common-prefix expansion changed the input."
 
 ;;;  Internal advice:
 
+(defun emacsvox--advice-corfu--in-region-1-around
+    (original beg end table pred)
+  "Let Corfu own speech for an initial interactive completion.
+Keep expanded input until the popup update can announce it with the new
+candidate count.  Consuming the interactive marker prevents generic
+`completion-at-point' feedback from being cut off by that update."
+  (let* ((interactive-p (ems-interactive-p 'completion-at-point))
+         (markers (and interactive-p
+                       (list (copy-marker beg) (copy-marker end t))))
+         (before (emacsvox-corfu--marker-text markers)))
+    (unwind-protect
+        (let ((result (funcall original beg end table pred)))
+          (when (and interactive-p result)
+            (let ((after (emacsvox-corfu--marker-text markers)))
+              (if (bound-and-true-p completion-in-region-mode)
+                  (unless (equal before after)
+                    (setq emacsvox-corfu--pending-expansion after))
+                (emacsvox-corfu--submit
+                 (emacsvox-corfu--voice after voice-bolden)
+                 '(:role candidate :events (accepted))
+                 'state-change 'complete))))
+          result)
+      (emacsvox-corfu--clear-markers markers))))
+
 (defun emacsvox--advice-corfu--update-after (&rest _)
   "Present candidate availability after Corfu updates."
   (when (bound-and-true-p corfu-mode)
@@ -426,10 +453,22 @@ CHANGED-P is non-nil when common-prefix expansion changed the input."
                     (emacsvox-corfu--candidate-with-annotation 0 t)
                     (emacsvox-corfu--count-text "Completion prompt, "))))
           (setq emacsvox-corfu--session-active-p t)
-          (when (or opening-p total-changed-p
-                    (not (equal snapshot emacsvox-corfu--prev-candidate)))
+          (cond
+           (emacsvox-corfu--pending-expansion
+            (emacsvox-corfu--submit
+             (emacsvox-corfu--expansion-text
+              emacsvox-corfu--pending-expansion t)
+             '(:role candidate :events (completion-input-updated))
+             'state-change 'complete)
+            ;; Remember the popup snapshot too, so another unchanged update
+            ;; cannot replace the expansion with its first candidate.
+            (setq emacsvox-corfu--pending-expansion nil
+                  emacsvox-corfu--prev-candidate snapshot
+                  emacsvox-corfu--prev-index corfu--index))
+           ((or opening-p total-changed-p
+                (not (equal snapshot emacsvox-corfu--prev-candidate)))
             (emacsvox-corfu--speak-candidate
-             (if opening-p 'open-object 'item) nil snapshot))
+             (if opening-p 'open-object 'item) nil snapshot)))
           (setq emacsvox-corfu--prev-total
                 (emacsvox-corfu--total)))
       (unless (equal emacsvox-corfu--prev-candidate "No completions")
@@ -455,6 +494,7 @@ CHANGED-P is non-nil when common-prefix expansion changed the input."
       emacsvox--advice-corfu-insert-separator-after)
      (corfu-complete :around emacsvox--advice-corfu-complete-around)
      (corfu-expand :around emacsvox--advice-corfu-expand-around)
+     (corfu--in-region-1 :around emacsvox--advice-corfu--in-region-1-around)
      (corfu--update :after emacsvox--advice-corfu--update-after))
    (mapcar
     (lambda (target)

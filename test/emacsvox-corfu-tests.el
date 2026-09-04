@@ -6,6 +6,7 @@
 (package-initialize)
 (require 'corfu)
 (require 'shell)
+(require 'emacsvox-advice)
 (load (expand-file-name "../lisp/emacsvox-corfu.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
@@ -159,7 +160,7 @@
                    (actions
                     (plist-get arguments :compatibility-actions)))
         (should (equal content
-                       "Expanded to ~/src/emacs, 2 completions"))
+                       "~/src/emacs, 2 completions"))
         (should
          (equal
           (plist-get facts :events)
@@ -457,6 +458,86 @@
                 (should-not completion-in-region-mode)
                 (should (equal (buffer-string) "cd src/"))))))
       (delete-directory root t))))
+
+(ert-deftest emacsvox-corfu-shell-initial-expansion-speaks-before-choices ()
+  "Initial TAB and the following popup update announce the expanded path once."
+  (let ((root (file-name-as-directory
+               (make-temp-file "emacsvox-corfu-shell-" t))))
+    (unwind-protect
+        (progn
+          (make-directory (expand-file-name "src/JAWS" root) t)
+          (make-directory (expand-file-name "src/project" root))
+          (save-window-excursion
+            (with-temp-buffer
+              (setq default-directory root)
+              (shell-mode)
+              (set-window-buffer (selected-window) (current-buffer))
+              (insert "cd sr")
+              (let ((corfu-preselect 'prompt)
+                    (corfu-preview-current nil)
+                    (corfu-on-exact-match nil)
+                    (this-command 'completion-at-point)
+                    speech)
+                (corfu-mode 1)
+                (cl-letf
+                    (((symbol-function 'corfu--candidates-popup) #'ignore)
+                     ((symbol-function 'corfu--popup-hide) #'ignore)
+                     ((symbol-function 'emacsvox-icon) #'ignore)
+                     ((symbol-function 'tts-speak)
+                      (lambda (text) (push text speech)))
+                     ((symbol-function 'emacsvox-aural-submit)
+                      (lambda (text &rest _) (push text speech))))
+                  (unwind-protect
+                      (progn
+                        (call-interactively #'completion-at-point)
+                        (should (equal (buffer-string) "cd src/"))
+                        (should completion-in-region-mode)
+                        ;; Corfu computes the directory's children only after
+                        ;; the initial completion command has returned.
+                        (corfu--post-command)
+                        (should (= corfu--total 2))
+                        (should (= corfu--index -1))
+                        (should
+                         (equal speech '("src/, 2 completions")))
+                        (corfu--post-command)
+                        (should (= (length speech) 1))
+                        (call-interactively #'corfu-next)
+                        (should (equal (car speech) "JAWS/, 1 of 2")))
+                    (corfu-quit)))))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-corfu-initial-completion-handles-unchanged-and-finished ()
+  "Initial completion announces unchanged choices or a finished word once."
+  (dolist (initial '("f" "fo"))
+    (with-temp-buffer
+      (insert initial)
+      (let ((completion-at-point-functions
+             (list (lambda ()
+                     (list (point-min) (point-max) '("foo" "far")))))
+            (corfu-preselect 'prompt)
+            (corfu-preview-current nil)
+            (corfu-on-exact-match nil)
+            speech)
+        (corfu-mode 1)
+        (cl-letf
+            (((symbol-function 'corfu--popup-hide) #'ignore)
+             ((symbol-function 'emacsvox-icon) #'ignore)
+             ((symbol-function 'tts-speak)
+              (lambda (text) (push text speech)))
+             ((symbol-function 'emacsvox-aural-submit)
+              (lambda (text &rest _) (push text speech))))
+          (unwind-protect
+              (progn
+                (call-interactively #'completion-at-point)
+                (if (equal initial "f")
+                    (progn
+                      (should completion-in-region-mode)
+                      (corfu--update)
+                      (should (equal speech '("far, 2 completions"))))
+                  (should-not completion-in-region-mode)
+                  (should (equal (buffer-string) "foo"))
+                  (should (equal speech '("foo")))))
+            (corfu-quit)))))))
 
 (ert-deftest emacsvox-corfu-separator-policy-uses-named-tone ()
   "Separator insertion resolves its short confirmation tone by intent."
