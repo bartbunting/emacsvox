@@ -8,23 +8,23 @@
 	:state
 	(:text "alpha beta\n" :point 1 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
- (:name next-line :events ((stop all) (speak (:text "second"))) :value
+ (:name next-line :events ((stop nil) (speak (:text "second"))) :value
 	nil :state
 	(:text "first\nsecond\n" :point 7 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
- (:name previous-line :events ((stop all) (speak (:text "first")))
+ (:name previous-line :events ((stop nil) (speak (:text "first")))
 	:value nil :state
 	(:text "first\nsecond\n" :point 1 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
  (:name beginning-of-buffer :events
-	((message "Mark set") (icon large-movement) (stop all)
+	((message "Mark set") (icon large-movement) (stop nil)
 	 (speak (:text "first"))
 	 (notify (:text " top " :personalities ((0 5 acss-p0-s0))) nil))
 	:value nil :state
 	(:text "first\nsecond\n" :point 1 :mark 9 :mark-active t
 	       :modified nil :kill-ring nil))
  (:name end-of-buffer :events
-	((message "Mark set") (icon large-movement) (stop all)
+	((message "Mark set") (icon large-movement) (stop nil)
 	 (tone 130.8 150 force)
 	 (notify (:text " bottom " :personalities ((0 8 acss-p0-s0)))
 		 nil))
@@ -53,7 +53,7 @@
 	(:text "alpha beta\n" :point 1 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
  (:name next-logical-line :events
-	((stop all) (speak (:text "second"))) :value nil :state
+	((stop nil) (speak (:text "second"))) :value nil :state
 	(:text "first\nsecond\n" :point 7 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
  (:name forward-word :events ((speak (:text "beta"))) :value t :state
@@ -63,7 +63,7 @@
 	(:text "alpha beta" :point 7 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
  (:name back-to-indentation :events
-	((stop all) (speak (:text "  alpha"))) :value nil :state
+	((stop nil) (speak (:text "  alpha"))) :value nil :state
 	(:text "  alpha\n" :point 3 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
  (:name forward-sentence :events ((speak (:text "Second sentence.")))
@@ -79,7 +79,7 @@
 	 :point 18 :mark nil :mark-active nil :modified nil :kill-ring
 	 nil))
  (:name forward-list :events
-	((icon large-movement) (stop all)
+	((icon large-movement) (stop nil)
 	 (speak (:text "(one) (two)")))
 	:value 6 :state
 	(:text "(one) (two)" :point 6 :mark nil :mark-active nil
@@ -107,7 +107,7 @@
 	(:text "alpha " :point 7 :mark nil :mark-active nil :modified
 	       t :kill-ring ("beta")))
  (:name kill-line :events
-	((icon delete-object) (tone 500 75 force) (stop all)
+	((icon delete-object) (tone 500 75 force) (stop nil)
 	 (speak (:text "alpha")))
 	:value nil :state
 	(:text "beta\n" :point 1 :mark nil :mark-active nil :modified

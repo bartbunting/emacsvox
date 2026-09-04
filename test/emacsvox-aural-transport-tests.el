@@ -235,7 +235,9 @@ write.  State synchronization lines in a combined write are ignored."
              emacsvox-aural-submission-facts
              emacsvox-aural-submission-context
              emacsvox-aural-submission-module
-             emacsvox-aural-submission-occasion))
+             emacsvox-aural-submission-occasion
+             emacsvox-aural-submission-lane
+             emacsvox-aural-submission-interruption-policy))
            'called)
          :facts '(:role message)
          :module 'notmuch
@@ -249,12 +251,14 @@ write.  State synchronization lines in a combined write are ignored."
       '((one two)
         (:role message)
         (:module notmuch :occasion navigation :frozen t)
-        notmuch navigation)))
+        notmuch navigation main lane)))
     (let ((emacsvox-aural-submission-facts '(:role heading))
           (emacsvox-aural-submission-context
            '(:module org :occasion state-change :frozen outer))
           (emacsvox-aural-submission-module 'org)
-          (emacsvox-aural-submission-occasion 'state-change))
+          (emacsvox-aural-submission-occasion 'state-change)
+          (emacsvox-aural-submission-lane 'notification)
+          (emacsvox-aural-submission-interruption-policy 'none))
       (setq observed nil)
       (emacsvox-aural-call-with-submission
        (lambda ()
@@ -264,7 +268,9 @@ write.  State synchronization lines in a combined write are ignored."
            emacsvox-aural-submission-facts
            emacsvox-aural-submission-context
            emacsvox-aural-submission-module
-           emacsvox-aural-submission-occasion)))
+           emacsvox-aural-submission-occasion
+           emacsvox-aural-submission-lane
+           emacsvox-aural-submission-interruption-policy)))
        :facts '(:role message)
        :context '(:module notmuch :occasion navigation)
        :module 'notmuch
@@ -274,23 +280,25 @@ write.  State synchronization lines in a combined write are ignored."
         observed
         '((:role heading)
           (:module org :occasion state-change :frozen outer)
-          org state-change)))
+          org state-change notification none)))
       (should (equal captures '((notmuch navigation)))))))
 
 (ert-deftest emacsvox-aural-source-assigns-whole-submission-delivery ()
   "Source occasions select delivery policy before transport is involved."
   (dolist
       (case
-       '((navigation replaceable speaker)
-         (continuous ordered nil)
-         (state-change ordered nil)
-         (notification ordered nil)))
+       '((navigation main lane replaceable speaker)
+         (continuous main none ordered nil)
+         (state-change main none ordered nil)
+         (notification main none ordered nil)))
     (let (observed)
       (emacsvox-aural-call-with-submission
        (lambda ()
          (setq
           observed
           (list
+           emacsvox-aural-submission-lane
+           emacsvox-aural-submission-interruption-policy
            emacsvox-aural-submission-delivery-policy
            emacsvox-aural-submission-replacement-key)))
        :occasion (car case))
@@ -301,12 +309,22 @@ write.  State synchronization lines in a combined write are ignored."
        (setq
         observed
         (list
+         emacsvox-aural-submission-lane
+         emacsvox-aural-submission-interruption-policy
          emacsvox-aural-submission-delivery-policy
          emacsvox-aural-submission-replacement-key)))
      :occasion 'notification
+     :lane 'notification
      :delivery-policy 'urgent
      :replacement-key 'ignored)
-    (should (equal observed '(urgent nil)))))
+    (should (equal observed '(notification none urgent nil))))
+  (should-error
+   (emacsvox-aural-call-with-submission #'ignore :lane 'background)
+   :type 'error)
+  (should-error
+   (emacsvox-aural-call-with-submission
+    #'ignore :interruption-policy 'global)
+   :type 'error))
 
 (ert-deftest emacsvox-aural-source-enclosing-delivery-is-authoritative ()
   "Nested compatibility helpers cannot replace outer delivery intent."
@@ -1501,6 +1519,98 @@ write.  State synchronization lines in a combined write are ignored."
              (equal (plist-get envelope :replacement_key) "navigation"))))
       (delete-process process))))
 
+(ert-deftest emacsvox-aural-navigation-hard-stops-only-its-main-lane ()
+  "Navigation stops stale main speech without stopping notification speech."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-main-lane-interruption-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (emacsvox-aural--pending-deliveries
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--delivery-sequence 0)
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text "next row" :speak t)
+           :context '(:occasion navigation)))
+         interruptions
+         writes)
+    (unwind-protect
+        (progn
+          (process-put
+           process emacsvox-aural--structured-timeline-process-property 3)
+          (process-put process tts--tracked-playback-completion-property t)
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (_owner command) (push command writes)))
+               ((symbol-function 'tts--interrupt-process)
+                (lambda (owner &optional notifications)
+                  (push (list owner notifications) interruptions)))
+               ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+            (let ((emacsvox-aural-submission-delivery-policy 'replaceable)
+                  (emacsvox-aural-submission-replacement-key 'navigation)
+                  (emacsvox-aural-submission-interruption-policy 'lane)
+                  (emacsvox-aural-submission-controls-interruption t))
+              (emacsvox-aural-call-with-delivery-transaction
+               process
+               (lambda ()
+                 (emacsvox-aural-queue-concrete-plan plan "next row")
+                 (tts--protocol-dispatch)))))
+          (should (equal interruptions (list (list process nil))))
+          (should (= (length writes) 1))
+          (should
+           (string-match-p "\\`emacsvox_timeline " (car writes))))
+      (delete-process process))))
+
+(ert-deftest emacsvox-aural-notification-submission-is-atomic-and-lane-owned ()
+  "A notification cue and text share one submission on the notifier owner."
+  (emacsvox-test--with-transport-scheme
+    (let ((tts-speaker-process 'main)
+          (tts-notify-process 'notification)
+          (context
+           '(:module notmuch
+             :mode notmuch-search-mode
+             :mode-lineage (notmuch-search-mode special-mode)
+             :occasion notification
+             :face-presentation-enabled t
+             :voice-lock-enabled nil
+             :icons-enabled t))
+          logs
+          owners
+          submission)
+      (cl-letf
+          (((symbol-function 'process-live-p)
+            (lambda (process) (memq process '(main notification))))
+           ((symbol-function 'tts-notify-process)
+            (lambda () tts-notify-process))
+           ((symbol-function 'emacsvox-log-notification)
+            (lambda (text) (push text logs)))
+           ((symbol-function 'tts-speak)
+            (lambda (_text) (push tts-speaker-process owners))))
+        (setq
+         submission
+         (emacsvox-aural-submit-notification
+          "Search refreshed, 2 threads"
+          :facts '(:role mail-view :events (refresh-completed))
+          :context context
+          :compatibility-actions
+          (list (emacsvox-aural-compatibility-icon 'task-done)))))
+      (should (equal owners '(notification)))
+      (should (equal logs '("Search refreshed, 2 threads")))
+      (should (eq (emacsvox-aural-submission-lane submission) 'notification))
+      (should
+       (eq
+        (emacsvox-aural-submission-interruption-policy submission)
+        'none))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (emacsvox-aural-submission-compatibility-actions submission))
+        '(task-done))))))
+
 (ert-deftest emacsvox-aural-failed-tracked-transaction-does-not-issue-id ()
   "A failed outer write neither returns an ID nor commits callback ownership."
   (let* ((process
@@ -2249,6 +2359,14 @@ write.  State synchronization lines in a combined write are ignored."
            (emacsvox-aural-compatibility-icon 'button)
            (emacsvox-aural-compatibility-icon 'repeat-stop 'after)))))
       (should (emacsvox-aural-submission-p submission))
+      (should
+       (eq
+        (emacsvox-aural-submission-lane submission)
+        'main))
+      (should
+       (eq
+        (emacsvox-aural-submission-interruption-policy submission)
+        'lane))
       (should
        (eq
         (emacsvox-aural-submission-delivery-policy submission)
@@ -5789,6 +5907,26 @@ is the default inherited by a newly created TTS scratch buffer."
              (eq (plist-get captured :mode) 'emacs-lisp-mode))
             (should
              (eq (plist-get captured :occasion) 'notification))))
+      (kill-buffer destination))))
+
+(ert-deftest emacsvox-aural-native-notification-captures-before-logging ()
+  "Atomic notification logging cannot replace the source buffer context."
+  (let ((destination (generate-new-buffer " *native-notification-log*"))
+        captured)
+    (unwind-protect
+        (with-temp-buffer
+          (setq major-mode 'emacs-lisp-mode)
+          (let ((source (current-buffer)))
+            (cl-letf
+                (((symbol-function 'emacsvox-log-notification)
+                  (lambda (_text) (set-buffer destination)))
+                 ((symbol-function 'emacsvox-aural-submit)
+                  (lambda (_text &rest arguments)
+                    (setq captured (copy-tree (plist-get arguments :context))))))
+              (emacsvox-aural-submit-notification "ready"))
+            (should (eq (plist-get captured :source-buffer) source))
+            (should (eq (plist-get captured :mode) 'emacs-lisp-mode))
+            (should (eq (plist-get captured :occasion) 'notification))))
       (kill-buffer destination))))
 
 (ert-deftest emacsvox-aural-transport-immediate-icon-uses-concrete-cue ()

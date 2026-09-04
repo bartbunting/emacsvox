@@ -39,7 +39,13 @@
 (require 'emacsvox-aural-source)
 
 (declare-function tts-speak "tts-speak" (text))
+(declare-function tts-initialize "tts-speak" ())
+(declare-function tts-notify-process "tts-speak" ())
+(declare-function emacsvox-log-notification "emacsvox-speak" (text))
 (autoload 'emacsvox-aural-present "emacsvox-aural-transport")
+
+(defvar tts-speaker-process)
+(defvar emacsvox-last-message)
 
 (define-error
   'emacsvox-aural-submission-error
@@ -55,7 +61,8 @@
     (emacsvox-aural-submission
      (:constructor emacsvox-aural--make-submission))
   "One frozen native aural presentation transaction."
-  id delivery-policy replacement-key facts context content
+  id lane interruption-policy delivery-policy replacement-key
+  facts context content
   compatibility-actions prepared-content plans)
 
 (defvar emacsvox-aural--submission-sequence 0
@@ -391,6 +398,16 @@ PHASE is `before' by default and may alternatively be `after'."
         prepared (length prepared))))
     (nreverse plans)))
 
+(defun emacsvox-aural--call-on-submission-lane (function &rest arguments)
+  "Call FUNCTION with ARGUMENTS on the current submission's speech lane."
+  (if (eq emacsvox-aural-submission-lane 'notification)
+      (progn
+        (unless (process-live-p tts-speaker-process)
+          (tts-initialize))
+        (let ((tts-speaker-process (tts-notify-process)))
+          (apply function arguments)))
+    (apply function arguments)))
+
 (defun emacsvox-aural--submit-content
     (content compatibility-actions)
   "Submit CONTENT with normalized COMPATIBILITY-ACTIONS."
@@ -429,6 +446,9 @@ PHASE is `before' by default and may alternatively be `after'."
            (submission
             (emacsvox-aural--make-submission
              :id id
+             :lane emacsvox-aural-submission-lane
+             :interruption-policy
+             emacsvox-aural-submission-interruption-policy
              :delivery-policy emacsvox-aural-submission-delivery-policy
              :replacement-key emacsvox-aural-submission-replacement-key
              :facts (copy-tree facts)
@@ -449,7 +469,8 @@ PHASE is `before' by default and may alternatively be `after'."
               (lambda (presented-plan)
                 (push presented-plan presented-plans))))
         (let ((emacsvox-aural--current-submission-id id))
-          (emacsvox-aural-call-with-presentation-transaction
+          (emacsvox-aural--call-on-submission-lane
+           #'emacsvox-aural-call-with-presentation-transaction
            id #'tts-speak prepared))
         (when presented-plans
           (setf
@@ -477,11 +498,14 @@ PHASE is `before' by default and may alternatively be `after'."
             (push presented-plan presented-plans)))
          (plan
           (let ((emacsvox-aural--current-submission-id id))
-            (emacsvox-aural-call-with-presentation-transaction
+            (emacsvox-aural--call-on-submission-lane
+             #'emacsvox-aural-call-with-presentation-transaction
              id #'emacsvox-aural-present facts plan-context
              (emacsvox-aural--source-compatibility-actions actions)))))
     (emacsvox-aural--make-submission
      :id id
+     :lane emacsvox-aural-submission-lane
+     :interruption-policy emacsvox-aural-submission-interruption-policy
      :delivery-policy emacsvox-aural-submission-delivery-policy
      :replacement-key emacsvox-aural-submission-replacement-key
      :facts facts
@@ -494,15 +518,16 @@ PHASE is `before' by default and may alternatively be `after'."
 
 (cl-defun emacsvox-aural-submit-actions
     (&key
-     facts context module occasion delivery-policy replacement-key
-     compatibility-actions)
+     facts context module occasion lane delivery-policy replacement-key
+     interruption-policy compatibility-actions)
   "Present semantic FACTS as one action-only native transaction.
 
 FACTS describe one user-visible event or object but supply no spoken object
 content.  Matching rules may still produce ordered speech, cue, pause, or tone
-actions.  Frozen CONTEXT controls policy; MODULE and OCCASION are used when it
-must be captured.  DELIVERY-POLICY and REPLACEMENT-KEY control whole-transaction
-delivery.  COMPATIBILITY-ACTIONS is an ordered list produced by
+actions.  Frozen CONTEXT controls policy; MODULE, OCCASION, and LANE are used
+when it must be captured.  DELIVERY-POLICY, REPLACEMENT-KEY, and
+INTERRUPTION-POLICY control whole-transaction delivery.  COMPATIBILITY-ACTIONS
+is an ordered list produced by
 `emacsvox-aural-compatibility-icon'.  Before actions precede semantic
 before-actions; after actions follow semantic after-actions.  A resolution
 with no enabled output does not start the speech server, dispatch, or create a
@@ -519,23 +544,26 @@ presentation-history record."
      :module (or module (plist-get context :module))
      :occasion
      (or occasion (plist-get context :occasion) 'notification)
+     :lane lane
      :delivery-policy delivery-policy
      :replacement-key replacement-key
+     :interruption-policy interruption-policy
      :arguments (list compatibility-actions))))
 
 (cl-defun emacsvox-aural-submit
     (content
-     &key facts context module occasion delivery-policy replacement-key
-     compatibility-actions)
+     &key facts context module occasion lane delivery-policy replacement-key
+     interruption-policy compatibility-actions)
   "Present CONTENT as one native aural transaction.
 
-FACTS and frozen CONTEXT describe one user-visible object.  MODULE and
-OCCASION are used when CONTEXT must be captured.  DELIVERY-POLICY and
-REPLACEMENT-KEY control whole-transaction delivery.  COMPATIBILITY-ACTIONS is an
-ordered list produced by `emacsvox-aural-compatibility-icon'.  Before actions
-precede semantic before-actions; after actions follow semantic after-actions.
-Semantic rules are resolved once for the object, while legacy icons resolve
-only their cue-specific adapter policy."
+FACTS and frozen CONTEXT describe one user-visible object.  MODULE, OCCASION,
+and LANE are used when CONTEXT must be captured.  DELIVERY-POLICY,
+REPLACEMENT-KEY, and INTERRUPTION-POLICY control whole-transaction delivery.
+COMPATIBILITY-ACTIONS is an ordered list produced by
+`emacsvox-aural-compatibility-icon'.  Before actions precede semantic
+before-actions; after actions follow semantic after-actions.  Semantic rules
+are resolved once for the object, while legacy icons resolve only their
+cue-specific adapter policy."
   (let* ((command-start emacsvox-aural-command-start-time)
          (submit-observed-at (float-time))
          (plain-content
@@ -566,8 +594,10 @@ only their cue-specific adapter policy."
                 :module (or module (plist-get context :module))
                 :occasion
                 (or occasion (plist-get context :occasion) 'continuous)
+                :lane lane
                 :delivery-policy delivery-policy
                 :replacement-key replacement-key
+                :interruption-policy interruption-policy
                 :arguments (list content compatibility-actions))))
             (setq completed t))
         (let ((finished-at (float-time)))
@@ -585,6 +615,43 @@ only their cue-specific adapter policy."
            :submission-elapsed-ms
            (emacsvox-aural--diagnostic-elapsed-ms work-start finished-at))))
       submission)))
+
+(cl-defun emacsvox-aural-submit-notification
+    (content
+     &key facts context module occasion delivery-policy replacement-key
+     compatibility-actions dont-log)
+  "Submit CONTENT and COMPATIBILITY-ACTIONS atomically on the notification lane.
+
+CONTENT may be nil for an action-only notification.  FACTS, CONTEXT, MODULE,
+OCCASION, DELIVERY-POLICY, and REPLACEMENT-KEY have the meanings documented by
+`emacsvox-aural-submit'.  Unless DONT-LOG is non-nil, nonempty CONTENT is also
+recorded in the notification log."
+  (let* ((effective-occasion
+          (or occasion (plist-get context :occasion) 'notification))
+         (effective-module (or module (plist-get context :module)))
+         ;; Freeze the caller before logging can visit another buffer.
+         (effective-context
+          (copy-tree
+           (or
+            context
+            (emacsvox-aural-capture-context
+             effective-module effective-occasion))))
+         (arguments
+          (list
+           :facts facts
+           :context effective-context
+           :module effective-module
+           :occasion effective-occasion
+           :lane 'notification
+           :delivery-policy delivery-policy
+           :replacement-key replacement-key
+           :compatibility-actions compatibility-actions)))
+    (when (and (stringp content) (not (string-empty-p content)))
+      (unless dont-log (emacsvox-log-notification content))
+      (setq emacsvox-last-message content))
+    (if (and (stringp content) (not (string-empty-p content)))
+        (apply #'emacsvox-aural-submit content arguments)
+      (apply #'emacsvox-aural-submit-actions arguments))))
 
 (provide 'emacsvox-aural-submission)
 

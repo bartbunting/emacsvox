@@ -1364,6 +1364,39 @@
     (should (equal (nreverse queued) '("inner" "outer")))
     (should-not (get-buffer " *tts-scratch-buffer* <2>"))))
 
+(ert-deftest emacsvox-tts-ordinary-speech-stops-only-the-current-lane ()
+  "Legacy foreground speech must not stop an independent notifier process."
+  (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+    (kill-buffer scratch))
+  (let ((tts-stop-immediately t)
+        (emacsvox-pronounce-table nil)
+        (emacsvox-pronounce-personality nil)
+        (voice-lock-mode nil)
+        (emacsvox-use-icons nil)
+        stops)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-prepared-text-p)
+              (lambda (_text) t))
+             ((symbol-function 'tts-stop)
+              (lambda (&optional all) (push all stops)))
+             ((symbol-function 'tts-notify-stop)
+              (lambda ()
+                (ert-fail "Foreground speech stopped notification speech")))
+             ((symbol-function 'tts--protocol-sync) #'ignore)
+             ((symbol-function 'tts-move-across-a-chunk)
+              (lambda (&rest _arguments)
+                (goto-char (point-max))
+                t))
+             ((symbol-function 'tts-voice-reset-code) (lambda () "reset"))
+             ((symbol-function 'tts--protocol-queue-code) #'ignore)
+             ((symbol-function 'tts--protocol-queue-text) #'ignore)
+             ((symbol-function 'tts--protocol-dispatch) #'ignore))
+          (tts--speak-transaction "foreground"))
+      (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+        (kill-buffer scratch)))
+    (should (equal stops '(nil)))))
+
 (ert-deftest emacsvox-tts-speech-snapshots-local-capitalization-presentation ()
   "Speech preparation carries the source buffer's caps selector into scratch."
   (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
@@ -1971,6 +2004,27 @@
           (should (= (length writes) 2)))
       (delete-process process))))
 
+(ert-deftest emacsvox-tts-explicit-stop-all-targets-each-lane-once ()
+  "An explicit stop-all interrupts both distinct speech owners exactly once."
+  (let ((tts-speaker-process 'main)
+        (tts-notify-process 'notification)
+        cancellations
+        interruptions)
+    (cl-letf
+        (((symbol-function 'process-live-p)
+          (lambda (process) (memq process '(main notification))))
+         ((symbol-function 'emacsvox-aural-cancel-pending-deliveries)
+          (lambda (owner) (push owner cancellations)))
+         ((symbol-function 'tts--interrupt-process)
+          (lambda (owner &optional notifications)
+            (push (list owner notifications) interruptions))))
+      (tts-stop 'all))
+    (should (equal (nreverse cancellations) '(main notification)))
+    (should
+     (equal
+      (nreverse interruptions)
+      '((main nil) (notification nil))))))
+
 (ert-deftest emacsvox-tts-tracked-callback-errors-do-not-strand-peers ()
   "One failing terminal callback cannot prevent other callbacks from retiring."
   (let* ((process
@@ -2239,6 +2293,32 @@
                  :speaker new-speaker :notifier nil)
         (configured new-speaker))))))
 
+(ert-deftest emacsvox-tts-initialize-keeps-main-when-notifier-start-fails ()
+  "A failed optional notifier does not prevent main speech initialization."
+  (let ((tts-speaker-process nil)
+        (tts-notify-process nil)
+        (tts-program "omnivox")
+        events)
+    (cl-letf
+        (((symbol-function 'tts-make-process)
+          (lambda (_name) 'new-speaker))
+         ((symbol-function 'tts-multistream-p) (lambda (_) t))
+         ((symbol-function 'tts-notify-initialize)
+          (lambda () (error "simulated notifier failure")))
+         ((symbol-function 'message)
+          (lambda (format-string &rest arguments)
+            (push (apply #'format format-string arguments) events)))
+         ((symbol-function 'require) (lambda (&rest _) t))
+         ((symbol-function 'voice-setup)
+          (lambda () (push (list 'configured tts-speaker-process) events))))
+      (tts-initialize))
+    (should (eq tts-speaker-process 'new-speaker))
+    (should (equal (car events) '(configured new-speaker)))
+    (should
+     (string-match-p
+      "Notification speech server unavailable"
+      (cadr events)))))
+
 (ert-deftest emacsvox-tts-notify-initialize-publishes-before-retirement ()
   "Notifier replacement uses common retirement after publishing its successor."
   (let ((tts-notify-process 'old)
@@ -2300,22 +2380,23 @@
 
 (ert-deftest emacsvox-tts-omnivox-notification-process-gets-channel-target ()
   "A distinct Omnivox notifier receives its own validated process route."
-  (let ((process-environment (copy-sequence process-environment))
-        (tts-notify-process nil)
-        (tts-program "omnivox")
-        (tts-notification-device "right")
-        observed)
-    (setenv "OMNIVOX_AUDIO_TARGET" nil)
-    (cl-letf
-        (((symbol-function 'tts-make-process)
-          (lambda (name)
-            (setq observed (list name (getenv "OMNIVOX_AUDIO_TARGET")))
-            'notification))
-         ((symbol-function 'process-live-p)
-          (lambda (process) (eq process 'notification))))
-      (should (eq (tts-notify-initialize) 'notification)))
-    (should (equal observed '("Notify" "right")))
-    (should-not (getenv "OMNIVOX_AUDIO_TARGET"))))
+  (dolist (case '((nil "both") ("right" "right")))
+    (let ((process-environment (copy-sequence process-environment))
+          (tts-notify-process nil)
+          (tts-program "omnivox")
+          (tts-notification-device (car case))
+          observed)
+      (setenv "OMNIVOX_AUDIO_TARGET" nil)
+      (cl-letf
+          (((symbol-function 'tts-make-process)
+            (lambda (name)
+              (setq observed (list name (getenv "OMNIVOX_AUDIO_TARGET")))
+              'notification))
+           ((symbol-function 'process-live-p)
+            (lambda (process) (eq process 'notification))))
+        (should (eq (tts-notify-initialize) 'notification)))
+      (should (equal observed (list "Notify" (cadr case))))
+      (should-not (getenv "OMNIVOX_AUDIO_TARGET")))))
 
 (ert-deftest emacsvox-tts-omnivox-notification-routing-is-process-based ()
   "Omnivox supports a second process without inventing an in-process stream."
@@ -2324,8 +2405,14 @@
   (let ((tts-notification-device "default"))
     (should-not (tts-multistream-p "omnivox")))
   (let ((tts-program "omnivox")
+        (tts-notification-device nil))
+    (should
+     (equal (tts--notification-omnivox-audio-target) "both"))
+    (should (tts--notification-process-configured-p)))
+  (let ((tts-program "omnivox")
         (tts-notification-device "named-device"))
-    (should-not (tts--notification-omnivox-audio-target)))
+    (should-not (tts--notification-omnivox-audio-target))
+    (should-not (tts--notification-process-configured-p)))
   (let ((tts-program "C:/Omnivox/Omnivox.EXE")
         (tts-notification-device "left"))
     (should

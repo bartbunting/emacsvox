@@ -1703,15 +1703,20 @@ the same region and avoids extracting it again."
       (tts--protocol-say string))))
 
 (defun tts-stop (&optional all)
-  "Stop speech.  Optional arg `all' or interactive call silences
-  notification stream as well."
+  "Stop speech.
+Optional argument ALL or an interactive call also stops a distinct
+notification process."
   (interactive "P")
-  (emacsvox-aural-cancel-pending-deliveries tts-speaker-process)
-  (tts--interrupt-process tts-speaker-process)
-  (when
-      (and (tts-notify-process)
-           (or all (called-interactively-p 'interactive)))
-    (tts-notify-stop)))
+  (let ((owners (list tts-speaker-process)))
+    (when
+        (and
+         (or all (called-interactively-p 'interactive))
+         (process-live-p tts-notify-process)
+         (not (eq tts-notify-process tts-speaker-process)))
+      (setq owners (append owners (list tts-notify-process))))
+    (dolist (owner owners)
+      (emacsvox-aural-cancel-pending-deliveries owner)
+      (tts--interrupt-process owner))))
 
 (defun tts-reset-default-voice ()
   
@@ -2923,13 +2928,14 @@ program. Port defaults to tts-local-server-port"
 (defcustom tts-notification-device
   nil
   "Virtual sound device to use for notifications stream.
-Set to nil to disable a separate Notification stream.
-If you set the device here, make sure it exists first.
-For SwiftMac, set this to `left' or `right'.  For Omnivox, `left',
-`right', or `both' starts a separately routed second process; nil keeps
-notifications on the main process and its route."
+For Omnivox, nil starts a second process routed to both channels; `left',
+`right', or `both' selects its process-wide route.  Set this to `default' or
+the empty string to disable that separate process and fall back to main speech.
+For other servers, nil disables a separate notification stream.  If you name a
+device, make sure it exists first.  For SwiftMac, use `left' or `right'."
   :type '(choice
-          (const :tag "None" nil)
+          (const :tag "Automatic" nil)
+          (const :tag "Disabled" "default")
           (string :value ""))
   :group 'tts)
 
@@ -2984,7 +2990,12 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
     (setq tts-speaker-process new)
     (cond
      ((tts-multistream-p tts-program)
-      (tts-notify-initialize))
+      (condition-case error-data
+          (tts-notify-initialize)
+        (error
+         (message
+          "Notification speech server unavailable; using available speech: %s"
+          (error-message-string error-data)))))
      (t
       ;; Do not leave a notifier from the previously selected engine alive.
       (let ((old-notifier tts-notify-process))
@@ -3151,7 +3162,6 @@ by the audio device's buffering latency."
       (and
        tts-stop-immediately
        (not emacsvox-aural-submission-controls-interruption))
-    (when (process-live-p tts-notify-process) (tts-notify-stop))
     (tts-stop))
   (when selective-display
     (let ((ctrl-m (string-match "\015" text)))
@@ -3375,9 +3385,25 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
   "Return a validated Omnivox channel target for the notification process."
   (and
    (tts--omnivox-program-p)
-   (stringp tts-notification-device)
-   (member tts-notification-device '("left" "right" "both"))
-   tts-notification-device))
+   (if (null tts-notification-device)
+       "both"
+     (and
+      (member tts-notification-device '("left" "right" "both"))
+      tts-notification-device))))
+
+(defun tts--notification-process-configured-p ()
+  "Return non-nil when current settings request a notification process."
+  (or
+   (string-match-p "cloud" tts-program)
+   (and
+    (tts--omnivox-program-p)
+    (or
+     (null tts-notification-device)
+     (member tts-notification-device '("left" "right" "both"))))
+   (and
+    (not (tts--omnivox-program-p))
+    (stringp tts-notification-device)
+    (not (member tts-notification-device '("" "default"))))))
 
 (defun tts-notify-initialize ()
   "Initialize a separate notification TTS process when configured."
@@ -3387,9 +3413,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
         (new nil)
         (tts-program
          (if (string-match "cloud" tts-program) "cloud-notify" tts-program)))
-    (unless
-        (and (not (string-match "cloud" tts-program))
-             (zerop (length tts-notification-device)))
+    (when (tts--notification-process-configured-p)
       (with-environment-variables
           (("ALSA_DEFAULT" tts-notification-device)
            ("SWIFTMAC_AUDIO_TARGET" tts-notification-device)

@@ -567,15 +567,18 @@ timelines with native replacement are never left pending."
         owner emacsvox-aural-submission-replacement-key)
        (let ((native
               (emacsvox-aural--native-replacement-delivery-p owner entries)))
-         ;; A negotiated structured timeline carries its replacement policy to
-         ;; Omnivox.  Let the server perform soft generation/audio preemption;
-         ;; a legacy `s' here would hard-cancel and potentially restart the
-         ;; native helper for every navigation event.
-         (when
-             (and
-              emacsvox-aural-submission-controls-interruption
-              (not native))
-           (tts--interrupt-process owner t))
+         ;; Without an explicit lane interruption, a negotiated structured
+         ;; timeline carries replacement to Omnivox and uses its soft keyed
+         ;; cancellation.  Navigation's lane boundary deliberately precedes
+         ;; that timeline with a process-local hard stop so even older ordered
+         ;; or urgent main speech cannot delay it.
+         (when emacsvox-aural-submission-controls-interruption
+           (cond
+            ((eq emacsvox-aural-submission-interruption-policy 'lane)
+             (emacsvox-aural-cancel-pending-deliveries owner)
+             (tts--interrupt-process owner))
+            ((not native)
+             (tts--interrupt-process owner))))
          (if
              (or (emacsvox-aural--tracked-submission-p) native)
            (when
@@ -591,7 +594,7 @@ timelines with native replacement are never left pending."
       ('urgent
        (emacsvox-aural-cancel-pending-deliveries owner)
        (when emacsvox-aural-submission-controls-interruption
-         (tts--interrupt-process owner t))
+         (tts--interrupt-process owner))
        (when
            (emacsvox-aural--send-delivery-entries
             entries owner nil emacsvox-aural--history-transaction-id)

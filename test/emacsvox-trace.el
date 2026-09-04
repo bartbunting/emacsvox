@@ -76,18 +76,21 @@
        (emacsvox-aural-concrete-action-text action))))))
 
 (defun emacsvox-trace--native-interruption ()
-  "Record native submission interruption once when it owns that policy."
+  "Record lane-local native interruption once when the submission owns it."
   (when
       (and
        (boundp 'emacsvox-aural-submission-controls-interruption)
        emacsvox-aural-submission-controls-interruption
        (boundp 'emacsvox-aural-submission-delivery-policy)
-       (memq
-        emacsvox-aural-submission-delivery-policy
-        '(replaceable urgent))
+       (or
+        (eq emacsvox-aural-submission-delivery-policy 'urgent)
+        (and
+         (eq emacsvox-aural-submission-delivery-policy 'replaceable)
+         (boundp 'emacsvox-aural-submission-interruption-policy)
+         (eq emacsvox-aural-submission-interruption-policy 'lane)))
        (not emacsvox-trace--native-interruption-recorded-p))
     (setq emacsvox-trace--native-interruption-recorded-p t)
-    (emacsvox-trace--record 'stop 'all)))
+    (emacsvox-trace--record 'stop nil)))
 
 (defun emacsvox-trace--speak (text)
   "Record a semantic speech event for TEXT."
