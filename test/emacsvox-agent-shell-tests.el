@@ -149,6 +149,15 @@
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--permission-event-setup
                   "emacsvox-agent-shell" ())
+(declare-function emacsvox-agent-shell--set-session-model-around
+                  "emacsvox-agent-shell"
+                  (original-function &rest arguments))
+(declare-function emacsvox-agent-shell--set-session-mode-around
+                  "emacsvox-agent-shell"
+                  (original-function &rest arguments))
+(declare-function emacsvox-agent-shell--cycle-session-mode-around
+                  "emacsvox-agent-shell"
+                  (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--session-focused-p
                   "emacsvox-agent-shell" (&optional buffer))
 (declare-function emacsvox-agent-shell--session-buffer
@@ -4983,30 +4992,64 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          (emacsvox-agent-shell--next-item-around
           (lambda (&rest _) (goto-char (point-max)))))))))
 
-(ert-deftest emacsvox-agent-shell-session-controls-submit-current-state ()
-  "Model and mode controls atomically announce their resulting state."
-  (cl-letf (((symbol-function 'ems-interactive-p)
-             (lambda (&rest _) t))
-            ((symbol-function 'emacsvox-agent-shell--header-state)
-             (lambda (&optional _) '(:model "o4" :mode "Plan"))))
-    (dolist
-        (case
-         '((emacsvox-agent-shell--set-session-model-after "Model o4.")
-           (emacsvox-agent-shell--set-session-mode-after
-            "Session mode Plan.")
-           (emacsvox-agent-shell--cycle-session-mode-after
-            "Session mode Plan.")))
-      (let ((presentations
-             (emacsvox-agent-shell-test--capture-presentations
-               (funcall (car case)))))
-        (should (= 1 (length presentations)))
-        (should (eq (caar presentations) 'submit))
-        (should (equal (nth 1 (car presentations)) (cadr case)))
-        (should
-         (eq (plist-get (nth 2 (car presentations)) :role)
-             'agent-session))
-        (should (eq (nth 3 (car presentations)) 'agent-shell))
-        (should (eq (nth 4 (car presentations)) 'state-change))))))
+(ert-deftest emacsvox-agent-shell-session-controls-wait-for-success ()
+  "Model and mode controls announce updated state only after success."
+  (let ((state '(:model "o3" :mode "Approve for me"))
+        callback
+        original-callback-ran)
+    (cl-letf (((symbol-function 'ems-interactive-p)
+               (lambda (&rest _) t))
+              ((symbol-function 'emacsvox-agent-shell--header-state)
+               (lambda (&optional _) state)))
+      (dolist
+          (case
+           '((emacsvox-agent-shell--set-session-model-around
+              (:model "o4" :mode "Approve for me") "Model o4.")
+             (emacsvox-agent-shell--set-session-mode-around
+              (:model "o3" :mode "Full access")
+              "Session mode Full access.")
+             (emacsvox-agent-shell--cycle-session-mode-around
+              (:model "o3" :mode "Plan") "Session mode Plan.")))
+        (setq state '(:model "o3" :mode "Approve for me")
+              callback nil
+              original-callback-ran nil)
+        (should-not
+         (emacsvox-agent-shell-test--capture-presentations
+           (funcall
+            (car case)
+            (lambda (&optional on-success)
+              (setq callback on-success))
+            (lambda () (setq original-callback-ran t)))))
+        (should (functionp callback))
+        (setq state (nth 1 case))
+        (let ((presentations
+               (emacsvox-agent-shell-test--capture-presentations
+                 (funcall callback))))
+          (should original-callback-ran)
+          (should (= 1 (length presentations)))
+          (should (eq (caar presentations) 'submit))
+          (should (equal (nth 1 (car presentations)) (nth 2 case)))
+          (should
+           (eq (plist-get (nth 2 (car presentations)) :role)
+               'agent-session))
+          (should (eq (nth 3 (car presentations)) 'agent-shell))
+          (should (eq (nth 4 (car presentations)) 'state-change)))))))
+
+(ert-deftest emacsvox-agent-shell-programmatic-session-controls-are-unchanged ()
+  "Programmatic session controls should retain callbacks without speech."
+  (let ((original-callback #'ignore)
+        received)
+    (cl-letf (((symbol-function 'ems-interactive-p)
+               (lambda (&rest _) nil)))
+      (should
+       (eq
+        (emacsvox-agent-shell--set-session-mode-around
+         (lambda (&rest arguments)
+           (setq received arguments)
+           'unchanged)
+         original-callback)
+        'unchanged))
+      (should (equal received (list original-callback))))))
 
 (ert-deftest emacsvox-agent-shell-block-locations-are-semantic ()
   "Transcript locations should expose semantic types in buffer order."

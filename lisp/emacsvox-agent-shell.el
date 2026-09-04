@@ -6000,35 +6000,53 @@ Return non-nil when point represents one of those semantic items."
       (format "%s %s." label value)
     fallback))
 
-(defun emacsvox-agent-shell--set-session-model-after (&rest _)
-  "Announce model change."
-  (when (ems-interactive-p 'agent-shell-set-session-model)
-    (emacsvox-agent-shell--submit-text-feedback
-     (emacsvox-agent-shell--session-setting-speech
-      :model "Model" "Model changed.")
-     (emacsvox-agent-shell--presentation-facts
-      'agent-session 'agent-setting-changed)
-     'state-change 'select-object)))
+(defun emacsvox-agent-shell--session-setting-around
+    (original-function arguments command property label fallback)
+  "Call ORIGINAL-FUNCTION with ARGUMENTS and announce a successful change.
+COMMAND identifies the interactive command.  PROPERTY, LABEL, and FALLBACK
+describe the resulting session setting.  Agent Shell changes settings
+asynchronously, so interactive feedback is added to its success callback and
+reads the state only after Agent Shell has updated it."
+  (if (not (ems-interactive-p command))
+      (apply original-function arguments)
+    (let ((original-callback (car arguments))
+          (shell-buffer (current-buffer)))
+      (apply
+       original-function
+       (cons
+        (lambda (&rest callback-arguments)
+          (when original-callback
+            (apply original-callback callback-arguments))
+          (when (buffer-live-p shell-buffer)
+            (with-current-buffer shell-buffer
+              (emacsvox-agent-shell--submit-text-feedback
+               (emacsvox-agent-shell--session-setting-speech
+                property label fallback)
+               (emacsvox-agent-shell--presentation-facts
+                'agent-session 'agent-setting-changed)
+               'state-change 'select-object))))
+        (cdr arguments))))))
 
-(defun emacsvox-agent-shell--set-session-mode-after (&rest _)
-  "Announce session mode change."
-  (when (ems-interactive-p 'agent-shell-set-session-mode)
-    (emacsvox-agent-shell--submit-text-feedback
-     (emacsvox-agent-shell--session-setting-speech
-      :mode "Session mode" "Session mode changed.")
-     (emacsvox-agent-shell--presentation-facts
-      'agent-session 'agent-setting-changed)
-     'state-change 'select-object)))
+(defun emacsvox-agent-shell--set-session-model-around
+    (original-function &rest arguments)
+  "Announce an interactive model change after it succeeds."
+  (emacsvox-agent-shell--session-setting-around
+   original-function arguments 'agent-shell-set-session-model
+   :model "Model" "Model changed."))
 
-(defun emacsvox-agent-shell--cycle-session-mode-after (&rest _)
-  "Announce session mode cycle."
-  (when (ems-interactive-p 'agent-shell-cycle-session-mode)
-    (emacsvox-agent-shell--submit-text-feedback
-     (emacsvox-agent-shell--session-setting-speech
-      :mode "Session mode" "Session mode changed.")
-     (emacsvox-agent-shell--presentation-facts
-      'agent-session 'agent-setting-changed)
-     'state-change 'select-object)))
+(defun emacsvox-agent-shell--set-session-mode-around
+    (original-function &rest arguments)
+  "Announce an interactive session mode change after it succeeds."
+  (emacsvox-agent-shell--session-setting-around
+   original-function arguments 'agent-shell-set-session-mode
+   :mode "Session mode" "Session mode changed."))
+
+(defun emacsvox-agent-shell--cycle-session-mode-around
+    (original-function &rest arguments)
+  "Announce an interactive session mode cycle after it succeeds."
+  (emacsvox-agent-shell--session-setting-around
+   original-function arguments 'agent-shell-cycle-session-mode
+   :mode "Session mode" "Session mode changed."))
 
 ;;;  Viewport Mode Integration
 
@@ -6444,12 +6462,12 @@ Return nil when the configured verbosity requests status cues only."
      emacsvox-agent-shell--next-permission-button-after)
     (agent-shell-previous-permission-button :filter-return
      emacsvox-agent-shell--previous-permission-button-after)
-    (agent-shell-set-session-model :after
-     emacsvox-agent-shell--set-session-model-after)
-    (agent-shell-set-session-mode :after
-     emacsvox-agent-shell--set-session-mode-after)
-    (agent-shell-cycle-session-mode :after
-     emacsvox-agent-shell--cycle-session-mode-after)
+    (agent-shell-set-session-model :around
+     emacsvox-agent-shell--set-session-model-around)
+    (agent-shell-set-session-mode :around
+     emacsvox-agent-shell--set-session-mode-around)
+    (agent-shell-cycle-session-mode :around
+     emacsvox-agent-shell--cycle-session-mode-around)
     (agent-shell-viewport--show-buffer :after
      emacsvox-agent-shell--viewport-show-buffer-after)
     (agent-shell-viewport-next-item :around
