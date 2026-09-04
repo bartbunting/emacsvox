@@ -514,7 +514,8 @@
      (propertize
       "Codex> "
       'font-lock-face '(comint-highlight-prompt comint-highlight-prompt)
-      'field 'output))
+      'field 'output
+      'rear-nonsticky '(field font-lock-face)))
     (let ((input-start (copy-marker (point) nil)))
       (setq-local comint-last-prompt
                   (cons prompt-start (copy-marker input-start nil)))
@@ -4994,7 +4995,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 
 (ert-deftest emacsvox-agent-shell-session-controls-wait-for-success ()
   "Model and mode controls announce updated state only after success."
-  (let ((state '(:model "o3" :mode "Approve for me"))
+  (let ((major-mode 'agent-shell-mode)
+        (state '(:model "o3" :mode "Approve for me"))
         callback
         original-callback-ran)
     (cl-letf (((symbol-function 'ems-interactive-p)
@@ -7320,6 +7322,53 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should (eq (get-text-property 0 'face spoken)
                       'agent-shell-chat-me-label)))))))
 
+(ert-deftest emacsvox-agent-shell-live-prompt-line-speech-crosses-field-boundary ()
+  "Physical and visual speech agree at live input without changing fields."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (dolist (case '(("" "Me. Ready for input.")
+                  ("draft" "Me. draft")
+                  ("first\nsecond" "second")))
+    (save-window-excursion
+      (with-temp-buffer
+        (emacsvox-agent-shell-test--insert-live-chat-input (car case))
+        (set-window-buffer (selected-window) (current-buffer))
+        (goto-char (point-max))
+        (let ((inhibit-field-text-motion nil)
+              (source (buffer-substring (point-min) (point-max)))
+              (origin (point))
+              spoken)
+          (should-not (get-pos-property (point) 'field))
+          ;; Batch Emacs cannot lay out the live prompt's display overlay.
+          ;; These short rows have the same physical and visual source bounds.
+          (cl-letf
+              (((symbol-function 'emacsvox-agent-shell--visual-line-source-bounds)
+                (lambda ()
+                  (let ((inhibit-field-text-motion t))
+                    (cons (line-beginning-position) (line-end-position))))))
+            (dolist (wrapper '(emacsvox-agent-shell--speak-line-around
+                               emacsvox-agent-shell--speak-visual-line-around))
+              (let ((text
+                     (funcall
+                      wrapper
+                      (lambda ()
+                        ;; Label lookup must not relax fields for its caller.
+                        (should-not inhibit-field-text-motion)
+                        (let ((inhibit-field-text-motion t))
+                          (emacsvox-agent-shell--prepare-speech-text
+                           (buffer-substring
+                            (line-beginning-position) (line-end-position))))))))
+                (should (equal (substring-no-properties text) (cadr case)))
+                (should-not (string-match-p "❯" text))
+                (push text spoken))))
+          (should (equal-including-properties (car spoken) (cadr spoken)))
+          (when (string-prefix-p "Me" (cadr case))
+            (should (eq (get-text-property 0 'face (car spoken))
+                        'agent-shell-chat-me-label)))
+          (should (= (point) origin))
+          (should
+           (equal-including-properties
+            source (buffer-substring (point-min) (point-max)))))))))
+
 (ert-deftest emacsvox-agent-shell-live-input-horizontal-boundaries-are-semantic ()
   "Character motion should stop at live input edges without core artifacts."
   (skip-unless (require 'agent-shell-chat-mode nil t))
@@ -8456,7 +8505,13 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          agent-table-exited agent-viewport-opened agent-viewport-refreshed
          agent-prompt-opened agent-prompt-submitted agent-prompt-cancelled
          agent-tool-status-changed agent-permission-requested
-         agent-permission-resolved))
+         agent-permission-resolved agent-diff agent-turn-origin
+         agent-setting-id agent-setting-value agent-steering-result
+         agent-queue-state agent-queue-count agent-list-kind agent-list-indent
+         agent-list-marker agent-diff-files agent-diff-hunks
+         agent-tool-output-updated agent-permission-details-updated
+         agent-steering-resolved agent-queue-changed agent-list-item-created
+         agent-list-indentation-changed agent-list-ended agent-diff-opened))
     (should (emacsvox-aural-semantic id))))
 
 (ert-deftest emacsvox-agent-shell-content-categories-carry-specific-intent ()
@@ -8633,6 +8688,319 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should (equal (nth 1 presentation) (cadr case)))
         (should (eq (nth 3 presentation) 'agent-shell))
         (should (eq (nth 4 presentation) (nth 2 case)))))))
+
+(defmacro emacsvox-agent-shell-test--with-current-session (&rest body)
+  "Run BODY with current upstream rendering and event dispatch, without IO."
+  (declare (indent 0) (debug t))
+  `(with-temp-buffer
+     (setq major-mode 'agent-shell-mode)
+     (setq-local agent-shell--state
+                 (agent-shell--make-state
+                  :buffer (current-buffer)
+                  :agent-config '((:shell-prompt . "Test> "))))
+     (setf (alist-get :initialized agent-shell--state) t
+           (alist-get :id (alist-get :session agent-shell--state)) "test-session")
+     (setq-local comint-last-output-start (copy-marker (point)))
+     (setq-local shell-maker--config
+                 (agent-shell--make-shell-maker-config :prompt "Test> "))
+     (setq-local emacsvox-comint-autospeak t)
+     (setq-local emacsvox-agent-shell-speech-level 'full)
+     (setq-local agent-shell-section-functions
+                 '(emacsvox-agent-shell--record-response-section))
+     (emacsvox-agent-shell--lifecycle-event-setup)
+     (emacsvox-agent-shell--tool-call-event-setup)
+     (emacsvox-agent-shell--permission-event-setup)
+     (let ((process (make-pipe-process :name "agent-shell-test" :buffer (current-buffer) :noquery t :sentinel #'ignore)))
+       (cl-letf (((symbol-function 'emacsvox-agent-shell--session-focused-p) (lambda (&optional _) t))
+                 ((symbol-function 'shell-maker--process) (lambda () process))
+                 ((symbol-function 'agent-shell--append-transcript) #'ignore)
+               ((symbol-function 'agent-shell-heartbeat-start) #'ignore)
+               ((symbol-function 'agent-shell-heartbeat-stop) #'ignore))
+       (unwind-protect (progn ,@body)
+         (delete-process process)
+         (emacsvox-agent-shell--buffer-cleanup))))))
+
+(ert-deftest emacsvox-agent-shell-current-codex-output-reaches-full-speech ()
+  "Real upstream tool dispatch must preserve rawOutput and changed output."
+  (emacsvox-agent-shell-test--with-current-session
+    (let ((emacsvox-agent-shell-tool-output-verbosity 'full)
+          (agent-shell-tool-use-expand-by-default t)
+          spoken)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest args) (push (cons text args) spoken))))
+        (dolist (output '("All tests passed" "All tests passed" "One test failed"))
+          (agent-shell--on-notification
+           :state agent-shell--state
+           :acp-notification
+           `((method . "session/update")
+             (params . ((update . ((sessionUpdate . "tool_call_update")
+                                  (toolCallId . "command-1")
+                                  (title . "Run tests") (status . "completed")
+                                  (rawOutput . ((formatted_output . ,output)))))))))))
+      (should (= 2 (length spoken)))
+      (should (string-match-p "All tests passed" (car (cadr spoken))))
+      (should (string-match-p "One test failed" (caar spoken)))
+      (should (memq 'agent-tool-output-updated
+                    (plist-get (plist-get (cdar spoken) :facts) :events)))
+      (dolist (entry spoken)
+        (should (eq 'notification (plist-get (cdr entry) :lane)))))))
+
+(ert-deftest emacsvox-agent-shell-steering-confirms-actual-outcomes ()
+  "Run upstream steering callbacks and confirm each outcome exactly once."
+  (dolist (outcome '("injected" "failed" "startedNewTurn" "promptRequired"))
+    (emacsvox-agent-shell-test--with-current-session
+      (let (callback interrupted submissions)
+        (cl-letf (((symbol-function 'acp-send-request)
+                   (lambda (&rest args) (setq callback (plist-get args :on-success))))
+                  ((symbol-function 'agent-shell--prompt-content-blocks) (lambda (_) []))
+                  ((symbol-function 'agent-shell-interrupt) (lambda (&rest _) (setq interrupted t)))
+                  ((symbol-function 'agent-shell--insert-to-shell-buffer)
+                   (lambda (&rest _) (setq-local shell-maker--busy t)))
+                  ((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest args) (push (cons text args) submissions))))
+          (agent-shell-experimental--send-steering :state agent-shell--state :prompt "Change course")
+          (should-not submissions)
+          (funcall callback (list (cons 'outcome outcome))))
+        (should (= 1 (length submissions)))
+        (should (eq (plist-get (cdar submissions) :lane) 'notification))
+        (should (eq (plist-get (plist-get (cdar submissions) :facts) :agent-steering-result)
+                    (pcase outcome ("injected" 'accepted) ("failed" 'declined)
+                           ("startedNewTurn" 'detached) (_ 'submitted))))
+        (should (eq (and interrupted t) (equal outcome "failed")))))))
+
+(ert-deftest emacsvox-agent-shell-steering-failure-and-disabled-callback ()
+  "Transport failure speaks its reason; callbacks after disable stay silent."
+  (dolist (disabled '(nil t))
+    (emacsvox-agent-shell-test--with-current-session
+      (let (callback submissions original-ran)
+        (cl-letf (((symbol-function 'acp-send-request)
+                   (lambda (&rest args) (setq callback (plist-get args :on-failure))))
+                  ((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (push text submissions))))
+          (agent-shell--send-request
+           :state agent-shell--state :buffer (current-buffer)
+           :request '((:method . "_session/steering"))
+           :on-failure (lambda (&rest _) (setq original-ran t)))
+          (when disabled (emacsvox-agent-shell--buffer-cleanup))
+          (funcall callback '((message . "Not supported")) nil))
+        (should original-ran)
+        (if disabled (should-not submissions)
+          (should (string-match-p "Not supported" (car submissions))))))))
+
+(ert-deftest emacsvox-agent-shell-push-completes-before-next-queued-turn ()
+  "Accepted pushes speak their rendered answer exactly once, before queue drain."
+  (emacsvox-agent-shell-test--with-current-session
+    (let (answer-at-drain)
+      (let ((events
+             (emacsvox-agent-shell-test--capture-events
+               (cl-letf (((symbol-function 'acp-send-response) #'ignore))
+                 (agent-shell-experimental--on-session-push-request
+                  :state agent-shell--state
+                  :acp-request '((method . "session/push") (id . 42)))
+                 (should emacsvox-agent-shell--response-turn-active-p)
+                 (agent-shell--on-notification
+                  :state agent-shell--state
+                  :acp-notification
+                  '((method . "session/update")
+                    (params . ((update . ((sessionUpdate . "agent_message_chunk")
+                                         (content . ((type . "text") (text . "Pushed answer")))))))))
+                 (agent-shell-experimental--on-session-push-end
+                  :state agent-shell--state
+                  :on-finished
+                  (lambda ()
+                    (setq answer-at-drain emacsvox-agent-shell--last-completed-answer)
+                    (emacsvox-agent-shell--begin-response-turn)))
+                 (agent-shell-experimental--on-session-push-end
+                  :state agent-shell--state :on-finished #'ignore)))))
+        (should (= 1 (cl-count '(speak "Pushed answer") events :test #'equal)))
+        (should (equal "Pushed answer" (substring-no-properties answer-at-drain)))
+        (should-not emacsvox-agent-shell--push-active-p)))))
+
+(ert-deftest emacsvox-agent-shell-rejected-push-preserves-running-response ()
+  "A rejected push must not reset a user turn's collected response."
+  (emacsvox-agent-shell-test--with-current-session
+    (setf (alist-get :active-requests agent-shell--state)
+          '(((:method . "session/prompt"))))
+    (emacsvox-agent-shell--begin-response-turn)
+    (emacsvox-agent-shell-test--render-response-section
+     :namespace-id "0" :block-id "1-agent_message_chunk" :body "Existing answer")
+    (let ((ids emacsvox-agent-shell--pending-speech-qualified-ids))
+      (should-not
+       (emacsvox-agent-shell-test--capture-events
+         (cl-letf (((symbol-function 'acp-send-response) #'ignore))
+           (agent-shell-experimental--on-session-push-request
+            :state agent-shell--state
+            :acp-request '((method . "session/push") (id . 42))))))
+      (should (equal ids emacsvox-agent-shell--pending-speech-qualified-ids))
+      (should-not emacsvox-agent-shell--push-active-p))))
+
+(ert-deftest emacsvox-agent-shell-current-list-editor-speaks-structure ()
+  "Actual interactive list commands announce changed structure and no-ops stay quiet."
+  (dolist (case '(("- task" agent-shell-list-edit-newline "Bullet, indentation 0." "- task\n- ")
+                  ("2. task" agent-shell-list-edit-newline "Item 3, indentation 0." "2. task\n3. ")
+                  ("- " agent-shell-list-edit-newline "List ended." "\n")
+                  ("- task" agent-shell-list-edit-indent-line "Bullet, indentation 2." "  - task")
+                  ("  - task" agent-shell-list-edit-dedent-line "Bullet, indentation 0." "- task")
+                  ("- task" agent-shell-list-edit-dedent-line nil "- task")))
+    (with-temp-buffer
+      (insert (nth 0 case))
+      (agent-shell-list-edit-mode 1)
+      (let ((events (emacsvox-agent-shell-test--capture-events
+                      (funcall-interactively (nth 1 case)))))
+        (should (equal (buffer-string) (nth 3 case)))
+        (should (equal events (when (nth 2 case) (list (list 'speak (nth 2 case))))))))))
+
+(ert-deftest emacsvox-agent-shell-queue-announces-start-and-pause ()
+  "Queue draining uses input-submitted, and stopping announces remaining work."
+  (emacsvox-agent-shell-test--with-current-session
+    (setq-local emacsvox-agent-shell-speech-level 'notify)
+    (setf (alist-get :pending-prompts agent-shell--state) '("first" "second"))
+    (let ((events
+           (emacsvox-agent-shell-test--capture-events
+             (cl-letf (((symbol-function 'agent-shell--insert-to-shell-buffer)
+                        (lambda (&rest _)
+                          (agent-shell--emit-event :event 'input-submitted))))
+               (agent-shell--prompt-queue-process-next))
+             (agent-shell--prompt-queue-display))))
+      (should (member '(speak "Queued prompt started. 1 remaining.") events))
+      (should (seq-some (lambda (event) (and (eq (car event) 'speak)
+                                            (string-prefix-p "Queue paused. 1 prompt waiting." (cadr event))))
+                        events)))))
+
+(ert-deftest emacsvox-agent-shell-config-events-compare-confirmed-values ()
+  "Initial config is silent; changed settings announce once across callback/event order."
+  (emacsvox-agent-shell-test--with-current-session
+    (setf (alist-get :config-options (alist-get :session agent-shell--state))
+          '(((:id . "effort") (:name . "Thought level") (:type . "select")
+             (:category . "thought_level") (:current-value . "low")
+             (:options . (((:value . "low") (:name . "Low"))
+                          ((:value . "high") (:name . "High")))))))
+    (emacsvox-agent-shell--observe-config-options (emacsvox-agent-shell--config-options) nil)
+    (let (callback submissions)
+      (cl-letf (((symbol-function 'acp-send-request)
+                 (lambda (&rest args) (setq callback (plist-get args :on-success))))
+                ((symbol-function 'agent-shell--update-header-and-mode-line) #'ignore)
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest args) (push (cons text args) submissions))))
+        (agent-shell--config-option-set-thought-level-id :thought-level-id "high")
+        (should-not submissions)
+        (funcall callback nil)
+        (agent-shell--emit-event :event 'config-option-update
+                                :data (list (cons :config-options (emacsvox-agent-shell--config-options)))))
+      (should (= 1 (length submissions)))
+      (should (equal "Thought level: High." (caar submissions)))
+      (should (equal "effort" (plist-get (plist-get (cdar submissions) :facts) :agent-setting-id))))))
+
+(ert-deftest emacsvox-agent-shell-permission-operation-updates-are-deduplicated ()
+  "Only updates to a pending permission's operation produce a new warning."
+  (emacsvox-agent-shell-test--with-current-session
+    (let ((request '((:event . permission-request)
+                     (:data . ((:request-id . 42) (:tool-call-id . "tool")
+                               (:tool-call . ((:title . "Run command")))))))
+          (update '((:event . tool-call-update)
+                    (:data . ((:tool-call-id . "tool")
+                              (:tool-call . ((:title . "Run command") (:status . "pending")
+                                             (:command . "echo hello"))))))))
+      (emacsvox-agent-shell-test--capture-events
+        (agent-shell--emit-event :event 'permission-request :data (map-elt request :data)))
+      (let ((events (emacsvox-agent-shell-test--capture-events
+                      (dotimes (_ 2)
+                        (agent-shell--emit-event :event 'tool-call-update :data (map-elt update :data))))))
+        (should (= 1 (cl-count-if (lambda (e) (and (eq (car e) 'speak)
+                                                   (string-prefix-p "Permission details changed." (cadr e))))
+                                  events)))
+        (should (seq-some (lambda (e) (and (eq (car e) 'speak)
+                                          (string-match-p "echo hello" (cadr e)))) events)))
+      (emacsvox-agent-shell-test--capture-events
+        (agent-shell--emit-event :event 'permission-response :data '((:request-id . 42))))
+      (should (= 0 (hash-table-count emacsvox-agent-shell--permission-detail-cache))))))
+
+(ert-deftest emacsvox-agent-shell-diff-entry-announces-files-and-hunks ()
+  "Open a real upstream diff and announce its structure without accepting it."
+  (save-window-excursion
+    (let (buffer)
+      (unwind-protect
+          (let ((events
+                 (emacsvox-agent-shell-test--capture-events
+                   (setq buffer
+                         (agent-shell-diff
+                          :diffs '(((:file . "example.txt") (:old . "old\n") (:new . "new\n"))))))))
+            (should (buffer-live-p buffer))
+            (should (seq-some (lambda (event)
+                                (and (eq (car event) 'speak)
+                                     (string-match-p "example.txt. 1 file, 1 hunk" (cadr event))))
+                              events)))
+        (when (buffer-live-p buffer) (kill-buffer buffer))))))
+
+(ert-deftest emacsvox-agent-shell-new-events-accept-user-speech-and-cues ()
+  "Steering facts support a user label and earcon through the real Aural compiler."
+  (let* ((emacsvox-aural-active-scheme 'default)
+         (emacsvox-aural-enabled-feature-fragments nil)
+         (emacsvox-aural-session-rules nil)
+         (emacsvox-aural-buffer-rules nil)
+         (emacsvox-aural-user-rules
+          '((:id test-steering-label
+             :match (:role agent-session :module agent-shell
+                     :event agent-steering-resolved :agent-steering-result accepted)
+             :render (:before (:append ((:id test-label :kind speech :text "Changed course")
+                                        (:id test-cue :kind cue :cue select-object)))))))
+         (facts '(:role agent-session :events (agent-steering-resolved)
+                  :agent-steering-result accepted))
+         (context '(:module agent-shell :mode agent-shell-mode :occasion notification))
+         (concrete (emacsvox-aural-compile-plan
+                    (emacsvox-aural-resolve-active facts context) facts context))
+         (actions (emacsvox-aural-concrete-plan-before concrete)))
+    (should (= 2 (length actions)))
+    (should (equal "Changed course" (emacsvox-aural-concrete-action-text (car actions))))
+    (should (eq 'select-object (emacsvox-aural-concrete-action-cue (cadr actions))))))
+
+(ert-deftest emacsvox-agent-shell-new-notifications-identify-background-session ()
+  "A background event names its shell and uses the independent notification lane."
+  (emacsvox-agent-shell-test--with-current-session
+    (rename-buffer "Agent @ notification-test" t)
+    (let (submission)
+      (cl-letf (((symbol-function 'emacsvox-agent-shell--session-focused-p) (lambda (&optional _) nil))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest arguments) (setq submission (cons text arguments)))))
+        (emacsvox-agent-shell--steering-feedback "injected"))
+      (should (string-prefix-p "Agent @ notification-test. Steering accepted." (car submission)))
+      (should (eq 'notification (plist-get (cdr submission) :lane))))))
+
+(ert-deftest emacsvox-agent-shell-push-error-clears-origin ()
+  "An interrupted pushed turn cannot label the next user response as pushed."
+  (emacsvox-agent-shell-test--with-current-session
+    (setq emacsvox-agent-shell--push-active-p t)
+    (emacsvox-agent-shell--begin-response-turn)
+    (emacsvox-agent-shell-test--capture-events
+      (emacsvox-agent-shell--handle-lifecycle-event
+       '((:event . error) (:data . ((:message . "Cancelled"))))))
+    (should-not emacsvox-agent-shell--push-active-p)
+    (should-not emacsvox-agent-shell--response-turn-active-p)))
+
+(ert-deftest emacsvox-agent-shell-list-editor-delegates-ordinary-feedback ()
+  "Non-list TAB and RET preserve native editing advice's interactive ownership."
+  (with-temp-buffer
+    (agent-shell-list-edit-mode 1)
+    (setq-local indent-line-function (lambda () (indent-line-to 2)))
+    (let* (column edits
+           (indent-advice (lambda (&rest _)
+                            (when (ems-interactive-p 'indent-for-tab-command)
+                              (setq column (current-column)))))
+           (newline-advice (lambda (&rest _)
+                             (when (ems-interactive-p 'newline)
+                               (push 'line-created edits)))))
+      (advice-add 'indent-for-tab-command :after indent-advice)
+      (advice-add 'newline :after newline-advice)
+      (unwind-protect
+          (progn
+            (should-not (emacsvox-agent-shell-test--capture-events
+                          (funcall-interactively 'agent-shell-list-edit-indent-line)))
+            (should (= column 2))
+            (should-not (emacsvox-agent-shell-test--capture-events
+                          (funcall-interactively 'agent-shell-list-edit-newline)))
+            (should (equal edits '(line-created))))
+        (advice-remove 'indent-for-tab-command indent-advice)
+        (advice-remove 'newline newline-advice)))))
 
 (provide 'emacsvox-agent-shell-tests)
 ;;; emacsvox-agent-shell-tests.el ends here

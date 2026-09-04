@@ -39,6 +39,24 @@ pause does not make a partial answer sound complete.  A cancelled, refused, or
 failed turn reports its outcome without replacing the last successfully
 completed response.
 
+When you use ~M-x agent-shell-prompt-steer~, Emacsvox confirms whether the
+agent accepted the steer, declined it, or started a separate turn.  A separate
+turn is announced as still in progress; it is not reported as complete until
+Agent Shell supplies a completion boundary.  Server-pushed turns, when
+supported by the provider, follow the same completed-response speech policy.
+
+Queued prompts announce when they start and how many remain.  If an interrupted
+or failed turn leaves prompts waiting, the queue announcement gives its count
+and the command ~M-x agent-shell-prompt-queue-resume~.  Queue-start feedback
+follows the session's speech level; paused-queue warnings follow
+~emacsvox-agent-shell-signal-processing~.
+
+Model, mode, thought-level, and other session setting changes announce their
+confirmed values.  Background setting announcements identify the session.
+In the viewport prompt editor, continuing a list announces its bullet or next
+number and indentation.  Indenting and dedenting announce the new indentation;
+leaving an empty list item announces that the list ended.
+
 ** Choose automatic speech and privacy
 :PROPERTIES:
 :TEXINFO_NODE: no
@@ -84,6 +102,13 @@ controlled by ~emacsvox-agent-shell-speak-tool-calls~ and
 ~response~ or ~full~, thought ~speak~, or full tool output is an
 explicit disclosure choice.
 
+At ~full~ speech level, tool verbosity ~full~ reads the tool's rendered output,
+including Codex command output and textual diffs.  Changed output can be read
+even when the tool's status has not changed; identical updates are suppressed.
+Tool verbosity ~status~ plays status cues as tools start and finish.
+Tool updates, steering outcomes, queue changes, and confirmed setting changes
+use the notification lane, leaving navigation speech independent.
+
 Automatic response, tool, error, permission, and similar text is limited by
 ~emacsvox-agent-shell-automatic-content-max-characters~, which defaults to
 2,000 characters.  A shortened presentation gives exact omitted character and
@@ -102,6 +127,11 @@ block the agent and require a decision.  With
 appropriate speech stream, identifies the session and requested operation, and
 announces its choices.  Provider-controlled descriptions and choice labels are
 bounded, but the actual permission controls remain in Agent Shell.
+
+If the provider supplies new operation details after asking permission,
+Emacsvox announces the changed description or input.  Identical updates and
+routine output do not repeat the warning.  The permission controls remain the
+place to inspect and decide the request.
 
 If the request belongs to another session, switch to the named buffer.  Use
 ~M-x agent-shell-jump-to-latest-permission-button-row~ to find its latest
@@ -189,6 +219,14 @@ Use typed block navigation to reach a source block, then:
 The source commands are explicit operations and do not use the automatic
 content limit.  Ordinary line navigation retains its separate bounded speech
 policy.
+
+Opening an Agent Shell change review announces its file and hunk counts and,
+for a single file, its name.  The normal Diff Mode hunk navigation remains
+available; opening the review does not accept or reject changes.
+
+These interactions expose semantic events and attributes to Aural.  You can
+customize speech, voices, and earcons for steering outcomes, queue changes,
+list editing, setting changes, updated tool output, and change-review entry.
 
 ** Navigate and copy rendered tables
 :PROPERTIES:

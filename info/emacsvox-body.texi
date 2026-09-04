@@ -3513,6 +3513,24 @@ pause does not make a partial answer sound complete.  A cancelled@comma{} refuse
 failed turn reports its outcome without replacing the last successfully
 completed response.
 
+When you use @code{M-x agent-shell-prompt-steer}@comma{} Emacsvox confirms whether the
+agent accepted the steer@comma{} declined it@comma{} or started a separate turn.  A separate
+turn is announced as still in progress; it is not reported as complete until
+Agent Shell supplies a completion boundary.  Server-pushed turns@comma{} when
+supported by the provider@comma{} follow the same completed-response speech policy.
+
+Queued prompts announce when they start and how many remain.  If an interrupted
+or failed turn leaves prompts waiting@comma{} the queue announcement gives its count
+and the command @code{M-x agent-shell-prompt-queue-resume}.  Queue-start feedback
+follows the session's speech level; paused-queue warnings follow
+@code{emacsvox-agent-shell-signal-processing}.
+
+Model@comma{} mode@comma{} thought-level@comma{} and other session setting changes announce their
+confirmed values.  Background setting announcements identify the session.
+In the viewport prompt editor@comma{} continuing a list announces its bullet or next
+number and indentation.  Indenting and dedenting announce the new indentation;
+leaving an empty list item announces that the list ended.
+
 @section Choose automatic speech and privacy
 
 The focused session defaults to @code{response}: completed answers and routine
@@ -3551,6 +3569,13 @@ controlled by @code{emacsvox-agent-shell-speak-tool-calls} and
 @code{response} or @code{full}@comma{} thought @code{speak}@comma{} or full tool output is an
 explicit disclosure choice.
 
+At @code{full} speech level@comma{} tool verbosity @code{full} reads the tool's rendered output@comma{}
+including Codex command output and textual diffs.  Changed output can be read
+even when the tool's status has not changed; identical updates are suppressed.
+Tool verbosity @code{status} plays status cues as tools start and finish.
+Tool updates@comma{} steering outcomes@comma{} queue changes@comma{} and confirmed setting changes
+use the notification lane@comma{} leaving navigation speech independent.
+
 Automatic response@comma{} tool@comma{} error@comma{} permission@comma{} and similar text is limited by
 @code{emacsvox-agent-shell-automatic-content-max-characters}@comma{} which defaults to
 2@comma{}000 characters.  A shortened presentation gives exact omitted character and
@@ -3566,6 +3591,11 @@ block the agent and require a decision.  With
 appropriate speech stream@comma{} identifies the session and requested operation@comma{} and
 announces its choices.  Provider-controlled descriptions and choice labels are
 bounded@comma{} but the actual permission controls remain in Agent Shell.
+
+If the provider supplies new operation details after asking permission@comma{}
+Emacsvox announces the changed description or input.  Identical updates and
+routine output do not repeat the warning.  The permission controls remain the
+place to inspect and decide the request.
 
 If the request belongs to another session@comma{} switch to the named buffer.  Use
 @code{M-x agent-shell-jump-to-latest-permission-button-row} to find its latest
@@ -3639,6 +3669,14 @@ through Agent Shell's public copy operation.
 The source commands are explicit operations and do not use the automatic
 content limit.  Ordinary line navigation retains its separate bounded speech
 policy.
+
+Opening an Agent Shell change review announces its file and hunk counts and@comma{}
+for a single file@comma{} its name.  The normal Diff Mode hunk navigation remains
+available; opening the review does not accept or reject changes.
+
+These interactions expose semantic events and attributes to Aural.  You can
+customize speech@comma{} voices@comma{} and earcons for steering outcomes@comma{} queue changes@comma{}
+list editing@comma{} setting changes@comma{} updated tool output@comma{} and change-review entry.
 
 @section Navigate and copy rendered tables
 
@@ -5100,6 +5138,35 @@ The lifecycle subscription currently consumes @code{init-started}@comma{}
 @code{permission-request}@comma{} @code{permission-response}@comma{} and @code{tool-call-update}.  Add new
 semantic behavior at the public event layer when Agent Shell exposes it; keep
 renderer and private fallbacks isolated and covered by compatibility tests.
+
+The lifecycle subscription also observes @code{config-option-update}.  Configuration
+snapshots suppress initial inventory and duplicate callback/event confirmation.
+Late tool details are compared only for permissions established by a public
+@code{permission-request} event@comma{} and their snapshots are removed on resolution.
+
+Current Agent Shell omits rendered Codex @code{rawOutput} and textual diffs from
+@code{tool-call-update}.  A narrow @code{agent-shell--on-notification} adapter joins that
+public event to the body rendered during the same call@comma{} matching both the
+owning buffer and qualified fragment ID@.  Full tool speech is submitted after
+rendering returns.  Output digests and lifecycle statuses are tracked separately
+so late output is spoken without repeating identical updates.  Renderer IDs
+without a matching public event do not authorize tool feedback.
+
+Until upstream exposes public steering and push lifecycle events@comma{} small
+adapters wrap the structured steering request's callbacks and the accepted
+@code{session/push} lifecycle.  Push speech finishes before the original completion
+callback can drain the next queued prompt.  Callback generations invalidate
+pending speech feedback on session change or integration cleanup; original
+transport callbacks still run.  No transcript text is interpreted as a
+steering outcome or push completion.
+
+The queue adapter marks actual queue draining and lets @code{input-submitted}
+confirm that a queued prompt started.  Prompt list editing and diff entry have
+native command feedback.  New asynchronous tool@comma{} queue@comma{} steering@comma{} setting@comma{} and
+permission-detail submissions explicitly select the notification lane; list
+editing and diff entry remain foreground interactions.  All new events and
+their outcome@comma{} count@comma{} or setting attributes are registered by the workflow
+semantic provider so Aural rules can customize their presentation.
 
 @subsection WSL2 Omnivox development staging
 

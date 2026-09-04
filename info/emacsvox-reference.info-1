@@ -1506,7 +1506,7 @@ https://github.com/xenodium/agent-shell for agent-shell itself.
      Verbosity level for tool call output.
      - 'full: Speak the complete tool output
      - 'summary: Speak a summary (status and title)
-     - 'status: Only speak the final status
+     - 'status: Play status cues as the tool starts and finishes
 
      Default Value:
 

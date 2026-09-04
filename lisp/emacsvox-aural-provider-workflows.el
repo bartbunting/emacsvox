@@ -861,6 +861,12 @@
      :owner agent-shell
      :occasions (continuous navigation inspection notification)
      :phases (before content after))
+    (agent-diff
+     :kind role
+     :summary "A change review opened from an agent session"
+     :owner agent-shell
+     :occasions (navigation inspection)
+     :phases (before content after))
     (agent-block-kind
      :kind attribute
      :summary "The structural kind of an Agent Shell transcript block"
@@ -920,6 +926,51 @@
      :owner agent-shell
      :occasions (continuous notification)
      :phases (before content after))
+    (agent-turn-origin
+     :kind attribute
+     :summary "Whether the turn was submitted by the user or pushed by the server"
+     :owner agent-shell :value-type symbol :allowed-values (user pushed))
+    (agent-setting-id
+     :kind attribute
+     :summary "The identifier of the confirmed session setting"
+     :owner agent-shell :value-type string)
+    (agent-setting-value
+     :kind attribute
+     :summary "The confirmed session setting value"
+     :owner agent-shell :value-type string)
+    (agent-steering-result
+     :kind attribute
+     :summary "The confirmed outcome of steering a prompt"
+     :owner agent-shell :value-type symbol
+     :allowed-values (accepted declined detached submitted))
+    (agent-queue-state
+     :kind attribute
+     :summary "Whether a queued prompt started or the queue paused"
+     :owner agent-shell :value-type symbol :allowed-values (started paused))
+    (agent-queue-count
+     :kind attribute
+     :summary "Number of prompts still waiting in the queue"
+     :owner agent-shell :value-type integer)
+    (agent-list-kind
+     :kind attribute
+     :summary "The kind of list at the prompt editor's insertion point"
+     :owner agent-shell :value-type symbol :allowed-values (bullet numbered none))
+    (agent-list-indent
+     :kind attribute
+     :summary "The list item's indentation in columns"
+     :owner agent-shell :value-type integer)
+    (agent-list-marker
+     :kind attribute
+     :summary "The resulting bullet or number of the current list item"
+     :owner agent-shell :value-type string)
+    (agent-diff-files
+     :kind attribute
+     :summary "Number of files in the opened change review"
+     :owner agent-shell :value-type integer)
+    (agent-diff-hunks
+     :kind attribute
+     :summary "Number of hunks in the opened change review"
+     :owner agent-shell :value-type integer)
     (processing-started
      :kind event
      :summary "An agent began initialization or request processing"
@@ -1027,7 +1078,39 @@
      :summary "An Agent Shell permission request was resolved"
      :owner agent-shell
      :occasions (state-change notification)
-     :phases (before content after)))
+     :phases (before content after))
+    (agent-tool-output-updated
+     :kind event
+     :summary "A completed tool's output changed without a new status"
+     :owner agent-shell :occasions (notification) :phases (before content after))
+    (agent-permission-details-updated
+     :kind event
+     :summary "The operation described by a pending permission changed"
+     :owner agent-shell :occasions (notification) :phases (before content after))
+    (agent-steering-resolved
+     :kind event
+     :summary "The agent accepted, declined, or redirected a steered prompt"
+     :owner agent-shell :occasions (notification) :phases (before content after))
+    (agent-queue-changed
+     :kind event
+     :summary "A queued prompt started or the prompt queue paused"
+     :owner agent-shell :occasions (notification) :phases (before content after))
+    (agent-list-item-created
+     :kind event
+     :summary "A new line or list item was inserted in the prompt editor"
+     :owner agent-shell :occasions (edit) :phases (before content after))
+    (agent-list-indentation-changed
+     :kind event
+     :summary "A prompt list item was indented or dedented"
+     :owner agent-shell :occasions (edit) :phases (before content after))
+    (agent-list-ended
+     :kind event
+     :summary "An empty list item was removed to leave a prompt list"
+     :owner agent-shell :occasions (edit) :phases (before content after))
+    (agent-diff-opened
+     :kind event
+     :summary "An agent change review was opened"
+     :owner agent-shell :occasions (navigation) :phases (before content after)))
   "Semantic definitions used by representative integration slices.")
 
 (defconst emacsvox-aural-workflow-module-fragments

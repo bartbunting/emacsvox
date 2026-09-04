@@ -1383,7 +1383,7 @@ Default Value:
 Verbosity level for tool call output.
 - 'full: Speak the complete tool output
 - 'summary: Speak a summary (status and title)
-- 'status: Only speak the final status
+- 'status: Play status cues as the tool starts and finishes
 @end verbatim
 
 Default Value:

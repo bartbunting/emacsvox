@@ -3390,6 +3390,27 @@ network pause does not make a partial answer sound complete.  A
 cancelled, refused, or failed turn reports its outcome without replacing
 the last successfully completed response.
 
+   When you use ‘M-x agent-shell-prompt-steer’, Emacsvox confirms
+whether the agent accepted the steer, declined it, or started a separate
+turn.  A separate turn is announced as still in progress; it is not
+reported as complete until Agent Shell supplies a completion boundary.
+Server-pushed turns, when supported by the provider, follow the same
+completed-response speech policy.
+
+   Queued prompts announce when they start and how many remain.  If an
+interrupted or failed turn leaves prompts waiting, the queue
+announcement gives its count and the command ‘M-x
+agent-shell-prompt-queue-resume’.  Queue-start feedback follows the
+session's speech level; paused-queue warnings follow
+‘emacsvox-agent-shell-signal-processing’.
+
+   Model, mode, thought-level, and other session setting changes
+announce their confirmed values.  Background setting announcements
+identify the session.  In the viewport prompt editor, continuing a list
+announces its bullet or next number and indentation.  Indenting and
+dedenting announce the new indentation; leaving an empty list item
+announces that the list ended.
+
 10.2 Choose automatic speech and privacy
 ========================================
 
@@ -3429,6 +3450,14 @@ separately controlled by ‘emacsvox-agent-shell-speak-tool-calls’ and
 ‘response’ or ‘full’, thought ‘speak’, or full tool output is an
 explicit disclosure choice.
 
+   At ‘full’ speech level, tool verbosity ‘full’ reads the tool's
+rendered output, including Codex command output and textual diffs.
+Changed output can be read even when the tool's status has not changed;
+identical updates are suppressed.  Tool verbosity ‘status’ plays status
+cues as tools start and finish.  Tool updates, steering outcomes, queue
+changes, and confirmed setting changes use the notification lane,
+leaving navigation speech independent.
+
    Automatic response, tool, error, permission, and similar text is
 limited by ‘emacsvox-agent-shell-automatic-content-max-characters’,
 which defaults to 2,000 characters.  A shortened presentation gives
@@ -3446,6 +3475,11 @@ the appropriate speech stream, identifies the session and requested
 operation, and announces its choices.  Provider-controlled descriptions
 and choice labels are bounded, but the actual permission controls remain
 in Agent Shell.
+
+   If the provider supplies new operation details after asking
+permission, Emacsvox announces the changed description or input.
+Identical updates and routine output do not repeat the warning.  The
+permission controls remain the place to inspect and decide the request.
 
    If the request belongs to another session, switch to the named
 buffer.  Use ‘M-x agent-shell-jump-to-latest-permission-button-row’ to
@@ -3520,6 +3554,16 @@ Use typed block navigation to reach a source block, then:
    The source commands are explicit operations and do not use the
 automatic content limit.  Ordinary line navigation retains its separate
 bounded speech policy.
+
+   Opening an Agent Shell change review announces its file and hunk
+counts and, for a single file, its name.  The normal Diff Mode hunk
+navigation remains available; opening the review does not accept or
+reject changes.
+
+   These interactions expose semantic events and attributes to Aural.
+You can customize speech, voices, and earcons for steering outcomes,
+queue changes, list editing, setting changes, updated tool output, and
+change-review entry.
 
 10.7 Navigate and copy rendered tables
 ======================================
@@ -4840,6 +4884,38 @@ subscriptions consume ‘permission-request’, ‘permission-response’, and
 when Agent Shell exposes it; keep renderer and private fallbacks
 isolated and covered by compatibility tests.
 
+   The lifecycle subscription also observes ‘config-option-update’.
+Configuration snapshots suppress initial inventory and duplicate
+callback/event confirmation.  Late tool details are compared only for
+permissions established by a public ‘permission-request’ event, and
+their snapshots are removed on resolution.
+
+   Current Agent Shell omits rendered Codex ‘rawOutput’ and textual
+diffs from ‘tool-call-update’.  A narrow ‘agent-shell--on-notification’
+adapter joins that public event to the body rendered during the same
+call, matching both the owning buffer and qualified fragment ID.  Full
+tool speech is submitted after rendering returns.  Output digests and
+lifecycle statuses are tracked separately so late output is spoken
+without repeating identical updates.  Renderer IDs without a matching
+public event do not authorize tool feedback.
+
+   Until upstream exposes public steering and push lifecycle events,
+small adapters wrap the structured steering request's callbacks and the
+accepted ‘session/push’ lifecycle.  Push speech finishes before the
+original completion callback can drain the next queued prompt.  Callback
+generations invalidate pending speech feedback on session change or
+integration cleanup; original transport callbacks still run.  No
+transcript text is interpreted as a steering outcome or push completion.
+
+   The queue adapter marks actual queue draining and lets
+‘input-submitted’ confirm that a queued prompt started.  Prompt list
+editing and diff entry have native command feedback.  New asynchronous
+tool, queue, steering, setting, and permission-detail submissions
+explicitly select the notification lane; list editing and diff entry
+remain foreground interactions.  All new events and their outcome,
+count, or setting attributes are registered by the workflow semantic
+provider so Aural rules can customize their presentation.
+
 16.3.6 WSL2 Omnivox development staging
 ---------------------------------------
 
@@ -5216,24 +5292,24 @@ Node: Desktop Applications127779
 Node: Notmuch Mail135167
 Ref: Notmuch fields and privacy144510
 Node: Agent Shell150218
-Node: EAT Terminal Access160212
-Node: Running Terminal Based Applications177471
-Node: Starting Term178426
-Node: Term Input Modes179265
-Node: Term Speech Feedback180425
-Node: Reviewing The Term Screen181619
-Node: Term Help And Recovery183520
-Node: Emacsvox Keyboard Commands184419
-Node: Copyright185823
-Node: Acknowledgments186410
-Node: Developer Guide187436
-Node: Documentation Maintenance188600
-Node: Speech Server Protocols193398
-Ref: Testing A Direct Legacy Server199305
-Ref: Commands That Queue Output199864
-Ref: Commands That Set State202898
-Node: Integration Maintenance205492
-Node: Concept Index225079
+Node: EAT Terminal Access162513
+Node: Running Terminal Based Applications179772
+Node: Starting Term180727
+Node: Term Input Modes181566
+Node: Term Speech Feedback182726
+Node: Reviewing The Term Screen183920
+Node: Term Help And Recovery185821
+Node: Emacsvox Keyboard Commands186720
+Node: Copyright188124
+Node: Acknowledgments188711
+Node: Developer Guide189737
+Node: Documentation Maintenance190901
+Node: Speech Server Protocols195699
+Ref: Testing A Direct Legacy Server201606
+Ref: Commands That Queue Output202165
+Ref: Commands That Set State205199
+Node: Integration Maintenance207793
+Node: Concept Index229273
 
 End Tag Table
 

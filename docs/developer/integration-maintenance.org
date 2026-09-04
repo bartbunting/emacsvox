@@ -190,6 +190,35 @@ The lifecycle subscription currently consumes ~init-started~,
 semantic behavior at the public event layer when Agent Shell exposes it; keep
 renderer and private fallbacks isolated and covered by compatibility tests.
 
+The lifecycle subscription also observes ~config-option-update~.  Configuration
+snapshots suppress initial inventory and duplicate callback/event confirmation.
+Late tool details are compared only for permissions established by a public
+~permission-request~ event, and their snapshots are removed on resolution.
+
+Current Agent Shell omits rendered Codex ~rawOutput~ and textual diffs from
+~tool-call-update~.  A narrow ~agent-shell--on-notification~ adapter joins that
+public event to the body rendered during the same call, matching both the
+owning buffer and qualified fragment ID.  Full tool speech is submitted after
+rendering returns.  Output digests and lifecycle statuses are tracked separately
+so late output is spoken without repeating identical updates.  Renderer IDs
+without a matching public event do not authorize tool feedback.
+
+Until upstream exposes public steering and push lifecycle events, small
+adapters wrap the structured steering request's callbacks and the accepted
+~session/push~ lifecycle.  Push speech finishes before the original completion
+callback can drain the next queued prompt.  Callback generations invalidate
+pending speech feedback on session change or integration cleanup; original
+transport callbacks still run.  No transcript text is interpreted as a
+steering outcome or push completion.
+
+The queue adapter marks actual queue draining and lets ~input-submitted~
+confirm that a queued prompt started.  Prompt list editing and diff entry have
+native command feedback.  New asynchronous tool, queue, steering, setting, and
+permission-detail submissions explicitly select the notification lane; list
+editing and diff entry remain foreground interactions.  All new events and
+their outcome, count, or setting attributes are registered by the workflow
+semantic provider so Aural rules can customize their presentation.
+
 ** WSL2 Omnivox development staging
 :PROPERTIES:
 :TEXINFO_NODE: no

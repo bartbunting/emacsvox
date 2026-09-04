@@ -123,10 +123,10 @@
   "Verbosity level for tool call output.
 - \\='full: Speak the complete tool output
 - \\='summary: Speak a summary (status and title)
-- \\='status: Only speak the final status"
+- \\='status: Play status cues as the tool starts and finishes"
   :type '(choice (const :tag "Full output" full)
                  (const :tag "Summary" summary)
-                 (const :tag "Status only" status))
+                 (const :tag "Status cues only" status))
   :group 'emacsvox-agent-shell)
 
 (defcustom emacsvox-agent-shell-speak-permissions t
@@ -684,8 +684,11 @@ ending at SOURCE-START labels the content that follows it."
 
 (defun emacsvox-agent-shell--chat-label-context-at-point ()
   "Return the visible agent-shell chat label context on the current line."
-  (emacsvox-agent-shell--chat-label-context-between
-   (line-beginning-position) (line-end-position)))
+  ;; Comint's input field starts after the prompt.  Include the whole physical
+  ;; line so its preceding Me label wins over the decorative prompt marker.
+  (let ((inhibit-field-text-motion t))
+    (emacsvox-agent-shell--chat-label-context-between
+     (line-beginning-position) (line-end-position))))
 
 (defun emacsvox-agent-shell--visual-line-source-bounds ()
   "Return the current visual line's underlying source bounds."
@@ -1266,6 +1269,33 @@ available so a timer created by an older loaded version can finish safely.")
 
 (defvar-local emacsvox-agent-shell--tool-call-status-cache nil
   "Hash table mapping tool call IDs to their last announced status.")
+
+(defvar-local emacsvox-agent-shell--tool-output-cache nil
+  "Digests of terminal tool output already observed in this turn.")
+
+(defvar-local emacsvox-agent-shell--permission-detail-cache nil
+  "Snapshots of operations whose permissions are still pending.")
+
+(defvar-local emacsvox-agent-shell--config-option-cache nil
+  "Last observed values of session configuration options.")
+
+(defvar-local emacsvox-agent-shell--callback-generation 0
+  "Generation invalidating asynchronous callbacks on cleanup or session change.")
+
+(defvar-local emacsvox-agent-shell--push-active-p nil
+  "Non-nil while collecting an accepted server-pushed turn.")
+
+(defvar emacsvox-agent-shell--rendering-tool-update nil
+  "Dynamically scoped public event and renderer output for one tool update.")
+
+(defvar emacsvox-agent-shell--queued-prompt-p nil
+  "Non-nil while Agent Shell submits the next queued prompt.")
+
+(defvar emacsvox-agent-shell--setting-command-active nil
+  "Non-nil while an interactive model or mode command makes its request.")
+
+(defvar emacsvox-agent-shell--setting-callback-active nil
+  "Non-nil when the config option adapter owns a success announcement.")
 
 (defvar-local emacsvox-agent-shell--table-navigation-active nil
   "Non-nil when contextual Markdown table keys are active.")
@@ -2211,6 +2241,7 @@ the body retains semantic faces and omits markup that is no longer displayed."
 Only buffer markers are updated while a response streams.  Rendered text is
 copied once, when the turn completes or the out-of-turn debounce timer fires."
   (emacsvox-agent-shell--record-setting-warning-section range)
+  (emacsvox-agent-shell--record-tool-output-section range)
   (when-let* ((body-start (map-nested-elt range '(:body :start)))
               ((< body-start (point-max)))
               ((eq (get-text-property body-start 'agent-shell-ui-section)
@@ -2304,7 +2335,8 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
 
 (defun emacsvox-agent-shell--discard-response-turn ()
   "Discard collected turn content and finish the current turn."
-  (setq emacsvox-agent-shell--response-turn-active-p nil
+  (setq emacsvox-agent-shell--push-active-p nil
+        emacsvox-agent-shell--response-turn-active-p nil
         emacsvox-agent-shell--latest-turn-outcome 'failed)
   (emacsvox-agent-shell--cancel-pending-speech))
 
@@ -2362,6 +2394,7 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
 (defun emacsvox-agent-shell--handle-permission-request (event)
   "Interrupt current speech and announce permission request EVENT."
   (let* ((data (map-elt event :data))
+         (tool-call-id (map-elt data :tool-call-id))
          (key (or (map-elt data :request-id)
                   (map-elt data :tool-call-id)))
          (actions (map-nested-elt event '(:data :tool-call
@@ -2370,7 +2403,15 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
       (unless (hash-table-p emacsvox-agent-shell--permission-action-cache)
         (setq emacsvox-agent-shell--permission-action-cache
               (make-hash-table :test #'equal)))
-      (puthash key actions emacsvox-agent-shell--permission-action-cache)))
+      (puthash key actions emacsvox-agent-shell--permission-action-cache))
+    (when tool-call-id
+      (unless (hash-table-p emacsvox-agent-shell--permission-detail-cache)
+        (setq emacsvox-agent-shell--permission-detail-cache
+              (make-hash-table :test #'equal)))
+      (puthash tool-call-id
+               (cons key (emacsvox-agent-shell--permission-details
+                          (map-elt data :tool-call)))
+               emacsvox-agent-shell--permission-detail-cache)))
   ;; Rendered turn-content capture ignores permission fragments, so the urgent
   ;; transaction interrupts current speech without discarding turn content
   ;; collected so far.  A later section update refreshes the complete body
@@ -2404,6 +2445,13 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
     (when (and key
                (hash-table-p emacsvox-agent-shell--permission-action-cache))
       (remhash key emacsvox-agent-shell--permission-action-cache))
+    (when (hash-table-p emacsvox-agent-shell--permission-detail-cache)
+      (maphash
+       (lambda (id entry)
+         (when (or (equal id (map-elt data :tool-call-id))
+                   (equal (car entry) key))
+           (remhash id emacsvox-agent-shell--permission-detail-cache)))
+       emacsvox-agent-shell--permission-detail-cache))
     (when emacsvox-agent-shell-speak-permissions
       (let* ((result
               (cond
@@ -2538,6 +2586,8 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
             ('error 'processing-failed))))
     (append
      '(:role agent-session)
+     (when emacsvox-agent-shell--push-active-p
+       '(:agent-turn-origin pushed))
      (when semantic-event (list :events (list semantic-event)))
      (when (eq semantic-event 'processing-started)
        '(:states (processing))))))
@@ -2551,6 +2601,7 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
     ;; allowed to deliver a partial response.
     (pcase event-type
       ('session-selected
+       (emacsvox-agent-shell--interaction-cleanup)
        (emacsvox-agent-shell--out-of-turn-cleanup)
        (setq emacsvox-agent-shell--response-turn-active-p nil
              emacsvox-agent-shell--last-completed-answer nil
@@ -2563,7 +2614,17 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
              (and emacsvox-agent-shell--last-completed-answer
                   'completed)))
       ('input-submitted
-       (emacsvox-agent-shell--begin-response-turn))
+       (emacsvox-agent-shell--begin-response-turn)
+       (when (and emacsvox-agent-shell--queued-prompt-p
+                  (emacsvox-agent-shell--speech-level-at-least-p 'notify))
+         (emacsvox-agent-shell--queue-feedback 'started)))
+      ('config-option-update
+       (emacsvox-agent-shell--observe-config-options
+        (map-nested-elt event '(:data :config-options))
+        (map-elt agent-shell--state :initialized)))
+      ('init-finished
+       (emacsvox-agent-shell--observe-config-options
+        (emacsvox-agent-shell--config-options) nil))
       ('turn-complete
        (if (equal (map-nested-elt event '(:data :stop-reason)) "end_turn")
            (emacsvox-agent-shell--finish-response-turn)
@@ -2573,6 +2634,9 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
     (when (and (memq event-type '(turn-complete error))
                (hash-table-p emacsvox-agent-shell--tool-call-status-cache))
       (clrhash emacsvox-agent-shell--tool-call-status-cache))
+    (when (memq event-type '(turn-complete error))
+      (setq emacsvox-agent-shell--tool-output-cache nil
+            emacsvox-agent-shell--permission-detail-cache nil))
     (when emacsvox-agent-shell-signal-processing
       (pcase event-type
         ((or 'init-started 'input-submitted)
@@ -2847,8 +2911,10 @@ and REPLACEMENT-KEY control interruption of the complete bounded submission."
            (_ 'agent-block))))
     (emacsvox-agent-shell--presentation-facts
      role nil nil
-     (when (eq role 'agent-block)
-       (list :agent-block-kind 'other)))))
+     (append
+      (when emacsvox-agent-shell--push-active-p '(:agent-turn-origin pushed))
+      (when (eq role 'agent-block)
+        (list :agent-block-kind 'other))))))
 
 (defun emacsvox-agent-shell--speak-content (content block-type)
   "Present Agent Shell CONTENT of BLOCK-TYPE with semantic context."
@@ -5992,6 +6058,239 @@ Return non-nil when point represents one of those semantic items."
 
 ;;;  Session Management
 
+(defun emacsvox-agent-shell--notify-event (text facts &optional icon occasion)
+  "Submit bounded asynchronous TEXT and FACTS on the notification lane.
+ICON belongs to the same transaction.  Background text identifies its shell."
+  (let ((speech
+         (when text
+           (emacsvox-agent-shell--limit-automatic-content
+            (if (emacsvox-agent-shell--session-focused-p) text
+              (concat (emacsvox-agent-shell--session-label) ". " text))
+            facts))))
+    (apply (if speech #'emacsvox-aural-submit #'emacsvox-aural-submit-actions)
+           (append
+            (when speech (list speech))
+            (list :facts facts :module 'agent-shell
+                  :occasion (or occasion 'notification) :lane 'notification
+                  :compatibility-actions
+                  (when icon (list (emacsvox-aural-compatibility-icon icon))))))))
+
+(defun emacsvox-agent-shell--callback-current-p (buffer generation)
+  "Return non-nil if BUFFER still owns a callback from GENERATION."
+  (and (buffer-live-p buffer)
+       (with-current-buffer buffer
+         (and (derived-mode-p 'agent-shell-mode)
+              (= generation emacsvox-agent-shell--callback-generation)))))
+
+(defun emacsvox-agent-shell--interaction-cleanup ()
+  "Invalidate asynchronous work and clear session interaction snapshots."
+  (cl-incf emacsvox-agent-shell--callback-generation)
+  (setq emacsvox-agent-shell--push-active-p nil
+        emacsvox-agent-shell--tool-call-status-cache nil
+        emacsvox-agent-shell--tool-output-cache nil
+        emacsvox-agent-shell--permission-detail-cache nil
+        emacsvox-agent-shell--config-option-cache nil))
+
+(defun emacsvox-agent-shell--config-options ()
+  "Read normalized config options through the optional compatibility API."
+  (when (and (boundp 'agent-shell--state)
+             (fboundp 'agent-shell--config-options))
+    (agent-shell--config-options agent-shell--state)))
+
+(defun emacsvox-agent-shell--observe-config-options (options announce)
+  "Remember OPTIONS and, when ANNOUNCE is non-nil, speak changed values.
+Newly advertised options establish a baseline; they are not value changes."
+  (unless (hash-table-p emacsvox-agent-shell--config-option-cache)
+    (setq emacsvox-agent-shell--config-option-cache
+          (make-hash-table :test #'equal)))
+  (dolist (option options)
+    (let* ((id (map-elt option :id))
+           (value (map-elt option :current-value))
+           (missing (make-symbol "missing"))
+           (previous (gethash id emacsvox-agent-shell--config-option-cache missing)))
+      (puthash id (copy-tree value) emacsvox-agent-shell--config-option-cache)
+      (when (and announce id (not (eq previous missing))
+                 (not (equal previous value)))
+        (let ((name (or (map-elt option :name) id))
+              (label (or (and (fboundp 'agent-shell--config-option-value-name)
+                              (agent-shell--config-option-value-name option value))
+                         (format "%s" value))))
+          (emacsvox-agent-shell--notify-event
+           (format "%s: %s." name label)
+           (emacsvox-agent-shell--presentation-facts
+            'agent-session 'agent-setting-changed nil
+            (list :agent-setting-id (format "%s" id)
+                  :agent-setting-value (format "%s" value)))
+           'select-object 'state-change))))))
+
+(defun emacsvox-agent-shell--steering-feedback (outcome &optional detail)
+  "Announce the confirmed steering OUTCOME and optional error DETAIL."
+  (let* ((result (pcase outcome
+                   ("injected" 'accepted)
+                   ("startedNewTurn" 'detached)
+                   ("submitted" 'submitted)
+                   (_ 'declined)))
+         (text (pcase result
+                 ('accepted "Steering accepted.")
+                 ('detached "Steered prompt started a separate turn. Still in progress.")
+                 ('submitted "Steered prompt submitted as a new turn.")
+                 (_ (if (and (stringp detail) (not (string-empty-p detail)))
+                        (format "Steering declined: %s. Stopping the running turn." detail)
+                      "Steering declined. Stopping the running turn.")))))
+    (emacsvox-agent-shell--notify-event
+     text
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-steering-resolved nil
+      (list :agent-steering-result result))
+     (if (memq result '(declined detached)) 'warn-user 'select-object))))
+
+(defun emacsvox-agent-shell--send-request-around (original &rest arguments)
+  "Adapt missing steering and config-success events around ORIGINAL.
+Only structured request methods establish authority.  Preserve the original
+callbacks, arguments, return values, and transport behavior."
+  (let* ((method (map-nested-elt (plist-get arguments :request) '(:method)))
+         (steering (equal method "_session/steering"))
+         (setting (equal method "session/set_config_option"))
+         (buffer (map-elt (plist-get arguments :state) :buffer)))
+    (if (not (and (or steering setting) (buffer-live-p buffer)))
+        (apply original arguments)
+      (let* ((generation (buffer-local-value 'emacsvox-agent-shell--callback-generation buffer))
+             (success (plist-get arguments :on-success))
+             (failure (plist-get arguments :on-failure))
+             (setting-message-regexp
+              (when setting
+                (concat "\\`"
+                        (regexp-opt
+                         (append '("Model" "Session mode" "Thought level")
+                                 (with-current-buffer buffer
+                                   (seq-keep (lambda (option)
+                                               (let ((name (map-elt option :name)))
+                                                 (and (stringp name) name)))
+                                             (emacsvox-agent-shell--config-options)))))
+                        ": ")))
+             (announce-setting
+              (or emacsvox-agent-shell--setting-command-active
+                  (memq ems--interactive-fn-name
+                        '(agent-shell-set-session-thought-level
+                          agent-shell-set-session-config-option))
+                  (map-elt (plist-get arguments :state) :initialized))))
+        (when setting
+          (with-current-buffer buffer
+            (emacsvox-agent-shell--observe-config-options
+             (emacsvox-agent-shell--config-options) nil)))
+        (setq arguments (copy-sequence arguments))
+        (setq arguments
+              (plist-put
+               arguments :on-success
+               (lambda (&rest response)
+                 (let* ((outcome (map-elt (car response) 'outcome))
+                        (steering-outcome
+                         (if (and steering (equal outcome "promptRequired")
+                                  (buffer-live-p buffer)
+                                  (not (with-current-buffer buffer (shell-maker-busy))))
+                             "submitted" outcome))
+                        (emacsvox-agent-shell--setting-callback-active setting)
+                        (ems--message-filter
+                         (if (and setting announce-setting)
+                             (concat "\\(?:" ems--message-filter "\\|"
+                                     setting-message-regexp "\\)")
+                           ems--message-filter)))
+                   (when success (apply success response))
+                   (when (emacsvox-agent-shell--callback-current-p buffer generation)
+                     (with-current-buffer buffer
+                       (if steering
+                           (emacsvox-agent-shell--steering-feedback
+                            steering-outcome)
+                         (emacsvox-agent-shell--observe-config-options
+                          (emacsvox-agent-shell--config-options) announce-setting))))))))
+        (when steering
+          (setq arguments
+                (plist-put
+                 arguments :on-failure
+                 (lambda (&rest response)
+                   (when failure (apply failure response))
+                   (when (emacsvox-agent-shell--callback-current-p buffer generation)
+                     (with-current-buffer buffer
+                       (emacsvox-agent-shell--steering-feedback
+                        "failed" (map-elt (car response) 'message))))))))
+        (apply original arguments)))))
+
+(defun emacsvox-agent-shell--push-request-around (original &rest arguments)
+  "Begin speech collection only after ORIGINAL accepts a server push."
+  (let* ((state (plist-get arguments :state))
+         (buffer (map-elt state :buffer))
+         (id (map-elt (plist-get arguments :acp-request) 'id))
+         (busy-before
+          (seq-some (lambda (request)
+                      (member (map-elt request :method) '("session/prompt" "session/push")))
+                    (map-elt state :active-requests))))
+    (prog1 (apply original arguments)
+      (when (and (not busy-before) (buffer-live-p buffer)
+                 (seq-some (lambda (request)
+                             (and (equal (map-elt request :method) "session/push")
+                                  (equal (map-elt request :id) id)))
+                           (map-elt state :active-requests)))
+        (with-current-buffer buffer
+          (unless emacsvox-agent-shell--push-active-p
+            (setq emacsvox-agent-shell--push-active-p t)
+            (emacsvox-agent-shell--begin-response-turn)
+            (when (and emacsvox-agent-shell-signal-processing
+                       (emacsvox-agent-shell--speech-level-at-least-p 'full))
+              (emacsvox-agent-shell--notify-event
+               "Agent update started."
+               (emacsvox-agent-shell-lifecycle-facts '((:event . input-submitted)))
+               emacsvox-agent-shell-processing-start-icon))))))))
+
+(defun emacsvox-agent-shell--push-end-around (original &rest arguments)
+  "Finish pushed speech at ORIGINAL's completion callback, before queue drain."
+  (let ((buffer (map-elt (plist-get arguments :state) :buffer))
+        (finished (plist-get arguments :on-finished)))
+    (setq arguments (copy-sequence arguments))
+    (setq arguments
+          (plist-put
+           arguments :on-finished
+           (lambda (&rest callback-arguments)
+             (when (buffer-live-p buffer)
+               (with-current-buffer buffer
+                 (when emacsvox-agent-shell--push-active-p
+                   (unwind-protect
+                       (let ((emacsvox-aural-submission-lane 'notification))
+                         (emacsvox-agent-shell--handle-lifecycle-event
+                          '((:event . turn-complete)
+                            (:data . ((:stop-reason . "end_turn"))))))
+                     (setq emacsvox-agent-shell--push-active-p nil)))))
+             (when finished (apply finished callback-arguments)))))
+    (apply original arguments)))
+
+(defun emacsvox-agent-shell--pending-prompt-count ()
+  "Return the current queue length, accepting the legacy state key."
+  (length (or (map-elt agent-shell--state :pending-prompts)
+              (map-elt agent-shell--state :pending-requests))))
+
+(defun emacsvox-agent-shell--queue-feedback (state)
+  "Announce queue STATE and its remaining prompt count."
+  (let ((count (emacsvox-agent-shell--pending-prompt-count)))
+    (emacsvox-agent-shell--notify-event
+     (if (eq state 'started)
+         (format "Queued prompt started. %d remaining." count)
+       (format "Queue paused. %d %s waiting. Resume with M-x agent-shell-prompt-queue-resume."
+               count (if (= count 1) "prompt" "prompts")))
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-queue-changed nil
+      (list :agent-queue-state state :agent-queue-count count))
+     (if (eq state 'started) 'progress 'warn-user))))
+
+(defun emacsvox-agent-shell--queue-process-around (original &rest arguments)
+  "Mark the queued submission performed by ORIGINAL for public input events."
+  (let ((emacsvox-agent-shell--queued-prompt-p t))
+    (apply original arguments)))
+
+(defun emacsvox-agent-shell--queue-display-after (&rest _)
+  "Announce the pending queue that Agent Shell has paused."
+  (when (and (> (emacsvox-agent-shell--pending-prompt-count) 0)
+             emacsvox-agent-shell-signal-processing)
+    (emacsvox-agent-shell--queue-feedback 'paused)))
+
 (defun emacsvox-agent-shell--session-setting-speech
     (property label fallback)
   "Describe session PROPERTY using LABEL, or return FALLBACK."
@@ -6010,21 +6309,24 @@ reads the state only after Agent Shell has updated it."
   (if (not (ems-interactive-p command))
       (apply original-function arguments)
     (let ((original-callback (car arguments))
-          (shell-buffer (current-buffer)))
+          (shell-buffer (current-buffer))
+          (generation emacsvox-agent-shell--callback-generation)
+          (emacsvox-agent-shell--setting-command-active t))
       (apply
        original-function
        (cons
         (lambda (&rest callback-arguments)
           (when original-callback
             (apply original-callback callback-arguments))
-          (when (buffer-live-p shell-buffer)
+          (when (and (not emacsvox-agent-shell--setting-callback-active)
+                     (emacsvox-agent-shell--callback-current-p shell-buffer generation))
             (with-current-buffer shell-buffer
-              (emacsvox-agent-shell--submit-text-feedback
+              (emacsvox-agent-shell--notify-event
                (emacsvox-agent-shell--session-setting-speech
                 property label fallback)
                (emacsvox-agent-shell--presentation-facts
                 'agent-session 'agent-setting-changed)
-               'state-change 'select-object))))
+               'select-object 'state-change))))
         (cdr arguments))))))
 
 (defun emacsvox-agent-shell--set-session-model-around
@@ -6049,6 +6351,87 @@ reads the state only after Agent Shell has updated it."
    :mode "Session mode" "Session mode changed."))
 
 ;;;  Viewport Mode Integration
+
+(defun emacsvox-agent-shell--list-edit-around (original arguments command)
+  "Describe the structure changed by list-edit COMMAND through ORIGINAL."
+  (if (not (ems-interactive-p command))
+      (apply original arguments)
+    (let ((before (agent-shell-list-edit--at-item))
+          (tick (buffer-chars-modified-tick)))
+      (if (and (not before)
+               (memq command '(agent-shell-list-edit-newline
+                               agent-shell-list-edit-indent-line)))
+          ;; These paths delegate to ordinary editing or completion.  Let
+          ;; their native advice own line echo and completion feedback.
+          (let ((ems--interactive-fn-name
+                 (if (eq command 'agent-shell-list-edit-newline)
+                     'newline 'indent-for-tab-command)))
+            (apply original arguments))
+        (prog1 (apply original arguments)
+          (unless (= tick (buffer-chars-modified-tick))
+            (let* ((item (agent-shell-list-edit--at-item))
+                   (kind (or (map-elt item :type) 'none))
+                   (indent (current-indentation))
+                   (marker (map-elt item :marker))
+                   (newline-p (eq command 'agent-shell-list-edit-newline))
+                   (ended (and before (not item)))
+                   (event (cond (ended 'agent-list-ended)
+                                (newline-p 'agent-list-item-created)
+                                (t 'agent-list-indentation-changed))))
+              (emacsvox-agent-shell--submit-text-feedback
+               (cond
+                (ended "List ended.")
+                ((eq kind 'numbered)
+                 (format "Item %s, indentation %d." marker indent))
+                ((eq kind 'bullet) (format "Bullet, indentation %d." indent))
+                (t "New line."))
+               (emacsvox-agent-shell--presentation-facts
+                'agent-prompt-editor event nil
+                (append (list :agent-list-kind kind :agent-list-indent indent)
+                        (when marker (list :agent-list-marker marker))))
+               'edit))))))))
+
+(defun emacsvox-agent-shell--list-newline-around (original &rest arguments)
+  "Speak list continuation or exit after ORIGINAL inserts a newline."
+  (emacsvox-agent-shell--list-edit-around
+   original arguments 'agent-shell-list-edit-newline))
+
+(defun emacsvox-agent-shell--list-indent-around (original &rest arguments)
+  "Speak the list indentation produced by ORIGINAL."
+  (emacsvox-agent-shell--list-edit-around
+   original arguments 'agent-shell-list-edit-indent-line))
+
+(defun emacsvox-agent-shell--list-dedent-around (original &rest arguments)
+  "Speak the list indentation produced by ORIGINAL."
+  (emacsvox-agent-shell--list-edit-around
+   original arguments 'agent-shell-list-edit-dedent-line))
+
+(defun emacsvox-agent-shell--diff-around (original &rest arguments)
+  "Orient the reader to the change review displayed by ORIGINAL."
+  (let ((buffer (apply original arguments)))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (when (derived-mode-p 'agent-shell-diff-mode)
+          (let* ((files (length (plist-get arguments :diffs)))
+                 (hunks (save-excursion
+                          (goto-char (point-min))
+                          (let ((count 0))
+                            (while (re-search-forward "^@@ " nil t)
+                              (cl-incf count))
+                            count)))
+                 (name (and (= files 1)
+                            (map-elt (car (plist-get arguments :diffs)) :file))))
+            (emacsvox-agent-shell--submit-text-feedback
+             (format (substitute-command-keys
+                      "Review changes. %s%d %s, %d %s. \\[diff-hunk-next] and \\[diff-hunk-prev] move between hunks.")
+                     (if name (concat (file-name-nondirectory name) ". ") "")
+                     files (if (= files 1) "file" "files")
+                     hunks (if (= hunks 1) "hunk" "hunks"))
+             (emacsvox-agent-shell--presentation-facts
+              'agent-diff 'agent-diff-opened nil
+              (list :agent-diff-files files :agent-diff-hunks hunks))
+             'navigation 'open-object)))))
+    buffer))
 
 (defun emacsvox-agent-shell--viewport-next-item-around
     (original-function &rest arguments)
@@ -6246,6 +6629,38 @@ DISMISS means the compose window is dismissed."
       (emacsvox-agent-shell--meaningful-tool-text tool-call-id)
       "unknown tool"))
 
+(defun emacsvox-agent-shell--permission-details (tool)
+  "Snapshot TOOL's requested operation, excluding output and progress."
+  (copy-tree (mapcar (lambda (key) (map-elt tool key))
+                     '(:title :description :command :raw-input))))
+
+(defun emacsvox-agent-shell--observe-permission-details (event)
+  "Announce changed operation details for an already pending permission EVENT."
+  (when-let* ((id (map-nested-elt event '(:data :tool-call-id)))
+              ((hash-table-p emacsvox-agent-shell--permission-detail-cache))
+              (previous (gethash id emacsvox-agent-shell--permission-detail-cache))
+              (tool (map-nested-elt event '(:data :tool-call))))
+    (if (member (map-elt tool :status) '("completed" "failed"))
+        (remhash id emacsvox-agent-shell--permission-detail-cache)
+      (let ((details (emacsvox-agent-shell--permission-details tool)))
+        (unless (equal details (cdr previous))
+          (puthash id (cons (car previous) details)
+                   emacsvox-agent-shell--permission-detail-cache)
+          (when emacsvox-agent-shell-speak-permissions
+            (let* ((print-length 8) (print-level 3)
+                   (input (or (map-elt tool :command)
+                              (when (map-elt tool :raw-input)
+                                (prin1-to-string (map-elt tool :raw-input)))))
+                   (detail (emacsvox-agent-shell--permission-field-text
+                            input "tool input")))
+              (emacsvox-agent-shell--notify-event
+               (concat "Permission details changed. "
+                       (emacsvox-agent-shell--tool-call-description tool id)
+                       (when detail (concat ". Input: " detail)))
+               (emacsvox-agent-shell--presentation-facts
+                'permission-request 'agent-permission-details-updated)
+               'warn-user))))))))
+
 (defun emacsvox-agent-shell--tool-call-announcement (status description)
   "Return a semantic announcement for tool STATUS and DESCRIPTION."
   (let ((verb (pcase status
@@ -6313,29 +6728,63 @@ Return nil when the configured verbosity requests status cues only."
         announcement))))
 
 (defun emacsvox-agent-shell--handle-tool-call-update (event)
-  "Announce a new semantic status from public tool update EVENT."
+  "Collect renderer output or present the public tool update EVENT."
+  (emacsvox-agent-shell--observe-permission-details event)
+  (if (and emacsvox-agent-shell--rendering-tool-update
+           (eq (current-buffer)
+               (plist-get emacsvox-agent-shell--rendering-tool-update :buffer))
+           (equal (map-nested-elt event '(:data :tool-call-id))
+                  (plist-get emacsvox-agent-shell--rendering-tool-update :id))
+           (eq emacsvox-agent-shell-tool-output-verbosity 'full)
+           (member (map-nested-elt event '(:data :tool-call :status))
+                   '("completed" "failed")))
+      (setf (plist-get emacsvox-agent-shell--rendering-tool-update :event)
+            (copy-tree event))
+    (emacsvox-agent-shell--present-tool-update event)))
+
+(defun emacsvox-agent-shell--present-tool-update (event)
+  "Present changed status or terminal output from public tool EVENT."
   (let* ((data (map-elt event :data))
          (tool-call-id (map-elt data :tool-call-id))
          (tool-call (map-elt data :tool-call))
          (status (map-elt tool-call :status))
-         (output (map-elt tool-call :output)))
+         (output (or (emacsvox-agent-shell--tool-output-text
+                      (map-elt tool-call :output))
+                     (emacsvox-agent-shell--tool-output-text
+                      (map-elt tool-call :content))))
+         (digest (and output (secure-hash 'sha256 output))))
     (when (and tool-call-id status)
       (unless (hash-table-p emacsvox-agent-shell--tool-call-status-cache)
         (setq emacsvox-agent-shell--tool-call-status-cache
               (make-hash-table :test #'equal)))
-      (let ((previous
-             (gethash tool-call-id
-                      emacsvox-agent-shell--tool-call-status-cache)))
+      (unless (hash-table-p emacsvox-agent-shell--tool-output-cache)
+        (setq emacsvox-agent-shell--tool-output-cache
+              (make-hash-table :test #'equal)))
+      (let* ((previous
+              (gethash tool-call-id
+                       emacsvox-agent-shell--tool-call-status-cache))
+             (status-changed (not (equal status previous)))
+             (output-changed
+              (and digest
+                   (eq emacsvox-agent-shell-tool-output-verbosity 'full)
+                   (member status '("completed" "failed"))
+                   (not (equal digest
+                               (gethash tool-call-id
+                                        emacsvox-agent-shell--tool-output-cache))))))
         (puthash tool-call-id status
                  emacsvox-agent-shell--tool-call-status-cache)
+        (when digest
+          (puthash tool-call-id digest emacsvox-agent-shell--tool-output-cache))
         (when (and emacsvox-agent-shell-speak-tool-calls
                    (emacsvox-agent-shell--speech-level-at-least-p 'full)
                    (member status
                            '("pending" "in_progress" "completed" "failed"))
-                   (not (equal status previous)))
+                   (or status-changed output-changed))
           (let* ((facts
                   (emacsvox-agent-shell--presentation-facts
-                   'agent-tool 'agent-tool-status-changed nil
+                   'agent-tool
+                   (if status-changed 'agent-tool-status-changed
+                     'agent-tool-output-updated) nil
                    (list
                     :agent-tool-status
                     (if (equal status "in_progress")
@@ -6346,17 +6795,48 @@ Return nil when the configured verbosity requests status cues only."
                    status
                    (emacsvox-agent-shell--tool-call-description
                     tool-call tool-call-id)
-                   (if (and (stringp output)
-                            (not (string-empty-p output)))
-                       output
-                     (map-elt tool-call :content)))))
-            (if text
-                (emacsvox-agent-shell--submit-automatic-text-feedback
-                 text facts 'notification)
-              (emacsvox-aural-submit-actions
-               :facts facts
-               :module 'agent-shell
-               :occasion 'notification))))))))
+                   output)))
+            (emacsvox-agent-shell--notify-event text facts)))))))
+
+(defun emacsvox-agent-shell--record-tool-output-section (range)
+  "Capture RANGE's body only for the tool event in this rendering pass."
+  (when-let* ((update emacsvox-agent-shell--rendering-tool-update)
+              ((eq (plist-get update :buffer) (current-buffer)))
+              ((plist-get update :event))
+              (start (map-nested-elt range '(:body :start)))
+              (end (map-nested-elt range '(:body :end)))
+              ((< start end))
+              (state (get-text-property start 'agent-shell-ui-state))
+              ((equal (map-elt state :qualified-id)
+                      (plist-get update :qualified-id))))
+    (setf (plist-get emacsvox-agent-shell--rendering-tool-update :output)
+          (buffer-substring start end))))
+
+(defun emacsvox-agent-shell--on-notification-around (original &rest arguments)
+  "Join public tool status with the output rendered by ORIGINAL.
+Agent Shell omits Codex rawOutput and rendered diffs from its tool event.
+Scope this compatibility adapter to the exact buffer, notification, and
+fragment.  Fragment names alone never manufacture a tool event."
+  (let* ((state (plist-get arguments :state))
+         (notification (plist-get arguments :acp-notification))
+         (update (map-nested-elt notification '(params update)))
+         (id (map-elt update 'toolCallId))
+         (emacsvox-agent-shell--rendering-tool-update
+          (when (and id (equal (map-elt update 'sessionUpdate)
+                               "tool_call_update"))
+            (list :buffer (map-elt state :buffer) :id id
+                  :qualified-id (format "%s-%s" (map-elt state :request-count) id)
+                  :event nil :output nil))))
+    (prog1 (apply original arguments)
+      (when-let* ((capture emacsvox-agent-shell--rendering-tool-update)
+                  (event (plist-get capture :event))
+                  (buffer (plist-get capture :buffer))
+                  ((buffer-live-p buffer)))
+        (when-let* ((output (plist-get capture :output)))
+          (setf (alist-get :output (alist-get :tool-call (alist-get :data event)))
+                output))
+        (with-current-buffer buffer
+          (emacsvox-agent-shell--present-tool-update event))))))
 
 (defun emacsvox-agent-shell--tool-call-event-setup ()
   "Subscribe the current agent-shell buffer to tool call updates."
@@ -6384,6 +6864,9 @@ Return nil when the configured verbosity requests status cues only."
 (defun emacsvox-agent-shell--buffer-setup ()
   "Activate speech, event support, and centralized cleanup in this shell."
   (emacsvox-agent-shell--activate-buffer-values)
+  (unless emacsvox-agent-shell--config-option-cache
+    (emacsvox-agent-shell--observe-config-options
+     (emacsvox-agent-shell--config-options) nil))
   (add-hook 'kill-buffer-hook
             #'emacsvox-agent-shell--buffer-cleanup nil t)
   (add-hook 'change-major-mode-hook
@@ -6396,6 +6879,7 @@ Return nil when the configured verbosity requests status cues only."
 
 (defun emacsvox-agent-shell--buffer-cleanup ()
   "Cancel speech work and remove all support state from this shell buffer."
+  (emacsvox-agent-shell--interaction-cleanup)
   (emacsvox-agent-shell--response-section-cleanup)
   (emacsvox-agent-shell--cancel-pending-speech)
   (setq emacsvox-agent-shell--pending-bodies nil)
@@ -6412,7 +6896,25 @@ Return nil when the configured verbosity requests status cues only."
 ;;;  Enable/Disable support:
 
 (defconst emacsvox-agent-shell--advice-list
-  '((emacsvox-speak-visual-line :around
+  '((agent-shell--on-notification :around
+     emacsvox-agent-shell--on-notification-around)
+    (agent-shell--send-request :around emacsvox-agent-shell--send-request-around)
+    (agent-shell-experimental--on-session-push-request :around
+     emacsvox-agent-shell--push-request-around)
+    (agent-shell-experimental--on-session-push-end :around
+     emacsvox-agent-shell--push-end-around)
+    (agent-shell--prompt-queue-process-next :around
+     emacsvox-agent-shell--queue-process-around)
+    (agent-shell--prompt-queue-display :after
+     emacsvox-agent-shell--queue-display-after)
+    (agent-shell-list-edit-newline :around
+     emacsvox-agent-shell--list-newline-around)
+    (agent-shell-list-edit-indent-line :around
+     emacsvox-agent-shell--list-indent-around)
+    (agent-shell-list-edit-dedent-line :around
+     emacsvox-agent-shell--list-dedent-around)
+    (agent-shell-diff :around emacsvox-agent-shell--diff-around)
+    (emacsvox-speak-visual-line :around
      emacsvox-agent-shell--speak-visual-line-around)
     (emacsvox-speak-line :around
      emacsvox-agent-shell--speak-line-around)
