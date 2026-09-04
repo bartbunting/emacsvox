@@ -167,7 +167,7 @@
       '("tmp, dired by name"
         (:role filesystem-listing
          :events (filesystem-listing-opened))
-        state-change open-object)))))
+        state-change open-object nil nil replaceable lane)))))
 
 (ert-deftest emacsvox-dired-listing-visibility-is-semantic ()
   "A listing visibility change carries aspect, state, text, and cue."
@@ -690,6 +690,10 @@
             '(:role filesystem-entry :entry-kind file
               :events (entry-opened))))
           (should (eq (plist-get (cdr submission) :module) 'org))
+          (should
+           (eq (plist-get (cdr submission) :delivery-policy) 'replaceable))
+          (should
+           (eq (plist-get (cdr submission) :interruption-policy) 'lane))
           (should
            (eq
             (emacsvox-aural-compatibility-action-value

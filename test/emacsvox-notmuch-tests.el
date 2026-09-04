@@ -20,6 +20,15 @@
        requested))))
   "Whether this test file explicitly loaded source or compiled Notmuch code.")
 
+(defun emacsvox-notmuch-test--notification-events (content arguments)
+  "Return compatibility cue and speech events for CONTENT and ARGUMENTS."
+  (append
+   (mapcar
+    (lambda (action)
+      (list 'icon (emacsvox-aural-compatibility-action-value action)))
+    (plist-get arguments :compatibility-actions))
+   (when content (list (list 'notify content)))))
+
 (defun emacsvox-notmuch-test--compiled-file-version (file)
   "Return the Emacs version recorded in compiled FILE, or nil."
   (with-temp-buffer
@@ -1366,6 +1375,37 @@ Return the beginning of the inserted row."
         (icon mail-has-attachment)
         (speak
          "Alice Smith <alice@example.com>, today, Bart Bunting <bart@example.com>, Project Team <team@example.com>, inbox, 2 attachments"))))))
+
+(ert-deftest emacsvox-notmuch-open-feedback-interrupts-the-main-lane ()
+  "Entering a Notmuch view is foreground speech with lane interruption."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-search-mode)
+    (let (submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--view-summary)
+            (lambda () "inbox, 3 threads"))
+           ((symbol-function 'emacsvox-notmuch--submit-text-feedback)
+            (lambda (&rest arguments) (setq submission arguments))))
+        (emacsvox-notmuch--open-feedback))
+      (should (eq (nth 4 submission) 'replaceable))
+      (should (eq (nth 5 submission) 'lane)))))
+
+(ert-deftest emacsvox-notmuch-message-entry-interrupts-the-main-lane ()
+  "Entering a Notmuch message remains interruptible foreground speech."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let (submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--move-to-message-body) #'ignore)
+           ((symbol-function 'notmuch-show-get-message-properties)
+            (lambda () emacsvox-notmuch-test--show-message))
+           ((symbol-function 'emacsvox-notmuch--landed-body-line)
+            (lambda () "Message body"))
+           ((symbol-function 'emacsvox-notmuch--submit-show-message)
+            (lambda (&rest arguments) (setq submission arguments))))
+        (emacsvox-notmuch--show-feedback))
+      (should (eq (nth 5 submission) 'replaceable))
+      (should (eq (nth 6 submission) 'lane)))))
 
 (ert-deftest emacsvox-notmuch-landed-message-speaks-first-body-line ()
   "Landing on a message speaks its summary followed by visible body text."
@@ -3431,7 +3471,7 @@ Return the beginning of the inserted row."
                    ((symbol-function 'emacsvox-aural-submit)
                     (lambda (&rest _)
                       (ert-fail "Search spoke content before it completed")))
-                   ((symbol-function 'tts-notify)
+                   ((symbol-function 'emacsvox-aural-submit-notification)
                     (lambda (&rest _)
                       (ert-fail "Search notified before it completed"))))
                 (let ((ems--interactive-fn-name 'notmuch-search)
@@ -3483,10 +3523,7 @@ Return the beginning of the inserted row."
                   (lambda (content &rest arguments)
                     (push (cons content arguments) captured)
                     'submission))
-                 ((symbol-function 'tts-notify)
-                  (lambda (&rest _)
-                    (ert-fail "Untouched foreground search used notifications")))
-                 ((symbol-function 'tts-notify-icon)
+                 ((symbol-function 'emacsvox-aural-submit-notification)
                   (lambda (&rest _)
                     (ert-fail "Untouched foreground search used notifications"))))
               (emacsvox--advice-notmuch-search-process-sentinel-after
@@ -3607,7 +3644,7 @@ Return the beginning of the inserted row."
                   (lambda (content &rest arguments)
                     (setq captured (cons content arguments))
                     'submission))
-                 ((symbol-function 'tts-notify)
+                 ((symbol-function 'emacsvox-aural-submit-notification)
                   (lambda (&rest _)
                     (ert-fail "Focused empty search used notifications"))))
               (emacsvox--advice-notmuch-search-process-sentinel-after
@@ -3646,17 +3683,17 @@ Return the beginning of the inserted row."
                 (((symbol-function 'emacsvox-aural-submit)
                   (lambda (&rest _)
                     (ert-fail "Interacted search replayed message content")))
-                 ((symbol-function 'tts-notify-icon)
-                  (lambda (icon) (push (list 'icon icon) events)))
-                 ((symbol-function 'tts-notify)
-                  (lambda (text &optional _)
-                    (setq facts (copy-tree emacsvox-aural-submission-facts))
-                    (push (list 'notify text) events))))
+                 ((symbol-function 'emacsvox-aural-submit-notification)
+                  (lambda (content &rest arguments)
+                    (setq facts (copy-tree (plist-get arguments :facts)))
+                    (setq events
+                          (emacsvox-notmuch-test--notification-events
+                           content arguments)))))
               (emacsvox--advice-notmuch-search-process-sentinel-after
                'process nil)))
           (should
            (equal
-            (nreverse events)
+            events
             '((icon task-done) (notify "Search complete, 2 threads"))))
           (should
            (equal
@@ -3682,17 +3719,17 @@ Return the beginning of the inserted row."
                ((symbol-function 'emacsvox-aural-submit)
                 (lambda (&rest _)
                   (ert-fail "Background completion used primary speech")))
-               ((symbol-function 'tts-notify-icon)
-                (lambda (icon) (push (list 'icon icon) events)))
-               ((symbol-function 'tts-notify)
-                (lambda (text &optional _)
-                  (push (list 'notify text) events))))
+               ((symbol-function 'emacsvox-aural-submit-notification)
+                (lambda (content &rest arguments)
+                  (setq events
+                        (emacsvox-notmuch-test--notification-events
+                         content arguments)))))
             (emacsvox-notmuch--announce-search-complete
              '(:kind search :interacted nil) buffer)))
       (when (buffer-live-p buffer) (kill-buffer buffer)))
     (should
      (equal
-      (nreverse events)
+      events
       '((icon task-done) (notify "Search complete, 1 thread"))))))
 
 (ert-deftest emacsvox-notmuch-refresh-announces-on-notification-stream ()
@@ -3701,7 +3738,9 @@ Return the beginning of the inserted row."
         (properties
          `((,emacsvox-notmuch--search-process-property
             . (:kind refresh :interacted nil))))
-        events)
+        events
+        (notification-calls 0)
+        notification-arguments)
     (unwind-protect
         (progn
           (with-current-buffer buffer
@@ -3715,18 +3754,26 @@ Return the beginning of the inserted row."
                 (((symbol-function 'emacsvox-aural-submit)
                   (lambda (&rest _)
                     (ert-fail "Refresh replayed primary row speech")))
-                 ((symbol-function 'tts-notify-icon)
-                  (lambda (icon) (push (list 'icon icon) events)))
-                 ((symbol-function 'tts-notify)
-                  (lambda (text &optional _)
-                    (push (list 'notify text) events))))
+                 ((symbol-function 'emacsvox-aural-submit-notification)
+                  (lambda (content &rest arguments)
+                    (cl-incf notification-calls)
+                    (setq notification-arguments arguments)
+                    (setq events
+                          (emacsvox-notmuch-test--notification-events
+                           content arguments)))))
               (emacsvox--advice-notmuch-search-process-sentinel-after
                'process nil))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))
     (should
      (equal
-      (nreverse events)
-      '((icon task-done) (notify "Search refreshed, 2 threads"))))))
+      events
+      '((icon task-done) (notify "Search refreshed, 2 threads"))))
+    (should (= notification-calls 1))
+    (should
+     (equal
+      (plist-get notification-arguments :facts)
+      '(:role mail-view :mail-view-kind search
+        :mail-action-kind refresh :events (refresh-completed))))))
 
 (ert-deftest emacsvox-notmuch-refresh-all-remains-silent ()
   "The command for silently refreshing every buffer tracks no process."
@@ -3765,11 +3812,11 @@ Return the beginning of the inserted row."
                 (((symbol-function 'emacsvox-aural-submit-actions)
                   (lambda (&rest _)
                     (ert-fail "Completed search emitted a progress cue")))
-                 ((symbol-function 'tts-notify-icon)
-                  (lambda (icon) (push (list 'icon icon) events)))
-                 ((symbol-function 'tts-notify)
-                  (lambda (text &optional _)
-                    (push (list 'notify text) events))))
+                 ((symbol-function 'emacsvox-aural-submit-notification)
+                  (lambda (content &rest arguments)
+                    (setq events
+                          (emacsvox-notmuch-test--notification-events
+                           content arguments)))))
               (emacsvox-notmuch--track-search-process 'search)
               (emacsvox--advice-notmuch-search-process-sentinel-after
                'process nil)))
@@ -3782,7 +3829,7 @@ Return the beginning of the inserted row."
       (when (buffer-live-p buffer) (kill-buffer buffer)))
     (should
      (equal
-      (nreverse events)
+      events
       '((icon task-done) (notify "Search complete, 1 thread"))))))
 
 (ert-deftest emacsvox-notmuch-search-completion-cue-and-silent-styles ()
@@ -3795,14 +3842,14 @@ Return the beginning of the inserted row."
             (cl-letf
                 (((symbol-function 'emacsvox-notmuch--search-buffer-focused-p)
                   (lambda (_buffer) nil))
-                 ((symbol-function 'tts-notify-icon)
-                  (lambda (icon) (push (list 'icon icon) events)))
-                 ((symbol-function 'tts-notify)
-                  (lambda (text &optional _)
-                    (push (list 'notify text) events))))
+                 ((symbol-function 'emacsvox-aural-submit-notification)
+                  (lambda (content &rest arguments)
+                    (setq events
+                          (emacsvox-notmuch-test--notification-events
+                           content arguments)))))
               (emacsvox-notmuch--announce-search-complete
                '(:kind search :interacted nil) buffer))
-            (should (equal (nreverse events) (nth 1 case)))))
+            (should (equal events (nth 1 case)))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (ert-deftest emacsvox-notmuch-killed-search-owner-cancels-silently ()
@@ -3844,12 +3891,9 @@ Return the beginning of the inserted row."
                ((symbol-function 'emacsvox-aural-submit-actions)
                 (lambda (&rest arguments)
                   (push (cons 'actions arguments) events)))
-               ((symbol-function 'tts-notify-icon)
+               ((symbol-function 'emacsvox-aural-submit-notification)
                 (lambda (&rest arguments)
-                  (push (cons 'icon arguments) events)))
-               ((symbol-function 'tts-notify)
-                (lambda (&rest arguments)
-                  (push (cons 'notify arguments) events))))
+                  (push (cons 'notification arguments) events))))
             (should (kill-buffer owner))
             (let ((deadline (+ (float-time) 2.0)))
               (while (and (process-live-p process)
@@ -3889,18 +3933,18 @@ Return the beginning of the inserted row."
           (should (buffer-live-p buffer))
           (should-not (get-buffer-window buffer t))
           (cl-letf
-              (((symbol-function 'tts-notify-icon)
-                (lambda (icon) (push (list 'icon icon) events)))
-               ((symbol-function 'tts-notify)
-                (lambda (text &optional _)
-                  (setq facts (copy-tree emacsvox-aural-submission-facts))
-                  (push (list 'notify text) events))))
+              (((symbol-function 'emacsvox-aural-submit-notification)
+                (lambda (content &rest arguments)
+                  (setq facts (copy-tree (plist-get arguments :facts)))
+                  (setq events
+                        (emacsvox-notmuch-test--notification-events
+                         content arguments)))))
             (emacsvox--advice-notmuch-search-process-sentinel-after
              'process nil)))
       (when (buffer-live-p buffer) (kill-buffer buffer)))
     (should
      (equal
-      (nreverse events)
+      events
       '((icon warn-user) (notify "Search refresh failed"))))
     (should
      (equal

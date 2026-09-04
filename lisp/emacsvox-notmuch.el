@@ -69,9 +69,6 @@
 (declare-function notmuch-show-move-to-message-top "notmuch-show" ())
 (declare-function notmuch-tag-format-tags "notmuch-tag"
                   (tags orig-tags &optional face))
-(declare-function tts-notify "tts-speak" (text &optional dont-log))
-(declare-function tts-notify-icon "tts-speak" (icon))
-
 (defvar notmuch-archive-tags)
 (defvar notmuch-search-mode-map)
 (defvar notmuch-show-mode-map)
@@ -533,9 +530,10 @@ bounded copy of a larger source buffer."
    "automatic Notmuch speech"))
 
 (defun emacsvox-notmuch--submit-content
-    (text facts occasion compatibility-actions &optional delivery-policy)
+    (text facts occasion compatibility-actions
+          &optional delivery-policy interruption-policy)
   "Submit TEXT and COMPATIBILITY-ACTIONS under FACTS and OCCASION.
-DELIVERY-POLICY, when non-nil, controls whole-transaction delivery."
+DELIVERY-POLICY and INTERRUPTION-POLICY, when non-nil, control delivery."
   (let ((text
          (and text
               (emacsvox-notmuch--limit-automatic-presentation text)))
@@ -544,19 +542,21 @@ DELIVERY-POLICY, when non-nil, controls whole-transaction delivery."
           (list :facts facts :module 'notmuch :occasion occasion
                 :compatibility-actions compatibility-actions)
           (when delivery-policy
-            (list :delivery-policy delivery-policy)))))
+            (list :delivery-policy delivery-policy))
+          (when interruption-policy
+            (list :interruption-policy interruption-policy)))))
     (if (and (stringp text) (not (string-empty-p text)))
         (apply #'emacsvox-aural-submit text arguments)
       (apply #'emacsvox-aural-submit-actions arguments))))
 
 (defun emacsvox-notmuch--submit-text-feedback
-    (facts occasion icon text &optional delivery-policy)
+    (facts occasion icon text &optional delivery-policy interruption-policy)
   "Submit explicit TEXT with FACTS, OCCASION, and leading ICON.
-DELIVERY-POLICY, when non-nil, controls whole-transaction delivery."
+DELIVERY-POLICY and INTERRUPTION-POLICY, when non-nil, control delivery."
   (emacsvox-notmuch--submit-content
    text facts occasion
    (emacsvox-notmuch--leading-compatibility-actions icon)
-   delivery-policy))
+   delivery-policy interruption-policy))
 
 (defun emacsvox-notmuch--leading-compatibility-actions (icon)
   "Return a leading compatibility action for ICON, when non-nil."
@@ -1102,11 +1102,13 @@ budgets covered the entire well-formed graph."
    emacsvox-notmuch-show-field-separator))
 
 (defun emacsvox-notmuch--submit-show-message
-    (message body-line facts occasion &optional icon)
+    (message body-line facts occasion
+             &optional icon delivery-policy interruption-policy)
   "Submit Notmuch MESSAGE and BODY-LINE under FACTS and OCCASION.
 
 ICON is a leading compatibility cue.  Status and attachment cues join the
-same transaction instead of creating a nested message presentation."
+same transaction instead of creating a nested message presentation.
+DELIVERY-POLICY and INTERRUPTION-POLICY, when non-nil, control delivery."
   (if message
       (let* ((summary (emacsvox-notmuch-format-show-message message))
              (speech
@@ -1118,10 +1120,11 @@ same transaction instead of creating a nested message presentation."
          (append
           (emacsvox-notmuch--leading-compatibility-actions icon)
           (emacsvox-notmuch--status-compatibility-actions
-           message emacsvox-notmuch-show-status-icons occasion t)))
+           message emacsvox-notmuch-show-status-icons occasion t))
+         delivery-policy interruption-policy)
         speech)
     (emacsvox-notmuch--submit-text-feedback
-     facts occasion icon nil)))
+     facts occasion icon nil delivery-policy interruption-policy)))
 
 (defun emacsvox-notmuch-speak-show-message (&optional message body-line)
   "Speak Notmuch MESSAGE, defaulting to the message at point.
@@ -1384,7 +1387,8 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
       (_ 'other))
     'open 'mail-view-opened)
    'state-change 'open-object
-   (emacsvox-notmuch--view-summary)))
+   (emacsvox-notmuch--view-summary)
+   'replaceable 'lane))
 
 (defun emacsvox-notmuch--hello-widget-count (widget)
   "Return the displayed result count preceding saved-search WIDGET."
@@ -1491,7 +1495,7 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
     (emacsvox-notmuch--submit-show-message
      message
      (emacsvox-notmuch--landed-body-line)
-     facts 'state-change 'open-object)))
+     facts 'state-change 'open-object 'replaceable 'lane)))
 
 (defun emacsvox--advice-emacsvox-speak-visual-line-notmuch-around
     (original &rest arguments)
@@ -2606,11 +2610,13 @@ refresh command."
 (defun emacsvox-notmuch--notify-search-feedback (facts icon &optional text)
   "Send generic Notmuch search feedback through the notification stream.
 FACTS describe the event, ICON is its leading cue, and TEXT is optional."
-  (emacsvox-aural-call-with-submission
-   (lambda ()
-     (when icon (tts-notify-icon icon))
-     (when text (tts-notify text)))
-   :facts facts :module 'notmuch :occasion 'notification))
+  (emacsvox-aural-submit-notification
+   text
+   :facts facts
+   :module 'notmuch
+   :occasion 'notification
+   :compatibility-actions
+   (emacsvox-notmuch--leading-compatibility-actions icon)))
 
 (defun emacsvox-notmuch--announce-search-start ()
   "Signal that a user-owned non-refresh Notmuch search has started."

@@ -153,21 +153,29 @@ FACTS describe the object or event, and OCCASION describes the interaction."
    (mapcar #'emacsvox-aural-compatibility-icon icons)))
 
 (defun emacsvox-dired--submit-text
-    (content facts occasion &optional icon icon-phase module)
+    (content facts occasion
+             &optional icon icon-phase module delivery-policy interruption-policy)
   "Submit CONTENT under FACTS and OCCASION with optional compatibility ICON.
-ICON-PHASE defaults to `before'.  MODULE defaults to `dired'."
-  (if (and (stringp content) (> (length content) 0))
-      (emacsvox-aural-submit
-       content
-       :facts facts
-       :module (or module 'dired)
-       :occasion occasion
-       :compatibility-actions
-       (when icon
-         (list
-          (emacsvox-aural-compatibility-icon icon icon-phase))))
-    (when icon
-      (emacsvox-dired--submit-actions facts occasion icon))))
+ICON-PHASE defaults to `before'.  MODULE defaults to `dired'.
+DELIVERY-POLICY and INTERRUPTION-POLICY, when non-nil, control delivery."
+  (let ((arguments
+         (append
+          (list
+           :facts facts
+           :module (or module 'dired)
+           :occasion occasion
+           :compatibility-actions
+           (when icon
+             (list
+              (emacsvox-aural-compatibility-icon icon icon-phase))))
+          (when delivery-policy
+            (list :delivery-policy delivery-policy))
+          (when interruption-policy
+            (list :interruption-policy interruption-policy)))))
+    (if (and (stringp content) (> (length content) 0))
+        (apply #'emacsvox-aural-submit content arguments)
+      (when icon
+        (apply #'emacsvox-aural-submit-actions arguments)))))
 
 (defun emacsvox-dired--submit-message
     (content facts occasion &optional icon)
@@ -668,7 +676,7 @@ DOCSTRING and BODY define the feedback function for each command."
    (emacsvox-dired--buffer-summary)
    '(:role filesystem-listing
      :events (filesystem-listing-opened))
-   'state-change 'open-object))
+   'state-change 'open-object nil nil 'replaceable 'lane))
 
 (defun emacsvox-dired--opened-destination-buffer (result filename)
   "Return the destination buffer represented by RESULT and FILENAME."
@@ -702,7 +710,8 @@ SOURCE-FACTS preserve the selected Dired entry."
                :events (filesystem-listing-opened))
            source-facts)
          'state-change 'open-object nil
-         (or emacsvox-aural-module 'dired))))))
+         (or emacsvox-aural-module 'dired)
+         'replaceable 'lane)))))
 
 (defun emacsvox-dired--open-around
     (orig-fun arguments target)
@@ -1127,7 +1136,7 @@ On a directory line, run du -s on the directory to speak its size."
    (emacsvox-dired--line-content)
    '(:role filesystem-listing
      :events (filesystem-listing-opened))
-   'state-change 'open-object 'after))
+   'state-change 'open-object 'after nil 'replaceable 'lane))
 (load "locate" t t)
 
 (cl-declaim (special locate-mode-map))
@@ -1378,7 +1387,7 @@ If on a directory, speak the total duration of all sound files under
      (emacsvox-dired--buffer-summary)
      '(:role filesystem-listing
        :events (filesystem-listing-opened))
-     'state-change 'open-object)))
+     'state-change 'open-object nil nil 'replaceable 'lane)))
 
 (provide 'emacsvox-dired)
 ;;;  emacs local variables
