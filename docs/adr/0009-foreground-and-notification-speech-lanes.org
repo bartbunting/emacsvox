@@ -1,0 +1,206 @@
+#+title: ADR 0009: Foreground and Notification Speech Lanes
+#+date: 2026-09-04
+#+startup: content
+
+* Status
+
+Accepted.
+
+* Context
+
+Emacsvox speaks information with different ownership and timing.  Some speech
+is the immediate result of a user's action: moving point, entering a Dired
+buffer, or opening a Notmuch message.  Other speech reports an asynchronous
+event, such as completion of a Notmuch search refresh.
+
+Treating those cases only as delivery priorities conflates two separate
+questions:
+
+1. Which output may this announcement interrupt, and which output may
+   interrupt it?
+2. How should this announcement be ordered or replaced among other
+   announcements of the same kind?
+
+This distinction matters most during navigation.  An entry summary on the
+main speech path should replace stale foreground speech, but the next arrow
+key must also be able to interrupt that summary immediately.  A search-refresh
+completion is different: it should not replace current navigation and normal
+navigation should not cancel it.  The two may be heard concurrently.
+
+The current Omnivox server has concurrent speech, tone, and sound output
+streams, but only one speech lane.  Its pending commands, voice state,
+synthesis worker, hard-interruption generation, and speech-wide stop behavior
+are process-owned.  Omnivox already defines separately routed notification
+speech as a second server process rather than another speech lane within one
+process.
+
+* Decision
+
+** Make lane ownership explicit
+
+Emacsvox distinguishes two logical speech lanes:
+
+- The /main lane/ owns foreground information produced directly by the
+  user's current interaction.
+- The /notification lane/ owns completion, progress, and other events that
+  arrive asynchronously from the interaction currently being performed.
+
+Lane selection is semantic.  It is not inferred from message length,
+importance, an earcon, or whether an event eventually invokes =message=.
+Delivery policy remains a separate, lane-local choice.
+
+The initial classification is:
+
+| Event | Lane | Required interaction |
+|-------+------+----------------------|
+| Point or selection movement | Main | Interrupt stale main speech and remain replaceable by later navigation. |
+| Entering a buffer or view | Main | Interrupt earlier main speech and remain interruptible by navigation. |
+| Opening a Notmuch message | Main | Interrupt earlier main speech and remain interruptible by message navigation. |
+| Completion of an asynchronous Notmuch refresh | Notification | Do not interrupt or delay main speech; allow concurrent playback. |
+| Explicit user request to stop all speech | Both | Cancel pending and active output in both lanes. |
+
+Other integrations classify events by the same ownership rule rather than by
+copying a mode-specific list.
+
+** Make navigation an interruption boundary on the main lane
+
+A navigation action must be able to interrupt any currently audible main-lane
+speech.  It must not wait merely because earlier main speech was submitted as
+ordered, urgent, or as a buffer-entry announcement.
+
+Normal foreground speech therefore needs both properties:
+
+1. It may interrupt obsolete main-lane output when it begins.
+2. Once admitted, it remains replaceable by subsequent foreground navigation.
+
+For the current Omnivox protocol, Emacsvox may realize this as a main-process
+stop followed by a replaceable structured submission.  The aural API owns that
+sequence; individual modes should declare semantic occasion and lane rather
+than assembling transport commands themselves.
+
+No normal main-lane delivery policy grants protection from later user
+navigation.  A future exception would require a separate accessibility
+decision rather than use of the existing =urgent= policy by convention.
+
+** Keep asynchronous notifications independent
+
+An asynchronous notification neither stops the main lane nor makes main-lane
+navigation wait.  Main navigation does not stop the notification lane.  When
+both lanes are active, their speech may overlap.
+
+Ordering and replacement still apply within the notification lane.  For
+example, repeated status for the same refresh operation may use a stable
+replacement domain, while distinct completion events may retain their order.
+Those choices do not alter the independence of the main lane.
+
+A notification earcon and its associated speech form one logical aural
+transaction on the notification lane.  Cancellation, replacement, and
+completion tracking apply to that transaction as a whole.  A Notmuch refresh
+completion uses the task-complete earcon followed by or overlaid with its
+spoken result according to the selected presentation, without a separate
+main-lane stop between the two.
+
+** Use two Omnivox server processes
+
+The Omnivox implementation uses two long-lived server processes:
+
+- the main process carries foreground speech and its associated cues; and
+- the notification process carries asynchronous notification speech and its
+  associated cues.
+
+Each process retains its own admission queue, interruption generation,
+replacement domains, synthesis lifecycle, and audio streams.  A main-process
+stop therefore cannot cancel notification playback.  The processes use the
+same installed Omnivox version and receive compatible logical-voice and
+routing configuration, while retaining independently configurable output
+routing, pan, and gain.
+
+This decision does not restore the deprecated
+=tts_set_notification_channel= command.  Process-wide routing continues to be
+selected when the notification process is launched.
+
+** Define explicit stop and degradation behavior
+
+Routine main-lane interruption is process-local.  An explicit user command
+whose meaning is ``stop all speech'' targets both processes.  Stopping or
+restarting one lane for lifecycle recovery does not silently stop the other.
+
+If the notification process is unavailable, Emacsvox may deliver a
+notification on the main process as a best-effort fallback.  Such fallback
+speech must yield immediately to navigation; it must not become protected
+main-lane output merely because it originated as a notification.  Diagnostics
+should make the degraded topology discoverable without turning routine
+notification failure into additional blocking speech.
+
+* Consequences
+
+** Benefits
+
+- Navigation remains responsive regardless of the length or original
+  priority of foreground speech.
+- Asynchronous completion notices can be heard without delaying or cancelling
+  the user's current navigation.
+- Entry summaries in Dired, Notmuch, and other modes share one general rule
+  instead of accumulating mode-specific priority fixes.
+- Notification earcons and speech have one cancellation and completion
+  lifetime, avoiding the race where a speech submission cancels its own cue.
+- Existing Omnivox process-local queues, stops, state, and protocols provide
+  the isolation without a new server protocol.
+
+** Costs and risks
+
+- A second Omnivox process duplicates some server, engine, helper, and audio
+  device resources.
+- Both processes must receive compatible configuration and lifecycle handling;
+  partial startup or restart can temporarily degrade notifications to the main
+  lane.
+- Concurrent speech can be harder to understand for some users.  Independent
+  routing and volume remain available, and users may disable or redirect
+  notification speech without changing main-lane interruption semantics.
+- Auditing existing integrations requires semantic judgement: not every
+  status message is asynchronous, and not every important message belongs on
+  the notification lane.
+
+* Alternatives considered
+
+** Use one Omnivox process with delivery priorities
+
+Rejected for the current architecture.  Its single speech queue and delivery
+policies cannot both preserve an asynchronous announcement and guarantee that
+foreground navigation is heard immediately.  Marking the notification urgent
+makes later navigation wait; making it replaceable allows navigation to cancel
+it.
+
+** Add main and notification speech lanes inside one Omnivox process
+
+Deferred.  A correct implementation requires more than another audio sink.
+It needs lane-scoped protocol identity, pending state, interruption
+generations, replacement registries, synthesis scheduling, engine access, and
+stop commands.  The current single synthesis worker and serialized helper
+engines could still place foreground work behind notification synthesis.
+
+This topology may be reconsidered if measured process or helper duplication
+becomes material.  Such a change must preserve the lane semantics in this
+decision and requires a corresponding Omnivox protocol and architecture
+decision.
+
+** Stop notifications whenever navigation begins
+
+Rejected.  It makes foreground speech responsive by discarding the independent
+asynchronous event the user wanted to hear.
+
+** Put buffer-entry and message-entry summaries on the notification lane
+
+Rejected.  They describe the new foreground context caused directly by the
+user's action.  They should interrupt the old context, and the user's next
+navigation action should interrupt them.
+
+* Ongoing constraints
+
+1. Keep regression coverage for lane-local interruption, cross-lane
+   concurrency, atomic notification delivery, explicit stop-all, and degraded
+   fallback behavior.
+2. Classify new integrations by event ownership and preserve the lane boundary
+   in user-facing controls and documentation.
+3. Reconsider process topology only with measured evidence and without changing
+   the interaction semantics accepted here.
