@@ -24593,8 +24593,9 @@ Speak version.
 @findex tts-stop
 
 @format
-Stop speech.  Optional arg ‘all’ or interactive call silences
-  notification stream as well.
+Stop speech.
+Optional argument ALL or an interactive call also stops a distinct
+notification process.
 
 (fn &optional ALL)
 @end format
@@ -24794,11 +24795,11 @@ Default Value:
 @defvar {User Option} tts-notification-device
 @verbatim
 Virtual sound device to use for notifications stream.
-Set to nil to disable a separate Notification stream.
-If you set the device here, make sure it exists first.
-For SwiftMac, set this to ‘left’ or ‘right’.  For Omnivox, ‘left’,
-‘right’, or ‘both’ starts a separately routed second process; nil keeps
-notifications on the main process and its route.
+For Omnivox, nil starts a second process routed to both channels; ‘left’,
+‘right’, or ‘both’ selects its process-wide route.  Set this to ‘default’ or
+the empty string to disable that separate process and fall back to main speech.
+For other servers, nil disables a separate notification stream.  If you name a
+device, make sure it exists first.  For SwiftMac, use ‘left’ or ‘right’.
 @end verbatim
 
 Default Value:

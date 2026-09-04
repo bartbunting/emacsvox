@@ -2129,6 +2129,41 @@ The precise sound may vary by speech engine@comma{} installed voices@comma{} sou
 audio hardware.  The intended distinction should remain understandable even
 when a simpler backend uses fewer voice characteristics or centered output.
 
+@subsection Main And Notification Speech Streams
+
+@cindex speech streams
+
+@cindex notification stream
+
+@vindex tts-notification-device
+
+Emacsvox assigns speech to one of two streams according to what caused it:
+
+@itemize
+@item
+The @emph{main stream} presents foreground information produced directly by your
+current interaction@comma{} such as movement@comma{} entering a buffer@comma{} or opening a
+message.  New navigation interrupts obsolete main-stream speech@comma{} and you can
+interrupt a longer entry announcement by navigating again.
+
+@item
+The @emph{notification stream} presents asynchronous events@comma{} such as completion
+of background work.  It does not stop main-stream speech@comma{} and normal
+navigation does not stop it@comma{} so both streams may be heard concurrently.  A
+notification cue and its associated speech are delivered together on this
+stream.
+@end itemize
+
+With Omnivox@comma{} Emacsvox starts a second server process for the notification
+stream by default.  Set @code{tts-notification-device} to @code{left}@comma{} @code{right}@comma{} or
+@code{both} to choose that process's route.  Set it to @code{default} or the empty string
+to disable the separate process; notification speech then falls back to the
+main process and remains interruptible by navigation.  Other speech backends
+may use a configured notification device or fall back to the main stream.
+
+Stopping obsolete main speech is local to the main stream.  An explicit
+@code{tts-stop} command stops both main and notification speech.
+
 @node Aural Home
 @section Begin With Aural Home
 
@@ -3158,13 +3193,13 @@ does not disclose the query@comma{} sender@comma{} recipients@comma{} subject@co
 metadata.  Killing the owning search buffer cancels this delivery silently.
 @end itemize
 
-The notification stream uses @code{tts-notification-device} when one is
-available and otherwise falls back to the primary process.  The
-@code{summary} policy always sends a generic count there; @code{cue} sends only
-a completion cue; and @code{silent} suppresses successful completion.
-Failures remain audible and generic for every policy.  A normal refresh is
-always treated as background-style completion@comma{} while the deliberate global
-refresh-all command remains silent.
+The @code{summary} policy plays a generic count and its completion cue on the
+notification stream; @code{cue} plays only that cue@comma{} and @code{silent} suppresses
+successful completion.  Failures remain audible and generic for every policy.
+A normal refresh is always treated as background-style completion@comma{} while the
+deliberate global refresh-all command remains silent.  See
+@ref{Aural Presentation} for the streams' general behavior and
+configuration.
 
 @section Navigate and inspect Search results
 

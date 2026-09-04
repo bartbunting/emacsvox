@@ -801,8 +801,9 @@ This module defines the generic TTS interface.
  -- Command: tts-stop (&optional all)
      ‘C-e s’
 
-     Stop speech.  Optional arg ‘all’ or interactive call silences
-       notification stream as well.
+     Stop speech.
+     Optional argument ALL or an interactive call also stops a distinct
+     notification process.
 
      (fn &optional ALL)
 
@@ -936,11 +937,11 @@ This module defines the generic TTS interface.
 
  -- Variable: User Option tts-notification-device
      Virtual sound device to use for notifications stream.
-     Set to nil to disable a separate Notification stream.
-     If you set the device here, make sure it exists first.
-     For SwiftMac, set this to ‘left’ or ‘right’.  For Omnivox, ‘left’,
-     ‘right’, or ‘both’ starts a separately routed second process; nil keeps
-     notifications on the main process and its route.
+     For Omnivox, nil starts a second process routed to both channels; ‘left’,
+     ‘right’, or ‘both’ selects its process-wide route.  Set this to ‘default’ or
+     the empty string to disable that separate process and fall back to main speech.
+     For other servers, nil disables a separate notification stream.  If you name a
+     device, make sure it exists first.  For SwiftMac, use ‘left’ or ‘right’.
 
      Default Value:
 
@@ -1888,7 +1889,7 @@ File: emacsvox-reference.info,  Node: Key Index,  Next: Function Index,  Prev: R
 * C-e C-w:                               emacsvox-speak.     (line  912)
 * C-e C-x:                               emacsvox-speak.     (line  463)
 * C-e d -:                               tts-speak.          (line   90)
-* C-e d ,:                               tts-speak.          (line  300)
+* C-e d ,:                               tts-speak.          (line  301)
 * C-e d .:                               tts-speak.          (line   82)
 * C-e d +:                               tts-speak.          (line   91)
 * C-e d =:                               tts-speak.          (line   92)
@@ -1904,7 +1905,7 @@ File: emacsvox-reference.info,  Node: Key Index,  Next: Function Index,  Prev: R
 * C-e d 9:                               tts-speak.          (line  185)
 * C-e d a:                               tts-speak.          (line   30)
 * C-e d C:                               tts-speak.          (line   17)
-* C-e d c:                               tts-speak.          (line  290)
+* C-e d c:                               tts-speak.          (line  291)
 * C-e d C-c:                             tts-speak.          (line   42)
 * C-e d C-d:                             dectalk-voices.     (line   17)
 * C-e d C-e:                             espeak-voices.      (line   17)
@@ -1924,16 +1925,16 @@ File: emacsvox-reference.info,  Node: Key Index,  Next: Function Index,  Prev: R
 * C-e d l:                               emacsvox-speak.     (line 1007)
 * C-e d L:                               tts-speak.          (line   61)
 * C-e d N:                               tts-speak.          (line  176)
-* C-e d n:                               tts-speak.          (line  321)
-* C-e d o:                               tts-speak.          (line  351)
+* C-e d n:                               tts-speak.          (line  322)
+* C-e d o:                               tts-speak.          (line  352)
 * C-e d P:                               tts-speak.          (line  217)
 * C-e d p:                               tts-speak.          (line  226)
-* C-e d q:                               tts-speak.          (line  311)
+* C-e d q:                               tts-speak.          (line  312)
 * C-e d R:                               tts-speak.          (line  110)
 * C-e d r:                               tts-speak.          (line  259)
 * C-e d S:                               tts-speak.          (line  163)
-* C-e d s:                               tts-speak.          (line  331)
-* C-e d SPC:                             tts-speak.          (line  343)
+* C-e d s:                               tts-speak.          (line  332)
+* C-e d SPC:                             tts-speak.          (line  344)
 * C-e d v:                               emacsvox-aural-compatibility-voice.
                                                              (line   32)
 * C-e d V:                               tts-speak.          (line  271)
@@ -6017,24 +6018,24 @@ Function Index
 * tts-speak-version <1>:                 tts-speak.          (line  272)
 * tts-stop:                              tts-speak.          (line  277)
 * tts-stop <1>:                          tts-speak.          (line  280)
-* tts-toggle-caps:                       tts-speak.          (line  288)
-* tts-toggle-caps <1>:                   tts-speak.          (line  291)
-* tts-toggle-punctuation-mode:           tts-speak.          (line  298)
-* tts-toggle-punctuation-mode <1>:       tts-speak.          (line  301)
-* tts-toggle-quiet:                      tts-speak.          (line  309)
-* tts-toggle-quiet <1>:                  tts-speak.          (line  312)
-* tts-toggle-speak-nonprinting-chars:    tts-speak.          (line  319)
-* tts-toggle-speak-nonprinting-chars <1>: tts-speak.         (line  322)
-* tts-toggle-split-caps:                 tts-speak.          (line  329)
-* tts-toggle-split-caps <1>:             tts-speak.          (line  332)
-* tts-toggle-splitting-on-white-space:   tts-speak.          (line  341)
-* tts-toggle-splitting-on-white-space <1>: tts-speak.        (line  344)
-* tts-toggle-strip-octals:               tts-speak.          (line  349)
-* tts-toggle-strip-octals <1>:           tts-speak.          (line  352)
-* tts-unicode-customize-char:            tts-speak.          (line  360)
-* tts-unicode-customize-char <1>:        tts-speak.          (line  361)
-* tts-unicode-uncustomize-char:          tts-speak.          (line  371)
-* tts-unicode-uncustomize-char <1>:      tts-speak.          (line  372)
+* tts-toggle-caps:                       tts-speak.          (line  289)
+* tts-toggle-caps <1>:                   tts-speak.          (line  292)
+* tts-toggle-punctuation-mode:           tts-speak.          (line  299)
+* tts-toggle-punctuation-mode <1>:       tts-speak.          (line  302)
+* tts-toggle-quiet:                      tts-speak.          (line  310)
+* tts-toggle-quiet <1>:                  tts-speak.          (line  313)
+* tts-toggle-speak-nonprinting-chars:    tts-speak.          (line  320)
+* tts-toggle-speak-nonprinting-chars <1>: tts-speak.         (line  323)
+* tts-toggle-split-caps:                 tts-speak.          (line  330)
+* tts-toggle-split-caps <1>:             tts-speak.          (line  333)
+* tts-toggle-splitting-on-white-space:   tts-speak.          (line  342)
+* tts-toggle-splitting-on-white-space <1>: tts-speak.        (line  345)
+* tts-toggle-strip-octals:               tts-speak.          (line  350)
+* tts-toggle-strip-octals <1>:           tts-speak.          (line  353)
+* tts-unicode-customize-char:            tts-speak.          (line  361)
+* tts-unicode-customize-char <1>:        tts-speak.          (line  362)
+* tts-unicode-uncustomize-char:          tts-speak.          (line  372)
+* tts-unicode-uncustomize-char <1>:      tts-speak.          (line  373)
 * voice-lock-mode:                       emacsvox-aural-compatibility-voice.
                                                              (line   30)
 * voice-lock-mode <1>:                   emacsvox-aural-compatibility-voice.

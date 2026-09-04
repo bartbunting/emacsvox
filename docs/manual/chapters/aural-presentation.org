@@ -121,6 +121,40 @@ The precise sound may vary by speech engine, installed voices, sound pack, and
 audio hardware.  The intended distinction should remain understandable even
 when a simpler backend uses fewer voice characteristics or centered output.
 
+*** Main And Notification Speech Streams
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+#+cindex: speech streams
+
+#+cindex: notification stream
+
+#+vindex: tts-notification-device
+
+Emacsvox assigns speech to one of two streams according to what caused it:
+
+- The /main stream/ presents foreground information produced directly by your
+  current interaction, such as movement, entering a buffer, or opening a
+  message.  New navigation interrupts obsolete main-stream speech, and you can
+  interrupt a longer entry announcement by navigating again.
+
+- The /notification stream/ presents asynchronous events, such as completion
+  of background work.  It does not stop main-stream speech, and normal
+  navigation does not stop it, so both streams may be heard concurrently.  A
+  notification cue and its associated speech are delivered together on this
+  stream.
+
+With Omnivox, Emacsvox starts a second server process for the notification
+stream by default.  Set ~tts-notification-device~ to ~left~, ~right~, or
+~both~ to choose that process's route.  Set it to ~default~ or the empty string
+to disable the separate process; notification speech then falls back to the
+main process and remains interruptible by navigation.  Other speech backends
+may use a configured notification device or fall back to the main stream.
+
+Stopping obsolete main speech is local to the main stream.  An explicit
+~tts-stop~ command stops both main and notification speech.
+
 ** Begin With Aural Home
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Aural Home

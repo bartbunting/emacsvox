@@ -112,13 +112,13 @@ The default ~adaptive~ completion policy distinguishes two interactions:
    does not disclose the query, sender, recipients, subject, tags, or attachment
    metadata.  Killing the owning search buffer cancels this delivery silently.
 
-The notification stream uses ~tts-notification-device~ when one is
-available and otherwise falls back to the primary process.  The
-~summary~ policy always sends a generic count there; ~cue~ sends only
-a completion cue; and ~silent~ suppresses successful completion.
-Failures remain audible and generic for every policy.  A normal refresh is
-always treated as background-style completion, while the deliberate global
-refresh-all command remains silent.
+The ~summary~ policy plays a generic count and its completion cue on the
+notification stream; ~cue~ plays only that cue, and ~silent~ suppresses
+successful completion.  Failures remain audible and generic for every policy.
+A normal refresh is always treated as background-style completion, while the
+deliberate global refresh-all command remains silent.  See
+@@texinfo:@ref{Aural Presentation}@@ for the streams' general behavior and
+configuration.
 
 ** Navigate and inspect Search results
 :PROPERTIES:

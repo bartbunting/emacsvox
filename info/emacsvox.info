@@ -2123,6 +2123,35 @@ pack, and audio hardware.  The intended distinction should remain
 understandable even when a simpler backend uses fewer voice
 characteristics or centered output.
 
+6.2.1 Main And Notification Speech Streams
+------------------------------------------
+
+Emacsvox assigns speech to one of two streams according to what caused
+it:
+
+   • The _main stream_ presents foreground information produced directly
+     by your current interaction, such as movement, entering a buffer,
+     or opening a message.  New navigation interrupts obsolete
+     main-stream speech, and you can interrupt a longer entry
+     announcement by navigating again.
+
+   • The _notification stream_ presents asynchronous events, such as
+     completion of background work.  It does not stop main-stream
+     speech, and normal navigation does not stop it, so both streams may
+     be heard concurrently.  A notification cue and its associated
+     speech are delivered together on this stream.
+
+   With Omnivox, Emacsvox starts a second server process for the
+notification stream by default.  Set ‘tts-notification-device’ to
+‘left’, ‘right’, or ‘both’ to choose that process's route.  Set it to
+‘default’ or the empty string to disable the separate process;
+notification speech then falls back to the main process and remains
+interruptible by navigation.  Other speech backends may use a configured
+notification device or fall back to the main stream.
+
+   Stopping obsolete main speech is local to the main stream.  An
+explicit ‘tts-stop’ command stops both main and notification speech.
+
 
 File: emacsvox.info,  Node: Aural Home,  Next: Explaining Presentation,  Prev: Presentation Modalities,  Up: Aural Presentation
 
@@ -3062,13 +3091,13 @@ interactions:
      sender, recipients, subject, tags, or attachment metadata.  Killing
      the owning search buffer cancels this delivery silently.
 
-   The notification stream uses ‘tts-notification-device’ when one is
-available and otherwise falls back to the primary process.  The
-‘summary’ policy always sends a generic count there; ‘cue’ sends only a
-completion cue; and ‘silent’ suppresses successful completion.  Failures
-remain audible and generic for every policy.  A normal refresh is always
-treated as background-style completion, while the deliberate global
-refresh-all command remains silent.
+   The ‘summary’ policy plays a generic count and its completion cue on
+the notification stream; ‘cue’ plays only that cue, and ‘silent’
+suppresses successful completion.  Failures remain audible and generic
+for every policy.  A normal refresh is always treated as
+background-style completion, while the deliberate global refresh-all
+command remains silent.  See *note Aural Presentation:: for the streams'
+general behavior and configuration.
 
 9.3 Navigate and inspect Search results
 =======================================
@@ -5045,6 +5074,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * MIME parts, Notmuch:                   Notmuch Mail.        (line 140)
 * minor modes:                           Object Oriented Desktop.
                                                               (line   6)
+* notification stream:                   Presentation Modalities.
+                                                              (line  45)
 * notification stream, Notmuch:          Notmuch Mail.        (line  63)
 * Notmuch Hello:                         Notmuch Mail.        (line  23)
 * Notmuch mail:                          Notmuch Mail.        (line   6)
@@ -5089,6 +5120,8 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * spatial presentation:                  Sounds And Space.    (line   6)
 * speech access, terminal:               EAT Terminal Access. (line   6)
 * speech settings:                       Speech System.       (line   6)
+* speech streams:                        Presentation Modalities.
+                                                              (line  45)
 * speech system:                         Speech System.       (line   6)
 * starting Notmuch:                      Notmuch Mail.        (line  23)
 * status cues, Notmuch:                  Notmuch Mail.        (line 230)
@@ -5160,47 +5193,47 @@ Node: Context-Sensitive Interaction86390
 Node: Aural Presentation89505
 Node: Presentation Model91704
 Node: Presentation Modalities94171
-Node: Aural Home95918
-Node: Explaining Presentation97806
-Node: Adjusting Presentation99791
-Node: Presentation Profiles102760
-Node: Voices And Routing104451
-Node: Sounds And Space108474
-Node: Presentation Troubleshooting110098
-Node: Voice Lock112136
-Node: Using Online Help115343
-Node: Emacs Packages119405
-Node: Document Authoring120779
-Node: Structured Editing121333
-Node: Browsing Structure122316
-Node: Web Browsing122914
-Node: Messaging123749
-Node: Editing Code124247
-Node: Development Environment124766
-Node: Desktop Management125323
-Node: Personal Information Management125825
-Node: Desktop Applications126357
-Node: Notmuch Mail133745
-Ref: Notmuch fields and privacy143105
-Node: Agent Shell148813
-Node: EAT Terminal Access158807
-Node: Running Terminal Based Applications176066
-Node: Starting Term177021
-Node: Term Input Modes177860
-Node: Term Speech Feedback179020
-Node: Reviewing The Term Screen180214
-Node: Term Help And Recovery182115
-Node: Emacsvox Keyboard Commands183014
-Node: Copyright184418
-Node: Acknowledgments185005
-Node: Developer Guide186031
-Node: Documentation Maintenance187195
-Node: Speech Server Protocols191993
-Ref: Testing A Direct Legacy Server197900
-Ref: Commands That Queue Output198459
-Ref: Commands That Set State201493
-Node: Integration Maintenance204087
-Node: Concept Index223674
+Node: Aural Home97340
+Node: Explaining Presentation99228
+Node: Adjusting Presentation101213
+Node: Presentation Profiles104182
+Node: Voices And Routing105873
+Node: Sounds And Space109896
+Node: Presentation Troubleshooting111520
+Node: Voice Lock113558
+Node: Using Online Help116765
+Node: Emacs Packages120827
+Node: Document Authoring122201
+Node: Structured Editing122755
+Node: Browsing Structure123738
+Node: Web Browsing124336
+Node: Messaging125171
+Node: Editing Code125669
+Node: Development Environment126188
+Node: Desktop Management126745
+Node: Personal Information Management127247
+Node: Desktop Applications127779
+Node: Notmuch Mail135167
+Ref: Notmuch fields and privacy144510
+Node: Agent Shell150218
+Node: EAT Terminal Access160212
+Node: Running Terminal Based Applications177471
+Node: Starting Term178426
+Node: Term Input Modes179265
+Node: Term Speech Feedback180425
+Node: Reviewing The Term Screen181619
+Node: Term Help And Recovery183520
+Node: Emacsvox Keyboard Commands184419
+Node: Copyright185823
+Node: Acknowledgments186410
+Node: Developer Guide187436
+Node: Documentation Maintenance188600
+Node: Speech Server Protocols193398
+Ref: Testing A Direct Legacy Server199305
+Ref: Commands That Queue Output199864
+Ref: Commands That Set State202898
+Node: Integration Maintenance205492
+Node: Concept Index225079
 
 End Tag Table
 
