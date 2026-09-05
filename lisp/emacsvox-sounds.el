@@ -494,7 +494,8 @@ None: For systems that rely on the speech server playing the icon."
   "Queue concrete auditory RESOURCE on the ordered speech stream."
   (emacsvox-aural-delivery-send
    tts-speaker-process
-   (format "a %s\n" (emacsvox-sounds--tcl-word resource))))
+   (format "a %s\n" (emacsvox-sounds--tcl-word
+                      (omnivox-remote-resource resource)))))
 
 (defun emacsvox-sounds-spatial-capability ()
   "Return the selected local cue player's spatial capability."
@@ -575,7 +576,8 @@ Apply normalized stereo BALANCE when the selected local player supports it."
      ((null emacsvox-play-program)
       (emacsvox-aural-delivery-send
        tts-speaker-process
-       (format "p %s\n" (emacsvox-sounds--tcl-word resource))))
+       (format "p %s\n" (emacsvox-sounds--tcl-word
+                          (omnivox-remote-resource resource)))))
      ((and
        emacsvox-pactl
        (string= emacsvox-play-program emacsvox-pactl))
@@ -612,7 +614,8 @@ This is a private function and  might go away."
    tts-speaker-process
    (format
     "p %s\n"
-    (emacsvox-sounds--tcl-word (emacsvox-sounds-cache-get icon)))))
+    (emacsvox-sounds--tcl-word
+     (omnivox-remote-resource (emacsvox-sounds-cache-get icon))))))
 
 ;;;;   Play an icon
 

@@ -33,6 +33,7 @@
 (require 'cl-lib)
 (require 'json)
 (require 'subr-x)
+(require 'omnivox-remote)
 (require 'emacsvox-aural-concrete)
 (require 'emacsvox-aural-compiler)
 (require 'emacsvox-aural-history)
@@ -1037,8 +1038,9 @@ recorded plans contain no speech span and therefore require legacy lowering."
                     (list
                      :type "audio"
                      :path
-                     (expand-file-name
-                      (emacsvox-aural-concrete-action-resource action))
+                     (omnivox-remote-resource
+                      (expand-file-name
+                       (emacsvox-aural-concrete-action-resource action)))
                      :mode "overlay" :volume 1.0
                      :pan (emacsvox-aural--timeline-action-pan action)
                      :effect_bus "dry")
