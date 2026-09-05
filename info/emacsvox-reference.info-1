@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1523 commands and 206 options.
+   This chapter documents a total of 1525 commands and 206 options.
 
 * Menu:
 
@@ -2320,6 +2320,7 @@ plain text and predictable for speech access.
      C-c C-c		emacsvox-aural-editor-save
 
      C-c C-a		emacsvox-aural-ui-actions
+     C-c TAB		emacsvox-aural-ui-open-manual
 
 2.22.1.21 emacsvox-edit-aural-feature-fragment
 ..............................................
@@ -2932,6 +2933,7 @@ diagnosis, and contextual remapping.
      W		emacsvox-aural-home-voice-workbench
      c		emacsvox-aural-home-change-feedback
      r		emacsvox-aural-home-remap-voice
+     t		emacsvox-aural-home-toggle-training
      x		emacsvox-aural-home-explain
 
      C-c C-o		emacsvox-aural-inspection-return-to-source
@@ -3039,14 +3041,21 @@ diagnosis, and contextual remapping.
 
      Expand or collapse the task group at point, retaining its position.
 
-2.26.1.24 emacsvox-aural-home-voice-palettes
+2.26.1.24 emacsvox-aural-home-toggle-training
+.............................................
+
+ -- Command: emacsvox-aural-home-toggle-training
+
+     Toggle training explanations for this Emacs session.
+
+2.26.1.25 emacsvox-aural-home-voice-palettes
 ............................................
 
  -- Command: emacsvox-aural-home-voice-palettes
 
      Open the accessible voice-palette manager.
 
-2.26.1.25 emacsvox-aural-home-voice-workbench
+2.26.1.26 emacsvox-aural-home-voice-workbench
 .............................................
 
  -- Command: emacsvox-aural-home-voice-workbench
@@ -4410,6 +4419,7 @@ preservation, and dismissal feedback for the aural managers and editors.
      S-SPC		scroll-down-command
 
      C-c C-a		emacsvox-aural-ui-actions
+     C-c TAB		emacsvox-aural-ui-open-manual
 
 2.51.1.2 emacsvox-aural-quit
 ............................
@@ -4467,6 +4477,7 @@ preservation, and dismissal feedback for the aural managers and editors.
      <up>		emacsvox-aural-ui-previous-row
 
      C-c C-a		emacsvox-aural-ui-actions
+     C-c TAB		emacsvox-aural-ui-open-manual
 
      C-M-i		backward-button
 
@@ -4529,28 +4540,35 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      Move to and speak the next row.
 
-2.51.1.10 emacsvox-aural-ui-previous-column
+2.51.1.10 emacsvox-aural-ui-open-manual
+.......................................
+
+ -- Command: emacsvox-aural-ui-open-manual
+
+     Read this interface’s offline task manual; q returns to the interface.
+
+2.51.1.11 emacsvox-aural-ui-previous-column
 ...........................................
 
  -- Command: emacsvox-aural-ui-previous-column
 
      Move left and speak the previous column.
 
-2.51.1.11 emacsvox-aural-ui-previous-row
+2.51.1.12 emacsvox-aural-ui-previous-row
 ........................................
 
  -- Command: emacsvox-aural-ui-previous-row
 
      Move to and speak the previous row.
 
-2.51.1.12 emacsvox-aural-ui-refresh
+2.51.1.13 emacsvox-aural-ui-refresh
 ...................................
 
  -- Command: emacsvox-aural-ui-refresh
 
      Refresh the current interface using its configured callback.
 
-2.51.1.13 emacsvox-aural-ui-speak-current-cell
+2.51.1.14 emacsvox-aural-ui-speak-current-cell
 ..............................................
 
  -- Command: emacsvox-aural-ui-speak-current-cell (&optional
@@ -4563,14 +4581,14 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      (fn &optional VALUE-FIRST)
 
-2.51.1.14 emacsvox-aural-ui-speak-current-row
+2.51.1.15 emacsvox-aural-ui-speak-current-row
 .............................................
 
  -- Command: emacsvox-aural-ui-speak-current-row
 
      Speak the complete current row using its configured callback.
 
-2.51.1.15 emacsvox-aural-ui-stop-preview
+2.51.1.16 emacsvox-aural-ui-stop-preview
 ........................................
 
  -- Command: emacsvox-aural-ui-stop-preview

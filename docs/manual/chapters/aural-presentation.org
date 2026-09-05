@@ -29,8 +29,16 @@ than editing configuration data by hand:
   Explain why the object at point received its voices, sounds, and other
   actions.
 
+For a first experiment, press @@texinfo:@kbd{C-e H}@@ and use
+@@texinfo:@kbd{/}@@ to find /Browse and try voices/.  Select an engine with
+@@texinfo:@key{RET}@@, then a voice with @@texinfo:@kbd{P}@@ to hear it.  Nothing
+is saved by browsing or previewing.  To change something you just heard, use
+@@texinfo:@kbd{C-e H c}@@ for the current item, or
+@@texinfo:@kbd{C-e H H}@@ to select past feedback.  See
+[[info:emacsvox#Voices And Routing][Voices And Routing]] for complete examples.
+
 This chapter gives a user-level model of the system and practical workflows for
-common changes.  The generated reference remains the authority for rule
+common changes.  The generated reference provides rule
 schemas, transport contracts, and extension development.
 
 ** A Practical Model Of Presentation
@@ -548,7 +556,8 @@ cancelling perform no configuration writes or route assignments.
 
 The experiment uses its working voice for navigation, values, and Help.
 @@texinfo:@kbd{n/p}@@ or up/down selects a parameter; left/right adjusts it;
-@@texinfo:@key{RET}@@ enters a value.  @@texinfo:@kbd{P}@@ plays the working
+@@texinfo:@key{RET}@@ enters a value; blank retains the current value and
+@@texinfo:@kbd{d}@@ explicitly requests the adapter default.  @@texinfo:@kbd{P}@@ plays the working
 version.  @@texinfo:@kbd{B}@@ alternates the opening and working versions,
 @@texinfo:@kbd{u}@@ undoes, @@texinfo:@kbd{R}@@ restores the opening voice and
 parameters, and @@texinfo:@kbd{S}@@ stops.  @@texinfo:@kbd{T}@@ changes the
@@ -578,6 +587,116 @@ files remain separate.  Any partial save or failed apply is reported, and
 the review retains completed steps so you can retry without repeating writes.
 @@texinfo:@kbd{q}@@ returns from the review; cancelling before Save and apply
 leaves configuration unchanged.
+
+*** Worked Presentation Recipes
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+**** Browse Eloquence And Compare Pitch
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+1. Open @@texinfo:@kbd{C-e H}@@ and search with @@texinfo:@kbd{/}@@ for
+   /Browse and try voices/.  Select the installed Eloquence engine and press
+   @@texinfo:@key{RET}@@.  Its list shows the voices this installation reports;
+   if Eloquence is unavailable, choose another available engine.
+2. Use up/down to choose a voice.  @@texinfo:@kbd{P}@@ plays it;
+   @@texinfo:@kbd{A}@@ plays the filtered list with spoken names, and
+   @@texinfo:@kbd{S}@@ stops.  @@texinfo:@kbd{T}@@ chooses your own sample
+   sentence.  For two different voices, @@texinfo:@kbd{B}@@ uses the selected
+   voice as A and asks for B.
+3. Press @@texinfo:@kbd{t}@@ on one physical voice.  Move to /Average Pitch/.
+   Press @@texinfo:@key{RET}@@ and enter @@texinfo:@kbd{3}@@, then
+   @@texinfo:@kbd{P}@@.  Enter @@texinfo:@kbd{7}@@ and replay the same sentence.
+   @@texinfo:@kbd{u}@@ restores the previous value for another comparison.
+   Navigation also uses the working voice, so you can hear it in actual use.
+4. For a labelled sequence, press @@texinfo:@kbd{D}@@ on Average Pitch and
+   supply three valid values, for example 3, 5, and 7.  This does not change
+   the working value.  @@texinfo:@kbd{B}@@ compares the opening and working
+   versions; it does not compare the two most recent edits.
+
+**** Keep A Voice Experiment
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+From the physical tuner, press @@texinfo:@kbd{w}@@ after finding a useful
+setting.  Choose /parameters as a named style/ to keep characteristics while
+letting existing routes choose the physical voice; choose /physical voice
+route/ to assign that voice while retaining the destination's existing style;
+choose /both/ to keep both for the chosen logical voice.
+
+Choose a destination name and, when needed, an editable palette.  Read the
+review, including the exact physical route and parameter values, and use
+@@texinfo:@kbd{P}@@ to preview that proposal.  Only
+@@texinfo:@kbd{C-c C-c}@@ in the review saves and applies it.  Palette selection
+is temporary for this session; save a Presentation Profile if you want to
+retain that selection.  The route has its own machine-local saved profile.
+If a step fails, the review states which writes succeeded and retains the
+remaining steps for retry.  @@texinfo:@kbd{q}@@ before saving changes nothing.
+
+**** Change A Heading Voice, Add A Cue, Or Silence One
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Move to a representative heading and open @@texinfo:@kbd{C-e H c}@@.
+Press @@texinfo:@kbd{c}@@, choose /Change the content voice/, and select a
+named voice such as ~bolden~.  @@texinfo:@kbd{P}@@ previews it.  Use
+@@texinfo:@kbd{m}@@ to review the actual heading facts, including level when
+supplied by the integration.  Use @@texinfo:@kbd{l}@@ to choose a lifetime,
+review the summary, then press @@texinfo:@kbd{a}@@.  A rule matching level-two
+headings affects all matching level-two headings within that lifetime's scope.
+
+To add a cue, begin again with a representative item and choose /Add a sound/.
+Select before or after content, choose a registered sound, and preview it.
+To silence an existing cue, choose /Suppress one component/ and select that
+sound by phase and identity.  This retains the spoken content and other
+feedback.  Review matching criteria and lifetime before applying either rule.
+
+**** Change A Blank-Line Tone
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Navigate onto a blank line so its feedback enters history.  Open
+@@texinfo:@kbd{C-e H H}@@, select that blank-line record, and press
+@@texinfo:@kbd{C}@@.  Choose /Change a tone/, select the tone, then choose a
+named tone or explicit pitch in Hertz and duration in milliseconds.  Compare
+@@texinfo:@kbd{O}@@ and @@texinfo:@kbd{P}@@.  Review the matching facts before
+choosing lifetime and applying.
+
+If that record contains a cue instead of a tone, the tone choice is absent.
+Use /Explain/ to see which rule supplied the cue; a guided change can suppress
+that cue, and a second change can add a tone.  The interface reports the
+actual presentation rather than assuming every visually blank line uses the
+same feedback.
+
+**** Choose An Engine And Recover Unfinished Work
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+For ordinary speech, open Home and search for /Ordinary speech engine/, or
+use @@texinfo:@kbd{C-e d e}@@ directly.  Choose an available engine.  This
+preference lasts for the session; a prefix argument explicitly saves it.
+Existing exact logical-voice routes take precedence over the preference.
+
+Use @@texinfo:@kbd{h}@@ to leave a working editor through Home without losing
+it.  Home's /Resume unfinished changes/ opens the original draft, including
+its source and working settings.  In a voice tuner, @@texinfo:@kbd{u}@@ undoes
+and @@texinfo:@kbd{R}@@ restores the opening settings.  Its
+@@texinfo:@kbd{q}@@ asks before discarding changes.  Guided feedback
+@@texinfo:@kbd{q}@@ hides and retains the draft.  To undo an already applied
+rule, open /Presentation Overrides/, select it in the appropriate scope, and
+use @@texinfo:@kbd{t}@@ to disable it or @@texinfo:@kbd{d}@@ to remove it.
+
+From any Aural interface, @@texinfo:@kbd{C-c C-i}@@ opens its offline task
+manual and @@texinfo:@kbd{q}@@ returns to the same interface and position.
+In Help, @@texinfo:@kbd{i}@@ opens that manual.  @@texinfo:@kbd{C-c C-a}@@
+offers named actions; @@texinfo:@kbd{S}@@ stops a preview sequence.
 
 ** Choose Sounds And Spatial Cues
 :PROPERTIES:

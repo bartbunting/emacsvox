@@ -2090,8 +2090,16 @@ Explain why the object at point received its voices@comma{} sounds@comma{} and o
 actions.
 @end table
 
+For a first experiment@comma{} press @kbd{C-e H} and use
+@kbd{/} to find @emph{Browse and try voices}.  Select an engine with
+@key{RET}@comma{} then a voice with @kbd{P} to hear it.  Nothing
+is saved by browsing or previewing.  To change something you just heard@comma{} use
+@kbd{C-e H c} for the current item@comma{} or
+@kbd{C-e H H} to select past feedback.  See
+@ref{Voices And Routing,Voices And Routing,,emacsvox,} for complete examples.
+
 This chapter gives a user-level model of the system and practical workflows for
-common changes.  The generated reference remains the authority for rule
+common changes.  The generated reference provides rule
 schemas@comma{} transport contracts@comma{} and extension development.
 
 @menu
@@ -2697,7 +2705,8 @@ cancelling perform no configuration writes or route assignments.
 
 The experiment uses its working voice for navigation@comma{} values@comma{} and Help.
 @kbd{n/p} or up/down selects a parameter; left/right adjusts it;
-@key{RET} enters a value.  @kbd{P} plays the working
+@key{RET} enters a value; blank retains the current value and
+@kbd{d} explicitly requests the adapter default.  @kbd{P} plays the working
 version.  @kbd{B} alternates the opening and working versions@comma{}
 @kbd{u} undoes@comma{} @kbd{R} restores the opening voice and
 parameters@comma{} and @kbd{S} stops.  @kbd{T} changes the
@@ -2727,6 +2736,116 @@ files remain separate.  Any partial save or failed apply is reported@comma{} and
 the review retains completed steps so you can retry without repeating writes.
 @kbd{q} returns from the review; cancelling before Save and apply
 leaves configuration unchanged.
+
+@subsection Worked Presentation Recipes
+
+@enumerate
+@item
+@anchor{Browse Eloquence And Compare Pitch}Browse Eloquence And Compare Pitch
+
+
+@enumerate
+@item
+Open @kbd{C-e H} and search with @kbd{/} for
+@emph{Browse and try voices}.  Select the installed Eloquence engine and press
+@key{RET}.  Its list shows the voices this installation reports;
+if Eloquence is unavailable@comma{} choose another available engine.
+@item
+Use up/down to choose a voice.  @kbd{P} plays it;
+@kbd{A} plays the filtered list with spoken names@comma{} and
+@kbd{S} stops.  @kbd{T} chooses your own sample
+sentence.  For two different voices@comma{} @kbd{B} uses the selected
+voice as A and asks for B@.
+@item
+Press @kbd{t} on one physical voice.  Move to @emph{Average Pitch}.
+Press @key{RET} and enter @kbd{3}@comma{} then
+@kbd{P}.  Enter @kbd{7} and replay the same sentence.
+@kbd{u} restores the previous value for another comparison.
+Navigation also uses the working voice@comma{} so you can hear it in actual use.
+@item
+For a labelled sequence@comma{} press @kbd{D} on Average Pitch and
+supply three valid values@comma{} for example 3@comma{} 5@comma{} and 7.  This does not change
+the working value.  @kbd{B} compares the opening and working
+versions; it does not compare the two most recent edits.
+@end enumerate
+
+@item
+@anchor{Keep A Voice Experiment}Keep A Voice Experiment
+
+
+From the physical tuner@comma{} press @kbd{w} after finding a useful
+setting.  Choose @emph{parameters as a named style} to keep characteristics while
+letting existing routes choose the physical voice; choose @emph{physical voice
+route} to assign that voice while retaining the destination's existing style;
+choose @emph{both} to keep both for the chosen logical voice.
+
+Choose a destination name and@comma{} when needed@comma{} an editable palette.  Read the
+review@comma{} including the exact physical route and parameter values@comma{} and use
+@kbd{P} to preview that proposal.  Only
+@kbd{C-c C-c} in the review saves and applies it.  Palette selection
+is temporary for this session; save a Presentation Profile if you want to
+retain that selection.  The route has its own machine-local saved profile.
+If a step fails@comma{} the review states which writes succeeded and retains the
+remaining steps for retry.  @kbd{q} before saving changes nothing.
+
+@item
+@anchor{Change A Heading Voice Add A Cue Or Silence One}Change A Heading Voice@comma{} Add A Cue@comma{} Or Silence One
+
+
+Move to a representative heading and open @kbd{C-e H c}.
+Press @kbd{c}@comma{} choose @emph{Change the content voice}@comma{} and select a
+named voice such as @code{bolden}.  @kbd{P} previews it.  Use
+@kbd{m} to review the actual heading facts@comma{} including level when
+supplied by the integration.  Use @kbd{l} to choose a lifetime@comma{}
+review the summary@comma{} then press @kbd{a}.  A rule matching level-two
+headings affects all matching level-two headings within that lifetime's scope.
+
+To add a cue@comma{} begin again with a representative item and choose @emph{Add a sound}.
+Select before or after content@comma{} choose a registered sound@comma{} and preview it.
+To silence an existing cue@comma{} choose @emph{Suppress one component} and select that
+sound by phase and identity.  This retains the spoken content and other
+feedback.  Review matching criteria and lifetime before applying either rule.
+
+@item
+@anchor{Change A Blank-Line Tone}Change A Blank-Line Tone
+
+
+Navigate onto a blank line so its feedback enters history.  Open
+@kbd{C-e H H}@comma{} select that blank-line record@comma{} and press
+@kbd{C}.  Choose @emph{Change a tone}@comma{} select the tone@comma{} then choose a
+named tone or explicit pitch in Hertz and duration in milliseconds.  Compare
+@kbd{O} and @kbd{P}.  Review the matching facts before
+choosing lifetime and applying.
+
+If that record contains a cue instead of a tone@comma{} the tone choice is absent.
+Use @emph{Explain} to see which rule supplied the cue; a guided change can suppress
+that cue@comma{} and a second change can add a tone.  The interface reports the
+actual presentation rather than assuming every visually blank line uses the
+same feedback.
+
+@item
+@anchor{Choose An Engine And Recover Unfinished Work}Choose An Engine And Recover Unfinished Work
+
+
+For ordinary speech@comma{} open Home and search for @emph{Ordinary speech engine}@comma{} or
+use @kbd{C-e d e} directly.  Choose an available engine.  This
+preference lasts for the session; a prefix argument explicitly saves it.
+Existing exact logical-voice routes take precedence over the preference.
+
+Use @kbd{h} to leave a working editor through Home without losing
+it.  Home's @emph{Resume unfinished changes} opens the original draft@comma{} including
+its source and working settings.  In a voice tuner@comma{} @kbd{u} undoes
+and @kbd{R} restores the opening settings.  Its
+@kbd{q} asks before discarding changes.  Guided feedback
+@kbd{q} hides and retains the draft.  To undo an already applied
+rule@comma{} open @emph{Presentation Overrides}@comma{} select it in the appropriate scope@comma{} and
+use @kbd{t} to disable it or @kbd{d} to remove it.
+
+From any Aural interface@comma{} @kbd{C-c C-i} opens its offline task
+manual and @kbd{q} returns to the same interface and position.
+In Help@comma{} @kbd{i} opens that manual.  @kbd{C-c C-a}
+offers named actions; @kbd{S} stops a preview sequence.
+@end enumerate
 
 @node Sounds And Space
 @section Choose Sounds And Spatial Cues
@@ -5604,3 +5723,46 @@ RuLex.
 Do not bypass the Omnivox release target manually or clean either repository
 to make its release guard pass.  Use @code{make windows-omnivox} only for the
 reproducible clean-release path documented in the user-facing WSL2 route.
+
+@subsection Aural experiments and guided changes
+
+Physical experiments reuse the tuner with an exact engine/voice selector@comma{}
+an immutable opening snapshot@comma{} a mutable working style@comma{} and undo history.
+They do not modify the palette registry@comma{} active palette@comma{} or route profile
+until the user explicitly keeps a reviewed result.  Navigation and Help use
+the working style.  A failed exact preview must be reported before ordinary
+speech can provide navigation fallback; a fallback sample must never be
+reported as the requested physical voice.
+
+Keep proposals snapshot the destination palette and routing profile as well
+as the proposed result.  Check those snapshots before writing@comma{} and retain
+separate completion flags for palette write@comma{} route write@comma{} and route apply.
+A retry must not repeat a successful write.  If routing saves but application
+fails@comma{} keep that distinction visible and retry the application step.  Never
+report the combined operation complete while one selected destination failed.
+Portable style storage and machine-local routing storage remain separate.
+
+Labelled comparisons use one controlled preview sequence@comma{} with identical
+sample text and separately configurable labels.  Each sequence belongs to
+its speech lane.  Stopping that lane cancels remaining entries and invalidates
+late callbacks; stopping foreground speech must not cancel notifications.
+Requested parameters and advertised capabilities are distinct from playback
+reports.  Do not fabricate exact effective numeric values when the adapter
+reports only support@comma{} acceptance@comma{} or degradation.
+
+Guided feedback changes use existing declarative rules and registered facts.
+The draft selects a component@comma{} matching criteria@comma{} and lifetime separately;
+preview dynamically overlays the intended layer without mutating live rules.
+Explicit buffer-rule snapshots in captured context must also be overlaid.
+Generated IDs remain stable for the matched component; new rules follow
+existing explicit order within the layer.  Apply checks a Current-item source
+guard and refuses to overwrite another unfinished editor for the same scope.
+Historical selection chooses a frozen part when a transaction contains
+several runs.  Original replay uses that part; proposed preview deliberately
+resolves it with current rules and the captured buffer context.
+
+Shared Help and offline task nodes preserve the original source and exact
+return position.  New interfaces should use the shared parent modes and add
+a task-node mapping to @code{emacsvox-aural-ui-manual-nodes}.  Row action predicates
+should hide operations that cannot apply to that row; this includes editing
+built-in options and reordering items outside the active-order view.

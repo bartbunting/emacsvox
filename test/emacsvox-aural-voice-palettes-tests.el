@@ -26,7 +26,8 @@
           "The quick brown fox jumps over the lazy dog.")
          (emacsvox-aural-active-scheme 'default))
      (emacsvox-aural--register-default-scheme)
-     ,@body))
+     (cl-letf (((symbol-function 'tts-speak) #'ignore))
+       ,@body)))
 
 (defconst emacsvox-test--voice-palette-data
   '(:schema-version 1
@@ -1321,6 +1322,15 @@
          #'string-lessp)
         '("First voice. The quick brown fox jumps over the lazy dog."
           "Second voice. The quick brown fox jumps over the lazy dog."))))))
+
+(ert-deftest emacsvox-aural-tuner-value-prompt-describes-retained-value ()
+  "Blank numeric input retains an existing setting and describes that behavior."
+  (let (prompt)
+    (cl-letf (((symbol-function 'read-string) (lambda (text &rest _) (setq prompt text) "")))
+      (should (= 6 (emacsvox-aural-voice-palettes--read-style-number 'average-pitch 6)))
+      (should (string-match-p "blank keeps 6" prompt))
+      (should-not (emacsvox-aural-voice-palettes--read-style-number 'average-pitch nil))
+      (should (string-match-p "blank uses the adapter default" prompt)))))
 
 (provide 'emacsvox-aural-voice-palettes-tests)
 ;;; emacsvox-aural-voice-palettes-tests.el ends here

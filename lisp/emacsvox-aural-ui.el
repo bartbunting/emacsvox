@@ -108,12 +108,76 @@ When nil, movement speaks the current titled cell.")
 (defvar-local emacsvox-aural-ui-help-origin-position nil
   "Marker recording point in the originating aural interface.")
 
+(defconst emacsvox-aural-ui-manual-nodes
+  '((emacsvox-aural-home-mode . "Aural Home")
+    (emacsvox-aural-recent-feedback-mode . "Explaining Presentation")
+    (emacsvox-aural-semantics-mode . "Presentation Model")
+    (emacsvox-aural-voice-workbench-mode . "Voices And Routing")
+    (emacsvox-aural-voice-palettes-mode . "Voices And Routing")
+    (emacsvox-aural-voice-palette-previews-mode . "Voices And Routing")
+    (emacsvox-aural-voice-tuner-mode . "Voices And Routing")
+    (emacsvox-aural-voice-experiment-keep-mode . "Voices And Routing")
+    (emacsvox-aural-sound-packs-mode . "Sounds And Space")
+    (emacsvox-aural-sound-pack-cues-mode . "Sounds And Space")
+    (emacsvox-aural-profiles-mode . "Presentation Profiles")
+    (emacsvox-aural-doctor-mode . "Presentation Troubleshooting")
+    (emacsvox-omnivox-components-mode . "Presentation Troubleshooting")
+    (emacsvox-aural-scheme-editor-mode . "Adjusting Presentation")
+    (emacsvox-aural-overrides-mode . "Adjusting Presentation")
+    (emacsvox-aural-change-feedback-mode . "Adjusting Presentation")
+    (emacsvox-aural-feature-fragments-mode . "Adjusting Presentation")
+    (emacsvox-aural-feature-fragment-previews-mode . "Adjusting Presentation"))
+  "Offline task nodes for Aural interfaces, including their derived modes.")
+
+(defun emacsvox-aural-ui--manual-node ()
+  "Return this interface's task node, following a Help origin when present."
+  (let ((buffer (current-buffer)) seen)
+    (while (and (not (memq buffer seen))
+                (buffer-live-p (buffer-local-value 'emacsvox-aural-ui-help-origin-buffer buffer)))
+      (push buffer seen)
+      (setq buffer (buffer-local-value 'emacsvox-aural-ui-help-origin-buffer buffer)))
+    (with-current-buffer buffer
+      (or (cl-loop for (mode . node) in emacsvox-aural-ui-manual-nodes
+                   when (derived-mode-p mode) return node)
+          "Aural Presentation"))))
+
+(defun emacsvox-aural-ui-open-manual ()
+  "Read this interface's offline task manual; q returns to the interface."
+  (interactive)
+  (require 'info)
+  (let ((node (emacsvox-aural-ui--manual-node))
+        (origin (if (and (derived-mode-p 'Info-mode)
+                         (buffer-live-p emacsvox-aural-ui-help-origin-buffer))
+                    emacsvox-aural-ui-help-origin-buffer (current-buffer)))
+        (window (selected-window))
+        (source emacsvox-aural-ui-source-buffer)
+        (source-position emacsvox-aural-ui-source-position)
+        (source-guard emacsvox-aural-ui-source-guard))
+    ;; A separate Info buffer avoids replacing an unrelated manual visit.
+    (info (format "(%s)%s"
+                  (expand-file-name "emacsvox.info" emacsvox-info-directory) node)
+          "*Emacsvox Aural Manual*")
+    (setq-local emacsvox-aural-ui-help-origin-buffer origin)
+    (setq-local emacsvox-aural-ui-help-origin-window window)
+    (when (markerp emacsvox-aural-ui-help-origin-position)
+      (set-marker emacsvox-aural-ui-help-origin-position nil))
+    (setq-local emacsvox-aural-ui-help-origin-position
+                (with-current-buffer origin (copy-marker (point))))
+    (emacsvox-aural-ui-register-interface source)
+    (setq-local emacsvox-aural-ui-source-buffer source)
+    (setq-local emacsvox-aural-ui-source-position
+                (and (markerp source-position) (copy-marker source-position t)))
+    (setq-local emacsvox-aural-ui-source-guard source-guard)
+    (emacsvox-aural-ui-help-return-mode 1)))
+
 (defvar emacsvox-aural-ui-help-return-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q") #'emacsvox-aural-ui-help-quit)
     (define-key map (kbd "h") #'emacsvox-aural)
     (define-key map (kbd "S") #'emacsvox-aural-ui-stop-preview)
     (define-key map (kbd "C-c C-a") #'emacsvox-aural-ui-help-actions)
+    (define-key map (kbd "i") #'emacsvox-aural-ui-open-manual)
+    (define-key map (kbd "C-c C-i") #'emacsvox-aural-ui-open-manual)
     map)
   "Keymap that gives aural Help buffers an exact return destination.")
 
@@ -176,7 +240,10 @@ metadata."
         (source-guard emacsvox-aural-ui-source-guard))
     (with-help-window (help-buffer)
       (funcall producer)
-      (princ "\nIn the Aural interface, C-c C-a lists available actions.\n"))
+      (princ "\nC-c C-a lists available actions. i opens the offline task manual; q returns.\n")
+      (insert-text-button "Read the offline task manual"
+                          'action (lambda (_) (emacsvox-aural-ui-open-manual))
+                          'follow-link t))
     (when-let* ((buffer (get-buffer (help-buffer))))
       (with-current-buffer buffer
         (when (markerp emacsvox-aural-ui-help-origin-position)
@@ -457,7 +524,8 @@ the cell value first."
                  result)))
        map)
       (setq map (keymap-parent map)))
-    (append emacsvox-aural-ui-extra-actions
+    (append '(("Read the offline task manual [C-c C-i]" . emacsvox-aural-ui-open-manual))
+            emacsvox-aural-ui-extra-actions
             (sort result (lambda (a b) (string-lessp (car a) (car b)))))))
 
 (defun emacsvox-aural-ui-announce-result (format-string &rest arguments)
@@ -590,6 +658,7 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
     (set-keymap-parent map special-mode-map)
     (define-key map (kbd "q") #'emacsvox-aural-quit)
     (define-key map (kbd "C-c C-a") #'emacsvox-aural-ui-actions)
+    (define-key map (kbd "C-c C-i") #'emacsvox-aural-ui-open-manual)
     (define-key map (kbd "S") #'emacsvox-aural-ui-stop-preview)
     map)
   "Keymap inherited by non-tabulated aural interfaces.")
@@ -616,6 +685,7 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
            ("SPC" . emacsvox-aural-ui-speak-current-row)
            ("g" . emacsvox-aural-ui-refresh)
            ("C-c C-a" . emacsvox-aural-ui-actions)
+           ("C-c C-i" . emacsvox-aural-ui-open-manual)
            ("S" . emacsvox-aural-ui-stop-preview)
            ("q" . emacsvox-aural-quit)))
       (define-key map (kbd (car binding)) (cdr binding)))

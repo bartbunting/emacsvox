@@ -124,7 +124,18 @@ Operational semantic contract version: =1=.
 | =agent-block-kind= | =attribute= | =agent-shell= | =agent-response=, =user-prompt=, =thought=, =tool-call=, =activity-group=, =plan=, =permission=, =error=, =table=, =source-block=, =other= | - | - | - | - | - | - | - | The structural kind of an Agent Shell transcript block |
 | =agent-content-copied= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | Agent Shell content was copied for reuse |
 | =agent-content-inspected= | =event= | =agent-shell= | - | - | - | - | - | =inspection= | =before=, =content=, =after= | - | The user explicitly requested Agent Shell content |
+| =agent-diff= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection= | =before=, =content=, =after= | - | A change review opened from an agent session |
+| =agent-diff-files= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | Number of files in the opened change review |
+| =agent-diff-hunks= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | Number of hunks in the opened change review |
+| =agent-diff-opened= | =event= | =agent-shell= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | An agent change review was opened |
 | =agent-error= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection=, =notification= | =before=, =content=, =after= | - | Error content produced while running an agent session |
+| =agent-list-ended= | =event= | =agent-shell= | - | - | - | - | - | =edit= | =before=, =content=, =after= | - | An empty list item was removed to leave a prompt list |
+| =agent-list-indent= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | The list item's indentation in columns |
+| =agent-list-indentation-changed= | =event= | =agent-shell= | - | - | - | - | - | =edit= | =before=, =content=, =after= | - | A prompt list item was indented or dedented |
+| =agent-list-item-created= | =event= | =agent-shell= | - | - | - | - | - | =edit= | =before=, =content=, =after= | - | A new line or list item was inserted in the prompt editor |
+| =agent-list-kind= | =attribute= | =agent-shell= | =bullet=, =numbered=, =none= | - | - | - | - | - | - | - | The kind of list at the prompt editor's insertion point |
+| =agent-list-marker= | =attribute= | =agent-shell= | =string= | - | - | - | - | - | - | - | The resulting bullet or number of the current list item |
+| =agent-permission-details-updated= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | The operation described by a pending permission changed |
 | =agent-permission-requested= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An Agent Shell action requested user permission |
 | =agent-permission-resolved= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | An Agent Shell permission request was resolved |
 | =agent-permission-result= | =attribute= | =agent-shell= | =allowed=, =denied=, =cancelled=, =sent= | - | - | - | - | - | - | - | The result of an Agent Shell permission decision |
@@ -134,14 +145,21 @@ Operational semantic contract version: =1=.
 | =agent-prompt-editor= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =edit=, =state-change= | =before=, =content=, =after= | - | An editor used to compose an Agent Shell prompt |
 | =agent-prompt-opened= | =event= | =agent-shell= | - | - | - | - | - | =edit=, =state-change= | =before=, =content=, =after= | - | An Agent Shell prompt editor was opened |
 | =agent-prompt-submitted= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A composed Agent Shell prompt was submitted or queued |
+| =agent-queue-changed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A queued prompt started or the prompt queue paused |
+| =agent-queue-count= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | Number of prompts still waiting in the queue |
+| =agent-queue-state= | =attribute= | =agent-shell= | =started=, =paused= | - | - | - | - | - | - | - | Whether a queued prompt started or the queue paused |
 | =agent-response= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection=, =notification= | =before=, =content=, =after= | - | User-facing response content produced by an agent |
 | =agent-session= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | One interactive agent conversation |
 | =agent-session-interrupted= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | The user interrupted an Agent Shell request |
 | =agent-session-opened= | =event= | =agent-shell= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | An Agent Shell session was opened or selected |
 | =agent-setting-changed= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | An Agent Shell presentation or session setting changed |
+| =agent-setting-id= | =attribute= | =agent-shell= | =string= | - | - | - | - | - | - | - | The identifier of the confirmed session setting |
+| =agent-setting-value= | =attribute= | =agent-shell= | =string= | - | - | - | - | - | - | - | The confirmed session setting value |
 | =agent-source-block= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection=, =state-change= | =before=, =content=, =after= | - | A rendered source-code block in an agent response |
 | =agent-source-language= | =attribute= | =agent-shell= | =string= | - | - | - | - | - | - | - | The declared language of an Agent Shell source block |
 | =agent-speech-level= | =attribute= | =agent-shell= | =auto=, =full=, =response=, =notify=, =quiet= | - | - | - | - | - | - | - | The selected automatic speech level for an agent session |
+| =agent-steering-resolved= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | The agent accepted, declined, or redirected a steered prompt |
+| =agent-steering-result= | =attribute= | =agent-shell= | =accepted=, =declined=, =detached=, =submitted= | - | - | - | - | - | - | - | The confirmed outcome of steering a prompt |
 | =agent-table= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection=, =state-change= | =before=, =content=, =after= | - | A rendered table in an agent response |
 | =agent-table-cell= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection=, =state-change= | =before=, =content=, =after= | - | One logical cell in a rendered agent-response table |
 | =agent-table-column= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | The zero-based logical column of an Agent Shell table cell |
@@ -150,8 +168,10 @@ Operational semantic contract version: =1=.
 | =agent-table-row= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | The zero-based logical row of an Agent Shell table cell |
 | =agent-thought= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection= | =before=, =content=, =after= | - | Intermediate reasoning content exposed by an agent |
 | =agent-tool= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection=, =notification= | =before=, =content=, =after= | - | A tool invocation or its output in an agent session |
+| =agent-tool-output-updated= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A completed tool's output changed without a new status |
 | =agent-tool-status= | =attribute= | =agent-shell= | =pending=, =in-progress=, =completed=, =failed= | - | - | - | - | - | - | - | The current lifecycle status of an Agent Shell tool call |
 | =agent-tool-status-changed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An Agent Shell tool call changed lifecycle status |
+| =agent-turn-origin= | =attribute= | =agent-shell= | =user=, =pushed= | - | - | - | - | - | - | - | Whether the turn was submitted by the user or pushed by the server |
 | =agent-user-prompt= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =edit=, =inspection= | =before=, =content=, =after= | - | User-authored prompt content in an agent conversation |
 | =agent-viewport= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | - | An Agent Shell response or prompt viewport |
 | =agent-viewport-mode= | =attribute= | =agent-shell= | =view=, =edit= | - | - | - | - | - | - | - | The interaction mode of an Agent Shell viewport |

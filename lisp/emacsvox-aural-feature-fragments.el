@@ -1398,11 +1398,33 @@ announce the selected example after displaying the buffer."
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
+(defun emacsvox-aural-feature-fragments--action-applicable-p (command)
+  "Return whether COMMAND can act on the selected option or collection."
+  (let* ((id (tabulated-list-get-id))
+         (collection (emacsvox-aural-feature-fragments--fragment-collection-row-p id))
+         (entry (and (symbolp id) (emacsvox-aural-feature-fragment-entry id)))
+         (position (cl-position id emacsvox-aural-enabled-feature-fragments)))
+    (pcase command
+      ('emacsvox-aural-feature-fragments-toggle-collection collection)
+      ((or 'emacsvox-aural-feature-fragments-edit 'emacsvox-aural-delete-feature-fragment)
+       (and entry (not (emacsvox-aural-feature-fragment-entry-built-in entry))))
+      ('emacsvox-aural-feature-fragments-move-up
+       (and (eq emacsvox-aural-feature-fragments-view 'active) position (> position 0)))
+      ('emacsvox-aural-feature-fragments-move-down
+       (and (eq emacsvox-aural-feature-fragments-view 'active) position
+            (< position (1- (length emacsvox-aural-enabled-feature-fragments)))))
+      ((or 'emacsvox-aural-feature-fragments-preview 'emacsvox-aural-feature-fragments-toggle
+           'emacsvox-aural-copy-feature-fragment 'emacsvox-aural-show-feature-fragment-validation)
+       entry)
+      (_ t))))
+
 (define-derived-mode
     emacsvox-aural-feature-fragments-mode
     emacsvox-aural-tabulated-mode
   "Aural-Options"
   "Major mode for viewing and managing aural presentation options."
+  (setq-local emacsvox-aural-ui-action-filter
+              #'emacsvox-aural-feature-fragments--action-applicable-p)
   (emacsvox-aural-ui-configure-tabulated
    "presentation option list"
    #'emacsvox-aural-feature-fragments-speak-current

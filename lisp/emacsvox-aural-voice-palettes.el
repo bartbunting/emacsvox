@@ -392,9 +392,9 @@ replaces live state.  Return the value of MUTATION."
   "Read optional ACSS DIMENSION, offering CURRENT."
   (let* ((prompt
           (format
-           "%s, 0 through 9; blank means default%s: "
+           "%s, 0 through 9; blank %s: "
            (emacsvox-aural-humanize dimension)
-           (if current (format " [%s]" current) "")))
+           (if current (format "keeps %s" current) "uses the adapter default")))
          (answer (string-trim (read-string prompt))))
     (cond
      ((and (string-empty-p answer) current) current)
@@ -410,8 +410,8 @@ replaces live state.  Return the value of MUTATION."
           (string-trim
            (read-string
             (format
-             "Voice family; blank means default%s: "
-             (if old-family (format " [%s]" old-family) ""))
+             "Voice family; blank %s: "
+             (if old-family (format "keeps %s" old-family) "uses the adapter default"))
             nil nil
             (and old-family (format "%s" old-family)))))
          (style
@@ -1975,7 +1975,7 @@ ANNOUNCEMENT overrides the normal setting description."
            "u undo last change   R restore opening style\n"
            "w save style, return C-c C-c save style, return\n"
            "q or C-c C-k cancel and return\n"
-           "h aural home         ? help\n")))
+           "h aural home         ? help; C-c C-i offline voice manual\n")))
     (emacsvox-aural-ui-with-help-window
       (princ help))
     (when (buffer-live-p tuner)

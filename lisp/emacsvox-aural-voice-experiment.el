@@ -84,11 +84,12 @@
     (emacsvox-aural-voice-tuner-audition
      (format "Trying %s. Unsupported requested settings: %s."
              emacsvox-aural-voice-tuner-voice
-             (or (string-join
-                  (cl-loop for dimension in emacsvox-aural-rich-voice-dimensions
+             (let ((unsupported
+                    (cl-loop for dimension in emacsvox-aural-rich-voice-dimensions
                            when (and (emacsvox-aural-voice-tuner--value dimension)
                                      (not (emacsvox-aural-voice-tuner--supported-p dimension)))
-                           collect (emacsvox-aural-humanize dimension)) ", ") "none")))))
+                           collect (emacsvox-aural-humanize dimension))))
+               (if unsupported (string-join unsupported ", ") "none"))))))
 
 (defun emacsvox-aural-voice-experiment-copy-style ()
   "Copy an existing logical style into this temporary experiment."
@@ -405,7 +406,7 @@ KIND is `style', `route', or `both'.  This function performs no writes."
                       "u undoes; R restores opening voice and parameters; v tries another voice.\n"
                       "c copies an existing style; T changes sample text; D demonstrates three values.\n"
                       "w or C-c C-c chooses what to keep and opens a review. Saving happens in that review.\n"
-                      "C-c C-a offers actions. h opens Home; q or C-c C-k cancels, confirming changed experiments.\n"
+                      "C-c C-i opens the offline voice manual. C-c C-a offers actions. h opens Home; q or C-c C-k cancels, confirming changed experiments.\n"
                       "Requested parameters and advertised support are separate from playback reports.\n"
                       "Exact applied parameter values are not reported by the adapter.\n")))
     (emacsvox-aural-ui-with-help-window (princ text))

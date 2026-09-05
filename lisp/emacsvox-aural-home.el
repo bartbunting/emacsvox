@@ -65,6 +65,8 @@
                   "emacsvox-aural-voice-workbench" ())
 (declare-function emacsvox-omnivox-manage-components
                   "emacsvox-omnivox-components" ())
+(declare-function emacsvox-aural-change-feedback
+                  "emacsvox-aural-change-feedback" (&optional record))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
@@ -330,7 +332,7 @@
       (vector
        "Training mode"
        (if emacsvox-aural-training-mode "on" "off")
-       "Toggle concise semantic explanations after presentations"))
+       "Review concise semantic explanations; t toggles them for this session"))
      (list
       'diagnostics
       (vector
@@ -551,13 +553,21 @@
     ('spatial (emacsvox-aural-describe-spatial-capabilities))
     ('spatial-settings (customize-group 'emacsvox-aural-spatial))
     ('training
-     (emacsvox-aural-training-mode
-      (if emacsvox-aural-training-mode -1 1))
-     (emacsvox-aural-home-refresh 'training)
-     (emacsvox-aural-home-speak-current))
+     (emacsvox-aural-ui-with-help-window
+       (princ (format "Training explanations are %s. Press t in Home to toggle them for this session.\n"
+                      (if emacsvox-aural-training-mode "on" "off"))))
+     (when (fboundp 'emacsvox-speak-help) (emacsvox-speak-help)))
     ('diagnostics
      (require 'emacsvox-aural-doctor)
      (emacsvox-aural-doctor))))
+
+(defun emacsvox-aural-home-toggle-training ()
+  "Toggle training explanations for this Emacs session."
+  (interactive)
+  (emacsvox-aural-training-mode (if emacsvox-aural-training-mode -1 1))
+  (emacsvox-aural-home-refresh 'training)
+  (emacsvox-aural-ui-announce-result "Training explanations %s for this session"
+                                   (if emacsvox-aural-training-mode "on" "off")))
 
 (defun emacsvox-aural-home-help ()
   "Display and speak aural home commands and discovery guidance."
@@ -566,12 +576,9 @@
     (princ
      (concat
       "Emacsvox Aural Home\n\n"
-      "This is the main entry point for presentation discovery, editing,\n"
-      "inspection, sound packs, spatial settings, and diagnostics.\n\n"
-      "A fixed internal baseline preserves compatible presentation. Automatic\n"
-      "mode presentation, enabled options, and finally personal, session, and\n"
-      "buffer overrides compose on top. Open Presentation options to choose\n"
-      "additions; open Presentation overrides for the strongest rule layers.\n\n"
+      "Start with a task: change the captured item with c, review past feedback\n"
+      "with H, or use / to find Browse and try voices or any other action.\n"
+      "Home keeps your source position and unfinished drafts.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET open details or group; TAB expand/collapse group\n"
@@ -587,6 +594,7 @@
       "W voice workbench\n"
       "I Omnivox engine modules\n"
       "D aural doctor\n"
+      "t toggle training explanations for this session\n"
       "g refresh\n"
       "C-c C-o return to the captured source item\n"
       "? display and speak this help\n"
@@ -627,6 +635,7 @@
      '(("RET" . emacsvox-aural-home-activate)
        ("TAB" . emacsvox-aural-home-toggle-group)
        ("/" . emacsvox-aural-home-search)
+       ("t" . emacsvox-aural-home-toggle-training)
        ("c" . emacsvox-aural-home-change-feedback)
        ("x" . emacsvox-aural-home-explain)
        ("r" . emacsvox-aural-home-remap-voice)

@@ -2086,10 +2086,16 @@ heard and use Aural Home rather than editing configuration data by hand:
      Explain why the object at point received its voices, sounds, and
      other actions.
 
+   For a first experiment, press ‘C-e H’ and use ‘/’ to find _Browse and
+try voices_.  Select an engine with <RET>, then a voice with ‘P’ to hear
+it.  Nothing is saved by browsing or previewing.  To change something
+you just heard, use ‘C-e H c’ for the current item, or ‘C-e H H’ to
+select past feedback.  See *note Voices And Routing: (emacsvox)Voices
+And Routing. for complete examples.
+
    This chapter gives a user-level model of the system and practical
-workflows for common changes.  The generated reference remains the
-authority for rule schemas, transport contracts, and extension
-development.
+workflows for common changes.  The generated reference provides rule
+schemas, transport contracts, and extension development.
 
 * Menu:
 
@@ -2639,11 +2645,12 @@ perform no configuration writes or route assignments.
 
    The experiment uses its working voice for navigation, values, and
 Help.  ‘n/p’ or up/down selects a parameter; left/right adjusts it;
-<RET> enters a value.  ‘P’ plays the working version.  ‘B’ alternates
-the opening and working versions, ‘u’ undoes, ‘R’ restores the opening
-voice and parameters, and ‘S’ stops.  ‘T’ changes the sample, ‘c’ copies
-an existing style, and ‘v’ tries another physical voice while retaining
-the requested parameters.
+<RET> enters a value; blank retains the current value and ‘d’ explicitly
+requests the adapter default.  ‘P’ plays the working version.  ‘B’
+alternates the opening and working versions, ‘u’ undoes, ‘R’ restores
+the opening voice and parameters, and ‘S’ stops.  ‘T’ changes the
+sample, ‘c’ copies an existing style, and ‘v’ tries another physical
+voice while retaining the requested parameters.
 
    For a three-value comparison, select a supported numeric parameter
 and choose _Demonstrate the selected parameter_ from ‘C-c C-a’, or press
@@ -2669,6 +2676,103 @@ remain separate.  Any partial save or failed apply is reported, and the
 review retains completed steps so you can retry without repeating
 writes.  ‘q’ returns from the review; cancelling before Save and apply
 leaves configuration unchanged.
+
+6.7.2 Worked Presentation Recipes
+---------------------------------
+
+  1. Browse Eloquence And Compare Pitch
+
+       1. Open ‘C-e H’ and search with ‘/’ for _Browse and try voices_.
+          Select the installed Eloquence engine and press <RET>.  Its
+          list shows the voices this installation reports; if Eloquence
+          is unavailable, choose another available engine.
+       2. Use up/down to choose a voice.  ‘P’ plays it; ‘A’ plays the
+          filtered list with spoken names, and ‘S’ stops.  ‘T’ chooses
+          your own sample sentence.  For two different voices, ‘B’ uses
+          the selected voice as A and asks for B.
+       3. Press ‘t’ on one physical voice.  Move to _Average Pitch_.
+          Press <RET> and enter ‘3’, then ‘P’.  Enter ‘7’ and replay the
+          same sentence.  ‘u’ restores the previous value for another
+          comparison.  Navigation also uses the working voice, so you
+          can hear it in actual use.
+       4. For a labelled sequence, press ‘D’ on Average Pitch and supply
+          three valid values, for example 3, 5, and 7.  This does not
+          change the working value.  ‘B’ compares the opening and
+          working versions; it does not compare the two most recent
+          edits.
+
+  2. Keep A Voice Experiment
+
+     From the physical tuner, press ‘w’ after finding a useful setting.
+     Choose _parameters as a named style_ to keep characteristics while
+     letting existing routes choose the physical voice; choose _physical
+     voice route_ to assign that voice while retaining the destination's
+     existing style; choose _both_ to keep both for the chosen logical
+     voice.
+
+     Choose a destination name and, when needed, an editable palette.
+     Read the review, including the exact physical route and parameter
+     values, and use ‘P’ to preview that proposal.  Only ‘C-c C-c’ in
+     the review saves and applies it.  Palette selection is temporary
+     for this session; save a Presentation Profile if you want to retain
+     that selection.  The route has its own machine-local saved profile.
+     If a step fails, the review states which writes succeeded and
+     retains the remaining steps for retry.  ‘q’ before saving changes
+     nothing.
+
+  3. Change A Heading Voice, Add A Cue, Or Silence One
+
+     Move to a representative heading and open ‘C-e H c’.  Press ‘c’,
+     choose _Change the content voice_, and select a named voice such as
+     ‘bolden’.  ‘P’ previews it.  Use ‘m’ to review the actual heading
+     facts, including level when supplied by the integration.  Use ‘l’
+     to choose a lifetime, review the summary, then press ‘a’.  A rule
+     matching level-two headings affects all matching level-two headings
+     within that lifetime's scope.
+
+     To add a cue, begin again with a representative item and choose
+     _Add a sound_.  Select before or after content, choose a registered
+     sound, and preview it.  To silence an existing cue, choose
+     _Suppress one component_ and select that sound by phase and
+     identity.  This retains the spoken content and other feedback.
+     Review matching criteria and lifetime before applying either rule.
+
+  4. Change A Blank-Line Tone
+
+     Navigate onto a blank line so its feedback enters history.  Open
+     ‘C-e H H’, select that blank-line record, and press ‘C’.  Choose
+     _Change a tone_, select the tone, then choose a named tone or
+     explicit pitch in Hertz and duration in milliseconds.  Compare ‘O’
+     and ‘P’.  Review the matching facts before choosing lifetime and
+     applying.
+
+     If that record contains a cue instead of a tone, the tone choice is
+     absent.  Use _Explain_ to see which rule supplied the cue; a guided
+     change can suppress that cue, and a second change can add a tone.
+     The interface reports the actual presentation rather than assuming
+     every visually blank line uses the same feedback.
+
+  5. Choose An Engine And Recover Unfinished Work
+
+     For ordinary speech, open Home and search for _Ordinary speech
+     engine_, or use ‘C-e d e’ directly.  Choose an available engine.
+     This preference lasts for the session; a prefix argument explicitly
+     saves it.  Existing exact logical-voice routes take precedence over
+     the preference.
+
+     Use ‘h’ to leave a working editor through Home without losing it.
+     Home's _Resume unfinished changes_ opens the original draft,
+     including its source and working settings.  In a voice tuner, ‘u’
+     undoes and ‘R’ restores the opening settings.  Its ‘q’ asks before
+     discarding changes.  Guided feedback ‘q’ hides and retains the
+     draft.  To undo an already applied rule, open _Presentation
+     Overrides_, select it in the appropriate scope, and use ‘t’ to
+     disable it or ‘d’ to remove it.
+
+     From any Aural interface, ‘C-c C-i’ opens its offline task manual
+     and ‘q’ returns to the same interface and position.  In Help, ‘i’
+     opens that manual.  ‘C-c C-a’ offers named actions; ‘S’ stops a
+     preview sequence.
 
 
 File: emacsvox.info,  Node: Sounds And Space,  Next: Presentation Troubleshooting,  Prev: Voices And Routing,  Up: Aural Presentation
@@ -5372,6 +5476,54 @@ repository to make its release guard pass.  Use ‘make windows-omnivox’
 only for the reproducible clean-release path documented in the
 user-facing WSL2 route.
 
+16.3.9 Aural experiments and guided changes
+-------------------------------------------
+
+Physical experiments reuse the tuner with an exact engine/voice
+selector, an immutable opening snapshot, a mutable working style, and
+undo history.  They do not modify the palette registry, active palette,
+or route profile until the user explicitly keeps a reviewed result.
+Navigation and Help use the working style.  A failed exact preview must
+be reported before ordinary speech can provide navigation fallback; a
+fallback sample must never be reported as the requested physical voice.
+
+   Keep proposals snapshot the destination palette and routing profile
+as well as the proposed result.  Check those snapshots before writing,
+and retain separate completion flags for palette write, route write, and
+route apply.  A retry must not repeat a successful write.  If routing
+saves but application fails, keep that distinction visible and retry the
+application step.  Never report the combined operation complete while
+one selected destination failed.  Portable style storage and
+machine-local routing storage remain separate.
+
+   Labelled comparisons use one controlled preview sequence, with
+identical sample text and separately configurable labels.  Each sequence
+belongs to its speech lane.  Stopping that lane cancels remaining
+entries and invalidates late callbacks; stopping foreground speech must
+not cancel notifications.  Requested parameters and advertised
+capabilities are distinct from playback reports.  Do not fabricate exact
+effective numeric values when the adapter reports only support,
+acceptance, or degradation.
+
+   Guided feedback changes use existing declarative rules and registered
+facts.  The draft selects a component, matching criteria, and lifetime
+separately; preview dynamically overlays the intended layer without
+mutating live rules.  Explicit buffer-rule snapshots in captured context
+must also be overlaid.  Generated IDs remain stable for the matched
+component; new rules follow existing explicit order within the layer.
+Apply checks a Current-item source guard and refuses to overwrite
+another unfinished editor for the same scope.  Historical selection
+chooses a frozen part when a transaction contains several runs.
+Original replay uses that part; proposed preview deliberately resolves
+it with current rules and the captured buffer context.
+
+   Shared Help and offline task nodes preserve the original source and
+exact return position.  New interfaces should use the shared parent
+modes and add a task-node mapping to ‘emacsvox-aural-ui-manual-nodes’.
+Row action predicates should hide operations that cannot apply to that
+row; this includes editing built-in options and reordering items outside
+the active-order view.
+
 
 File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 
@@ -5564,49 +5716,54 @@ Node: Desktop Objects87899
 Node: Object Oriented Desktop89124
 Node: Context-Sensitive Interaction90237
 Node: Aural Presentation93352
-Node: Presentation Model95551
-Node: Presentation Modalities98018
-Node: Aural Home101187
-Node: Explaining Presentation104766
-Node: Adjusting Presentation106794
-Node: Presentation Profiles112680
-Node: Voices And Routing114357
-Node: Sounds And Space121776
-Node: Presentation Troubleshooting123412
-Node: Voice Lock125450
-Node: Using Online Help128657
-Node: Emacs Packages132719
-Node: Document Authoring134093
-Node: Structured Editing134647
-Node: Browsing Structure135630
-Node: Web Browsing136228
-Node: Messaging137063
-Node: Editing Code137561
-Node: Development Environment138080
-Node: Desktop Management139616
-Node: Personal Information Management140118
-Node: Desktop Applications140650
-Node: Notmuch Mail148038
-Ref: Notmuch fields and privacy157381
-Node: Agent Shell163089
-Node: EAT Terminal Access175384
-Node: Running Terminal Based Applications192643
-Node: Starting Term193598
-Node: Term Input Modes194437
-Node: Term Speech Feedback195597
-Node: Reviewing The Term Screen196791
-Node: Term Help And Recovery198692
-Node: Emacsvox Keyboard Commands199591
-Node: Copyright200995
-Node: Acknowledgments201582
-Node: Developer Guide202608
-Node: Documentation Maintenance203772
-Node: Speech Server Protocols208570
-Ref: Testing A Direct Legacy Server214477
-Ref: Commands That Queue Output215036
-Ref: Commands That Set State218070
-Node: Integration Maintenance220664
-Node: Concept Index244900
+Node: Presentation Model95945
+Node: Presentation Modalities98412
+Node: Aural Home101581
+Node: Explaining Presentation105160
+Node: Adjusting Presentation107188
+Node: Presentation Profiles113074
+Node: Voices And Routing114751
+Ref: Browse Eloquence And Compare Pitch122329
+Ref: Keep A Voice Experiment123576
+Ref: Change A Heading Voice Add A Cue Or Silence One124576
+Ref: Change A Blank-Line Tone125537
+Ref: Choose An Engine And Recover Unfinished Work126294
+Node: Sounds And Space127452
+Node: Presentation Troubleshooting129088
+Node: Voice Lock131126
+Node: Using Online Help134333
+Node: Emacs Packages138395
+Node: Document Authoring139769
+Node: Structured Editing140323
+Node: Browsing Structure141306
+Node: Web Browsing141904
+Node: Messaging142739
+Node: Editing Code143237
+Node: Development Environment143756
+Node: Desktop Management145292
+Node: Personal Information Management145794
+Node: Desktop Applications146326
+Node: Notmuch Mail153714
+Ref: Notmuch fields and privacy163057
+Node: Agent Shell168765
+Node: EAT Terminal Access181060
+Node: Running Terminal Based Applications198319
+Node: Starting Term199274
+Node: Term Input Modes200113
+Node: Term Speech Feedback201273
+Node: Reviewing The Term Screen202467
+Node: Term Help And Recovery204368
+Node: Emacsvox Keyboard Commands205267
+Node: Copyright206671
+Node: Acknowledgments207258
+Node: Developer Guide208284
+Node: Documentation Maintenance209448
+Node: Speech Server Protocols214246
+Ref: Testing A Direct Legacy Server220153
+Ref: Commands That Queue Output220712
+Ref: Commands That Set State223746
+Node: Integration Maintenance226340
+Node: Concept Index253327
 
 End Tag Table
 

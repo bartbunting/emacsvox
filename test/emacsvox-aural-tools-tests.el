@@ -115,7 +115,10 @@
          (emacsvox-aural-speech-balance-function nil)
          (emacsvox-aural-queued-cue-balance-function nil))
      (emacsvox-aural--register-default-scheme)
-     ,@body))
+     ;; State tests must not launch a server for result announcements.
+     ;; Individual speech assertions install their own inner capture stub.
+     (cl-letf (((symbol-function 'tts-speak) #'ignore))
+       ,@body)))
 
 (defmacro emacsvox-test--with-home-context (&rest body)
   "Run BODY with an isolated source and Home, cleaning up created interfaces."
@@ -127,7 +130,8 @@
          (unwind-protect
              (cl-letf (((symbol-function 'tts-speak) #'ignore)
                        ((symbol-function 'emacsvox-icon) #'ignore)
-                       ((symbol-function 'emacsvox-speak-help) #'ignore))
+                       ((symbol-function 'emacsvox-speak-help) #'ignore)
+                       ((symbol-function 'emacsvox-speak-mode-line) #'ignore))
                (with-current-buffer source
                  (insert "first\nsecond\n")
                  (goto-char (point-min)))
@@ -3170,7 +3174,10 @@
           (point-min) (point-max)
           emacsvox-aural-editor-rule-index-property 1))
         (emacsvox-aural-editor-move-rule-up)
-        (emacsvox-aural-editor-save)
+        (let (spoken)
+          (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
+            (emacsvox-aural-editor-save))
+          (should (string-prefix-p "Applied temporarily:" spoken)))
         (should
          (equal
           (mapcar
@@ -3214,7 +3221,10 @@
                 (car emacsvox-aural-editor-rules)
                 :enabled)
                nil)
-              (emacsvox-aural-editor-save))
+              (let (spoken)
+                (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
+                  (emacsvox-aural-editor-save))
+                (should (string-match-p "Saved\\|Applied temporarily" spoken))))
             (let* ((entry
                     (emacsvox-aural-feature-fragment-entry
                      'personal-fragment))
@@ -3246,7 +3256,10 @@
              emacsvox-aural-editor-scope 'buffer
              emacsvox-aural-editor-target source
              emacsvox-aural-editor-rules (list rule))
-            (emacsvox-aural-editor-save)
+            (let (spoken)
+                (cl-letf (((symbol-function 'tts-speak) (lambda (text) (setq spoken text))))
+                  (emacsvox-aural-editor-save))
+                (should (string-match-p "Saved\\|Applied temporarily" spoken)))
             (should-not emacsvox-aural-buffer-rules)
             (with-current-buffer source
               (should
@@ -3254,6 +3267,74 @@
                 (plist-get (car emacsvox-aural-buffer-rules) :id)
                 'local))))
         (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-home-training-details-do-not-toggle ()
+  "RET reviews training; only the explicit toggle applies a session change."
+  (emacsvox-test--with-home-context
+    (emacsvox-aural-home--goto 'training)
+    (emacsvox-aural-home-activate)
+    (should-not emacsvox-aural-training-mode)
+    (emacsvox-aural-home-toggle-training)
+    (should emacsvox-aural-training-mode)))
+
+(ert-deftest emacsvox-aural-option-actions-reject-collection-edits ()
+  "Collection rows do not offer leaf changes or ordering commands."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (emacsvox-aural-feature-fragments-mode)
+      (setq tabulated-list-entries
+            (list (list '(collection . navigation)
+                        ["Navigation" "Collapsed" "Collection" "0" "Valid" "Examples"])))
+      (tabulated-list-print)
+      (goto-char (point-min))
+      (let ((commands (mapcar #'cdr (emacsvox-aural-ui-action-candidates))))
+          (should (emacsvox-aural-feature-fragments--action-applicable-p
+                   'emacsvox-aural-feature-fragments-toggle-collection))
+          (dolist (command '(emacsvox-aural-feature-fragments-edit emacsvox-aural-delete-feature-fragment
+                             emacsvox-aural-feature-fragments-preview emacsvox-aural-feature-fragments-toggle
+                             emacsvox-aural-feature-fragments-move-up emacsvox-aural-feature-fragments-move-down))
+            (should-not (memq command commands)))))))
+
+(ert-deftest emacsvox-aural-ui-offline-manual-retains-source-and-return ()
+  "The actual Info task node opens offline and q restores the same source and row."
+  (emacsvox-test--with-home-context
+    (let ((home (current-buffer)) (position (point)))
+      (emacsvox-aural-ui-open-manual)
+      (should (derived-mode-p 'Info-mode))
+      (should (equal Info-current-node "Aural Home"))
+      (should (eq emacsvox-aural-ui-source-buffer source))
+      (should (eq (key-binding (kbd "q")) #'emacsvox-aural-ui-help-quit))
+      (emacsvox-aural-ui-open-manual)
+      (emacsvox-aural-ui-help-quit)
+      (should (eq (current-buffer) home))
+      (should (= (point) position)))))
+
+(ert-deftest emacsvox-aural-ui-help-links-to-the-originating-task ()
+  "Help includes an offline link, and nested visits keep the interface's node."
+  (emacsvox-test--with-home-context
+    (emacsvox-aural-home-help)
+    (pop-to-buffer (help-buffer))
+    (goto-char (point-min))
+    (search-forward "Read the offline task manual")
+    (should (button-at (1- (point))))
+    (should (equal (emacsvox-aural-ui--manual-node) "Aural Home"))
+    (emacsvox-aural-ui-open-manual)
+    (should (equal Info-current-node "Aural Home"))
+    (emacsvox-aural-ui-help-quit)
+    (should (equal (buffer-name) (help-buffer)))))
+
+(ert-deftest emacsvox-aural-ui-manual-covers-all-task-interfaces ()
+  "Task mappings resolve to real maintained offline nodes, including derived tuners."
+  (require 'info)
+  (require 'emacsvox-aural-voice-experiment)
+  (dolist (entry emacsvox-aural-ui-manual-nodes)
+    (with-temp-buffer
+      (insert-file-contents (expand-file-name "emacsvox.info" emacsvox-info-directory))
+      (should (search-forward (format "Node: %s," (cdr entry)) nil t))))
+  (with-temp-buffer
+    (emacsvox-aural-voice-experiment-mode)
+    (should (equal (emacsvox-aural-ui--manual-node) "Voices And Routing"))
+    (should (eq (key-binding (kbd "C-c C-i")) #'emacsvox-aural-ui-open-manual))))
 
 (provide 'emacsvox-aural-tools-tests)
 ;;; emacsvox-aural-tools-tests.el ends here

@@ -12,6 +12,89 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: emacsvox-reference.info,  Node: emacsvox-xref,  Next: emacsvox-xslt,  Prev: emacsvox-xkcd,  Up: Emacsvox Commands And Options
+
+2.253 emacsvox-xref
+===================
+
+XREF == Cross-references in source code.  This is part of Emacs 25.
+This module speech-enables xref
+
+   Required modules:
+
+
+File: emacsvox-reference.info,  Node: emacsvox-xslt,  Next: emacsvox-yaml,  Prev: emacsvox-xref,  Up: Emacsvox Commands And Options
+
+2.254 emacsvox-xslt
+===================
+
+libxml and libxsl are XML libraries for GNOME. xsltproc is a xslt
+processor using libxsl this module defines routines for applying xsl
+transformations using xsltproc
+
+2.254.1 Emacsvox-Xslt Commands
+------------------------------
+
+2.254.1.1 emacsvox-xslt-view
+............................
+
+ -- Command: emacsvox-xslt-view (style url)
+
+     Browse URL with specified XSL style.
+
+     (fn STYLE URL)
+
+2.254.1.2 emacsvox-xslt-view-atom-file
+......................................
+
+ -- Command: emacsvox-xslt-view-atom-file (file)
+     ‘C-e v a’
+
+     View Atom file.
+
+     (fn FILE)
+
+2.254.1.3 emacsvox-xslt-view-file
+.................................
+
+ -- Command: emacsvox-xslt-view-file (style file)
+     ‘C-e v x’
+
+     Transform ‘file’ using ‘style’ and preview via browse-url.
+
+     (fn STYLE FILE)
+
+2.254.1.4 emacsvox-xslt-view-region
+...................................
+
+ -- Command: emacsvox-xslt-view-region (style start end &optional
+          unescape-charent)
+
+     Browse XML region with specified XSL style.
+
+     (fn STYLE START END &optional UNESCAPE-CHARENT)
+
+2.254.1.5 emacsvox-xslt-view-rss-file
+.....................................
+
+ -- Command: emacsvox-xslt-view-rss-file (file)
+     ‘C-e v r’
+
+     View RSS file.
+
+     (fn FILE)
+
+2.254.1.6 emacsvox-xslt-view-xml
+................................
+
+ -- Command: emacsvox-xslt-view-xml (style url &optional
+          unescape-charent)
+
+     Browse XML URL with specified XSL style.
+
+     (fn STYLE URL &optional UNESCAPE-CHARENT)
+
+
 File: emacsvox-reference.info,  Node: emacsvox-yaml,  Next: emacsvox-yasnippet,  Prev: emacsvox-xslt,  Up: Emacsvox Commands And Options
 
 2.255 emacsvox-yaml
@@ -3297,69 +3380,73 @@ Function Index
 * emacsvox-aural-home-mode <1>:          emacsvox-aural-home.
                                                              (line   75)
 * emacsvox-aural-home-next:              emacsvox-aural-home.
-                                                             (line  106)
-* emacsvox-aural-home-next <1>:          emacsvox-aural-home.
                                                              (line  107)
+* emacsvox-aural-home-next <1>:          emacsvox-aural-home.
+                                                             (line  108)
 * emacsvox-aural-home-next-column:       emacsvox-aural-home.
-                                                             (line  113)
-* emacsvox-aural-home-next-column <1>:   emacsvox-aural-home.
                                                              (line  114)
+* emacsvox-aural-home-next-column <1>:   emacsvox-aural-home.
+                                                             (line  115)
 * emacsvox-aural-home-overrides:         emacsvox-aural-home.
-                                                             (line  120)
-* emacsvox-aural-home-overrides <1>:     emacsvox-aural-home.
                                                              (line  121)
+* emacsvox-aural-home-overrides <1>:     emacsvox-aural-home.
+                                                             (line  122)
 * emacsvox-aural-home-previous:          emacsvox-aural-home.
-                                                             (line  127)
-* emacsvox-aural-home-previous <1>:      emacsvox-aural-home.
                                                              (line  128)
+* emacsvox-aural-home-previous <1>:      emacsvox-aural-home.
+                                                             (line  129)
 * emacsvox-aural-home-previous-column:   emacsvox-aural-home.
-                                                             (line  134)
-* emacsvox-aural-home-previous-column <1>: emacsvox-aural-home.
                                                              (line  135)
+* emacsvox-aural-home-previous-column <1>: emacsvox-aural-home.
+                                                             (line  136)
 * emacsvox-aural-home-profiles:          emacsvox-aural-home.
-                                                             (line  141)
-* emacsvox-aural-home-profiles <1>:      emacsvox-aural-home.
                                                              (line  142)
+* emacsvox-aural-home-profiles <1>:      emacsvox-aural-home.
+                                                             (line  143)
 * emacsvox-aural-home-recent-feedback:   emacsvox-aural-home.
-                                                             (line  148)
-* emacsvox-aural-home-recent-feedback <1>: emacsvox-aural-home.
                                                              (line  149)
+* emacsvox-aural-home-recent-feedback <1>: emacsvox-aural-home.
+                                                             (line  150)
 * emacsvox-aural-home-refresh:           emacsvox-aural-home.
-                                                             (line  155)
-* emacsvox-aural-home-refresh <1>:       emacsvox-aural-home.
                                                              (line  156)
+* emacsvox-aural-home-refresh <1>:       emacsvox-aural-home.
+                                                             (line  157)
 * emacsvox-aural-home-remap-earcon:      emacsvox-aural-home.
-                                                             (line  164)
-* emacsvox-aural-home-remap-earcon <1>:  emacsvox-aural-home.
                                                              (line  165)
+* emacsvox-aural-home-remap-earcon <1>:  emacsvox-aural-home.
+                                                             (line  166)
 * emacsvox-aural-home-remap-voice:       emacsvox-aural-home.
-                                                             (line  171)
-* emacsvox-aural-home-remap-voice <1>:   emacsvox-aural-home.
                                                              (line  172)
+* emacsvox-aural-home-remap-voice <1>:   emacsvox-aural-home.
+                                                             (line  173)
 * emacsvox-aural-home-search:            emacsvox-aural-home.
-                                                             (line  178)
-* emacsvox-aural-home-search <1>:        emacsvox-aural-home.
                                                              (line  179)
+* emacsvox-aural-home-search <1>:        emacsvox-aural-home.
+                                                             (line  180)
 * emacsvox-aural-home-speak-current:     emacsvox-aural-home.
-                                                             (line  185)
+                                                             (line  186)
 * emacsvox-aural-home-speak-current <1>: emacsvox-aural-home.
-                                                             (line  187)
+                                                             (line  188)
 * emacsvox-aural-home-speak-current-cell: emacsvox-aural-home.
-                                                             (line  195)
-* emacsvox-aural-home-speak-current-cell <1>: emacsvox-aural-home.
                                                              (line  196)
+* emacsvox-aural-home-speak-current-cell <1>: emacsvox-aural-home.
+                                                             (line  197)
 * emacsvox-aural-home-toggle-group:      emacsvox-aural-home.
-                                                             (line  202)
-* emacsvox-aural-home-toggle-group <1>:  emacsvox-aural-home.
                                                              (line  203)
-* emacsvox-aural-home-voice-palettes:    emacsvox-aural-home.
-                                                             (line  209)
-* emacsvox-aural-home-voice-palettes <1>: emacsvox-aural-home.
+* emacsvox-aural-home-toggle-group <1>:  emacsvox-aural-home.
+                                                             (line  204)
+* emacsvox-aural-home-toggle-training:   emacsvox-aural-home.
                                                              (line  210)
-* emacsvox-aural-home-voice-workbench:   emacsvox-aural-home.
-                                                             (line  216)
-* emacsvox-aural-home-voice-workbench <1>: emacsvox-aural-home.
+* emacsvox-aural-home-toggle-training <1>: emacsvox-aural-home.
+                                                             (line  211)
+* emacsvox-aural-home-voice-palettes:    emacsvox-aural-home.
                                                              (line  217)
+* emacsvox-aural-home-voice-palettes <1>: emacsvox-aural-home.
+                                                             (line  218)
+* emacsvox-aural-home-voice-workbench:   emacsvox-aural-home.
+                                                             (line  224)
+* emacsvox-aural-home-voice-workbench <1>: emacsvox-aural-home.
+                                                             (line  225)
 * emacsvox-aural-inspection-return-to-source: emacsvox-aural-inspection.
                                                              (line   17)
 * emacsvox-aural-inspection-return-to-source <1>: emacsvox-aural-inspection.
@@ -3534,8 +3621,8 @@ Function Index
                                                              (line  154)
 * emacsvox-aural-profiles-update-from-current <1>: emacsvox-aural-profiles.
                                                              (line  155)
-* emacsvox-aural-quit:                   emacsvox-aural-ui.  (line   43)
-* emacsvox-aural-quit <1>:               emacsvox-aural-ui.  (line   44)
+* emacsvox-aural-quit:                   emacsvox-aural-ui.  (line   44)
+* emacsvox-aural-quit <1>:               emacsvox-aural-ui.  (line   45)
 * emacsvox-aural-recent-feedback-audition-cues: emacsvox-aural-recent-feedback.
                                                              (line   29)
 * emacsvox-aural-recent-feedback-audition-cues <1>: emacsvox-aural-recent-feedback.
@@ -3748,8 +3835,8 @@ Function Index
                                                              (line  248)
 * emacsvox-aural-sound-packs-speak-current-cell <1>: emacsvox-aural-sound-packs.
                                                              (line  249)
-* emacsvox-aural-tabulated-mode:         emacsvox-aural-ui.  (line   54)
-* emacsvox-aural-tabulated-mode <1>:     emacsvox-aural-ui.  (line   55)
+* emacsvox-aural-tabulated-mode:         emacsvox-aural-ui.  (line   55)
+* emacsvox-aural-tabulated-mode <1>:     emacsvox-aural-ui.  (line   56)
 * emacsvox-aural-toggle-compatibility-voice: emacsvox-aural-compatibility-voice.
                                                              (line   16)
 * emacsvox-aural-toggle-compatibility-voice <1>: emacsvox-aural-compatibility-voice.
@@ -3769,32 +3856,34 @@ Function Index
                                                              (line   40)
 * emacsvox-aural-training-mode <1>:      emacsvox-aural-explanation.
                                                              (line   41)
-* emacsvox-aural-ui-actions:             emacsvox-aural-ui.  (line  102)
-* emacsvox-aural-ui-actions <1>:         emacsvox-aural-ui.  (line  103)
-* emacsvox-aural-ui-help-actions:        emacsvox-aural-ui.  (line  109)
-* emacsvox-aural-ui-help-actions <1>:    emacsvox-aural-ui.  (line  110)
-* emacsvox-aural-ui-help-quit:           emacsvox-aural-ui.  (line  116)
-* emacsvox-aural-ui-help-quit <1>:       emacsvox-aural-ui.  (line  117)
-* emacsvox-aural-ui-help-return-mode:    emacsvox-aural-ui.  (line  123)
-* emacsvox-aural-ui-help-return-mode <1>: emacsvox-aural-ui. (line  124)
-* emacsvox-aural-ui-next-column:         emacsvox-aural-ui.  (line  147)
-* emacsvox-aural-ui-next-column <1>:     emacsvox-aural-ui.  (line  148)
-* emacsvox-aural-ui-next-row:            emacsvox-aural-ui.  (line  154)
-* emacsvox-aural-ui-next-row <1>:        emacsvox-aural-ui.  (line  155)
-* emacsvox-aural-ui-previous-column:     emacsvox-aural-ui.  (line  161)
-* emacsvox-aural-ui-previous-column <1>: emacsvox-aural-ui.  (line  162)
-* emacsvox-aural-ui-previous-row:        emacsvox-aural-ui.  (line  168)
-* emacsvox-aural-ui-previous-row <1>:    emacsvox-aural-ui.  (line  169)
-* emacsvox-aural-ui-refresh:             emacsvox-aural-ui.  (line  175)
-* emacsvox-aural-ui-refresh <1>:         emacsvox-aural-ui.  (line  176)
-* emacsvox-aural-ui-speak-current-cell:  emacsvox-aural-ui.  (line  182)
+* emacsvox-aural-ui-actions:             emacsvox-aural-ui.  (line  104)
+* emacsvox-aural-ui-actions <1>:         emacsvox-aural-ui.  (line  105)
+* emacsvox-aural-ui-help-actions:        emacsvox-aural-ui.  (line  111)
+* emacsvox-aural-ui-help-actions <1>:    emacsvox-aural-ui.  (line  112)
+* emacsvox-aural-ui-help-quit:           emacsvox-aural-ui.  (line  118)
+* emacsvox-aural-ui-help-quit <1>:       emacsvox-aural-ui.  (line  119)
+* emacsvox-aural-ui-help-return-mode:    emacsvox-aural-ui.  (line  125)
+* emacsvox-aural-ui-help-return-mode <1>: emacsvox-aural-ui. (line  126)
+* emacsvox-aural-ui-next-column:         emacsvox-aural-ui.  (line  149)
+* emacsvox-aural-ui-next-column <1>:     emacsvox-aural-ui.  (line  150)
+* emacsvox-aural-ui-next-row:            emacsvox-aural-ui.  (line  156)
+* emacsvox-aural-ui-next-row <1>:        emacsvox-aural-ui.  (line  157)
+* emacsvox-aural-ui-open-manual:         emacsvox-aural-ui.  (line  163)
+* emacsvox-aural-ui-open-manual <1>:     emacsvox-aural-ui.  (line  164)
+* emacsvox-aural-ui-previous-column:     emacsvox-aural-ui.  (line  170)
+* emacsvox-aural-ui-previous-column <1>: emacsvox-aural-ui.  (line  171)
+* emacsvox-aural-ui-previous-row:        emacsvox-aural-ui.  (line  177)
+* emacsvox-aural-ui-previous-row <1>:    emacsvox-aural-ui.  (line  178)
+* emacsvox-aural-ui-refresh:             emacsvox-aural-ui.  (line  184)
+* emacsvox-aural-ui-refresh <1>:         emacsvox-aural-ui.  (line  185)
+* emacsvox-aural-ui-speak-current-cell:  emacsvox-aural-ui.  (line  191)
 * emacsvox-aural-ui-speak-current-cell <1>: emacsvox-aural-ui.
-                                                             (line  184)
-* emacsvox-aural-ui-speak-current-row:   emacsvox-aural-ui.  (line  195)
+                                                             (line  193)
+* emacsvox-aural-ui-speak-current-row:   emacsvox-aural-ui.  (line  204)
 * emacsvox-aural-ui-speak-current-row <1>: emacsvox-aural-ui.
-                                                             (line  196)
-* emacsvox-aural-ui-stop-preview:        emacsvox-aural-ui.  (line  202)
-* emacsvox-aural-ui-stop-preview <1>:    emacsvox-aural-ui.  (line  203)
+                                                             (line  205)
+* emacsvox-aural-ui-stop-preview:        emacsvox-aural-ui.  (line  211)
+* emacsvox-aural-ui-stop-preview <1>:    emacsvox-aural-ui.  (line  212)
 * emacsvox-aural-voice-experiment-compare: emacsvox-aural-voice-experiment.
                                                              (line   17)
 * emacsvox-aural-voice-experiment-compare <1>: emacsvox-aural-voice-experiment.
@@ -4628,13 +4717,13 @@ Function Index
 * emacsvox-ediff-speak-current-difference <1>: emacsvox-ediff.
                                                              (line   26)
 * emacsvox-edit-aural-feature-fragment:  emacsvox-aural-editor.
-                                                             (line  207)
-* emacsvox-edit-aural-feature-fragment <1>: emacsvox-aural-editor.
                                                              (line  208)
+* emacsvox-edit-aural-feature-fragment <1>: emacsvox-aural-editor.
+                                                             (line  209)
 * emacsvox-edit-aural-rules:             emacsvox-aural-editor.
-                                                             (line  216)
+                                                             (line  217)
 * emacsvox-edit-aural-rules <1>:         emacsvox-aural-editor.
-                                                             (line  218)
+                                                             (line  219)
 * emacsvox-ein-speak-current-cell:       emacsvox-ein.       (line   15)
 * emacsvox-ein-speak-current-cell <1>:   emacsvox-ein.       (line   16)
 * emacsvox-elfeed-eww-entry-at-point:    emacsvox-elfeed.    (line   17)

@@ -39,6 +39,8 @@
 (require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-description)
 
+(declare-function emacsvox-aural-change-feedback
+                  "emacsvox-aural-change-feedback" (&optional record))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
@@ -448,7 +450,7 @@ the value across sessions."
      (concat
       "Recent Aural Feedback\n\n"
       "Each row is one bounded frozen presentation that was actually queued.\n"
-      "Large payloads retain a preview, totals, and SHA-256 digest.\n"
+      "Choose a row to replay, explain, or prepare a change to what you heard.\n"
       "Replay and explanation retain the frozen output.\n"
       "C opens a separate proposed change; its preview uses current rules.\n\n"
       "n or down next       p or up previous\n"

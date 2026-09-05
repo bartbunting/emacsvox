@@ -406,3 +406,49 @@ RuLex.
 Do not bypass the Omnivox release target manually or clean either repository
 to make its release guard pass.  Use ~make windows-omnivox~ only for the
 reproducible clean-release path documented in the user-facing WSL2 route.
+
+** Aural experiments and guided changes
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Physical experiments reuse the tuner with an exact engine/voice selector,
+an immutable opening snapshot, a mutable working style, and undo history.
+They do not modify the palette registry, active palette, or route profile
+until the user explicitly keeps a reviewed result.  Navigation and Help use
+the working style.  A failed exact preview must be reported before ordinary
+speech can provide navigation fallback; a fallback sample must never be
+reported as the requested physical voice.
+
+Keep proposals snapshot the destination palette and routing profile as well
+as the proposed result.  Check those snapshots before writing, and retain
+separate completion flags for palette write, route write, and route apply.
+A retry must not repeat a successful write.  If routing saves but application
+fails, keep that distinction visible and retry the application step.  Never
+report the combined operation complete while one selected destination failed.
+Portable style storage and machine-local routing storage remain separate.
+
+Labelled comparisons use one controlled preview sequence, with identical
+sample text and separately configurable labels.  Each sequence belongs to
+its speech lane.  Stopping that lane cancels remaining entries and invalidates
+late callbacks; stopping foreground speech must not cancel notifications.
+Requested parameters and advertised capabilities are distinct from playback
+reports.  Do not fabricate exact effective numeric values when the adapter
+reports only support, acceptance, or degradation.
+
+Guided feedback changes use existing declarative rules and registered facts.
+The draft selects a component, matching criteria, and lifetime separately;
+preview dynamically overlays the intended layer without mutating live rules.
+Explicit buffer-rule snapshots in captured context must also be overlaid.
+Generated IDs remain stable for the matched component; new rules follow
+existing explicit order within the layer.  Apply checks a Current-item source
+guard and refuses to overwrite another unfinished editor for the same scope.
+Historical selection chooses a frozen part when a transaction contains
+several runs.  Original replay uses that part; proposed preview deliberately
+resolves it with current rules and the captured buffer context.
+
+Shared Help and offline task nodes preserve the original source and exact
+return position.  New interfaces should use the shared parent modes and add
+a task-node mapping to ~emacsvox-aural-ui-manual-nodes~.  Row action predicates
+should hide operations that cannot apply to that row; this includes editing
+built-in options and reordering items outside the active-order view.

@@ -86,3 +86,14 @@ component.  ~P~ previews before choosing persistence, ~O~ replays the original,
 before ~a~ or ~C-c C-c~ applies or saves.  ~e~ opens the Advanced rule editor;
 ~q~ retains the unfinished draft.  Matching breadth and lifetime are described
 separately, and failures preserve recoverable work.
+
+** Task recipes and offline help
+
+Aural interfaces offer ~C-c C-i~ for their offline task manual, with ~q~
+returning to the exact origin; Help also offers ~i~ and a manual link.  Worked
+recipes cover physical voices, pitch comparisons, Keep result, heading
+voices, cues, blank-line tones, engine preference, and draft recovery.
+Home Help starts with tasks.  Training mode ~RET~ shows details and ~t~
+explicitly toggles explanations for the session.  Tuner value prompts now
+state when blank retains the current value, and option Actions hide operations
+that cannot apply to the selected row.

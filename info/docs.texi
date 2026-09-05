@@ -65,7 +65,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1523 commands and 206 options.
+This chapter documents a total of 1525 commands and 206 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -2319,6 +2319,7 @@ M-<up>		emacsvox-aural-editor-move-rule-up
 C-c C-c		emacsvox-aural-editor-save
 
 C-c C-a		emacsvox-aural-ui-actions
+C-c TAB		emacsvox-aural-ui-open-manual
 
 @end format
 @end deffn
@@ -3047,6 +3048,7 @@ V		emacsvox-aural-home-voice-palettes
 W		emacsvox-aural-home-voice-workbench
 c		emacsvox-aural-home-change-feedback
 r		emacsvox-aural-home-remap-voice
+t		emacsvox-aural-home-toggle-training
 x		emacsvox-aural-home-explain
 
 C-c C-o		emacsvox-aural-inspection-return-to-source
@@ -3181,6 +3183,15 @@ Speak the current aural home column title and value.
 
 @format
 Expand or collapse the task group at point, retaining its position.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-toggle-training
+@deffn {Command} emacsvox-aural-home-toggle-training
+@findex emacsvox-aural-home-toggle-training
+
+@format
+Toggle training explanations for this Emacs session.
 @end format
 @end deffn
 
@@ -4750,6 +4761,7 @@ DEL		scroll-down-command
 S-SPC		scroll-down-command
 
 C-c C-a		emacsvox-aural-ui-actions
+C-c TAB		emacsvox-aural-ui-open-manual
 
 @end format
 @end deffn
@@ -4812,6 +4824,7 @@ M-<right>	tabulated-list-next-column
 <up>		emacsvox-aural-ui-previous-row
 
 C-c C-a		emacsvox-aural-ui-actions
+C-c TAB		emacsvox-aural-ui-open-manual
 
 C-M-i		backward-button
 
@@ -4886,6 +4899,15 @@ Move right and speak the next column.
 
 @format
 Move to and speak the next row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-open-manual
+@deffn {Command} emacsvox-aural-ui-open-manual
+@findex emacsvox-aural-ui-open-manual
+
+@format
+Read this interface’s offline task manual; q returns to the interface.
 @end format
 @end deffn
 
@@ -15278,6 +15300,7 @@ Default Value:
 @end verbatim
 
 @end defvar
+
 @node emacsvox-nov
 @section emacsvox-nov
 
