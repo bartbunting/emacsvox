@@ -442,9 +442,100 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
          (entries (emacsvox-omnivox-components--entries records)))
     (should (= (length records) 2))
     (should (equal (plist-get (car records) :id) "flite"))
-    (should (equal (aref (cadar entries) 1) "available"))
+    (should (equal (aref (cadar entries) 1) "not installed"))
     (should (equal (aref (cadar entries) 2) "2.9 MiB"))
     (should (equal (aref (cadadr entries) 1) "runtime required"))))
+
+(ert-deftest emacsvox-omnivox-components-show-operation-until-completion ()
+  "Rows and speech reflect active operations, refresh, success, and failure."
+  (dolist (case '((installation "installing" "available" "installed")
+                  (uninstallation "uninstalling" "installed" "available")
+                  (test "testing" "installed" "installed")))
+    (dolist (exit-code '(0 1))
+      (let ((output (generate-new-buffer " *component status output*")))
+        (unwind-protect
+            (with-temp-buffer
+              (emacsvox-omnivox-components-mode)
+              (let* ((record (list :id "flite" :name "Flite"
+                                   :state (nth 2 case) :size 1024 :detail "fixture"))
+                     (records (list record
+                                    '(:id "piper" :name "Piper" :state "available"
+                                      :size 2048 :detail "fixture")))
+                     (emacsvox-omnivox-components--output-buffer (buffer-name output))
+                     refresh-fails spoken)
+                (cl-letf (((symbol-function 'emacsvox-omnivox-components--check-installer)
+                           (lambda () "/bin/sh"))
+                          ((symbol-function 'emacsvox-omnivox-components--load-records)
+                           (lambda ()
+                             (if refresh-fails (error "fixture refresh failed") records)))
+                          ((symbol-function 'emacsvox-omnivox-components--running-omnivox-p)
+                           #'ignore)
+                          ((symbol-function 'emacsvox-omnivox-components--show-output) #'ignore)
+                          ((symbol-function 'emacsvox-omnivox-components--speak)
+                           (lambda (text) (setq spoken text))))
+                  (emacsvox-omnivox-components-refresh "flite")
+                  (emacsvox-aural-ui-goto-tabulated-column 1)
+                  (let ((process (emacsvox-omnivox-components--start
+                                  record (car case)
+                                  '("-c" "read -r result; exit \"$result\""))))
+                    (unwind-protect
+                        (progn
+                          (should (equal (aref (tabulated-list-get-entry) 1) (cadr case)))
+                          (should (string-search (cadr case)
+                                                 (emacsvox-omnivox-components-speak-current)))
+                          (emacsvox-omnivox-components-refresh)
+                          (should (equal (aref (tabulated-list-get-entry) 1) (cadr case)))
+                          (should (= (emacsvox-aural-ui-tabulated-column-index) 1))
+                          (should (equal (aref (cadr (assoc "piper" tabulated-list-entries)) 1)
+                                         "not installed"))
+                          (should-error (emacsvox-omnivox-components--start record 'test nil)
+                                        :type 'user-error)
+                          (when (zerop exit-code)
+                            (setf (plist-get record :state) (nth 3 case)))
+                          ;; A failed refresh must also clear the busy label.
+                          (setq refresh-fails (and (= exit-code 1) (eq (car case) 'test)))
+                          (process-send-string process (format "%d\n" exit-code))
+                          (let ((deadline (+ (float-time) 5)))
+                            (while (and emacsvox-omnivox-components--process
+                                        (< (float-time) deadline))
+                              (accept-process-output process 0.05)))
+                          (should-not emacsvox-omnivox-components--process)
+                          (should (equal (aref (tabulated-list-get-entry) 1)
+                                         (if (equal (plist-get record :state) "available")
+                                             "not installed" "installed")))
+                          (when (= exit-code 1)
+                            (should (string-search "failed" spoken)))
+                          (when refresh-fails
+                            (should (string-search "refresh failed" spoken))))
+                      (when (process-live-p process)
+                        (set-process-sentinel process #'ignore)
+                        (delete-process process)))))))
+          (kill-buffer output))))))
+
+(ert-deftest emacsvox-omnivox-components-reopening-retains-active-operation ()
+  "Reopening the manager retains its installer, displayed state, and selection."
+  (let ((buffer (get-buffer-create "*Omnivox Engine Modules*"))
+        (process (make-pipe-process :name "component install fixture" :noquery t)))
+    (unwind-protect
+        (cl-letf (((symbol-function 'emacsvox-omnivox-components--load-records)
+                   (lambda () '((:id "flite" :name "Flite" :state "available"
+                                 :size 1024 :detail "fixture"))))
+                  ((symbol-function 'emacsvox-aural-ui-pop-to-buffer) #'identity))
+          (with-current-buffer buffer
+            (emacsvox-omnivox-components-mode)
+            (setq emacsvox-omnivox-components--process process)
+            (process-put process 'emacsvox-component-id "flite")
+            (process-put process 'emacsvox-operation 'installation)
+            (emacsvox-omnivox-components-refresh "flite")
+            (emacsvox-aural-ui-goto-tabulated-column 1)
+            (emacsvox-omnivox-manage-components)
+            (should (eq emacsvox-omnivox-components--process process))
+            (should (equal (aref (tabulated-list-get-entry) 1) "installing"))
+            (should (= (emacsvox-aural-ui-tabulated-column-index) 1))
+            (should-error (emacsvox-omnivox-components--start nil 'test nil)
+                          :type 'user-error)))
+      (delete-process process)
+      (kill-buffer buffer))))
 
 (ert-deftest emacsvox-omnivox-components-test-result-announces-voices ()
   "A successful voice check reports the count and points to its list."
@@ -514,9 +605,12 @@ Use MANIFEST-SHA256 when supplied instead of ARCHIVE's real digest."
         restarted)
     (unwind-protect
         (with-temp-buffer
+          (emacsvox-omnivox-components-mode)
           (cl-letf (((symbol-function
                       'emacsvox-omnivox-components--check-installer)
                      (lambda () "/bin/false"))
+                    ((symbol-function 'emacsvox-omnivox-components--load-records)
+                     (lambda () nil))
                     ((symbol-function
                       'emacsvox-omnivox-components--running-omnivox-p)
                      (lambda () t))

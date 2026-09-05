@@ -128,6 +128,22 @@
    ((>= bytes 1048576) (format "%.1f MiB" (/ bytes 1048576.0)))
    (t (format "%.0f KiB" (/ bytes 1024.0)))))
 
+(defun emacsvox-omnivox-components--state (record)
+  "Return the displayed state of RECORD, including a pending operation."
+  (or
+   (when (and (processp emacsvox-omnivox-components--process)
+              (equal (plist-get record :id)
+                     (process-get emacsvox-omnivox-components--process
+                                  'emacsvox-component-id)))
+     (pcase (process-get emacsvox-omnivox-components--process
+                         'emacsvox-operation)
+       ('installation "installing")
+       ('uninstallation "uninstalling")
+       ('test "testing")))
+   (if (equal (plist-get record :state) "available")
+       "not installed"
+     (replace-regexp-in-string "-" " " (plist-get record :state)))))
+
 (defun emacsvox-omnivox-components--entries (records)
   "Return tabulated entries for component RECORDS."
   (mapcar
@@ -136,7 +152,7 @@
       (plist-get record :id)
       (vector
        (plist-get record :name)
-       (replace-regexp-in-string "-" " " (plist-get record :state))
+       (emacsvox-omnivox-components--state record)
        (emacsvox-omnivox-components--human-size
         (plist-get record :size))
        (plist-get record :detail))))
@@ -150,17 +166,21 @@
                                         (plist-get record :id)))
         (user-error "Move to an Omnivox component row first"))))
 
-(defun emacsvox-omnivox-components-refresh (&optional id)
-  "Refresh Omnivox module status, preserving row ID and current column."
-  (interactive)
+(defun emacsvox-omnivox-components--render (&optional id)
+  "Redraw current module records, preserving row ID and current column."
   (emacsvox-aural-ui-refresh-tabulated
    (lambda ()
-     (setq emacsvox-omnivox-components--records
-           (emacsvox-omnivox-components--load-records)
-           tabulated-list-entries
+     (setq tabulated-list-entries
            (emacsvox-omnivox-components--entries
             emacsvox-omnivox-components--records)))
    id "windows"))
+
+(defun emacsvox-omnivox-components-refresh (&optional id)
+  "Refresh Omnivox module status, preserving row ID and current column."
+  (interactive)
+  (setq emacsvox-omnivox-components--records
+        (emacsvox-omnivox-components--load-records))
+  (emacsvox-omnivox-components--render id))
 
 (defun emacsvox-omnivox-components-speak-current ()
   "Speak the complete Omnivox component row at point."
@@ -170,7 +190,7 @@
           (format
            "%s. %s. %s. %s."
            (plist-get record :name)
-           (replace-regexp-in-string "-" " " (plist-get record :state))
+           (emacsvox-omnivox-components--state record)
            (emacsvox-omnivox-components--human-size
             (plist-get record :size))
            (plist-get record :detail))))
@@ -271,11 +291,12 @@ OUTPUT to the generic process sentinel EVENT."
              name operation success output-text event)))
       (when (buffer-live-p manager)
         (with-current-buffer manager
-          (setq emacsvox-omnivox-components--process nil)
-          (when success
+          (when (eq process emacsvox-omnivox-components--process)
+            (setq emacsvox-omnivox-components--process nil)
             (condition-case err
                 (emacsvox-omnivox-components-refresh id)
               (error
+               (emacsvox-omnivox-components--render id)
                (setq message-text
                      (format "%s; refresh failed: %s"
                              message-text (error-message-string err))))))))
@@ -343,6 +364,8 @@ OUTPUT to the generic process sentinel EVENT."
                  'emacsvox-component-name (plist-get record :name))
     (process-put emacsvox-omnivox-components--process
                  'emacsvox-restore-omnivox restore-omnivox)
+    (when (derived-mode-p 'emacsvox-omnivox-components-mode)
+      (emacsvox-omnivox-components--render))
     emacsvox-omnivox-components--process))
 
 (defun emacsvox-omnivox-components-install ()
@@ -413,11 +436,15 @@ OUTPUT to the generic process sentinel EVENT."
       "This manager shows built-in engines, user-supplied runtime bridges,\n"
       "and optional modules pinned to the installed Omnivox release. Downloads\n"
       "are installed per user only after their SHA-256 checksum is verified.\n"
+      "Release state describes that managed release installation. Browse and\n"
+      "try voices reports the active server, which may use another installation.\n"
       "Emacsvox never downloads Eloquence, DECtalk, or RHVoice runtimes, or a\n"
       "Piper voice model.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "RET install available module, otherwise test engine\n"
+      "Not installed means downloadable; installing marks an active download.\n"
+      "Uninstalling and testing mark other operations in progress.\n"
+      "RET install missing module, otherwise test engine\n"
       "i install module     t check engine; open voices or error\n"
       "u uninstall a manager-installed module\n"
       "g refresh            h aural home\n"
@@ -435,7 +462,7 @@ OUTPUT to the generic process sentinel EVENT."
    #'emacsvox-omnivox-components-refresh)
   (setq tabulated-list-format
         [("Engine" 16 t)
-         ("State" 21 t)
+         ("Release state" 21 t)
          ("Download" 11 t)
          ("Details" 0 t)]
         tabulated-list-padding 2)
@@ -461,7 +488,8 @@ OUTPUT to the generic process sentinel EVENT."
   (let ((source (emacsvox-aural-inspection-remember-source-buffer))
         (buffer (get-buffer-create "*Omnivox Engine Modules*")))
     (with-current-buffer buffer
-      (emacsvox-omnivox-components-mode)
+      (unless (derived-mode-p 'emacsvox-omnivox-components-mode)
+        (emacsvox-omnivox-components-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-omnivox-components-refresh))
     (emacsvox-aural-ui-pop-to-buffer buffer)
