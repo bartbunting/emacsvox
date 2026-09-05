@@ -112,6 +112,9 @@
 (defvar-local emacsvox-aural-voice-workbench-columns nil
   "Hash table retaining the selected column for each view.")
 
+(defvar-local emacsvox-aural-voice-workbench--voice-list-parent nil
+  "Engine whose row opened the current physical voice list, or nil.")
+
 (defvar-local emacsvox-aural-voice-workbench-preview-generation 0
   "Generation identifying the current preview and its callbacks.")
 
@@ -2575,6 +2578,8 @@ refreshing the Workbench at LOGICAL-VOICE."
 (defun emacsvox-aural-voice-workbench-refresh (&optional id)
   "Refresh inventory and preserve each view's row and column independently."
   (interactive)
+  (unless (eq emacsvox-aural-voice-workbench-view 'physical)
+    (setq emacsvox-aural-voice-workbench--voice-list-parent nil))
   (when emacsvox-aural-voice-workbench-rendered-view
     (when-let* ((current (tabulated-list-get-id)))
       (puthash emacsvox-aural-voice-workbench-rendered-view current
@@ -2727,10 +2732,26 @@ refreshing the Workbench at LOGICAL-VOICE."
   (interactive)
   (if (eq emacsvox-aural-voice-workbench-view 'engines)
       (let ((engine (or (tabulated-list-get-id) (user-error "Select an engine first"))))
-        (setq emacsvox-aural-voice-workbench-filter
+        (setq emacsvox-aural-voice-workbench--voice-list-parent engine
+              emacsvox-aural-voice-workbench-filter
               (plist-put emacsvox-aural-voice-workbench-filter :engine engine))
         (emacsvox-aural-voice-workbench--switch 'physical))
     (emacsvox-aural-voice-workbench-describe)))
+
+(defun emacsvox-aural-voice-workbench-quit ()
+  "Return from an engine's voice list, or dismiss the workbench.
+
+When an engine row opened this voice list, restore its selected row and
+column.  Otherwise hide the workbench, retaining staged edits and warning
+when they remain unsaved."
+  (interactive)
+  (if (and (eq emacsvox-aural-voice-workbench-view 'physical)
+           emacsvox-aural-voice-workbench--voice-list-parent)
+      (progn
+        (puthash 'engines emacsvox-aural-voice-workbench--voice-list-parent
+                 emacsvox-aural-voice-workbench-selections)
+        (emacsvox-aural-voice-workbench--switch 'engines))
+    (emacsvox-aural-quit)))
 
 (defun emacsvox-aural-voice-workbench-describe ()
   "Display and speak exact Workbench row and configuration details."
@@ -2800,7 +2821,8 @@ refreshing the Workbench at LOGICAL-VOICE."
       "r retry committed apply\n"
       "U restore previous saved revision\n"
       "g redraw quietly      h aural home\n"
-      "q hide; warns if route is unsaved   ? help\n")))
+      "q back to the engine that opened this voice list; otherwise hide\n"
+      "Hiding warns if a route is unsaved. ? help\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
@@ -2829,7 +2851,8 @@ refreshing the Workbench at LOGICAL-VOICE."
            'emacsvox-aural-voice-workbench-export-profile
            'emacsvox-aural-voice-workbench-migrate
            'emacsvox-aural-voice-workbench-apply-preset
-           'emacsvox-aural-ui-refresh 'emacsvox-aural-quit
+           'emacsvox-aural-ui-refresh 'emacsvox-aural-voice-workbench-quit
+           'emacsvox-aural-quit
            'emacsvox-aural 'emacsvox-aural-voice-workbench-help) t)
       ('emacsvox-aural-voice-workbench-cancel-assignment
        emacsvox-aural-voice-workbench-assignment-target)
@@ -2937,7 +2960,7 @@ refreshing the Workbench at LOGICAL-VOICE."
        ("C-c C-k" . emacsvox-aural-voice-workbench-cancel-staged)
        ("r" . emacsvox-aural-voice-workbench-retry-apply)
        ("U" . emacsvox-aural-voice-workbench-undo-applied)
-       ("q" . emacsvox-aural-quit)
+       ("q" . emacsvox-aural-voice-workbench-quit)
        ("h" . emacsvox-aural)
        ("?" . emacsvox-aural-voice-workbench-help)))
   (define-key emacsvox-aural-voice-workbench-mode-map

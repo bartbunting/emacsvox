@@ -10,6 +10,13 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.2][NEWS for Emacsvox 2026.9.2]].
 
+** Back out of an engine's voice list one step at a time
+
+After ~RET~ opens an engine's voices, ~q~ returns to that engine's row and
+column.  Another ~q~ leaves the Workbench.  Returning works for empty or
+refreshed voice lists and preserves unsaved routing changes; leaving the
+Workbench still warns about those changes.
+
 ** Engine availability is distinct from routing policy
 
 Browse and try voices reports engine availability before routing preferences.

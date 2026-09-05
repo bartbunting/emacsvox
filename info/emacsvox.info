@@ -2582,7 +2582,10 @@ are:
    For physical voices, choose _Browse and try voices_ in Home, then
 press <RET> on an engine to browse its voices.  <RET> on a voice shows
 details; ‘P’ plays a named sample.  Filters and each view's selected row
-and column survive navigation through Home.
+and column survive navigation through Home.  Press ‘q’ in an engine's
+voice list to return to that engine's row and column.  Press ‘q’ again
+from the engine list to leave the workbench.  The direct view shortcuts
+remain available.
 
    The engine list reports _Availability_ before routing preferences.
 An engine with a missing runtime stays visible as _unavailable_, with
@@ -2609,8 +2612,9 @@ parameter.
 
    Use ‘a’ to assign a physical voice and ‘t’ to tune the selected
 logical voice on its effective route.  Route changes are staged until
-you press ‘w’ or ‘C-c C-c’ to save and apply them.  Pressing ‘q’ with
-unsaved route changes warns that they remain staged.
+you press ‘w’ or ‘C-c C-c’ to save and apply them.  Returning to the
+engine list preserves staged route changes.  Leaving the workbench with
+‘q’ warns when those changes remain unsaved.
 
    The tuner names neutral effect values instead of speaking an
 ambiguous number: gain five is _unchanged_, low-pass nine is _disabled_,
@@ -5739,47 +5743,47 @@ Node: Explaining Presentation105755
 Node: Adjusting Presentation107783
 Node: Presentation Profiles113669
 Node: Voices And Routing115346
-Ref: Browse Eloquence And Compare Pitch123288
-Ref: Keep A Voice Experiment124535
-Ref: Change A Heading Voice Add A Cue Or Silence One125535
-Ref: Change A Blank-Line Tone126496
-Ref: Choose An Engine And Recover Unfinished Work127253
-Node: Sounds And Space128411
-Node: Presentation Troubleshooting130047
-Node: Voice Lock132085
-Node: Using Online Help135292
-Node: Emacs Packages139354
-Node: Document Authoring140728
-Node: Structured Editing141282
-Node: Browsing Structure142265
-Node: Web Browsing142863
-Node: Messaging143698
-Node: Editing Code144196
-Node: Development Environment144715
-Node: Desktop Management146251
-Node: Personal Information Management146753
-Node: Desktop Applications147285
-Node: Notmuch Mail154673
-Ref: Notmuch fields and privacy164016
-Node: Agent Shell169724
-Node: EAT Terminal Access182019
-Node: Running Terminal Based Applications199278
-Node: Starting Term200233
-Node: Term Input Modes201072
-Node: Term Speech Feedback202232
-Node: Reviewing The Term Screen203426
-Node: Term Help And Recovery205327
-Node: Emacsvox Keyboard Commands206226
-Node: Copyright207630
-Node: Acknowledgments208217
-Node: Developer Guide209243
-Node: Documentation Maintenance210407
-Node: Speech Server Protocols215205
-Ref: Testing A Direct Legacy Server221112
-Ref: Commands That Queue Output221671
-Ref: Commands That Set State224705
-Node: Integration Maintenance227299
-Node: Concept Index254286
+Ref: Browse Eloquence And Compare Pitch123546
+Ref: Keep A Voice Experiment124793
+Ref: Change A Heading Voice Add A Cue Or Silence One125793
+Ref: Change A Blank-Line Tone126754
+Ref: Choose An Engine And Recover Unfinished Work127511
+Node: Sounds And Space128669
+Node: Presentation Troubleshooting130305
+Node: Voice Lock132343
+Node: Using Online Help135550
+Node: Emacs Packages139612
+Node: Document Authoring140986
+Node: Structured Editing141540
+Node: Browsing Structure142523
+Node: Web Browsing143121
+Node: Messaging143956
+Node: Editing Code144454
+Node: Development Environment144973
+Node: Desktop Management146509
+Node: Personal Information Management147011
+Node: Desktop Applications147543
+Node: Notmuch Mail154931
+Ref: Notmuch fields and privacy164274
+Node: Agent Shell169982
+Node: EAT Terminal Access182277
+Node: Running Terminal Based Applications199536
+Node: Starting Term200491
+Node: Term Input Modes201330
+Node: Term Speech Feedback202490
+Node: Reviewing The Term Screen203684
+Node: Term Help And Recovery205585
+Node: Emacsvox Keyboard Commands206484
+Node: Copyright207888
+Node: Acknowledgments208475
+Node: Developer Guide209501
+Node: Documentation Maintenance210665
+Node: Speech Server Protocols215463
+Ref: Testing A Direct Legacy Server221370
+Ref: Commands That Queue Output221929
+Ref: Commands That Set State224963
+Node: Integration Maintenance227557
+Node: Concept Index254544
 
 End Tag Table
 

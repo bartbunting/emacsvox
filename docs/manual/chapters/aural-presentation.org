@@ -487,6 +487,9 @@ For physical voices, choose /Browse and try voices/ in Home, then press
 @@texinfo:@key{RET}@@ on an engine to browse its voices.  @@texinfo:@key{RET}@@
 on a voice shows details; @@texinfo:@kbd{P}@@ plays a named sample.  Filters
 and each view's selected row and column survive navigation through Home.
+Press @@texinfo:@kbd{q}@@ in an engine's voice list to return to that engine's
+row and column.  Press @@texinfo:@kbd{q}@@ again from the engine list to leave
+the workbench.  The direct view shortcuts remain available.
 
 The engine list reports /Availability/ before routing preferences.  An engine
 with a missing runtime stays visible as /unavailable/, with its reason under
@@ -511,8 +514,9 @@ adapter advertises; they are not a listening test of every parameter.
 
 Use @@texinfo:@kbd{a}@@ to assign a physical voice and @@texinfo:@kbd{t}@@ to tune the
 selected logical voice on its effective route.  Route changes are staged until
-you press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ to save and apply them.  Pressing
-@@texinfo:@kbd{q}@@ with unsaved route changes warns that they remain staged.
+you press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ to save and apply them.
+Returning to the engine list preserves staged route changes.  Leaving the
+workbench with @@texinfo:@kbd{q}@@ warns when those changes remain unsaved.
 
 The tuner names neutral effect values instead of speaking an ambiguous number:
 gain five is /unchanged/, low-pass nine is /disabled/, high-pass zero is

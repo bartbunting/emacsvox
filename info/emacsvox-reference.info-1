@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1525 commands and 206 options.
+   This chapter documents a total of 1526 commands and 206 options.
 
 * Menu:
 
@@ -5506,7 +5506,7 @@ palettes or routing profiles.
      j		emacsvox-aural-voice-workbench-suggest-route
      l		emacsvox-aural-voice-workbench-logical-view
      m		emacsvox-aural-voice-workbench-migrate
-     q		emacsvox-aural-quit
+     q		emacsvox-aural-voice-workbench-quit
      r		emacsvox-aural-voice-workbench-retry-apply
      s		emacsvox-aural-voice-workbench-style-view
      t		emacsvox-aural-voice-workbench-tune
@@ -5577,7 +5577,18 @@ palettes or routing profiles.
 
      Preview usable matching voices in displayed order, identifying each sample.
 
-2.55.1.32 emacsvox-aural-voice-workbench-refresh
+2.55.1.32 emacsvox-aural-voice-workbench-quit
+.............................................
+
+ -- Command: emacsvox-aural-voice-workbench-quit
+
+     Return from an engine’s voice list, or dismiss the workbench.
+
+     When an engine row opened this voice list, restore its selected row and
+     column.  Otherwise hide the workbench, retaining staged edits and warning
+     when they remain unsaved.
+
+2.55.1.33 emacsvox-aural-voice-workbench-refresh
 ................................................
 
  -- Command: emacsvox-aural-voice-workbench-refresh (&optional id)
@@ -5586,112 +5597,112 @@ palettes or routing profiles.
 
      (fn &optional ID)
 
-2.55.1.33 emacsvox-aural-voice-workbench-refresh-inventory
+2.55.1.34 emacsvox-aural-voice-workbench-refresh-inventory
 ..........................................................
 
  -- Command: emacsvox-aural-voice-workbench-refresh-inventory
 
      Request fresh adapter inventory and quietly rebuild the current view.
 
-2.55.1.34 emacsvox-aural-voice-workbench-replace-engine
+2.55.1.35 emacsvox-aural-voice-workbench-replace-engine
 .......................................................
 
  -- Command: emacsvox-aural-voice-workbench-replace-engine
 
      Replace one engine in selected staged logical mappings.
 
-2.55.1.35 emacsvox-aural-voice-workbench-request-recovery-probe
+2.55.1.36 emacsvox-aural-voice-workbench-request-recovery-probe
 ...............................................................
 
  -- Command: emacsvox-aural-voice-workbench-request-recovery-probe
 
      Request a live recovery probe for the current failed engine.
 
-2.55.1.36 emacsvox-aural-voice-workbench-retry-apply
+2.55.1.37 emacsvox-aural-voice-workbench-retry-apply
 ....................................................
 
  -- Command: emacsvox-aural-voice-workbench-retry-apply
 
      Idempotently retry the committed profile on all live speech streams.
 
-2.55.1.37 emacsvox-aural-voice-workbench-save-and-apply
+2.55.1.38 emacsvox-aural-voice-workbench-save-and-apply
 .......................................................
 
  -- Command: emacsvox-aural-voice-workbench-save-and-apply
 
      Atomically save the staged profile and apply it to every speech stream.
 
-2.55.1.38 emacsvox-aural-voice-workbench-set-filter
+2.55.1.39 emacsvox-aural-voice-workbench-set-filter
 ...................................................
 
  -- Command: emacsvox-aural-voice-workbench-set-filter
 
      Set or clear one physical-voice inventory filter.
 
-2.55.1.39 emacsvox-aural-voice-workbench-speak-current
+2.55.1.40 emacsvox-aural-voice-workbench-speak-current
 ......................................................
 
  -- Command: emacsvox-aural-voice-workbench-speak-current
 
      Speak the complete current Workbench row with titled values.
 
-2.55.1.40 emacsvox-aural-voice-workbench-stop-preview
+2.55.1.41 emacsvox-aural-voice-workbench-stop-preview
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-stop-preview
 
      Stop the active preview immediately.
 
-2.55.1.41 emacsvox-aural-voice-workbench-style-view
+2.55.1.42 emacsvox-aural-voice-workbench-style-view
 ...................................................
 
  -- Command: emacsvox-aural-voice-workbench-style-view
 
      Show portable styles, routes, and advertised effects.
 
-2.55.1.42 emacsvox-aural-voice-workbench-suggest-route
+2.55.1.43 emacsvox-aural-voice-workbench-suggest-route
 ......................................................
 
  -- Command: emacsvox-aural-voice-workbench-suggest-route
 
      Review and stage one inferred route for the current logical voice.
 
-2.55.1.43 emacsvox-aural-voice-workbench-toggle-disabled-engine
+2.55.1.44 emacsvox-aural-voice-workbench-toggle-disabled-engine
 ...............................................................
 
  -- Command: emacsvox-aural-voice-workbench-toggle-disabled-engine
 
      Disable or restore the current engine in the staged policy.
 
-2.55.1.44 emacsvox-aural-voice-workbench-toggle-fallback-engine
+2.55.1.45 emacsvox-aural-voice-workbench-toggle-fallback-engine
 ...............................................................
 
  -- Command: emacsvox-aural-voice-workbench-toggle-fallback-engine
 
      Add or remove the current engine from global fallback order.
 
-2.55.1.45 emacsvox-aural-voice-workbench-toggle-preferred-engine
+2.55.1.46 emacsvox-aural-voice-workbench-toggle-preferred-engine
 ................................................................
 
  -- Command: emacsvox-aural-voice-workbench-toggle-preferred-engine
 
      Add or remove the current engine from global preferred order.
 
-2.55.1.46 emacsvox-aural-voice-workbench-tune
+2.55.1.47 emacsvox-aural-voice-workbench-tune
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-tune
 
      Temporarily tune a physical voice, or edit a logical voice’s portable style.
 
-2.55.1.47 emacsvox-aural-voice-workbench-undo
+2.55.1.48 emacsvox-aural-voice-workbench-undo
 .............................................
 
  -- Command: emacsvox-aural-voice-workbench-undo
 
      Undo the most recent staged routing edit without changing saved state.
 
-2.55.1.48 emacsvox-aural-voice-workbench-undo-applied
+2.55.1.49 emacsvox-aural-voice-workbench-undo-applied
 .....................................................
 
  -- Command: emacsvox-aural-voice-workbench-undo-applied

@@ -65,7 +65,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1525 commands and 206 options.
+This chapter documents a total of 1526 commands and 206 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -6069,7 +6069,7 @@ h		emacsvox-aural
 j		emacsvox-aural-voice-workbench-suggest-route
 l		emacsvox-aural-voice-workbench-logical-view
 m		emacsvox-aural-voice-workbench-migrate
-q		emacsvox-aural-quit
+q		emacsvox-aural-voice-workbench-quit
 r		emacsvox-aural-voice-workbench-retry-apply
 s		emacsvox-aural-voice-workbench-style-view
 t		emacsvox-aural-voice-workbench-tune
@@ -6156,6 +6156,19 @@ Preview the selected voice, identifying physical samples by name.
 
 @format
 Preview usable matching voices in displayed order, identifying each sample.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-workbench-quit
+@deffn {Command} emacsvox-aural-voice-workbench-quit
+@findex emacsvox-aural-voice-workbench-quit
+
+@format
+Return from an engine’s voice list, or dismiss the workbench.
+
+When an engine row opened this voice list, restore its selected row and
+column.  Otherwise hide the workbench, retaining staged edits and warning
+when they remain unsaved.
 @end format
 @end deffn
 

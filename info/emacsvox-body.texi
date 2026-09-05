@@ -2646,6 +2646,9 @@ For physical voices@comma{} choose @emph{Browse and try voices} in Home@comma{} 
 @key{RET} on an engine to browse its voices.  @key{RET}
 on a voice shows details; @kbd{P} plays a named sample.  Filters
 and each view's selected row and column survive navigation through Home.
+Press @kbd{q} in an engine's voice list to return to that engine's
+row and column.  Press @kbd{q} again from the engine list to leave
+the workbench.  The direct view shortcuts remain available.
 
 The engine list reports @emph{Availability} before routing preferences.  An engine
 with a missing runtime stays visible as @emph{unavailable}@comma{} with its reason under
@@ -2670,8 +2673,9 @@ adapter advertises; they are not a listening test of every parameter.
 
 Use @kbd{a} to assign a physical voice and @kbd{t} to tune the
 selected logical voice on its effective route.  Route changes are staged until
-you press @kbd{w} or @kbd{C-c C-c} to save and apply them.  Pressing
-@kbd{q} with unsaved route changes warns that they remain staged.
+you press @kbd{w} or @kbd{C-c C-c} to save and apply them.
+Returning to the engine list preserves staged route changes.  Leaving the
+workbench with @kbd{q} warns when those changes remain unsaved.
 
 The tuner names neutral effect values instead of speaking an ambiguous number:
 gain five is @emph{unchanged}@comma{} low-pass nine is @emph{disabled}@comma{} high-pass zero is
