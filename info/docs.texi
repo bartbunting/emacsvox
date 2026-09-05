@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 278 loaded; 0 intentionally omitted.
+@c Modules: 279 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell.elc emacsvox-amark.elc
 @c Loaded: emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc emacsvox-aural-compatibility-voice.elc
@@ -55,9 +55,9 @@
 @c Loaded: emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc
 @c Loaded: emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc gmaps.elc
 @c Loaded: gweb.elc ladspa.elc light.elc mac-voices.elc omaps.elc
-@c Loaded: omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc soundscape.elc
-@c Loaded: sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc tts-speak.elc
-@c Loaded: voice-defs.elc voice-setup.elc xbacklight.elc
+@c Loaded: omnivox-remote.elc omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc
+@c Loaded: soundscape.elc sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc
+@c Loaded: tts-speak.elc voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -333,6 +333,7 @@ This chapter documents a total of 1523 commands and 206 options.
 * light:: Control Brightness.
 * mac-voices:: Define  Mac tags.
 * omaps:: Open street  Maps.
+* omnivox-remote:: Workstation speech transport.
 * omnivox-voices:: Omnivox voice adapter.
 * outloud-voices:: Define  OutLoud tags.
 * pip:: Interface To Piper TTS.
@@ -15277,7 +15278,6 @@ Default Value:
 @end verbatim
 
 @end defvar
-
 @node emacsvox-nov
 @section emacsvox-nov
 
@@ -23948,6 +23948,13 @@ Default Value:
 
 Implements geocoding via the Open Street Maps API
 https://nominatim.org/
+
+@node omnivox-remote
+@section omnivox-remote
+
+Authenticated loopback connections through a user-managed SSH reverse
+forward.  Existing TTS filters own speech and control; this module owns
+authentication, heartbeats, lane recovery, and bundled resource identifiers.
 
 @node omnivox-voices
 @section omnivox-voices

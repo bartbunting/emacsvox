@@ -10,6 +10,17 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.2][NEWS for Emacsvox 2026.9.2]].
 
+** Remote Emacs can use workstation speech
+
+Development builds can connect remote Emacs to Omnivox on the workstation
+through an authenticated SSH reverse forward.  Engines and audio remain on
+the workstation; foreground and notification connections recover separately
+without replaying unfinished speech.  Use ~omnivox-remote-connect~,
+~omnivox-remote-status~, and ~omnivox-remote-disconnect~ with the endpoint and
+private token options described in Speech Backends.  Windows services require
+Windows OpenSSH for the forward when WSL uses NAT.  Omnivox 1.7.1 release
+binaries predate this feature.
+
 ** Aural Home retains context and unfinished work
 
 ~C-e H~ remembers the source item as well as its buffer.  Moving the source

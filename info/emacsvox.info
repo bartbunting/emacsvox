@@ -1035,6 +1035,82 @@ selects the normal platform engine above.  Engine routing and optional
 Piper, Eloquence, or DECtalk support are later customizations, not
 prerequisites for first speech.
 
+   *Remote workstation speech (development builds).*  Emacs can run on
+an SSH host while Omnivox, its installed voices, and playback remain on
+the computer you are using.  This requires the new ‘--serve’ option and
+the matching Emacsvox remote transport; the published Omnivox 1.7.1
+binary does not include it.  Keep the ordinary local setup until those
+development builds are installed.
+
+   On your workstation, create a private token once.  The creation tool
+refuses to overwrite an existing token or print its contents:
+
+     mkdir -p "$HOME/.config/omnivox"
+     python3 /path/to/omnivox/tools/create_remote_token.py \
+         "$HOME/.config/omnivox/remote-token"
+
+   Start your installed Omnivox in a terminal and leave it running.
+Give it the sound directory from the same Emacsvox sound-pack
+installation used by remote Emacs:
+
+     omnivox --serve --token-file "$HOME/.config/omnivox/remote-token" \
+         --sound-root /path/to/emacsvox/sounds
+
+   For a Windows service started through the WSL Emacsvox launcher,
+translate both paths for the Windows process:
+
+     /path/to/emacsvox/servers/omnivox --serve \
+         --token-file "$(wslpath -w "$HOME/.config/omnivox/remote-token")" \
+         --sound-root "$(wslpath -w /path/to/emacsvox/sounds)"
+
+   In another workstation terminal, copy the token over your verified
+SSH connection and open the reverse forward.  Replace ‘user@emacs-host’
+with the machine where Emacs will run:
+
+     ssh user@emacs-host 'mkdir -p ~/.config/omnivox; chmod 700 ~/.config/omnivox'
+     scp "$HOME/.config/omnivox/remote-token" user@emacs-host:.config/omnivox/remote-token
+     ssh user@emacs-host 'chmod 600 ~/.config/omnivox/remote-token'
+     ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=10 \
+         -o ServerAliveCountMax=2 \
+         -R 127.0.0.1:6417:127.0.0.1:6417 user@emacs-host
+
+   If Omnivox runs on Windows, open the final SSH connection with
+Windows OpenSSH (‘ssh.exe’ from WSL, or ‘ssh’ from PowerShell).  Its
+forward must reach Windows loopback.  A WSL SSH client under NAT reaches
+WSL's separate loopback instead.  Windows OpenSSH uses your Windows SSH
+keys and host-trust configuration.
+
+   On the remote Emacs host, set these options before starting Emacsvox:
+
+     (setq tts-program "omnivox"
+           omnivox-remote-host "127.0.0.1"
+           omnivox-remote-port 6417
+           omnivox-remote-token-file "~/.config/omnivox/remote-token")
+
+   Use ‘M-x omnivox-remote-connect’ to connect or retry manually, ‘M-x
+omnivox-remote-status’ to inspect the connection, and ‘M-x
+omnivox-remote-disconnect’ to stop it and suspend retries.  After a lost
+connection, Emacsvox reconnects with fresh voice and routing
+information; unfinished speech is discarded.  Foreground and
+notification speech retain separate workers.  Only one Emacs session may
+own a service at a time.
+
+   The service and forwarded endpoint must stay on loopback.  Do not
+enable SSH ‘GatewayPorts’.  SSH encrypts the connection; the private
+token also excludes other users on the remote host.  To rotate it, stop
+the service, replace both private token files, and restart.  Typing
+‘quit’ in the service terminal or interrupting it stops its workers.
+
+   The voice inventory describes your workstation.  Install engines and
+use the engine-module manager on that workstation.  Bundled icons
+resolve there by pack-relative name; personal sounds outside the bundled
+sound directory and sound uploads are not supported in this first
+version.  Omitting ‘--sound-root’ disables file-based icons.  If the
+remote port is occupied, choose another port on the left side of ‘-R’
+and set ‘omnivox-remote-port’ to match.  An authentication failure means
+the token copies differ or their file permissions are too broad; a busy
+service still belongs to another connection.
+
 
 File: emacsvox.info,  Node: Installing An Omnivox Release Binary,  Next: Installing An Omnivox Windows Release Under WSL2,  Prev: Supported Platform Routes,  Up: Speech Backends
 
@@ -5474,63 +5550,63 @@ Node: Voice-lock36106
 Node: Status Information37356
 Node: Speech Backends38419
 Node: Supported Platform Routes40348
-Node: Installing An Omnivox Release Binary44116
-Node: Installing An Omnivox Windows Release Under WSL247509
-Node: Optional Omnivox Engine Modules53430
-Node: Trying Native Windows Emacsvox58307
-Node: Installing Omnivox From Source66028
-Node: Building Omnivox For WSL267892
-Node: Selecting And Checking Omnivox75551
-Node: Compatibility Speech Servers77819
-Node: Backend Diagnostics And Ownership79745
-Node: Audio Desktop82922
-Node: Desktop Objects84052
-Node: Object Oriented Desktop85277
-Node: Context-Sensitive Interaction86390
-Node: Aural Presentation89505
-Node: Presentation Model91704
-Node: Presentation Modalities94171
-Node: Aural Home97340
-Node: Explaining Presentation100919
-Node: Adjusting Presentation102947
-Node: Presentation Profiles108833
-Node: Voices And Routing110510
-Node: Sounds And Space117929
-Node: Presentation Troubleshooting119565
-Node: Voice Lock121603
-Node: Using Online Help124810
-Node: Emacs Packages128872
-Node: Document Authoring130246
-Node: Structured Editing130800
-Node: Browsing Structure131783
-Node: Web Browsing132381
-Node: Messaging133216
-Node: Editing Code133714
-Node: Development Environment134233
-Node: Desktop Management135769
-Node: Personal Information Management136271
-Node: Desktop Applications136803
-Node: Notmuch Mail144191
-Ref: Notmuch fields and privacy153534
-Node: Agent Shell159242
-Node: EAT Terminal Access171537
-Node: Running Terminal Based Applications188796
-Node: Starting Term189751
-Node: Term Input Modes190590
-Node: Term Speech Feedback191750
-Node: Reviewing The Term Screen192944
-Node: Term Help And Recovery194845
-Node: Emacsvox Keyboard Commands195744
-Node: Copyright197148
-Node: Acknowledgments197735
-Node: Developer Guide198761
-Node: Documentation Maintenance199925
-Node: Speech Server Protocols204723
-Ref: Testing A Direct Legacy Server210630
-Ref: Commands That Queue Output211189
-Ref: Commands That Set State214223
-Node: Integration Maintenance216817
-Node: Concept Index241053
+Node: Installing An Omnivox Release Binary47963
+Node: Installing An Omnivox Windows Release Under WSL251356
+Node: Optional Omnivox Engine Modules57277
+Node: Trying Native Windows Emacsvox62154
+Node: Installing Omnivox From Source69875
+Node: Building Omnivox For WSL271739
+Node: Selecting And Checking Omnivox79398
+Node: Compatibility Speech Servers81666
+Node: Backend Diagnostics And Ownership83592
+Node: Audio Desktop86769
+Node: Desktop Objects87899
+Node: Object Oriented Desktop89124
+Node: Context-Sensitive Interaction90237
+Node: Aural Presentation93352
+Node: Presentation Model95551
+Node: Presentation Modalities98018
+Node: Aural Home101187
+Node: Explaining Presentation104766
+Node: Adjusting Presentation106794
+Node: Presentation Profiles112680
+Node: Voices And Routing114357
+Node: Sounds And Space121776
+Node: Presentation Troubleshooting123412
+Node: Voice Lock125450
+Node: Using Online Help128657
+Node: Emacs Packages132719
+Node: Document Authoring134093
+Node: Structured Editing134647
+Node: Browsing Structure135630
+Node: Web Browsing136228
+Node: Messaging137063
+Node: Editing Code137561
+Node: Development Environment138080
+Node: Desktop Management139616
+Node: Personal Information Management140118
+Node: Desktop Applications140650
+Node: Notmuch Mail148038
+Ref: Notmuch fields and privacy157381
+Node: Agent Shell163089
+Node: EAT Terminal Access175384
+Node: Running Terminal Based Applications192643
+Node: Starting Term193598
+Node: Term Input Modes194437
+Node: Term Speech Feedback195597
+Node: Reviewing The Term Screen196791
+Node: Term Help And Recovery198692
+Node: Emacsvox Keyboard Commands199591
+Node: Copyright200995
+Node: Acknowledgments201582
+Node: Developer Guide202608
+Node: Documentation Maintenance203772
+Node: Speech Server Protocols208570
+Ref: Testing A Direct Legacy Server214477
+Ref: Commands That Queue Output215036
+Ref: Commands That Set State218070
+Node: Integration Maintenance220664
+Node: Concept Index244900
 
 End Tag Table
 

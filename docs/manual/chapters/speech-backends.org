@@ -54,6 +54,89 @@ the normal platform engine above.  Engine routing and optional Piper,
 Eloquence, or DECtalk support are later customizations, not prerequisites for
 first speech.
 
+*Remote workstation speech (development builds).*  Emacs can run on an SSH
+host while Omnivox, its installed voices, and playback remain on the computer
+you are using.  This requires the new ~--serve~ option and the matching
+Emacsvox remote transport; the published Omnivox 1.7.1 binary does not include
+it.  Keep the ordinary local setup until those development builds are installed.
+
+On your workstation, create a private token once.  The creation tool refuses
+to overwrite an existing token or print its contents:
+
+#+begin_example
+mkdir -p "$HOME/.config/omnivox"
+python3 /path/to/omnivox/tools/create_remote_token.py \
+    "$HOME/.config/omnivox/remote-token"
+#+end_example
+
+Start your installed Omnivox in a terminal and leave it running.  Give it the
+sound directory from the same Emacsvox sound-pack installation used by remote
+Emacs:
+
+#+begin_example
+omnivox --serve --token-file "$HOME/.config/omnivox/remote-token" \
+    --sound-root /path/to/emacsvox/sounds
+#+end_example
+
+For a Windows service started through the WSL Emacsvox launcher, translate
+both paths for the Windows process:
+
+#+begin_example
+/path/to/emacsvox/servers/omnivox --serve \
+    --token-file "$(wslpath -w "$HOME/.config/omnivox/remote-token")" \
+    --sound-root "$(wslpath -w /path/to/emacsvox/sounds)"
+#+end_example
+
+In another workstation terminal, copy the token over your verified SSH
+connection and open the reverse forward.  Replace ~user@emacs-host~ with the
+machine where Emacs will run:
+
+#+begin_example
+ssh user@emacs-host 'mkdir -p ~/.config/omnivox; chmod 700 ~/.config/omnivox'
+scp "$HOME/.config/omnivox/remote-token" user@emacs-host:.config/omnivox/remote-token
+ssh user@emacs-host 'chmod 600 ~/.config/omnivox/remote-token'
+ssh -o ExitOnForwardFailure=yes -o ServerAliveInterval=10 \
+    -o ServerAliveCountMax=2 \
+    -R 127.0.0.1:6417:127.0.0.1:6417 user@emacs-host
+#+end_example
+
+If Omnivox runs on Windows, open the final SSH connection with Windows
+OpenSSH (~ssh.exe~ from WSL, or ~ssh~ from PowerShell).  Its forward must
+reach Windows loopback.  A WSL SSH client under NAT reaches WSL's separate
+loopback instead.  Windows OpenSSH uses your Windows SSH keys and host-trust
+configuration.
+
+On the remote Emacs host, set these options before starting Emacsvox:
+
+#+begin_src emacs-lisp
+(setq tts-program "omnivox"
+      omnivox-remote-host "127.0.0.1"
+      omnivox-remote-port 6417
+      omnivox-remote-token-file "~/.config/omnivox/remote-token")
+#+end_src
+
+Use ~M-x omnivox-remote-connect~ to connect or retry manually,
+~M-x omnivox-remote-status~ to inspect the connection, and
+~M-x omnivox-remote-disconnect~ to stop it and suspend retries.  After a lost
+connection, Emacsvox reconnects with fresh voice and routing information;
+unfinished speech is discarded.  Foreground and notification speech retain
+separate workers.  Only one Emacs session may own a service at a time.
+
+The service and forwarded endpoint must stay on loopback.  Do not enable SSH
+~GatewayPorts~.  SSH encrypts the connection; the private token also excludes
+other users on the remote host.  To rotate it, stop the service, replace both
+private token files, and restart.  Typing ~quit~ in the service terminal or
+interrupting it stops its workers.
+
+The voice inventory describes your workstation.  Install engines and use the
+engine-module manager on that workstation.  Bundled icons resolve there by
+pack-relative name; personal sounds outside the bundled sound directory and
+sound uploads are not supported in this first version.  Omitting
+~--sound-root~ disables file-based icons.  If the remote port is occupied,
+choose another port on the left side of ~-R~ and set ~omnivox-remote-port~ to
+match.  An authentication failure means the token copies differ or their file
+permissions are too broad; a busy service still belongs to another connection.
+
 ** Install Omnivox From A Release Binary
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Installing An Omnivox Release Binary
