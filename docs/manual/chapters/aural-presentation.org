@@ -488,6 +488,12 @@ For physical voices, choose /Browse and try voices/ in Home, then press
 on a voice shows details; @@texinfo:@kbd{P}@@ plays a named sample.  Filters
 and each view's selected row and column survive navigation through Home.
 
+The engine list reports /Availability/ before routing preferences.  An engine
+with a missing runtime stays visible as /unavailable/, with its reason under
+/Last failure/.  /Routing policy: allowed/ means the policy permits using that
+engine; it does not mean its runtime is installed.  Disabled policies, health,
+and temporary failures are reported separately.
+
 @@texinfo:@kbd{A}@@ plays available matching voices in displayed order,
 skipping unavailable rows.  @@texinfo:@kbd{B}@@ starts with the selected voice
 as A and offers another matching voice as B.  Choose /Search all engines/

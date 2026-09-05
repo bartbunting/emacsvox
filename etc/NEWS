@@ -10,6 +10,22 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.2][NEWS for Emacsvox 2026.9.2]].
 
+** Engine availability is distinct from routing policy
+
+Browse and try voices reports engine availability before routing preferences.
+The former /enabled/ label now says /Routing policy: allowed/; missing runtimes
+remain /unavailable/ with their discovery reason visible in the row.
+
+** Engine module operations show their progress
+
+Downloadable modules say /not installed/ until installation starts.  The
+module manager shows and speaks /installing/, /uninstalling/, or /testing/
+while an operation runs, including after refresh or reopening.  Completion
+and failure refresh the state, and reopening preserves the active operation
+and its protection against starting another one.
+The /Release state/ column describes the managed release; Browse and try
+voices reflects the active server, which may use a different installation.
+
 ** Remote Emacs can use workstation speech
 
 Development builds can connect remote Emacs to Omnivox on the workstation

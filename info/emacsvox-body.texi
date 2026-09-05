@@ -1319,14 +1319,19 @@ M-x emacsvox-omnivox-manage-components RET
 You can also press @kbd{C-e H} for Aural Home and then
 @kbd{I} on @emph{Omnivox engine modules}.  The spoken table reports each
 engine as installed@comma{} downloadable@comma{} unavailable on this architecture@comma{} needing a
-core update@comma{} or needing a separately supplied runtime or model.  Move to an
-engine row@comma{} then choose the task you want:
+core update@comma{} or needing a separately supplied runtime or model.  @emph{Release
+state} describes the managed release installation.  @emph{Browse and try voices}
+reports the active speech server@comma{} which can use a different installation@comma{} such
+as a development runtime or a remote workstation.  Installing a module here
+changes the managed release only.  Move to an engine row@comma{} then choose the task
+you want:
 
 @itemize
 @item
-To install an @emph{available} module@comma{} press @kbd{i} and confirm.  The
+To install a @emph{not installed} module@comma{} press @kbd{i} and confirm.  The
 manager downloads the version matched to your Omnivox core@comma{} verifies it@comma{} and
-announces when installation is complete.
+announces when installation is complete.  Its state changes to @emph{installing}
+immediately and stays that way if you refresh or reopen the manager.
 @item
 To check any engine@comma{} press @kbd{t}.  Emacsvox announces how many
 voices Omnivox found and selects an accessible buffer containing the complete
@@ -1341,7 +1346,7 @@ runtime bridges.
 @end itemize
 
 Removal keeps the verified download in the local cache.  If you change your
-mind@comma{} select the module again---its state will now be @emph{available}---and press
+mind@comma{} select the module again---its state will now be @emph{not installed}---and press
 @kbd{i} to reinstall it.  A valid cached download is reused.
 
 The module's whole managed directory is removed.  Move anything you placed
@@ -1352,7 +1357,9 @@ the operation and briefly stops its active Omnivox speech streams so Windows
 can release the module helper.  It restores speech when removal finishes@comma{}
 including after an error.  After a successful installation@comma{} it also refreshes
 the table and restarts a running Omnivox server.  Operations run asynchronously
-so Emacs remains responsive.
+so Emacs remains responsive.  The table shows @emph{uninstalling} during removal and
+@emph{testing} during a voice check.  Completion or failure refreshes the state;
+if that refresh fails@comma{} the last known state remains with a spoken error.
 
 If a removal reports that its helper is still in use@comma{} close any other Emacsvox
 or Omnivox session using that release and press @kbd{u} again.  The
@@ -2639,6 +2646,12 @@ For physical voices@comma{} choose @emph{Browse and try voices} in Home@comma{} 
 @key{RET} on an engine to browse its voices.  @key{RET}
 on a voice shows details; @kbd{P} plays a named sample.  Filters
 and each view's selected row and column survive navigation through Home.
+
+The engine list reports @emph{Availability} before routing preferences.  An engine
+with a missing runtime stays visible as @emph{unavailable}@comma{} with its reason under
+@emph{Last failure}.  @emph{Routing policy: allowed} means the policy permits using that
+engine; it does not mean its runtime is installed.  Disabled policies@comma{} health@comma{}
+and temporary failures are reported separately.
 
 @kbd{A} plays available matching voices in displayed order@comma{}
 skipping unavailable rows.  @kbd{B} starts with the selected voice

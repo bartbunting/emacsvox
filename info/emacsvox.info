@@ -1325,12 +1325,18 @@ chosen data.
    You can also press ‘C-e H’ for Aural Home and then ‘I’ on _Omnivox
 engine modules_.  The spoken table reports each engine as installed,
 downloadable, unavailable on this architecture, needing a core update,
-or needing a separately supplied runtime or model.  Move to an engine
-row, then choose the task you want:
+or needing a separately supplied runtime or model.  _Release state_
+describes the managed release installation.  _Browse and try voices_
+reports the active speech server, which can use a different
+installation, such as a development runtime or a remote workstation.
+Installing a module here changes the managed release only.  Move to an
+engine row, then choose the task you want:
 
-   • To install an _available_ module, press ‘i’ and confirm.  The
+   • To install a _not installed_ module, press ‘i’ and confirm.  The
      manager downloads the version matched to your Omnivox core,
-     verifies it, and announces when installation is complete.
+     verifies it, and announces when installation is complete.  Its
+     state changes to _installing_ immediately and stays that way if you
+     refresh or reopen the manager.
    • To check any engine, press ‘t’.  Emacsvox announces how many voices
      Omnivox found and selects an accessible buffer containing the
      complete list.  If the check fails, it announces and displays the
@@ -1342,8 +1348,8 @@ row, then choose the task you want:
      built-in engines, or runtime bridges.
 
    Removal keeps the verified download in the local cache.  If you
-change your mind, select the module again--its state will now be
-_available_--and press ‘i’ to reinstall it.  A valid cached download is
+change your mind, select the module again--its state will now be _not
+installed_--and press ‘i’ to reinstall it.  A valid cached download is
 reused.
 
    The module's whole managed directory is removed.  Move anything you
@@ -1355,7 +1361,10 @@ active Omnivox speech streams so Windows can release the module helper.
 It restores speech when removal finishes, including after an error.
 After a successful installation, it also refreshes the table and
 restarts a running Omnivox server.  Operations run asynchronously so
-Emacs remains responsive.
+Emacs remains responsive.  The table shows _uninstalling_ during removal
+and _testing_ during a voice check.  Completion or failure refreshes the
+state; if that refresh fails, the last known state remains with a spoken
+error.
 
    If a removal reports that its helper is still in use, close any other
 Emacsvox or Omnivox session using that release and press ‘u’ again.  The
@@ -2574,6 +2583,13 @@ are:
 press <RET> on an engine to browse its voices.  <RET> on a voice shows
 details; ‘P’ plays a named sample.  Filters and each view's selected row
 and column survive navigation through Home.
+
+   The engine list reports _Availability_ before routing preferences.
+An engine with a missing runtime stays visible as _unavailable_, with
+its reason under _Last failure_.  _Routing policy: allowed_ means the
+policy permits using that engine; it does not mean its runtime is
+installed.  Disabled policies, health, and temporary failures are
+reported separately.
 
    ‘A’ plays available matching voices in displayed order, skipping
 unavailable rows.  ‘B’ starts with the selected voice as A and offers
@@ -5705,65 +5721,65 @@ Node: Supported Platform Routes40348
 Node: Installing An Omnivox Release Binary47963
 Node: Installing An Omnivox Windows Release Under WSL251356
 Node: Optional Omnivox Engine Modules57277
-Node: Trying Native Windows Emacsvox62154
-Node: Installing Omnivox From Source69875
-Node: Building Omnivox For WSL271739
-Node: Selecting And Checking Omnivox79398
-Node: Compatibility Speech Servers81666
-Node: Backend Diagnostics And Ownership83592
-Node: Audio Desktop86769
-Node: Desktop Objects87899
-Node: Object Oriented Desktop89124
-Node: Context-Sensitive Interaction90237
-Node: Aural Presentation93352
-Node: Presentation Model95945
-Node: Presentation Modalities98412
-Node: Aural Home101581
-Node: Explaining Presentation105160
-Node: Adjusting Presentation107188
-Node: Presentation Profiles113074
-Node: Voices And Routing114751
-Ref: Browse Eloquence And Compare Pitch122329
-Ref: Keep A Voice Experiment123576
-Ref: Change A Heading Voice Add A Cue Or Silence One124576
-Ref: Change A Blank-Line Tone125537
-Ref: Choose An Engine And Recover Unfinished Work126294
-Node: Sounds And Space127452
-Node: Presentation Troubleshooting129088
-Node: Voice Lock131126
-Node: Using Online Help134333
-Node: Emacs Packages138395
-Node: Document Authoring139769
-Node: Structured Editing140323
-Node: Browsing Structure141306
-Node: Web Browsing141904
-Node: Messaging142739
-Node: Editing Code143237
-Node: Development Environment143756
-Node: Desktop Management145292
-Node: Personal Information Management145794
-Node: Desktop Applications146326
-Node: Notmuch Mail153714
-Ref: Notmuch fields and privacy163057
-Node: Agent Shell168765
-Node: EAT Terminal Access181060
-Node: Running Terminal Based Applications198319
-Node: Starting Term199274
-Node: Term Input Modes200113
-Node: Term Speech Feedback201273
-Node: Reviewing The Term Screen202467
-Node: Term Help And Recovery204368
-Node: Emacsvox Keyboard Commands205267
-Node: Copyright206671
-Node: Acknowledgments207258
-Node: Developer Guide208284
-Node: Documentation Maintenance209448
-Node: Speech Server Protocols214246
-Ref: Testing A Direct Legacy Server220153
-Ref: Commands That Queue Output220712
-Ref: Commands That Set State223746
-Node: Integration Maintenance226340
-Node: Concept Index253327
+Node: Trying Native Windows Emacsvox62749
+Node: Installing Omnivox From Source70470
+Node: Building Omnivox For WSL272334
+Node: Selecting And Checking Omnivox79993
+Node: Compatibility Speech Servers82261
+Node: Backend Diagnostics And Ownership84187
+Node: Audio Desktop87364
+Node: Desktop Objects88494
+Node: Object Oriented Desktop89719
+Node: Context-Sensitive Interaction90832
+Node: Aural Presentation93947
+Node: Presentation Model96540
+Node: Presentation Modalities99007
+Node: Aural Home102176
+Node: Explaining Presentation105755
+Node: Adjusting Presentation107783
+Node: Presentation Profiles113669
+Node: Voices And Routing115346
+Ref: Browse Eloquence And Compare Pitch123288
+Ref: Keep A Voice Experiment124535
+Ref: Change A Heading Voice Add A Cue Or Silence One125535
+Ref: Change A Blank-Line Tone126496
+Ref: Choose An Engine And Recover Unfinished Work127253
+Node: Sounds And Space128411
+Node: Presentation Troubleshooting130047
+Node: Voice Lock132085
+Node: Using Online Help135292
+Node: Emacs Packages139354
+Node: Document Authoring140728
+Node: Structured Editing141282
+Node: Browsing Structure142265
+Node: Web Browsing142863
+Node: Messaging143698
+Node: Editing Code144196
+Node: Development Environment144715
+Node: Desktop Management146251
+Node: Personal Information Management146753
+Node: Desktop Applications147285
+Node: Notmuch Mail154673
+Ref: Notmuch fields and privacy164016
+Node: Agent Shell169724
+Node: EAT Terminal Access182019
+Node: Running Terminal Based Applications199278
+Node: Starting Term200233
+Node: Term Input Modes201072
+Node: Term Speech Feedback202232
+Node: Reviewing The Term Screen203426
+Node: Term Help And Recovery205327
+Node: Emacsvox Keyboard Commands206226
+Node: Copyright207630
+Node: Acknowledgments208217
+Node: Developer Guide209243
+Node: Documentation Maintenance210407
+Node: Speech Server Protocols215205
+Ref: Testing A Direct Legacy Server221112
+Ref: Commands That Queue Output221671
+Ref: Commands That Set State224705
+Node: Integration Maintenance227299
+Node: Concept Index254286
 
 End Tag Table
 

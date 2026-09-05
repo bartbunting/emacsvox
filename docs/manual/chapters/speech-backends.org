@@ -361,12 +361,17 @@ M-x emacsvox-omnivox-manage-components RET
 You can also press @@texinfo:@kbd{C-e H}@@ for Aural Home and then
 @@texinfo:@kbd{I}@@ on /Omnivox engine modules/.  The spoken table reports each
 engine as installed, downloadable, unavailable on this architecture, needing a
-core update, or needing a separately supplied runtime or model.  Move to an
-engine row, then choose the task you want:
+core update, or needing a separately supplied runtime or model.  /Release
+state/ describes the managed release installation.  /Browse and try voices/
+reports the active speech server, which can use a different installation, such
+as a development runtime or a remote workstation.  Installing a module here
+changes the managed release only.  Move to an engine row, then choose the task
+you want:
 
-- To install an /available/ module, press @@texinfo:@kbd{i}@@ and confirm.  The
+- To install a /not installed/ module, press @@texinfo:@kbd{i}@@ and confirm.  The
   manager downloads the version matched to your Omnivox core, verifies it, and
-  announces when installation is complete.
+  announces when installation is complete.  Its state changes to /installing/
+  immediately and stays that way if you refresh or reopen the manager.
 - To check any engine, press @@texinfo:@kbd{t}@@.  Emacsvox announces how many
   voices Omnivox found and selects an accessible buffer containing the complete
   list.  If the check fails, it announces and displays the actual diagnostic
@@ -378,7 +383,7 @@ engine row, then choose the task you want:
   runtime bridges.
 
 Removal keeps the verified download in the local cache.  If you change your
-mind, select the module again---its state will now be /available/---and press
+mind, select the module again---its state will now be /not installed/---and press
 @@texinfo:@kbd{i}@@ to reinstall it.  A valid cached download is reused.
 
 The module's whole managed directory is removed.  Move anything you placed
@@ -389,7 +394,9 @@ the operation and briefly stops its active Omnivox speech streams so Windows
 can release the module helper.  It restores speech when removal finishes,
 including after an error.  After a successful installation, it also refreshes
 the table and restarts a running Omnivox server.  Operations run asynchronously
-so Emacs remains responsive.
+so Emacs remains responsive.  The table shows /uninstalling/ during removal and
+/testing/ during a voice check.  Completion or failure refreshes the state;
+if that refresh fails, the last known state remains with a spoken error.
 
 If a removal reports that its helper is still in use, close any other Emacsvox
 or Omnivox session using that release and press @@texinfo:@kbd{u}@@ again.  The
