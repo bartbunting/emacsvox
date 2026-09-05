@@ -2236,6 +2236,43 @@
           (should (= (length actions) 1))
           (should (eq (emacsvox-aural-concrete-action-tone (car actions)) (nth 2 case))))))))
 
+(ert-deftest emacsvox-magit-hash-voice-survives-forward-and-backward-highlighting ()
+  (dolist (voice '(inaudible voice-lighten))
+    (emacsvox-magit-test--with-sections
+      (setq-local voice-setup-local-map (make-hash-table :test #'eq))
+      (puthash 'magit-hash voice voice-setup-local-map)
+      (forward-line 1)
+      (magit-section-update-highlight t)
+      (let (styles)
+        (cl-letf (((symbol-function 'tts-stop) #'ignore)
+                  ((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _)
+                     (push (emacsvox-aural--string-style text 0) styles))))
+          (dolist (command '(magit-next-line magit-previous-line))
+            (magit-section-pre-command-hook)
+            (funcall-interactively command 1 nil)
+            (magit-section-post-command-hook)))
+        (should (equal styles (list voice voice))))
+      (should-not (get-text-property (point) 'personality))
+      ;; Explicit line/region reading uses captured overlay faces as well.
+      (let* ((text (emacsvox-aural-source-substring
+                    (line-beginning-position) (line-end-position)))
+             (snapshot (emacsvox-aural--string-face-snapshot text 0)))
+        (should (eq (emacsvox-aural--string-style text 0 snapshot) voice))))))
+
+(ert-deftest emacsvox-magit-highlighting-preserves-deliberate-personalities ()
+  (emacsvox-magit-test--with-sections
+    (forward-line 1)
+    (let ((inhibit-read-only t))
+      (put-text-property (point) (1+ (point)) 'personality 'voice-animate))
+    (magit-section-update-highlight t)
+    (let ((overlay (car magit-section-highlight-overlays)))
+      ;; Font Lock can later copy font-lock-face into face outside Magit.
+      (overlay-put overlay 'face 'magit-section-highlight)
+      (move-overlay overlay (1+ (point)) (line-end-position))
+      (delete-overlay overlay))
+    (should (eq (get-text-property (point) 'personality) 'voice-animate))))
+
 (ert-deftest emacsvox-magit-completion-and-entry-have-independent-lanes ()
   (let ((process (make-process :name "emacsvox-magit-test" :command '("true")
                                :sentinel #'ignore :noquery t))

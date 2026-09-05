@@ -60,6 +60,7 @@
 (defvar transient-current-command)
 (defvar with-editor-post-cancel-hook)
 (defvar with-editor-post-finish-hook)
+(defvar ems--voiceify-overlays)
 
 ;;;  Map voices to faces:
 
@@ -1871,6 +1872,58 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
        magit-stash
        magit-status))
   (eval-after-load feature #'emacsvox-magit--install-advice))
+
+;;; Selection highlights must not overwrite source personalities:
+
+(defconst emacsvox-magit--focus-faces
+  '(magit-section-highlight magit-section-heading-selection)
+  "Positional highlights already represented by Magit navigation facts.")
+
+(defun emacsvox-magit--focus-overlay-p (overlay)
+  "Return non-nil for a purely positional Magit highlight OVERLAY."
+  (when-let* ((buffer (overlay-buffer overlay)))
+    (with-current-buffer buffer
+      (and (derived-mode-p 'magit-section-mode)
+           (cl-intersection
+            emacsvox-magit--focus-faces
+            (append
+             (emacsvox-aural-face-names (overlay-get overlay 'face))
+             (emacsvox-aural-face-names (overlay-get overlay 'font-lock-face))))))))
+
+(defun emacsvox-magit--preserve-highlighted-source (original overlay &rest arguments)
+  "Call legacy overlay adapter ORIGINAL without mirroring Magit focus voices.
+OVERLAY and ARGUMENTS are passed unchanged.  Source faces and deliberate
+personality properties remain authoritative, including custom hash voices."
+  (let ((ems--voiceify-overlays
+         (and ems--voiceify-overlays
+              (not (emacsvox-magit--focus-overlay-p overlay)))))
+    (apply original overlay arguments)))
+
+(defun emacsvox-magit--source-faces (original &optional position buffer)
+  "Capture source faces through ORIGINAL at POSITION in BUFFER.
+Ignore positional Magit overlays so explicit line and region reading agree
+with Magit navigation about the source text's voices."
+  (let ((records (funcall original position buffer)))
+    (with-current-buffer (or buffer (current-buffer))
+      (if (derived-mode-p 'magit-section-mode)
+          (cl-remove-if
+           (lambda (record)
+             (and (eq (plist-get record :source) 'overlay)
+                  (memq (plist-get record :face) emacsvox-magit--focus-faces)))
+           records)
+        records))))
+
+(unless (advice-member-p #'emacsvox-magit--source-faces
+                         'emacsvox-aural-capture-source-faces)
+  (advice-add 'emacsvox-aural-capture-source-faces :around
+              #'emacsvox-magit--source-faces))
+
+(with-eval-after-load 'emacsvox-advice
+  (dolist (target '(emacsvox--advice-overlay-put-after
+                    emacsvox--advice-delete-overlay-before
+                    emacsvox--advice-move-overlay-before))
+    (unless (advice-member-p #'emacsvox-magit--preserve-highlighted-source target)
+      (advice-add target :around #'emacsvox-magit--preserve-highlighted-source))))
 
 ;;; Repository list:
 
