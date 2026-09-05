@@ -1017,6 +1017,17 @@ after that response row was already visited directly."
              (car bounds) (cdr bounds))
         bounds))))
 
+(defun emacsvox-agent-shell--chat-padding-source-bounds ()
+  "Return inclusive source bounds of chat label padding at point."
+  (when-let* ((overlay
+               (seq-find
+                (lambda (candidate)
+                  (memq (emacsvox-agent-shell--chat-overlay-tag candidate)
+                        '(me-label me-surplus)))
+                (overlays-at (point)))))
+    (cons (max (point-min) (overlay-start overlay))
+          (min (1- (point-max)) (1- (overlay-end overlay))))))
+
 (defun emacsvox-agent-shell--move-beyond-visual-source-row
     (direction bounds)
   "Move in DIRECTION beyond visual source BOUNDS.
@@ -1081,14 +1092,32 @@ a positive argument to the advised command."
     (setq result
           (if normalize-p
               (let ((ems--interactive-fn-name nil))
-                (apply original-function arguments))
+                (condition-case error-data
+                    (apply original-function arguments)
+                  ((beginning-of-buffer end-of-buffer)
+                   ;; A multiline Me label can trap core visual motion at
+                   ;; its newline anchor, far from either buffer boundary.
+                   (let ((padding
+                          (emacsvox-agent-shell--chat-padding-source-bounds)))
+                     (unless
+                         (and padding
+                              (pcase direction
+                                ('backward
+                                 (and (eq (car error-data) 'beginning-of-buffer)
+                                      (> (car padding) (point-min))))
+                                ('forward
+                                 (and (eq (car error-data) 'end-of-buffer)
+                                      (< (cdr padding) (1- (point-max)))))))
+                       (signal (car error-data) (cdr error-data)))))))
             (apply original-function arguments)))
     (when normalize-p
-      (let (previous)
+      (let (previous padding)
         ;; A folded or transient row can make core visual motion return while
         ;; point remains at the row anchor.  Escape when source remains in the
         ;; requested direction instead of presenting that anchor indefinitely.
         (while (and (or
+                     (setq padding
+                           (emacsvox-agent-shell--chat-padding-source-bounds))
                      (emacsvox-agent-shell--end-of-prompt-marker-line-p)
                      (and
                       origin-source-bounds
@@ -1104,10 +1133,15 @@ a positive argument to the advised command."
                        (emacsvox-agent-shell--chat-navigation-source-bounds))))
                     (not (eq previous (point))))
           (setq previous (point))
-          (if (emacsvox-agent-shell--end-of-prompt-marker-line-p)
-              (emacsvox-agent-shell--move-through-prompt-marker direction)
+          (cond
+           (padding
             (emacsvox-agent-shell--move-beyond-visual-source-row
-             direction origin-source-bounds))))
+             direction padding))
+           ((emacsvox-agent-shell--end-of-prompt-marker-line-p)
+            (emacsvox-agent-shell--move-through-prompt-marker direction))
+           (t
+            (emacsvox-agent-shell--move-beyond-visual-source-row
+             direction origin-source-bounds)))))
       (emacsvox-agent-shell--present-current-navigation-line))
     result))
 

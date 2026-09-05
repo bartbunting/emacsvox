@@ -7765,6 +7765,98 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (should (= (point) destination))
             (should (equal presentations (list destination)))))))))
 
+(ert-deftest emacsvox-agent-shell-chat-navigation-crosses-label-padding ()
+  "The Me label's blank source rows must not trap vertical navigation."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert "Earlier response\n")
+    (let ((surplus-start (point)) label-start prompt-start presentations)
+      (insert "\n")
+      (setq label-start (point))
+      (insert "\n")
+      (setq prompt-start (point))
+      (insert "Codex> Input\n")
+      ;; Match Agent Shell's live multiline label and hidden surplus newline.
+      (let ((surplus (make-overlay surplus-start label-start))
+            (label (make-overlay label-start prompt-start)))
+        (overlay-put surplus 'agent-shell-chat--tag 'me-surplus)
+        (overlay-put surplus 'display "")
+        (overlay-put label 'agent-shell-chat--tag 'me-label)
+        (overlay-put label 'before-string "\n Me \n"))
+      (dolist (case '((previous-line 1 backward)
+                      (next-line -1 backward)
+                      (next-line 1 forward)
+                      (previous-line -1 forward)))
+        (pcase-let ((`(,command ,count ,direction) case))
+          (dolist (boundary-error '(nil t))
+            (let* ((backward-p (eq direction 'backward))
+                   (ems--interactive-fn-name command)
+                   (wrapper
+                    (if (eq command 'previous-line)
+                        #'emacsvox-agent-shell--previous-line-around
+                      #'emacsvox-agent-shell--next-line-around))
+                   (destination
+                    (if backward-p (1- surplus-start) prompt-start)))
+              (setq presentations nil)
+              (goto-char (if backward-p prompt-start (1- surplus-start)))
+              (cl-letf
+                  (((symbol-function
+                     'emacsvox-agent-shell--present-current-navigation-line)
+                    (lambda () (push (point) presentations))))
+                (funcall
+                 wrapper
+                 (lambda (&rest _)
+                   (goto-char (if backward-p label-start surplus-start))
+                   (when boundary-error
+                     (signal (if backward-p 'beginning-of-buffer 'end-of-buffer)
+                             nil)))
+                 count))
+              (should (= (point) destination))
+              (should (equal presentations (list destination))))))))))
+
+(ert-deftest emacsvox-agent-shell-chat-navigation-preserves-boundary-errors ()
+  "Real limits, unrelated failures, and noninteractive calls must still fail."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert "\nResponse\n\n")
+    (let ((first-label (make-overlay (point-min) (1+ (point-min))))
+          (last-label (make-overlay (1- (point-max)) (point-max))))
+      (dolist (overlay (list first-label last-label))
+        (overlay-put overlay 'agent-shell-chat--tag 'me-label))
+      (dolist (case '((previous-line 1 beginning-of-buffer)
+                      (next-line -1 beginning-of-buffer)
+                      (next-line 1 end-of-buffer)
+                      (previous-line -1 end-of-buffer)))
+        (pcase-let ((`(,command ,count ,boundary) case))
+          (let ((ems--interactive-fn-name command)
+                (wrapper
+                 (if (eq command 'previous-line)
+                     #'emacsvox-agent-shell--previous-line-around
+                   #'emacsvox-agent-shell--next-line-around)))
+            (goto-char
+             (if (eq boundary 'beginning-of-buffer)
+                 (point-min)
+               (1- (point-max))))
+            (should-error
+             (funcall wrapper (lambda (&rest _) (signal boundary nil)) count)
+             :type boundary)
+            ;; A boundary error without label padding is not ours to recover.
+            (goto-char 3)
+            (should-error
+             (funcall wrapper (lambda (&rest _) (signal boundary nil)) count)
+             :type boundary))))
+      (goto-char (point-min))
+      (let ((ems--interactive-fn-name 'next-line))
+        (should-error
+         (emacsvox-agent-shell--next-line-around
+          (lambda (&rest _) (error "Unrelated motion failure")) 1)
+         :type 'error))
+      (let ((ems--interactive-fn-name nil))
+        (should-error
+         (emacsvox-agent-shell--next-line-around
+          (lambda (&rest _) (signal 'end-of-buffer nil)) 1)
+         :type 'end-of-buffer)))))
+
 (ert-deftest emacsvox-agent-shell-chat-navigation-skips-hidden-marker-row ()
   "One vertical command should cross the hidden prompt marker and speak."
   (skip-unless (require 'agent-shell-chat-mode nil t))
