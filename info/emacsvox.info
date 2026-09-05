@@ -2172,8 +2172,11 @@ the same voice in the tuner likewise preserves its working settings.  If
 a prepared remap's source item changes or disappears, Emacsvox asks you
 to prepare that change again before applying it.
 
-   Aural Home is a spoken table.  Each row names an area, reports its
-current status, and describes its purpose.  The common controls are:
+   Aural Home begins with five task groups in one spoken table.  Press
+<RET> or <TAB> to expand or collapse a group.  Each action names a
+destination, reports its current status, and describes its purpose.  ‘/’
+searches all actions, including collapsed groups; the matching group
+opens with your destination selected.  The common controls are:
 
 ‘n, p, down, up’
      Move by row; settings lists speak the name and current state.
@@ -2202,19 +2205,28 @@ current status, and describes its purpose.  The common controls are:
 ‘q’
      Leave the current Aural interface.
 
-   The rows fall into a few practical groups:
+   The five groups are:
 
-Goal                Aural Home routes
-Understand          Explain At Point, Recent Aural Feedback, Semantic
-feedback            Vocabulary, and Training Mode.
-Change one          Remap Voice At Point, Remap Earcon At Point,
-behavior            Presentation Overrides, and Current Buffer Rules.
-Select broader      Presentation Options and Presentation Profiles.
-behavior
-Adjust resources    Voice Palettes, Voice Workbench, Sound Packs,
-                    Spatial Capabilities, and Spatial Settings.
-Diagnose the        Aural Doctor.
-system
+Task group                Destinations
+Understand or change      Current item explanation and remapping,
+feedback                  Recent Feedback, semantic vocabulary, and
+                          return to source.
+Choose voices and         Browse and try voices, palettes, sound packs,
+sounds                    speech engine and rate, notifications,
+                          spatial settings, and the full Voice
+                          Workbench.
+Choose optional           Presentation Options and training
+feedback                  explanations.
+Manage changes and        Unfinished drafts, overrides, buffer rules,
+saved setups              and Presentation Profiles.
+Troubleshoot              Aural Doctor and Omnivox engine modules.
+
+   Home announces the captured source and unfinished draft count on
+entry.  Choose _Resume unfinished changes_ to visit the original rule
+editor, tuner, or routing Workbench.  The draft is still unsaved until
+you accept it there.  Presentation Profiles capture options, palette,
+sound pack, and spatial settings.  Physical voice routes have their own
+saved routing profile.
 
    You can press <RET> on a row without memorizing its shortcut.  Aural
 Home also provides direct keys for frequent routes, including ‘x’ for
@@ -5369,46 +5381,46 @@ Node: Aural Presentation89505
 Node: Presentation Model91704
 Node: Presentation Modalities94171
 Node: Aural Home97340
-Node: Explaining Presentation100155
-Node: Adjusting Presentation102183
-Node: Presentation Profiles105458
-Node: Voices And Routing107135
-Node: Sounds And Space111190
-Node: Presentation Troubleshooting112826
-Node: Voice Lock114864
-Node: Using Online Help118071
-Node: Emacs Packages122133
-Node: Document Authoring123507
-Node: Structured Editing124061
-Node: Browsing Structure125044
-Node: Web Browsing125642
-Node: Messaging126477
-Node: Editing Code126975
-Node: Development Environment127494
-Node: Desktop Management129030
-Node: Personal Information Management129532
-Node: Desktop Applications130064
-Node: Notmuch Mail137452
-Ref: Notmuch fields and privacy146795
-Node: Agent Shell152503
-Node: EAT Terminal Access164798
-Node: Running Terminal Based Applications182057
-Node: Starting Term183012
-Node: Term Input Modes183851
-Node: Term Speech Feedback185011
-Node: Reviewing The Term Screen186205
-Node: Term Help And Recovery188106
-Node: Emacsvox Keyboard Commands189005
-Node: Copyright190409
-Node: Acknowledgments190996
-Node: Developer Guide192022
-Node: Documentation Maintenance193186
-Node: Speech Server Protocols197984
-Ref: Testing A Direct Legacy Server203891
-Ref: Commands That Queue Output204450
-Ref: Commands That Set State207484
-Node: Integration Maintenance210078
-Node: Concept Index234314
+Node: Explaining Presentation100919
+Node: Adjusting Presentation102947
+Node: Presentation Profiles106222
+Node: Voices And Routing107899
+Node: Sounds And Space111954
+Node: Presentation Troubleshooting113590
+Node: Voice Lock115628
+Node: Using Online Help118835
+Node: Emacs Packages122897
+Node: Document Authoring124271
+Node: Structured Editing124825
+Node: Browsing Structure125808
+Node: Web Browsing126406
+Node: Messaging127241
+Node: Editing Code127739
+Node: Development Environment128258
+Node: Desktop Management129794
+Node: Personal Information Management130296
+Node: Desktop Applications130828
+Node: Notmuch Mail138216
+Ref: Notmuch fields and privacy147559
+Node: Agent Shell153267
+Node: EAT Terminal Access165562
+Node: Running Terminal Based Applications182821
+Node: Starting Term183776
+Node: Term Input Modes184615
+Node: Term Speech Feedback185775
+Node: Reviewing The Term Screen186969
+Node: Term Help And Recovery188870
+Node: Emacsvox Keyboard Commands189769
+Node: Copyright191173
+Node: Acknowledgments191760
+Node: Developer Guide192786
+Node: Documentation Maintenance193950
+Node: Speech Server Protocols198748
+Ref: Testing A Direct Legacy Server204655
+Ref: Commands That Queue Output205214
+Ref: Commands That Set State208248
+Node: Integration Maintenance210842
+Node: Concept Index235078
 
 End Tag Table
 

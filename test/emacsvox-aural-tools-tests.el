@@ -157,6 +157,43 @@
         (should (= seen 1))))
     (should (= (with-current-buffer source (point)) 7))))
 
+(ert-deftest emacsvox-aural-home-search-reveals-collapsed-destinations ()
+  "Search reaches every action and returns to its selected row and column."
+  (emacsvox-test--with-home-context
+    (let ((all (mapcar #'car (emacsvox-aural-home--all-entries)))
+          (grouped (apply #'append (mapcar #'cddr emacsvox-aural-home-task-groups))))
+      (should (= (length all) (length (delete-dups (copy-sequence grouped)))))
+      (dolist (id all) (should (memq id grouped))))
+    (emacsvox-aural-ui-goto-tabulated-column 1)
+    (let (opened)
+      (cl-letf (((symbol-function 'completing-read)
+                 (lambda (_prompt choices &rest _)
+                   (should (assoc "Browse and try voices" choices))
+                   "Browse and try voices"))
+                ((symbol-function 'emacsvox-aural-voice-workbench)
+                 (lambda (view) (setq opened view))))
+        (emacsvox-aural-home-search))
+      (should (eq opened 'engines)))
+    (should (memq 'resources emacsvox-aural-home-expanded-groups))
+    (should (eq (tabulated-list-get-id) 'browse-voices))
+    (should (= (emacsvox-aural-ui-tabulated-column-index) 1))
+    (emacsvox-aural-home-toggle-group)
+    (should (equal (tabulated-list-get-id) '(group resources)))
+    (should-not (assq 'browse-voices tabulated-list-entries))))
+
+(ert-deftest emacsvox-aural-home-resumes-the-selected-unfinished-editor ()
+  "Draft discovery visits the original editor without altering its rules or source."
+  (emacsvox-test--with-home-context
+    (let* ((rule '(:id unfinished :match (:role heading)
+                  :render (:content (:voice bolden))))
+           (editor (emacsvox-aural-editor-open-prefilled-rule 'buffer rule source)))
+      (emacsvox-aural)
+      (should (memq editor (emacsvox-aural-home--pending-drafts)))
+      (emacsvox-aural-home-drafts)
+      (should (eq (current-buffer) editor))
+      (should (equal emacsvox-aural-editor-rules (list rule)))
+      (should (eq emacsvox-aural-editor-target source)))))
+
 (ert-deftest emacsvox-aural-tools-home-marker-follows-insertion-before-item ()
   "An insertion before the captured line moves its marker without changing target."
   (emacsvox-test--with-home-context
@@ -2150,10 +2187,12 @@
               (should
                (equal
                 (mapcar #'car tabulated-list-entries)
-                '(explain remap remap-earcon overrides recent-feedback profiles
-                  voices voice-workbench engine-modules features buffer-rules
-                  semantics sounds spatial spatial-settings training
-                  diagnostics)))
+                '((group understand) (group resources) (group optional)
+                  (group manage) (group troubleshoot))))
+              (dolist (id '(explain remap remap-earcon overrides recent-feedback profiles
+                            voices voice-workbench engine-modules features buffer-rules
+                            semantics sounds spatial spatial-settings training diagnostics))
+                (should (assq id (emacsvox-aural-home--all-entries))))
               (dolist
                   (binding
                    '(("RET" . emacsvox-aural-home-activate)
@@ -2221,16 +2260,14 @@
               (with-current-buffer "*Emacsvox Aural*"
                 (emacsvox-aural-home-previous)
                 (should (equal spoken "Top of aural home."))
+                (emacsvox-aural-home-toggle-group)
+                (should (string-prefix-p "Understand or change feedback: expanded" spoken))
+                (emacsvox-aural-home-next)
+                (should (string-prefix-p "Explain at point: " spoken))
                 (emacsvox-aural-home-next)
                 (should (string-prefix-p "Remap voice at point: " spoken))
                 (emacsvox-aural-home-next)
                 (should (string-prefix-p "Remap earcon at point: " spoken))
-                (emacsvox-aural-home-next)
-                (should (string-prefix-p "Presentation overrides: " spoken))
-                (emacsvox-aural-home-next)
-                (should (string-prefix-p "Recent aural feedback: " spoken))
-                (emacsvox-aural-home-next)
-                (should (string-prefix-p "Presentation profiles: " spoken))
                 (emacsvox-aural-home-next-column)
                 (should
                  (string-prefix-p "Current status, " spoken))

@@ -2183,8 +2183,11 @@ the tuner likewise preserves its working settings.  If a prepared remap's
 source item changes or disappears@comma{} Emacsvox asks you to prepare that change
 again before applying it.
 
-Aural Home is a spoken table.  Each row names an area@comma{} reports its current
-status@comma{} and describes its purpose.  The common controls are:
+Aural Home begins with five task groups in one spoken table.  Press
+@key{RET} or @key{TAB} to expand or collapse a group.
+Each action names a destination@comma{} reports its current status@comma{} and describes
+its purpose.  @kbd{/} searches all actions@comma{} including collapsed
+groups; the matching group opens with your destination selected.  The common controls are:
 
 @table @kbd
 @item n@comma{} p@comma{} down@comma{} up
@@ -2213,22 +2216,28 @@ Return to Aural Home from a manager or editor.
 Leave the current Aural interface.
 @end table
 
-The rows fall into a few practical groups:
+The five groups are:
 
-@multitable @columnfractions 0.27 0.73
-@item Goal
-@tab Aural Home routes
-@item Understand feedback
-@tab Explain At Point@comma{} Recent Aural Feedback@comma{} Semantic Vocabulary@comma{} and Training Mode.
-@item Change one behavior
-@tab Remap Voice At Point@comma{} Remap Earcon At Point@comma{} Presentation Overrides@comma{} and Current Buffer Rules.
-@item Select broader behavior
-@tab Presentation Options and Presentation Profiles.
-@item Adjust resources
-@tab Voice Palettes@comma{} Voice Workbench@comma{} Sound Packs@comma{} Spatial Capabilities@comma{} and Spatial Settings.
-@item Diagnose the system
-@tab Aural Doctor.
+@multitable @columnfractions 0.35 0.65
+@item Task group
+@tab Destinations
+@item Understand or change feedback
+@tab Current item explanation and remapping@comma{} Recent Feedback@comma{} semantic vocabulary@comma{} and return to source.
+@item Choose voices and sounds
+@tab Browse and try voices@comma{} palettes@comma{} sound packs@comma{} speech engine and rate@comma{} notifications@comma{} spatial settings@comma{} and the full Voice Workbench.
+@item Choose optional feedback
+@tab Presentation Options and training explanations.
+@item Manage changes and saved setups
+@tab Unfinished drafts@comma{} overrides@comma{} buffer rules@comma{} and Presentation Profiles.
+@item Troubleshoot
+@tab Aural Doctor and Omnivox engine modules.
 @end multitable
+
+Home announces the captured source and unfinished draft count on entry.
+Choose @emph{Resume unfinished changes} to visit the original rule editor@comma{} tuner@comma{}
+or routing Workbench.  The draft is still unsaved until you accept it there.
+Presentation Profiles capture options@comma{} palette@comma{} sound pack@comma{} and spatial
+settings.  Physical voice routes have their own saved routing profile.
 
 You can press @key{RET} on a row without memorizing its shortcut.  Aural
 Home also provides direct keys for frequent routes@comma{} including @kbd{x} for

@@ -68,6 +68,63 @@
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
+(declare-function emacsvox-aural-voice-workbench--dirty-p
+                  "emacsvox-aural-voice-workbench" ())
+(declare-function emacsvox-aural-prefer-engine
+                  "emacsvox-aural-voice-workbench" (engine-id &optional save))
+(declare-function tts-set-rate "tts-speak" (rate &optional prefix))
+(declare-function tts-notify-stop "tts-speak" ())
+(declare-function emacsvox-view-notifications "emacsvox-speak" ())
+
+(defvar-local emacsvox-aural-home-expanded-groups nil
+  "Task groups expanded in this Home buffer.")
+
+(defconst emacsvox-aural-home-task-groups
+  '((understand "Understand or change feedback"
+                explain remap remap-earcon recent-feedback semantics return-source)
+    (resources "Choose voices and sounds"
+               browse-voices voices sounds speech-engine speech-rate
+               notifications notification-log stop-notifications
+               spatial spatial-settings voice-workbench)
+    (optional "Choose optional feedback" features training)
+    (manage "Manage changes and saved setups" drafts overrides buffer-rules profiles)
+    (troubleshoot "Troubleshoot" diagnostics engine-modules))
+  "Ordered Home task groups with their stable action identifiers.")
+
+(defun emacsvox-aural-home--pending-drafts ()
+  "Return unfinished Aural editors without changing their working state."
+  (cl-remove-if-not
+   (lambda (buffer)
+     (with-current-buffer buffer
+       (or (bound-and-true-p emacsvox-aural-editor-dirty)
+           (bound-and-true-p emacsvox-aural-voice-tuner-dirty)
+           (and (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+                (emacsvox-aural-voice-workbench--dirty-p)))))
+   (buffer-list)))
+
+(defun emacsvox-aural-home--header ()
+  "Describe the captured source and number of unfinished editors."
+  (format "Source: %s; %d unfinished drafts"
+          (emacsvox-aural-inspection-source-description)
+          (length (emacsvox-aural-home--pending-drafts))))
+
+(defun emacsvox-aural-home-drafts ()
+  "Resume an unfinished rule, voice, or routing editor."
+  (interactive)
+  (let ((drafts (emacsvox-aural-home--pending-drafts)))
+    (unless drafts (user-error "There are no unfinished Aural drafts"))
+    (emacsvox-aural-ui-pop-to-buffer
+     (if (cdr drafts)
+         (get-buffer (completing-read "Resume draft: "
+                                      (mapcar #'buffer-name drafts) nil t))
+       (car drafts)))))
+
+(defun emacsvox-aural-home-browse-voices ()
+  "Browse installed engines and try their physical voices."
+  (interactive)
+  (require 'emacsvox-aural-voice-workbench)
+  (emacsvox-aural-voice-workbench 'engines))
+
 (defun emacsvox-aural-home--source-buffer ()
   "Return the live inspection source for the current aural home buffer."
   (emacsvox-aural-inspection-source-buffer))
@@ -138,8 +195,8 @@
   (require 'emacsvox-aural-doctor)
   (emacsvox-aural-doctor-summary))
 
-(defun emacsvox-aural-home--entries ()
-  "Return current rows for the aural home buffer."
+(defun emacsvox-aural-home--all-entries ()
+  "Return all named Home actions, including those in collapsed groups."
   (let* ((source (emacsvox-aural-home--source-buffer))
          (source-name (emacsvox-aural-inspection-source-description))
          (buffer-rules
@@ -155,6 +212,30 @@
            (emacsvox-aural-effective-scheme-provider 'resource-pack)
            "none")))
     (list
+     (list 'browse-voices
+           (vector "Browse and try voices" "Installed engines and voices"
+                   "Hear physical voices, compare samples, and try temporary tuning"))
+     (list 'speech-engine
+           (vector "Ordinary speech engine" "Session; prefix to save"
+                   "Choose the preferred engine using the existing routing command"))
+     (list 'speech-rate
+           (vector "Speech rate" (format "%s" (bound-and-true-p tts-speech-rate))
+                   "Set the source buffer rate; prefix sets the global rate"))
+     (list 'notifications
+           (vector "Notification output" "Customize"
+                   "Choose the notification device; initialize it with C-e d C-n"))
+     (list 'notification-log
+           (vector "Review notifications" "Notification history"
+                   "Open the existing notifications buffer"))
+     (list 'stop-notifications
+           (vector "Stop notification speech" "Current notification stream"
+                   "Stop background speech using the existing notification command"))
+     (list 'return-source
+           (vector "Return to source item" source-name "Visit the captured source position"))
+     (list 'drafts
+           (vector "Resume unfinished changes"
+                   (format "%d drafts" (length (emacsvox-aural-home--pending-drafts)))
+                   "Choose an unfinished rule, voice, or routing editor"))
      (list
       'explain
       (vector
@@ -187,7 +268,7 @@
       (vector
        "Presentation profiles"
        (emacsvox-aural-home--profile-status)
-       "Save and switch complete global presentation configurations"))
+       "Save and switch options, palette, sound pack, and spatial settings; routes are separate"))
      (list
       'voices
       (vector
@@ -252,8 +333,55 @@
        (emacsvox-aural-home--validation-status)
        "Diagnose bindings, loaded files, configuration, resources, and backend")))))
 
+(defun emacsvox-aural-home--entries ()
+  "Return task groups and the actions in expanded groups, in task order."
+  (let ((actions (emacsvox-aural-home--all-entries)) rows)
+    (dolist (group emacsvox-aural-home-task-groups)
+      (let ((expanded (memq (car group) emacsvox-aural-home-expanded-groups)))
+        (push (list (list 'group (car group))
+                    (vector (cadr group)
+                            (format "%s, %d actions" (if expanded "expanded" "collapsed")
+                                    (length (cddr group)))
+                            "RET or TAB expands or collapses this task group")) rows)
+        (when expanded
+          (dolist (id (cddr group))
+            (when-let* ((entry (assq id actions))) (push entry rows))))))
+    (nreverse rows)))
+
+(defun emacsvox-aural-home-toggle-group ()
+  "Expand or collapse the task group at point, retaining its position."
+  (interactive)
+  (let* ((row (tabulated-list-get-id))
+         (id (if (consp row) (cadr row)
+               (car (cl-find-if (lambda (group) (memq row (cddr group)))
+                                emacsvox-aural-home-task-groups)))))
+    (unless id (user-error "Move to a Home task group first"))
+    (if (memq id emacsvox-aural-home-expanded-groups)
+        (setq emacsvox-aural-home-expanded-groups
+              (delq id emacsvox-aural-home-expanded-groups))
+      (push id emacsvox-aural-home-expanded-groups))
+    (emacsvox-aural-home-refresh (list 'group id))
+    (emacsvox-aural-ui-speak-name-and-state)))
+
+(defun emacsvox-aural-home-search ()
+  "Find and open any named Home action, including collapsed destinations."
+  (interactive)
+  (let* ((actions (mapcar (lambda (row) (cons (aref (cadr row) 0) (car row)))
+                          (emacsvox-aural-home--all-entries)))
+         (id (cdr (assoc (completing-read "Home action: " actions nil t) actions)))
+         (group (cl-find-if (lambda (entry) (memq id (cddr entry)))
+                            emacsvox-aural-home-task-groups)))
+    (cl-pushnew (car group) emacsvox-aural-home-expanded-groups)
+    (emacsvox-aural-home-refresh id)
+    (emacsvox-aural-home-activate)))
+
 (defun emacsvox-aural-home--goto (id)
-  "Move to home row ID and its first column."
+  "Move to Home action ID, expanding its group when needed."
+  (unless (emacsvox-aural-ui-goto-row id)
+    (when-let* ((group (cl-find-if (lambda (entry) (memq id (cddr entry)))
+                                  emacsvox-aural-home-task-groups)))
+      (cl-pushnew (car group) emacsvox-aural-home-expanded-groups)
+      (emacsvox-aural-home-refresh id)))
   (emacsvox-aural-ui-goto-row id))
 
 (defun emacsvox-aural-home-refresh (&optional id)
@@ -262,10 +390,11 @@
   (emacsvox-aural-ui-refresh-tabulated
    (lambda ()
      (setq tabulated-list-entries (emacsvox-aural-home--entries)))
-   id 'explain))
+   id '(group understand))
+  (setq header-line-format '(:eval (emacsvox-aural-home--header))))
 
-(defun emacsvox-aural-home-speak-current ()
-  "Speak the complete aural home row at point."
+(defun emacsvox-aural-home-speak-current (&optional include-context)
+  "Speak the complete Home row; INCLUDE-CONTEXT adds source and draft status."
   (interactive)
   (let* ((entry
           (or
@@ -275,6 +404,8 @@
           (format
            "%s. %s. %s."
            (aref entry 0) (aref entry 1) (aref entry 2))))
+    (when include-context
+      (setq summary (concat (emacsvox-aural-home--header) ". " summary)))
     (if (fboundp 'tts-speak)
         (tts-speak summary)
       (message "%s" summary))
@@ -369,6 +500,17 @@
   (interactive)
   (pcase (or (tabulated-list-get-id)
              (user-error "Move to an aural home row first"))
+    (`(group ,_) (emacsvox-aural-home-toggle-group))
+    ('browse-voices (emacsvox-aural-home-browse-voices))
+    ('drafts (emacsvox-aural-home-drafts))
+    ('return-source (emacsvox-aural-inspection-return-to-source))
+    ('speech-engine
+     (require 'emacsvox-aural-voice-workbench)
+     (call-interactively #'emacsvox-aural-prefer-engine))
+    ('speech-rate (emacsvox-aural-home--call-in-source #'tts-set-rate))
+    ('notifications (customize-variable 'tts-notification-device))
+    ('notification-log (call-interactively #'emacsvox-view-notifications))
+    ('stop-notifications (call-interactively #'tts-notify-stop))
     ('explain
      (emacsvox-aural-home-explain))
     ('remap
@@ -420,7 +562,9 @@
       "additions; open Presentation overrides for the strongest rule layers.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "RET open or perform  SPC speak complete row\n"
+      "RET open details or group; TAB expand/collapse group\n"
+      "/ search all actions, including collapsed groups\n"
+      "SPC speak complete row; source and draft count are announced on entry\n"
       "x explain at point   r remap voice at point\n"
       "R remap one exact earcon at point\n"
       "O presentation overrides\n"
@@ -455,9 +599,9 @@
    #'emacsvox-aural-ui-speak-name-and-state)
   (setq
    tabulated-list-format
-   [("Area" 24 t)
-    ("Current status" 38 t)
-    ("Purpose" 0 t)])
+   [("Task or action" 35 nil)
+    ("Current status" 38 nil)
+    ("Purpose" 0 nil)])
   (setq tabulated-list-padding 2)
   (add-hook
    'tabulated-list-revert-hook
@@ -467,6 +611,8 @@
 (dolist
     (binding
      '(("RET" . emacsvox-aural-home-activate)
+       ("TAB" . emacsvox-aural-home-toggle-group)
+       ("/" . emacsvox-aural-home-search)
        ("x" . emacsvox-aural-home-explain)
        ("r" . emacsvox-aural-home-remap-voice)
        ("R" . emacsvox-aural-home-remap-earcon)
@@ -499,7 +645,7 @@
       (emacsvox-aural-home-refresh))
     (emacsvox-aural-ui-pop-to-buffer buffer)
     (when (called-interactively-p 'interactive)
-      (emacsvox-aural-home-speak-current))
+      (emacsvox-aural-home-speak-current t))
     buffer))
 
 (add-hook

@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1488 commands and 205 options.
+   This chapter documents a total of 1493 commands and 205 options.
 
 * Menu:
 
@@ -2730,28 +2730,42 @@ diagnosis, and contextual remapping.
 
      Perform the primary operation for the aural home row at point.
 
-2.25.1.3 emacsvox-aural-home-engine-modules
+2.25.1.3 emacsvox-aural-home-browse-voices
+..........................................
+
+ -- Command: emacsvox-aural-home-browse-voices
+
+     Browse installed engines and try their physical voices.
+
+2.25.1.4 emacsvox-aural-home-drafts
+...................................
+
+ -- Command: emacsvox-aural-home-drafts
+
+     Resume an unfinished rule, voice, or routing editor.
+
+2.25.1.5 emacsvox-aural-home-engine-modules
 ...........................................
 
  -- Command: emacsvox-aural-home-engine-modules
 
      Open the verified Omnivox engine-module manager.
 
-2.25.1.4 emacsvox-aural-home-explain
+2.25.1.6 emacsvox-aural-home-explain
 ....................................
 
  -- Command: emacsvox-aural-home-explain
 
      Explain presentation at point in the remembered source buffer.
 
-2.25.1.5 emacsvox-aural-home-help
+2.25.1.7 emacsvox-aural-home-help
 .................................
 
  -- Command: emacsvox-aural-home-help
 
      Display and speak aural home commands and discovery guidance.
 
-2.25.1.6 emacsvox-aural-home-mode
+2.25.1.8 emacsvox-aural-home-mode
 .................................
 
  -- Command: emacsvox-aural-home-mode
@@ -2765,7 +2779,9 @@ diagnosis, and contextual remapping.
 
      Key             Binding
      -----------------------------------------------------
+     TAB		emacsvox-aural-home-toggle-group
      RET		emacsvox-aural-home-activate
+     /		emacsvox-aural-home-search
      ?		emacsvox-aural-home-help
      D		emacsvox-aural-doctor
      H		emacsvox-aural-home-recent-feedback
@@ -2780,56 +2796,56 @@ diagnosis, and contextual remapping.
 
      C-c C-o		emacsvox-aural-inspection-return-to-source
 
-2.25.1.7 emacsvox-aural-home-next
+2.25.1.9 emacsvox-aural-home-next
 .................................
 
  -- Command: emacsvox-aural-home-next
 
      Move to and speak the next aural home row.
 
-2.25.1.8 emacsvox-aural-home-next-column
-........................................
+2.25.1.10 emacsvox-aural-home-next-column
+.........................................
 
  -- Command: emacsvox-aural-home-next-column
 
      Move right and speak the next aural home column.
 
-2.25.1.9 emacsvox-aural-home-overrides
-......................................
+2.25.1.11 emacsvox-aural-home-overrides
+.......................................
 
  -- Command: emacsvox-aural-home-overrides
 
      Open unified presentation overrides from Aural Home.
 
-2.25.1.10 emacsvox-aural-home-previous
+2.25.1.12 emacsvox-aural-home-previous
 ......................................
 
  -- Command: emacsvox-aural-home-previous
 
      Move to and speak the previous aural home row.
 
-2.25.1.11 emacsvox-aural-home-previous-column
+2.25.1.13 emacsvox-aural-home-previous-column
 .............................................
 
  -- Command: emacsvox-aural-home-previous-column
 
      Move left and speak the previous aural home column.
 
-2.25.1.12 emacsvox-aural-home-profiles
+2.25.1.14 emacsvox-aural-home-profiles
 ......................................
 
  -- Command: emacsvox-aural-home-profiles
 
      Open the complete presentation-profile manager.
 
-2.25.1.13 emacsvox-aural-home-recent-feedback
+2.25.1.15 emacsvox-aural-home-recent-feedback
 .............................................
 
  -- Command: emacsvox-aural-home-recent-feedback
 
      Open bounded retained presentations from Aural Home.
 
-2.25.1.14 emacsvox-aural-home-refresh
+2.25.1.16 emacsvox-aural-home-refresh
 .....................................
 
  -- Command: emacsvox-aural-home-refresh (&optional id)
@@ -2838,42 +2854,59 @@ diagnosis, and contextual remapping.
 
      (fn &optional ID)
 
-2.25.1.15 emacsvox-aural-home-remap-earcon
+2.25.1.17 emacsvox-aural-home-remap-earcon
 ..........................................
 
  -- Command: emacsvox-aural-home-remap-earcon
 
      Prepare an earcon override for the remembered source item.
 
-2.25.1.16 emacsvox-aural-home-remap-voice
+2.25.1.18 emacsvox-aural-home-remap-voice
 .........................................
 
  -- Command: emacsvox-aural-home-remap-voice
 
      Prepare a voice override for the remembered source item.
 
-2.25.1.17 emacsvox-aural-home-speak-current
+2.25.1.19 emacsvox-aural-home-search
+....................................
+
+ -- Command: emacsvox-aural-home-search
+
+     Find and open any named Home action, including collapsed destinations.
+
+2.25.1.20 emacsvox-aural-home-speak-current
 ...........................................
 
- -- Command: emacsvox-aural-home-speak-current
+ -- Command: emacsvox-aural-home-speak-current (&optional
+          include-context)
 
-     Speak the complete aural home row at point.
+     Speak the complete Home row; INCLUDE-CONTEXT adds source and draft status.
 
-2.25.1.18 emacsvox-aural-home-speak-current-cell
+     (fn &optional INCLUDE-CONTEXT)
+
+2.25.1.21 emacsvox-aural-home-speak-current-cell
 ................................................
 
  -- Command: emacsvox-aural-home-speak-current-cell
 
      Speak the current aural home column title and value.
 
-2.25.1.19 emacsvox-aural-home-voice-palettes
+2.25.1.22 emacsvox-aural-home-toggle-group
+..........................................
+
+ -- Command: emacsvox-aural-home-toggle-group
+
+     Expand or collapse the task group at point, retaining its position.
+
+2.25.1.23 emacsvox-aural-home-voice-palettes
 ............................................
 
  -- Command: emacsvox-aural-home-voice-palettes
 
      Open the accessible voice-palette manager.
 
-2.25.1.20 emacsvox-aural-home-voice-workbench
+2.25.1.24 emacsvox-aural-home-voice-workbench
 .............................................
 
  -- Command: emacsvox-aural-home-voice-workbench
@@ -4282,14 +4315,21 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      Choose an available action by name.
 
-2.50.1.5 emacsvox-aural-ui-help-quit
+2.50.1.5 emacsvox-aural-ui-help-actions
+.......................................
+
+ -- Command: emacsvox-aural-ui-help-actions
+
+     Return to the interface that opened Help and choose one of its actions.
+
+2.50.1.6 emacsvox-aural-ui-help-quit
 ....................................
 
  -- Command: emacsvox-aural-ui-help-quit
 
      Quit Help and restore its originating aural interface and position.
 
-2.50.1.6 emacsvox-aural-ui-help-return-mode
+2.50.1.7 emacsvox-aural-ui-help-return-mode
 ...........................................
 
  -- Command: emacsvox-aural-ui-help-return-mode (&optional arg)
@@ -4313,42 +4353,42 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      (fn &optional ARG)
 
-2.50.1.7 emacsvox-aural-ui-next-column
+2.50.1.8 emacsvox-aural-ui-next-column
 ......................................
 
  -- Command: emacsvox-aural-ui-next-column
 
      Move right and speak the next column.
 
-2.50.1.8 emacsvox-aural-ui-next-row
+2.50.1.9 emacsvox-aural-ui-next-row
 ...................................
 
  -- Command: emacsvox-aural-ui-next-row
 
      Move to and speak the next row.
 
-2.50.1.9 emacsvox-aural-ui-previous-column
-..........................................
+2.50.1.10 emacsvox-aural-ui-previous-column
+...........................................
 
  -- Command: emacsvox-aural-ui-previous-column
 
      Move left and speak the previous column.
 
-2.50.1.10 emacsvox-aural-ui-previous-row
+2.50.1.11 emacsvox-aural-ui-previous-row
 ........................................
 
  -- Command: emacsvox-aural-ui-previous-row
 
      Move to and speak the previous row.
 
-2.50.1.11 emacsvox-aural-ui-refresh
+2.50.1.12 emacsvox-aural-ui-refresh
 ...................................
 
  -- Command: emacsvox-aural-ui-refresh
 
      Refresh the current interface using its configured callback.
 
-2.50.1.12 emacsvox-aural-ui-speak-current-cell
+2.50.1.13 emacsvox-aural-ui-speak-current-cell
 ..............................................
 
  -- Command: emacsvox-aural-ui-speak-current-cell (&optional
@@ -4361,14 +4401,14 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      (fn &optional VALUE-FIRST)
 
-2.50.1.13 emacsvox-aural-ui-speak-current-row
+2.50.1.14 emacsvox-aural-ui-speak-current-row
 .............................................
 
  -- Command: emacsvox-aural-ui-speak-current-row
 
      Speak the complete current row using its configured callback.
 
-2.50.1.14 emacsvox-aural-ui-stop-preview
+2.50.1.15 emacsvox-aural-ui-stop-preview
 ........................................
 
  -- Command: emacsvox-aural-ui-stop-preview
@@ -8158,6 +8198,7 @@ table of contents.
 
  -- Variable: User Option emacsvox-epub-bookshelf-directory
      Directory where we keep .bsf files defining various bookshelves.
+
      Default Value:
 
      "~/EBooks/bsf/"

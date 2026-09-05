@@ -65,7 +65,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1488 commands and 205 options.
+This chapter documents a total of 1493 commands and 205 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -2811,6 +2811,24 @@ Perform the primary operation for the aural home row at point.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-home-browse-voices
+@deffn {Command} emacsvox-aural-home-browse-voices
+@findex emacsvox-aural-home-browse-voices
+
+@format
+Browse installed engines and try their physical voices.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-drafts
+@deffn {Command} emacsvox-aural-home-drafts
+@findex emacsvox-aural-home-drafts
+
+@format
+Resume an unfinished rule, voice, or routing editor.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-home-engine-modules
 @deffn {Command} emacsvox-aural-home-engine-modules
 @findex emacsvox-aural-home-engine-modules
@@ -2852,7 +2870,9 @@ during initialization.
 
 Key             Binding
 -------------------------------------------------------------------------------
+TAB		emacsvox-aural-home-toggle-group
 RET		emacsvox-aural-home-activate
+/		emacsvox-aural-home-search
 ?		emacsvox-aural-home-help
 D		emacsvox-aural-doctor
 H		emacsvox-aural-home-recent-feedback
@@ -2962,12 +2982,23 @@ Prepare a voice override for the remembered source item.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-home-search
+@deffn {Command} emacsvox-aural-home-search
+@findex emacsvox-aural-home-search
+
+@format
+Find and open any named Home action, including collapsed destinations.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-home-speak-current
-@deffn {Command} emacsvox-aural-home-speak-current
+@deffn {Command} emacsvox-aural-home-speak-current  (&optional include-context)
 @findex emacsvox-aural-home-speak-current
 
 @format
-Speak the complete aural home row at point.
+Speak the complete Home row; INCLUDE-CONTEXT adds source and draft status.
+
+(fn &optional INCLUDE-CONTEXT)
 @end format
 @end deffn
 
@@ -2977,6 +3008,15 @@ Speak the complete aural home row at point.
 
 @format
 Speak the current aural home column title and value.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-toggle-group
+@deffn {Command} emacsvox-aural-home-toggle-group
+@findex emacsvox-aural-home-toggle-group
+
+@format
+Expand or collapse the task group at point, retaining its position.
 @end format
 @end deffn
 
@@ -4591,6 +4631,15 @@ C-M-i		backward-button
 
 @format
 Choose an available action by name.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-help-actions
+@deffn {Command} emacsvox-aural-ui-help-actions
+@findex emacsvox-aural-ui-help-actions
+
+@format
+Return to the interface that opened Help and choose one of its actions.
 @end format
 @end deffn
 
@@ -9111,6 +9160,7 @@ Custom URL executor for use in EPub Mode.
 @verbatim
 Directory where we keep .bsf files defining various bookshelves.
 @end verbatim
+
 Default Value:
 @verbatim
 

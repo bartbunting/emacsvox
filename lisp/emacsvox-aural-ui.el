@@ -49,6 +49,7 @@
                   (&optional buffer-info))
 (declare-function emacsvox-aural-home-refresh
                   "emacsvox-aural-home" (&optional id))
+(autoload 'emacsvox-aural "emacsvox-aural-home" nil t)
 (declare-function tts-speak "tts-speak" (text))
 (declare-function emacsvox-aural-preview-stop "emacsvox-aural-preview" ())
 (declare-function emacsvox-aural-preview-message "emacsvox-aural-preview"
@@ -110,6 +111,9 @@ When nil, movement speaks the current titled cell.")
 (defvar emacsvox-aural-ui-help-return-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q") #'emacsvox-aural-ui-help-quit)
+    (define-key map (kbd "h") #'emacsvox-aural)
+    (define-key map (kbd "S") #'emacsvox-aural-ui-stop-preview)
+    (define-key map (kbd "C-c C-a") #'emacsvox-aural-ui-help-actions)
     map)
   "Keymap that gives aural Help buffers an exact return destination.")
 
@@ -117,6 +121,14 @@ When nil, movement speaks the current titled cell.")
   "Return from Help to the exact aural interface that requested it."
   :lighter nil
   :keymap emacsvox-aural-ui-help-return-mode-map)
+
+(defun emacsvox-aural-ui-help-actions ()
+  "Return to the interface that opened Help and choose one of its actions."
+  (interactive)
+  (unless (buffer-live-p emacsvox-aural-ui-help-origin-buffer)
+    (user-error "The interface that opened Help is no longer available"))
+  (emacsvox-aural-ui-help-quit)
+  (emacsvox-aural-ui-actions))
 
 (defun emacsvox-aural-ui-help-quit ()
   "Quit Help and restore its originating aural interface and position."
