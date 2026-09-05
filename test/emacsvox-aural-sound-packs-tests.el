@@ -122,7 +122,7 @@
             (emacsvox-aural-sound-packs-previous)
             (should (equal spoken "Top of sound pack list."))
             (emacsvox-aural-sound-packs-next)
-            (should (equal spoken "overlay, Pack"))
+            (should (equal spoken "overlay: active"))
             (emacsvox-aural-sound-packs-next-column)
             (should (equal spoken "Status, active")))))
       (emacsvox-aural-list-sound-pack-cues 'overlay)
@@ -163,7 +163,7 @@
           (should (equal (aref alarm 1) "missing")))
         (dolist
             (binding
-             '(("RET" . emacsvox-aural-sound-pack-cues-audition)
+             '(("RET" . emacsvox-aural-sound-pack-cues-describe)
                ("P" . emacsvox-aural-sound-pack-cues-audition)
                ("v" . emacsvox-aural-sound-pack-cues-show-validation)
                ("o" . emacsvox-aural-sound-packs-open-directory)

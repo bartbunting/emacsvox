@@ -451,7 +451,8 @@
   (emacsvox-aural-ui-configure-tabulated
    "aural home"
    #'emacsvox-aural-home-speak-current
-   #'emacsvox-aural-home-refresh)
+   #'emacsvox-aural-home-refresh
+   #'emacsvox-aural-ui-speak-name-and-state)
   (setq
    tabulated-list-format
    [("Area" 24 t)

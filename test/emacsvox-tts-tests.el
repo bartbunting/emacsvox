@@ -390,6 +390,40 @@
           (should-not (gethash 301 (omnivox--pending-requests process))))
       (when (process-live-p process) (delete-process process)))))
 
+(ert-deftest emacsvox-tts-omnivox-preview-stop-cancels-late-callbacks ()
+  "Only the preview owner cancels; late completion cannot start another sample."
+  (let ((tts-speaker-process 'main) (tts-stopped-hook nil)
+        callbacks submitted results)
+    (cl-letf (((symbol-function 'tts-stop) #'ignore)
+              ((symbol-function 'omnivox--preview-one)
+               (lambda (entry callback)
+                 (push entry submitted) (push callback callbacks))))
+      (omnivox-preview-voice-sequence '(first second)
+                                     (lambda (result) (push result results)))
+      (run-hook-with-args 'tts-stopped-hook 'notification)
+      (should-not results)
+      (run-hook-with-args 'tts-stopped-hook 'main)
+      (funcall (car callbacks) '(:status completed))
+      (should (equal submitted '(first)))
+      (should (= (length results) 1))
+      (should (eq (plist-get (car results) :status) 'cancelled))
+      (should-not tts-stopped-hook))))
+
+(ert-deftest emacsvox-tts-omnivox-preview-later-error-cleans-up ()
+  "A request error following an asynchronous completion finishes exactly once."
+  (let ((tts-speaker-process 'main) (tts-stopped-hook nil) callback results)
+    (cl-letf (((symbol-function 'tts-stop) #'ignore)
+              ((symbol-function 'omnivox--preview-one)
+               (lambda (entry continuation)
+                 (if (eq entry 'first) (setq callback continuation)
+                   (error "Preview unavailable")))))
+      (omnivox-preview-voice-sequence '(first second)
+                                     (lambda (result) (push result results)))
+      (should-error (funcall callback '(:status completed)))
+      (should (= (length results) 1))
+      (should (eq (plist-get (car results) :status) 'failed))
+      (should-not tts-stopped-hook))))
+
 (ert-deftest emacsvox-tts-omnivox-old-preview-omits-relative-rate-visibly ()
   "An older Omnivox is never sent an absolute fallback rate."
   (let* ((process

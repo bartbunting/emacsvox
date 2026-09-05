@@ -148,9 +148,9 @@
          "Summary: %s\n\n"
          (plist-get emacsvox-aural-editor-scheme-data :summary)))))
     (insert
-     "Keys: n add, RET/e edit, c copy, d delete, t enable/disable,\n"
-     "M-up/M-down reorder, m metadata, p preview, x explain, v validate,\n"
-     "w write, C-c C-c write, g refresh, q quit, ? help.\n\n")
+     "Keys: n/p or up/down move, N add, RET/e edit, c copy, d delete,\n"
+     "t enable/disable, M-up/M-down reorder, m metadata, P preview, S stop,\n"
+     "x explain, v validate, w write, C-c C-a actions, q quit, ? help.\n\n")
     (if emacsvox-aural-editor-rules
         (cl-loop
          for rule in emacsvox-aural-editor-rules
@@ -185,7 +185,7 @@
            (put-text-property
             start (point)
             emacsvox-aural-editor-rule-index-property index)))
-      (insert "No rules.  Press n to add one.\n"))
+      (insert "No rules.  Press N to add one.\n"))
     (goto-char (min position (point-max)))))
 
 (defun emacsvox-aural-editor--index-at-point ()
@@ -197,6 +197,32 @@
      (point-min))
     emacsvox-aural-editor-rule-index-property)
    (user-error "Move point to a displayed rule first")))
+
+(defun emacsvox-aural-editor--move-rule (direction)
+  "Move DIRECTION rules and speak the selected rule's name and state."
+  (let* ((current (get-text-property (point) emacsvox-aural-editor-rule-index-property))
+         (target (if current (+ current direction)
+                   (if (> direction 0) 0 (1- (length emacsvox-aural-editor-rules))))))
+    (if (or (< target 0) (>= target (length emacsvox-aural-editor-rules)))
+        (emacsvox-aural-ui-announce-boundary
+         (if (> direction 0) "End of rules." "Beginning of rules."))
+      (goto-char (text-property-any (point-min) (point-max)
+                                    emacsvox-aural-editor-rule-index-property target))
+      (let ((rule (nth target emacsvox-aural-editor-rules)))
+        (emacsvox-aural-ui-speak
+         (format "%s: %s%s" (plist-get rule :id)
+                 (if (emacsvox-aural-editor-rule-enabled-p rule) "enabled" "disabled")
+                 (if emacsvox-aural-editor-dirty ", unsaved" "")))))))
+
+(defun emacsvox-aural-editor-next-rule ()
+  "Move to the next rule."
+  (interactive)
+  (emacsvox-aural-editor--move-rule 1))
+
+(defun emacsvox-aural-editor-previous-rule ()
+  "Move to the previous rule."
+  (interactive)
+  (emacsvox-aural-editor--move-rule -1))
 
 (defun emacsvox-aural-editor--rule-at-point ()
   "Return the working declarative rule displayed at point."
@@ -1035,7 +1061,11 @@ LABEL identifies the speech or cue being edited."
      emacsvox-aural-editor-source-guard nil)
     (force-mode-line-update)
     (emacsvox-aural-editor-refresh)
-    (message "Saved %s" (emacsvox-aural-editor--scope-label))))
+    (emacsvox-aural-ui-announce-result
+     "%s %s"
+     (if (memq emacsvox-aural-editor-scope '(session buffer))
+         "Applied temporarily:" "Saved:")
+     (emacsvox-aural-editor--scope-label))))
 
 (defun emacsvox-aural-editor--compiled-rule-at-point ()
   "Compile and return the selected working rule."
@@ -1108,7 +1138,7 @@ LABEL identifies the speech or cue being edited."
 (defun emacsvox-aural-editor-help ()
   "Display aural editor commands and workflow."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Presentation Editor\n\n"
@@ -1116,10 +1146,11 @@ LABEL identifies the speech or cue being edited."
       "content, and after phases.  Ordered actions are speech, cues, pauses,\n"
       "or named tones.\n"
       "Open a different editor buffer to choose another persistence scope.\n\n"
-      "n add rule          RET or e edit rule\n"
+      "n/p or up/down move N add rule\n"
+      "RET or e edit rule  C-c C-a available actions\n"
       "c copy rule         d delete rule\n"
       "t enable/disable    M-up/M-down reorder\n"
-      "m metadata          p preview\n"
+      "m metadata          P preview; S stop\n"
       "x explain           v validate\n"
       "w or C-c C-c write changes\n"
       "h aural home\n"
@@ -1139,7 +1170,11 @@ LABEL identifies the speech or cue being edited."
 (defvar emacsvox-aural-scheme-editor-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map emacsvox-aural-interface-mode-map)
-    (define-key map (kbd "n") #'emacsvox-aural-editor-add-rule)
+    (define-key map (kbd "n") #'emacsvox-aural-editor-next-rule)
+    (define-key map (kbd "p") #'emacsvox-aural-editor-previous-rule)
+    (define-key map (kbd "<down>") #'emacsvox-aural-editor-next-rule)
+    (define-key map (kbd "<up>") #'emacsvox-aural-editor-previous-rule)
+    (define-key map (kbd "N") #'emacsvox-aural-editor-add-rule)
     (define-key map (kbd "RET") #'emacsvox-aural-editor-edit-rule)
     (define-key map (kbd "e") #'emacsvox-aural-editor-edit-rule)
     (define-key map (kbd "c") #'emacsvox-aural-editor-copy-rule)
@@ -1148,7 +1183,7 @@ LABEL identifies the speech or cue being edited."
     (define-key map (kbd "<M-up>") #'emacsvox-aural-editor-move-rule-up)
     (define-key map (kbd "<M-down>") #'emacsvox-aural-editor-move-rule-down)
     (define-key map (kbd "m") #'emacsvox-aural-editor-edit-metadata)
-    (define-key map (kbd "p") #'emacsvox-aural-editor-preview-rule)
+    (define-key map (kbd "P") #'emacsvox-aural-editor-preview-rule)
     (define-key map (kbd "x") #'emacsvox-aural-editor-explain-rule)
     (define-key map (kbd "v") #'emacsvox-aural-editor-validate)
     (define-key map (kbd "s") nil)
@@ -1165,6 +1200,19 @@ LABEL identifies the speech or cue being edited."
     emacsvox-aural-interface-mode
   "Aural-Presentation-Editor"
   "Accessible editor for declarative Presentation Options and rule layers."
+  (setq-local emacsvox-aural-ui-action-filter
+              (lambda (command)
+                (or (get-text-property
+                     (point) emacsvox-aural-editor-rule-index-property)
+                    (not (memq command
+                               '(emacsvox-aural-editor-explain-rule
+                                 emacsvox-aural-editor-move-rule-up
+                                 emacsvox-aural-editor-move-rule-down
+                                 emacsvox-aural-editor-edit-rule
+                                 emacsvox-aural-editor-delete-rule
+                                 emacsvox-aural-editor-copy-rule
+                                 emacsvox-aural-editor-toggle-rule
+                                 emacsvox-aural-editor-preview-rule))))))
   (setq-local
    mode-line-process
    '(:eval (when emacsvox-aural-editor-dirty " [modified]"))))

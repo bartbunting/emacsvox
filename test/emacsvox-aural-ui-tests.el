@@ -261,6 +261,40 @@
       (should (equal spoken '("Bottom of test rows.")))
       (should (equal icons '(warn-user))))))
 
+(ert-deftest emacsvox-aural-ui-settings-movement-speaks-name-and-state ()
+  "Moving down from a status cell names the new setting as well as its state."
+  (with-temp-buffer
+    (emacsvox-test-aural-ui-mode)
+    (setq tabulated-list-format [("Name" 16 nil) ("Status" 16 nil)]
+          emacsvox-test-aural-ui-entries
+          '((first ["First" "on"]) (second ["Second" "off"]))
+          emacsvox-aural-ui-move-speaker #'emacsvox-aural-ui-speak-name-and-state)
+    (emacsvox-aural-ui-refresh-tabulated #'emacsvox-test-aural-ui--populate)
+    (emacsvox-aural-ui-goto-tabulated-column 1)
+    (let (spoken)
+      (setq emacsvox-aural-ui-speech-function (lambda (text) (push text spoken)))
+      (emacsvox-aural-ui-next-row)
+      (should (equal spoken '("Second: off")))
+      (should (= (emacsvox-aural-ui-tabulated-column-index) 1)))))
+
+(ert-deftest emacsvox-aural-ui-actions-follow-effective-bindings-and-filter ()
+  "Named actions honor shadowed bindings and row-specific applicability."
+  (with-temp-buffer
+    (emacsvox-test-aural-ui-mode)
+    (use-local-map (copy-keymap (current-local-map)))
+    (local-set-key (kbd "P") #'emacsvox-aural-ui-speak-current-row)
+    (local-set-key (kbd "N") #'emacsvox-aural-ui-refresh)
+    (should (eq (key-binding (kbd "C-c C-a")) #'emacsvox-aural-ui-actions))
+    (should (eq (key-binding (kbd "S")) #'emacsvox-aural-ui-stop-preview))
+    (let ((actions (mapcar #'cdr (emacsvox-aural-ui-action-candidates))))
+      (should (memq 'emacsvox-aural-ui-refresh actions))
+      (should-not (memq 'emacsvox-aural-ui-speak-current-row actions))
+      (should-not (memq 'emacsvox-aural-ui-next-row actions)))
+    (setq emacsvox-aural-ui-action-filter
+          (lambda (command) (not (eq command 'emacsvox-aural-ui-refresh))))
+    (should-not (memq 'emacsvox-aural-ui-refresh
+                      (mapcar #'cdr (emacsvox-aural-ui-action-candidates))))))
+
 (provide 'emacsvox-aural-ui-tests)
 
 ;;; emacsvox-aural-ui-tests.el ends here

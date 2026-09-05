@@ -836,7 +836,6 @@ SEEN prevents malformed personality-variable cycles."
         (rate-supported
          (omnivox--process-supports-p
           tts-speaker-process "relative_rate_v1")))
-    (tts-stop)
     (omnivox--send-control-request
      tts-speaker-process
      (append
@@ -863,29 +862,46 @@ SEEN prevents malformed personality-variable cycles."
 
 (defun omnivox-preview-voice-sequence (entries callback)
   "Preview Omnivox ENTRIES in order and call CALLBACK after playback."
+  (tts-stop)
   (let ((remaining (copy-tree entries))
-        results)
+        (owner tts-speaker-process)
+        results finished stop-handler)
     (cl-labels
-        ((next
+        ((finish
+          (status)
+          (unless finished
+            (setq finished t)
+            (remove-hook 'tts-stopped-hook stop-handler)
+            (tts--voice-preview-callback
+             callback
+             (list :status status :completion-guarantee 'playback
+                   :results (nreverse results)))))
+         (next
           ()
-          (if (null remaining)
-              (tts--voice-preview-callback
-               callback
-               (list :status 'completed :completion-guarantee 'playback
-                     :results (nreverse results)))
-            (let ((entry (pop remaining)))
-              (omnivox--preview-one
-               entry
-               (lambda (result)
-                 (push result results)
-                 (if (eq (plist-get result :status) 'cancelled)
-                     (tts--voice-preview-callback
-                      callback
-                      (list :status 'cancelled
-                            :completion-guarantee 'playback
-                            :results (nreverse results)))
-                   (next))))))))
-      (next))))
+          (unless finished
+            (if (null remaining)
+                (finish 'completed)
+              (let ((entry (pop remaining)))
+                (condition-case error-data
+                    (omnivox--preview-one
+                     entry
+                     (lambda (result)
+                       (unless finished
+                         (push result results)
+                         (if (eq (plist-get result :status) 'cancelled)
+                             (finish 'cancelled)
+                           (next)))))
+                  (error
+                   (finish 'failed)
+                   (signal (car error-data) (cdr error-data)))))))))
+      (setq stop-handler (lambda (process)
+                           (when (eq owner process) (finish 'cancelled))))
+      (add-hook 'tts-stopped-hook stop-handler)
+      (condition-case error-data
+          (next)
+        (error
+         (finish 'failed)
+         (signal (car error-data) (cdr error-data)))))))
 
 (defun omnivox--logical-voice-ids ()
   "Return every defined or explicitly configured logical voice ID."

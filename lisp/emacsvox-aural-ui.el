@@ -38,6 +38,7 @@
 (defvar emacsvox-aural-submission-context)
 (defvar emacsvox-aural-submission-module)
 (defvar emacsvox-aural-submission-occasion)
+(defvar emacsvox-speak-messages)
 
 (declare-function emacsvox-aural-capture-context
                   "emacsvox-aural-transport"
@@ -49,6 +50,9 @@
 (declare-function emacsvox-aural-home-refresh
                   "emacsvox-aural-home" (&optional id))
 (declare-function tts-speak "tts-speak" (text))
+(declare-function emacsvox-aural-preview-stop "emacsvox-aural-preview" ())
+(declare-function emacsvox-aural-preview-message "emacsvox-aural-preview"
+                  (format-string &rest arguments))
 
 (defvar-local emacsvox-aural-ui-interface-buffer nil
   "Non-nil when the current buffer is an aural interface.")
@@ -87,6 +91,12 @@ When nil, movement speaks the current titled cell.")
 
 (defvar-local emacsvox-aural-ui-dismiss-warning-function nil
   "Optional function returning a warning to speak after this interface hides.")
+
+(defvar-local emacsvox-aural-ui-action-filter nil
+  "Optional predicate deciding whether a command applies to the current row.")
+
+(defvar-local emacsvox-aural-ui-extra-actions nil
+  "Additional labelled commands offered by the Actions menu.")
 
 (defvar-local emacsvox-aural-ui-help-origin-buffer nil
   "Aural interface buffer from which the current Help buffer was opened.")
@@ -147,11 +157,14 @@ metadata."
   (let ((origin-buffer (current-buffer))
         (origin-window (selected-window))
         (origin-position (copy-marker (point)))
-        (source emacsvox-aural-ui-source-buffer)
-        (source-position emacsvox-aural-ui-source-position)
+        (source (if emacsvox-aural-ui-interface-buffer
+                    emacsvox-aural-ui-source-buffer (current-buffer)))
+        (source-position (if emacsvox-aural-ui-interface-buffer
+                             emacsvox-aural-ui-source-position (copy-marker (point) t)))
         (source-guard emacsvox-aural-ui-source-guard))
     (with-help-window (help-buffer)
-      (funcall producer))
+      (funcall producer)
+      (princ "\nIn the Aural interface, C-c C-a lists available actions.\n"))
     (when-let* ((buffer (get-buffer (help-buffer))))
       (with-current-buffer buffer
         (when (markerp emacsvox-aural-ui-help-origin-position)
@@ -375,6 +388,81 @@ the cell value first."
     emacsvox-aural-ui-row-speaker
     #'emacsvox-aural-ui-speak-current-cell)))
 
+(defun emacsvox-aural-ui-speak-name-and-state ()
+  "Speak the current item's name and status independently of the selected column."
+  (let* ((row (or (tabulated-list-get-entry)
+                  (user-error "Move to an item first")))
+         (name-index
+          (or (cl-position "Rule" tabulated-list-format
+                           :key #'car :test #'equal) 0))
+         (state-index
+          (cl-position-if
+           (lambda (column) (member (car column) '("Status" "Current status" "State")))
+           tabulated-list-format))
+         (name (string-trim (format "%s" (aref row name-index))))
+         (state (and state-index
+                     (string-trim (format "%s" (aref row state-index))))))
+    (emacsvox-aural-ui-speak
+     (if state (format "%s: %s" name state) (format "%s" name)))))
+
+(defun emacsvox-aural-ui-stop-preview ()
+  "Stop the current preview and its remaining samples."
+  (interactive)
+  (require 'emacsvox-aural-preview)
+  (emacsvox-aural-preview-stop)
+  (emacsvox-aural-preview-message "Preview stopped"))
+
+(defun emacsvox-aural-ui-action-candidates ()
+  "Return labelled, applicable commands from this interface's actual bindings."
+  (let ((map (current-local-map))
+        (row (or (not (derived-mode-p 'tabulated-list-mode))
+                 (tabulated-list-get-id)))
+        (excluded '(emacsvox-aural-ui-actions emacsvox-aural-ui-next-row
+                    emacsvox-aural-ui-previous-row emacsvox-aural-ui-next-column
+                    emacsvox-aural-ui-previous-column emacsvox-aural-ui-speak-current-cell
+                    emacsvox-aural-ui-speak-current-row
+                    emacsvox-aural-editor-next-rule emacsvox-aural-editor-previous-rule))
+        seen result)
+    (while map
+      (map-keymap
+       (lambda (key command)
+         (when (and (symbolp command) (commandp command)
+                    (string-match-p "aural\\|omnivox" (symbol-name command))
+                    (not (memq command excluded))
+                    (not (memq key '(?n ?p ?\s ?. up down left right 14 16)))
+                    (not (memq command seen))
+                    (eq command (key-binding (vector key)))
+                    (or emacsvox-aural-ui-action-filter row
+                        (memq key '(?N ?g ?h ?q ?? ?S)))
+                    (or (null emacsvox-aural-ui-action-filter)
+                        (funcall emacsvox-aural-ui-action-filter command)))
+           (push command seen)
+           (push (cons (format "%s [%s]"
+                               (car (split-string (or (documentation command)
+                                                      (symbol-name command)) "\n"))
+                               (key-description (vector key)))
+                       command)
+                 result)))
+       map)
+      (setq map (keymap-parent map)))
+    (append emacsvox-aural-ui-extra-actions
+            (sort result (lambda (a b) (string-lessp (car a) (car b)))))))
+
+(defun emacsvox-aural-ui-announce-result (format-string &rest arguments)
+  "Display and speak the result described by FORMAT-STRING and ARGUMENTS."
+  (let ((text (apply #'format format-string arguments))
+        (emacsvox-speak-messages nil))
+    (message "%s" text)
+    (emacsvox-aural-ui-speak text)))
+
+(defun emacsvox-aural-ui-actions ()
+  "Choose an available action by name."
+  (interactive)
+  (let* ((choices (emacsvox-aural-ui-action-candidates))
+         (_ (unless choices (user-error "No actions are available here")))
+         (answer (completing-read "Action: " choices nil 'require-match)))
+    (call-interactively (cdr (assoc answer choices)))))
+
 (defun emacsvox-aural-ui-announce-boundary (message)
   "Announce tabulated-list boundary MESSAGE."
   (when (fboundp 'emacsvox-icon)
@@ -489,6 +577,8 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map special-mode-map)
     (define-key map (kbd "q") #'emacsvox-aural-quit)
+    (define-key map (kbd "C-c C-a") #'emacsvox-aural-ui-actions)
+    (define-key map (kbd "S") #'emacsvox-aural-ui-stop-preview)
     map)
   "Keymap inherited by non-tabulated aural interfaces.")
 
@@ -513,6 +603,8 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
            ("." . emacsvox-aural-ui-speak-current-cell)
            ("SPC" . emacsvox-aural-ui-speak-current-row)
            ("g" . emacsvox-aural-ui-refresh)
+           ("C-c C-a" . emacsvox-aural-ui-actions)
+           ("S" . emacsvox-aural-ui-stop-preview)
            ("q" . emacsvox-aural-quit)))
       (define-key map (kbd (car binding)) (cdr binding)))
     map)

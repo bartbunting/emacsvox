@@ -22,3 +22,13 @@ reopening an editor or the same tuned voice preserves unfinished changes.
 Generated current-item remaps recheck their source before applying.  Current
 explanation and remapping no longer use unrelated earlier feedback; retained
 historical presentations remain available through Recent Feedback.
+
+** Consistent Aural navigation and actions
+
+Settings lists speak the name and state together when moving vertically.
+Child managers retain their row and column on reopening; Help returns to
+its exact origin.  ~C-c C-a~ offers named actions and ~S~ stops previews.
+The rule editor now uses ~n/p~ for movement, ~N~ for Add and ~P~ for Preview.
+~RET~ opens details or a child list; profiles are applied with ~a~.
+Palette ~P~ auditions its voices, while ~RET~ browses them.  Stopping or
+interrupting an exact-voice sequence prevents late callbacks restarting it.

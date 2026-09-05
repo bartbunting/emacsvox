@@ -182,11 +182,15 @@ Aural Home is a spoken table.  Each row names an area, reports its current
 status, and describes its purpose.  The common controls are:
 
 #+attr_texinfo: :indic kbd :compact t
-- n, p, down, up :: Move by row and speak the new row.
+- n, p, down, up :: Move by row; settings lists speak the name and current state.
 - left, right :: Move among the titled columns.
 - . :: Speak the current column title and value.
 - SPC :: Speak the complete current row.
-- RET :: Open or perform the current row's main action.
+- RET :: Open a destination, child list, or details. In the tuner, edit a value.
+- C-c C-a :: Choose an applicable action by name.
+- N :: Create a new item where supported.
+- P :: Preview in managers and editors; Home retains its profiles shortcut.
+- S :: Stop the preview and its remaining samples.
 - ? :: Display and speak help for the current Aural interface.
 - h :: Return to Aural Home from a manager or editor.
 - q :: Leave the current Aural interface.
@@ -295,6 +299,12 @@ Start by choosing the narrowest tool that matches your intention:
 5. Return to the source, repeat the action, and use @@texinfo:@kbd{C-e E}@@ again to
    confirm which rule now wins.
 
+In the rule editor, @@texinfo:@kbd{n}@@ and @@texinfo:@kbd{p}@@ move between
+rules.  @@texinfo:@kbd{N}@@ adds a rule, @@texinfo:@kbd{P}@@ previews it, and
+@@texinfo:@kbd{S}@@ stops.  These replace the former lowercase Add and Preview
+keys.  Saving announces whether the rule was saved or applied temporarily.
+@@texinfo:@kbd{q}@@ asks before discarding an unfinished draft.
+
 Open /Presentation Overrides/ to manage these changes together.  There,
 @@texinfo:@kbd{P}@@ previews the complete current result, @@texinfo:@kbd{t}@@ temporarily disables
 or enables a rule, and @@texinfo:@kbd{d}@@ removes it.  Disabling or deleting an
@@ -348,7 +358,7 @@ To save and use a profile:
 3. Press @@texinfo:@kbd{N}@@ to save the current live configuration as a new named
    profile.
 
-4. Later, select that profile and press @@texinfo:@key{RET}@@ or @@texinfo:@kbd{a}@@ to apply
+4. Later, select that profile and press @@texinfo:@kbd{a}@@ to apply
    its saved values.
 
 5. If you deliberately change the live configuration and want the selected
@@ -393,7 +403,7 @@ Four terms help when adjusting voices:
 
 Use the /Voice Palettes/ manager when you want to choose or edit the portable
 style vocabulary.  Press @@texinfo:@key{RET}@@ on a palette to browse its voices,
-preview them before editing, and use @@texinfo:@kbd{a}@@ in the palette manager to
+use @@texinfo:@kbd{P}@@ to audition the palette sequence before editing, and use @@texinfo:@kbd{a}@@ in the palette manager to
 activate a selected palette.  Built-in palettes remain intact; editing can
 create a personal copy.
 
@@ -469,7 +479,7 @@ Open /Sound Packs/ from Aural Home.  In the manager:
 #+attr_texinfo: :indic kbd :compact t
 - P :: Audition a representative cue without activating the pack.
 - RET :: Browse the pack's individual cues and their source or fallback.
-- P or RET in the cue browser :: Audition the selected concrete cue.
+- P in the cue browser :: Audition the selected concrete cue; RET shows details.
 - v :: Validate the pack and report missing or invalid resources.
 - a :: Activate the selected pack.
 

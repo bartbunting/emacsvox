@@ -36,6 +36,8 @@
 (require 'subr-x)
 (require 'emacsvox-aural-transport)
 
+(autoload 'emacsvox-aural-ui-with-help-window "emacsvox-aural-ui" nil nil 'macro)
+
 (cl-defstruct
     (emacsvox-aural-validation-report
      (:constructor emacsvox-aural--make-validation-report))
@@ -333,7 +335,7 @@
 
 (defun emacsvox-aural-display-validation (report &optional kind)
   "Display validation REPORT for object KIND in a help buffer."
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (format
       "Aural %s %s: %s\n\n"

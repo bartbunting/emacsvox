@@ -2188,7 +2188,7 @@ status@comma{} and describes its purpose.  The common controls are:
 
 @table @kbd
 @item n@comma{} p@comma{} down@comma{} up
-Move by row and speak the new row.
+Move by row; settings lists speak the name and current state.
 @item left@comma{} right
 Move among the titled columns.
 @item .
@@ -2196,7 +2196,15 @@ Speak the current column title and value.
 @item SPC
 Speak the complete current row.
 @item RET
-Open or perform the current row's main action.
+Open a destination@comma{} child list@comma{} or details. In the tuner@comma{} edit a value.
+@item C-c C-a
+Choose an applicable action by name.
+@item N
+Create a new item where supported.
+@item P
+Preview in managers and editors; Home retains its profiles shortcut.
+@item S
+Stop the preview and its remaining samples.
 @item ?
 Display and speak help for the current Aural interface.
 @item h
@@ -2342,6 +2350,12 @@ Return to the source@comma{} repeat the action@comma{} and use @kbd{C-e E} again
 confirm which rule now wins.
 @end enumerate
 
+In the rule editor@comma{} @kbd{n} and @kbd{p} move between
+rules.  @kbd{N} adds a rule@comma{} @kbd{P} previews it@comma{} and
+@kbd{S} stops.  These replace the former lowercase Add and Preview
+keys.  Saving announces whether the rule was saved or applied temporarily.
+@kbd{q} asks before discarding an unfinished draft.
+
 Open @emph{Presentation Overrides} to manage these changes together.  There@comma{}
 @kbd{P} previews the complete current result@comma{} @kbd{t} temporarily disables
 or enables a rule@comma{} and @kbd{d} removes it.  Disabling or deleting an
@@ -2399,7 +2413,7 @@ Press @kbd{N} to save the current live configuration as a new named
 profile.
 
 @item
-Later@comma{} select that profile and press @key{RET} or @kbd{a} to apply
+Later@comma{} select that profile and press @kbd{a} to apply
 its saved values.
 
 @item
@@ -2448,7 +2462,7 @@ voice on the current machine.
 
 Use the @emph{Voice Palettes} manager when you want to choose or edit the portable
 style vocabulary.  Press @key{RET} on a palette to browse its voices@comma{}
-preview them before editing@comma{} and use @kbd{a} in the palette manager to
+use @kbd{P} to audition the palette sequence before editing@comma{} and use @kbd{a} in the palette manager to
 activate a selected palette.  Built-in palettes remain intact; editing can
 create a personal copy.
 
@@ -2527,8 +2541,8 @@ Open @emph{Sound Packs} from Aural Home.  In the manager:
 Audition a representative cue without activating the pack.
 @item RET
 Browse the pack's individual cues and their source or fallback.
-@item P or RET in the cue browser
-Audition the selected concrete cue.
+@item P in the cue browser
+Audition the selected concrete cue; RET shows details.
 @item v
 Validate the pack and report missing or invalid resources.
 @item a

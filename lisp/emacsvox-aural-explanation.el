@@ -260,7 +260,7 @@ Use an exact queued record only if it still belongs to that source item."
 (defun emacsvox-describe-aural-spatial-capabilities ()
   "Describe current spatial backends and user policy."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ "Aural spatial capabilities\n\n")
     (princ
      (format "Backends: %S\n" (emacsvox-aural-spatial-capabilities)))
@@ -585,7 +585,7 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
           (emacsvox-aural-explanation--matching-occasion-description
            occasion-counts)))
     (setq emacsvox-aural-explanation--last-explanation explanation)
-    (with-help-window (help-buffer)
+    (emacsvox-aural-ui-with-help-window
       (princ "Aural presentation explanation\n\n")
       (if
           (memq

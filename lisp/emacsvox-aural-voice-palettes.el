@@ -2145,7 +2145,7 @@ identity."
       "hear.  The voice name is spoken in the voice being auditioned.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "RET or P preview     A preview every voice\n"
+      "RET voice details    P preview; A preview every voice\n"
       "T comparison text    S stop preview\n"
       "SPC speak voice      t tune voice\n"
       "e also tunes; s also stops for compatibility\n"
@@ -2184,7 +2184,7 @@ identity."
 
 (dolist
     (binding
-     '(("RET" . emacsvox-aural-voice-palette-previews-play)
+     '(("RET" . emacsvox-aural-voice-palette-previews-explain)
        ("P" . emacsvox-aural-voice-palette-previews-play)
        ("A" . emacsvox-aural-voice-palette-previews-play-all)
        ("t" . emacsvox-aural-voice-palette-previews-tune)
@@ -2217,13 +2217,15 @@ after displaying the preview buffer."
     (unless entries
       (user-error "Voice palette %s has no effective voices" palette))
     (with-current-buffer buffer
-      (emacsvox-aural-voice-palette-previews-mode)
+      (unless (and (derived-mode-p 'emacsvox-aural-voice-palette-previews-mode)
+                   (eq palette emacsvox-aural-voice-palette-previews-palette))
+        (emacsvox-aural-voice-palette-previews-mode)
+        (setq emacsvox-aural-voice-palette-previews-text
+              emacsvox-aural-voice-palettes-preview-text))
       (emacsvox-aural-inspection-attach-source source)
       (setq
        emacsvox-aural-voice-palette-previews-palette palette
-       emacsvox-aural-voice-palette-previews-entries entries
-       emacsvox-aural-voice-palette-previews-text
-       emacsvox-aural-voice-palettes-preview-text)
+       emacsvox-aural-voice-palette-previews-entries entries)
       (emacsvox-aural-voice-palette-previews-refresh voice))
     (emacsvox-aural-ui-pop-to-buffer buffer)
     (when (and speak (tabulated-list-get-id))
@@ -2236,6 +2238,12 @@ after displaying the preview buffer."
   (let ((id (or id (emacsvox-aural-voice-palettes--at-point-or-read))))
     (emacsvox-aural-list-voice-palette-previews
      id nil (called-interactively-p 'interactive))))
+
+(defun emacsvox-aural-voice-palettes-audition ()
+  "Audition the selected palette's effective voices in order."
+  (interactive)
+  (emacsvox-aural-voice-palettes-preview)
+  (emacsvox-aural-voice-palette-previews-play-all))
 
 (defun emacsvox-aural-voice-palettes-explain (&optional id voice)
   "Explain one effective voice and its adapter fallback."
@@ -2305,7 +2313,8 @@ after displaying the preview buffer."
       "N create palette     c copy palette\n"
       "e edit voice         E edit summary and parent\n"
       "D delete voice       d delete palette\n"
-      "B or P browse voices x explain voice\n"
+      "B browse voices      P audition palette; S stop\n"
+      "x explain voice\n"
       "In the voice list, N creates and c copies a voice\n"
       "v view and validate  g refresh\n"
       "h aural home         q quit\n")))
@@ -2320,7 +2329,8 @@ after displaying the preview buffer."
   (emacsvox-aural-ui-configure-tabulated
    "voice palettes"
    #'emacsvox-aural-voice-palettes-speak-current
-   #'emacsvox-aural-voice-palettes-refresh)
+   #'emacsvox-aural-voice-palettes-refresh
+   #'emacsvox-aural-ui-speak-name-and-state)
   (setq
    tabulated-list-format
    [("Palette" 24 t)
@@ -2350,7 +2360,7 @@ after displaying the preview buffer."
        ("E" . emacsvox-aural-voice-palettes-edit-metadata)
        ("D" . emacsvox-aural-voice-palettes-delete-entry)
        ("d" . emacsvox-aural-voice-palettes-delete)
-       ("P" . emacsvox-aural-voice-palettes-preview)
+       ("P" . emacsvox-aural-voice-palettes-audition)
        ("x" . emacsvox-aural-voice-palettes-explain)
        ("v" . emacsvox-aural-voice-palettes-describe)
        ("h" . emacsvox-aural)
@@ -2368,10 +2378,11 @@ after displaying the preview buffer."
          (emacsvox-aural-inspection-remember-source-buffer))
         (buffer (get-buffer-create "*Aural Voice Palettes*")))
     (with-current-buffer buffer
-      (emacsvox-aural-voice-palettes-mode)
+      (unless (derived-mode-p 'emacsvox-aural-voice-palettes-mode)
+        (emacsvox-aural-voice-palettes-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-voice-palettes-refresh
-       (or palette (emacsvox-aural-voice-palettes--active-id))))
+       (or palette (tabulated-list-get-id) (emacsvox-aural-voice-palettes--active-id))))
     (emacsvox-aural-ui-pop-to-buffer buffer)
     (when (called-interactively-p 'interactive)
       (emacsvox-aural-voice-palettes-speak-current))

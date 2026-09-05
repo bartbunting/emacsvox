@@ -437,7 +437,7 @@ the value across sessions."
 (defun emacsvox-aural-recent-feedback-help ()
   "Display and speak recent aural feedback help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Recent Aural Feedback\n\n"
@@ -516,7 +516,8 @@ buffer names, and positions."
            (or source-buffer (current-buffer))))
          (buffer (get-buffer-create "*Recent Aural Feedback*")))
     (with-current-buffer buffer
-      (emacsvox-aural-recent-feedback-mode)
+      (unless (derived-mode-p 'emacsvox-aural-recent-feedback-mode)
+        (emacsvox-aural-recent-feedback-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-recent-feedback-refresh))
     (emacsvox-aural-ui-pop-to-buffer buffer)

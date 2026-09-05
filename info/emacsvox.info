@@ -2176,7 +2176,7 @@ to prepare that change again before applying it.
 current status, and describes its purpose.  The common controls are:
 
 ‘n, p, down, up’
-     Move by row and speak the new row.
+     Move by row; settings lists speak the name and current state.
 ‘left, right’
      Move among the titled columns.
 ‘.’
@@ -2184,7 +2184,17 @@ current status, and describes its purpose.  The common controls are:
 ‘SPC’
      Speak the complete current row.
 ‘RET’
-     Open or perform the current row's main action.
+     Open a destination, child list, or details.  In the tuner, edit a
+     value.
+‘C-c C-a’
+     Choose an applicable action by name.
+‘N’
+     Create a new item where supported.
+‘P’
+     Preview in managers and editors; Home retains its profiles
+     shortcut.
+‘S’
+     Stop the preview and its remaining samples.
 ‘?’
      Display and speak help for the current Aural interface.
 ‘h’
@@ -2304,6 +2314,11 @@ working setup                  Profiles               configuration
   5. Return to the source, repeat the action, and use ‘C-e E’ again to
      confirm which rule now wins.
 
+   In the rule editor, ‘n’ and ‘p’ move between rules.  ‘N’ adds a rule,
+‘P’ previews it, and ‘S’ stops.  These replace the former lowercase Add
+and Preview keys.  Saving announces whether the rule was saved or
+applied temporarily.  ‘q’ asks before discarding an unfinished draft.
+
    Open _Presentation Overrides_ to manage these changes together.
 There, ‘P’ previews the complete current result, ‘t’ temporarily
 disables or enables a rule, and ‘d’ removes it.  Disabling or deleting
@@ -2354,8 +2369,7 @@ audio environments.
   3. Press ‘N’ to save the current live configuration as a new named
      profile.
 
-  4. Later, select that profile and press <RET> or ‘a’ to apply its
-     saved values.
+  4. Later, select that profile and press ‘a’ to apply its saved values.
 
   5. If you deliberately change the live configuration and want the
      selected profile to adopt it, press ‘w’.  If you instead want to
@@ -2396,9 +2410,9 @@ Four terms help when adjusting voices:
 
    Use the _Voice Palettes_ manager when you want to choose or edit the
 portable style vocabulary.  Press <RET> on a palette to browse its
-voices, preview them before editing, and use ‘a’ in the palette manager
-to activate a selected palette.  Built-in palettes remain intact;
-editing can create a personal copy.
+voices, use ‘P’ to audition the palette sequence before editing, and use
+‘a’ in the palette manager to activate a selected palette.  Built-in
+palettes remain intact; editing can create a personal copy.
 
    Use _Voice Workbench_ when the question involves installed voices,
 engines, or routes.  Open it from Aural Home with ‘W’.  Its main views
@@ -2475,8 +2489,8 @@ sound character without rewriting every presentation rule.
      Audition a representative cue without activating the pack.
 ‘RET’
      Browse the pack's individual cues and their source or fallback.
-‘P or RET in the cue browser’
-     Audition the selected concrete cue.
+‘P in the cue browser’
+     Audition the selected concrete cue; RET shows details.
 ‘v’
      Validate the pack and report missing or invalid resources.
 ‘a’
@@ -5355,46 +5369,46 @@ Node: Aural Presentation89505
 Node: Presentation Model91704
 Node: Presentation Modalities94171
 Node: Aural Home97340
-Node: Explaining Presentation99849
-Node: Adjusting Presentation101877
-Node: Presentation Profiles104846
-Node: Voices And Routing106537
-Node: Sounds And Space110560
-Node: Presentation Troubleshooting112184
-Node: Voice Lock114222
-Node: Using Online Help117429
-Node: Emacs Packages121491
-Node: Document Authoring122865
-Node: Structured Editing123419
-Node: Browsing Structure124402
-Node: Web Browsing125000
-Node: Messaging125835
-Node: Editing Code126333
-Node: Development Environment126852
-Node: Desktop Management128388
-Node: Personal Information Management128890
-Node: Desktop Applications129422
-Node: Notmuch Mail136810
-Ref: Notmuch fields and privacy146153
-Node: Agent Shell151861
-Node: EAT Terminal Access164156
-Node: Running Terminal Based Applications181415
-Node: Starting Term182370
-Node: Term Input Modes183209
-Node: Term Speech Feedback184369
-Node: Reviewing The Term Screen185563
-Node: Term Help And Recovery187464
-Node: Emacsvox Keyboard Commands188363
-Node: Copyright189767
-Node: Acknowledgments190354
-Node: Developer Guide191380
-Node: Documentation Maintenance192544
-Node: Speech Server Protocols197342
-Ref: Testing A Direct Legacy Server203249
-Ref: Commands That Queue Output203808
-Ref: Commands That Set State206842
-Node: Integration Maintenance209436
-Node: Concept Index233672
+Node: Explaining Presentation100155
+Node: Adjusting Presentation102183
+Node: Presentation Profiles105458
+Node: Voices And Routing107135
+Node: Sounds And Space111190
+Node: Presentation Troubleshooting112826
+Node: Voice Lock114864
+Node: Using Online Help118071
+Node: Emacs Packages122133
+Node: Document Authoring123507
+Node: Structured Editing124061
+Node: Browsing Structure125044
+Node: Web Browsing125642
+Node: Messaging126477
+Node: Editing Code126975
+Node: Development Environment127494
+Node: Desktop Management129030
+Node: Personal Information Management129532
+Node: Desktop Applications130064
+Node: Notmuch Mail137452
+Ref: Notmuch fields and privacy146795
+Node: Agent Shell152503
+Node: EAT Terminal Access164798
+Node: Running Terminal Based Applications182057
+Node: Starting Term183012
+Node: Term Input Modes183851
+Node: Term Speech Feedback185011
+Node: Reviewing The Term Screen186205
+Node: Term Help And Recovery188106
+Node: Emacsvox Keyboard Commands189005
+Node: Copyright190409
+Node: Acknowledgments190996
+Node: Developer Guide192022
+Node: Documentation Maintenance193186
+Node: Speech Server Protocols197984
+Ref: Testing A Direct Legacy Server203891
+Ref: Commands That Queue Output204450
+Ref: Commands That Set State207484
+Node: Integration Maintenance210078
+Node: Concept Index234314
 
 End Tag Table
 

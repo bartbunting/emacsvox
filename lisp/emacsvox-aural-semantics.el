@@ -242,7 +242,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
 (defun emacsvox-aural-semantics-help ()
   "Display and speak semantic-list help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Semantic List\n\n"
@@ -291,7 +291,8 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
          (emacsvox-aural-inspection-remember-source-buffer))
         (buffer (get-buffer-create "*Aural Semantics*")))
     (with-current-buffer buffer
-      (emacsvox-aural-semantics-mode)
+      (unless (derived-mode-p 'emacsvox-aural-semantics-mode)
+        (emacsvox-aural-semantics-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-semantics-refresh))
     (emacsvox-aural-ui-pop-to-buffer buffer)
@@ -312,7 +313,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
          (record (emacsvox-aural-semantic semantic)))
     (unless record
       (user-error "Unknown aural semantic: %S" semantic))
-    (with-help-window (help-buffer)
+    (emacsvox-aural-ui-with-help-window
       (princ (format "%s\n\n" semantic))
       (princ (format "Kind: %s\n" (emacsvox-aural-semantic-kind record)))
       (princ (format "Owner: %s\n" (emacsvox-aural-semantic-owner record)))

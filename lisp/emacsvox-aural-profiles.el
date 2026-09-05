@@ -306,7 +306,7 @@
           (and
            (eq status 'diverged)
            (emacsvox-aural-profiles--differences id))))
-    (with-help-window (help-buffer)
+    (emacsvox-aural-ui-with-help-window
       (princ (format "Presentation profile: %s\n\n" id))
       (princ (format "Summary: %s\n" (plist-get data :summary)))
       (princ
@@ -515,7 +515,7 @@ MUTATION."
 (defun emacsvox-aural-profiles-help ()
   "Display and speak presentation-profile manager help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Presentation Profiles\n\n"
@@ -531,7 +531,8 @@ MUTATION."
       "live differences. Edit rules in the option and override managers.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "RET or a apply saved SPC speak profile\n"
+      "RET details          a apply saved profile\n"
+      "SPC speak profile    C-c C-a available actions\n"
       "v view and validate  N save current as new\n"
       "c copy               w write current into profile\n"
       "r rename             d delete\n"
@@ -547,7 +548,8 @@ MUTATION."
   (emacsvox-aural-ui-configure-tabulated
    "presentation profiles"
    #'emacsvox-aural-profiles-speak-current
-   #'emacsvox-aural-profiles-refresh)
+   #'emacsvox-aural-profiles-refresh
+   #'emacsvox-aural-ui-speak-name-and-state)
   (setq
    tabulated-list-format
    [("Profile" 24 t)
@@ -576,7 +578,7 @@ MUTATION."
 
 (dolist
     (binding
-     '(("RET" . emacsvox-aural-profiles-activate)
+     '(("RET" . emacsvox-aural-profiles-describe)
        ("a" . emacsvox-aural-profiles-activate)
        ("v" . emacsvox-aural-profiles-describe)
        ("N" . emacsvox-aural-profiles-create)
@@ -600,10 +602,11 @@ MUTATION."
          (emacsvox-aural-inspection-remember-source-buffer))
         (buffer (get-buffer-create "*Aural Presentation Profiles*")))
     (with-current-buffer buffer
-      (emacsvox-aural-profiles-mode)
+      (unless (derived-mode-p 'emacsvox-aural-profiles-mode)
+        (emacsvox-aural-profiles-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-profiles-refresh
-       (or profile (emacsvox-aural-current-profile-id))))
+       (or profile (tabulated-list-get-id) (emacsvox-aural-current-profile-id))))
     (emacsvox-aural-ui-pop-to-buffer buffer)
     (if (tabulated-list-get-id)
         (when (called-interactively-p 'interactive)

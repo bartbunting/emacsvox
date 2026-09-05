@@ -79,7 +79,8 @@
         (should (equal (aref row 2) "personal"))
         (should (equal (aref row 3) "acss-default"))
         (should (equal (aref row 4) "2"))
-        (should (equal (aref row 5) "27")))
+        (should (= (string-to-number (aref row 5))
+                   (length (emacsvox-aural-effective-voice-entries 'reading)))))
       (dolist
           (binding
            '(("RET" . emacsvox-aural-voice-palettes-preview)
@@ -92,7 +93,7 @@
              ("E" . emacsvox-aural-voice-palettes-edit-metadata)
              ("D" . emacsvox-aural-voice-palettes-delete-entry)
              ("d" . emacsvox-aural-voice-palettes-delete)
-             ("P" . emacsvox-aural-voice-palettes-preview)
+             ("P" . emacsvox-aural-voice-palettes-audition)
              ("x" . emacsvox-aural-voice-palettes-explain)
              ("v" . emacsvox-aural-voice-palettes-describe)
              ("h" . emacsvox-aural)
@@ -305,7 +306,8 @@
             (should (emacsvox-aural-ui-interface-buffer-p))
             (should
              (eq emacsvox-aural-voice-palette-previews-palette 'reading))
-            (should (= (length tabulated-list-entries) 27))
+            (should (= (length tabulated-list-entries)
+                       (length (emacsvox-aural-effective-voice-entries 'reading))))
             (should
              (equal
               (aref (cadr (assq 'heading tabulated-list-entries)) 1)
@@ -1152,17 +1154,13 @@
         (dolist (buffer buffers)
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
 
-(ert-deftest emacsvox-aural-voice-palette-preview-survives-module-only-reload ()
-  "The preview remains dismissible to an older generic interface checker."
+(ert-deftest emacsvox-aural-voice-palette-preview-inherits-shared-dismissal ()
+  "A freshly loaded preview is registered and dismissible through shared UI."
   (with-temp-buffer
     (emacsvox-aural-voice-palette-previews-mode)
     (let (dismissed)
       (cl-letf
-          (((symbol-function 'emacsvox-aural-ui-interface-buffer-p)
-            (lambda (&optional buffer)
-              (with-current-buffer (or buffer (current-buffer))
-                (derived-mode-p 'emacsvox-aural-voice-palettes-mode))))
-           ((symbol-function 'emacsvox-aural-capture-context) #'ignore)
+          (((symbol-function 'emacsvox-aural-capture-context) #'ignore)
            ((symbol-function 'quit-window)
             (lambda (&optional _kill _window) (setq dismissed t)))
            ((symbol-function 'emacsvox-icon) #'ignore)

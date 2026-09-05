@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1481 commands and 205 options.
+   This chapter documents a total of 1488 commands and 205 options.
 
 * Menu:
 
@@ -2085,49 +2085,63 @@ plain text and predictable for speech access.
 
      Move the selected rule earlier in its scope.
 
-2.21.1.12 emacsvox-aural-editor-preview-rule
+2.21.1.12 emacsvox-aural-editor-next-rule
+.........................................
+
+ -- Command: emacsvox-aural-editor-next-rule
+
+     Move to the next rule.
+
+2.21.1.13 emacsvox-aural-editor-preview-rule
 ............................................
 
  -- Command: emacsvox-aural-editor-preview-rule
 
      Preview the selected unsaved working rule.
 
-2.21.1.13 emacsvox-aural-editor-quit
+2.21.1.14 emacsvox-aural-editor-previous-rule
+.............................................
+
+ -- Command: emacsvox-aural-editor-previous-rule
+
+     Move to the previous rule.
+
+2.21.1.15 emacsvox-aural-editor-quit
 ....................................
 
  -- Command: emacsvox-aural-editor-quit
 
      Quit the editor, asking before discarding working changes.
 
-2.21.1.14 emacsvox-aural-editor-refresh
+2.21.1.16 emacsvox-aural-editor-refresh
 .......................................
 
  -- Command: emacsvox-aural-editor-refresh
 
      Render the current working Presentation Option or rule layer.
 
-2.21.1.15 emacsvox-aural-editor-save
+2.21.1.17 emacsvox-aural-editor-save
 ....................................
 
  -- Command: emacsvox-aural-editor-save
 
      Validate and atomically save or apply current working rules.
 
-2.21.1.16 emacsvox-aural-editor-toggle-rule
+2.21.1.18 emacsvox-aural-editor-toggle-rule
 ...........................................
 
  -- Command: emacsvox-aural-editor-toggle-rule
 
      Enable or disable the selected working rule without discarding it.
 
-2.21.1.17 emacsvox-aural-editor-validate
+2.21.1.19 emacsvox-aural-editor-validate
 ........................................
 
  -- Command: emacsvox-aural-editor-validate
 
      Validate all working rules and display diagnostics.
 
-2.21.1.18 emacsvox-aural-scheme-editor-mode
+2.21.1.20 emacsvox-aural-scheme-editor-mode
 ...........................................
 
  -- Command: emacsvox-aural-scheme-editor-mode
@@ -2148,14 +2162,17 @@ plain text and predictable for speech access.
      <		beginning-of-buffer
      >		end-of-buffer
      ?		emacsvox-aural-editor-help
+     N		emacsvox-aural-editor-add-rule
+     P		emacsvox-aural-editor-preview-rule
+     S		emacsvox-aural-ui-stop-preview
      c		emacsvox-aural-editor-copy-rule
      d		emacsvox-aural-editor-delete-rule
      e		emacsvox-aural-editor-edit-rule
      g		emacsvox-aural-editor-refresh
      h		emacsvox-aural
      m		emacsvox-aural-editor-edit-metadata
-     n		emacsvox-aural-editor-add-rule
-     p		emacsvox-aural-editor-preview-rule
+     n		emacsvox-aural-editor-next-rule
+     p		emacsvox-aural-editor-previous-rule
      q		emacsvox-aural-editor-quit
      t		emacsvox-aural-editor-toggle-rule
      v		emacsvox-aural-editor-validate
@@ -2165,10 +2182,14 @@ plain text and predictable for speech access.
      S-SPC		scroll-down-command
      M-<down>	emacsvox-aural-editor-move-rule-down
      M-<up>		emacsvox-aural-editor-move-rule-up
+     <down>		emacsvox-aural-editor-next-rule
+     <up>		emacsvox-aural-editor-previous-rule
 
      C-c C-c		emacsvox-aural-editor-save
 
-2.21.1.19 emacsvox-edit-aural-feature-fragment
+     C-c C-a		emacsvox-aural-ui-actions
+
+2.21.1.21 emacsvox-edit-aural-feature-fragment
 ..............................................
 
  -- Command: emacsvox-edit-aural-feature-fragment (&optional fragment)
@@ -2177,7 +2198,7 @@ plain text and predictable for speech access.
 
      (fn &optional FRAGMENT)
 
-2.21.1.20 emacsvox-edit-aural-rules
+2.21.1.22 emacsvox-edit-aural-rules
 ...................................
 
  -- Command: emacsvox-edit-aural-rules (scope &optional fragment
@@ -2367,14 +2388,21 @@ aural presentation fragments.
 
      Audition only the earcons in the preview example at point.
 
-2.23.1.6 emacsvox-aural-feature-fragment-previews-help
+2.23.1.6 emacsvox-aural-feature-fragment-previews-describe
+..........................................................
+
+ -- Command: emacsvox-aural-feature-fragment-previews-describe
+
+     Show details of the selected example and its composed feedback.
+
+2.23.1.7 emacsvox-aural-feature-fragment-previews-help
 ......................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-help
 
      Display and speak presentation-option preview help.
 
-2.23.1.7 emacsvox-aural-feature-fragment-previews-mode
+2.23.1.8 emacsvox-aural-feature-fragment-previews-mode
 ......................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-mode
@@ -2388,7 +2416,7 @@ aural presentation fragments.
 
      Key             Binding
      -----------------------------------------------------
-     RET		emacsvox-aural-feature-fragment-previews-play
+     RET		emacsvox-aural-feature-fragment-previews-describe
      ?		emacsvox-aural-feature-fragment-previews-help
      P		emacsvox-aural-feature-fragment-previews-play
      c		emacsvox-aural-feature-fragment-previews-audition-cues
@@ -2396,42 +2424,42 @@ aural presentation fragments.
      i		emacsvox-aural-feature-fragment-previews-toggle-isolated
      o		emacsvox-aural-list-feature-fragments
 
-2.23.1.8 emacsvox-aural-feature-fragment-previews-next
+2.23.1.9 emacsvox-aural-feature-fragment-previews-next
 ......................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-next
 
      Move to and speak the next preview example.
 
-2.23.1.9 emacsvox-aural-feature-fragment-previews-next-column
-.............................................................
+2.23.1.10 emacsvox-aural-feature-fragment-previews-next-column
+..............................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-next-column
 
      Move right and speak the next preview column.
 
-2.23.1.10 emacsvox-aural-feature-fragment-previews-play
+2.23.1.11 emacsvox-aural-feature-fragment-previews-play
 .......................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-play
 
      Play the complete preview example at point.
 
-2.23.1.11 emacsvox-aural-feature-fragment-previews-previous
+2.23.1.12 emacsvox-aural-feature-fragment-previews-previous
 ...........................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-previous
 
      Move to and speak the previous preview example.
 
-2.23.1.12 emacsvox-aural-feature-fragment-previews-previous-column
+2.23.1.13 emacsvox-aural-feature-fragment-previews-previous-column
 ..................................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-previous-column
 
      Move left and speak the previous preview column.
 
-2.23.1.13 emacsvox-aural-feature-fragment-previews-refresh
+2.23.1.14 emacsvox-aural-feature-fragment-previews-refresh
 ..........................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-refresh (&optional
@@ -2441,49 +2469,49 @@ aural presentation fragments.
 
      (fn &optional EXAMPLE-ID)
 
-2.23.1.14 emacsvox-aural-feature-fragment-previews-speak-current
+2.23.1.15 emacsvox-aural-feature-fragment-previews-speak-current
 ................................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-speak-current
 
      Speak a concise description of the preview example at point.
 
-2.23.1.15 emacsvox-aural-feature-fragment-previews-speak-current-cell
+2.23.1.16 emacsvox-aural-feature-fragment-previews-speak-current-cell
 .....................................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-speak-current-cell
 
      Speak the current preview column title and value.
 
-2.23.1.16 emacsvox-aural-feature-fragment-previews-toggle-isolated
+2.23.1.17 emacsvox-aural-feature-fragment-previews-toggle-isolated
 ..................................................................
 
  -- Command: emacsvox-aural-feature-fragment-previews-toggle-isolated
 
      Toggle composed versus isolated resolution in this preview buffer.
 
-2.23.1.17 emacsvox-aural-feature-fragments-activate
+2.23.1.18 emacsvox-aural-feature-fragments-activate
 ...................................................
 
  -- Command: emacsvox-aural-feature-fragments-activate
 
      Open the option at point, or toggle its collection.
 
-2.23.1.18 emacsvox-aural-feature-fragments-edit
+2.23.1.19 emacsvox-aural-feature-fragments-edit
 ...............................................
 
  -- Command: emacsvox-aural-feature-fragments-edit
 
      Edit the personal feature fragment at point.
 
-2.23.1.19 emacsvox-aural-feature-fragments-help
+2.23.1.20 emacsvox-aural-feature-fragments-help
 ...............................................
 
  -- Command: emacsvox-aural-feature-fragments-help
 
      Display and speak presentation-option manager help.
 
-2.23.1.20 emacsvox-aural-feature-fragments-mode
+2.23.1.21 emacsvox-aural-feature-fragments-mode
 ...............................................
 
  -- Command: emacsvox-aural-feature-fragments-mode
@@ -2512,35 +2540,35 @@ aural presentation fragments.
      M-<down>	emacsvox-aural-feature-fragments-move-down
      M-<up>		emacsvox-aural-feature-fragments-move-up
 
-2.23.1.21 emacsvox-aural-feature-fragments-move-down
+2.23.1.22 emacsvox-aural-feature-fragments-move-down
 ....................................................
 
  -- Command: emacsvox-aural-feature-fragments-move-down
 
      Move the enabled feature fragment at point later.
 
-2.23.1.22 emacsvox-aural-feature-fragments-move-up
+2.23.1.23 emacsvox-aural-feature-fragments-move-up
 ..................................................
 
  -- Command: emacsvox-aural-feature-fragments-move-up
 
      Move the enabled feature fragment at point earlier.
 
-2.23.1.23 emacsvox-aural-feature-fragments-next
+2.23.1.24 emacsvox-aural-feature-fragments-next
 ...............................................
 
  -- Command: emacsvox-aural-feature-fragments-next
 
      Move to and speak the next presentation-option row.
 
-2.23.1.24 emacsvox-aural-feature-fragments-next-column
+2.23.1.25 emacsvox-aural-feature-fragments-next-column
 ......................................................
 
  -- Command: emacsvox-aural-feature-fragments-next-column
 
      Move right and speak the next feature-fragment column.
 
-2.23.1.25 emacsvox-aural-feature-fragments-preview
+2.23.1.26 emacsvox-aural-feature-fragments-preview
 ..................................................
 
  -- Command: emacsvox-aural-feature-fragments-preview (&optional
@@ -2557,21 +2585,21 @@ aural presentation fragments.
 
      (fn &optional ISOLATED FRAGMENT EXAMPLE-ID)
 
-2.23.1.26 emacsvox-aural-feature-fragments-previous
+2.23.1.27 emacsvox-aural-feature-fragments-previous
 ...................................................
 
  -- Command: emacsvox-aural-feature-fragments-previous
 
      Move to and speak the previous presentation-option row.
 
-2.23.1.27 emacsvox-aural-feature-fragments-previous-column
+2.23.1.28 emacsvox-aural-feature-fragments-previous-column
 ..........................................................
 
  -- Command: emacsvox-aural-feature-fragments-previous-column
 
      Move left and speak the previous feature-fragment column.
 
-2.23.1.28 emacsvox-aural-feature-fragments-refresh
+2.23.1.29 emacsvox-aural-feature-fragments-refresh
 ..................................................
 
  -- Command: emacsvox-aural-feature-fragments-refresh (&optional
@@ -2581,21 +2609,21 @@ aural presentation fragments.
 
      (fn &optional FRAGMENT)
 
-2.23.1.29 emacsvox-aural-feature-fragments-speak-current
+2.23.1.30 emacsvox-aural-feature-fragments-speak-current
 ........................................................
 
  -- Command: emacsvox-aural-feature-fragments-speak-current
 
      Speak the presentation option or collection at point.
 
-2.23.1.30 emacsvox-aural-feature-fragments-speak-current-cell
+2.23.1.31 emacsvox-aural-feature-fragments-speak-current-cell
 .............................................................
 
  -- Command: emacsvox-aural-feature-fragments-speak-current-cell
 
      Speak the current feature-fragment column title and value.
 
-2.23.1.31 emacsvox-aural-feature-fragments-toggle
+2.23.1.32 emacsvox-aural-feature-fragments-toggle
 .................................................
 
  -- Command: emacsvox-aural-feature-fragments-toggle (&optional
@@ -2605,28 +2633,28 @@ aural presentation fragments.
 
      (fn &optional FRAGMENT)
 
-2.23.1.32 emacsvox-aural-feature-fragments-toggle-collection
+2.23.1.33 emacsvox-aural-feature-fragments-toggle-collection
 ............................................................
 
  -- Command: emacsvox-aural-feature-fragments-toggle-collection
 
      Expand or collapse the presentation-option collection at point.
 
-2.23.1.33 emacsvox-aural-feature-fragments-toggle-view
+2.23.1.34 emacsvox-aural-feature-fragments-toggle-view
 ......................................................
 
  -- Command: emacsvox-aural-feature-fragments-toggle-view
 
      Switch between grouped discovery and active precedence views.
 
-2.23.1.34 emacsvox-aural-list-feature-fragments
+2.23.1.35 emacsvox-aural-list-feature-fragments
 ...............................................
 
  -- Command: emacsvox-aural-list-feature-fragments
 
      Open the accessible manager for aural presentation options.
 
-2.23.1.35 emacsvox-aural-show-feature-fragment-validation
+2.23.1.36 emacsvox-aural-show-feature-fragment-validation
 .........................................................
 
  -- Command: emacsvox-aural-show-feature-fragment-validation (&optional
@@ -3143,7 +3171,7 @@ options while capturing sound, voice, and spatial choices.
 
      Key             Binding
      -----------------------------------------------------
-     RET		emacsvox-aural-profiles-activate
+     RET		emacsvox-aural-profiles-describe
      ?		emacsvox-aural-profiles-help
      N		emacsvox-aural-profiles-create
      a		emacsvox-aural-profiles-activate
@@ -3678,14 +3706,21 @@ discovered-pack manifests without editing raw Lisp.
 
      Audition the concrete cue at point.
 
-2.44.1.4 emacsvox-aural-sound-pack-cues-help
+2.44.1.4 emacsvox-aural-sound-pack-cues-describe
+................................................
+
+ -- Command: emacsvox-aural-sound-pack-cues-describe
+
+     Show details of the selected cue without playing it.
+
+2.44.1.5 emacsvox-aural-sound-pack-cues-help
 ............................................
 
  -- Command: emacsvox-aural-sound-pack-cues-help
 
      Display and speak sound-pack cue-browser help.
 
-2.44.1.5 emacsvox-aural-sound-pack-cues-mode
+2.44.1.6 emacsvox-aural-sound-pack-cues-mode
 ............................................
 
  -- Command: emacsvox-aural-sound-pack-cues-mode
@@ -3699,7 +3734,7 @@ discovered-pack manifests without editing raw Lisp.
 
      Key             Binding
      -----------------------------------------------------
-     RET		emacsvox-aural-sound-pack-cues-audition
+     RET		emacsvox-aural-sound-pack-cues-describe
      ?		emacsvox-aural-sound-pack-cues-help
      P		emacsvox-aural-sound-pack-cues-audition
      h		emacsvox-aural
@@ -3707,35 +3742,35 @@ discovered-pack manifests without editing raw Lisp.
      s		emacsvox-aural-list-sound-packs
      v		emacsvox-aural-sound-pack-cues-show-validation
 
-2.44.1.6 emacsvox-aural-sound-pack-cues-next
+2.44.1.7 emacsvox-aural-sound-pack-cues-next
 ............................................
 
  -- Command: emacsvox-aural-sound-pack-cues-next
 
      Move to and speak the next cue.
 
-2.44.1.7 emacsvox-aural-sound-pack-cues-next-column
+2.44.1.8 emacsvox-aural-sound-pack-cues-next-column
 ...................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-next-column
 
      Move right and speak the next cue column.
 
-2.44.1.8 emacsvox-aural-sound-pack-cues-previous
+2.44.1.9 emacsvox-aural-sound-pack-cues-previous
 ................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-previous
 
      Move to and speak the previous cue.
 
-2.44.1.9 emacsvox-aural-sound-pack-cues-previous-column
-.......................................................
+2.44.1.10 emacsvox-aural-sound-pack-cues-previous-column
+........................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-previous-column
 
      Move left and speak the previous cue column.
 
-2.44.1.10 emacsvox-aural-sound-pack-cues-refresh
+2.44.1.11 emacsvox-aural-sound-pack-cues-refresh
 ................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-refresh (&optional cue)
@@ -3744,56 +3779,56 @@ discovered-pack manifests without editing raw Lisp.
 
      (fn &optional CUE)
 
-2.44.1.11 emacsvox-aural-sound-pack-cues-show-validation
+2.44.1.12 emacsvox-aural-sound-pack-cues-show-validation
 ........................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-show-validation
 
      Display and speak validation for the cue browser’s sound pack.
 
-2.44.1.12 emacsvox-aural-sound-pack-cues-speak-current
+2.44.1.13 emacsvox-aural-sound-pack-cues-speak-current
 ......................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-speak-current
 
      Speak the cue, provenance, and intent at point.
 
-2.44.1.13 emacsvox-aural-sound-pack-cues-speak-current-cell
+2.44.1.14 emacsvox-aural-sound-pack-cues-speak-current-cell
 ...........................................................
 
  -- Command: emacsvox-aural-sound-pack-cues-speak-current-cell
 
      Speak the current cue-browser column title and value.
 
-2.44.1.14 emacsvox-aural-sound-packs-activate
+2.44.1.15 emacsvox-aural-sound-packs-activate
 .............................................
 
  -- Command: emacsvox-aural-sound-packs-activate
 
      Activate the sound pack at point.
 
-2.44.1.15 emacsvox-aural-sound-packs-audition
+2.44.1.16 emacsvox-aural-sound-packs-audition
 .............................................
 
  -- Command: emacsvox-aural-sound-packs-audition
 
      Audition a representative cue from the sound pack at point.
 
-2.44.1.16 emacsvox-aural-sound-packs-edit-manifest
+2.44.1.17 emacsvox-aural-sound-packs-edit-manifest
 ..................................................
 
  -- Command: emacsvox-aural-sound-packs-edit-manifest
 
      Guidedly edit safe manifest metadata for the discovered pack at point.
 
-2.44.1.17 emacsvox-aural-sound-packs-help
+2.44.1.18 emacsvox-aural-sound-packs-help
 .........................................
 
  -- Command: emacsvox-aural-sound-packs-help
 
      Display and speak sound-pack manager help.
 
-2.44.1.18 emacsvox-aural-sound-packs-mode
+2.44.1.19 emacsvox-aural-sound-packs-mode
 .........................................
 
  -- Command: emacsvox-aural-sound-packs-mode
@@ -3816,42 +3851,42 @@ discovered-pack manifests without editing raw Lisp.
      o		emacsvox-aural-sound-packs-open-directory
      v		emacsvox-aural-sound-packs-show-validation
 
-2.44.1.19 emacsvox-aural-sound-packs-next
+2.44.1.20 emacsvox-aural-sound-packs-next
 .........................................
 
  -- Command: emacsvox-aural-sound-packs-next
 
      Move to and speak the next sound pack.
 
-2.44.1.20 emacsvox-aural-sound-packs-next-column
+2.44.1.21 emacsvox-aural-sound-packs-next-column
 ................................................
 
  -- Command: emacsvox-aural-sound-packs-next-column
 
      Move right and speak the next sound-pack column.
 
-2.44.1.21 emacsvox-aural-sound-packs-open-directory
+2.44.1.22 emacsvox-aural-sound-packs-open-directory
 ...................................................
 
  -- Command: emacsvox-aural-sound-packs-open-directory
 
      Open the current sound pack’s directory in Dired.
 
-2.44.1.22 emacsvox-aural-sound-packs-previous
+2.44.1.23 emacsvox-aural-sound-packs-previous
 .............................................
 
  -- Command: emacsvox-aural-sound-packs-previous
 
      Move to and speak the previous sound pack.
 
-2.44.1.23 emacsvox-aural-sound-packs-previous-column
+2.44.1.24 emacsvox-aural-sound-packs-previous-column
 ....................................................
 
  -- Command: emacsvox-aural-sound-packs-previous-column
 
      Move left and speak the previous sound-pack column.
 
-2.44.1.24 emacsvox-aural-sound-packs-refresh
+2.44.1.25 emacsvox-aural-sound-packs-refresh
 ............................................
 
  -- Command: emacsvox-aural-sound-packs-refresh (&optional pack)
@@ -3860,7 +3895,7 @@ discovered-pack manifests without editing raw Lisp.
 
      (fn &optional PACK)
 
-2.44.1.25 emacsvox-aural-sound-packs-show-validation
+2.44.1.26 emacsvox-aural-sound-packs-show-validation
 ....................................................
 
  -- Command: emacsvox-aural-sound-packs-show-validation (&optional
@@ -3870,14 +3905,14 @@ discovered-pack manifests without editing raw Lisp.
 
      (fn &optional PACK-ID)
 
-2.44.1.26 emacsvox-aural-sound-packs-speak-current
+2.44.1.27 emacsvox-aural-sound-packs-speak-current
 ..................................................
 
  -- Command: emacsvox-aural-sound-packs-speak-current
 
      Speak a natural summary of the sound pack at point.
 
-2.44.1.27 emacsvox-aural-sound-packs-speak-current-cell
+2.44.1.28 emacsvox-aural-sound-packs-speak-current-cell
 .......................................................
 
  -- Command: emacsvox-aural-sound-packs-speak-current-cell
@@ -4172,11 +4207,14 @@ preservation, and dismissal feedback for the aural managers and editors.
      <		beginning-of-buffer
      >		end-of-buffer
      ?		describe-mode
+     S		emacsvox-aural-ui-stop-preview
      g		revert-buffer
      h		describe-mode
      q		emacsvox-aural-quit
      DEL		scroll-down-command
      S-SPC		scroll-down-command
+
+     C-c C-a		emacsvox-aural-ui-actions
 
 2.50.1.2 emacsvox-aural-quit
 ............................
@@ -4213,7 +4251,7 @@ preservation, and dismissal feedback for the aural managers and editors.
      <		beginning-of-buffer
      >		end-of-buffer
      ?		describe-mode
-     S		tabulated-list-sort
+     S		emacsvox-aural-ui-stop-preview
      g		emacsvox-aural-ui-refresh
      h		describe-mode
      n		emacsvox-aural-ui-next-row
@@ -4233,16 +4271,25 @@ preservation, and dismissal feedback for the aural managers and editors.
      <right>		emacsvox-aural-ui-next-column
      <up>		emacsvox-aural-ui-previous-row
 
+     C-c C-a		emacsvox-aural-ui-actions
+
      C-M-i		backward-button
 
-2.50.1.4 emacsvox-aural-ui-help-quit
+2.50.1.4 emacsvox-aural-ui-actions
+..................................
+
+ -- Command: emacsvox-aural-ui-actions
+
+     Choose an available action by name.
+
+2.50.1.5 emacsvox-aural-ui-help-quit
 ....................................
 
  -- Command: emacsvox-aural-ui-help-quit
 
      Quit Help and restore its originating aural interface and position.
 
-2.50.1.5 emacsvox-aural-ui-help-return-mode
+2.50.1.6 emacsvox-aural-ui-help-return-mode
 ...........................................
 
  -- Command: emacsvox-aural-ui-help-return-mode (&optional arg)
@@ -4266,42 +4313,42 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      (fn &optional ARG)
 
-2.50.1.6 emacsvox-aural-ui-next-column
+2.50.1.7 emacsvox-aural-ui-next-column
 ......................................
 
  -- Command: emacsvox-aural-ui-next-column
 
      Move right and speak the next column.
 
-2.50.1.7 emacsvox-aural-ui-next-row
+2.50.1.8 emacsvox-aural-ui-next-row
 ...................................
 
  -- Command: emacsvox-aural-ui-next-row
 
      Move to and speak the next row.
 
-2.50.1.8 emacsvox-aural-ui-previous-column
+2.50.1.9 emacsvox-aural-ui-previous-column
 ..........................................
 
  -- Command: emacsvox-aural-ui-previous-column
 
      Move left and speak the previous column.
 
-2.50.1.9 emacsvox-aural-ui-previous-row
-.......................................
+2.50.1.10 emacsvox-aural-ui-previous-row
+........................................
 
  -- Command: emacsvox-aural-ui-previous-row
 
      Move to and speak the previous row.
 
-2.50.1.10 emacsvox-aural-ui-refresh
+2.50.1.11 emacsvox-aural-ui-refresh
 ...................................
 
  -- Command: emacsvox-aural-ui-refresh
 
      Refresh the current interface using its configured callback.
 
-2.50.1.11 emacsvox-aural-ui-speak-current-cell
+2.50.1.12 emacsvox-aural-ui-speak-current-cell
 ..............................................
 
  -- Command: emacsvox-aural-ui-speak-current-cell (&optional
@@ -4314,12 +4361,19 @@ preservation, and dismissal feedback for the aural managers and editors.
 
      (fn &optional VALUE-FIRST)
 
-2.50.1.12 emacsvox-aural-ui-speak-current-row
+2.50.1.13 emacsvox-aural-ui-speak-current-row
 .............................................
 
  -- Command: emacsvox-aural-ui-speak-current-row
 
      Speak the complete current row using its configured callback.
+
+2.50.1.14 emacsvox-aural-ui-stop-preview
+........................................
+
+ -- Command: emacsvox-aural-ui-stop-preview
+
+     Stop the current preview and its remaining samples.
 
 2.50.2 emacsvox-aural-ui Options
 --------------------------------
@@ -4406,7 +4460,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      Key             Binding
      -----------------------------------------------------
-     RET		emacsvox-aural-voice-palette-previews-play
+     RET		emacsvox-aural-voice-palette-previews-explain
      ?		emacsvox-aural-voice-palette-previews-help
      A		emacsvox-aural-voice-palette-previews-play-all
      E		emacsvox-aural-voice-palette-previews-edit
@@ -4530,35 +4584,42 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      Activate the voice palette at point as an override.
 
-2.52.1.22 emacsvox-aural-voice-palettes-copy
+2.52.1.22 emacsvox-aural-voice-palettes-audition
+................................................
+
+ -- Command: emacsvox-aural-voice-palettes-audition
+
+     Audition the selected palette’s effective voices in order.
+
+2.52.1.23 emacsvox-aural-voice-palettes-copy
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-copy
 
      Copy the voice palette at point to a personal palette.
 
-2.52.1.23 emacsvox-aural-voice-palettes-create
+2.52.1.24 emacsvox-aural-voice-palettes-create
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-create
 
      Create an empty personal voice palette.
 
-2.52.1.24 emacsvox-aural-voice-palettes-delete
+2.52.1.25 emacsvox-aural-voice-palettes-delete
 ..............................................
 
  -- Command: emacsvox-aural-voice-palettes-delete
 
      Delete the personal voice palette at point when it is unreferenced.
 
-2.52.1.25 emacsvox-aural-voice-palettes-delete-entry
+2.52.1.26 emacsvox-aural-voice-palettes-delete-entry
 ....................................................
 
  -- Command: emacsvox-aural-voice-palettes-delete-entry
 
      Delete one direct entry from the personal palette at point.
 
-2.52.1.26 emacsvox-aural-voice-palettes-describe
+2.52.1.27 emacsvox-aural-voice-palettes-describe
 ................................................
 
  -- Command: emacsvox-aural-voice-palettes-describe (&optional id)
@@ -4567,21 +4628,21 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID)
 
-2.52.1.27 emacsvox-aural-voice-palettes-edit-entry
+2.52.1.28 emacsvox-aural-voice-palettes-edit-entry
 ..................................................
 
  -- Command: emacsvox-aural-voice-palettes-edit-entry
 
      Create or replace one direct voice entry in the personal palette at point.
 
-2.52.1.28 emacsvox-aural-voice-palettes-edit-metadata
+2.52.1.29 emacsvox-aural-voice-palettes-edit-metadata
 .....................................................
 
  -- Command: emacsvox-aural-voice-palettes-edit-metadata
 
      Edit summary and parent of the personal palette at point.
 
-2.52.1.29 emacsvox-aural-voice-palettes-explain
+2.52.1.30 emacsvox-aural-voice-palettes-explain
 ...............................................
 
  -- Command: emacsvox-aural-voice-palettes-explain (&optional id voice)
@@ -4590,21 +4651,21 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID VOICE)
 
-2.52.1.30 emacsvox-aural-voice-palettes-follow-baseline
+2.52.1.31 emacsvox-aural-voice-palettes-follow-baseline
 .......................................................
 
  -- Command: emacsvox-aural-voice-palettes-follow-baseline
 
      Clear the palette override and use the compatibility baseline.
 
-2.52.1.31 emacsvox-aural-voice-palettes-help
+2.52.1.32 emacsvox-aural-voice-palettes-help
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-help
 
      Display and speak voice-palette manager help.
 
-2.52.1.32 emacsvox-aural-voice-palettes-mode
+2.52.1.33 emacsvox-aural-voice-palettes-mode
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-mode
@@ -4624,7 +4685,7 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      D		emacsvox-aural-voice-palettes-delete-entry
      E		emacsvox-aural-voice-palettes-edit-metadata
      N		emacsvox-aural-voice-palettes-create
-     P		emacsvox-aural-voice-palettes-preview
+     P		emacsvox-aural-voice-palettes-audition
      a		emacsvox-aural-voice-palettes-activate
      c		emacsvox-aural-voice-palettes-copy
      d		emacsvox-aural-voice-palettes-delete
@@ -4634,21 +4695,21 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      v		emacsvox-aural-voice-palettes-describe
      x		emacsvox-aural-voice-palettes-explain
 
-2.52.1.33 emacsvox-aural-voice-palettes-next
+2.52.1.34 emacsvox-aural-voice-palettes-next
 ............................................
 
  -- Command: emacsvox-aural-voice-palettes-next
 
      Move to and speak the next voice palette.
 
-2.52.1.34 emacsvox-aural-voice-palettes-next-column
+2.52.1.35 emacsvox-aural-voice-palettes-next-column
 ...................................................
 
  -- Command: emacsvox-aural-voice-palettes-next-column
 
      Move right and speak the next palette column.
 
-2.52.1.35 emacsvox-aural-voice-palettes-preview
+2.52.1.36 emacsvox-aural-voice-palettes-preview
 ...............................................
 
  -- Command: emacsvox-aural-voice-palettes-preview (&optional id)
@@ -4657,21 +4718,21 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID)
 
-2.52.1.36 emacsvox-aural-voice-palettes-previous
+2.52.1.37 emacsvox-aural-voice-palettes-previous
 ................................................
 
  -- Command: emacsvox-aural-voice-palettes-previous
 
      Move to and speak the previous voice palette.
 
-2.52.1.37 emacsvox-aural-voice-palettes-previous-column
+2.52.1.38 emacsvox-aural-voice-palettes-previous-column
 .......................................................
 
  -- Command: emacsvox-aural-voice-palettes-previous-column
 
      Move left and speak the previous palette column.
 
-2.52.1.38 emacsvox-aural-voice-palettes-refresh
+2.52.1.39 emacsvox-aural-voice-palettes-refresh
 ...............................................
 
  -- Command: emacsvox-aural-voice-palettes-refresh (&optional id)
@@ -4680,21 +4741,21 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ID)
 
-2.52.1.39 emacsvox-aural-voice-palettes-speak-current
+2.52.1.40 emacsvox-aural-voice-palettes-speak-current
 .....................................................
 
  -- Command: emacsvox-aural-voice-palettes-speak-current
 
      Speak the complete voice-palette row at point.
 
-2.52.1.40 emacsvox-aural-voice-palettes-speak-current-cell
+2.52.1.41 emacsvox-aural-voice-palettes-speak-current-cell
 ..........................................................
 
  -- Command: emacsvox-aural-voice-palettes-speak-current-cell
 
      Speak the current palette column title and value.
 
-2.52.1.41 emacsvox-aural-voice-tuner-audition
+2.52.1.42 emacsvox-aural-voice-tuner-audition
 .............................................
 
  -- Command: emacsvox-aural-voice-tuner-audition (&optional
@@ -4704,42 +4765,42 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional ANNOUNCEMENT)
 
-2.52.1.42 emacsvox-aural-voice-tuner-compare
+2.52.1.43 emacsvox-aural-voice-tuner-compare
 ............................................
 
  -- Command: emacsvox-aural-voice-tuner-compare
 
      Alternate an opening-style and working-style comparison sample.
 
-2.52.1.43 emacsvox-aural-voice-tuner-decrease
+2.52.1.44 emacsvox-aural-voice-tuner-decrease
 .............................................
 
  -- Command: emacsvox-aural-voice-tuner-decrease
 
      Decrease the current numeric dimension and audition its new value.
 
-2.52.1.44 emacsvox-aural-voice-tuner-edit
+2.52.1.45 emacsvox-aural-voice-tuner-edit
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-edit
 
      Edit the current dimension and audition the new value.
 
-2.52.1.45 emacsvox-aural-voice-tuner-help
+2.52.1.46 emacsvox-aural-voice-tuner-help
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-help
 
      Display and speak voice tuner help.
 
-2.52.1.46 emacsvox-aural-voice-tuner-increase
+2.52.1.47 emacsvox-aural-voice-tuner-increase
 .............................................
 
  -- Command: emacsvox-aural-voice-tuner-increase
 
      Increase the current numeric dimension and audition its new value.
 
-2.52.1.47 emacsvox-aural-voice-tuner-mode
+2.52.1.48 emacsvox-aural-voice-tuner-mode
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-mode
@@ -4773,28 +4834,28 @@ Accessible management for inherited, data-safe ACSS voice palettes.
      C-c C-c		emacsvox-aural-voice-tuner-save
      C-c C-k		emacsvox-aural-voice-tuner-quit
 
-2.52.1.48 emacsvox-aural-voice-tuner-next
+2.52.1.49 emacsvox-aural-voice-tuner-next
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-next
 
      Move to and speak the next tunable dimension.
 
-2.52.1.49 emacsvox-aural-voice-tuner-previous
+2.52.1.50 emacsvox-aural-voice-tuner-previous
 .............................................
 
  -- Command: emacsvox-aural-voice-tuner-previous
 
      Move to and speak the previous tunable dimension.
 
-2.52.1.50 emacsvox-aural-voice-tuner-quit
+2.52.1.51 emacsvox-aural-voice-tuner-quit
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-quit
 
      Cancel tuning, asking before discarding unsaved changes.
 
-2.52.1.51 emacsvox-aural-voice-tuner-refresh
+2.52.1.52 emacsvox-aural-voice-tuner-refresh
 ............................................
 
  -- Command: emacsvox-aural-voice-tuner-refresh (&optional dimension)
@@ -4803,42 +4864,42 @@ Accessible management for inherited, data-safe ACSS voice palettes.
 
      (fn &optional DIMENSION)
 
-2.52.1.52 emacsvox-aural-voice-tuner-restore
+2.52.1.53 emacsvox-aural-voice-tuner-restore
 ............................................
 
  -- Command: emacsvox-aural-voice-tuner-restore
 
      Restore and audition the style present when the tuner opened.
 
-2.52.1.53 emacsvox-aural-voice-tuner-save
+2.52.1.54 emacsvox-aural-voice-tuner-save
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-save
 
      Atomically save the portable style and return to the voice preview.
 
-2.52.1.54 emacsvox-aural-voice-tuner-set-digit
+2.52.1.55 emacsvox-aural-voice-tuner-set-digit
 ..............................................
 
  -- Command: emacsvox-aural-voice-tuner-set-digit
 
      Set the current numeric dimension from the typed digit and audition it.
 
-2.52.1.55 emacsvox-aural-voice-tuner-speak-current
+2.52.1.56 emacsvox-aural-voice-tuner-speak-current
 ..................................................
 
  -- Command: emacsvox-aural-voice-tuner-speak-current
 
      Speak the complete tuner row at point.
 
-2.52.1.56 emacsvox-aural-voice-tuner-undo
+2.52.1.57 emacsvox-aural-voice-tuner-undo
 .........................................
 
  -- Command: emacsvox-aural-voice-tuner-undo
 
      Undo the most recent unsaved tuner change and audition it.
 
-2.52.1.57 emacsvox-aural-voice-tuner-use-default
+2.52.1.58 emacsvox-aural-voice-tuner-use-default
 ................................................
 
  -- Command: emacsvox-aural-voice-tuner-use-default
@@ -8097,7 +8158,6 @@ table of contents.
 
  -- Variable: User Option emacsvox-epub-bookshelf-directory
      Directory where we keep .bsf files defining various bookshelves.
-
      Default Value:
 
      "~/EBooks/bsf/"

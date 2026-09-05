@@ -65,7 +65,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1481 commands and 205 options.
+This chapter documents a total of 1488 commands and 205 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -2046,12 +2046,30 @@ Move the selected rule earlier in its scope.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-editor-next-rule
+@deffn {Command} emacsvox-aural-editor-next-rule
+@findex emacsvox-aural-editor-next-rule
+
+@format
+Move to the next rule.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-editor-preview-rule
 @deffn {Command} emacsvox-aural-editor-preview-rule
 @findex emacsvox-aural-editor-preview-rule
 
 @format
 Preview the selected unsaved working rule.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-editor-previous-rule
+@deffn {Command} emacsvox-aural-editor-previous-rule
+@findex emacsvox-aural-editor-previous-rule
+
+@format
+Move to the previous rule.
 @end format
 @end deffn
 
@@ -2121,14 +2139,17 @@ SPC		scroll-up-command
 <		beginning-of-buffer
 >		end-of-buffer
 ?		emacsvox-aural-editor-help
+N		emacsvox-aural-editor-add-rule
+P		emacsvox-aural-editor-preview-rule
+S		emacsvox-aural-ui-stop-preview
 c		emacsvox-aural-editor-copy-rule
 d		emacsvox-aural-editor-delete-rule
 e		emacsvox-aural-editor-edit-rule
 g		emacsvox-aural-editor-refresh
 h		emacsvox-aural
 m		emacsvox-aural-editor-edit-metadata
-n		emacsvox-aural-editor-add-rule
-p		emacsvox-aural-editor-preview-rule
+n		emacsvox-aural-editor-next-rule
+p		emacsvox-aural-editor-previous-rule
 q		emacsvox-aural-editor-quit
 t		emacsvox-aural-editor-toggle-rule
 v		emacsvox-aural-editor-validate
@@ -2138,8 +2159,12 @@ DEL		scroll-down-command
 S-SPC		scroll-down-command
 M-<down>	emacsvox-aural-editor-move-rule-down
 M-<up>		emacsvox-aural-editor-move-rule-up
+<down>		emacsvox-aural-editor-next-rule
+<up>		emacsvox-aural-editor-previous-rule
 
 C-c C-c		emacsvox-aural-editor-save
+
+C-c C-a		emacsvox-aural-ui-actions
 
 @end format
 @end deffn
@@ -2374,6 +2399,15 @@ Audition only the earcons in the preview example at point.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-feature-fragment-previews-describe
+@deffn {Command} emacsvox-aural-feature-fragment-previews-describe
+@findex emacsvox-aural-feature-fragment-previews-describe
+
+@format
+Show details of the selected example and its composed feedback.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-feature-fragment-previews-help
 @deffn {Command} emacsvox-aural-feature-fragment-previews-help
 @findex emacsvox-aural-feature-fragment-previews-help
@@ -2397,7 +2431,7 @@ final or penultimate step during initialization.
 
 Key             Binding
 -------------------------------------------------------------------------------
-RET		emacsvox-aural-feature-fragment-previews-play
+RET		emacsvox-aural-feature-fragment-previews-describe
 ?		emacsvox-aural-feature-fragment-previews-help
 P		emacsvox-aural-feature-fragment-previews-play
 c		emacsvox-aural-feature-fragment-previews-audition-cues
@@ -3282,7 +3316,7 @@ step during initialization.
 
 Key             Binding
 -------------------------------------------------------------------------------
-RET		emacsvox-aural-profiles-activate
+RET		emacsvox-aural-profiles-describe
 ?		emacsvox-aural-profiles-help
 N		emacsvox-aural-profiles-create
 a		emacsvox-aural-profiles-activate
@@ -3872,6 +3906,15 @@ Audition the concrete cue at point.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-sound-pack-cues-describe
+@deffn {Command} emacsvox-aural-sound-pack-cues-describe
+@findex emacsvox-aural-sound-pack-cues-describe
+
+@format
+Show details of the selected cue without playing it.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-sound-pack-cues-help
 @deffn {Command} emacsvox-aural-sound-pack-cues-help
 @findex emacsvox-aural-sound-pack-cues-help
@@ -3895,7 +3938,7 @@ penultimate step during initialization.
 
 Key             Binding
 -------------------------------------------------------------------------------
-RET		emacsvox-aural-sound-pack-cues-audition
+RET		emacsvox-aural-sound-pack-cues-describe
 ?		emacsvox-aural-sound-pack-cues-help
 P		emacsvox-aural-sound-pack-cues-audition
 h		emacsvox-aural
@@ -4466,11 +4509,14 @@ SPC		scroll-up-command
 <		beginning-of-buffer
 >		end-of-buffer
 ?		describe-mode
+S		emacsvox-aural-ui-stop-preview
 g		revert-buffer
 h		describe-mode
 q		emacsvox-aural-quit
 DEL		scroll-down-command
 S-SPC		scroll-down-command
+
+C-c C-a		emacsvox-aural-ui-actions
 
 @end format
 @end deffn
@@ -4512,7 +4558,7 @@ SPC		emacsvox-aural-ui-speak-current-row
 <		beginning-of-buffer
 >		end-of-buffer
 ?		describe-mode
-S		tabulated-list-sort
+S		emacsvox-aural-ui-stop-preview
 g		emacsvox-aural-ui-refresh
 h		describe-mode
 n		emacsvox-aural-ui-next-row
@@ -4532,8 +4578,19 @@ M-<right>	tabulated-list-next-column
 <right>		emacsvox-aural-ui-next-column
 <up>		emacsvox-aural-ui-previous-row
 
+C-c C-a		emacsvox-aural-ui-actions
+
 C-M-i		backward-button
 
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-ui-actions
+@deffn {Command} emacsvox-aural-ui-actions
+@findex emacsvox-aural-ui-actions
+
+@format
+Choose an available action by name.
 @end format
 @end deffn
 
@@ -4640,6 +4697,15 @@ Speak the complete current row using its configured callback.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-ui-stop-preview
+@deffn {Command} emacsvox-aural-ui-stop-preview
+@findex emacsvox-aural-ui-stop-preview
+
+@format
+Stop the current preview and its remaining samples.
+@end format
+@end deffn
+
 @subsection emacsvox-aural-ui Options
 
 @defvar {User Option} emacsvox-aural-ui-help-return-mode-hook
@@ -4733,7 +4799,7 @@ or penultimate step during initialization.
 
 Key             Binding
 -------------------------------------------------------------------------------
-RET		emacsvox-aural-voice-palette-previews-play
+RET		emacsvox-aural-voice-palette-previews-explain
 ?		emacsvox-aural-voice-palette-previews-help
 A		emacsvox-aural-voice-palette-previews-play-all
 E		emacsvox-aural-voice-palette-previews-edit
@@ -4889,6 +4955,15 @@ Activate the voice palette at point as an override.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-voice-palettes-audition
+@deffn {Command} emacsvox-aural-voice-palettes-audition
+@findex emacsvox-aural-voice-palettes-audition
+
+@format
+Audition the selected palette’s effective voices in order.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-voice-palettes-copy
 @deffn {Command} emacsvox-aural-voice-palettes-copy
 @findex emacsvox-aural-voice-palettes-copy
@@ -5003,7 +5078,7 @@ B		emacsvox-aural-voice-palettes-preview
 D		emacsvox-aural-voice-palettes-delete-entry
 E		emacsvox-aural-voice-palettes-edit-metadata
 N		emacsvox-aural-voice-palettes-create
-P		emacsvox-aural-voice-palettes-preview
+P		emacsvox-aural-voice-palettes-audition
 a		emacsvox-aural-voice-palettes-activate
 c		emacsvox-aural-voice-palettes-copy
 d		emacsvox-aural-voice-palettes-delete
@@ -9036,7 +9111,6 @@ Custom URL executor for use in EPub Mode.
 @verbatim
 Directory where we keep .bsf files defining various bookshelves.
 @end verbatim
-
 Default Value:
 @verbatim
 

@@ -571,7 +571,7 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
          (pack (emacsvox-aural-resource-pack pack-id))
          (report (emacsvox-aural-validate-resource-pack pack-id))
          (status (emacsvox-aural-sound-packs--report-status report)))
-    (with-help-window (help-buffer)
+    (emacsvox-aural-ui-with-help-window
       (princ
        (format
         "Sound pack %s: %s\n\n"
@@ -800,7 +800,7 @@ PATH protects completion from invalid inheritance cycles."
 (defun emacsvox-aural-sound-packs-help ()
   "Display and speak sound-pack manager help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Sound-Pack Manager\n\n"
@@ -825,7 +825,8 @@ PATH protects completion from invalid inheritance cycles."
   (emacsvox-aural-ui-configure-tabulated
    "sound pack list"
    #'emacsvox-aural-sound-packs-speak-current
-   #'emacsvox-aural-sound-packs-refresh)
+   #'emacsvox-aural-sound-packs-refresh
+   #'emacsvox-aural-ui-speak-name-and-state)
   (setq
    tabulated-list-format
    [("Pack" 20 t)
@@ -860,10 +861,16 @@ PATH protects completion from invalid inheritance cycles."
    (kbd (car binding))
    (cdr binding)))
 
+(defun emacsvox-aural-sound-pack-cues-describe ()
+  "Show details of the selected cue without playing it."
+  (interactive)
+  (let ((description (emacsvox-aural-sound-pack-cues-speak-current)))
+    (emacsvox-aural-ui-with-help-window (princ description))))
+
 (defun emacsvox-aural-sound-pack-cues-help ()
   "Display and speak sound-pack cue-browser help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Sound Cue Browser\n\n"
@@ -872,7 +879,7 @@ PATH protects completion from invalid inheritance cycles."
       "spatialization, and semantic intent.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "RET or P audition    SPC speak cue\n"
+      "RET cue details      P audition; S stop\n"
       "v validate pack      o open pack directory\n"
       "g rescan pack        s sound-pack manager\n"
       "h aural home         ? help\n"
@@ -905,7 +912,7 @@ PATH protects completion from invalid inheritance cycles."
 
 (dolist
     (binding
-     '(("RET" . emacsvox-aural-sound-pack-cues-audition)
+     '(("RET" . emacsvox-aural-sound-pack-cues-describe)
        ("P" . emacsvox-aural-sound-pack-cues-audition)
        ("v" . emacsvox-aural-sound-pack-cues-show-validation)
        ("o" . emacsvox-aural-sound-packs-open-directory)
@@ -924,10 +931,11 @@ PATH protects completion from invalid inheritance cycles."
          (emacsvox-aural-inspection-remember-source-buffer))
         (buffer (get-buffer-create "*Aural Sound Packs*")))
     (with-current-buffer buffer
-      (emacsvox-aural-sound-packs-mode)
+      (unless (derived-mode-p 'emacsvox-aural-sound-packs-mode)
+        (emacsvox-aural-sound-packs-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-sound-packs-refresh
-       (or pack emacsvox-sounds-current-pack)))
+       (or pack (tabulated-list-get-id) emacsvox-sounds-current-pack)))
     (emacsvox-aural-ui-pop-to-buffer buffer)
     (when
         (and
@@ -951,7 +959,8 @@ PATH protects completion from invalid inheritance cycles."
     (unless (emacsvox-aural-resource-pack pack)
       (user-error "Unknown sound pack: %S" pack))
     (with-current-buffer buffer
-      (emacsvox-aural-sound-pack-cues-mode)
+      (unless (derived-mode-p 'emacsvox-aural-sound-pack-cues-mode)
+        (emacsvox-aural-sound-pack-cues-mode))
       (emacsvox-aural-inspection-attach-source source)
       (setq emacsvox-aural-sound-pack-cues-pack pack)
       (emacsvox-aural-sound-pack-cues-refresh))

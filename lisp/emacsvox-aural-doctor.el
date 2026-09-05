@@ -535,7 +535,7 @@
 (defun emacsvox-aural-doctor-help ()
   "Display and speak Aural Doctor help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Emacsvox Aural Doctor\n\n"
@@ -587,7 +587,8 @@
          (emacsvox-aural-inspection-remember-source-buffer))
         (buffer (get-buffer-create "*Aural Doctor*")))
     (with-current-buffer buffer
-      (emacsvox-aural-doctor-mode)
+      (unless (derived-mode-p 'emacsvox-aural-doctor-mode)
+        (emacsvox-aural-doctor-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-doctor-refresh))
     (emacsvox-aural-ui-pop-to-buffer buffer)

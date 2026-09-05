@@ -447,7 +447,7 @@
          (input
           (emacsvox-aural-overrides--current-input
            (emacsvox-aural-override-record-source-buffer record))))
-    (with-help-window (help-buffer)
+    (emacsvox-aural-ui-with-help-window
       (princ
        (format
         "Presentation override: %s\n\n"
@@ -758,7 +758,7 @@
 (defun emacsvox-aural-overrides-help ()
   "Display and speak Presentation Overrides help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Presentation Overrides\n\n"
@@ -789,7 +789,8 @@
   (emacsvox-aural-ui-configure-tabulated
    "presentation overrides"
    #'emacsvox-aural-overrides-speak-current
-   #'emacsvox-aural-overrides-refresh)
+   #'emacsvox-aural-overrides-refresh
+   #'emacsvox-aural-ui-speak-name-and-state)
   (setq
    tabulated-list-format
    [("Scope" 12 t)
@@ -844,7 +845,8 @@
         (buffer
          (get-buffer-create "*Aural Presentation Overrides*")))
     (with-current-buffer buffer
-      (emacsvox-aural-overrides-mode)
+      (unless (derived-mode-p 'emacsvox-aural-overrides-mode)
+        (emacsvox-aural-overrides-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-overrides-refresh))
     (emacsvox-aural-ui-pop-to-buffer buffer)

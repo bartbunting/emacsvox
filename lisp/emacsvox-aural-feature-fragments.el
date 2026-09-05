@@ -422,7 +422,7 @@
          (report (emacsvox-aural-validate-feature-fragment fragment))
          (summary
           (emacsvox-aural-feature-fragments--fragment-spoken-summary fragment)))
-    (with-help-window (help-buffer)
+    (emacsvox-aural-ui-with-help-window
       (princ (format "Aural presentation option: %s\n\n" fragment))
       (princ
        (format
@@ -1013,10 +1013,16 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
       (message "%s" summary))
     summary))
 
+(defun emacsvox-aural-feature-fragment-previews-describe ()
+  "Show details of the selected example and its composed feedback."
+  (interactive)
+  (let ((description (emacsvox-aural-feature-fragment-previews-speak-current)))
+    (emacsvox-aural-ui-with-help-window (princ description))))
+
 (defun emacsvox-aural-feature-fragment-previews-help ()
   "Display and speak presentation-option preview help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Presentation Option Preview\n\n"
@@ -1025,7 +1031,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
       "manager speech and plays no labels, content, or training explanation.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "RET or P full preview\n"
+      "RET example details  P full preview; S stop\n"
       "c cue-only audition  i composed/isolated\n"
       "SPC speak example    g refresh\n"
       "o option manager     h aural home\n"
@@ -1059,7 +1065,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
 
 (dolist
     (binding
-     '(("RET" . emacsvox-aural-feature-fragment-previews-play)
+     '(("RET" . emacsvox-aural-feature-fragment-previews-describe)
        ("P" . emacsvox-aural-feature-fragment-previews-play)
        ("c" . emacsvox-aural-feature-fragment-previews-audition-cues)
        ("i" . emacsvox-aural-feature-fragment-previews-toggle-isolated)
@@ -1091,7 +1097,9 @@ announce the selected example after displaying the buffer."
              fragment)))
          (buffer (get-buffer-create "*Aural Option Preview*")))
     (with-current-buffer buffer
-      (emacsvox-aural-feature-fragment-previews-mode)
+      (unless (and (derived-mode-p 'emacsvox-aural-feature-fragment-previews-mode)
+                   (eq fragment emacsvox-aural-feature-fragment-previews-fragment))
+        (emacsvox-aural-feature-fragment-previews-mode))
       (emacsvox-aural-inspection-attach-source source)
       (setq
        emacsvox-aural-feature-fragment-previews-fragment fragment
@@ -1274,8 +1282,8 @@ announce the selected example after displaying the buffer."
      (copy-hash-table emacsvox-aural-feature-fragment-registry)
      enabled)
     (emacsvox-aural-feature-fragments-refresh-if-live fragment)
-    (message
-     "%s presentation option %s"
+    (emacsvox-aural-ui-announce-result
+     "Saved: %s presentation option %s"
      (if enabled-p "Disabled" "Enabled")
      fragment)
     (not enabled-p)))
@@ -1364,7 +1372,7 @@ announce the selected example after displaying the buffer."
 (defun emacsvox-aural-feature-fragments-help ()
   "Display and speak presentation-option manager help."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Aural Presentation Options\n\n"
@@ -1372,12 +1380,12 @@ announce the selected example after displaying the buffer."
       "TAB or RET on a collection expands or collapses it.  The active-order view\n"
       "shows enabled options from weakest to strongest.  Toggling an option never\n"
       "changes its stable precedence.  Personal overrides remain stronger.\n"
-      "Rows speak value then title; columns speak title then value.\n"
+      "Rows speak the option name and status; columns speak title then value.\n"
       "Moving past either boundary announces it.\n\n"
       "C-n or down next     C-p or up previous\n"
-      "n next titled row    p previous titled row\n"
+      "n next option        p previous option\n"
       "left/right column    . speak titled cell\n"
-      "RET open/toggle      TAB expand/collapse collection\n"
+      "RET details          TAB expand/collapse collection\n"
       "SPC speak row        a grouped/active-order view\n"
       "P preview option     C-u P preview option alone\n"
       "Multiple examples open a reusable preview browser\n"
@@ -1398,7 +1406,8 @@ announce the selected example after displaying the buffer."
   (emacsvox-aural-ui-configure-tabulated
    "presentation option list"
    #'emacsvox-aural-feature-fragments-speak-current
-   #'emacsvox-aural-feature-fragments-refresh)
+   #'emacsvox-aural-feature-fragments-refresh
+   #'emacsvox-aural-ui-speak-name-and-state)
   (setq
    tabulated-list-format
    [("Option" 32 nil)
@@ -1442,10 +1451,11 @@ announce the selected example after displaying the buffer."
          (emacsvox-aural-inspection-remember-source-buffer))
         (buffer (get-buffer-create "*Aural Feature Fragments*")))
     (with-current-buffer buffer
-      (emacsvox-aural-feature-fragments-mode)
+      (unless (derived-mode-p 'emacsvox-aural-feature-fragments-mode)
+        (emacsvox-aural-feature-fragments-mode))
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-feature-fragments-refresh
-       (car emacsvox-aural-enabled-feature-fragments)))
+       (or (tabulated-list-get-id) (car emacsvox-aural-enabled-feature-fragments))))
     (emacsvox-aural-ui-pop-to-buffer buffer)
     (if (tabulated-list-get-id)
         (when (called-interactively-p 'interactive)

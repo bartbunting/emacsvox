@@ -2222,15 +2222,15 @@
                 (emacsvox-aural-home-previous)
                 (should (equal spoken "Top of aural home."))
                 (emacsvox-aural-home-next)
-                (should (equal spoken "Remap voice at point, Area"))
+                (should (string-prefix-p "Remap voice at point: " spoken))
                 (emacsvox-aural-home-next)
-                (should (equal spoken "Remap earcon at point, Area"))
+                (should (string-prefix-p "Remap earcon at point: " spoken))
                 (emacsvox-aural-home-next)
-                (should (equal spoken "Presentation overrides, Area"))
+                (should (string-prefix-p "Presentation overrides: " spoken))
                 (emacsvox-aural-home-next)
-                (should (equal spoken "Recent aural feedback, Area"))
+                (should (string-prefix-p "Recent aural feedback: " spoken))
                 (emacsvox-aural-home-next)
-                (should (equal spoken "Presentation profiles, Area"))
+                (should (string-prefix-p "Presentation profiles: " spoken))
                 (emacsvox-aural-home-next-column)
                 (should
                  (string-prefix-p "Current status, " spoken))
@@ -2466,16 +2466,16 @@
                    ((symbol-function 'emacsvox-icon) #'ignore))
                 (emacsvox-aural-feature-fragments-previous)
                 (should
-                 (equal spoken "General, Option"))
+                 (equal spoken "General: 2 of 2 enabled"))
                 (emacsvox-aural-feature-fragments-previous)
                 (should
                  (equal spoken "Top of presentation option list."))
                 (emacsvox-aural-feature-fragments-next)
                 (should
-                 (equal spoken "first fragment, Option"))
+                 (equal spoken "first fragment: enabled 1"))
                 (emacsvox-aural-feature-fragments-next)
                 (should
-                 (equal spoken "second fragment, Option"))
+                 (equal spoken "second fragment: enabled 2"))
                 (emacsvox-aural-feature-fragments-next)
                 (should
                  (equal spoken "Bottom of presentation option list."))
