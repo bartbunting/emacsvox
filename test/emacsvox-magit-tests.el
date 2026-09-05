@@ -11,10 +11,13 @@
 (require 'magit-repos)
 (require 'git-commit)
 (require 'git-rebase)
+(require 'emacsvox-advice)
 
 (load
  (expand-file-name
-  "../lisp/emacsvox-magit.el"
+  (if (equal (getenv "EMACSVOX_MAGIT_TEST_LOAD") "compiled")
+      "../lisp/emacsvox-magit.elc"
+    "../lisp/emacsvox-magit.el")
   (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 
@@ -50,14 +53,13 @@
 (ert-deftest emacsvox-magit-repository-tag-reports-object-and-next-focus ()
   "Marking a repository reports its identity and the newly focused row."
   (with-temp-buffer
-    (insert "first repository\nsecond repository")
+    (insert (propertize "first repository\n" 'tabulated-list-id "/src/first/")
+            (propertize "second repository" 'tabulated-list-id "/src/second/"))
     (goto-char (point-min))
     (let ((ems--interactive-fn-name 'magit-repolist-mark)
           calls)
       (cl-letf
-          (((symbol-function 'tabulated-list-get-id)
-            (lambda () "/src/first/"))
-           ((symbol-function 'emacsvox-aural-submit)
+          (((symbol-function 'emacsvox-aural-submit)
             (lambda (content &rest arguments)
               (push (cons content arguments) calls))))
         (should
@@ -2148,6 +2150,35 @@
             :events (vcs-diff-scrolled))
            navigation
            (scroll))))))))
+
+;;; Regression coverage against real Magit commands and Git repositories:
+
+(ert-deftest emacsvox-magit-completion-and-entry-have-independent-lanes ()
+  (let ((process (make-process :name "emacsvox-magit-test" :command '("true")
+                               :sentinel #'ignore :noquery t))
+        (emacsvox-use-icons t))
+    (unwind-protect
+        (progn
+          (while (process-live-p process) (accept-process-output process 0.05))
+          (process-put process 'emacsvox-magit-operation 'magit-fetch)
+          (process-put process 'emacsvox-magit-operation-label "fetch")
+          (cl-letf (((symbol-function 'tts-speak) #'ignore)
+                    ((symbol-function 'tts-stop) #'ignore)
+                    ((symbol-function 'emacsvox-queue-resource) #'ignore))
+            (let ((submission (emacsvox--advice-magit-process-finish-after process)))
+              (should (eq (emacsvox-aural-submission-lane submission) 'notification))
+              (should (eq (emacsvox-aural-submission-interruption-policy submission) 'none))
+              (should (eq (emacsvox-aural-concrete-action-cue
+                           (car (emacsvox-aural-concrete-plan-before
+                                 (car (emacsvox-aural-submission-plans submission)))))
+                          'task-done)))
+            (with-temp-buffer
+              (insert "Head: main")
+              (let* ((ems--interactive-fn-name 'magit-status)
+                     (submission (emacsvox--advice-magit-status-after)))
+                (should (eq (emacsvox-aural-submission-lane submission) 'main))
+                (should (eq (emacsvox-aural-submission-interruption-policy submission) 'lane))))))
+      (when (process-live-p process) (delete-process process)))))
 
 (provide 'emacsvox-magit-tests)
 ;;; emacsvox-magit-tests.el ends here

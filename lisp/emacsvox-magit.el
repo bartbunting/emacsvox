@@ -303,12 +303,16 @@ The left-margin face is purely graphical and contains no spoken content.")
    ((derived-mode-p 'magit-diff-mode) 'diff)
    (t 'other)))
 
+(defvar emacsvox-magit--presentation-lane 'main
+  "Lane owned by the current Magit presentation.")
+
 (defun emacsvox-magit--submit-actions (facts occasion &rest icons)
   "Submit FACTS and compatibility ICONS as one action-only transaction."
   (emacsvox-aural-submit-actions
    :facts facts
    :module 'magit
    :occasion occasion
+   :lane emacsvox-magit--presentation-lane
    :compatibility-actions
    (mapcar #'emacsvox-aural-compatibility-icon icons)))
 
@@ -322,6 +326,7 @@ ICON-PHASE defaults to `before'."
        :facts facts
        :module 'magit
        :occasion occasion
+       :lane emacsvox-magit--presentation-lane
        :compatibility-actions
        (when icon
          (list
@@ -811,7 +816,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
     (emacsvox-magit--submit-text
      (emacsvox-magit--line-content)
      (emacsvox-magit-view-facts 'status 'vcs-view-opened)
-     'state-change 'open-object)))
+     'navigation 'open-object)))
 
 (defconst emacsvox-magit--quit-targets
   '(magit-mode-quit-window
@@ -846,7 +851,8 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
 (defun emacsvox--advice-magit-process-finish-after (argument &rest _)
   "Present completion or failure when ARGUMENT is an asynchronous process."
   (when (processp argument)
-    (let* ((failed
+    (let* ((emacsvox-magit--presentation-lane 'notification)
+           (failed
             (or
              (eq (process-status argument) 'signal)
              (not (zerop (process-exit-status argument)))))
