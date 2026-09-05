@@ -42,6 +42,8 @@
 
 (declare-function magit-current-section "magit-section" ())
 (declare-function magit-section-hidden "magit-section" (section))
+(declare-function magit-region-values "magit-section" (&optional condition multiple))
+(declare-function magit-diff-scope "magit-diff" (&optional section strict))
 
 (defvar git-commit-mode)
 (defvar magit-blame-mode)
@@ -624,15 +626,9 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
     magit-log-move-to-revision
     magit-jump-to-revision-diffstat
     magit-jump-to-revision-diff
-    magit-jump-to-diffstat-or-diff
-    magit-unstage
-    magit-unstage-all
-    magit-file-unstage
-    magit-stage
-    magit-file-stage
-     magit-stage-modified)
+    magit-jump-to-diffstat-or-diff)
    emacsvox-magit--section-jump-targets)
-  "Current Magit navigation and staging commands.")
+  "Current Magit navigation commands.")
 
 (cl-loop
  for target in emacsvox-magit--navigation-targets
@@ -644,14 +640,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
      (when (ems-interactive-p ',target)
        (emacsvox-magit-present-line
         'select-object
-        ,(if
-             (memq
-              target
-              '(magit-stash magit-unstage magit-unstage-all
-                magit-file-unstage magit-stage magit-file-stage
-                magit-stage-modified))
-             ''state-change
-           ''navigation)
+        'navigation
         ',target)))))
 
 ;;;  Section Toggle:
@@ -885,9 +874,51 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
 
 ;;;  Advise process-sentinel:
 
+(defvar emacsvox-magit--git-results nil
+  "Dynamic vector of completed Git calls and failures for one command.
+Failures are pairs of repository directory and exit status.  Only processes
+started by this command can contribute asynchronous results.")
+
+(defvar emacsvox-magit--git-processes nil
+  "Processes started by the command collecting Git results.")
+
+(defun emacsvox-magit--record-git-result (argument &optional directory)
+  "Record the exit status of ARGUMENT, a process or integer, in DIRECTORY."
+  (let* ((process (and (processp argument) argument))
+         (results (if process
+                      (process-get process 'emacsvox-magit-collected)
+                    emacsvox-magit--git-results))
+         (status (if process (process-exit-status process) argument)))
+    (when (and results
+               (or (not process)
+                   (not (process-get process 'emacsvox-magit-result-recorded))))
+      (when process (process-put process 'emacsvox-magit-result-recorded t))
+      (cl-incf (aref results 0))
+      (when (or (not (zerop status))
+                (and process (eq (process-status process) 'signal)))
+        (push (cons (or (if process (process-get process 'default-dir)
+                         directory)
+                       default-directory)
+                    status)
+              (aref results 1))))))
+
+(defun emacsvox-magit--collect-finished-processes ()
+  "Record exited processes whose sentinels have not yet run.
+Magit's remote input path can finish waiting as soon as a process exits."
+  (dolist (process emacsvox-magit--git-processes)
+    (when (memq (process-status process) '(exit signal))
+      (emacsvox-magit--record-git-result process))))
+
+(defun emacsvox--advice-magit-process-finish-around
+    (original argument &rest arguments)
+  "Observe Git's exit status before ORIGINAL handles ARGUMENT and ARGUMENTS."
+  (emacsvox-magit--record-git-result argument (nth 2 arguments))
+  (apply original argument arguments))
+
 (defun emacsvox--advice-magit-process-finish-after (argument &rest _)
   "Present completion or failure when ARGUMENT is an asynchronous process."
-  (when (processp argument)
+  (when (and (processp argument)
+             (not (process-get argument 'emacsvox-magit-collected)))
     (let* ((emacsvox-magit--presentation-lane 'notification)
            (failed
             (or
@@ -1599,6 +1630,112 @@ Only present the invocation that applies the transient's selected values."
     magit-repolist-find-file-other-frame)
   "Operations whose specific feedback supersedes process-boundary feedback.")
 
+(defconst emacsvox-magit--staging-targets
+  '(magit-stage magit-stage-files magit-stage-modified magit-file-stage
+    magit-unstage magit-unstage-files magit-unstage-all magit-file-unstage)
+  "Staging commands whose feedback depends on observed Git results.")
+
+(defconst emacsvox-magit--checked-operation-targets
+  '(magit-branch-checkout magit-branch-or-checkout magit-branch-rename
+    magit-remote-rename magit-remote-remove
+    magit-stash-both magit-stash-index magit-stash-worktree
+    magit-stash-keep-index)
+  "Commands requiring one result across several synchronous Git calls.")
+
+(defun emacsvox-magit--staging-subject (target arguments section)
+  "Describe what TARGET will change using ARGUMENTS and SECTION."
+  (let* ((scope (and (memq target '(magit-stage magit-unstage))
+                    (magit-diff-scope)))
+         (files
+          (cond
+           ((memq target '(magit-stage-files magit-unstage-files))
+            (car arguments))
+           ((eq scope 'files) (magit-region-values nil t))
+           ((eq scope 'file)
+            (list (emacsvox-magit--section-value section 'value)))
+           ((memq target '(magit-file-stage magit-file-unstage))
+            (list (or (and (boundp 'magit-buffer-file-name)
+                           magit-buffer-file-name)
+                      buffer-file-name))))))
+    (cond ((and (length= files 1) (stringp (car files))) (car files))
+          ((length> files 1) (format "%d files" (length files)))
+          ((memq scope '(region hunk hunks))
+           "selected changes")
+          (t "changes"))))
+
+(defun emacsvox-magit--present-staging-result
+    (target section subject results &optional error-p)
+  "Present TARGET's RESULTS for the original SECTION and SUBJECT."
+  (let* ((unstage (memq target '(magit-unstage magit-unstage-files
+                                magit-unstage-all magit-file-unstage)))
+         (verb (if unstage "unstage" "stage"))
+         (failed (or error-p (aref results 1)))
+         (changed (and (not failed) (> (aref results 0) 0)))
+         (facts
+          (emacsvox-magit-section-facts
+           nil section
+           (if changed (if unstage 'entry-unstaged 'entry-staged)
+             'operation-failed))))
+    (when changed
+      (setq facts (plist-put facts :states
+                             (list (if unstage 'unstaged 'staged)))))
+    (emacsvox-magit--submit-text
+     (cond (failed (format "Failed to %s %s" verb subject))
+           (changed (format "%s %s" (if unstage "Unstaged" "Staged") subject))
+           (t (format "No changes %s" (if unstage "unstaged" "staged"))))
+     (append facts (list :vcs-operation target))
+     'state-change (if changed 'select-object 'warn-user))))
+
+(defun emacsvox-magit--call-checked-operation (original target arguments)
+  "Run ORIGINAL for TARGET with ARGUMENTS, then present the observed outcome."
+  (cond
+   ;; These commands also have an asynchronous branch-creation path.
+   ;; Its existing process adapter owns that lifecycle.
+   ((and (memq target '(magit-branch-checkout magit-branch-or-checkout))
+         (cadr arguments))
+    (apply original arguments))
+   (emacsvox-magit--git-results
+    (let ((ems--interactive-fn-name nil)) (apply original arguments)))
+   ((not (ems-interactive-p target)) (apply original arguments))
+   (t
+    (let* ((emacsvox-magit--git-results (vector 0 nil))
+           (emacsvox-magit--git-processes nil)
+           (staging (memq target emacsvox-magit--staging-targets))
+           (section (and staging (magit-current-section)))
+           (subject (and staging
+                         (emacsvox-magit--staging-subject target arguments section)))
+           ;; Refresh can destroy or relocate the original section.
+           (snapshot (and section
+                          (list :type (emacsvox-magit--section-value section 'type)
+                                :hidden (emacsvox-magit--section-value section 'hidden)))))
+      (unless staging (emacsvox-magit--present-operation target 'started))
+      (condition-case error-data
+          (let ((result (apply original arguments)))
+            (emacsvox-magit--collect-finished-processes)
+            (if staging
+                (emacsvox-magit--present-staging-result
+                 target snapshot subject emacsvox-magit--git-results)
+              (emacsvox-magit--present-operation
+               target (cond ((aref emacsvox-magit--git-results 1) 'failed)
+                            ((zerop (aref emacsvox-magit--git-results 0)) 'unchanged)
+                            (t 'completed))))
+            result)
+        (error
+         (if staging
+             (emacsvox-magit--present-staging-result
+              target snapshot subject emacsvox-magit--git-results t)
+           (emacsvox-magit--present-operation target 'failed))
+         (signal (car error-data) (cdr error-data))))))))
+
+(cl-loop
+ for target in (append emacsvox-magit--staging-targets
+                       emacsvox-magit--checked-operation-targets)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do (eval `(defun ,function (original &rest arguments)
+             "Present the completed interactive Git command."
+             (emacsvox-magit--call-checked-operation
+              original ',target arguments))))
+
 (defun emacsvox-magit--operation-label (operation)
   "Return a concise spoken label for OPERATION."
   (let* ((name (symbol-name operation))
@@ -1639,12 +1776,14 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
            (pcase state
              ('started "Started")
              ('completed "Completed")
+             ('unchanged "No change for")
              ('failed "Failed"))
            label))
          (icon
           (pcase state
             ('started 'progress)
             ('completed 'task-done)
+            ('unchanged 'select-object)
             ('failed 'warn-user))))
     (emacsvox-magit--submit-text
      text facts 'notification icon)))
@@ -1693,24 +1832,29 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
 (defun emacsvox--advice-magit-start-process-around
     (original program &optional input &rest arguments)
   "Present an asynchronous process started by an interactive Magit command."
-  (let ((operation ems--interactive-fn-name))
-    (if
-        (or
-         (null operation)
-         (memq operation emacsvox-magit--dedicated-view-targets)
-         (memq operation emacsvox-magit--dedicated-operation-targets)
-         (not (ems-interactive-p operation)))
-        (apply original program input arguments)
-      (condition-case error-data
-          (let* ((process (apply original program input arguments))
-                 (label (emacsvox-magit--operation-label operation)))
-            (process-put process 'emacsvox-magit-operation operation)
-            (process-put process 'emacsvox-magit-operation-label label)
-            (emacsvox-magit--present-operation operation 'started t)
-            process)
-        (error
-         (emacsvox-magit--present-operation operation 'failed t)
-         (signal (car error-data) (cdr error-data)))))))
+  (if emacsvox-magit--git-results
+      (let ((process (apply original program input arguments)))
+        (process-put process 'emacsvox-magit-collected emacsvox-magit--git-results)
+        (push process emacsvox-magit--git-processes)
+        process)
+    (let ((operation ems--interactive-fn-name))
+      (if
+          (or
+           (null operation)
+           (memq operation emacsvox-magit--dedicated-view-targets)
+           (memq operation emacsvox-magit--dedicated-operation-targets)
+           (not (ems-interactive-p operation)))
+          (apply original program input arguments)
+        (condition-case error-data
+            (let* ((process (apply original program input arguments))
+                   (label (emacsvox-magit--operation-label operation)))
+              (process-put process 'emacsvox-magit-operation operation)
+              (process-put process 'emacsvox-magit-operation-label label)
+              (emacsvox-magit--present-operation operation 'started t)
+              process)
+          (error
+           (emacsvox-magit--present-operation operation 'failed t)
+           (signal (car error-data) (cdr error-data))))))))
 
 (defun emacsvox-magit--view-kind-label (kind)
   "Return a concise spoken label for Magit view KIND."
@@ -1769,6 +1913,15 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
 
 (defun emacsvox-magit--install-advice ()
   "Install advice for the Magit functions that are currently loaded."
+  (dolist (target (append emacsvox-magit--staging-targets
+                          emacsvox-magit--checked-operation-targets))
+    (when (fboundp target)
+      ;; Remove the former unconditional staging feedback on a live reload.
+      (when (memq target emacsvox-magit--staging-targets)
+        (advice-remove target (intern (format "emacsvox--advice-%s-after" target))))
+      (let ((function (intern (format "emacsvox--advice-%s-around" target))))
+        (unless (advice-member-p function target)
+          (advice-add target :around function '((name . emacsvox)))))))
   (dolist (target emacsvox-magit--simple-advice-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
@@ -1827,6 +1980,8 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
           emacsvox--advice-magit-display-buffer-around)
          (magit-run-git
           emacsvox--advice-magit-run-git-around)
+         (magit-process-finish
+          emacsvox--advice-magit-process-finish-around)
          (magit-git
           emacsvox--advice-magit-git-around)
          (magit-run-git-with-input
@@ -1850,13 +2005,14 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
           (and
            (fboundp target)
            (not (advice-member-p function target)))
-        (advice-add target :around function '((name . emacsvox)))))))
+        (advice-add target :around function)))))
 
 (dolist
     (feature
      '(magit
        magit-apply
        magit-blame
+       magit-branch
        magit-commit
        magit-diff
        magit-dired
@@ -1868,6 +2024,7 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
        magit-patch
        magit-refs
        magit-repos
+       magit-remote
        magit-section
        magit-stash
        magit-status))
@@ -2022,7 +2179,9 @@ TARGET, OPERATION, EVENT, and ICON describe the interaction."
   "Present aggregate fetch lifecycle for REPOSITORIES."
   (if (not (ems-interactive-p 'magit-repolist-fetch))
       (apply original repositories arguments)
-    (let ((description
+    (let ((emacsvox-magit--git-results (vector 0 nil))
+          (emacsvox-magit--git-processes nil)
+          (description
            (emacsvox-magit--repository-set-description repositories))
           (facts
            (append
@@ -2032,13 +2191,22 @@ TARGET, OPERATION, EVENT, and ICON describe the interaction."
        (format "Fetching %s" description)
        facts 'notification 'progress)
       (condition-case error-data
-          (let ((result (apply original repositories arguments)))
+          (let* ((result (apply original repositories arguments))
+                 (_ (emacsvox-magit--collect-finished-processes))
+                 (total (aref emacsvox-magit--git-results 0))
+                 (failed (length (aref emacsvox-magit--git-results 1))))
             (emacsvox-magit--submit-text
-             (format "Fetched %s" description)
+             (cond ((zerop total) "No repositories fetched")
+                   ((zerop failed) (format "Fetched %s" description))
+                   ((= failed total) (format "Failed to fetch %s" description))
+                   (t (format "Fetched %d of %d repositories; %d failed"
+                              (- total failed) total failed)))
              (plist-put
               (copy-sequence facts)
-              :events '(operation-completed))
-             'notification 'task-done)
+              :events (list (if (and (> total 0) (zerop failed))
+                                'operation-completed 'operation-failed)))
+             'notification (if (and (> total 0) (zerop failed))
+                               'task-done 'warn-user))
             result)
         (error
          (emacsvox-magit--submit-text

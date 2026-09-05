@@ -114,6 +114,8 @@
         (emacsvox--advice-magit-repolist-fetch-around
          (lambda (repositories)
            (should (equal repositories '("one" "two")))
+           (dotimes (_ 2)
+             (emacsvox--advice-magit-process-finish-around #'identity 0))
            'fetched)
         '("one" "two"))
         'fetched)))
@@ -2153,6 +2155,220 @@
 
 ;;; Regression coverage against real Magit commands and Git repositories:
 
+(defvar emacsvox-magit-test--calls nil)
+
+(defun emacsvox-magit-test--capture (content &rest arguments)
+  (push (cons content arguments) emacsvox-magit-test--calls))
+
+(defun emacsvox-magit-test--git (&rest arguments)
+  (with-temp-buffer
+    (should (zerop (apply #'process-file "git" nil t nil arguments)))
+    (string-trim (buffer-string))))
+
+(defmacro emacsvox-magit-test--with-repository (&rest body)
+  "Run BODY in an isolated Git repository, capturing speech submissions."
+  (declare (indent 0))
+  `(let* ((directory (file-name-as-directory (make-temp-file "emacsvox-magit-" t)))
+          (default-directory directory)
+          (process-environment (append '("GIT_CONFIG_GLOBAL=/dev/null"
+                                         "GIT_CONFIG_NOSYSTEM=1")
+                                       process-environment))
+          (magit-auto-revert-mode nil)
+          (magit-save-repository-buffers nil)
+          (magit-pre-call-git-hook nil)
+          (magit-credential-hook nil)
+          (magit-process-raise-error nil)
+          (magit-inhibit-refresh t)
+          (magit-wip-mode nil)
+          (emacsvox-magit-test--calls nil))
+     (unwind-protect
+         (progn
+           (emacsvox-magit-test--git "init" "-q" "-b" "main")
+           (emacsvox-magit-test--git "config" "user.name" "Speech Test")
+           (emacsvox-magit-test--git "config" "user.email" "test@example.invalid")
+           (write-region "initial\n" nil "sample.txt" nil 'silent)
+           (emacsvox-magit-test--git "add" "sample.txt")
+           (emacsvox-magit-test--git "commit" "-qm" "Fixture")
+           (with-temp-buffer
+             (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                        #'emacsvox-magit-test--capture)
+                       ((symbol-function 'emacsvox-aural-submit-actions)
+                        (lambda (&rest args)
+                          (apply #'emacsvox-magit-test--capture nil args))))
+               ,@body)))
+       (dolist (buffer (buffer-list))
+         (when (with-current-buffer buffer
+                 (string-prefix-p directory default-directory))
+           (with-current-buffer buffer (set-buffer-modified-p nil))
+           (kill-buffer buffer)))
+       (delete-directory directory t))))
+
+(ert-deftest emacsvox-magit-real-staging-and-unstaging-identify-files ()
+  (emacsvox-magit-test--with-repository
+    (write-region "modified\n" nil "sample.txt" nil 'silent)
+    (funcall-interactively #'magit-stage-files '("sample.txt"))
+    (should (equal (emacsvox-magit-test--git "diff" "--cached" "--name-only")
+                   "sample.txt"))
+    (should (equal (mapcar #'car emacsvox-magit-test--calls) '("Staged sample.txt")))
+    (should (equal (plist-get (plist-get (cdar emacsvox-magit-test--calls) :facts)
+                              :events) '(entry-staged)))
+    (setq emacsvox-magit-test--calls nil)
+    (funcall-interactively #'magit-unstage-files '("sample.txt"))
+    (should (string-empty-p (emacsvox-magit-test--git "diff" "--cached" "--name-only")))
+    (should (equal (mapcar #'car emacsvox-magit-test--calls) '("Unstaged sample.txt")))
+    (should (equal (plist-get (plist-get (cdar emacsvox-magit-test--calls) :facts)
+                              :events) '(entry-unstaged)))))
+
+(ert-deftest emacsvox-magit-real-stage-failure-never-emits-staged ()
+  (emacsvox-magit-test--with-repository
+    (write-region "modified\n" nil "sample.txt" nil 'silent)
+    (write-region "" nil ".git/index.lock" nil 'silent)
+    (funcall-interactively #'magit-stage-modified)
+    (should (string-empty-p (emacsvox-magit-test--git "diff" "--cached" "--name-only")))
+    (should (equal (mapcar #'car emacsvox-magit-test--calls) '("Failed to stage changes")))
+    (let ((facts (plist-get (cdar emacsvox-magit-test--calls) :facts)))
+      (should (equal (plist-get facts :events) '(operation-failed)))
+      (should-not (plist-get facts :states)))))
+
+(ert-deftest emacsvox-magit-real-stage-error-is-preserved ()
+  (emacsvox-magit-test--with-repository
+    (write-region "modified\n" nil "sample.txt" nil 'silent)
+    (write-region "" nil ".git/index.lock" nil 'silent)
+    (let ((magit-process-raise-error t))
+      (should-error (funcall-interactively #'magit-stage-files '("sample.txt"))
+                    :type 'magit-git-error))
+    (should (equal (mapcar #'car emacsvox-magit-test--calls)
+                   '("Failed to stage sample.txt")))))
+
+(ert-deftest emacsvox-magit-nested-staging-has-one-owner ()
+  (emacsvox-magit-test--with-repository
+    (write-region "modified\n" nil "sample.txt" nil 'silent)
+    (let ((ems--interactive-fn-name 'magit-stage))
+      (emacsvox-magit--call-checked-operation
+       (lambda () (funcall-interactively #'magit-stage-files '("sample.txt")))
+       'magit-stage nil))
+    (should (= (length emacsvox-magit-test--calls) 1))
+    (should (equal (plist-get (plist-get (cdar emacsvox-magit-test--calls) :facts)
+                              :events) '(entry-staged)))))
+
+(ert-deftest emacsvox-magit-programmatic-staging-remains-silent ()
+  (emacsvox-magit-test--with-repository
+    (write-region "modified\n" nil "sample.txt" nil 'silent)
+    (magit-stage-files '("sample.txt"))
+    (should (equal (emacsvox-magit-test--git "diff" "--cached" "--name-only")
+                   "sample.txt"))
+    (should-not emacsvox-magit-test--calls)))
+
+(ert-deftest emacsvox-magit-real-checkout-rename-and-stash-are-spoken ()
+  (emacsvox-magit-test--with-repository
+    (emacsvox-magit-test--git "branch" "topic")
+    (funcall-interactively #'magit-branch-checkout "topic")
+    (should (equal (emacsvox-magit-test--git "branch" "--show-current") "topic"))
+    (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                   '("Started branch checkout" "Completed branch checkout")))
+    (setq emacsvox-magit-test--calls nil)
+    (funcall-interactively #'magit-branch-rename "topic" "renamed")
+    (should (equal (emacsvox-magit-test--git "branch" "--show-current") "renamed"))
+    (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                   '("Started branch rename" "Completed branch rename")))
+    (setq emacsvox-magit-test--calls nil)
+    (write-region "modified\n" nil "sample.txt" nil 'silent)
+    (funcall-interactively #'magit-stash-both "Saved work")
+    (should (string-match-p "Saved work" (emacsvox-magit-test--git "stash" "list")))
+    (should (string-empty-p (emacsvox-magit-test--git "diff" "--name-only")))
+    (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                   '("Started stash both" "Completed stash both")))))
+
+(ert-deftest emacsvox-magit-checked-operation-retains-earlier-failures ()
+  (let ((ems--interactive-fn-name 'magit-branch-rename)
+        (emacsvox-magit-test--calls nil))
+    (cl-letf (((symbol-function 'emacsvox-aural-submit) #'emacsvox-magit-test--capture))
+      (should
+       (eq 'original-result
+           (emacsvox-magit--call-checked-operation
+            (lambda (&rest _)
+              (emacsvox--advice-magit-process-finish-around #'identity 1)
+              (emacsvox--advice-magit-process-finish-around #'identity 0)
+              'original-result)
+            'magit-branch-rename '("old" "new")))))
+    (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                   '("Started branch rename" "Failed branch rename")))))
+
+(ert-deftest emacsvox-magit-real-remote-rename-remove-and-noop ()
+  (emacsvox-magit-test--with-repository
+    (emacsvox-magit-test--git "remote" "add" "origin" directory)
+    (funcall-interactively #'magit-remote-rename "origin" "upstream")
+    (should (equal (emacsvox-magit-test--git "remote") "upstream"))
+    (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                   '("Started remote rename" "Completed remote rename")))
+    (setq emacsvox-magit-test--calls nil)
+    (funcall-interactively #'magit-remote-rename "upstream" "upstream")
+    (should (equal (caar emacsvox-magit-test--calls) "No change for remote rename"))
+    (should-not (plist-get (plist-get (cdar emacsvox-magit-test--calls) :facts) :events))
+    (setq emacsvox-magit-test--calls nil)
+    (funcall-interactively #'magit-remote-remove "upstream")
+    (should (string-empty-p (emacsvox-magit-test--git "remote")))
+    (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                   '("Started remote remove" "Completed remote remove")))))
+
+(ert-deftest emacsvox-magit-new-branch-keeps-asynchronous-lifecycle ()
+  (emacsvox-magit-test--with-repository
+    (funcall-interactively #'magit-branch-checkout "created" "main")
+    (let ((process magit-this-process))
+      (should-not (process-get process 'emacsvox-magit-collected))
+      (with-timeout (5 (ert-fail "Checkout process did not finish"))
+        (while (eq magit-this-process process) (accept-process-output nil 0.05)))
+      (should (equal (emacsvox-magit-test--git "branch" "--show-current") "created"))
+      (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                     '("Started branch checkout" "Completed branch checkout")))
+      (should (eq (plist-get (cdar emacsvox-magit-test--calls) :lane) 'notification)))))
+
+(ert-deftest emacsvox-magit-waited-process-has-one-command-result ()
+  (emacsvox-magit-test--with-repository
+    (let ((ems--interactive-fn-name 'magit-remote-remove)
+          process)
+      (emacsvox-magit--call-checked-operation
+       (lambda ()
+         ;; Exercise the start-and-wait lifecycle used by remote Git calls.
+         (setq process (magit-start-process "git" nil "status" "--short"))
+         (set-process-sentinel process #'ignore)
+         (with-timeout (5 (ert-fail "Git process did not finish"))
+           (while (process-live-p process) (accept-process-output process 0.05))))
+       'magit-remote-remove nil)
+      (should (equal (process-get process 'emacsvox-magit-collected) [1 nil]))
+      ;; A delayed sentinel still updates Magit but produces no second result.
+      (magit-process-sentinel process "finished\n"))
+    (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                   '("Started remote remove" "Completed remote remove")))
+    (should (eq (plist-get (cdar emacsvox-magit-test--calls) :lane) 'main))))
+
+(ert-deftest emacsvox-magit-real-fetch-reports-partial-failure ()
+  (emacsvox-magit-test--with-repository
+    (emacsvox-magit-test--git "remote" "add" "origin"
+                             (expand-file-name "missing-remote.git"))
+    (let ((other (expand-file-name "second/")))
+      (make-directory other)
+      (let ((default-directory other)) (emacsvox-magit-test--git "init" "-q"))
+      (funcall-interactively #'magit-repolist-fetch (list directory other)))
+    (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                   '("Fetching 2 repositories" "Fetched 1 of 2 repositories; 1 failed")))
+    (should (equal (plist-get (plist-get (cdar emacsvox-magit-test--calls) :facts)
+                              :events) '(operation-failed)))))
+
+(ert-deftest emacsvox-magit-real-fetch-failure-is-never-success ()
+  (emacsvox-magit-test--with-repository
+    (emacsvox-magit-test--git "remote" "add" "origin"
+                             (expand-file-name "missing-remote.git"))
+    (funcall-interactively #'magit-repolist-fetch (list directory))
+    (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                   '("Fetching 1 repository" "Failed to fetch 1 repository")))))
+
+(ert-deftest emacsvox-magit-real-fetch-success-is-confirmed ()
+  (emacsvox-magit-test--with-repository
+    (funcall-interactively #'magit-repolist-fetch (list directory))
+    (should (equal (mapcar #'car (reverse emacsvox-magit-test--calls))
+                   '("Fetching 1 repository" "Fetched 1 repository")))))
+
 (defmacro emacsvox-magit-test--with-sections (&rest body)
   "Run BODY in a displayed section tree with two commit rows."
   (declare (indent 0))
@@ -2299,6 +2515,20 @@
                 (should (eq (emacsvox-aural-submission-lane submission) 'main))
                 (should (eq (emacsvox-aural-submission-interruption-policy submission) 'lane))))))
       (when (process-live-p process) (delete-process process)))))
+
+(ert-deftest emacsvox-magit-observer-ignores-unrelated-process-completion ()
+  (let* ((process (make-pipe-process :name "emacsvox-magit-unrelated"
+                                    :sentinel #'ignore :noquery t))
+         (emacsvox-magit--git-results (vector 0 nil)))
+    (unwind-protect
+        (progn
+          (emacsvox--advice-magit-process-finish-around #'identity process)
+          (should (equal emacsvox-magit--git-results [0 nil]))
+          (process-put process 'emacsvox-magit-collected emacsvox-magit--git-results)
+          (dotimes (_ 2)
+            (emacsvox--advice-magit-process-finish-around #'identity process))
+          (should (equal emacsvox-magit--git-results [1 nil])))
+      (delete-process process))))
 
 (provide 'emacsvox-magit-tests)
 ;;; emacsvox-magit-tests.el ends here
