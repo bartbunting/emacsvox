@@ -1248,16 +1248,22 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   "Call copy command ORIGINAL for TARGET with ARGUMENTS."
   (if (not (eq ems--interactive-fn-name target))
       (apply original arguments)
-    (let ((result (apply original arguments)))
+    (let ((kill-new-function (symbol-function 'kill-new))
+          copied result)
+      (cl-letf (((symbol-function 'kill-new)
+                 (lambda (&rest args)
+                   (prog1 (apply kill-new-function args)
+                     (setq copied t)))))
+        (setq result (apply original arguments)))
       (when (ems-interactive-p target)
         (emacsvox-magit--submit-text
-         (emacsvox-magit--copied-content)
+         (if copied (emacsvox-magit--copied-content) "Nothing to copy here")
          (append
           (emacsvox-magit-view-facts
            (emacsvox-magit-current-view-kind)
-           'operation-completed)
+           (if copied 'operation-completed 'operation-failed))
           (list :vcs-operation target))
-         'state-change 'mark-object))
+         'state-change (if copied 'mark-object 'warn-user)))
       result)))
 
 (cl-loop

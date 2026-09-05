@@ -1098,7 +1098,7 @@
       (should
        (eq
         (emacsvox-magit--call-copy-command
-         (lambda (&rest _) 'copied)
+         (lambda (&rest _) (kill-new "abc123") 'copied)
          'magit-copy-section-value nil)
         'copied))
       (should
@@ -2427,6 +2427,25 @@
       ;; Follow actual visibility even when Magit's implementation differs
       ;; from the show-headings command's advertised behavior.
       (should (string-prefix-p "Expanded." (car call))))))
+
+(ert-deftest emacsvox-magit-copy-empty-heading-does-not-claim-old-kill ()
+  (emacsvox-magit-test--with-sections
+    (let ((kill-ring '("unrelated old text"))
+          (emacsvox-magit-test--calls nil))
+      (cl-letf (((symbol-function 'emacsvox-aural-submit) #'emacsvox-magit-test--capture))
+        (funcall-interactively #'magit-copy-section-value nil))
+      (should (equal kill-ring '("unrelated old text")))
+      (should (equal (mapcar #'car emacsvox-magit-test--calls) '("Nothing to copy here"))))))
+
+(ert-deftest emacsvox-magit-recopying-identical-content-is-acknowledged ()
+  (let ((kill-ring '("same"))
+        (kill-do-not-save-duplicates t)
+        (ems--interactive-fn-name 'magit-copy-section-value)
+        (emacsvox-magit-test--calls nil))
+    (cl-letf (((symbol-function 'emacsvox-aural-submit) #'emacsvox-magit-test--capture))
+      (emacsvox-magit--call-copy-command
+       (lambda () (kill-new "same")) 'magit-copy-section-value nil))
+    (should (equal (mapcar #'car emacsvox-magit-test--calls) '("Copied. same")))))
 
 (ert-deftest emacsvox-magit-blank-navigation-uses-core-tone-without-icon ()
   (dolist (case '(("" empty line-empty) ("  " whitespace-only line-whitespace)))
