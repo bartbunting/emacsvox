@@ -195,7 +195,7 @@ fi
 if $windows_runtime; then
     # WSL passes selected Linux variables to Windows programs through WSLENV.
     # Preserve existing entries and add Omnivox's compatibility settings once.
-    for variable in OMNIVOX_ENGINE OMNIVOX_AUDIO_TARGET \
+    for variable in OMNIVOX_ENGINE OMNIVOX_AUDIO_TARGET OMNIVOX_AUDIO_OUTPUT \
         OMNIVOX_LOG_SYNTHESIS_TEXT \
         OMNIVOX_ELOQUENCE_HELPER OMNIVOX_ECI_DLL \
         OMNIVOX_DECTALK_HELPER OMNIVOX_DECTALK_DLL \

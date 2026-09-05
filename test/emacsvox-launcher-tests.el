@@ -384,6 +384,7 @@
              "printf 'RHVOICE_LIBRARY=%s\\n' \"${OMNIVOX_RHVOICE_LIBRARY-}\"\n"
              "printf 'RHVOICE_DATA=%s\\n' \"${OMNIVOX_RHVOICE_DATA-}\"\n"
              "printf 'RHVOICE_CONFIG=%s\\n' \"${OMNIVOX_RHVOICE_CONFIG-}\"\n"
+             "printf 'AUDIO_OUTPUT=%s\\n' \"${OMNIVOX_AUDIO_OUTPUT-}\"\n"
              "printf 'WSLENV=%s\\n' \"${WSLENV-}\"\n"))
           (dolist (file (list launcher filter program))
             (set-file-modes file #o700))
@@ -397,9 +398,13 @@
           (setenv "EMACSVOX_OMNIVOX_CONFIG_FILE"
                   (expand-file-name "missing-config" directory))
           (setenv "OMNIVOX_LOG_DIRECTORY" log-directory)
+          (setenv "OMNIVOX_AUDIO_OUTPUT" "null")
+          (setenv "WSLENV" "EXISTING/p")
           (with-temp-buffer
             (should (zerop (call-process launcher nil t)))
             (let ((output (buffer-string)))
+              (should (string-search "AUDIO_OUTPUT=null\n" output))
+              (should (string-search "WSLENV=EXISTING/p:" output))
               (should (string-search (concat "MODEL=" model "\n") output))
               (should
                (string-search
@@ -410,7 +415,8 @@
               (should
                (string-search
                 (concat "RHVOICE_CONFIG=" rhvoice-config "\n") output))
-              (dolist (name '("OMNIVOX_RHVOICE_HELPER"
+              (dolist (name '("OMNIVOX_AUDIO_OUTPUT"
+                              "OMNIVOX_RHVOICE_HELPER"
                               "OMNIVOX_RHVOICE_LIBRARY"
                               "OMNIVOX_RHVOICE_DATA"
                               "OMNIVOX_RHVOICE_CONFIG"
