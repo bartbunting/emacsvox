@@ -2312,8 +2312,8 @@ Start by choosing the narrowest tool that matches your intention:
 @item Try an optional behavior supplied by Emacsvox or an integration
 @tab Presentation Options
 @tab Global configuration
-@item Change the voice or earcon for the object at point
-@tab Remap At Point
+@item Change voice@comma{} sound@comma{} tone@comma{} label@comma{} or suppression
+@tab Change this feedback
 @tab Personal@comma{} session@comma{} or current buffer
 @item Review or remove an existing precise change
 @tab Presentation Overrides
@@ -2325,6 +2325,61 @@ Start by choosing the narrowest tool that matches your intention:
 @tab Presentation Profiles
 @tab Saved global configuration
 @end multitable
+
+@subsection Guided Change This Feedback
+
+@enumerate
+@item
+Move to a representative item@comma{} press @kbd{C-e H}@comma{} then
+@kbd{c}.  This captures @emph{Current item}.  For feedback that has
+already happened@comma{} use Home's @kbd{H}@comma{} select a @emph{Recent Feedback}
+record@comma{} and press @kbd{C}.  A record containing several parts
+asks which part to change.  Truncated history cannot supply a complete
+original/proposed comparison.
+
+@item
+Press @kbd{c} to choose a component change.  Available choices
+include the content voice@comma{} adding a sound or tone@comma{} adding a spoken label@comma{}
+replacing an existing sound@comma{} changing a tone@comma{} or suppressing one component.
+You can add a cue when the original has none.  The choices use the facts
+and components supplied by the integration; they cannot add missing
+semantic distinctions.
+
+@item
+Press @kbd{P} to hear the proposed change before choosing how
+long to keep it.  @kbd{O} plays the frozen original example;
+@kbd{S} stops.  Proposed preview resolves the selected example
+with current rules and its captured buffer context.  It does not apply
+your draft to live feedback.
+
+@item
+Press @kbd{m} for @emph{What should match}.  Review the actual facts@comma{}
+states@comma{} events@comma{} and occasion.  When available@comma{} the object-kind choice
+omits events and occasion and therefore affects more presentations.
+These are rules for every matching item@comma{} not an edit to one object.
+
+@item
+Press @kbd{l} for @emph{How long}: the source buffer's lifetime@comma{}
+this Emacs session@comma{} or a saved personal rule.  A buffer rule affects every
+matching item in that buffer.  Review the spoken summary of target@comma{}
+change@comma{} matching criteria@comma{} and lifetime.
+
+@item
+Press @kbd{a} or @kbd{C-c C-c} to apply or save.
+@kbd{e} instead opens the prepared rule in the Advanced editor.
+@kbd{q} hides the guided draft; Home's @emph{Resume unfinished
+changes} brings it back.  Aborting a choice or leaving before Apply does
+not change live rules.  Failed saves retain the draft and report failure.
+@end enumerate
+
+Replacing or suppressing a sound targets its identity in its before- or
+after-content phase@comma{} retaining other components.  Existing rule data can
+insert only at the beginning or end of a phase; replacing a middle component
+therefore asks which edge to use and includes that placement in the summary.
+Ambiguous components require the Advanced editor.  Current-item changes
+recheck their captured source before applying; a changed or killed target
+must be inspected again.  Historical changes remain tied to the selected
+frozen example.
 
 @subsection Remap One Item At Point
 

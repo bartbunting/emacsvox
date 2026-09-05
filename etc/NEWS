@@ -64,3 +64,14 @@ Style and route stores remain separate, and incomplete saves or failed
 application retain their completed steps for retry.  Requested settings and
 reported playback support are shown separately; exact effective values are
 not claimed when the adapter does not report them.
+
+** Guided changes to selected feedback
+
+Home ~c~ opens Change this feedback for Current item; Recent Feedback ~C~
+uses the selected frozen record and asks for a part when needed.  Change a
+voice, add or replace a cue or tone, add a spoken label, or suppress one
+component.  ~P~ previews before choosing persistence, ~O~ replays the original,
+~m~ chooses matching criteria, and ~l~ chooses lifetime.  Review the summary
+before ~a~ or ~C-c C-c~ applies or saves.  ~e~ opens the Advanced rule editor;
+~q~ retains the unfinished draft.  Matching breadth and lifetime are described
+separately, and failures preserve recoverable work.

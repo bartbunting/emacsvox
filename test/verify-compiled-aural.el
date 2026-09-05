@@ -133,6 +133,7 @@
          "emacsvox-aural-profiles"
          "emacsvox-aural-voice-palettes"
          "emacsvox-aural-voice-experiment"
+         "emacsvox-aural-change-feedback"
          "emacsvox-aural-voice-workbench"
          "emacsvox-aural-provider-org"
          "emacsvox-aural-provider-org-srs"
@@ -211,6 +212,7 @@
          emacsvox-aural-profiles--ids
          emacsvox-aural-voice-palettes--active-id
          emacsvox-aural-voice-experiment-open
+         emacsvox-aural-change-feedback
          emacsvox-org--require-aural-semantics
          emacsvox-aural-register-workflow-provider
          emacsvox-markdown-register-aural-presentation

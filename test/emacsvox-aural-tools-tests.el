@@ -2263,6 +2263,8 @@
                 (emacsvox-aural-home-toggle-group)
                 (should (string-prefix-p "Understand or change feedback: expanded" spoken))
                 (emacsvox-aural-home-next)
+                (should (string-prefix-p "Change this feedback: " spoken))
+                (emacsvox-aural-home-next)
                 (should (string-prefix-p "Explain at point: " spoken))
                 (emacsvox-aural-home-next)
                 (should (string-prefix-p "Remap voice at point: " spoken))

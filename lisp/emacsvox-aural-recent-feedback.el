@@ -434,6 +434,12 @@ the value across sessions."
   (emacsvox-aural-remap-earcon-at-point
    (emacsvox-aural-recent-feedback--record)))
 
+(defun emacsvox-aural-recent-feedback-change ()
+  "Guide a change using the explicitly selected frozen feedback record."
+  (interactive)
+  (require 'emacsvox-aural-change-feedback)
+  (emacsvox-aural-change-feedback (emacsvox-aural-recent-feedback--record)))
+
 (defun emacsvox-aural-recent-feedback-help ()
   "Display and speak recent aural feedback help."
   (interactive)
@@ -443,7 +449,8 @@ the value across sessions."
       "Recent Aural Feedback\n\n"
       "Each row is one bounded frozen presentation that was actually queued.\n"
       "Large payloads retain a preview, totals, and SHA-256 digest.\n"
-      "The browser never re-resolves retained data using current configuration.\n\n"
+      "Replay and explanation retain the frozen output.\n"
+      "C opens a separate proposed change; its preview uses current rules.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "SPC speak record     RET or e explain retained output\n"
@@ -487,6 +494,7 @@ the value across sessions."
      '(("RET" . emacsvox-aural-recent-feedback-explain)
        ("e" . emacsvox-aural-recent-feedback-explain)
        ("P" . emacsvox-aural-recent-feedback-replay)
+       ("C" . emacsvox-aural-recent-feedback-change)
        ("c" . emacsvox-aural-recent-feedback-audition-cues)
        ("r" . emacsvox-aural-recent-feedback-remap-voice)
        ("R" . emacsvox-aural-recent-feedback-remap-earcon)

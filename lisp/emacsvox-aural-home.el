@@ -81,7 +81,7 @@
 
 (defconst emacsvox-aural-home-task-groups
   '((understand "Understand or change feedback"
-                explain remap remap-earcon recent-feedback semantics return-source)
+                change-feedback explain remap remap-earcon recent-feedback semantics return-source)
     (resources "Choose voices and sounds"
                browse-voices voices sounds speech-engine speech-rate
                notifications notification-log stop-notifications
@@ -96,7 +96,9 @@
   (cl-remove-if-not
    (lambda (buffer)
      (with-current-buffer buffer
-       (or (bound-and-true-p emacsvox-aural-editor-dirty)
+       (or (and (bound-and-true-p emacsvox-aural-change-feedback-render)
+                (not (bound-and-true-p emacsvox-aural-change-feedback-applied)))
+           (bound-and-true-p emacsvox-aural-editor-dirty)
            (bound-and-true-p emacsvox-aural-voice-tuner-dirty)
            (and (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
                 (emacsvox-aural-voice-workbench--dirty-p)))))
@@ -212,6 +214,9 @@
            (emacsvox-aural-effective-scheme-provider 'resource-pack)
            "none")))
     (list
+     (list 'change-feedback
+           (vector "Change this feedback" source-name
+                   "Preview a component change, then choose matching criteria and lifetime"))
      (list 'browse-voices
            (vector "Browse and try voices" "Installed engines and voices"
                    "Hear physical voices, compare samples, and try temporary tuning"))
@@ -495,12 +500,19 @@
   (require 'emacsvox-omnivox-components)
   (emacsvox-omnivox-manage-components))
 
+(defun emacsvox-aural-home-change-feedback ()
+  "Guide a change to the captured Current item's feedback."
+  (interactive)
+  (require 'emacsvox-aural-change-feedback)
+  (emacsvox-aural-change-feedback))
+
 (defun emacsvox-aural-home-activate ()
   "Perform the primary operation for the aural home row at point."
   (interactive)
   (pcase (or (tabulated-list-get-id)
              (user-error "Move to an aural home row first"))
     (`(group ,_) (emacsvox-aural-home-toggle-group))
+    ('change-feedback (emacsvox-aural-home-change-feedback))
     ('browse-voices (emacsvox-aural-home-browse-voices))
     ('drafts (emacsvox-aural-home-drafts))
     ('return-source (emacsvox-aural-inspection-return-to-source))
@@ -565,6 +577,7 @@
       "RET open details or group; TAB expand/collapse group\n"
       "/ search all actions, including collapsed groups\n"
       "SPC speak complete row; source and draft count are announced on entry\n"
+      "c guided Change this feedback\n"
       "x explain at point   r remap voice at point\n"
       "R remap one exact earcon at point\n"
       "O presentation overrides\n"
@@ -579,7 +592,8 @@
       "? display and speak this help\n"
       "C-e H opens this home from any ordinary buffer\n"
       "C-e E explains presentation from any ordinary buffer\n"
-      "To remap an item, move to it, open C-e H, then press r or R.\n"
+      "To change an item, move to it, open C-e H, then press c.\n"
+      "r and R retain the direct advanced remapping shortcuts.\n"
       "The generated override opens unwritten; review it and press w to write.\n"
       "h returns here from any aural manager or editor\n"
       "Reopening Home or an editor keeps its selection and unfinished edits.\n"
@@ -613,6 +627,7 @@
      '(("RET" . emacsvox-aural-home-activate)
        ("TAB" . emacsvox-aural-home-toggle-group)
        ("/" . emacsvox-aural-home-search)
+       ("c" . emacsvox-aural-home-change-feedback)
        ("x" . emacsvox-aural-home-explain)
        ("r" . emacsvox-aural-home-remap-voice)
        ("R" . emacsvox-aural-home-remap-earcon)

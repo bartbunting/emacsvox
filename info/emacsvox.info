@@ -2295,8 +2295,8 @@ Intention                      Use                    Scope
 Try an optional behavior       Presentation Options   Global
 supplied by Emacsvox or an                            configuration
 integration
-Change the voice or earcon     Remap At Point         Personal, session,
-for the object at point                               or current buffer
+Change voice, sound, tone,     Change this feedback   Personal, session,
+label, or suppression                                 or current buffer
 Review or remove an existing   Presentation           Its recorded scope
 precise change                 Overrides
 Try rules only in the          Current Buffer Rules   Life of that
@@ -2304,7 +2304,56 @@ current work buffer                                   buffer
 Switch a complete reading or   Presentation           Saved global
 working setup                  Profiles               configuration
 
-6.5.1 Remap One Item At Point
+6.5.1 Guided Change This Feedback
+---------------------------------
+
+  1. Move to a representative item, press ‘C-e H’, then ‘c’.  This
+     captures _Current item_.  For feedback that has already happened,
+     use Home's ‘H’, select a _Recent Feedback_ record, and press ‘C’.
+     A record containing several parts asks which part to change.
+     Truncated history cannot supply a complete original/proposed
+     comparison.
+
+  2. Press ‘c’ to choose a component change.  Available choices include
+     the content voice, adding a sound or tone, adding a spoken label,
+     replacing an existing sound, changing a tone, or suppressing one
+     component.  You can add a cue when the original has none.  The
+     choices use the facts and components supplied by the integration;
+     they cannot add missing semantic distinctions.
+
+  3. Press ‘P’ to hear the proposed change before choosing how long to
+     keep it.  ‘O’ plays the frozen original example; ‘S’ stops.
+     Proposed preview resolves the selected example with current rules
+     and its captured buffer context.  It does not apply your draft to
+     live feedback.
+
+  4. Press ‘m’ for _What should match_.  Review the actual facts,
+     states, events, and occasion.  When available, the object-kind
+     choice omits events and occasion and therefore affects more
+     presentations.  These are rules for every matching item, not an
+     edit to one object.
+
+  5. Press ‘l’ for _How long_: the source buffer's lifetime, this Emacs
+     session, or a saved personal rule.  A buffer rule affects every
+     matching item in that buffer.  Review the spoken summary of target,
+     change, matching criteria, and lifetime.
+
+  6. Press ‘a’ or ‘C-c C-c’ to apply or save.  ‘e’ instead opens the
+     prepared rule in the Advanced editor.  ‘q’ hides the guided draft;
+     Home's _Resume unfinished changes_ brings it back.  Aborting a
+     choice or leaving before Apply does not change live rules.  Failed
+     saves retain the draft and report failure.
+
+   Replacing or suppressing a sound targets its identity in its before-
+or after-content phase, retaining other components.  Existing rule data
+can insert only at the beginning or end of a phase; replacing a middle
+component therefore asks which edge to use and includes that placement
+in the summary.  Ambiguous components require the Advanced editor.
+Current-item changes recheck their captured source before applying; a
+changed or killed target must be inspected again.  Historical changes
+remain tied to the selected frozen example.
+
+6.5.2 Remap One Item At Point
 -----------------------------
 
   1. Move to a representative object and press ‘C-e E’ so you know what
@@ -2337,7 +2386,7 @@ disables or enables a rule, and ‘d’ removes it.  Disabling or deleting
 an override restores the next weaker behavior; it does not leave a
 copied default behind.
 
-6.5.2 Try A Presentation Option
+6.5.3 Try A Presentation Option
 -------------------------------
 
 Presentation Options are maintained additions such as richer heading
@@ -5444,44 +5493,44 @@ Node: Presentation Modalities94171
 Node: Aural Home97340
 Node: Explaining Presentation100919
 Node: Adjusting Presentation102947
-Node: Presentation Profiles106222
-Node: Voices And Routing107899
-Node: Sounds And Space115318
-Node: Presentation Troubleshooting116954
-Node: Voice Lock118992
-Node: Using Online Help122199
-Node: Emacs Packages126261
-Node: Document Authoring127635
-Node: Structured Editing128189
-Node: Browsing Structure129172
-Node: Web Browsing129770
-Node: Messaging130605
-Node: Editing Code131103
-Node: Development Environment131622
-Node: Desktop Management133158
-Node: Personal Information Management133660
-Node: Desktop Applications134192
-Node: Notmuch Mail141580
-Ref: Notmuch fields and privacy150923
-Node: Agent Shell156631
-Node: EAT Terminal Access168926
-Node: Running Terminal Based Applications186185
-Node: Starting Term187140
-Node: Term Input Modes187979
-Node: Term Speech Feedback189139
-Node: Reviewing The Term Screen190333
-Node: Term Help And Recovery192234
-Node: Emacsvox Keyboard Commands193133
-Node: Copyright194537
-Node: Acknowledgments195124
-Node: Developer Guide196150
-Node: Documentation Maintenance197314
-Node: Speech Server Protocols202112
-Ref: Testing A Direct Legacy Server208019
-Ref: Commands That Queue Output208578
-Ref: Commands That Set State211612
-Node: Integration Maintenance214206
-Node: Concept Index238442
+Node: Presentation Profiles108833
+Node: Voices And Routing110510
+Node: Sounds And Space117929
+Node: Presentation Troubleshooting119565
+Node: Voice Lock121603
+Node: Using Online Help124810
+Node: Emacs Packages128872
+Node: Document Authoring130246
+Node: Structured Editing130800
+Node: Browsing Structure131783
+Node: Web Browsing132381
+Node: Messaging133216
+Node: Editing Code133714
+Node: Development Environment134233
+Node: Desktop Management135769
+Node: Personal Information Management136271
+Node: Desktop Applications136803
+Node: Notmuch Mail144191
+Ref: Notmuch fields and privacy153534
+Node: Agent Shell159242
+Node: EAT Terminal Access171537
+Node: Running Terminal Based Applications188796
+Node: Starting Term189751
+Node: Term Input Modes190590
+Node: Term Speech Feedback191750
+Node: Reviewing The Term Screen192944
+Node: Term Help And Recovery194845
+Node: Emacsvox Keyboard Commands195744
+Node: Copyright197148
+Node: Acknowledgments197735
+Node: Developer Guide198761
+Node: Documentation Maintenance199925
+Node: Speech Server Protocols204723
+Ref: Testing A Direct Legacy Server210630
+Ref: Commands That Queue Output211189
+Ref: Commands That Set State214223
+Node: Integration Maintenance216817
+Node: Concept Index241053
 
 End Tag Table
 

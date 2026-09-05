@@ -279,10 +279,60 @@ Start by choosing the narrowest tool that matches your intention:
 #+attr_texinfo: :columns 0.42 0.30 0.28
 | Intention | Use | Scope |
 | Try an optional behavior supplied by Emacsvox or an integration | Presentation Options | Global configuration |
-| Change the voice or earcon for the object at point | Remap At Point | Personal, session, or current buffer |
+| Change voice, sound, tone, label, or suppression | Change this feedback | Personal, session, or current buffer |
 | Review or remove an existing precise change | Presentation Overrides | Its recorded scope |
 | Try rules only in the current work buffer | Current Buffer Rules | Life of that buffer |
 | Switch a complete reading or working setup | Presentation Profiles | Saved global configuration |
+
+*** Guided Change This Feedback
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+1. Move to a representative item, press @@texinfo:@kbd{C-e H}@@, then
+   @@texinfo:@kbd{c}@@.  This captures /Current item/.  For feedback that has
+   already happened, use Home's @@texinfo:@kbd{H}@@, select a /Recent Feedback/
+   record, and press @@texinfo:@kbd{C}@@.  A record containing several parts
+   asks which part to change.  Truncated history cannot supply a complete
+   original/proposed comparison.
+
+2. Press @@texinfo:@kbd{c}@@ to choose a component change.  Available choices
+   include the content voice, adding a sound or tone, adding a spoken label,
+   replacing an existing sound, changing a tone, or suppressing one component.
+   You can add a cue when the original has none.  The choices use the facts
+   and components supplied by the integration; they cannot add missing
+   semantic distinctions.
+
+3. Press @@texinfo:@kbd{P}@@ to hear the proposed change before choosing how
+   long to keep it.  @@texinfo:@kbd{O}@@ plays the frozen original example;
+   @@texinfo:@kbd{S}@@ stops.  Proposed preview resolves the selected example
+   with current rules and its captured buffer context.  It does not apply
+   your draft to live feedback.
+
+4. Press @@texinfo:@kbd{m}@@ for /What should match/.  Review the actual facts,
+   states, events, and occasion.  When available, the object-kind choice
+   omits events and occasion and therefore affects more presentations.
+   These are rules for every matching item, not an edit to one object.
+
+5. Press @@texinfo:@kbd{l}@@ for /How long/: the source buffer's lifetime,
+   this Emacs session, or a saved personal rule.  A buffer rule affects every
+   matching item in that buffer.  Review the spoken summary of target,
+   change, matching criteria, and lifetime.
+
+6. Press @@texinfo:@kbd{a}@@ or @@texinfo:@kbd{C-c C-c}@@ to apply or save.
+   @@texinfo:@kbd{e}@@ instead opens the prepared rule in the Advanced editor.
+   @@texinfo:@kbd{q}@@ hides the guided draft; Home's /Resume unfinished
+   changes/ brings it back.  Aborting a choice or leaving before Apply does
+   not change live rules.  Failed saves retain the draft and report failure.
+
+Replacing or suppressing a sound targets its identity in its before- or
+after-content phase, retaining other components.  Existing rule data can
+insert only at the beginning or end of a phase; replacing a middle component
+therefore asks which edge to use and includes that placement in the summary.
+Ambiguous components require the Advanced editor.  Current-item changes
+recheck their captured source before applying; a changed or killed target
+must be inspected again.  Historical changes remain tied to the selected
+frozen example.
 
 *** Remap One Item At Point
 :PROPERTIES:

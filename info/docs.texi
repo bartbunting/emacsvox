@@ -1,63 +1,63 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 277 loaded; 0 intentionally omitted.
+@c Modules: 278 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell.elc emacsvox-amark.elc
-@c Loaded: emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-compatibility-voice.elc emacsvox-aural-compiler.elc
-@c Loaded: emacsvox-aural-concrete.elc emacsvox-aural-description.elc emacsvox-aural-doctor.elc emacsvox-aural-editor.elc emacsvox-aural-explanation.elc
-@c Loaded: emacsvox-aural-feature-fragments.elc emacsvox-aural-history.elc emacsvox-aural-home.elc emacsvox-aural-inspection.elc emacsvox-aural-overrides.elc
-@c Loaded: emacsvox-aural-planner.elc emacsvox-aural-preview.elc emacsvox-aural-profile-service.elc emacsvox-aural-profiles.elc emacsvox-aural-provider-markdown.elc
-@c Loaded: emacsvox-aural-provider-notmuch.elc emacsvox-aural-provider-org-srs.elc emacsvox-aural-provider-org.elc emacsvox-aural-provider-workflows.elc emacsvox-aural-providers.elc
-@c Loaded: emacsvox-aural-recent-feedback.elc emacsvox-aural-resources.elc emacsvox-aural-routing-profiles.elc emacsvox-aural-rules.elc emacsvox-aural-schemes.elc
-@c Loaded: emacsvox-aural-semantics.elc emacsvox-aural-sound-packs.elc emacsvox-aural-source.elc emacsvox-aural-spatial.elc emacsvox-aural-submission.elc
-@c Loaded: emacsvox-aural-tools.elc emacsvox-aural-transport.elc emacsvox-aural-ui.elc emacsvox-aural-validation.elc emacsvox-aural-voice-experiment.elc
-@c Loaded: emacsvox-aural-voice-palettes.elc emacsvox-aural-voice-workbench.elc emacsvox-aural.elc emacsvox-avy.elc emacsvox-bbdb.elc
-@c Loaded: emacsvox-bibtex.elc emacsvox-bookmark.elc emacsvox-bookshare.elc emacsvox-browse-kill-ring.elc emacsvox-bs.elc
-@c Loaded: emacsvox-buff-menu.elc emacsvox-c.elc emacsvox-calc.elc emacsvox-calculator.elc emacsvox-calendar.elc
-@c Loaded: emacsvox-calibredb.elc emacsvox-chess.elc emacsvox-cider.elc emacsvox-clojure.elc emacsvox-cmuscheme.elc
-@c Loaded: emacsvox-combobulate.elc emacsvox-comint.elc emacsvox-company.elc emacsvox-compile.elc emacsvox-consult.elc
-@c Loaded: emacsvox-corfu.elc emacsvox-cperl.elc emacsvox-custom.elc emacsvox-dbus.elc emacsvox-deadgrep.elc
-@c Loaded: emacsvox-debugger.elc emacsvox-denote.elc emacsvox-desktop.elc emacsvox-devdocs.elc emacsvox-dictionary.elc
-@c Loaded: emacsvox-diff-mode.elc emacsvox-dired.elc emacsvox-dumb-jump.elc emacsvox-eat-core.elc emacsvox-eat-input.elc
-@c Loaded: emacsvox-eat-review.elc emacsvox-eat.elc emacsvox-ebuku.elc emacsvox-ediff.elc emacsvox-eglot.elc
-@c Loaded: emacsvox-ein.elc emacsvox-elfeed.elc emacsvox-elisp-refs.elc emacsvox-ellama.elc emacsvox-elpher.elc
-@c Loaded: emacsvox-elpy.elc emacsvox-embark.elc emacsvox-emms.elc emacsvox-empv.elc emacsvox-enriched.elc
-@c Loaded: emacsvox-entertain.elc emacsvox-enwc.elc emacsvox-epa.elc emacsvox-epub.elc emacsvox-erc.elc
-@c Loaded: emacsvox-eshell.elc emacsvox-ess.elc emacsvox-etable.elc emacsvox-eterm.elc emacsvox-eudc.elc
-@c Loaded: emacsvox-evil.elc emacsvox-eww.elc emacsvox-extras.elc emacsvox-exwm.elc emacsvox-feeds.elc
-@c Loaded: emacsvox-ffap.elc emacsvox-ffip.elc emacsvox-filtertext.elc emacsvox-flycheck.elc emacsvox-flymake.elc
-@c Loaded: emacsvox-flyspell.elc emacsvox-folding.elc emacsvox-forge.elc emacsvox-forms.elc emacsvox-geiser.elc
-@c Loaded: emacsvox-gnuplot.elc emacsvox-gnus.elc emacsvox-go-mode.elc emacsvox-gomoku.elc emacsvox-google.elc
-@c Loaded: emacsvox-gptel.elc emacsvox-gridtext.elc emacsvox-gud.elc emacsvox-haskell.elc emacsvox-helm.elc
-@c Loaded: emacsvox-helpful.elc emacsvox-hide-lines.elc emacsvox-hide.elc emacsvox-hideshow.elc emacsvox-hydra.elc
-@c Loaded: emacsvox-ibuffer.elc emacsvox-ido.elc emacsvox-iedit.elc emacsvox-info.elc emacsvox-ispell.elc
-@c Loaded: emacsvox-ivy.elc emacsvox-journalctl.elc emacsvox-js2.elc emacsvox-keymap.elc emacsvox-kmacro.elc
-@c Loaded: emacsvox-librivox.elc emacsvox-lispy.elc emacsvox-lua.elc emacsvox-m-player.elc emacsvox-magit.elc
-@c Loaded: emacsvox-make-mode.elc emacsvox-man.elc emacsvox-marginalia.elc emacsvox-markdown.elc emacsvox-maths.elc
-@c Loaded: emacsvox-message.elc emacsvox-mines.elc emacsvox-mu4e.elc emacsvox-multiple-cursors.elc emacsvox-net-utils.elc
-@c Loaded: emacsvox-newsticker.elc emacsvox-nm.elc emacsvox-notmuch.elc emacsvox-nov.elc emacsvox-nxml.elc
-@c Loaded: emacsvox-ocr.elc emacsvox-omnivox-components.elc emacsvox-org-srs.elc emacsvox-org.elc emacsvox-orgalist.elc
-@c Loaded: emacsvox-outline.elc emacsvox-package.elc emacsvox-perl.elc emacsvox-pipewire.elc emacsvox-popup.elc
-@c Loaded: emacsvox-preamble.elc emacsvox-proced.elc emacsvox-project.elc emacsvox-projectile.elc emacsvox-pronounce.elc
-@c Loaded: emacsvox-py.elc emacsvox-pydoc.elc emacsvox-python.elc emacsvox-racket.elc emacsvox-re-builder.elc
-@c Loaded: emacsvox-reftex.elc emacsvox-related.elc emacsvox-rg.elc emacsvox-rmail.elc emacsvox-rpm-spec.elc
-@c Loaded: emacsvox-rst.elc emacsvox-ruby.elc emacsvox-rust-mode.elc emacsvox-sage.elc emacsvox-sdcv.elc
-@c Loaded: emacsvox-ses.elc emacsvox-setup.elc emacsvox-sgml-mode.elc emacsvox-sh-script.elc emacsvox-slime.elc
-@c Loaded: emacsvox-smartparens.elc emacsvox-solitaire.elc emacsvox-sounds.elc emacsvox-speak.elc emacsvox-speedbar.elc
-@c Loaded: emacsvox-sql.elc emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc emacsvox-tab-bar.elc
-@c Loaded: emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc emacsvox-tar.elc
-@c Loaded: emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc emacsvox-todo-mode.elc
-@c Loaded: emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc emacsvox-vdiff.elc
-@c Loaded: emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc emacsvox-wdired.elc
-@c Loaded: emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-which-key.elc emacsvox-widget.elc
-@c Loaded: emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc
-@c Loaded: emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc
-@c Loaded: espeak-voices.elc g-utils.elc gm-nnir.elc gmaps.elc gweb.elc
-@c Loaded: ladspa.elc light.elc mac-voices.elc omaps.elc omnivox-voices.elc
-@c Loaded: outloud-voices.elc pip.elc plain-voices.elc soundscape.elc sox-gen.elc
-@c Loaded: sox.elc swiftmac-voices.elc tetris.elc tts-speak.elc voice-defs.elc
-@c Loaded: voice-setup.elc xbacklight.elc
+@c Loaded: emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc emacsvox-aural-compatibility-voice.elc
+@c Loaded: emacsvox-aural-compiler.elc emacsvox-aural-concrete.elc emacsvox-aural-description.elc emacsvox-aural-doctor.elc emacsvox-aural-editor.elc
+@c Loaded: emacsvox-aural-explanation.elc emacsvox-aural-feature-fragments.elc emacsvox-aural-history.elc emacsvox-aural-home.elc emacsvox-aural-inspection.elc
+@c Loaded: emacsvox-aural-overrides.elc emacsvox-aural-planner.elc emacsvox-aural-preview.elc emacsvox-aural-profile-service.elc emacsvox-aural-profiles.elc
+@c Loaded: emacsvox-aural-provider-markdown.elc emacsvox-aural-provider-notmuch.elc emacsvox-aural-provider-org-srs.elc emacsvox-aural-provider-org.elc emacsvox-aural-provider-workflows.elc
+@c Loaded: emacsvox-aural-providers.elc emacsvox-aural-recent-feedback.elc emacsvox-aural-resources.elc emacsvox-aural-routing-profiles.elc emacsvox-aural-rules.elc
+@c Loaded: emacsvox-aural-schemes.elc emacsvox-aural-semantics.elc emacsvox-aural-sound-packs.elc emacsvox-aural-source.elc emacsvox-aural-spatial.elc
+@c Loaded: emacsvox-aural-submission.elc emacsvox-aural-tools.elc emacsvox-aural-transport.elc emacsvox-aural-ui.elc emacsvox-aural-validation.elc
+@c Loaded: emacsvox-aural-voice-experiment.elc emacsvox-aural-voice-palettes.elc emacsvox-aural-voice-workbench.elc emacsvox-aural.elc emacsvox-avy.elc
+@c Loaded: emacsvox-bbdb.elc emacsvox-bibtex.elc emacsvox-bookmark.elc emacsvox-bookshare.elc emacsvox-browse-kill-ring.elc
+@c Loaded: emacsvox-bs.elc emacsvox-buff-menu.elc emacsvox-c.elc emacsvox-calc.elc emacsvox-calculator.elc
+@c Loaded: emacsvox-calendar.elc emacsvox-calibredb.elc emacsvox-chess.elc emacsvox-cider.elc emacsvox-clojure.elc
+@c Loaded: emacsvox-cmuscheme.elc emacsvox-combobulate.elc emacsvox-comint.elc emacsvox-company.elc emacsvox-compile.elc
+@c Loaded: emacsvox-consult.elc emacsvox-corfu.elc emacsvox-cperl.elc emacsvox-custom.elc emacsvox-dbus.elc
+@c Loaded: emacsvox-deadgrep.elc emacsvox-debugger.elc emacsvox-denote.elc emacsvox-desktop.elc emacsvox-devdocs.elc
+@c Loaded: emacsvox-dictionary.elc emacsvox-diff-mode.elc emacsvox-dired.elc emacsvox-dumb-jump.elc emacsvox-eat-core.elc
+@c Loaded: emacsvox-eat-input.elc emacsvox-eat-review.elc emacsvox-eat.elc emacsvox-ebuku.elc emacsvox-ediff.elc
+@c Loaded: emacsvox-eglot.elc emacsvox-ein.elc emacsvox-elfeed.elc emacsvox-elisp-refs.elc emacsvox-ellama.elc
+@c Loaded: emacsvox-elpher.elc emacsvox-elpy.elc emacsvox-embark.elc emacsvox-emms.elc emacsvox-empv.elc
+@c Loaded: emacsvox-enriched.elc emacsvox-entertain.elc emacsvox-enwc.elc emacsvox-epa.elc emacsvox-epub.elc
+@c Loaded: emacsvox-erc.elc emacsvox-eshell.elc emacsvox-ess.elc emacsvox-etable.elc emacsvox-eterm.elc
+@c Loaded: emacsvox-eudc.elc emacsvox-evil.elc emacsvox-eww.elc emacsvox-extras.elc emacsvox-exwm.elc
+@c Loaded: emacsvox-feeds.elc emacsvox-ffap.elc emacsvox-ffip.elc emacsvox-filtertext.elc emacsvox-flycheck.elc
+@c Loaded: emacsvox-flymake.elc emacsvox-flyspell.elc emacsvox-folding.elc emacsvox-forge.elc emacsvox-forms.elc
+@c Loaded: emacsvox-geiser.elc emacsvox-gnuplot.elc emacsvox-gnus.elc emacsvox-go-mode.elc emacsvox-gomoku.elc
+@c Loaded: emacsvox-google.elc emacsvox-gptel.elc emacsvox-gridtext.elc emacsvox-gud.elc emacsvox-haskell.elc
+@c Loaded: emacsvox-helm.elc emacsvox-helpful.elc emacsvox-hide-lines.elc emacsvox-hide.elc emacsvox-hideshow.elc
+@c Loaded: emacsvox-hydra.elc emacsvox-ibuffer.elc emacsvox-ido.elc emacsvox-iedit.elc emacsvox-info.elc
+@c Loaded: emacsvox-ispell.elc emacsvox-ivy.elc emacsvox-journalctl.elc emacsvox-js2.elc emacsvox-keymap.elc
+@c Loaded: emacsvox-kmacro.elc emacsvox-librivox.elc emacsvox-lispy.elc emacsvox-lua.elc emacsvox-m-player.elc
+@c Loaded: emacsvox-magit.elc emacsvox-make-mode.elc emacsvox-man.elc emacsvox-marginalia.elc emacsvox-markdown.elc
+@c Loaded: emacsvox-maths.elc emacsvox-message.elc emacsvox-mines.elc emacsvox-mu4e.elc emacsvox-multiple-cursors.elc
+@c Loaded: emacsvox-net-utils.elc emacsvox-newsticker.elc emacsvox-nm.elc emacsvox-notmuch.elc emacsvox-nov.elc
+@c Loaded: emacsvox-nxml.elc emacsvox-ocr.elc emacsvox-omnivox-components.elc emacsvox-org-srs.elc emacsvox-org.elc
+@c Loaded: emacsvox-orgalist.elc emacsvox-outline.elc emacsvox-package.elc emacsvox-perl.elc emacsvox-pipewire.elc
+@c Loaded: emacsvox-popup.elc emacsvox-preamble.elc emacsvox-proced.elc emacsvox-project.elc emacsvox-projectile.elc
+@c Loaded: emacsvox-pronounce.elc emacsvox-py.elc emacsvox-pydoc.elc emacsvox-python.elc emacsvox-racket.elc
+@c Loaded: emacsvox-re-builder.elc emacsvox-reftex.elc emacsvox-related.elc emacsvox-rg.elc emacsvox-rmail.elc
+@c Loaded: emacsvox-rpm-spec.elc emacsvox-rst.elc emacsvox-ruby.elc emacsvox-rust-mode.elc emacsvox-sage.elc
+@c Loaded: emacsvox-sdcv.elc emacsvox-ses.elc emacsvox-setup.elc emacsvox-sgml-mode.elc emacsvox-sh-script.elc
+@c Loaded: emacsvox-slime.elc emacsvox-smartparens.elc emacsvox-solitaire.elc emacsvox-sounds.elc emacsvox-speak.elc
+@c Loaded: emacsvox-speedbar.elc emacsvox-sql.elc emacsvox-sudoku.elc emacsvox-supercite.elc emacsvox-syslog.elc
+@c Loaded: emacsvox-tab-bar.elc emacsvox-table-ui.elc emacsvox-table.elc emacsvox-tabulate.elc emacsvox-tabulated-list.elc
+@c Loaded: emacsvox-tar.elc emacsvox-tcl.elc emacsvox-tempo.elc emacsvox-tetris.elc emacsvox-texinfo.elc
+@c Loaded: emacsvox-todo-mode.elc emacsvox-transient.elc emacsvox-treesit.elc emacsvox-typo.elc emacsvox-url-template.elc
+@c Loaded: emacsvox-vdiff.elc emacsvox-version.elc emacsvox-vertico.elc emacsvox-view.elc emacsvox-vterm.elc
+@c Loaded: emacsvox-wdired.elc emacsvox-we.elc emacsvox-websearch.elc emacsvox-webspace.elc emacsvox-which-key.elc
+@c Loaded: emacsvox-widget.elc emacsvox-windmove.elc emacsvox-windows-speech.elc emacsvox-wizards.elc emacsvox-woman.elc
+@c Loaded: emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc emacsvox-yaml.elc emacsvox-yasnippet.elc
+@c Loaded: emacsvox.elc espeak-voices.elc g-utils.elc gm-nnir.elc gmaps.elc
+@c Loaded: gweb.elc ladspa.elc light.elc mac-voices.elc omaps.elc
+@c Loaded: omnivox-voices.elc outloud-voices.elc pip.elc plain-voices.elc soundscape.elc
+@c Loaded: sox-gen.elc sox.elc swiftmac-voices.elc tetris.elc tts-speak.elc
+@c Loaded: voice-defs.elc voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -65,7 +65,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1508 commands and 206 options.
+This chapter documents a total of 1523 commands and 206 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -83,6 +83,7 @@ This chapter documents a total of 1508 commands and 206 options.
 * emacsvox-arc:: Speech enable archive-mode.
 * emacsvox-auctex:: Speech enable AucTeX --.
 * emacsvox-aural:: Semantic aural presentation.
+* emacsvox-aural-change-feedback:: Guided feedback changes.
 * emacsvox-aural-compatibility-voice:: Legacy voice policy.
 * emacsvox-aural-compiler:: Concrete aural compiler.
 * emacsvox-aural-concrete:: Backend-ready aural plans.
@@ -1670,6 +1671,157 @@ t
 
 @end defvar
 
+@node emacsvox-aural-change-feedback
+@section emacsvox-aural-change-feedback
+
+Guide a narrowly scoped change using existing semantic facts and rule data.
+Preview, match, and lifetime are independent choices.  No live rule layer
+changes until Apply; the advanced editor remains available for full control.
+
+@subsection Emacsvox-Aural-Change-Feedback Commands
+
+@subsubsection emacsvox-aural-change-feedback
+@deffn {Command} emacsvox-aural-change-feedback  (&optional record)
+@findex emacsvox-aural-change-feedback
+
+@format
+Guide a feedback change for the captured Current item or explicit RECORD.
+
+(fn &optional RECORD)
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-advanced
+@deffn {Command} emacsvox-aural-change-feedback-advanced
+@findex emacsvox-aural-change-feedback-advanced
+
+@format
+Open this prepared change in the full rule editor without applying it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-apply
+@deffn {Command} emacsvox-aural-change-feedback-apply
+@findex emacsvox-aural-change-feedback-apply
+
+@format
+Save or apply the reviewed rule using its explicitly selected lifetime.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-change
+@deffn {Command} emacsvox-aural-change-feedback-change
+@findex emacsvox-aural-change-feedback-change
+
+@format
+Choose a component change without applying or saving any partial choice.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-details
+@deffn {Command} emacsvox-aural-change-feedback-details
+@findex emacsvox-aural-change-feedback-details
+
+@format
+Show the full reviewed summary without applying it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-help
+@deffn {Command} emacsvox-aural-change-feedback-help
+@findex emacsvox-aural-change-feedback-help
+
+@format
+Explain guided changes, previews, matching criteria, and lifetimes.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-lifetime
+@deffn {Command} emacsvox-aural-change-feedback-lifetime
+@findex emacsvox-aural-change-feedback-lifetime
+
+@format
+Choose current buffer, this session, or a saved personal rule.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-match
+@deffn {Command} emacsvox-aural-change-feedback-match
+@findex emacsvox-aural-change-feedback-match
+
+@format
+Choose which facts should match, independently of the change’s lifetime.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-mode
+@deffn {Command} emacsvox-aural-change-feedback-mode
+@findex emacsvox-aural-change-feedback-mode
+
+@format
+Guide an unapplied change to selected feedback.
+
+In addition to any hooks its parent mode
+‘emacsvox-aural-tabulated-mode’ might have run, this mode runs the
+hook ‘emacsvox-aural-change-feedback-mode-hook’, as the final or
+penultimate step during initialization.
+
+Key             Binding
+-------------------------------------------------------------------------------
+RET		emacsvox-aural-change-feedback-open-row
+?		emacsvox-aural-change-feedback-help
+O		emacsvox-aural-change-feedback-original
+P		emacsvox-aural-change-feedback-proposed
+a		emacsvox-aural-change-feedback-apply
+c		emacsvox-aural-change-feedback-change
+e		emacsvox-aural-change-feedback-advanced
+h		emacsvox-aural
+l		emacsvox-aural-change-feedback-lifetime
+m		emacsvox-aural-change-feedback-match
+
+C-c C-c		emacsvox-aural-change-feedback-apply
+
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-open-row
+@deffn {Command} emacsvox-aural-change-feedback-open-row
+@findex emacsvox-aural-change-feedback-open-row
+
+@format
+Open matching or lifetime choices, or show details of the selected row.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-original
+@deffn {Command} emacsvox-aural-change-feedback-original
+@findex emacsvox-aural-change-feedback-original
+
+@format
+Replay the frozen selected feedback or the captured Current item example.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-proposed
+@deffn {Command} emacsvox-aural-change-feedback-proposed
+@findex emacsvox-aural-change-feedback-proposed
+
+@format
+Preview this draft with current rules, without applying it.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-change-feedback-refresh
+@deffn {Command} emacsvox-aural-change-feedback-refresh  (&optional id)
+@findex emacsvox-aural-change-feedback-refresh
+
+@format
+Refresh the guided draft while retaining selected row ID.
+
+(fn &optional ID)
+@end format
+@end deffn
+
 @node emacsvox-aural-compatibility-voice
 @section emacsvox-aural-compatibility-voice
 
@@ -2821,6 +2973,15 @@ Browse installed engines and try their physical voices.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-home-change-feedback
+@deffn {Command} emacsvox-aural-home-change-feedback
+@findex emacsvox-aural-home-change-feedback
+
+@format
+Guide a change to the captured Current item’s feedback.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-home-drafts
 @deffn {Command} emacsvox-aural-home-drafts
 @findex emacsvox-aural-home-drafts
@@ -2883,6 +3044,7 @@ P		emacsvox-aural-home-profiles
 R		emacsvox-aural-home-remap-earcon
 V		emacsvox-aural-home-voice-palettes
 W		emacsvox-aural-home-voice-workbench
+c		emacsvox-aural-home-change-feedback
 r		emacsvox-aural-home-remap-voice
 x		emacsvox-aural-home-explain
 
@@ -3548,6 +3710,15 @@ Audition only the exact earcons in the feedback record at point.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-recent-feedback-change
+@deffn {Command} emacsvox-aural-recent-feedback-change
+@findex emacsvox-aural-recent-feedback-change
+
+@format
+Guide a change using the explicitly selected frozen feedback record.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-recent-feedback-explain
 @deffn {Command} emacsvox-aural-recent-feedback-explain
 @findex emacsvox-aural-recent-feedback-explain
@@ -3582,6 +3753,7 @@ Key             Binding
 -------------------------------------------------------------------------------
 RET		emacsvox-aural-recent-feedback-explain
 ?		emacsvox-aural-recent-feedback-help
+C		emacsvox-aural-recent-feedback-change
 L		emacsvox-aural-set-history-limit
 P		emacsvox-aural-recent-feedback-replay
 R		emacsvox-aural-recent-feedback-remap-earcon
