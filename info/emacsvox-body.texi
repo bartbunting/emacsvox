@@ -2489,8 +2489,26 @@ Engines@comma{} preference@comma{} fallback@comma{} and health.
 Portable styles and effects.
 @end table
 
-Press @kbd{P} to preview a row@comma{} @kbd{A} to preview all visible
-voices@comma{} @kbd{B} to compare two@comma{} and @kbd{S} to stop preview.
+For physical voices@comma{} choose @emph{Browse and try voices} in Home@comma{} then press
+@key{RET} on an engine to browse its voices.  @key{RET}
+on a voice shows details; @kbd{P} plays a named sample.  Filters
+and each view's selected row and column survive navigation through Home.
+
+@kbd{A} plays available matching voices in displayed order@comma{}
+skipping unavailable rows.  @kbd{B} starts with the selected voice
+as A and offers another matching voice as B@.  Choose @emph{Search all engines}
+inside that prompt to compare outside the current filters.  Both samples use
+the same sentence.  @kbd{T} edits it@comma{} @kbd{F} filters@comma{}
+@kbd{C} clears filters@comma{} and @kbd{R} refreshes inventory.
+
+Labels identify each engine and voice.  Customize
+@code{emacsvox-aural-preview-label-verbosity} for names@comma{} brief letters or numbers@comma{}
+or no labels.  Labels and samples share one preview sequence:
+@kbd{S} or foreground navigation cancels the remaining samples.
+An exact-preview failure is reported instead of accepting a different voice
+as the requested one.  Availability and capability reports describe what the
+adapter advertises; they are not a listening test of every parameter.
+
 Use @kbd{a} to assign a physical voice and @kbd{t} to tune the
 selected logical voice on its effective route.  Route changes are staged until
 you press @kbd{w} or @kbd{C-c C-c} to save and apply them.  Pressing

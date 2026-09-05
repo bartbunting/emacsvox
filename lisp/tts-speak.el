@@ -2543,6 +2543,9 @@ Call CALLBACK once with the adapter's terminal result when supplied."
          inventory
        (tts-default-voice-inventory)))))
 
+(defvar tts-voice-inventory-changed-hook nil
+  "Hook run when the adapter receives a fresh main-stream voice inventory.")
+
 (defun tts-refresh-voice-inventory ()
   "Refresh and return the active speech adapter's voice inventory.
 

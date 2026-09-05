@@ -65,7 +65,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1493 commands and 205 options.
+This chapter documents a total of 1494 commands and 206 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -3257,6 +3257,25 @@ Speech previews stop earlier output, queue one concrete plan or caller-built
 sequence, and dispatch once.  Cue-only previews stop speech but bypass the
 speech queue, presentation history, and training hooks.
 
+@subsection emacsvox-aural-preview Options
+
+@defvar {User Option} emacsvox-aural-preview-label-verbosity
+@verbatim
+How physical voice comparisons identify their samples.
+‘names’ includes the engine and voice; ‘brief’ uses only the comparison
+letter or sequence number; nil omits labels.  The comparison sentence itself
+is identical for every sample.
+@end verbatim
+
+Default Value:
+@verbatim
+
+names
+
+@end verbatim
+
+@end defvar
+
 @node emacsvox-aural-profile-service
 @section emacsvox-aural-profile-service
 
@@ -5537,7 +5556,7 @@ Clear all physical-voice filters and refresh.
 @findex emacsvox-aural-voice-workbench-compare
 
 @format
-A/B two installed physical voices with identical text and settings.
+Compare the selected physical voice with another matching voice.
 @end format
 @end deffn
 
@@ -5654,7 +5673,7 @@ penultimate step during initialization.
 
 Key             Binding
 -------------------------------------------------------------------------------
-RET		emacsvox-aural-voice-workbench-describe
+RET		emacsvox-aural-voice-workbench-open-row
 ?		emacsvox-aural-voice-workbench-help
 A		emacsvox-aural-voice-workbench-preview-all
 B		emacsvox-aural-voice-workbench-compare
@@ -5738,6 +5757,15 @@ Move the current selector or preferred engine earlier.
 @end format
 @end deffn
 
+@subsubsection emacsvox-aural-voice-workbench-open-row
+@deffn {Command} emacsvox-aural-voice-workbench-open-row
+@findex emacsvox-aural-voice-workbench-open-row
+
+@format
+Browse the selected engine’s physical voices, or show details of another row.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-voice-workbench-physical-view
 @deffn {Command} emacsvox-aural-voice-workbench-physical-view
 @findex emacsvox-aural-voice-workbench-physical-view
@@ -5752,7 +5780,7 @@ Show discovered physical voices.
 @findex emacsvox-aural-voice-workbench-preview
 
 @format
-Preview the current logical, physical, engine, or style row once.
+Preview the selected voice, identifying physical samples by name.
 @end format
 @end deffn
 
@@ -5761,7 +5789,7 @@ Preview the current logical, physical, engine, or style row once.
 @findex emacsvox-aural-voice-workbench-preview-all
 
 @format
-Preview every currently visible physical voice using identical text.
+Preview usable matching voices in displayed order, identifying each sample.
 @end format
 @end deffn
 
@@ -5770,7 +5798,7 @@ Preview every currently visible physical voice using identical text.
 @findex emacsvox-aural-voice-workbench-refresh
 
 @format
-Refresh the Workbench quietly, preserving row ID and column.
+Refresh inventory and preserve each view’s row and column independently.
 
 (fn &optional ID)
 @end format

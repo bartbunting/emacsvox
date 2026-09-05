@@ -2439,12 +2439,31 @@ are:
 ‘s’
      Portable styles and effects.
 
-   Press ‘P’ to preview a row, ‘A’ to preview all visible voices, ‘B’ to
-compare two, and ‘S’ to stop preview.  Use ‘a’ to assign a physical
-voice and ‘t’ to tune the selected logical voice on its effective route.
-Route changes are staged until you press ‘w’ or ‘C-c C-c’ to save and
-apply them.  Pressing ‘q’ with unsaved route changes warns that they
-remain staged.
+   For physical voices, choose _Browse and try voices_ in Home, then
+press <RET> on an engine to browse its voices.  <RET> on a voice shows
+details; ‘P’ plays a named sample.  Filters and each view's selected row
+and column survive navigation through Home.
+
+   ‘A’ plays available matching voices in displayed order, skipping
+unavailable rows.  ‘B’ starts with the selected voice as A and offers
+another matching voice as B.  Choose _Search all engines_ inside that
+prompt to compare outside the current filters.  Both samples use the
+same sentence.  ‘T’ edits it, ‘F’ filters, ‘C’ clears filters, and ‘R’
+refreshes inventory.
+
+   Labels identify each engine and voice.  Customize
+‘emacsvox-aural-preview-label-verbosity’ for names, brief letters or
+numbers, or no labels.  Labels and samples share one preview sequence:
+‘S’ or foreground navigation cancels the remaining samples.  An
+exact-preview failure is reported instead of accepting a different voice
+as the requested one.  Availability and capability reports describe what
+the adapter advertises; they are not a listening test of every
+parameter.
+
+   Use ‘a’ to assign a physical voice and ‘t’ to tune the selected
+logical voice on its effective route.  Route changes are staged until
+you press ‘w’ or ‘C-c C-c’ to save and apply them.  Pressing ‘q’ with
+unsaved route changes warns that they remain staged.
 
    The tuner names neutral effect values instead of speaking an
 ambiguous number: gain five is _unchanged_, low-pass nine is _disabled_,
@@ -5385,42 +5404,42 @@ Node: Explaining Presentation100919
 Node: Adjusting Presentation102947
 Node: Presentation Profiles106222
 Node: Voices And Routing107899
-Node: Sounds And Space111954
-Node: Presentation Troubleshooting113590
-Node: Voice Lock115628
-Node: Using Online Help118835
-Node: Emacs Packages122897
-Node: Document Authoring124271
-Node: Structured Editing124825
-Node: Browsing Structure125808
-Node: Web Browsing126406
-Node: Messaging127241
-Node: Editing Code127739
-Node: Development Environment128258
-Node: Desktop Management129794
-Node: Personal Information Management130296
-Node: Desktop Applications130828
-Node: Notmuch Mail138216
-Ref: Notmuch fields and privacy147559
-Node: Agent Shell153267
-Node: EAT Terminal Access165562
-Node: Running Terminal Based Applications182821
-Node: Starting Term183776
-Node: Term Input Modes184615
-Node: Term Speech Feedback185775
-Node: Reviewing The Term Screen186969
-Node: Term Help And Recovery188870
-Node: Emacsvox Keyboard Commands189769
-Node: Copyright191173
-Node: Acknowledgments191760
-Node: Developer Guide192786
-Node: Documentation Maintenance193950
-Node: Speech Server Protocols198748
-Ref: Testing A Direct Legacy Server204655
-Ref: Commands That Queue Output205214
-Ref: Commands That Set State208248
-Node: Integration Maintenance210842
-Node: Concept Index235078
+Node: Sounds And Space112972
+Node: Presentation Troubleshooting114608
+Node: Voice Lock116646
+Node: Using Online Help119853
+Node: Emacs Packages123915
+Node: Document Authoring125289
+Node: Structured Editing125843
+Node: Browsing Structure126826
+Node: Web Browsing127424
+Node: Messaging128259
+Node: Editing Code128757
+Node: Development Environment129276
+Node: Desktop Management130812
+Node: Personal Information Management131314
+Node: Desktop Applications131846
+Node: Notmuch Mail139234
+Ref: Notmuch fields and privacy148577
+Node: Agent Shell154285
+Node: EAT Terminal Access166580
+Node: Running Terminal Based Applications183839
+Node: Starting Term184794
+Node: Term Input Modes185633
+Node: Term Speech Feedback186793
+Node: Reviewing The Term Screen187987
+Node: Term Help And Recovery189888
+Node: Emacsvox Keyboard Commands190787
+Node: Copyright192191
+Node: Acknowledgments192778
+Node: Developer Guide193804
+Node: Documentation Maintenance194968
+Node: Speech Server Protocols199766
+Ref: Testing A Direct Legacy Server205673
+Ref: Commands That Queue Output206232
+Ref: Commands That Set State209266
+Node: Integration Maintenance211860
+Node: Concept Index236096
 
 End Tag Table
 

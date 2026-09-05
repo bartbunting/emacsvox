@@ -768,8 +768,8 @@
         (should (equal (plist-get selector :engine-id) "eloquence"))
         (should (equal (plist-get selector :voice-id) "eci:Reed")))
       (should
-       (equal (plist-get (car entries) :text)
-              emacsvox-aural-voice-workbench-preview-text))
+       (equal (mapcar (lambda (entry) (plist-get entry :text)) entries)
+              (list "1, Eloquence, Reed." emacsvox-aural-voice-workbench-preview-text)))
       (should (equal emacsvox-aural-voice-workbench-staged-profile before))
       (should
        (eq (plist-get emacsvox-aural-voice-workbench-last-preview :status)
@@ -786,9 +786,8 @@
         (emacsvox-aural-voice-workbench-preview-all))
       (should (= (length entries) 2))
       (should
-       (equal (delete-dups (mapcar (lambda (entry) (plist-get entry :text))
-                                   entries))
-              (list emacsvox-aural-voice-workbench-preview-text)))
+       (equal (mapcar (lambda (entry) (plist-get entry :text)) entries)
+              (list "1, Eloquence, Reed." emacsvox-aural-voice-workbench-preview-text)))
       (should
        (equal
         (mapcar
@@ -796,6 +795,91 @@
            (plist-get (plist-get entry :selector) :kind))
          entries)
         '(exact exact))))))
+
+(ert-deftest emacsvox-aural-workbench-engine-entry-preserves-view-orientation ()
+  "Engine RET filters physical voices and preserves the engine's selected column."
+  (emacsvox-test--with-voice-workbench
+    (emacsvox-aural-voice-workbench--switch 'engines)
+    (emacsvox-aural-ui-goto-row "eloquence")
+    (emacsvox-aural-ui-goto-tabulated-column 2)
+    (setq emacsvox-aural-voice-workbench-filter '(:language "en-AU"))
+    (emacsvox-aural-voice-workbench-open-row)
+    (should (eq emacsvox-aural-voice-workbench-view 'physical))
+    (should (equal emacsvox-aural-voice-workbench-filter
+                   '(:language "en-AU" :engine "eloquence")))
+    (should (equal (tabulated-list-get-id) '("eloquence" "eci:Reed")))
+    (emacsvox-aural-ui-goto-tabulated-column 3)
+    (emacsvox-aural-voice-workbench--switch 'engines)
+    (should (equal (tabulated-list-get-id) "eloquence"))
+    (should (= (emacsvox-aural-ui-tabulated-column-index) 2))
+    (emacsvox-aural-voice-workbench--switch 'physical)
+    (should (= (emacsvox-aural-ui-tabulated-column-index) 3))))
+
+(ert-deftest emacsvox-aural-workbench-bulk-preview-follows-rendered-order ()
+  "Sorted rows determine audible order; unavailable engines are skipped."
+  (emacsvox-test--with-voice-workbench
+    (let* ((inventory (copy-tree emacsvox-test--workbench-inventory))
+           (engine (car (plist-get inventory :engines)))
+           (extra (copy-tree (car (plist-get engine :voices))))
+           (tts-voice-inventory-function (lambda () inventory))
+           entries)
+      (setf (plist-get extra :voice-id) "eci:Zoe"
+            (plist-get extra :display-name) "Zoe"
+            (plist-get engine :voices) (append (plist-get engine :voices) (list extra)))
+      (emacsvox-aural-voice-workbench--switch 'physical)
+      (setq tabulated-list-sort-key '("Physical voice" . t))
+      (emacsvox-aural-voice-workbench-refresh)
+      (cl-letf (((symbol-function 'tts-preview-voices)
+                 (lambda (value _callback) (setq entries value))))
+        (emacsvox-aural-voice-workbench-preview-all))
+      (should (equal (mapcar (lambda (entry) (plist-get (plist-get entry :selector) :voice-id))
+                            entries) '("eci:Zoe" "eci:Zoe" "eci:Reed" "eci:Reed")))
+      (should (equal (plist-get (nth 1 entries) :text) (plist-get (nth 3 entries) :text)))
+      (should (string-match-p "Zoe" (plist-get (nth 0 entries) :text)))
+      (emacsvox-aural-ui-goto-row '("winrt" "David"))
+      (should-error (emacsvox-aural-voice-workbench-preview) :type 'user-error))))
+
+(ert-deftest emacsvox-aural-workbench-comparison-starts-at-selected-row ()
+  "Comparison keeps A fixed and searches all engines only when explicitly chosen."
+  (emacsvox-test--with-voice-workbench
+    (let* ((inventory (copy-tree emacsvox-test--workbench-inventory))
+           (second (cadr (plist-get inventory :engines)))
+           (tts-voice-inventory-function (lambda () inventory))
+           entries prompts)
+      (setf (plist-get second :circuit) "closed")
+      (setq emacsvox-aural-voice-workbench-filter '(:engine "eloquence"))
+      (emacsvox-aural-voice-workbench--switch 'physical)
+      (cl-letf (((symbol-function 'completing-read)
+                 (lambda (prompt choices &rest _)
+                   (push prompt prompts)
+                   (if (= (length prompts) 1)
+                       (progn (should (equal choices '(("Search all engines"))))
+                              "Search all engines")
+                     (should (string-match-p "David" (caar choices)))
+                     (caar choices))))
+                ((symbol-function 'tts-preview-voices)
+                 (lambda (value _callback) (setq entries value))))
+        (emacsvox-aural-voice-workbench-compare))
+      (should (= (length prompts) 2))
+      (should (equal (plist-get (nth 0 entries) :text) "A, Eloquence, Reed."))
+      (should (equal (plist-get (nth 2 entries) :text) "B, Windows Speech, David."))
+      (should (equal (plist-get (nth 1 entries) :text) (plist-get (nth 3 entries) :text)))
+      (should (equal emacsvox-aural-voice-workbench-filter '(:engine "eloquence"))))))
+
+(ert-deftest emacsvox-aural-workbench-ignores-obsolete-preview-status ()
+  "An old cancellation callback cannot replace the newer preview's status."
+  (emacsvox-test--with-voice-workbench
+    (let (callbacks)
+      (cl-letf (((symbol-function 'tts-preview-voices)
+                 (lambda (_entries callback) (push callback callbacks))))
+        (emacsvox-aural-voice-workbench--preview-entries '((:text "first")))
+        (emacsvox-aural-voice-workbench--preview-entries '((:text "second")))
+        (funcall (cadr callbacks) '(:status cancelled))
+        (should (equal (plist-get emacsvox-aural-voice-workbench-last-preview :status)
+                       "running 1"))
+        (funcall (car callbacks) '(:status completed))
+        (should (eq (plist-get emacsvox-aural-voice-workbench-last-preview :status)
+                    'completed))))))
 
 (ert-deftest emacsvox-aural-voice-workbench-logical-preview-carries-effects ()
   "Logical preview uses the effective route and complete portable style."
@@ -949,7 +1033,7 @@
   "Workbench view, filter, detail, refresh, home, and help keys are present."
   (dolist
       (binding
-       '(("RET" . emacsvox-aural-voice-workbench-describe)
+       '(("RET" . emacsvox-aural-voice-workbench-open-row)
          ("l" . emacsvox-aural-voice-workbench-logical-view)
          ("v" . emacsvox-aural-voice-workbench-physical-view)
          ("e" . emacsvox-aural-voice-workbench-engine-view)

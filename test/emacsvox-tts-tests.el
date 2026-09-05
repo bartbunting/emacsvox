@@ -390,6 +390,28 @@
           (should-not (gethash 301 (omnivox--pending-requests process))))
       (when (process-live-p process) (delete-process process)))))
 
+(ert-deftest emacsvox-tts-omnivox-rejects-mismatched-exact-preview-result ()
+  "Fallback realization cannot be reported as the requested physical voice."
+  (let ((result
+         (omnivox--normalize-preview-response
+          '(:selector (:kind exact :engine-id "eloquence" :voice-id "Reed"))
+          '(:type "preview_completed" :status "completed"
+            :realized (:engine_id "espeak" :voice_id "en")) t t)))
+    (should (eq (plist-get result :status) 'failed))
+    (should (string-match-p "requested exact" (plist-get result :message)))))
+
+(ert-deftest emacsvox-tts-omnivox-preview-failure-stops-the-sequence ()
+  "An unavailable sample ends a sequence with a failed terminal result."
+  (let ((tts-stopped-hook nil) calls result)
+    (cl-letf (((symbol-function 'tts-stop) #'ignore)
+              ((symbol-function 'omnivox--preview-one)
+               (lambda (entry callback)
+                 (push entry calls) (funcall callback '(:status failed)))))
+      (omnivox-preview-voice-sequence '(first second) (lambda (value) (setq result value)))
+      (should (equal calls '(first)))
+      (should (eq (plist-get result :status) 'failed))
+      (should-not tts-stopped-hook))))
+
 (ert-deftest emacsvox-tts-omnivox-preview-stop-cancels-late-callbacks ()
   "Only the preview owner cancels; late completion cannot start another sample."
   (let ((tts-speaker-process 'main) (tts-stopped-hook nil)

@@ -794,9 +794,18 @@ SEEN prevents malformed personality-variable cycles."
        (tts--voice-preview-dimensions (plist-get entry :effects))
        :message (or (plist-get response :message)
                     "Omnivox returned an invalid preview response"))
-    (let ((realized (plist-get response :realized)))
+    (let* ((realized (plist-get response :realized))
+           (selector (plist-get entry :selector))
+           (mismatch
+            (and (equal (plist-get response :status) "completed")
+                 (memq (tts--voice-preview-selector-kind selector) '(exact engine-default))
+                 (not (and (equal (plist-get selector :engine-id)
+                                  (plist-get realized :engine_id))
+                           (or (eq (tts--voice-preview-selector-kind selector) 'engine-default)
+                               (equal (plist-get selector :voice-id)
+                                      (plist-get realized :voice_id))))))))
       (list
-       :status (intern (or (plist-get response :status) "failed"))
+       :status (if mismatch 'failed (intern (or (plist-get response :status) "failed")))
        :completion-guarantee 'playback
        :requested (copy-tree (plist-get entry :selector))
        :realized
@@ -821,7 +830,9 @@ SEEN prevents malformed personality-variable cycles."
            (mapcar #'omnivox--preview-dimension-symbol
                    (plist-get response :degraded_effects))
          (tts--voice-preview-dimensions (plist-get entry :effects)))
-       :message (plist-get response :message)))))
+       :message (if mismatch
+                    "The server did not realize the requested exact engine and voice"
+                  (plist-get response :message))))))
 
 (defun omnivox--preview-one (entry callback)
   "Preview one normalized ENTRY and call CALLBACK after playback."
@@ -888,9 +899,10 @@ SEEN prevents malformed personality-variable cycles."
                      (lambda (result)
                        (unless finished
                          (push result results)
-                         (if (eq (plist-get result :status) 'cancelled)
-                             (finish 'cancelled)
-                           (next)))))
+                         (pcase (plist-get result :status)
+                           ('cancelled (finish 'cancelled))
+                           ('completed (next))
+                           (_ (finish 'failed))))))
                   (error
                    (finish 'failed)
                    (signal (car error-data) (cdr error-data)))))))))
@@ -1473,7 +1485,8 @@ logical registry is replaced, so partial failure is explicit and retryable."
           (setq omnivox-engine-inventory response
                 omnivox-engine-inventory-time (current-time)
                 omnivox-routing-policy-registration
-                (copy-tree (plist-get response :routing_policy))))
+                (copy-tree (plist-get response :routing_policy)))
+          (run-hooks 'tts-voice-inventory-changed-hook))
         (if (omnivox--process-supports-p process "runtime_routing_policy")
             (if (omnivox--set-process-routing-policy process)
                 nil

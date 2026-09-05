@@ -425,8 +425,26 @@ routes.  Open it from Aural Home with @@texinfo:@kbd{W}@@.  Its main views are:
 - e :: Engines, preference, fallback, and health.
 - s :: Portable styles and effects.
 
-Press @@texinfo:@kbd{P}@@ to preview a row, @@texinfo:@kbd{A}@@ to preview all visible
-voices, @@texinfo:@kbd{B}@@ to compare two, and @@texinfo:@kbd{S}@@ to stop preview.
+For physical voices, choose /Browse and try voices/ in Home, then press
+@@texinfo:@key{RET}@@ on an engine to browse its voices.  @@texinfo:@key{RET}@@
+on a voice shows details; @@texinfo:@kbd{P}@@ plays a named sample.  Filters
+and each view's selected row and column survive navigation through Home.
+
+@@texinfo:@kbd{A}@@ plays available matching voices in displayed order,
+skipping unavailable rows.  @@texinfo:@kbd{B}@@ starts with the selected voice
+as A and offers another matching voice as B.  Choose /Search all engines/
+inside that prompt to compare outside the current filters.  Both samples use
+the same sentence.  @@texinfo:@kbd{T}@@ edits it, @@texinfo:@kbd{F}@@ filters,
+@@texinfo:@kbd{C}@@ clears filters, and @@texinfo:@kbd{R}@@ refreshes inventory.
+
+Labels identify each engine and voice.  Customize
+~emacsvox-aural-preview-label-verbosity~ for names, brief letters or numbers,
+or no labels.  Labels and samples share one preview sequence:
+@@texinfo:@kbd{S}@@ or foreground navigation cancels the remaining samples.
+An exact-preview failure is reported instead of accepting a different voice
+as the requested one.  Availability and capability reports describe what the
+adapter advertises; they are not a listening test of every parameter.
+
 Use @@texinfo:@kbd{a}@@ to assign a physical voice and @@texinfo:@kbd{t}@@ to tune the
 selected logical voice on its effective route.  Route changes are staged until
 you press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ to save and apply them.  Pressing

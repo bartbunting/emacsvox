@@ -41,3 +41,14 @@ Existing direct shortcuts remain available.  Home announces the captured
 source and unfinished draft count; Resume unfinished changes opens the
 original editor.  Voice browsing, speech rate, engine preference, and
 notification controls are available beside the advanced managers.
+
+** Browse, identify, and compare physical voices
+
+~RET~ on a Workbench engine opens its filtered voices; ~RET~ on a voice shows
+details.  ~P~ plays a named sample.  ~A~ follows displayed order and skips
+unavailable voices.  ~B~ starts with the selected voice and offers a filtered
+second voice, with an explicit Search all engines choice.  Sample labels are
+configurable through ~emacsvox-aural-preview-label-verbosity~.  Views retain
+their own selected rows and columns, and fresh inventory updates open lists.
+Exact-preview failures stop the sequence and report the requested voice's
+failure instead of silently accepting another engine or voice.

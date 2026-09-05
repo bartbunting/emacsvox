@@ -43,6 +43,28 @@
 (declare-function tts-stop "tts-speak" ())
 (declare-function tts--protocol-dispatch "tts-speak" ())
 
+(defcustom emacsvox-aural-preview-label-verbosity 'names
+  "How physical voice comparisons identify their samples.
+`names' includes the engine and voice; `brief' uses only the comparison
+letter or sequence number; nil omits labels.  The comparison sentence itself
+is identical for every sample."
+  :type '(choice (const :tag "Engine and voice names" names)
+                 (const :tag "Letters or numbers" brief)
+                 (const :tag "No labels" nil))
+  :group 'emacsvox-aural)
+
+(defun emacsvox-aural-preview-labelled-entry (entry name &optional identifier)
+  "Return ENTRY preceded by a label for NAME and optional IDENTIFIER.
+Labels use the same exact voice and settings, and remain in the same
+cancellable sequence as the unchanged sample text."
+  (let ((label
+         (pcase emacsvox-aural-preview-label-verbosity
+           ('names (string-join (delq nil (list identifier name)) ", "))
+           ('brief identifier))))
+    (if (and label (not (string-empty-p label)))
+        (list (plist-put (copy-tree entry) :text (concat label ".")) entry)
+      (list entry))))
+
 (defun emacsvox-aural-preview-stop ()
   "Stop speech before an explicitly requested preview."
   (when (fboundp 'tts-stop)
