@@ -219,6 +219,32 @@ editing and diff entry remain foreground interactions.  All new events and
 their outcome, count, or setting attributes are registered by the workflow
 semantic provider so Aural rules can customize their presentation.
 
+** Magit contracts
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Staging and selected synchronous operations collect Git outcomes at
+~magit-process-finish~, before Magit can raise an error.  One interactive
+command owns the aggregate result across nested calls.  A process that Magit
+starts and waits for contributes only to the collector attached when it was
+started; unrelated process callbacks cannot change that result.  Uncollected
+asynchronous completions explicitly select the notification lane.  Neither a
+command's return value nor the absence of an Emacs error proves Git succeeded.
+
+Magit's positional highlight overlays must not become source personalities.
+The integration suppresses legacy overlay voice mirroring for those highlights
+and excludes their faces from source capture.  It preserves text faces,
+deliberate personalities, and customized hash voices.  Navigation still emits
+section facts; empty lines supply the core line-condition facts without a
+competing selection icon.
+
+Regression tests use isolated repositories for real Git failures and real
+section trees for highlighting and visibility.  Run the Magit tests from
+source, then again in a fresh Emacs with ~EMACSVOX_MAGIT_TEST_LOAD=compiled~
+after bringing byte-code current.  A live buffer created with the former
+highlight mirroring needs a Magit refresh to rebuild its source properties.
+
 ** WSL2 Omnivox development staging
 :PROPERTIES:
 :TEXINFO_NODE: no

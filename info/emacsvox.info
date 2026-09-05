@@ -2831,6 +2831,27 @@ own manuals remain authoritative for setup and operation.  Verify each
 component individually with its mode help before combining it into a
 larger workflow.
 
+8.7.1 Magit
+-----------
+
+Magit navigation speaks the reached section or line.  Empty and
+whitespace-only lines use the normal line tones.  Commit hashes are
+silent by default; changing the voice assigned to the ‘magit-hash’ face
+changes this consistently for both navigation and explicit reading.
+Moving the section highlight preserves that choice.
+
+   Staging and unstaging report their outcome after Git finishes,
+including failures.  Branch checkout, branch and remote renaming, remote
+removal, and stash creation also announce their results.
+Repository-list fetching reports partial failures when some repositories
+fail.  Background process completion uses the notification lane, while
+entering status and navigating use the main speech lane.
+
+   Section visibility commands describe the resulting collapsed,
+expanded, or partly expanded state.  Copying a heading without a value
+says there is nothing to copy; it does not repeat an older kill-ring
+entry as a new copy.
+
 
 File: emacsvox.info,  Node: Desktop Management,  Next: Personal Information Management,  Prev: Development Environment,  Up: Emacs Packages
 
@@ -4916,7 +4937,34 @@ remain foreground interactions.  All new events and their outcome,
 count, or setting attributes are registered by the workflow semantic
 provider so Aural rules can customize their presentation.
 
-16.3.6 WSL2 Omnivox development staging
+16.3.6 Magit contracts
+----------------------
+
+Staging and selected synchronous operations collect Git outcomes at
+‘magit-process-finish’, before Magit can raise an error.  One
+interactive command owns the aggregate result across nested calls.  A
+process that Magit starts and waits for contributes only to the
+collector attached when it was started; unrelated process callbacks
+cannot change that result.  Uncollected asynchronous completions
+explicitly select the notification lane.  Neither a command's return
+value nor the absence of an Emacs error proves Git succeeded.
+
+   Magit's positional highlight overlays must not become source
+personalities.  The integration suppresses legacy overlay voice
+mirroring for those highlights and excludes their faces from source
+capture.  It preserves text faces, deliberate personalities, and
+customized hash voices.  Navigation still emits section facts; empty
+lines supply the core line-condition facts without a competing selection
+icon.
+
+   Regression tests use isolated repositories for real Git failures and
+real section trees for highlighting and visibility.  Run the Magit tests
+from source, then again in a fresh Emacs with
+‘EMACSVOX_MAGIT_TEST_LOAD=compiled’ after bringing byte-code current.  A
+live buffer created with the former highlight mirroring needs a Magit
+refresh to rebuild its source properties.
+
+16.3.7 WSL2 Omnivox development staging
 ---------------------------------------
 
 The ordinary WSL2 user route is implemented by
@@ -5286,30 +5334,30 @@ Node: Web Browsing124336
 Node: Messaging125171
 Node: Editing Code125669
 Node: Development Environment126188
-Node: Desktop Management126745
-Node: Personal Information Management127247
-Node: Desktop Applications127779
-Node: Notmuch Mail135167
-Ref: Notmuch fields and privacy144510
-Node: Agent Shell150218
-Node: EAT Terminal Access162513
-Node: Running Terminal Based Applications179772
-Node: Starting Term180727
-Node: Term Input Modes181566
-Node: Term Speech Feedback182726
-Node: Reviewing The Term Screen183920
-Node: Term Help And Recovery185821
-Node: Emacsvox Keyboard Commands186720
-Node: Copyright188124
-Node: Acknowledgments188711
-Node: Developer Guide189737
-Node: Documentation Maintenance190901
-Node: Speech Server Protocols195699
-Ref: Testing A Direct Legacy Server201606
-Ref: Commands That Queue Output202165
-Ref: Commands That Set State205199
-Node: Integration Maintenance207793
-Node: Concept Index229273
+Node: Desktop Management127724
+Node: Personal Information Management128226
+Node: Desktop Applications128758
+Node: Notmuch Mail136146
+Ref: Notmuch fields and privacy145489
+Node: Agent Shell151197
+Node: EAT Terminal Access163492
+Node: Running Terminal Based Applications180751
+Node: Starting Term181706
+Node: Term Input Modes182545
+Node: Term Speech Feedback183705
+Node: Reviewing The Term Screen184899
+Node: Term Help And Recovery186800
+Node: Emacsvox Keyboard Commands187699
+Node: Copyright189103
+Node: Acknowledgments189690
+Node: Developer Guide190716
+Node: Documentation Maintenance191880
+Node: Speech Server Protocols196678
+Ref: Testing A Direct Legacy Server202585
+Ref: Commands That Queue Output203144
+Ref: Commands That Set State206178
+Node: Integration Maintenance208772
+Node: Concept Index231623
 
 End Tag Table
 
