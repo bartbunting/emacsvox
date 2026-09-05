@@ -505,6 +505,30 @@
         (when (get-buffer "*Aural Voice Palette Preview*")
           (kill-buffer "*Aural Voice Palette Preview*"))))))
 
+(ert-deftest emacsvox-aural-voice-tuner-reopens-its-working-draft ()
+  "Reopening the same voice retains unsaved parameters without a discard prompt."
+  (emacsvox-test--with-voice-palettes
+    (emacsvox-aural-register-voice-palette-data emacsvox-test--voice-palette-data)
+    (let (buffers)
+      (unwind-protect
+          (save-window-excursion
+            (setq buffers (emacsvox-test--open-reading-voice-tuner 'aside))
+            (with-current-buffer (cadr buffers)
+              (setq emacsvox-aural-voice-tuner-working-style
+                    (plist-put emacsvox-aural-voice-tuner-working-style :average-pitch 7)
+                    emacsvox-aural-voice-tuner-dirty t))
+            (with-current-buffer (car buffers)
+              (cl-letf (((symbol-function 'yes-or-no-p)
+                         (lambda (&rest _) (ert-fail "Unexpected discard prompt")))
+                        ((symbol-function 'emacsvox-aural-voice-tuner--play-text) #'ignore))
+                (emacsvox-aural-voice-palette-previews-tune)))
+            (with-current-buffer (cadr buffers)
+              (should emacsvox-aural-voice-tuner-dirty)
+              (should (= 7 (plist-get emacsvox-aural-voice-tuner-working-style
+                                      :average-pitch)))))
+        (dolist (buffer buffers)
+          (when (buffer-live-p buffer) (kill-buffer buffer)))))))
+
 (ert-deftest emacsvox-aural-voice-tuner-opens-complete-supported-form ()
   "The tuner exposes all dimensions and reports active adapter support."
   (emacsvox-test--with-voice-palettes

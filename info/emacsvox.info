@@ -2159,8 +2159,18 @@ File: emacsvox.info,  Node: Aural Home,  Next: Explaining Presentation,  Prev: P
 =========================
 
 Open Aural Home from an ordinary buffer with ‘C-e H’.  Emacsvox
-remembers that source buffer so contextual actions such as explanation
-and remapping can operate on the object you were using.
+remembers that source buffer and opening position so contextual actions
+such as explanation and remapping operate on the object you were using.
+Moving the source cursor while Home is open does not change this target.
+In Home, ‘C-c C-o’ returns to it.  To choose a new target, invoke ‘C-e
+H’ afresh from that item in an ordinary buffer.
+
+   Returning through Home or Help preserves the selected row and
+unfinished edits.  Buffer rule editors retain separate drafts for each
+source buffer; reopening a modified editor resumes its draft.  Reopening
+the same voice in the tuner likewise preserves its working settings.  If
+a prepared remap's source item changes or disappears, Emacsvox asks you
+to prepare that change again before applying it.
 
    Aural Home is a spoken table.  Each row names an area, reports its
 current status, and describes its purpose.  The common controls are:
@@ -2221,12 +2231,12 @@ useful:
      tells you whether to inspect an option, an override, a voice route,
      a sound pack, or the Voice Lock compatibility layer.
 
-   When a retained presentation from that source is available, the
-explanation describes the exact output that was queued, including its
-source location and resolved resources.  It does not reinterpret that
-old output using your latest settings.  Without an exact record,
-Emacsvox labels the explanation as a simulation of what the current
-rules would produce at point.
+   When a retained presentation still matches the source buffer,
+position, and unchanged source revision, the explanation describes the
+exact output that was queued, including its source location and resolved
+resources.  It does not reinterpret that old output using your latest
+settings.  Without an exact record, Emacsvox labels the explanation as a
+simulation of what the current rules would produce at point.
 
    To inspect something heard earlier, open Aural Home and choose
 _Recent Aural Feedback_, or press ‘H’ there.  Each row is a bounded
@@ -4828,7 +4838,34 @@ implementation:
 is defined by the Aural implementation, its generated reference, and
 accepted ADRs.
 
-16.3.4 Notmuch contracts
+16.3.4 Aural interface source ownership
+---------------------------------------
+
+Ordinary-buffer entry captures a source buffer, a marker, and a guarded
+source line.  Child interfaces and Help inherit that context through the
+inspection and shared UI helpers.  Use
+‘emacsvox-aural-inspection-call-in-source’ for contextual commands so
+that moving the source cursor does not retarget an open interface.
+Re-entry from an ordinary buffer deliberately captures a new target.  A
+dead or replaced source is reported rather than resolved through an
+unrelated recent-buffer fallback.
+
+   Current-item lookup may reuse a frozen history record only when the
+captured source identity, position, and modification tick still match.
+Source identity is a buffer-local, data-only token that distinguishes
+buffers sharing a name; history continues to retain no buffer objects or
+markers.  Explicit historical selection remains valid after the source
+changes and is explained from its frozen plan.  Prepared current-item
+rules carry a source guard checked before their saved or live rule layer
+changes.
+
+   Find rule editors by scope and target identity, not by a formatted
+buffer name.  Buffer scopes belong to buffer objects, fragment scopes to
+fragment identifiers, and personal/session scopes each share one working
+editor.  Reopening a dirty editor preserves its draft and source
+association.
+
+16.3.5 Notmuch contracts
 ------------------------
 
 The live module is registered as an optional package integration.  Its
@@ -4859,7 +4896,7 @@ exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
 focused selector, including real displayed-window reading for both
 advance paths.
 
-16.3.5 Agent Shell contracts
+16.3.6 Agent Shell contracts
 ----------------------------
 
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
@@ -4937,7 +4974,7 @@ remain foreground interactions.  All new events and their outcome,
 count, or setting attributes are registered by the workflow semantic
 provider so Aural rules can customize their presentation.
 
-16.3.6 Magit contracts
+16.3.7 Magit contracts
 ----------------------
 
 Staging and selected synchronous operations collect Git outcomes at
@@ -4964,7 +5001,7 @@ from source, then again in a fresh Emacs with
 live buffer created with the former highlight mirroring needs a Magit
 refresh to rebuild its source properties.
 
-16.3.7 WSL2 Omnivox development staging
+16.3.8 WSL2 Omnivox development staging
 ---------------------------------------
 
 The ordinary WSL2 user route is implemented by
@@ -5318,46 +5355,46 @@ Node: Aural Presentation89505
 Node: Presentation Model91704
 Node: Presentation Modalities94171
 Node: Aural Home97340
-Node: Explaining Presentation99228
-Node: Adjusting Presentation101213
-Node: Presentation Profiles104182
-Node: Voices And Routing105873
-Node: Sounds And Space109896
-Node: Presentation Troubleshooting111520
-Node: Voice Lock113558
-Node: Using Online Help116765
-Node: Emacs Packages120827
-Node: Document Authoring122201
-Node: Structured Editing122755
-Node: Browsing Structure123738
-Node: Web Browsing124336
-Node: Messaging125171
-Node: Editing Code125669
-Node: Development Environment126188
-Node: Desktop Management127724
-Node: Personal Information Management128226
-Node: Desktop Applications128758
-Node: Notmuch Mail136146
-Ref: Notmuch fields and privacy145489
-Node: Agent Shell151197
-Node: EAT Terminal Access163492
-Node: Running Terminal Based Applications180751
-Node: Starting Term181706
-Node: Term Input Modes182545
-Node: Term Speech Feedback183705
-Node: Reviewing The Term Screen184899
-Node: Term Help And Recovery186800
-Node: Emacsvox Keyboard Commands187699
-Node: Copyright189103
-Node: Acknowledgments189690
-Node: Developer Guide190716
-Node: Documentation Maintenance191880
-Node: Speech Server Protocols196678
-Ref: Testing A Direct Legacy Server202585
-Ref: Commands That Queue Output203144
-Ref: Commands That Set State206178
-Node: Integration Maintenance208772
-Node: Concept Index231623
+Node: Explaining Presentation99849
+Node: Adjusting Presentation101877
+Node: Presentation Profiles104846
+Node: Voices And Routing106537
+Node: Sounds And Space110560
+Node: Presentation Troubleshooting112184
+Node: Voice Lock114222
+Node: Using Online Help117429
+Node: Emacs Packages121491
+Node: Document Authoring122865
+Node: Structured Editing123419
+Node: Browsing Structure124402
+Node: Web Browsing125000
+Node: Messaging125835
+Node: Editing Code126333
+Node: Development Environment126852
+Node: Desktop Management128388
+Node: Personal Information Management128890
+Node: Desktop Applications129422
+Node: Notmuch Mail136810
+Ref: Notmuch fields and privacy146153
+Node: Agent Shell151861
+Node: EAT Terminal Access164156
+Node: Running Terminal Based Applications181415
+Node: Starting Term182370
+Node: Term Input Modes183209
+Node: Term Speech Feedback184369
+Node: Reviewing The Term Screen185563
+Node: Term Help And Recovery187464
+Node: Emacsvox Keyboard Commands188363
+Node: Copyright189767
+Node: Acknowledgments190354
+Node: Developer Guide191380
+Node: Documentation Maintenance192544
+Node: Speech Server Protocols197342
+Ref: Testing A Direct Legacy Server203249
+Ref: Commands That Queue Output203808
+Ref: Commands That Set State206842
+Node: Integration Maintenance209436
+Node: Concept Index233672
 
 End Tag Table
 

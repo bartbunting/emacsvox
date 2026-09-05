@@ -165,8 +165,18 @@ Stopping obsolete main speech is local to the main stream.  An explicit
 #+cindex: Aural Home
 
 Open Aural Home from an ordinary buffer with @@texinfo:@kbd{C-e H}@@.  Emacsvox
-remembers that source buffer so contextual actions such as explanation and
-remapping can operate on the object you were using.
+remembers that source buffer and opening position so contextual actions such
+as explanation and remapping operate on the object you were using.  Moving
+the source cursor while Home is open does not change this target.  In Home,
+@@texinfo:@kbd{C-c C-o}@@ returns to it.  To choose a new target, invoke
+@@texinfo:@kbd{C-e H}@@ afresh from that item in an ordinary buffer.
+
+Returning through Home or Help preserves the selected row and unfinished
+edits.  Buffer rule editors retain separate drafts for each source buffer;
+reopening a modified editor resumes its draft.  Reopening the same voice in
+the tuner likewise preserves its working settings.  If a prepared remap's
+source item changes or disappears, Emacsvox asks you to prepare that change
+again before applying it.
 
 Aural Home is a spoken table.  Each row names an area, reports its current
 status, and describes its purpose.  The common controls are:
@@ -218,7 +228,8 @@ Use this workflow when feedback is surprising, unclear, or especially useful:
    you whether to inspect an option, an override, a voice route, a sound pack,
    or the Voice Lock compatibility layer.
 
-When a retained presentation from that source is available, the explanation
+When a retained presentation still matches the source buffer, position, and
+unchanged source revision, the explanation
 describes the exact output that was queued, including its source location and
 resolved resources.  It does not reinterpret that old output using your latest
 settings.  Without an exact record, Emacsvox labels the explanation as a

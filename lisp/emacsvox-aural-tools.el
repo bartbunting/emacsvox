@@ -115,15 +115,16 @@ message notification policy."
 
 (defalias 'emacsvox-aural-preview-rule #'emacsvox-preview-aural-rule)
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
+(defvar emacsvox-aural-editor-prepared-source-guard)
 
 (defun emacsvox-aural-tools--remap-source-input (&optional record)
   "Return presentation input for optional frozen RECORD or the current source.
 
 For RECORD, use its frozen voice and semantic context.  Associate it
 with the current inspection source only when the buffer name still matches;
-history deliberately does not retain source buffers.  Without RECORD, prefer
-the latest retained presentation from the current source and fall back to
-inspectable facts at point."
+history deliberately does not retain source buffers.  Without RECORD, use
+inspectable facts at the captured source position, or a retained presentation
+whose source identity, position, and modification tick still match."
   (if record
       (progn
         (unless (emacsvox-aural-presentation-record-p record)
@@ -150,35 +151,38 @@ inspectable facts at point."
     (let ((source (emacsvox-aural-inspection-source-buffer)))
       (unless source
         (user-error "No live source buffer is available"))
-      (with-current-buffer source
-        (if-let* ((record (emacsvox-aural-last-presentation source)))
-            (let* ((concrete
-                    (emacsvox-aural-presentation-record-plan record))
-                   (render
-                    (emacsvox-aural-concrete-plan-source-plan concrete)))
-              (list
-               :source source
-               :facts
-               (copy-tree (emacsvox-aural-concrete-plan-facts concrete))
-               :context
-               (copy-tree (emacsvox-aural-concrete-plan-context concrete))
-               :render render
-               :concrete concrete))
-          (let* ((facts (emacsvox-aural-facts-at-point))
-                 (_
-                  (unless facts
-                    (user-error
-                     "No presentation is recorded here; move away and back, then retry")))
-                 (context (emacsvox-aural-context-at-point))
-                 (explanation (emacsvox-aural-explain facts context)))
-            (list
-             :source source
-             :facts (copy-tree facts)
-             :context (copy-tree context)
-             :render
-             (emacsvox-aural-explanation-render-plan explanation)
-             :concrete
-             (emacsvox-aural-explanation-concrete-plan explanation))))))))
+      (emacsvox-aural-inspection-call-in-source
+       (lambda ()
+         (if-let* ((record (emacsvox-aural-presentation-at-point)))
+             (let* ((concrete
+                     (emacsvox-aural-presentation-record-plan record))
+                    (render
+                     (emacsvox-aural-concrete-plan-source-plan concrete)))
+               (list
+                :source source
+                :source-guard (emacsvox-aural-inspection-source-guard)
+                :facts
+                (copy-tree (emacsvox-aural-concrete-plan-facts concrete))
+                :context
+                (copy-tree (emacsvox-aural-concrete-plan-context concrete))
+                :render render
+                :concrete concrete))
+           (let* ((facts (emacsvox-aural-facts-at-point))
+                  (_
+                   (unless facts
+                     (user-error
+                      "No presentation at this item; use Recent Feedback to select what you heard")))
+                  (context (emacsvox-aural-context-at-point))
+                  (explanation (emacsvox-aural-explain facts context)))
+             (list
+              :source source
+              :source-guard (emacsvox-aural-inspection-source-guard)
+              :facts (copy-tree facts)
+              :context (copy-tree context)
+              :render
+              (emacsvox-aural-explanation-render-plan explanation)
+              :concrete
+              (emacsvox-aural-explanation-concrete-plan explanation)))))))))
 
 (defun emacsvox-aural-tools--voice-remap-selector (facts context)
   "Derive a stable object selector from FACTS and CONTEXT.
@@ -336,11 +340,11 @@ SOURCE-AVAILABLE is non-nil."
   "Prepare a scoped named-voice override for RECORD or presentation at point.
 
 When RECORD is non-nil, use that frozen presentation from recent feedback.
-Otherwise the latest presentation heard in the source buffer supplies exact
-facts and context.  The generated rule ignores transient events and
-occasions, but retains object kind, state, and provider identity.  It opens
+Otherwise inspect the current source item.  The generated rule ignores
+transient events and occasions, but retains object kind, state, and provider
+identity.  It opens
 unsaved in the advanced rule editor so the selector can be reviewed or
-  refined before `s' saves it."
+refined before `w' saves or applies it."
   (interactive)
   (let* ((input
           (if record
@@ -384,7 +388,9 @@ unsaved in the advanced rule editor so the selector can be reviewed or
            :match selector
            :render (list :content (list :voice voice)))))
     (require 'emacsvox-aural-editor)
-    (emacsvox-aural-editor-open-prefilled-rule scope rule source)
+    (let ((emacsvox-aural-editor-prepared-source-guard
+           (plist-get input :source-guard)))
+      (emacsvox-aural-editor-open-prefilled-rule scope rule source))
     (emacsvox-aural-tools--announce-result
      "Prepared %s voice override for %s; review it and press w to write"
      scope description)))
@@ -602,49 +608,51 @@ generated change opens unsaved in the advanced editor for review."
             (emacsvox-aural-tools--remap-rule-id
              scope selector (list 'earcon phase action-id))))
       (require 'emacsvox-aural-editor)
-      (if (eq operation 'restore)
-          (progn
-            (emacsvox-aural-editor-open-without-rule
-             scope rule-id source)
-            (emacsvox-aural-tools--announce-result
-             "Prepared removal of %s earcon override; press w to restore inherited behavior"
-             scope))
-        (let* ((phase-key (intern (format ":%s" phase)))
-               (anchor
-                (emacsvox-aural-concrete-action-anchor action))
-               (phase-data
-                (list :anchor anchor :remove (list action-id))))
-          (when (eq operation 'replace)
-            (let* ((answer
-                    (completing-read
-                     (format
-                      "Replacement for %s: "
-                      (emacsvox-aural-humanize current-cue))
-                     (emacsvox-aural-tools--earcon-remap-candidates)
-                     nil 'must-match nil nil
-                     (symbol-name current-cue)))
-                   (replacement (intern answer))
-                   (action-data
-                    (emacsvox-aural-tools--earcon-action-data
-                     action replacement)))
-              (setq
-               phase-data
-               (plist-put
-                phase-data
-                (emacsvox-aural-tools--earcon-remap-insertion choice)
-                (list action-data)))
-              (emacsvox-aural-tools--preview-replacement-earcon
-               action-data facts context)))
-          (let ((rule
-                 (list
-                  :id rule-id
-                  :match selector
-                  :render (list phase-key phase-data))))
-            (emacsvox-aural-editor-open-prefilled-rule
-             scope rule source)
-            (emacsvox-aural-tools--announce-result
-             "Prepared %s %s-earcon override for %s; review it and press w to write"
-             scope phase description)))))))
+      (let ((emacsvox-aural-editor-prepared-source-guard
+             (plist-get input :source-guard)))
+        (if (eq operation 'restore)
+            (progn
+              (emacsvox-aural-editor-open-without-rule
+               scope rule-id source)
+              (emacsvox-aural-tools--announce-result
+               "Prepared removal of %s earcon override; press w to restore inherited behavior"
+               scope))
+          (let* ((phase-key (intern (format ":%s" phase)))
+                 (anchor
+                  (emacsvox-aural-concrete-action-anchor action))
+                 (phase-data
+                  (list :anchor anchor :remove (list action-id))))
+            (when (eq operation 'replace)
+              (let* ((answer
+                      (completing-read
+                       (format
+                        "Replacement for %s: "
+                        (emacsvox-aural-humanize current-cue))
+                       (emacsvox-aural-tools--earcon-remap-candidates)
+                       nil 'must-match nil nil
+                       (symbol-name current-cue)))
+                     (replacement (intern answer))
+                     (action-data
+                      (emacsvox-aural-tools--earcon-action-data
+                       action replacement)))
+                (setq
+                 phase-data
+                 (plist-put
+                  phase-data
+                  (emacsvox-aural-tools--earcon-remap-insertion choice)
+                  (list action-data)))
+                (emacsvox-aural-tools--preview-replacement-earcon
+                 action-data facts context)))
+            (let ((rule
+                   (list
+                    :id rule-id
+                    :match selector
+                    :render (list phase-key phase-data))))
+              (emacsvox-aural-editor-open-prefilled-rule
+               scope rule source)
+              (emacsvox-aural-tools--announce-result
+               "Prepared %s %s-earcon override for %s; review it and press w to write"
+               scope phase description))))))))
 
 
 (defun emacsvox-reset-aural-overrides (scope)

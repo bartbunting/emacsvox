@@ -2170,8 +2170,18 @@ Stopping obsolete main speech is local to the main stream.  An explicit
 @cindex Aural Home
 
 Open Aural Home from an ordinary buffer with @kbd{C-e H}.  Emacsvox
-remembers that source buffer so contextual actions such as explanation and
-remapping can operate on the object you were using.
+remembers that source buffer and opening position so contextual actions such
+as explanation and remapping operate on the object you were using.  Moving
+the source cursor while Home is open does not change this target.  In Home@comma{}
+@kbd{C-c C-o} returns to it.  To choose a new target@comma{} invoke
+@kbd{C-e H} afresh from that item in an ordinary buffer.
+
+Returning through Home or Help preserves the selected row and unfinished
+edits.  Buffer rule editors retain separate drafts for each source buffer;
+reopening a modified editor resumes its draft.  Reopening the same voice in
+the tuner likewise preserves its working settings.  If a prepared remap's
+source item changes or disappears@comma{} Emacsvox asks you to prepare that change
+again before applying it.
 
 Aural Home is a spoken table.  Each row names an area@comma{} reports its current
 status@comma{} and describes its purpose.  The common controls are:
@@ -2240,7 +2250,8 @@ you whether to inspect an option@comma{} an override@comma{} a voice route@comma
 or the Voice Lock compatibility layer.
 @end enumerate
 
-When a retained presentation from that source is available@comma{} the explanation
+When a retained presentation still matches the source buffer@comma{} position@comma{} and
+unchanged source revision@comma{} the explanation
 describes the exact output that was queued@comma{} including its source location and
 resolved resources.  It does not reinterpret that old output using your latest
 settings.  Without an exact record@comma{} Emacsvox labels the explanation as a
@@ -5102,6 +5113,29 @@ or to a module-owned extension.
 
 Do not infer answers from the archived proposals.  Current behavior is defined
 by the Aural implementation@comma{} its generated reference@comma{} and accepted ADRs.
+
+@subsection Aural interface source ownership
+
+Ordinary-buffer entry captures a source buffer@comma{} a marker@comma{} and a guarded source
+line.  Child interfaces and Help inherit that context through the inspection
+and shared UI helpers.  Use @code{emacsvox-aural-inspection-call-in-source} for
+contextual commands so that moving the source cursor does not retarget an
+open interface.  Re-entry from an ordinary buffer deliberately captures a new
+target.  A dead or replaced source is reported rather than resolved through
+an unrelated recent-buffer fallback.
+
+Current-item lookup may reuse a frozen history record only when the captured
+source identity@comma{} position@comma{} and modification tick still match.  Source identity
+is a buffer-local@comma{} data-only token that distinguishes buffers sharing a name;
+history continues to retain no buffer objects or markers.  Explicit historical
+selection remains valid after the source changes and is explained from its
+frozen plan.  Prepared current-item rules carry a source guard checked before
+their saved or live rule layer changes.
+
+Find rule editors by scope and target identity@comma{} not by a formatted buffer
+name.  Buffer scopes belong to buffer objects@comma{} fragment scopes to fragment
+identifiers@comma{} and personal/session scopes each share one working editor.
+Reopening a dirty editor preserves its draft and source association.
 
 @subsection Notmuch contracts
 

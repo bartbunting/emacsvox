@@ -2033,43 +2033,52 @@ identity."
            (style
             (emacsvox-aural-voice-tuner--complete-style
              definition palette-id))
-           (buffer (get-buffer-create "*Aural Voice Tuner*")))
+           (buffer (get-buffer-create "*Aural Voice Tuner*"))
+           (resume
+            (with-current-buffer buffer
+              (and (derived-mode-p 'emacsvox-aural-voice-tuner-mode)
+                   emacsvox-aural-voice-tuner-dirty
+                   (eq palette-id emacsvox-aural-voice-tuner-palette)
+                   (eq voice emacsvox-aural-voice-tuner-voice)
+                   (equal selector emacsvox-aural-voice-tuner-route-selector)
+                   (equal language emacsvox-aural-voice-tuner-route-language)))))
       (when
-          (with-current-buffer buffer
-            (and
-             (derived-mode-p 'emacsvox-aural-voice-tuner-mode)
-             emacsvox-aural-voice-tuner-dirty))
+          (and (not resume) (with-current-buffer buffer
+                              (and
+                               (derived-mode-p 'emacsvox-aural-voice-tuner-mode)
+                               emacsvox-aural-voice-tuner-dirty)))
         (unless
             (yes-or-no-p
              "Discard the unsaved voice tuner before opening another voice? ")
           (user-error "Kept the existing unsaved voice tuner")))
       (with-current-buffer buffer
-        (emacsvox-aural-voice-tuner-mode)
-        (emacsvox-aural-inspection-attach-source inspection-source)
-        (setq
-         emacsvox-aural-voice-tuner-palette palette-id
-         emacsvox-aural-voice-tuner-voice voice
-         emacsvox-aural-voice-tuner-original-definition
-         (copy-tree definition)
-         emacsvox-aural-voice-tuner-initial-style (copy-tree style)
-         emacsvox-aural-voice-tuner-working-style (copy-tree style)
-         emacsvox-aural-voice-tuner-history nil
-         emacsvox-aural-voice-tuner-dirty nil
-         emacsvox-aural-voice-tuner-preview-text text
-         emacsvox-aural-voice-tuner-source-buffer source
-         emacsvox-aural-voice-tuner-route-selector (copy-tree selector)
-         emacsvox-aural-voice-tuner-route-language language
-         emacsvox-aural-voice-tuner-route-engine (copy-tree engine)
-         emacsvox-aural-voice-tuner-route-realized (copy-tree realized)
-         emacsvox-aural-voice-tuner-preview-result nil
-         emacsvox-aural-voice-tuner-compare-reference-next-p t
-         emacsvox-aural-voice-tuner-legacy-rate
-         (and
-          (emacsvox-aural-voice-style-p definition)
-          (numberp (plist-get definition :rate))
-          (not (zerop (plist-get definition :rate)))
-          (plist-get definition :rate)))
-        (emacsvox-aural-voice-tuner-refresh))
+        (unless resume
+          (emacsvox-aural-voice-tuner-mode)
+          (emacsvox-aural-inspection-attach-source inspection-source)
+          (setq
+           emacsvox-aural-voice-tuner-palette palette-id
+           emacsvox-aural-voice-tuner-voice voice
+           emacsvox-aural-voice-tuner-original-definition
+           (copy-tree definition)
+           emacsvox-aural-voice-tuner-initial-style (copy-tree style)
+           emacsvox-aural-voice-tuner-working-style (copy-tree style)
+           emacsvox-aural-voice-tuner-history nil
+           emacsvox-aural-voice-tuner-dirty nil
+           emacsvox-aural-voice-tuner-preview-text text
+           emacsvox-aural-voice-tuner-source-buffer source
+           emacsvox-aural-voice-tuner-route-selector (copy-tree selector)
+           emacsvox-aural-voice-tuner-route-language language
+           emacsvox-aural-voice-tuner-route-engine (copy-tree engine)
+           emacsvox-aural-voice-tuner-route-realized (copy-tree realized)
+           emacsvox-aural-voice-tuner-preview-result nil
+           emacsvox-aural-voice-tuner-compare-reference-next-p t
+           emacsvox-aural-voice-tuner-legacy-rate
+           (and
+            (emacsvox-aural-voice-style-p definition)
+            (numberp (plist-get definition :rate))
+            (not (zerop (plist-get definition :rate)))
+            (plist-get definition :rate)))
+          (emacsvox-aural-voice-tuner-refresh)))
       (emacsvox-aural-ui-pop-to-buffer buffer)
       (emacsvox-aural-voice-tuner-speak-current)
       buffer)))

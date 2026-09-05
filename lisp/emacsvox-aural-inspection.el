@@ -38,8 +38,16 @@
 (require 'emacsvox-aural-rules)
 (require 'emacsvox-aural-source)
 
+(declare-function emacsvox-speak-line "emacsvox-speak" (&optional arg))
+
 (defvar emacsvox-aural-inspection-last-source-buffer nil
   "Most recent ordinary buffer used as an aural inspection source.")
+
+(defvar emacsvox-aural-inspection-last-source-position nil
+  "Marker accompanying the most recently remembered inspection source.")
+
+(defvar emacsvox-aural-inspection-last-source-guard nil
+  "Snapshot accompanying the most recently remembered inspection source.")
 
 (defun emacsvox-aural-inspection-last-source-buffer ()
   "Return the most recent live ordinary inspection source.
@@ -87,11 +95,29 @@ to nil rather than an unrelated newer fallback."
 
 BUFFER defaults to the current buffer.  Interface buffers contribute their
 attached ordinary source rather than becoming sources themselves."
-  (let ((source
+  (let* ((origin
+          (if (and (emacsvox-aural-ui-interface-buffer-p)
+                   (eq buffer emacsvox-aural-ui-source-buffer))
+              (current-buffer)
+            (or buffer (current-buffer))))
+         (source
          (emacsvox-aural-inspection-source-buffer
-          (or buffer (current-buffer)))))
+          origin))
+         (position
+          (and source
+               (if (emacsvox-aural-ui-interface-buffer-p origin)
+                   (buffer-local-value
+                    'emacsvox-aural-ui-source-position origin)
+                 (with-current-buffer source (copy-marker (point) t))))))
     (when source
-      (setq emacsvox-aural-inspection-last-source-buffer source))
+      (setq emacsvox-aural-inspection-last-source-buffer source
+            emacsvox-aural-inspection-last-source-position
+            (and (markerp position) (copy-marker position t))
+            emacsvox-aural-inspection-last-source-guard
+            (if (emacsvox-aural-ui-interface-buffer-p origin)
+                (buffer-local-value 'emacsvox-aural-ui-source-guard origin)
+              (with-current-buffer source
+                (emacsvox-aural-inspection--capture-source-guard)))))
     source))
 
 (defun emacsvox-aural-inspection-attach-source (source)
@@ -106,7 +132,95 @@ from later adopting an unrelated global fallback."
           source
           (emacsvox-aural-inspection--resolve-source source nil))))
     (setq-local emacsvox-aural-ui-source-buffer source)
+    (setq-local emacsvox-aural-ui-source-guard
+                (and source
+                     (if (eq source emacsvox-aural-inspection-last-source-buffer)
+                         emacsvox-aural-inspection-last-source-guard
+                       (with-current-buffer source
+                         (emacsvox-aural-inspection--capture-source-guard)))))
+    (setq-local emacsvox-aural-ui-source-position
+                (when source
+                  (if (and (markerp emacsvox-aural-inspection-last-source-position)
+                           (eq source
+                               (marker-buffer
+                                emacsvox-aural-inspection-last-source-position)))
+                      (copy-marker emacsvox-aural-inspection-last-source-position t)
+                    (with-current-buffer source (copy-marker (point) t)))))
     source))
+
+(defun emacsvox-aural-inspection-call-in-source (function &rest arguments)
+  "Call FUNCTION with ARGUMENTS at this interface's captured source position.
+Preserve the source cursor.  Ordinary buffers use their current point."
+  (let* ((source (emacsvox-aural-inspection-source-buffer))
+         (position (and (emacsvox-aural-ui-interface-buffer-p)
+                        emacsvox-aural-ui-source-position)))
+    (unless source (user-error "No live source buffer is available"))
+    (when (emacsvox-aural-ui-interface-buffer-p)
+      (emacsvox-aural-inspection-check-source-guard emacsvox-aural-ui-source-guard))
+    (with-current-buffer source
+      (save-excursion
+        (save-restriction
+          (widen)
+          (when position
+            (unless (and (markerp position) (eq (marker-buffer position) source))
+              (user-error "The captured source location is no longer available"))
+            (goto-char position))
+          (apply function arguments))))))
+
+(defun emacsvox-aural-inspection-source-description ()
+  "Describe the captured source buffer and line, or its absence."
+  (if (emacsvox-aural-inspection-source-buffer)
+      (condition-case nil
+          (emacsvox-aural-inspection-call-in-source
+           (lambda () (format "%s, line %d" (buffer-name) (line-number-at-pos))))
+        (user-error "source item changed; reopen Home from the source"))
+    "source buffer unavailable"))
+
+(defun emacsvox-aural-inspection-return-to-source ()
+  "Return to the captured source item."
+  (interactive)
+  (let ((source (emacsvox-aural-inspection-source-buffer))
+        (position emacsvox-aural-ui-source-position))
+    (unless source (user-error "No live source buffer is available"))
+    (pop-to-buffer source)
+    (when (and (markerp position) (eq source (marker-buffer position)))
+      (when (or (< position (point-min)) (> position (point-max))) (widen))
+      (goto-char position))
+    (when (fboundp 'emacsvox-speak-line) (emacsvox-speak-line))))
+
+(defun emacsvox-aural-inspection--capture-source-guard ()
+  "Capture the current source line with bounds that detect deletion."
+  (let ((begin (line-beginning-position))
+        (end (min (point-max) (1+ (line-end-position)))))
+    (list (copy-marker (point) t) (buffer-substring begin end)
+          (copy-marker begin t) (copy-marker end))))
+
+(defun emacsvox-aural-inspection-source-guard ()
+  "Capture a guard for a prepared current-item change.
+The guard follows edits before the source line, but rejects changes to it."
+  (emacsvox-aural-inspection-call-in-source
+   #'emacsvox-aural-inspection--capture-source-guard))
+
+(defun emacsvox-aural-inspection-check-source-guard (guard)
+  "Reject a prepared change when GUARD's source item has disappeared or changed."
+  (when guard
+    (let* ((position (car guard))
+           (source (and (markerp position) (marker-buffer position))))
+      (unless (buffer-live-p source)
+        (user-error "The prepared change's source buffer has been killed"))
+      (with-current-buffer source
+        (save-excursion
+          (save-restriction
+            (widen)
+            (goto-char position)
+            (unless (and (= (nth 2 guard) (line-beginning-position))
+                         (= (nth 3 guard)
+                            (min (point-max) (1+ (line-end-position))))
+                         (<= (nth 2 guard) (nth 3 guard))
+                         (equal-including-properties
+                          (cadr guard)
+                          (buffer-substring (nth 2 guard) (nth 3 guard))))
+              (user-error "The source item changed; prepare this change again"))))))))
 
 (defun emacsvox-aural-inspection-point-position ()
   "Return a position at or immediately before point that can hold properties."

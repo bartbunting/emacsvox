@@ -90,6 +90,8 @@
          (emacsvox-aural--presentation-sequence 0)
          (emacsvox-aural-history-record-interface-presentations nil)
          (emacsvox-aural-inspection-last-source-buffer nil)
+         (emacsvox-aural-inspection-last-source-position nil)
+         (emacsvox-aural-inspection-last-source-guard nil)
          (emacsvox-aural-feature-fragments--fragment-preview-last-examples
           (make-hash-table :test #'eq))
          (emacsvox-aural-active-scheme 'default)
@@ -114,6 +116,154 @@
          (emacsvox-aural-queued-cue-balance-function nil))
      (emacsvox-aural--register-default-scheme)
      ,@body))
+
+(defmacro emacsvox-test--with-home-context (&rest body)
+  "Run BODY with an isolated source and Home, cleaning up created interfaces."
+  (declare (indent 0) (debug t))
+  `(emacsvox-test--with-aural-tools
+     (save-window-excursion
+       (let ((original-buffers (buffer-list))
+             (source (generate-new-buffer " *aural-home-source*")))
+         (unwind-protect
+             (cl-letf (((symbol-function 'tts-speak) #'ignore)
+                       ((symbol-function 'emacsvox-icon) #'ignore)
+                       ((symbol-function 'emacsvox-speak-help) #'ignore))
+               (with-current-buffer source
+                 (insert "first\nsecond\n")
+                 (goto-char (point-min)))
+               (emacsvox-aural source)
+               ,@body)
+           (dolist (buffer (buffer-list))
+             (unless (memq buffer original-buffers)
+               (kill-buffer buffer))))))))
+
+(ert-deftest emacsvox-aural-tools-home-preserves-target-and-help-return ()
+  "Help and Home keep the captured source position and selected row."
+  (emacsvox-test--with-home-context
+    (emacsvox-aural-home--goto 'semantics)
+    (with-current-buffer source (goto-char 7))
+    (emacsvox-aural-home-help)
+    (with-current-buffer (help-buffer)
+      (should emacsvox-aural-ui-help-return-mode)
+      (emacsvox-aural))
+    (with-current-buffer "*Emacsvox Aural*"
+      (should (eq (tabulated-list-get-id) 'semantics))
+      (should (eq (emacsvox-aural-home--source-buffer) source))
+      (should (= (emacsvox-aural-inspection-call-in-source #'point) 1))
+      (let (seen)
+        (cl-letf (((symbol-function 'emacsvox-aural-explain-presentation)
+                   (lambda () (interactive) (setq seen (point)))))
+          (emacsvox-aural-home-explain))
+        (should (= seen 1))))
+    (should (= (with-current-buffer source (point)) 7))))
+
+(ert-deftest emacsvox-aural-tools-home-marker-follows-insertion-before-item ()
+  "An insertion before the captured line moves its marker without changing target."
+  (emacsvox-test--with-home-context
+    (with-current-buffer source (goto-char 1) (insert "new\n"))
+    (should (= (emacsvox-aural-inspection-call-in-source #'point) 5))
+    (should (equal (emacsvox-aural-inspection-call-in-source
+                    (lambda () (buffer-substring (point) (line-end-position))))
+                   "first"))))
+
+(ert-deftest emacsvox-aural-tools-home-rejects-replaced-source-item ()
+  "A deleted source item must be adopted afresh even if the next row is identical."
+  (emacsvox-test--with-home-context
+    (with-current-buffer source
+      (erase-buffer) (insert "first\nfirst\n") (goto-char 1)
+      (emacsvox-aural))
+    (with-current-buffer source (delete-region 1 7))
+    (with-current-buffer "*Emacsvox Aural*"
+      (should-error (emacsvox-aural-home-explain) :type 'user-error))
+    (with-current-buffer source (emacsvox-aural))
+    (with-current-buffer "*Emacsvox Aural*"
+      (should (= (emacsvox-aural-inspection-call-in-source #'point) 1)))))
+
+(ert-deftest emacsvox-aural-tools-editor-reentry-keeps-buffer-owned-drafts ()
+  "Reopening and renaming sources preserve separate buffer-scoped drafts."
+  (emacsvox-test--with-home-context
+    (let* ((rule '(:id draft :match (:role heading)
+                   :render (:content (:voice bolden))))
+           (first (emacsvox-aural-editor-open-prefilled-rule 'buffer rule source))
+           (other (generate-new-buffer " *aural-other-source*")))
+      (emacsvox-aural)
+      (emacsvox-aural-home--goto 'buffer-rules)
+      (emacsvox-aural-home-activate)
+      (with-current-buffer first
+        (should emacsvox-aural-editor-dirty)
+        (should (equal emacsvox-aural-editor-rules (list rule))))
+      (let ((second (emacsvox-edit-aural-rules 'buffer nil other)))
+        (should-not (eq first second))
+        (with-current-buffer second
+          (should (eq emacsvox-aural-editor-target other))
+          (should-not emacsvox-aural-editor-rules)))
+      (with-current-buffer source (rename-buffer " *aural-renamed-source*" t))
+      (should (eq first (emacsvox-edit-aural-rules 'buffer nil source)))
+      (with-current-buffer first
+        (should emacsvox-aural-editor-dirty)
+        (should (equal emacsvox-aural-editor-rules (list rule)))))))
+
+(ert-deftest emacsvox-aural-tools-generated-change-rechecks-source-before-save ()
+  "A prepared current-item rule cannot be applied after its target changed."
+  (emacsvox-test--with-home-context
+    (let* ((emacsvox-aural-editor-prepared-source-guard
+            (emacsvox-aural-inspection-source-guard))
+           (editor (emacsvox-aural-editor-open-prefilled-rule
+                    'buffer '(:id guarded :match (:role heading)
+                              :render (:content (:voice bolden))) source)))
+      (with-current-buffer source (goto-char 2) (insert "changed"))
+      (with-current-buffer editor
+        (should-error (emacsvox-aural-editor-save) :type 'user-error)
+        (should emacsvox-aural-editor-dirty))
+      (should-not (buffer-local-value 'emacsvox-aural-buffer-rules source)))))
+
+(ert-deftest emacsvox-aural-tools-current-item-does-not-remap-earlier-row ()
+  "Current directory facts take precedence over a file heard at an earlier point."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (insert "file\ndirectory\n") (goto-char 1)
+      (let* ((context (emacsvox-aural-capture-context 'dired 'navigation))
+             (facts '(:role filesystem-entry :entry-kind file))
+             (render (emacsvox-aural-resolve facts context nil))
+             (plan (emacsvox-aural-compile-plan render facts context)))
+        (emacsvox-aural-record-presentation plan)
+        (goto-char 6)
+        (cl-letf (((symbol-function 'emacsvox-aural-facts-at-point)
+                   (lambda () '(:role filesystem-entry :entry-kind directory)))
+                  ((symbol-function 'emacsvox-aural-context-at-point)
+                   (lambda () context)))
+          (should (eq (plist-get
+                       (plist-get (emacsvox-aural-tools--remap-source-input) :facts)
+                       :entry-kind) 'directory)))))))
+
+(ert-deftest emacsvox-aural-tools-current-record-checks-buffer-identity-and-revision ()
+  "Old history remains available but cannot identify edited or replacement sources."
+  (emacsvox-test--with-aural-tools
+    (let ((source (generate-new-buffer " *aural-record-identity*"))
+          name record)
+      (unwind-protect
+          (progn
+            (with-current-buffer source
+              (setq name (buffer-name))
+              (insert "first") (goto-char 1)
+              (let* ((context (emacsvox-aural-capture-context nil 'navigation))
+                     (facts '(:role heading :content "first"))
+                     (plan (emacsvox-aural-compile-plan
+                            (emacsvox-aural-resolve facts context nil) facts context)))
+                (emacsvox-aural-record-presentation plan)
+                (setq record (emacsvox-aural-presentation-at-point))
+                (should record)
+                (insert "edit") (goto-char 1)
+                (should-not (emacsvox-aural-presentation-at-point))
+                (should (eq (emacsvox-aural-last-presentation source) record))))
+            (kill-buffer source)
+            (setq source (get-buffer-create name))
+            (with-current-buffer source
+              (insert "first") (goto-char 1)
+              (emacsvox-aural-capture-context)
+              (should-not (emacsvox-aural-presentation-at-point))
+              (should (eq (emacsvox-aural-last-presentation source) record))))
+        (when (buffer-live-p source) (kill-buffer source))))))
 
 (defun emacsvox-test--register-tools-scheme (id rules)
   "Register and use internal test scheme ID containing RULES."

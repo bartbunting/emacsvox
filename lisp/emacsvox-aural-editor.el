@@ -57,6 +57,12 @@
 (defvar-local emacsvox-aural-editor-dirty nil
   "Non-nil when working editor data differs from its saved source.")
 
+(defvar emacsvox-aural-editor-prepared-source-guard nil
+  "Dynamically supplied source guard for a generated current-item rule.")
+
+(defvar-local emacsvox-aural-editor-source-guard nil
+  "Source guard checked before applying this generated working change.")
+
 (defvaralias 'emacsvox-aural-editor--rule-index-property
   'emacsvox-aural-editor-rule-index-property)
 
@@ -1007,6 +1013,8 @@ LABEL identifies the speech or cue being edited."
 (defun emacsvox-aural-editor-save ()
   "Validate and atomically save or apply current working rules."
   (interactive)
+  (emacsvox-aural-inspection-check-source-guard
+   emacsvox-aural-editor-source-guard)
   (let* ((rules (emacsvox-aural-editor-normalized-rules))
          (report (emacsvox-aural-editor-validation-report)))
     (when
@@ -1023,7 +1031,8 @@ LABEL identifies the speech or cue being edited."
       (_ (emacsvox-aural-editor--commit-layer rules)))
     (setq
      emacsvox-aural-editor-rules (copy-tree rules)
-     emacsvox-aural-editor-dirty nil)
+     emacsvox-aural-editor-dirty nil
+     emacsvox-aural-editor-source-guard nil)
     (force-mode-line-update)
     (emacsvox-aural-editor-refresh)
     (message "Saved %s" (emacsvox-aural-editor--scope-label))))
@@ -1170,12 +1179,22 @@ LABEL identifies the speech or cue being edited."
      emacsvox-aural-feature-fragment-registry)
     (sort ids #'string-lessp)))
 
+(defun emacsvox-aural-editor--find-buffer (scope target)
+  "Find an editor for SCOPE and TARGET, independently of its display name."
+  (cl-find-if
+   (lambda (buffer)
+     (with-current-buffer buffer
+       (and (derived-mode-p 'emacsvox-aural-scheme-editor-mode)
+            (eq scope emacsvox-aural-editor-scope)
+            (or (memq scope '(personal session))
+                (eq target emacsvox-aural-editor-target)))))
+   (buffer-list)))
+
 (defun emacsvox-aural-editor--open-remap-target (scope source-buffer)
   "Open and return a clean remap editor for SCOPE and SOURCE-BUFFER."
   (unless (memq scope '(personal session buffer))
     (user-error "Point remapping cannot target a %S editor" scope))
-  (let* ((name (format "*Aural Editor: %s*" scope))
-         (existing (get-buffer name)))
+  (let ((existing (emacsvox-aural-editor--find-buffer scope source-buffer)))
     (when
         (and
          existing
@@ -1183,8 +1202,7 @@ LABEL identifies the speech or cue being edited."
       (user-error
        "Save or quit the modified %s editor before preparing another remap"
        scope))
-    (emacsvox-edit-aural-rules scope nil source-buffer)
-    (get-buffer name)))
+    (emacsvox-edit-aural-rules scope nil source-buffer)))
 
 (defun emacsvox-aural-editor-open-prefilled-rule
     (scope rule source-buffer)
@@ -1200,6 +1218,8 @@ discard changes from an already open dirty editor."
     (unless buffer
       (error "Aural %s editor did not open" scope))
     (with-current-buffer buffer
+      (setq emacsvox-aural-editor-source-guard
+            emacsvox-aural-editor-prepared-source-guard)
       (let ((index
              (cl-position
               id emacsvox-aural-editor-rules
@@ -1239,6 +1259,8 @@ This restores inherited behavior after the edited scope is saved."
     (unless buffer
       (error "Aural %s editor did not open" scope))
     (with-current-buffer buffer
+      (setq emacsvox-aural-editor-source-guard
+            emacsvox-aural-editor-prepared-source-guard)
       (let ((index
              (cl-position
               rule-id emacsvox-aural-editor-rules
@@ -1276,7 +1298,8 @@ This restores inherited behavior after the edited scope is saved."
 
 SCOPE is `personal', `session', `buffer', or `fragment'.  FRAGMENT identifies
 a personal Presentation Option.  SOURCE-BUFFER defaults to
-the ordinary source associated with the current buffer for buffer scope."
+the ordinary source associated with the current buffer for buffer scope.
+Return the editor buffer.  Reopening a modified editor preserves its draft."
   (interactive
    (list
     (intern
@@ -1327,22 +1350,30 @@ the ordinary source associated with the current buffer for buffer scope."
          (name
           (format
            "*Aural Editor: %s*"
-           (if (eq scope 'fragment) fragment scope)))
-         (buffer (get-buffer-create name)))
+           (pcase scope
+             ('fragment fragment)
+             ('buffer (format "buffer %s" (buffer-name source-buffer)))
+             (_ scope))))
+         (buffer
+          (or (emacsvox-aural-editor--find-buffer
+               scope (if (eq scope 'fragment) fragment source-buffer))
+              (generate-new-buffer name))))
     (with-current-buffer buffer
-      (emacsvox-aural-scheme-editor-mode)
-      (emacsvox-aural-inspection-attach-source source-buffer)
-      (setq
-       emacsvox-aural-editor-scope scope
-       emacsvox-aural-editor-target
-       (if (eq scope 'fragment) fragment source-buffer)
-       emacsvox-aural-editor-scheme-data
-       (and entry
-            (copy-tree (emacsvox-aural-feature-fragment-entry-data entry)))
-       emacsvox-aural-editor-rules (copy-tree rules)
-       emacsvox-aural-editor-dirty nil)
-      (emacsvox-aural-editor-refresh))
-    (emacsvox-aural-ui-pop-to-buffer buffer)))
+      (unless emacsvox-aural-editor-dirty
+        (emacsvox-aural-scheme-editor-mode)
+        (emacsvox-aural-inspection-attach-source source-buffer)
+        (setq
+         emacsvox-aural-editor-scope scope
+         emacsvox-aural-editor-target
+         (if (eq scope 'fragment) fragment source-buffer)
+         emacsvox-aural-editor-scheme-data
+         (and entry
+              (copy-tree (emacsvox-aural-feature-fragment-entry-data entry)))
+         emacsvox-aural-editor-rules (copy-tree rules)
+         emacsvox-aural-editor-dirty nil)
+        (emacsvox-aural-editor-refresh)))
+    (emacsvox-aural-ui-pop-to-buffer buffer)
+    buffer))
 
 (defun emacsvox-aural-editor-open-rule
     (scope rule-id &optional source-buffer)
@@ -1352,12 +1383,7 @@ SCOPE must be `personal', `session', or `buffer'.  SOURCE-BUFFER identifies
 the ordinary source whose buffer-local rules should be edited."
   (unless (memq scope '(personal session buffer))
     (user-error "Not an override scope: %S" scope))
-  (emacsvox-edit-aural-rules scope nil source-buffer)
-  (let* ((name (format "*Aural Editor: %s*" scope))
-         (buffer
-          (or
-           (get-buffer name)
-           (error "Aural editor did not create %s" name))))
+  (let ((buffer (emacsvox-edit-aural-rules scope nil source-buffer)))
     (with-current-buffer buffer
       (let ((index
              (cl-position

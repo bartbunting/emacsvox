@@ -141,7 +141,7 @@
 (defun emacsvox-aural-home--entries ()
   "Return current rows for the aural home buffer."
   (let* ((source (emacsvox-aural-home--source-buffer))
-         (source-name (if source (buffer-name source) "no source buffer"))
+         (source-name (emacsvox-aural-inspection-source-description))
          (buffer-rules
           (if source
               (length
@@ -306,12 +306,8 @@
   (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-home--call-in-source (command)
-  "Call interactive COMMAND in the remembered source buffer."
-  (let ((source (emacsvox-aural-home--source-buffer)))
-    (unless source
-      (user-error "No live source buffer is available"))
-    (with-current-buffer source
-      (call-interactively command))))
+  "Call interactive COMMAND at the remembered source item."
+  (emacsvox-aural-inspection-call-in-source #'call-interactively command))
 
 (defun emacsvox-aural-home-explain ()
   "Explain presentation at point in the remembered source buffer."
@@ -412,7 +408,7 @@
 (defun emacsvox-aural-home-help ()
   "Display and speak aural home commands and discovery guidance."
   (interactive)
-  (with-help-window (help-buffer)
+  (emacsvox-aural-ui-with-help-window
     (princ
      (concat
       "Emacsvox Aural Home\n\n"
@@ -435,12 +431,15 @@
       "I Omnivox engine modules\n"
       "D aural doctor\n"
       "g refresh\n"
+      "C-c C-o return to the captured source item\n"
       "? display and speak this help\n"
       "C-e H opens this home from any ordinary buffer\n"
       "C-e E explains presentation from any ordinary buffer\n"
       "To remap an item, move to it, open C-e H, then press r or R.\n"
       "The generated override opens unwritten; review it and press w to write.\n"
       "h returns here from any aural manager or editor\n"
+      "Reopening Home or an editor keeps its selection and unfinished edits.\n"
+      "If the source item changes, reopen C-e H from its new location.\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -477,6 +476,7 @@
        ("W" . emacsvox-aural-home-voice-workbench)
        ("I" . emacsvox-aural-home-engine-modules)
        ("D" . emacsvox-aural-doctor)
+       ("C-c C-o" . emacsvox-aural-inspection-return-to-source)
        ("?" . emacsvox-aural-home-help)))
   (define-key
    emacsvox-aural-home-mode-map
@@ -492,9 +492,10 @@
            (or source-buffer (current-buffer))))
          (buffer (get-buffer-create "*Emacsvox Aural*")))
     (with-current-buffer buffer
-      (emacsvox-aural-home-mode)
+      (unless (derived-mode-p 'emacsvox-aural-home-mode)
+        (emacsvox-aural-home-mode))
       (emacsvox-aural-inspection-attach-source source)
-      (emacsvox-aural-home-refresh 'explain))
+      (emacsvox-aural-home-refresh))
     (emacsvox-aural-ui-pop-to-buffer buffer)
     (when (called-interactively-p 'interactive)
       (emacsvox-aural-home-speak-current))

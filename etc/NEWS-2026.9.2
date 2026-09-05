@@ -1,0 +1,119 @@
+#    -*- mode: org -*-
+Programming is the art of telling another human being what one wants
+the computer to do.   [[https://www.azquotes.com/quote/964459][(DEK)]]
+
+Emacsvox News -- History Of User-Visible Changes
+
+Maintained by Emacsvox Contributors.
+
+* Emacsvox 2026.9.2 --- Current User-Visible Changes
+
+This patch release requires Emacs 31 or later and Omnivox 1.7.0 or newer.  The
+guided WSL2 installer pins the matching verified Omnivox 1.7.1 Windows x64 or
+ARM64 archive.
+
+Released notes are preserved in [[file:NEWS-2026.9.1][NEWS for Emacsvox 2026.9.1]].
+
+** First-run engine selection and WSL setup
+
+~C-e d e~ now works before a machine routing profile has been saved.  It uses
+the live Omnivox policy as a transient session baseline and writes no file;
+~C-u C-e d e~ explicitly saves the baseline with the selected engine order.
+
+The WSL2 installation guide now gives a concrete Linux-filesystem checkout
+location, an update procedure that leaves the current speaking session running
+until its replacement is ready, manual rebuild steps, separate Emacsvox and
+Omnivox version checks, and immediate controls for slowing general speech and
+echoed characters.  The guided installer now fully rebuilds byte-code so an
+update cannot retain generated Lisp from the previous source revision.
+
+** Omnivox 1.7.1 integration
+
+The supported speech-server baseline remains Omnivox 1.7.0.  The guided WSL2
+installer, downloadable engine modules, and clean source-built Windows runtime
+now pin the published Omnivox 1.7.1 artifacts and matching source commit.  That
+release calibrates TGSpeechBox rate control to the Eloquence scale and reports
+exact requested text anchors, enabling Emacsvox capitalization and timed
+presentation while the TGSpeechBox module remains experimental.
+
+The new ~M-x emacsvox-omnivox-manage-components~ command, also available as
+~I~ from Aural Home, presents a spoken list of built-in, downloadable, and
+user-runtime speech engines.  On WSL2 it can checksum-verify, stage, validate,
+and install the version-matched Flite, RuTTS, Piper, or experimental
+TGSpeechBox companions per user.  It never downloads proprietary Eloquence,
+DECtalk, or RHVoice runtimes or chooses a Piper voice model.
+
+Engine checks now select an accessible result buffer, announce the number of
+voices found, and report Omnivox's actual diagnostic when a check fails.
+Manager-installed modules can be removed with ~u~ after explicit confirmation;
+core engines, runtime bridges, and the verified download cache are preserved.
+Removal now stops and restores the active Omnivox streams around deletion, so
+Windows does not retain a lock on the companion executable.  A narrowly
+recognized helper-only residue from an interrupted removal can be removed on
+the next attempt, and Emacs process-status text no longer hides the useful
+diagnostic.
+
+** Org link transitions
+
+Opening an Org link into another buffer now plays one opening cue while leaving
+the destination integration responsible for speaking its content.
+
+** Agent Shell response speech
+
+At the default response speech level, one completed turn now produces one
+bounded automatic presentation instead of queueing every rendered answer
+fragment separately.  Automatic response speech shares navigation's
+replacement domain, so ordinary Up and Down movement promptly interrupts it.
+Full speech level retains its detailed per-block ordering, and explicit
+~C-c r~ reading still speaks the complete response.
+
+** Notmuch search navigation
+
+Speaking each search-result row no longer copies the complete Omnivox engine
+and voice inventory.  This substantially reduces allocation while navigating
+large Notmuch result buffers and avoids the associated long garbage-collection
+pauses.  Foreground search completion now keeps its view summary and selected
+message fields in separate semantic objects, avoiding an invalid presentation
+rule error when the first result is announced.
+
+Quitting a Notmuch view with ~q~ now interrupts message or search-result speech
+before playing the close cue.
+
+** Vertico history
+
+Recalling minibuffer history while Vertico is active now speaks the recalled
+entry once instead of repeating it during Vertico's following display update.
+
+** Terminal completion
+
+EAT no longer mistakes unchanged terminal history above the prompt for
+completion candidates when an inline Bash completion redraw arrives in
+multiple chunks.
+
+** Voice tuning
+
+Opening Voice Workbench without a saved routing profile now reuses its initial
+voice-inventory snapshot instead of copying the complete inventory twice.
+
+The voice tuner now names neutral post-synthesis values such as /unchanged/ and
+/disabled/.  Gain, pan, and filter endpoints are translated to their exact
+Omnivox wire values instead of treating every dimension as the same linear
+zero-to-nine scale.
+
+Portable voice styles can now request Omnivox chorus.  The default voice
+palette also includes a ~telephone~ logical voice that combines the existing
+high-pass and low-pass filters for a narrow-band sound without changing speech
+duration or markers.
+
+Omnivox average-pitch differences are gentler by default.  Customize
+=omnivox-average-pitch-contrast= to =1.0= for the historical curve, =0= for
+neutral average pitch, or a value through =2.0= for stronger contrast.
+
+** Image and PDF OCR
+
+The Emacsvox OCR front end now uses PaddleOCR PP-StructureV3 by default.  It
+accepts images and PDFs, preserves reading order, emits table-aware Markdown,
+and keeps engine diagnostics separate from recognized text.  The user manual
+includes the tested x86-64 WSL2 installation for =paddleocr[all]=.  Language,
+device, table, formula, orientation, unwarping, acceleration, and Python
+selection are available as typed Emacs customization options.

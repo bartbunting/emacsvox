@@ -137,6 +137,32 @@ explicit architecture decision before implementation:
 Do not infer answers from the archived proposals.  Current behavior is defined
 by the Aural implementation, its generated reference, and accepted ADRs.
 
+** Aural interface source ownership
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Ordinary-buffer entry captures a source buffer, a marker, and a guarded source
+line.  Child interfaces and Help inherit that context through the inspection
+and shared UI helpers.  Use ~emacsvox-aural-inspection-call-in-source~ for
+contextual commands so that moving the source cursor does not retarget an
+open interface.  Re-entry from an ordinary buffer deliberately captures a new
+target.  A dead or replaced source is reported rather than resolved through
+an unrelated recent-buffer fallback.
+
+Current-item lookup may reuse a frozen history record only when the captured
+source identity, position, and modification tick still match.  Source identity
+is a buffer-local, data-only token that distinguishes buffers sharing a name;
+history continues to retain no buffer objects or markers.  Explicit historical
+selection remains valid after the source changes and is explained from its
+frozen plan.  Prepared current-item rules carry a source guard checked before
+their saved or live rule layer changes.
+
+Find rule editors by scope and target identity, not by a formatted buffer
+name.  Buffer scopes belong to buffer objects, fragment scopes to fragment
+identifiers, and personal/session scopes each share one working editor.
+Reopening a dirty editor preserves its draft and source association.
+
 ** Notmuch contracts
 :PROPERTIES:
 :TEXINFO_NODE: no

@@ -122,6 +122,7 @@ endpoints.  The other dimensions use the ordinary linear mapping."
     :legacy-face-source :legacy-faces :legacy-face-provenance
     :legacy-personality
     :legacy-source :source-buffer :source-buffer-name :source-position
+    :source-buffer-id :source-modification-tick
     :buffer-rules
     :history-recording-inhibited :presentation-transaction-id)
   "Keys accepted in a presentation context plist.")

@@ -56,6 +56,12 @@
 (defvar-local emacsvox-aural-ui-source-buffer nil
   "Ordinary buffer from which the current aural interface was opened.")
 
+(defvar-local emacsvox-aural-ui-source-position nil
+  "Marker for the source item captured on entry to this interface.")
+
+(defvar-local emacsvox-aural-ui-source-guard nil
+  "Snapshot detecting replacement of the captured source item.")
+
 (defvar-local emacsvox-aural-ui-list-name "list"
   "Spoken name of the current tabulated interface.")
 
@@ -140,7 +146,10 @@ window, and point even when a reusable Help window has stale restoration
 metadata."
   (let ((origin-buffer (current-buffer))
         (origin-window (selected-window))
-        (origin-position (copy-marker (point))))
+        (origin-position (copy-marker (point)))
+        (source emacsvox-aural-ui-source-buffer)
+        (source-position emacsvox-aural-ui-source-position)
+        (source-guard emacsvox-aural-ui-source-guard))
     (with-help-window (help-buffer)
       (funcall producer))
     (when-let* ((buffer (get-buffer (help-buffer))))
@@ -150,6 +159,12 @@ metadata."
         (setq-local emacsvox-aural-ui-help-origin-buffer origin-buffer)
         (setq-local emacsvox-aural-ui-help-origin-window origin-window)
         (setq-local emacsvox-aural-ui-help-origin-position origin-position)
+        (emacsvox-aural-ui-register-interface source)
+        (setq-local emacsvox-aural-ui-source-buffer source)
+        (setq-local emacsvox-aural-ui-source-position
+                    (and (markerp source-position)
+                         (copy-marker source-position t)))
+        (setq-local emacsvox-aural-ui-source-guard source-guard)
         (emacsvox-aural-ui-help-return-mode 1)))
     (get-buffer (help-buffer))))
 

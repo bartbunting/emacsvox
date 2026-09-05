@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1480 commands and 205 options.
+   This chapter documents a total of 1481 commands and 205 options.
 
 * Menu:
 
@@ -2018,6 +2018,7 @@ plain text and predictable for speech access.
      SCOPE is ‘personal’, ‘session’, ‘buffer’, or ‘fragment’.  FRAGMENT identifies
      a personal Presentation Option.  SOURCE-BUFFER defaults to
      the ordinary source associated with the current buffer for buffer scope.
+     Return the editor buffer.  Reopening a modified editor preserves its draft.
 
      (fn SCOPE &optional FRAGMENT SOURCE-BUFFER)
 
@@ -2187,6 +2188,7 @@ plain text and predictable for speech access.
      SCOPE is ‘personal’, ‘session’, ‘buffer’, or ‘fragment’.  FRAGMENT identifies
      a personal Presentation Option.  SOURCE-BUFFER defaults to
      the ordinary source associated with the current buffer for buffer scope.
+     Return the editor buffer.  Reopening a modified editor preserves its draft.
 
      (fn SCOPE &optional FRAGMENT SOURCE-BUFFER)
 
@@ -2748,6 +2750,8 @@ diagnosis, and contextual remapping.
      r		emacsvox-aural-home-remap-voice
      x		emacsvox-aural-home-explain
 
+     C-c C-o		emacsvox-aural-inspection-return-to-source
+
 2.25.1.7 emacsvox-aural-home-next
 .................................
 
@@ -2858,6 +2862,16 @@ Source-buffer ownership and at-point context capture shared by aural
 managers, editors, explanations, and previews.  Each interface keeps its
 own ordinary source buffer; the most recent source remains only as a
 fallback for interfaces opened without an explicit association.
+
+2.26.1 Emacsvox-Aural-Inspection Commands
+-----------------------------------------
+
+2.26.1.1 emacsvox-aural-inspection-return-to-source
+...................................................
+
+ -- Command: emacsvox-aural-inspection-return-to-source
+
+     Return to the captured source item.
 
 
 File: emacsvox-reference.info,  Node: emacsvox-aural-overrides,  Next: emacsvox-aural-planner,  Prev: emacsvox-aural-inspection,  Up: Emacsvox Commands And Options
@@ -4065,11 +4079,11 @@ Contextual voice and earcon remapping plus override reset commands.
      Prepare a scoped named-voice override for RECORD or presentation at point.
 
      When RECORD is non-nil, use that frozen presentation from recent feedback.
-     Otherwise the latest presentation heard in the source buffer supplies exact
-     facts and context.  The generated rule ignores transient events and
-     occasions, but retains object kind, state, and provider identity.  It opens
+     Otherwise inspect the current source item.  The generated rule ignores
+     transient events and occasions, but retains object kind, state, and provider
+     identity.  It opens
      unsaved in the advanced rule editor so the selector can be reviewed or
-       refined before ‘s’ saves it.
+     refined before ‘w’ saves or applies it.
 
      (fn &optional RECORD)
 

@@ -155,28 +155,16 @@ plan at point always supplies its actual occasion as the initial default."
 
 (defun emacsvox-aural-explanation--interactive-explanation-input
     (choose-occasion)
-  "Return exact queued input, or simulated input when CHOOSE-OCCASION."
-  (let* ((interface
-          (emacsvox-aural-ui-interface-buffer-p))
-         (source
-          (emacsvox-aural-inspection-source-buffer))
-         (record
-          (and
-           (not choose-occasion)
-           source
-           (emacsvox-aural-last-presentation source))))
-    (if record
-        (list nil nil record)
-      (when (and interface (null source))
-        (user-error "No live source buffer is available"))
-      (let ((input
-             (if (eq source (current-buffer))
-                 (emacsvox-aural-explanation--read-explanation-input
-                  choose-occasion)
-               (with-current-buffer source
-                 (emacsvox-aural-explanation--read-explanation-input
-                  choose-occasion)))))
-        (append input (list nil))))))
+  "Inspect the captured source item, simulating when CHOOSE-OCCASION.
+Use an exact queued record only if it still belongs to that source item."
+  (emacsvox-aural-inspection-call-in-source
+   (lambda ()
+     (if-let* ((record (and (not choose-occasion)
+                           (emacsvox-aural-presentation-at-point))))
+         (list nil nil record)
+       (append (emacsvox-aural-explanation--read-explanation-input
+                choose-occasion)
+               (list nil))))))
 
 (defun emacsvox-aural-explanation--suppressed-action-ids (rules plan)
   "Return action identifiers introduced by RULES but absent from PLAN."

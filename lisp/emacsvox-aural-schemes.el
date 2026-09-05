@@ -888,6 +888,9 @@ context rather than capturing one at the source boundary."
       (cl-incf emacsvox-aural--current-rules-cache-hits)
       cached)))
 
+(defvar-local emacsvox-aural-source-buffer-id nil
+  "Data-only identity distinguishing this source from buffers reusing its name.")
+
 (defun emacsvox-aural-current-context
     (module occasion &optional legacy-personality legacy-source)
   "Capture current MODULE, OCCASION, and legacy presentation hints."
@@ -907,6 +910,10 @@ context rather than capturing one at the source boundary."
    :buffer-rules (copy-tree emacsvox-aural-buffer-rules)
    :source-buffer (current-buffer)
    :source-buffer-name (buffer-name)
+   :source-buffer-id
+   (or emacsvox-aural-source-buffer-id
+       (setq emacsvox-aural-source-buffer-id (make-symbol "aural-source")))
+   :source-modification-tick (buffer-modified-tick)
    :source-position (point)))
 
 (defun emacsvox-aural--apply-legacy-content-style (plan context)

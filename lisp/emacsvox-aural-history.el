@@ -37,6 +37,7 @@
 (require 'emacsvox-aural-rules)
 
 (defvar emacsvox-aural-submission-delivery-policy)
+(defvar emacsvox-aural-source-buffer-id)
 
 (cl-defstruct
     (emacsvox-aural-presentation-record
@@ -494,6 +495,21 @@ from any source."
        name emacsvox-aural-presentation-history
        :key #'emacsvox-aural-presentation-record-source-buffer-name
        :test #'equal))))
+
+(defun emacsvox-aural-presentation-at-point ()
+  "Return the latest record only when it still belongs to the current item.
+Require source identity, position, and modification tick.  Older records
+remain available through Recent Feedback, including after source edits."
+  (when-let* ((record (emacsvox-aural-last-presentation (current-buffer)))
+              (context (emacsvox-aural-concrete-plan-context
+                        (emacsvox-aural-presentation-record-plan record)))
+              (identity (plist-get context :source-buffer-id)))
+    (when (and (boundp 'emacsvox-aural-source-buffer-id)
+               (eq identity emacsvox-aural-source-buffer-id)
+               (equal (point) (emacsvox-aural-presentation-record-source-position record))
+               (equal (buffer-modified-tick)
+                      (plist-get context :source-modification-tick)))
+      record)))
 
 (provide 'emacsvox-aural-history)
 
