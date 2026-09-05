@@ -57,6 +57,10 @@
       "bin/emacsvox-wsl-install" emacsvox-wsl-install-tests--root)
      (expand-file-name "bin/emacsvox-wsl-install" root))
     (set-file-modes (expand-file-name "bin/emacsvox-wsl-install" root) #o700)
+    (make-directory (expand-file-name "utils" root) t)
+    (copy-file
+     (expand-file-name "utils/emacsvox-install-common.sh" emacsvox-wsl-install-tests--root)
+     (expand-file-name "utils/emacsvox-install-common.sh" root))
     (emacsvox-wsl-install-tests--write-manifest
      root (or omnivox-sha256 (make-string 64 ?b)))
     root))
@@ -101,7 +105,7 @@
 
 (defun emacsvox-wsl-install-tests--setenv (environment name value)
   "Return ENVIRONMENT with NAME set to VALUE."
-  (let ((process-environment environment))
+  (let ((process-environment (copy-sequence environment)))
     (setenv name value)
     process-environment))
 

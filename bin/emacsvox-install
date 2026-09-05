@@ -1,0 +1,167 @@
+#!/bin/sh
+# Copyright (C) 2026 Emacsvox contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+# shellcheck source-path=SCRIPTDIR
+
+set -eu
+program_name=emacsvox-install
+mode=install
+role=
+
+fail() { printf '%s: %s\n' "$program_name" "$1" >&2; exit "${2:-1}"; }
+note() { printf '\n%s\n' "$1"; }
+usage()
+{
+    cat <<'EOF'
+Usage: bin/emacsvox-install --role remote-emacs [--check]
+
+Prepare Linux Emacsvox for speech on a remote workstation. No local Omnivox,
+audio device, GUI, or Windows interoperability is required. An existing Emacs
+31+ is preserved; Debian/Ubuntu can build the pinned terminal-only Emacs.
+
+  --role remote-emacs  install Emacs and compile this Emacsvox checkout
+  --check              report prerequisites and paths without changing files
+  -h, --help           show help
+
+Only per-user files are installed. Missing system packages are reported for
+you to install; sudo and shell startup files are never invoked or modified.
+The workstation service, private token, and SSH tunnel can be prepared later.
+For a local WSL desktop, continue using bin/emacsvox-wsl-install.
+EOF
+}
+while [ "$#" -gt 0 ]; do
+    case $1 in
+        --role)
+            [ "$#" -ge 2 ] || fail '--role needs a value' 2
+            role=$2; shift 2 ;;
+        --check) mode=check; shift ;;
+        -h|--help) usage; exit 0 ;;
+        *) fail "unknown option: $1" 2 ;;
+    esac
+done
+[ "$role" = remote-emacs ] || fail 'choose --role remote-emacs; other roles are not implemented here yet' 2
+[ "$(uname -s)" = Linux ] || fail 'remote installation currently supports Linux (including WSL)'
+
+script_directory=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+emacsvox_root=$(CDPATH='' cd -- "$script_directory/.." && pwd)
+# Keep a single Emacs pin during the platform migration.
+# shellcheck source=../etc/wsl-install.conf
+. "$emacsvox_root/etc/wsl-install.conf"
+# shellcheck source=../utils/emacsvox-install-common.sh
+. "$emacsvox_root/utils/emacsvox-install-common.sh"
+[ "${EMACSVOX_WSL_INSTALL_SCHEMA-}" = 1 ] || fail 'unsupported installation manifest schema'
+validate_hash "$EMACSVOX_WSL_EMACS_SHA256"
+
+cache_home=${XDG_CACHE_HOME:-"$HOME/.cache"}
+download_directory=$cache_home/emacsvox/downloads
+emacs_build_kind=terminal
+emacs_install_directory=$HOME/.local/opt/emacs-$EMACSVOX_WSL_EMACS_VERSION-terminal
+resolve_emacs
+if [ "${EMACS+x}" = x ] && [ -z "$EMACS" ]; then
+    fail 'EMACS is explicitly empty; select Emacs 31+ or unset it'
+fi
+if [ "$emacs_selection" = 'EMACS environment variable' ] && [ -r "$emacsvox_root/local.mk" ]; then
+    configured_emacs=$(
+        unset EMACS
+        resolve_emacs
+        if [ "$emacs_selection" = local.mk ]; then printf '%s' "$emacs_candidate"; fi
+    )
+    if [ -n "$configured_emacs" ] && [ "$configured_emacs" != "$emacs_candidate" ]; then
+        fail 'EMACS and local.mk select different executables; align those explicit settings before installing'
+    fi
+fi
+if ! $emacs_supported &&
+   { [ "$emacs_selection" = 'EMACS environment variable' ] || [ "$emacs_selection" = local.mk ]; }; then
+    fail "$emacs_selection selects unsupported Emacs ${selected_emacs_version:-unknown}; update that explicit setting before continuing"
+fi
+if ! $emacs_supported && [ -x "$emacs_install_directory/bin/emacs" ]; then
+    selected_emacs_version=$(emacs_version "$emacs_install_directory/bin/emacs" || :)
+    [ "$selected_emacs_version" = "$EMACSVOX_WSL_EMACS_VERSION" ] || fail 'the existing terminal Emacs has an unexpected version'
+    emacs_candidate=$emacs_install_directory/bin/emacs
+    emacs_selection='existing terminal installation'
+    emacs_supported=true
+fi
+if ! $emacs_supported && { [ -e "$emacs_install_directory" ] || [ -L "$emacs_install_directory" ]; }; then
+    fail "existing terminal Emacs installation is incomplete: $emacs_install_directory"
+fi
+
+note 'Remote Emacs installation plan'
+printf '  Platform: Linux (%s)\n  Role: remote-emacs\n  Checkout: %s\n' "$(uname -m)" "$emacsvox_root"
+if $emacs_supported; then
+    printf '  Emacs: %s (%s, selected by %s)\n' "$emacs_candidate" "$selected_emacs_version" "$emacs_selection"
+else
+    printf '  Emacs: build verified GNU Emacs %s (terminal-only) into %s\n' "$EMACSVOX_WSL_EMACS_VERSION" "$emacs_install_directory"
+fi
+printf '  Local speech components: none\n  Workstation connection: configured and checked separately\n'
+
+missing_packages=
+if $emacs_supported; then
+    command -v make >/dev/null 2>&1 || fail 'install GNU make before compiling Emacsvox' 2
+else
+    os_release=${EMACSVOX_INSTALL_OS_RELEASE_FILE:-/etc/os-release}
+    [ -r "$os_release" ] || fail 'automatic Emacs acquisition requires Debian/Ubuntu; otherwise select an existing Emacs 31+'
+    distribution=$(
+        # Trusted operating-system identification file (overridable in tests).
+        # shellcheck disable=SC1090
+        . "$os_release"
+        printf '%s %s' "${ID-}" "${ID_LIKE-}"
+    )
+    case " $distribution " in
+        *' debian '*|*' ubuntu '*) ;;
+        *) fail 'automatic Emacs acquisition requires Debian/Ubuntu; otherwise select an existing Emacs 31+' ;;
+    esac
+    command -v dpkg-query >/dev/null 2>&1 || fail 'Debian package inspection requires dpkg-query'
+    for package in curl make coreutils tar xz-utils build-essential pkg-config texinfo \
+        libgnutls28-dev libtree-sitter-dev libncurses-dev libxml2-dev libsqlite3-dev libacl1-dev libgmp-dev; do
+        if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -qx 'install ok installed'; then
+            missing_packages="${missing_packages}${missing_packages:+ }$package"
+        fi
+    done
+fi
+if [ -n "$missing_packages" ]; then
+    printf '\nReview and run:\n\n  sudo apt update\n  sudo apt install %s\n\nThen rerun the installer. No files were changed.\n' "$missing_packages"
+    exit 2
+fi
+if [ "$mode" = check ]; then
+    printf '\nNo files were changed. Run bin/emacsvox-install --role remote-emacs to install.\n'
+    exit 0
+fi
+
+cleanup_build_directory=
+cleanup()
+{
+    if [ -n "$cleanup_build_directory" ]; then
+        case $cleanup_build_directory in
+            "${TMPDIR:-/tmp}"/emacsvox-emacs-*) rm -rf -- "$cleanup_build_directory" ;;
+        esac
+    fi
+}
+trap cleanup 0 1 2 15
+if ! $emacs_supported; then install_emacs; fi
+configure_local_emacs
+
+note 'Compiling Emacsvox for remote speech'
+compile_log=$cache_home/emacsvox/logs/emacsvox-remote-bytecode.log
+mkdir -p -- "$(dirname -- "$compile_log")"
+: >"$compile_log"
+chmod 600 "$compile_log"
+if ! make -C "$emacsvox_root" EMACS="$emacs_candidate" bytecode-rebuild >"$compile_log" 2>&1; then
+    tail -n 30 "$compile_log" >&2
+    fail "Emacsvox compilation failed; complete output is in $compile_log"
+fi
+env -u TTS_PROGRAM EMACS="$emacs_candidate" EMACSVOX_DIR="$emacsvox_root" \
+    "$emacsvox_root/bin/emacsvox" --remote --diagnose
+cat <<EOF
+
+Remote Emacs installation complete. No local speech engine was installed.
+Workstation speech has not been tested: prepare the service, token, and SSH
+reverse forward using the Remote Workstation Speech section of the manual.
+
+Then check both speech lanes:
+  $emacsvox_root/bin/emacsvox --remote --check
+
+Start a terminal session:
+  $emacsvox_root/bin/emacsvox --remote
+
+Build log: $compile_log
+EOF

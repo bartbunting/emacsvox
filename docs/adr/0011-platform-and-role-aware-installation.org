@@ -1,0 +1,172 @@
+#+title: ADR 0011: Platform and Role Aware Installation
+#+date: 2026-09-05
+#+startup: content
+
+* Status
+
+Accepted for the platform/role separation and remote-only Linux implementation
+first.  The remaining platform providers are an incremental roadmap, not a
+claim of implemented support.  This record does not promote preview routes to
+supported installations or replace the accepted WSL entry point.
+
+* Context
+
+ADRs 0005 and 0008 provide a guided WSL desktop installation and optional
+Omnivox engines.  ADR 0010 now permits Emacs to run on another machine with
+synthesis and playback on the user's workstation.  The current installer
+always requires WSL interoperability and installs Windows Omnivox.  The
+isolated launcher likewise validates a local speech executable before starting
+Emacs, even when the intended transport is remote.
+
+A native Windows Emacs 31.1 build has also been exercised on the workstation,
+including native Emacsvox compilation and both Omnivox speech lanes.  That is
+useful acceptance evidence for a preview; it does not establish a reproducible
+Windows installer across architectures.  Linux and macOS have documented
+Omnivox archive routes but no equivalent guided installation.
+
+* Decision
+
+** Select platform and installation role separately
+
+Detect the operating environment and architecture.  Ask what the machine will
+do; an SSH session alone must not select a role.
+
+| Role | Emacs host components | Local speech components | Completion condition |
+|------+-----------------------+-------------------------+----------------------|
+| Desktop | Emacs 31+, Emacsvox, isolated launcher | Verified Omnivox core and baseline engine | Fresh Emacs startup, acknowledged routing, and audible speech. |
+| Remote Emacs | Emacs 31+, Emacsvox, remote launcher configuration | None | Local installation verified; connected acceptance checks both workstation speech lanes when a tunnel is available. |
+| Speech host | No Emacs installation required | Verified Omnivox service, baseline engine, and matching sound resources | Loopback service and authenticated two-lane connection verified; audible workstation check. |
+
+A workstation can serve both desktop and speech-host roles using the same
+verified Omnivox installation.  Roles describe requested components and
+checks, not mutually exclusive ownership of a machine.
+
+** Provide consistent commands with native platform implementations
+
+POSIX entry point for the first implementation:
+
+#+begin_example
+./bin/emacsvox-install --role remote-emacs --check
+./bin/emacsvox-install --role remote-emacs
+#+end_example
+
+Use a PowerShell entry point on native Windows with the equivalent role and
+doctor options.  Native Windows must not require WSL merely to install or run
+Emacsvox.  Keep =bin/emacsvox-wsl-install= and its accepted default behaviour
+available; delegate to common implementation only after parity tests pass.
+
+Doctor mode reports the detected platform, role, selected Emacs, required
+components, missing prerequisites, paths, and outstanding acceptance checks.
+It performs no downloads, configuration writes, service starts, or audio.
+
+** Treat Emacs acquisition as a separate platform capability
+
+| Environment | Proposed Emacs acquisition | Omnivox placement |
+|-------------+----------------------------+-------------------|
+| WSL2 desktop | Preserve supported Emacs; retain the pinned per-user GNU source build. | Native Windows release under LocalAppData, selected by Windows architecture. |
+| Debian/Ubuntu Linux | Preserve supported Emacs; add a pinned per-user source build with desktop and terminal-only configurations. | Native compatible Linux release for desktop/speech-host roles. |
+| Other Linux | Accept an existing Emacs 31+; report unsupported automatic acquisition explicitly. | Offer only reviewed host-compatible artifacts; retain the documented source fallback. |
+| macOS Intel/Apple silicon | Initially accept existing Emacs 31+; add automatic acquisition only after selecting and testing its pinned provider. | Architecture-matched native macOS release. |
+| Native Windows | Preserve supported native Emacs; initially use an explicit preview toolchain/build route based on the verified per-user UCRT64 build. | Native Windows release under LocalAppData. |
+
+Remote Emacs must not require a local audio device, Omnivox binary, Windows
+interoperability, or GUI development libraries.  Its source build is
+terminal-only unless a desktop build is explicitly requested.  An existing
+supported GUI Emacs can still be reused.  Remote use of WSL is also allowed
+without installing or probing Windows speech components.
+
+Acquisition and byte-code checks must use the same Emacs selection.  Preserve
+explicit =EMACS= and =local.mk= choices, reject unsupported explicit choices,
+and leave personal initialization untouched.  Missing system packages are
+reported as a reviewed command, following ADR 0005; the installer does not
+invoke elevated package installation automatically.
+
+** Keep remote preparation independent of a live connection
+
+The remote launcher must load loopback host, port, and token-file selection
+before =emacsvox-setup.el= initializes speech.  It must bypass all local
+Omnivox and local playback probing.  Token contents must not appear in
+command-line arguments, generated startup source, or diagnostics.
+
+Installing Emacs and compiling Emacsvox can finish before the workstation
+service, token, and tunnel exist.  Report these as remaining connection steps;
+do not claim that speech works until authentication, inventory, routing, and
+tracked completion succeed on both lanes.  The installer does not open SSH
+connections or change SSH configuration.  Retain the loopback-only service,
+private token, no-replay reconnect behaviour, and sound-resource constraints
+of ADR 0010.
+
+Speech-host installation prepares an explicit service launch command.  It
+does not register automatic startup or a background service implicitly.
+
+** Share release data while preserving platform ownership
+
+Use one reviewed source of version, URL, architecture, checksum, and component
+availability data.  Preserve the existing WSL and component manifests during
+migration; do not independently update copies of the same pins.  The precise
+manifest format is an implementation choice to review before migration.
+
+Every archive is checksum-verified and staged before activation.  Reuse valid
+per-user installations and cached downloads; refuse incomplete or conflicting
+installations with a useful recovery message.  Keep logs and provenance,
+preserve dirty checkouts, and rebuild Emacsvox byte-code with the selected
+Emacs.  Optional engines retain the version, architecture, and user-supplied
+runtime boundaries in ADR 0008.
+
+* Implementation order
+
+1. Add remote-only Debian/Ubuntu installation and a remote-aware isolated
+   launcher.  This addresses the already requested machine with no Omnivox.
+2. Introduce the shared installation flow while preserving WSL behaviour, then
+   add native Linux desktop acquisition from reviewed Omnivox artifacts.
+3. Make the tested native Windows build and launcher reproducible as an
+   explicitly labelled preview.  Verify clean per-user installation without
+   relying on this workstation's development runtime or MSYS2 on system PATH.
+4. Add macOS doctor/installation with an existing Emacs, native acceptance on
+   Intel and Apple silicon, and a separately reviewed acquisition provider.
+5. Add speech-host preparation and compatible optional-engine installation
+   where the corresponding artifacts and native acceptance are available.
+
+The first implementation shares GNU Emacs selection, verified acquisition,
+and local.mk configuration through =utils/emacsvox-install-common.sh=.
+=etc/wsl-install.conf= remains the sole Emacs release pin until the later
+manifest migration.  Terminal builds use a distinct
+=~/.local/opt/emacs-VERSION-terminal= prefix so a WSL desktop installation is
+not replaced with a terminal-only build.
+
+=bin/emacsvox --remote= starts an isolated terminal session.  Loopback host,
+port, and token-file path are selected by =EMACSVOX_REMOTE_HOST=,
+=EMACSVOX_REMOTE_PORT=, and =EMACSVOX_REMOTE_TOKEN_FILE=.  A small Lisp startup
+file reads these values as data before Emacsvox initialization.  Remote doctor
+mode does not require credentials or a tunnel; the explicit remote check owns
+two short-lived connections and verifies inventory, voice registration, and
+tracked speech completion on each.
+
+* Acceptance gates
+
+- Keep the isolated WSL x64/ARM64 tests passing.  Test an actual archive for
+  every newly changed pin before changing its public installation guide.
+- Verify role selection, architecture selection, unsupported hosts, explicit
+  Emacs selection, checksum rejection, partial installation, reruns, paths
+  containing spaces, and non-mutating doctor mode.
+- Prove remote-only installation invokes no local speech, Windows, or audio
+  tools.  Test both supported-Emacs reuse and terminal-only acquisition.
+- Start a fresh Emacs after compilation.  For remote acceptance, check both
+  lanes against a real workstation service through the documented SSH route.
+- Keep native Windows and macOS acceptance distinct from mocked platform
+  tests.  Do not advertise architectures merely because selection logic
+  recognizes them.
+- Update maintained user instructions and generated documentation only after
+  the corresponding implementation and checks are complete.
+
+* Consequences
+
+Users choose where Emacs runs and where sound plays without acquiring unused
+components.  The existing WSL journey remains available during incremental
+implementation.  Platform providers can gain support independently, with
+explicit boundaries where acquisition or native testing is unavailable.
+
+The cost is maintaining native Windows tooling alongside POSIX tooling and
+testing both installation roles and operating environments.  Sharing release
+data and role semantics should reduce drift, but does not replace native
+compiler, filesystem, and audible acceptance tests.

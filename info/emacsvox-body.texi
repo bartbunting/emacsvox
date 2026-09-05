@@ -95,6 +95,7 @@ available before installation at
 
 @menu
 * Before You Begin: Obtaining Emacsvox.  Prepare the required tools and Emacsvox checkout.
+* Installing On A Remote Linux Host: Installing Remote Emacsvox.  Prepare Emacsvox without installing local speech engines.
 * Updating An Existing WSL2 Installation: Updating Emacsvox Under WSL2.  Update the source checkout and rerun the guided installer.
 * Install And Check Omnivox: Building And Testing The Speech Server.  Install the recommended server and hear its check.
 * Quick Installation::           Build Emacsvox and reach an isolated speaking session.
@@ -140,7 +141,7 @@ requirements for the recommended WSL2 binary route.  Docker and Windows .NET
 Framework are needed only for the advanced reproducible source-build route in
 @ref{Building Omnivox For WSL2}.
 
-Run the clone from a WSL terminal and keep the checkout on the Linux
+Run the clone from a Linux or WSL terminal and keep the checkout on the Linux
 filesystem.  The following concrete location works for an ordinary per-user
 installation:
 
@@ -158,7 +159,9 @@ semantics can interfere with Unix executable permissions and build tools.
 Clone Omnivox beside Emacsvox only when following the Omnivox source-build or
 reproducible WSL2 build route.
 
-Under WSL2@comma{} first ask the guided installer to inspect the machine without
+If this machine will send speech to another workstation@comma{} use
+@ref{Installing Remote Emacsvox} instead of installing a local
+speech server.  For a local WSL2 desktop@comma{} first ask the guided installer to inspect the machine without
 changing it:
 
 @example
@@ -199,6 +202,80 @@ reinstall it later.  The manager never removes core engines or separately
 supplied runtimes.
 @xref{Optional Omnivox Engine Modules} explains the choices and
 licensing boundaries.
+
+@node Installing Remote Emacsvox
+@section Installing On A Remote Linux Host
+
+Use this route when Emacs runs on a Linux host and speech plays on your
+workstation through an SSH reverse forward.  It also works for remote-only
+Emacs under WSL@comma{} without Windows interoperability.  This is currently a
+development feature: the workstation needs an Omnivox build with @code{--serve};
+the published Omnivox 1.7.1 archive does not include that option.
+
+After cloning Emacsvox on the Emacs host@comma{} run:
+
+@example
+cd ~/src/emacsvox
+./bin/emacsvox-install --role remote-emacs --check
+./bin/emacsvox-install --role remote-emacs
+@end example
+
+The first command reports prerequisites and paths without changing files.
+The second reuses Emacs 31 or newer and compiles Emacsvox.  When supported
+Emacs is missing on Debian or Ubuntu@comma{} it builds the checksum-verified GNU
+Emacs 31.1 source as a terminal-only installation under
+@code{~/.local/opt/emacs-31.1-terminal}.  Other Linux distributions currently need
+an existing Emacs 31 or newer.  A supported GUI Emacs can also be reused.
+Explicit @code{EMACS} and @code{local.mk} selections are preserved; if they conflict or
+select an unsupported version@comma{} resolve the reported setting first.
+
+No local Omnivox@comma{} sound device@comma{} GUI build packages@comma{} or Windows speech tools
+are required.  Missing Debian/Ubuntu build packages are reported as one
+@code{apt} command for you to review and run.  The installer never invokes @code{sudo}
+or changes a shell startup file.  Build logs are kept below
+@code{~/.cache/emacsvox/logs}@comma{} or the corresponding @code{XDG_CACHE_HOME} location.
+
+Installation can finish before the workstation is connected.  Follow the
+@emph{Remote workstation speech} instructions in
+@ref{Supported Platform Routes} to prepare its service@comma{} private
+token@comma{} and SSH reverse forward.  Then run on the Emacs host:
+
+@example
+./bin/emacsvox --remote --diagnose
+./bin/emacsvox --remote --check
+./bin/emacsvox --remote
+@end example
+
+Diagnosis reports local configuration without connecting or reading the
+token's contents.  The check connects both speech lanes@comma{} waits for workstation
+inventory and voice registration@comma{} and speaks a short foreground announcement
+followed by a notification announcement.  Confirm that both are audible.
+The last command starts an isolated terminal Emacsvox session.
+
+The default forwarded endpoint is @code{127.0.0.1:6417}.  The token file defaults
+to @code{~/.config/omnivox/remote-token}@comma{} respecting @code{XDG_CONFIG_HOME} when set.
+To select another forwarded port or private token path@comma{} supply environment
+values to the same command:
+
+@example
+EMACSVOX_REMOTE_PORT=6418 \
+EMACSVOX_REMOTE_TOKEN_FILE="$HOME/.config/omnivox/other-token" \
+  ./bin/emacsvox --remote --check
+@end example
+
+@code{EMACSVOX_REMOTE_HOST} accepts only @code{127.0.0.1} or @code{::1}.  The token path
+must be absolute; its contents stay in the private file.  Use the same
+settings when starting the session.  Remote mode selects the Omnivox
+transport and skips local speech executable and playback probes; leave
+@code{TTS_PROGRAM} unset or set it to @code{omnivox}.
+
+For updates@comma{} keep your speaking session open@comma{} pull the checkout with
+@code{git pull --ff-only}@comma{} and rerun the remote installer.  It rebuilds byte-code
+with the selected Emacs.  Perform the connected check while the workstation
+service is free@comma{} and test the updated session before closing the known-good
+one.  A single service admits only one Emacs session at a time: use a
+separate test service or explicitly disconnect the old remote session before
+connecting its replacement.
 
 @node Updating Emacsvox Under WSL2
 @section Updating An Existing WSL2 Installation
@@ -1064,7 +1141,12 @@ reach Windows loopback.  A WSL SSH client under NAT reaches WSL's separate
 loopback instead.  Windows OpenSSH uses your Windows SSH keys and host-trust
 configuration.
 
-On the remote Emacs host@comma{} set these options before starting Emacsvox:
+For a remote-only Linux installation and isolated launch commands@comma{} follow
+@ref{Installing Remote Emacsvox}.  The @code{--remote} launcher supplies
+the connection options before initializing speech and needs no local Omnivox
+executable.
+
+For a personal Emacs configuration@comma{} set these options before starting Emacsvox:
 
 @lisp
 (setq tts-program "omnivox"

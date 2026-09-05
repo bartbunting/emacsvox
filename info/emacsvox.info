@@ -167,6 +167,7 @@ chapter is available before installation at
 * Menu:
 
 * Before You Begin: Obtaining Emacsvox.  Prepare the required tools and Emacsvox checkout.
+* Installing On A Remote Linux Host: Installing Remote Emacsvox.  Prepare Emacsvox without installing local speech engines.
 * Updating An Existing WSL2 Installation: Updating Emacsvox Under WSL2.  Update the source checkout and rerun the guided installer.
 * Install And Check Omnivox: Building And Testing The Speech Server.  Install the recommended server and hear its check.
 * Quick Installation::           Build Emacsvox and reach an isolated speaking session.
@@ -175,7 +176,7 @@ chapter is available before installation at
 * Persistent Startup::           Add Emacsvox to personal configuration safely.
 
 
-File: emacsvox.info,  Node: Obtaining Emacsvox,  Next: Updating Emacsvox Under WSL2,  Up: Installation
+File: emacsvox.info,  Node: Obtaining Emacsvox,  Next: Installing Remote Emacsvox,  Up: Installation
 
 2.1 Before You Begin
 ====================
@@ -215,9 +216,9 @@ recommended WSL2 binary route.  Docker and Windows .NET Framework are
 needed only for the advanced reproducible source-build route in *note
 Building Omnivox For WSL2::.
 
-   Run the clone from a WSL terminal and keep the checkout on the Linux
-filesystem.  The following concrete location works for an ordinary
-per-user installation:
+   Run the clone from a Linux or WSL terminal and keep the checkout on
+the Linux filesystem.  The following concrete location works for an
+ordinary per-user installation:
 
      mkdir -p ~/src
      cd ~/src
@@ -232,8 +233,10 @@ executable permissions and build tools.  Clone Omnivox beside Emacsvox
 only when following the Omnivox source-build or reproducible WSL2 build
 route.
 
-   Under WSL2, first ask the guided installer to inspect the machine
-without changing it:
+   If this machine will send speech to another workstation, use *note
+Installing Remote Emacsvox:: instead of installing a local speech
+server.  For a local WSL2 desktop, first ask the guided installer to
+inspect the machine without changing it:
 
      cd ~/src/emacsvox
      ./bin/emacsvox-wsl-install --check
@@ -272,9 +275,84 @@ Optional Omnivox Engine Modules:: explains the choices and licensing
 boundaries.
 
 
-File: emacsvox.info,  Node: Updating Emacsvox Under WSL2,  Next: Building And Testing The Speech Server,  Prev: Obtaining Emacsvox,  Up: Installation
+File: emacsvox.info,  Node: Installing Remote Emacsvox,  Next: Updating Emacsvox Under WSL2,  Prev: Obtaining Emacsvox,  Up: Installation
 
-2.2 Updating An Existing WSL2 Installation
+2.2 Installing On A Remote Linux Host
+=====================================
+
+Use this route when Emacs runs on a Linux host and speech plays on your
+workstation through an SSH reverse forward.  It also works for
+remote-only Emacs under WSL, without Windows interoperability.  This is
+currently a development feature: the workstation needs an Omnivox build
+with ‘--serve’; the published Omnivox 1.7.1 archive does not include
+that option.
+
+   After cloning Emacsvox on the Emacs host, run:
+
+     cd ~/src/emacsvox
+     ./bin/emacsvox-install --role remote-emacs --check
+     ./bin/emacsvox-install --role remote-emacs
+
+   The first command reports prerequisites and paths without changing
+files.  The second reuses Emacs 31 or newer and compiles Emacsvox.  When
+supported Emacs is missing on Debian or Ubuntu, it builds the
+checksum-verified GNU Emacs 31.1 source as a terminal-only installation
+under ‘~/.local/opt/emacs-31.1-terminal’.  Other Linux distributions
+currently need an existing Emacs 31 or newer.  A supported GUI Emacs can
+also be reused.  Explicit ‘EMACS’ and ‘local.mk’ selections are
+preserved; if they conflict or select an unsupported version, resolve
+the reported setting first.
+
+   No local Omnivox, sound device, GUI build packages, or Windows speech
+tools are required.  Missing Debian/Ubuntu build packages are reported
+as one ‘apt’ command for you to review and run.  The installer never
+invokes ‘sudo’ or changes a shell startup file.  Build logs are kept
+below ‘~/.cache/emacsvox/logs’, or the corresponding ‘XDG_CACHE_HOME’
+location.
+
+   Installation can finish before the workstation is connected.  Follow
+the _Remote workstation speech_ instructions in *note Supported Platform
+Routes:: to prepare its service, private token, and SSH reverse forward.
+Then run on the Emacs host:
+
+     ./bin/emacsvox --remote --diagnose
+     ./bin/emacsvox --remote --check
+     ./bin/emacsvox --remote
+
+   Diagnosis reports local configuration without connecting or reading
+the token's contents.  The check connects both speech lanes, waits for
+workstation inventory and voice registration, and speaks a short
+foreground announcement followed by a notification announcement.
+Confirm that both are audible.  The last command starts an isolated
+terminal Emacsvox session.
+
+   The default forwarded endpoint is ‘127.0.0.1:6417’.  The token file
+defaults to ‘~/.config/omnivox/remote-token’, respecting
+‘XDG_CONFIG_HOME’ when set.  To select another forwarded port or private
+token path, supply environment values to the same command:
+
+     EMACSVOX_REMOTE_PORT=6418 \
+     EMACSVOX_REMOTE_TOKEN_FILE="$HOME/.config/omnivox/other-token" \
+       ./bin/emacsvox --remote --check
+
+   ‘EMACSVOX_REMOTE_HOST’ accepts only ‘127.0.0.1’ or ‘::1’.  The token
+path must be absolute; its contents stay in the private file.  Use the
+same settings when starting the session.  Remote mode selects the
+Omnivox transport and skips local speech executable and playback probes;
+leave ‘TTS_PROGRAM’ unset or set it to ‘omnivox’.
+
+   For updates, keep your speaking session open, pull the checkout with
+‘git pull --ff-only’, and rerun the remote installer.  It rebuilds
+byte-code with the selected Emacs.  Perform the connected check while
+the workstation service is free, and test the updated session before
+closing the known-good one.  A single service admits only one Emacs
+session at a time: use a separate test service or explicitly disconnect
+the old remote session before connecting its replacement.
+
+
+File: emacsvox.info,  Node: Updating Emacsvox Under WSL2,  Next: Building And Testing The Speech Server,  Prev: Installing Remote Emacsvox,  Up: Installation
+
+2.3 Updating An Existing WSL2 Installation
 ==========================================
 
 The guided installer recompiles the source already present in the
@@ -342,7 +420,7 @@ the diagnostic and audible check above.
 
 File: emacsvox.info,  Node: Building And Testing The Speech Server,  Next: Quick Installation,  Prev: Updating Emacsvox Under WSL2,  Up: Installation
 
-2.3 Install And Check Omnivox
+2.4 Install And Check Omnivox
 =============================
 
 If you used the guided WSL2 installer above, Omnivox is already
@@ -376,7 +454,7 @@ route.
 
 File: emacsvox.info,  Node: Quick Installation,  Next: Confirming First Speech,  Prev: Building And Testing The Speech Server,  Up: Installation
 
-2.4 Build And Start Emacsvox
+2.5 Build And Start Emacsvox
 ============================
 
 The guided WSL2 installer has already selected Emacs, compiled Emacsvox,
@@ -446,7 +524,7 @@ Arguments after ‘--’ are passed to Emacs.
 
 File: emacsvox.info,  Node: Confirming First Speech,  Next: Recovering From No Speech,  Prev: Quick Installation,  Up: Installation
 
-2.5 Confirming First Speech
+2.6 Confirming First Speech
 ===========================
 
 You will know the isolated start succeeded when Omnivox acknowledges the
@@ -491,7 +569,7 @@ Emacsvox to your normal Emacs configuration.
 
 File: emacsvox.info,  Node: Recovering From No Speech,  Next: Persistent Startup,  Prev: Confirming First Speech,  Up: Installation
 
-2.6 Recovering From No Speech
+2.7 Recovering From No Speech
 =============================
 
 If speech did not start, keep the isolated launcher as your known
@@ -543,7 +621,7 @@ The isolated launcher works, but a customized Emacs start does not
 
 File: emacsvox.info,  Node: Persistent Startup,  Prev: Recovering From No Speech,  Up: Installation
 
-2.7 Persistent Startup
+2.8 Persistent Startup
 ======================
 
 After *note Confirming First Speech:: succeeds, add these forms to your
@@ -1080,7 +1158,13 @@ forward must reach Windows loopback.  A WSL SSH client under NAT reaches
 WSL's separate loopback instead.  Windows OpenSSH uses your Windows SSH
 keys and host-trust configuration.
 
-   On the remote Emacs host, set these options before starting Emacsvox:
+   For a remote-only Linux installation and isolated launch commands,
+follow *note Installing Remote Emacsvox::.  The ‘--remote’ launcher
+supplies the connection options before initializing speech and needs no
+local Omnivox executable.
+
+   For a personal Emacs configuration, set these options before starting
+Emacsvox:
 
      (setq tts-program "omnivox"
            omnivox-remote-host "127.0.0.1"
@@ -5701,89 +5785,90 @@ Tag Table:
 Node: Top384
 Node: Introduction2198
 Node: Installation5597
-Node: Obtaining Emacsvox6946
-Node: Updating Emacsvox Under WSL211501
-Node: Building And Testing The Speech Server14651
-Node: Quick Installation16217
-Node: Confirming First Speech18716
-Node: Recovering From No Speech20709
-Node: Persistent Startup23581
-Node: Basic Usage24595
-Node: Overview27219
-Node: Working28357
-Ref: Working-Footnote-129699
-Ref: Working-Footnote-229792
-Node: Reading29902
-Node: Speech System31682
-Node: Controlling Echo32594
-Node: Speech Output Control33429
-Node: Miscellaneous35159
-Node: Voice-lock36106
-Node: Status Information37356
-Node: Speech Backends38419
-Node: Supported Platform Routes40348
-Node: Installing An Omnivox Release Binary47963
-Node: Installing An Omnivox Windows Release Under WSL251356
-Node: Optional Omnivox Engine Modules57277
-Node: Trying Native Windows Emacsvox62749
-Node: Installing Omnivox From Source70470
-Node: Building Omnivox For WSL272334
-Node: Selecting And Checking Omnivox79993
-Node: Compatibility Speech Servers82261
-Node: Backend Diagnostics And Ownership84187
-Node: Audio Desktop87364
-Node: Desktop Objects88494
-Node: Object Oriented Desktop89719
-Node: Context-Sensitive Interaction90832
-Node: Aural Presentation93947
-Node: Presentation Model96540
-Node: Presentation Modalities99007
-Node: Aural Home102176
-Node: Explaining Presentation105755
-Node: Adjusting Presentation107783
-Node: Presentation Profiles113669
-Node: Voices And Routing115346
-Ref: Browse Eloquence And Compare Pitch123546
-Ref: Keep A Voice Experiment124793
-Ref: Change A Heading Voice Add A Cue Or Silence One125793
-Ref: Change A Blank-Line Tone126754
-Ref: Choose An Engine And Recover Unfinished Work127511
-Node: Sounds And Space128669
-Node: Presentation Troubleshooting130305
-Node: Voice Lock132343
-Node: Using Online Help135550
-Node: Emacs Packages139612
-Node: Document Authoring140986
-Node: Structured Editing141540
-Node: Browsing Structure142523
-Node: Web Browsing143121
-Node: Messaging143956
-Node: Editing Code144454
-Node: Development Environment144973
-Node: Desktop Management146509
-Node: Personal Information Management147011
-Node: Desktop Applications147543
-Node: Notmuch Mail154931
-Ref: Notmuch fields and privacy164274
-Node: Agent Shell169982
-Node: EAT Terminal Access182277
-Node: Running Terminal Based Applications199536
-Node: Starting Term200491
-Node: Term Input Modes201330
-Node: Term Speech Feedback202490
-Node: Reviewing The Term Screen203684
-Node: Term Help And Recovery205585
-Node: Emacsvox Keyboard Commands206484
-Node: Copyright207888
-Node: Acknowledgments208475
-Node: Developer Guide209501
-Node: Documentation Maintenance210665
-Node: Speech Server Protocols215463
-Ref: Testing A Direct Legacy Server221370
-Ref: Commands That Queue Output221929
-Ref: Commands That Set State224963
-Node: Integration Maintenance227557
-Node: Concept Index254544
+Node: Obtaining Emacsvox7070
+Node: Installing Remote Emacsvox11788
+Node: Updating Emacsvox Under WSL215496
+Node: Building And Testing The Speech Server18654
+Node: Quick Installation20220
+Node: Confirming First Speech22719
+Node: Recovering From No Speech24712
+Node: Persistent Startup27584
+Node: Basic Usage28598
+Node: Overview31222
+Node: Working32360
+Ref: Working-Footnote-133702
+Ref: Working-Footnote-233795
+Node: Reading33905
+Node: Speech System35685
+Node: Controlling Echo36597
+Node: Speech Output Control37432
+Node: Miscellaneous39162
+Node: Voice-lock40109
+Node: Status Information41359
+Node: Speech Backends42422
+Node: Supported Platform Routes44351
+Node: Installing An Omnivox Release Binary52217
+Node: Installing An Omnivox Windows Release Under WSL255610
+Node: Optional Omnivox Engine Modules61531
+Node: Trying Native Windows Emacsvox67003
+Node: Installing Omnivox From Source74724
+Node: Building Omnivox For WSL276588
+Node: Selecting And Checking Omnivox84247
+Node: Compatibility Speech Servers86515
+Node: Backend Diagnostics And Ownership88441
+Node: Audio Desktop91618
+Node: Desktop Objects92748
+Node: Object Oriented Desktop93973
+Node: Context-Sensitive Interaction95086
+Node: Aural Presentation98201
+Node: Presentation Model100794
+Node: Presentation Modalities103261
+Node: Aural Home106430
+Node: Explaining Presentation110009
+Node: Adjusting Presentation112037
+Node: Presentation Profiles117923
+Node: Voices And Routing119600
+Ref: Browse Eloquence And Compare Pitch127800
+Ref: Keep A Voice Experiment129047
+Ref: Change A Heading Voice Add A Cue Or Silence One130047
+Ref: Change A Blank-Line Tone131008
+Ref: Choose An Engine And Recover Unfinished Work131765
+Node: Sounds And Space132923
+Node: Presentation Troubleshooting134559
+Node: Voice Lock136597
+Node: Using Online Help139804
+Node: Emacs Packages143866
+Node: Document Authoring145240
+Node: Structured Editing145794
+Node: Browsing Structure146777
+Node: Web Browsing147375
+Node: Messaging148210
+Node: Editing Code148708
+Node: Development Environment149227
+Node: Desktop Management150763
+Node: Personal Information Management151265
+Node: Desktop Applications151797
+Node: Notmuch Mail159185
+Ref: Notmuch fields and privacy168528
+Node: Agent Shell174236
+Node: EAT Terminal Access186531
+Node: Running Terminal Based Applications203790
+Node: Starting Term204745
+Node: Term Input Modes205584
+Node: Term Speech Feedback206744
+Node: Reviewing The Term Screen207938
+Node: Term Help And Recovery209839
+Node: Emacsvox Keyboard Commands210738
+Node: Copyright212142
+Node: Acknowledgments212729
+Node: Developer Guide213755
+Node: Documentation Maintenance214919
+Node: Speech Server Protocols219717
+Ref: Testing A Direct Legacy Server225624
+Ref: Commands That Queue Output226183
+Ref: Commands That Set State229217
+Node: Integration Maintenance231811
+Node: Concept Index258798
 
 End Tag Table
 

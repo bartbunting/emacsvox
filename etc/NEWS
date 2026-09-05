@@ -10,6 +10,19 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.2][NEWS for Emacsvox 2026.9.2]].
 
+** Install Emacsvox on a remote Linux host without local speech engines
+
+~bin/emacsvox-install --role remote-emacs~ reuses Emacs 31 or newer, or builds
+the pinned terminal-only Emacs on Debian/Ubuntu, and compiles Emacsvox without
+installing Omnivox or requiring Windows interoperability.  ~--check~ reports
+prerequisites without changing files.
+
+~bin/emacsvox --remote~ supplies workstation connection settings before
+startup.  ~--remote --diagnose~ needs no live connection;
+~--remote --check~ verifies both remote speech lanes.  Workstation speech still
+requires a development Omnivox with ~--serve~, a private token, and an SSH
+reverse forward.  The existing local WSL installer remains available.
+
 ** Back out of an engine's voice list one step at a time
 
 After ~RET~ opens an engine's voices, ~q~ returns to that engine's row and

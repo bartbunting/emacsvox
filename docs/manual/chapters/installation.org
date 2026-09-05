@@ -58,7 +58,7 @@ requirements for the recommended WSL2 binary route.  Docker and Windows .NET
 Framework are needed only for the advanced reproducible source-build route in
 @@texinfo:@ref{Building Omnivox For WSL2}@@.
 
-Run the clone from a WSL terminal and keep the checkout on the Linux
+Run the clone from a Linux or WSL terminal and keep the checkout on the Linux
 filesystem.  The following concrete location works for an ordinary per-user
 installation:
 
@@ -76,7 +76,9 @@ semantics can interfere with Unix executable permissions and build tools.
 Clone Omnivox beside Emacsvox only when following the Omnivox source-build or
 reproducible WSL2 build route.
 
-Under WSL2, first ask the guided installer to inspect the machine without
+If this machine will send speech to another workstation, use
+@@texinfo:@ref{Installing Remote Emacsvox}@@ instead of installing a local
+speech server.  For a local WSL2 desktop, first ask the guided installer to inspect the machine without
 changing it:
 
 #+begin_example
@@ -117,6 +119,83 @@ reinstall it later.  The manager never removes core engines or separately
 supplied runtimes.
 @@texinfo:@xref{Optional Omnivox Engine Modules}@@ explains the choices and
 licensing boundaries.
+
+** Installing On A Remote Linux Host
+:PROPERTIES:
+:TEXINFO_NODE_NAME: Installing Remote Emacsvox
+:DESCRIPTION: Prepare Emacsvox without installing local speech engines.
+:END:
+
+Use this route when Emacs runs on a Linux host and speech plays on your
+workstation through an SSH reverse forward.  It also works for remote-only
+Emacs under WSL, without Windows interoperability.  This is currently a
+development feature: the workstation needs an Omnivox build with ~--serve~;
+the published Omnivox 1.7.1 archive does not include that option.
+
+After cloning Emacsvox on the Emacs host, run:
+
+#+begin_example
+cd ~/src/emacsvox
+./bin/emacsvox-install --role remote-emacs --check
+./bin/emacsvox-install --role remote-emacs
+#+end_example
+
+The first command reports prerequisites and paths without changing files.
+The second reuses Emacs 31 or newer and compiles Emacsvox.  When supported
+Emacs is missing on Debian or Ubuntu, it builds the checksum-verified GNU
+Emacs 31.1 source as a terminal-only installation under
+~~/.local/opt/emacs-31.1-terminal~.  Other Linux distributions currently need
+an existing Emacs 31 or newer.  A supported GUI Emacs can also be reused.
+Explicit ~EMACS~ and ~local.mk~ selections are preserved; if they conflict or
+select an unsupported version, resolve the reported setting first.
+
+No local Omnivox, sound device, GUI build packages, or Windows speech tools
+are required.  Missing Debian/Ubuntu build packages are reported as one
+~apt~ command for you to review and run.  The installer never invokes ~sudo~
+or changes a shell startup file.  Build logs are kept below
+~~/.cache/emacsvox/logs~, or the corresponding ~XDG_CACHE_HOME~ location.
+
+Installation can finish before the workstation is connected.  Follow the
+/Remote workstation speech/ instructions in
+@@texinfo:@ref{Supported Platform Routes}@@ to prepare its service, private
+token, and SSH reverse forward.  Then run on the Emacs host:
+
+#+begin_example
+./bin/emacsvox --remote --diagnose
+./bin/emacsvox --remote --check
+./bin/emacsvox --remote
+#+end_example
+
+Diagnosis reports local configuration without connecting or reading the
+token's contents.  The check connects both speech lanes, waits for workstation
+inventory and voice registration, and speaks a short foreground announcement
+followed by a notification announcement.  Confirm that both are audible.
+The last command starts an isolated terminal Emacsvox session.
+
+The default forwarded endpoint is ~127.0.0.1:6417~.  The token file defaults
+to ~~/.config/omnivox/remote-token~, respecting ~XDG_CONFIG_HOME~ when set.
+To select another forwarded port or private token path, supply environment
+values to the same command:
+
+#+begin_example
+EMACSVOX_REMOTE_PORT=6418 \
+EMACSVOX_REMOTE_TOKEN_FILE="$HOME/.config/omnivox/other-token" \
+  ./bin/emacsvox --remote --check
+#+end_example
+
+~EMACSVOX_REMOTE_HOST~ accepts only ~127.0.0.1~ or ~::1~.  The token path
+must be absolute; its contents stay in the private file.  Use the same
+settings when starting the session.  Remote mode selects the Omnivox
+transport and skips local speech executable and playback probes; leave
+~TTS_PROGRAM~ unset or set it to ~omnivox~.
+
+For updates, keep your speaking session open, pull the checkout with
+~git pull --ff-only~, and rerun the remote installer.  It rebuilds byte-code
+with the selected Emacs.  Perform the connected check while the workstation
+service is free, and test the updated session before closing the known-good
+one.  A single service admits only one Emacs session at a time: use a
+separate test service or explicitly disconnect the old remote session before
+connecting its replacement.
 
 ** Updating An Existing WSL2 Installation
 :PROPERTIES:

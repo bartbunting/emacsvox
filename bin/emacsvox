@@ -13,12 +13,13 @@ program_name=emacsvox
 usage()
 {
     cat <<'EOF'
-Usage: bin/emacsvox [LAUNCHER-OPTION] [--] [EMACS-ARGUMENT ...]
+Usage: bin/emacsvox [LAUNCHER-OPTION ...] [--] [EMACS-ARGUMENT ...]
 
 Start an isolated Emacsvox session from this source tree.  The launcher does
 not load site files or personal Emacs configuration.
 
 Launcher options:
+  --remote    use workstation speech through an existing SSH reverse forward
   --diagnose  validate and print the selected Emacs, speech server, and paths
   --check     validate the launcher, then run Omnivox's audible server check
   -h, --help  show this help and exit
@@ -30,9 +31,17 @@ Selection order:
   Omnivox     $OMNIVOX_PROGRAM, the per-user config, a staged runtime, PATH
   source tree $EMACSVOX_DIR, otherwise the parent of this bin directory
 
-Use -- before an Emacs argument that is also a launcher option.  A normal
-start always passes -Q, --no-splash, and the absolute emacsvox-setup.el path
-before the supplied Emacs arguments.
+Remote mode uses a terminal and skips all local speech and audio probing.
+Set EMACSVOX_REMOTE_HOST (127.0.0.1 or ::1; default 127.0.0.1),
+EMACSVOX_REMOTE_PORT (default 6417), and EMACSVOX_REMOTE_TOKEN_FILE (default
+$XDG_CONFIG_HOME/omnivox/remote-token, or ~/.config/omnivox/remote-token).
+--remote --diagnose needs no token or tunnel; --remote --check verifies both
+speech lanes against the workstation. Token contents never enter arguments.
+
+Use -- before an Emacs argument that is also a launcher option.  A
+local start passes -Q, --no-splash, and the absolute emacsvox-setup.el path
+before the supplied Emacs arguments. Remote startup supplies its connection
+settings before loading that same setup source.
 EOF
 }
 
@@ -43,38 +52,32 @@ fail()
 }
 
 mode=start
-case ${1-} in
-    -h|--help)
-        usage
-        exit 0
-        ;;
-    --diagnose)
-        mode=diagnose
-        shift
-        ;;
-    --check)
-        mode=check
-        shift
-        ;;
-    --)
-        shift
-        ;;
-esac
+remote=false
+while [ "$#" -gt 0 ]; do
+    case $1 in
+        -h|--help) usage; exit 0 ;;
+        --diagnose) mode=diagnose; shift ;;
+        --check) mode=check; shift ;;
+        --remote) remote=true; shift ;;
+        --) shift; break ;;
+        *) break ;;
+    esac
+done
 
 if [ "$mode" != start ] && [ "$#" -ne 0 ]; then
     fail "$mode does not accept Emacs arguments; use --help for usage" 2
 fi
 
-script_directory=$(CDPATH= cd -- "$(dirname "$0")" && pwd) ||
+script_directory=$(CDPATH='' cd -- "$(dirname "$0")" && pwd) ||
     fail "cannot resolve the launcher directory"
-default_emacsvox_root=$(CDPATH= cd -- "$script_directory/.." && pwd) ||
+default_emacsvox_root=$(CDPATH='' cd -- "$script_directory/.." && pwd) ||
     fail "cannot resolve the Emacsvox source tree"
 requested_emacsvox_root=${EMACSVOX_DIR:-$default_emacsvox_root}
 
 if [ ! -d "$requested_emacsvox_root" ]; then
     fail "Emacsvox directory does not exist: $requested_emacsvox_root"
 fi
-emacsvox_root=$(CDPATH= cd -- "$requested_emacsvox_root" && pwd) ||
+emacsvox_root=$(CDPATH='' cd -- "$requested_emacsvox_root" && pwd) ||
     fail "cannot enter the Emacsvox directory: $requested_emacsvox_root"
 setup_file=$emacsvox_root/lisp/emacsvox-setup.el
 if [ ! -r "$setup_file" ]; then
@@ -89,7 +92,7 @@ else
     if [ -r "$emacsvox_root/local.mk" ]; then
         emacs_bin=$(
             sed -n \
-                's/^[[:space:]]*EMACS[[:space:]]*=[[:space:]]*//; s/[[:space:]]*$//; p' \
+                '/^[[:space:]]*EMACS[[:space:]]*=/ { s/^[[:space:]]*EMACS[[:space:]]*=[[:space:]]*//; s/[[:space:]]*$//; p; }' \
                 "$emacsvox_root/local.mk" | sed -n '$p'
         )
     fi
@@ -141,6 +144,33 @@ if [ "$emacs_major" -lt 31 ]; then
     fail "Emacsvox requires Emacs 31 or newer; $emacs_bin reports $emacs_version"
 fi
 
+if $remote; then
+    requested_tts=${TTS_PROGRAM-omnivox}
+    case ${requested_tts##*/} in
+        omnivox|omnivox.exe) ;;
+        *) fail '--remote requires TTS_PROGRAM=omnivox or an unset TTS_PROGRAM' ;;
+    esac
+    export EMACSVOX_REMOTE_HOST="${EMACSVOX_REMOTE_HOST:-127.0.0.1}"
+    export EMACSVOX_REMOTE_PORT="${EMACSVOX_REMOTE_PORT:-6417}"
+    export EMACSVOX_REMOTE_TOKEN_FILE="${EMACSVOX_REMOTE_TOKEN_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/omnivox/remote-token}"
+    case $EMACSVOX_REMOTE_HOST in
+        127.0.0.1|::1) ;;
+        *) fail 'remote speech requires a loopback endpoint (127.0.0.1 or ::1)' ;;
+    esac
+    case $EMACSVOX_REMOTE_PORT in
+        ''|*[!0-9]*) fail 'remote port must be an integer from 1 to 65535' ;;
+    esac
+    if [ "${#EMACSVOX_REMOTE_PORT}" -gt 5 ] ||
+       [ "$EMACSVOX_REMOTE_PORT" -lt 1 ] || [ "$EMACSVOX_REMOTE_PORT" -gt 65535 ]; then
+        fail 'remote port must be an integer from 1 to 65535'
+    fi
+    case $EMACSVOX_REMOTE_TOKEN_FILE in
+        /*) ;;
+        *) fail 'EMACSVOX_REMOTE_TOKEN_FILE must be an absolute path' ;;
+    esac
+    tts_program=omnivox
+    unset EMACSVOX_PLAY EMACSVOX_OMNIVOX_PROBE_ONLY
+else
 if [ "${TTS_PROGRAM+x}" = x ]; then
     if [ -z "$TTS_PROGRAM" ]; then
         fail "TTS_PROGRAM is set but empty"
@@ -191,6 +221,8 @@ if [ -r /proc/version ] && grep -qi microsoft /proc/version; then
     fi
 fi
 
+fi
+
 export EMACSVOX_DIR="$emacsvox_root"
 export TTS_PROGRAM="$tts_program"
 
@@ -201,6 +233,16 @@ diagnose()
     printf 'Emacs: %s\n' "$emacs_bin"
     printf 'Emacs selection: %s\n' "$emacs_selection"
     printf 'Emacs version: %s\n' "$emacs_version"
+    if $remote; then
+        printf 'Speech transport: remote workstation (no local server)\n'
+        printf 'Forwarded endpoint: %s:%s\n' "$EMACSVOX_REMOTE_HOST" "$EMACSVOX_REMOTE_PORT"
+        printf 'Token file: %s\n' "$EMACSVOX_REMOTE_TOKEN_FILE"
+        if [ -r "$EMACSVOX_REMOTE_TOKEN_FILE" ]; then
+            printf 'Token file is readable; authentication and speech are not tested by --diagnose.\n'
+        else
+            printf 'Token file is not ready; install the private workstation token before connecting.\n'
+        fi
+    else
     printf 'Speech server: %s\n' "$tts_program"
     printf 'Speech server selected by: %s\n' "$tts_selection"
     case $backend_program in
@@ -214,6 +256,7 @@ diagnose()
     if [ -n "$omnivox_runtime" ]; then
         printf 'Omnivox executable: %s\n' "$omnivox_runtime"
     fi
+    fi
     printf 'Startup configuration: isolated (-Q); no site or personal init files\n'
 }
 
@@ -224,6 +267,10 @@ case $mode in
         ;;
     check)
         diagnose
+        if $remote; then
+            printf '\nChecking both remote speech lanes. Confirm that you hear both announcements.\n'
+            exec "$emacs_bin" -Q --batch --load "$emacsvox_root/utils/emacsvox-remote-check.el"
+        fi
         case ${tts_program##*/} in
             omnivox|omnivox.exe)
                 printf '\nRunning the audible Omnivox check.  Confirm that you hear both the tone and speech.\n'
@@ -236,4 +283,9 @@ case $mode in
         ;;
 esac
 
+if $remote; then
+    exec "$emacs_bin" -Q --no-splash -nw \
+        --load "$emacsvox_root/utils/emacsvox-remote-startup.el" \
+        --funcall emacsvox-remote-startup "$@"
+fi
 exec "$emacs_bin" -Q --no-splash --load "$setup_file" "$@"

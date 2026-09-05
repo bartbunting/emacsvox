@@ -1,6 +1,7 @@
 Introduction
 Installation
 Obtaining Emacsvox
+Installing Remote Emacsvox
 Updating Emacsvox Under WSL2
 Building And Testing The Speech Server
 Quick Installation

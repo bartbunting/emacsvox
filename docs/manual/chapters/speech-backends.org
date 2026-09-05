@@ -106,7 +106,12 @@ reach Windows loopback.  A WSL SSH client under NAT reaches WSL's separate
 loopback instead.  Windows OpenSSH uses your Windows SSH keys and host-trust
 configuration.
 
-On the remote Emacs host, set these options before starting Emacsvox:
+For a remote-only Linux installation and isolated launch commands, follow
+@@texinfo:@ref{Installing Remote Emacsvox}@@.  The ~--remote~ launcher supplies
+the connection options before initializing speech and needs no local Omnivox
+executable.
+
+For a personal Emacs configuration, set these options before starting Emacsvox:
 
 #+begin_src emacs-lisp
 (setq tts-program "omnivox"
