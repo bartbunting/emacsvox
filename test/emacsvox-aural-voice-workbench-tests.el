@@ -317,6 +317,30 @@
     (emacsvox-aural-voice-workbench-style-view)
     (should tabulated-list-entries)))
 
+(ert-deftest emacsvox-aural-voice-workbench-separates-availability-and-policy ()
+  "Missing engines remain diagnosable without being announced as enabled."
+  (emacsvox-test--with-voice-workbench
+    (let* ((inventory (copy-tree emacsvox-test--workbench-inventory))
+           (missing '(:engine-id "rhvoice" :display-name "RHVoice"
+                      :availability "unavailable"
+                      :availability-reason "Runtime library was not found"
+                      :health "unavailable" :voices nil))
+           (tts-voice-inventory-function (lambda () inventory)))
+      (push missing (plist-get inventory :engines))
+      (emacsvox-aural-voice-workbench-engine-view)
+      (emacsvox-aural-ui-goto-row "rhvoice")
+      (let ((spoken (emacsvox-aural-voice-workbench-speak-current)))
+        (should (string-search "Engine, RHVoice. Availability, unavailable" spoken))
+        (should (string-search "Routing policy, allowed" spoken))
+        (should (string-search "Runtime library was not found" spoken))
+        (should-not (string-search "enabled" spoken)))
+      (emacsvox-aural-ui-goto-row "eloquence")
+      (should (string-search "Availability, available"
+                             (emacsvox-aural-voice-workbench-speak-current)))
+      (emacsvox-aural-voice-workbench-toggle-disabled-engine)
+      (should (string-search "Routing policy, disabled staged"
+                             (emacsvox-aural-voice-workbench-speak-current))))))
+
 (ert-deftest emacsvox-aural-voice-workbench-stages-distinct-engine-orders ()
   "Preferred, fallback, and disabled policy lists remain independent."
   (emacsvox-test--with-voice-workbench

@@ -755,6 +755,7 @@ or persisting a routing choice."
      (vector
       id
       (or (plist-get engine :display-name) id)
+      (or (plist-get engine :availability) "unknown")
       (if preferred-order (number-to-string (1+ preferred-order))
         (if (equal id
                    (plist-get emacsvox-aural-voice-workbench-inventory
@@ -763,12 +764,12 @@ or persisting a routing choice."
       (if fallback-order (number-to-string (1+ fallback-order)) "unlisted")
       (cond (disabled "disabled staged")
             (live-disabled "disabled live")
-            (t "enabled"))
-      (or (plist-get engine :availability) "unknown")
+            (t "allowed"))
       (format "%s/%s"
               (or (plist-get engine :health) "unknown")
               (or (plist-get engine :circuit) "unknown"))
       (or (plist-get engine :last-failure)
+          (plist-get engine :availability-reason)
           (plist-get engine :health-reason) "none")
       (if-let* ((milliseconds
                  (plist-get engine :cooldown-remaining-ms)))
@@ -830,8 +831,8 @@ or persisting a routing choice."
       ("Gender" 10 t) ("Quality" 12 t) ("Availability" 14 t)
       ("Health" 12 t) ("Selected by" 28 t) ("Native ID" 0 t)])
     ('engines
-     [("Engine ID" 16 t) ("Engine" 20 t) ("Preferred" 12 t)
-      ("Fallback" 10 t) ("Policy" 10 t) ("Availability" 14 t)
+     [("Engine ID" 16 t) ("Engine" 20 t) ("Availability" 14 t)
+      ("Preferred" 12 t) ("Fallback" 10 t) ("Routing policy" 16 t)
       ("Health/circuit" 18 t) ("Last failure" 28 t) ("Cooldown" 12 t)
       ("Audio" 18 t) ("Voices" 8 t) ("Markers" 24 t)
       ("Anchors" 18 t) ("Effects" 0 t)])
@@ -2785,6 +2786,8 @@ refreshing the Workbench at LOGICAL-VOICE."
       "d delete selector     y copy another logical route\n"
       "M map all unmapped    X replace engine in selected routes\n"
       "Engine view: O toggle preferred; [/] reorder preferred\n"
+      "Availability reports discovery; Routing policy allowed only permits use.\n"
+      "Missing runtimes remain visible with their unavailable reason.\n"
       "f toggle fallback     {/} reorder fallback\n"
       "D disable/restore     K request failed-engine recovery probe\n"
       "C-e d e prefer engine for session; prefix saves it\n"
