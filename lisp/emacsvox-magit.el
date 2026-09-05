@@ -40,6 +40,9 @@
 
 ;;; Forward declarations:
 
+(declare-function magit-current-section "magit-section" ())
+(declare-function magit-section-hidden "magit-section" (section))
+
 (defvar git-commit-mode)
 (defvar magit-blame-mode)
 (defvar magit-buffer-file-name)
@@ -556,13 +559,19 @@ EVENT and VISIBILITY override values inferred from the command and section."
 
 ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
   feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
-  (let ((facts
-         (emacsvox-magit-section-facts
-          target section event visibility)))
-    (emacsvox-magit--submit-text
-     (emacsvox-magit--line-content
-      (and (eq occasion 'navigation) (plist-get facts :visibility)))
-     facts occasion icon (and icon-after 'after))))
+  (let* ((facts
+          (emacsvox-magit-section-facts
+           target section event visibility))
+         (content
+          (emacsvox-magit--line-content
+           (and (eq occasion 'navigation) (plist-get facts :visibility))))
+         (condition (emacsvox-speak--line-condition content)))
+    (if (and (eq occasion 'navigation)
+             (memq condition '(empty whitespace-only)))
+        (emacsvox-magit--submit-actions
+         (plist-put facts :line-condition condition) occasion)
+      (emacsvox-magit--submit-text
+       content facts occasion icon (and icon-after 'after)))))
 
 ;;;  Advice navigation commands:
 
@@ -646,6 +655,35 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
 
 ;;;  Section Toggle:
 
+(defun emacsvox-magit--present-visibility (target &optional section)
+  "Present the resulting visibility of SECTION after TARGET."
+  (let* ((section (or section (magit-current-section)))
+         (hidden (emacsvox-magit--section-value section 'hidden))
+         (children (emacsvox-magit--section-value section 'children))
+         (bodies
+          (cl-labels ((leaves (node)
+                        (if-let* ((children
+                                   (emacsvox-magit--section-value node 'children)))
+                            (mapcan #'leaves children)
+                          (when (emacsvox-magit--section-value node 'content)
+                            (list node)))))
+            (mapcan #'leaves children)))
+         (hidden-bodies
+          (cl-count-if #'magit-section-hidden bodies))
+         (label (cond (hidden "Collapsed")
+                      ((and bodies (= hidden-bodies (length bodies)))
+                       "Headings shown")
+                      ((> hidden-bodies 0) "Partly expanded")
+                      (t "Expanded"))))
+    (emacsvox-magit--submit-text
+     (concat (propertize (concat label ". ") 'personality voice-annotate)
+             (emacsvox-magit--line-content))
+     (append
+      (emacsvox-magit-section-facts
+       target section 'visibility-changed (if hidden 'folded 'expanded))
+      (list :vcs-operation target))
+     'state-change (if hidden 'close-object 'open-object) 'after)))
+
 (defconst emacsvox-magit--show-targets
   '(magit-section-show-children
     magit-section-show-headings
@@ -667,9 +705,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
   `(defun ,advice-function (&rest _)
      "speak."
      (when (ems-interactive-p ',target)
-       (emacsvox-magit-present-line
-        'open-object 'state-change ',target nil
-        'visibility-changed 'expanded t)))))
+       (emacsvox-magit--present-visibility ',target)))))
 
 (defun emacsvox--advice-magit-section-hide-after (&rest _)
   "Present a hidden Magit section."

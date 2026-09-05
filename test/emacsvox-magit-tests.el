@@ -1883,7 +1883,7 @@
       (should-not events)
       (let ((ems--interactive-fn-name 'magit-section-show-children))
         (emacsvox--advice-magit-section-show-children-after))
-      (should (equal events '((open-object)))))))
+      (should (equal events '(text))))))
 
 (ert-deftest emacsvox-magit-process-feedback-is-asynchronous-and-accurate ()
   "Only asynchronous Magit completion gets feedback, using its true result."
@@ -2152,6 +2152,89 @@
            (scroll))))))))
 
 ;;; Regression coverage against real Magit commands and Git repositories:
+
+(defmacro emacsvox-magit-test--with-sections (&rest body)
+  "Run BODY in a displayed section tree with two commit rows."
+  (declare (indent 0))
+  `(save-window-excursion
+     (with-temp-buffer
+       (switch-to-buffer (current-buffer))
+       (magit-section-mode)
+       (emacsvox-magit-enable-aural-context)
+       (let ((inhibit-read-only t))
+         (magit-insert-section (root)
+           (magit-insert-section (recent)
+             (magit-insert-heading "Recent commits")
+             (magit-insert-section (commit "123456789")
+               (insert (propertize "123456789" 'font-lock-face 'magit-hash)
+                       " First commit\n")
+               (magit-insert-heading))
+             (magit-insert-section (commit "abcdef123")
+               (insert (propertize "abcdef123" 'font-lock-face 'magit-hash)
+                       " Second commit\n")
+               (magit-insert-heading))
+             (insert "\n"))))
+       (goto-char (point-min))
+       ,@body)))
+
+(ert-deftest emacsvox-magit-level-one-reports-actual-collapse ()
+  (emacsvox-magit-test--with-sections
+    (let (call)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest args) (setq call (cons text args)))))
+        (funcall-interactively #'magit-section-show-level-1))
+      (should (oref (magit-current-section) hidden))
+      (should (string-prefix-p "Collapsed." (car call)))
+      (should (eq (plist-get (plist-get (cdr call) :facts) :visibility) 'folded))
+      (should (eq (emacsvox-aural-compatibility-action-value
+                   (car (plist-get (cdr call) :compatibility-actions))) 'close-object)))))
+
+(ert-deftest emacsvox-magit-show-children-distinguishes-hidden-bodies ()
+  (with-temp-buffer
+    (magit-section-mode)
+    (let ((inhibit-read-only t) call)
+      (magit-insert-section (root)
+        (magit-insert-section (file "sample.txt")
+          (magit-insert-heading "sample.txt")
+          (magit-insert-section (body)
+            (magit-insert-heading "Hunk")
+            (insert "+content\n"))))
+      (goto-char (point-min))
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest args) (setq call (cons text args)))))
+        (funcall-interactively #'magit-section-show-children (magit-current-section) 0))
+      (should (string-prefix-p "Headings shown." (car call)))
+      (should (eq (plist-get (plist-get (cdr call) :facts) :visibility) 'expanded))
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (text &rest args) (setq call (cons text args)))))
+        (funcall-interactively #'magit-section-show-headings (magit-current-section)))
+      ;; Follow actual visibility even when Magit's implementation differs
+      ;; from the show-headings command's advertised behavior.
+      (should (string-prefix-p "Expanded." (car call))))))
+
+(ert-deftest emacsvox-magit-blank-navigation-uses-core-tone-without-icon ()
+  (dolist (case '(("" empty line-empty) ("  " whitespace-only line-whitespace)))
+    (emacsvox-magit-test--with-sections
+      (goto-char (point-max))
+      (forward-line -1)
+      (let ((inhibit-read-only t)) (insert (car case)))
+      (forward-line -1)
+      (let ((emacsvox-use-icons t)
+            submission)
+        (cl-letf (((symbol-function 'tts-stop) #'ignore)
+                  ((symbol-function 'emacsvox-queue-resource) #'ignore)
+                  ((symbol-function 'tts-tone) #'ignore))
+          (let ((submit (symbol-function 'emacsvox-aural-submit-actions)))
+            (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+                       (lambda (&rest args)
+                         (setq submission (apply submit args)))))
+              (funcall-interactively #'magit-next-line 1 nil))))
+        (let* ((plan (car (emacsvox-aural-submission-plans submission)))
+               (actions (emacsvox-aural-concrete-plan-before plan)))
+          (should (eq (emacsvox-aural-submission-lane submission) 'main))
+          (should (eq (emacsvox-aural-submission-interruption-policy submission) 'lane))
+          (should (= (length actions) 1))
+          (should (eq (emacsvox-aural-concrete-action-tone (car actions)) (nth 2 case))))))))
 
 (ert-deftest emacsvox-magit-completion-and-entry-have-independent-lanes ()
   (let ((process (make-process :name "emacsvox-magit-test" :command '("true")
