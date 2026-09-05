@@ -1659,20 +1659,36 @@ logical registry is replaced, so partial failure is explicit and retryable."
             (error-message-string error-data)))))
 
 (defun omnivox-query-voices ()
-  "Return physical voices reported by the Omnivox executable.
+  "Return physical voices reported by the current Omnivox workstation.
 Signal an error if discovery cannot run or returns malformed data."
-  (let ((program (omnivox--server-program)))
-    (unless program
-      (error "Could not find the Omnivox server executable"))
-    (with-temp-buffer
-      (let ((status
-             (process-file program nil t nil "--list-voices-alist")))
-        (unless (and (integerp status) (zerop status))
-          (error "Omnivox voice discovery failed%s"
-                 (if (string-empty-p (string-trim (buffer-string)))
-                     ""
-                   (format ": %s" (string-trim (buffer-string))))))
-        (omnivox--parse-voices (buffer-string))))))
+  (if (omnivox-remote-enabled-p)
+      (let ((inventory
+             (and (process-live-p tts-speaker-process)
+                  (process-get tts-speaker-process omnivox--control-inventory-property))))
+        (unless inventory
+          (user-error "Workstation voice inventory is not ready; connect and wait for routing readiness"))
+        (cl-mapcan
+         (lambda (engine)
+           (mapcar
+            (lambda (voice)
+              (list (plist-get (plist-get voice :id) :voice_id)
+                    (plist-get voice :display_name)
+                    (or (plist-get voice :language) "")
+                    (or (plist-get voice :quality) "")))
+            (append (plist-get engine :voices) nil)))
+         (append (plist-get inventory :engines) nil)))
+    (let ((program (omnivox--server-program)))
+      (unless program
+        (error "Could not find the Omnivox server executable"))
+      (with-temp-buffer
+        (let ((status
+               (process-file program nil t nil "--list-voices-alist")))
+          (unless (and (integerp status) (zerop status))
+            (error "Omnivox voice discovery failed%s"
+                   (if (string-empty-p (string-trim (buffer-string)))
+                       ""
+                     (format ": %s" (string-trim (buffer-string))))))
+          (omnivox--parse-voices (buffer-string)))))))
 
 (defun omnivox-refresh-voices ()
   "Refresh and return the physical voices available from Omnivox."

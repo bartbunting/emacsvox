@@ -35,6 +35,7 @@
 
 (require 'cl-lib)
 (require 'subr-x)
+(require 'omnivox-remote)
 (require 'emacsvox-aural-transport)
 
 ;;;  Forward Declarations:
@@ -2962,12 +2963,15 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
   
   (let ((process-connection-type nil)
         (default-directory (expand-file-name "~/"))
-        (program (tts--resolve-program tts-program))
+        (program (unless (omnivox-remote-enabled-p)
+                   (tts--resolve-program tts-program)))
         (process nil))
-    (unless program
+    (unless (or program (omnivox-remote-enabled-p))
       (error "Could not find speech server executable `%s'" tts-program))
     (setq process
-          (start-process name nil program))
+          (if (omnivox-remote-enabled-p)
+              (omnivox-remote-make-process name)
+            (start-process name nil program)))
     (unless (process-live-p process) (error "Fail: Speech Server"))
     (set-process-coding-system process 'utf-8 'utf-8)
     (process-put
@@ -2976,7 +2980,10 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
     (process-put
      process tts--speech-process-role-property
      (if (string= name "Notify") 'notification 'speaker))
-    (set-process-sentinel process #'tts--speech-process-sentinel)
+    (set-process-sentinel
+     process (if (process-get process 'omnivox-remote-managed)
+                 #'omnivox-remote--sentinel
+               #'tts--speech-process-sentinel))
     process))
 
 (declare-function voice-setup "voice-setup" ())

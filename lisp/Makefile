@@ -67,6 +67,7 @@ omnivox-voices.elc
 TTS_OBJECTS = \
 emacsvox-version.elc \
 emacsvox-preamble.elc \
+omnivox-remote.elc \
 tts-speak.elc \
 $(VOICE_OBJECTS)
 

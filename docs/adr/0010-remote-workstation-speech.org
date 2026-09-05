@@ -1,0 +1,39 @@
+#+title: ADR 0010: Remote Workstation Speech
+#+date: 2026-09-05
+#+startup: content
+
+* Status
+
+Accepted.
+
+* Decision
+
+Remote Emacs connects to a workstation Omnivox service through an SSH reverse
+forward. Emacsvox owns two authenticated TCP connections, preserving the
+foreground and notification lanes required by ADR 0009. Each connection owns
+a distinct workstation worker. Engine discovery and playback happen there.
+
+An opt-in transport module supplies network processes to the existing TTS
+lifecycle, completion filters, capability negotiation, inventory, and routing
+initialization. The existing local process-launch route remains the default.
+Both TCP endpoints remain on loopback; a private token authenticates the Emacs
+session in addition to SSH's encrypted and authenticated tunnel.
+
+A lost lane fails its pending work and reconnects with fresh worker state.
+Speech is never replayed. Heartbeats detect stalled tunnels. Explicit
+disconnect disables reconnection and retires both lanes. Sound resources use
+stable identifiers below a configured workstation sound directory; arbitrary
+remote filesystem paths and uploads are outside the first version.
+
+The Omnivox repository defines the versioned wire contract in its remote
+protocol and ADR 0008. Workstation packaging and optional engines retain the
+installation ownership established by ADRs 0005 and 0008. Capability readiness
+and routing readiness remain the separate checkpoints in ADR 0007.
+
+* Consequences
+
+Remote Emacs needs no speech engines or audio device. Setup requires a tunnel,
+a private token at both ends, and matching sound packs. Network latency affects
+navigation. A service initially admits one Emacs session; reconnecting a lane
+may briefly wait for its previous worker to retire. Native TLS, automatic SSH
+management, uploaded sounds, and shared multi-user playback are deferred.
