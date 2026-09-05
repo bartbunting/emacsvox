@@ -8,6 +8,7 @@ announcements/auto
 *.o
 # ignore generated files:
 /local.mk
+/native-install.json
 etc/emacsvox.sh
 lisp/emacsvox-loaddefs.el
 lisp/TAGS

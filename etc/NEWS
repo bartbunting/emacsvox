@@ -10,6 +10,18 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.2][NEWS for Emacsvox 2026.9.2]].
 
+** Install the native Windows x64 preview without WSL
+
+~bin/emacsvox-install.ps1~ reuses native Emacs 31 or newer or builds GNU Emacs
+31.1 with a private MSYS2 UCRT64 toolchain.  It installs pinned Windows
+Omnivox, prepares Emacsvox, and checks a fresh native GUI with both speech
+lanes.  ~-Check~ reports the plan without changing files.
+
+~bin/emacsvox.ps1~ starts the isolated preview; ~-Diagnose~ checks its setup
+and ~-Check~ verifies startup and speech.  This remains an x64 desktop preview.
+The installer does not require WSL or change personal initialization, system
+PATH, Windows services, or JAWS configuration.
+
 ** Install Emacsvox on a remote Linux host without local speech engines
 
 ~bin/emacsvox-install --role remote-emacs~ reuses Emacs 31 or newer, or builds

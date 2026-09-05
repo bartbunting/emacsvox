@@ -373,7 +373,8 @@ server is ready.  If either is missing@comma{} use
 @ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}
 before continuing.  @xref{Speech Backends} contains the complete platform
 matrix@comma{} build details@comma{} and compatibility alternatives.  Native Windows Emacs
-support remains a preview.  Evaluators can follow
+support remains a preview.  Its x64 PowerShell installer can build Emacs and
+install Omnivox without WSL@.  Evaluators can follow
 @ref{Trying Native Windows Emacsvox}; initial users should choose
 the WSL2 route.
 
@@ -1492,31 +1493,100 @@ to select them.
 @section Trying Native Windows Emacsvox
 
 This is a @emph{preview evaluation}@comma{} not yet the recommended first installation.
-It runs both Emacs and Omnivox directly on Windows; it does not use WSL2 or the
-POSIX @code{bin/emacsvox} and @code{servers/omnivox} launchers.  The procedure is
-self-contained so a useful result records exactly where success or failure
-occurred.
+The guided provider supports Windows x64 and runs entirely on Windows.  WSL@comma{}
+Docker@comma{} Rust@comma{} and a system MSYS2 installation are not required.
 
-You need a native Windows build of Emacs 31 or newer@comma{} PowerShell@comma{} Git@comma{} an
-Emacsvox checkout on the Windows filesystem@comma{} and network access for the
-Omnivox release download.  Windows audio must work and at least one Windows
-speech voice must be installed.  You do not need WSL2@comma{} Docker@comma{} Rust@comma{} MinGW@comma{}
-Visual Studio@comma{} or Windows .NET Framework.  Use @code{windows-x64} on an Intel or
-AMD Windows computer.  Use @code{windows-arm64} only on Windows on ARM@.
+@subsection Guided Windows x64 Installation
 
-If Emacsvox is not already checked out on Windows@comma{} open PowerShell and place a
-checkout on the Windows filesystem:
+You need Windows PowerShell 5.1 or newer@comma{} Git for cloning@comma{} network access@comma{} and
+working Windows audio with an installed speech voice.  Put the checkout on a
+local Windows drive@comma{} rather than a WSL or network path.  From PowerShell:
 
 @example
-$SourceRoot = Join-Path $env:USERPROFILE "src"
-New-Item -ItemType Directory -Force $SourceRoot | Out-Null
-Set-Location $SourceRoot
 git clone https://github.com/bartbunting/emacsvox.git
-$Emacsvox = Join-Path $SourceRoot "emacsvox"
+Set-Location emacsvox
+.\bin\emacsvox-install.ps1 -Role Desktop -Check
+.\bin\emacsvox-install.ps1 -Role Desktop
 @end example
 
-If the checkout already exists@comma{} skip @code{git clone} and set @code{$Emacsvox} to its
-absolute Windows path instead.  Continue in the same PowerShell window.
+Skip cloning if you already have a Windows checkout and change into it instead.
+The check reports the selected Emacs and planned paths without downloading@comma{}
+writing configuration@comma{} or playing audio.
+
+The installer reuses native Emacs 31 or newer.  If none is selected@comma{} it builds
+GNU Emacs 31.1 using a private MSYS2 UCRT64 toolchain@comma{} then installs the pinned
+Omnivox core and prepares Emacsvox.  Allow several gigabytes of disk space and
+time for the initial downloads and source build.  Later runs reuse the
+installed Emacs and cached archives.  An existing native Emacs does not need
+MSYS2 to prepare Emacsvox.
+
+To select an existing Emacs explicitly@comma{} add
+@samp{-Emacs "C:\path\to\Emacs\bin\emacs.exe"}.  Explicit @samp{-Emacs}@comma{} @samp{EMACS} environment@comma{}
+and @samp{local.mk} selections must agree and require native Emacs 31 or newer.
+@samp{-BuildEmacs} selects the managed source build instead of a saved or PATH
+selection; it reuses a complete managed build when one exists.  It cannot
+replace an explicit selection.
+
+Installation is per-user.  The defaults are:
+
+@itemize
+@item
+Emacs@comma{} Omnivox@comma{} the isolated profile@comma{} and logs below
+@samp{%LOCALAPPDATA%\Emacsvox\Native}.
+@item
+Private build tools below @samp{%LOCALAPPDATA%\Emacsvox\Toolchains\msys2-20260611}.
+@item
+Verified archive cache below @samp{%LOCALAPPDATA%\Emacsvox\Downloads}.
+@item
+A data-only @samp{native-install.json} in this checkout@comma{} ignored by Git.
+@end itemize
+
+@samp{-InstallRoot}@comma{} @samp{-ToolchainRoot}@comma{} and @samp{-CacheDirectory} select other local
+Windows directories.  The MSYS2 build-tool path must not contain spaces;
+choose @samp{-ToolchainRoot} if the default does.  Checkout and installed Emacs
+paths may contain spaces.  The installer leaves personal Emacs initialization@comma{}
+system PATH@comma{} Windows services@comma{} and JAWS settings alone.
+
+The source archives are checksum-pinned.  MSYS2 compiler packages come from
+its signed rolling repositories; their installed versions are recorded with
+the build.  Lisp native compilation is disabled in this preview.  The built
+Emacs includes its runtime DLLs@comma{} so launching it does not need MSYS2 on PATH@.
+
+The default final check opens a temporary native Emacs window@comma{} verifies both
+speech lanes@comma{} speaks two announcements@comma{} and closes that test window.  Confirm
+that you hear both announcements.  @samp{-NoAudioCheck} skips this step when needed;
+run the explicit check before accepting speech:
+
+@example
+.\bin\emacsvox.ps1 -Diagnose
+.\bin\emacsvox.ps1 -Check
+.\bin\emacsvox.ps1
+@end example
+
+The last command opens the isolated native preview.  It uses Windows speech
+by default.  An explicit @samp{OMNIVOX_ENGINE} environment selection remains
+available for separately configured engines.  Native optional-engine
+installation@comma{} ARM64@comma{} and other native Windows roles are not provided by this
+guided preview.
+
+After pulling source changes@comma{} rerun the installer before launching.  It
+preserves source changes and refreshes the compiled files.  Missing or stale
+compiled files stop launch with instructions to rerun installation.  For a
+failed build@comma{} retain the logs under the reported build directory.  Inspect an
+incomplete installation before moving it aside or selecting a new directory;
+the installer does not overwrite an unknown partial tree.
+
+JAWS speech muting does not disable its keyboard shortcuts.  If @samp{M-<} or
+@samp{M->} is intercepted@comma{} test with @samp{JAWSKey+3} before the shortcut.  Bart's
+@samp{workstation-config} repository supplies the separately installed@comma{}
+Emacs-specific JAWS override used on the test workstation.
+
+@subsection Manual Native Evaluation
+
+The following manual procedure remains available for an already installed
+native Windows Emacs 31 or newer.  It does not acquire Emacs or replace the
+guided x64 checks above.  Set @samp{$Emacsvox} to the checkout's absolute Windows
+path and continue in one PowerShell window.
 
 @subsection Download And Verify Omnivox
 
@@ -1606,8 +1676,9 @@ $env:TTS_PROGRAM = $Omnivox
 The Emacs version must be 31 or newer.  Use @code{emacs.exe}@comma{} rather than
 @code{runemacs.exe}@comma{} for this first trial so startup errors remain visible in the
 PowerShell window.  Loading @code{emacsvox-setup.el} directly is intentional: the
-repository's @code{bin/emacsvox} launcher is a POSIX shell script and is not the
-native Windows entry point.
+repository's @code{bin/emacsvox} launcher is a POSIX shell script.  The guided
+native entry point is @code{bin/emacsvox.ps1}; this subsection describes the manual
+alternative.
 
 @subsection Accept Or Report The Trial
 
@@ -5472,6 +5543,44 @@ be hidden by stale local byte-code.  In a stable checkout with current @code{.el
 files@comma{} @code{(load-library "emacsvox-setup")} may be used.  Do not use
 @code{load-library} as the first load after editing the source tree: Emacs can
 select an old @code{emacsvox-setup.elc} before the newer source checker runs.
+
+@enumerate
+@item
+@anchor{Native Windows preview builds}Native Windows preview builds
+
+
+Use a separate checkout on a Windows drive.  The native installer regenerates
+autoloads and all modules from the @samp{lisp/Makefile} inventory with the selected
+Windows Emacs.  Its launcher verifies that byte-code in a fresh process.
+Do not share generated byte-code with a WSL checkout using another Emacs.
+
+Run the native installer checks from that Windows checkout:
+
+@example
+.\test\emacsvox-windows-install-tests.ps1 -Emacs "C:\path\to\emacs.exe"
+.\bin\emacsvox-install.ps1 -Role Desktop -Check
+.\bin\emacsvox-install.ps1 -Role Desktop
+.\bin\emacsvox.ps1 -Check
+@end example
+
+The PowerShell tests use temporary fixtures and an existing native Emacs.
+They check doctor behavior@comma{} explicit selections@comma{} incomplete installations@comma{}
+platform rejection@comma{} checksums@comma{} archive paths@comma{} argument handling@comma{} and atomic
+configuration replacement.  @samp{test/emacsvox-native-bytecode-tests.el} compares
+the native inventory with GNU Make and checks dependency order and byte-code
+preflight failures.  Keep the WSL x64/ARM64 and remote installer tests passing.
+
+Actual acquisition acceptance must start with a private toolchain and the
+pinned archives@comma{} not a reused developer runtime.  Keep MSYS2 package versions@comma{}
+compiler/configure/build/install logs@comma{} and @samp{emacsvox-build.json} with the
+installed Emacs.  The installation logs also include
+@samp{native-install-provenance.json} with Lisp source hashes and selected pins.
+MSYS2 packages are signed rolling inputs; these records do not claim a frozen
+or bit-identical compiler environment.  Verify fresh graphical startup@comma{}
+acknowledged routing@comma{} and tracked completion on both speech lanes with a PATH
+that contains neither WSL nor MSYS2 tools.  Human listening remains a separate
+acceptance step.
+@end enumerate
 
 @subsection Emacsvox release staging and publication
 

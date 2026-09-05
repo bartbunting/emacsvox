@@ -448,31 +448,100 @@ to select them.
 :END:
 
 This is a /preview evaluation/, not yet the recommended first installation.
-It runs both Emacs and Omnivox directly on Windows; it does not use WSL2 or the
-POSIX ~bin/emacsvox~ and ~servers/omnivox~ launchers.  The procedure is
-self-contained so a useful result records exactly where success or failure
-occurred.
+The guided provider supports Windows x64 and runs entirely on Windows.  WSL,
+Docker, Rust, and a system MSYS2 installation are not required.
 
-You need a native Windows build of Emacs 31 or newer, PowerShell, Git, an
-Emacsvox checkout on the Windows filesystem, and network access for the
-Omnivox release download.  Windows audio must work and at least one Windows
-speech voice must be installed.  You do not need WSL2, Docker, Rust, MinGW,
-Visual Studio, or Windows .NET Framework.  Use ~windows-x64~ on an Intel or
-AMD Windows computer.  Use ~windows-arm64~ only on Windows on ARM.
+*** Guided Windows x64 Installation
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
 
-If Emacsvox is not already checked out on Windows, open PowerShell and place a
-checkout on the Windows filesystem:
+You need Windows PowerShell 5.1 or newer, Git for cloning, network access, and
+working Windows audio with an installed speech voice.  Put the checkout on a
+local Windows drive, rather than a WSL or network path.  From PowerShell:
 
 #+begin_src powershell
-$SourceRoot = Join-Path $env:USERPROFILE "src"
-New-Item -ItemType Directory -Force $SourceRoot | Out-Null
-Set-Location $SourceRoot
 git clone https://github.com/bartbunting/emacsvox.git
-$Emacsvox = Join-Path $SourceRoot "emacsvox"
+Set-Location emacsvox
+.\bin\emacsvox-install.ps1 -Role Desktop -Check
+.\bin\emacsvox-install.ps1 -Role Desktop
 #+end_src
 
-If the checkout already exists, skip ~git clone~ and set ~$Emacsvox~ to its
-absolute Windows path instead.  Continue in the same PowerShell window.
+Skip cloning if you already have a Windows checkout and change into it instead.
+The check reports the selected Emacs and planned paths without downloading,
+writing configuration, or playing audio.
+
+The installer reuses native Emacs 31 or newer.  If none is selected, it builds
+GNU Emacs 31.1 using a private MSYS2 UCRT64 toolchain, then installs the pinned
+Omnivox core and prepares Emacsvox.  Allow several gigabytes of disk space and
+time for the initial downloads and source build.  Later runs reuse the
+installed Emacs and cached archives.  An existing native Emacs does not need
+MSYS2 to prepare Emacsvox.
+
+To select an existing Emacs explicitly, add
+=-Emacs "C:\path\to\Emacs\bin\emacs.exe"=.  Explicit =-Emacs=, =EMACS= environment,
+and =local.mk= selections must agree and require native Emacs 31 or newer.
+=-BuildEmacs= selects the managed source build instead of a saved or PATH
+selection; it reuses a complete managed build when one exists.  It cannot
+replace an explicit selection.
+
+Installation is per-user.  The defaults are:
+
+- Emacs, Omnivox, the isolated profile, and logs below
+  =%LOCALAPPDATA%\Emacsvox\Native=.
+- Private build tools below =%LOCALAPPDATA%\Emacsvox\Toolchains\msys2-20260611=.
+- Verified archive cache below =%LOCALAPPDATA%\Emacsvox\Downloads=.
+- A data-only =native-install.json= in this checkout, ignored by Git.
+
+=-InstallRoot=, =-ToolchainRoot=, and =-CacheDirectory= select other local
+Windows directories.  The MSYS2 build-tool path must not contain spaces;
+choose =-ToolchainRoot= if the default does.  Checkout and installed Emacs
+paths may contain spaces.  The installer leaves personal Emacs initialization,
+system PATH, Windows services, and JAWS settings alone.
+
+The source archives are checksum-pinned.  MSYS2 compiler packages come from
+its signed rolling repositories; their installed versions are recorded with
+the build.  Lisp native compilation is disabled in this preview.  The built
+Emacs includes its runtime DLLs, so launching it does not need MSYS2 on PATH.
+
+The default final check opens a temporary native Emacs window, verifies both
+speech lanes, speaks two announcements, and closes that test window.  Confirm
+that you hear both announcements.  =-NoAudioCheck= skips this step when needed;
+run the explicit check before accepting speech:
+
+#+begin_src powershell
+.\bin\emacsvox.ps1 -Diagnose
+.\bin\emacsvox.ps1 -Check
+.\bin\emacsvox.ps1
+#+end_src
+
+The last command opens the isolated native preview.  It uses Windows speech
+by default.  An explicit =OMNIVOX_ENGINE= environment selection remains
+available for separately configured engines.  Native optional-engine
+installation, ARM64, and other native Windows roles are not provided by this
+guided preview.
+
+After pulling source changes, rerun the installer before launching.  It
+preserves source changes and refreshes the compiled files.  Missing or stale
+compiled files stop launch with instructions to rerun installation.  For a
+failed build, retain the logs under the reported build directory.  Inspect an
+incomplete installation before moving it aside or selecting a new directory;
+the installer does not overwrite an unknown partial tree.
+
+JAWS speech muting does not disable its keyboard shortcuts.  If =M-<= or
+=M->= is intercepted, test with =JAWSKey+3= before the shortcut.  Bart's
+=workstation-config= repository supplies the separately installed,
+Emacs-specific JAWS override used on the test workstation.
+
+*** Manual Native Evaluation
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The following manual procedure remains available for an already installed
+native Windows Emacs 31 or newer.  It does not acquire Emacs or replace the
+guided x64 checks above.  Set =$Emacsvox= to the checkout's absolute Windows
+path and continue in one PowerShell window.
 
 *** Download And Verify Omnivox
 :PROPERTIES:
@@ -571,8 +640,9 @@ $env:TTS_PROGRAM = $Omnivox
 The Emacs version must be 31 or newer.  Use ~emacs.exe~, rather than
 ~runemacs.exe~, for this first trial so startup errors remain visible in the
 PowerShell window.  Loading ~emacsvox-setup.el~ directly is intentional: the
-repository's ~bin/emacsvox~ launcher is a POSIX shell script and is not the
-native Windows entry point.
+repository's ~bin/emacsvox~ launcher is a POSIX shell script.  The guided
+native entry point is ~bin/emacsvox.ps1~; this subsection describes the manual
+alternative.
 
 *** Accept Or Report The Trial
 :PROPERTIES:

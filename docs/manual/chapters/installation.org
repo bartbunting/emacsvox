@@ -299,7 +299,8 @@ server is ready.  If either is missing, use
 @@texinfo:@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}@@
 before continuing.  @@texinfo:@xref{Speech Backends}@@ contains the complete platform
 matrix, build details, and compatibility alternatives.  Native Windows Emacs
-support remains a preview.  Evaluators can follow
+support remains a preview.  Its x64 PowerShell installer can build Emacs and
+install Omnivox without WSL.  Evaluators can follow
 @@texinfo:@ref{Trying Native Windows Emacsvox}@@; initial users should choose
 the WSL2 route.
 

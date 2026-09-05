@@ -4,8 +4,9 @@
 
 * Status
 
-Accepted for the platform/role separation and remote-only Linux implementation
-first.  The remaining platform providers are an incremental roadmap, not a
+Accepted for the platform/role separation, remote-only Linux implementation,
+and the subsequent native Windows x64 desktop preview.  The remaining
+platform providers are an incremental roadmap, not a
 claim of implemented support.  This record does not promote preview routes to
 supported installations or replace the accepted WSL entry point.
 
@@ -117,11 +118,11 @@ runtime boundaries in ADR 0008.
 
 1. Add remote-only Debian/Ubuntu installation and a remote-aware isolated
    launcher.  This addresses the already requested machine with no Omnivox.
-2. Introduce the shared installation flow while preserving WSL behaviour, then
-   add native Linux desktop acquisition from reviewed Omnivox artifacts.
-3. Make the tested native Windows build and launcher reproducible as an
+2. Make the tested native Windows build and launcher reproducible as an
    explicitly labelled preview.  Verify clean per-user installation without
    relying on this workstation's development runtime or MSYS2 on system PATH.
+3. Introduce the shared installation flow while preserving WSL behaviour, then
+   add native Linux desktop acquisition from reviewed Omnivox artifacts.
 4. Add macOS doctor/installation with an existing Emacs, native acceptance on
    Intel and Apple silicon, and a separately reviewed acquisition provider.
 5. Add speech-host preparation and compatible optional-engine installation
@@ -141,6 +142,44 @@ file reads these values as data before Emacsvox initialization.  Remote doctor
 mode does not require credentials or a tunnel; the explicit remote check owns
 two short-lived connections and verifies inventory, voice registration, and
 tracked speech completion on each.
+
+** Native Windows preview provider
+
+=bin/emacsvox-install.ps1 -Role Desktop= is the native PowerShell entry point;
+=-Check= is non-mutating.  Native Windows x64 is the only enabled architecture
+in this preview.  =-Emacs=, the environment, and =local.mk= are explicit
+selections and must agree.  The ignored checkout-local =native-install.json=
+records the successful native selection without changing =local.mk= or the
+user's initialization.  =bin/emacsvox.ps1= owns isolated native launch,
+byte-code preflight, diagnosis, and a fresh graphical two-lane speech check.
+
+The Emacs and Omnivox pins remain in =etc/wsl-install.conf=, read as validated
+data by PowerShell.  =etc/windows-install.conf= adds only the checksum-pinned
+MSYS2 bootstrap.  The private UCRT64 toolchain obtains signed packages from
+MSYS2's rolling repositories and records their exact versions.  This is a
+repeatable installation procedure, not a claim of bit-identical binaries or
+a frozen compiler package set.  There is no WSL, Docker, system MSYS2, or Rust
+dependency, and no automatic elevation, PATH change, or service registration.
+
+The build uses a private MSYS2 path without spaces and a simple internal
+build/install prefix.  The resulting Windows Emacs tree includes its runtime
+DLLs and is relocated to the per-user installation directory.  Lisp native
+compilation is disabled; ordinary byte-compilation remains enabled.  Existing
+native Emacs 31+ installations do not need MSYS2 for Emacsvox compilation.
+
+=utils/emacsvox-native-bytecode.el= reads the canonical module variables and
+dependency rules from =lisp/Makefile= instead of maintaining a second module
+list.  It regenerates autoloads and rebuilds byte-code with native Emacs.
+Regression tests compare its inventory with GNU Make.  A fresh process rejects
+missing, stale, mismatched-version, and orphaned byte-code before launch.
+Paths cross the Emacs command-line boundary as encoded data to avoid Windows
+ANSI/OEM decoding differences; settings are never executable configuration.
+
+The core release supplies baseline Windows speech.  Optional-engine setup,
+JAWS integration, native ARM64 acceptance, and other Windows installation
+roles remain separate work.  JAWS speech muting alone does not disable its
+keyboard interception; the personal workstation override remains owned by
+=workstation-config=.
 
 * Acceptance gates
 

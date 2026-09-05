@@ -447,9 +447,10 @@ speech server is ready.  If either is missing, use *note Backend
 Diagnostics And Responsibilities: Backend Diagnostics And Ownership.
 before continuing.  *Note Speech Backends:: contains the complete
 platform matrix, build details, and compatibility alternatives.  Native
-Windows Emacs support remains a preview.  Evaluators can follow *note
-Trying Native Windows Emacsvox::; initial users should choose the WSL2
-route.
+Windows Emacs support remains a preview.  Its x64 PowerShell installer
+can build Emacs and install Omnivox without WSL.  Evaluators can follow
+*note Trying Native Windows Emacsvox::; initial users should choose the
+WSL2 route.
 
 
 File: emacsvox.info,  Node: Quick Installation,  Next: Confirming First Speech,  Prev: Building And Testing The Speech Server,  Up: Installation
@@ -1500,33 +1501,101 @@ File: emacsvox.info,  Node: Trying Native Windows Emacsvox,  Next: Installing Om
 ==================================
 
 This is a _preview evaluation_, not yet the recommended first
-installation.  It runs both Emacs and Omnivox directly on Windows; it
-does not use WSL2 or the POSIX ‘bin/emacsvox’ and ‘servers/omnivox’
-launchers.  The procedure is self-contained so a useful result records
-exactly where success or failure occurred.
+installation.  The guided provider supports Windows x64 and runs
+entirely on Windows.  WSL, Docker, Rust, and a system MSYS2 installation
+are not required.
 
-   You need a native Windows build of Emacs 31 or newer, PowerShell,
-Git, an Emacsvox checkout on the Windows filesystem, and network access
-for the Omnivox release download.  Windows audio must work and at least
-one Windows speech voice must be installed.  You do not need WSL2,
-Docker, Rust, MinGW, Visual Studio, or Windows .NET Framework.  Use
-‘windows-x64’ on an Intel or AMD Windows computer.  Use ‘windows-arm64’
-only on Windows on ARM.
+4.4.1 Guided Windows x64 Installation
+-------------------------------------
 
-   If Emacsvox is not already checked out on Windows, open PowerShell
-and place a checkout on the Windows filesystem:
+You need Windows PowerShell 5.1 or newer, Git for cloning, network
+access, and working Windows audio with an installed speech voice.  Put
+the checkout on a local Windows drive, rather than a WSL or network
+path.  From PowerShell:
 
-     $SourceRoot = Join-Path $env:USERPROFILE "src"
-     New-Item -ItemType Directory -Force $SourceRoot | Out-Null
-     Set-Location $SourceRoot
      git clone https://github.com/bartbunting/emacsvox.git
-     $Emacsvox = Join-Path $SourceRoot "emacsvox"
+     Set-Location emacsvox
+     .\bin\emacsvox-install.ps1 -Role Desktop -Check
+     .\bin\emacsvox-install.ps1 -Role Desktop
 
-   If the checkout already exists, skip ‘git clone’ and set ‘$Emacsvox’
-to its absolute Windows path instead.  Continue in the same PowerShell
-window.
+   Skip cloning if you already have a Windows checkout and change into
+it instead.  The check reports the selected Emacs and planned paths
+without downloading, writing configuration, or playing audio.
 
-4.4.1 Download And Verify Omnivox
+   The installer reuses native Emacs 31 or newer.  If none is selected,
+it builds GNU Emacs 31.1 using a private MSYS2 UCRT64 toolchain, then
+installs the pinned Omnivox core and prepares Emacsvox.  Allow several
+gigabytes of disk space and time for the initial downloads and source
+build.  Later runs reuse the installed Emacs and cached archives.  An
+existing native Emacs does not need MSYS2 to prepare Emacsvox.
+
+   To select an existing Emacs explicitly, add ‘-Emacs
+"C:\path\to\Emacs\bin\emacs.exe"’.  Explicit ‘-Emacs’, ‘EMACS’
+environment, and ‘local.mk’ selections must agree and require native
+Emacs 31 or newer.  ‘-BuildEmacs’ selects the managed source build
+instead of a saved or PATH selection; it reuses a complete managed build
+when one exists.  It cannot replace an explicit selection.
+
+   Installation is per-user.  The defaults are:
+
+   • Emacs, Omnivox, the isolated profile, and logs below
+     ‘%LOCALAPPDATA%\Emacsvox\Native’.
+   • Private build tools below
+     ‘%LOCALAPPDATA%\Emacsvox\Toolchains\msys2-20260611’.
+   • Verified archive cache below ‘%LOCALAPPDATA%\Emacsvox\Downloads’.
+   • A data-only ‘native-install.json’ in this checkout, ignored by Git.
+
+   ‘-InstallRoot’, ‘-ToolchainRoot’, and ‘-CacheDirectory’ select other
+local Windows directories.  The MSYS2 build-tool path must not contain
+spaces; choose ‘-ToolchainRoot’ if the default does.  Checkout and
+installed Emacs paths may contain spaces.  The installer leaves personal
+Emacs initialization, system PATH, Windows services, and JAWS settings
+alone.
+
+   The source archives are checksum-pinned.  MSYS2 compiler packages
+come from its signed rolling repositories; their installed versions are
+recorded with the build.  Lisp native compilation is disabled in this
+preview.  The built Emacs includes its runtime DLLs, so launching it
+does not need MSYS2 on PATH.
+
+   The default final check opens a temporary native Emacs window,
+verifies both speech lanes, speaks two announcements, and closes that
+test window.  Confirm that you hear both announcements.  ‘-NoAudioCheck’
+skips this step when needed; run the explicit check before accepting
+speech:
+
+     .\bin\emacsvox.ps1 -Diagnose
+     .\bin\emacsvox.ps1 -Check
+     .\bin\emacsvox.ps1
+
+   The last command opens the isolated native preview.  It uses Windows
+speech by default.  An explicit ‘OMNIVOX_ENGINE’ environment selection
+remains available for separately configured engines.  Native
+optional-engine installation, ARM64, and other native Windows roles are
+not provided by this guided preview.
+
+   After pulling source changes, rerun the installer before launching.
+It preserves source changes and refreshes the compiled files.  Missing
+or stale compiled files stop launch with instructions to rerun
+installation.  For a failed build, retain the logs under the reported
+build directory.  Inspect an incomplete installation before moving it
+aside or selecting a new directory; the installer does not overwrite an
+unknown partial tree.
+
+   JAWS speech muting does not disable its keyboard shortcuts.  If ‘M-<’
+or ‘M->’ is intercepted, test with ‘JAWSKey+3’ before the shortcut.
+Bart's ‘workstation-config’ repository supplies the separately
+installed, Emacs-specific JAWS override used on the test workstation.
+
+4.4.2 Manual Native Evaluation
+------------------------------
+
+The following manual procedure remains available for an already
+installed native Windows Emacs 31 or newer.  It does not acquire Emacs
+or replace the guided x64 checks above.  Set ‘$Emacsvox’ to the
+checkout's absolute Windows path and continue in one PowerShell window.
+
+4.4.3 Download And Verify Omnivox
 ---------------------------------
 
 Set ‘$Platform’ for the computer.  The example below uses the usual
@@ -1559,7 +1628,7 @@ Intel or AMD Windows x64 archive:
 security or local policy refuses it, stop rather than weakening that
 policy.
 
-4.4.2 Install And Check The Native Server
+4.4.4 Install And Check The Native Server
 -----------------------------------------
 
 Continue in the same PowerShell window.  Extract the complete release
@@ -1594,7 +1663,7 @@ and spoken confirmation.  Keep ‘omnivox.exe’, ‘espeak-ng-data’, and
 ‘omnivox-voices.el’: it is the adapter for upstream Emacspeak, while
 Emacsvox supplies its own adapter.
 
-4.4.3 Start Native Emacsvox
+4.4.5 Start Native Emacsvox
 ---------------------------
 
 Keep the same PowerShell window so ‘$Omnivox’ still identifies the
@@ -1615,9 +1684,10 @@ to that checkout:
 ‘runemacs.exe’, for this first trial so startup errors remain visible in
 the PowerShell window.  Loading ‘emacsvox-setup.el’ directly is
 intentional: the repository's ‘bin/emacsvox’ launcher is a POSIX shell
-script and is not the native Windows entry point.
+script.  The guided native entry point is ‘bin/emacsvox.ps1’; this
+subsection describes the manual alternative.
 
-4.4.4 Accept Or Report The Trial
+4.4.6 Accept Or Report The Trial
 --------------------------------
 
 A successful trial satisfies every item below:
@@ -5182,6 +5252,42 @@ not use ‘load-library’ as the first load after editing the source tree:
 Emacs can select an old ‘emacsvox-setup.elc’ before the newer source
 checker runs.
 
+  1. Native Windows preview builds
+
+     Use a separate checkout on a Windows drive.  The native installer
+     regenerates autoloads and all modules from the ‘lisp/Makefile’
+     inventory with the selected Windows Emacs.  Its launcher verifies
+     that byte-code in a fresh process.  Do not share generated
+     byte-code with a WSL checkout using another Emacs.
+
+     Run the native installer checks from that Windows checkout:
+
+          .\test\emacsvox-windows-install-tests.ps1 -Emacs "C:\path\to\emacs.exe"
+          .\bin\emacsvox-install.ps1 -Role Desktop -Check
+          .\bin\emacsvox-install.ps1 -Role Desktop
+          .\bin\emacsvox.ps1 -Check
+
+     The PowerShell tests use temporary fixtures and an existing native
+     Emacs.  They check doctor behavior, explicit selections, incomplete
+     installations, platform rejection, checksums, archive paths,
+     argument handling, and atomic configuration replacement.
+     ‘test/emacsvox-native-bytecode-tests.el’ compares the native
+     inventory with GNU Make and checks dependency order and byte-code
+     preflight failures.  Keep the WSL x64/ARM64 and remote installer
+     tests passing.
+
+     Actual acquisition acceptance must start with a private toolchain
+     and the pinned archives, not a reused developer runtime.  Keep
+     MSYS2 package versions, compiler/configure/build/install logs, and
+     ‘emacsvox-build.json’ with the installed Emacs.  The installation
+     logs also include ‘native-install-provenance.json’ with Lisp source
+     hashes and selected pins.  MSYS2 packages are signed rolling
+     inputs; these records do not claim a frozen or bit-identical
+     compiler environment.  Verify fresh graphical startup, acknowledged
+     routing, and tracked completion on both speech lanes with a PATH
+     that contains neither WSL nor MSYS2 tools.  Human listening remains
+     a separate acceptance step.
+
 16.3.2 Emacsvox release staging and publication
 -----------------------------------------------
 
@@ -5789,86 +5895,87 @@ Node: Obtaining Emacsvox7070
 Node: Installing Remote Emacsvox11788
 Node: Updating Emacsvox Under WSL215496
 Node: Building And Testing The Speech Server18654
-Node: Quick Installation20220
-Node: Confirming First Speech22719
-Node: Recovering From No Speech24712
-Node: Persistent Startup27584
-Node: Basic Usage28598
-Node: Overview31222
-Node: Working32360
-Ref: Working-Footnote-133702
-Ref: Working-Footnote-233795
-Node: Reading33905
-Node: Speech System35685
-Node: Controlling Echo36597
-Node: Speech Output Control37432
-Node: Miscellaneous39162
-Node: Voice-lock40109
-Node: Status Information41359
-Node: Speech Backends42422
-Node: Supported Platform Routes44351
-Node: Installing An Omnivox Release Binary52217
-Node: Installing An Omnivox Windows Release Under WSL255610
-Node: Optional Omnivox Engine Modules61531
-Node: Trying Native Windows Emacsvox67003
-Node: Installing Omnivox From Source74724
-Node: Building Omnivox For WSL276588
-Node: Selecting And Checking Omnivox84247
-Node: Compatibility Speech Servers86515
-Node: Backend Diagnostics And Ownership88441
-Node: Audio Desktop91618
-Node: Desktop Objects92748
-Node: Object Oriented Desktop93973
-Node: Context-Sensitive Interaction95086
-Node: Aural Presentation98201
-Node: Presentation Model100794
-Node: Presentation Modalities103261
-Node: Aural Home106430
-Node: Explaining Presentation110009
-Node: Adjusting Presentation112037
-Node: Presentation Profiles117923
-Node: Voices And Routing119600
-Ref: Browse Eloquence And Compare Pitch127800
-Ref: Keep A Voice Experiment129047
-Ref: Change A Heading Voice Add A Cue Or Silence One130047
-Ref: Change A Blank-Line Tone131008
-Ref: Choose An Engine And Recover Unfinished Work131765
-Node: Sounds And Space132923
-Node: Presentation Troubleshooting134559
-Node: Voice Lock136597
-Node: Using Online Help139804
-Node: Emacs Packages143866
-Node: Document Authoring145240
-Node: Structured Editing145794
-Node: Browsing Structure146777
-Node: Web Browsing147375
-Node: Messaging148210
-Node: Editing Code148708
-Node: Development Environment149227
-Node: Desktop Management150763
-Node: Personal Information Management151265
-Node: Desktop Applications151797
-Node: Notmuch Mail159185
-Ref: Notmuch fields and privacy168528
-Node: Agent Shell174236
-Node: EAT Terminal Access186531
-Node: Running Terminal Based Applications203790
-Node: Starting Term204745
-Node: Term Input Modes205584
-Node: Term Speech Feedback206744
-Node: Reviewing The Term Screen207938
-Node: Term Help And Recovery209839
-Node: Emacsvox Keyboard Commands210738
-Node: Copyright212142
-Node: Acknowledgments212729
-Node: Developer Guide213755
-Node: Documentation Maintenance214919
-Node: Speech Server Protocols219717
-Ref: Testing A Direct Legacy Server225624
-Ref: Commands That Queue Output226183
-Ref: Commands That Set State229217
-Node: Integration Maintenance231811
-Node: Concept Index258798
+Node: Quick Installation20299
+Node: Confirming First Speech22798
+Node: Recovering From No Speech24791
+Node: Persistent Startup27663
+Node: Basic Usage28677
+Node: Overview31301
+Node: Working32439
+Ref: Working-Footnote-133781
+Ref: Working-Footnote-233874
+Node: Reading33984
+Node: Speech System35764
+Node: Controlling Echo36676
+Node: Speech Output Control37511
+Node: Miscellaneous39241
+Node: Voice-lock40188
+Node: Status Information41438
+Node: Speech Backends42501
+Node: Supported Platform Routes44430
+Node: Installing An Omnivox Release Binary52296
+Node: Installing An Omnivox Windows Release Under WSL255689
+Node: Optional Omnivox Engine Modules61610
+Node: Trying Native Windows Emacsvox67082
+Node: Installing Omnivox From Source78158
+Node: Building Omnivox For WSL280022
+Node: Selecting And Checking Omnivox87681
+Node: Compatibility Speech Servers89949
+Node: Backend Diagnostics And Ownership91875
+Node: Audio Desktop95052
+Node: Desktop Objects96182
+Node: Object Oriented Desktop97407
+Node: Context-Sensitive Interaction98520
+Node: Aural Presentation101635
+Node: Presentation Model104228
+Node: Presentation Modalities106695
+Node: Aural Home109864
+Node: Explaining Presentation113443
+Node: Adjusting Presentation115471
+Node: Presentation Profiles121357
+Node: Voices And Routing123034
+Ref: Browse Eloquence And Compare Pitch131234
+Ref: Keep A Voice Experiment132481
+Ref: Change A Heading Voice Add A Cue Or Silence One133481
+Ref: Change A Blank-Line Tone134442
+Ref: Choose An Engine And Recover Unfinished Work135199
+Node: Sounds And Space136357
+Node: Presentation Troubleshooting137993
+Node: Voice Lock140031
+Node: Using Online Help143238
+Node: Emacs Packages147300
+Node: Document Authoring148674
+Node: Structured Editing149228
+Node: Browsing Structure150211
+Node: Web Browsing150809
+Node: Messaging151644
+Node: Editing Code152142
+Node: Development Environment152661
+Node: Desktop Management154197
+Node: Personal Information Management154699
+Node: Desktop Applications155231
+Node: Notmuch Mail162619
+Ref: Notmuch fields and privacy171962
+Node: Agent Shell177670
+Node: EAT Terminal Access189965
+Node: Running Terminal Based Applications207224
+Node: Starting Term208179
+Node: Term Input Modes209018
+Node: Term Speech Feedback210178
+Node: Reviewing The Term Screen211372
+Node: Term Help And Recovery213273
+Node: Emacsvox Keyboard Commands214172
+Node: Copyright215576
+Node: Acknowledgments216163
+Node: Developer Guide217189
+Node: Documentation Maintenance218353
+Node: Speech Server Protocols223151
+Ref: Testing A Direct Legacy Server229058
+Ref: Commands That Queue Output229617
+Ref: Commands That Set State232651
+Node: Integration Maintenance235245
+Ref: Native Windows preview builds237285
+Node: Concept Index264147
 
 End Tag Table
 

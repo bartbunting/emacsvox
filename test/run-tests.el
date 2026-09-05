@@ -60,6 +60,7 @@
   (require 'emacsvox-launcher-tests)
   (require 'emacsvox-wsl-install-tests)
   (require 'emacsvox-remote-install-tests)
+  (require 'emacsvox-native-bytecode-tests)
   (require 'emacsvox-omnivox-components-tests)
   (require 'emacsvox-keymap-tests)
   (require 'emacsvox-startup-tests)
