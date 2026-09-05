@@ -139,6 +139,11 @@ fi
 # line-aware bounded parts.  Closed logs are retained within both aggregate
 # file-count and byte limits; live write targets remain protected when they
 # exceed either cap.
+omnivox_service=false
+for omnivox_argument do
+    case $omnivox_argument in --serve) omnivox_service=true ;; esac
+done
+# A foreground service needs visible listen/startup diagnostics in its terminal.
 omnivox_state_directory=${XDG_STATE_HOME:-"$HOME/.local/state"}
 omnivox_log_directory=${OMNIVOX_LOG_DIRECTORY:-"$omnivox_state_directory/emacsvox/omnivox"}
 omnivox_log_max_file_bytes=${OMNIVOX_LOG_MAX_FILE_BYTES:-16777216}
@@ -156,7 +161,7 @@ case $omnivox_log_retained_bytes in
     ''|*[!0-9]*|0) omnivox_log_retained_bytes=268435456 ;;
 esac
 
-if (umask 077 && mkdir -p -- "$omnivox_log_directory"); then
+if ! $omnivox_service && (umask 077 && mkdir -p -- "$omnivox_log_directory"); then
     chmod 700 -- "$omnivox_log_directory" 2>/dev/null || :
     log_filter="$server_directory/omnivox-log-filter"
     export OMNIVOX_LOG_FILTER_DIRECTORY="$omnivox_log_directory"
@@ -188,7 +193,7 @@ if (umask 077 && mkdir -p -- "$omnivox_log_directory"); then
     printf '%s session_start session_id=%s launcher_pid=%s program=%s\n' \
         "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$omnivox_session_id" "$$" \
         "$resolved_program" >&2
-else
+elif ! $omnivox_service; then
     echo "Could not create Omnivox log directory: $omnivox_log_directory" >&2
 fi
 
@@ -196,6 +201,7 @@ if $windows_runtime; then
     # WSL passes selected Linux variables to Windows programs through WSLENV.
     # Preserve existing entries and add Omnivox's compatibility settings once.
     for variable in OMNIVOX_ENGINE OMNIVOX_AUDIO_TARGET OMNIVOX_AUDIO_OUTPUT \
+        OMNIVOX_REMOTE_NOTIFICATION_TARGET \
         OMNIVOX_LOG_SYNTHESIS_TEXT \
         OMNIVOX_ELOQUENCE_HELPER OMNIVOX_ECI_DLL \
         OMNIVOX_DECTALK_HELPER OMNIVOX_DECTALK_DLL \

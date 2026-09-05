@@ -340,6 +340,30 @@
             (should (equal (buffer-string) "configured:--configured\n"))))
       (delete-directory directory t))))
 
+(ert-deftest emacsvox-launcher-keeps-service-startup-diagnostics-visible ()
+  "Foreground service diagnostics remain on stderr instead of hidden logs."
+  (let* ((directory (make-temp-file "emacsvox-service-launcher-" t))
+         (launcher (expand-file-name "omnivox" directory))
+         (program (expand-file-name "worker" directory))
+         (logs (expand-file-name "logs" directory))
+         (process-environment (copy-sequence process-environment)))
+    (unwind-protect
+        (progn
+          (copy-file (expand-file-name "servers/omnivox" emacsvox-launcher-tests--root)
+                     launcher)
+          (with-temp-file program
+            (insert "#!/bin/sh\nprintf 'Service listening\\n' >&2\n"))
+          (set-file-modes launcher #o700)
+          (set-file-modes program #o700)
+          (setenv "OMNIVOX_PROGRAM" program)
+          (setenv "OMNIVOX_LOG_DIRECTORY" logs)
+          (setenv "EMACSVOX_OMNIVOX_PROBE_ONLY" nil)
+          (with-temp-buffer
+            (should (zerop (call-process launcher nil '(t t) nil "--serve")))
+            (should (string-search "Service listening" (buffer-string))))
+          (should-not (file-exists-p logs)))
+      (delete-directory directory t))))
+
 (ert-deftest emacsvox-launcher-configures-staged-windows-companions ()
   "Staged companion settings should reach Windows Omnivox."
   (let* ((directory (make-temp-file "emacsvox piper launcher-" t))
@@ -416,6 +440,7 @@
                (string-search
                 (concat "RHVOICE_CONFIG=" rhvoice-config "\n") output))
               (dolist (name '("OMNIVOX_AUDIO_OUTPUT"
+                              "OMNIVOX_REMOTE_NOTIFICATION_TARGET"
                               "OMNIVOX_RHVOICE_HELPER"
                               "OMNIVOX_RHVOICE_LIBRARY"
                               "OMNIVOX_RHVOICE_DATA"
