@@ -52,3 +52,15 @@ configurable through ~emacsvox-aural-preview-label-verbosity~.  Views retain
 their own selected rows and columns, and fresh inventory updates open lists.
 Exact-preview failures stop the sequence and report the requested voice's
 failure instead of silently accepting another engine or voice.
+
+** Temporary physical voice tuning and reviewed Keep result
+
+Press ~t~ on a physical voice to experiment with its exact route, engine
+parameters, and audio effects.  Navigation and Help use the working voice.
+Compare opening and working versions, copy a style, switch voices, or hear
+three parameter values without saving.  ~w~ chooses what to keep and opens a
+review; ~C-c C-c~ in that review saves and applies the selected destinations.
+Style and route stores remain separate, and incomplete saves or failed
+application retain their completed steps for retry.  Requested settings and
+reported playback support are shown separately; exact effective values are
+not claimed when the adapter does not report them.

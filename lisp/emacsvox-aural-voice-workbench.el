@@ -48,6 +48,9 @@
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
+(declare-function emacsvox-aural-voice-experiment-open
+                  "emacsvox-aural-voice-experiment" (pair source text))
+
 (defcustom emacsvox-aural-voice-workbench-preview-text
   "The quick brown fox jumps over the lazy dog."
   "Common text used for Voice Workbench preview and A/B comparison."
@@ -2516,6 +2519,17 @@ refreshing the Workbench at LOGICAL-VOICE."
       copy)))
 
 (defun emacsvox-aural-voice-workbench-tune ()
+  "Temporarily tune a physical voice, or edit a logical voice's portable style."
+  (interactive)
+  (if (eq emacsvox-aural-voice-workbench-view 'physical)
+      (progn
+        (require 'emacsvox-aural-voice-experiment)
+        (emacsvox-aural-voice-experiment-open
+         (emacsvox-aural-voice-workbench--physical-pair (tabulated-list-get-id))
+         (current-buffer) emacsvox-aural-voice-workbench-preview-text))
+    (emacsvox-aural-voice-workbench--tune-logical)))
+
+(defun emacsvox-aural-voice-workbench--tune-logical ()
   "Tune the current logical voice against its effective preview route."
   (interactive)
   (unless (memq emacsvox-aural-voice-workbench-view '(logical styles))
@@ -2763,7 +2777,8 @@ refreshing the Workbench at LOGICAL-VOICE."
       "B selected voice versus a matching voice; T edit sample text\n"
       "B also offers Search all engines. Unavailable voices are skipped by A.\n"
       "Customize emacsvox-aural-preview-label-verbosity for sample labels.\n"
-      "S stop preview        t tune logical voice on effective route\n"
+      "S stop preview        t tune selected physical or logical voice\n"
+      "Physical tuning is temporary; Keep result opens a review before saving.\n"
       "a assign or choose physical voice\n"
       "j review one route suggestion\n"
       "c cancel assignment   [/] move selector earlier/later\n"
@@ -2828,8 +2843,9 @@ refreshing the Workbench at LOGICAL-VOICE."
            'emacsvox-aural-voice-workbench-toggle-disabled-engine
            'emacsvox-aural-voice-workbench-request-recovery-probe)
        (and row (eq view 'engines)))
-      ((or 'emacsvox-aural-voice-workbench-tune
-           'emacsvox-aural-voice-workbench-suggest-route
+      ('emacsvox-aural-voice-workbench-tune
+       (and row (memq view '(physical logical styles))))
+      ((or 'emacsvox-aural-voice-workbench-suggest-route
            'emacsvox-aural-voice-workbench-delete-selector
            'emacsvox-aural-voice-workbench-copy-route)
        (and row (memq view '(logical styles))))

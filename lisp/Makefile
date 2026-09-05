@@ -110,6 +110,7 @@ emacsvox-aural-doctor.elc \
 emacsvox-aural-profiles.elc \
 emacsvox-aural-voice-palettes.elc \
 emacsvox-aural-voice-workbench.elc \
+emacsvox-aural-voice-experiment.elc \
 emacsvox-aural-provider-org.elc \
 emacsvox-aural-provider-workflows.elc \
 emacsvox-aural-provider-org-srs.elc \

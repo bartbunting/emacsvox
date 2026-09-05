@@ -2503,6 +2503,48 @@ kinds of content, not to identify every named voice in isolation.  Use a
 portable palette for the intended distinction and machine routing for
 the best local realization.
 
+6.7.1 Tune A Physical Voice Temporarily
+---------------------------------------
+
+In _Browse and try voices_, select a physical voice and press ‘t’.  This
+opens a temporary experiment with that exact engine and voice,
+engine-default speech characteristics, the current speech rate, and
+neutral audio effects.  Opening, adjusting, comparing, and cancelling
+perform no configuration writes or route assignments.
+
+   The experiment uses its working voice for navigation, values, and
+Help.  ‘n/p’ or up/down selects a parameter; left/right adjusts it;
+<RET> enters a value.  ‘P’ plays the working version.  ‘B’ alternates
+the opening and working versions, ‘u’ undoes, ‘R’ restores the opening
+voice and parameters, and ‘S’ stops.  ‘T’ changes the sample, ‘c’ copies
+an existing style, and ‘v’ tries another physical voice while retaining
+the requested parameters.
+
+   For a three-value comparison, select a supported numeric parameter
+and choose _Demonstrate the selected parameter_ from ‘C-c C-a’, or press
+‘D’.  Enter three valid values; each is labelled before the identical
+sentence.  This demonstration does not change the working settings and
+can be stopped as one sequence.
+
+   Engine speech controls and Omnivox audio effects are identified
+separately.  The Requested column shows your settings.  Playback reports
+show omissions or acceptance; adapters do not report exact effective
+numeric values.  A failed physical voice is reported explicitly.  If it
+prevents navigation, ordinary speech keeps the tuner operable and
+announces that fallback.
+
+   Press ‘w’ or ‘C-c C-c’ to choose _Keep result_: parameters as a named
+style, a physical voice route retaining the existing style, or both
+voice and parameters for a named logical voice.  A built-in palette is
+copied only when you save the reviewed result.  The review names the
+destinations and shows the parameters.  Press ‘C-c C-c’ in that review
+to save and apply them.  Palette selection applies for the session; a
+Presentation Profile can retain that choice.  Route and style files
+remain separate.  Any partial save or failed apply is reported, and the
+review retains completed steps so you can retry without repeating
+writes.  ‘q’ returns from the review; cancelling before Save and apply
+leaves configuration unchanged.
+
 
 File: emacsvox.info,  Node: Sounds And Space,  Next: Presentation Troubleshooting,  Prev: Voices And Routing,  Up: Aural Presentation
 
@@ -5404,42 +5446,42 @@ Node: Explaining Presentation100919
 Node: Adjusting Presentation102947
 Node: Presentation Profiles106222
 Node: Voices And Routing107899
-Node: Sounds And Space112972
-Node: Presentation Troubleshooting114608
-Node: Voice Lock116646
-Node: Using Online Help119853
-Node: Emacs Packages123915
-Node: Document Authoring125289
-Node: Structured Editing125843
-Node: Browsing Structure126826
-Node: Web Browsing127424
-Node: Messaging128259
-Node: Editing Code128757
-Node: Development Environment129276
-Node: Desktop Management130812
-Node: Personal Information Management131314
-Node: Desktop Applications131846
-Node: Notmuch Mail139234
-Ref: Notmuch fields and privacy148577
-Node: Agent Shell154285
-Node: EAT Terminal Access166580
-Node: Running Terminal Based Applications183839
-Node: Starting Term184794
-Node: Term Input Modes185633
-Node: Term Speech Feedback186793
-Node: Reviewing The Term Screen187987
-Node: Term Help And Recovery189888
-Node: Emacsvox Keyboard Commands190787
-Node: Copyright192191
-Node: Acknowledgments192778
-Node: Developer Guide193804
-Node: Documentation Maintenance194968
-Node: Speech Server Protocols199766
-Ref: Testing A Direct Legacy Server205673
-Ref: Commands That Queue Output206232
-Ref: Commands That Set State209266
-Node: Integration Maintenance211860
-Node: Concept Index236096
+Node: Sounds And Space115318
+Node: Presentation Troubleshooting116954
+Node: Voice Lock118992
+Node: Using Online Help122199
+Node: Emacs Packages126261
+Node: Document Authoring127635
+Node: Structured Editing128189
+Node: Browsing Structure129172
+Node: Web Browsing129770
+Node: Messaging130605
+Node: Editing Code131103
+Node: Development Environment131622
+Node: Desktop Management133158
+Node: Personal Information Management133660
+Node: Desktop Applications134192
+Node: Notmuch Mail141580
+Ref: Notmuch fields and privacy150923
+Node: Agent Shell156631
+Node: EAT Terminal Access168926
+Node: Running Terminal Based Applications186185
+Node: Starting Term187140
+Node: Term Input Modes187979
+Node: Term Speech Feedback189139
+Node: Reviewing The Term Screen190333
+Node: Term Help And Recovery192234
+Node: Emacsvox Keyboard Commands193133
+Node: Copyright194537
+Node: Acknowledgments195124
+Node: Developer Guide196150
+Node: Documentation Maintenance197314
+Node: Speech Server Protocols202112
+Ref: Testing A Direct Legacy Server208019
+Ref: Commands That Queue Output208578
+Ref: Commands That Set State211612
+Node: Integration Maintenance214206
+Node: Concept Index238442
 
 End Tag Table
 

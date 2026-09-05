@@ -485,6 +485,50 @@ content, not to identify every named voice in isolation.  Use a portable
 palette for the intended distinction and machine routing for the best local
 realization.
 
+*** Tune A Physical Voice Temporarily
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+In /Browse and try voices/, select a physical voice and press
+@@texinfo:@kbd{t}@@.  This opens a temporary experiment with that exact
+engine and voice, engine-default speech characteristics, the current speech
+rate, and neutral audio effects.  Opening, adjusting, comparing, and
+cancelling perform no configuration writes or route assignments.
+
+The experiment uses its working voice for navigation, values, and Help.
+@@texinfo:@kbd{n/p}@@ or up/down selects a parameter; left/right adjusts it;
+@@texinfo:@key{RET}@@ enters a value.  @@texinfo:@kbd{P}@@ plays the working
+version.  @@texinfo:@kbd{B}@@ alternates the opening and working versions,
+@@texinfo:@kbd{u}@@ undoes, @@texinfo:@kbd{R}@@ restores the opening voice and
+parameters, and @@texinfo:@kbd{S}@@ stops.  @@texinfo:@kbd{T}@@ changes the
+sample, @@texinfo:@kbd{c}@@ copies an existing style, and @@texinfo:@kbd{v}@@
+tries another physical voice while retaining the requested parameters.
+
+For a three-value comparison, select a supported numeric parameter and
+choose /Demonstrate the selected parameter/ from @@texinfo:@kbd{C-c C-a}@@,
+or press @@texinfo:@kbd{D}@@.  Enter three valid values; each is labelled
+before the identical sentence.  This demonstration does not change the
+working settings and can be stopped as one sequence.
+
+Engine speech controls and Omnivox audio effects are identified separately.
+The Requested column shows your settings.  Playback reports show omissions
+or acceptance; adapters do not report exact effective numeric values.  A
+failed physical voice is reported explicitly.  If it prevents navigation,
+ordinary speech keeps the tuner operable and announces that fallback.
+
+Press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ to choose /Keep result/:
+parameters as a named style, a physical voice route retaining the existing
+style, or both voice and parameters for a named logical voice.  A built-in
+palette is copied only when you save the reviewed result.  The review names
+the destinations and shows the parameters.  Press @@texinfo:@kbd{C-c C-c}@@
+in that review to save and apply them.  Palette selection applies for the
+session; a Presentation Profile can retain that choice.  Route and style
+files remain separate.  Any partial save or failed apply is reported, and
+the review retains completed steps so you can retry without repeating writes.
+@@texinfo:@kbd{q}@@ returns from the review; cancelling before Save and apply
+leaves configuration unchanged.
+
 ** Choose Sounds And Spatial Cues
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Sounds And Space

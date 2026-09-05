@@ -2549,6 +2549,47 @@ content@comma{} not to identify every named voice in isolation.  Use a portable
 palette for the intended distinction and machine routing for the best local
 realization.
 
+@subsection Tune A Physical Voice Temporarily
+
+In @emph{Browse and try voices}@comma{} select a physical voice and press
+@kbd{t}.  This opens a temporary experiment with that exact
+engine and voice@comma{} engine-default speech characteristics@comma{} the current speech
+rate@comma{} and neutral audio effects.  Opening@comma{} adjusting@comma{} comparing@comma{} and
+cancelling perform no configuration writes or route assignments.
+
+The experiment uses its working voice for navigation@comma{} values@comma{} and Help.
+@kbd{n/p} or up/down selects a parameter; left/right adjusts it;
+@key{RET} enters a value.  @kbd{P} plays the working
+version.  @kbd{B} alternates the opening and working versions@comma{}
+@kbd{u} undoes@comma{} @kbd{R} restores the opening voice and
+parameters@comma{} and @kbd{S} stops.  @kbd{T} changes the
+sample@comma{} @kbd{c} copies an existing style@comma{} and @kbd{v}
+tries another physical voice while retaining the requested parameters.
+
+For a three-value comparison@comma{} select a supported numeric parameter and
+choose @emph{Demonstrate the selected parameter} from @kbd{C-c C-a}@comma{}
+or press @kbd{D}.  Enter three valid values; each is labelled
+before the identical sentence.  This demonstration does not change the
+working settings and can be stopped as one sequence.
+
+Engine speech controls and Omnivox audio effects are identified separately.
+The Requested column shows your settings.  Playback reports show omissions
+or acceptance; adapters do not report exact effective numeric values.  A
+failed physical voice is reported explicitly.  If it prevents navigation@comma{}
+ordinary speech keeps the tuner operable and announces that fallback.
+
+Press @kbd{w} or @kbd{C-c C-c} to choose @emph{Keep result}:
+parameters as a named style@comma{} a physical voice route retaining the existing
+style@comma{} or both voice and parameters for a named logical voice.  A built-in
+palette is copied only when you save the reviewed result.  The review names
+the destinations and shows the parameters.  Press @kbd{C-c C-c}
+in that review to save and apply them.  Palette selection applies for the
+session; a Presentation Profile can retain that choice.  Route and style
+files remain separate.  Any partial save or failed apply is reported@comma{} and
+the review retains completed steps so you can retry without repeating writes.
+@kbd{q} returns from the review; cancelling before Save and apply
+leaves configuration unchanged.
+
 @node Sounds And Space
 @section Choose Sounds And Spatial Cues
 

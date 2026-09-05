@@ -898,10 +898,10 @@
       (should
        (equal
         (emacsvox-aural-voice-tuner--support-description 'reverb)
-        "saved; preview transport cannot apply"))
+        "requested; preview transport cannot apply"))
       (should
        (string-match-p
-        "saved but is not applied in this audition"
+        "requested but is not applied in this audition"
         (emacsvox-aural-voice-tuner--setting-announcement 'reverb))))))
 
 (ert-deftest emacsvox-aural-rich-voice-style-validates-and-persists-effects ()

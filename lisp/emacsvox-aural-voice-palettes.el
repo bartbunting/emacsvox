@@ -127,6 +127,15 @@
 (defvar-local emacsvox-aural-voice-tuner-preview-result nil
   "Most recent normalized route-preview completion result.")
 
+(defvar-local emacsvox-aural-voice-tuner-preview-generation 0
+  "Generation preventing obsolete callbacks from replacing current feedback.")
+
+(defvar-local emacsvox-aural-voice-tuner-additional-dirty-function nil
+  "Optional predicate for additional unsaved tuner state, such as a physical route.")
+
+(defvar emacsvox-aural-voice-tuner--feedback-p nil
+  "Non-nil while requesting operable tuner feedback rather than a voice sample.")
+
 (defvar-local emacsvox-aural-voice-tuner-legacy-rate nil
   "Ignored nonzero legacy absolute rate found when this tuner opened.")
 
@@ -1302,7 +1311,7 @@ in that overlay so subsequent edits do not create more palettes."
          (emacsvox-aural-humanize
           (emacsvox-aural-voice-tuner--adapter))))
        ((not (emacsvox-aural-voice-tuner--applied-p dimension))
-        "saved; preview transport cannot apply")
+        "requested; preview transport cannot apply")
        (t
         (format
          "supported by %s"
@@ -1325,9 +1334,16 @@ in that overlay so subsequent edits do not create more palettes."
 
 (defun emacsvox-aural-voice-tuner--effective-value (dimension)
   "Describe the auditioned value for DIMENSION."
-  (if (and emacsvox-aural-voice-tuner-route-selector
-           (eq dimension 'family))
-      "retained for fallback; not applied to the selected physical voice"
+  (if emacsvox-aural-voice-tuner-route-selector
+      (cond
+       ((eq dimension 'family) "physical route owns the base voice")
+       ((emacsvox-aural-voice-tuner--degraded-p dimension) "reported omitted")
+       ((not (emacsvox-aural-voice-tuner--supported-p dimension)) "unsupported")
+       ((memq (plist-get emacsvox-aural-voice-tuner-preview-result :status) '(failed cancelled))
+        "preview did not complete")
+       ((eq (plist-get emacsvox-aural-voice-tuner-preview-result :status) 'completed)
+        "playback accepted; exact value not reported")
+       (t "advertised support; no playback report"))
     (if (emacsvox-aural-voice-tuner--applied-p dimension)
         (if (eq dimension 'family)
             (let* ((value (emacsvox-aural-voice-tuner--value dimension))
@@ -1397,7 +1413,7 @@ in that overlay so subsequent edits do not create more palettes."
    (format
     " Voice: %s    Palette: %s    %s    %s"
     emacsvox-aural-voice-tuner-voice
-    emacsvox-aural-voice-tuner-palette
+    (or emacsvox-aural-voice-tuner-palette "temporary experiment; nothing saved")
     (emacsvox-aural-voice-tuner--route-description)
     (concat
      (if emacsvox-aural-voice-tuner-dirty "modified" "unchanged")
@@ -1465,7 +1481,7 @@ in that overlay so subsequent edits do not create more palettes."
     (emacsvox-aural-voice-tuner--support-description dimension))
    (if (emacsvox-aural-voice-tuner--applied-p dimension)
        "."
-     "; this setting is saved but is not applied in this audition.")))
+     "; this setting is requested but is not applied in this audition.")))
 
 (defun emacsvox-aural-voice-tuner--speak-setting ()
   "Speak the current setting name, value, and adapter support."
@@ -1512,7 +1528,9 @@ in that overlay so subsequent edits do not create more palettes."
 When RECORD-RESULT is non-nil, retain routed realization and degradation
 information for the working tuner display."
   (if emacsvox-aural-voice-tuner-route-selector
-      (let ((buffer (current-buffer)))
+      (let ((buffer (current-buffer))
+            (generation (cl-incf emacsvox-aural-voice-tuner-preview-generation))
+            (feedback emacsvox-aural-voice-tuner--feedback-p))
         (when record-result
           (setq emacsvox-aural-voice-tuner-preview-result
                 '(:status running)))
@@ -1525,9 +1543,16 @@ information for the working tuner display."
          :callback
          (when record-result
            (lambda (result)
-             (when (buffer-live-p buffer)
+             (when (and (buffer-live-p buffer)
+                        (= generation (buffer-local-value
+                                       'emacsvox-aural-voice-tuner-preview-generation buffer)))
                (with-current-buffer buffer
                  (setq emacsvox-aural-voice-tuner-preview-result result)
+                 (when (eq (plist-get result :status) 'failed)
+                   (tts-speak
+                    (if feedback (concat "Tuned voice unavailable. " text)
+                      (format "Voice preview failed: %s"
+                              (or (plist-get result :message) "requested voice unavailable")))))
                  (when-let* ((realized (plist-get result :realized)))
                    (setq emacsvox-aural-voice-tuner-route-realized realized))
                  (when (derived-mode-p 'emacsvox-aural-voice-tuner-mode)
@@ -1548,8 +1573,9 @@ information for the working tuner display."
 If the staged route cannot be previewed, fall back to normal speech so that
 the tuner remains operable."
   (condition-case error-data
-      (emacsvox-aural-voice-tuner--play-text
-       text emacsvox-aural-voice-tuner-working-style t)
+      (let ((emacsvox-aural-voice-tuner--feedback-p t))
+        (emacsvox-aural-voice-tuner--play-text
+         text emacsvox-aural-voice-tuner-working-style t))
     (error
      (emacsvox-aural-preview-message
       "Tuned voice unavailable; using normal speech: %s"
@@ -1599,10 +1625,10 @@ the tuner remains operable."
   "Update and return the tuner dirty state."
   (setq
    emacsvox-aural-voice-tuner-dirty
-   (not
-    (equal
-     emacsvox-aural-voice-tuner-working-style
-     emacsvox-aural-voice-tuner-initial-style))))
+   (or (not (equal emacsvox-aural-voice-tuner-working-style
+                   emacsvox-aural-voice-tuner-initial-style))
+       (and emacsvox-aural-voice-tuner-additional-dirty-function
+            (funcall emacsvox-aural-voice-tuner-additional-dirty-function)))))
 
 (defun emacsvox-aural-voice-tuner--set-value
     (dimension value &optional announcement)
@@ -1624,9 +1650,11 @@ ANNOUNCEMENT overrides the normal setting description."
       (emacsvox-aural-voice-tuner--update-dirty)
       (emacsvox-aural-voice-tuner-refresh dimension)
       (emacsvox-aural-voice-tuner-audition
-       (or
-        announcement
-        (emacsvox-aural-voice-tuner--setting-announcement dimension))))
+       (concat (or announcement
+                   (emacsvox-aural-voice-tuner--setting-announcement dimension))
+               (when (and emacsvox-aural-voice-tuner-route-engine
+                          (not (emacsvox-aural-voice-tuner--supported-p dimension)))
+                 (format ", unsupported by %s" (emacsvox-aural-voice-tuner--adapter))))))
     value))
 
 (defun emacsvox-aural-voice-tuner--numeric-dimension ()
@@ -1954,11 +1982,26 @@ ANNOUNCEMENT overrides the normal setting description."
       (with-current-buffer tuner
         (emacsvox-aural-voice-tuner--speak-text help)))))
 
+(defun emacsvox-aural-voice-tuner--action-applicable-p (command)
+  "Return whether tuner COMMAND applies to the current parameter and state."
+  (pcase command
+    ('emacsvox-aural-voice-tuner-undo emacsvox-aural-voice-tuner-history)
+    ('emacsvox-aural-voice-tuner-restore emacsvox-aural-voice-tuner-dirty)
+    ((or 'emacsvox-aural-voice-tuner-edit 'emacsvox-aural-voice-tuner-use-default)
+     (and (tabulated-list-get-id)
+          (or (not (eq (tabulated-list-get-id) 'family))
+              (emacsvox-aural-voice-tuner--supported-p 'family))))
+    ((or 'emacsvox-aural-voice-tuner-increase 'emacsvox-aural-voice-tuner-decrease
+         'emacsvox-aural-voice-tuner-set-digit)
+     (and (tabulated-list-get-id) (not (eq (tabulated-list-get-id) 'family))))
+    (_ t)))
+
 (define-derived-mode
     emacsvox-aural-voice-tuner-mode
     emacsvox-aural-tabulated-mode
   "Aural-Voice-Tuner"
   "Transactional spoken tuner for one personal-palette voice."
+  (setq-local emacsvox-aural-ui-action-filter #'emacsvox-aural-voice-tuner--action-applicable-p)
   (emacsvox-aural-ui-configure-tabulated
    "voice settings"
    #'emacsvox-aural-voice-tuner-speak-current
