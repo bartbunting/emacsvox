@@ -156,12 +156,13 @@
 
 (ert-deftest emacsvox-tts-omnivox-discovers-physical-voice-identifiers ()
   "Omnivox discovery invokes the server safely and preserves backend IDs."
-  (let (invocation)
+  (let (invocation stderr-file)
     (cl-letf
         (((symbol-function 'omnivox--server-program)
           (lambda () "/tmp/server path/omnivox"))
          ((symbol-function 'process-file)
           (lambda (program input destination display &rest arguments)
+            (setq stderr-file (cadr destination))
             (setq invocation
                   (list program input destination display arguments))
             (insert
@@ -174,7 +175,38 @@
       (should
        (equal
         invocation
-        '("/tmp/server path/omnivox" nil t nil ("--list-voices-alist")))))))
+        (list "/tmp/server path/omnivox" nil (list t stderr-file) nil
+              '("--list-voices-alist"))))
+      (should (stringp stderr-file))
+      (should-not (file-exists-p stderr-file)))))
+
+(ert-deftest emacsvox-tts-omnivox-separates-voice-discovery-diagnostics ()
+  "Child stderr cannot corrupt voices, but remains available on failure."
+  (let ((run-process (symbol-function 'process-file))
+        (emacs (expand-file-name invocation-name invocation-directory)))
+    (dolist (exit-status '(0 1))
+      (let (stderr-file)
+        (cl-letf
+            (((symbol-function 'omnivox--server-program) (lambda () emacs))
+             ((symbol-function 'process-file)
+              (lambda (program input destination display &rest _arguments)
+                (setq stderr-file (cadr destination))
+                (funcall
+                 run-process program input destination display
+                 "-Q" "--batch" "--eval"
+                 (prin1-to-string
+                  `(progn
+                     (princ "((\"id\" \"Voice\" \"en\" \"Standard\"))")
+                     (princ "Backend diagnostic" 'external-debugging-output)
+                     (kill-emacs ,exit-status)))))))
+          (if (zerop exit-status)
+              (should (equal (omnivox-query-voices)
+                             '(("id" "Voice" "en" "Standard"))))
+            (should
+             (string-match-p
+              "Backend diagnostic"
+              (error-message-string (should-error (omnivox-query-voices))))))
+          (should-not (file-exists-p stderr-file)))))))
 
 (ert-deftest emacsvox-tts-omnivox-rejects-malformed-voice-discovery ()
   "Malformed discovery data cannot become selectable Omnivox voices."
@@ -184,6 +216,42 @@
   (should-error
    (omnivox--parse-voices "((\"id\" \"name\" \"language\" \"quality\")) trailing")
    :type 'error))
+
+(ert-deftest emacsvox-tts-local-process-separates-server-diagnostics ()
+  "A local server's stderr never reaches its protocol output filter."
+  (let* ((name "Emacsvox test speech")
+         (diagnostics (format "*%s diagnostics*" name))
+         (start (symbol-function 'make-process))
+         (emacs (expand-file-name invocation-name invocation-directory))
+         process output)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'omnivox-remote-enabled-p) (lambda () nil))
+             ((symbol-function 'tts--resolve-program) (lambda (_) emacs))
+             ((symbol-function 'make-process)
+              (lambda (&rest arguments)
+                (apply start
+                       (plist-put
+                        arguments :command
+                        (list emacs "-Q" "--batch" "--eval"
+                              (prin1-to-string
+                               '(progn
+                                  (princ "Backend diagnostic" 'external-debugging-output)
+                                  (princ "protocol output\n")))))))))
+          (setq process (tts-make-process name))
+          (set-process-filter
+           process (lambda (_ chunk) (setq output (concat output chunk))))
+          (let ((deadline (+ (float-time) 10)))
+            (while (and (process-live-p process) (< (float-time) deadline))
+              (accept-process-output process 0.05)))
+          (should-not (process-live-p process))
+          (accept-process-output nil 0.1)
+          (should (equal output "protocol output\n"))
+          (should
+           (with-current-buffer diagnostics
+             (string-match-p "Backend diagnostic" (buffer-string)))))
+      (when (processp process) (delete-process process))
+      (when (get-buffer diagnostics) (kill-buffer diagnostics)))))
 
 (ert-deftest emacsvox-tts-omnivox-selects-voice-on-both-streams ()
   "Physical voice selection updates speaker and notification processes."

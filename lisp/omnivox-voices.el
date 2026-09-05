@@ -1680,15 +1680,22 @@ Signal an error if discovery cannot run or returns malformed data."
     (let ((program (omnivox--server-program)))
       (unless program
         (error "Could not find the Omnivox server executable"))
-      (with-temp-buffer
-        (let ((status
-               (process-file program nil t nil "--list-voices-alist")))
-          (unless (and (integerp status) (zerop status))
-            (error "Omnivox voice discovery failed%s"
-                   (if (string-empty-p (string-trim (buffer-string)))
-                       ""
-                     (format ": %s" (string-trim (buffer-string))))))
-          (omnivox--parse-voices (buffer-string)))))))
+      (let ((stderr-file (make-temp-file "omnivox-discovery-")))
+        (unwind-protect
+            (with-temp-buffer
+              (let ((status
+                     (process-file program nil (list t stderr-file) nil
+                                   "--list-voices-alist")))
+                (unless (and (integerp status) (zerop status))
+                  (goto-char (point-max))
+                  (insert "\n")
+                  (insert-file-contents stderr-file)
+                  (error "Omnivox voice discovery failed%s"
+                         (if (string-empty-p (string-trim (buffer-string)))
+                             ""
+                           (format ": %s" (string-trim (buffer-string))))))
+                (omnivox--parse-voices (buffer-string))))
+          (delete-file stderr-file))))))
 
 (defun omnivox-refresh-voices ()
   "Refresh and return the physical voices available from Omnivox."

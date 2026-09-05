@@ -2971,7 +2971,9 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
     (setq process
           (if (omnivox-remote-enabled-p)
               (omnivox-remote-make-process name)
-            (start-process name nil program)))
+            (make-process
+             :name name :command (list program) :connection-type 'pipe
+             :stderr (get-buffer-create (format "*%s diagnostics*" name)))))
     (unless (process-live-p process) (error "Fail: Speech Server"))
     (set-process-coding-system process 'utf-8 'utf-8)
     (process-put
