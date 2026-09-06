@@ -32,8 +32,10 @@ terminals need corfu-terminal, whereas Emacs 31 provides terminal popup support.
 
 * Package dependency and installer choices
 
-The Lisp package metadata declares =(emacs "30.2")=. There is not yet an
-Emacsvox Debian package or a Debian dependency added by this investigation.
+The Lisp package metadata declares =(emacs "30.2")=. The subsequent Debian
+packaging work now declares the same minimum as a system dependency; see
+[[file:../adr/0013-debian-package.org][ADR 0013]] and the Debian package section in
+[[file:integration-maintenance.org][the maintainer guide]].
 The source installers inspect the actual selected executable, so they accept
 both distribution packages and separately built Emacs installations.
 
@@ -46,9 +48,9 @@ explicit choice: =--build-emacs= on POSIX or =-BuildEmacs= on Windows. Existing
 explicit executable selections remain protected. Windows points to GNU's
 prebuilt distribution first. The source fallback remains pinned at 31.1.
 
-A future Debian package should normally declare its system Emacs dependency
-so apt can resolve it. A Debian maintainer script should not prompt to compile
-Emacs. The source installer remains the route for a separately built Emacs;
+The Debian package lets apt resolve its system Emacs dependency. It ships
+Lisp sources and autoloads and does not compile Emacs or byte-code during
+installation. The source installer remains the route for a separately built Emacs;
 system dependency metadata and executable checks serve different purposes.
 
 * Validation
@@ -110,6 +112,11 @@ Build, test, smoke and documentation logs are retained locally under
 
 * Native Windows follow-up
 
+Native Windows x64 is now supported under
+[[file:../adr/0014-native-windows-support.org][ADR 0014]]. The measurements below retain their original scope; promotion
+does not turn mocked transport checks into audible acceptance on every host.
+Remote workstation speech remains preview.
+
 The official [[https://ftp.gnu.org/gnu/emacs/windows/emacs-30/][GNU Windows Emacs 30.2 zip]] was downloaded and verified against
 GNU's published SHA-256 listing, then extracted into a temporary directory.
 A separate source tree on the Windows drive was used throughout; the live
@@ -136,3 +143,21 @@ compatibility, including core speech runtime contracts and mocked transports. Th
 audible acceptance on every desktop or compatibility of every external
 package version. No live user profile was
 restarted and no Linode installation was changed by this investigation.
+
+* Packaging and release-readiness follow-up
+
+The subsequent Debian packaging work is implemented and documented in the
+maintainer guide. On 2026-09-06, the Emacsvox package passed five packaging
+tests and a disposable Ubuntu 26.04 installation, startup, reinstall, and
+purge check that preserved user configuration. The latest complete Linux
+suite reported 2,962 expected results out of 2,968: five failures and the
+expected missing-mu4e skip. The earlier Notmuch failure did not recur; the
+other five baseline failures listed above remain release blockers.
+
+Omnivox's corresponding development package passed installation, unprivileged
+voice discovery and non-silent synthesis, reinstall, synthetic revision
+upgrade, and purge checks on Ubuntu 24.04 and 26.04. Its 605 Rust tests,
+18 packaging/release-asset tests, locked Clippy, formatting, and workflow lint
+also passed. These are local development checks, not evidence that new release
+assets or the public manual have been published. The native audio and full
+release gates still apply to the final candidates.

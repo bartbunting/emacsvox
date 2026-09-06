@@ -69,10 +69,10 @@ Emacs 30.2 and 31.1. The full ~make test~ suite additionally requires the
 optional integration packages, including ~lua-mode~ on Emacs 30.
 
 Keep each Emacs version's build in a separate checkout; never reuse ~.elc~
-files across versions. All platforms, including the native Windows preview, use this minimum.
+files across versions. All platforms, including native Windows x64, use this minimum.
 The documentation toolchain retains its independent pin.
 
-*** Native Windows preview builds
+*** Native Windows builds
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -107,7 +107,24 @@ MSYS2 packages are signed rolling inputs; these records do not claim a frozen
 or bit-identical compiler environment.  Verify fresh graphical startup,
 acknowledged routing, and tracked completion on both speech lanes with a PATH
 that contains neither WSL nor MSYS2 tools.  Human listening remains a separate
-acceptance step.
+acceptance step. Native Windows x64 is supported; remote workstation speech
+remains preview, as recorded in
+[[file:../adr/0014-native-windows-support.org][ADR 0014]].
+
+*** Remote preview validation
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Keep remote installer fixtures separate from connected acceptance. In the
+Omnivox checkout, run ~make dev~ followed by ~make remote-test~; set
+~OMNIVOX_REMOTE_TEST_SLOW=1~ to cover heartbeat expiry. Set
+~OMNIVOX_REMOTE_TEST_EMACS~ to the selected Emacs and
+~OMNIVOX_REMOTE_TEST_EMACSVOX~ to the matching Emacsvox checkout for client
+acceptance. The Omnivox ~docs/REMOTE.md~ guide records Windows relay tests,
+real-device options, and retained evidence. Null-output tests do not establish
+audible playback or acceptance through a separate SSH host. Remote access
+remains preview independently of native Windows desktop support.
 
 ** Debian package builds
 :PROPERTIES:

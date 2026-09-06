@@ -10,6 +10,19 @@ features.
 
 *Modernization Status:* Emacs 30.2 and newer, with modern elisp patterns and advice-add throughout.
 
+* Choose Your Installation
+
+Native Windows x64 is supported with Emacs 30.2 or newer. Follow the
+[[file:docs/manual/chapters/speech-backends.org][native Windows installation guide]]
+using =bin/emacsvox-install.ps1= and =bin/emacsvox.ps1=; WSL is optional.
+The WSL2 route below remains supported. GNU/Linux users can also use the
+Debian packaging route described in the
+[[file:docs/manual/chapters/installation.org][installation chapter]], when a package is available.
+
+Remote Emacs with speech on a workstation remains a preview. Its setup is in
+the same installation chapter and the Speech Backends guide. It requires a
+matching Omnivox build with =--serve=; published Omnivox 1.7.1 lacks that option.
+
 * Start Here: First Speech
 
 The guided WSL2 installer reuses Emacs 30.2 or newer. If it is missing, it

@@ -4,6 +4,10 @@
 
 * Status
 
+Update: [[file:0014-native-windows-support.org][ADR 0014]] promotes native Windows x64 desktop support and keeps remote
+access in preview. Earlier preview descriptions below record the original
+decision context.
+
 Accepted for the Lisp runtime, build, launcher and installation routes on all
 platforms, including native Windows. This refines the Emacs 31 baseline in ADRs
 0005 and 0011. Native Windows remains an x64 preview; the runtime minimum does

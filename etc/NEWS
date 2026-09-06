@@ -45,19 +45,20 @@ on POSIX or ~-BuildEmacs~ on Windows; it no longer starts automatically.
 Lua mode must be installed separately on Emacs 30 when wanted; Corfu terminal
 popups on Emacs 30 need corfu-terminal.
 
-** Install the native Windows x64 preview without WSL
+** Native Windows x64 is supported without WSL
 
 ~bin/emacsvox-install.ps1~ reuses native Emacs 30.2 or newer or, with ~-BuildEmacs~, builds GNU Emacs
 31.1 with a private MSYS2 UCRT64 toolchain.  It installs pinned Windows
 Omnivox, prepares Emacsvox, and checks a fresh native GUI with both speech
 lanes.  ~-Check~ reports the plan without changing files.
 
-~bin/emacsvox.ps1~ starts the isolated preview; ~-Diagnose~ checks its setup
-and ~-Check~ verifies startup and speech.  This remains an x64 desktop preview.
+~bin/emacsvox.ps1~ starts the isolated native desktop; ~-Diagnose~ checks its setup
+and ~-Check~ verifies startup and speech.  This is now a supported x64 desktop route with Emacs 30.2 or newer.
+Native ARM64 and automatic optional-engine installation remain outside this route.
 The installer does not require WSL or change personal initialization, system
 PATH, Windows services, or JAWS configuration.
 
-** Install Emacsvox on a remote Linux host without local speech engines
+** Preview: install Emacsvox on a remote Linux host without local speech engines
 
 ~bin/emacsvox-install --role remote-emacs~ reuses Emacs 30.2 or newer, or with
 ~--build-emacs~ builds the pinned terminal-only Emacs on Debian/Ubuntu, and compiles Emacsvox without
@@ -93,9 +94,9 @@ and its protection against starting another one.
 The /Release state/ column describes the managed release; Browse and try
 voices reflects the active server, which may use a different installation.
 
-** Remote Emacs can use workstation speech
+** Preview: remote Emacs can use workstation speech
 
-Development builds can connect remote Emacs to Omnivox on the workstation
+The remote preview can connect remote Emacs to Omnivox on the workstation
 through an authenticated SSH reverse forward.  Engines and audio remain on
 the workstation; foreground and notification connections recover separately
 without replaying unfinished speech.  Use ~omnivox-remote-connect~,

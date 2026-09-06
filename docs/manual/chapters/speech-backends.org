@@ -42,7 +42,7 @@ test.
 | macOS on Intel | Omnivox 1.7.1 release archive using AVSpeechSynthesizer | The published x64 archive is built and verified on a native macOS runner; the audible host check remains required. |
 | Emacs in WSL2 on x86-64 Windows | Omnivox 1.7.1 Windows x64 release archive using WinRT | The published archive is checksum-protected and release CI verifies its architecture, adjacent data, WinRT and eSpeak synthesis.  The audible host check remains required. |
 | Emacs in WSL2 on Windows on ARM | Omnivox 1.7.1 Windows ARM64 release archive using WinRT | Release CI verifies the ARM64 archive, adjacent data, WinRT and eSpeak synthesis, and the guided installer selects it automatically.  A complete WSL2 host and audible check remains required. |
-| Native Windows Emacs | Omnivox 1.7.1 Windows release using WinRT | Preview. Omnivox verifies its native Windows archive, and Emacsvox can start ~omnivox.exe~ directly, but the complete combination has not passed a fresh-machine acceptance test. Initial users should use WSL2; evaluators can follow the bounded trial below. |
+| Native Windows x64 Emacs 30.2 or newer | Guided PowerShell installation with Omnivox 1.7.1 using WinRT | Supported. Native installer, complete byte-code compilation, fresh-process verification, and two-lane speech checks cover this route. Confirm audible speech on the installed host. Native Windows ARM64 is not yet supported. |
 
 The release-archive routes below are the shortest installation on matching
 GNU/Linux, macOS, and WSL2 hosts.  A bare executable, a repository tag, or an
@@ -54,7 +54,7 @@ the normal platform engine above.  Engine routing and optional Piper,
 Eloquence, or DECtalk support are later customizations, not prerequisites for
 first speech.
 
-*Remote workstation speech (development builds).*  Emacs can run on an SSH
+*Remote workstation speech (preview).*  Emacs can run on an SSH
 host while Omnivox, its installed voices, and playback remain on the computer
 you are using.  This requires the new ~--serve~ option and the matching
 Emacsvox remote transport; the published Omnivox 1.7.1 binary does not include
@@ -441,14 +441,14 @@ manager's @@texinfo:@kbd{t}@@ command.  The direct Omnivox release assets remain
 available for maintainers and recovery, but the manager is the recommended way
 to select them.
 
-** Trying Native Windows Emacsvox
+** Installing Native Windows Emacsvox
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Trying Native Windows Emacsvox
-:DESCRIPTION: Evaluate native Windows Emacs and Omnivox with bounded checks.
+:DESCRIPTION: Install and verify supported native Windows x64 Emacsvox.
 :END:
 
-This is a /preview evaluation/, not yet the recommended first installation.
-The guided provider supports Windows x64 and runs entirely on Windows.  WSL,
+Native Windows x64 is a supported desktop installation with Emacs 30.2 or
+newer. The guided PowerShell installer runs entirely on Windows. WSL,
 Docker, Rust, and a system MSYS2 installation are not required.
 
 *** Guided Windows x64 Installation
@@ -503,7 +503,7 @@ system PATH, Windows services, and JAWS settings alone.
 
 The source archives are checksum-pinned.  MSYS2 compiler packages come from
 its signed rolling repositories; their installed versions are recorded with
-the build.  Lisp native compilation is disabled in this preview.  The built
+the build.  Lisp native compilation is disabled in the managed source build.  The built
 Emacs includes its runtime DLLs, so launching it does not need MSYS2 on PATH.
 
 The default final check opens a temporary native Emacs window, verifies both
@@ -517,11 +517,11 @@ run the explicit check before accepting speech:
 .\bin\emacsvox.ps1
 #+end_src
 
-The last command opens the isolated native preview.  It uses Windows speech
+The last command opens the isolated native desktop.  It uses Windows speech
 by default.  An explicit =OMNIVOX_ENGINE= environment selection remains
 available for separately configured engines.  Native optional-engine
 installation, ARM64, and other native Windows roles are not provided by this
-guided preview.
+guided installer.
 
 After pulling source changes, rerun the installer before launching.  It
 preserves source changes and refreshes the compiled files.  Missing or stale
@@ -535,7 +535,7 @@ JAWS speech muting does not disable its keyboard shortcuts.  If =M-<= or
 =workstation-config= repository supplies the separately installed,
 Emacs-specific JAWS override used on the test workstation.
 
-*** Manual Native Evaluation
+*** Manual Native Installation
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
@@ -640,18 +640,18 @@ $env:TTS_PROGRAM = $Omnivox
 #+end_src
 
 The Emacs version must be 30.2 or newer.  Use ~emacs.exe~, rather than
-~runemacs.exe~, for this first trial so startup errors remain visible in the
+~runemacs.exe~, for this first launch so startup errors remain visible in the
 PowerShell window.  Loading ~emacsvox-setup.el~ directly is intentional: the
 repository's ~bin/emacsvox~ launcher is a POSIX shell script.  The guided
 native entry point is ~bin/emacsvox.ps1~; this subsection describes the manual
 alternative.
 
-*** Accept Or Report The Trial
+*** Verify Speech And Report Problems
 :PROPERTIES:
 :TEXINFO_NODE: no
 :END:
 
-A successful trial satisfies every item below:
+Verify the installation with these checks:
 
 1. Emacsvox speaks its startup introduction.
 
@@ -680,7 +680,7 @@ exits, retain the PowerShell error, the Emacs ~*Messages*~ buffer, Windows
 version and architecture, the complete ~emacs.exe --version~ output, and
 ~omnivox.exe --version~ output.
 
-After a successful trial, the same absolute selection can be placed before
+After successful verification, the same absolute selection can be placed before
 loading Emacsvox in the user's Emacs initialization file:
 
 #+begin_src emacs-lisp
@@ -692,8 +692,8 @@ loading Emacsvox in the user's Emacs initialization file:
 Replace both example paths.  This initial configuration deliberately uses an
 absolute executable path.  Adding the Omnivox directory to ~exec-path~ is
 optional and is needed only when later selecting it by the short name
-~omnivox~.  A successful report is evidence for promoting native Windows out
-of preview; it does not silently change the support status on its own.
+~omnivox~. Native Windows support covers the x64 desktop route above; remote
+workstation speech remains a separate preview feature.
 
 ** Installing Omnivox From Source
 :PROPERTIES:
@@ -936,9 +936,9 @@ explicit override.  Under WSL2, the guided installer's data-only configuration
 file is persistent across launching shells and takes precedence over a
 source-built staged runtime.
 Native Windows Emacs resolves ~omnivox.exe~ directly through ~exec-path~, or
-uses the absolute executable named by ~TTS_PROGRAM~.  That route remains
-preview.  For its bounded evaluation procedure, see
-@@texinfo:@ref{Trying Native Windows Emacsvox}@@.
+uses the absolute executable named by ~TTS_PROGRAM~. For the supported x64
+installation procedure, see
+@@texinfo:@ref{Trying Native Windows Emacsvox,Installing Native Windows Emacsvox}@@.
 
 Inside a running Emacsvox session, ~M-x omnivox~ selects the same server
 temporarily.  Use ~M-x tts-speak-version~ to identify the live adapter

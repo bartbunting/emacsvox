@@ -106,7 +106,7 @@ if (Test-Path $omnivoxRoot) {
     $version = Invoke-EmacsvoxNative $omnivox @('--version')
     if ($version -ne "omnivox $($pins.EMACSVOX_WSL_OMNIVOX_VERSION)") { throw "Unexpected Omnivox version: $version" }
 }
-Write-Host "Native Windows x64 preview; role: $Role"
+Write-Host "Native Windows x64; role: $Role"
 if ($selected) { Write-Host "Emacs: $($selected.Program) ($($selected.Version))" }
 else { Write-Host "Emacs: build GNU $($pins.EMACSVOX_WSL_EMACS_VERSION) using private MSYS2 UCRT64 at $ToolchainRoot" }
 Write-Host "Omnivox: pinned $($pins.EMACSVOX_WSL_OMNIVOX_VERSION) at $omnivoxRoot"
@@ -208,4 +208,4 @@ Write-EmacsvoxJson (Join-Path $logs 'native-install-provenance.json') @{
 Write-EmacsvoxJson $configFile $config
 if (-not $NoAudioCheck) { & (Join-Path $root 'bin\emacsvox.ps1') -Check }
 else { Write-Host 'Audio check skipped. Run bin\emacsvox.ps1 -Check before accepting speech.' }
-Write-Host 'Native Windows preview installed. Start it with .\bin\emacsvox.ps1'
+Write-Host 'Native Windows Emacsvox installed. Start it with .\bin\emacsvox.ps1'

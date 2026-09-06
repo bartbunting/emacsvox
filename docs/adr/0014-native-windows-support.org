@@ -1,0 +1,45 @@
+#+title: ADR 0014: Native Windows Desktop Support and Remote Preview
+#+date: 2026-09-06
+#+startup: content
+
+* Status
+
+Accepted by the maintainer. This promotes the native Windows x64 desktop
+route described in ADR 0011 and refines the preview references in ADRs 0005,
+0008, and 0012. Remote workstation speech under ADR 0010 remains preview.
+
+* Decision
+
+Native Windows x64 with Emacs 30.2 or newer is a supported Emacsvox desktop
+installation. The PowerShell installer reuses a supported native Emacs or
+provides the explicitly requested pinned source build. The isolated native
+launcher, checksum-pinned Omnivox core, and fresh two-lane checks remain the
+maintained route. WSL2 is an independent supported option, not a prerequisite.
+
+The promotion follows the maintainer's acceptance of the completed Windows
+work. Retained Emacs 30.2 native installer, complete 279-module compilation,
+and fresh-process byte-code evidence is recorded in
+[[file:../developer/emacs-30-compatibility.org][the compatibility report]]. The native installation and speech checks remain
+in [[file:../developer/integration-maintenance.org][the maintainer guide]]. Support status does not imply that automated tests
+prove audible operation on every audio device or external package combination.
+
+Keep the scope at x64 desktop installation. Native Windows ARM64, other native
+installation roles, automatic optional-engine acquisition, and JAWS-specific
+configuration retain their existing separate boundaries. The WSL component
+installer is not a native PowerShell component installer. No protocol,
+packaging, runtime minimum, release pin, or acquisition policy changes here.
+
+Remote access remains an opt-in preview on every workstation platform,
+including Windows. Document authentication, SSH forwarding, one-session
+ownership, reconnect without replay, and the existing acceptance limits.
+Shipping the remote feature in a future release does not itself promote it
+out of preview. Omnivox 1.7.1 release binaries still predate the feature.
+
+* Consequences
+
+Current user instructions and release notes describe native Windows x64 as
+supported and remote access as preview. Preserve historical release notes and
+prior ADR context; use this record to interpret their earlier preview status.
+Keep existing Info node identifiers and public manual URLs where possible.
+Continue native installer, version-specific byte-code, and audible checks for
+release candidates. Publication and release approval boundaries are unchanged.

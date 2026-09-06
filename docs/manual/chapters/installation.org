@@ -23,6 +23,10 @@ available before installation at
 :TEXINFO_NODE: no
 :END:
 
+Debian packaging is new development work; Emacsvox 2026.9.2 predates it.
+Use a package from a release that includes one, or a locally built development
+package. Omnivox 1.7.1 likewise has no deb asset.
+
 With a downloaded Emacsvox deb, install it using apt:
 
 #+begin_example
@@ -181,7 +185,7 @@ licensing boundaries.
 Use this route when Emacs runs on a Linux host and speech plays on your
 workstation through an SSH reverse forward.  It also works for remote-only
 Emacs under WSL, without Windows interoperability.  This is currently a
-development feature: the workstation needs an Omnivox build with ~--serve~;
+preview feature: the workstation needs an Omnivox build with ~--serve~;
 the published Omnivox 1.7.1 archive does not include that option.
 
 After cloning Emacsvox on the Emacs host, run:
@@ -354,10 +358,10 @@ server is ready.  If either is missing, use
 @@texinfo:@ref{Backend Diagnostics And Ownership,Backend Diagnostics And Responsibilities}@@
 before continuing.  @@texinfo:@xref{Speech Backends}@@ contains the complete platform
 matrix, build details, and compatibility alternatives.  Native Windows Emacs
-support remains a preview.  Its x64 PowerShell installer can build Emacs and
-install Omnivox without WSL.  Evaluators can follow
-@@texinfo:@ref{Trying Native Windows Emacsvox}@@; initial users should choose
-the WSL2 route.
+on x64 is supported with Emacs 30.2 or newer. Its PowerShell installer reuses
+a prebuilt Emacs or offers an explicit source build, and installs Omnivox
+without WSL. Follow
+@@texinfo:@ref{Trying Native Windows Emacsvox,Installing Native Windows Emacsvox}@@.
 
 ** Build And Start Emacsvox
 :PROPERTIES:

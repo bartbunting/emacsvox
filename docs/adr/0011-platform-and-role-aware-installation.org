@@ -4,6 +4,10 @@
 
 * Status
 
+Update: [[file:0014-native-windows-support.org][ADR 0014]] promotes native Windows x64 desktop support and keeps remote
+access in preview. Earlier preview descriptions below record the original
+decision context.
+
 Accepted for the platform/role separation, remote-only Linux implementation,
 and the subsequent native Windows x64 desktop preview.  The remaining
 platform providers are an incremental roadmap, not a

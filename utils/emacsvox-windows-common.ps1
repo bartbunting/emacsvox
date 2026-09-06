@@ -20,8 +20,8 @@ function Assert-NativeWindows(
     [string]$Platform = [Environment]::OSVersion.Platform.ToString(),
     [string]$Architecture = [Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
 ) {
-    if ($Platform -ne 'Win32NT') { throw 'This preview requires native Windows.' }
-    if ($Architecture -ne 'X64') { throw "This preview has been tested only on Windows x64; detected $Architecture." }
+    if ($Platform -ne 'Win32NT') { throw 'This installer requires native Windows.' }
+    if ($Architecture -ne 'X64') { throw "This installer is supported only on Windows x64; detected $Architecture." }
 }
 
 function Assert-WindowsLocalPath([string]$Path) {
