@@ -10,6 +10,99 @@
 (require 'ert)
 (require 'emacsvox-speak)
 
+(defun emacsvox-speak-tests--with-cycle-buffers (test)
+  "Call TEST with four displayed-in-order buffers in a unique major mode."
+  (let* ((mode (make-symbol "cycle-test-mode"))
+         (buffers
+          (mapcar
+           (lambda (name)
+             (let ((buffer (generate-new-buffer name)))
+               (with-current-buffer buffer (setq major-mode mode))
+               buffer))
+           '("cycle-A" "cycle-B" "cycle-C" "cycle-D"))))
+    (unwind-protect
+        (save-window-excursion
+          (dolist (buffer (reverse buffers)) (switch-to-buffer buffer))
+          (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                    ((symbol-function 'emacsvox-speak-mode-line) #'ignore)
+                    ((symbol-function 'emacsvox-speak-line) #'ignore))
+            (funcall test buffers)))
+      (dolist (buffer buffers)
+        (when (buffer-live-p buffer) (kill-buffer buffer))))))
+
+(ert-deftest emacsvox-buffer-cycle-visits-every-matching-buffer-in-both-directions ()
+  "Each direction traverses the entire mode-specific cycle and wraps."
+  (dolist (direction '(next previous))
+    (emacsvox-speak-tests--with-cycle-buffers
+     (lambda (buffers)
+       (let ((expected (if (eq direction 'next)
+                           (append (cdr buffers) (list (car buffers)))
+                         (append (reverse (cdr buffers)) (list (car buffers)))))
+             (command (if (eq direction 'next)
+                          #'emacsvox-cycle-to-next-buffer
+                        #'emacsvox-cycle-to-previous-buffer)))
+         (dolist (buffer expected)
+           (call-interactively command)
+           (should (eq (current-buffer) buffer))))))))
+
+(ert-deftest emacsvox-buffer-cycle-directions-are-inverses ()
+  "Changing direction returns to the buffer just left, from every position."
+  (emacsvox-speak-tests--with-cycle-buffers
+   (lambda (_buffers)
+     (dotimes (_ 4)
+       (let ((start (current-buffer)))
+         (emacsvox-cycle-to-next-buffer)
+         (emacsvox-cycle-to-previous-buffer)
+         (should (eq (current-buffer) start))
+         (emacsvox-cycle-to-previous-buffer)
+         (emacsvox-cycle-to-next-buffer)
+         (should (eq (current-buffer) start)))
+       (emacsvox-cycle-to-next-buffer)))))
+
+(ert-deftest emacsvox-buffer-cycle-skips-other-modes-and-killed-buffers ()
+  "The live buffer list remains authoritative when candidates change."
+  (emacsvox-speak-tests--with-cycle-buffers
+   (lambda (buffers)
+     (with-current-buffer (nth 1 buffers) (setq major-mode 'fundamental-mode))
+     (kill-buffer (nth 2 buffers))
+     (emacsvox-cycle-to-next-buffer)
+     (should (eq (current-buffer) (nth 3 buffers)))
+     (emacsvox-cycle-to-next-buffer)
+     (should (eq (current-buffer) (car buffers)))
+     (emacsvox-cycle-to-previous-buffer)
+     (should (eq (current-buffer) (nth 3 buffers))))))
+
+(ert-deftest emacsvox-buffer-cycle-single-candidate-does-not-switch ()
+  "No matching alternative leaves the current buffer and order unchanged."
+  (emacsvox-speak-tests--with-cycle-buffers
+   (lambda (buffers)
+     (mapc #'kill-buffer (cdr buffers))
+     (let ((order (buffer-list (selected-frame))))
+       (should-error (emacsvox-cycle-to-next-buffer))
+       (should-error (emacsvox-cycle-to-previous-buffer))
+       (should (eq (current-buffer) (car buffers)))
+       (should (equal order (buffer-list (selected-frame))))))))
+
+(ert-deftest emacsvox-buffer-cycle-repeats-with-bare-keys-and-exits ()
+  "Actual prefix and repeat keys cycle in both directions, then yield typing."
+  (emacsvox-speak-tests--with-cycle-buffers
+   (lambda (buffers)
+     (let ((global-map (copy-keymap (current-global-map)))
+           (overriding-terminal-local-map nil)
+           (pre-command-hook nil)
+           (post-command-hook nil))
+       (define-key global-map (kbd "C-e") emacsvox-keymap)
+       (execute-kbd-macro (kbd "C-e n n"))
+       (should (eq (current-buffer) (nth 2 buffers)))
+       (execute-kbd-macro (kbd "p"))
+       (should (eq (current-buffer) (nth 1 buffers)))
+       (execute-kbd-macro (kbd "n n n"))
+       (should (eq (current-buffer) (car buffers)))
+       (execute-kbd-macro (kbd "x n"))
+       (should (eq (current-buffer) (car buffers)))
+       (should (equal (buffer-string) "xn"))
+       (should-not overriding-terminal-local-map)))))
+
 (ert-deftest emacsvox-show-point-facts-classify-text-boundaries ()
   "Point facts distinguish beginning, interior, end, and empty positions."
   (let ((emacsvox-show-point t)

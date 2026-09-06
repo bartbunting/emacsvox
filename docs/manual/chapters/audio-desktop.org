@@ -56,6 +56,49 @@ Moving to another buffer changes the selected work object without closing the
 one you left.  This makes it practical to keep a document, its reference
 material, a shell, and related application results available together.
 
+*** Cycle Between Buffers of the Same Kind
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+#+cindex: buffer cycling
+#+kindex: C-e n
+#+kindex: C-e p
+#+kindex: C-e .
+#+kindex: C-e ,
+
+When several buffers contain the same kind of work, cycling lets you move
+among them without remembering their names or opening a buffer list.  This is
+useful when comparing Org notes, reviewing several directories in Dired, or
+moving between source files.
+
+Press @@texinfo:@kbd{C-e n}@@ to select the next buffer with the same major
+mode, or @@texinfo:@kbd{C-e p}@@ to select the previous one.  For example, from
+an Org buffer these commands visit other Org buffers, skipping all buffers
+that do not use the same major mode.  Buffers are grouped by major mode, not
+by project or directory.
+
+After the first command, you only need the final letter: @@texinfo:@kbd{n}@@
+continues forward and @@texinfo:@kbd{p}@@ moves backward.  You can change
+direction at any time, and cycling wraps around when you reach the end.  For
+example, @@texinfo:@kbd{C-e n n p}@@ moves forward twice, then returns to the
+buffer you just left.
+
+To navigate without the major-mode filter, use @@texinfo:@kbd{C-e .}@@ for
+next buffer or @@texinfo:@kbd{C-e ,}@@ for previous buffer.  You can then repeat
+with just @@texinfo:@kbd{.}@@ or @@texinfo:@kbd{,}@@, in the same way as
+@@texinfo:@kbd{n}@@ and @@texinfo:@kbd{p}@@.  You can also switch between these
+controls while cycling.
+
+The temporary buffer-selection controls also include @@texinfo:@kbd{b}@@ to
+select a buffer by name, @@texinfo:@kbd{f}@@ to open a file,
+@@texinfo:@kbd{k}@@ to kill a buffer, and @@texinfo:@kbd{o}@@ to change windows.
+
+Press @@texinfo:@kbd{C-g}@@ when finished to return to normal editing.  A key
+outside the temporary buffer-selection controls also ends cycling and
+performs its normal action.  To choose a particular buffer by name, use
+@@texinfo:@kbd{C-x b}@@.
+
 ** Let Modes Give Each Buffer Its Tools
 :PROPERTIES:
 :TEXINFO_NODE_NAME: Object Oriented Desktop

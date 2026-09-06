@@ -3412,10 +3412,15 @@ Appended entries are separated by newlines."
 (defun emacsvox-cycle-to-next-buffer ()
   "Cycles to next buffer having same mode."
   (interactive)
-  (let ((next (emacsvox-buffer-cycle-next major-mode)))
+  (let ((next (emacsvox-buffer-cycle-next major-mode))
+        (current (current-buffer)))
     (cond
-     (next ;  (bury-buffer)
-      (funcall-interactively #'switch-to-buffer next))
+     (next
+      (prog1 (funcall-interactively #'switch-to-buffer next)
+        ;; Rotate the buffer just left to the end.  Merely switching promotes
+        ;; NEXT to the front and makes repeated next commands toggle two buffers.
+        ;; This rotation is the inverse of promoting the last matching buffer.
+        (bury-buffer current)))
      (t (error "No next buffer in mode %s" major-mode)))))
 
 ;; Inspired by text-adjust-scale:

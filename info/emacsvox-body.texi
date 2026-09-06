@@ -757,6 +757,11 @@ Help commands describe the active modes@comma{} available keys@comma{} and Emacs
 integrations in the buffer where you are working.
 @end itemize
 
+To move among buffers with the same major mode@comma{} use @kbd{C-e n}
+and @kbd{C-e p}@comma{} then repeat with just @kbd{n} or
+@kbd{p}.  See @ref{Desktop Objects} for examples and the
+other buffer-selection controls.
+
 The following sections introduce a practical starter set.  Use live Help or
 the generated reference when you need the complete commands for a particular
 application.
@@ -2185,6 +2190,46 @@ unsaved file changes.
 Moving to another buffer changes the selected work object without closing the
 one you left.  This makes it practical to keep a document@comma{} its reference
 material@comma{} a shell@comma{} and related application results available together.
+
+@subsection Cycle Between Buffers of the Same Kind
+
+@cindex buffer cycling
+@kindex C-e n
+@kindex C-e p
+@kindex C-e .
+@kindex C-e ,
+
+When several buffers contain the same kind of work@comma{} cycling lets you move
+among them without remembering their names or opening a buffer list.  This is
+useful when comparing Org notes@comma{} reviewing several directories in Dired@comma{} or
+moving between source files.
+
+Press @kbd{C-e n} to select the next buffer with the same major
+mode@comma{} or @kbd{C-e p} to select the previous one.  For example@comma{} from
+an Org buffer these commands visit other Org buffers@comma{} skipping all buffers
+that do not use the same major mode.  Buffers are grouped by major mode@comma{} not
+by project or directory.
+
+After the first command@comma{} you only need the final letter: @kbd{n}
+continues forward and @kbd{p} moves backward.  You can change
+direction at any time@comma{} and cycling wraps around when you reach the end.  For
+example@comma{} @kbd{C-e n n p} moves forward twice@comma{} then returns to the
+buffer you just left.
+
+To navigate without the major-mode filter@comma{} use @kbd{C-e .} for
+next buffer or @kbd{C-e ,} for previous buffer.  You can then repeat
+with just @kbd{.} or @kbd{,}@comma{} in the same way as
+@kbd{n} and @kbd{p}.  You can also switch between these
+controls while cycling.
+
+The temporary buffer-selection controls also include @kbd{b} to
+select a buffer by name@comma{} @kbd{f} to open a file@comma{}
+@kbd{k} to kill a buffer@comma{} and @kbd{o} to change windows.
+
+Press @kbd{C-g} when finished to return to normal editing.  A key
+outside the temporary buffer-selection controls also ends cycling and
+performs its normal action.  To choose a particular buffer by name@comma{} use
+@kbd{C-x b}.
 
 @node Object Oriented Desktop
 @section Let Modes Give Each Buffer Its Tools

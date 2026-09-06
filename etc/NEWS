@@ -10,6 +10,14 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.2][NEWS for Emacsvox 2026.9.2]].
 
+** Cycle buffers consistently in both directions
+
+~C-e n~ now cycles through every buffer with the same major mode instead of
+toggling between two buffers. ~C-e p~ traverses the cycle in reverse, so
+changing direction returns to the buffer just left. After either prefix,
+bare ~n~ and ~p~ continue cycling. A key outside the temporary buffer-selection
+controls ends cycling and performs its normal action.
+
 ** Install Emacsvox with a Debian package
 
 Emacsvox can be packaged as an architecture-independent deb, installing the

@@ -108,6 +108,11 @@ useful groups of explicit commands:
 - Help commands describe the active modes, available keys, and Emacsvox
   integrations in the buffer where you are working.
 
+To move among buffers with the same major mode, use @@texinfo:@kbd{C-e n}@@
+and @@texinfo:@kbd{C-e p}@@, then repeat with just @@texinfo:@kbd{n}@@ or
+@@texinfo:@kbd{p}@@.  See @@texinfo:@ref{Desktop Objects}@@ for examples and the
+other buffer-selection controls.
+
 The following sections introduce a practical starter set.  Use live Help or
 the generated reference when you need the complete commands for a particular
 application.
