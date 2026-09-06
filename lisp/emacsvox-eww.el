@@ -477,6 +477,7 @@
 (require 'empv "empv" 'no-error)
 (declare-function emacsvox-epub-eww
                   "emacsvox-epub" (epub-file &optional broken-ncx))
+(declare-function emacsvox-epub--filename "emacsvox-epub" (file))
 (declare-function
  emacsvox-m-player "emacsvox-m-player" (resource &optional play-list))
 
@@ -2218,10 +2219,14 @@ into `notes'.`m"
         (buffer-list)))
       ((eq type 'epub)
        (require 'emacsvox-epub)
-       (cl-find-if
-        #'(lambda (b)
-            (string= book (with-current-buffer b emacsvox-epub-this-epub)))
-        (buffer-list)))
+       (let ((path (emacsvox-epub--filename book)))
+         (cl-find-if
+          #'(lambda (b)
+              (with-current-buffer b
+                (and (stringp emacsvox-epub-this-epub)
+                     (equal path (emacsvox-epub--filename
+                                  emacsvox-epub-this-epub)))))
+          (buffer-list))))
       ((eq type 'daisy)
        (require 'emacsvox-bookshare)
        (cl-find-if

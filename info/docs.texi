@@ -9526,7 +9526,8 @@ Move to next book.
 
 @format
 Open specified Epub.
-Filename may need to  be shell-quoted when called from Lisp.
+Use an ordinary filename from Lisp.  Legacy shell-quoted filenames
+remain accepted when they do not name an existing literal file.
 
 (fn EPUB-FILE)
 @end format

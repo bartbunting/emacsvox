@@ -89,6 +89,7 @@
 
 (ert-deftest emacsvox-epub-dom-text-populates-metadata ()
   "EPUB construction extracts title and author with the current DOM API."
+  (skip-unless (libxml-available-p))
   (cl-letf (((symbol-function 'emacsvox-epub-do-ls)
              (lambda (&rest _)
                '("OPS/content.opf" "OPS/toc.ncx" "OPS/chapter.xhtml")))
@@ -96,12 +97,12 @@
              (lambda (&rest _) "OPS/toc.ncx"))
             ((symbol-function 'emacsvox-epub-do-opf)
              (lambda (&rest _) "OPS/content.opf"))
-            ((symbol-function 'emacsvox-epub-dom-from-archive)
+            ;; Mock the process boundary, since the DOM helper is inlined
+            ;; into byte-compiled callers.
+            ((symbol-function 'emacsvox-epub--archive-output)
              (lambda (&rest _)
-               '(package nil
-                         (metadata nil
-                                   (title nil "Accessible Emacs")
-                                   (creator nil "Ada Reader")))))
+               (concat "<package><metadata><title>Accessible Emacs</title>"
+                       "<creator>Ada Reader</creator></metadata></package>")))
             ((symbol-function 'emacsvox-epub-nav-files)
              (lambda (&rest _) nil)))
     (let ((epub (emacsvox-epub-make-epub "book.epub")))

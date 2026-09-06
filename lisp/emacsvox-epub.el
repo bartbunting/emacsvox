@@ -215,41 +215,98 @@
   :group 'emacsvox-epub)
 
 ;;;  EPub Implementation:
+(defun emacsvox-epub--filename (file)
+  "Return an absolute filename for raw or legacy shell-quoted FILE.
+An existing literal filename takes precedence over legacy decoding."
+  (expand-file-name
+   (if (file-exists-p file) file
+     (condition-case nil
+         (emacsvox-epub-shell-unquote file)
+       (error file)))))
+
+(defun emacsvox-epub--archive-output (file program &rest arguments)
+  "Run PROGRAM with literal ARGUMENTS for FILE and return its output."
+  (unless program (error "EPUB %s: required archive tool is unavailable" file))
+  (let ((diagnostics (make-temp-file "emacsvox-epub-errors-")))
+    (unwind-protect
+        (with-temp-buffer
+          (let ((status
+                 (condition-case failure
+                     (apply #'call-process program nil (list t diagnostics)
+                            nil arguments)
+                   (file-error
+                    (error "EPUB %s: %s" file (error-message-string failure))))))
+            (unless (eql status 0)
+              (error "EPUB %s: %s failed (%s): %s"
+                     file program status
+                     (with-temp-buffer
+                       (insert-file-contents diagnostics)
+                       (string-trim (buffer-string)))))
+            (buffer-string)))
+      (delete-file diagnostics))))
+
+(defun emacsvox-epub--listing (file command default-command)
+  "List FILE with zipinfo, retaining an explicitly customized COMMAND.
+DEFAULT-COMMAND identifies the historical template used by the default."
+  (let ((path (emacsvox-epub--filename file)))
+    (split-string
+     (if (equal command default-command)
+         (emacsvox-epub--archive-output path emacsvox-epub-zipinfo "-1" path)
+       (emacsvox-epub--archive-output
+        path shell-file-name shell-command-switch
+        (format command (shell-quote-argument path))))
+     "\r?\n" t)))
+
+(defun emacsvox-epub--metadata-member (file command default-command pattern)
+  "Find one metadata member of FILE using COMMAND and PATTERN."
+  (let ((matches (emacsvox-epub--listing file command default-command)))
+    (when (equal command default-command)
+      (setq matches (cl-remove-if-not
+                     (lambda (name) (string-match-p pattern name)) matches)))
+    (when (cdr matches)
+      (error "EPUB %s: multiple metadata members match %s" file pattern))
+    (car matches)))
+
+(defun emacsvox-epub--member-pattern (member)
+  "Quote MEMBER for unzip's filename matching, independently of any shell."
+  (replace-regexp-in-string "[][?*\\\\-]" "\\\\\\&" member))
+
 ;; Helper: dom from file in archive
 (defsubst emacsvox-epub-dom-from-archive (epub-file file &optional xml-p)
   "Return DOM from specified file in epub archive."
   
   (with-temp-buffer
     (setq buffer-undo-list  t)
-    (shell-command
-     (format
-      "%s -c -qq %s %s "
-      emacsvox-epub-unzip
-      epub-file
-      (shell-quote-argument file))
-     (current-buffer))
+    (let ((path (emacsvox-epub--filename epub-file)))
+      (insert (emacsvox-epub--archive-output
+               path emacsvox-epub-unzip "-p" path
+               (emacsvox-epub--member-pattern file))))
     (cond
-     (xml-p (libxml-parse-xml-region (point-min) (point-max)))
+     (xml-p (or (libxml-parse-xml-region (point-min) (point-max))
+                (error "EPUB %s: invalid XML in %s" epub-file file)))
      (t (libxml-parse-html-region (point-min) (point-max))))))
 
 (defvar emacsvox-epub-toc-path-pattern
   ".ncx$"
   "Pattern match for path component  to table of contents in an Epub.")
 
-(defvar emacsvox-epub-toc-command
+(defconst emacsvox-epub--default-toc-command
   (format "%s -1 %%s | grep %s"
           emacsvox-epub-zipinfo
           emacsvox-epub-toc-path-pattern)
-  "Command that returns location of .ncx file in an epub archive.")
+  "Historical default TOC command template.")
+
+(defvar emacsvox-epub-toc-command emacsvox-epub--default-toc-command
+  "Optional shell template selecting the .ncx member of an EPUB.
+The default uses zipinfo directly.  A custom template receives one
+shell-quoted filename at %s; do not add quotes around that placeholder.")
 
 (defun emacsvox-epub-do-toc (file)
   "Return location of .ncx file within epub archive."
   
-  (let ((result
-         (shell-command-to-string (format emacsvox-epub-toc-command  file))))
-    (cond
-     ((= 0 (length result)) nil)
-     (t (substring result 0 -1)))))
+  (emacsvox-epub--metadata-member
+   file emacsvox-epub-toc-command emacsvox-epub--default-toc-command
+   emacsvox-epub-toc-path-pattern))
 
 (defun emacsvox-epub-get-contents (epub element)
   "Return buffer containing contents of element from epub."
@@ -261,11 +318,10 @@
     (with-current-buffer buffer
       (setq buffer-undo-list  t)
       (erase-buffer)
-      (call-process emacsvox-epub-unzip
-                    nil t nil
-                    "-c" "-qq"
-                    (emacsvox-epub-shell-unquote (emacsvox-epub-path epub))
-                    element))
+      (let ((path (emacsvox-epub--filename (emacsvox-epub-path epub))))
+        (insert (emacsvox-epub--archive-output
+                 path emacsvox-epub-unzip "-p" path
+                 (emacsvox-epub--member-pattern element)))))
     buffer))
 
 (defun emacsvox-epub-nav-files (this-epub)
@@ -293,28 +349,39 @@
   ".opf$"
   "Pattern match for path component  to table of contents in an Epub.")
 
-(defvar emacsvox-epub-opf-command
+(defconst emacsvox-epub--default-opf-command
   (format "%s -1 %%s | grep %s"
           emacsvox-epub-zipinfo
           emacsvox-epub-opf-path-pattern)
-  "Command that returns location of .opf file in an epub archive.")
+  "Historical default OPF command template.")
+
+(defvar emacsvox-epub-opf-command emacsvox-epub--default-opf-command
+  "Optional shell template selecting the .opf member of an EPUB.
+The default uses zipinfo directly.  A custom template receives one
+shell-quoted filename at %s; do not add quotes around that placeholder.")
 
 (defun emacsvox-epub-do-opf (file)
   "Return location of .opf file within epub archive."
   
-  (substring
-   (shell-command-to-string (format emacsvox-epub-opf-command file))
-   0 -1))
+  (emacsvox-epub--metadata-member
+   file emacsvox-epub-opf-command emacsvox-epub--default-opf-command
+   emacsvox-epub-opf-path-pattern))
 
-(defvar emacsvox-epub-ls-command
+(defconst emacsvox-epub--default-ls-command
   (format "%s -1 %%s | sort" emacsvox-epub-zipinfo)
-  "Shell command that returns sorted list of files in an epub archive.")
+  "Historical default archive-list command template.")
+
+(defvar emacsvox-epub-ls-command emacsvox-epub--default-ls-command
+  "Optional shell template listing files in an EPUB, one per line.
+The default uses zipinfo directly and sorts in Lisp.  A custom template
+receives one shell-quoted filename at %s; do not quote that placeholder.")
 
 (defun emacsvox-epub-do-ls (file)
   "Return sorted list of files in an epub archive."
   
-  (split-string
-   (shell-command-to-string (format emacsvox-epub-ls-command file))))
+  (sort (emacsvox-epub--listing
+         file emacsvox-epub-ls-command emacsvox-epub--default-ls-command)
+        #'string<))
 
 (cl-defstruct emacsvox-epub
   path                       ; path to .epub file
@@ -330,16 +397,16 @@
 
 (defun emacsvox-epub-make-epub  (epub-file)
   "Construct an epub object given an epub filename."
-  (let ((path (expand-file-name epub-file))
+  (let* ((path (emacsvox-epub--filename epub-file))
         (this nil)
-        (ls (emacsvox-epub-do-ls epub-file))
-        (toc (emacsvox-epub-do-toc epub-file))
-        (opf (emacsvox-epub-do-opf epub-file))
+        (ls (emacsvox-epub-do-ls path))
+        (toc (emacsvox-epub-do-toc path))
+        (opf (emacsvox-epub-do-opf path))
         (opf-dom nil)
         (title nil)
         (author nil))
-    (unless (> (length opf) 0) (error "No Package --- Not a valid EPub?"))
-    (unless (> (length toc) 0) (error "No TOC --- Not a valid EPub?"))
+    (unless (> (length opf) 0) (error "EPUB %s: No Package" path))
+    (unless (> (length toc) 0) (error "EPUB %s: No TOC" path))
     (setq opf-dom (emacsvox-epub-dom-from-archive path opf 'xml))
     (setq title (emacsvox-dom-inner-text (dom-by-tag opf-dom 'title))
           author (emacsvox-dom-inner-text (dom-by-tag opf-dom 'creator)))
@@ -364,8 +431,36 @@
   "Scratch buffer used to process epub.")
 
 (defun emacsvox-epub-shell-unquote (f)
-  "Reverse effect of shell-quote-argument."
-  (shell-command-to-string (format "echo -n %s" f)))
+  "Decode legacy filename F produced by `shell-quote-argument'.
+No shell expansions or commands are evaluated.  Reject other shell syntax."
+  (let ((posix
+         (if (equal f "''") ""
+           (replace-regexp-in-string
+            "\\\\\\(.\\|\n\\)\\|'\n'"
+            (lambda (match)
+              (if (eq (aref match 0) ?\\) (substring match 1) "\n"))
+            f t t))))
+    (cond
+     ((equal f (shell-quote-argument posix t)) posix)
+     ;; Native Windows filenames cannot contain double quotes.  Undo cmd's
+     ;; caret quoting and the surrounding CommandLineToArgvW quotes, then
+     ;; require a round trip through the selected Emacs's native encoder.
+     ((eq system-type 'windows-nt)
+      (let* ((plain (replace-regexp-in-string "\\^\\([%!()\"<>&|^]\\)" "\\1" f))
+             (native (and (string-prefix-p "\"" plain)
+                          (string-suffix-p "\"" plain)
+                          (> (length plain) 1)
+                          (substring plain 1 -1))))
+        (unless (and native (not (string-match-p "\"" native)))
+          (error "Invalid legacy EPUB filename: %s" f))
+        (when (string-match "\\\\+\\'" native)
+          (let ((count (- (length native) (match-beginning 0))))
+            (when (cl-evenp count)
+              (setq native (substring native 0 (- (/ count 2)))))))
+        (unless (equal f (shell-quote-argument native))
+          (error "Invalid legacy EPUB filename: %s" f))
+        native))
+     (t (error "Invalid legacy EPUB filename: %s" f)))))
 
 (defvar-local emacsvox-epub-this-epub nil
   "EPub associated with current buffer.")
@@ -401,7 +496,8 @@ Useful if table of contents in toc.ncx is empty."
    (list
     (emacsvox-epub-make-epub
      (or
-      (get-text-property (point) 'epub)
+      (when-let* ((key (get-text-property (point) 'epub)))
+        (emacsvox-epub-shell-unquote key))
       (read-file-name "EPub File: ")))))
   
   (let ((files (emacsvox-epub-html epub)))
@@ -607,7 +703,7 @@ Letters do not insert themselves; instead, they are commands.
      (unless
          (gethash filename emacsvox-epub-db)
        (setq updated t)
-       (let* ((epub (emacsvox-epub-make-epub filename))
+       (let* ((epub (emacsvox-epub-make-epub f))
               (title (emacsvox-epub-title epub))
               (author  (emacsvox-epub-author epub)))
          (setf (gethash filename emacsvox-epub-db)
@@ -661,7 +757,7 @@ Interactive prefix arg searches recursively in directory."
      (unless
          (gethash filename emacsvox-epub-db)
        (cl-incf updated)
-       (let* ((epub (emacsvox-epub-make-epub filename))
+       (let* ((epub (emacsvox-epub-make-epub f))
               (title (emacsvox-epub-title epub))
               (author  (emacsvox-epub-author epub)))
          (setf (gethash filename emacsvox-epub-db)
@@ -677,7 +773,7 @@ Interactive prefix arg searches recursively in directory."
   
   (let* ((filename (shell-quote-argument (expand-file-name epub-file)))
          
-         (epub (emacsvox-epub-make-epub filename))
+         (epub (emacsvox-epub-make-epub epub-file))
          (title (emacsvox-epub-title epub))
          (author  (emacsvox-epub-author epub)))
     (setf (gethash filename emacsvox-epub-db)
@@ -692,8 +788,8 @@ Interactive prefix arg searches recursively in directory."
   "Open epub file and add it to current bookshelf."
   (interactive "fAdd Book: ")
   
-  (let* ((filename (shell-quote-argument epub-file))
-         (epub (emacsvox-epub-make-epub filename))
+  (let* ((filename (shell-quote-argument (expand-file-name epub-file)))
+         (epub (emacsvox-epub-make-epub epub-file))
          (title (emacsvox-epub-title epub))
          (author  (emacsvox-epub-author epub)))
     (setf (gethash filename emacsvox-epub-db)
@@ -833,11 +929,13 @@ root directory,see \\[emacsvox-epub-mode]"
 
 (defun emacsvox-epub-open (epub-file)
   "Open specified Epub.
-Filename may need to  be shell-quoted when called from Lisp."
+Use an ordinary filename from Lisp.  Legacy shell-quoted filenames
+remain accepted when they do not name an existing literal file."
   (interactive
    (list
     (or
-     (get-text-property (point) 'epub)
+     (when-let* ((key (get-text-property (point) 'epub)))
+       (emacsvox-epub-shell-unquote key))
      (read-file-name "EPub: " emacsvox-epub-library-directory))))
   (let ((e (emacsvox-epub-make-epub epub-file)))
     (emacsvox-epub-browse-toc e)))
@@ -855,24 +953,21 @@ in the epub file."
   (interactive
    (list
     (or
-     (get-text-property (point) 'epub)
+     (when-let* ((key (get-text-property (point) 'epub)))
+       (emacsvox-epub-shell-unquote key))
      (when (eq major-mode 'dired-mode) (dired-get-filename))
      (let ((completion-ignore-case t)
            (emacsvox-speak-messages nil)
            (read-file-name-completion-ignore-case t))
-       (shell-quote-argument
-        (completing-read
-         "Book: "
-         (directory-files-recursively
-          emacsvox-epub-library-directory
-          "\\.epub$" 'include-dirs)))))
+       (completing-read
+        "Book: "
+        (directory-files-recursively
+         emacsvox-epub-library-directory
+         "\\.epub$" 'include-dirs))))
     current-prefix-arg))
   (let* ((emacsvox-speak-messages nil)
-         (directory
-          (string-trim
-           (shell-command-to-string
-            (format "cd %s; pwd"
-                    (file-name-directory epub-file)))))
+         (epub-file (emacsvox-epub--filename epub-file))
+         (directory (file-name-directory epub-file))
          (eww-epub (get-buffer-create "Full Text EPub"))
          (this-epub (emacsvox-epub-make-epub epub-file))
          (navs (emacsvox-epub-navs this-epub))
@@ -950,7 +1045,7 @@ to find Epubs  having full viewability.")
      ((null file) (error "No EPub under point."))
      (t (when (y-or-n-p
                (format "Delete %s" file))
-          (delete-file file)
+          (delete-file (emacsvox-epub-shell-unquote file))
           (emacsvox-epub-bookshelf-refresh)
           (emacsvox-icon 'delete-object))))))
 
