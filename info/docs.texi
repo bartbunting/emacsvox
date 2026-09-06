@@ -15569,7 +15569,10 @@ correctly by themselves.
 @findex emacsvox-ocr-scan-image
 
 @format
-Acquire page image.
+Acquire a page image, publishing it only after successful processing.
+With compression and ‘emacsvox-ocr-keep-uncompressed-image’, retain the
+original with -uncompressed before its extension.  On processing failure,
+report the recovery path and leave the page number unchanged.
 @end format
 @end deffn
 

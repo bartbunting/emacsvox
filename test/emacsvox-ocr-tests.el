@@ -114,6 +114,120 @@
     (emacsvox-ocr--ensure-page-capacity 80)
     (should (> (length emacsvox-ocr-page-positions) 80))))
 
+(defun emacsvox-ocr-tests--with-scanner (scanner-body compressor-body function)
+  "Run FUNCTION in an OCR buffer with private fake acquisition programs."
+  (unless (and (not (eq system-type 'windows-nt)) (executable-find "sh"))
+    (ert-skip "Scanner fixtures require a POSIX shell"))
+  (let* ((directory (make-temp-file "emacsvox scan 'fixture' " t))
+         (scanner (expand-file-name "scanner with spaces" directory))
+         (compressor (expand-file-name "compressor with spaces" directory))
+         (errors (generate-new-buffer " *OCR acquisition errors*")))
+    (unwind-protect
+        (progn
+          (emacsvox-ocr-tests--write-executable scanner (concat "#!/bin/sh\n" scanner-body))
+          (when compressor-body
+            (emacsvox-ocr-tests--write-executable
+             compressor (concat "#!/bin/sh\n" compressor-body)))
+          (with-temp-buffer
+            (emacsvox-ocr-mode)
+            (setq default-directory (file-name-as-directory directory)
+                  emacsvox-ocr-document-name "a book's;$cash")
+            (let ((noninteractive nil)
+                  (emacsvox-ocr-scan-image scanner)
+                  (emacsvox-ocr-scan-image-options "")
+                  (emacsvox-ocr-compress-image (and compressor-body compressor))
+                  (emacsvox-ocr-compress-image-options "")
+                  (emacsvox-ocr-error-buffer (buffer-name errors)))
+              (funcall function directory))))
+      (kill-buffer errors)
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-ocr-scan-keeps-the-requested-original ()
+  "Keep enabled retains the acquired bytes, while disabled removes staging."
+  (dolist (keep '(nil t))
+    (emacsvox-ocr-tests--with-scanner
+     "printf 'original bytes\\n'\n"
+     "printf 'compressed bytes\\n' > \"$2\"\n"
+     (lambda (directory)
+       (let* ((emacsvox-ocr-keep-uncompressed-image keep)
+              (image (expand-file-name "a book's;$cash-p1.tif" directory))
+              (original (expand-file-name "a book's;$cash-p1-uncompressed.tif" directory))
+              (unrelated (expand-file-name "temp.tif" directory)))
+         (with-temp-file unrelated (insert "another operation"))
+         (call-interactively #'emacsvox-ocr-scan-image)
+         (should (= emacsvox-ocr-last-page-number 1))
+         (with-temp-buffer
+           (insert-file-contents image)
+           (should (equal (buffer-string) "compressed bytes\n")))
+         (should (eq (file-exists-p original) keep))
+         (when keep
+           (with-temp-buffer
+             (insert-file-contents original)
+             (should (equal (buffer-string) "original bytes\n"))))
+         (with-temp-buffer
+           (insert-file-contents unrelated)
+           (should (equal (buffer-string) "another operation")))
+         (should-not (directory-files directory nil "^\\.emacsvox-scan-")))))))
+
+(ert-deftest emacsvox-ocr-scan-without-compression-preserves-programmatic-count ()
+  "Scan-and-recognize can acquire its input without advancing OCR's page."
+  (emacsvox-ocr-tests--with-scanner
+   "printf 'original bytes\\n'\n" nil
+   (lambda (directory)
+     (emacsvox-ocr-scan-image)
+     (should (= emacsvox-ocr-last-page-number 0))
+     (with-temp-buffer
+       (insert-file-contents (expand-file-name "a book's;$cash-p1.tif" directory))
+       (should (equal (buffer-string) "original bytes\n"))))))
+
+(ert-deftest emacsvox-ocr-scanner-failure-publishes-no-image-or-success ()
+  "A scanner failure removes incomplete output and preserves the page number."
+  (emacsvox-ocr-tests--with-scanner
+   "printf 'partial image'; printf 'scanner broke\\n' >&2; exit 7\n" nil
+   (lambda (directory)
+     (let (messages)
+       (cl-letf (((symbol-function 'message)
+                  (lambda (format-string &rest args)
+                    (push (apply #'format format-string args) messages))))
+         (should-error (call-interactively #'emacsvox-ocr-scan-image)))
+       (should-not (cl-some (lambda (message) (string-match-p "Acquired" message)) messages)))
+     (should (= emacsvox-ocr-last-page-number 0))
+     (should-not (directory-files-recursively directory "\\.tif\\'"))
+     (with-current-buffer emacsvox-ocr-error-buffer
+       (should (string-match-p "scanner broke" (buffer-string)))))))
+
+(ert-deftest emacsvox-ocr-compression-failure-retains-a-recoverable-original ()
+  "Failed compression preserves acquired bytes and reports their actual path."
+  (emacsvox-ocr-tests--with-scanner
+   "printf 'original bytes\\n'\n"
+   "printf 'partial compressed' > \"$2\"; printf 'compressor broke\\n' >&2; exit 9\n"
+   (lambda (directory)
+     (let* ((emacsvox-ocr-keep-uncompressed-image nil)
+            (failure (should-error (call-interactively #'emacsvox-ocr-scan-image)))
+            (description (error-message-string failure))
+            (images (directory-files-recursively directory "\\.tif\\'"))
+            original)
+       (should (= emacsvox-ocr-last-page-number 0))
+       (should-not (file-exists-p (expand-file-name "a book's;$cash-p1.tif" directory)))
+       (dolist (image images)
+         (with-temp-buffer
+           (insert-file-contents image)
+           (when (equal (buffer-string) "original bytes\n") (setq original image))))
+       (should original)
+       (should (string-match-p (regexp-quote original) description))
+       (with-current-buffer emacsvox-ocr-error-buffer
+         (should (string-match-p "compressor broke" (buffer-string))))))))
+
+(ert-deftest emacsvox-ocr-empty-acquisition-does-not-count-as-success ()
+  "Exit zero without image data must not publish or advance a page."
+  (emacsvox-ocr-tests--with-scanner
+   "exit 0\n" nil
+   (lambda (directory)
+     (let ((failure (should-error (call-interactively #'emacsvox-ocr-scan-image))))
+       (should (string-match-p "produced no image" (error-message-string failure))))
+     (should (= emacsvox-ocr-last-page-number 0))
+     (should-not (directory-files-recursively directory "\\.tif\\'")))))
+
 (ert-deftest emacsvox-ocr-recognition-preserves-literal-arguments ()
   "OCR should handle spaces without invoking a shell."
   (let* ((directory (make-temp-file "emacsvox ocr success " t))

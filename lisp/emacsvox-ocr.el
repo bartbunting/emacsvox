@@ -401,35 +401,88 @@ Pick a short but meaningful name."
   (emacsvox-icon 'select-object)
   (emacsvox-speak-mode-line))
 
+(defun emacsvox-ocr--acquisition-step (command output label)
+  "Run acquisition COMMAND and require a nonempty OUTPUT for LABEL."
+  (let ((emacsvox-speak-messages nil)
+        (inhibit-read-only t)
+        (errors (get-buffer-create emacsvox-ocr-error-buffer)))
+    (let ((status (shell-command command errors errors)))
+      (unless (eql status 0)
+        (user-error "%s failed (exit %s); see %s"
+                    label status emacsvox-ocr-error-buffer)))
+    (unless (and (file-regular-p output)
+                 (> (file-attribute-size (file-attributes output)) 0))
+      (user-error "%s produced no image; see %s" label emacsvox-ocr-error-buffer))))
+
 (defun emacsvox-ocr-scan-image ()
-  "Acquire page image."
+  "Acquire a page image, publishing it only after successful processing.
+With compression and `emacsvox-ocr-keep-uncompressed-image', retain the
+original with -uncompressed before its extension.  On processing failure,
+report the recovery path and leave the page number unchanged."
   (interactive)
-  (let ((image-name (emacsvox-ocr-get-image-name
-                     emacsvox-ocr-image-extension)))
-    (let ((emacsvox-speak-messages nil))
-      (shell-command
-       (concat
-        (format
-         "%s %s > %s;\n"
-         emacsvox-ocr-scan-image
-         emacsvox-ocr-scan-image-options 
-         (cond
-          ((not emacsvox-ocr-compress-image) image-name)
-          (t (format "temp%s" emacsvox-ocr-image-extension))))
-        (when emacsvox-ocr-compress-image
-          (format "%s %s  temp%s %s ;\n"
-                  emacsvox-ocr-compress-image
-                  emacsvox-ocr-compress-image-options
-                  emacsvox-ocr-image-extension
-                  image-name))
-        (when emacsvox-ocr-keep-uncompressed-image
-          (format "rm -f temp%s"
-                  emacsvox-ocr-image-extension))))
-      (when (called-interactively-p 'interactive)
-        (setq emacsvox-ocr-last-page-number
-              (1+ emacsvox-ocr-last-page-number)))
-      (message "Acquired  image to file %s"
-               image-name))))
+  (unless emacsvox-ocr-scan-image
+    (user-error "Configure emacsvox-ocr-scan-image with an acquisition program"))
+  (let* ((image-name (expand-file-name
+                      (emacsvox-ocr-get-image-name emacsvox-ocr-image-extension)))
+         (original-name (concat (file-name-sans-extension image-name)
+                                "-uncompressed" emacsvox-ocr-image-extension))
+         stage source output acquired complete)
+    (when (file-exists-p image-name)
+      (user-error "Image already exists: %s" image-name))
+    (when (and emacsvox-ocr-compress-image emacsvox-ocr-keep-uncompressed-image
+               (file-exists-p original-name))
+      (user-error "Uncompressed image already exists: %s" original-name))
+    (setq stage (make-temp-file
+                 (expand-file-name ".emacsvox-scan-" (file-name-directory image-name)) t)
+          source (expand-file-name (concat "source" emacsvox-ocr-image-extension) stage)
+          output (if emacsvox-ocr-compress-image
+                     (expand-file-name (concat "result" emacsvox-ocr-image-extension) stage)
+                   source))
+    (unwind-protect
+        (condition-case failure
+            (progn
+              (emacsvox-ocr--acquisition-step
+               (format "%s %s > %s"
+                       (shell-quote-argument emacsvox-ocr-scan-image)
+                       emacsvox-ocr-scan-image-options
+                       (shell-quote-argument source))
+               source "Scanner")
+              (setq acquired t)
+              (when emacsvox-ocr-compress-image
+                (emacsvox-ocr--acquisition-step
+                 (format "%s %s %s %s"
+                         ;; Preserve intentionally configured shell commands,
+                         ;; while also accepting an executable path with spaces.
+                         (if (file-executable-p emacsvox-ocr-compress-image)
+                             (shell-quote-argument emacsvox-ocr-compress-image)
+                           emacsvox-ocr-compress-image)
+                         emacsvox-ocr-compress-image-options
+                         (shell-quote-argument source)
+                         (shell-quote-argument output))
+                 output "Image compression")
+                (when emacsvox-ocr-keep-uncompressed-image
+                  (rename-file source original-name)))
+              (rename-file output image-name)
+              (setq complete t)
+              (when (called-interactively-p 'interactive)
+                (cl-incf emacsvox-ocr-last-page-number))
+              (message "Acquired image to file %s%s" image-name
+                       (if (and emacsvox-ocr-compress-image
+                                emacsvox-ocr-keep-uncompressed-image)
+                           (format "; original retained at %s" original-name)
+                         "")))
+          (error
+           (if (and acquired (not complete))
+               (user-error "%s; recovery path: %s"
+                           (error-message-string failure)
+                           (cond ((file-exists-p source) source)
+                                 ((file-exists-p original-name) original-name)
+                                 (t stage)))
+             (signal (car failure) (cdr failure)))))
+      ;; A complete acquisition is valuable even if compression or publication
+      ;; failed.  Incomplete scanner output and successful staging are disposable.
+      (unless (and acquired (not complete))
+        (delete-directory stage t)))))
 
 (defun emacsvox-ocr-scan-photo (&optional metadata)
   "Scan in a photograph.

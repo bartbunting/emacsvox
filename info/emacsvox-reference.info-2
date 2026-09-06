@@ -3395,7 +3395,10 @@ remains available as an optional image-acquisition route.
 
  -- Command: emacsvox-ocr-scan-image
 
-     Acquire page image.
+     Acquire a page image, publishing it only after successful processing.
+     With compression and ‘emacsvox-ocr-keep-uncompressed-image’, retain the
+     original with -uncompressed before its extension.  On processing failure,
+     report the recovery path and leave the page number unchanged.
 
 2.178.1.16 emacsvox-ocr-scan-photo
 ..................................
@@ -9271,24 +9274,3 @@ File: emacsvox-reference.info,  Node: emacsvox-woman,  Next: emacsvox-xkcd,  Pre
 ====================
 
 WOMAN == Man pages implemented in Emacs Lisp
-
-
-File: emacsvox-reference.info,  Node: emacsvox-xkcd,  Next: emacsvox-xref,  Prev: emacsvox-woman,  Up: Emacsvox Commands And Options
-
-2.252 emacsvox-xkcd
-===================
-
-XKCD == XKCD In Emacs View XKCD comics in Emacs.  Speech enables package
-xkcd Augments it by displaying the alt text and the transcript.
-
-   Required modules:
-
-2.252.1 Emacsvox-Xkcd Commands
-------------------------------
-
-2.252.1.1 emacsvox-xkcd-open-explanation-browser
-................................................
-
- -- Command: emacsvox-xkcd-open-explanation-browser
-
-     Open explanation of current xkcd in default browser

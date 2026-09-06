@@ -12,6 +12,27 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: emacsvox-reference.info,  Node: emacsvox-xkcd,  Next: emacsvox-xref,  Prev: emacsvox-woman,  Up: Emacsvox Commands And Options
+
+2.252 emacsvox-xkcd
+===================
+
+XKCD == XKCD In Emacs View XKCD comics in Emacs.  Speech enables package
+xkcd Augments it by displaying the alt text and the transcript.
+
+   Required modules:
+
+2.252.1 Emacsvox-Xkcd Commands
+------------------------------
+
+2.252.1.1 emacsvox-xkcd-open-explanation-browser
+................................................
+
+ -- Command: emacsvox-xkcd-open-explanation-browser
+
+     Open explanation of current xkcd in default browser
+
+
 File: emacsvox-reference.info,  Node: emacsvox-xref,  Next: emacsvox-xslt,  Prev: emacsvox-xkcd,  Up: Emacsvox Commands And Options
 
 2.253 emacsvox-xref
@@ -5579,14 +5600,14 @@ Function Index
 * emacsvox-ocr-scan-and-recognize <1>:   emacsvox-ocr.       (line  185)
 * emacsvox-ocr-scan-image:               emacsvox-ocr.       (line  194)
 * emacsvox-ocr-scan-image <1>:           emacsvox-ocr.       (line  195)
-* emacsvox-ocr-scan-photo:               emacsvox-ocr.       (line  201)
-* emacsvox-ocr-scan-photo <1>:           emacsvox-ocr.       (line  202)
-* emacsvox-ocr-set-compress-image-options: emacsvox-ocr.     (line  211)
-* emacsvox-ocr-set-compress-image-options <1>: emacsvox-ocr. (line  212)
-* emacsvox-ocr-set-scan-image-options:   emacsvox-ocr.       (line  222)
-* emacsvox-ocr-set-scan-image-options <1>: emacsvox-ocr.     (line  223)
-* emacsvox-ocr-write-document:           emacsvox-ocr.       (line  233)
-* emacsvox-ocr-write-document <1>:       emacsvox-ocr.       (line  234)
+* emacsvox-ocr-scan-photo:               emacsvox-ocr.       (line  204)
+* emacsvox-ocr-scan-photo <1>:           emacsvox-ocr.       (line  205)
+* emacsvox-ocr-set-compress-image-options: emacsvox-ocr.     (line  214)
+* emacsvox-ocr-set-compress-image-options <1>: emacsvox-ocr. (line  215)
+* emacsvox-ocr-set-scan-image-options:   emacsvox-ocr.       (line  225)
+* emacsvox-ocr-set-scan-image-options <1>: emacsvox-ocr.     (line  226)
+* emacsvox-ocr-write-document:           emacsvox-ocr.       (line  236)
+* emacsvox-ocr-write-document <1>:       emacsvox-ocr.       (line  237)
 * emacsvox-omnivox-components-activate:  emacsvox-omnivox-components.
                                                              (line   15)
 * emacsvox-omnivox-components-activate <1>: emacsvox-omnivox-components.
