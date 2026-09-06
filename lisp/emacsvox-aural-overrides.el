@@ -287,11 +287,15 @@
 (defun emacsvox-aural-overrides--current-input (&optional source)
   "Return normalized source input for SOURCE, or nil."
   (let ((source (or source (emacsvox-aural-overrides--source-buffer))))
-    (when (buffer-live-p source)
-      (with-current-buffer source
-        (emacsvox-aural-normalize-input
-         (emacsvox-aural-facts-at-point)
-         (emacsvox-aural-context-at-point))))))
+    (when (and (buffer-live-p source)
+               (eq source (emacsvox-aural-inspection-source-buffer)))
+      (condition-case nil
+          (emacsvox-aural-inspection-call-in-source
+           (lambda ()
+             (emacsvox-aural-normalize-input
+              (emacsvox-aural-facts-at-point)
+              (emacsvox-aural-context-at-point))))
+        (user-error nil)))))
 
 (defun emacsvox-aural-overrides--here-status (record input)
   "Return current-point match status for RECORD against normalized INPUT."
@@ -502,14 +506,15 @@
         ((live-input
          (and
            (buffer-live-p source)
-           (with-current-buffer source
-             (let* ((facts (emacsvox-aural-facts-at-point))
-                    (context (emacsvox-aural-context-at-point))
-                    (input
-                     (emacsvox-aural-normalize-input facts context)))
-               (and
-                (emacsvox-aural-rule-matches-p compiled input)
-                (cons facts context))))))
+           (emacsvox-aural-inspection-call-in-source
+            (lambda ()
+              (let* ((facts (emacsvox-aural-facts-at-point))
+                     (context (emacsvox-aural-context-at-point))
+                     (input
+                      (emacsvox-aural-normalize-input facts context)))
+                (and
+                 (emacsvox-aural-rule-matches-p compiled input)
+                 (cons facts context)))))))
          (`(,facts . ,context)
           (or
            live-input

@@ -711,6 +711,47 @@
           (kill-buffer "*Aural Presentation Overrides*"))
         (kill-buffer source)))))
 
+(ert-deftest emacsvox-aural-overrides-retain-captured-position ()
+  "Preview and match status follow capture until deliberate source re-entry."
+  (emacsvox-test--with-aural-tools
+    (let ((source (generate-new-buffer " *aural-captured-override*"))
+          (emacsvox-aural-session-rules
+           '((:id first-only :match (:role heading :level 1)
+              :render (:content (:voice default)))))
+          manager proposed)
+      (unwind-protect
+          (save-window-excursion
+            (with-current-buffer source
+              (insert "First\nSecond\n")
+              (put-text-property 1 6 emacsvox-aural-facts-property
+                                 '(:role heading :level 1 :content "First"))
+              (put-text-property 7 13 emacsvox-aural-facts-property
+                                 '(:role heading :level 2 :content "Second"))
+              (goto-char 1)
+              (setq manager (emacsvox-aural-list-overrides)))
+            (with-current-buffer source (goto-char 7))
+            (with-current-buffer manager
+              (emacsvox-aural-overrides-refresh)
+              (should (equal (aref (cadar tabulated-list-entries) 5) "matches here"))
+              (goto-char (point-min))
+              (cl-letf (((symbol-function 'emacsvox-aural-preview-play-plan)
+                         (lambda (plan) (setq proposed plan))))
+                (emacsvox-aural-overrides-preview))
+              (should (equal (plist-get (emacsvox-aural-concrete-plan-facts proposed)
+                                        :content) "First")))
+            (with-current-buffer source
+              (should (= (point) 7))
+              (emacsvox-aural-list-overrides))
+            (with-current-buffer manager
+              (should (= (plist-get (emacsvox-aural-input-facts
+                                      (emacsvox-aural-overrides--current-input)) :level) 2)))
+            (with-current-buffer source (insert "changed"))
+            (with-current-buffer manager
+              (should-not (emacsvox-aural-overrides--current-input))
+              (should-error (emacsvox-aural-overrides-preview) :type 'user-error)))
+        (when (buffer-live-p source) (kill-buffer source))
+        (when (buffer-live-p manager) (kill-buffer manager))))))
+
 (ert-deftest emacsvox-aural-overrides-preview-resolves-complete-cascade ()
   "Override preview includes matching base-scheme and override behavior."
   (emacsvox-test--with-aural-tools
