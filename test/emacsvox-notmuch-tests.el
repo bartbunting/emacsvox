@@ -3896,10 +3896,13 @@ Return the beginning of the inserted row."
                   (push (cons 'notification arguments) events))))
             (should (kill-buffer owner))
             (let ((deadline (+ (float-time) 2.0)))
-              (while (and (process-live-p process)
+              ;; Process exit can precede delivery of its terminal sentinel.
+              ;; Wait for that callback to clear tracking, including when the
+              ;; process is already dead and has no remaining output.
+              (while (and (process-get
+                           process emacsvox-notmuch--search-process-property)
                           (< (float-time) deadline))
-                (accept-process-output process 0.05)))
-            (accept-process-output process 0.05)
+                (accept-process-output nil 0.05)))
             (should-not (buffer-live-p owner))
             (should-not (process-live-p process))
             (should (memq (process-status process) '(exit signal)))

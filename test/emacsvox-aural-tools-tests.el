@@ -2317,7 +2317,10 @@
     (with-temp-buffer
       (funcall mode)
       (should
-       (eq (key-binding (kbd "q")) #'emacsvox-aural-quit))))
+       (eq (key-binding (kbd "q"))
+           (if (eq mode 'emacsvox-aural-voice-workbench-mode)
+               #'emacsvox-aural-voice-workbench-quit
+             #'emacsvox-aural-quit)))))
   (should
    (eq
     (lookup-key emacsvox-aural-scheme-editor-mode-map (kbd "q"))

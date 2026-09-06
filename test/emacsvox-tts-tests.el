@@ -1167,7 +1167,8 @@
 
 (ert-deftest emacsvox-tts-omnivox-projects-live-inventory ()
   "Omnivox inventory keeps engine and native voice IDs separate."
-  (let* ((omnivox-engine-inventory
+  (let* ((tts-speaker-process nil)
+         (omnivox-engine-inventory
           '(:type "inventory" :inventory_generation 7
             :preferred_engine_id "eloquence"
             :engines
@@ -1976,7 +1977,7 @@
 
 (ert-deftest emacsvox-tts-marker-speech-rejects-unsupported-server ()
   "Marker-aware speech fails before submitting text to an older server."
-  (let ((tts-program "espeak") called)
+  (let ((tts-program "espeak") (tts-speaker-process nil) called)
     (cl-letf (((symbol-function 'tts-speak)
                (lambda (_text) (setq called t))))
       (should-error
@@ -1986,7 +1987,7 @@
 
 (ert-deftest emacsvox-tts-tracked-speech-rejects-unsupported-server ()
   "Tracked speech fails clearly when its server cannot report completion."
-  (let ((tts-program "espeak") called)
+  (let ((tts-program "espeak") (tts-speaker-process nil) called)
     (cl-letf (((symbol-function 'tts-speak)
                (lambda (_text) (setq called t))))
       (should-error

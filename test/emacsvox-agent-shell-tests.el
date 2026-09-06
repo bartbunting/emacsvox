@@ -9123,28 +9123,31 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 
 (ert-deftest emacsvox-agent-shell-list-editor-delegates-ordinary-feedback ()
   "Non-list TAB and RET preserve native editing advice's interactive ownership."
-  (with-temp-buffer
-    (agent-shell-list-edit-mode 1)
-    (setq-local indent-line-function (lambda () (indent-line-to 2)))
-    (let* (column edits
-           (indent-advice (lambda (&rest _)
-                            (when (ems-interactive-p 'indent-for-tab-command)
-                              (setq column (current-column)))))
-           (newline-advice (lambda (&rest _)
-                             (when (ems-interactive-p 'newline)
-                               (push 'line-created edits)))))
-      (advice-add 'indent-for-tab-command :after indent-advice)
-      (advice-add 'newline :after newline-advice)
-      (unwind-protect
-          (progn
-            (should-not (emacsvox-agent-shell-test--capture-events
-                          (funcall-interactively 'agent-shell-list-edit-indent-line)))
-            (should (= column 2))
-            (should-not (emacsvox-agent-shell-test--capture-events
-                          (funcall-interactively 'agent-shell-list-edit-newline)))
-            (should (equal edits '(line-created))))
-        (advice-remove 'indent-for-tab-command indent-advice)
-        (advice-remove 'newline newline-advice)))))
+  (require 'emacsvox-advice)
+  (let ((ordinary-events
+         (with-temp-buffer
+           (setq-local indent-line-function (lambda () (indent-line-to 2)))
+           (list
+            (emacsvox-agent-shell-test--capture-events
+              (funcall-interactively 'indent-for-tab-command))
+            (emacsvox-agent-shell-test--capture-events
+              (funcall-interactively 'newline))))))
+    ;; Observe the native feedback itself: ems-interactive-p consumes ownership,
+    ;; so a second test advice cannot independently claim the same command.
+    (should (car ordinary-events))
+    (with-temp-buffer
+      (agent-shell-list-edit-mode 1)
+      (setq-local indent-line-function (lambda () (indent-line-to 2)))
+      (should
+       (equal (emacsvox-agent-shell-test--capture-events
+                (funcall-interactively 'agent-shell-list-edit-indent-line))
+              (car ordinary-events)))
+      (should (= (current-column) 2))
+      (should
+       (equal (emacsvox-agent-shell-test--capture-events
+                (funcall-interactively 'agent-shell-list-edit-newline))
+              (cadr ordinary-events)))
+      (should (equal (buffer-string) "  \n")))))
 
 (provide 'emacsvox-agent-shell-tests)
 ;;; emacsvox-agent-shell-tests.el ends here
