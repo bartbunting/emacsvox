@@ -1,0 +1,183 @@
+#    -*- mode: org -*-
+Programming is the art of telling another human being what one wants
+the computer to do.   [[https://www.azquotes.com/quote/964459][(DEK)]]
+
+Emacsvox News -- History Of User-Visible Changes
+
+Maintained by Emacsvox Contributors.
+
+* Emacsvox 2026.9.3 --- Current User-Visible Changes
+
+Released notes are preserved in [[file:NEWS-2026.9.2][NEWS for Emacsvox 2026.9.2]].
+
+** Cycle buffers consistently in both directions
+
+~C-e n~ now cycles through every buffer with the same major mode instead of
+toggling between two buffers. ~C-e p~ traverses the cycle in reverse, so
+changing direction returns to the buffer just left. After either prefix,
+bare ~n~ and ~p~ continue cycling. A key outside the temporary buffer-selection
+controls ends cycling and performs its normal action.
+
+** Agent Shell speaks yanked prompt text
+
+Interactive text yanks in Agent Shell's input area now speak the inserted
+text, including prefix-argument yanks. Image attachment and programmatic
+yanks retain their existing behavior.
+
+** Install Emacsvox with a Debian package
+
+Emacsvox can be packaged as an architecture-independent deb, installing the
+audio desktop under /usr/share/emacsvox with an ~emacsvox~ command. It requires
+a packaged Emacs 30.2 or newer and recommends Omnivox; remote or WSL users can
+omit the local Linux speech server. Installation preserves personal Emacs
+configuration and never builds GNU Emacs or starts speech. The package includes
+Lisp sources, generated autoloads, sounds and offline manuals.
+
+** Use Emacs 30.2 or newer on every platform
+
+Emacsvox now accepts Emacs 30.2 and newer on all platforms, including native
+Windows and Ubuntu 26.04's distribution package. The launcher, configuration and guided
+installers reuse it without building Emacs 31. DOM reading preserves Emacs
+31 text behavior, and password feedback handles both versions' masking state.
+When Emacs is missing, installers suggest a suitable apt package or a prebuilt
+Windows release. The pinned Emacs 31.1 source build requires ~--build-emacs~
+on POSIX or ~-BuildEmacs~ on Windows; it no longer starts automatically.
+Lua mode must be installed separately on Emacs 30 when wanted; Corfu terminal
+popups on Emacs 30 need corfu-terminal.
+
+** Native Windows x64 is supported without WSL
+
+~bin/emacsvox-install.ps1~ reuses native Emacs 30.2 or newer or, with ~-BuildEmacs~, builds GNU Emacs
+31.1 with a private MSYS2 UCRT64 toolchain.  It installs pinned Windows
+Omnivox, prepares Emacsvox, and checks a fresh native GUI with both speech
+lanes.  ~-Check~ reports the plan without changing files.
+
+~bin/emacsvox.ps1~ starts the isolated native desktop; ~-Diagnose~ checks its setup
+and ~-Check~ verifies startup and speech.  This is now a supported x64 desktop route with Emacs 30.2 or newer.
+Native ARM64 and automatic optional-engine installation remain outside this route.
+The installer does not require WSL or change personal initialization, system
+PATH, Windows services, or JAWS configuration.
+
+** Preview: install Emacsvox on a remote Linux host without local speech engines
+
+~bin/emacsvox-install --role remote-emacs~ reuses Emacs 30.2 or newer, or with
+~--build-emacs~ builds the pinned terminal-only Emacs on Debian/Ubuntu, and compiles Emacsvox without
+installing Omnivox or requiring Windows interoperability.  ~--check~ reports
+prerequisites without changing files.
+
+~bin/emacsvox --remote~ supplies workstation connection settings before
+startup.  ~--remote --diagnose~ needs no live connection;
+~--remote --check~ verifies both remote speech lanes.  Workstation speech still
+requires a development Omnivox with ~--serve~, a private token, and an SSH
+reverse forward.  The existing local WSL installer remains available.
+
+** Back out of an engine's voice list one step at a time
+
+After ~RET~ opens an engine's voices, ~q~ returns to that engine's row and
+column.  Another ~q~ leaves the Workbench.  Returning works for empty or
+refreshed voice lists and preserves unsaved routing changes; leaving the
+Workbench still warns about those changes.
+
+** Engine availability is distinct from routing policy
+
+Browse and try voices reports engine availability before routing preferences.
+The former /enabled/ label now says /Routing policy: allowed/; missing runtimes
+remain /unavailable/ with their discovery reason visible in the row.
+
+** Engine module operations show their progress
+
+Downloadable modules say /not installed/ until installation starts.  The
+module manager shows and speaks /installing/, /uninstalling/, or /testing/
+while an operation runs, including after refresh or reopening.  Completion
+and failure refresh the state, and reopening preserves the active operation
+and its protection against starting another one.
+The /Release state/ column describes the managed release; Browse and try
+voices reflects the active server, which may use a different installation.
+
+** Preview: remote Emacs can use workstation speech
+
+The remote preview can connect remote Emacs to Omnivox on the workstation
+through an authenticated SSH reverse forward.  Engines and audio remain on
+the workstation; foreground and notification connections recover separately
+without replaying unfinished speech.  Use ~omnivox-remote-connect~,
+~omnivox-remote-status~, and ~omnivox-remote-disconnect~ with the endpoint and
+private token options described in Speech Backends.  Windows services require
+Windows OpenSSH for the forward when WSL uses NAT.  Omnivox 1.7.1 release
+binaries predate this feature.
+
+** Aural Home retains context and unfinished work
+
+~C-e H~ remembers the source item as well as its buffer.  Moving the source
+cursor does not retarget explanation or remapping; ~C-c C-o~ in Home returns
+to the captured item.  Reopen ~C-e H~ from an ordinary buffer to adopt a new
+target.  Help and Home retain their return context and selected row.
+
+Buffer rule editors preserve separate drafts for each source buffer, and
+reopening an editor or the same tuned voice preserves unfinished changes.
+Generated current-item remaps recheck their source before applying.  Current
+explanation and remapping no longer use unrelated earlier feedback; retained
+historical presentations remain available through Recent Feedback.
+
+** Consistent Aural navigation and actions
+
+Settings lists speak the name and state together when moving vertically.
+Child managers retain their row and column on reopening; Help returns to
+its exact origin.  ~C-c C-a~ offers named actions and ~S~ stops previews.
+The rule editor now uses ~n/p~ for movement, ~N~ for Add and ~P~ for Preview.
+~RET~ opens details or a child list; profiles are applied with ~a~.
+Palette ~P~ auditions its voices, while ~RET~ browses them.  Stopping or
+interrupting an exact-voice sequence prevents late callbacks restarting it.
+
+** Task groups and searchable destinations in Aural Home
+
+Home begins with five expandable task groups.  ~RET~ or ~TAB~ expands a
+group, and ~/~ searches every named action, including collapsed groups.
+Existing direct shortcuts remain available.  Home announces the captured
+source and unfinished draft count; Resume unfinished changes opens the
+original editor.  Voice browsing, speech rate, engine preference, and
+notification controls are available beside the advanced managers.
+
+** Browse, identify, and compare physical voices
+
+~RET~ on a Workbench engine opens its filtered voices; ~RET~ on a voice shows
+details.  ~P~ plays a named sample.  ~A~ follows displayed order and skips
+unavailable voices.  ~B~ starts with the selected voice and offers a filtered
+second voice, with an explicit Search all engines choice.  Sample labels are
+configurable through ~emacsvox-aural-preview-label-verbosity~.  Views retain
+their own selected rows and columns, and fresh inventory updates open lists.
+Exact-preview failures stop the sequence and report the requested voice's
+failure instead of silently accepting another engine or voice.
+
+** Temporary physical voice tuning and reviewed Keep result
+
+Press ~t~ on a physical voice to experiment with its exact route, engine
+parameters, and audio effects.  Navigation and Help use the working voice.
+Compare opening and working versions, copy a style, switch voices, or hear
+three parameter values without saving.  ~w~ chooses what to keep and opens a
+review; ~C-c C-c~ in that review saves and applies the selected destinations.
+Style and route stores remain separate, and incomplete saves or failed
+application retain their completed steps for retry.  Requested settings and
+reported playback support are shown separately; exact effective values are
+not claimed when the adapter does not report them.
+
+** Guided changes to selected feedback
+
+Home ~c~ opens Change this feedback for Current item; Recent Feedback ~C~
+uses the selected frozen record and asks for a part when needed.  Change a
+voice, add or replace a cue or tone, add a spoken label, or suppress one
+component.  ~P~ previews before choosing persistence, ~O~ replays the original,
+~m~ chooses matching criteria, and ~l~ chooses lifetime.  Review the summary
+before ~a~ or ~C-c C-c~ applies or saves.  ~e~ opens the Advanced rule editor;
+~q~ retains the unfinished draft.  Matching breadth and lifetime are described
+separately, and failures preserve recoverable work.
+
+** Task recipes and offline help
+
+Aural interfaces offer ~C-c C-i~ for their offline task manual, with ~q~
+returning to the exact origin; Help also offers ~i~ and a manual link.  Worked
+recipes cover physical voices, pitch comparisons, Keep result, heading
+voices, cues, blank-line tones, engine preference, and draft recovery.
+Home Help starts with tasks.  Training mode ~RET~ shows details and ~t~
+explicitly toggles explanations for the session.  Tuner value prompts now
+state when blank retains the current value, and option Actions hide operations
+that cannot apply to the selected row.
