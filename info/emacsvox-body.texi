@@ -4142,8 +4142,10 @@ shell buffers.  Run @code{M-x emacsvox-agent-shell-enable} only when manually
 re-enabling support after it was disabled or while diagnosing a live reload.
 
 Compose and submit prompts with Agent Shell's normal editing commands.  The
-live prompt retains Emacs undo.  Submitted transcript text is history rather
-than editable prompt input.  Press @kbd{C-c C-c} to ask Agent Shell to interrupt
+live prompt retains Emacs undo. Interactive text yanks speak the inserted
+text@comma{} including when a prefix argument selects a different kill-ring entry.
+Image attachment keeps Agent Shell's existing feedback. Submitted transcript
+text is history rather than editable prompt input.  Press @kbd{C-c C-c} to ask Agent Shell to interrupt
 an active request; its normal confirmation setting still applies.
 
 Emacsvox speaks routine content only at complete turn boundaries.  A network

@@ -18,6 +18,12 @@ changing direction returns to the buffer just left. After either prefix,
 bare ~n~ and ~p~ continue cycling. A key outside the temporary buffer-selection
 controls ends cycling and performs its normal action.
 
+** Agent Shell speaks yanked prompt text
+
+Interactive text yanks in Agent Shell's input area now speak the inserted
+text, including prefix-argument yanks. Image attachment and programmatic
+yanks retain their existing behavior.
+
 ** Install Emacsvox with a Debian package
 
 Emacsvox can be packaged as an architecture-independent deb, installing the

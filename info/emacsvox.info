@@ -3997,10 +3997,12 @@ only when manually re-enabling support after it was disabled or while
 diagnosing a live reload.
 
    Compose and submit prompts with Agent Shell's normal editing
-commands.  The live prompt retains Emacs undo.  Submitted transcript
-text is history rather than editable prompt input.  Press ‘C-c C-c’ to
-ask Agent Shell to interrupt an active request; its normal confirmation
-setting still applies.
+commands.  The live prompt retains Emacs undo.  Interactive text yanks
+speak the inserted text, including when a prefix argument selects a
+different kill-ring entry.  Image attachment keeps Agent Shell's
+existing feedback.  Submitted transcript text is history rather than
+editable prompt input.  Press ‘C-c C-c’ to ask Agent Shell to interrupt
+an active request; its normal confirmation setting still applies.
 
    Emacsvox speaks routine content only at complete turn boundaries.  A
 network pause does not make a partial answer sound complete.  A
@@ -6099,26 +6101,26 @@ Node: Desktop Applications160274
 Node: Notmuch Mail167662
 Ref: Notmuch fields and privacy177005
 Node: Agent Shell182713
-Node: EAT Terminal Access195008
-Node: Running Terminal Based Applications212267
-Node: Starting Term213222
-Node: Term Input Modes214061
-Node: Term Speech Feedback215221
-Node: Reviewing The Term Screen216415
-Node: Term Help And Recovery218316
-Node: Emacsvox Keyboard Commands219215
-Node: Copyright220619
-Node: Acknowledgments221206
-Node: Developer Guide222232
-Node: Documentation Maintenance223396
-Node: Speech Server Protocols228196
-Ref: Testing A Direct Legacy Server234103
-Ref: Commands That Queue Output234662
-Ref: Commands That Set State237696
-Node: Integration Maintenance240290
-Ref: Supported Emacs versions242332
-Ref: Native Windows preview builds243028
-Node: Concept Index271548
+Node: EAT Terminal Access195184
+Node: Running Terminal Based Applications212443
+Node: Starting Term213398
+Node: Term Input Modes214237
+Node: Term Speech Feedback215397
+Node: Reviewing The Term Screen216591
+Node: Term Help And Recovery218492
+Node: Emacsvox Keyboard Commands219391
+Node: Copyright220795
+Node: Acknowledgments221382
+Node: Developer Guide222408
+Node: Documentation Maintenance223572
+Node: Speech Server Protocols228372
+Ref: Testing A Direct Legacy Server234279
+Ref: Commands That Queue Output234838
+Ref: Commands That Set State237872
+Node: Integration Maintenance240466
+Ref: Supported Emacs versions242508
+Ref: Native Windows preview builds243204
+Node: Concept Index271724
 
 End Tag Table
 
