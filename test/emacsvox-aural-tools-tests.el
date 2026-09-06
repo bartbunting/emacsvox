@@ -1468,6 +1468,59 @@
           (kill-buffer "*Recent Aural Feedback*"))
         (kill-buffer source)))))
 
+(ert-deftest emacsvox-aural-tools-historical-remappers-require-source-identity ()
+  "Both remappers accept original identity, including renames, and reject reuse."
+  (dolist (state '(replaced original renamed missing-identity))
+    (emacsvox-test--with-aural-tools
+      (let ((source (generate-new-buffer " *aural-history-identity*"))
+            (emacsvox-aural-session-rules
+             '((:id heading-cue :match (:role heading)
+                :render (:before ((:id cue :kind cue :cue item))))))
+            record choices targets)
+        (unwind-protect
+            (progn
+              (with-current-buffer source
+                (insert "Old") (goto-char 1)
+                (let* ((facts '(:role heading :level 1 :content "Old"))
+                       (context (emacsvox-aural-capture-context))
+                       (plan (emacsvox-aural-compile-plan
+                              (emacsvox-aural-resolve-active facts context) facts context)))
+                  (emacsvox-aural-record-presentation plan)
+                  (setq record (emacsvox-aural-last-presentation))))
+              (pcase state
+                ('renamed (with-current-buffer source
+                            (rename-buffer (generate-new-buffer-name " *aural-renamed*"))))
+                ('replaced (let ((name (buffer-name source)))
+                             (kill-buffer source)
+                             (setq source (get-buffer-create name))))
+                ('missing-identity
+                 (setf (emacsvox-aural-concrete-plan-context
+                        (emacsvox-aural-presentation-record-plan record))
+                       (plist-put
+                        (emacsvox-aural-concrete-plan-context
+                         (emacsvox-aural-presentation-record-plan record))
+                        :source-buffer-id nil))))
+              (with-current-buffer source
+                (cl-letf (((symbol-function 'tts-speak) #'ignore)
+                          ((symbol-function 'emacsvox-aural-preview-play-cues) #'ignore)
+                          ((symbol-function 'completing-read)
+                           (lambda (prompt collection &rest _)
+                             (cond ((string-prefix-p "Keep" prompt)
+                                    (push collection choices) "this Emacs session")
+                                   ((string-prefix-p "Change" prompt) "suppress it")
+                                   (t "default"))))
+                          ((symbol-function 'emacsvox-aural-editor-open-prefilled-rule)
+                           (lambda (_scope _rule target) (push target targets))))
+                  (emacsvox-aural-remap-voice-at-point record)
+                  (emacsvox-aural-remap-earcon-at-point record)))
+              (should (= (length choices) 2))
+              (dolist (offered choices)
+                (should (eq (not (null (member "this buffer" offered)))
+                            (not (null (memq state '(original renamed)))))))
+              (dolist (target targets)
+                (should (eq target (and (memq state '(original renamed)) source)))))
+          (when (buffer-live-p source) (kill-buffer source)))))))
+
 (ert-deftest emacsvox-aural-tools-record-remap-requires-matching-source ()
   "Historical remapping never guesses a live buffer from a retained name."
   (emacsvox-test--with-aural-tools
@@ -1479,7 +1532,8 @@
               :text "Network" :speak t :voice-request 'bolden)
              :facts
              '(:role filesystem-entry :entry-kind directory)
-             :context '(:module dired :mode dired-mode)
+             :context (with-current-buffer source
+                        (emacsvox-aural-capture-context 'dired))
              :source-plan
              (emacsvox-aural--make-render-plan
               :content

@@ -470,9 +470,8 @@
          (buffer (generate-new-buffer "*Aural Change Feedback*")))
     ;; Frozen history can identify a buffer only when its original identity survives.
     (when (and record (plist-get input :source)
-               (not (and (plist-get (plist-get input :context) :source-buffer-id)
-                         (eq (plist-get (plist-get input :context) :source-buffer-id)
-                             (buffer-local-value 'emacsvox-aural-source-buffer-id (plist-get input :source))))))
+               (not (emacsvox-aural-tools--source-matches-context-p
+                     (plist-get input :source) (plist-get input :context))))
       (setq input (plist-put input :source nil)))
     (with-current-buffer buffer
       (emacsvox-aural-change-feedback-mode)

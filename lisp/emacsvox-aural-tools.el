@@ -117,6 +117,14 @@ message notification policy."
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
 (defvar emacsvox-aural-editor-prepared-source-guard)
 
+(defun emacsvox-aural-tools--source-matches-context-p (source context)
+  "Return non-nil when live SOURCE has the identity frozen in CONTEXT."
+  (and (buffer-live-p source)
+       (let ((identity (plist-get context :source-buffer-id)))
+         (and identity
+              (eq identity
+                  (buffer-local-value 'emacsvox-aural-source-buffer-id source))))))
+
 (defun emacsvox-aural-tools--remap-record-plan (record component)
   "Choose the retained part of RECORD to remap for COMPONENT.
 Earcon remapping includes only parts containing an earcon."
@@ -144,7 +152,7 @@ Earcon remapping includes only parts containing an earcon."
   "Return presentation input for optional frozen RECORD or the current source.
 
 For RECORD, use its frozen voice and semantic context.  Associate it
-with the current inspection source only when the buffer name still matches;
+with the current inspection source only when its original identity survives;
 history deliberately does not retain source buffers.  Without RECORD, use
 inspectable facts at the captured source position, or a retained presentation
 whose source identity, position, and modification tick still match.
@@ -162,10 +170,8 @@ When COMPONENT is non-nil, select the retained part to remap."
                (source
                 (and
                  source
-                 (equal
-                  (buffer-name source)
-                  (emacsvox-aural-presentation-record-source-buffer-name
-                   record))
+                 (emacsvox-aural-tools--source-matches-context-p
+                  source (emacsvox-aural-concrete-plan-context concrete))
                  source)))
           (list
            :source source
