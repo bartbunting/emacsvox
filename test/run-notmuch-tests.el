@@ -9,8 +9,8 @@
 
 (require 'ert)
 
-(when (< emacs-major-version 31)
-  (error "Emacsvox tests require Emacs 31 or later"))
+(when (version< emacs-version "30.2")
+  (error "Emacsvox tests require Emacs 30.2 or later"))
 
 (setq load-prefer-newer t)
 

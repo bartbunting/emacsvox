@@ -471,16 +471,18 @@ Skip cloning if you already have a Windows checkout and change into it instead.
 The check reports the selected Emacs and planned paths without downloading,
 writing configuration, or playing audio.
 
-The installer reuses native Emacs 31 or newer.  If none is selected, it builds
-GNU Emacs 31.1 using a private MSYS2 UCRT64 toolchain, then installs the pinned
-Omnivox core and prepares Emacsvox.  Allow several gigabytes of disk space and
+The installer reuses native Emacs 30.2 or newer. If none is selected, it offers
+a [[https://www.gnu.org/software/emacs/download.html][prebuilt Windows Emacs]] first. Install a release at least 30.2 and select its
+~bin/emacs.exe~ with ~-Emacs~. Alternatively, choose ~-BuildEmacs~ to build
+GNU Emacs 31.1 using a private MSYS2 UCRT64 toolchain. No source build starts
+without that option. It then installs the pinned Omnivox core and prepares Emacsvox.  Allow several gigabytes of disk space and
 time for the initial downloads and source build.  Later runs reuse the
 installed Emacs and cached archives.  An existing native Emacs does not need
 MSYS2 to prepare Emacsvox.
 
 To select an existing Emacs explicitly, add
 =-Emacs "C:\path\to\Emacs\bin\emacs.exe"=.  Explicit =-Emacs=, =EMACS= environment,
-and =local.mk= selections must agree and require native Emacs 31 or newer.
+and =local.mk= selections must agree and require native Emacs 30.2 or newer.
 =-BuildEmacs= selects the managed source build instead of a saved or PATH
 selection; it reuses a complete managed build when one exists.  It cannot
 replace an explicit selection.
@@ -539,7 +541,7 @@ Emacs-specific JAWS override used on the test workstation.
 :END:
 
 The following manual procedure remains available for an already installed
-native Windows Emacs 31 or newer.  It does not acquire Emacs or replace the
+native Windows Emacs 30.2 or newer.  It does not acquire Emacs or replace the
 guided x64 checks above.  Set =$Emacsvox= to the checkout's absolute Windows
 path and continue in one PowerShell window.
 
@@ -637,7 +639,7 @@ $env:TTS_PROGRAM = $Omnivox
 & $Emacs -Q --no-splash --load "$Emacsvox\lisp\emacsvox-setup.el"
 #+end_src
 
-The Emacs version must be 31 or newer.  Use ~emacs.exe~, rather than
+The Emacs version must be 30.2 or newer.  Use ~emacs.exe~, rather than
 ~runemacs.exe~, for this first trial so startup errors remain visible in the
 PowerShell window.  Loading ~emacsvox-setup.el~ directly is intentional: the
 repository's ~bin/emacsvox~ launcher is a POSIX shell script.  The guided

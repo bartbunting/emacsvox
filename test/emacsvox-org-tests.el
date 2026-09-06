@@ -284,7 +284,10 @@
   (dolist (target emacsvox-test--org-structure-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
-      (should (fboundp target))
+      (should (or (fboundp target)
+                  ;; These commands arrived with Org 9.8 in Emacs 31.
+                  (and (version< (org-version) "9.8")
+                       (memq target '(org-up-heading)))))
       (should (fboundp function))
       (should (advice-member-p function target)))))
 
@@ -1159,7 +1162,10 @@
   (dolist (target emacsvox-test--org-link-refile-around-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-around" target))))
-      (should (fboundp target))
+      (should (or (fboundp target)
+                  ;; These commands arrived with Org 9.8 in Emacs 31.
+                  (and (version< (org-version) "9.8")
+                       (memq target '(org-link-preview org-link-preview-refresh)))))
       (should (fboundp function))
       (should (advice-member-p function target)))))
 

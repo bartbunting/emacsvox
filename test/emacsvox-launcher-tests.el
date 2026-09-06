@@ -618,13 +618,36 @@
             (should-not (file-exists-p log-directory))))
       (delete-directory root t))))
 
-(ert-deftest emacsvox-launcher-rejects-system-emacs-30 ()
+(ert-deftest emacsvox-launcher-checks-minimum-minor-version ()
+  "The launcher accepts 30.2 and newer, including two-digit minor versions."
+  (let* ((root (emacsvox-launcher-tests--make-checkout))
+         (tools (expand-file-name "tools" root))
+         (launcher (expand-file-name "bin/emacsvox" root))
+         (process-environment (copy-sequence process-environment)))
+    (unwind-protect
+        (progn
+          (setenv "EMACSVOX_DIR" nil)
+          (setenv "TTS_PROGRAM" nil)
+          (setenv "OMNIVOX_PROGRAM"
+                  (emacsvox-launcher-tests--fake-omnivox
+                   (expand-file-name "omnivox" tools)))
+          (dolist (entry '(("29.4" . nil) ("30.1" . nil) ("30" . nil)
+                          ("30.2" . t) ("30.10" . t) ("31.0" . t)
+                          ("invalid" . nil)))
+            (setenv "EMACS" (emacsvox-launcher-tests--fake-emacs
+                             (expand-file-name "emacs" tools) (car entry)))
+            (should (eq (zerop (car (emacsvox-launcher-tests--call
+                                    launcher "--diagnose")))
+                        (cdr entry)))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-launcher-rejects-system-emacs-30-1 ()
   "PATH fallback does not start Emacsvox with an old system Emacs."
   (let* ((root (emacsvox-launcher-tests--make-checkout))
          (tools (expand-file-name "old system bin" root))
          (_fake-emacs
           (emacsvox-launcher-tests--fake-emacs
-           (expand-file-name "emacs" tools) "30.4"))
+           (expand-file-name "emacs" tools) "30.1"))
          (launcher (expand-file-name "bin/emacsvox" root)))
     (unwind-protect
         (let ((process-environment (copy-sequence process-environment)))
@@ -638,7 +661,7 @@
             (should (and (integerp status) (not (zerop status))))
             (should
              (string-search
-              "Emacsvox requires Emacs 31 or newer" output))))
+              "Emacsvox requires Emacs 30.2 or newer" output))))
       (delete-directory root t))))
 
 (ert-deftest emacsvox-launcher-reports-a-missing-omnivox-runtime ()

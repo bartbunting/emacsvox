@@ -1729,7 +1729,7 @@ Optional interactive prefix arg `multi' prompts for multiple elements."
             (funcall transform
                      (cl-remove-if-not
                       #'(lambda (node)
-                          (string-match text (dom-inner-text node)))
+                          (string-match text (emacsvox-dom-inner-text node)))
                       dom)))
       (emacsvox-eww-view-helper
        (dom-html-from-nodes dom (eww-current-url)))

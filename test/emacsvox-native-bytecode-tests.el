@@ -44,7 +44,7 @@
           (setenv "EMACSVOX_NATIVE_ROOT" (base64-encode-string (encode-coding-string root 'utf-8) t))
           (setenv "EMACSVOX_NATIVE_BYTECODE" "check")
           (should-error (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main)))
-          (with-temp-file compiled (insert ";;; in Emacs version 30.2\n"))
+          (with-temp-file compiled (insert ";;; in Emacs version 29.4\n"))
           (should-error (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main)))
           (with-temp-file compiled (insert ";;; in Emacs version " emacs-version "\n"))
           (should (string-match-p "1 modules" (with-output-to-string (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main)))))

@@ -60,6 +60,7 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
 (require 'dom)
+(require 'dom-addons)
 (require 'g-utils)
 (declare-function emacsvox-xslt-get "emacsvox-xslt" (style))
 
@@ -339,7 +340,7 @@ more results."
              (libxml-parse-xml-region (point-min) (point-max))
              'title)))
       (when title
-        (setq title (dom-inner-text (cl-first title)))
+        (setq title (emacsvox-dom-inner-text (cl-first title)))
         (setq title (replace-regexp-in-string " +" "-" title)))
       (kill-buffer)
       (expand-file-name

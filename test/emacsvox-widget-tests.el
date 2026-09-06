@@ -42,14 +42,20 @@
     (widget-setup :after emacsvox--advice-widget-setup-after))
   "Directly migrated Widget motion and setup advice.")
 
-(ert-deftest emacsvox-widget-emacs31-target-contracts ()
-  "Every advised Widget target exists with its Emacs 31 arguments."
+(ert-deftest emacsvox-widget-supported-target-contracts ()
+  "Every advised Widget target accepts its version-specific native arguments."
   (dolist (entry emacsvox-test--widget-target-arglists)
     (pcase-let ((`(,target ,arguments) entry))
       (should (fboundp target))
       (should-not (or (get target 'obsolete)
                       (get target 'byte-obsolete-info)))
-      (should (equal (help-function-arglist target t) arguments)))))
+      (when (and (version< emacs-version "31")
+                 (memq target '(widget-forward widget-backward)))
+        (setq arguments '(arg)))
+      ;; Emacs 30 loses the arglist on some advice wrappers.
+      (should (equal (help-function-arglist
+                      (advice--cd*r (symbol-function target)) t)
+                     arguments)))))
 
 (ert-deftest emacsvox-widget-motion-advice-is-directly-registered ()
   "Widget motion and setup advice uses native advice directly."

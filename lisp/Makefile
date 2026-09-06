@@ -359,6 +359,8 @@ documentation-modules:
 aural: $(AURAL_RUNTIME_OBJECTS) emacsvox-keymap.elc \
 $(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc
 
+emacsvox-bookshare.elc emacsvox-epub.elc emacsvox-eww.elc emacsvox-librivox.elc: dom-addons.elc
+
 emacsvox-preamble.elc: emacsvox-version.elc
 
 emacsvox-eat-input.elc: emacsvox-eat-core.elc

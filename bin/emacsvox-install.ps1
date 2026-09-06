@@ -72,7 +72,7 @@ elseif (-not $BuildEmacs) {
     $candidate = Get-Command emacs.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($candidate) {
         try { $selected = Get-EmacsvoxNativeEmacs $candidate.Source }
-        catch { Write-Host 'PATH has no usable native Emacs 31+; the pinned build will be used.' }
+        catch { Write-Host 'PATH has no usable native Emacs 30.2 or newer.' }
     }
 }
 $omnivoxRoot = Join-Path $InstallRoot "Omnivox\$($pins.EMACSVOX_WSL_OMNIVOX_VERSION)-windows-x64"
@@ -81,6 +81,15 @@ $logs = Join-Path $InstallRoot 'logs'
 $profile = Join-Path $InstallRoot 'profile'
 $msys = Join-Path $ToolchainRoot 'msys64'
 $bash = Join-Path $msys 'usr\bin\bash.exe'
+if (-not $selected -and -not $BuildEmacs) {
+    Write-Host 'Emacs 30.2 or newer is required. Choose a prebuilt release or a source build:'
+    Write-Host '  Recommended: install a prebuilt Windows Emacs 30.2 or newer from'
+    Write-Host '  https://www.gnu.org/software/emacs/download.html'
+    Write-Host '  Then rerun this installer with -Emacs C:\path\to\Emacs\bin\emacs.exe'
+    Write-Host "  Alternatively, rerun with -BuildEmacs to build pinned GNU Emacs $($pins.EMACSVOX_WSL_EMACS_VERSION)."
+    if ($Check) { Write-Host 'No files changed.'; return }
+    throw 'Select a prebuilt Emacs with -Emacs, or choose -BuildEmacs. No files changed.'
+}
 if (-not $selected) {
     if ($ToolchainRoot -match '\s') { throw 'MSYS2 build tools need a path without spaces; select -ToolchainRoot accordingly.' }
     if ((Test-Path $ToolchainRoot) -and -not (Test-Path (Join-Path $ToolchainRoot 'emacsvox-toolchain.json'))) {

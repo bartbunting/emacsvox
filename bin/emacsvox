@@ -140,8 +140,13 @@ case $emacs_major in
         fail "selected executable did not report a valid Emacs version: $emacs_bin"
         ;;
 esac
-if [ "$emacs_major" -lt 31 ]; then
-    fail "Emacsvox requires Emacs 31 or newer; $emacs_bin reports $emacs_version"
+emacs_minor=${emacs_version#*.}
+emacs_minor=${emacs_minor%%.*}
+case $emacs_version in *.*) ;; *) emacs_minor=0 ;; esac
+case $emacs_minor in ''|*[!0-9]*) emacs_minor=0 ;; esac
+if [ "$emacs_major" -lt 30 ] ||
+   { [ "$emacs_major" -eq 30 ] && [ "$emacs_minor" -lt 2 ]; }; then
+    fail "Emacsvox requires Emacs 30.2 or newer; $emacs_bin reports $emacs_version"
 fi
 
 if $remote; then

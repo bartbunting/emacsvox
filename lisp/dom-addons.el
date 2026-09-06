@@ -37,6 +37,22 @@
 (require 'g-utils)
 
 ;;;  Additional helpers:
+(defun emacsvox-dom-inner-text (node)
+  "Return NODE's text without inserting whitespace between child elements.
+Ignore descendant script and comment elements.  Use `dom-inner-text'
+when available, retaining the same behavior on Emacs 30.2."
+  (if (fboundp 'dom-inner-text)
+      (dom-inner-text node)
+    (let ((pending (copy-sequence (dom-children node)))
+          text)
+      (while pending
+        (let ((child (pop pending)))
+          (cond
+           ((stringp child) (push child text))
+           ((not (memq (dom-tag child) '(script comment)))
+            (setq pending (append (dom-children child) pending))))))
+      (apply #'concat (nreverse text)))))
+
 (defun dom-alternate-links (dom)
   "Return link elements specifying rel=alternate."
   (cl-remove-if-not

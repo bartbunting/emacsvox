@@ -26,7 +26,7 @@ checkout, byte-code, and release procedures live in
 Emacsvox repository at [[https://github.com/bartbunting/emacsvox]].  Before
 changing a governed workflow or architecture, read ~AGENTS.md~ and every
 accepted record under ~docs/adr/~.  Repository-local ~local.mk~ selects the
-Emacs used by supported targets; Emacsvox requires Emacs 31 or newer.
+Emacs used by supported targets; Emacsvox requires Emacs 30.2 or newer.
 
 Do not hand-edit generated references.  ~info/docs.texi~ and ~info/keys.texi~
 come from the source documentation generator, and

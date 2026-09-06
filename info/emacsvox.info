@@ -81,7 +81,7 @@ Emacs.  It helps you read and write text, browse the Web, use mail and
 messaging, work in shells, program, and explore structured information
 through speech and sound.
 
-   Emacsvox requires Emacs 31 or newer and is derived from Emacspeak.
+   Emacsvox requires Emacs 30.2 or newer and is derived from Emacspeak.
 Emacspeak's pioneering audio-desktop design and T.  V.  Raman's original
 work remain the foundation of this project.
 
@@ -182,27 +182,32 @@ File: emacsvox.info,  Node: Obtaining Emacsvox,  Next: Installing Remote Emacsvo
 ====================
 
 Install ‘git’ so you can obtain the Emacsvox checkout.  Emacsvox
-requires Emacs 31 or newer
+requires Emacs 30.2 or newer
 (https://www.gnu.org/software/emacs/download.html), but WSL2 users do
 not need to find a separate Emacs package before beginning.  The guided
-installer below uses an existing supported Emacs or builds the pinned
-stable release for the current user.
+installer below uses an existing supported Emacs, suggests a suitable
+package, or offers an explicit source build.
 
-   On GNU/Linux and macOS, install Emacs 31 or newer and ‘make’.
+   On GNU/Linux and macOS, install Emacs 30.2 or newer and ‘make’.
 Omnivox 1.7.0 or newer is the supported speech-server baseline.
 Installing its release archive also requires ‘curl’ and either
 ‘sha256sum’ on GNU/Linux or ‘shasum’ on macOS, plus ‘tar’.  GNU Texinfo
 is needed only when building or editing the documentation, not for an
 ordinary installation.
 
+   Ubuntu 26.04 provides Emacs 30.2 as a distribution package, which
+satisfies this requirement.  The same minimum applies to native Windows.
+On Emacs 30, install ‘lua-mode’ separately if you use Lua; on Emacs 31
+it is built in.  Corfu on an Emacs 30 text terminal also needs
+‘corfu-terminal’; Emacs 31 supports its terminal popup directly.
+
    To check the Emacs found by your shell, run:
 
      emacs --version
 
-   The first line should begin with ‘GNU Emacs 31’ or a higher version
-number.  If the command is not found or reports an older version,
-install a supported Emacs or locate its executable.  You can check a
-specific executable in the same way:
+   The reported version must be 30.2 or newer.  If the command is not
+found or reports an older version, install a supported Emacs or locate
+its executable.  You can check a specific executable in the same way:
 
      /path/to/emacs-31/bin/emacs --version
 
@@ -241,25 +246,33 @@ inspect the machine without changing it:
      cd ~/src/emacsvox
      ./bin/emacsvox-wsl-install --check
 
-   The report names the Emacs it will use, the matching Omnivox Windows
-archive, and the per-user installation paths.  If Emacs build packages
-are missing, it prints one ‘apt’ command for you to review and run.  The
-installer never invokes ‘sudo’ itself.  After resolving any reported
-prerequisite, run:
+   If Emacs is missing, the report checks the available apt version and
+suggests ‘sudo apt install emacs’ only when that candidate satisfies
+30.2.  Older or unavailable candidates are identified without being
+recommended.  You can refresh apt metadata and check again, or choose
+the pinned source build with ‘./bin/emacsvox-wsl-install --build-emacs’.
+Add ‘--check’ to inspect that build's prerequisites first.  The
+installer never begins a source build by default.
+
+   With Emacs selected, the report names it, the matching Omnivox
+Windows archive, and the per-user installation paths.  If source-build
+packages are missing, it prints one ‘apt’ command for you to review and
+run.  The installer never invokes ‘sudo’ itself.  After resolving any
+reported prerequisite, run:
 
      ./bin/emacsvox-wsl-install
 
-   It builds the pinned stable Emacs only when Emacs 31 or newer is
-unavailable, downloads and verifies the matching Omnivox 1.7.1 Windows
-archive, records its path without editing a shell startup file, compiles
-Emacsvox, runs a diagnostic, and plays the final speech-server check.
-The Emacs build can take a while on a fresh machine; later runs reuse it
-and the verified downloads.  Routine compiler output is kept below
-‘$XDG_CACHE_HOME/emacsvox/logs’, normally ‘~/.cache/emacsvox/logs’.  If
-a build fails, the installer shows its final log lines and the complete
-log path.  Continue only after hearing both the final tone and speech.
-You can then skip to the last step in *note Quick Installation:: and
-start Emacsvox.
+   If you chose ‘--build-emacs’, it prepares the pinned stable Emacs for
+your user.  It then downloads and verifies the matching Omnivox 1.7.1
+Windows archive, records its path without editing a shell startup file,
+compiles Emacsvox, runs a diagnostic, and plays the final speech-server
+check.  The Emacs build can take a while on a fresh machine; later runs
+reuse it and the verified downloads.  Routine compiler output is kept
+below ‘$XDG_CACHE_HOME/emacsvox/logs’, normally
+‘~/.cache/emacsvox/logs’.  If a build fails, the installer shows its
+final log lines and the complete log path.  Continue only after hearing
+both the final tone and speech.  You can then skip to the last step in
+*note Quick Installation:: and start Emacsvox.
 
    After the core installation works, optional speech engines are
 available from ‘M-x emacsvox-omnivox-manage-components RET’.  The same
@@ -294,14 +307,17 @@ that option.
      ./bin/emacsvox-install --role remote-emacs
 
    The first command reports prerequisites and paths without changing
-files.  The second reuses Emacs 31 or newer and compiles Emacsvox.  When
-supported Emacs is missing on Debian or Ubuntu, it builds the
-checksum-verified GNU Emacs 31.1 source as a terminal-only installation
-under ‘~/.local/opt/emacs-31.1-terminal’.  Other Linux distributions
-currently need an existing Emacs 31 or newer.  A supported GUI Emacs can
-also be reused.  Explicit ‘EMACS’ and ‘local.mk’ selections are
-preserved; if they conflict or select an unsupported version, resolve
-the reported setting first.
+files.  The second reuses Emacs 30.2 or newer and compiles Emacsvox.  If
+Emacs is missing, it checks the local apt candidate and suggests ‘sudo
+apt install emacs-nox’ when that version is suitable.  To choose the
+source build instead, run ‘./bin/emacsvox-install --role remote-emacs
+--build-emacs’.  Add ‘--check’ to inspect build prerequisites first.
+The checksum-verified GNU Emacs 31.1 source is built as a terminal-only
+installation under ‘~/.local/opt/emacs-31.1-terminal’.  Other Linux
+distributions currently need an existing Emacs 30.2 or newer.  A
+supported GUI Emacs can also be reused.  Explicit ‘EMACS’ and ‘local.mk’
+selections are preserved; if they conflict or select an unsupported
+version, resolve the reported setting first.
 
    No local Omnivox, sound device, GUI build packages, or Windows speech
 tools are required.  Missing Debian/Ubuntu build packages are reported
@@ -467,8 +483,8 @@ GNU/Linux, macOS, a manual WSL2 installation, or later diagnosis.
 
           cd /path/where/you/keep/source/emacsvox
 
-  2. Select Emacs 31 or newer.  If it is not the system ‘emacs’, create
-     the ignored local settings file:
+  2. Select Emacs 30.2 or newer.  If it is not the system ‘emacs’,
+     create the ignored local settings file:
 
           cp local.mk.example local.mk
 
@@ -499,7 +515,7 @@ GNU/Linux, macOS, a manual WSL2 installation, or later diagnosis.
 
      This checks the checkout, Emacs, and speech server without playing
      audio or opening interactive Emacs.  A successful report names
-     Emacs 31 or newer, the ‘omnivox’ speech server, and an isolated
+     Emacs 30.2 or newer, the ‘omnivox’ speech server, and an isolated
      ‘-Q’ startup.  If it reports a path or version problem, correct
      that item and run the command again.
 
@@ -580,7 +596,7 @@ starting point and find the first command below that did not work:
      No audio or interactive Emacs has started.  Under WSL2, begin with
      ‘./bin/emacsvox-wsl-install --check’ and resolve the first item it
      reports.  Otherwise, follow the launcher selection: set ‘EMACS’,
-     correct ‘EMACS=’ in ‘local.mk’, or install Emacs 31 or newer when
+     correct ‘EMACS=’ in ‘local.mk’, or install Emacs 30.2 or newer when
      the Emacs check fails.  When the speech server is not executable,
      finish installing Omnivox, put it on ‘PATH’, or set
      ‘OMNIVOX_PROGRAM’ to its absolute executable.  The guided WSL2
@@ -1522,17 +1538,22 @@ path.  From PowerShell:
 it instead.  The check reports the selected Emacs and planned paths
 without downloading, writing configuration, or playing audio.
 
-   The installer reuses native Emacs 31 or newer.  If none is selected,
-it builds GNU Emacs 31.1 using a private MSYS2 UCRT64 toolchain, then
-installs the pinned Omnivox core and prepares Emacsvox.  Allow several
-gigabytes of disk space and time for the initial downloads and source
-build.  Later runs reuse the installed Emacs and cached archives.  An
-existing native Emacs does not need MSYS2 to prepare Emacsvox.
+   The installer reuses native Emacs 30.2 or newer.  If none is
+selected, it offers a prebuilt Windows Emacs
+(https://www.gnu.org/software/emacs/download.html) first.  Install a
+release at least 30.2 and select its ‘bin/emacs.exe’ with ‘-Emacs’.
+Alternatively, choose ‘-BuildEmacs’ to build GNU Emacs 31.1 using a
+private MSYS2 UCRT64 toolchain.  No source build starts without that
+option.  It then installs the pinned Omnivox core and prepares Emacsvox.
+Allow several gigabytes of disk space and time for the initial downloads
+and source build.  Later runs reuse the installed Emacs and cached
+archives.  An existing native Emacs does not need MSYS2 to prepare
+Emacsvox.
 
    To select an existing Emacs explicitly, add ‘-Emacs
 "C:\path\to\Emacs\bin\emacs.exe"’.  Explicit ‘-Emacs’, ‘EMACS’
 environment, and ‘local.mk’ selections must agree and require native
-Emacs 31 or newer.  ‘-BuildEmacs’ selects the managed source build
+Emacs 30.2 or newer.  ‘-BuildEmacs’ selects the managed source build
 instead of a saved or PATH selection; it reuses a complete managed build
 when one exists.  It cannot replace an explicit selection.
 
@@ -1591,7 +1612,7 @@ installed, Emacs-specific JAWS override used on the test workstation.
 ------------------------------
 
 The following manual procedure remains available for an already
-installed native Windows Emacs 31 or newer.  It does not acquire Emacs
+installed native Windows Emacs 30.2 or newer.  It does not acquire Emacs
 or replace the guided x64 checks above.  Set ‘$Emacsvox’ to the
 checkout's absolute Windows path and continue in one PowerShell window.
 
@@ -1680,11 +1701,11 @@ to that checkout:
      $env:TTS_PROGRAM = $Omnivox
      & $Emacs -Q --no-splash --load "$Emacsvox\lisp\emacsvox-setup.el"
 
-   The Emacs version must be 31 or newer.  Use ‘emacs.exe’, rather than
-‘runemacs.exe’, for this first trial so startup errors remain visible in
-the PowerShell window.  Loading ‘emacsvox-setup.el’ directly is
-intentional: the repository's ‘bin/emacsvox’ launcher is a POSIX shell
-script.  The guided native entry point is ‘bin/emacsvox.ps1’; this
+   The Emacs version must be 30.2 or newer.  Use ‘emacs.exe’, rather
+than ‘runemacs.exe’, for this first trial so startup errors remain
+visible in the PowerShell window.  Loading ‘emacsvox-setup.el’ directly
+is intentional: the repository's ‘bin/emacsvox’ launcher is a POSIX
+shell script.  The guided native entry point is ‘bin/emacsvox.ps1’; this
 subsection describes the manual alternative.
 
 4.4.6 Accept Or Report The Trial
@@ -4813,7 +4834,7 @@ the Emacsvox repository at <https://github.com/bartbunting/emacsvox>.
 Before changing a governed workflow or architecture, read ‘AGENTS.md’
 and every accepted record under ‘docs/adr/’.  Repository-local
 ‘local.mk’ selects the Emacs used by supported targets; Emacsvox
-requires Emacs 31 or newer.
+requires Emacs 30.2 or newer.
 
    Do not hand-edit generated references.  ‘info/docs.texi’ and
 ‘info/keys.texi’ come from the source documentation generator, and
@@ -5215,7 +5236,7 @@ behavior bounded when changing an integration.
 ----------------------------------------------
 
 Use the Emacs selected by the ignored repository-local ‘local.mk’.  When
-Emacs 31 or newer is not the system ‘emacs’, set its absolute path
+Emacs 30.2 or newer is not the system ‘emacs’, set its absolute path
 there:
 
      EMACS=/path/to/emacs-31/bin/emacs
@@ -5252,7 +5273,21 @@ not use ‘load-library’ as the first load after editing the source tree:
 Emacs can select an old ‘emacsvox-setup.elc’ before the newer source
 checker runs.
 
-  1. Native Windows preview builds
+  1. Supported Emacs versions
+
+     The Lisp runtime and all platform routes support Emacs 30.2 and
+     newer.  Run ‘make compat-test’ for the core compatibility contracts
+     without installing third-party packages.  CI builds all maintained
+     modules and runs this gate on Emacs 30.2 and 31.1.  The full ‘make
+     test’ suite additionally requires the optional integration
+     packages, including ‘lua-mode’ on Emacs 30.
+
+     Keep each Emacs version's build in a separate checkout; never reuse
+     ‘.elc’ files across versions.  All platforms, including the native
+     Windows preview, use this minimum.  The documentation toolchain
+     retains its independent pin.
+
+  2. Native Windows preview builds
 
      Use a separate checkout on a Windows drive.  The native installer
      regenerates autoloads and all modules from the ‘lisp/Makefile’
@@ -5890,92 +5925,93 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 Tag Table:
 Node: Top384
 Node: Introduction2198
-Node: Installation5597
-Node: Obtaining Emacsvox7070
-Node: Installing Remote Emacsvox11788
-Node: Updating Emacsvox Under WSL215496
-Node: Building And Testing The Speech Server18654
-Node: Quick Installation20299
-Node: Confirming First Speech22798
-Node: Recovering From No Speech24791
-Node: Persistent Startup27663
-Node: Basic Usage28677
-Node: Overview31301
-Node: Working32439
-Ref: Working-Footnote-133781
-Ref: Working-Footnote-233874
-Node: Reading33984
-Node: Speech System35764
-Node: Controlling Echo36676
-Node: Speech Output Control37511
-Node: Miscellaneous39241
-Node: Voice-lock40188
-Node: Status Information41438
-Node: Speech Backends42501
-Node: Supported Platform Routes44430
-Node: Installing An Omnivox Release Binary52296
-Node: Installing An Omnivox Windows Release Under WSL255689
-Node: Optional Omnivox Engine Modules61610
-Node: Trying Native Windows Emacsvox67082
-Node: Installing Omnivox From Source78158
-Node: Building Omnivox For WSL280022
-Node: Selecting And Checking Omnivox87681
-Node: Compatibility Speech Servers89949
-Node: Backend Diagnostics And Ownership91875
-Node: Audio Desktop95052
-Node: Desktop Objects96182
-Node: Object Oriented Desktop97407
-Node: Context-Sensitive Interaction98520
-Node: Aural Presentation101635
-Node: Presentation Model104228
-Node: Presentation Modalities106695
-Node: Aural Home109864
-Node: Explaining Presentation113443
-Node: Adjusting Presentation115471
-Node: Presentation Profiles121357
-Node: Voices And Routing123034
-Ref: Browse Eloquence And Compare Pitch131234
-Ref: Keep A Voice Experiment132481
-Ref: Change A Heading Voice Add A Cue Or Silence One133481
-Ref: Change A Blank-Line Tone134442
-Ref: Choose An Engine And Recover Unfinished Work135199
-Node: Sounds And Space136357
-Node: Presentation Troubleshooting137993
-Node: Voice Lock140031
-Node: Using Online Help143238
-Node: Emacs Packages147300
-Node: Document Authoring148674
-Node: Structured Editing149228
-Node: Browsing Structure150211
-Node: Web Browsing150809
-Node: Messaging151644
-Node: Editing Code152142
-Node: Development Environment152661
-Node: Desktop Management154197
-Node: Personal Information Management154699
-Node: Desktop Applications155231
-Node: Notmuch Mail162619
-Ref: Notmuch fields and privacy171962
-Node: Agent Shell177670
-Node: EAT Terminal Access189965
-Node: Running Terminal Based Applications207224
-Node: Starting Term208179
-Node: Term Input Modes209018
-Node: Term Speech Feedback210178
-Node: Reviewing The Term Screen211372
-Node: Term Help And Recovery213273
-Node: Emacsvox Keyboard Commands214172
-Node: Copyright215576
-Node: Acknowledgments216163
-Node: Developer Guide217189
-Node: Documentation Maintenance218353
-Node: Speech Server Protocols223151
-Ref: Testing A Direct Legacy Server229058
-Ref: Commands That Queue Output229617
-Ref: Commands That Set State232651
-Node: Integration Maintenance235245
-Ref: Native Windows preview builds237285
-Node: Concept Index264147
+Node: Installation5599
+Node: Obtaining Emacsvox7072
+Node: Installing Remote Emacsvox12616
+Node: Updating Emacsvox Under WSL216568
+Node: Building And Testing The Speech Server19726
+Node: Quick Installation21371
+Node: Confirming First Speech23874
+Node: Recovering From No Speech25867
+Node: Persistent Startup28741
+Node: Basic Usage29755
+Node: Overview32379
+Node: Working33517
+Ref: Working-Footnote-134859
+Ref: Working-Footnote-234952
+Node: Reading35062
+Node: Speech System36842
+Node: Controlling Echo37754
+Node: Speech Output Control38589
+Node: Miscellaneous40319
+Node: Voice-lock41266
+Node: Status Information42516
+Node: Speech Backends43579
+Node: Supported Platform Routes45508
+Node: Installing An Omnivox Release Binary53374
+Node: Installing An Omnivox Windows Release Under WSL256767
+Node: Optional Omnivox Engine Modules62688
+Node: Trying Native Windows Emacsvox68160
+Node: Installing Omnivox From Source79511
+Node: Building Omnivox For WSL281375
+Node: Selecting And Checking Omnivox89034
+Node: Compatibility Speech Servers91302
+Node: Backend Diagnostics And Ownership93228
+Node: Audio Desktop96405
+Node: Desktop Objects97535
+Node: Object Oriented Desktop98760
+Node: Context-Sensitive Interaction99873
+Node: Aural Presentation102988
+Node: Presentation Model105581
+Node: Presentation Modalities108048
+Node: Aural Home111217
+Node: Explaining Presentation114796
+Node: Adjusting Presentation116824
+Node: Presentation Profiles122710
+Node: Voices And Routing124387
+Ref: Browse Eloquence And Compare Pitch132587
+Ref: Keep A Voice Experiment133834
+Ref: Change A Heading Voice Add A Cue Or Silence One134834
+Ref: Change A Blank-Line Tone135795
+Ref: Choose An Engine And Recover Unfinished Work136552
+Node: Sounds And Space137710
+Node: Presentation Troubleshooting139346
+Node: Voice Lock141384
+Node: Using Online Help144591
+Node: Emacs Packages148653
+Node: Document Authoring150027
+Node: Structured Editing150581
+Node: Browsing Structure151564
+Node: Web Browsing152162
+Node: Messaging152997
+Node: Editing Code153495
+Node: Development Environment154014
+Node: Desktop Management155550
+Node: Personal Information Management156052
+Node: Desktop Applications156584
+Node: Notmuch Mail163972
+Ref: Notmuch fields and privacy173315
+Node: Agent Shell179023
+Node: EAT Terminal Access191318
+Node: Running Terminal Based Applications208577
+Node: Starting Term209532
+Node: Term Input Modes210371
+Node: Term Speech Feedback211531
+Node: Reviewing The Term Screen212725
+Node: Term Help And Recovery214626
+Node: Emacsvox Keyboard Commands215525
+Node: Copyright216929
+Node: Acknowledgments217516
+Node: Developer Guide218542
+Node: Documentation Maintenance219706
+Node: Speech Server Protocols224506
+Ref: Testing A Direct Legacy Server230413
+Ref: Commands That Queue Output230972
+Ref: Commands That Set State234006
+Node: Integration Maintenance236600
+Ref: Supported Emacs versions238642
+Ref: Native Windows preview builds239338
+Node: Concept Index266200
 
 End Tag Table
 

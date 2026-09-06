@@ -17,8 +17,8 @@
        (root (expand-file-name "../" (file-name-directory script)))
        (lisp-directory (expand-file-name "lisp/" root))
        (autoloads (expand-file-name "emacsvox-autoload.el" lisp-directory)))
-  (unless (version<= "31" emacs-version)
-    (error "Emacsvox requires Emacs 31 or newer; got %s from %s"
+  (unless (version<= "30.2" emacs-version)
+    (error "Emacsvox requires Emacs 30.2 or newer; got %s from %s"
            emacs-version invocation-directory))
   (unless (file-readable-p autoloads)
     (error "Incomplete Emacsvox checkout; cannot read %s" autoloads))

@@ -7,7 +7,7 @@ Welcome to Emacsvox@comma{} a keyboard-driven spoken environment built on Emacs.
 helps you read and write text@comma{} browse the Web@comma{} use mail and messaging@comma{} work in
 shells@comma{} program@comma{} and explore structured information through speech and sound.
 
-Emacsvox requires Emacs 31 or newer and is derived from Emacspeak.  Emacspeak's
+Emacsvox requires Emacs 30.2 or newer and is derived from Emacspeak.  Emacspeak's
 pioneering audio-desktop design and T@. V@. Raman's original work remain the
 foundation of this project.
 
@@ -108,15 +108,21 @@ available before installation at
 @section Before You Begin
 
 Install @code{git} so you can obtain the Emacsvox checkout.  Emacsvox requires
-@uref{https://www.gnu.org/software/emacs/download.html, Emacs 31 or newer}@comma{} but WSL2 users do not need to find a separate Emacs
+@uref{https://www.gnu.org/software/emacs/download.html, Emacs 30.2 or newer}@comma{} but WSL2 users do not need to find a separate Emacs
 package before beginning.  The guided installer below uses an existing
-supported Emacs or builds the pinned stable release for the current user.
+supported Emacs@comma{} suggests a suitable package@comma{} or offers an explicit source build.
 
-On GNU/Linux and macOS@comma{} install Emacs 31 or newer and @code{make}.  Omnivox 1.7.0
+On GNU/Linux and macOS@comma{} install Emacs 30.2 or newer and @code{make}.  Omnivox 1.7.0
 or newer is the supported speech-server baseline.  Installing its release
 archive also requires @code{curl} and either @code{sha256sum} on GNU/Linux or @code{shasum}
 on macOS@comma{} plus @code{tar}.  GNU Texinfo is needed only when building or editing the
 documentation@comma{} not for an ordinary installation.
+
+Ubuntu 26.04 provides Emacs 30.2 as a distribution package@comma{} which satisfies
+this requirement. The same minimum applies to native Windows.
+On Emacs 30@comma{} install @code{lua-mode} separately if you use Lua; on Emacs 31 it is
+built in. Corfu on an Emacs 30 text terminal also needs @code{corfu-terminal};
+Emacs 31 supports its terminal popup directly.
 
 To check the Emacs found by your shell@comma{} run:
 
@@ -124,7 +130,7 @@ To check the Emacs found by your shell@comma{} run:
 emacs --version
 @end example
 
-The first line should begin with @code{GNU Emacs 31} or a higher version number.  If
+The reported version must be 30.2 or newer.  If
 the command is not found or reports an older version@comma{} install a supported Emacs
 or locate its executable.  You can check a specific executable in the same way:
 
@@ -169,8 +175,15 @@ cd ~/src/emacsvox
 ./bin/emacsvox-wsl-install --check
 @end example
 
-The report names the Emacs it will use@comma{} the matching Omnivox Windows archive@comma{}
-and the per-user installation paths.  If Emacs build packages are missing@comma{} it
+If Emacs is missing@comma{} the report checks the available apt version and suggests
+@code{sudo apt install emacs} only when that candidate satisfies 30.2. Older or
+unavailable candidates are identified without being recommended. You can
+refresh apt metadata and check again@comma{} or choose the pinned source build with
+@code{./bin/emacsvox-wsl-install --build-emacs}. Add @code{--check} to inspect that
+build's prerequisites first. The installer never begins a source build by default.
+
+With Emacs selected@comma{} the report names it@comma{} the matching Omnivox Windows archive@comma{}
+and the per-user installation paths. If source-build packages are missing@comma{} it
 prints one @code{apt} command for you to review and run.  The installer never invokes
 @code{sudo} itself.  After resolving any reported prerequisite@comma{} run:
 
@@ -178,8 +191,8 @@ prints one @code{apt} command for you to review and run.  The installer never in
 ./bin/emacsvox-wsl-install
 @end example
 
-It builds the pinned stable Emacs only when Emacs 31 or newer is unavailable@comma{}
-downloads and verifies the matching Omnivox 1.7.1 Windows archive@comma{} records its
+If you chose @code{--build-emacs}@comma{} it prepares the pinned stable Emacs for your user.
+It then downloads and verifies the matching Omnivox 1.7.1 Windows archive@comma{} records its
 path without editing a shell startup file@comma{} compiles Emacsvox@comma{} runs a diagnostic@comma{}
 and plays the final speech-server check.  The Emacs build can take a while on
 a fresh machine; later runs reuse it and the verified downloads.  Routine
@@ -221,11 +234,14 @@ cd ~/src/emacsvox
 @end example
 
 The first command reports prerequisites and paths without changing files.
-The second reuses Emacs 31 or newer and compiles Emacsvox.  When supported
-Emacs is missing on Debian or Ubuntu@comma{} it builds the checksum-verified GNU
-Emacs 31.1 source as a terminal-only installation under
+The second reuses Emacs 30.2 or newer and compiles Emacsvox. If Emacs is missing@comma{}
+it checks the local apt candidate and suggests @code{sudo apt install emacs-nox}
+when that version is suitable. To choose the source build instead@comma{} run
+@code{./bin/emacsvox-install --role remote-emacs --build-emacs}. Add @code{--check} to
+inspect build prerequisites first. The checksum-verified GNU Emacs 31.1 source
+is built as a terminal-only installation under
 @code{~/.local/opt/emacs-31.1-terminal}.  Other Linux distributions currently need
-an existing Emacs 31 or newer.  A supported GUI Emacs can also be reused.
+an existing Emacs 30.2 or newer.  A supported GUI Emacs can also be reused.
 Explicit @code{EMACS} and @code{local.mk} selections are preserved; if they conflict or
 select an unsupported version@comma{} resolve the reported setting first.
 
@@ -395,7 +411,7 @@ cd /path/where/you/keep/source/emacsvox
 @end example
 
 @item
-Select Emacs 31 or newer.  If it is not the system @code{emacs}@comma{} create the
+Select Emacs 30.2 or newer.  If it is not the system @code{emacs}@comma{} create the
 ignored local settings file:
 
 @example
@@ -436,7 +452,7 @@ Run the non-audible launcher preflight from the Emacsvox checkout:
 @end example
 
 This checks the checkout@comma{} Emacs@comma{} and speech server without playing audio or
-opening interactive Emacs.  A successful report names Emacs 31 or newer@comma{}
+opening interactive Emacs.  A successful report names Emacs 30.2 or newer@comma{}
 the @code{omnivox} speech server@comma{} and an isolated @code{-Q} startup.  If it reports a
 path or version problem@comma{} correct that item and run the command again.
 
@@ -525,8 +541,8 @@ point and find the first command below that did not work:
 No audio or interactive Emacs has started.  Under WSL2@comma{} begin with
 @code{./bin/emacsvox-wsl-install --check} and resolve the first item it reports.
 Otherwise@comma{} follow the launcher selection:
-set @code{EMACS}@comma{} correct @code{EMACS=} in @code{local.mk}@comma{} or install Emacs 31
-or newer when the Emacs check fails.  When the speech server is not
+set @code{EMACS}@comma{} correct @code{EMACS=} in @code{local.mk}@comma{} or install Emacs 30.2 or newer
+when the Emacs check fails.  When the speech server is not
 executable@comma{} finish installing Omnivox@comma{} put it on @code{PATH}@comma{} or set
 @code{OMNIVOX_PROGRAM} to its absolute executable.  The guided WSL2 installer
 records the verified executable in a per-user configuration file; rerunning
@@ -1513,16 +1529,18 @@ Skip cloning if you already have a Windows checkout and change into it instead.
 The check reports the selected Emacs and planned paths without downloading@comma{}
 writing configuration@comma{} or playing audio.
 
-The installer reuses native Emacs 31 or newer.  If none is selected@comma{} it builds
-GNU Emacs 31.1 using a private MSYS2 UCRT64 toolchain@comma{} then installs the pinned
-Omnivox core and prepares Emacsvox.  Allow several gigabytes of disk space and
+The installer reuses native Emacs 30.2 or newer. If none is selected@comma{} it offers
+a @uref{https://www.gnu.org/software/emacs/download.html, prebuilt Windows Emacs} first. Install a release at least 30.2 and select its
+@code{bin/emacs.exe} with @code{-Emacs}. Alternatively@comma{} choose @code{-BuildEmacs} to build
+GNU Emacs 31.1 using a private MSYS2 UCRT64 toolchain. No source build starts
+without that option. It then installs the pinned Omnivox core and prepares Emacsvox.  Allow several gigabytes of disk space and
 time for the initial downloads and source build.  Later runs reuse the
 installed Emacs and cached archives.  An existing native Emacs does not need
 MSYS2 to prepare Emacsvox.
 
 To select an existing Emacs explicitly@comma{} add
 @samp{-Emacs "C:\path\to\Emacs\bin\emacs.exe"}.  Explicit @samp{-Emacs}@comma{} @samp{EMACS} environment@comma{}
-and @samp{local.mk} selections must agree and require native Emacs 31 or newer.
+and @samp{local.mk} selections must agree and require native Emacs 30.2 or newer.
 @samp{-BuildEmacs} selects the managed source build instead of a saved or PATH
 selection; it reuses a complete managed build when one exists.  It cannot
 replace an explicit selection.
@@ -1584,7 +1602,7 @@ Emacs-specific JAWS override used on the test workstation.
 @subsection Manual Native Evaluation
 
 The following manual procedure remains available for an already installed
-native Windows Emacs 31 or newer.  It does not acquire Emacs or replace the
+native Windows Emacs 30.2 or newer.  It does not acquire Emacs or replace the
 guided x64 checks above.  Set @samp{$Emacsvox} to the checkout's absolute Windows
 path and continue in one PowerShell window.
 
@@ -1673,7 +1691,7 @@ $env:TTS_PROGRAM = $Omnivox
 & $Emacs -Q --no-splash --load "$Emacsvox\lisp\emacsvox-setup.el"
 @end example
 
-The Emacs version must be 31 or newer.  Use @code{emacs.exe}@comma{} rather than
+The Emacs version must be 30.2 or newer.  Use @code{emacs.exe}@comma{} rather than
 @code{runemacs.exe}@comma{} for this first trial so startup errors remain visible in the
 PowerShell window.  Loading @code{emacsvox-setup.el} directly is intentional: the
 repository's @code{bin/emacsvox} launcher is a POSIX shell script.  The guided
@@ -5026,7 +5044,7 @@ checkout@comma{} byte-code@comma{} and release procedures live in
 Emacsvox repository at @uref{https://github.com/bartbunting/emacsvox}.  Before
 changing a governed workflow or architecture@comma{} read @code{AGENTS.md} and every
 accepted record under @code{docs/adr/}.  Repository-local @code{local.mk} selects the
-Emacs used by supported targets; Emacsvox requires Emacs 31 or newer.
+Emacs used by supported targets; Emacsvox requires Emacs 30.2 or newer.
 
 Do not hand-edit generated references.  @code{info/docs.texi} and @code{info/keys.texi}
 come from the source documentation generator@comma{} and
@@ -5502,7 +5520,7 @@ changing an integration.
 @subsection Source checkout and byte-code lifecycle
 
 Use the Emacs selected by the ignored repository-local @code{local.mk}.  When Emacs
-31 or newer is not the system @code{emacs}@comma{} set its absolute path there:
+30.2 or newer is not the system @code{emacs}@comma{} set its absolute path there:
 
 @example
 EMACS=/path/to/emacs-31/bin/emacs
@@ -5545,6 +5563,20 @@ files@comma{} @code{(load-library "emacsvox-setup")} may be used.  Do not use
 select an old @code{emacsvox-setup.elc} before the newer source checker runs.
 
 @enumerate
+@item
+@anchor{Supported Emacs versions}Supported Emacs versions
+
+
+The Lisp runtime and all platform routes support Emacs 30.2 and newer. Run
+@code{make compat-test} for the core compatibility contracts without installing
+third-party packages. CI builds all maintained modules and runs this gate on
+Emacs 30.2 and 31.1. The full @code{make test} suite additionally requires the
+optional integration packages@comma{} including @code{lua-mode} on Emacs 30.
+
+Keep each Emacs version's build in a separate checkout; never reuse @code{.elc}
+files across versions. All platforms@comma{} including the native Windows preview@comma{} use this minimum.
+The documentation toolchain retains its independent pin.
+
 @item
 @anchor{Native Windows preview builds}Native Windows preview builds
 

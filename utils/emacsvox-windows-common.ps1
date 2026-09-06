@@ -84,7 +84,7 @@ function Get-EmacsvoxNativeEmacs([string]$Program) {
     if (-not $command) { throw "Selected Emacs does not exist: $Program" }
     $path = $command.Source
     $output = Invoke-EmacsvoxNative $path @('-Q', '--batch', '--eval',
-        '(progn (unless (and (eq system-type (quote windows-nt)) (version<= "31" emacs-version)) (error "Native Windows Emacs 31+ required")) (princ emacs-version))')
+        '(progn (unless (and (eq system-type (quote windows-nt)) (version<= "30.2" emacs-version)) (error "Native Windows Emacs 30.2+ required")) (princ emacs-version))')
     if ($output -notmatch '^\d+\.\d+(?:[.0-9A-Za-z+-]*)$') { throw "Unexpected Emacs version: $output" }
     return @{ Program = $path; Version = $output }
 }

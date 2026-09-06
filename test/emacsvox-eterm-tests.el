@@ -234,6 +234,7 @@
           (eterm-char-mode t)
           (last-command-event 'backspace)
           (original-delete-char (symbol-function 'delete-char))
+          (original-window-live-p (symbol-function 'window-live-p))
           events)
       (cl-letf
           (((symbol-function 'process-live-p)
@@ -243,7 +244,9 @@
            ((symbol-function 'get-buffer-window)
             (lambda (&rest _) 'term-window))
            ((symbol-function 'window-live-p)
-            (lambda (window) (eq window 'term-window)))
+            (lambda (window)
+              (or (eq window 'term-window)
+                  (funcall original-window-live-p window))))
            ((symbol-function 'term-current-row)
             (lambda () current-row))
            ((symbol-function 'term-current-column)

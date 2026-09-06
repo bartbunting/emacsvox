@@ -443,7 +443,9 @@
                   (corfu-preview-current nil))
               (corfu-mode 1)
               (cl-letf
-                  (((symbol-function 'corfu--popup-show)
+                  (;; Exercise Corfu's popup route even on Emacs 30 batch/terminal frames.
+                   ((symbol-function 'corfu--popup-support-p) (lambda () t))
+                   ((symbol-function 'corfu--popup-show)
                     (lambda (&rest _)))
                    ((symbol-function 'corfu--popup-hide)
                     (lambda (&rest _)))
@@ -480,7 +482,9 @@
                     speech)
                 (corfu-mode 1)
                 (cl-letf
-                    (((symbol-function 'corfu--candidates-popup) #'ignore)
+                    (;; Exercise Corfu's popup route even on Emacs 30 batch/terminal frames.
+                     ((symbol-function 'corfu--popup-support-p) (lambda () t))
+                     ((symbol-function 'corfu--candidates-popup) #'ignore)
                      ((symbol-function 'corfu--popup-hide) #'ignore)
                      ((symbol-function 'emacsvox-icon) #'ignore)
                      ((symbol-function 'tts-speak)
@@ -520,7 +524,9 @@
             speech)
         (corfu-mode 1)
         (cl-letf
-            (((symbol-function 'corfu--popup-hide) #'ignore)
+            (;; Exercise Corfu's popup route even on Emacs 30 batch/terminal frames.
+             ((symbol-function 'corfu--popup-support-p) (lambda () t))
+             ((symbol-function 'corfu--popup-hide) #'ignore)
              ((symbol-function 'emacsvox-icon) #'ignore)
              ((symbol-function 'tts-speak)
               (lambda (text) (push text speech)))

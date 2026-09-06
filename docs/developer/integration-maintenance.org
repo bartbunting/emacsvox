@@ -15,7 +15,7 @@ changing an integration.
 :END:
 
 Use the Emacs selected by the ignored repository-local ~local.mk~.  When Emacs
-31 or newer is not the system ~emacs~, set its absolute path there:
+30.2 or newer is not the system ~emacs~, set its absolute path there:
 
 #+begin_example
 EMACS=/path/to/emacs-31/bin/emacs
@@ -56,6 +56,21 @@ be hidden by stale local byte-code.  In a stable checkout with current ~.elc~
 files, ~(load-library "emacsvox-setup")~ may be used.  Do not use
 ~load-library~ as the first load after editing the source tree: Emacs can
 select an old ~emacsvox-setup.elc~ before the newer source checker runs.
+
+*** Supported Emacs versions
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The Lisp runtime and all platform routes support Emacs 30.2 and newer. Run
+~make compat-test~ for the core compatibility contracts without installing
+third-party packages. CI builds all maintained modules and runs this gate on
+Emacs 30.2 and 31.1. The full ~make test~ suite additionally requires the
+optional integration packages, including ~lua-mode~ on Emacs 30.
+
+Keep each Emacs version's build in a separate checkout; never reuse ~.elc~
+files across versions. All platforms, including the native Windows preview, use this minimum.
+The documentation toolchain retains its independent pin.
 
 *** Native Windows preview builds
 :PROPERTIES:

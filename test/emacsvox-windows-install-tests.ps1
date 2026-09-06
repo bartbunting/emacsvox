@@ -42,6 +42,21 @@ try {
         throw 'Saved-selection doctor changed installation state'
     }
     Remove-Item $settings
+    # A missing Emacs offers choices before any download or toolchain probing.
+    $oldPath = $env:PATH
+    try {
+        $env:PATH = "$env:SystemRoot\System32"
+        $choice = & $installer -Check -InstallRoot $install -CacheDirectory $cache `
+            -ToolchainRoot (Join-Path $testRoot 'unused tools') 6>&1 | Out-String
+        if ($choice -notmatch 'prebuilt Windows Emacs 30.2' -or $choice -notmatch '-BuildEmacs') {
+            throw 'Missing Emacs did not offer prebuilt and source choices'
+        }
+        Assert-Rejected { & $installer -InstallRoot $install -CacheDirectory $cache } 'Select a prebuilt Emacs'
+        Assert-Rejected { & $installer -BuildEmacs -Check -InstallRoot $install `
+            -ToolchainRoot (Join-Path $testRoot 'unused tools') } 'path without spaces'
+        if ((Test-Path $install) -or (Test-Path $cache)) { throw 'Choice prompt mutated the filesystem' }
+    }
+    finally { $env:PATH = $oldPath }
     Assert-Rejected { & $installer -Emacs $native.Program -BuildEmacs -Check } 'cannot replace an explicit'
     Assert-Rejected { & $installer -Emacs '' -Check } 'cannot be empty'
     Assert-Rejected { & $installer -Emacs 'Z:\missing\emacs.exe' -Check } 'does not exist'

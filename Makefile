@@ -63,7 +63,7 @@ TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
 .PHONY: version version-check headers-check test unit-test notmuch-test compiled-notmuch-test
-.PHONY: compiled-aural-test build-aural-test trace trace-test
+.PHONY: compiled-aural-test build-aural-test trace trace-test compat-test
 .PHONY: reference-test advice-audit name-audit tts-audit
 .PHONY: check-emacs bytecode bytecode-check bytecode-rebuild generated-reference
 .PHONY: docs-preview docs-update docs-reference docs-generate
@@ -90,6 +90,9 @@ headers-check:
 
 test: version-check headers-check unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
 
+compat-test: check-emacs config
+	$(EMACS) -Q --batch -l test/run-compat-tests.el
+
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el
 
@@ -103,7 +106,7 @@ compiled-notmuch-test: bytecode-check
 
 check-emacs:
 	@$(EMACS) -Q --batch --eval \
-		'(unless (version<= "31" emacs-version) (error "Emacsvox requires Emacs 31 or newer; got %s from %s" emacs-version invocation-directory))'
+		'(unless (version<= "30.2" emacs-version) (error "Emacsvox requires Emacs 30.2 or newer; got %s from %s" emacs-version invocation-directory))'
 
 # Keep ignored in-tree byte-code explicit: ordinary edits can use the
 # incremental target, while branch changes should discard every old .elc.
@@ -1370,7 +1373,7 @@ release-publish: release-artifact-check
 ### Install: 
 
 install:
-	@echo "This release requires Emacs 31 or later."
+	@echo "This release requires Emacs 30.2 or later on all platforms."
 	@echo "On WSL2, inspect and run the guided binary installation with:"
 	@echo "  ./bin/emacsvox-wsl-install --check"
 	@echo "  ./bin/emacsvox-wsl-install"

@@ -8,14 +8,14 @@ visually impaired users work with the Emacs editor.  Emacsvox turns Emacs into
 a complete audio desktop, providing spoken and non-speech feedback for its
 features.
 
-*Modernization Status:* Fully updated for Emacs 31+ with modern elisp patterns and advice-add throughout.
+*Modernization Status:* Emacs 30.2 and newer, with modern elisp patterns and advice-add throughout.
 
 * Start Here: First Speech
 
-If you use WSL2 and do not yet have Emacs 31, this is the path you want.  Do
-not install a separate Emacs package first: the guided Emacsvox installer uses
-an existing Emacs 31 or newer when available and otherwise downloads and builds
-the pinned stable Emacs release for your user.
+The guided WSL2 installer reuses Emacs 30.2 or newer. If it is missing, it
+checks the apt candidate and suggests a suitable package, or offers the pinned
+Emacs 31.1 source build through =--build-emacs=. No source build starts until
+you choose that option.
 
 This checklist is sufficient to reach first speech without an installed Info
 manual.  The
@@ -44,9 +44,9 @@ checked-in Info files provide the same manual inside Emacs.
    #+END_SRC
    The doctor changes nothing.  If build packages are missing, it prints one
    =apt= command for you to review and run; then repeat the installer.  The
-   installer uses an existing Emacs 31 or newer when available.  Otherwise it
-   builds the pinned stable Emacs for your user, downloads and verifies the
-   matching Omnivox Windows release, records both paths without editing a shell
+   installer uses an existing Emacs 30.2 or newer when available. Otherwise,
+   follow its package suggestion or rerun with =--build-emacs=. It downloads
+   and verifies the matching Omnivox Windows release and records both paths without editing a shell
    startup file, compiles Emacsvox, and finishes with an audible check.
 
    Once first speech works, =M-x emacsvox-omnivox-manage-components RET= (or
@@ -55,10 +55,10 @@ checked-in Info files provide the same manual inside Emacs.
    experimental TGSpeechBox modules per user.  Proprietary Eloquence, DECtalk,
    and RHVoice runtimes and Piper voice models remain user supplied.
 
-   On GNU/Linux or macOS, install Emacs 31 or newer and follow the
+   On GNU/Linux or macOS, install Emacs 30.2 or newer and follow the
    [[https://bartbunting.github.io/emacsvox/Speech-Backends.html][Speech Backends guide]]
    ([[file:docs/manual/chapters/speech-backends.org][source]]) for the matching Omnivox
-   release.  If Emacs 31 is not the system =emacs=, set =EMACS= in the ignored
+   release.  If a supported Emacs is not the system =emacs=, set =EMACS= in the ignored
    =local.mk=.  Then run:
    #+BEGIN_SRC sh
    make check-emacs
@@ -542,7 +542,9 @@ context-free direct icon call in its maintained migrated-module set.
 
 * Requirements
 
-*Emacsvox requires Emacs 31 or later.*
+*Emacsvox requires Emacs 30.2 or later.* Ubuntu 26.04 packages Emacs 30.2,
+so it can use the distribution package. The same minimum applies to native Windows. Optional integrations may need extra packages;
+Lua mode is built into Emacs 31 and is available separately on Emacs 30.
 
 * Blog and Portfolio
   - [[https://emacspeak.blogspot.com][Original Emacspeak blog]]
@@ -550,9 +552,9 @@ context-free direct icon call in its maintained migrated-module set.
 
 * Additional Info
 
-Emacsvox is a fork of Emacspeak, modernized for Emacs 31+ with:
+Emacsvox is a fork of Emacspeak, modernized for Emacs 30.2 and newer with:
 
 - All deprecated defadvice converted to advice-add
 - Modern elisp patterns throughout
 - Consistent code formatting
-- Full Emacs 31+ compliance
+- Compatibility checks on Emacs 30.2 and 31

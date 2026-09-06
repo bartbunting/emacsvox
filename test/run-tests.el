@@ -8,8 +8,8 @@
 
 (require 'ert)
 
-(when (< emacs-major-version 31)
-  (error "Emacsvox tests require Emacs 31 or later"))
+(when (version< emacs-version "30.2")
+  (error "Emacsvox tests require Emacs 30.2 or later"))
 
 (setq load-prefer-newer t)
 
@@ -186,6 +186,9 @@
   (require 'emacsvox-sql-tests)
   (require 'emacsvox-flyspell-tests)
   (require 'emacsvox-supercite-tests)
+  ;; Lua is built in on Emacs 31; older supported Emacs needs lua-mode installed.
+  (require 'package)
+  (package-initialize)
   (require 'emacsvox-lua-tests)
   (require 'emacsvox-sgml-mode-tests)
   (require 'emacsvox-newsticker-tests)

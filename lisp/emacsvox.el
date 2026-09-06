@@ -9,7 +9,7 @@
 ;; Author: T. V. Raman <tv.raman.tv@gmail.com>
 ;; Maintainer: Emacsvox contributors
 ;; Version: 2026.9.2
-;; Package-Requires: ((emacs "31") (hydra "0.5"))
+;; Package-Requires: ((emacs "30.2") (hydra "0.5"))
 ;; Keywords: Emacsvox, Speech, Dectalk,
 ;; URL: https://github.com/bartbunting/emacsvox
 

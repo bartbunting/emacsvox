@@ -25,15 +25,21 @@ available before installation at
 :END:
 
 Install ~git~ so you can obtain the Emacsvox checkout.  Emacsvox requires
-[[https://www.gnu.org/software/emacs/download.html][Emacs 31 or newer]], but WSL2 users do not need to find a separate Emacs
+[[https://www.gnu.org/software/emacs/download.html][Emacs 30.2 or newer]], but WSL2 users do not need to find a separate Emacs
 package before beginning.  The guided installer below uses an existing
-supported Emacs or builds the pinned stable release for the current user.
+supported Emacs, suggests a suitable package, or offers an explicit source build.
 
-On GNU/Linux and macOS, install Emacs 31 or newer and ~make~.  Omnivox 1.7.0
+On GNU/Linux and macOS, install Emacs 30.2 or newer and ~make~.  Omnivox 1.7.0
 or newer is the supported speech-server baseline.  Installing its release
 archive also requires ~curl~ and either ~sha256sum~ on GNU/Linux or ~shasum~
 on macOS, plus ~tar~.  GNU Texinfo is needed only when building or editing the
 documentation, not for an ordinary installation.
+
+Ubuntu 26.04 provides Emacs 30.2 as a distribution package, which satisfies
+this requirement. The same minimum applies to native Windows.
+On Emacs 30, install ~lua-mode~ separately if you use Lua; on Emacs 31 it is
+built in. Corfu on an Emacs 30 text terminal also needs ~corfu-terminal~;
+Emacs 31 supports its terminal popup directly.
 
 To check the Emacs found by your shell, run:
 
@@ -41,7 +47,7 @@ To check the Emacs found by your shell, run:
 emacs --version
 #+end_example
 
-The first line should begin with ~GNU Emacs 31~ or a higher version number.  If
+The reported version must be 30.2 or newer.  If
 the command is not found or reports an older version, install a supported Emacs
 or locate its executable.  You can check a specific executable in the same way:
 
@@ -86,8 +92,15 @@ cd ~/src/emacsvox
 ./bin/emacsvox-wsl-install --check
 #+end_example
 
-The report names the Emacs it will use, the matching Omnivox Windows archive,
-and the per-user installation paths.  If Emacs build packages are missing, it
+If Emacs is missing, the report checks the available apt version and suggests
+~sudo apt install emacs~ only when that candidate satisfies 30.2. Older or
+unavailable candidates are identified without being recommended. You can
+refresh apt metadata and check again, or choose the pinned source build with
+~./bin/emacsvox-wsl-install --build-emacs~. Add ~--check~ to inspect that
+build's prerequisites first. The installer never begins a source build by default.
+
+With Emacs selected, the report names it, the matching Omnivox Windows archive,
+and the per-user installation paths. If source-build packages are missing, it
 prints one ~apt~ command for you to review and run.  The installer never invokes
 ~sudo~ itself.  After resolving any reported prerequisite, run:
 
@@ -95,8 +108,8 @@ prints one ~apt~ command for you to review and run.  The installer never invokes
 ./bin/emacsvox-wsl-install
 #+end_example
 
-It builds the pinned stable Emacs only when Emacs 31 or newer is unavailable,
-downloads and verifies the matching Omnivox 1.7.1 Windows archive, records its
+If you chose ~--build-emacs~, it prepares the pinned stable Emacs for your user.
+It then downloads and verifies the matching Omnivox 1.7.1 Windows archive, records its
 path without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
 and plays the final speech-server check.  The Emacs build can take a while on
 a fresh machine; later runs reuse it and the verified downloads.  Routine
@@ -141,11 +154,14 @@ cd ~/src/emacsvox
 #+end_example
 
 The first command reports prerequisites and paths without changing files.
-The second reuses Emacs 31 or newer and compiles Emacsvox.  When supported
-Emacs is missing on Debian or Ubuntu, it builds the checksum-verified GNU
-Emacs 31.1 source as a terminal-only installation under
+The second reuses Emacs 30.2 or newer and compiles Emacsvox. If Emacs is missing,
+it checks the local apt candidate and suggests ~sudo apt install emacs-nox~
+when that version is suitable. To choose the source build instead, run
+~./bin/emacsvox-install --role remote-emacs --build-emacs~. Add ~--check~ to
+inspect build prerequisites first. The checksum-verified GNU Emacs 31.1 source
+is built as a terminal-only installation under
 ~~/.local/opt/emacs-31.1-terminal~.  Other Linux distributions currently need
-an existing Emacs 31 or newer.  A supported GUI Emacs can also be reused.
+an existing Emacs 30.2 or newer.  A supported GUI Emacs can also be reused.
 Explicit ~EMACS~ and ~local.mk~ selections are preserved; if they conflict or
 select an unsupported version, resolve the reported setting first.
 
@@ -322,7 +338,7 @@ manual WSL2 installation, or later diagnosis.
    cd /path/where/you/keep/source/emacsvox
    #+end_example
 
-1. Select Emacs 31 or newer.  If it is not the system ~emacs~, create the
+1. Select Emacs 30.2 or newer.  If it is not the system ~emacs~, create the
    ignored local settings file:
 
    #+begin_example
@@ -361,7 +377,7 @@ manual WSL2 installation, or later diagnosis.
    #+end_example
 
    This checks the checkout, Emacs, and speech server without playing audio or
-   opening interactive Emacs.  A successful report names Emacs 31 or newer,
+   opening interactive Emacs.  A successful report names Emacs 30.2 or newer,
    the ~omnivox~ speech server, and an isolated ~-Q~ startup.  If it reports a
    path or version problem, correct that item and run the command again.
 
@@ -448,8 +464,8 @@ point and find the first command below that did not work:
   No audio or interactive Emacs has started.  Under WSL2, begin with
   ~./bin/emacsvox-wsl-install --check~ and resolve the first item it reports.
   Otherwise, follow the launcher selection:
-  set ~EMACS~, correct ~EMACS=~ in ~local.mk~, or install Emacs 31
-  or newer when the Emacs check fails.  When the speech server is not
+  set ~EMACS~, correct ~EMACS=~ in ~local.mk~, or install Emacs 30.2 or newer
+  when the Emacs check fails.  When the speech server is not
   executable, finish installing Omnivox, put it on ~PATH~, or set
   ~OMNIVOX_PROGRAM~ to its absolute executable.  The guided WSL2 installer
   records the verified executable in a per-user configuration file; rerunning

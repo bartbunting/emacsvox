@@ -10,7 +10,7 @@ Welcome to Emacsvox, a keyboard-driven spoken environment built on Emacs.  It
 helps you read and write text, browse the Web, use mail and messaging, work in
 shells, program, and explore structured information through speech and sound.
 
-Emacsvox requires Emacs 31 or newer and is derived from Emacspeak.  Emacspeak's
+Emacsvox requires Emacs 30.2 or newer and is derived from Emacspeak.  Emacspeak's
 pioneering audio-desktop design and T. V. Raman's original work remain the
 foundation of this project.
 

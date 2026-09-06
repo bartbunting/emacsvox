@@ -118,6 +118,39 @@
              (apply #'call-process program nil '(t t) nil arguments)))
         (list status (buffer-string))))))
 
+(ert-deftest emacsvox-wsl-installer-offers-apt-before-build-prerequisites ()
+  "WSL suggests an available Emacs package and accepts combined build options."
+  (let* ((root (emacsvox-wsl-install-tests--make-checkout))
+         (tools (emacsvox-wsl-install-tests--make-tools root))
+         (home (expand-file-name "home" root))
+         (proc-version (expand-file-name "proc-version" root))
+         (installer (expand-file-name "bin/emacsvox-wsl-install" root)))
+    (unwind-protect
+        (progn
+          (make-directory home t)
+          (with-temp-file proc-version (insert "Microsoft WSL2\n"))
+          (dolist (tool '(("emacs" . "printf 30.1")
+                          ("apt-cache" . "printf '  Candidate: 1:30.2-1\n'")
+                          ("dpkg-query" . "exit 1")))
+            (emacsvox-wsl-install-tests--write-executable
+             (expand-file-name (car tool) tools) (concat "#!/bin/sh\n" (cdr tool) "\n")))
+          (let ((environment
+                 (emacsvox-wsl-install-tests--setenv
+                  (emacsvox-wsl-install-tests--environment root tools home "/unused" proc-version)
+                  "EMACS" nil)))
+            (let ((result (emacsvox-wsl-install-tests--call installer environment "--no-audio-check")))
+              (should (= 2 (car result)))
+              (should (string-search "sudo apt install emacs" (cadr result)))
+              (should (string-search "--build-emacs --no-audio-check" (cadr result)))
+              (should-not (string-search "libgtk-3-dev" (cadr result))))
+            (let ((result (emacsvox-wsl-install-tests--call
+                           installer environment "--build-emacs" "--check" "--no-audio-check")))
+              (should (= 2 (car result)))
+              (should (string-search "libgtk-3-dev" (cadr result)))))
+          (should-not (file-exists-p (expand-file-name "local.mk" root)))
+          (should-not (file-exists-p (expand-file-name "config" home))))
+      (delete-directory root t))))
+
 (ert-deftest emacsvox-wsl-installer-check-is-non-mutating-and-architecture-aware ()
   "Doctor mode should explain x64 and ARM64 plans without creating config."
   (let* ((root (emacsvox-wsl-install-tests--make-checkout))

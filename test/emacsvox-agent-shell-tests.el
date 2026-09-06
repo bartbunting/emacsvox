@@ -3286,6 +3286,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            '(:category agent-shell-chat-me :text "Me" :editable t))
           spoken)
       (cl-letf (;; Batch frames do not provide reliable visual-line geometry.
+                ((symbol-function 'posn-at-point)
+                 (lambda (&rest _) '(nil nil nil nil nil nil (0 . 0))))
                 ((symbol-function 'end-of-visual-line)
                  (lambda (&optional _)
                    (goto-char (line-end-position))))

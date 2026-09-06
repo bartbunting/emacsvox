@@ -45,7 +45,7 @@
            (expand-file-name "emacs-31" tools)
            "#!/bin/sh\ncase $* in *EMACSVOX_VERSION*) printf EMACSVOX_VERSION=31.1 ;; *) printf 31.1 ;; esac\n")
           (emacsvox-wsl-install-tests--write-executable
-           (expand-file-name "emacs" tools) "#!/bin/sh\nprintf 30.2\n")
+           (expand-file-name "emacs" tools) "#!/bin/sh\nprintf 30.1\n")
           (emacsvox-wsl-install-tests--write-executable
            (expand-file-name "dpkg-query" tools) "#!/bin/sh\nprintf 'install ok installed'\n")
           (emacsvox-wsl-install-tests--write-executable
@@ -81,10 +81,49 @@
      (should-not (file-exists-p (expand-file-name "forbidden" root)))
      (should-not (file-exists-p (expand-file-name "home/config" root))))))
 
+(ert-deftest emacsvox-remote-install-reuses-ubuntu-emacs-30-2 ()
+  "A supported distro Emacs never triggers acquisition of the pinned Emacs."
+  (emacsvox-remote-install-tests--fixture
+   (lambda (root tools environment)
+     (dolist (version '("30.2" "30.10" "31.1"))
+       (emacsvox-wsl-install-tests--write-executable
+        (expand-file-name "emacs-31" tools)
+        (concat "#!/bin/sh\ncase $* in *EMACSVOX_VERSION*) "
+                "printf '%s' 'EMACSVOX_VERSION=" version "' ;; "
+                "*) printf '%s' '" version "' ;; esac\n"))
+       (let ((result (emacsvox-remote-install-tests--call root environment)))
+         (should (zerop (car result))))
+       (should-not (file-exists-p (expand-file-name "forbidden" root)))
+       (should-not (file-directory-p
+                    (expand-file-name "home/.local/opt/emacs-31.1-terminal" root)))))))
+
+(ert-deftest emacsvox-remote-install-offers-package-or-explicit-build ()
+  "Default acquisition checks apt's upstream version and makes no changes."
+  (emacsvox-remote-install-tests--fixture
+   (lambda (root tools environment)
+     (setq environment (emacsvox-wsl-install-tests--setenv environment "EMACS" nil))
+     (dolist (entry '(("1:30.2+1-2ubuntu1" . t) ("1:31.1-1" . t)
+                      ("1:29.4-1" . nil) ("2:30.1-1" . nil) ("(none)" . nil)))
+       (emacsvox-wsl-install-tests--write-executable
+        (expand-file-name "apt-cache" tools)
+        (format "#!/bin/sh\nprintf '  Candidate: %%s\n' '%s'\n" (car entry)))
+       (let* ((result (emacsvox-remote-install-tests--call root environment))
+              (output (cadr result)))
+         (should (= 2 (car result)))
+         (should (eq (and (string-search "sudo apt install emacs-nox" output) t)
+                     (cdr entry)))
+         (should (string-search "--build-emacs" output))
+         (should-not (string-search "libgnutls28-dev" output)))
+       (should-not (file-exists-p (expand-file-name "forbidden" root)))
+       (should-not (file-exists-p (expand-file-name "make-calls" root)))
+       (should-not (file-exists-p (expand-file-name "local.mk" root)))))))
+
 (ert-deftest emacsvox-remote-install-preserves-explicit-selections ()
   "Unsupported, empty, and conflicting explicit selections cannot be replaced."
   (emacsvox-remote-install-tests--fixture
    (lambda (root tools environment)
+     (should-not (zerop (car (emacsvox-remote-install-tests--call
+                             root environment "--build-emacs"))))
      (dolist (selection (list "" (expand-file-name "emacs" tools)))
        (let ((result
               (emacsvox-remote-install-tests--call
@@ -117,7 +156,7 @@
      (emacsvox-wsl-install-tests--write-executable
       (expand-file-name "dpkg-query" tools) "#!/bin/sh\nexit 1\n")
      (let ((result (emacsvox-remote-install-tests--call
-                    root (emacsvox-wsl-install-tests--setenv environment "EMACS" nil) "--check")))
+                    root (emacsvox-wsl-install-tests--setenv environment "EMACS" nil) "--check" "--build-emacs")))
        (should (= 2 (car result)))
        (should (string-match-p "sudo apt install .*libgnutls28-dev" (cadr result)))
        (should-not (string-match-p "libgtk\\|libasound\\|libxpm\\|unzip" (cadr result))))
@@ -131,7 +170,7 @@
      (with-temp-file (expand-file-name "os-release" root) (insert "ID=fedora\n"))
      (should (zerop (car (emacsvox-remote-install-tests--call root environment "--check"))))
      (let ((result (emacsvox-remote-install-tests--call
-                    root (emacsvox-wsl-install-tests--setenv environment "EMACS" nil) "--check")))
+                    root (emacsvox-wsl-install-tests--setenv environment "EMACS" nil) "--check" "--build-emacs")))
        (should-not (zerop (car result)))
        (should (string-match-p "requires Debian/Ubuntu" (cadr result)))))))
 
@@ -174,7 +213,7 @@
    (lambda (root tools environment)
      (emacsvox-remote-install-tests--archive root tools)
      (setq environment (emacsvox-wsl-install-tests--setenv environment "EMACS" nil))
-     (let ((result (emacsvox-remote-install-tests--call root environment)))
+     (let ((result (emacsvox-remote-install-tests--call root environment "--build-emacs")))
        (should (zerop (car result))))
      (let ((arguments (with-temp-buffer
                         (insert-file-contents (expand-file-name "configure-args" root))
@@ -195,7 +234,7 @@
      (emacsvox-remote-install-tests--archive root tools)
      (with-temp-file (expand-file-name "emacs-fixture.tar.xz" root) (insert "corrupt"))
      (let ((result (emacsvox-remote-install-tests--call
-                    root (emacsvox-wsl-install-tests--setenv environment "EMACS" nil))))
+                    root (emacsvox-wsl-install-tests--setenv environment "EMACS" nil) "--build-emacs")))
        (should-not (zerop (car result)))
        (should (string-match-p "checksum verification failed" (cadr result))))
      (dolist (file '("configure-args" "make-calls" "local.mk"))

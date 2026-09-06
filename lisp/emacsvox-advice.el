@@ -47,6 +47,7 @@
 (require 'emacsvox-aural-submission)
 
 (defvar read-passwd--password-hidden)
+(defvar read-passwd--hide-password)
 (defvar emacsvox-aural-submission-facts nil
   "Dynamically bound semantic facts for the current speech submission.")
 (defvar emacsvox-aural-submission-occasion nil
@@ -1104,10 +1105,19 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 ;; read-password--hide-password
 
+(defun emacsvox--password-hidden-p ()
+  "Return whether password input is masked in the current minibuffer.
+Emacs 30 and 31 use different names for the visibility state.
+Treat unknown state as hidden."
+  (cond
+   ((boundp 'read-passwd--password-hidden) read-passwd--password-hidden)
+   ((boundp 'read-passwd--hide-password) read-passwd--hide-password)
+   (t t)))
+
 (defun emacsvox--advice-read-passwd--hide-password-after (&rest _)
   "Speak the masked or visible password character."
   (tts-notify
-   (if read-passwd--password-hidden "dot"
+   (if (emacsvox--password-hidden-p) "dot"
      (if (characterp last-input-event) (format "%c" last-input-event)
        "dot")))
   (emacsvox-icon 'repeat-active))
@@ -1120,7 +1130,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 (defun emacsvox--advice-read-passwd-toggle-visibility-after (&rest _)
   "Announce an interactive password visibility change."
   (when (ems-interactive-p 'read-passwd-toggle-visibility)
-    (emacsvox-icon (if read-passwd--password-hidden 'off 'on))))
+    (emacsvox-icon (if (emacsvox--password-hidden-p) 'off 'on))))
 
 (advice-add
  'read-passwd-toggle-visibility :after

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Bootstrap a talking Emacsvox checkout with eSpeak on GNU/Linux.
 # Usage: ./bootstrap.sh [git-ref] [destination]
-# Prerequisites: Git, Emacs 31+, make, eSpeak NG, and its development headers.
+# Prerequisites: Git, Emacs 30.2+, make, eSpeak NG, and its development headers.
 
 set -euo pipefail
 
@@ -15,12 +15,8 @@ if [ ! -d "$destination/.git" ]; then
 fi
 
 cd "$destination"
-"$emacs" --batch --quick --eval '(princ emacs-major-version)' |
-  grep -Eq '^3[1-9]|^[4-9][0-9]' ||
-  {
-    echo "Emacsvox requires Emacs 31 or newer." >&2
-    exit 1
-  }
+"$emacs" --batch --quick --eval \
+  '(unless (version<= "30.2" emacs-version) (error "Emacsvox requires Emacs 30.2 or newer"))'
 
 make bytecode EMACS="$emacs"
 make espeak EMACS="$emacs"

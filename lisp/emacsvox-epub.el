@@ -188,6 +188,7 @@
   (require 'derived)
   (require 'subr-x))
 (require 'dom)
+(require 'dom-addons)
 ;;; Executables:
 ;; unzip, wget, zipinfo
 (defconst emacsvox-epub-find (executable-find "find") "Find utility")
@@ -340,8 +341,8 @@
     (unless (> (length opf) 0) (error "No Package --- Not a valid EPub?"))
     (unless (> (length toc) 0) (error "No TOC --- Not a valid EPub?"))
     (setq opf-dom (emacsvox-epub-dom-from-archive path opf 'xml))
-    (setq title (dom-inner-text (dom-by-tag opf-dom 'title))
-          author (dom-inner-text (dom-by-tag opf-dom 'creator)))
+    (setq title (emacsvox-dom-inner-text (dom-by-tag opf-dom 'title))
+          author (emacsvox-dom-inner-text (dom-by-tag opf-dom 'creator)))
     (when (zerop (length author)) (setq author "Unknown"))
     (when (zerop (length title)) (setq title "Untitled"))
     (setq this 

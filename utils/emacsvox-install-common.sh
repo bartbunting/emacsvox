@@ -52,16 +52,50 @@ resolve_emacs()
         selected_emacs_version=$(emacs_version "$emacs_candidate" || :)
     fi
     selected_emacs_major=${selected_emacs_version%%.*}
+    selected_emacs_minor=${selected_emacs_version#*.}
+    selected_emacs_minor=${selected_emacs_minor%%.*}
+    case $selected_emacs_version in *.*) ;; *) selected_emacs_minor=0 ;; esac
+    case $selected_emacs_minor in ''|*[!0-9]*) selected_emacs_minor=0 ;; esac
     case $selected_emacs_major in
         ''|*[!0-9]*) emacs_supported=false ;;
         *)
-            if [ "$selected_emacs_major" -ge 31 ]; then
+            if [ "$selected_emacs_major" -gt 30 ] ||
+               { [ "$selected_emacs_major" -eq 30 ] && [ "$selected_emacs_minor" -ge 2 ]; }; then
                 emacs_supported=true
             else
                 emacs_supported=false
             fi
             ;;
     esac
+}
+
+# Show choices before checking source-build prerequisites or making changes.
+# Callers supply emacs_package (emacs or emacs-nox) and build_command.
+offer_emacs_acquisition()
+{
+    note 'Emacs 30.2 or newer is required. Choose a package or a source build.'
+    apt_candidate=
+    if command -v apt-cache >/dev/null 2>&1; then
+        apt_candidate=$(LC_ALL=C apt-cache policy "$emacs_package" 2>/dev/null |
+            sed -n 's/^[[:space:]]*Candidate:[[:space:]]*//p' | sed -n '1p')
+    fi
+    # Debian's epoch must not make an older upstream Emacs look newer than 30.2.
+    upstream_candidate=${apt_candidate#*:}
+    if [ -n "$apt_candidate" ] && [ "$apt_candidate" != '(none)' ] &&
+       command -v dpkg >/dev/null 2>&1 &&
+       dpkg --compare-versions "$upstream_candidate" ge 30.2 2>/dev/null; then
+        printf '  Recommended: apt offers %s %s. Review and run:\n\n' "$emacs_package" "$apt_candidate"
+        printf '    sudo apt update\n    sudo apt install %s\n\n' "$emacs_package"
+        printf '  Then rerun the installer; the installed Emacs version will be checked.\n'
+    elif [ -n "$apt_candidate" ] && [ "$apt_candidate" != '(none)' ]; then
+        printf '  apt currently offers %s %s, below the required 30.2.\n' "$emacs_package" "$apt_candidate"
+        printf '  Refresh apt metadata with sudo apt update and check again, or use the source build.\n'
+    else
+        printf '  No suitable apt candidate could be verified from local metadata.\n'
+        printf '  Install Emacs 30.2 or newer using your system package manager, or use the source build.\n'
+    fi
+    printf '\n  On Debian/Ubuntu, to build pinned GNU Emacs %s instead, run:\n\n    %s\n\n' "$EMACSVOX_WSL_EMACS_VERSION" "$build_command"
+    printf 'No packages were installed and no files were changed.\n'
 }
 
 download_verified()

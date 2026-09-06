@@ -35,7 +35,8 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
-(require 'lua-mode)
+;; Built into Emacs 31; an optional package on Emacs 30.
+(require 'lua-mode nil t)
 
 ;;;  Advice Interactive Commands:
 (defmacro emacsvox-lua--define-after-advice

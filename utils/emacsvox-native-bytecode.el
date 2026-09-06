@@ -62,8 +62,8 @@
 
 (defun emacsvox-native-bytecode-main ()
   "Build or check this native checkout, selected through environment data."
-  (unless (and (eq system-type 'windows-nt) (version<= "31" emacs-version))
-    (error "Native Windows Emacs 31+ required"))
+  (unless (and (eq system-type 'windows-nt) (version<= "30.2" emacs-version))
+    (error "Native Windows Emacs 30.2+ required"))
   (let* ((root (decode-coding-string (base64-decode-string (getenv "EMACSVOX_NATIVE_ROOT")) 'utf-8))
          (directory (expand-file-name "lisp" root))
          (sources (emacsvox-native-bytecode-plan root))

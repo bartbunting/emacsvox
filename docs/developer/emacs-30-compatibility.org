@@ -1,0 +1,138 @@
+#+title: Emacs 30.2 Compatibility Investigation
+#+date: 2026-09-06
+#+startup: content
+
+* Result
+
+Emacs 30.2 is the common minimum for the Emacsvox Lisp runtime and every
+platform route, including native Windows, after these compatibility changes. Ubuntu 26.04 packages
+[[https://packages.ubuntu.com/nl/resolute/emacs][Emacs 30.2 (1:30.2+1-2ubuntu1)]], so an Emacsvox Debian package can depend on
+Emacs 30.2 or newer without requiring an Emacs 31 source build on that release.
+The native Windows installer accepts prebuilt Emacs 30.2 or newer.
+
+[[file:../adr/0012-emacs-30-compatibility.org][ADR 0012]] records the support boundary. Emacs 30.1 and earlier were not
+certified. The current pinned fallback remains GNU Emacs 31.1.
+
+* Runtime findings and changes
+
+| Area | Finding | Change |
+|------+---------+--------|
+| DOM reading | Emacs 30 lacks dom-inner-text. dom-texts inserts separators and treats comments differently. | Reading clients call emacsvox-dom-inner-text, using the native function when present and a tested fallback otherwise. |
+| Password feedback | Emacs 30 uses read-passwd--hide-password for state; Emacs 31 uses read-passwd--password-hidden. | A private helper reads the available state; unknown state remains masked. |
+| Lua | Lua mode is built into Emacs 31, but absent from a bare Emacs 30 installation. | The integration is optional during compilation; install lua-mode separately to use it or run the complete integration suite. |
+| Version selection | Multiple entry points rejected any Emacs below 31. | All platform launchers, installers, configuration, bootstrap, test runners, build gates and package metadata now require 30.2. |
+| Byte-code | Compiled artifacts are specific to the selected Emacs. | Preserve exact-version checks and use separate compatibility checkouts. |
+
+The broad suite also assumed the Emacs 31 spelling of a generated Voice Lock
+state variable, newer Org command availability, and Emacs 31 Widget signatures.
+Its fixtures now account for supported versions without changing the actual
+speech behavior. Batch display tests provide the geometry they need.
+Corfu tests explicitly exercise the popup implementation; Emacs 30 text
+terminals need corfu-terminal, whereas Emacs 31 provides terminal popup support.
+
+* Package dependency and installer choices
+
+The Lisp package metadata declares =(emacs "30.2")=. There is not yet an
+Emacsvox Debian package or a Debian dependency added by this investigation.
+The source installers inspect the actual selected executable, so they accept
+both distribution packages and separately built Emacs installations.
+
+When no supported Emacs is selected, the WSL and Linux installers inspect the
+local apt candidate and recommend =emacs= (WSL desktop) or =emacs-nox= (remote
+terminal) only when its upstream version satisfies 30.2. Epoch prefixes are
+removed before comparing. Older or unavailable candidates are explained; no
+apt refresh or package installation runs automatically. A source build is an
+explicit choice: =--build-emacs= on POSIX or =-BuildEmacs= on Windows. Existing
+explicit executable selections remain protected. Windows points to GNU's
+prebuilt distribution first. The source fallback remains pinned at 31.1.
+
+A future Debian package should normally declare its system Emacs dependency
+so apt can resolve it. A Debian maintainer script should not prompt to compile
+Emacs. The source installer remains the route for a separately built Emacs;
+system dependency metadata and executable checks serve different purposes.
+
+* Validation
+
+Local binaries were Ubuntu's =/usr/bin/emacs= (30.2) and the existing
+=/home/bart/opt/emacs-31/bin/emacs= (31.0.90). The main ignored =local.mk= remains
+on the latter. CI now schedules Emacs 30.2 and 31.1; the new workflow has not
+been run on GitHub as part of this investigation.
+
+| Check | Emacs 30.2 | Emacs 31.0.90 |
+|-------+------------+---------------|
+| Complete maintained byte-code inventory | 279 modules; passed with optional packages and with a private home containing none | 279 modules; passed |
+| Focused compatibility gate | 225 passed; native dom-inner-text comparison skipped because that API is absent | 226 passed |
+| Fresh compiled setup and DOM reading smoke | Passed | Passed |
+| Compiled Notmuch suite | 119 passed | 119 passed |
+| Compiled aural parity and normal build-tree startup | Passed | Passed |
+| Semantic traces | All 27 matched | All 27 matched |
+| Broad integration comparison | 2954 tests: 2946 passed, 6 failed, 2 skipped | 2964 tests: 2957 passed, 6 failed, 1 skipped |
+
+The focused gate uses no personal packages. Installer tests exercise both WSL
+x64 and ARM64 fixtures, reuse of Emacs 30.2, preservation of explicit choices,
+and rejection of versions below the minimum. Archive pins were not changed.
+Builds still emit existing optional-integration compiler warnings; a successful
+build does not mean the repository is warning-free.
+
+The broad Emacs 30 comparison used an isolated copy of the installed package
+sources, without Emacs 31 byte-code, plus NonGNU ELPA lua-mode 20221027. Ten
+=emacsvox-py-tests= cases were excluded only in that disposable audit runner:
+python-mode 20260710.1059 replaces rx internals without declaring
+=rx--pcase-vars= special on Emacs 30, causing subsequent EAT loading to fail.
+The maintained complete runner still loads those tests and reports the problem;
+this work does not silently skip or patch that third-party defect. The Emacs
+30 broad result therefore is not a full-suite pass.
+
+Both versions retain these six failures, which were present in the original
+Emacs 31 baseline and have not been changed by this work:
+
+- emacsvox-agent-shell-list-editor-delegates-ordinary-feedback
+- emacsvox-aural-interfaces-provide-dismissal
+- emacsvox-notmuch-killed-search-owner-cancels-silently
+- emacsvox-tts-marker-speech-rejects-unsupported-server
+- emacsvox-tts-omnivox-projects-live-inventory
+- emacsvox-tts-tracked-speech-rejects-unsupported-server
+
+The missing mu4e integration is skipped in both broad runs. The second Emacs
+30 skip is the comparison with the absent native DOM API. The passing compiled
+Notmuch suite indicates its broad-run failure depends on suite context.
+Release gates remain unchanged; these baseline failures still prevent a green
+complete release gate. No release was tagged or published.
+
+Header and version consistency, ShellCheck, YAML parsing and
+=make docs-release-check= also passed. The canonical Org manual was regenerated
+to its tracked Texinfo and Info artifacts.
+
+Build, test, smoke and documentation logs are retained locally under
+=~/.cache/emacsvox/compat30/=, with the disposable audit checkouts under
+=audit-jrq5o07_/=. The compatibility source entry point is
+=test/run-compat-tests.el= and is run with =make compat-test=.
+
+* Native Windows follow-up
+
+The official [[https://ftp.gnu.org/gnu/emacs/windows/emacs-30/][GNU Windows Emacs 30.2 zip]] was downloaded and verified against
+GNU's published SHA-256 listing, then extracted into a temporary directory.
+A separate source tree on the Windows drive was used throughout; the live
+Windows installation and personal configuration were not changed.
+
+- The native PowerShell installer tests passed with real Windows Emacs 30.2,
+  including non-mutating doctor mode, protected explicit selections, missing
+  Emacs package/build choices, archive validation and argument transport.
+- =emacsvox-native-bytecode-main= built all 279 modules with native Emacs 30.2.
+- A fresh native process verified all 279 compiled modules against Emacs 30.2.
+- A further fresh process loaded compiled startup and EWW and verified DOM text
+  extraction. No audible speech test was run.
+
+Logs are retained under =~/.cache/emacsvox/compat30/native-windows-30.log= and
+=C:/Users/bart/AppData/Local/Temp/emacsvox-compat30-yaqx7jal/=.
+The final Linux compatibility gate passes 226 tests on Emacs 31.0.90 and
+225 with one expected skip on Emacs 30.2. These additional checks cover package
+selection, explicit source-build choice and the unified native minimum.
+
+* Limits
+
+These checks establish Linux and native Windows source and byte-code
+compatibility, including core speech runtime contracts and mocked transports. They do not establish
+audible acceptance on every desktop or compatibility of every external
+package version. No live user profile was
+restarted and no Linode installation was changed by this investigation.

@@ -12,8 +12,9 @@
 - Preserve existing tracked and untracked work. Never clean, reset, stash, or
   discard a dirty worktree merely to satisfy a build precondition.
 - Use the Emacs selected by the ignored `local.mk` and run `make check-emacs`
-  before diagnosing compiler failures. Emacsvox requires Emacs 31 or newer;
-  never compile it with an older system `emacs`.
+  before diagnosing compiler failures. Emacsvox requires Emacs 30.2 or newer;
+  never compile it with an older system `emacs`. Keep compatibility builds
+  in separate checkouts; all platforms use the same Emacs 30.2 minimum.
 - After an ordinary Lisp edit, run `make bytecode` before restarting the live
   Emacsvox profile. Run `make bytecode-check` as a non-mutating preflight; it
   also rejects byte-code produced by a different Emacs version.

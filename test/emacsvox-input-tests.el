@@ -8,6 +8,9 @@
 
 (require 'cl-lib)
 (require 'ert)
+
+(defvar read-passwd--password-hidden)
+(defvar read-passwd--hide-password)
 (require 'emacsvox-advice)
 
 (defconst emacsvox-test--input-before-targets
@@ -143,6 +146,22 @@
         (icon repeat-active)
         (notify "s")
         (icon repeat-active))))))
+
+(ert-deftest emacsvox-read-passwd-emacs30-visibility-and-unknown-state ()
+  "Emacs 30's state keeps hidden characters masked; unknown state stays hidden."
+  (cl-progv '(read-passwd--password-hidden) nil
+    (makunbound 'read-passwd--password-hidden)
+    (dolist (hidden '(t nil))
+      (let ((read-passwd--hide-password hidden)
+            (last-input-event ?x) spoken)
+        (cl-letf (((symbol-function 'tts-notify)
+                   (lambda (text) (setq spoken text)))
+                  ((symbol-function 'emacsvox-icon) #'ignore))
+          (emacsvox--advice-read-passwd--hide-password-after))
+        (should (equal spoken (if hidden "dot" "x")))))
+    (cl-progv '(read-passwd--hide-password) nil
+      (makunbound 'read-passwd--hide-password)
+      (should (emacsvox--password-hidden-p)))))
 
 (ert-deftest emacsvox-read-passwd-toggle-announces-visibility ()
   "Interactive password visibility changes announce their resulting state."

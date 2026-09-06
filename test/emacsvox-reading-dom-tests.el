@@ -2,7 +2,7 @@
 
 ;;; Commentary:
 
-;; Regression coverage for Emacs 31 DOM text extraction in reading clients.
+;; Regression coverage for Emacs 30.2 and newer DOM text extraction in reading clients.
 
 ;;; Code:
 
@@ -51,6 +51,32 @@
    (cl-remove-if-not
     #'emacsvox-test--has-obsolete-dom-text-call-p
     emacsvox-test--reading-dom-source-files)))
+
+(ert-deftest emacsvox-reading-dom-fallback-preserves-text ()
+  "Fallback keeps whitespace and order, ignores scripts/comments, and copies text."
+  (let ((leaf (copy-sequence "single leaf")))
+    (cl-letf (((symbol-function 'dom-inner-text) nil))
+      (should (equal "" (emacsvox-dom-inner-text nil)))
+      (should (equal " One\n two three "
+                     (emacsvox-dom-inner-text
+                      '(div nil " One\n" (b nil " two")
+                            (script nil "hidden" (span nil "also hidden"))
+                            (comment nil "hidden") " three "))))
+      (let ((result (emacsvox-dom-inner-text `(p nil ,leaf))))
+        (should (equal leaf result))
+        (should-not (eq leaf result))))))
+
+(ert-deftest emacsvox-reading-dom-fallback-matches-native ()
+  "Compare the fallback with the native Emacs 31 implementation when available."
+  (skip-unless (fboundp 'dom-inner-text))
+  (dolist (node '(nil (p nil) (p nil "hello")
+                 (div nil "one" (b nil "two") " three")
+                 (p nil "a" (comment nil "hidden") (script nil "hidden") "b")
+                 (script nil "root text") (comment nil "root comment")
+                 (p nil (style nil "retained") (br nil) "\tend\n")))
+    (let ((expected (dom-inner-text node)))
+      (cl-letf (((symbol-function 'dom-inner-text) nil))
+        (should (equal expected (emacsvox-dom-inner-text node)))))))
 
 (ert-deftest emacsvox-bookshare-dom-text-decodes-entities ()
   "Bookshare extracts and decodes XML metadata text."

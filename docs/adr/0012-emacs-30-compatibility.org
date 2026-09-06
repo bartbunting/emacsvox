@@ -1,0 +1,68 @@
+#+title: ADR 0012: Emacs 30.2 Compatibility
+#+date: 2026-09-06
+#+startup: content
+
+* Status
+
+Accepted for the Lisp runtime, build, launcher and installation routes on all
+platforms, including native Windows. This refines the Emacs 31 baseline in ADRs
+0005 and 0011. Native Windows remains an x64 preview; the runtime minimum does
+not change architecture support or release pins.
+
+* Context
+
+Ubuntu 26.04 supplies Emacs 30.2. Requiring a separate Emacs 31 source build
+adds substantial work to an otherwise ordinary installation. Investigation
+found two runtime differences: DOM text extraction and the private password
+visibility variable. Lua mode is built into Emacs 31 but remains an optional
+package on Emacs 30. Other observed core differences were test assumptions
+about generated minor mode variables, Widget signatures and newer Org commands.
+
+The existing CI compiler matrix still named Emacs 29.4 and 30.1 despite the
+Emacs 31 requirement, and compiled only a small core subset.
+
+* Decision
+
+- Support Emacs 30.2 and newer for the Lisp runtime and every platform route. Match
+  package metadata, configuration, build gates, launcher and installer checks.
+  Do not claim support for Emacs 30.1 or earlier.
+- Keep compatibility adaptations local and behavior-tested. Reading clients
+  use an Emacsvox-owned DOM helper, delegating to the native implementation
+  when available. Its fallback preserves whitespace and excludes descendant
+  scripts and comments. Password feedback follows the loaded Emacs's masking
+  state and treats unknown state as hidden. Do not install global aliases for
+  missing Emacs APIs or copy older bundled Emacs implementations into the tree.
+- Treat Lua like an optional integration on Emacs 30. Its absence must not
+  prevent building the core. The complete integration suite requires its
+  package installed. Optional packages retain their own version and platform
+  requirements; Corfu terminal popups on Emacs 30 need corfu-terminal.
+- Reuse supported distribution Emacs without downloading or building another
+  version. Preserve explicit selections and existing per-user configuration.
+  If none is available, show the system-package or prebuilt-binary option
+  first. Inspect the apt candidate's upstream version before recommending it;
+  a Debian epoch cannot make Emacs 29 satisfy the 30.2 minimum. Offer the pinned
+  Emacs 31.1 source build through --build-emacs (POSIX) or -BuildEmacs (Windows).
+  Do not start a source build without this explicit choice. Doctor modes remain
+  non-mutating. Keep the acquisition pins and archive hashes unchanged.
+- CI builds the complete maintained Lisp inventory and runs =make compat-test=
+  in private homes on Emacs 30.2 and 31.1. This focused gate covers core startup,
+  input, voice, reading, Org, and installer contracts without third-party
+  packages. It supplements the complete integration suite and release gates.
+- Keep the documentation authoring toolchain pinned independently of the
+  runtime minimum. Byte-code must still match the exact selected Emacs version;
+  use separate checkouts for compatibility builds and ship source only.
+
+* Consequences
+
+Ubuntu users can use the distribution Emacs package. A future Debian package
+can express the runtime minimum as Emacs 30.2 instead of initiating an Emacs
+source build during installation. This decision does not create or publish
+that package, change installation ownership, or weaken release gates.
+
+The native Windows preview accepts a prebuilt Emacs 30.2 or newer and retains
+the Emacs 31.1 source build as an explicit option. Version support does not
+certify every external package combination or establish audible acceptance on
+every desktop.
+
+Investigation details and remaining baseline failures are recorded in
+[[file:../developer/emacs-30-compatibility.org][the Emacs 30 compatibility investigation]].

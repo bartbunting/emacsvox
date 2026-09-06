@@ -10,9 +10,21 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.2][NEWS for Emacsvox 2026.9.2]].
 
+** Use Emacs 30.2 or newer on every platform
+
+Emacsvox now accepts Emacs 30.2 and newer on all platforms, including native
+Windows and Ubuntu 26.04's distribution package. The launcher, configuration and guided
+installers reuse it without building Emacs 31. DOM reading preserves Emacs
+31 text behavior, and password feedback handles both versions' masking state.
+When Emacs is missing, installers suggest a suitable apt package or a prebuilt
+Windows release. The pinned Emacs 31.1 source build requires ~--build-emacs~
+on POSIX or ~-BuildEmacs~ on Windows; it no longer starts automatically.
+Lua mode must be installed separately on Emacs 30 when wanted; Corfu terminal
+popups on Emacs 30 need corfu-terminal.
+
 ** Install the native Windows x64 preview without WSL
 
-~bin/emacsvox-install.ps1~ reuses native Emacs 31 or newer or builds GNU Emacs
+~bin/emacsvox-install.ps1~ reuses native Emacs 30.2 or newer or, with ~-BuildEmacs~, builds GNU Emacs
 31.1 with a private MSYS2 UCRT64 toolchain.  It installs pinned Windows
 Omnivox, prepares Emacsvox, and checks a fresh native GUI with both speech
 lanes.  ~-Check~ reports the plan without changing files.
@@ -24,8 +36,8 @@ PATH, Windows services, or JAWS configuration.
 
 ** Install Emacsvox on a remote Linux host without local speech engines
 
-~bin/emacsvox-install --role remote-emacs~ reuses Emacs 31 or newer, or builds
-the pinned terminal-only Emacs on Debian/Ubuntu, and compiles Emacsvox without
+~bin/emacsvox-install --role remote-emacs~ reuses Emacs 30.2 or newer, or with
+~--build-emacs~ builds the pinned terminal-only Emacs on Debian/Ubuntu, and compiles Emacsvox without
 installing Omnivox or requiring Windows interoperability.  ~--check~ reports
 prerequisites without changing files.
 
