@@ -703,8 +703,7 @@ Signal a clear installation error when negotiation found an older version."
   "Return non-nil when the current transaction can replace its legacy queue."
   (and
    emacsvox-aural--delivery-timeline-runs
-   (cl-every
-    #'emacsvox-aural--timeline-run-has-speech-p
+   (cl-some #'emacsvox-aural--timeline-run-has-speech-p
     emacsvox-aural--delivery-timeline-runs)
    (cl-every
     #'emacsvox-aural--structured-compatible-delivery-entry-p
@@ -984,7 +983,7 @@ Return a list of envelope and opaque semantic bindings, or nil when the
 recorded plans contain no speech span and therefore require legacy lowering."
   (let ((span-sequence 0)
         (action-sequence 0)
-        active-effects spans actions bindings unsupported)
+        active-effects spans actions bindings deferred-actions unsupported)
     (cl-labels
         ((wire-id
           (prefix)
@@ -1086,6 +1085,12 @@ recorded plans contain no speech span and therefore require legacy lowering."
            "run"
            (list :type "silence" :duration_ms duration)
            nil))
+         (add-pending
+          (pending span-id affinity)
+          (dolist (entry pending)
+            (if (numberp (car entry))
+                (add-silence (car entry) span-id affinity)
+              (add-action (car entry) span-id affinity (cdr entry)))))
          (add-span
           (text request style command balance lifecycle pending context)
           (let* ((span-id (cl-incf span-sequence))
@@ -1102,10 +1107,8 @@ recorded plans contain no speech span and therefore require legacy lowering."
                :effects (effect-directive style balance))
               (when rate-offset (list :rate_offset rate-offset)))
              spans)
-            (dolist (action pending)
-              (if (numberp action)
-                  (add-silence action span-id 'before)
-                (add-action action span-id 'before context)))
+            (add-pending (append deferred-actions pending) span-id 'before)
+            (setq deferred-actions nil)
             (when lifecycle
               (let ((semantic-id (wire-id "semantic")))
                 (add-wire-action
@@ -1131,7 +1134,7 @@ recorded plans contain no speech span and therefore require legacy lowering."
                      (context (emacsvox-aural-concrete-plan-context plan))
                      (after-context
                       (emacsvox-aural-concrete-plan-context after-plan))
-                     (pending (and pause (list pause)))
+                     (pending (and pause (list (cons pause context))))
                      (last-span nil))
           (dolist (action (emacsvox-aural-concrete-plan-before plan))
             (if (speech-action-p action)
@@ -1146,7 +1149,7 @@ recorded plans contain no speech span and therefore require legacy lowering."
                     (emacsvox-aural-concrete-action-balance action)
                     action pending context)
                    pending nil))
-              (setq pending (append pending (list action)))))
+              (setq pending (append pending (list (cons action context))))))
           (when
               (and
                (emacsvox-aural-concrete-content-speak content)
@@ -1161,7 +1164,10 @@ recorded plans contain no speech span and therefore require legacy lowering."
               (emacsvox-aural-concrete-content-balance content)
               nil pending context)
              pending nil))
-          (dolist (positioned positioned-actions)
+          ;; As in legacy content queueing, suppression also omits actions
+          ;; positioned within that content.  Boundary actions remain distinct.
+          (dolist (positioned (and (emacsvox-aural-concrete-content-speak content)
+                                  positioned-actions))
             (let ((offset (plist-get positioned :utf8-offset)))
               (unless
                   (and last-span (integerp offset)
@@ -1189,13 +1195,16 @@ recorded plans contain no speech span and therefore require legacy lowering."
                     (emacsvox-aural-concrete-action-balance action)
                     action pending after-context)
                    pending nil))
-              (setq pending (append pending (list action)))))
+              (setq pending (append pending (list (cons action after-context))))))
           (if (not last-span)
-              (setq unsupported t)
-            (dolist (action pending)
-              (if (numberp action)
-                  (add-silence action last-span 'after)
-                (add-action action last-span 'after after-context)))))))
+              ;; Keep each silent run's action context until the next spoken
+              ;; span.  At the end of the transaction, anchor them after the
+              ;; last span instead.  Output-free runs need no representation.
+              (setq deferred-actions (append deferred-actions pending))
+            (add-pending pending last-span 'after))))
+      (if spans
+          (add-pending deferred-actions span-sequence 'after)
+        (setq unsupported t)))
     (unless unsupported
       (list
        (append
@@ -1480,7 +1489,7 @@ the authoritative check after punctuation and split-cap preprocessing."
        (and
         runs
         (eq owner tts-speaker-process)
-        (cl-every #'emacsvox-aural--timeline-run-has-speech-p runs)
+        (cl-some #'emacsvox-aural--timeline-run-has-speech-p runs)
         (cl-every
          #'emacsvox-aural--structured-compatible-delivery-entry-p
          entries)))

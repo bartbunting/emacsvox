@@ -151,6 +151,53 @@ Use a private process advertising structured delivery, without sending audio."
                        (:chorus . 1.0)))
         (should (= (plist-get effects (car entry)) (cdr entry)))))))
 
+(ert-deftest emacsvox-aural-native-suppression-preserves-surviving-effects ()
+  "Inaudible runs do not downgrade other runs or lose their boundary actions."
+  (dolist (with-actions '(nil t))
+    (dolist (position '(before between after))
+      (emacsvox-test--with-transport-scheme
+        (setq emacsvox-aural-session-rules
+              (append
+               '((:id styled :match (:role heading)
+                  :render (:content (:voice telephone)))
+                 (:id hidden-positioned :match (:role heading :level 9)
+                  :render (:before ((:id positioned-only :kind tone :pitch 900
+                                     :duration 10 :anchor run)))))
+               (when with-actions
+                 '((:id silent-boundaries :match (:legacy-personality inaudible)
+                    :render
+                    (:before ((:id cue :kind cue :cue item :anchor run))
+                     :after ((:id pause :kind pause :duration 20 :anchor run)
+                             (:id tone :kind tone :pitch 500 :duration 30
+                              :anchor run))))))))
+        (let* ((hidden (propertize "hidden" 'personality 'inaudible
+                                   emacsvox-aural-positioned-facts-property
+                                   '((:role heading :level 9))))
+               (text (pcase position
+                       ('before (concat hidden "visible"))
+                       ('between (concat "first" hidden "second"))
+                       ('after (concat "visible" hidden))))
+               (result (emacsvox-test--capture-native-timeline text :facts '(:role heading)))
+               (timeline (plist-get result :timeline))
+               (spans (plist-get timeline :spans))
+               (actions (plist-get timeline :actions))
+               (effects (plist-get (plist-get (car spans) :effects) :style)))
+          (should timeline)
+          (should-not (string-match-p "q {" (plist-get result :wire)))
+          (should-not (string-match-p "hidden" (mapconcat
+                                                (lambda (span) (plist-get span :text))
+                                                spans "")))
+          (should (= (plist-get effects :low_pass) (/ 5.0 9.0)))
+          (should (= (plist-get effects :high_pass) (/ 5.0 9.0)))
+          (dolist (kind '("audio" "silence" "tone"))
+            (let ((selected (seq-filter
+                             (lambda (action) (equal (plist-get action :type) kind))
+                             actions)))
+              (should (= (length selected) (if with-actions 1 0)))
+              (when with-actions
+                (should (equal (plist-get (plist-get (car selected) :position) :affinity)
+                               (if (eq position 'after) "after" "before")))))))))))
+
 (defun emacsvox-test--transport-context (&optional mode)
   "Return a minimal presentation context for MODE."
   (list
