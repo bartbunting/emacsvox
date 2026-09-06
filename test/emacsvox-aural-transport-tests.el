@@ -198,6 +198,53 @@ Use a private process advertising structured delivery, without sending audio."
                 (should (equal (plist-get (plist-get (car selected) :position) :affinity)
                                (if (eq position 'after) "after" "before")))))))))))
 
+(ert-deftest emacsvox-aural-native-history-inspects-and-remaps-later-parts ()
+  "Exact explanation and both remappers reach later retained speech and cues."
+  (require 'emacsvox-aural-tools)
+  (require 'emacsvox-aural-editor)
+  (emacsvox-test--with-transport-scheme
+    (setq emacsvox-aural-session-rules
+          '((:id later-part :match (:role heading :level 2)
+             :render
+             (:before ((:id label :kind speech :text "UNIQUE LATER LABEL" :anchor run))
+              :content (:voice telephone :volume 0.5)
+              :after ((:id cue :kind cue :cue select-object :anchor run))))))
+    (let* ((text (concat (propertize "First" emacsvox-aural-facts-property
+                                    '(:role heading :level 1))
+                         (propertize "Second" emacsvox-aural-facts-property
+                                     '(:role heading :level 2))))
+           (result (emacsvox-test--capture-native-timeline text))
+           (record (emacsvox-aural-last-presentation))
+           (explanation (emacsvox-aural-explain-record record))
+           opened)
+      (should (plist-get result :timeline))
+      (should (= (length (emacsvox-aural-presentation-record-effective-plans record)) 2))
+      (save-window-excursion
+        (let ((summary (emacsvox-aural-explanation-display explanation)))
+          (should (string-match-p "UNIQUE LATER LABEL" summary))
+          (with-current-buffer "*Help*"
+            (should (string-match-p "UNIQUE LATER LABEL" (buffer-string)))
+            (should (string-match-p "telephone" (buffer-string)))
+            (should (string-match-p "Backend degradation:.*unsupported-volume"
+                                    (buffer-string))))))
+      (cl-letf (((symbol-function 'emacsvox-aural-preview-play-cues) #'ignore)
+                ((symbol-function 'emacsvox-aural-ui-speak) #'ignore)
+                ((symbol-function 'tts-speak) #'ignore)
+                ((symbol-function 'completing-read)
+                 (lambda (prompt collection &rest _)
+                   (cond ((string-prefix-p "Which part" prompt) (caar (last collection)))
+                         ((string-prefix-p "Change" prompt) "suppress it")
+                         ((string-prefix-p "Keep" prompt) "this Emacs session")
+                         ((string-prefix-p "Voice for" prompt) "default")
+                         (t (ert-fail (format "Unexpected prompt: %s" prompt))))))
+                ((symbol-function 'emacsvox-aural-editor-open-prefilled-rule)
+                 (lambda (_scope rule _source) (push rule opened))))
+        (emacsvox-aural-remap-earcon-at-point record)
+        (emacsvox-aural-remap-voice-at-point record))
+      (should (= (length opened) 2))
+      (dolist (rule opened)
+        (should (= (plist-get (plist-get rule :match) :level) 2))))))
+
 (defun emacsvox-test--transport-context (&optional mode)
   "Return a minimal presentation context for MODE."
   (list

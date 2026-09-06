@@ -55,7 +55,8 @@
      (:constructor emacsvox-aural--make-explanation))
   "Reproducible explanation of one resolved aural presentation."
   scheme facts context matching-rules render-plan concrete-plan
-  suppressed-actions basis presentation-id queued-at source-location)
+  suppressed-actions basis presentation-id queued-at source-location
+  additional-plans)
 
 (defvar emacsvox-aural-explanation--last-explanation nil
   "Most recently displayed aural presentation explanation.")
@@ -230,7 +231,8 @@ Use an exact queued record only if it still belongs to that source item."
   "Return an explanation of retained frozen presentation RECORD."
   (unless (emacsvox-aural-presentation-record-p record)
     (user-error "Not an aural presentation record: %S" record))
-  (let* ((concrete (emacsvox-aural-presentation-record-plan record))
+  (let* ((plans (emacsvox-aural-presentation-record-effective-plans record))
+         (concrete (car plans))
          (render (emacsvox-aural-concrete-plan-source-plan concrete)))
     (emacsvox-aural--make-explanation
      :scheme (emacsvox-aural-concrete-plan-scheme concrete)
@@ -240,6 +242,7 @@ Use an exact queued record only if it still belongs to that source item."
      (copy-tree (emacsvox-aural-concrete-plan-rule-provenance concrete))
      :render-plan render
      :concrete-plan concrete
+     :additional-plans (cdr plans)
      :suppressed-actions nil
      :basis
      (if
@@ -565,6 +568,27 @@ selected occasion has no matching rule."
        "To change this object's voice or one of its earcons, use the remap rows in Aural Home."))
       " ")))
 
+(defun emacsvox-aural-explanation--part-summary (plan index)
+  "Describe frozen PLAN as part INDEX of a retained presentation."
+  (string-join
+   (delq nil
+         (list
+          (format "Part %d. %s." index
+                  (emacsvox-aural-explanation-facts-description
+                   (emacsvox-aural-concrete-plan-facts plan)
+                   (emacsvox-aural-concrete-plan-context plan)))
+          (when-let* ((before (emacsvox-aural-concrete-plan-before plan)))
+            (format "Before the content, %s."
+                    (mapconcat #'emacsvox-aural-explanation--spoken-action before ", then ")))
+          (emacsvox-aural-explanation--spoken-content
+           (emacsvox-aural-concrete-plan-source-plan plan) plan)
+          (when-let* ((after (emacsvox-aural-concrete-plan-after plan)))
+            (format "After the content, %s."
+                    (mapconcat #'emacsvox-aural-explanation--spoken-action after ", then ")))
+          (when (emacsvox-aural-concrete-plan-degradations plan)
+            "This part has backend degradation; details follow in the explanation.")))
+   " "))
+
 (defun emacsvox-aural-explanation-display
     (explanation &optional speak occasion-counts)
   "Display EXPLANATION in a help buffer.
@@ -578,15 +602,27 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
          (rules (emacsvox-aural-explanation-matching-rules explanation))
          (before (emacsvox-aural-concrete-plan-before concrete))
          (after (emacsvox-aural-concrete-plan-after concrete))
+         (additional (emacsvox-aural-explanation-additional-plans explanation))
          (summary
-          (emacsvox-aural-explanation--spoken-explanation
-           explanation occasion-counts))
+          (string-join
+           (append
+            (when additional
+              (list (format "Retained feedback has %d parts. Part 1 follows."
+                            (1+ (length additional)))))
+            (list (emacsvox-aural-explanation--spoken-explanation
+                   explanation occasion-counts))
+            (cl-loop for plan in additional for index from 2
+                     collect (emacsvox-aural-explanation--part-summary plan index)))
+           " "))
          (matching-occasions
           (emacsvox-aural-explanation--matching-occasion-description
            occasion-counts)))
     (setq emacsvox-aural-explanation--last-explanation explanation)
     (emacsvox-aural-ui-with-help-window
       (princ "Aural presentation explanation\n\n")
+      (when additional
+        (princ (format "Retained parts: %d. Part 1 follows; later parts appear below.\n\n"
+                       (1+ (length additional)))))
       (if
           (memq
            (emacsvox-aural-explanation-basis explanation)
@@ -773,6 +809,23 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
       (when-let* ((degradations
                    (emacsvox-aural-concrete-plan-degradations concrete)))
         (princ (format "\nBackend degradation: %S\n" degradations)))
+      (cl-loop
+       for plan in additional for index from 2
+       for part-content = (emacsvox-aural-concrete-plan-content plan)
+       do
+       (princ (format "\n%s\n" (emacsvox-aural-explanation--part-summary plan index)))
+       (princ (format "Content text: %S\nFacts: %S\nContext: %S\n"
+                      (emacsvox-aural-concrete-content-text part-content)
+                      (emacsvox-aural-concrete-plan-facts plan)
+                      (emacsvox-aural-concrete-plan-context plan)))
+       (princ (format "Voice: requested %S, effective %S, provenance %S, capability %S\n"
+                      (emacsvox-aural-concrete-content-voice-request part-content)
+                      (emacsvox-aural-concrete-content-voice-style part-content)
+                      (emacsvox-aural-concrete-content-voice-provenance part-content)
+                      (emacsvox-aural-concrete-content-voice-capability part-content)))
+       (princ (format "Matching rules: %S\nBackend degradation: %S\n"
+                      (emacsvox-aural-concrete-plan-rule-provenance plan)
+                      (emacsvox-aural-concrete-plan-degradations plan))))
       (princ
        (concat
         "\nTo change this object's voice, choose Remap at point from "

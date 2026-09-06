@@ -117,20 +117,46 @@ message notification policy."
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
 (defvar emacsvox-aural-editor-prepared-source-guard)
 
-(defun emacsvox-aural-tools--remap-source-input (&optional record)
+(defun emacsvox-aural-tools--remap-record-plan (record component)
+  "Choose the retained part of RECORD to remap for COMPONENT.
+Earcon remapping includes only parts containing an earcon."
+  (let ((choices
+         (cl-loop
+          for plan in (emacsvox-aural-presentation-record-effective-plans record)
+          for index from 1
+          when (or (not (eq component 'earcon))
+                   (emacsvox-aural-tools--earcon-remap-choices plan))
+          collect
+          (cons (format "Part %d: %s" index
+                        (truncate-string-to-width
+                         (or (emacsvox-aural-concrete-content-text
+                              (emacsvox-aural-concrete-plan-content plan))
+                             "feedback without content")
+                         80 nil nil t))
+                plan))))
+    (unless choices
+      (user-error "This presentation contains no earcon to remap"))
+    (if (null (cdr choices)) (cdar choices)
+      (cdr (assoc (completing-read "Which part should change: " choices nil t)
+                  choices)))))
+
+(defun emacsvox-aural-tools--remap-source-input (&optional record component)
   "Return presentation input for optional frozen RECORD or the current source.
 
 For RECORD, use its frozen voice and semantic context.  Associate it
 with the current inspection source only when the buffer name still matches;
 history deliberately does not retain source buffers.  Without RECORD, use
 inspectable facts at the captured source position, or a retained presentation
-whose source identity, position, and modification tick still match."
+whose source identity, position, and modification tick still match.
+When COMPONENT is non-nil, select the retained part to remap."
   (if record
       (progn
         (unless (emacsvox-aural-presentation-record-p record)
           (user-error "Not an aural presentation record: %S" record))
         (let* ((concrete
-                (emacsvox-aural-presentation-record-plan record))
+                (if component
+                    (emacsvox-aural-tools--remap-record-plan record component)
+                  (emacsvox-aural-presentation-record-plan record)))
                (source
                 (emacsvox-aural-inspection-source-buffer))
                (source
@@ -155,7 +181,9 @@ whose source identity, position, and modification tick still match."
        (lambda ()
          (if-let* ((record (emacsvox-aural-presentation-at-point)))
              (let* ((concrete
-                     (emacsvox-aural-presentation-record-plan record))
+                     (if component
+                         (emacsvox-aural-tools--remap-record-plan record component)
+                       (emacsvox-aural-presentation-record-plan record)))
                     (render
                      (emacsvox-aural-concrete-plan-source-plan concrete)))
                (list
@@ -347,9 +375,7 @@ unsaved in the advanced rule editor so the selector can be reviewed or
 refined before `w' saves or applies it."
   (interactive)
   (let* ((input
-          (if record
-              (emacsvox-aural-tools--remap-source-input record)
-            (emacsvox-aural-tools--remap-source-input)))
+          (emacsvox-aural-tools--remap-source-input record 'voice))
          (facts (plist-get input :facts))
          (context (plist-get input :context))
          (render (plist-get input :render))
@@ -562,9 +588,7 @@ or restore it.  Replacement also auditions the newly resolved cue.  The
 generated change opens unsaved in the advanced editor for review."
   (interactive)
   (let* ((input
-          (if record
-              (emacsvox-aural-tools--remap-source-input record)
-            (emacsvox-aural-tools--remap-source-input)))
+          (emacsvox-aural-tools--remap-source-input record 'earcon))
          (facts (plist-get input :facts))
          (context (plist-get input :context))
          (concrete (plist-get input :concrete))

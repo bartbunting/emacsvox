@@ -469,7 +469,7 @@
           (cl-letf
               (((symbol-function
                  'emacsvox-aural-tools--remap-source-input)
-                (lambda ()
+                (lambda (&optional _record _component)
                   (list
                    :source source
                    :facts
@@ -932,7 +932,7 @@
           (cl-letf
               (((symbol-function
                  'emacsvox-aural-tools--remap-source-input)
-                (lambda ()
+                (lambda (&optional _record _component)
                   (list
                    :source source
                    :facts
@@ -1070,7 +1070,7 @@
           (cl-letf
               (((symbol-function
                  'emacsvox-aural-tools--remap-source-input)
-                (lambda ()
+                (lambda (&optional _record _component)
                   (list
                    :source source
                    :facts
@@ -1138,7 +1138,7 @@
       (cl-letf
           (((symbol-function
              'emacsvox-aural-tools--remap-source-input)
-            (lambda ()
+            (lambda (&optional _record _component)
               (list
                :facts
                '(:role filesystem-entry :entry-kind directory)
