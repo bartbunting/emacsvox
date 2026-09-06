@@ -1,0 +1,54 @@
+.TH EMACSVOX 1 "September 2026" "Emacsvox" "User Commands"
+.SH NAME
+emacsvox \- start the Emacsvox audio desktop
+.SH SYNOPSIS
+.B emacsvox
+.RI [ launcher-options ]
+.RB [ -- ]
+.RI [ emacs-arguments ]
+.SH DESCRIPTION
+Starts GNU Emacs with Emacsvox, using an isolated configuration.
+Requires Emacs 30.2 or newer and local Omnivox or a configured remote
+workstation speech service. Personal and site startup files are not loaded.
+.SH OPTIONS
+.TP
+.B --diagnose
+Report the selected Emacs, speech server and installation paths without audio.
+.TP
+.B --check
+Run the audible speech-server check. Confirm both tone and speech.
+.TP
+.B --remote
+Use workstation speech through an existing SSH reverse forward.
+No local speech engine is required. Combine with --diagnose or --check.
+.TP
+.B --help
+Display launcher usage and environment options.
+.TP
+.B --
+Pass subsequent options directly to Emacs. Use -nw for a local terminal session.
+.SH ENVIRONMENT
+.TP
+.B EMACS
+Select a supported Emacs executable.
+.TP
+.B OMNIVOX_PROGRAM
+Absolute path to the Omnivox executable, overriding the per-user selection.
+.TP
+.B EMACSVOX_DIR
+Override the installed Emacsvox tree, for example to test a source checkout.
+.TP
+.B EMACSVOX_REMOTE_HOST, EMACSVOX_REMOTE_PORT, EMACSVOX_REMOTE_TOKEN_FILE
+Remote loopback endpoint and private authentication token file.
+See --help and the manual for defaults and tunnel preparation.
+.SH FILES
+.TP
+.I /usr/share/emacsvox
+Lisp sources, sounds, server launcher and offline manuals.
+.TP
+.I /usr/share/doc/emacsvox/README.Debian
+Package installation, optional dependencies and configuration guidance.
+.SH SEE ALSO
+.BR emacs (1)
+.PP
+The full manual is /usr/share/emacsvox/info/emacsvox.info.

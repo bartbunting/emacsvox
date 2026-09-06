@@ -1,0 +1,54 @@
+Emacsvox for Debian and Ubuntu
+=============================
+
+Install a downloaded package with apt, which resolves its Emacs dependency:
+
+  sudo apt install ./emacsvox_VERSION_all.deb
+
+Emacs 30.2 or newer is required. Omnivox 1.7.0 or newer is recommended.
+If Omnivox is not in your configured apt repositories, install its downloaded
+deb in the same apt command, or supply an existing Omnivox installation.
+The package does not add repositories, download engines or build GNU Emacs.
+An Emacs built outside dpkg does not satisfy the package dependency: use the
+source installer if you want to rely exclusively on a per-user Emacs build.
+
+Start an isolated session with:
+
+  emacsvox --diagnose
+  emacsvox --check
+  emacsvox
+
+Confirm that --check produces both tone and speech before ordinary use.
+Use emacsvox -nw for a terminal session. EMACS selects another supported
+executable. OMNIVOX_PROGRAM and the existing per-user Omnivox configuration
+select the speech executable; installing this package does not change them.
+
+For remote Emacs or WSL using an existing Windows Omnivox, omit the local
+Linux speech engine with:
+
+  sudo apt install --no-install-recommends ./emacsvox_VERSION_all.deb
+
+For remote speech, use emacsvox --remote --diagnose and then emacsvox --remote
+after preparing the workstation service, private token and SSH reverse tunnel.
+Published Omnivox 1.7.1 lacks the remote service; use a compatible development
+service until a release includes it. For WSL desktop speech, select the native
+Windows omnivox.exe with OMNIVOX_PROGRAM or your existing per-user setting.
+The guided WSL source installer remains the route for acquiring that runtime.
+
+Files live under /usr/share/emacsvox; the public command is /usr/bin/emacsvox.
+The manual is /usr/share/emacsvox/info/emacsvox.info (also available from
+Emacsvox help). To enable speech in your personal Emacs, explicitly add:
+
+  (load-file "/usr/share/emacsvox/lisp/emacsvox-setup.el")
+
+No site startup file is installed and no personal initialization is edited.
+This first package loads Lisp sources; no .elc files are shipped or generated
+at installation time. Optional integrations need their corresponding tools
+or Emacs packages; Hydra convenience menus need the hydra Emacs package.
+Source-checkout build and guided installation commands do not apply to this
+read-only system tree. Upgrade it using apt. Removal leaves personal settings,
+speech tokens and logs intact.
+
+BUILD-INFO.json records source identity and the autoload generation toolchain.
+Versions containing +git and -0local1 are local development builds, not
+published releases.

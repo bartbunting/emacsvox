@@ -10,6 +10,15 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.2][NEWS for Emacsvox 2026.9.2]].
 
+** Install Emacsvox with a Debian package
+
+Emacsvox can be packaged as an architecture-independent deb, installing the
+audio desktop under /usr/share/emacsvox with an ~emacsvox~ command. It requires
+a packaged Emacs 30.2 or newer and recommends Omnivox; remote or WSL users can
+omit the local Linux speech server. Installation preserves personal Emacs
+configuration and never builds GNU Emacs or starts speech. The package includes
+Lisp sources, generated autoloads, sounds and offline manuals.
+
 ** Use Emacs 30.2 or newer on every platform
 
 Emacsvox now accepts Emacs 30.2 and newer on all platforms, including native

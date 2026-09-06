@@ -7,6 +7,31 @@ on:
     branches: [master]
 
 jobs:
+  debian-package:
+    name: Debian package and Ubuntu installation
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: '30.2'
+      - name: Check and build development package
+        run: |
+          make deb-test
+          make deb
+      - name: Install and remove in disposable Ubuntu
+        run: |
+          set -- dist/emacsvox_*_all.deb
+          package=$1
+          docker run --rm -v "$PWD:/source:ro" ubuntu:26.04 \
+            sh /source/test/debian-install-smoke.sh "/source/$package"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emacsvox-debian-development
+          path: |
+            dist/emacsvox_*_all.deb
+            dist/emacsvox_*_all.deb.sha256
+
   version:
     name: Release metadata consistency
     runs-on: ubuntu-latest

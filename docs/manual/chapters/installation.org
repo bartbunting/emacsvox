@@ -9,14 +9,53 @@
 @c Generated from docs/manual/emacsvox.org; do not edit.
 #+end_export
 
-This chapter takes you from a fresh source checkout to a speaking Emacsvox
-session.  You will prepare the speech server, build Emacsvox, check each layer,
-and start an isolated session before changing your personal Emacs setup.
+This chapter takes you from installation to a speaking Emacsvox session.
+Use a Debian package when available, or follow the source checkout route.
+Start an isolated session before changing your personal Emacs setup.
 
 Commands shown before Emacsvox starts are entered in a terminal.  Keys written
 with @@texinfo:@kbd{C-}@@ or @@texinfo:@kbd{M-}@@ are entered inside Emacs.  The same chapter is
 available before installation at
 [[https://bartbunting.github.io/emacsvox/Installation.html]].
+
+** Debian and Ubuntu package
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+With a downloaded Emacsvox deb, install it using apt:
+
+#+begin_example
+sudo apt install ./emacsvox_VERSION_all.deb
+emacsvox --diagnose
+emacsvox --check
+emacsvox
+#+end_example
+
+Replace ~VERSION~ with the version in the downloaded filename. Apt requires
+a packaged Emacs 30.2 or newer; an installed terminal-only ~emacs-nox~ also
+satisfies this dependency. The package never builds GNU Emacs. If your
+distribution cannot provide a supported version, use the source installation
+route below, which offers an explicit Emacs 31 source build.
+
+Omnivox 1.7.0 or newer is recommended. If it is unavailable from your apt
+repositories, include its downloaded deb in the same apt command, or select an
+existing installation. Confirm both tone and speech from ~emacsvox --check~.
+For remote Emacs or WSL with an existing Windows speech server, use
+~sudo apt install --no-install-recommends ./emacsvox_VERSION_all.deb~.
+Remote sessions start with ~emacsvox --remote~ after the workstation service,
+token and tunnel are prepared as described in
+@@texinfo:@ref{Installing Remote Emacsvox}@@. The package does not acquire a
+Windows speech runtime; the guided WSL source installer below handles that.
+
+Emacsvox installs under ~/usr/share/emacsvox~, with the command
+~/usr/bin/emacsvox~. It includes Lisp sources, sounds and offline manuals.
+No personal initialization is changed and ordinary Emacs sessions do not
+automatically start speaking. To enable Emacsvox in your own Emacs setup, add
+~(load-file "/usr/share/emacsvox/lisp/emacsvox-setup.el")~ explicitly.
+Upgrade the system tree using apt; the source build instructions below apply
+to checkouts. Removing the package preserves personal settings and speech tokens.
+Package details are in ~/usr/share/doc/emacsvox/README.Debian~.
 
 ** Before You Begin
 :PROPERTIES:

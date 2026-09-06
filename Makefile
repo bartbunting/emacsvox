@@ -78,6 +78,7 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: dist release release-source-check release-check release-artifact
 .PHONY: release-artifact-check
 .PHONY: release-tag release-publish
+.PHONY: deb deb-test release-deb
 
 version:
 	@cat "$(VERSION_FILE)"
@@ -87,6 +88,17 @@ version-check:
 
 headers-check:
 	@utils/emacsvox-header-check
+
+# Development builds preserve and identify work in progress. Release packages
+# require the already checked source archive; neither target tags or publishes.
+deb: check-emacs version-check headers-check
+	python3 utils/emacsvox-package-deb.py --development --emacs "$(EMACS)" --output-dir "$(DIST_DIR)"
+
+deb-test: check-emacs
+	EMACS="$(EMACS)" python3 -m unittest discover -s test -p 'test_package_deb.py' -v
+
+release-deb: check-emacs
+	python3 utils/emacsvox-package-deb.py --release --emacs "$(EMACS)" --output-dir "$(DIST_DIR)"
 
 test: version-check headers-check unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
 

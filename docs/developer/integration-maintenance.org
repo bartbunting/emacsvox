@@ -109,6 +109,35 @@ acknowledged routing, and tracked completion on both speech lanes with a PATH
 that contains neither WSL nor MSYS2 tools.  Human listening remains a separate
 acceptance step.
 
+** Debian package builds
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+~make deb~ builds a local development package in ~dist/~ using Python 3,
+~dpkg-deb~, Git and the selected Emacs. It stages runtime sources and generates
+autoloads in a private directory, preserving checkout byte-code and personal
+configuration. The deb has architecture ~all~, an Emacs 30.2 dependency
+(including terminal and graphical alternatives), and an Omnivox recommendation.
+It loads source and does not install emacsen-common hooks or compile on install.
+The ownership and release boundaries are recorded in
+[[file:../adr/0013-debian-package.org][ADR 0013]].
+
+~make deb-test~ checks the actual archive, reproducibility, source startup,
+remote diagnosis, dependency metadata and refusal of an unprepared release.
+CI additionally installs, reinstalls and purges the package in a disposable
+Ubuntu 26.04 container using ~test/debian-install-smoke.sh~. It uploads the
+development deb and checksum as CI artifacts, without publishing a release.
+
+After preparing the checked source archive using the release procedure below,
+~make release-deb~ produces ~dist/emacsvox_VERSION-1_all.deb~ and its checksum.
+The script itself verifies the existing clean-source artifact gate before and
+after packaging. Local versions instead contain ~+git~ with the source commit
+and source hash, and revision ~-0local1~. The included ~BUILD-INFO.json~ records
+the exact source identity and autoload Emacs version. Neither package target
+creates a tag, uploads release assets, adds an apt repository or changes the
+manual release publication approval boundary.
+
 ** Emacsvox release staging and publication
 :PROPERTIES:
 :TEXINFO_NODE: no

@@ -1,0 +1,54 @@
+#+title: ADR 0013: Debian Package Ownership and Dependencies
+#+date: 2026-09-06
+#+startup: content
+
+* Status
+
+Accepted for an upstream binary Debian package. Distribution archive submission
+and an apt repository are separate work.
+
+* Decision
+
+Provide an architecture-independent =emacsvox= deb for Debian and Ubuntu. It
+depends on a packaged GNU Emacs 30.2 or newer, accepting the graphical and
+terminal variants, and recommends =omnivox (>= 1.7.0)=. Remote Emacs and WSL
+with an existing Windows server can omit that recommendation, preserving the
+role separation in ADR 0011. Optional integrations remain optional.
+
+Install the self-contained runtime under =/usr/share/emacsvox= and a public
+=/usr/bin/emacsvox= wrapper around the existing isolated launcher. Preserve
+the runtime's relative Lisp, sound, server and Info paths. This is an explicitly
+launched application, without emacsen-common registration or site startup
+activation. Personal Emacs initialization and XDG settings remain user-owned.
+
+Ship Lisp sources and freshly generated autoloads, preserving the source-only
+distribution contract in ADR 0012. Do not ship or generate byte-code during
+package installation. This avoids privileging one installed Emacs version and
+keeps installation and removal free of compilation, network downloads, speech,
+services, or edits to home directories. The existing per-user source installers
+remain available when a distribution cannot supply a supported Emacs. A deb
+never builds GNU Emacs to repair an unsatisfied dependency.
+
+Use =VERSION-1= for a guarded release package. Local builds carry a =+git=
+commit/source-hash suffix and =-0local1= revision. Build from a staged copy of
+version-controlled and unignored runtime sources; never copy local generated
+byte-code, configuration or speech runtimes. Record source identity and the
+autoload toolchain, normalize package timestamps/ownership and emit SHA-256.
+Preserve attribution, file-specific licences and offline manuals per ADRs
+0001 and 0003.
+
+=make deb= creates a development package without requiring a clean checkout.
+=make release-deb= requires the existing checked release source artifact and
+clean source identity. Neither target tags, publishes, pushes or replaces the
+release gates in ADRs 0002 and 0006.
+
+* Consequences
+
+Ubuntu users can install or remove the audio desktop using apt while retaining
+their personal configuration. One deb serves architectures with a supported
+Emacs; the separate Omnivox package retains its own architecture limitations.
+
+Loading sources may take longer than loading local byte-code. A future cache
+must have explicit version, invalidation and ownership rules before adoption.
+The initial package does not configure optional tools, acquire Windows engines
+or register every integration with Debian's Emacs package infrastructure.

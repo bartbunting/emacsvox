@@ -84,9 +84,9 @@ differs from your running Emacs@comma{} prefer the live help shown by @kbd{C-h m
 
 @c Generated from docs/manual/emacsvox.org; do not edit.
 
-This chapter takes you from a fresh source checkout to a speaking Emacsvox
-session.  You will prepare the speech server@comma{} build Emacsvox@comma{} check each layer@comma{}
-and start an isolated session before changing your personal Emacs setup.
+This chapter takes you from installation to a speaking Emacsvox session.
+Use a Debian package when available@comma{} or follow the source checkout route.
+Start an isolated session before changing your personal Emacs setup.
 
 Commands shown before Emacsvox starts are entered in a terminal.  Keys written
 with @kbd{C-} or @kbd{M-} are entered inside Emacs.  The same chapter is
@@ -103,6 +103,42 @@ available before installation at
 * Recovering From No Speech::    Diagnose the boundary at which speech failed.
 * Persistent Startup::           Add Emacsvox to personal configuration safely.
 @end menu
+
+@section Debian and Ubuntu package
+
+With a downloaded Emacsvox deb@comma{} install it using apt:
+
+@example
+sudo apt install ./emacsvox_VERSION_all.deb
+emacsvox --diagnose
+emacsvox --check
+emacsvox
+@end example
+
+Replace @code{VERSION} with the version in the downloaded filename. Apt requires
+a packaged Emacs 30.2 or newer; an installed terminal-only @code{emacs-nox} also
+satisfies this dependency. The package never builds GNU Emacs. If your
+distribution cannot provide a supported version@comma{} use the source installation
+route below@comma{} which offers an explicit Emacs 31 source build.
+
+Omnivox 1.7.0 or newer is recommended. If it is unavailable from your apt
+repositories@comma{} include its downloaded deb in the same apt command@comma{} or select an
+existing installation. Confirm both tone and speech from @code{emacsvox --check}.
+For remote Emacs or WSL with an existing Windows speech server@comma{} use
+@code{sudo apt install --no-install-recommends ./emacsvox_VERSION_all.deb}.
+Remote sessions start with @code{emacsvox --remote} after the workstation service@comma{}
+token and tunnel are prepared as described in
+@ref{Installing Remote Emacsvox}. The package does not acquire a
+Windows speech runtime; the guided WSL source installer below handles that.
+
+Emacsvox installs under @code{/usr/share/emacsvox}@comma{} with the command
+@code{/usr/bin/emacsvox}. It includes Lisp sources@comma{} sounds and offline manuals.
+No personal initialization is changed and ordinary Emacs sessions do not
+automatically start speaking. To enable Emacsvox in your own Emacs setup@comma{} add
+@code{(load-file "/usr/share/emacsvox/lisp/emacsvox-setup.el")} explicitly.
+Upgrade the system tree using apt; the source build instructions below apply
+to checkouts. Removing the package preserves personal settings and speech tokens.
+Package details are in @code{/usr/share/doc/emacsvox/README.Debian}.
 
 @node Obtaining Emacsvox
 @section Before You Begin
@@ -5613,6 +5649,32 @@ acknowledged routing@comma{} and tracked completion on both speech lanes with a 
 that contains neither WSL nor MSYS2 tools.  Human listening remains a separate
 acceptance step.
 @end enumerate
+
+@subsection Debian package builds
+
+@code{make deb} builds a local development package in @code{dist/} using Python 3@comma{}
+@code{dpkg-deb}@comma{} Git and the selected Emacs. It stages runtime sources and generates
+autoloads in a private directory@comma{} preserving checkout byte-code and personal
+configuration. The deb has architecture @code{all}@comma{} an Emacs 30.2 dependency
+(including terminal and graphical alternatives)@comma{} and an Omnivox recommendation.
+It loads source and does not install emacsen-common hooks or compile on install.
+The ownership and release boundaries are recorded in
+@uref{../adr/0013-debian-package.org, ADR 0013}.
+
+@code{make deb-test} checks the actual archive@comma{} reproducibility@comma{} source startup@comma{}
+remote diagnosis@comma{} dependency metadata and refusal of an unprepared release.
+CI additionally installs@comma{} reinstalls and purges the package in a disposable
+Ubuntu 26.04 container using @code{test/debian-install-smoke.sh}. It uploads the
+development deb and checksum as CI artifacts@comma{} without publishing a release.
+
+After preparing the checked source archive using the release procedure below@comma{}
+@code{make release-deb} produces @code{dist/emacsvox_VERSION-1_all.deb} and its checksum.
+The script itself verifies the existing clean-source artifact gate before and
+after packaging. Local versions instead contain @code{+git} with the source commit
+and source hash@comma{} and revision @code{-0local1}. The included @code{BUILD-INFO.json} records
+the exact source identity and autoload Emacs version. Neither package target
+creates a tag@comma{} uploads release assets@comma{} adds an apt repository or changes the
+manual release publication approval boundary.
 
 @subsection Emacsvox release staging and publication
 

@@ -1,0 +1,16 @@
+Upstream: Emacsvox
+Source: https://github.com/bartbunting/emacsvox
+
+Original and principal author: T. V. Raman.
+Copyright holders include T. V. Raman, Digital Equipment Corporation,
+Bart Bunting, Emacsvox contributors, and the holders named in individual files.
+See AUTHORS and the preserved source headers for attribution.
+
+The project default code licence is GPL-2.0-or-later; the complete GPL version
+2 text accompanies this file as COPYING. This is not a blanket licence for
+every file in the distribution. THIRD_PARTY_NOTICES records known exceptions,
+including Google BSD-style notices, public-domain code, and GPL-3.0-or-later
+code. File-specific notices and the manual's copying terms remain controlling.
+Full additional licence texts are in /usr/share/emacsvox/LICENSES.
+The source distribution retains the historical notice in
+/usr/share/emacsvox/etc/COPYRIGHT.
