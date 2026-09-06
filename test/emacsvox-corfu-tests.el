@@ -512,12 +512,12 @@
 
 (ert-deftest emacsvox-corfu-initial-completion-handles-unchanged-and-finished ()
   "Initial completion announces unchanged choices or a finished word once."
-  (dolist (initial '("f" "fo"))
+  (dolist (initial '("t" "to"))
     (with-temp-buffer
       (insert initial)
       (let ((completion-at-point-functions
              (list (lambda ()
-                     (list (point-min) (point-max) '("foo" "far")))))
+                     (list (point-min) (point-max) '("top" "tap")))))
             (corfu-preselect 'prompt)
             (corfu-preview-current nil)
             (corfu-on-exact-match nil)
@@ -535,14 +535,14 @@
           (unwind-protect
               (progn
                 (call-interactively #'completion-at-point)
-                (if (equal initial "f")
+                (if (equal initial "t")
                     (progn
                       (should completion-in-region-mode)
                       (corfu--update)
-                      (should (equal speech '("far, 2 completions"))))
+                      (should (equal speech '("tap, 2 completions"))))
                   (should-not completion-in-region-mode)
-                  (should (equal (buffer-string) "foo"))
-                  (should (equal speech '("foo")))))
+                  (should (equal (buffer-string) "top"))
+                  (should (equal speech '("top")))))
             (corfu-quit)))))))
 
 (ert-deftest emacsvox-corfu-separator-policy-uses-named-tone ()
