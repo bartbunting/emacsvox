@@ -1,0 +1,89 @@
+name: Release Debian package
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-deb-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: purcell/setup-emacs@master
+        with:
+          version: '30.2'
+      - name: Download and validate the checked release source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          test "$RELEASE_TAG" = "$(cat VERSION)"
+          test "$(git cat-file -t "refs/tags/$RELEASE_TAG")" = tag
+          test "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" = "$(git rev-parse HEAD)"
+          mkdir -p dist
+          for suffix in tar.bz2 tar.bz2.sha256 tar.bz2.source; do
+            gh release download "$RELEASE_TAG" --repo "$GH_REPO" \
+              --pattern "emacsvox-$RELEASE_TAG.$suffix" --dir dist
+          done
+          make release-artifact-check
+      - name: Install from the published source archive and build the deb
+        run: |
+          make source-archive-check
+          make deb-test
+          make release-deb
+      - name: Install and remove the release package in disposable Ubuntu
+        run: |
+          package="dist/emacsvox_$(cat VERSION)-1_all.deb"
+          docker run --rm -v "$PWD:/source:ro" ubuntu:26.04 \
+            sh /source/test/debian-install-smoke.sh "/source/$package"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: checked-release-deb
+          if-no-files-found: error
+          path: |
+            dist/emacsvox_*-1_all.deb
+            dist/emacsvox_*-1_all.deb.sha256
+
+  attach:
+    needs: build
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: checked-release-deb
+          path: package
+      - name: Attach checked assets without replacing published files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        working-directory: package
+        run: |
+          package="emacsvox_$RELEASE_TAG-1_all.deb"
+          sha256sum --check "$package.sha256"
+          existing=$(gh release view "$RELEASE_TAG" --repo "$GH_REPO" --json assets --jq '.assets[].name')
+          mkdir -p "$RUNNER_TEMP/existing-release-deb"
+          for asset in "$package" "$package.sha256"; do
+            if printf '%s\n' "$existing" | grep -Fxq "$asset"; then
+              gh release download "$RELEASE_TAG" --repo "$GH_REPO" --pattern "$asset" \
+                --dir "$RUNNER_TEMP/existing-release-deb"
+              cmp "$asset" "$RUNNER_TEMP/existing-release-deb/$asset"
+            else
+              gh release upload "$RELEASE_TAG" "$asset" --repo "$GH_REPO"
+            fi
+          done

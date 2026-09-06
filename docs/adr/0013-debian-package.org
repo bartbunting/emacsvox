@@ -42,6 +42,18 @@ Preserve attribution, file-specific licences and offline manuals per ADRs
 clean source identity. Neither target tags, publishes, pushes or replaces the
 release gates in ADRs 0002 and 0006.
 
+** Release asset automation
+
+Once a maintainer publishes a stable release under the separate approval in
+ADRs 0002 and 0006, CI may build and attach its Debian package. CI checks out
+the exact tag and validates the existing published source archive, checksum
+and checked-commit provenance before invoking =release-deb=. It exercises
+installation from the source archive and installs, starts, reinstalls and
+purges the deb in disposable Ubuntu before attachment. It neither creates a
+release nor substitutes its packaging checks for the full source release gate.
+Only the final attachment job has repository write permission. Existing
+published assets may be reused if identical, but are never overwritten.
+
 * Consequences
 
 Ubuntu users can install or remove the audio desktop using apt while retaining

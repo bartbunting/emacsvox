@@ -76,7 +76,7 @@ EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 .PHONY: verify-windows-omnivox-main-live
 .PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
 .PHONY: dist release release-source-check release-check release-artifact
-.PHONY: release-artifact-check
+.PHONY: release-artifact-check source-archive-check source-archive-test
 .PHONY: release-tag release-publish
 .PHONY: deb deb-test release-deb
 
@@ -100,7 +100,7 @@ deb-test: check-emacs
 release-deb: check-emacs
 	python3 utils/emacsvox-package-deb.py --release --emacs "$(EMACS)" --output-dir "$(DIST_DIR)"
 
-test: version-check headers-check unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
+test: version-check headers-check source-archive-test unit-test compiled-notmuch-test compiled-aural-test build-aural-test trace-test
 
 compat-test: check-emacs config
 	$(EMACS) -Q --batch -l test/run-compat-tests.el
@@ -1303,6 +1303,8 @@ release-artifact: release-check
 		git archive --format=tar --prefix="$(RELEASE_PREFIX)/" \
 			--output="$$tar_tmp" HEAD; \
 		bzip2 -9 -c "$$tar_tmp" > "$$archive_tmp"; \
+		python3 utils/emacsvox-check-source-archive.py \
+			--archive "$$archive_tmp" --emacs "$(EMACS)"; \
 		rm -f "$$tar_tmp"; \
 		mv "$$archive_tmp" "$(RELEASE_ARCHIVE)"; \
 		cd "$(DIST_DIR)"; \
@@ -1354,6 +1356,12 @@ release-artifact-check: release-source-check
 			echo "Release artifact provenance does not match its checksum." >&2; \
 			exit 1; \
 		}
+
+source-archive-check: check-emacs
+	python3 utils/emacsvox-check-source-archive.py --archive "$(RELEASE_ARCHIVE)" --emacs "$(EMACS)"
+
+source-archive-test:
+	python3 -m unittest discover -s test -p 'test_source_archive.py' -v
 
 release: release-artifact
 	@echo "Artifact ready; run make release-tag only after inspecting it."

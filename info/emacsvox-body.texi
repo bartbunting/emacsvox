@@ -5743,6 +5743,19 @@ the exact source identity and autoload Emacs version. Neither package target
 creates a tag@comma{} uploads release assets@comma{} adds an apt repository or changes the
 manual release publication approval boundary.
 
+After a maintainer publishes a stable GitHub release@comma{} the Release Debian
+package workflow checks out its exact annotated tag and downloads the source
+archive@comma{} checksum and provenance from that release. It checks the source
+identity@comma{} installs from the archive@comma{} builds the release deb@comma{} and tests install@comma{}
+startup@comma{} reinstall and removal in Ubuntu 26.04 before attaching the deb and
+checksum. Build jobs have read-only repository access; only the attachment job
+can write release assets. A rerun accepts identical existing assets and refuses
+to replace different files. CI does not create tags or releases.
+
+This workflow uses Emacs 30.2 for autoload generation; its recorded toolchain
+can differ from a locally prepared package. Let CI attach the release deb
+instead of uploading a differently built local package with the same name.
+
 @subsection Emacsvox release staging and publication
 
 The repository-level @code{VERSION} file is the canonical stable release
@@ -5776,6 +5789,20 @@ creating @code{dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2}@comma{} its SHA-256 check
 provenance record naming the checked source commit.  For a patch-zero feature
 release@comma{} the series must match the current month.  A corrective or backport
 release retains its original non-future series as required by ADR 0002.
+The source archive includes the maintained @code{utils/} tools needed by the
+installers@comma{} launchers and build. Before recording checked provenance@comma{} the
+artifact target extracts the actual archive into a temporary directory and
+runs the remote-only installer with the selected Emacs in a private home. It
+checks fresh compiled startup@comma{} the offline manual and the remote helper's
+credential validation without opening a workstation connection or playing
+speech. @code{make source-archive-check} repeats this check on an existing archive;
+@code{make source-archive-test} checks export contents and rejection of missing
+helpers@comma{} local configuration and byte-code. CI runs both checks before a
+release as well. On native Windows@comma{} run
+@code{test/emacsvox-source-archive-tests.ps1 -Archive PATH -Emacs PATH} to check the
+actual archive's installer doctor@comma{} complete native compilation and fresh
+byte-code validation in a temporary Windows directory.
+
 Inspect the archive@comma{} checksum@comma{} and provenance before proceeding.
 
 Stop after artifact inspection unless fresh explicit permission names the

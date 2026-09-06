@@ -15,6 +15,13 @@ jobs:
       - uses: purcell/setup-emacs@master
         with:
           version: '30.2'
+      - name: Verify source archive contents and installation
+        run: |
+          make source-archive-test
+          mkdir -p dist
+          archive="dist/emacsvox-$(cat VERSION).tar.bz2"
+          git archive --format=tar --prefix="emacsvox-$(cat VERSION)/" HEAD | bzip2 -9 > "$archive"
+          make source-archive-check
       - name: Check and build development package
         run: |
           make deb-test
