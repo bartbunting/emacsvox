@@ -139,7 +139,10 @@ endpoints.  The other dimensions use the ordinary linear mapping."
      (:constructor emacsvox-aural--make-action))
   "A validated backend-independent action."
   id kind text text-template template-fields cue pitch duration voice volume space
-  anchor source tone audio-mode)
+  anchor source tone audio-mode
+  ;; A one-element snapshot distinguishes resolved empty facts from an action
+  ;; compiled directly without rule matching.  Never mutate registered actions.
+  matched-facts)
 
 (cl-defstruct
     (emacsvox-aural-phase-operations
@@ -1986,22 +1989,31 @@ they do not form a fallback-shadow relationship."
    (lambda (action) (memq (emacsvox-aural-action-id action) ids))
    actions))
 
-(defun emacsvox-aural--actions-at-anchor (actions anchor)
+(defun emacsvox-aural--actions-at-anchor (actions anchor &optional input)
   "Return ACTIONS whose lifecycle matches ANCHOR.
 
 When ANCHOR is nil, retain every action for compatibility callers that
-resolve an undivided render plan."
-  (if (null anchor)
-      (copy-sequence actions)
-    (cl-remove-if-not
-     (lambda (action)
-       (eq (emacsvox-aural-action-anchor action) anchor))
-     actions)))
+resolve an undivided render plan.  INPUT freezes the matching facts on fresh
+action records, leaving registered rule data and earlier resolutions intact."
+  (mapcar
+   (lambda (action)
+     (if (null input) action
+       (let ((resolved (copy-emacsvox-aural-action action)))
+         (setf (emacsvox-aural-action-matched-facts resolved)
+               (list (copy-tree (emacsvox-aural-input-facts input))))
+         resolved)))
+   (if (null anchor)
+       actions
+     (cl-remove-if-not
+      (lambda (action)
+        (eq (emacsvox-aural-action-anchor action) anchor))
+      actions))))
 
-(defun emacsvox-aural--apply-phase (actions operations &optional anchor)
+(defun emacsvox-aural--apply-phase (actions operations &optional anchor input)
   "Apply phase OPERATIONS to current ACTIONS for ANCHOR.
 
-An omitted ANCHOR retains the original undivided resolution behavior."
+An omitted ANCHOR retains the original undivided resolution behavior.
+INPUT owns the semantic facts of actions introduced by OPERATIONS."
   (cond
    ((and
      (emacsvox-aural-phase-operations-suppress operations)
@@ -2025,7 +2037,7 @@ An omitted ANCHOR retains the original undivided resolution behavior."
                  (emacsvox-aural-phase-operations-replace-set-p operations))
                 (emacsvox-aural--actions-at-anchor
                  (emacsvox-aural-phase-operations-replace operations)
-                 anchor)
+                 anchor input)
               (copy-sequence actions))))
       (when operation-applies
         (setq
@@ -2035,11 +2047,11 @@ An omitted ANCHOR retains the original undivided resolution behavior."
       (append
        (emacsvox-aural--actions-at-anchor
         (emacsvox-aural-phase-operations-prepend operations)
-        anchor)
+        anchor input)
        result
        (emacsvox-aural--actions-at-anchor
         (emacsvox-aural-phase-operations-append operations)
-        anchor))))))
+        anchor input))))))
 
 (defun emacsvox-aural--set-content-provenance (content property rule-id)
   "Record that RULE-ID selected PROPERTY on CONTENT."
@@ -2172,7 +2184,7 @@ which establishes a new complete base before applying those dimensions."
          (emacsvox-aural--apply-phase
           (emacsvox-aural-render-plan-before plan)
           (emacsvox-aural-contribution-before contribution)
-          anchor))
+          anchor best-input))
         (emacsvox-aural--apply-content
          (emacsvox-aural-render-plan-content plan)
          (emacsvox-aural-contribution-content contribution)
@@ -2182,7 +2194,7 @@ which establishes a new complete base before applying those dimensions."
          (emacsvox-aural--apply-phase
           (emacsvox-aural-render-plan-after plan)
           (emacsvox-aural-contribution-after contribution)
-          anchor))
+          anchor best-input))
         (setf
          (emacsvox-aural-render-plan-matched-rules plan)
          (append

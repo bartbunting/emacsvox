@@ -6133,6 +6133,71 @@ is the default inherited by a newly created TTS scratch buffer."
               (emacsvox-aural-concrete-plan-at 8 prepared)))
             (emacsvox-test--transport-adapter-command 'voice-animate))))))))
 
+(ert-deftest emacsvox-aural-speak-line-object-labels-use-matching-facts ()
+  "Object labels retain their matching input across mixed semantic runs."
+  (require 'emacsvox-speak)
+  (dolist (boundary-facts '(nil (:role heading :level 1)))
+    (dolist (split '(nil t))
+      (emacsvox-test--with-transport-scheme
+        (emacsvox-test--transport-scheme
+         '((:id selected-heading
+            :match (:role heading :level 2)
+            :render
+            (:before ((:id start :kind speech :text-template "Heading {level}"))
+             :after ((:id end :kind speech :text-template "End {level}"))))
+           (:id other-heading
+            :match (:role heading :level 1)
+            :render
+            (:before ((:id other :kind speech :text-template "Other {level}"))))))
+        (let ((tts-speaker-process
+               (make-pipe-process :name "aural-label-test" :noquery t))
+              (tts-notify-process nil) (tts-default-voice 'neutral)
+              (tts-quiet nil) (tts-stop-immediately nil)
+              (emacsvox-show-point nil) (emacsvox-audio-indentation nil)
+              (emacsvox-speak-messages nil)
+              writes)
+          (unwind-protect
+              (with-temp-buffer
+                (insert "Prefix Heading Suffix")
+                (put-text-property 1 (point-max)
+                                   emacsvox-aural-facts-property boundary-facts)
+                (put-text-property 8 15 emacsvox-aural-facts-property
+                                   '(:role heading :level 2))
+                (when split
+                  (put-text-property 10 15 'face 'font-lock-keyword-face))
+                (goto-char 1)
+                (cl-letf (((symbol-function 'process-send-string)
+                           (lambda (_process text) (push text writes)))
+                          ((symbol-function 'tts-get-voice-command)
+                           (lambda (_voice) ""))
+                          ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+                  (emacsvox-speak-line)
+                  (emacsvox-aural-flush-pending-deliveries tts-speaker-process))
+                (let ((wire (apply #'concat (nreverse writes))))
+                  (should (= (length (split-string wire "Heading 2")) 2))
+                  (should (= (length (split-string wire "End 2")) 2))
+                  (should-not (string-match-p "Heading 1\\|End 1" wire))
+                  (when boundary-facts (should (string-match-p "Other 1" wire)))))
+            (delete-process tts-speaker-process)))))))
+
+(ert-deftest emacsvox-aural-submit-object-tone-uses-matching-facts ()
+  "Numeric actions freeze their own winning input, including across submits."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id heading-tone :match (:role heading :requires (level))
+        :render (:before ((:id tone :kind tone :pitch (:fact level)
+                          :duration 20))))))
+    (cl-letf (((symbol-function 'tts-speak) #'ignore))
+      (dolist (level '(2 3 2))
+        (let* ((text (concat "Prefix "
+                             (propertize "Heading" emacsvox-aural-facts-property
+                                         (list :role 'heading :level level))))
+               (submission (emacsvox-aural-submit text))
+               (plans (emacsvox-aural-submission-plans submission)))
+          (should (= level (emacsvox-aural-concrete-action-pitch
+                            (car (emacsvox-aural-concrete-plan-before
+                                  (car plans)))))))))))
+
 (ert-deftest emacsvox-aural-transport-infers-or-honors-object-boundaries ()
   "Fact changes split inferred objects while an explicit identifier groups."
   (emacsvox-test--with-transport-scheme

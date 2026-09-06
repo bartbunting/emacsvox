@@ -770,7 +770,10 @@ according to `emacsvox-aural-unsupported-volume-policy'."
 (defun emacsvox-aural--compile-concrete-action
     (action facts pack palette cue-target)
   "Compile ACTION with FACTS through PACK and PALETTE for CUE-TARGET."
-  (let* ((identity (list :action (emacsvox-aural-action-id action)))
+  (let* ((facts (if (emacsvox-aural-action-matched-facts action)
+                    (car (emacsvox-aural-action-matched-facts action))
+                  facts))
+         (identity (list :action (emacsvox-aural-action-id action)))
          (volume
           (emacsvox-aural--compile-volume
            (emacsvox-aural-action-volume action) identity)))
