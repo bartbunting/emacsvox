@@ -4969,6 +4969,13 @@ When INTERACTIVE-P is non-nil, announce a resulting visibility change."
           (list :agent-source-language language)))
        'state-change 'yank-object))))
 
+(defun emacsvox-agent-shell--yank-dwim-around (original &rest arguments)
+  "Let an interactive Agent Shell text paste use normal yank feedback."
+  (if (ems-interactive-p 'agent-shell-yank-dwim)
+      (let ((ems--interactive-fn-name 'yank))
+        (apply original arguments))
+    (apply original arguments)))
+
 (defun emacsvox-agent-shell--literal-character-input-p ()
   "Return non-nil when this command key should insert at an editable prompt."
   (and (integerp last-command-event)
@@ -6930,7 +6937,8 @@ fragment.  Fragment names alone never manufacture a tool event."
 ;;;  Enable/Disable support:
 
 (defconst emacsvox-agent-shell--advice-list
-  '((agent-shell--on-notification :around
+  '((agent-shell-yank-dwim :around emacsvox-agent-shell--yank-dwim-around)
+    (agent-shell--on-notification :around
      emacsvox-agent-shell--on-notification-around)
     (agent-shell--send-request :around emacsvox-agent-shell--send-request-around)
     (agent-shell-experimental--on-session-push-request :around
