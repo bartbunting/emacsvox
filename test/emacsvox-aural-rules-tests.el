@@ -508,13 +508,35 @@
        (emacsvox-aural-content-style-voice-provenance content))
       'base))))
 
+(ert-deftest emacsvox-aural-rules-compose-rich-dimensions-and-provenance ()
+  "Every accepted style key composes and keeps its winning provenance."
+  (dolist (key '(:rate-offset :gain :low-pass :high-pass :pan
+                :reverb :echo :chorus :rate))
+    (dolist (override '(nil 0 5))
+      (let* ((rules
+              (list (emacsvox-test--compile-rule
+                     'base '(:role heading)
+                     (list :content (list :voice (list key 3 :richness 8))) 'core)
+                    (emacsvox-test--compile-rule
+                     'override '(:role heading)
+                     (list :content (list :voice (list key override))) 'user)))
+             (content (emacsvox-aural-render-plan-content
+                       (emacsvox-aural-resolve '(:role heading) nil rules)))
+             (style (emacsvox-aural-content-style-voice content)))
+        (should (plist-member style key))
+        (should (equal (plist-get style key) override))
+        (should (= (plist-get style :richness) 8))
+        (should (eq (alist-get (intern (substring (symbol-name key) 1))
+                              (emacsvox-aural-content-style-voice-provenance content))
+                    'override))))))
+
 (ert-deftest emacsvox-aural-rules-named-voice-resets-partial-style ()
   "A stronger named preset discards every inherited ACSS override."
   (let* ((rules
           (list
            (emacsvox-test--compile-rule
             'partial '(:role heading)
-            '(:content (:voice (:average-pitch 2)))
+            '(:content (:voice (:average-pitch 2 :rate-offset 4 :reverb 8)))
             'core)
            (emacsvox-test--compile-rule
             'reset '(:role heading)
@@ -527,7 +549,7 @@
             '(:mode org-mode :occasion navigation)
             rules))))
     (should (eq (emacsvox-aural-content-style-voice content) 'lighten))
-    (dolist (property (cons 'preset emacsvox-aural-voice-dimensions))
+    (dolist (property (cons 'preset emacsvox-aural-rich-voice-dimensions))
       (should
        (eq
         (alist-get

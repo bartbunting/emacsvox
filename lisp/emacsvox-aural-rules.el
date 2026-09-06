@@ -2102,8 +2102,9 @@ INPUT owns the semantic facts of actions introduced by OPERATIONS."
   (setf
    (emacsvox-aural-content-style-voice-provenance content)
    (mapcar
-    (lambda (property) (cons property rule-id))
-    (cons 'preset emacsvox-aural-voice-dimensions))))
+    (lambda (key)
+      (cons (intern (substring (symbol-name key) 1)) rule-id))
+    emacsvox-aural--voice-style-keys)))
 
 (defun emacsvox-aural--apply-voice (content voice rule-id)
   "Apply declarative VOICE from RULE-ID to CONTENT.
@@ -2127,12 +2128,11 @@ which establishes a new complete base before applying those dimensions."
         (when (plist-member incoming :preset)
           (setq result (list :preset (plist-get incoming :preset)))
           (emacsvox-aural--reset-voice-provenance content rule-id))
-        (dolist (dimension emacsvox-aural-voice-dimensions)
-          (let ((key (emacsvox-aural--voice-dimension-key dimension)))
-            (when (plist-member incoming key)
-              (setq result (plist-put result key (plist-get incoming key)))
-              (emacsvox-aural--set-voice-provenance
-               content dimension rule-id))))
+        (dolist (key (remq :preset emacsvox-aural--voice-style-keys))
+          (when (plist-member incoming key)
+            (setq result (plist-put result key (plist-get incoming key)))
+            (emacsvox-aural--set-voice-provenance
+             content (intern (substring (symbol-name key) 1)) rule-id)))
         (setf (emacsvox-aural-content-style-voice content) result))
     (setf (emacsvox-aural-content-style-voice content) voice)
     (emacsvox-aural--reset-voice-provenance content rule-id)))

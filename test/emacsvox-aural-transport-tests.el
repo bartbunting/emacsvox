@@ -94,6 +94,63 @@
     :rules rules))
   (set 'emacsvox-aural-active-scheme 'transport-test))
 
+(defun emacsvox-test--capture-native-timeline (text &rest arguments)
+  "Capture final wire and submission for native TEXT and ARGUMENTS.
+Use a private process advertising structured delivery, without sending audio."
+  (require 'omnivox-voices)
+  (let* ((process (make-pipe-process :name "aural-native-wire-test" :noquery t))
+         (tts-speaker-process process) (tts-notify-process nil)
+         (tts-program "omnivox") (tts-quiet nil) (tts-stop-immediately nil)
+         (tts-handle-unicode nil) (tts-caps nil) (voice-lock-mode t)
+         (tts-chunk-separator-syntax ".>)$\"") (tts-punctuation-mode 'none)
+         (emacsvox-pronounce-table nil)
+         (tts-get-voice-command (lambda (_voice) ""))
+         (tts-voice-capabilities-function
+          (lambda () '(:adapter omnivox
+                       :dimensions (rate-offset average-pitch pitch-range stress richness)
+                       :post-synthesis-dimensions
+                       (gain low-pass high-pass pan reverb echo chorus))))
+         writes submission)
+    (unwind-protect
+        (progn
+          (process-put process emacsvox-aural--structured-timeline-process-property 3)
+          (process-put process emacsvox-aural--relative-rate-process-property t)
+          (process-put process tts--tracked-playback-completion-property t)
+          (cl-letf (((symbol-function 'process-send-string)
+                     (lambda (_process command) (push command writes)))
+                    ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+            (setq submission (apply #'emacsvox-aural-submit text arguments))
+            (emacsvox-aural-flush-pending-deliveries process))
+          (let* ((wire (apply #'concat (nreverse writes)))
+                 (timeline
+                  (when (string-match "emacsvox_timeline {\\([^}]+\\)}" wire)
+                    (json-parse-string
+                     (decode-coding-string
+                      (base64-decode-string (match-string 1 wire)) 'utf-8)
+                     :object-type 'plist :array-type 'list))))
+            (list :wire wire :timeline timeline :submission submission)))
+      (delete-process process))))
+
+(ert-deftest emacsvox-aural-native-rule-rich-style-reaches-final-wire ()
+  "Inline relative rate and every effect survive rule resolution to delivery."
+  (emacsvox-test--with-transport-scheme
+    (setq emacsvox-aural-session-rules
+          '((:id rich-style :match (:role heading)
+             :render (:content (:voice (:average-pitch 6 :rate-offset 4 :gain 3
+                                        :low-pass 4 :high-pass 5 :pan 6
+                                        :reverb 7 :echo 8 :chorus 9))))))
+    (let* ((result (emacsvox-test--capture-native-timeline "Heading" :facts '(:role heading)))
+           (timeline (plist-get result :timeline))
+           (span (car (plist-get timeline :spans)))
+           (effects (plist-get (plist-get span :effects) :style)))
+      (should timeline)
+      (should (= (plist-get span :rate_offset) 4))
+      (dolist (entry `((:gain . 0.3) (:low_pass . ,(/ 4.0 9.0))
+                       (:high_pass . ,(/ 5.0 9.0)) (:pan . 0.625)
+                       (:reverb . ,(/ 7.0 9.0)) (:echo . ,(/ 8.0 9.0))
+                       (:chorus . 1.0)))
+        (should (= (plist-get effects (car entry)) (cdr entry)))))))
+
 (defun emacsvox-test--transport-context (&optional mode)
   "Return a minimal presentation context for MODE."
   (list
