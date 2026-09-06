@@ -144,6 +144,10 @@ The value is non-nil only when `invisible-p' was non-nil in the source buffer.
 It lets later TTS cleanup preserve that decision without depending on another
 buffer's `buffer-invisibility-spec'.")
 
+(defconst emacsvox-aural--source-visibility-captured-property
+  'emacsvox-aural--source-visibility-captured
+  "Non-nil on text whose effective visibility was captured, including visible text.")
+
 (defun emacsvox-aural-transform-source-text (text)
   "Apply the current mode-specific source transformation to TEXT."
   (let ((result
@@ -401,8 +405,9 @@ without changing BUFFER."
                     frozen-snapshot))
                  (when invisible
                    (list 'invisible (copy-tree invisible)))
-                 (when effectively-invisible
-                   (list emacsvox-aural-source-invisible-property t))
+                 (list emacsvox-aural--source-visibility-captured-property t
+                       emacsvox-aural-source-invisible-property
+                       (and effectively-invisible t))
                  (when icon
                    (list 'auditory-icon (copy-tree icon))))))
           (when properties

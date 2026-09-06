@@ -53,6 +53,7 @@
 (defvar emacsvox-capitalization-presentation)
 (defvar emacsvox-capitalization-presentation-values)
 (defvar emacsvox-aural-source-invisible-property)
+(defvar emacsvox-aural--source-visibility-captured-property)
 (defvar emacsvox-aural--current-submission-id)
 
 (declare-function ems--fastload "emacsvox-preamble" (file))
@@ -1079,9 +1080,12 @@ start of the source match."
 
 (defun tts--invisible-at-p (position)
   "Return non-nil when text at POSITION must be omitted from speech."
-  (or
-   (get-char-property position emacsvox-aural-source-invisible-property)
-   (invisible-p position)))
+  (let ((hidden (get-char-property position emacsvox-aural-source-invisible-property)))
+    (if (get-char-property position emacsvox-aural--source-visibility-captured-property)
+        hidden
+      ;; Older hidden snapshots and raw compatibility strings keep their
+      ;; existing interpretation; captured visible text never consults this buffer.
+      (or hidden (invisible-p position)))))
 
 (defun tts--next-invisibility-change (position)
   "Return the next speech-invisibility boundary after POSITION."
@@ -1091,6 +1095,9 @@ start of the source match."
       position 'invisible (current-buffer) limit)
      (next-single-property-change
       position emacsvox-aural-source-invisible-property
+      (current-buffer) limit)
+     (next-single-property-change
+      position emacsvox-aural--source-visibility-captured-property
       (current-buffer) limit))))
 
 (defun tts--previous-invisibility-change (position)
@@ -1101,6 +1108,9 @@ start of the source match."
       position 'invisible (current-buffer) limit)
      (previous-single-property-change
       position emacsvox-aural-source-invisible-property
+      (current-buffer) limit)
+     (previous-single-property-change
+      position emacsvox-aural--source-visibility-captured-property
       (current-buffer) limit))))
 
 (defun tts--skip-invisible-forward ()
@@ -1125,9 +1135,7 @@ start of the source match."
         (tts--skip-invisible-forward)
         (delete-region start (point))
         (setq start (point)))
-       (t (goto-char
-           (or (next-single-property-change (point) 'invisible)
-               (point-max)))
+       (t (goto-char (tts--next-invisibility-change (point)))
           (setq start (point)))))))
 
 ;;;   Tones, Language, formatting speech etc.

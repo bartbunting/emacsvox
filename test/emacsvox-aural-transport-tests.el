@@ -5392,6 +5392,44 @@ is the default inherited by a newly created TTS scratch buffer."
       (tts--delete-invisible-text)
       (should (equal (buffer-string) "visible ")))))
 
+(ert-deftest emacsvox-aural-native-visibility-snapshot-outlives-source ()
+  "Captured visible and hidden states survive source death and another buffer."
+  (emacsvox-test--with-transport-scheme
+    (dolist (source-hidden '(nil t))
+      (let (text context)
+        (with-temp-buffer
+          (insert "visible text")
+          (setq-local buffer-invisibility-spec (and source-hidden '((fold . t))))
+          (overlay-put (make-overlay 9 (point-max)) 'invisible 'fold)
+          (setq text (emacsvox-aural-source-substring (point-min) (point-max))
+                context (emacsvox-aural-capture-context)))
+        (dolist (destination-hidden '(nil t))
+          (with-temp-buffer
+            (setq-local buffer-invisibility-spec (and destination-hidden '((fold . t))))
+            (let* ((result (emacsvox-test--capture-native-timeline text :context context))
+                   (spans (plist-get (plist-get result :timeline) :spans)))
+              (should (equal (string-trim
+                              (mapconcat (lambda (span) (plist-get span :text)) spans ""))
+                             (if source-hidden "visible" "visible text"))))))))))
+
+(ert-deftest emacsvox-aural-native-mixed-captured-and-raw-visibility ()
+  "Snapshot boundaries remain distinct from raw strings with the same category."
+  (emacsvox-test--with-transport-scheme
+    (let (captured)
+      (with-temp-buffer
+        (setq-local buffer-invisibility-spec nil)
+        (insert (propertize "captured" 'invisible 'fold))
+        (setq captured (emacsvox-aural-source-substring (point-min) (point-max))))
+      (with-temp-buffer
+        (setq-local buffer-invisibility-spec '((fold . t)))
+        (let ((raw (propertize "raw" 'invisible 'fold)))
+          (dolist (text (list (concat raw captured) (concat captured raw)))
+            (let* ((result (emacsvox-test--capture-native-timeline text))
+                   (spans (plist-get (plist-get result :timeline) :spans)))
+              (should (equal (string-trim
+                              (mapconcat (lambda (span) (plist-get span :text)) spans ""))
+                             "captured")))))))))
+
 (ert-deftest emacsvox-aural-source-keeps-source-visible-property-visible ()
   "An inactive source invisibility value is not treated as hidden later."
   (let (copy)
