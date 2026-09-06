@@ -18,7 +18,7 @@ SPEC.loader.exec_module(ARCHIVE)
 
 
 class SourceArchiveTests(unittest.TestCase):
-    def fixture(self, work, omit=(), extra=()):
+    def fixture(self, work, omit=(), extra=(), links=()):
         archive = work / "fixture.tar"
         with tarfile.open(archive, "w") as output:
             for name in [n for n in ARCHIVE.REQUIRED if n not in omit] + list(extra):
@@ -26,6 +26,11 @@ class SourceArchiveTests(unittest.TestCase):
                 info = tarfile.TarInfo("emacsvox-2026.9.4/" + name)
                 info.size = len(contents)
                 output.addfile(info, io.BytesIO(contents))
+            for name, target in links:
+                info = tarfile.TarInfo("emacsvox-2026.9.4/" + name)
+                info.type = tarfile.SYMTYPE
+                info.linkname = target
+                output.addfile(info)
         return archive
 
     def test_real_git_export_contains_installation_tools(self):
@@ -50,6 +55,15 @@ class SourceArchiveTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "missing required files"):
                     ARCHIVE.extract(self.fixture(work, omit=(missing,)), work / "out")
                 self.assertFalse((work / "out").exists())
+
+    def test_dangling_link_to_excluded_content_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            archive = self.fixture(work, links=(("servers/linux-outloud/ladspa-asoundrc",
+                                                "../../scapes/ladspa-asoundrc"),))
+            with self.assertRaisesRegex(RuntimeError, "dangling source archive link"):
+                ARCHIVE.extract(archive, work / "out")
+            self.assertFalse((work / "out").exists())
 
     def test_local_configuration_bytecode_and_path_escape_rejected(self):
         for unwanted in ("local.mk", "native-install.json", "lisp/emacsvox.elc", "../escaped"):

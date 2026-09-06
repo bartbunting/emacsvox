@@ -17,6 +17,8 @@ installation and remote-launch failures caused by missing helpers in the
 2026.9.3 source archive. Debian packages already included their runtime helpers.
 Release preparation now installs and starts the extracted source archive in
 an isolated test environment before marking the artifact ready.
+The archive also omits a dangling Linux configuration link that prevented
+extraction with Windows tar.
 
 ** Debian packages are built after release publication
 

@@ -12,3 +12,4 @@
 /js/node/node_modules export-ignore
 /scapes export-ignore
 /tvr export-ignore
+/servers/linux-outloud/ladspa-asoundrc export-ignore

@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import posixpath
 from pathlib import Path, PurePosixPath
 import re
 import shutil
@@ -41,6 +42,11 @@ def extract(archive, destination):
         if missing:
             raise RuntimeError("source archive is missing required files: " + ", ".join(missing))
         for member in members:
+            if member.issym():
+                target = posixpath.normpath(posixpath.join(
+                    posixpath.dirname(member.name), member.linkname))
+                if target not in names:
+                    raise RuntimeError(f"dangling source archive link: {member.name}")
             parts = PurePosixPath(member.name).parts
             if (member.name.startswith("/") or ".." in parts
                     or member.name.endswith(".elc")
