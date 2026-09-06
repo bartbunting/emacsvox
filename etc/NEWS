@@ -19,6 +19,8 @@ Release preparation now installs and starts the extracted source archive in
 an isolated test environment before marking the artifact ready.
 The archive also omits a dangling Linux configuration link that prevented
 extraction with Windows tar.
+The source build's toolchain include now handles extraction paths containing
+spaces.
 
 ** Debian packages are built after release publication
 

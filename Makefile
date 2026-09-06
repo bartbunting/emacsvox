@@ -381,7 +381,10 @@ OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256 ?=
 OMNIVOX_INCLUDE_TGSPEECHBOX ?= 0
 OMNIVOX_TGSPEECHBOX_CXX ?= x86_64-w64-mingw32-g++-posix
 OMNIVOX_RECORD_RHVOICE ?= 0
-include $(OMNIVOX_RELEASE_DIR)/toolchain.lock
+# Make include paths need escaped spaces even after variable expansion.
+emacsvox_make_empty :=
+emacsvox_make_space := $(emacsvox_make_empty) $(emacsvox_make_empty)
+include $(subst $(emacsvox_make_space),\ ,$(OMNIVOX_RELEASE_DIR)/toolchain.lock)
 OMNIVOX_CSC = $(OMNIVOX_RELEASE_DIR)/cache/roslyn-$(roslyn_version)/tasks/net472/csc.exe
 OMNIVOX_REFERENCE_DIR = $(OMNIVOX_RELEASE_DIR)/cache/net40-reference-assemblies-$(reference_assemblies_version)/build/.NETFramework/v4.0
 OMNIVOX_PIPER_DIR = $(OMNIVOX_RELEASE_DIR)/cache/piper-$(omnivox_piper_version)/companion-$(omnivox_piper_archive_sha256)/piper

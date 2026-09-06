@@ -41,11 +41,13 @@ class SourceArchiveTests(unittest.TestCase):
             subprocess.run(["git", "archive", "--worktree-attributes", "--format=tar",
                             f"--prefix=emacsvox-{version}/", f"--output={archive}", "HEAD"],
                            cwd=ROOT, check=True)
-            root = ARCHIVE.extract(archive, work / "extracted")
+            root = ARCHIVE.extract(archive, work / "extracted tree")
             tools = subprocess.check_output(["git", "ls-files", "utils/"], cwd=ROOT, text=True)
             for name in tools.splitlines():
                 self.assertTrue((root / name).is_file(), name)
             self.assertTrue((root / "bin/emacsvox-install").stat().st_mode & 0o111)
+            subprocess.run(["make", "--dry-run", "check-emacs"], cwd=root,
+                           check=True, capture_output=True, text=True)
 
     def test_missing_helpers_rejected_before_running_installation(self):
         for missing in ("utils/emacsvox-install-common.sh",
