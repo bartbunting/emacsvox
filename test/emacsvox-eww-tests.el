@@ -95,6 +95,69 @@
       (nreverse events)
       '((icon open-object) speak-header)))))
 
+(defun emacsvox-test--eww-run-shell-command (command)
+  "Run COMMAND locally and return its output, failing on a nonzero exit."
+  (with-temp-buffer
+    (should
+     (zerop (call-process shell-file-name nil t nil
+                          shell-command-switch command)))
+    (buffer-string)))
+
+(ert-deftest emacsvox-eww-shell-url-is-one-literal-argument ()
+  "Configured shell syntax works while URL metacharacters remain literal."
+  (skip-unless (and (not (eq system-type 'windows-nt))
+                    (executable-find "sh")))
+  (let ((shell-file-name (executable-find "sh"))
+        (shell-command-switch "-c")
+        (emacsvox-eww-url-shell-commands
+         '("printf '%s\\n' 'configured argument'")))
+    (dolist (url '("https://example.test/a b?one=1&two=2"
+                   "https://example.test/';printf injected;#"
+                   "https://example.test/$HOME/$(printf expanded)/`printf expanded`"))
+      (dolist (prompt '(nil t))
+        (let (output)
+          (cl-letf (((symbol-function 'shr-url-at-point)
+                     (lambda (&rest _) url))
+                    ((symbol-function 'completing-read)
+                     (lambda (&rest _) (car emacsvox-eww-url-shell-commands)))
+                    ((symbol-function 'async-shell-command)
+                     (lambda (command &rest _)
+                       (setq output
+                             (emacsvox-test--eww-run-shell-command command))))
+                    ((symbol-function 'emacsvox-icon) #'ignore))
+            (emacsvox-eww-shell-cmd-on-url-at-point prompt))
+          (should (equal output (concat "configured argument\n" url "\n"))))))))
+
+(ert-deftest emacsvox-eww-downloader-preserves-paths-and-url ()
+  "The downloader receives one literal URL in the selected directory."
+  (skip-unless (and (not (eq system-type 'windows-nt))
+                    (executable-find "sh")))
+  (let* ((shell-file-name (executable-find "sh"))
+         (shell-command-switch "-c")
+         (root (make-temp-file "emacsvox-eww-download-" t))
+         (directory (expand-file-name "downloads with 'quotes';$cash" root))
+         (emacsvox-ytdl (expand-file-name "downloader with 'quotes';$cash" root))
+         (eww-download-directory (lambda () directory))
+         (original-directory default-directory)
+         output)
+    (unwind-protect
+        (progn
+          (make-directory directory)
+          (with-temp-file emacsvox-ytdl
+            (insert "#!/bin/sh\nprintf '%s\\n' \"$PWD\" \"$#\" \"$@\"\n"))
+          (set-file-modes emacsvox-ytdl #o700)
+          (dolist (url '("https://example.test/a b?one=1&two=2"
+                         "https://example.test/';printf injected;#"
+                         "https://example.test/$HOME/$(printf expanded)/`printf expanded`"))
+            (cl-letf (((symbol-function 'async-shell-command)
+                       (lambda (command &rest _)
+                         (setq output
+                               (emacsvox-test--eww-run-shell-command command)))))
+              (emacsvox-eww-yt-dl url))
+            (should (equal output (format "%s\n1\n%s\n" directory url)))
+            (should (equal default-directory original-directory))))
+      (delete-directory root t))))
+
 (ert-deftest emacsvox-eww-open-feedback-is-target-aware ()
   "Only the matching EWW open command emits its cue."
   (let ((ems--interactive-fn-name 'eww-open-file)

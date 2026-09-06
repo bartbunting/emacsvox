@@ -2353,7 +2353,8 @@ via command `org-insert-link' bound to \\[org-insert-link]."
 (defvar emacsvox-eww-url-shell-commands
   (delete nil
           (list
-           (expand-file-name "cbox" emacsvox-etc-directory)))
+           (shell-quote-argument
+            (expand-file-name "cbox" emacsvox-etc-directory))))
   "Shell commands we permit on URL under point.")
 
 (defun emacsvox-eww-shell-cmd-on-url-at-point (&optional prompt)
@@ -2369,7 +2370,8 @@ via command `org-insert-link' bound to \\[org-insert-link]."
                               emacsvox-eww-url-shell-commands)
            (cl-first emacsvox-eww-url-shell-commands))))
     (cl-assert url t "No url found")
-    (async-shell-command (format "%s '%s'" cmd url))
+    ;; CMD intentionally permits configured shell syntax; the URL is data.
+    (async-shell-command (format "%s %s" cmd (shell-quote-argument url)))
     (emacsvox-icon 'task-done)))
 
 ;;; Smart Tabs:
@@ -2688,9 +2690,14 @@ With interactive prefix arg, move to the start of the table."
    eww-mode)
   
   (cl-assert emacsvox-ytdl t "Install youtube-dl first.")
-  (let ((dir (funcall eww-download-directory)))
-    (access-file dir "Cannot download here")
-    (async-shell-command (format "cd %s;%s '%s'" dir emacsvox-ytdl url))))
+  (let ((default-directory
+         (file-name-as-directory
+          (expand-file-name (funcall eww-download-directory)))))
+    (access-file default-directory "Cannot download here")
+    (async-shell-command
+     (format "%s %s"
+             (shell-quote-argument emacsvox-ytdl)
+             (shell-quote-argument url)))))
 
 (defun emacsvox-eww-url-to-register ()
   "Accumulate  URL in register `u'"
