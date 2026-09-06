@@ -1,0 +1,30 @@
+#    -*- mode: org -*-
+Programming is the art of telling another human being what one wants
+the computer to do.   [[https://www.azquotes.com/quote/964459][(DEK)]]
+
+Emacsvox News -- History Of User-Visible Changes
+
+Maintained by Emacsvox Contributors.
+
+* Emacsvox 2026.9.4 --- Current User-Visible Changes
+
+Released notes are preserved in [[file:NEWS-2026.9.3][NEWS for Emacsvox 2026.9.3]].
+
+** Source archives include their installation tools
+
+Source archives now include the maintained tools under ~utils/~. This repairs
+installation and remote-launch failures caused by missing helpers in the
+2026.9.3 source archive. Debian packages already included their runtime helpers.
+Release preparation now installs and starts the extracted source archive in
+an isolated test environment before marking the artifact ready.
+The archive also omits a dangling Linux configuration link that prevented
+extraction with Windows tar.
+The source build's toolchain include now handles extraction paths containing
+spaces.
+
+** Debian packages are built after release publication
+
+Release CI now builds the Debian package from the checked release source,
+tests it in Ubuntu 26.04, and attaches the deb and checksum to the published
+release. This retains the packaged Emacs 30.2 dependency and optional local
+Omnivox recommendation.
