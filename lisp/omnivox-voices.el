@@ -1309,14 +1309,19 @@ logical registry is replaced, so partial failure is explicit and retryable."
           (mapcar
            (lambda (process)
              (cons process
-                   (omnivox--process-logical-registry-content process)))
-           processes)))
-    (omnivox--update-logical-registry-generation
-     (mapcar #'cdr registrations))
+                   (copy-tree (omnivox--process-logical-registry-content process))))
+           processes))
+         ;; Definitions and generation belong to this apply, including callbacks
+         ;; that run after another apply has advanced the desired configuration.
+         (generation
+          (progn
+            (omnivox--update-logical-registry-generation
+             (mapcar #'cdr registrations))
+            omnivox--logical-registry-generation)))
     (if (null processes)
         (omnivox--publish-voice-configuration-result
          (list :status 'failed :adapter 'omnivox
-               :registry-generation omnivox--logical-registry-generation
+               :registry-generation generation
                :code 'no-supported-process :processes nil
                :time (current-time))
          callback)
@@ -1342,7 +1347,7 @@ logical registry is replaced, so partial failure is explicit and retryable."
                   (omnivox--publish-voice-configuration-result
                    (list
                     :status status :adapter 'omnivox
-                    :registry-generation omnivox--logical-registry-generation
+                    :registry-generation generation
                     :processes ordered :time (current-time))
                    callback))))
              (finish
@@ -1378,8 +1383,7 @@ logical registry is replaced, so partial failure is explicit and retryable."
                process
                (append
                 (list :type "register_logical_voices"
-                      :registry_generation
-                      omnivox--logical-registry-generation)
+                      :registry_generation generation)
                 (cdr (assq process registrations)))
                #'registration-response))
              (policy-response

@@ -1854,6 +1854,110 @@
           (should (= (length changes) 2)))
       (delete-process process))))
 
+(ert-deftest emacsvox-tts-omnivox-overlapping-applies-own-their-generation ()
+  "Overlapping snapshots converge on both lanes, including unchanged retry."
+  (dolist (reverse-acks '(nil t))
+    (let* ((speaker (make-pipe-process :name "config-overlap-main" :noquery t))
+           (notification (make-pipe-process :name "config-overlap-notify" :noquery t))
+           (tts-speaker-process speaker) (tts-notify-process notification)
+           (omnivox--logical-registry-generation 0)
+           (omnivox--logical-registry-signature nil)
+           (omnivox-engine-priority-ids '("espeak"))
+           (omnivox-fallback-engine-ids nil) (omnivox-disabled-engine-ids nil)
+           (omnivox-voice-configuration-last-result nil)
+           (omnivox-voice-configuration-applied-hook nil)
+           (policy '(:preferred_engine_ids ["espeak"]
+                     :fallback_engine_ids [] :disabled_engine_ids []))
+           (receiver (make-hash-table :test #'eq))
+           (revision 0.1)
+           requests terminal)
+      (cl-labels
+          ((respond (write response)
+             (omnivox--dispatch-control-response
+              (car write)
+              (append (list :protocol_version 1
+                            :request_id (plist-get (cdr write) :request_id))
+                      response)))
+           (register (write)
+             ;; Model the receiving generation/content contract: equal
+             ;; generations are idempotent only for identical definitions.
+             (let* ((process (car write)) (request (cdr write))
+                    (generation (plist-get request :registry_generation))
+                    (definitions (plist-get request :definitions))
+                    (current (gethash process receiver))
+                    (code (cond ((and current (< generation (car current)))
+                                 "stale_generation")
+                                ((and current (= generation (car current))
+                                      (not (equal definitions (cdr current))))
+                                 "generation_conflict"))))
+               (if code
+                   (respond write (list :type "error" :code code :message code))
+                 (puthash process (cons generation definitions) receiver)
+                 (respond write (list :type "logical_voices_registered"
+                                      :registration
+                                      (list :registry_generation generation
+                                            :bindings [])))))))
+        (unwind-protect
+            (progn
+              (dolist (process (list speaker notification))
+                (process-put process omnivox--control-capabilities-property
+                             '(:features ("runtime_routing_policy"
+                                           "logical_voice_registration"))))
+              (cl-letf
+                  (((symbol-function 'process-send-string)
+                    (lambda (process command)
+                      (push (cons process (emacsvox-test--omnivox-decode-command command))
+                            requests)))
+                   ((symbol-function 'omnivox--process-logical-registry-content)
+                    (lambda (_process)
+                      (list :definitions
+                            (vector (list :id "voice-test" :language :null
+                                          :preferences []
+                                          :acss (list :average_pitch revision)))
+                            :fallback_policy
+                            '(:allow_same_language_on_requested_engine t
+                              :global_default :null :fallback_engines [])))))
+                (omnivox-apply-voice-configuration
+                 (lambda (result) (push (cons 'old result) terminal)))
+                (setq revision 0.9)
+                (omnivox-apply-voice-configuration
+                 (lambda (result) (push (cons 'new result) terminal)))
+                (let ((policies (if reverse-acks requests (reverse requests))))
+                  (should (= (length policies) 4))
+                  (setq requests nil)
+                  (dolist (write policies)
+                    (respond write (list :type "routing_policy_applied"
+                                         :routing_policy
+                                         (list :routing_policy_generation 1
+                                               :policy policy)))))
+                (let ((registrations (nreverse requests)))
+                  (setq requests nil)
+                  (should (= (length registrations) 4))
+                  (dolist (write registrations)
+                    (let* ((request (cdr write))
+                           (definition (car (plist-get request :definitions)))
+                           (pitch (plist-get (plist-get definition :acss) :average_pitch)))
+                      (should (= (plist-get request :registry_generation)
+                                 (if (= pitch 0.1) 1 2))))
+                    (register write)))
+                (should (= (plist-get (cdr (assq 'old terminal)) :registry-generation) 1))
+                (should (= (plist-get (cdr (assq 'new terminal)) :registry-generation) 2))
+                (should (eq (plist-get (cdr (assq 'new terminal)) :status) 'applied))
+                (dolist (process (list speaker notification))
+                  (should (= (car (gethash process receiver)) 2))
+                  (should (= (plist-get (plist-get (cadr (gethash process receiver)) :acss)
+                                        :average_pitch) 0.9)))
+                (omnivox-apply-voice-configuration
+                 (lambda (result) (push (cons 'retry result) terminal)))
+                (should (= (length requests) 2))
+                (dolist (write requests)
+                  (should (= (plist-get (cdr write) :registry_generation) 2))
+                  (register write))
+                (should (eq (plist-get (cdr (assq 'retry terminal)) :status) 'applied))
+                (should (= (length terminal) 3))))
+          (delete-process speaker)
+          (delete-process notification))))))
+
 (ert-deftest emacsvox-tts-omnivox-reports-partial-configuration-apply ()
   "Complete configuration apply returns one terminal result per speech stream."
   (let* ((speaker
