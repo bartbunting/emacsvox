@@ -1332,5 +1332,167 @@
       (should-not (emacsvox-aural-voice-palettes--read-style-number 'average-pitch nil))
       (should (string-match-p "blank uses the adapter default" prompt)))))
 
+(defmacro emacsvox-test--with-numeric-tuner (dimension value &rest body)
+  "Run BODY in a tuner for DIMENSION and VALUE, recording refreshes and auditions."
+  (declare (indent 2) (debug (form form body)))
+  `(with-temp-buffer
+     (emacsvox-aural-voice-tuner-mode)
+     (let* ((tuner-test-dimension ,dimension)
+            (tuner-test-key (intern (concat ":" (symbol-name tuner-test-dimension))))
+            (tuner-test-initial (list :family 'paul tuner-test-key ,value))
+            tuner-test-refreshes tuner-test-auditions)
+       (setq emacsvox-aural-voice-tuner-initial-style (copy-tree tuner-test-initial)
+             emacsvox-aural-voice-tuner-working-style (copy-tree tuner-test-initial))
+       (cl-letf (((symbol-function 'emacsvox-aural-voice-tuner--current-dimension)
+                  (lambda () tuner-test-dimension))
+                 ((symbol-function 'emacsvox-aural-voice-tuner-refresh)
+                  (lambda (&optional dimension) (push dimension tuner-test-refreshes)))
+                 ((symbol-function 'emacsvox-aural-voice-tuner-audition)
+                  (lambda (&optional announcement) (push announcement tuner-test-auditions))))
+         ,@body))))
+
+(ert-deftest emacsvox-aural-tuner-numeric-bounds-preserve-state-and-undo ()
+  "Accepted boundary values audition once; rejected steps leave state intact."
+  :tags '(voice-style-ui)
+  ;; Independent expectations: do not obtain test limits from field metadata.
+  (dolist (fixture '((average-pitch 0 9) (pitch-range 0 9) (stress 0 9)
+                     (richness 0 9) (rate-offset -20 20) (gain 0 9)
+                     (low-pass 0 9) (high-pass 0 9) (pan 0 9)
+                     (reverb 0 9) (echo 0 9) (chorus 0 9)))
+    (pcase-let ((`(,dimension ,minimum ,maximum) fixture))
+      (dolist (step (list (list #'emacsvox-aural-voice-tuner-decrease (1+ minimum) minimum)
+                         (list #'emacsvox-aural-voice-tuner-increase (1- maximum) maximum)))
+        (pcase-let ((`(,command ,initial ,boundary) step))
+          (emacsvox-test--with-numeric-tuner dimension initial
+            (call-interactively command)
+            (should (= (plist-get emacsvox-aural-voice-tuner-working-style tuner-test-key)
+                       boundary))
+            (should (equal emacsvox-aural-voice-tuner-history (list tuner-test-initial)))
+            (should emacsvox-aural-voice-tuner-dirty)
+            (should (equal tuner-test-refreshes (list dimension)))
+            (should (= 1 (length tuner-test-auditions)))
+            (let ((before (copy-tree emacsvox-aural-voice-tuner-working-style)))
+              (should (equal (should-error (call-interactively command) :type 'user-error)
+                             (list 'user-error (format "%s is already at %s" dimension boundary))))
+              (should (equal emacsvox-aural-voice-tuner-working-style before)))
+            (should (equal emacsvox-aural-voice-tuner-history (list tuner-test-initial)))
+            (should (= 1 (length tuner-test-refreshes)))
+            (should (= 1 (length tuner-test-auditions)))
+            (call-interactively #'emacsvox-aural-voice-tuner-undo)
+            (should (equal emacsvox-aural-voice-tuner-working-style tuner-test-initial))
+            (should-not emacsvox-aural-voice-tuner-history)
+            (should-not emacsvox-aural-voice-tuner-dirty)
+            (should (= 2 (length tuner-test-refreshes)))
+            (should (= 2 (length tuner-test-auditions)))))))))
+
+(ert-deftest emacsvox-aural-tuner-numeric-adjustments-from-nil ()
+  "Nil starts at five for ordinary fields, and plus/minus one for rate."
+  :tags '(voice-style-ui)
+  (dolist (dimension '(average-pitch pitch-range stress richness rate-offset
+                      gain low-pass high-pass pan reverb echo chorus))
+    (dolist (command '(emacsvox-aural-voice-tuner-increase emacsvox-aural-voice-tuner-decrease))
+      (emacsvox-test--with-numeric-tuner dimension nil
+        (call-interactively command)
+        (should (= (plist-get emacsvox-aural-voice-tuner-working-style tuner-test-key)
+                   (if (eq dimension 'rate-offset)
+                       (if (eq command 'emacsvox-aural-voice-tuner-increase) 1 -1)
+                     5)))
+        (should (equal emacsvox-aural-voice-tuner-history (list tuner-test-initial)))
+        (should (= 1 (length tuner-test-refreshes)))
+        (should (= 1 (length tuner-test-auditions)))))))
+
+(ert-deftest emacsvox-aural-tuner-numeric-digit-and-default-shortcuts ()
+  "Digits and reset preserve history, and repeating a value stays quiet."
+  :tags '(voice-style-ui)
+  (dolist (dimension '(average-pitch pitch-range stress richness rate-offset
+                      gain low-pass high-pass pan reverb echo chorus))
+    (emacsvox-test--with-numeric-tuner dimension nil
+      (let ((last-command-event ?0))
+        (call-interactively #'emacsvox-aural-voice-tuner-set-digit)
+        (call-interactively #'emacsvox-aural-voice-tuner-set-digit))
+      (should (= (plist-get emacsvox-aural-voice-tuner-working-style tuner-test-key) 0))
+      (should (= 1 (length emacsvox-aural-voice-tuner-history)))
+      (should (= 1 (length tuner-test-auditions)))
+      (let ((last-command-event ?9))
+        (call-interactively #'emacsvox-aural-voice-tuner-set-digit))
+      (should (= (plist-get emacsvox-aural-voice-tuner-working-style tuner-test-key) 9))
+      (call-interactively #'emacsvox-aural-voice-tuner-use-default)
+      (call-interactively #'emacsvox-aural-voice-tuner-use-default)
+      (should (equal emacsvox-aural-voice-tuner-working-style tuner-test-initial))
+      (should (= 3 (length emacsvox-aural-voice-tuner-history)))
+      (should (= 3 (length tuner-test-refreshes)))
+      (should (= 3 (length tuner-test-auditions)))
+      (should-not emacsvox-aural-voice-tuner-dirty))))
+
+(ert-deftest emacsvox-aural-tuner-numeric-input-keeps-reader-contracts ()
+  "Numeric edits preserve their distinct blank handling and accepted spellings."
+  :tags '(voice-style-ui)
+  (dolist (dimension '(average-pitch pitch-range stress richness rate-offset
+                      gain low-pass high-pass pan reverb echo chorus))
+    (dolist (current '(nil 0 5))
+      (dolist (answer '("" " \t" "0" "9" " 3 " "00" "+1" "-0" "-20" "20"
+                        "-21" "21" "10" "-1" "1.0" "+" "1x" "word"))
+        (let* ((rate-p (eq dimension 'rate-offset))
+               (trimmed (string-trim answer))
+               (valid (if rate-p
+                          (member trimmed '("" "0" "9" "3" "00" "+1" "-0" "-20" "20" "10" "-1"))
+                        (member trimmed '("" "0" "9" "3"))))
+               (expected (if (string-empty-p trimmed)
+                             (unless rate-p current)
+                           (string-to-number trimmed)))
+               prompt)
+          (emacsvox-test--with-numeric-tuner dimension current
+            (cl-letf (((symbol-function 'read-string)
+                       (lambda (text &rest _) (setq prompt text) answer)))
+              (if valid
+                  (progn
+                    (call-interactively #'emacsvox-aural-voice-tuner-edit)
+                    (should (equal (plist-get emacsvox-aural-voice-tuner-working-style tuner-test-key)
+                                   expected)))
+                (should (equal
+                         (should-error (call-interactively #'emacsvox-aural-voice-tuner-edit)
+                                       :type 'user-error)
+                         (list 'user-error
+                               (if rate-p "Relative rate must be -20 through 20 or blank"
+                                 (format "%s must be 0 through 9 or blank" dimension)))))))
+            (when (eq dimension 'average-pitch)
+              (should (equal prompt
+                             (format "average pitch, 0 through 9; blank %s: "
+                                     (if current (format "keeps %s" current)
+                                       "uses the adapter default")))))
+            (when rate-p
+              (should (equal prompt
+                             (format "Relative rate, -20 through 20; blank means unchanged%s: "
+                                     (if current (format " [%s]" current) "")))))
+            (if (and valid (not (equal current expected)))
+                (progn
+                  (should (equal emacsvox-aural-voice-tuner-history (list tuner-test-initial)))
+                  (should emacsvox-aural-voice-tuner-dirty)
+                  (should (= 1 (length tuner-test-refreshes)))
+                  (should (= 1 (length tuner-test-auditions))))
+              (should (equal emacsvox-aural-voice-tuner-working-style tuner-test-initial))
+              (should-not emacsvox-aural-voice-tuner-history)
+              (should-not emacsvox-aural-voice-tuner-dirty)
+              (should-not tuner-test-refreshes)
+              (should-not tuner-test-auditions))))))))
+
+(ert-deftest emacsvox-aural-tuner-numeric-editor-keeps-five-field-acss-scope ()
+  "The complete-style editor asks only for family and four ACSS dimensions."
+  :tags '(voice-style-ui)
+  (let ((answers '("paul" "0" "1" "2" "3")) prompts)
+    (cl-letf (((symbol-function 'read-string)
+               (lambda (prompt &rest _)
+                 (push prompt prompts)
+                 (or (pop answers) (ert-fail "Unexpected additional style prompt")))))
+      (should (equal (emacsvox-aural-voice-palettes--read-style)
+                     '(:family paul :average-pitch 0 :pitch-range 1 :stress 2 :richness 3))))
+    (should-not answers)
+    (should (equal (nreverse prompts)
+                   '("Voice family; blank uses the adapter default: "
+                     "average pitch, 0 through 9; blank uses the adapter default: "
+                     "pitch range, 0 through 9; blank uses the adapter default: "
+                     "stress, 0 through 9; blank uses the adapter default: "
+                     "richness, 0 through 9; blank uses the adapter default: ")))))
+
 (provide 'emacsvox-aural-voice-palettes-tests)
 ;;; emacsvox-aural-voice-palettes-tests.el ends here

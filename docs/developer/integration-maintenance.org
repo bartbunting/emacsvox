@@ -375,9 +375,20 @@ future inheritance, omission, or reset policy needs a separate decision.
 Compiler conversion, backend wire names, capability discovery, normalization,
 and delivery stay in their existing owners.  When adding a field, update those
 consumers explicitly and test final serialized output or an explicit
-degradation.  Editor labels, controls, and preview descriptions also need
-review; they are not generated from this table.  Delivery preparation and
-asynchronous operation ownership remain separate refactoring proposals.
+degradation.  The palette editor and tuner's typed-entry and increment/decrement
+bounds use this metadata through ~emacsvox-aural--voice-style-field~.  The
+complete ACSS editor obtains its four numeric fields from the ACSS inventory;
+it does not expand into editing rate or post-synthesis fields.
+
+Input grammar, labels, neutral values, and preview descriptions remain UI
+policy.  Ordinary numeric input accepts a single digit; blank retains an
+existing value, including zero.  Relative-rate input accepts signed integers
+and blank clears the explicit adjustment to ~nil~.  From ~nil~, horizontal
+adjustment starts at five for ordinary fields and at plus/minus one for rate.
+Digit shortcuts retain their zero-through-nine values.  Invalid boundary steps
+must fail before history, dirty state, refresh, or audition changes.
+Delivery preparation and asynchronous operation ownership remain separate
+refactoring proposals.
 
 The rule tests state field inventories, bounds, error precedence, and
 composition expectations independently of the metadata.  Scheme tests cover
@@ -385,7 +396,11 @@ saved rich palettes and explicit-nil rules; transport tests check distinct
 ACSS mappings, zero and omitted wire fields, effects, and preset behavior.
 ~make compiled-aural-test~ also runs these style contracts with the isolated
 compiled subsystem loaded, checking that the implementations stay in that
-build.  Preserve final-write, timeout, reentrancy, and trace regressions when
+build.  The ~voice-style-ui~ tests in
+=test/emacsvox-aural-voice-palettes-tests.el= exercise interactive numeric
+commands, prompts, blank input, boundaries, unchanged values, and undo in both
+source and compiled runs.  They capture auditions and do not start audio.
+Preserve final-write, timeout, reentrancy, and trace regressions when
 working on later delivery slices; metadata validation alone cannot establish
 process lifecycle or audible behavior.
 

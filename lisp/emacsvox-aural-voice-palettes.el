@@ -390,17 +390,22 @@ replaces live state.  Return the value of MUTATION."
 (defun emacsvox-aural-voice-palettes--read-style-number
     (dimension current)
   "Read optional ACSS DIMENSION, offering CURRENT."
-  (let* ((prompt
+  (let* ((field (emacsvox-aural--voice-style-field dimension))
+         (minimum (plist-get field :minimum))
+         (maximum (plist-get field :maximum))
+         (prompt
           (format
-           "%s, 0 through 9; blank %s: "
+           "%s, %d through %d; blank %s: "
            (emacsvox-aural-humanize dimension)
+           minimum maximum
            (if current (format "keeps %s" current) "uses the adapter default")))
          (answer (string-trim (read-string prompt))))
     (cond
      ((and (string-empty-p answer) current) current)
      ((string-empty-p answer) nil)
-     ((not (string-match-p "\\`[0-9]\\'" answer))
-      (user-error "%s must be 0 through 9 or blank" dimension))
+     ((or (not (string-match-p "\\`[0-9]\\'" answer))
+          (not (<= minimum (string-to-number answer) maximum)))
+      (user-error "%s must be %d through %d or blank" dimension minimum maximum))
      (t (string-to-number answer)))))
 
 (defun emacsvox-aural-voice-palettes--read-style (&optional current)
@@ -419,7 +424,7 @@ replaces live state.  Return the value of MUTATION."
            :family
            (unless (string-empty-p family-text)
              (intern family-text)))))
-    (dolist (dimension '(average-pitch pitch-range stress richness))
+    (dolist (dimension (remq 'family emacsvox-aural-voice-dimensions))
       (setq
        style
        (plist-put
@@ -1673,7 +1678,7 @@ ANNOUNCEMENT overrides the normal setting description."
          (value (if (numberp current)
                     (1+ current)
                   (if rate-offset-p 1 5)))
-         (maximum (if rate-offset-p 20 9)))
+         (maximum (plist-get (emacsvox-aural--voice-style-field dimension) :maximum)))
     (when (> value maximum)
       (user-error "%s is already at %s" dimension maximum))
     (emacsvox-aural-voice-tuner--set-value
@@ -1689,7 +1694,7 @@ ANNOUNCEMENT overrides the normal setting description."
          (value (if (numberp current)
                     (1- current)
                   (if rate-offset-p -1 5)))
-         (minimum (if rate-offset-p -20 0)))
+         (minimum (plist-get (emacsvox-aural--voice-style-field dimension) :minimum)))
     (when (< value minimum)
       (user-error "%s is already at %s" dimension minimum))
     (emacsvox-aural-voice-tuner--set-value
@@ -1801,11 +1806,15 @@ ANNOUNCEMENT overrides the normal setting description."
           (if (eq dimension 'family)
               (emacsvox-aural-voice-tuner--read-family current)
             (if (eq dimension 'rate-offset)
-                (let* ((answer
+                (let* ((field (emacsvox-aural--voice-style-field dimension))
+                       (minimum (plist-get field :minimum))
+                       (maximum (plist-get field :maximum))
+                       (answer
                         (string-trim
                          (read-string
                           (format
-                           "Relative rate, -20 through 20; blank means unchanged%s: "
+                           "Relative rate, %d through %d; blank means unchanged%s: "
+                           minimum maximum
                            (if current (format " [%s]" current) "")))))
                        (value
                         (unless (string-empty-p answer)
@@ -1813,9 +1822,11 @@ ANNOUNCEMENT overrides the normal setting description."
                   (when (and
                          value
                          (not (string-match-p "\\`[-+]?[0-9]+\\'" answer)))
-                    (user-error "Relative rate must be -20 through 20 or blank"))
-                  (when (and value (not (<= -20 value 20)))
-                    (user-error "Relative rate must be -20 through 20 or blank"))
+                    (user-error "Relative rate must be %d through %d or blank"
+                                minimum maximum))
+                  (when (and value (not (<= minimum value maximum)))
+                    (user-error "Relative rate must be %d through %d or blank"
+                                minimum maximum))
                   value)
               (emacsvox-aural-voice-palettes--read-style-number
                dimension current)))))

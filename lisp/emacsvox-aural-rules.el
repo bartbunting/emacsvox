@@ -300,6 +300,12 @@ rate, or post-synthesis dimensions."
   "Return the keyword property corresponding to voice DIMENSION."
   (intern (concat ":" (symbol-name dimension))))
 
+(defun emacsvox-aural--voice-style-field (dimension)
+  "Return metadata for voice DIMENSION, or nil if unknown.
+The returned plist belongs to the field table; callers must not modify it."
+  (cdr (assq (emacsvox-aural--voice-dimension-key dimension)
+             emacsvox-aural--voice-style-fields)))
+
 (defun emacsvox-aural--validate-voice-style (style label)
   "Validate explicit voice STYLE described by LABEL and return STYLE."
   (unless (emacsvox-aural-voice-style-p style)

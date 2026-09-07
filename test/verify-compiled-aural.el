@@ -334,17 +334,28 @@
   ;; these features; they must not reload their source implementations.
   (dolist (file '("emacsvox-aural-rules-tests.el"
                   "emacsvox-aural-schemes-tests.el"
-                  "emacsvox-aural-transport-tests.el"))
+                  "emacsvox-aural-transport-tests.el"
+                  "emacsvox-aural-voice-palettes-tests.el"))
     (load (expand-file-name (concat "test/" file) root-directory) nil nil t))
   (dolist (function '(emacsvox-aural--validate-voice-style
+                      emacsvox-aural--voice-style-field
                       emacsvox-aural-compile-voice-style
                       omnivox--portable-style-acss
-                      emacsvox-aural--timeline-style-acss))
+                      emacsvox-aural--timeline-style-acss
+                      emacsvox-aural-voice-palettes--read-style-number
+                      emacsvox-aural-voice-palettes--read-style
+                      emacsvox-aural-voice-tuner--set-value
+                      emacsvox-aural-voice-tuner-increase
+                      emacsvox-aural-voice-tuner-decrease
+                      emacsvox-aural-voice-tuner-edit))
     (unless (file-in-directory-p (symbol-file function 'defun) build-directory)
       (error "Voice-style contract escaped compiled build: %S" function)))
+  (unless (ert-select-tests '(tag voice-style-ui) t)
+    (error "No compiled voice-style UI contracts were loaded"))
   (let ((stats
          (ert-run-tests-batch
           '(or "^emacsvox-aural-rules-"
+               (tag voice-style-ui)
                emacsvox-aural-schemes-persist-personal-voice-palettes
                emacsvox-aural-native-voice-fields-preserve-zero-and-omission
                emacsvox-aural-transport-preset-nil-and-zero-retain-current-behavior))))

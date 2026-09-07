@@ -6009,9 +6009,20 @@ future inheritance@comma{} omission@comma{} or reset policy needs a separate dec
 Compiler conversion@comma{} backend wire names@comma{} capability discovery@comma{} normalization@comma{}
 and delivery stay in their existing owners.  When adding a field@comma{} update those
 consumers explicitly and test final serialized output or an explicit
-degradation.  Editor labels@comma{} controls@comma{} and preview descriptions also need
-review; they are not generated from this table.  Delivery preparation and
-asynchronous operation ownership remain separate refactoring proposals.
+degradation.  The palette editor and tuner's typed-entry and increment/decrement
+bounds use this metadata through @code{emacsvox-aural--voice-style-field}.  The
+complete ACSS editor obtains its four numeric fields from the ACSS inventory;
+it does not expand into editing rate or post-synthesis fields.
+
+Input grammar@comma{} labels@comma{} neutral values@comma{} and preview descriptions remain UI
+policy.  Ordinary numeric input accepts a single digit; blank retains an
+existing value@comma{} including zero.  Relative-rate input accepts signed integers
+and blank clears the explicit adjustment to @code{nil}.  From @code{nil}@comma{} horizontal
+adjustment starts at five for ordinary fields and at plus/minus one for rate.
+Digit shortcuts retain their zero-through-nine values.  Invalid boundary steps
+must fail before history@comma{} dirty state@comma{} refresh@comma{} or audition changes.
+Delivery preparation and asynchronous operation ownership remain separate
+refactoring proposals.
 
 The rule tests state field inventories@comma{} bounds@comma{} error precedence@comma{} and
 composition expectations independently of the metadata.  Scheme tests cover
@@ -6019,7 +6030,11 @@ saved rich palettes and explicit-nil rules; transport tests check distinct
 ACSS mappings@comma{} zero and omitted wire fields@comma{} effects@comma{} and preset behavior.
 @code{make compiled-aural-test} also runs these style contracts with the isolated
 compiled subsystem loaded@comma{} checking that the implementations stay in that
-build.  Preserve final-write@comma{} timeout@comma{} reentrancy@comma{} and trace regressions when
+build.  The @code{voice-style-ui} tests in
+@samp{test/emacsvox-aural-voice-palettes-tests.el} exercise interactive numeric
+commands@comma{} prompts@comma{} blank input@comma{} boundaries@comma{} unchanged values@comma{} and undo in both
+source and compiled runs.  They capture auditions and do not start audio.
+Preserve final-write@comma{} timeout@comma{} reentrancy@comma{} and trace regressions when
 working on later delivery slices; metadata validation alone cannot establish
 process lifecycle or audible behavior.
 
