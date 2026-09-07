@@ -6440,6 +6440,46 @@ Do not bypass the Omnivox release target manually or clean either repository
 to make its release guard pass.  Use @code{make windows-omnivox} only for the
 reproducible clean-release path documented in the user-facing WSL2 route.
 
+@subsection Windows staging implementation and fixtures
+
+Make owns option and clean-source guards@comma{} toolchain verification@comma{} companion
+preparation@comma{} Docker compilation@comma{} and final runtime verification.  Its
+@code{windows-omnivox} target passes prepared build outputs to the internal
+@samp{servers/omnivox-release/stage-runtime.sh} script.  Use the guarded Make
+targets rather than invoking this script directly.
+
+The script owns host-side payload staging: input checks@comma{} content hashes@comma{}
+optional voice-data caches@comma{} diagnostics@comma{} provenance@comma{} path files@comma{} and selection
+of the completed runtime.  Make passes the Emacsvox root as
+@code{EMACSVOX_STAGE_ROOT}@comma{} the resolved @code{OMNIVOX_*} source/build/runtime paths and
+feature switches@comma{} and the two pinned Roslyn/reference-assembly archive hashes.
+The assignments at the call site and the script's initial parameter checks
+define the complete internal input list.  Optional user inputs retain their
+@code{OMNIVOX_PIPER_MODEL}@comma{} @code{OMNIVOX_RHVOICE_*}@comma{} and @code{OMNIVOX_ECI_DLL} environment
+variables.  Main-only development staging remains separately owned by
+@samp{stage-main-dev.sh} with its existing reuse restrictions.
+
+Run @code{make windows-staging-test} on a GNU/Linux host with Python 3@comma{} Git@comma{} Make@comma{}
+and the standard GNU file/checksum tools.  The tests use private repositories@comma{}
+prepared payloads@comma{} runtime directories@comma{} and a simulated LocalAppData.  Docker@comma{}
+Windows commands@comma{} and compiler/verifier boundaries are replaced by fixtures;
+Git guards@comma{} copying@comma{} hashing@comma{} provenance@comma{} and link activation execute normally.
+The suite is also included in @code{make test} and its own CI job.  It exercises
+clean/development variants@comma{} optional companions and external voice inputs@comma{}
+paths containing spaces@comma{} corrupt caches@comma{} missing inputs@comma{} rejected main-only
+reuse@comma{} interruption@comma{} and activation failure.
+
+Preserve the current activation sequence during maintenance.  The script
+selects the staged runtime before Make's final runtime and live checks; a
+failure in those final checks does not restore the previous selection.
+Interruption before activation can leave temporary files in a new version
+directory while preserving the current link.  The fixture tests characterize
+these existing behaviors and successful retry.  Changing cleanup or rollback
+requires a separate fix and acceptance decision.  Fixture success does not
+establish native compiler reproducibility@comma{} real Windows path conversion@comma{}
+engine startup@comma{} or audible playback; run the existing native gates for that
+acceptance in an appropriate staging environment.
+
 @subsection Aural experiments and guided changes
 
 Physical experiments reuse the tuner with an exact engine/voice selector@comma{}

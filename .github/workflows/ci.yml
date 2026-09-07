@@ -7,6 +7,15 @@ on:
     branches: [master]
 
 jobs:
+  windows-staging:
+    name: Isolated Windows staging fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check staging, provenance, and failure boundaries
+        run: make windows-staging-test
+
   debian-package:
     name: Debian package and Ubuntu installation
     runs-on: ubuntu-26.04

@@ -811,6 +811,49 @@ Do not bypass the Omnivox release target manually or clean either repository
 to make its release guard pass.  Use ~make windows-omnivox~ only for the
 reproducible clean-release path documented in the user-facing WSL2 route.
 
+** Windows staging implementation and fixtures
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Make owns option and clean-source guards, toolchain verification, companion
+preparation, Docker compilation, and final runtime verification.  Its
+~windows-omnivox~ target passes prepared build outputs to the internal
+=servers/omnivox-release/stage-runtime.sh= script.  Use the guarded Make
+targets rather than invoking this script directly.
+
+The script owns host-side payload staging: input checks, content hashes,
+optional voice-data caches, diagnostics, provenance, path files, and selection
+of the completed runtime.  Make passes the Emacsvox root as
+~EMACSVOX_STAGE_ROOT~, the resolved ~OMNIVOX_*~ source/build/runtime paths and
+feature switches, and the two pinned Roslyn/reference-assembly archive hashes.
+The assignments at the call site and the script's initial parameter checks
+define the complete internal input list.  Optional user inputs retain their
+~OMNIVOX_PIPER_MODEL~, ~OMNIVOX_RHVOICE_*~, and ~OMNIVOX_ECI_DLL~ environment
+variables.  Main-only development staging remains separately owned by
+=stage-main-dev.sh= with its existing reuse restrictions.
+
+Run ~make windows-staging-test~ on a GNU/Linux host with Python 3, Git, Make,
+and the standard GNU file/checksum tools.  The tests use private repositories,
+prepared payloads, runtime directories, and a simulated LocalAppData.  Docker,
+Windows commands, and compiler/verifier boundaries are replaced by fixtures;
+Git guards, copying, hashing, provenance, and link activation execute normally.
+The suite is also included in ~make test~ and its own CI job.  It exercises
+clean/development variants, optional companions and external voice inputs,
+paths containing spaces, corrupt caches, missing inputs, rejected main-only
+reuse, interruption, and activation failure.
+
+Preserve the current activation sequence during maintenance.  The script
+selects the staged runtime before Make's final runtime and live checks; a
+failure in those final checks does not restore the previous selection.
+Interruption before activation can leave temporary files in a new version
+directory while preserving the current link.  The fixture tests characterize
+these existing behaviors and successful retry.  Changing cleanup or rollback
+requires a separate fix and acceptance decision.  Fixture success does not
+establish native compiler reproducibility, real Windows path conversion,
+engine startup, or audible playback; run the existing native gates for that
+acceptance in an appropriate staging environment.
+
 ** Aural experiments and guided changes
 :PROPERTIES:
 :TEXINFO_NODE: no
