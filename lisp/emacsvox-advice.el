@@ -1105,6 +1105,9 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 ;; read-password--hide-password
 
+(defvar-local emacsvox--password-modified-tick nil
+  "Character modification tick at the last password masking update.")
+
 (defun emacsvox--password-hidden-p ()
   "Return whether password input is masked in the current minibuffer.
 Emacs 30 and 31 use different names for the visibility state.
@@ -1115,12 +1118,21 @@ Treat unknown state as hidden."
    (t t)))
 
 (defun emacsvox--advice-read-passwd--hide-password-after (&rest _)
-  "Speak the masked or visible password character."
-  (tts-notify
-   (if (emacsvox--password-hidden-p) "dot"
-     (if (characterp last-input-event) (format "%c" last-input-event)
-       "dot")))
-  (emacsvox-icon 'repeat-active))
+  "Give password feedback only when the input changes."
+  ;; Masking also runs during setup and after navigation.  Text-property
+  ;; changes made by masking must not count as password edits.
+  (let* ((tick (buffer-chars-modified-tick))
+         (changed (and emacsvox--password-modified-tick
+                       (/= tick emacsvox--password-modified-tick))))
+    (setq emacsvox--password-modified-tick tick)
+    (when changed
+      (tts-notify
+       (if (or (emacsvox--password-hidden-p)
+               (not (eq this-command 'self-insert-command)))
+           "dot"
+         (if (characterp last-input-event) (format "%c" last-input-event)
+           "dot")))
+      (emacsvox-icon 'repeat-active))))
 
 (advice-add
  'read-passwd--hide-password :after
@@ -1135,16 +1147,6 @@ Treat unknown state as hidden."
 (advice-add
  'read-passwd-toggle-visibility :after
  #'emacsvox--advice-read-passwd-toggle-visibility-after
- '((name . emacsvox)))
-
-(defun emacsvox--advice-read-passwd-before (&optional prompt &rest _)
-  "Speak PROMPT before reading a password."
-  (emacsvox-icon 'open-object)
-  (tts-speak (or prompt "password: "))
-  (emacsvox-icon 'pwd))
-
-(advice-add
- 'read-passwd :before #'emacsvox--advice-read-passwd-before
  '((name . emacsvox)))
 
 (defvar emacsvox-read-char-prompt-cache nil
@@ -2696,13 +2698,18 @@ Keep the owner because multi-buffer searches can end in a different buffer.")
       (puthash default-directory "" emacsvox-pronounce-table))
     (emacsvox-icon 'open-object)
     (when minibuffer-default (emacsvox-icon 'help))
-    (unless vertico-owns-content-p
+    (cond
+     ((bound-and-true-p read-passwd-mode)
+      ;; Announce after the setup stop, and never include a default secret.
+      (emacsvox-icon 'pwd)
+      (tts-notify (minibuffer-prompt)))
+     ((not vertico-owns-content-p)
       (tts-with-punctuations
        'all
        (tts-notify
         (concat
          (buffer-string)
-         (if (stringp minibuffer-default) minibuffer-default "")))))))
+         (if (stringp minibuffer-default) minibuffer-default ""))))))))
 
 (add-hook 'minibuffer-setup-hook 'emacsvox-minibuffer-setup-hook 'at-end)
 

@@ -27,7 +27,6 @@
      emacsvox--advice-read-passwd--hide-password-after)
     (read-passwd-toggle-visibility :after
      emacsvox--advice-read-passwd-toggle-visibility-after)
-    (read-passwd :before emacsvox--advice-read-passwd-before)
     (read-char-choice :before emacsvox--advice-read-char-choice-before)
     (yes-or-no-p :around emacsvox--advice-yes-or-no-p-around)
     (y-or-n-p :around emacsvox--advice-y-or-n-p-around)
@@ -114,51 +113,130 @@
     (should (equal emacsvox-read-char-prompt-cache "Continue?"))
     (should-not events)))
 
-(ert-deftest emacsvox-read-passwd-advice-uses-explicit-prompt ()
-  "Password feedback preserves icon and speech order."
-  (let (events)
+(defun emacsvox-test--read-password (keys &optional confirm default)
+  "Read a synthetic password using KEYS, CONFIRM and DEFAULT.
+Return the reader's result and the speech and stop events in order."
+  (require 'auth-source)
+  (let ((global-map (copy-keymap global-map))
+        (read-passwd-map (copy-keymap read-passwd-map))
+        (minibuffer-setup-hook '(emacsvox-minibuffer-setup-hook))
+        (minibuffer-exit-hook nil)
+        (pre-command-hook nil)
+        (post-command-hook nil)
+        (emacsvox-minibuffer-dictionary (make-hash-table :test #'equal))
+        events result)
+    ;; C-e is the Emacsvox prefix in the full test environment.
+    (define-key read-passwd-map (kbd "C-a") #'move-beginning-of-line)
+    (define-key read-passwd-map (kbd "C-e") #'move-end-of-line)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-stop)
+               (lambda (&rest args) (push (cons 'stop args) events)))
+              ((symbol-function 'tts-notify)
+               (lambda (text &rest _) (push (list 'notify text) events)))
               ((symbol-function 'tts-speak)
-               (lambda (text) (push (list 'speak text) events))))
-      (emacsvox--advice-read-passwd-before "Secret: "))
+               (lambda (text) (push (list 'speak text) events)))
+              ((symbol-function 'emacsvox-test--password-command)
+               (lambda ()
+                 (interactive)
+                 (setq result
+                       (read-passwd "Password for /sudo:root@localhost: "
+                                    confirm default)))))
+      (define-key global-map (kbd "C-c p")
+                  #'emacsvox-test--password-command)
+      (save-window-excursion
+        (execute-kbd-macro (vconcat (kbd "C-c p") (kbd keys)))))
+    (list result (nreverse events))))
+
+(ert-deftest emacsvox-read-passwd-opening-and-navigation-preserve-prompt ()
+  "An empty password prompt survives setup and navigation without dots."
+  (pcase-let ((`(,result ,events)
+               (emacsvox-test--read-password "C-a C-e RET")))
+    (should (equal result ""))
     (should
-     (equal
-      (nreverse events)
-      '((icon open-object) (speak "Secret: ") (icon pwd))))))
+     (equal (seq-take events 4)
+            '((stop all) (icon open-object) (icon pwd)
+              (notify "Password for /sudo:root@localhost: "))))
+    ;; Ordinary navigation may read the prompt again, but masking must not
+    ;; replace it with a dot or stop it after setup.
+    (should
+     (equal (seq-filter (lambda (event) (memq (car event) '(stop notify)))
+                        events)
+            '((stop all)
+              (notify "Password for /sudo:root@localhost: "))))))
+
+(ert-deftest emacsvox-read-passwd-edit-feedback-does-not-repeat-on-navigation ()
+  "Typing and deletion produce masked feedback; intervening motion does not."
+  (pcase-let ((`(,result ,events)
+               (emacsvox-test--read-password "x C-a C-e DEL RET")))
+    (should (equal result ""))
+    (should
+     (equal (seq-filter (lambda (event) (eq (car event) 'notify)) events)
+            '((notify "Password for /sudo:root@localhost: ")
+              (notify "dot") (notify "dot"))))))
+
+(ert-deftest emacsvox-read-passwd-default-is-not-spoken ()
+  "A default password is returned without being included in prompt speech."
+  (pcase-let ((`(,result ,events)
+               (emacsvox-test--read-password "RET" nil "synthetic-secret")))
+    (should (equal result "synthetic-secret"))
+    (should
+     (equal (seq-filter (lambda (event) (memq (car event) '(speak notify)))
+                        events)
+            '((notify "Password for /sudo:root@localhost: "))))))
+
+(ert-deftest emacsvox-read-passwd-confirmation-announces-each-prompt ()
+  "Confirmation uses its own prompt and resets password edit tracking."
+  (pcase-let ((`(,result ,events)
+               (emacsvox-test--read-password "x RET x RET" t)))
+    (should (equal result "x"))
+    (should
+     (equal (seq-filter (lambda (event) (eq (car event) 'notify)) events)
+            '((notify "Password for /sudo:root@localhost: ")
+              (notify "dot") (notify "Confirm password: ")
+              (notify "dot"))))))
 
 (ert-deftest emacsvox-read-passwd-character-feedback-respects-visibility ()
   "Password characters are masked in speech only while hidden."
-  (let ((last-input-event ?s)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-notify)
-               (lambda (text) (push (list 'notify text) events))))
-      (let ((read-passwd--password-hidden t))
-        (emacsvox--advice-read-passwd--hide-password-after))
-      (let ((read-passwd--password-hidden nil))
-        (emacsvox--advice-read-passwd--hide-password-after)))
-    (should
-     (equal
-      (nreverse events)
-      '((notify "dot")
-        (icon repeat-active)
-        (notify "s")
-        (icon repeat-active))))))
+  (with-temp-buffer
+    (let ((last-input-event ?s)
+          (this-command 'self-insert-command)
+          events)
+      (emacsvox--advice-read-passwd--hide-password-after)
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'tts-notify)
+                 (lambda (text) (push (list 'notify text) events))))
+        (let ((read-passwd--password-hidden t))
+          (insert "s")
+          (emacsvox--advice-read-passwd--hide-password-after))
+        (let ((read-passwd--password-hidden nil))
+          (insert "s")
+          (emacsvox--advice-read-passwd--hide-password-after)))
+      (should
+       (equal
+        (nreverse events)
+        '((notify "dot")
+          (icon repeat-active)
+          (notify "s")
+          (icon repeat-active)))))))
 
 (ert-deftest emacsvox-read-passwd-emacs30-visibility-and-unknown-state ()
   "Emacs 30's state keeps hidden characters masked; unknown state stays hidden."
   (cl-progv '(read-passwd--password-hidden) nil
     (makunbound 'read-passwd--password-hidden)
     (dolist (hidden '(t nil))
-      (let ((read-passwd--hide-password hidden)
-            (last-input-event ?x) spoken)
-        (cl-letf (((symbol-function 'tts-notify)
-                   (lambda (text) (setq spoken text)))
-                  ((symbol-function 'emacsvox-icon) #'ignore))
-          (emacsvox--advice-read-passwd--hide-password-after))
-        (should (equal spoken (if hidden "dot" "x")))))
+      (with-temp-buffer
+        (let ((read-passwd--hide-password hidden)
+              (this-command 'self-insert-command)
+              (last-input-event ?x) spoken)
+          (emacsvox--advice-read-passwd--hide-password-after)
+          (cl-letf (((symbol-function 'tts-notify)
+                     (lambda (text) (setq spoken text)))
+                    ((symbol-function 'emacsvox-icon) #'ignore))
+            (insert "x")
+            (emacsvox--advice-read-passwd--hide-password-after))
+          (should (equal spoken (if hidden "dot" "x"))))))
     (cl-progv '(read-passwd--hide-password) nil
       (makunbound 'read-passwd--hide-password)
       (should (emacsvox--password-hidden-p)))))
