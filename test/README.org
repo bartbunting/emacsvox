@@ -1,17 +1,87 @@
 #+title: Emacsvox Tests
 
-* Emacs 31 Test Suite
+* Start here
 
-Select Emacs 31 in the repository's ignored =local.mk=, verify it with
-=make check-emacs=, then run the unit tests and self-contained Emacsvox golden
-traces with:
+Emacsvox supports Emacs 30.2 and newer on every platform.  Select the executable
+in the repository's ignored =local.mk= before running Emacs-dependent checks:
 
 #+begin_src sh
+make check-emacs
+make core-test
+make trace-test
+#+end_src
+
+For example, =local.mk= can contain =EMACS=/path/to/emacs/bin/emacs=.  The core
+commands above need no optional Emacs packages and do not build Emacsvox.
+Use a separate checkout for each Emacs version, and preserve existing work
+when a check reports a missing prerequisite or stale build.
+
+| Target | What it establishes | Build and preparation effects |
+|--------+---------------------+-------------------------------|
+| =core-test=, =trace-test= | Core speech/transport contracts and recorded command outcomes. | Disposable test fixtures; no in-tree compilation or configuration. |
+| =compat-test= | Focused runtime, startup, input, reading, Org, and installer contracts without optional packages. | Runs =config= first, including regeneration of ignored autoloads. |
+| =unit-test= | The broad ERT suite, including installed optional integrations. | Requires generated autoloads; temporary fixtures, with no automatic in-tree rebuild or dependency installation. |
+| =integration-test= | Agent Shell, Notmuch, and EAT against the reviewed lock. | Requires =test-deps= first; verifies the prepared tree, without downloading or rebuilding it. |
+| =compiled-notmuch-test= | Notmuch behaviour with the explicitly verified compiled adapter. | Requires current in-tree byte-code and the Notmuch package; does not rebuild it. |
+| =compiled-aural-test= | Compiled Aural parity in a fresh child Emacs. | Compiles into a temporary directory; leaves in-tree byte-code untouched. |
+| =build-aural-test= | Aural behaviour from the ordinary build tree. | Builds Aural byte-code under =lisp/=, then verifies it in a fresh Emacs. |
+| =test= | Version/headers, source archive fixtures, =unit-test=, both compiled checks above, =build-aural-test=, and traces. | Includes the in-tree Aural build; needs current byte-code before its Notmuch preflight. |
+
+Tests set =load-prefer-newer= and some explicitly load implementation sources.
+A passing source suite does not establish that a live profile's compiled
+dependencies are current.  In an existing tree, current compiled dependencies
+can still be loaded.  Use =make bytecode-check= as the non-mutating preflight;
+use =make bytecode= after ordinary Lisp edits, or =make bytecode-rebuild= after
+branch changes or macro/public-interface changes, then verify in a fresh Emacs.
+See [[file:../docs/developer/integration-maintenance.org::*Source checkout and byte-code lifecycle][the developer guide]] for the complete lifecycle and supported-version policy.
+
+* Full suite prerequisites and results
+
+=make unit-test= and =make test= require many optional packages in addition to
+the core toolchain.  These include Agent Shell (with ACP and shell-maker), EAT
+(with compat), Notmuch, Markdown Mode, Company, Helm, Magit, Consult, Corfu,
+Vertico, and the other adapters selected by [[file:run-tests.el][the full runner]].  Their test files'
+=require= forms identify the package features needed by each integration;
+install the corresponding packages and their dependencies in the test profile.
+Emacs 30 also needs the external =lua-mode= package; Emacs 31 includes it.
+The six-package lock below prepares only its focused integration job, not this
+entire package set.  No test target installs packages into your personal profile.
+
+The full runner also loads =lisp/emacsvox-loaddefs.el= for documentation tests.
+Run =make config= before =make unit-test= in an unconfigured source checkout;
+configuration generates this index without compiling modules.  The =bytecode=
+command in the full-gate example below performs configuration and compilation.
+
+On Unix, keep Python 3, GNU Make, Git, =sh=, Bash, =cat=, and Tcl (=tclsh=)
+available for the existing subprocess and installer fixtures.  Individual
+platform or optional-library tests can have further prerequisites.  Inspect
+their skip explanations rather than treating missing tools as coverage.
+
+Once the optional packages are available, a checkout with ordinary source edits
+can run the full gate with:
+
+#+begin_src sh
+make check-emacs
+make bytecode
 make test
 #+end_src
 
-The trace tests replace low-level speech and sound functions temporarily.  They
-do not start a speech server or play audio.
+Use =bytecode-rebuild= instead after changing branches or public interfaces.
+For a machine without the optional package set, start with the core commands
+or =make compat-test=; for the three pinned integrations, use the next sections.
+
+Missing required packages abort full-suite loading before ERT runs, often with
+“Cannot open load file”.  Some integrations, such as Mu4e, deliberately skip
+when unavailable.  ERT prints the selected count, unexpected results, and skips
+at the end.  Ordinary ERT runners can succeed with skips; the pinned integration
+gate rejects every skip.  A successful run with skips proves only the executed
+cases.  Keep the command, selected Emacs version, final counts, and failure/skip
+details when reporting results.  Run a failing target directly to retain its
+diagnostics instead of rebuilding or regenerating baselines to hide the failure.
+
+The trace tests replace low-level speech and sound functions temporarily; they
+do not start a speech server or play audio.  Automated speech assertions check
+events and editor state, not pronunciation, audible timing, or device routing.
 
 Use =make trace= to print the current structured core trace without comparing
 it to the committed baseline.
