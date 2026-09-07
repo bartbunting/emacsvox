@@ -89,5 +89,66 @@
       (kill-buffer output)
       (delete-directory root t))))
 
+(ert-deftest emacsvox-make-recursion-preserves-selected-emacs ()
+  "Configuration and compilation keep local.mk and command-line selections."
+  (skip-unless (and (executable-find "make") (not (eq system-type 'windows-nt))))
+  (let* ((root (make-temp-file "emacsvox-make-selection-" t))
+         (default-directory (file-name-as-directory root))
+         (process-environment (copy-sequence process-environment))
+         (log (expand-file-name "invocations" root))
+         (bin (expand-file-name "bin" root))
+         (selected (expand-file-name "selected-emacs" bin))
+         (override (expand-file-name "override-emacs" bin)))
+    (unwind-protect
+        (progn
+          ;; Do not let a parent `make unit-test EMACS=...' mask local.mk.
+          (dolist (name '("MAKEFLAGS" "MAKEOVERRIDES" "MFLAGS" "MAKELEVEL" "EMACS"))
+            (setenv name nil))
+          (make-directory bin)
+          (setenv "PATH" (concat bin path-separator (getenv "PATH")))
+          (dolist (entry '(("emacs" . "fallback") ("selected-emacs" . "local")
+                           ("override-emacs" . "override")))
+            (let ((path (expand-file-name (car entry) bin)))
+              (with-temp-file path
+                (insert "#!/bin/sh\nprintf '%s\\n' " (cdr entry) " >> "
+                        (shell-quote-argument log) "\n"))
+              (set-file-modes path #o755)))
+          (copy-file (expand-file-name "Makefile" emacsvox-autoload-tests--root)
+                     (expand-file-name "Makefile" root))
+          (make-directory (expand-file-name "servers/omnivox-release" root) t)
+          (copy-file
+           (expand-file-name "servers/omnivox-release/toolchain.lock"
+                             emacsvox-autoload-tests--root)
+           (expand-file-name "servers/omnivox-release/toolchain.lock" root))
+          (make-directory (expand-file-name "etc" root))
+          (with-temp-file (expand-file-name "etc/Makefile" root)
+            (insert "config:\n\t@:\n"))
+          (make-directory (expand-file-name "lisp" root))
+          (with-temp-file (expand-file-name "lisp/Makefile" root)
+            (insert "override OBJECTS = fixture.elc\ninclude "
+                    (replace-regexp-in-string
+                     " " "\\ " (expand-file-name "lisp/Makefile"
+                                                emacsvox-autoload-tests--root) t t)
+                    "\n"))
+          (dolist (name '("fixture.el" "emacsvox-omnivox-components.el"))
+            (with-temp-file (expand-file-name (concat "lisp/" name) root)
+              (insert "; fixture\n")))
+          (with-temp-file (expand-file-name "local.mk" root)
+            (insert "EMACS=" selected "\n"))
+          (dolist (target '("config" "emacsvox"))
+            (dolist (explicit '(nil t))
+              (when (file-exists-p log) (delete-file log))
+              (with-temp-buffer
+                (let ((status
+                       (apply #'call-process "make" nil t nil target
+                              (when explicit (list (concat "EMACS=" override))))))
+                  (unless (zerop status) (ert-fail (buffer-string)))))
+              (with-temp-buffer
+                (insert-file-contents log)
+                (should (equal (split-string (buffer-string))
+                               (make-list (if (equal target "config") 1 3)
+                                          (if explicit "override" "local"))))))))
+      (delete-directory root t))))
+
 (provide 'emacsvox-autoload-tests)
 ;;; emacsvox-autoload-tests.el ends here

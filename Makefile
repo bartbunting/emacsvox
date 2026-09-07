@@ -336,7 +336,7 @@ aural-reference:
 ###   User level targets emacsvox   outloud espeak 
 
 emacsvox: check-emacs config
-	@cd lisp && $(MAKE) $(MAKEFLAGS)
+	@cd lisp && $(MAKE) EMACS="$(EMACS)" $(MAKEFLAGS)
 	@echo "See the NEWS file for a  summary of new features — Control e cap n in Emacs"
 	@echo "See Emacsvox Customizations for customizations — control e cap C in Emacs"
 	@echo  "Read the Emacsvox Manual — Control e TAB in Emacs"
@@ -1262,7 +1262,7 @@ dist: release-artifact
 
 config:
 	@cd etc && $(MAKE) config $(MAKEFLAGS)
-	@cd lisp && $(MAKE) config $(MAKEFLAGS)
+	@cd lisp && $(MAKE) EMACS="$(EMACS)" config $(MAKEFLAGS)
 
 ###   complete build
 
