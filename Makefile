@@ -1371,7 +1371,7 @@ release: release-artifact
 
 release-tag: release-artifact-check
 	@utils/emacsvox-version-check --tag
-	git tag -a "$(VERSION)" -m "Emacsvox $(VERSION)"
+	git tag -a --no-sign "$(VERSION)" -m "Emacsvox $(VERSION)"
 	@echo "Created local annotated tag $(VERSION); it has not been pushed."
 
 release-publish: release-artifact-check

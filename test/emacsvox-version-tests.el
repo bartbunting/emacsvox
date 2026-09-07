@@ -165,7 +165,7 @@
     (should
      (string-match-p
       (regexp-quote
-       "git tag -a \"$(VERSION)\" -m \"Emacsvox $(VERSION)\"")
+       "git tag -a --no-sign \"$(VERSION)\" -m \"Emacsvox $(VERSION)\"")
       makefile))
     (should-not
      (string-match-p (regexp-quote "git tag -s") makefile))
@@ -176,6 +176,53 @@
      (string-match-p
       (regexp-quote "--repo \"$$release_repository\"")
       makefile))))
+
+(ert-deftest emacsvox-release-tag-remains-unsigned-with-signing-configured ()
+  "The actual tag command never invokes a signer, even with tag.gpgSign=true."
+  (skip-unless (and (executable-find "git") (not (eq system-type 'windows-nt))))
+  (let* ((root (make-temp-file "emacsvox-unsigned-tag-" t))
+         (default-directory (file-name-as-directory root))
+         (process-environment (copy-sequence process-environment))
+         (signer (expand-file-name "failing-signer" root))
+         (marker (expand-file-name "signer-invoked" root))
+         (makefile (emacsvox-version-tests--file-string "Makefile")))
+    (unwind-protect
+        (progn
+          (dolist (name '("GIT_DIR" "GIT_COMMON_DIR" "GIT_WORK_TREE"
+                          "GIT_INDEX_FILE" "GIT_CONFIG_COUNT" "GIT_CONFIG_PARAMETERS"))
+            (setenv name nil))
+          (setenv "GIT_CONFIG_NOSYSTEM" "1")
+          (setenv "GIT_CONFIG_GLOBAL" (expand-file-name "unused-config" root))
+          (with-temp-file signer
+            (insert "#!/bin/sh\nprintf 'attempted\\n' > "
+                    (shell-quote-argument marker) "\nexit 1\n"))
+          (set-file-modes signer #o755)
+          (emacsvox-version-tests--initialize-repository root)
+          (emacsvox-version-tests--git root "config" "gpg.format" "openpgp")
+          (emacsvox-version-tests--git root "config" "gpg.program" signer)
+          (should (string-match
+                   "\nrelease-tag:[^\n]*\n\\(\\(?:\t[^\n]*\n\\)+\\)" makefile))
+          (let ((recipe (match-string 1 makefile)))
+            (should (string-match "^\t\\(git tag [^\n]+\\)$" recipe))
+            (let ((command (match-string 1 recipe)))
+              (dolist (signing '("false" "true"))
+                (emacsvox-version-tests--git root "config" "tag.gpgSign" signing)
+                (let* ((tag (concat "fixture-signing-" signing))
+                       (invocation
+                        (replace-regexp-in-string
+                         (regexp-quote "$(VERSION)") tag command t t)))
+                  (with-temp-buffer
+                    (let ((status (call-process-shell-command invocation nil t nil)))
+                      (unless (eq status 0) (ert-fail (buffer-string)))))
+                  (should-not (file-exists-p marker))
+                  (with-temp-buffer
+                    (should (eq 0 (call-process "git" nil t nil "cat-file" "tag" tag)))
+                    (should (string-match-p "^type commit$" (buffer-string)))
+                    (should (string-match-p (concat "^tag " tag "$") (buffer-string)))
+                    (should (string-suffix-p (concat "Emacsvox " tag "\n")
+                                            (buffer-string)))
+                    (should-not (string-search "SIGNATURE" (buffer-string)))))))))
+      (delete-directory root t))))
 
 (ert-deftest emacsvox-version-checker-accepts-the-repository ()
   "The fast non-mutating checker accepts all maintained version metadata."
