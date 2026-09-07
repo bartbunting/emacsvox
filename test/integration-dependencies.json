@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "packages": [
+    {
+      "name": "compat",
+      "commit": "df03e91f1fc47503ca71e11dd507ed18ca8b5ab0",
+      "url": "https://elpa.gnu.org/packages/compat-31.0.0.2.tar",
+      "sha256": "47d8693a10087f8b20c72e6a78b628db980cb7547c4f8f517fc5d11acd8b0f38",
+      "archive_root": "compat-31.0.0.2",
+      "subdirectory": "."
+    },
+    {
+      "name": "acp",
+      "commit": "42f5c268537220b94cb1f17e29d3f1f89e6ff0a0",
+      "url": "https://codeload.github.com/xenodium/acp.el/tar.gz/42f5c268537220b94cb1f17e29d3f1f89e6ff0a0",
+      "sha256": "fc1d58403b534c7899769721672d51e260933881dc37c96d7ef6612d1275ac40",
+      "archive_root": "acp.el-42f5c268537220b94cb1f17e29d3f1f89e6ff0a0",
+      "subdirectory": "."
+    },
+    {
+      "name": "shell-maker",
+      "commit": "ab4f8ebaf4ef7a7db4762c5d5075baea580044ba",
+      "url": "https://codeload.github.com/xenodium/shell-maker/tar.gz/ab4f8ebaf4ef7a7db4762c5d5075baea580044ba",
+      "sha256": "cd1df45c06807f98007cc1c65d1ad301f4bc9555564c2484bb38b40712cc99db",
+      "archive_root": "shell-maker-ab4f8ebaf4ef7a7db4762c5d5075baea580044ba",
+      "subdirectory": "."
+    },
+    {
+      "name": "agent-shell",
+      "commit": "d027d8de2b74019ae83e36b1edcd0b968295ac31",
+      "url": "https://codeload.github.com/xenodium/agent-shell/tar.gz/d027d8de2b74019ae83e36b1edcd0b968295ac31",
+      "sha256": "10705ce4222cf31454c3d8c1c95c70b0491d261aebe35d9ac167859d0db9c8e5",
+      "archive_root": "agent-shell-d027d8de2b74019ae83e36b1edcd0b968295ac31",
+      "subdirectory": ".",
+      "excluded_paths": ["CLAUDE.md", "GEMINI.md"]
+    },
+    {
+      "name": "eat",
+      "commit": "c91451f2d17453c19d3fa76faa4945cbe54e14ce",
+      "url": "https://elpa.nongnu.org/nongnu/eat-0.9.4.tar",
+      "sha256": "14971fc562f0820794eb6af78beebc7dc3ba898221e785c2d272a9f0fccfc54a",
+      "archive_root": "eat-0.9.4",
+      "subdirectory": "."
+    },
+    {
+      "name": "notmuch",
+      "commit": "094744b3f6f5c6831b6555d1fe75709abf1d1279",
+      "url": "https://codeload.github.com/notmuch/notmuch/tar.gz/094744b3f6f5c6831b6555d1fe75709abf1d1279",
+      "sha256": "8c53b6344c35b446216708db1df94c49773b5428445e296667bbbc723cb80cc7",
+      "archive_root": "notmuch-094744b3f6f5c6831b6555d1fe75709abf1d1279",
+      "subdirectory": "emacs"
+    }
+  ]
+}

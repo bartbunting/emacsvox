@@ -44,7 +44,57 @@ The separate compatibility job still builds every maintained module.
 In an existing checkout it prefers newer source, but can load current compiled
 dependencies.  Use =make bytecode-check= separately before using a live profile.
 This core job does not cover the optional Agent Shell, Notmuch, or EAT suites;
-they remain part of =make unit-test= and =make test= with their dependencies.
+the separate pinned integration job below covers them.
+
+* Pinned integration CI
+
+Run Agent Shell, Notmuch, and EAT tests with reviewed dependency snapshots:
+
+#+begin_src sh
+make test-deps-test
+make test-deps
+make integration-test
+#+end_src
+
+These targets use the selected Emacs (30.2 or newer), Python 3, GNU Make, Git,
+=sh=, Bash, and =cat=.  Preparation downloads the six archives recorded in
+=test/integration-dependencies.json=: Agent Shell, ACP, shell-maker, EAT,
+compat, and Notmuch.  Each has an exact upstream commit and archive SHA-256.
+It does not consult the current package archive index or your personal packages.
+The offline =test-deps-test= checks preparation, reuse, autoloads, corruption,
+unsafe archives, and failure cleanup with disposable fixtures.
+
+=make test-deps= caches verified archives below ignored =.test-deps-cache/=,
+extracts sources below ignored =.test-deps/=, and generates dependency autoloads
+with the selected Emacs.  Notmuch uses only its =emacs/= subtree; two Agent Shell
+documentation symlinks are explicitly excluded in the lock.  Dependency Lisp
+is not byte-compiled.  =TEST_DEPS_DIR= and =TEST_DEPS_CACHE= override these paths.
+Preparation stages a new tree before placing it at the destination.  Reuse
+verifies all file hashes and executable bits, the lock, preparer, and Emacs
+version.  It refuses to overwrite an unprepared or altered directory.  After
+a pin, preparer, or Emacs change, choose a new directory, for example:
+
+#+begin_src sh
+make test-deps TEST_DEPS_DIR=/tmp/emacsvox-test-deps-next
+make integration-test TEST_DEPS_DIR=/tmp/emacsvox-test-deps-next
+#+end_src
+
+Use a separate checkout for each Emacs version.  The runner verifies preparation
+again before loading dependency code and fails on missing prerequisites,
+unexpected results, skipped tests, or an empty test run.  It never downloads
+packages.  Update pins deliberately: review upstream changes, record the new
+commit and verified archive hash together, and rerun both CI matrix versions
+with fresh dependency directories.  A checksum failure is a reason to inspect
+the downloaded artifact, not to automatically accept a new hash.
+
+The =integrations= CI job runs these commands on Emacs 30.2 and 31.1 in a fresh
+checkout with a private home directory.  Tests capture speech and agent/mail
+events; EAT also exercises disposable terminal subprocesses.  They require no
+live agent, mailbox, speech server, or audio device.  They do not establish
+audible timing or complete compiled integration parity.  Local runs prefer
+newer source but may load current compiled dependencies; the fresh CI checkout
+contains no Emacsvox byte-code.  =make compiled-notmuch-test= remains a separate
+local check after bringing byte-code current.
 
 * Pinned Emacspeak Reference
 

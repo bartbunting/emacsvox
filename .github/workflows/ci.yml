@@ -103,6 +103,28 @@ jobs:
           env HOME="$core_home" make trace-test EMACS="$emacs_binary"
           env HOME="$core_home" make compiled-aural-test EMACS="$emacs_binary"
 
+  integrations:
+    name: Agent Shell, Notmuch, and EAT (Emacs ${{ matrix.emacs }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        emacs: ['30.2', '31.1']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs }}
+      - name: Verify preparation and run pinned integrations
+        run: |
+          emacs_binary=$(command -v emacs)
+          integration_home="$RUNNER_TEMP/emacsvox-integration-home"
+          mkdir -p "$integration_home"
+          env HOME="$integration_home" make test-deps-test EMACS="$emacs_binary"
+          env HOME="$integration_home" make test-deps EMACS="$emacs_binary"
+          env HOME="$integration_home" make integration-test EMACS="$emacs_binary"
+
   compatibility:
     name: Build and compatibility (Emacs ${{ matrix.emacs }})
     runs-on: ubuntu-latest

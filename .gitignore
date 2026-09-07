@@ -27,6 +27,8 @@ servers/software-dtk/tcldtk.so
 .cask/
 /etc/pickup-c/pickup
 /.ccls-cache/
+/.test-deps/
+/.test-deps-cache/
 *.pdf
 **.pdf
 # ELPA-generated files

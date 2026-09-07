@@ -5413,8 +5413,21 @@ checker runs.
      POSIX shell, and Tcl (‘tclsh’); missing prerequisites fail before
      the core tests run.  The fresh CI checkout exercises source,
      followed by an isolated compiled Aural check.  Optional integration
-     suites remain outside this job.  See ‘test/README.org’ for the
-     local commands and coverage boundaries.
+     suites remain outside this job.
+
+     The separate integration CI job runs Agent Shell, Notmuch, and EAT
+     tests on both versions with a private home directory and six
+     reviewed dependency snapshots.  ‘make test-deps’ verifies the
+     archive hashes in ‘test/integration-dependencies.json’ and stages
+     sources and autoloads under ignored ‘.test-deps/’; it never changes
+     personal packages.  ‘make integration-test’ verifies that prepared
+     tree before loading it and fails on missing dependencies or skipped
+     tests.  Pin updates require upstream review, new archive hashes,
+     and fresh preparation for both Emacs versions.  These source tests
+     capture speech events and exercise disposable EAT subprocesses;
+     they do not replace listening tests or compiled integration checks.
+     See ‘test/README.org’ for preparation checks, directory overrides,
+     recovery, and coverage boundaries.
 
      Keep each Emacs version's build in a separate checkout; never reuse
      ‘.elc’ files across versions.  All platforms, including native
@@ -6261,9 +6274,9 @@ Ref: Commands That Queue Output236814
 Ref: Commands That Set State239848
 Node: Integration Maintenance242442
 Ref: Supported Emacs versions245172
-Ref: Native Windows builds246547
-Ref: Remote preview validation248607
-Node: Concept Index279897
+Ref: Native Windows builds247378
+Ref: Remote preview validation249438
+Node: Concept Index280728
 
 End Tag Table
 

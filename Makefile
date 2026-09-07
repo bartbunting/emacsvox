@@ -61,9 +61,12 @@ RELEASE_REMOTE ?= origin
 
 TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
+TEST_DEPS_DIR ?= $(CURDIR)/.test-deps
+TEST_DEPS_CACHE ?= $(CURDIR)/.test-deps-cache
 
 .PHONY: version version-check headers-check test unit-test notmuch-test compiled-notmuch-test
 .PHONY: compiled-aural-test build-aural-test trace trace-test compat-test core-test
+.PHONY: test-deps test-deps-test integration-test
 .PHONY: reference-test advice-audit name-audit tts-audit
 .PHONY: check-emacs bytecode bytecode-check bytecode-rebuild generated-reference
 .PHONY: docs-preview docs-update docs-reference docs-generate
@@ -107,6 +110,17 @@ compat-test: check-emacs config
 
 core-test: check-emacs
 	$(EMACS) -Q --batch -l test/run-core-tests.el
+
+test-deps: check-emacs
+	python3 test/prepare-dependencies.py --emacs "$(EMACS)" \
+		--directory "$(TEST_DEPS_DIR)" --cache "$(TEST_DEPS_CACHE)"
+
+test-deps-test: check-emacs
+	EMACS="$(EMACS)" python3 -m unittest discover -s test -p 'test_integration_dependencies.py' -v
+
+integration-test: check-emacs
+	EMACSVOX_TEST_DEPS_DIR="$(TEST_DEPS_DIR)" \
+	$(EMACS) -Q --batch -l test/run-integration-tests.el
 
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el

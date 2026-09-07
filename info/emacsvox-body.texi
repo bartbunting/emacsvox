@@ -5712,7 +5712,19 @@ and golden speech traces without optional Emacs packages.  It requires GNU
 Make@comma{} Git@comma{} a POSIX shell@comma{} and Tcl (@code{tclsh}); missing prerequisites fail before
 the core tests run.  The fresh CI checkout exercises source@comma{} followed by an
 isolated compiled Aural check.  Optional integration suites remain outside
-this job.  See @samp{test/README.org} for the local commands and coverage boundaries.
+this job.
+
+The separate integration CI job runs Agent Shell@comma{} Notmuch@comma{} and EAT tests on
+both versions with a private home directory and six reviewed dependency
+snapshots.  @code{make test-deps} verifies the archive hashes in
+@samp{test/integration-dependencies.json} and stages sources and autoloads under
+ignored @samp{.test-deps/}; it never changes personal packages.  @code{make integration-test}
+verifies that prepared tree before loading it and fails on missing dependencies
+or skipped tests.  Pin updates require upstream review@comma{} new archive hashes@comma{}
+and fresh preparation for both Emacs versions.  These source tests capture
+speech events and exercise disposable EAT subprocesses; they do not replace
+listening tests or compiled integration checks.  See @samp{test/README.org} for
+preparation checks@comma{} directory overrides@comma{} recovery@comma{} and coverage boundaries.
 
 Keep each Emacs version's build in a separate checkout; never reuse @code{.elc}
 files across versions. All platforms@comma{} including native Windows x64@comma{} use this minimum.
