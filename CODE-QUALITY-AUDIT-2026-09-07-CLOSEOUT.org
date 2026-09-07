@@ -1,0 +1,465 @@
+#+title: Emacsvox code quality audit — remediation and acceptance status
+#+date: 2026-09-07
+#+options: toc:2
+
+* Scope and status
+
+This is the companion to [[file:CODE-QUALITY-AUDIT-2026-09-07.org][the original audit]], which is preserved unchanged.
+It records the remediation through Emacsvox commit
+=39001000377f14a356529b7aee666ec1d141b23c= and the subsequent native Windows
+speech-runtime acceptance. It is an internal engineering report, outside the
+published manual and generated documentation workflow.
+
+All 20 findings have received implementation work. AUD-01–16 have committed
+corrections; AUD-17, AUD-18 and AUD-20 have completed the agreed bounded
+maintenance changes. AUD-19 remains partly addressed: metadata, tuner and
+preparation improvements are committed, while broader delivery and operation
+ownership proposals still require design decisions. This is not a claim that
+all maintenance concerns or live accessibility acceptance are complete.
+
+Statuses distinguish implementation from acceptance:
+
+- =Implemented=: the reported defect has a committed correction and the
+  indicated automated evidence. Outstanding platform/listening checks remain
+  explicit; this does not mean every surrounding code path was reviewed.
+- =Bounded change complete=: the agreed maintainability slice is complete;
+  the entire module has not been redesigned or certified.
+- =Partial; design open=: useful agreed slices are complete, with additional
+  design work deliberately outstanding.
+
+Validation below is historical evidence from the individual implementation
+slices, checked against commit contents and retained local logs. Counts belong
+to those snapshots; they are not a new run of every suite at today's HEAD.
+Source tests, compiled tests, platform execution and human listening establish
+different things and are not substituted for each other.
+
+* Finding-to-commit map
+
+Commit IDs are local Git references; inspect any with =git show COMMIT=.
+
+| Finding | Subject | Commits | Implementation status | Outstanding acceptance/design |
+|---------+---------+---------+-----------------------+-------------------------------|
+| AUD-01 | EWW shell arguments | 8190c14a4 | Implemented | Real downloader/browser integration optional. |
+| AUD-02 | EPUB path representation | 4f9f52cb2 | Implemented | Actual native Windows archive execution. |
+| AUD-03 | Scanner retention and failures | f9dba2938 | Implemented | Real scanner, compressor and OCR recovery. |
+| AUD-04 | Process retirement | c135122bc | Implemented | Audible stop/replacement and interruption. |
+| AUD-05 | Timed-out voice operations | d3f7c9383 | Implemented | Real delayed server and spoken Workbench recovery. |
+| AUD-06 | Partial remote startup | de0e99c30 | Implemented | Real SSH/two-lane reconnect without replay. |
+| AUD-07 | Packaged OCR launcher | 24b5a4d4d | Implemented | Installed OCR prerequisites and recognition. |
+| AUD-08 | Selected Emacs propagation | f63449c83 | Implemented | No additional defect-specific check identified. |
+| AUD-09 | Native dependency freshness | 40fbf5c3a | Implemented | Native Windows Emacs checker/build execution. |
+| AUD-10 | Autoload regeneration | 259fc806c | Implemented | No additional defect-specific check identified. |
+| AUD-11 | Startup stale-source coverage | 0445a94db | Implemented | Interactive delayed/failed startup acceptance. |
+| AUD-12 | Unsigned release tags | 7cb8c6de9 | Implemented | No real release publication is needed to validate this fix. |
+| AUD-13 | CI speech/integration coverage | 9582f1dc5, 2b1e00315, 1b9c220f3 | Implemented | Hosted Actions and actual Emacs 31.1 execution unverified here. |
+| AUD-14 | Isearch preference ownership | 05230f31f | Implemented | Listening with enabled/disabled message speech. |
+| AUD-15 | Prefix keys in Help | 299ea3cd4 | Implemented | Interactive Help; separate multi-event prefix lead below. |
+| AUD-16 | Test entry documentation | 68956c6ea | Implemented | Full Emacs 30.2 suite with all prerequisites remains distinct. |
+| AUD-17 | Background startup ownership | ee8fc21ff | Bounded change complete | Fresh interactive status/error feedback. |
+| AUD-18 | Agent Shell responsibilities | 4f5dbd1c9 | Bounded change complete | Live rendering/permission feedback; other responsibilities retained. |
+| AUD-19 | Aural metadata and delivery | 20af4ba4c, 940373aed, eb1e5cf3b | Partial; design open | Delivery candidate, async operation and optional provenance designs. |
+| AUD-20 | Embedded Windows staging | 390010003 | Bounded change complete | Clean native x64 route passed; optional engines/listening remain. |
+
+* Evidence and limits by finding
+
+** AUD-01 — Literal EWW arguments
+
+URL data and executable paths are quoted while configured shell command
+templates remain supported. Downloads select their working directory through
+=default-directory=. [[file:test/emacsvox-eww-tests.el][EWW regressions]] execute harmless real local commands and check
+exact arguments and working directories; both new regressions failed before
+the correction. All 30 EWW tests passed against source and compiled code.
+Bytecode and documentation gates passed. This does not exercise every user's
+browser/downloader command template.
+
+** AUD-02 — Literal EPUB archive paths with legacy compatibility
+
+Archive operations use direct process arguments, checked diagnostics and
+literal member matching. Existing saved bookshelf keys and customized command
+templates retain compatibility; legacy filename decoding does not evaluate
+input. Tests in [[file:test/emacsvox-epub-tests.el][EPUB]], [[file:test/emacsvox-eww-tests.el][EWW]] and [[file:test/emacsvox-reading-dom-tests.el][DOM handling]] cover real tiny archives,
+malformed metadata, Dired, saved shelves, deletion boundaries, custom templates
+and Windows quoting cases. The slice passed 2,994 unit tests with one optional
+skip, 41 compiled EWW/EPUB tests, a full bytecode rebuild and documentation
+gates. Windows quoting tests are not native Windows archive execution.
+
+** AUD-03 — Scanner images and recovery
+
+Acquisition and compression complete before image publication or interactive
+page advancement. Private staging preserves requested originals and leaves a
+recoverable original after processing failure. [[file:test/emacsvox-ocr-tests.el][Thirteen OCR tests]] passed against
+source and compiled code, including fake scanner/compressor failures, literal
+paths, empty successful output, retention and cleanup. Bytecode/reference/docs
+checks passed. Hardware behavior, actual recognition and usability of the
+spoken recovery path still need acceptance.
+
+** AUD-04 — Unconditional process retirement
+
+Cleanup and stopped observers are isolated from send/hook failure; retirement
+is reentrant/idempotent, quit propagates after cleanup, and an unpublished
+replacement is retired when initialization is interrupted. [[file:test/emacsvox-tts-tests.el][TTS]] and
+[[file:test/omnivox-remote-tests.el][remote tests]] cover ownership and failure paths. The slice passed 3,007 unit
+tests with one existing skip, 157 compiled TTS/remote tests, semantic traces
+and bytecode/docs preflights. Real audible interruption and stop-all remain
+separate from callback and process-state assertions.
+
+** AUD-05 — Terminal timeout ownership
+
+Voice applies own their requests and reject callbacks after terminal
+completion; submission failure and process replacement clean up ownership.
+Overlapping applies and one terminal aggregate are preserved. Workbench
+describes the unconfirmed server outcome and retry. [[file:test/emacsvox-tts-tests.el][TTS]] and
+[[file:test/emacsvox-aural-voice-workbench-tests.el][Workbench regressions]] accompanied 3,014 unit passes with one existing skip,
+202 compiled TTS/Workbench passes, bytecode/reference/manual checks.
+Cancellation does not prove that a server rolled back an already applied
+change. A real delayed-response session and spoken recovery remain unverified.
+
+** AUD-06 — Notification-lane recovery
+
+Partial remote startup uses the existing guarded retry scheduler, preserves
+working main speech and retains connection diagnostics. [[file:test/omnivox-remote-tests.el][Remote regressions]]
+cover successful retry, disabled recovery and disconnect with controlled
+connection failures. Source/compiled TTS and remote validation passed 166
+tests; standalone remote tests and manual/bytecode/docs checks passed too.
+This establishes deterministic recovery behavior, not real SSH timing or
+audible reconnect without replay across two lanes.
+
+** AUD-07 — Debian OCR payload completeness
+
+The package requires the executable default OCR launcher. [[file:test/test_package_deb.py][Six isolated Debian
+archive tests]] passed, checking the installed Lisp default and relocated
+launcher arguments/environment without OCR dependencies. User instructions
+were updated and Org/docs gates passed. Actual package installation with OCR
+models/dependencies and successful recognition remain unverified.
+
+** AUD-08 — Recursive Emacs selection
+
+Both Lisp submakes now receive the selected =EMACS=. [[file:test/emacsvox-autoload-tests.el][Real recipe fixtures]]
+distinguish fallback, local.mk and command-line executables. The slice passed
+3,018 unit tests with one existing skip, then ordinary =make bytecode= and
+=make docs-release-check= with local.mk alone. No broader build-system redesign
+was needed.
+
+** AUD-09 — Native freshness uses the dependency graph
+
+The native checker retains parsed dependencies while preserving the public
+ordered-source plan, and reports the stale dependent and newer prerequisite.
+[[file:test/emacsvox-native-bytecode-tests.el][Native checker fixtures]] compare direct/transitive dependency, own-source and
+missing-output cases with GNU Make; tests and bytecode/docs gates passed.
+The later AUD-20 Windows *speech-runtime* build does not run native Windows
+Emacs and therefore does not close this finding's native-platform acceptance.
+
+** AUD-10 — Configuration regenerates the whole autoload inventory
+
+Each configuration pass regenerates autoloads from the configured source
+inventory, rather than depending only on one Lisp file's timestamp. [[file:test/emacsvox-autoload-tests.el][Four
+autoload/configuration tests]] passed, including the real Make refresh path;
+the refresh regression failed on the old implementation. The regeneration
+cost is intentional and documented in the developer guide. An intermediate
+docs check rejected stale bytecode after edits; later build/docs gates passed.
+
+** AUD-11 — Fresh-session startup coverage
+
+Startup freshness includes essential dependencies and preserves source-load
+preference in background threads. [[file:test/emacsvox-startup-tests.el][Fourteen startup tests]] passed at this slice,
+including a fresh-process newer-source regression that failed before the fix.
+The slice also passed 3,028 unit tests with one existing skip, compiled Aural
+parity and normal build-tree startup checks. Final user-visible delayed/failed
+startup acceptance is combined with AUD-17 below.
+
+** AUD-12 — Explicit unsigned annotated tags
+
+The release command explicitly disables signing. [[file:test/emacsvox-version-tests.el][Thirteen version/release tests]]
+passed, including an isolated real Git tag operation under inherited signing
+configuration; the regression failed on the original recipe. This verifies
+behavior without creating a release tag in the project. Release gates and
+the requirement for fresh, named-release publication permission remain intact.
+
+** AUD-13 — Core CI, pinned integrations and load-order regression
+
+The core job exercises speech, transport, traces and compiled Aural behavior.
+Pinned Agent Shell, Notmuch and EAT dependencies have a separate integration
+runner and preparation checks. Running that integration suite exposed a real
+Agent Shell kill-feedback advice-order defect, fixed in its own commit.
+
+The actual core CI shell block passed locally in isolated private-home
+checkouts on Emacs 30.2 and 31.0.90: 436 tests, 27 traces and compiled parity
+on each. The pinned integration job passed 557 tests on each; nine dependency
+preparation tests passed. Negative controls demonstrated rejection of an
+injected retirement regression, missing Tcl, a deliberate integration skip
+and broken kill feedback. [[file:.github/workflows/ci.yml][CI configuration]], [[file:test/run-core-tests.el][core runner]],
+[[file:test/run-integration-tests.el][integration runner]] and [[file:test/test_integration_dependencies.py][dependency fixtures]] retain this coverage.
+Hosted Actions execution and the configured Emacs 31.1 job were not observed;
+local 31.0.90 is not evidence of execution on 31.1.
+
+** AUD-14 — Restore the user's Isearch speech preference
+
+Isearch saves and restores the prior message-speech setting. [[file:test/emacsvox-search-tests.el][Twenty-four search
+tests]] passed against source, compiled code and Emacs 30.2. The slice also
+passed 3,034 unit tests with one existing skip and bytecode/docs checks.
+Listening with message speech enabled and disabled, including abort/exit,
+remains an explicit acceptance case.
+
+** AUD-15 — Help describes the active prefix
+
+The startup Help text derives the advertised prefix from the active binding.
+Fresh batch Help checks covered the default and a customized single-event
+prefix; bytecode, reference and docs checks passed. This slice did not add a
+new test suite for a small documentation correction.
+
+A separate multi-event-prefix probe using =C-c e= failed during configuration;
+the customized single-event path passed. This is a follow-up lead, not a claim
+that the Help correction solved arbitrary prefix installation. Reproduce and
+identify its owner before proposing an additional fix.
+
+** AUD-16 — Accurate test entry guidance
+
+[[file:test/README.org][The test guide]] now explains prerequisites, coverage and build effects with
+Emacs 30.2 as the baseline, separating source tests from compiled/live checks.
+Docs and the remaining relevant gates passed. A selected 30.2 compatibility
+run had 241 passes and one expected DOM capability skip; broader 30.2 unit
+attempts stopped at missing package/Lua setup. Those prerequisite failures do
+not establish a product regression or a full 30.2-suite pass.
+
+** AUD-17 — Background tasks have observable completion and failure
+
+Startup retains task state and errors, isolates immediate/deferred adapter
+failures, preserves source preference, and provides readable/spoken status.
+[[file:test/emacsvox-startup-tests.el][Twenty-three startup tests]] passed against source and compiled code; the
+slice passed 3,043 unit tests with one existing skip and 445 core tests on
+Emacs 30.2. User installation guidance and developer lifecycle documentation
+were updated. Actual interactive startup with delayed/failing optional
+integrations still needs a listener to assess notification and recovery.
+
+** AUD-18 — Agent Shell renderer boundary
+
+Renderer interpretation moved into [[file:lisp/emacsvox-agent-shell-render.el][a private module]] while existing commands,
+permissions and compatibility behavior remain in their established owners.
+[[file:test/emacsvox-agent-shell-render-tests.el][Eight renderer tests]], 565 integration tests against source and compiled
+code, 3,051 unit passes with one existing skip, and Emacs 30.2 core/integration
+and compiled-renderer checks passed. This completes one coherent extraction;
+it does not mean the rest of Agent Shell is small or comprehensively reviewed.
+
+** AUD-19 — Shared metadata and explicit preparation helpers
+
+Three bounded slices are complete:
+
+1. Shared voice-style field metadata and validation, with independently
+   stated value/absence/precedence expectations and round-trip coverage.
+2. Numeric tuner controls consume that metadata while retaining the existing
+   five-field ACSS editor scope and reader behavior.
+3. Pure effect-state decisions and explicit serialization policy/key inputs;
+   wrapper policy capture still occurs at the established point after
+   resource resolution, and final writes retain exactly-once behavior.
+
+[[file:test/emacsvox-aural-rules-tests.el][Rules]], [[file:test/emacsvox-aural-voice-palettes-tests.el][tuner]], [[file:test/emacsvox-aural-transport-tests.el][transport]] and [[file:test/verify-compiled-aural.el][compiled parity]] checks preserve these contracts.
+Metadata characterization passed on old and new implementations; five tuner
+cases likewise passed before/after. Four delivery characterization cases
+passed before extraction and all six cases passed afterward. Focused source
+and compiled Emacs 30.2 checks passed. The final delivery slice passed 3,070
+unit tests with one existing Mu4e skip, 27 traces and compiled parity.
+
+Still open: a complete delivery candidate separated from process effects and
+registration; explicit asynchronous voice-operation ownership; optional
+delivery provenance. Keep backend capabilities and the foreground/notification
+contract in their current owners until a reviewed design demonstrates parity.
+The existing [[file:docs/developer/backlog.org][developer backlog]] remains the design starting point and is not
+rewritten by this report.
+
+** AUD-20 — Staging extraction and native acceptance
+
+The host-side staging operation moved from Make into
+[[file:servers/omnivox-release/stage-runtime.sh][stage-runtime.sh]], with explicit inputs. Make retains guards, prerequisite
+verification, build orchestration and final verification. Main-only reuse
+behavior is unchanged. [[file:test/test_windows_staging.py][Twelve behavioral fixtures]] exercise real Make/Git/file
+operations with stubbed compiler/Windows boundaries: clean/dirty sources,
+optional inputs, spaced paths, corrupt caches, missing companions, rejected
+reuse, interruption, activation failure/retry and post-activation gate failure.
+
+All twelve passed against both implementations. Three same-directory
+old/new comparisons matched bytes, permissions, build identities and event
+order. The isolated implementation checkout passed 3,070 unit tests with one
+existing Mu4e skip, a full selected-Emacs bytecode build, staging/archive/header
+checks and bytecode/docs gates. A post-commit export contained the executable
+script. The native clean x64 route subsequently passed as detailed next.
+
+* Durable native Windows acceptance summary
+
+This section preserves the result independently of temporary logs. It records
+the run completed on 2026-09-07, not a release publication or a deployment of
+the active profile.
+
+| Field | Value |
+|-------+-------|
+| Emacsvox source | 39001000377f14a356529b7aee666ec1d141b23c |
+| Omnivox source | c526382c6eb36a740684ee69147e3de950c8d7b4 |
+| Command | make windows-omnivox OMNIVOX_DIR=/tmp/emacsvox-aud20-native-t80_0318/omnivox |
+| Working directory | /tmp/emacsvox-aud20-native-t80_0318/emacsvox |
+| Successful run, UTC | 06:27:03–06:32:16; exit 0 |
+| Preflight | make check-emacs passed; local.mk selected Emacs 31.0.90 |
+| Build kind | release-clean-worktree |
+| Private runtime ID | d391b25afb3002c3 |
+| Active runtime selection after run | versions/98084bb159c06059, unchanged |
+| Rust / MinGW | 1.97.1 / GCC 12-win32 |
+| Official Piper companion | 1.7.1; matching pinned source commit |
+
+Provenance independently matched both source commits and the empty
+tracked-diff digest for both private checkouts. Cargo.lock, toolchain.lock,
+Dockerfile and executable hashes were checked against the staged provenance.
+
+#+begin_example
+emacsvox_worktree_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+omnivox_worktree_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+omnivox_executable_sha256=c1f35f53ab39694005837f10367c1488eff88e5de42e35aa6e15559955f4fed2
+release_image_id=sha256:3186f03b16a6b9cc62befb0902a40974b6297426483582464e3c421bb9873204
+verified_build_id=d391b25afb3002c3
+live_flite_voice=cmu_us_slt
+live_rutts_voices=male,female
+live_tgspeechbox_voice=not-included
+live_tgspeechbox_sample_rates=not-included
+live_piper_voice=not-configured
+#+end_example
+
+| Gate | Observed result |
+|------+-----------------|
+| Toolchain | Pinned image, Rust/MinGW, Roslyn/hash, reference assemblies and Windows .NET checks passed. |
+| Helper determinism | Repeated Eloquence and DECtalk helper builds compared byte-for-byte. |
+| Compilation | Linux CLI, Windows CLI with Piper, RHVoice, Flite and RuTTS helper builds passed. |
+| Staging and integrity | Payload/companion manifests, diagnostics, provenance, Windows-local copies and eSpeak data identity passed. |
+| eSpeak | Expected English US voice listed and bounded voice-cache file validated. |
+| Flite | cmu_us_slt listed; English-text WAV generated with RIFF signature and size greater than 44 bytes. |
+| RuTTS | Male/female listed; male Russian-text WAV passed the same structural checks. |
+
+No Piper model was configured. RHVoice, Eloquence and DECtalk synthesis with
+external runtime data was not exercised; TGSpeechBox was omitted. Female
+RuTTS synthesis and eSpeak WAV generation were not part of the live gate.
+Structural WAV checks do not prove intelligibility, non-silent audio,
+playback, latency, interruption or usable spoken interaction.
+
+The first attempt failed after Flite compilation because the private shared
+clones' Git alternates pointed outside Docker's mounts. This was an acceptance
+setup error before host staging, not evidence of an extraction defect. The
+private clones were made self-contained, then the complete ordinary target
+passed without bypassing any gate. Both private source trees remained clean.
+
+The approved run populated normal content-addressed Windows LocalAppData
+caches. The active source worktrees and live profile were not retargeted or
+restarted. The existing activation-before-final-verification ordering remains
+unchanged; the private selection bounded the effect of a failed candidate.
+
+Raw logs and full provenance were retained at
+=/tmp/emacsvox-aud20-native-t80_0318/=, including =windows-omnivox.log=,
+=results.json=, =attempt-1-windows-omnivox.log=, =final-isolation.json= and the
+private runtime's =PROVENANCE=. These paths may disappear; the summary above
+does not depend on them. Runtime binaries and full local logs are not added
+to the repository.
+
+* Documentation accounting
+
+| Audit need | Maintained source updated by remediation | Remaining verification |
+|------------+------------------------------------------+------------------------|
+| Remote partial startup/recovery | [[file:docs/manual/chapters/speech-backends.org][Speech backends]] and [[file:docs/developer/integration-maintenance.org][integration maintenance]] | Real reconnect and spoken diagnosis. |
+| Packaged OCR invocation | [[file:docs/manual/chapters/applications.org][Applications]] | Installed OCR stack and recognition. |
+| Voice timeout/unconfirmed outcome | [[file:docs/manual/chapters/aural-presentation.org][Aural presentation]] and integration maintenance | Live Workbench recovery. |
+| Active Help prefix | [[file:lisp/emacsvox.el][Main Lisp docstring]] | Interactive Help; separate multi-event-prefix lead. |
+| Test prerequisites and scope | [[file:test/README.org][Test entry guide]] | Complete 30.2 environment and hosted CI. |
+| Startup completion/error ownership | [[file:docs/manual/chapters/installation.org][Installation]] and integration maintenance | Delayed/failed interactive startup. |
+| Renderer, metadata, preparation, staging boundaries | Integration maintenance and relevant test guidance | Larger design proposals are not described as implemented. |
+
+Generated references/manuals were refreshed through their maintained workflows
+where required during implementation. This companion is not an authoritative
+replacement for user configuration instructions or the existing ADRs. No
+external-link validation or public documentation publication is claimed.
+
+* Remaining work in bounded order
+
+** 1. Foreground, notification and recovery listening acceptance
+
+Prepare a separate profile/checklist tied to an exact source and runtime
+identity. Exercise foreground interruption, independent notifications,
+stop-all, routing-ready startup, Isearch exit/abort with each message-speech
+preference, and delayed/failed startup status. Record what was actually heard,
+expected ordering, recovery steps and any duplicate/missing feedback. Include
+Workbench timeout/retry with a controlled delayed server when available.
+
+Done when each scenario has an observed pass/fail and reproducible failures
+have a bounded regression task. This needs a listener; automated events alone
+cannot close it. Do not silently replace or restart the active profile.
+
+** 2. Real remote two-lane acceptance
+
+Use a configured SSH speech workstation. Exercise notification-only initial
+failure, reconnect/backoff, heartbeat timeout, disconnect during recovery and
+no replay of obsolete speech. Check foreground continuity and audible error
+recovery. Record both endpoint identities. A deterministic fake-peer extension
+can be handled independently if an uncovered branch is found; it does not
+replace this real connection check.
+
+** 3. Native Emacs and complete CI environment
+
+In separate checkouts, execute AUD-09 with actual Windows Emacs at a supported
+version, including stale direct/transitive dependencies and fresh startup.
+Execute hosted core/integration jobs and the configured 31.1 version when
+available. For a broad 30.2 unit run, first provision the documented optional
+package and Lua prerequisites; retain explicit skips and failures. Do not
+confuse the successful Windows speech-runtime build with these Lisp checks.
+
+** 4. Scanner, package and optional-engine acceptance
+
+With available hardware, verify original retention, scanner/compressor error
+recovery, page counting and recognition. Test the Debian-installed launcher
+with its actual OCR dependencies. Independently test optional speech engines
+with explicitly configured external data/models; capture which voice and
+engine were heard. Missing hardware or models should remain recorded coverage
+limits rather than prompting unrelated dependency/runtime changes.
+
+** 5. Small independent follow-ups
+
+- Reproduce the =C-c e= multi-event-prefix lead in a fresh isolated profile;
+  identify the configuration contract and owner before proposing a correction.
+- Promote a newly reproduced listening/integration failure into the smallest
+  meaningful regression and correction, committed separately.
+- Retain a hosted CI result with exact source and toolchain identities when
+  that run is performed; do not infer it from local shell-block execution.
+
+** 6. AUD-19 design discussion after acceptance
+
+| Candidate | Benefit | Cost/risk | Bounded first step |
+|-----------+---------+-----------+--------------------|
+| Explicit delivery candidate before process effects | Easier inspection and failure reasoning without live writes. | Capture timing, resource resolution and registration must remain equivalent. | Map remaining inputs/effects and propose one candidate boundary with old/new final-write parity. |
+| Explicit asynchronous voice operation | Clear terminal ownership and cleanup across callbacks. | Overlapping applies, timeout ambiguity and process replacement make migration risky. | Specify lifecycle states and ownership invariants around the existing timeout regressions. |
+| Optional delivery provenance | Easier explanation of what was sent and why. | Retention cost and duplicated/unclear diagnostic ownership. | Establish one concrete diagnostic use case before adding retained data. |
+
+Recommendation: discuss the delivery candidate first, informed by actual
+acceptance failures if any. Keep the current helpers if the proposed boundary
+does not materially reduce change risk. No generic framework, lane-contract
+change, compatibility removal or broad file split is authorized by this
+close-out report.
+
+* Close-out report checks and preservation
+
+This slice adds only this companion report. The original audit remains
+unchanged and untracked; its historical line references are intentionally not
+rewritten. Existing backlog, password-advice and input-test changes are not
+part of the audit close-out commit. No build, dependency update, generated
+artifact update, runtime restart or publication is required for this report.
+
+Close-out validation passed:
+
+- All 20 finding sections and all 20 table mappings are present in order;
+  every mapped commit is an ancestor of the stated source snapshot.
+- All 40 repository-relative file links resolve in the working checkout.
+  The original audit link depends on the preserved, currently untracked file.
+- The retained native results report exit 0; each copied provenance/live-result
+  line matches its underlying evidence.
+- Selected-Emacs Org lint and whitespace checks passed. An initial malformed
+  batch-check expression was corrected before the successful lint run; it
+  did not indicate an Org-file defect.
+- =make check-emacs= and =make docs-release-check= passed, including bytecode
+  preflight and current generated-manual checks. Only ignored documentation
+  preview outputs were produced; no tracked artifact was regenerated.
+- SHA256 checks confirmed the original audit and all three pre-existing
+  modified files remained byte-for-byte unchanged during this slice.
+
+Runtime test suites and native builds were not repeated for this report-only
+change. This report preserves their earlier results with their stated limits.
