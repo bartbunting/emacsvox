@@ -348,7 +348,7 @@ OBJECTS = $(TTS_OBJECTS) $(SPEAK_OBJECTS) $(CORE_OBJECTS)  $(ADDON_OBJECTS)
 
 ###   User level targets all
 
-.PHONY: all aural documentation-modules
+.PHONY: all aural documentation-modules config
 all: $(OBJECTS)
 
 # Canonical compiled-module inventory consumed by the generated reference.
@@ -478,7 +478,6 @@ muggles: emacsvox-muggles.elc
 extra-muggles: extra-muggles.elc
 maths: emacsvox-maths.elc
 
-config: emacsvox-loaddefs.el
 lint:
 	echo "." |\
 emacs -batch -q \
@@ -488,7 +487,10 @@ emacs -batch -q \
 
 ### build time target --loaddefs
 
-emacsvox-loaddefs.el: emacsvox-omnivox-components.el
+# Configuration always rescans the source inventory, including removed files.
+emacsvox-loaddefs.el: config
+
+config:
 	@$(EMACS) $(BATCH)  -l ./emacsvox-preamble.el  \
 	-l ./emacsvox-autoload.el  \
 	-f emacsvox-auto-generate-autoloads

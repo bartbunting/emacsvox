@@ -5360,6 +5360,17 @@ changes.  ‘make bytecode-check’ is the non-mutating preflight for
 startup or deployment.  It reports missing, stale, orphaned, or
 wrong-Emacs byte-code.
 
+   Each ‘make config’ fully regenerates ‘lisp/emacsvox-loaddefs.el’ from
+the current sources, including edited autoloads, new modules, and
+deleted modules.  The build targets ‘make bytecode’, ‘make
+bytecode-rebuild’, ‘make emacsvox’, and ‘make all’ run configuration
+before compiling; ‘make compat-test’ runs it before testing.  The
+portable command ‘emacs -Q --batch -l etc/configure-emacsvox.el’ uses
+the same full regeneration.  Saving a source file or starting Emacs does
+not regenerate autoloads.  Neither ‘make bytecode-check’ nor ‘make
+docs-release-check’ does so.  Regenerating the index alone does not
+force all modules to be recompiled.
+
    Tests deliberately prefer source and therefore do not prove that the
 byte-code used by a live profile is current.  Verify rebuilt byte-code
 in a fresh Emacs rather than relying on a file reload when compiled
@@ -6229,10 +6240,10 @@ Ref: Testing A Direct Legacy Server235700
 Ref: Commands That Queue Output236259
 Ref: Commands That Set State239293
 Node: Integration Maintenance241887
-Ref: Supported Emacs versions243929
-Ref: Native Windows builds244617
-Ref: Remote preview validation246677
-Node: Concept Index277967
+Ref: Supported Emacs versions244617
+Ref: Native Windows builds245305
+Ref: Remote preview validation247365
+Node: Concept Index278655
 
 End Tag Table
 

@@ -38,8 +38,10 @@
 
 (defun emacsvox-auto-generate-autoloads ()
   "Generate emacsvox autoloads."
+  ;; A full scan also drops entries for deleted modules.  The incremental
+  ;; generator can retain them even when configuration is explicitly rerun.
   (loaddefs-generate
-   emacsvox-lisp-directory emacsvox-auto-autoloads-file))
+   emacsvox-lisp-directory emacsvox-auto-autoloads-file nil nil nil t))
 
 (provide 'emacsvox-autoload)
 

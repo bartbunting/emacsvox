@@ -41,7 +41,87 @@
     (should
      (equal
       observed
-      '("/tmp/emacsvox-lisp" "/tmp/emacsvox-loaddefs.el")))))
+      '("/tmp/emacsvox-lisp" "/tmp/emacsvox-loaddefs.el" nil nil nil t)))))
+
+(ert-deftest emacsvox-make-config-refreshes-autoloads ()
+  "Repeated configuration refreshes edited, added, and removed commands."
+  (skip-unless (and (executable-find "make") (not (eq system-type 'windows-nt))))
+  (let* ((root (make-temp-file "emacsvox-autoload-refresh-" t))
+         (default-directory (file-name-as-directory root))
+         (process-environment (copy-sequence process-environment))
+         (emacs (expand-file-name invocation-name invocation-directory))
+         (index (expand-file-name "emacsvox-loaddefs.el" root)))
+    (unwind-protect
+        (cl-labels
+            ((write-module
+              (file forms)
+              (with-temp-file (expand-file-name file root)
+                (insert ";;; Fixture -*- lexical-binding: t; -*-\n" forms)))
+             (run
+              (program &rest arguments)
+              (with-temp-buffer
+                (let ((status (apply #'call-process program nil t nil arguments)))
+                  (unless (eq status 0)
+                    (ert-fail (format "%s exited %s: %s"
+                                      program status (buffer-string)))))))
+             (configure
+              ()
+              (run "make" "config" (concat "EMACS=" emacs) "BATCH=-Q --batch"))
+             (verify
+              (form)
+              ;; A fresh process must see only the newly generated index.
+              (run emacs "-Q" "--batch" "-L" root "-l" index
+                   "--eval"
+                   (prin1-to-string
+                    `(progn
+                       (require 'ert)
+                       ,@(mapcar (lambda (check) `(should ,check))
+                                 (cdr form)))))))
+          (dolist (name '("MAKEFLAGS" "MAKEOVERRIDES" "MFLAGS" "MAKELEVEL" "EMACS"))
+            (setenv name nil))
+          (copy-file (expand-file-name "lisp/Makefile" emacsvox-autoload-tests--root)
+                     (expand-file-name "Makefile" root))
+          (copy-file (expand-file-name "lisp/emacsvox-autoload.el"
+                                       emacsvox-autoload-tests--root)
+                     (expand-file-name "emacsvox-autoload.el" root))
+          (write-module "emacsvox-preamble.el"
+                        "(setq emacsvox-lisp-directory default-directory)\n")
+          (write-module "emacsvox-omnivox-components.el" "; Unchanged module.\n")
+          (write-module "example.el"
+                        (concat ";;;###autoload\n"
+                                "(defun ev-fixture () \"Original.\" "
+                                "(interactive) 'original)\n"))
+          (configure)
+          (verify '(and (commandp 'ev-fixture)
+                        (autoloadp (symbol-function 'ev-fixture))
+                        (equal (documentation 'ev-fixture) "Original.")
+                        (eq (ev-fixture) 'original)))
+          (write-module "example.el"
+                        (concat ";;;###autoload\n"
+                                "(defun ev-fixture (value) \"Updated.\" "
+                                "(interactive \"p\") value)\n"))
+          ;; Neither the old Make prerequisite nor timestamp-based rescans
+          ;; can detect this replacement.  Full configuration must do so.
+          (set-file-times (expand-file-name "example.el" root) '(0 1 0 0))
+          (configure)
+          (verify '(and (commandp 'ev-fixture)
+                        (string-prefix-p "Updated." (documentation 'ev-fixture))
+                        (string-search "(fn VALUE)" (documentation 'ev-fixture t))
+                        (eq (ev-fixture 'updated) 'updated)))
+          (write-module "added.el"
+                        (concat ";;;###autoload\n"
+                                "(defun ev-added () (interactive) 'added)\n"))
+          (set-file-times (expand-file-name "added.el" root) '(0 1 0 0))
+          (configure)
+          (verify '(and (commandp 'ev-added) (eq (ev-added) 'added)))
+          (delete-file (expand-file-name "example.el" root))
+          (configure)
+          (verify '(and (not (fboundp 'ev-fixture))
+                        (commandp 'ev-added) (eq (ev-added) 'added)))
+          (configure)
+          (verify '(and (not (fboundp 'ev-fixture))
+                        (commandp 'ev-added) (eq (ev-added) 'added))))
+      (delete-directory root t))))
 
 (ert-deftest emacsvox-portable-configure-generates-loaddefs ()
   "The Emacs-only first-run command works without Make or the current directory."
