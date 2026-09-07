@@ -71,6 +71,41 @@
       (omnivox-remote--sentinel process "closed\n"))
     (should handled)))
 
+(ert-deftest omnivox-remote-disconnect-cleans-both-lanes-after-hook-error ()
+  "Disconnect retires both lanes and their heartbeats despite a bad observer."
+  (let* ((speaker (make-pipe-process :name "remote-disconnect-main" :noquery t))
+         (notifier (make-pipe-process :name "remote-disconnect-notify" :noquery t))
+         (tts-speaker-process speaker)
+         (tts-notify-process notifier)
+         (omnivox-remote--session "test-session")
+         (omnivox-remote--suspended nil)
+         (omnivox-remote--retry-timer nil)
+         stopped
+         (tts-stopped-hook
+          (list (lambda (_) (error "observer broke"))
+                (lambda (owner) (push owner stopped)))))
+    (unwind-protect
+        (progn
+          (dolist (process (list speaker notifier))
+            (process-put process 'omnivox-remote-managed t)
+            (process-put process 'omnivox-remote-heartbeat
+                         (run-at-time 3600 nil #'ignore))
+            (set-process-sentinel process #'omnivox-remote--sentinel))
+          (cl-letf (((symbol-function 'emacsvox-aural-delivery-send) #'ignore)
+                    ((symbol-function 'omnivox-remote--schedule-retry)
+                     (lambda () (ert-fail "Disconnect scheduled reconnect"))))
+            (omnivox-remote-disconnect))
+          (should omnivox-remote--suspended)
+          (should-not omnivox-remote--session)
+          (should (equal (nreverse stopped) (list speaker notifier)))
+          (dolist (process (list speaker notifier))
+            (should-not (process-live-p process))
+            (should-not (process-get process 'omnivox-remote-heartbeat))))
+      (dolist (process (list speaker notifier))
+        (when-let* ((timer (process-get process 'omnivox-remote-heartbeat)))
+          (cancel-timer timer))
+        (when (process-live-p process) (delete-process process))))))
+
 (ert-deftest omnivox-remote-voice-discovery-uses-workstation-inventory ()
   (let ((tts-program "omnivox")
         (omnivox-remote-host "127.0.0.1")

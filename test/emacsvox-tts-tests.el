@@ -2331,6 +2331,208 @@
       (when (process-live-p process)
         (delete-process process)))))
 
+(ert-deftest emacsvox-tts-retirement-failures-do-not-strand-state-or-observers ()
+  "A failed send or hook cannot strand callbacks, peers, or the old server."
+  (dolist (failure '(send hook both))
+    (let* ((process
+            (make-pipe-process
+             :name "emacsvox-retirement-failure-test" :buffer nil :noquery t))
+           (tts--tracked-dispatches (make-hash-table :test #'eql))
+           (tts--marker-dispatches (make-hash-table :test #'eql))
+           (tts--dispatch-lifecycles (make-hash-table :test #'eql))
+           (emacsvox-aural-last-delivery-failure nil)
+           cancellations callbacks stopped diagnostics
+           (tts-stopped-hook
+            (list
+             (lambda (_owner)
+               (when (memq failure '(hook both)) (error "observer broke")))
+             (lambda (owner) (push owner stopped)))))
+      (unwind-protect
+          (progn
+            (set-process-sentinel process #'tts--speech-process-sentinel)
+            (puthash
+             17 (cons process (lambda (id status) (push (list id status) callbacks)))
+             tts--tracked-dispatches)
+            (puthash
+             17 (tts--marker-dispatch-create :process process :callback #'ignore)
+             tts--marker-dispatches)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-cancel-pending-deliveries)
+                  (lambda (owner) (push owner cancellations)))
+                 ((symbol-function 'emacsvox-aural-delivery-send)
+                  (lambda (&rest _)
+                    (when (memq failure '(send both)) (error "pipe broke"))))
+                 ((symbol-function 'message)
+                  (lambda (format-string &rest arguments)
+                    (push (apply #'format format-string arguments) diagnostics))))
+              (tts--retire-process process)
+              (tts--retire-process process))
+            (should-not (process-live-p process))
+            (should (equal cancellations (list process)))
+            (should (equal callbacks '((17 cancelled))))
+            (should (equal stopped (list process)))
+            (should (= 0 (hash-table-count tts--tracked-dispatches)))
+            (should (= 0 (hash-table-count tts--marker-dispatches)))
+            (should-not emacsvox-aural-last-delivery-failure)
+            (dolist (detail (pcase failure
+                             ('send '("stop command.*pipe broke"))
+                             ('hook '("stopped hook.*observer broke"))
+                             (_ '("stop command.*pipe broke"
+                                  "stopped hook.*observer broke"))))
+              (should
+               (seq-some
+                (lambda (entry)
+                  (and (string-match-p (process-name process) entry)
+                       (string-match-p detail entry)))
+                diagnostics))))
+        (when (process-live-p process) (delete-process process))))))
+
+(ert-deftest emacsvox-tts-retirement-is-reentrant-and-idempotent ()
+  "Callbacks and observers may retire the same owner without recursion."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-retirement-reentrant-test" :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-notify-process nil)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         callbacks stopped writes
+         (tts-stopped-hook
+          (list (lambda (owner)
+                  (push owner stopped)
+                  (tts-stop)
+                  (tts--retire-process owner)))))
+    (unwind-protect
+        (progn
+          (puthash
+           17 (cons process
+                    (lambda (id status)
+                      (push (list id status) callbacks)
+                      (tts--retire-process process)))
+           tts--tracked-dispatches)
+          (cl-letf (((symbol-function 'emacsvox-aural-delivery-send)
+                     (lambda (owner &rest _) (push owner writes))))
+            (tts--retire-process process)
+            (tts--retire-process process))
+          (should-not (process-live-p process))
+          (should (equal writes (list process)))
+          (should (equal callbacks '((17 cancelled))))
+          (should (equal stopped (list process))))
+      (when (process-live-p process) (delete-process process)))))
+
+(ert-deftest emacsvox-tts-retirement-cleans-an-already-dead-owner ()
+  "Retirement cleans stale ownership without sending to a dead process."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-retirement-dead-test" :buffer nil :noquery t))
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         callbacks stopped
+         (tts-stopped-hook (list (lambda (owner) (push owner stopped)))))
+    (delete-process process)
+    (puthash
+     17 (cons process (lambda (id status) (push (list id status) callbacks)))
+     tts--tracked-dispatches)
+    (cl-letf (((symbol-function 'emacsvox-aural-delivery-send)
+               (lambda (&rest _) (ert-fail "Sent to a dead process"))))
+      (tts--retire-process process)
+      (tts--retire-process process))
+    (should (equal callbacks '((17 cancelled))))
+    (should (equal stopped (list process)))))
+
+(ert-deftest emacsvox-tts-retirement-defers-quit-until-cleanup ()
+  "A user quit still propagates after callbacks, observers, and deletion."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-retirement-quit-test" :buffer nil :noquery t))
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         callbacks stopped
+         (tts-stopped-hook (list (lambda (owner) (push owner stopped)))))
+    (unwind-protect
+        (progn
+          (puthash
+           17 (cons process (lambda (id status) (push (list id status) callbacks)))
+           tts--tracked-dispatches)
+          (cl-letf (((symbol-function 'emacsvox-aural-delivery-send)
+                     (lambda (&rest _) (signal 'quit nil))))
+            (should (eq 'quit
+                        (condition-case nil
+                            (progn (tts--retire-process process) 'returned)
+                          (quit 'quit)))))
+          (should-not (process-live-p process))
+          (should (equal callbacks '((17 cancelled))))
+          (should (equal stopped (list process))))
+      (when (process-live-p process) (delete-process process)))))
+
+(ert-deftest emacsvox-tts-initialize-recovers-from-retirement-errors ()
+  "A failing old-server send and observer cannot block replacement setup."
+  (let* ((old (make-pipe-process :name "emacsvox-retirement-old" :noquery t))
+         (new (make-pipe-process :name "emacsvox-retirement-new" :noquery t))
+         (tts-speaker-process old)
+         (tts-notify-process nil)
+         (tts-program "test-server")
+         (tts-stopped-hook (list (lambda (_) (error "observer broke"))))
+         configured)
+    (unwind-protect
+        (progn
+          (cl-letf (((symbol-function 'tts-make-process) (lambda (_) new))
+                    ((symbol-function 'emacsvox-aural-delivery-send)
+                     (lambda (&rest _) (error "pipe broke")))
+                    ((symbol-function 'tts-multistream-p) (lambda (_) nil))
+                    ((symbol-function 'voice-setup)
+                     (lambda () (setq configured tts-speaker-process))))
+            (tts-initialize))
+          (should (eq tts-speaker-process new))
+          (should (eq configured new))
+          (should (process-live-p new))
+          (should-not (process-live-p old)))
+      (when (process-live-p old) (delete-process old))
+      (when (process-live-p new) (delete-process new)))))
+
+(ert-deftest emacsvox-tts-initialize-quit-retires-unpublished-replacement ()
+  "Quitting retirement cannot leave the newly started server unowned."
+  (let* ((old (make-pipe-process :name "emacsvox-retirement-quit-old" :noquery t))
+         (new (make-pipe-process :name "emacsvox-retirement-quit-new" :noquery t))
+         (tts-speaker-process old)
+         (tts-notify-process nil)
+         (tts-program "test-server")
+         (tts-stopped-hook (list (lambda (_) (signal 'quit nil)))))
+    (unwind-protect
+        (progn
+          (cl-letf (((symbol-function 'tts-make-process) (lambda (_) new))
+                    ((symbol-function 'emacsvox-aural-delivery-send) #'ignore))
+            (should (eq 'quit
+                        (condition-case nil
+                            (progn (tts-initialize) 'returned)
+                          (quit 'quit)))))
+          (should-not (process-live-p old))
+          (should-not (process-live-p new))
+          (should-not (eq tts-speaker-process new)))
+      (when (process-live-p old) (delete-process old))
+      (when (process-live-p new) (delete-process new)))))
+
+(ert-deftest emacsvox-tts-notifier-replacement-survives-retirement-errors ()
+  "An observer failure leaves the replacement notifier live and current."
+  (let* ((old (make-pipe-process :name "emacsvox-retirement-old-notify" :noquery t))
+         (new (make-pipe-process :name "emacsvox-retirement-new-notify" :noquery t))
+         (tts-notify-process old)
+         (tts-program "test-server")
+         (tts-notification-device "test-device")
+         observed
+         (tts-stopped-hook
+          (list (lambda (_)
+                  (setq observed tts-notify-process)
+                  (error "observer broke")))))
+    (unwind-protect
+        (progn
+          (cl-letf (((symbol-function 'tts-make-process) (lambda (_) new))
+                    ((symbol-function 'emacsvox-aural-delivery-send) #'ignore))
+            (should (eq (tts-notify-initialize) new)))
+          (should (eq observed new))
+          (should (eq tts-notify-process new))
+          (should (process-live-p new))
+          (should-not (process-live-p old)))
+      (when (process-live-p old) (delete-process old))
+      (when (process-live-p new) (delete-process new)))))
+
 (ert-deftest emacsvox-tts-interrupt-deduplicates-notification-owner ()
   "Interrupting notifications stops each distinct process exactly once."
   (let ((speaker

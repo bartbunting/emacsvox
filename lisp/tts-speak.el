@@ -41,6 +41,7 @@
 ;;;  Forward Declarations:
 
 (defvar emacsvox-last-message)
+(defvar emacsvox-speak-messages)
 (defvar org-fold-core-style)
 (defvar org-link-descriptive)
 (defvar tts-default-voice)
@@ -554,23 +555,64 @@ urgent policies cancel different scopes."
            (process-live-p tts-notify-process)
            (not (eq process tts-notify-process)))
     (tts-notify-stop))
-  (unwind-protect
-      (when (process-live-p process)
-        (emacsvox-aural-delivery-send process "s\n" 'stop))
-    (tts--cancel-process-tracked-dispatches process 'cancelled))
-  (run-hook-with-args 'tts-stopped-hook process))
+  ;; Retirement owns these callbacks already.  A stopped observer may itself
+  ;; call `tts-stop', so do not enter the same hook again for that owner.
+  (unless (and (processp process)
+               (process-get process tts--speech-process-retiring-property))
+    (unwind-protect
+        (when (process-live-p process)
+          (emacsvox-aural-delivery-send process "s\n" 'stop))
+      (tts--cancel-process-tracked-dispatches process 'cancelled))
+    (run-hook-with-args 'tts-stopped-hook process)))
 
 (defun tts--retire-process (process)
   "Cancel state owned by PROCESS, stop it, and delete it.
 
 This is the primary speech-process lifecycle boundary.  Pending replaceable
 delivery, tracked completion callbacks, and clients of `tts-stopped-hook' are
-retired before PROCESS can become an unreachable dead owner."
-  (when (processp process)
+retired before PROCESS can become an unreachable dead owner.  Ordinary cleanup
+errors are logged without preventing other cleanup or recovery.  A quit is
+deferred until cleanup finishes, then re-signalled.  Repeated retirement of
+the same owner is harmless."
+  (when (and (processp process)
+             (not (process-get process tts--speech-process-retiring-property)))
     (process-put process tts--speech-process-retiring-property t)
-    (emacsvox-aural-cancel-pending-deliveries process)
-    (tts--interrupt-process process)
-    (delete-process process)))
+    ;; Logging during teardown must not try to speak through the old server.
+    ;; Diagnostics remain in the echo area and *Messages* after recovery.
+    (let ((emacsvox-speak-messages nil)
+          failures quit-data)
+      (cl-labels
+          ((attempt (stage function &rest arguments)
+             (condition-case error-data
+                 (apply function arguments)
+               (error
+                (push (format "%s: %s" stage (error-message-string error-data))
+                      failures))
+               (quit (setq quit-data error-data)))))
+        (unwind-protect
+            (progn
+              (attempt "pending deliveries"
+                       #'emacsvox-aural-cancel-pending-deliveries process)
+              (when (process-live-p process)
+                (attempt "stop command"
+                         #'emacsvox-aural-delivery-send process "s\n" 'stop))
+              (attempt "tracked callbacks"
+                       #'tts--cancel-process-tracked-dispatches process 'cancelled)
+              (run-hook-wrapped
+               'tts-stopped-hook
+               (lambda (function owner)
+                 (attempt
+                  (if (symbolp function)
+                      (format "stopped hook %s" function)
+                    "stopped hook (anonymous)")
+                  function owner)
+                 nil)
+               process))
+          (delete-process process)))
+      (dolist (failure (nreverse failures))
+        (message "Speech server %s retired with cleanup error in %s"
+                 (process-name process) failure))
+      (when quit-data (signal (car quit-data) (cdr quit-data))))))
 
 (defun tts--protocol-dispatch-tracked (callback)
   "Dispatch queued speech and call CALLBACK with its terminal server status.
@@ -3005,9 +3047,15 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
   (let ((new (tts-make-process "Speaker"))
         (old-speaker tts-speaker-process))
     ;; Retire the old server only after its replacement starts successfully.
-    (when (processp old-speaker)
-      (tts--retire-process old-speaker))
-    (setq tts-speaker-process new)
+    ;; If retirement is quit, the unpublished replacement still needs an owner
+    ;; responsible for deleting it.
+    (unwind-protect
+        (progn
+          (when (processp old-speaker)
+            (tts--retire-process old-speaker))
+          (setq tts-speaker-process new))
+      (unless (eq tts-speaker-process new)
+        (tts--retire-process new)))
     (cond
      ((tts-multistream-p tts-program)
       (condition-case error-data
