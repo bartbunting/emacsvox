@@ -143,10 +143,10 @@ follow the candidate with the total count instead of its ordinal position."
                     nil
                     (list
                      (emacsvox-corfu--voice
-                      (and prefix (string-trim prefix)) voice-annotate)
-                     (emacsvox-corfu--voice cand voice-bolden)
+                      (and prefix (string-trim prefix)) 'voice-annotate)
+                     (emacsvox-corfu--voice cand 'voice-bolden)
                      (emacsvox-corfu--voice
-                      (and suffix (string-trim suffix)) voice-annotate))))
+                      (and suffix (string-trim suffix)) 'voice-annotate))))
                   (position
                    (emacsvox-corfu--voice
                     (if count-only-p
@@ -158,7 +158,7 @@ follow the candidate with the total count instead of its ordinal position."
                       (format "%d of %d"
                               (1+ index)
                               (emacsvox-corfu--total)))
-                    voice-annotate)))
+                    'voice-annotate)))
         (concat (mapconcat #'identity parts " ") ", " position)))))
 
 (defun emacsvox-corfu--count-text (&optional prefix)
@@ -169,7 +169,7 @@ follow the candidate with the total count instead of its ordinal position."
              (or prefix "")
              total
              (if (= total 1) "" "s"))
-     voice-annotate)))
+     'voice-annotate)))
 
 (defun emacsvox-corfu--candidate-facts (&optional event index)
   "Return semantic facts for the current candidate.
@@ -272,12 +272,12 @@ audible.  SNAPSHOT, when non-nil, is the already formatted candidate text."
 CHANGED-P is non-nil when common-prefix expansion changed the input."
   (if changed-p
       (concat
-       (emacsvox-corfu--voice input voice-bolden)
+       (emacsvox-corfu--voice input 'voice-bolden)
        (emacsvox-corfu--voice
         (format ", %d completion%s"
                 (emacsvox-corfu--total)
                 (if (= (emacsvox-corfu--total) 1) "" "s"))
-        voice-annotate))
+        'voice-annotate))
     (emacsvox-corfu--count-text "No common expansion, ")))
 
 ;;;  Advice Interactive Commands:
@@ -367,7 +367,7 @@ CHANGED-P is non-nil when common-prefix expansion changed the input."
                  (if finished-p
                      (emacsvox-corfu--voice
                       (or after before "Completion accepted")
-                      voice-bolden)
+                      'voice-bolden)
                    (emacsvox-corfu--expansion-text
                     (or after before "") changed-p))
                  (list
@@ -434,7 +434,7 @@ candidate count.  Consuming the interactive marker prevents generic
                   (unless (equal before after)
                     (setq emacsvox-corfu--pending-expansion after))
                 (emacsvox-corfu--submit
-                 (emacsvox-corfu--voice after voice-bolden)
+                 (emacsvox-corfu--voice after 'voice-bolden)
                  '(:role candidate :events (accepted))
                  'state-change 'complete))))
           result)
@@ -474,7 +474,7 @@ candidate count.  Consuming the interactive marker prevents generic
       (unless (equal emacsvox-corfu--prev-candidate "No completions")
         (let ((text
                (emacsvox-corfu--voice
-                "No completions" voice-annotate)))
+                "No completions" 'voice-annotate)))
           (emacsvox-corfu--submit
            text
            '(:role candidate :events (operation-failed))

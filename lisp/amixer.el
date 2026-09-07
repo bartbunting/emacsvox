@@ -371,7 +371,7 @@ of 3 and 4 lower or raise volume."
      (concat
       (propertize
        (string-trim (shell-command-to-string ems--vol-cmd))
-       'personality voice-bolden)
+       'personality 'voice-bolden)
       " Repeat with %k"))))
 
 (provide 'amixer)

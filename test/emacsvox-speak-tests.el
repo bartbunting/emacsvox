@@ -317,7 +317,7 @@
       (emacsvox-speak-spell-word "Ab"))
     (should (equal (substring-no-properties spoken) "A b "))
     (should-not (string-match-p "cap" spoken))
-    (should (eq (get-text-property 0 'personality spoken) voice-animate))
+    (should (eq (get-text-property 0 'personality spoken) 'voice-animate))
     (let* ((tts-caps t)
            (emacsvox-capitalization-presentation 'tone)
            (annotated (tts--annotate-capitalization spoken))

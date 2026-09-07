@@ -81,7 +81,7 @@
       (emacsvox-icon 'alert-user))
      (t (emacsvox-icon 'item)))
     (put-text-property 0 (length name)
-                       'personality voice-bolden-medium name)
+                       'personality 'voice-bolden-medium name)
     (message  (concat name ": "desc))))
 
 (defun emacsvox-package-next-line ()

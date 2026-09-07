@@ -420,7 +420,7 @@
            (eq
             (get-text-property
              (string-match-p "collapsed" content) 'personality content)
-            voice-annotate)))
+            'voice-annotate)))
         (should
          (equal
           (substring-no-properties (emacsvox-magit--line-content 'expanded))
@@ -704,7 +704,7 @@
                     (plist-get arguments :compatibility-actions)))
         (should (equal content "Squash. squash abc # subject"))
         (should
-         (eq (get-text-property 0 'personality content) voice-annotate))
+         (eq (get-text-property 0 'personality content) 'voice-annotate))
         (should
          (eq
           (get-text-property (length "Squash. ") 'face content)

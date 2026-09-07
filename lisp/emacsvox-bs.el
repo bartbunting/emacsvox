@@ -74,7 +74,7 @@
 (defun emacsvox-bs--buffer-summary ()
   "Return a concise voice-preserving summary of the selected buffer."
   (concat
-   (propertize (buffer-name) 'personality voice-lighten-medium)
+   (propertize (buffer-name) 'personality 'voice-lighten-medium)
    ", "
    (propertize
     (downcase
@@ -83,7 +83,7 @@
       (and (listp mode-name) (cl-find-if #'stringp mode-name))
       (replace-regexp-in-string
        "-mode\\'" "" (symbol-name major-mode))))
-    'personality voice-animate)))
+    'personality 'voice-animate)))
 
 (defun emacsvox-bs--submit-current-buffer (icon)
   "Submit the selected buffer summary with leading compatibility ICON."
@@ -107,7 +107,7 @@ Optional ICON precedes the row in the same native transaction."
   (let ((buffer (bs--current-buffer)))
     (cond
      ((get-buffer buffer)
-      (let ((with (propertize "with size " 'personality voice-smoothen))
+      (let ((with (propertize "with size " 'personality 'voice-smoothen))
             (name (buffer-name buffer))
             (file (buffer-file-name buffer))
             this-buffer-read-only this-buffer-modified-p

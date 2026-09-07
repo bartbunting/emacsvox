@@ -574,7 +574,7 @@ DELIVERY-POLICY and INTERRUPTION-POLICY, when non-nil, control delivery."
   "Return a concise voiced summary of the current buffer and mode."
   (let ((name
          (propertize
-          (buffer-name) 'personality voice-lighten-medium))
+          (buffer-name) 'personality 'voice-lighten-medium))
         (mode
          (string-trim
           (downcase (format-mode-line mode-name)))))
@@ -582,7 +582,7 @@ DELIVERY-POLICY and INTERRUPTION-POLICY, when non-nil, control delivery."
         name
       (concat
        name ", "
-       (propertize mode 'personality voice-animate)))))
+       (propertize mode 'personality 'voice-animate)))))
 
 (defun emacsvox-notmuch--current-line-content ()
   "Return the current source-aware line without its newline."

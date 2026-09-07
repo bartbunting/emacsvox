@@ -471,7 +471,7 @@ ICON-PHASE defaults to `before'."
 (defun emacsvox-transient--buffer-summary ()
   "Return a concise voice-preserving summary of the selected buffer."
   (concat
-   (propertize (buffer-name) 'personality voice-lighten-medium)
+   (propertize (buffer-name) 'personality 'voice-lighten-medium)
    ", "
    (propertize
     (downcase
@@ -480,7 +480,7 @@ ICON-PHASE defaults to `before'."
       (and (listp mode-name) (cl-find-if #'stringp mode-name))
       (replace-regexp-in-string
        "-mode\\'" "" (symbol-name major-mode))))
-    'personality voice-animate)))
+    'personality 'voice-animate)))
 
 (defun emacsvox-transient--present-visible-menu
     (action event occasion icon)

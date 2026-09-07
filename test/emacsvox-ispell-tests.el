@@ -81,7 +81,7 @@
          "0 good\n"
          "1 best\n"
          "Space keeps the spelling.")))
-      (should (eq (get-text-property 0 'personality spoken) voice-bolden))
+      (should (eq (get-text-property 0 'personality spoken) 'voice-bolden))
       (should-not (get-text-property 3 'personality spoken)))))
 
 (ert-deftest emacsvox-ispell-choice-keys-match-native-command-loop ()

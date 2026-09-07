@@ -72,7 +72,7 @@
             (format "%d of %d"
                     (- (line-number-at-pos) 2)
                     (- (count-lines(point-min) (point-max))2))
-            'personality voice-bolden)))
+            'personality 'voice-bolden)))
     (when (and line count-msg)
       (tts-speak (concat line count-msg)))))
 

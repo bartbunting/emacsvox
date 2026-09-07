@@ -262,7 +262,7 @@
     (_index begin end &optional _buffer)
   "Add  voice properties."
   (with-silent-modifications
-    (put-text-property begin end 'personality voice-bolden))
+    (put-text-property begin end 'personality 'voice-bolden))
   (emacsvox-speak-line)
   (sit-for 2))
 

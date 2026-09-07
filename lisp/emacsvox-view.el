@@ -157,7 +157,7 @@
   (when (ems-interactive-p 'View-goto-line)
     (let ((line-number (format "line %s" line)))
       (put-text-property 0 (length line-number) 'personality
-                         voice-annotate line-number)
+                         'voice-annotate line-number)
       (emacsvox-icon 'large-movement)
       (tts-speak (concat line-number (ems--this-line))))))
 

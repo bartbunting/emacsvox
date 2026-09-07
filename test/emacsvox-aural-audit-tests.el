@@ -269,5 +269,20 @@
     (unless (emacsvox-aural-audit-clean-p audit)
       (ert-fail (emacsvox-aural-audit-format audit)))))
 
+(ert-deftest emacsvox-aural-emitted-personalities-retain-voice-names ()
+  "Text producers must leave built-in voice selection to the active palette."
+  (let (early-evaluations)
+    (should-not
+     (emacsvox-aural-audit--scan-source-forms
+      emacsvox-test--aural-audit-root
+      (lambda (form file function)
+        (when (memq (car form)
+                    '(propertize put-text-property
+                      ems-set-personality-temporarily emacsvox-corfu--voice))
+          (dolist (argument (cdr form))
+            (when (memq argument voice-setup-defined-voices)
+              (push (list file function argument) early-evaluations)))))))
+    (should-not early-evaluations)))
+
 (provide 'emacsvox-aural-audit-tests)
 ;;; emacsvox-aural-audit-tests.el ends here

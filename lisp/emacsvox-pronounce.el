@@ -73,7 +73,7 @@ String: Return it as is.
       (cond
        ((stringp v) (format " %s " v))
        ((and (numberp v) (< v (length fields)))
-        (propertize (nth v fields) 'personality voice-smoothen))
+        (propertize (nth v fields) 'personality 'voice-smoothen))
        ((and
          (listp v) (symbolp (nth 0 v)) (fboundp (nth 0 v)))
         (apply                          ; apply func to fields

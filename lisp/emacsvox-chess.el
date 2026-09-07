@@ -168,10 +168,10 @@
           white (memq piece emacsvox-chess-whites) ;upper-case is white
           piece (emacsvox-chess-piece-name  piece))
     (unless white
-      (setq piece (propertize  piece 'personality voice-bolden-extra)))
+      (setq piece (propertize  piece 'personality 'voice-bolden-extra)))
     (if light ;;; square color
-        (setq coord (propertize  coord 'personality voice-monotone-extra))
-      (setq coord (propertize  coord 'personality voice-lighten-extra )))
+        (setq coord (propertize  coord 'personality 'voice-monotone-extra))
+      (setq coord (propertize  coord 'personality 'voice-lighten-extra )))
     (if (zerop (length piece))
         (list coord  )
       (list coord  piece))))
@@ -506,8 +506,8 @@
       (and (cl-evenp rank ) (cl-evenp file))
       (and (cl-oddp rank) (cl-oddp file))))
     (if light ;;; square color
-        (setq coord (propertize  coord 'personality voice-monotone-extra))
-      (setq coord (propertize  coord 'personality voice-lighten-extra )))
+        (setq coord (propertize  coord 'personality 'voice-monotone-extra))
+      (setq coord (propertize  coord 'personality 'voice-lighten-extra )))
     coord))
 
 (defun emacsvox-chess-piece-squares (piece)

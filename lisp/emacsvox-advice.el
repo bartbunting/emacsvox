@@ -457,7 +457,7 @@ When on a close delimiter, speak matching delimiter after a small delay. "
   (tts-notify
    (propertize
     (format "%s " (emacsvox-get-current-percentage-into-buffer))
-    'personality voice-smoothen)))
+    'personality 'voice-smoothen)))
 
 ;;;  Advise modify case commands to speak
 
@@ -1051,7 +1051,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
        (concat
         (propertize
          (if (string-match "^ad-Advice" fn) (substring fn 10) fn)
-         'personality voice-bolden)
+         'personality 'voice-bolden)
         m )))))
 
 ;; Silence messages from async handlers:

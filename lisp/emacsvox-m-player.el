@@ -166,9 +166,9 @@ This is set to nil when playing Internet  streams.")
          (concat
           (propertize "Position:  " 'pause 90)
           (ems--seconds-to-duration (cl-first info))
-          (propertize " of " 'personality voice-smoothen-extra)
+          (propertize " of " 'personality 'voice-smoothen-extra)
           (ems--seconds-to-duration (cl-third info))
-          (propertize " in " 'personality voice-smoothen-extra)
+          (propertize " in " 'personality 'voice-smoothen-extra)
           (cl-second info)))))
     (t (format "Process MPlayer not running.")))))
 

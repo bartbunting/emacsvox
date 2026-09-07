@@ -343,7 +343,7 @@ ICON-PHASE defaults to `before'."
 (defun emacsvox-magit--buffer-summary ()
   "Return a concise voice-preserving summary of the selected buffer."
   (concat
-   (propertize (buffer-name) 'personality voice-lighten-medium)
+   (propertize (buffer-name) 'personality 'voice-lighten-medium)
    ", "
    (propertize
     (downcase
@@ -352,7 +352,7 @@ ICON-PHASE defaults to `before'."
       (and (listp mode-name) (cl-find-if #'stringp mode-name))
       (replace-regexp-in-string
        "-mode\\'" "" (symbol-name major-mode))))
-    'personality voice-animate)))
+    'personality 'voice-animate)))
 
 (defun emacsvox-magit--fringe-display-p (display)
   "Return non-nil when DISPLAY renders a fringe bitmap."
@@ -477,7 +477,7 @@ interpret margin content and omit graphical backing text.  When VISIBILITY is
        (propertize
         (format ", %s"
                 (if (eq visibility 'folded) "collapsed" "expanded"))
-        'personality voice-annotate)))))
+        'personality 'voice-annotate)))))
 
 (defun emacsvox-magit-view-facts (kind event)
   "Return semantic facts for a Magit view of KIND undergoing EVENT."
@@ -666,7 +666,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
                       ((> hidden-bodies 0) "Partly expanded")
                       (t "Expanded"))))
     (emacsvox-magit--submit-text
-     (concat (propertize (concat label ". ") 'personality voice-annotate)
+     (concat (propertize (concat label ". ") 'personality 'voice-annotate)
              (emacsvox-magit--line-content))
      (append
       (emacsvox-magit-section-facts
@@ -824,7 +824,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
      (or
       (and (boundp 'magit-buffer-file-name) magit-buffer-file-name)
       (buffer-name)))
-    'personality voice-annotate)
+    'personality 'voice-annotate)
    (emacsvox-magit--line-content)))
 
 ;;;  Additional commands to advice:
@@ -1240,7 +1240,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
       (format "Copied %d characters" (length text)))
      (t
       (concat
-       (propertize "Copied. " 'personality voice-annotate)
+       (propertize "Copied. " 'personality 'voice-annotate)
        text)))))
 
 (defun emacsvox-magit--call-copy-command
@@ -1474,7 +1474,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
    (concat
     (propertize
      (concat (emacsvox-magit--view-setting-description target) ". ")
-     'personality voice-annotate)
+     'personality 'voice-annotate)
     (emacsvox-magit--line-content))
    (append
     (emacsvox-magit-view-facts
@@ -1509,7 +1509,7 @@ Only present the invocation that applies the transient's selected values."
           "Refreshed %s view. "
           (emacsvox-magit--view-kind-label
            (emacsvox-magit-current-view-kind)))
-         'personality voice-annotate)
+         'personality 'voice-annotate)
         (emacsvox-magit--line-content))
        (append
         (emacsvox-magit-view-facts
@@ -1878,7 +1878,7 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
            (format
             "%s view. "
             (emacsvox-magit--view-kind-label kind))
-           'personality voice-annotate)
+           'personality 'voice-annotate)
           (let ((line (emacsvox-magit--line-content)))
             (if (> (length line) 0)
                 line
@@ -2106,7 +2106,7 @@ with Magit navigation about the source text's voices."
   "Return LABEL followed by the newly focused repository row."
   (let ((line (emacsvox-magit--line-content)))
     (concat
-     (propertize (concat label ". ") 'personality voice-annotate)
+     (propertize (concat label ". ") 'personality 'voice-annotate)
      line)))
 
 (defun emacsvox-magit--call-repolist-tag
@@ -2401,7 +2401,7 @@ TARGET, OPERATION, EVENT, and ICON describe the interaction."
   (concat
    (propertize
     (concat label (if content ". " "."))
-    'personality voice-annotate)
+    'personality 'voice-annotate)
    content))
 
 (defun emacsvox-magit--call-commit-history
@@ -2740,7 +2740,7 @@ to prepend, or non-nil to prepend the default operation label."
           (if (stringp announcement)
               announcement
             (emacsvox-magit--rebase-operation-label operation)))
-         'personality voice-annotate)
+         'personality 'voice-annotate)
         content)))
     (emacsvox-magit--submit-text
      content

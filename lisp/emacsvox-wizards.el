@@ -591,7 +591,7 @@ If optional arg property is not supplied, read it interactively. "
                     (format "skip %d " newlines))
               (put-text-property 0 (length skipped)
                                  'personality
-                                 voice-annotate skipped))
+                                 'voice-annotate skipped))
             (emacsvox-icon 'select-object)
             (tts-speak
              (concat skipped (ems--this-line))))))
@@ -622,7 +622,7 @@ If optional arg property is not supplied, read it interactively. "
               (setq skipped (format "skip %d " newlines))
               (put-text-property 0 (length skipped)
                                  'personality
-                                 voice-annotate skipped))
+                                 'voice-annotate skipped))
             (emacsvox-icon 'select-object)
             (tts-speak
              (concat skipped (ems--this-line))))))
@@ -1908,9 +1908,9 @@ Otherwise just return  `color'."
         name)
        (t
         (let ((v (concat
-                  (propertize name 'personality voice-bolden)
+                  (propertize name 'personality 'voice-bolden)
                   " shaded "
-                  (propertize shade 'personality voice-annotate))))
+                  (propertize shade 'personality 'voice-annotate))))
           (puthash color v ems--color-table)
           v)))))
    (t (puthash color color ems--color-table)
@@ -2000,11 +2000,11 @@ under point as either the foreground or background color."
         (msg nil))
     (cond
      ((string= fg "red")
-      (put-text-property 0 2 'personality voice-bolden hex))
+      (put-text-property 0 2 'personality 'voice-bolden hex))
      ((string= fg "green")
-      (put-text-property 3 5 'personality voice-bolden hex))
+      (put-text-property 3 5 'personality 'voice-bolden hex))
      ((string= fg "blue")
-      (put-text-property 6 8 'personality voice-bolden hex)))
+      (put-text-property 6 8 'personality 'voice-bolden hex)))
     (setq msg (format "%s is a %s shade: %s"
                       name (ems--color-wheel-shade w) hex))
     (setq msg

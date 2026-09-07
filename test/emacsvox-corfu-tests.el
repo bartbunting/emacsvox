@@ -52,13 +52,13 @@
                     (plist-get arguments :compatibility-actions)))
         (should (equal content "emacs/, 2 completions"))
         (should
-         (eq (get-text-property 0 'personality content) voice-bolden))
+         (eq (get-text-property 0 'personality content) 'voice-bolden))
         (should
          (eq
           (get-text-property
            (string-match "2 completions" content)
            'personality content)
-          voice-annotate))
+          'voice-annotate))
         (should (eq (plist-get facts :role) 'candidate))
         (should (equal (plist-get facts :events) '(focus-entered)))
         (should-not (plist-member facts :states))
@@ -114,10 +114,10 @@
                    (position (string-match "1 of 2" content)))
         (should (equal content "emacs/, 1 of 2"))
         (should
-         (eq (get-text-property 0 'personality content) voice-bolden))
+         (eq (get-text-property 0 'personality content) 'voice-bolden))
         (should
          (eq (get-text-property position 'personality content)
-             voice-annotate))
+             'voice-annotate))
         (should (equal (plist-get facts :states) '(selected)))
         (should (= (plist-get facts :completion-index) 0))
         (should
@@ -126,6 +126,48 @@
            #'emacsvox-aural-compatibility-action-value
            actions)
           '(large-movement)))))))
+
+(ert-deftest emacsvox-corfu-candidate-voices-follow-palette-changes ()
+  "Existing candidate text resolves named voices at presentation time."
+  (let ((emacsvox-aural-voice-palette-registry
+         (copy-hash-table emacsvox-aural-voice-palette-registry))
+        (corfu--candidates '("example"))
+        (corfu--index 0)
+        (corfu--total 1)
+        text)
+    (cl-letf (((symbol-function 'emacsvox-corfu--candidate-affixes)
+               (lambda (_) '(nil nil))))
+      (setq text (emacsvox-corfu--candidate-with-annotation)))
+    (dolist (definition '((first voice-animate voice-lighten)
+                          (second voice-lighten voice-animate)))
+      (pcase-let ((`(,palette ,candidate ,annotation) definition))
+        (emacsvox-aural-register-voice-palette-data
+         `(:schema-version 1 :id ,palette :summary "Completion test voices"
+           :parent acss-default
+           :entries ((bolden :personality ,candidate)
+                     (annotate :personality ,annotation))))
+        (let ((emacsvox-aural-voice-palette-override palette))
+          (dolist (enabled '(t nil))
+            (let ((voice-lock-mode enabled))
+              (cl-letf (((symbol-function 'tts-get-voice-command)
+                         (lambda (voice) (format "%s" voice))))
+                (let ((prepared (emacsvox-aural-prepare-text text)))
+                  (dolist (entry `((0 bolden ,candidate)
+                                   (,(string-match "1 of 1" text)
+                                    annotate ,annotation)))
+                    (pcase-let* ((`(,position ,name ,personality) entry)
+                                 (content
+                                  (emacsvox-aural-concrete-plan-content
+                                   (emacsvox-aural-concrete-plan-at
+                                    position prepared))))
+                      (should
+                       (eq (emacsvox-aural-concrete-content-voice-request content)
+                           (and enabled name)))
+                      (should
+                       (equal
+                        (emacsvox-aural-concrete-content-voice-command content)
+                        (and enabled
+                             (format "%s" (symbol-value personality))))))))))))))))
 
 (ert-deftest emacsvox-corfu-complete-announces-common-expansion ()
   "TAB on the prompt distinguishes common expansion from acceptance."

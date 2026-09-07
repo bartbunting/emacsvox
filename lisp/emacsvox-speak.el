@@ -533,7 +533,7 @@ feedback belongs after it."
       ((= 0 percent) " top ")
       ((= 100 percent) " bottom ")
       (t (format " %d%% " percent)))
-     'personality voice-monotone-extra)))
+     'personality 'voice-monotone-extra)))
 
 (defun emacsvox-goto-percent (percent)
   "Move to end  PERCENT of buffer like in View mode.
@@ -1192,7 +1192,7 @@ interruption so native submissions can apply their complete delivery policy."
               line (emacsvox-speak--indentation-facts indent))))
           (when linenum
             (setq linenum (format "%d" linenum))
-            (setq linenum (propertize linenum 'personality voice-lighten))
+            (setq linenum (propertize linenum 'personality 'voice-lighten))
             (setq line (concat linenum line)))
           (funcall speaker line))))))
 
@@ -1405,7 +1405,7 @@ Local to each buffer.  Used to decide if we  spell or speak the word. ")
              (setq char-string (format "%c " char))
              (when (char-uppercase-p char)
                (put-text-property 0 1
-                                  'personality voice-animate
+                                  'personality 'voice-animate
                                   char-string))
              (setq result
                    (concat result
@@ -2034,7 +2034,7 @@ indicating the arrival  of new mail when displaying the mode line.")
    ((zerop level) nil)
    (t
     (propertize
-     (format " Recursive Edit %d " level) 'personality voice-smoothen))))
+     (format " Recursive Edit %d " level) 'personality 'voice-smoothen))))
 
 (defsubst emacsvox-get-voicefied-frame-info (frame)
   "Return voicefied version of this frame name."
@@ -2043,7 +2043,7 @@ indicating the arrival  of new mail when displaying the mode line.")
    (t
     (propertize
      (format " %s " (frame-parameter frame 'name))
-     'personality voice-lighten-extra ))))
+     'personality 'voice-lighten-extra ))))
 
 ;;;   Speak mode line information
 
@@ -2160,7 +2160,7 @@ Interactive prefix arg speaks buffer info."
             (window-count (length (window-list)))
             (autospeak
              (when (ems--comint-autospeak)
-               (propertize "Autospeak" 'personality voice-lighten)))
+               (propertize "Autospeak" 'personality 'voice-lighten)))
             (vc-state
              (when (and vc-mode (buffer-file-name))
                (vc-state (buffer-file-name))))
@@ -2179,7 +2179,7 @@ Interactive prefix arg speaks buffer info."
          (t                             ;process modeline
           (unless (zerop (length global-info))
             (put-text-property
-             0 (length global-info) 'personality voice-bolden-medium
+             0 (length global-info) 'personality 'voice-bolden-medium
              global-info))
 ;;; avoid pathological case
           (unless (and buffer-read-only (buffer-modified-p))
@@ -2194,12 +2194,12 @@ Interactive prefix arg speaks buffer info."
              autospeak
              dir-info
              (propertize (buffer-name) 'personality
-                         voice-lighten-medium)
+                         'voice-lighten-medium)
              (emacsvox-get-current-percentage-verbosely)
              (when window-count
-               (propertize window-count 'personality voice-smoothen))
+               (propertize window-count 'personality 'voice-smoothen))
              (when vc-mode
-               (propertize (downcase vc-mode) 'personality voice-smoothen))
+               (propertize (downcase vc-mode) 'personality 'voice-smoothen))
              (when vc-state (format " %s " vc-state))
              (when line-number-mode
                (format "line %d" (emacsvox-get-current-line-number)))
@@ -2207,7 +2207,7 @@ Interactive prefix arg speaks buffer info."
                (format "column %d" (current-column)))
              (propertize
               (downcase
-               (format-mode-line mode-name)) 'personality voice-animate)
+               (format-mode-line mode-name)) 'personality 'voice-animate)
              global-info frame-info recursion-info))))))))))
 
 (defun emacsvox-return-mode-line ()
@@ -2291,7 +2291,7 @@ Displays name of current buffer.")
    (t
     (tts-notify
      (concat
-      (propertize (buffer-name) 'personality voice-smoothen)
+      (propertize (buffer-name) 'personality 'voice-smoothen)
       (format-time-string emacsvox-speak-time-brief-format))))))
 
 (defun emacsvox-toggle-header-line ()
@@ -2501,7 +2501,7 @@ arg to give to command yank."
   (let ((context
          (format "kill %s "
                  (if current-prefix-arg (+ 1 count) 1))))
-    (put-text-property 0 (length context) 'personality voice-annotate context)
+    (put-text-property 0 (length context) 'personality 'voice-annotate context)
     (tts-speak
      (concat context (current-kill (if current-prefix-arg count 0) t)))))
 
@@ -2572,7 +2572,7 @@ location of the mark is indicated by an aural highlight. "
         (context
          (format "mark %s " (if current-prefix-arg count 0))))
     (put-text-property 0 (length context)
-                       'personality voice-annotate context)
+                       'personality 'voice-annotate context)
     (setq pos
           (if current-prefix-arg
               (elt mark-ring (1- count))
@@ -2580,7 +2580,7 @@ location of the mark is indicated by an aural highlight. "
     (save-excursion
       (goto-char pos)
       (ems-set-personality-temporarily
-       pos (1+ pos) voice-animate
+       pos (1+ pos) 'voice-animate
        (setq line (ems--this-line)))
       (tts-speak
        (concat context line)))))
@@ -3085,7 +3085,7 @@ char, or dont move. "
   
   (emacsvox-icon 'mark-object)
   (ems-set-personality-temporarily (point) (1+ (point))
-                                   voice-animate
+                                   'voice-animate
                                    (emacsvox-speak-line)))
 
 (defun emacsvox-mark-backward-mark ()
@@ -3267,7 +3267,7 @@ displayed buffers."
             "Displaying %s window%s "
             count
             (if (> count 1) "s" ""))
-           'personality voice-annotate)))
+           'personality 'voice-annotate)))
     (setq
      windows
      (cond
@@ -3278,14 +3278,14 @@ displayed buffers."
         (let ((w
                (propertize
                 (format "%s "  (window-buffer window))
-                'personality voice-animate))
+                'personality 'voice-animate))
               (corners  (window-edges window))
               (tl nil)
               (br nil))
           (setq tl (format  " %d %d " (cl-second corners) (cl-first corners))
                 br  (format " %d %d " (cl-fourth corners) (cl-third corners)))
-          (put-text-property 0 (length tl) 'personality voice-bolden tl)
-          (put-text-property 0 (length br) 'personality voice-bolden br)
+          (put-text-property 0 (length tl) 'personality 'voice-bolden tl)
+          (put-text-property 0 (length br) 'personality 'voice-bolden br)
           (concat w " with top left " tl " and bottom right " br))))
       (t (mapcar #'buffer-name (mapcar #'window-buffer window-list)))))
     (emacsvox--sox-multiwindow )
@@ -3541,7 +3541,7 @@ Use `,' and `.' to continuously decrease/increase `selective-display'.
      (lambda nil (emacsvox-icon 'repeat-end)) ; done action
      (propertize
       (format "Selective Display: %s" selective-display)
-      'personality voice-bolden))))
+      'personality 'voice-bolden))))
 
 ;;; Pip: Use Piper if available.
 ;; Uses pip if piper loaded, otherwise falls back to notifications

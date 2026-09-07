@@ -465,9 +465,9 @@
     (should
      (equal
       (nreverse events)
-      `((icon scroll)
+      '((icon scroll)
         (speak "visible text")
-        (notify "50% " ,voice-smoothen))))))
+        (notify "50% " voice-smoothen))))))
 
 (ert-deftest emacsvox-core-untabify-advice-uses-explicit-region-arguments ()
   "Untabify cleanup replaces nonbreaking spaces inside its advised region."

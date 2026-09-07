@@ -189,7 +189,7 @@ suppressed because the aural submission owns audible presentation."
 (defun emacsvox-dired--buffer-summary ()
   "Return a concise voice-preserving summary of the selected Dired buffer."
   (concat
-   (propertize (buffer-name) 'personality voice-lighten-medium)
+   (propertize (buffer-name) 'personality 'voice-lighten-medium)
    ", "
    (propertize
     (downcase
@@ -197,7 +197,7 @@ suppressed because the aural submission owns audible presentation."
       (and (stringp mode-name) mode-name)
       (and (listp mode-name) (cl-find-if #'stringp mode-name))
       "Dired"))
-    'personality voice-animate)))
+    'personality 'voice-animate)))
 
 (defun emacsvox-dired--line-content ()
   "Return the current line with speech-relevant properties intact."

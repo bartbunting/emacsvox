@@ -91,7 +91,7 @@
   (emacsvox-eudc-widgets-add-emacsvox-help)
   (emacsvox-icon 'open-object)
   (let
-      ((server (propertize "Server " 'personality voice-smoothen))
+      ((server (propertize "Server " 'personality 'voice-smoothen))
        (host eudc-server))
     (tts-speak
      (concat server " " host " "

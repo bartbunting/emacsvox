@@ -106,11 +106,11 @@ BEFORE-ICONS and AFTER-ICONS preserve package feedback inside the transaction."
 (defun emacsvox-py--buffer-summary ()
   "Return a concise voice-preserving summary of the selected buffer."
   (concat
-   (propertize (buffer-name) 'personality voice-lighten-medium)
+   (propertize (buffer-name) 'personality 'voice-lighten-medium)
    ", "
    (propertize
     (downcase (format-mode-line mode-name))
-    'personality voice-animate)))
+    'personality 'voice-animate)))
 
 (defun emacsvox-py--remove-captured-source-icon
     (content icon source-offset source-length)
@@ -374,7 +374,7 @@ When FORWARD is non-nil, capture the character at point instead of before it."
     (emacsvox-py--submit-text
      (propertize
       (format "indent %s" (current-column))
-      'personality voice-annotate)
+      'personality 'voice-annotate)
      (emacsvox-py--edit-facts 'newline-and-indent 'indentation)
      'edit)))
 

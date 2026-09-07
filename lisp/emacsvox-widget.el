@@ -86,7 +86,7 @@ Returns a string with appropriate personality."
            (t nil)))
     (when help
       (put-text-property 0 (length help)
-                         'personality voice-animate help)
+                         'personality 'voice-animate help)
       help)))
 
 ;;;   define summarizer
@@ -147,7 +147,7 @@ Returns a string with appropriate personality."
            (t (prin1-to-string v 'no-escape)))))
     (when  value
       (put-text-property 0 (length value)
-                         'personality voice-bolden value))
+                         'personality 'voice-bolden value))
     (concat label
             help-echo
             value)))
@@ -360,7 +360,7 @@ Returns a string with appropriate personality."
                       (value (prin1-to-string value))
                       (t " no items  "))))
     (put-text-property 0  (length selections)
-                       'personality voice-bolden selections)
+                       'personality 'voice-bolden selections)
     (concat label
             " has "
             selections 
@@ -436,7 +436,7 @@ Returns a string with appropriate personality."
                   (prin1-to-string value)
                 " no item ")))))
     (put-text-property 0  (length selected)
-                       'personality voice-bolden selected)
+                       'personality 'voice-bolden selected)
     (concat label
             " is "
             selected)))
@@ -454,7 +454,7 @@ Returns a string with appropriate personality."
         (help-echo (emacsvox-widget-help-echo widget)))
     (when value
       (put-text-property 0 (length value)
-                         'personality voice-bolden value))
+                         'personality 'voice-bolden value))
     (concat label
             help-echo
             (or value ""))))

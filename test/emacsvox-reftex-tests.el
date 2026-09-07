@@ -114,7 +114,7 @@
                    (push (list 'sit-for seconds) events))))
         (emacsvox--advice-reftex-highlight-after 0 2 5 nil))
       (should
-       (eq (get-text-property 2 'personality) voice-bolden))
+       (eq (get-text-property 2 'personality) 'voice-bolden))
       (should-not (get-text-property 5 'personality))
       (should
        (equal

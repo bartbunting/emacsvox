@@ -91,7 +91,7 @@ highest-ranked corrections and announces the total."
        (keys (emacsvox-ispell--choice-keys limit))
        (pos ""))
     (setq line
-          (ems-set-personality-temporarily start end voice-bolden
+          (ems-set-personality-temporarily start end 'voice-bolden
                                            (buffer-substring
                                             (line-beginning-position)
                                             (line-end-position))))
@@ -116,7 +116,7 @@ highest-ranked corrections and announces the total."
          (setq pos
                (propertize
                 (single-key-description key)
-                'personality voice-smoothen))
+                'personality 'voice-smoothen))
          (insert pos)
          (insert (format " %s\n" choice)))))
       (insert "Space keeps the spelling.")
