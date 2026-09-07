@@ -21,6 +21,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
 kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
@@ -63,9 +64,26 @@ voice on the current machine.
 
 <p>Use the <em class="emph">Voice Palettes</em> manager when you want to choose or edit the portable
 style vocabulary.  Press <kbd class="key">RET</kbd> on a palette to browse its voices,
-preview them before editing, and use <kbd class="kbd">a</kbd> in the palette manager to
+use <kbd class="kbd">P</kbd> to audition the palette sequence before editing, and use <kbd class="kbd">a</kbd> in the palette manager to
 activate a selected palette.  Built-in palettes remain intact; editing can
 create a personal copy.
+</p>
+<p>With Voice Lock enabled, named formatting voices such as <em class="emph">bolden</em> and
+<em class="emph">annotate</em> follow the active palette in search feedback, completion,
+status speech, and the named-voice sampler. Explicit aural rules can override
+these formatting voices.
+</p>
+<p>If you assign voices in your personal Lisp configuration, use a name such as
+<code class="code">'voice-bolden</code> to follow the palette. For example:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(setq emacsvox-calendar-mark-personality 'voice-bolden)
+</pre></div>
+
+<p>Legacy settings such as <code class="code">voice-bolden-settings</code> still supply the fallback
+when the palette has no custom definition. Explicit ACSS styles retain their
+own settings. Restart Emacs after updating Emacsvox to load changed voice
+defaults; explicit choices in your personal configuration remain in effect.
 </p>
 <p>Use <em class="emph">Voice Workbench</em> when the question involves installed voices, engines, or
 routes.  Open it from Aural Home with <kbd class="kbd">W</kbd>.  Its main views are:
@@ -85,22 +103,236 @@ routes.  Open it from Aural Home with <kbd class="kbd">W</kbd>.  Its main views 
 </p></dd>
 </dl>
 
-<p>Press <kbd class="kbd">P</kbd> to preview a row, <kbd class="kbd">A</kbd> to preview all visible
-voices, <kbd class="kbd">B</kbd> to compare two, and <kbd class="kbd">S</kbd> to stop preview.
-Use <kbd class="kbd">a</kbd> to assign a physical voice and <kbd class="kbd">t</kbd> to tune the
+<p>For physical voices, choose <em class="emph">Browse and try voices</em> in Home, then press
+<kbd class="key">RET</kbd> on an engine to browse its voices.  <kbd class="key">RET</kbd>
+on a voice shows details; <kbd class="kbd">P</kbd> plays a named sample.  Filters
+and each view&rsquo;s selected row and column survive navigation through Home.
+Press <kbd class="kbd">q</kbd> in an engine&rsquo;s voice list to return to that engine&rsquo;s
+row and column.  Press <kbd class="kbd">q</kbd> again from the engine list to leave
+the workbench.  The direct view shortcuts remain available.
+</p>
+<p>The engine list reports <em class="emph">Availability</em> before routing preferences.  An engine
+with a missing runtime stays visible as <em class="emph">unavailable</em>, with its reason under
+<em class="emph">Last failure</em>.  <em class="emph">Routing policy: allowed</em> means the policy permits using that
+engine; it does not mean its runtime is installed.  Disabled policies, health,
+and temporary failures are reported separately.
+</p>
+<p><kbd class="kbd">A</kbd> plays available matching voices in displayed order,
+skipping unavailable rows.  <kbd class="kbd">B</kbd> starts with the selected voice
+as A and offers another matching voice as B.  Choose <em class="emph">Search all engines</em>
+inside that prompt to compare outside the current filters.  Both samples use
+the same sentence.  <kbd class="kbd">T</kbd> edits it, <kbd class="kbd">F</kbd> filters,
+<kbd class="kbd">C</kbd> clears filters, and <kbd class="kbd">R</kbd> refreshes inventory.
+</p>
+<p>Labels identify each engine and voice.  Customize
+<code class="code">emacsvox-aural-preview-label-verbosity</code> for names, brief letters or numbers,
+or no labels.  Labels and samples share one preview sequence:
+<kbd class="kbd">S</kbd> or foreground navigation cancels the remaining samples.
+An exact-preview failure is reported instead of accepting a different voice
+as the requested one.  Availability and capability reports describe what the
+adapter advertises; they are not a listening test of every parameter.
+</p>
+<p>Use <kbd class="kbd">a</kbd> to assign a physical voice and <kbd class="kbd">t</kbd> to tune the
 selected logical voice on its effective route.  Route changes are staged until
-you press <kbd class="kbd">w</kbd> or <kbd class="kbd">C-c C-c</kbd> to save and apply them.  Pressing
-<kbd class="kbd">q</kbd> with unsaved route changes warns that they remain staged.
+you press <kbd class="kbd">w</kbd> or <kbd class="kbd">C-c C-c</kbd> to save and apply them.
+Returning to the engine list preserves staged route changes.  Leaving the
+workbench with <kbd class="kbd">q</kbd> warns when those changes remain unsaved.
+</p>
+<p>Applying waits for each speech stream to acknowledge its configuration.  If
+an Omnivox apply times out, the Workbench reports <em class="emph">server outcome unconfirmed</em>.
+Emacsvox stops that apply and sends no later steps, but changes already sent
+may still take effect on the server.  A timeout does not undo the saved profile
+or confirm that the server rejected it.  Press <kbd class="kbd">r</kbd> to reapply
+the committed profile and obtain a fresh result.  Save or cancel any newer
+staged edits before retrying.  A partial result retains the streams that
+acknowledged success and identifies those that timed out.
+</p>
+<p>The tuner names neutral effect values instead of speaking an ambiguous number:
+gain five is <em class="emph">unchanged</em>, low-pass nine is <em class="emph">disabled</em>, high-pass zero is
+<em class="emph">disabled</em>, pan five is <em class="emph">centre</em>, and reverb, echo, or chorus zero is
+<em class="emph">disabled</em>.  Chorus adds a bounded doubled-voice modulation without changing
+speech duration or marker positions.  It is applied by Omnivox to buffered
+audio; the tuner reports when the selected route cannot apply it.  These
+portable levels are translated to the exact values required by the active
+adapter.
+</p>
+<p>The built-in <code class="code">acss-default</code> palette also includes a <code class="code">telephone</code> logical voice.
+It combines high-pass and low-pass filtering to give any buffered Omnivox
+engine a narrow-band telephone sound while preserving its selected physical
+voice, duration, and markers.  Preview it in <em class="emph">Voice Palettes</em> or <em class="emph">Voice
+Workbench</em> before assigning it to content.  Adapters without post-synthesis
+filtering preserve the portable style but do not apply the filters.
+</p>
+<p>Omnivox average-pitch differences use the customizable
+&lsquo;<samp class="samp">omnivox-average-pitch-contrast</samp>&rsquo;.  Its default value, &lsquo;<samp class="samp">0.5</samp>&rsquo;, keeps palette
+distinctions while making them gentler.  Set it to &lsquo;<samp class="samp">1.0</samp>&rsquo; for the historical
+contrast, or &lsquo;<samp class="samp">0</samp>&rsquo; to make average pitch neutral.  Values through &lsquo;<samp class="samp">2.0</samp>&rsquo; are
+accepted.  Changing it refreshes logical-voice registration, and the same
+setting applies to previews, structured speech, and legacy inline voices.
 </p>
 <p>For a quick engine preference, <kbd class="kbd">C-e d e</kbd> chooses an available engine
 for the current Emacs session.  Press <kbd class="kbd">C-u</kbd> first to save the new
-preference.  Explicit logical-voice routes still take precedence.
+preference.  On a first run with no saved routing profile, the ordinary command
+uses the live Omnivox policy as an in-memory baseline and writes no file; the
+prefixed command explicitly saves that baseline and the selected preference.
+Explicit logical-voice routes still take precedence.
 </p>
 <p>Judge voices in context.  The goal is usually to distinguish nearby kinds of
 content, not to identify every named voice in isolation.  Use a portable
 palette for the intended distinction and machine routing for the best local
 realization.
 </p>
+<ul class="mini-toc">
+<li><a href="#Tune-A-Physical-Voice-Temporarily" accesskey="1">Tune A Physical Voice Temporarily</a></li>
+<li><a href="#Worked-Presentation-Recipes" accesskey="2">Worked Presentation Recipes</a></li>
+</ul>
+<div class="subsection-level-extent" id="Tune-A-Physical-Voice-Temporarily">
+<h4 class="subsection"><span>6.7.1 Tune A Physical Voice Temporarily<a class="copiable-link" href="#Tune-A-Physical-Voice-Temporarily"> &para;</a></span></h4>
+
+<p>In <em class="emph">Browse and try voices</em>, select a physical voice and press
+<kbd class="kbd">t</kbd>.  This opens a temporary experiment with that exact
+engine and voice, engine-default speech characteristics, the current speech
+rate, and neutral audio effects.  Opening, adjusting, comparing, and
+cancelling perform no configuration writes or route assignments.
+</p>
+<p>The experiment uses its working voice for navigation, values, and Help.
+<kbd class="kbd">n/p</kbd> or up/down selects a parameter; left/right adjusts it;
+<kbd class="key">RET</kbd> enters a value; blank retains the current value and
+<kbd class="kbd">d</kbd> explicitly requests the adapter default.  <kbd class="kbd">P</kbd> plays the working
+version.  <kbd class="kbd">B</kbd> alternates the opening and working versions,
+<kbd class="kbd">u</kbd> undoes, <kbd class="kbd">R</kbd> restores the opening voice and
+parameters, and <kbd class="kbd">S</kbd> stops.  <kbd class="kbd">T</kbd> changes the
+sample, <kbd class="kbd">c</kbd> copies an existing style, and <kbd class="kbd">v</kbd>
+tries another physical voice while retaining the requested parameters.
+</p>
+<p>For a three-value comparison, select a supported numeric parameter and
+choose <em class="emph">Demonstrate the selected parameter</em> from <kbd class="kbd">C-c C-a</kbd>,
+or press <kbd class="kbd">D</kbd>.  Enter three valid values; each is labelled
+before the identical sentence.  This demonstration does not change the
+working settings and can be stopped as one sequence.
+</p>
+<p>Engine speech controls and Omnivox audio effects are identified separately.
+The Requested column shows your settings.  Playback reports show omissions
+or acceptance; adapters do not report exact effective numeric values.  A
+failed physical voice is reported explicitly.  If it prevents navigation,
+ordinary speech keeps the tuner operable and announces that fallback.
+</p>
+<p>Press <kbd class="kbd">w</kbd> or <kbd class="kbd">C-c C-c</kbd> to choose <em class="emph">Keep result</em>:
+parameters as a named style, a physical voice route retaining the existing
+style, or both voice and parameters for a named logical voice.  A built-in
+palette is copied only when you save the reviewed result.  The review names
+the destinations and shows the parameters.  Press <kbd class="kbd">C-c C-c</kbd>
+in that review to save and apply them.  Palette selection applies for the
+session; a Presentation Profile can retain that choice.  Route and style
+files remain separate.  Any partial save or failed apply is reported, and
+the review retains completed steps so you can retry without repeating writes.
+<kbd class="kbd">q</kbd> returns from the review; cancelling before Save and apply
+leaves configuration unchanged.
+</p>
+</div>
+<div class="subsection-level-extent" id="Worked-Presentation-Recipes">
+<h4 class="subsection"><span>6.7.2 Worked Presentation Recipes<a class="copiable-link" href="#Worked-Presentation-Recipes"> &para;</a></span></h4>
+
+<ol class="enumerate">
+<li> <a class="anchor" id="Browse-Eloquence-And-Compare-Pitch"></a>Browse Eloquence And Compare Pitch
+
+
+<ol class="enumerate">
+<li> Open <kbd class="kbd">C-e H</kbd> and search with <kbd class="kbd">/</kbd> for
+<em class="emph">Browse and try voices</em>.  Select the installed Eloquence engine and press
+<kbd class="key">RET</kbd>.  Its list shows the voices this installation reports;
+if Eloquence is unavailable, choose another available engine.
+</li><li> Use up/down to choose a voice.  <kbd class="kbd">P</kbd> plays it;
+<kbd class="kbd">A</kbd> plays the filtered list with spoken names, and
+<kbd class="kbd">S</kbd> stops.  <kbd class="kbd">T</kbd> chooses your own sample
+sentence.  For two different voices, <kbd class="kbd">B</kbd> uses the selected
+voice as A and asks for B.
+</li><li> Press <kbd class="kbd">t</kbd> on one physical voice.  Move to <em class="emph">Average Pitch</em>.
+Press <kbd class="key">RET</kbd> and enter <kbd class="kbd">3</kbd>, then
+<kbd class="kbd">P</kbd>.  Enter <kbd class="kbd">7</kbd> and replay the same sentence.
+<kbd class="kbd">u</kbd> restores the previous value for another comparison.
+Navigation also uses the working voice, so you can hear it in actual use.
+</li><li> For a labelled sequence, press <kbd class="kbd">D</kbd> on Average Pitch and
+supply three valid values, for example 3, 5, and 7.  This does not change
+the working value.  <kbd class="kbd">B</kbd> compares the opening and working
+versions; it does not compare the two most recent edits.
+</li></ol>
+
+</li><li> <a class="anchor" id="Keep-A-Voice-Experiment"></a>Keep A Voice Experiment
+
+
+<p>From the physical tuner, press <kbd class="kbd">w</kbd> after finding a useful
+setting.  Choose <em class="emph">parameters as a named style</em> to keep characteristics while
+letting existing routes choose the physical voice; choose <em class="emph">physical voice
+route</em> to assign that voice while retaining the destination&rsquo;s existing style;
+choose <em class="emph">both</em> to keep both for the chosen logical voice.
+</p>
+<p>Choose a destination name and, when needed, an editable palette.  Read the
+review, including the exact physical route and parameter values, and use
+<kbd class="kbd">P</kbd> to preview that proposal.  Only
+<kbd class="kbd">C-c C-c</kbd> in the review saves and applies it.  Palette selection
+is temporary for this session; save a Presentation Profile if you want to
+retain that selection.  The route has its own machine-local saved profile.
+If a step fails, the review states which writes succeeded and retains the
+remaining steps for retry.  <kbd class="kbd">q</kbd> before saving changes nothing.
+</p>
+</li><li> <a class="anchor" id="Change-A-Heading-Voice-Add-A-Cue-Or-Silence-One"></a>Change A Heading Voice, Add A Cue, Or Silence One
+
+
+<p>Move to a representative heading and open <kbd class="kbd">C-e H c</kbd>.
+Press <kbd class="kbd">c</kbd>, choose <em class="emph">Change the content voice</em>, and select a
+named voice such as <code class="code">bolden</code>.  <kbd class="kbd">P</kbd> previews it.  Use
+<kbd class="kbd">m</kbd> to review the actual heading facts, including level when
+supplied by the integration.  Use <kbd class="kbd">l</kbd> to choose a lifetime,
+review the summary, then press <kbd class="kbd">a</kbd>.  A rule matching level-two
+headings affects all matching level-two headings within that lifetime&rsquo;s scope.
+</p>
+<p>To add a cue, begin again with a representative item and choose <em class="emph">Add a sound</em>.
+Select before or after content, choose a registered sound, and preview it.
+To silence an existing cue, choose <em class="emph">Suppress one component</em> and select that
+sound by phase and identity.  This retains the spoken content and other
+feedback.  Review matching criteria and lifetime before applying either rule.
+</p>
+</li><li> <a class="anchor" id="Change-A-Blank_002dLine-Tone"></a>Change A Blank-Line Tone
+
+
+<p>Navigate onto a blank line so its feedback enters history.  Open
+<kbd class="kbd">C-e H H</kbd>, select that blank-line record, and press
+<kbd class="kbd">C</kbd>.  Choose <em class="emph">Change a tone</em>, select the tone, then choose a
+named tone or explicit pitch in Hertz and duration in milliseconds.  Compare
+<kbd class="kbd">O</kbd> and <kbd class="kbd">P</kbd>.  Review the matching facts before
+choosing lifetime and applying.
+</p>
+<p>If that record contains a cue instead of a tone, the tone choice is absent.
+Use <em class="emph">Explain</em> to see which rule supplied the cue; a guided change can suppress
+that cue, and a second change can add a tone.  The interface reports the
+actual presentation rather than assuming every visually blank line uses the
+same feedback.
+</p>
+</li><li> <a class="anchor" id="Choose-An-Engine-And-Recover-Unfinished-Work"></a>Choose An Engine And Recover Unfinished Work
+
+
+<p>For ordinary speech, open Home and search for <em class="emph">Ordinary speech engine</em>, or
+use <kbd class="kbd">C-e d e</kbd> directly.  Choose an available engine.  This
+preference lasts for the session; a prefix argument explicitly saves it.
+Existing exact logical-voice routes take precedence over the preference.
+</p>
+<p>Use <kbd class="kbd">h</kbd> to leave a working editor through Home without losing
+it.  Home&rsquo;s <em class="emph">Resume unfinished changes</em> opens the original draft, including
+its source and working settings.  In a voice tuner, <kbd class="kbd">u</kbd> undoes
+and <kbd class="kbd">R</kbd> restores the opening settings.  Its
+<kbd class="kbd">q</kbd> asks before discarding changes.  Guided feedback
+<kbd class="kbd">q</kbd> hides and retains the draft.  To undo an already applied
+rule, open <em class="emph">Presentation Overrides</em>, select it in the appropriate scope, and
+use <kbd class="kbd">t</kbd> to disable it or <kbd class="kbd">d</kbd> to remove it.
+</p>
+<p>From any Aural interface, <kbd class="kbd">C-c C-i</kbd> opens its offline task
+manual and <kbd class="kbd">q</kbd> returns to the same interface and position.
+In Help, <kbd class="kbd">i</kbd> opens that manual.  <kbd class="kbd">C-c C-a</kbd>
+offers named actions; <kbd class="kbd">S</kbd> stops a preview sequence.
+</p></li></ol>
+
+</div>
 </div>
 <hr>
 <div class="nav-panel">

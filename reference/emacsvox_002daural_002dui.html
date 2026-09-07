@@ -37,7 +37,7 @@ strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
 Next: <a href="emacsvox_002daural_002dvalidation.html" accesskey="n" rel="next">emacsvox-aural-validation</a>, Previous: <a href="emacsvox_002daural_002dtransport.html" accesskey="p" rel="prev">emacsvox-aural-transport</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="emacsvox_002daural_002dui-1"><span>2.50 emacsvox-aural-ui<a class="copiable-link" href="#emacsvox_002daural_002dui-1"> &para;</a></span></h3>
+<h3 class="section" id="emacsvox_002daural_002dui-1"><span>2.52 emacsvox-aural-ui<a class="copiable-link" href="#emacsvox_002daural_002dui-1"> &para;</a></span></h3>
 
 <p>Common interface identity, spoken tabulated-list navigation, refresh
 preservation, and dismissal feedback for the aural managers and editors.
@@ -47,24 +47,28 @@ preservation, and dismissal feedback for the aural managers and editors.
 <li><a href="#emacsvox_002daural_002dui-Options" accesskey="2">emacsvox-aural-ui Options</a></li>
 </ul>
 <div class="subsection-level-extent" id="Emacsvox_002dAural_002dUi-Commands">
-<h4 class="subsection"><span>2.50.1 Emacsvox-Aural-Ui Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dUi-Commands"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.52.1 Emacsvox-Aural-Ui Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dUi-Commands"> &para;</a></span></h4>
 
 <ul class="mini-toc">
 <li><a href="#emacsvox_002daural_002dinterface_002dmode" accesskey="1">emacsvox-aural-interface-mode</a></li>
 <li><a href="#emacsvox_002daural_002dquit" accesskey="2">emacsvox-aural-quit</a></li>
 <li><a href="#emacsvox_002daural_002dtabulated_002dmode" accesskey="3">emacsvox-aural-tabulated-mode</a></li>
-<li><a href="#emacsvox_002daural_002dui_002dhelp_002dquit" accesskey="4">emacsvox-aural-ui-help-quit</a></li>
-<li><a href="#emacsvox_002daural_002dui_002dhelp_002dreturn_002dmode" accesskey="5">emacsvox-aural-ui-help-return-mode</a></li>
-<li><a href="#emacsvox_002daural_002dui_002dnext_002dcolumn" accesskey="6">emacsvox-aural-ui-next-column</a></li>
-<li><a href="#emacsvox_002daural_002dui_002dnext_002drow" accesskey="7">emacsvox-aural-ui-next-row</a></li>
-<li><a href="#emacsvox_002daural_002dui_002dprevious_002dcolumn" accesskey="8">emacsvox-aural-ui-previous-column</a></li>
-<li><a href="#emacsvox_002daural_002dui_002dprevious_002drow" accesskey="9">emacsvox-aural-ui-previous-row</a></li>
+<li><a href="#emacsvox_002daural_002dui_002dactions" accesskey="4">emacsvox-aural-ui-actions</a></li>
+<li><a href="#emacsvox_002daural_002dui_002dhelp_002dactions" accesskey="5">emacsvox-aural-ui-help-actions</a></li>
+<li><a href="#emacsvox_002daural_002dui_002dhelp_002dquit" accesskey="6">emacsvox-aural-ui-help-quit</a></li>
+<li><a href="#emacsvox_002daural_002dui_002dhelp_002dreturn_002dmode" accesskey="7">emacsvox-aural-ui-help-return-mode</a></li>
+<li><a href="#emacsvox_002daural_002dui_002dnext_002dcolumn" accesskey="8">emacsvox-aural-ui-next-column</a></li>
+<li><a href="#emacsvox_002daural_002dui_002dnext_002drow" accesskey="9">emacsvox-aural-ui-next-row</a></li>
+<li><a href="#emacsvox_002daural_002dui_002dopen_002dmanual">emacsvox-aural-ui-open-manual</a></li>
+<li><a href="#emacsvox_002daural_002dui_002dprevious_002dcolumn">emacsvox-aural-ui-previous-column</a></li>
+<li><a href="#emacsvox_002daural_002dui_002dprevious_002drow">emacsvox-aural-ui-previous-row</a></li>
 <li><a href="#emacsvox_002daural_002dui_002drefresh">emacsvox-aural-ui-refresh</a></li>
 <li><a href="#emacsvox_002daural_002dui_002dspeak_002dcurrent_002dcell">emacsvox-aural-ui-speak-current-cell</a></li>
 <li><a href="#emacsvox_002daural_002dui_002dspeak_002dcurrent_002drow">emacsvox-aural-ui-speak-current-row</a></li>
+<li><a href="#emacsvox_002daural_002dui_002dstop_002dpreview">emacsvox-aural-ui-stop-preview</a></li>
 </ul>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dinterface_002dmode">
-<h4 class="subsubsection"><span>2.50.1.1 emacsvox-aural-interface-mode<a class="copiable-link" href="#emacsvox_002daural_002dinterface_002dmode"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.1 emacsvox-aural-interface-mode<a class="copiable-link" href="#emacsvox_002daural_002dinterface_002dmode"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dinterface_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-interface-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dinterface_002dmode"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dinterface_002dmode-1"></a>
@@ -84,18 +88,22 @@ SPC		scroll-up-command
 &lt;		beginning-of-buffer
 &gt;		end-of-buffer
 ?		describe-mode
+S		emacsvox-aural-ui-stop-preview
 g		revert-buffer
 h		describe-mode
 q		emacsvox-aural-quit
 DEL		scroll-down-command
 S-SPC		scroll-down-command
 
+C-c C-a		emacsvox-aural-ui-actions
+C-c TAB		emacsvox-aural-ui-open-manual
+
 </pre></div>
 </dd></dl>
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dquit">
-<h4 class="subsubsection"><span>2.50.1.2 emacsvox-aural-quit<a class="copiable-link" href="#emacsvox_002daural_002dquit"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.2 emacsvox-aural-quit<a class="copiable-link" href="#emacsvox_002daural_002dquit"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dquit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-quit</strong> <var class="def-var-arguments">(&amp;optional kill)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dquit"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dquit-1"></a>
@@ -111,7 +119,7 @@ When KILL is non-nil, kill the interface buffer as ‘quit-window’ would.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dtabulated_002dmode">
-<h4 class="subsubsection"><span>2.50.1.3 emacsvox-aural-tabulated-mode<a class="copiable-link" href="#emacsvox_002daural_002dtabulated_002dmode"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.3 emacsvox-aural-tabulated-mode<a class="copiable-link" href="#emacsvox_002daural_002dtabulated_002dmode"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dtabulated_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-tabulated-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dtabulated_002dmode"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dtabulated_002dmode-1"></a>
@@ -136,7 +144,7 @@ SPC		emacsvox-aural-ui-speak-current-row
 &lt;		beginning-of-buffer
 &gt;		end-of-buffer
 ?		describe-mode
-S		tabulated-list-sort
+S		emacsvox-aural-ui-stop-preview
 g		emacsvox-aural-ui-refresh
 h		describe-mode
 n		emacsvox-aural-ui-next-row
@@ -156,14 +164,41 @@ M-&lt;right&gt;	tabulated-list-next-column
 &lt;right&gt;		emacsvox-aural-ui-next-column
 &lt;up&gt;		emacsvox-aural-ui-previous-row
 
+C-c C-a		emacsvox-aural-ui-actions
+C-c TAB		emacsvox-aural-ui-open-manual
+
 C-M-i		backward-button
 
 </pre></div>
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dactions">
+<h4 class="subsubsection"><span>2.52.1.4 emacsvox-aural-ui-actions<a class="copiable-link" href="#emacsvox_002daural_002dui_002dactions"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dactions"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-actions</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dactions"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dactions-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Choose an available action by name.
+</pre></div>
+</dd></dl>
+
+</div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dhelp_002dactions">
+<h4 class="subsubsection"><span>2.52.1.5 emacsvox-aural-ui-help-actions<a class="copiable-link" href="#emacsvox_002daural_002dui_002dhelp_002dactions"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dhelp_002dactions"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-help-actions</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dhelp_002dactions"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dhelp_002dactions-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Return to the interface that opened Help and choose one of its actions.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dhelp_002dquit">
-<h4 class="subsubsection"><span>2.50.1.4 emacsvox-aural-ui-help-quit<a class="copiable-link" href="#emacsvox_002daural_002dui_002dhelp_002dquit"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.6 emacsvox-aural-ui-help-quit<a class="copiable-link" href="#emacsvox_002daural_002dui_002dhelp_002dquit"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dhelp_002dquit"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-help-quit</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dhelp_002dquit"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dhelp_002dquit-1"></a>
@@ -175,7 +210,7 @@ C-M-i		backward-button
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dhelp_002dreturn_002dmode">
-<h4 class="subsubsection"><span>2.50.1.5 emacsvox-aural-ui-help-return-mode<a class="copiable-link" href="#emacsvox_002daural_002dui_002dhelp_002dreturn_002dmode"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.7 emacsvox-aural-ui-help-return-mode<a class="copiable-link" href="#emacsvox_002daural_002dui_002dhelp_002dreturn_002dmode"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dhelp_002dreturn_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-help-return-mode</strong> <var class="def-var-arguments">(&amp;optional arg)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dhelp_002dreturn_002dmode"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dhelp_002dreturn_002dmode-1"></a>
@@ -204,7 +239,7 @@ disabled.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dnext_002dcolumn">
-<h4 class="subsubsection"><span>2.50.1.6 emacsvox-aural-ui-next-column<a class="copiable-link" href="#emacsvox_002daural_002dui_002dnext_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.8 emacsvox-aural-ui-next-column<a class="copiable-link" href="#emacsvox_002daural_002dui_002dnext_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-next-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dnext_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dnext_002dcolumn-1"></a>
@@ -216,7 +251,7 @@ disabled.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dnext_002drow">
-<h4 class="subsubsection"><span>2.50.1.7 emacsvox-aural-ui-next-row<a class="copiable-link" href="#emacsvox_002daural_002dui_002dnext_002drow"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.9 emacsvox-aural-ui-next-row<a class="copiable-link" href="#emacsvox_002daural_002dui_002dnext_002drow"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dnext_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-next-row</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dnext_002drow"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dnext_002drow-1"></a>
@@ -227,8 +262,20 @@ disabled.
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dopen_002dmanual">
+<h4 class="subsubsection"><span>2.52.1.10 emacsvox-aural-ui-open-manual<a class="copiable-link" href="#emacsvox_002daural_002dui_002dopen_002dmanual"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dopen_002dmanual"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-open-manual</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dopen_002dmanual"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dopen_002dmanual-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Read this interface’s offline task manual; q returns to the interface.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dprevious_002dcolumn">
-<h4 class="subsubsection"><span>2.50.1.8 emacsvox-aural-ui-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dui_002dprevious_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.11 emacsvox-aural-ui-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dui_002dprevious_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-previous-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dprevious_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dprevious_002dcolumn-1"></a>
@@ -240,7 +287,7 @@ disabled.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dprevious_002drow">
-<h4 class="subsubsection"><span>2.50.1.9 emacsvox-aural-ui-previous-row<a class="copiable-link" href="#emacsvox_002daural_002dui_002dprevious_002drow"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.12 emacsvox-aural-ui-previous-row<a class="copiable-link" href="#emacsvox_002daural_002dui_002dprevious_002drow"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dprevious_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-previous-row</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dprevious_002drow"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dprevious_002drow-1"></a>
@@ -252,7 +299,7 @@ disabled.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002drefresh">
-<h4 class="subsubsection"><span>2.50.1.10 emacsvox-aural-ui-refresh<a class="copiable-link" href="#emacsvox_002daural_002dui_002drefresh"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.13 emacsvox-aural-ui-refresh<a class="copiable-link" href="#emacsvox_002daural_002dui_002drefresh"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-refresh</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002drefresh"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002drefresh-1"></a>
@@ -264,7 +311,7 @@ disabled.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dspeak_002dcurrent_002dcell">
-<h4 class="subsubsection"><span>2.50.1.11 emacsvox-aural-ui-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dui_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.14 emacsvox-aural-ui-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dui_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dspeak_002dcurrent_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-speak-current-cell</strong> <var class="def-var-arguments">(&amp;optional value-first)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dspeak_002dcurrent_002dcell"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dspeak_002dcurrent_002dcell-1"></a>
@@ -281,7 +328,7 @@ the cell value first.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dspeak_002dcurrent_002drow">
-<h4 class="subsubsection"><span>2.50.1.12 emacsvox-aural-ui-speak-current-row<a class="copiable-link" href="#emacsvox_002daural_002dui_002dspeak_002dcurrent_002drow"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.52.1.15 emacsvox-aural-ui-speak-current-row<a class="copiable-link" href="#emacsvox_002daural_002dui_002dspeak_002dcurrent_002drow"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dspeak_002dcurrent_002drow"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-speak-current-row</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dspeak_002dcurrent_002drow"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dspeak_002dcurrent_002drow-1"></a>
@@ -292,12 +339,24 @@ the cell value first.
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dui_002dstop_002dpreview">
+<h4 class="subsubsection"><span>2.52.1.16 emacsvox-aural-ui-stop-preview<a class="copiable-link" href="#emacsvox_002daural_002dui_002dstop_002dpreview"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dui_002dstop_002dpreview"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-ui-stop-preview</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dui_002dstop_002dpreview"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dui_002dstop_002dpreview-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Stop the current preview and its remaining samples.
+</pre></div>
+</dd></dl>
+
+</div>
 </div>
 <div class="subsection-level-extent" id="emacsvox_002daural_002dui-Options">
-<h4 class="subsection"><span>2.50.2 emacsvox-aural-ui Options<a class="copiable-link" href="#emacsvox_002daural_002dui-Options"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.52.2 emacsvox-aural-ui Options<a class="copiable-link" href="#emacsvox_002daural_002dui-Options"> &para;</a></span></h4>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-45"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-ui-help-return-mode-hook</var><a class="copiable-link" href="#index-User-Option-45"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-46"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-ui-help-return-mode-hook</var><a class="copiable-link" href="#index-User-Option-46"> &para;</a></span></dt>
 <dd><pre class="verbatim">Hook run after entering or leaving ‘emacsvox-aural-ui-help-return-mode’.
 No problems result if this variable is not bound.
 ‘add-hook’ automatically binds it.  (This is true for all hook variables.)

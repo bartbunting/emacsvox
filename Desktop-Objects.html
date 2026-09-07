@@ -69,6 +69,56 @@ unsaved file changes.
 one you left.  This makes it practical to keep a document, its reference
 material, a shell, and related application results available together.
 </p>
+<ul class="mini-toc">
+<li><a href="#Cycle-Between-Buffers-of-the-Same-Kind" accesskey="1">Cycle Between Buffers of the Same Kind</a></li>
+</ul>
+<div class="subsection-level-extent" id="Cycle-Between-Buffers-of-the-Same-Kind">
+<h4 class="subsection"><span>5.1.1 Cycle Between Buffers of the Same Kind<a class="copiable-link" href="#Cycle-Between-Buffers-of-the-Same-Kind"> &para;</a></span></h4>
+
+<a class="index-entry-id" id="index-buffer-cycling"></a>
+<a class="index-entry-id" id="index-C_002de-n"></a>
+<a class="index-entry-id" id="index-C_002de-p"></a>
+<a class="index-entry-id" id="index-C_002de-_002e"></a>
+<a class="index-entry-id" id="index-C_002de-_002c"></a>
+
+<p>When several buffers contain the same kind of work, cycling lets you move
+among them without remembering their names or opening a buffer list.  This is
+useful when comparing Org notes, reviewing several directories in Dired, or
+moving between source files.
+</p>
+<p>Press <kbd class="kbd">C-e n</kbd> to select the next buffer with the same major
+mode, or <kbd class="kbd">C-e p</kbd> to select the previous one.  For example, from
+an Org buffer these commands visit other Org buffers, skipping all buffers
+that do not use the same major mode.  Buffers are grouped by major mode, not
+by project or directory.
+</p>
+<p>After the first command, you only need the final letter: <kbd class="kbd">n</kbd>
+continues forward and <kbd class="kbd">p</kbd> moves backward.  You can change
+direction at any time, and cycling wraps around when you reach the end.  For
+example, <kbd class="kbd">C-e n n p</kbd> moves forward twice, then returns to the
+buffer you just left.
+</p>
+<p>To navigate without the major-mode filter, use <kbd class="kbd">C-e .</kbd> for
+next buffer or <kbd class="kbd">C-e ,</kbd> for previous buffer.  You can then repeat
+with just <kbd class="kbd">.</kbd> or <kbd class="kbd">,</kbd>, in the same way as
+<kbd class="kbd">n</kbd> and <kbd class="kbd">p</kbd>.  You can also switch between these
+controls while cycling.
+</p>
+<p>The temporary buffer-selection controls also include <kbd class="kbd">b</kbd> to
+select a buffer by name, <kbd class="kbd">f</kbd> to open a file,
+<kbd class="kbd">k</kbd> to kill a buffer, and <kbd class="kbd">o</kbd> to change windows.
+</p>
+<p>Press <kbd class="kbd">C-g</kbd> when finished to return to normal editing.  A key
+outside the temporary buffer-selection controls also ends cycling and
+performs its normal action.  To choose a particular buffer by name, use
+<kbd class="kbd">C-x b</kbd>.
+</p>
+</div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Object-Oriented-Desktop.html">Let Modes Give Each Buffer Its Tools</a>, Up: <a href="Audio-Desktop.html">Work With The Audio Desktop</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

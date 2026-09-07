@@ -21,6 +21,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 ul.mark-bullet {list-style-type: disc}
@@ -63,6 +64,25 @@ maps.  Which of those keys are available depends on the current major
 and minor modes, your window system or terminal, and your configuration;
 therefore this conceptual chapter does not duplicate their inventories.
 </p>
+<p>To choose a different main prefix, set &lsquo;<samp class="samp">emacsvox-prefix</samp>&rsquo; before loading
+Emacsvox.  For example:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(setq emacsvox-prefix (kbd &quot;C-c e&quot;))
+</pre></div>
+
+<p>With this setting, <kbd class="kbd">C-c e l</kbd> speaks the line and
+<kbd class="kbd">C-c e e</kbd> provides end-of-line recovery.  Evil, EXWM,
+widgets and Term use the prefix followed by <kbd class="kbd">e</kbd> for their
+corresponding recovery command when the prefix contains multiple events.
+Repeating such a prefix is also bound when the sequence is unused or already
+runs that recovery command.  Existing commands and submaps take precedence:
+<kbd class="kbd">C-c e C-c</kbd> retains selective display, so
+<kbd class="kbd">C-c e C-c e</kbd> is not installed as a recovery shortcut.
+Single-event prefixes retain their existing repeated-key behavior, including
+the default <kbd class="kbd">C-e C-e</kbd>.  Mode-local bindings can still shadow
+the chosen prefix; inspect them with Help.
+</p>
 <p>Use Emacs Help to inspect the effective result:
 </p>
 <ul class="itemize mark-bullet">
@@ -78,6 +98,11 @@ prefix&rsquo;s current bindings.
 session.  Check customizations first, then compare the generated defaults
 in the <a data-manual="emacsvox-reference" href="reference/Emacsvox-Keymaps.html#Emacsvox-Keymaps">Emacsvox Keymaps</a> in <cite class="cite">Emacsvox Reference Manual</cite>.
 </p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Copyright.html">Copyright</a>, Previous: <a href="Running-Terminal-Based-Applications.html">Term Terminal Access</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

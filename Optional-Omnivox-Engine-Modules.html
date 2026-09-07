@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Optional Omnivox Engine Modules (Emacsvox User Manual)</title>
+
+<meta name="description" content="Optional Omnivox Engine Modules (Emacsvox User Manual)">
+<meta name="keywords" content="Optional Omnivox Engine Modules (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" rel="up" title="Installing An Omnivox Windows Release Under WSL2">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="subsection-level-extent" id="Optional-Omnivox-Engine-Modules">
+<div class="nav-panel">
+<p>
+Up: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" accesskey="u" rel="up">Install An Omnivox Windows Release Under WSL2</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h4 class="subsection" id="Optional-Omnivox-Engine-Modules-1"><span>4.3.2 Optional Omnivox Engine Modules<a class="copiable-link" href="#Optional-Omnivox-Engine-Modules-1"> &para;</a></span></h4>
+
+<p>The ordinary WSL2 archive is the Omnivox core, not a claim that every supported
+engine is installed.  It keeps first speech small while matching companion
+archives provide engines that are larger, experimental, architecture-specific,
+or incomplete without separately chosen data.
+</p>
+<p>From a running Emacsvox session, open:
+</p>
+<div class="example">
+<pre class="example-preformatted">M-x emacsvox-omnivox-manage-components RET
+</pre></div>
+
+<p>You can also press <kbd class="kbd">C-e H</kbd> for Aural Home and then
+<kbd class="kbd">I</kbd> on <em class="emph">Omnivox engine modules</em>.  The spoken table reports each
+engine as installed, downloadable, unavailable on this architecture, needing a
+core update, or needing a separately supplied runtime or model.  <em class="emph">Release
+state</em> describes the managed release installation.  <em class="emph">Browse and try voices</em>
+reports the active speech server, which can use a different installation, such
+as a development runtime or a remote workstation.  Installing a module here
+changes the managed release only.  Move to an engine row, then choose the task
+you want:
+</p>
+<ul class="itemize mark-bullet">
+<li>To install a <em class="emph">not installed</em> module, press <kbd class="kbd">i</kbd> and confirm.  The
+manager downloads the version matched to your Omnivox core, verifies it, and
+announces when installation is complete.  Its state changes to <em class="emph">installing</em>
+immediately and stays that way if you refresh or reopen the manager.
+</li><li>To check any engine, press <kbd class="kbd">t</kbd>.  Emacsvox announces how many
+voices Omnivox found and selects an accessible buffer containing the complete
+list.  If the check fails, it announces and displays the actual diagnostic
+instead of only an exit code.  Press <kbd class="kbd">q</kbd> to return to the
+manager or <kbd class="kbd">h</kbd> for Aural Home.
+</li><li>To remove an <em class="emph">installed</em> module, press <kbd class="kbd">u</kbd> and confirm.  This
+is available only for Flite, RuTTS, Piper, and TGSpeechBox modules installed
+by this manager.  It cannot remove the Omnivox core, built-in engines, or
+runtime bridges.
+</li></ul>
+
+<p>Removal keeps the verified download in the local cache.  If you change your
+mind, select the module again&mdash;its state will now be <em class="emph">not installed</em>&mdash;and press
+<kbd class="kbd">i</kbd> to reinstall it.  A valid cached download is reused.
+</p>
+<p>The module&rsquo;s whole managed directory is removed.  Move anything you placed
+inside that directory somewhere else before confirming.  User-supplied
+runtimes and models stored outside it are not touched; remove those separately
+using their supplier&rsquo;s instructions.  Before removal, the manager announces
+the operation and briefly stops its active Omnivox speech streams so Windows
+can release the module helper.  It restores speech when removal finishes,
+including after an error.  After a successful installation, it also refreshes
+the table and restarts a running Omnivox server.  Operations run asynchronously
+so Emacs remains responsive.  The table shows <em class="emph">uninstalling</em> during removal and
+<em class="emph">testing</em> during a voice check.  Completion or failure refreshes the state;
+if that refresh fails, the last known state remains with a spoken error.
+</p>
+<p>If a removal reports that its helper is still in use, close any other Emacsvox
+or Omnivox session using that release and press <kbd class="kbd">u</kbd> again.  The
+manager safely recognizes an interrupted removal when the expected helper is
+the only file left; it continues to refuse directories containing unrecognized
+files.
+</p>
+<p>The manager reads &lsquo;<samp class="samp">etc/omnivox-components.conf</samp>&rsquo;.  Every archive name, byte size,
+and SHA-256 hash is pinned to the same Omnivox version as the installed core.
+The WSL2 installer rejects a mismatched core, an unsafe archive layout, missing
+source provenance, or a helper that cannot pass its staged voice-discovery
+check.  It then installs the module below the same versioned Windows
+&lsquo;<samp class="samp">LocalAppData</samp>&rsquo; release directory.  It does not invoke &lsquo;<samp class="samp">sudo</samp>&rsquo; or edit shell
+startup files.
+</p>
+<p>The choices have different boundaries:
+</p>
+<ul class="itemize mark-bullet">
+<li>Flite includes its compact English SLT voice and needs no external runtime.
+</li><li>RuTTS includes its compact Russian voices and needs no external runtime.
+</li><li>Piper installs native engine support, but appears only after you separately
+review and configure an ONNX voice model and its model card.
+</li><li>TGSpeechBox is an explicitly experimental multilingual formant engine.  The
+1.7.1 module calibrates rate control to the Eloquence scale and supplies exact
+requested text anchors for capitalization and timed presentation.
+</li><li>RHVoice, Eloquence, and DECtalk use distributable bridges, but Emacsvox never
+downloads their external runtimes, voices, dictionaries, or licence material.
+Supply those only when you have the appropriate distribution and licence.
+</li></ul>
+
+<p>For a terminal-only installation, run
+&lsquo;<samp class="samp">./bin/emacsvox-omnivox-components --list</samp>&rsquo; and then, for example,
+&lsquo;<samp class="samp">./bin/emacsvox-omnivox-components --install flite</samp>&rsquo;.  Multiple module names may
+follow &lsquo;<samp class="samp">--install</samp>&rsquo; or &lsquo;<samp class="samp">--uninstall</samp>&rsquo;.  For example, use
+&lsquo;<samp class="samp">./bin/emacsvox-omnivox-components --uninstall flite</samp>&rsquo; to remove the managed
+Flite directory while retaining its cached archive.  Restart Omnivox after a
+terminal installation or removal, then use &lsquo;<samp class="samp">--test ENGINE</samp>&rsquo; or the Emacs
+manager&rsquo;s <kbd class="kbd">t</kbd> command.  The direct Omnivox release assets remain
+available for maintainers and recovery, but the manager is the recommended way
+to select them.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Up: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

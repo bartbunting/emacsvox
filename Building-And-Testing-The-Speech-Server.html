@@ -17,7 +17,7 @@
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Installation.html" rel="up" title="Installation">
 <link href="Quick-Installation.html" rel="next" title="Quick Installation">
-<link href="Obtaining-Emacsvox.html" rel="prev" title="Obtaining Emacsvox">
+<link href="Updating-Emacsvox-Under-WSL2.html" rel="prev" title="Updating Emacsvox Under WSL2">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
@@ -34,17 +34,17 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Building-And-Testing-The-Speech-Server">
 <div class="nav-panel">
 <p>
-Next: <a href="Quick-Installation.html" accesskey="n" rel="next">Build And Start Emacsvox</a>, Previous: <a href="Obtaining-Emacsvox.html" accesskey="p" rel="prev">Before You Begin</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Quick-Installation.html" accesskey="n" rel="next">Build And Start Emacsvox</a>, Previous: <a href="Updating-Emacsvox-Under-WSL2.html" accesskey="p" rel="prev">Updating An Existing WSL2 Installation</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Install-And-Check-Omnivox"><span>2.2 Install And Check Omnivox<a class="copiable-link" href="#Install-And-Check-Omnivox"> &para;</a></span></h3>
+<h3 class="section" id="Install-And-Check-Omnivox"><span>2.5 Install And Check Omnivox<a class="copiable-link" href="#Install-And-Check-Omnivox"> &para;</a></span></h3>
 
 <p>If you used the guided WSL2 installer above, Omnivox is already installed and
 checked.  Continue to <a class="ref" href="Quick-Installation.html">Build And Start Emacsvox</a>.
 </p>
 <p>On a matching GNU/Linux x86-64 or macOS host, follow
 <a class="ref" href="Installing-An-Omnivox-Release-Binary.html">Install Omnivox From A Release Binary</a>.  That procedure downloads and
-verifies the published 1.6.4 archive, keeps its runtime data beside the
+verifies the published 1.7.1 archive, keeps its runtime data beside the
 executable, and adds its versioned installation directory to <code class="code">PATH</code>.  Then run:
 </p>
 <div class="example">
@@ -65,9 +65,10 @@ server is ready.  If either is missing, use
 <a class="ref" href="Backend-Diagnostics-And-Ownership.html">Backend Diagnostics And Responsibilities</a>
 before continuing.  See <a class="xref" href="Speech-Backends.html">Speech Backends</a> contains the complete platform
 matrix, build details, and compatibility alternatives.  Native Windows Emacs
-support remains a preview.  Evaluators can follow
-<a class="ref" href="Trying-Native-Windows-Emacsvox.html">Trying Native Windows Emacsvox</a>; initial users should choose
-the WSL2 route.
+on x64 is supported with Emacs 30.2 or newer. Its PowerShell installer reuses
+a prebuilt Emacs or offers an explicit source build, and installs Omnivox
+without WSL. Follow
+<a class="ref" href="Trying-Native-Windows-Emacsvox.html">Installing Native Windows Emacsvox</a>.
 </p>
 </div>
 

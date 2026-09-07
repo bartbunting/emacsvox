@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Updating Emacsvox Under WSL2 (Emacsvox User Manual)</title>
+
+<meta name="description" content="Updating Emacsvox Under WSL2 (Emacsvox User Manual)">
+<meta name="keywords" content="Updating Emacsvox Under WSL2 (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Installation.html" rel="up" title="Installation">
+<link href="Building-And-Testing-The-Speech-Server.html" rel="next" title="Building And Testing The Speech Server">
+<link href="Installing-Remote-Emacsvox.html" rel="prev" title="Installing Remote Emacsvox">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Updating-Emacsvox-Under-WSL2">
+<div class="nav-panel">
+<p>
+Next: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="n" rel="next">Install And Check Omnivox</a>, Previous: <a href="Installing-Remote-Emacsvox.html" accesskey="p" rel="prev">Installing On A Remote Linux Host</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Updating-An-Existing-WSL2-Installation"><span>2.4 Updating An Existing WSL2 Installation<a class="copiable-link" href="#Updating-An-Existing-WSL2-Installation"> &para;</a></span></h3>
+
+<p>The guided installer recompiles the source already present in the Emacsvox
+checkout, but it does not fetch newer source itself.  Keep the current speaking
+Emacsvox session open while updating.  Run the commands from
+<kbd class="kbd">M-x shell RET</kbd> in that session, or from another accessible WSL terminal:
+</p>
+<div class="example">
+<pre class="example-preformatted">cd ~/src/emacsvox
+git pull --ff-only
+./bin/emacsvox-wsl-install --check
+./bin/emacsvox-wsl-install
+</pre></div>
+
+<p>Replace <code class="code">~/src/emacsvox</code> if you chose another Linux-filesystem location.  The
+fast-forward-only pull does not create a merge commit.  If Git reports local
+changes, a divergent branch, or another error, stop and review that checkout;
+do not reset or discard files merely to complete an update.
+</p>
+<p>Rerunning the installer reuses supported Emacs and verified cached downloads,
+installs a newly pinned Omnivox release when necessary, rebuilds Emacsvox
+byte-code from scratch so files from the previous source revision cannot
+survive, and repeats the launch checks.  These operations change files on disk
+but do not stop the Emacsvox process already providing speech.  If the update
+fails, leave that session running while using it to inspect the reported error
+and the named log file.
+</p>
+<p>After the installer succeeds and you hear its final check, leave the old
+Emacsvox session open and start a second, isolated process from the updated
+checkout:
+</p>
+<div class="example">
+<pre class="example-preformatted">cd ~/src/emacsvox
+./bin/emacsvox
+</pre></div>
+
+<p>Running both sessions temporarily is deliberate: the old session remains the
+known-good source of speech while you test the replacement.  The new process
+cannot retain Lisp loaded from the previous version.  Confirm that it speaks
+the ready message and ordinary buffer contents.  In the new session, use
+<kbd class="kbd">M-x emacsvox-speak-version RET</kbd> to hear the Emacsvox version and
+<kbd class="kbd">M-x tts-speak-version RET</kbd> to hear the live speech-server version.  Only
+after these checks pass should you save work in the old session and exit it.
+You can then continue in the isolated session or start Emacsvox through your
+normal customized entry point.  If the new session does not speak, close it but
+leave the old session running while you inspect the diagnostic and installer
+logs.
+</p>
+<p>For an Emacsvox-only manual update, keep the current session running and replace
+the two guided-installer commands after <code class="code">git pull --ff-only</code> with:
+</p>
+<div class="example">
+<pre class="example-preformatted">make check-emacs
+make bytecode-rebuild
+./bin/emacsvox --diagnose
+./bin/emacsvox --check
+</pre></div>
+
+<p>All four commands must succeed, and the final check must produce both its tone
+and speech, before performing the second-session test above.  This manual route
+rebuilds Emacsvox but does not download or select a newly pinned Omnivox
+release.  When Omnivox also needs to be updated independently, follow the
+<em class="emph">Manual Release Installation</em> subsection in
+<a class="ref" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">Install An Omnivox Windows Release Under WSL2</a>, then repeat
+the diagnostic and audible check above.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Building-And-Testing-The-Speech-Server.html">Install And Check Omnivox</a>, Previous: <a href="Installing-Remote-Emacsvox.html">Installing On A Remote Linux Host</a>, Up: <a href="Installation.html">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

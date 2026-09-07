@@ -20,6 +20,7 @@
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+pre.format-preformatted {font-family: inherit}
 span:hover a.copiable-link {visibility: visible}
 strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
 ul.mark-bullet {list-style-type: disc}
@@ -52,10 +53,35 @@ programming modes.
 </li></ul>
 
 <ul class="mini-toc">
-<li><a href="#emacsvox-Options" accesskey="1">emacsvox Options</a></li>
+<li><a href="#Emacsvox-Commands" accesskey="1">Emacsvox Commands</a></li>
+<li><a href="#emacsvox-Options" accesskey="2">emacsvox Options</a></li>
 </ul>
+<div class="subsection-level-extent" id="Emacsvox-Commands">
+<h4 class="subsection"><span>2.4.1 Emacsvox Commands<a class="copiable-link" href="#Emacsvox-Commands"> &para;</a></span></h4>
+
+<ul class="mini-toc">
+<li><a href="#emacsvox_002dstartup_002dstatus" accesskey="1">emacsvox-startup-status</a></li>
+</ul>
+<div class="subsubsection-level-extent" id="emacsvox_002dstartup_002dstatus">
+<h4 class="subsubsection"><span>2.4.1.1 emacsvox-startup-status<a class="copiable-link" href="#emacsvox_002dstartup_002dstatus"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002dstartup_002dstatus"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-startup-status</strong><a class="copiable-link" href="#index-emacsvox_002dstartup_002dstatus"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002dstartup_002dstatus-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Report background startup progress and optional integration failures.
+Interactively, speak a summary and display the full report in Help.
+Programmatically, return the summary without opening a window or speaking.
+This reports integration preparation, not speech-server or routing readiness.
+Repeated startup does not retry failed work; correct the reported problem
+and verify in a fresh Emacs session.
+</pre></div>
+</dd></dl>
+
+</div>
+</div>
 <div class="subsection-level-extent" id="emacsvox-Options">
-<h4 class="subsection"><span>2.4.1 emacsvox Options<a class="copiable-link" href="#emacsvox-Options"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.4.2 emacsvox Options<a class="copiable-link" href="#emacsvox-Options"> &para;</a></span></h4>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
 <dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-2"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-pip-enable</var><a class="copiable-link" href="#index-User-Option-2"> &para;</a></span></dt>
@@ -94,6 +120,11 @@ t
 </dd></dl>
 
 </div>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="emacsvox_002d2048.html">emacsvox-2048</a>, Previous: <a href="dom_002daddons.html">dom-addons</a>, Up: <a href="Emacsvox-Commands-And-Options.html">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

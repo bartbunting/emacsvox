@@ -180,6 +180,14 @@ instructions are in Omnivox&rsquo;s checkout under <code class="code">docs/RHVOI
 changing those inputs, then use <code class="code">C-e d e</code> to inspect the engines reported by the
 new process.
 </p>
+<p>Piper testing from a newer committed Omnivox revision uses the separate
+<code class="code">windows-omnivox-piper-dev</code> target and its native Windows CI artifact.  The
+target requires the archive&rsquo;s published SHA-256 and a reviewed external model,
+and rejects a dirty or different Omnivox checkout.  See
+<a class="ref" href="Integration-Maintenance.html">Integration Maintenance</a> for the complete command and
+provenance checks.  This development path does not change the companion pinned
+for reproducible releases.
+</p>
 </div>
 <hr>
 <div class="nav-panel">

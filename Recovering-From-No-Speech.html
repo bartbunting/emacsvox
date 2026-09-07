@@ -38,7 +38,7 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Persistent-Startup.html" accesskey="n" rel="next">Persistent Startup</a>, Previous: <a href="Confirming-First-Speech.html" accesskey="p" rel="prev">Confirming First Speech</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Recovering-From-No-Speech-1"><span>2.5 Recovering From No Speech<a class="copiable-link" href="#Recovering-From-No-Speech-1"> &para;</a></span></h3>
+<h3 class="section" id="Recovering-From-No-Speech-1"><span>2.8 Recovering From No Speech<a class="copiable-link" href="#Recovering-From-No-Speech-1"> &para;</a></span></h3>
 
 <p>If speech did not start, keep the isolated launcher as your known starting
 point and find the first command below that did not work:
@@ -48,8 +48,8 @@ point and find the first command below that did not work:
 <dd><p>No audio or interactive Emacs has started.  Under WSL2, begin with
 <code class="code">./bin/emacsvox-wsl-install --check</code> and resolve the first item it reports.
 Otherwise, follow the launcher selection:
-set <code class="code">EMACS</code>, correct <code class="code">EMACS=</code> in <code class="code">local.mk</code>, or install Emacs 31
-or newer when the Emacs check fails.  When the speech server is not
+set <code class="code">EMACS</code>, correct <code class="code">EMACS=</code> in <code class="code">local.mk</code>, or install Emacs 30.2 or newer
+when the Emacs check fails.  When the speech server is not
 executable, finish installing Omnivox, put it on <code class="code">PATH</code>, or set
 <code class="code">OMNIVOX_PROGRAM</code> to its absolute executable.  The guided WSL2 installer
 records the verified executable in a per-user configuration file; rerunning
@@ -76,6 +76,16 @@ speech server visible during that start cannot be executed.  Correct the
 reported speech-server path rather than adding more init-file configuration.
 For an Omnivox process error, inspect the private log directory described
 below.
+</p></dd>
+<dt>The ready message is heard, but one mode lacks spoken feedback</dt>
+<dd><p>Type <kbd class="kbd">M-x emacsvox-startup-status RET</kbd>.  The report names failed
+startup work or package integrations and retains the original error.  Use
+<kbd class="kbd">M-x emacsvox-speak-buffer RET</kbd> to hear the full report.  Correct
+the named package, configuration, or Emacsvox problem, then verify in a fresh
+session.  For source edits, follow the byte-code build procedure before
+testing.  Repeating startup or restarting the speech server does not retry
+failed integrations: an interrupted load can leave some hooks or advice
+installed.  Keep the original error when requesting help.
 </p></dd>
 <dt>The ready message is heard, but speech later stops</dt>
 <dd><p>If Emacs reports that an Emacsvox speech server exited, inspect the Omnivox

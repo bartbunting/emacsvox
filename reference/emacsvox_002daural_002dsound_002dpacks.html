@@ -37,7 +37,7 @@ strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
 Next: <a href="emacsvox_002daural_002dsource.html" accesskey="n" rel="next">emacsvox-aural-source</a>, Previous: <a href="emacsvox_002daural_002dsemantics.html" accesskey="p" rel="prev">emacsvox-aural-semantics</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="emacsvox_002daural_002dsound_002dpacks-1"><span>2.44 emacsvox-aural-sound-packs<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks-1"> &para;</a></span></h3>
+<h3 class="section" id="emacsvox_002daural_002dsound_002dpacks-1"><span>2.46 emacsvox-aural-sound-packs<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks-1"> &para;</a></span></h3>
 
 <p>Accessible sound-pack and cue browsers.  Users can inspect native,
 inherited, fallback, and missing assets; audition concrete cues; activate
@@ -48,18 +48,19 @@ manifests without editing raw Lisp.
 <li><a href="#Emacsvox_002dAural_002dSound_002dPacks-Commands" accesskey="1">Emacsvox-Aural-Sound-Packs Commands</a></li>
 </ul>
 <div class="subsection-level-extent" id="Emacsvox_002dAural_002dSound_002dPacks-Commands">
-<h4 class="subsection"><span>2.44.1 Emacsvox-Aural-Sound-Packs Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dSound_002dPacks-Commands"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.46.1 Emacsvox-Aural-Sound-Packs Commands<a class="copiable-link" href="#Emacsvox_002dAural_002dSound_002dPacks-Commands"> &para;</a></span></h4>
 
 <ul class="mini-toc">
 <li><a href="#emacsvox_002daural_002dlist_002dsound_002dpack_002dcues" accesskey="1">emacsvox-aural-list-sound-pack-cues</a></li>
 <li><a href="#emacsvox_002daural_002dlist_002dsound_002dpacks" accesskey="2">emacsvox-aural-list-sound-packs</a></li>
 <li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002daudition" accesskey="3">emacsvox-aural-sound-pack-cues-audition</a></li>
-<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dhelp" accesskey="4">emacsvox-aural-sound-pack-cues-help</a></li>
-<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dmode" accesskey="5">emacsvox-aural-sound-pack-cues-mode</a></li>
-<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dnext" accesskey="6">emacsvox-aural-sound-pack-cues-next</a></li>
-<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dnext_002dcolumn" accesskey="7">emacsvox-aural-sound-pack-cues-next-column</a></li>
-<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious" accesskey="8">emacsvox-aural-sound-pack-cues-previous</a></li>
-<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious_002dcolumn" accesskey="9">emacsvox-aural-sound-pack-cues-previous-column</a></li>
+<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002ddescribe" accesskey="4">emacsvox-aural-sound-pack-cues-describe</a></li>
+<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dhelp" accesskey="5">emacsvox-aural-sound-pack-cues-help</a></li>
+<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dmode" accesskey="6">emacsvox-aural-sound-pack-cues-mode</a></li>
+<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dnext" accesskey="7">emacsvox-aural-sound-pack-cues-next</a></li>
+<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dnext_002dcolumn" accesskey="8">emacsvox-aural-sound-pack-cues-next-column</a></li>
+<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious" accesskey="9">emacsvox-aural-sound-pack-cues-previous</a></li>
+<li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious_002dcolumn">emacsvox-aural-sound-pack-cues-previous-column</a></li>
 <li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002drefresh">emacsvox-aural-sound-pack-cues-refresh</a></li>
 <li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dshow_002dvalidation">emacsvox-aural-sound-pack-cues-show-validation</a></li>
 <li><a href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent">emacsvox-aural-sound-pack-cues-speak-current</a></li>
@@ -80,7 +81,7 @@ manifests without editing raw Lisp.
 <li><a href="#emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent_002dcell">emacsvox-aural-sound-packs-speak-current-cell</a></li>
 </ul>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dlist_002dsound_002dpack_002dcues">
-<h4 class="subsubsection"><span>2.44.1.1 emacsvox-aural-list-sound-pack-cues<a class="copiable-link" href="#emacsvox_002daural_002dlist_002dsound_002dpack_002dcues"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.1 emacsvox-aural-list-sound-pack-cues<a class="copiable-link" href="#emacsvox_002daural_002dlist_002dsound_002dpack_002dcues"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dlist_002dsound_002dpack_002dcues"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-list-sound-pack-cues</strong> <var class="def-var-arguments">(&amp;optional pack)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dlist_002dsound_002dpack_002dcues"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dlist_002dsound_002dpack_002dcues-1"></a>
@@ -94,7 +95,7 @@ manifests without editing raw Lisp.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dlist_002dsound_002dpacks">
-<h4 class="subsubsection"><span>2.44.1.2 emacsvox-aural-list-sound-packs<a class="copiable-link" href="#emacsvox_002daural_002dlist_002dsound_002dpacks"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.2 emacsvox-aural-list-sound-packs<a class="copiable-link" href="#emacsvox_002daural_002dlist_002dsound_002dpacks"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dlist_002dsound_002dpacks"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-list-sound-packs</strong> <var class="def-var-arguments">(&amp;optional pack)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dlist_002dsound_002dpacks"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dlist_002dsound_002dpacks-1"></a>
@@ -108,7 +109,7 @@ manifests without editing raw Lisp.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002daudition">
-<h4 class="subsubsection"><span>2.44.1.3 emacsvox-aural-sound-pack-cues-audition<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002daudition"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.3 emacsvox-aural-sound-pack-cues-audition<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002daudition"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002daudition"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-audition</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002daudition"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002daudition-1"></a>
@@ -119,8 +120,20 @@ manifests without editing raw Lisp.
 </dd></dl>
 
 </div>
+<div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002ddescribe">
+<h4 class="subsubsection"><span>2.46.1.4 emacsvox-aural-sound-pack-cues-describe<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002ddescribe"> &para;</a></span></h4>
+<dl class="first-deffn def-block">
+<dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002ddescribe"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-describe</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002ddescribe"> &para;</a></span></dt>
+<dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002ddescribe-1"></a>
+
+<div class="format">
+<pre class="format-preformatted">Show details of the selected cue without playing it.
+</pre></div>
+</dd></dl>
+
+</div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002dhelp">
-<h4 class="subsubsection"><span>2.44.1.4 emacsvox-aural-sound-pack-cues-help<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dhelp"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.5 emacsvox-aural-sound-pack-cues-help<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dhelp"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002dhelp"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dhelp-1"></a>
@@ -132,7 +145,7 @@ manifests without editing raw Lisp.
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002dmode">
-<h4 class="subsubsection"><span>2.44.1.5 emacsvox-aural-sound-pack-cues-mode<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dmode"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.6 emacsvox-aural-sound-pack-cues-mode<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dmode"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002dmode"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dmode-1"></a>
@@ -147,7 +160,7 @@ penultimate step during initialization.
 
 Key             Binding
 &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-
-RET		emacsvox-aural-sound-pack-cues-audition
+RET		emacsvox-aural-sound-pack-cues-describe
 ?		emacsvox-aural-sound-pack-cues-help
 P		emacsvox-aural-sound-pack-cues-audition
 h		emacsvox-aural
@@ -160,7 +173,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002dnext">
-<h4 class="subsubsection"><span>2.44.1.6 emacsvox-aural-sound-pack-cues-next<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dnext"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.7 emacsvox-aural-sound-pack-cues-next<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dnext"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-next</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002dnext"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dnext-1"></a>
@@ -172,7 +185,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002dnext_002dcolumn">
-<h4 class="subsubsection"><span>2.44.1.7 emacsvox-aural-sound-pack-cues-next-column<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dnext_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.8 emacsvox-aural-sound-pack-cues-next-column<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dnext_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-next-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002dnext_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dnext_002dcolumn-1"></a>
@@ -184,7 +197,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious">
-<h4 class="subsubsection"><span>2.44.1.8 emacsvox-aural-sound-pack-cues-previous<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.9 emacsvox-aural-sound-pack-cues-previous<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-previous</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious-1"></a>
@@ -196,7 +209,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious_002dcolumn">
-<h4 class="subsubsection"><span>2.44.1.9 emacsvox-aural-sound-pack-cues-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.10 emacsvox-aural-sound-pack-cues-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-previous-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dprevious_002dcolumn-1"></a>
@@ -208,7 +221,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002drefresh">
-<h4 class="subsubsection"><span>2.44.1.10 emacsvox-aural-sound-pack-cues-refresh<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002drefresh"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.11 emacsvox-aural-sound-pack-cues-refresh<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002drefresh"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-refresh</strong> <var class="def-var-arguments">(&amp;optional cue)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002drefresh"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002drefresh-1"></a>
@@ -222,7 +235,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002dshow_002dvalidation">
-<h4 class="subsubsection"><span>2.44.1.11 emacsvox-aural-sound-pack-cues-show-validation<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dshow_002dvalidation"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.12 emacsvox-aural-sound-pack-cues-show-validation<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dshow_002dvalidation"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dshow_002dvalidation"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-show-validation</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002dshow_002dvalidation"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dshow_002dvalidation-1"></a>
@@ -234,7 +247,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent">
-<h4 class="subsubsection"><span>2.44.1.12 emacsvox-aural-sound-pack-cues-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.13 emacsvox-aural-sound-pack-cues-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent-1"></a>
@@ -246,7 +259,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent_002dcell">
-<h4 class="subsubsection"><span>2.44.1.13 emacsvox-aural-sound-pack-cues-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.14 emacsvox-aural-sound-pack-cues-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-pack-cues-speak-current-cell</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent_002dcell"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpack_002dcues_002dspeak_002dcurrent_002dcell-1"></a>
@@ -258,7 +271,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dactivate">
-<h4 class="subsubsection"><span>2.44.1.14 emacsvox-aural-sound-packs-activate<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dactivate"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.15 emacsvox-aural-sound-packs-activate<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dactivate"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dactivate"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-activate</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dactivate"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dactivate-1"></a>
@@ -270,7 +283,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002daudition">
-<h4 class="subsubsection"><span>2.44.1.15 emacsvox-aural-sound-packs-audition<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002daudition"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.16 emacsvox-aural-sound-packs-audition<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002daudition"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002daudition"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-audition</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002daudition"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002daudition-1"></a>
@@ -282,7 +295,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dedit_002dmanifest">
-<h4 class="subsubsection"><span>2.44.1.16 emacsvox-aural-sound-packs-edit-manifest<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dedit_002dmanifest"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.17 emacsvox-aural-sound-packs-edit-manifest<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dedit_002dmanifest"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dedit_002dmanifest"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-edit-manifest</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dedit_002dmanifest"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dedit_002dmanifest-1"></a>
@@ -294,7 +307,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dhelp">
-<h4 class="subsubsection"><span>2.44.1.17 emacsvox-aural-sound-packs-help<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dhelp"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.18 emacsvox-aural-sound-packs-help<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dhelp"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dhelp"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-help</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dhelp"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dhelp-1"></a>
@@ -306,7 +319,7 @@ v		emacsvox-aural-sound-pack-cues-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dmode">
-<h4 class="subsubsection"><span>2.44.1.18 emacsvox-aural-sound-packs-mode<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dmode"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.19 emacsvox-aural-sound-packs-mode<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dmode"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dmode"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-mode</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dmode"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dmode-1"></a>
@@ -335,7 +348,7 @@ v		emacsvox-aural-sound-packs-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dnext">
-<h4 class="subsubsection"><span>2.44.1.19 emacsvox-aural-sound-packs-next<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dnext"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.20 emacsvox-aural-sound-packs-next<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dnext"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dnext"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-next</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dnext"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dnext-1"></a>
@@ -347,7 +360,7 @@ v		emacsvox-aural-sound-packs-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dnext_002dcolumn">
-<h4 class="subsubsection"><span>2.44.1.20 emacsvox-aural-sound-packs-next-column<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dnext_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.21 emacsvox-aural-sound-packs-next-column<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dnext_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dnext_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-next-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dnext_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dnext_002dcolumn-1"></a>
@@ -359,7 +372,7 @@ v		emacsvox-aural-sound-packs-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dopen_002ddirectory">
-<h4 class="subsubsection"><span>2.44.1.21 emacsvox-aural-sound-packs-open-directory<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dopen_002ddirectory"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.22 emacsvox-aural-sound-packs-open-directory<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dopen_002ddirectory"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dopen_002ddirectory"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-open-directory</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dopen_002ddirectory"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dopen_002ddirectory-1"></a>
@@ -371,7 +384,7 @@ v		emacsvox-aural-sound-packs-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dprevious">
-<h4 class="subsubsection"><span>2.44.1.22 emacsvox-aural-sound-packs-previous<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dprevious"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.23 emacsvox-aural-sound-packs-previous<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dprevious"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dprevious"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-previous</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dprevious"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dprevious-1"></a>
@@ -383,7 +396,7 @@ v		emacsvox-aural-sound-packs-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dprevious_002dcolumn">
-<h4 class="subsubsection"><span>2.44.1.23 emacsvox-aural-sound-packs-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dprevious_002dcolumn"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.24 emacsvox-aural-sound-packs-previous-column<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dprevious_002dcolumn"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dprevious_002dcolumn"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-previous-column</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dprevious_002dcolumn"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dprevious_002dcolumn-1"></a>
@@ -395,7 +408,7 @@ v		emacsvox-aural-sound-packs-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002drefresh">
-<h4 class="subsubsection"><span>2.44.1.24 emacsvox-aural-sound-packs-refresh<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002drefresh"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.25 emacsvox-aural-sound-packs-refresh<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002drefresh"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002drefresh"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-refresh</strong> <var class="def-var-arguments">(&amp;optional pack)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002drefresh"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002drefresh-1"></a>
@@ -409,7 +422,7 @@ v		emacsvox-aural-sound-packs-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dshow_002dvalidation">
-<h4 class="subsubsection"><span>2.44.1.25 emacsvox-aural-sound-packs-show-validation<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dshow_002dvalidation"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.26 emacsvox-aural-sound-packs-show-validation<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dshow_002dvalidation"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dshow_002dvalidation"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-show-validation</strong> <var class="def-var-arguments">(&amp;optional pack-id)</var><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dshow_002dvalidation"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dshow_002dvalidation-1"></a>
@@ -423,7 +436,7 @@ v		emacsvox-aural-sound-packs-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent">
-<h4 class="subsubsection"><span>2.44.1.26 emacsvox-aural-sound-packs-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.27 emacsvox-aural-sound-packs-speak-current<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-speak-current</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent-1"></a>
@@ -435,7 +448,7 @@ v		emacsvox-aural-sound-packs-show-validation
 
 </div>
 <div class="subsubsection-level-extent" id="emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent_002dcell">
-<h4 class="subsubsection"><span>2.44.1.27 emacsvox-aural-sound-packs-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
+<h4 class="subsubsection"><span>2.46.1.28 emacsvox-aural-sound-packs-speak-current-cell<a class="copiable-link" href="#emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent_002dcell"> &para;</a></span></h4>
 <dl class="first-deffn def-block">
 <dt class="deffn def-line" id="index-emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent_002dcell"><span class="category-def">Command: </span><span><strong class="def-name">emacsvox-aural-sound-packs-speak-current-cell</strong><a class="copiable-link" href="#index-emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent_002dcell"> &para;</a></span></dt>
 <dd><a class="index-entry-id" id="index-emacsvox_002daural_002dsound_002dpacks_002dspeak_002dcurrent_002dcell-1"></a>

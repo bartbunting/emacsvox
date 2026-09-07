@@ -37,7 +37,7 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Confirming-First-Speech.html" accesskey="n" rel="next">Confirming First Speech</a>, Previous: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="p" rel="prev">Install And Check Omnivox</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Build-And-Start-Emacsvox"><span>2.3 Build And Start Emacsvox<a class="copiable-link" href="#Build-And-Start-Emacsvox"> &para;</a></span></h3>
+<h3 class="section" id="Build-And-Start-Emacsvox"><span>2.6 Build And Start Emacsvox<a class="copiable-link" href="#Build-And-Start-Emacsvox"> &para;</a></span></h3>
 
 <p>The guided WSL2 installer has already selected Emacs, compiled Emacsvox, and
 run both checks below.  You may go directly to the final step and start the
@@ -51,7 +51,7 @@ manual WSL2 installation, or later diagnosis.
 <pre class="example-preformatted">cd /path/where/you/keep/source/emacsvox
 </pre></div>
 
-</li><li> Select Emacs 31 or newer.  If it is not the system <code class="code">emacs</code>, create the
+</li><li> Select Emacs 30.2 or newer.  If it is not the system <code class="code">emacs</code>, create the
 ignored local settings file:
 
 <div class="example">
@@ -90,7 +90,7 @@ compiled with the same supported Emacs selected in the previous step.
 </pre></div>
 
 <p>This checks the checkout, Emacs, and speech server without playing audio or
-opening interactive Emacs.  A successful report names Emacs 31 or newer,
+opening interactive Emacs.  A successful report names Emacs 30.2 or newer,
 the <code class="code">omnivox</code> speech server, and an isolated <code class="code">-Q</code> startup.  If it reports a
 path or version problem, correct that item and run the command again.
 </p>

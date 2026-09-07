@@ -73,14 +73,34 @@ shell buffers.  Run <code class="code">M-x emacsvox-agent-shell-enable</code> on
 re-enabling support after it was disabled or while diagnosing a live reload.
 </p>
 <p>Compose and submit prompts with Agent Shell&rsquo;s normal editing commands.  The
-live prompt retains Emacs undo.  Submitted transcript text is history rather
-than editable prompt input.  Press <kbd class="kbd">C-c C-c</kbd> to ask Agent Shell to interrupt
+live prompt retains Emacs undo. Interactive text yanks speak the inserted
+text, including when a prefix argument selects a different kill-ring entry.
+Image attachment keeps Agent Shell&rsquo;s existing feedback. Submitted transcript
+text is history rather than editable prompt input.  Press <kbd class="kbd">C-c C-c</kbd> to ask Agent Shell to interrupt
 an active request; its normal confirmation setting still applies.
 </p>
 <p>Emacsvox speaks routine content only at complete turn boundaries.  A network
 pause does not make a partial answer sound complete.  A cancelled, refused, or
 failed turn reports its outcome without replacing the last successfully
 completed response.
+</p>
+<p>When you use <code class="code">M-x agent-shell-prompt-steer</code>, Emacsvox confirms whether the
+agent accepted the steer, declined it, or started a separate turn.  A separate
+turn is announced as still in progress; it is not reported as complete until
+Agent Shell supplies a completion boundary.  Server-pushed turns, when
+supported by the provider, follow the same completed-response speech policy.
+</p>
+<p>Queued prompts announce when they start and how many remain.  If an interrupted
+or failed turn leaves prompts waiting, the queue announcement gives its count
+and the command <code class="code">M-x agent-shell-prompt-queue-resume</code>.  Queue-start feedback
+follows the session&rsquo;s speech level; paused-queue warnings follow
+<code class="code">emacsvox-agent-shell-signal-processing</code>.
+</p>
+<p>Model, mode, thought-level, and other session setting changes announce their
+confirmed values.  Background setting announcements identify the session.
+In the viewport prompt editor, continuing a list announces its bullet or next
+number and indentation.  Indenting and dedenting announce the new indentation;
+leaving an empty list item announces that the list ended.
 </p>
 </div>
 <div class="section-level-extent" id="Choose-automatic-speech-and-privacy">
@@ -127,6 +147,13 @@ controlled by <code class="code">emacsvox-agent-shell-speak-tool-calls</code> an
 <code class="code">response</code> or <code class="code">full</code>, thought <code class="code">speak</code>, or full tool output is an
 explicit disclosure choice.
 </p>
+<p>At <code class="code">full</code> speech level, tool verbosity <code class="code">full</code> reads the tool&rsquo;s rendered output,
+including Codex command output and textual diffs.  Changed output can be read
+even when the tool&rsquo;s status has not changed; identical updates are suppressed.
+Tool verbosity <code class="code">status</code> plays status cues as tools start and finish.
+Tool updates, steering outcomes, queue changes, and confirmed setting changes
+use the notification lane, leaving navigation speech independent.
+</p>
 <p>Automatic response, tool, error, permission, and similar text is limited by
 <code class="code">emacsvox-agent-shell-automatic-content-max-characters</code>, which defaults to
 2,000 characters.  A shortened presentation gives exact omitted character and
@@ -144,6 +171,11 @@ block the agent and require a decision.  With
 appropriate speech stream, identifies the session and requested operation, and
 announces its choices.  Provider-controlled descriptions and choice labels are
 bounded, but the actual permission controls remain in Agent Shell.
+</p>
+<p>If the provider supplies new operation details after asking permission,
+Emacsvox announces the changed description or input.  Identical updates and
+routine output do not repeat the warning.  The permission controls remain the
+place to inspect and decide the request.
 </p>
 <p>If the request belongs to another session, switch to the named buffer.  Use
 <code class="code">M-x agent-shell-jump-to-latest-permission-button-row</code> to find its latest
@@ -231,6 +263,14 @@ through Agent Shell&rsquo;s public copy operation.
 <p>The source commands are explicit operations and do not use the automatic
 content limit.  Ordinary line navigation retains its separate bounded speech
 policy.
+</p>
+<p>Opening an Agent Shell change review announces its file and hunk counts and,
+for a single file, its name.  The normal Diff Mode hunk navigation remains
+available; opening the review does not accept or reject changes.
+</p>
+<p>These interactions expose semantic events and attributes to Aural.  You can
+customize speech, voices, and earcons for steering outcomes, queue changes,
+list editing, setting changes, updated tool output, and change-review entry.
 </p>
 </div>
 <div class="section-level-extent" id="Navigate-and-copy-rendered-tables">

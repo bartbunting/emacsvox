@@ -21,6 +21,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 span:hover a.copiable-link {visibility: visible}
+strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -35,13 +36,34 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="emacsvox_002daural_002dprofile_002dservice.html" accesskey="n" rel="next">emacsvox-aural-profile-service</a>, Previous: <a href="emacsvox_002daural_002dplanner.html" accesskey="p" rel="prev">emacsvox-aural-planner</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="emacsvox_002daural_002dpreview-1"><span>2.29 emacsvox-aural-preview<a class="copiable-link" href="#emacsvox_002daural_002dpreview-1"> &para;</a></span></h3>
+<h3 class="section" id="emacsvox_002daural_002dpreview-1"><span>2.31 emacsvox-aural-preview<a class="copiable-link" href="#emacsvox_002daural_002dpreview-1"> &para;</a></span></h3>
 
 <p>Coordinate explicit previews without owning their feature-specific content.
 Speech previews stop earlier output, queue one concrete plan or caller-built
 sequence, and dispatch once.  Cue-only previews stop speech but bypass the
 speech queue, presentation history, and training hooks.
 </p>
+<ul class="mini-toc">
+<li><a href="#emacsvox_002daural_002dpreview-Options" accesskey="1">emacsvox-aural-preview Options</a></li>
+</ul>
+<div class="subsection-level-extent" id="emacsvox_002daural_002dpreview-Options">
+<h4 class="subsection"><span>2.31.1 emacsvox-aural-preview Options<a class="copiable-link" href="#emacsvox_002daural_002dpreview-Options"> &para;</a></span></h4>
+
+<dl class="first-defvr first-defvar-alias-first-defvr def-block">
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-31"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-preview-label-verbosity</var><a class="copiable-link" href="#index-User-Option-31"> &para;</a></span></dt>
+<dd><pre class="verbatim">How physical voice comparisons identify their samples.
+‘names’ includes the engine and voice; ‘brief’ uses only the comparison
+letter or sequence number; nil omits labels.  The comparison sentence itself
+is identical for every sample.
+</pre>
+<p>Default Value:
+</p><pre class="verbatim">
+names
+
+</pre>
+</dd></dl>
+
+</div>
 </div>
 
 

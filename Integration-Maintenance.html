@@ -46,17 +46,26 @@ changing an integration.
 </p>
 <ul class="mini-toc">
 <li><a href="#Source-checkout-and-byte_002dcode-lifecycle" accesskey="1">Source checkout and byte-code lifecycle</a></li>
-<li><a href="#Emacsvox-release-staging-and-publication" accesskey="2">Emacsvox release staging and publication</a></li>
-<li><a href="#Future-Aural-contract-decisions" accesskey="3">Future Aural contract decisions</a></li>
-<li><a href="#Notmuch-contracts" accesskey="4">Notmuch contracts</a></li>
-<li><a href="#Agent-Shell-contracts" accesskey="5">Agent Shell contracts</a></li>
-<li><a href="#WSL2-Omnivox-development-staging" accesskey="6">WSL2 Omnivox development staging</a></li>
+<li><a href="#Debian-package-builds" accesskey="2">Debian package builds</a></li>
+<li><a href="#Emacsvox-release-staging-and-publication" accesskey="3">Emacsvox release staging and publication</a></li>
+<li><a href="#Future-Aural-contract-decisions" accesskey="4">Future Aural contract decisions</a></li>
+<li><a href="#Voice_002dstyle-metadata-ownership" accesskey="5">Voice-style metadata ownership</a></li>
+<li><a href="#Timeline-preparation-boundaries" accesskey="6">Timeline preparation boundaries</a></li>
+<li><a href="#Aural-interface-source-ownership" accesskey="7">Aural interface source ownership</a></li>
+<li><a href="#Remote-speech-recovery" accesskey="8">Remote speech recovery</a></li>
+<li><a href="#Omnivox-voice-configuration-applies" accesskey="9">Omnivox voice configuration applies</a></li>
+<li><a href="#Notmuch-contracts">Notmuch contracts</a></li>
+<li><a href="#Agent-Shell-contracts">Agent Shell contracts</a></li>
+<li><a href="#Magit-contracts">Magit contracts</a></li>
+<li><a href="#WSL2-Omnivox-development-staging">WSL2 Omnivox development staging</a></li>
+<li><a href="#Windows-staging-implementation-and-fixtures">Windows staging implementation and fixtures</a></li>
+<li><a href="#Aural-experiments-and-guided-changes">Aural experiments and guided changes</a></li>
 </ul>
 <div class="subsection-level-extent" id="Source-checkout-and-byte_002dcode-lifecycle">
 <h4 class="subsection"><span>16.3.1 Source checkout and byte-code lifecycle<a class="copiable-link" href="#Source-checkout-and-byte_002dcode-lifecycle"> &para;</a></span></h4>
 
 <p>Use the Emacs selected by the ignored repository-local <code class="code">local.mk</code>.  When Emacs
-31 or newer is not the system <code class="code">emacs</code>, set its absolute path there:
+30.2 or newer is not the system <code class="code">emacs</code>, set its absolute path there:
 </p>
 <div class="example">
 <pre class="example-preformatted">EMACS=/path/to/emacs-31/bin/emacs
@@ -81,6 +90,16 @@ the selected Emacs; it does not clean or discard source changes.
 <code class="code">make bytecode-check</code> is the non-mutating preflight for startup or deployment.
 It reports missing, stale, orphaned, or wrong-Emacs byte-code.
 </p>
+<p>Each <code class="code">make config</code> fully regenerates &lsquo;<samp class="samp">lisp/emacsvox-loaddefs.el</samp>&rsquo; from the
+current sources, including edited autoloads, new modules, and deleted modules.
+The build targets <code class="code">make bytecode</code>, <code class="code">make bytecode-rebuild</code>, <code class="code">make emacsvox</code>,
+and <code class="code">make all</code> run configuration before compiling; <code class="code">make compat-test</code> runs it
+before testing.  The
+portable command <code class="code">emacs -Q --batch -l etc/configure-emacsvox.el</code> uses the same
+full regeneration.  Saving a source file or starting Emacs does not regenerate
+autoloads.  Neither <code class="code">make bytecode-check</code> nor <code class="code">make docs-release-check</code> does so.
+Regenerating the index alone does not force all modules to be recompiled.
+</p>
 <p>Tests deliberately prefer source and therefore do not prove that the
 byte-code used by a live profile is current.  Verify rebuilt byte-code in a
 fresh Emacs rather than relying on a file reload when compiled dependants may
@@ -98,9 +117,182 @@ files, <code class="code">(load-library &quot;emacsvox-setup&quot;)</code> may b
 <code class="code">load-library</code> as the first load after editing the source tree: Emacs can
 select an old <code class="code">emacsvox-setup.elc</code> before the newer source checker runs.
 </p>
+<ol class="enumerate">
+<li> <a class="anchor" id="Background-startup-ownership-and-failure-recovery"></a>Background startup ownership and failure recovery
+
+
+<p><code class="code">emacsvox</code> starts two named background tasks: <code class="code">core-advice</code> loads core command
+feedback and <code class="code">package-preparation</code> registers optional package adapters.  The
+private task registry retains each thread, state, start/end times, and original
+error for the Emacs session.  Repeated startup reuses these records, including
+completed and failed tasks, instead of starting duplicate background work.
+Other startup effects, including speech-server initialization, still run when
+<code class="code">emacsvox</code> is called again; this is not a general-purpose retry command.
+</p>
+<p>Registration completion is separate from adapter loading.  An already-loaded
+package triggers its adapter immediately; another package gets a deferred load
+callback.  Each package/adapter pair is registered once.  Both load paths record
+failures without aborting later registrations.  Failed or completed adapters
+are not automatically retried on another package load.  User quit is recorded
+and still propagates.  Source fallback from the setup guard is preserved in
+both background tasks and deferred callbacks.
+</p>
+<p><code class="code">M-x emacsvox-startup-status</code> speaks a summary and selects a Help report with
+task durations and original adapter errors.  Calling <code class="code">emacsvox-startup-status</code>
+from Lisp returns the summary without speech or a window.  Failures also issue
+a warning and attempt a notification in interactive Emacs; retained records
+remain available if either feedback path fails.  Successful completion adds no
+new unconditional announcement.  The protocol and routing checkpoints defined
+in the startup ADRs retain their separate meanings; task completion does not
+declare the speech server ready, or establish that every adapter has loaded.
+</p>
+<p>Correct the reported cause and verify in a fresh session, rebuilding changed
+Lisp first.  A failed adapter can leave partial advice or hooks: error isolation
+does not roll those effects back.  Do not clear private ownership tables as a
+retry mechanism, since deferred callbacks can still refer to their records.
+Retain error details, selected Emacs version, and phase durations when debugging.
+Background scheduling is preserved; these records do not guarantee that core
+advice finishes before the first input command, and batch timings do not measure
+interactive startup latency.
+</p>
+<p>The focused tests exercise real deferred loads, failure isolation, task reuse,
+source fallback, and spoken status with speech intercepted.  Check source with
+the selected Emacs using &lsquo;<samp class="samp">test/emacsvox-startup-tests.el</samp>&rsquo;.  For fresh compiled
+parity, first run <code class="code">make bytecode-check</code>, then set
+&lsquo;<samp class="samp">EMACSVOX_STARTUP_TEST_LOAD=compiled</samp>&rsquo; when loading the same test file in a new
+batch Emacs.  This selects &lsquo;<samp class="samp">emacsvox.elc</samp>&rsquo; explicitly; it does not make every
+test dependency compiled.  Audible diagnosis and real startup latency still
+need an isolated interactive session.
+</p>
+</li><li> <a class="anchor" id="Supported-Emacs-versions"></a>Supported Emacs versions
+
+
+<p>The Lisp runtime and all platform routes support Emacs 30.2 and newer. Run
+<code class="code">make compat-test</code> for the core compatibility contracts without installing
+third-party packages. CI builds all maintained modules and runs this gate on
+Emacs 30.2 and 31.1. The full <code class="code">make test</code> suite additionally requires the
+optional integration packages, including <code class="code">lua-mode</code> on Emacs 30.
+</p>
+<p>The separate core speech CI job runs <code class="code">make core-test</code>, <code class="code">make trace-test</code>, and
+<code class="code">make compiled-aural-test</code> on both versions with a private home directory.
+It covers speech, voice configuration, transport, Voice Workbench, startup,
+and golden speech traces without optional Emacs packages.  It requires GNU
+Make, Git, a POSIX shell, and Tcl (<code class="code">tclsh</code>); missing prerequisites fail before
+the core tests run.  The fresh CI checkout exercises source, followed by an
+isolated compiled Aural check.  Optional integration suites remain outside
+this job.
+</p>
+<p>The separate integration CI job runs Agent Shell, Notmuch, and EAT tests on
+both versions with a private home directory and six reviewed dependency
+snapshots.  <code class="code">make test-deps</code> verifies the archive hashes in
+&lsquo;<samp class="samp">test/integration-dependencies.json</samp>&rsquo; and stages sources and autoloads under
+ignored &lsquo;<samp class="samp">.test-deps/</samp>&rsquo;; it never changes personal packages.  <code class="code">make integration-test</code>
+verifies that prepared tree before loading it and fails on missing dependencies
+or skipped tests.  Pin updates require upstream review, new archive hashes,
+and fresh preparation for both Emacs versions.  These source tests capture
+speech events and exercise disposable EAT subprocesses; they do not replace
+listening tests or compiled integration checks.  See &lsquo;<samp class="samp">test/README.org</samp>&rsquo; for
+preparation checks, directory overrides, recovery, and coverage boundaries.
+</p>
+<p>Keep each Emacs version&rsquo;s build in a separate checkout; never reuse <code class="code">.elc</code>
+files across versions. All platforms, including native Windows x64, use this minimum.
+The documentation toolchain retains its independent pin.
+</p>
+</li><li> <a class="anchor" id="Native-Windows-builds"></a>Native Windows builds
+
+
+<p>Use a separate checkout on a Windows drive.  The native installer regenerates
+autoloads and all modules from the &lsquo;<samp class="samp">lisp/Makefile</samp>&rsquo; inventory with the selected
+Windows Emacs.  Its launcher verifies that byte-code in a fresh process.
+Do not share generated byte-code with a WSL checkout using another Emacs.
+</p>
+<p>Run the native installer checks from that Windows checkout:
+</p>
+<div class="example">
+<pre class="example-preformatted">.\test\emacsvox-windows-install-tests.ps1 -Emacs &quot;C:\path\to\emacs.exe&quot;
+.\bin\emacsvox-install.ps1 -Role Desktop -Check
+.\bin\emacsvox-install.ps1 -Role Desktop
+.\bin\emacsvox.ps1 -Check
+</pre></div>
+
+<p>The PowerShell tests use temporary fixtures and an existing native Emacs.
+They check doctor behavior, explicit selections, incomplete installations,
+platform rejection, checksums, archive paths, argument handling, and atomic
+configuration replacement.  &lsquo;<samp class="samp">test/emacsvox-native-bytecode-tests.el</samp>&rsquo; compares
+the native inventory with GNU Make and checks dependency order and byte-code
+preflight failures.  Keep the WSL x64/ARM64 and remote installer tests passing.
+</p>
+<p>Actual acquisition acceptance must start with a private toolchain and the
+pinned archives, not a reused developer runtime.  Keep MSYS2 package versions,
+compiler/configure/build/install logs, and &lsquo;<samp class="samp">emacsvox-build.json</samp>&rsquo; with the
+installed Emacs.  The installation logs also include
+&lsquo;<samp class="samp">native-install-provenance.json</samp>&rsquo; with Lisp source hashes and selected pins.
+MSYS2 packages are signed rolling inputs; these records do not claim a frozen
+or bit-identical compiler environment.  Verify fresh graphical startup,
+acknowledged routing, and tracked completion on both speech lanes with a PATH
+that contains neither WSL nor MSYS2 tools.  Human listening remains a separate
+acceptance step. Native Windows x64 is supported; remote workstation speech
+remains preview, as recorded in
+<a class="uref" href="../adr/0014-native-windows-support.org">ADR 0014</a>.
+</p>
+</li><li> <a class="anchor" id="Remote-preview-validation"></a>Remote preview validation
+
+
+<p>Keep remote installer fixtures separate from connected acceptance. In the
+Omnivox checkout, run <code class="code">make dev</code> followed by <code class="code">make remote-test</code>; set
+<code class="code">OMNIVOX_REMOTE_TEST_SLOW=1</code> to cover heartbeat expiry. Set
+<code class="code">OMNIVOX_REMOTE_TEST_EMACS</code> to the selected Emacs and
+<code class="code">OMNIVOX_REMOTE_TEST_EMACSVOX</code> to the matching Emacsvox checkout for client
+acceptance. The Omnivox <code class="code">docs/REMOTE.md</code> guide records Windows relay tests,
+real-device options, and retained evidence. Null-output tests do not establish
+audible playback or acceptance through a separate SSH host. Remote access
+remains preview independently of native Windows desktop support.
+</p></li></ol>
+
+</div>
+<div class="subsection-level-extent" id="Debian-package-builds">
+<h4 class="subsection"><span>16.3.2 Debian package builds<a class="copiable-link" href="#Debian-package-builds"> &para;</a></span></h4>
+
+<p><code class="code">make deb</code> builds a local development package in <code class="code">dist/</code> using Python 3,
+<code class="code">dpkg-deb</code>, Git and the selected Emacs. It stages runtime sources and generates
+autoloads in a private directory, preserving checkout byte-code and personal
+configuration. The deb has architecture <code class="code">all</code>, an Emacs 30.2 dependency
+(including terminal and graphical alternatives), and an Omnivox recommendation.
+It loads source and does not install emacsen-common hooks or compile on install.
+The ownership and release boundaries are recorded in
+<a class="uref" href="../adr/0013-debian-package.org">ADR 0013</a>.
+</p>
+<p><code class="code">make deb-test</code> checks the actual archive, reproducibility, source startup,
+remote diagnosis, dependency metadata and refusal of an unprepared release.
+CI additionally installs, reinstalls and purges the package in a disposable
+Ubuntu 26.04 container using <code class="code">test/debian-install-smoke.sh</code>. It uploads the
+development deb and checksum as CI artifacts, without publishing a release.
+</p>
+<p>After preparing the checked source archive using the release procedure below,
+<code class="code">make release-deb</code> produces <code class="code">dist/emacsvox_VERSION-1_all.deb</code> and its checksum.
+The script itself verifies the existing clean-source artifact gate before and
+after packaging. Local versions instead contain <code class="code">+git</code> with the source commit
+and source hash, and revision <code class="code">-0local1</code>. The included <code class="code">BUILD-INFO.json</code> records
+the exact source identity and autoload Emacs version. Neither package target
+creates a tag, uploads release assets, adds an apt repository or changes the
+manual release publication approval boundary.
+</p>
+<p>After a maintainer publishes a stable GitHub release, the Release Debian
+package workflow checks out its exact annotated tag and downloads the source
+archive, checksum and provenance from that release. It checks the source
+identity, installs from the archive, builds the release deb, and tests install,
+startup, reinstall and removal in Ubuntu 26.04 before attaching the deb and
+checksum. Build jobs have read-only repository access; only the attachment job
+can write release assets. A rerun accepts identical existing assets and refuses
+to replace different files. CI does not create tags or releases.
+</p>
+<p>This workflow uses Emacs 30.2 for autoload generation; its recorded toolchain
+can differ from a locally prepared package. Let CI attach the release deb
+instead of uploading a differently built local package with the same name.
+</p>
 </div>
 <div class="subsection-level-extent" id="Emacsvox-release-staging-and-publication">
-<h4 class="subsection"><span>16.3.2 Emacsvox release staging and publication<a class="copiable-link" href="#Emacsvox-release-staging-and-publication"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.3 Emacsvox release staging and publication<a class="copiable-link" href="#Emacsvox-release-staging-and-publication"> &para;</a></span></h4>
 
 <p>The repository-level <code class="code">VERSION</code> file is the canonical stable release
 identifier.  Calendar-versioning policy, including delayed patches and
@@ -133,7 +325,21 @@ creating <code class="code">dist/emacsvox-YYYY.MONTH.PATCH.tar.bz2</code>, its S
 provenance record naming the checked source commit.  For a patch-zero feature
 release, the series must match the current month.  A corrective or backport
 release retains its original non-future series as required by ADR 0002.
-Inspect the archive, checksum, and provenance before proceeding.
+The source archive includes the maintained <code class="code">utils/</code> tools needed by the
+installers, launchers and build. Before recording checked provenance, the
+artifact target extracts the actual archive into a temporary directory and
+runs the remote-only installer with the selected Emacs in a private home. It
+checks fresh compiled startup, the offline manual and the remote helper&rsquo;s
+credential validation without opening a workstation connection or playing
+speech. <code class="code">make source-archive-check</code> repeats this check on an existing archive;
+<code class="code">make source-archive-test</code> checks export contents and rejection of missing
+helpers, local configuration and byte-code. CI runs both checks before a
+release as well. On native Windows, run
+<code class="code">test/emacsvox-source-archive-tests.ps1 -Archive PATH -Emacs PATH</code> to check the
+actual archive&rsquo;s installer doctor, complete native compilation and fresh
+byte-code validation in a temporary Windows directory.
+</p>
+<p>Inspect the archive, checksum, and provenance before proceeding.
 </p>
 <p>Stop after artifact inspection unless fresh explicit permission names the
 release to be tagged and published.  Preparing an artifact, committing or
@@ -159,7 +365,7 @@ when a non-mutating preflight is wanted without creating an artifact.
 </p>
 </div>
 <div class="subsection-level-extent" id="Future-Aural-contract-decisions">
-<h4 class="subsection"><span>16.3.3 Future Aural contract decisions<a class="copiable-link" href="#Future-Aural-contract-decisions"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.4 Future Aural contract decisions<a class="copiable-link" href="#Future-Aural-contract-decisions"> &para;</a></span></h4>
 
 <p>The completed Aural implementation diary is preserved under
 <code class="code">archive/emacsvox/migrations/</code> rather than serving as current instructions.
@@ -179,8 +385,167 @@ or to a module-owned extension.
 by the Aural implementation, its generated reference, and accepted ADRs.
 </p>
 </div>
+<div class="subsection-level-extent" id="Voice_002dstyle-metadata-ownership">
+<h4 class="subsection"><span>16.3.5 Voice-style metadata ownership<a class="copiable-link" href="#Voice_002dstyle-metadata-ownership"> &para;</a></span></h4>
+
+<p>The private <code class="code">emacsvox-aural--voice-style-fields</code> table in
+&lsquo;<samp class="samp">lisp/emacsvox-aural-rules.el</samp>&rsquo; owns accepted field names, groups, value types,
+and integer bounds.  The existing public dimension lists and private accepted
+key list are derived from it; validation traverses the descriptors directly.
+Composition and provenance continue to consume the accepted-key inventory.
+</p>
+<p>Keep the two established orders explicit.  Validation checks preset, family,
+the four numeric ACSS fields, post-synthesis fields, relative rate, and legacy
+rate.  The accepted-key inventory places relative and legacy rate before the
+post-synthesis fields.  ACSS dimension order also determines positional legacy
+personality settings, and rich dimension order determines tuner rows.
+</p>
+<p>Every accepted field allows <code class="code">nil</code>.  Validation preserves the original plist,
+including duplicate fields, for which the first value is used.  Field absence,
+explicit <code class="code">nil</code>, and zero remain distinct during composition and persistence.
+Legacy <code class="code">:rate</code> is accepted for loading saved data but is not applied as a new
+rate; nonzero legacy values produce the existing retuning degradation.
+The table supplies no implicit defaults and does not declare engine support.
+</p>
+<p>An explicit <code class="code">nil</code> over a preset is a compatibility behavior to characterize,
+not an authoring decision settled by the metadata table.  For example, the
+current compiler clears the reported average-pitch value for
+<code class="code">(:preset base :average-pitch nil)</code> while retaining the base voice command and
+emitting no pitch-reset command.  The tests preserve this distinction.  A
+future inheritance, omission, or reset policy needs a separate decision.
+</p>
+<p>Compiler conversion, backend wire names, capability discovery, normalization,
+and delivery stay in their existing owners.  When adding a field, update those
+consumers explicitly and test final serialized output or an explicit
+degradation.  The palette editor and tuner&rsquo;s typed-entry and increment/decrement
+bounds use this metadata through <code class="code">emacsvox-aural--voice-style-field</code>.  The
+complete ACSS editor obtains its four numeric fields from the ACSS inventory;
+it does not expand into editing rate or post-synthesis fields.
+</p>
+<p>Input grammar, labels, neutral values, and preview descriptions remain UI
+policy.  Ordinary numeric input accepts a single digit; blank retains an
+existing value, including zero.  Relative-rate input accepts signed integers
+and blank clears the explicit adjustment to <code class="code">nil</code>.  From <code class="code">nil</code>, horizontal
+adjustment starts at five for ordinary fields and at plus/minus one for rate.
+Digit shortcuts retain their zero-through-nine values.  Invalid boundary steps
+must fail before history, dirty state, refresh, or audition changes.
+Delivery preparation has the limited helper boundaries described below;
+asynchronous operation ownership remains a separate refactoring proposal.
+</p>
+<p>The rule tests state field inventories, bounds, error precedence, and
+composition expectations independently of the metadata.  Scheme tests cover
+saved rich palettes and explicit-nil rules; transport tests check distinct
+ACSS mappings, zero and omitted wire fields, effects, and preset behavior.
+<code class="code">make compiled-aural-test</code> also runs these style contracts with the isolated
+compiled subsystem loaded, checking that the implementations stay in that
+build.  The <code class="code">voice-style-ui</code> tests in
+&lsquo;<samp class="samp">test/emacsvox-aural-voice-palettes-tests.el</samp>&rsquo; exercise interactive numeric
+commands, prompts, blank input, boundaries, unchanged values, and undo in both
+source and compiled runs.  They capture auditions and do not start audio.
+Preserve final-write, timeout, reentrancy, and trace regressions when
+working on later delivery slices; metadata validation alone cannot establish
+process lifecycle or audible behavior.
+</p>
+</div>
+<div class="subsection-level-extent" id="Timeline-preparation-boundaries">
+<h4 class="subsection"><span>16.3.6 Timeline preparation boundaries<a class="copiable-link" href="#Timeline-preparation-boundaries"> &para;</a></span></h4>
+
+<p>Two private helpers in &lsquo;<samp class="samp">lisp/emacsvox-aural-transport.el</samp>&rsquo; make preparation
+inputs explicit.  <code class="code">emacsvox-aural--timeline-effect-transition</code> takes previous
+effects, normalized next effects, and a span ID, returning a directive and the
+next state.  Replacement copies the saved state separately from the directive;
+retention preserves the previous state.  The builder still owns the state
+accumulator, span numbering, and when normalization runs.  Suppressed or empty
+content does not advance effects, while spoken boundary actions do.
+</p>
+<p><code class="code">emacsvox-aural--encode-timeline-delivery-fields</code> takes a policy and replacement
+key.  The existing <code class="code">emacsvox-aural--timeline-delivery-fields</code> wrapper reads the
+dynamic submission variables at the end of timeline construction.  Preserve
+that capture point: resource resolution earlier in construction can re-enter
+Lisp and change the submission state.  The serializer preserves ordered
+defaults, key conversion, circular printing, diagnostics, and byte bounds.
+</p>
+<p>The complete builder is not pure.  Cue resolution through
+<code class="code">omnivox-remote-resource</code> may perform I/O; relative-rate support comes from the
+live speech process.  Those operations, action placement, dispatch
+registration, framing, fallback, and process writes retain their existing
+owners and sequence.  Separating a complete delivery candidate from those
+effects requires further design and failure-path characterization.
+</p>
+<p>The <code class="code">delivery-preparation</code> tests in &lsquo;<samp class="samp">test/emacsvox-aural-transport-tests.el</samp>&rsquo;
+check complete serialized timelines and final writes, semantic bindings,
+state ownership, policy inputs, and capture timing.  The compiled Aural gate
+also runs these contracts and existing stop and send-failure regressions with
+the compiled implementation resident.  Keep the full failure, reentrancy,
+and golden-trace suites as regression checks; captured writes establish
+protocol behavior, not audible playback.
+</p>
+</div>
+<div class="subsection-level-extent" id="Aural-interface-source-ownership">
+<h4 class="subsection"><span>16.3.7 Aural interface source ownership<a class="copiable-link" href="#Aural-interface-source-ownership"> &para;</a></span></h4>
+
+<p>Ordinary-buffer entry captures a source buffer, a marker, and a guarded source
+line.  Child interfaces and Help inherit that context through the inspection
+and shared UI helpers.  Use <code class="code">emacsvox-aural-inspection-call-in-source</code> for
+contextual commands so that moving the source cursor does not retarget an
+open interface.  Re-entry from an ordinary buffer deliberately captures a new
+target.  A dead or replaced source is reported rather than resolved through
+an unrelated recent-buffer fallback.
+</p>
+<p>Current-item lookup may reuse a frozen history record only when the captured
+source identity, position, and modification tick still match.  Source identity
+is a buffer-local, data-only token that distinguishes buffers sharing a name;
+history continues to retain no buffer objects or markers.  Explicit historical
+selection remains valid after the source changes and is explained from its
+frozen plan.  Prepared current-item rules carry a source guard checked before
+their saved or live rule layer changes.
+</p>
+<p>Find rule editors by scope and target identity, not by a formatted buffer
+name.  Buffer scopes belong to buffer objects, fragment scopes to fragment
+identifiers, and personal/session scopes each share one working editor.
+Reopening a dirty editor preserves its draft and source association.
+</p>
+</div>
+<div class="subsection-level-extent" id="Remote-speech-recovery">
+<h4 class="subsection"><span>16.3.8 Remote speech recovery<a class="copiable-link" href="#Remote-speech-recovery"> &para;</a></span></h4>
+
+<p>Ordinary <code class="code">tts-initialize</code> startup schedules the existing remote retry when
+main speech starts but a configured notification connection fails.  The
+scheduler respects <code class="code">omnivox-remote-auto-reconnect</code>, explicit suspension, and
+its single pending timer.  The retry restores only missing lanes; it keeps a
+working main process and negotiates fresh configuration for the new notifier.
+<code class="code">omnivox-remote-disconnect</code> cancels the timer and suspends even a retry callback
+that has already been dispatched.  Local speech and disabled notification
+streams do not start remote recovery.  Exercise these boundaries in
+<code class="code">test/omnivox-remote-tests.el</code> with controlled connection failures and timers.
+</p>
+</div>
+<div class="subsection-level-extent" id="Omnivox-voice-configuration-applies">
+<h4 class="subsection"><span>16.3.9 Omnivox voice configuration applies<a class="copiable-link" href="#Omnivox-voice-configuration-applies"> &para;</a></span></h4>
+
+<p><code class="code">omnivox-apply-voice-configuration</code> captures one generation and its definitions
+for the original speech processes.  Applies may overlap.  Each owns its request
+identifiers and retires only those callbacks when a process result becomes
+terminal.  Acknowledging routing precedes logical registration; one aggregate
+reports applied, partial, or failed after all participating processes finish.
+</p>
+<p>The timeout closes pending results as failed with phase <code class="code">timeout</code>, cancels
+the timer, and releases the apply&rsquo;s pending callbacks.  A late acknowledgement
+cannot start another phase, update acknowledged configuration, or publish a
+second terminal result.  A reply from a stopped or replaced process also
+cannot advance its old apply.  Request ownership must remain correct when
+replies are dispatched while a send is still returning.
+</p>
+<p>This closes client work; it cannot undo a change already sent to the server.
+The Workbench therefore describes a timeout as an unconfirmed server outcome
+and offers reapplication of the committed profile.  No late-reply history is
+retained for expired applies.  Keep request-table, late-reply, overlapping-apply,
+and replacement regressions in <code class="code">test/emacsvox-tts-tests.el</code> and spoken timeout
+feedback coverage in <code class="code">test/emacsvox-aural-voice-workbench-tests.el</code>.
+</p>
+</div>
 <div class="subsection-level-extent" id="Notmuch-contracts">
-<h4 class="subsection"><span>16.3.4 Notmuch contracts<a class="copiable-link" href="#Notmuch-contracts"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.10 Notmuch contracts<a class="copiable-link" href="#Notmuch-contracts"> &para;</a></span></h4>
 
 <p>The live module is registered as an optional package integration.  Its stable
 extension points are the Hello, Search, Show, and Tree mode hooks; Search and
@@ -208,11 +573,71 @@ including real displayed-window reading for both advance paths.
 </p>
 </div>
 <div class="subsection-level-extent" id="Agent-Shell-contracts">
-<h4 class="subsection"><span>16.3.5 Agent Shell contracts<a class="copiable-link" href="#Agent-Shell-contracts"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.11 Agent Shell contracts<a class="copiable-link" href="#Agent-Shell-contracts"> &para;</a></span></h4>
 
 <p>Use <code class="code">M-x emacsvox-agent-shell-enable</code> to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 </p>
+<ol class="enumerate">
+<li> <a class="anchor" id="Internal-ownership-and-renderer-tests"></a>Internal ownership and renderer tests
+
+
+<p>The main &lsquo;<samp class="samp">lisp/emacsvox-agent-shell.el</samp>&rsquo; module requires the internal
+&lsquo;<samp class="samp">lisp/emacsvox-agent-shell-render.el</samp>&rsquo; module.  The renderer module depends
+only on Emacs libraries, with no reverse dependency on the main integration.
+Its private helper names and argument contracts remain available through the
+main module.
+</p>
+<table class="multitable">
+<thead><tr><th width="30%">Owner</th><th width="70%">Responsibilities</th></tr></thead>
+<tbody><tr><td width="30%">Renderer module</td><td width="70%">Interpret prompt faces and chat label strings, current and legacy status glyphs, semantic fragment provenance, decorative controls, answer body ranges, and legacy clipboard properties. Most helpers inspect supplied strings; fragment classification can also read the current buffer without changing it.</td></tr>
+<tr><td width="30%">Main integration</td><td width="70%">Capture buffer and overlay context; apply user customization, speech limits, and delivery; own response accumulation, event subscriptions, timers, callback generations, navigation, permission handling, activation, and cleanup.</td></tr>
+</tbody>
+</table>
+
+<p>Renderer metadata supplies presentation and navigation facts; it does not
+authorize permission responses or establish lifecycle completion.  Status
+label customization stays with the main integration.  Keep compatibility
+interpretation together in the renderer module, and keep registration and
+speech side effects in the main owner.
+</p>
+<p>This is the first bounded separation of responsibilities.  Event state,
+navigation and table commands, and permission handling still share the main
+module.  Assess their private dependencies and lifecycle contracts before
+considering another extraction; a heading or a line count alone is not a
+reason to create a module.
+</p>
+<p>The independent &lsquo;<samp class="samp">test/emacsvox-agent-shell-render-tests.el</samp>&rsquo; suite runs in the
+core and integration gates without needing optional packages of its own.  It
+checks property-preserving copies, compatibility renderings, group provenance,
+answer selection, and a fresh module load without integration registrations.
+With the Emacs selected by &lsquo;<samp class="samp">local.mk</samp>&rsquo;, it can also run directly:
+</p>
+<div class="example">
+<pre class="example-preformatted">/path/to/emacs -Q --batch -L lisp \
+  -l test/emacsvox-agent-shell-render-tests.el -f ert-run-tests-batch-and-exit
+</pre></div>
+
+<p>Keep the existing Agent Shell integration tests alongside these smaller
+contracts.  They exercise real pinned upstream renderers, speech delivery,
+enable/disable, and buffer-death cleanup.  After preparing the pinned
+dependencies with <code class="code">make test-deps</code>, run source and compiled parity checks:
+</p>
+<div class="example">
+<pre class="example-preformatted">make integration-test
+make bytecode
+make bytecode-check
+EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make integration-test
+</pre></div>
+
+<p>The environment setting selects the exact renderer and main integration
+<code class="code">.elc</code> files in a fresh Emacs; other dependencies retain the runner&rsquo;s source
+preference.  Without it, both modules load explicitly from <code class="code">.el</code> sources.
+The tests capture speech events and do not establish audible playback.
+</p>
+</li><li> <a class="anchor" id="Upstream-contract-layers"></a>Upstream contract layers
+
+
 <p>The integration uses three deliberately different contract layers:
 </p>
 <table class="multitable">
@@ -230,9 +655,64 @@ deliberately disabling them or while testing live integration changes.
 semantic behavior at the public event layer when Agent Shell exposes it; keep
 renderer and private fallbacks isolated and covered by compatibility tests.
 </p>
+<p>The lifecycle subscription also observes <code class="code">config-option-update</code>.  Configuration
+snapshots suppress initial inventory and duplicate callback/event confirmation.
+Late tool details are compared only for permissions established by a public
+<code class="code">permission-request</code> event, and their snapshots are removed on resolution.
+</p>
+<p>Current Agent Shell omits rendered Codex <code class="code">rawOutput</code> and textual diffs from
+<code class="code">tool-call-update</code>.  A narrow <code class="code">agent-shell--on-notification</code> adapter joins that
+public event to the body rendered during the same call, matching both the
+owning buffer and qualified fragment ID.  Full tool speech is submitted after
+rendering returns.  Output digests and lifecycle statuses are tracked separately
+so late output is spoken without repeating identical updates.  Renderer IDs
+without a matching public event do not authorize tool feedback.
+</p>
+<p>Until upstream exposes public steering and push lifecycle events, small
+adapters wrap the structured steering request&rsquo;s callbacks and the accepted
+<code class="code">session/push</code> lifecycle.  Push speech finishes before the original completion
+callback can drain the next queued prompt.  Callback generations invalidate
+pending speech feedback on session change or integration cleanup; original
+transport callbacks still run.  No transcript text is interpreted as a
+steering outcome or push completion.
+</p>
+<p>The queue adapter marks actual queue draining and lets <code class="code">input-submitted</code>
+confirm that a queued prompt started.  Prompt list editing and diff entry have
+native command feedback.  New asynchronous tool, queue, steering, setting, and
+permission-detail submissions explicitly select the notification lane; list
+editing and diff entry remain foreground interactions.  All new events and
+their outcome, count, or setting attributes are registered by the workflow
+semantic provider so Aural rules can customize their presentation.
+</p></li></ol>
+
+</div>
+<div class="subsection-level-extent" id="Magit-contracts">
+<h4 class="subsection"><span>16.3.12 Magit contracts<a class="copiable-link" href="#Magit-contracts"> &para;</a></span></h4>
+
+<p>Staging and selected synchronous operations collect Git outcomes at
+<code class="code">magit-process-finish</code>, before Magit can raise an error.  One interactive
+command owns the aggregate result across nested calls.  A process that Magit
+starts and waits for contributes only to the collector attached when it was
+started; unrelated process callbacks cannot change that result.  Uncollected
+asynchronous completions explicitly select the notification lane.  Neither a
+command&rsquo;s return value nor the absence of an Emacs error proves Git succeeded.
+</p>
+<p>Magit&rsquo;s positional highlight overlays must not become source personalities.
+The integration suppresses legacy overlay voice mirroring for those highlights
+and excludes their faces from source capture.  It preserves text faces,
+deliberate personalities, and customized hash voices.  Navigation still emits
+section facts; empty lines supply the core line-condition facts without a
+competing selection icon.
+</p>
+<p>Regression tests use isolated repositories for real Git failures and real
+section trees for highlighting and visibility.  Run the Magit tests from
+source, then again in a fresh Emacs with <code class="code">EMACSVOX_MAGIT_TEST_LOAD=compiled</code>
+after bringing byte-code current.  A live buffer created with the former
+highlight mirroring needs a Magit refresh to rebuild its source properties.
+</p>
 </div>
 <div class="subsection-level-extent" id="WSL2-Omnivox-development-staging">
-<h4 class="subsection"><span>16.3.6 WSL2 Omnivox development staging<a class="copiable-link" href="#WSL2-Omnivox-development-staging"> &para;</a></span></h4>
+<h4 class="subsection"><span>16.3.13 WSL2 Omnivox development staging<a class="copiable-link" href="#WSL2-Omnivox-development-staging"> &para;</a></span></h4>
 
 <p>The ordinary WSL2 user route is implemented by
 <code class="code">bin/emacsvox-wsl-install</code> and pinned by <code class="code">etc/wsl-install.conf</code>.  Treat either
@@ -305,6 +785,50 @@ together before these integrations enter the clean release path.  See
 <code class="code">servers/omnivox-release/README.org</code> for the pinned toolchain, licensing,
 provenance, and restaging contract.
 </p>
+<p>To test Piper before that release-pin advance, commit and push a clean Omnivox
+revision and run its <code class="code">Piper Native Validation</code> workflow.  Download the
+<code class="code">omnivox-piper-windows-x64</code> artifact, which contains the companion archive and
+<code class="code">piper-sha256sums.txt</code>, then stage it with a reviewed model:
+</p>
+<div class="example">
+<pre class="example-preformatted">OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE=/absolute/path/to/omnivox-1.7.1-piper-windows-x64.zip \
+  OMNIVOX_PIPER_DEVELOPMENT_ARCHIVE_SHA256=64-character-sha256 \
+  OMNIVOX_PIPER_MODEL=/absolute/path/to/voice.onnx \
+  make windows-omnivox-piper-dev
+</pre></div>
+
+<p>This is a development-only bridge, not a release-pin bypass.  It verifies the
+outer archive hash, rejects unsafe archive members and symbolic links, checks
+the companion&rsquo;s internal manifest, and requires its source provenance to name
+the exact clean Omnivox <code class="code">HEAD</code> and the Windows MSVC target.  The staged runtime
+records the artifact hash and companion tree hash and labels the companion
+<code class="code">github-actions-native-development-build</code> with version <code class="code">development-ci</code>.  The
+version-looking archive filename comes from Omnivox&rsquo;s current package metadata
+and does not assert that post-tag code was released.  The final live gate loads
+the separately cached model and requires Piper to enumerate that voice and
+synthesize a non-empty WAV.
+</p>
+<p>The ordinary <code class="code">windows-omnivox-dev</code> target remains appropriate for uncommitted
+Omnivox work because it rebuilds all included companions locally and omits
+Piper.  The CI-artifact target deliberately rejects a dirty Omnivox checkout:
+commit and push the change, let the native workflow build that exact commit,
+then use its new artifact.  Emacsvox itself may contain tracked changes; their
+diff hash remains part of the local runtime identity.
+</p>
+<p>After one complete development runtime has been staged, use
+<code class="code">make windows-omnivox-main-dev</code> for changes confined to the main Rust server or
+its main-only audio output.  This guarded path uses the same pinned toolchain
+to rebuild only <code class="code">omnivox.exe</code>, derives a new content-addressed runtime from the
+current hash-verified development payload, records the original complete build
+and reused manifest in provenance, hard-links the unchanged payload, and runs a
+focused live check of the new Windows main executable.  It refuses reuse when
+helper, helper-protocol, dependency, toolchain, or companion inputs changed; in
+that case rerun <code class="code">make windows-omnivox-dev</code>.  Run
+<code class="code">make verify-windows-omnivox-runtime verify-windows-omnivox-live</code> when a
+complete development audit is useful.  The clean <code class="code">make windows-omnivox</code> release
+path always rebuilds and verifies every payload and never uses incremental
+reuse.
+</p>
 <p>The development target accepts <code class="code">OMNIVOX_RHVOICE_LIBRARY</code> and
 <code class="code">OMNIVOX_RHVOICE_DATA</code> together, plus an optional
 <code class="code">OMNIVOX_RHVOICE_CONFIG</code> directory.  It resolves WSL or Windows absolute paths,
@@ -321,6 +845,93 @@ RuLex.
 <p>Do not bypass the Omnivox release target manually or clean either repository
 to make its release guard pass.  Use <code class="code">make windows-omnivox</code> only for the
 reproducible clean-release path documented in the user-facing WSL2 route.
+</p>
+</div>
+<div class="subsection-level-extent" id="Windows-staging-implementation-and-fixtures">
+<h4 class="subsection"><span>16.3.14 Windows staging implementation and fixtures<a class="copiable-link" href="#Windows-staging-implementation-and-fixtures"> &para;</a></span></h4>
+
+<p>Make owns option and clean-source guards, toolchain verification, companion
+preparation, Docker compilation, and final runtime verification.  Its
+<code class="code">windows-omnivox</code> target passes prepared build outputs to the internal
+&lsquo;<samp class="samp">servers/omnivox-release/stage-runtime.sh</samp>&rsquo; script.  Use the guarded Make
+targets rather than invoking this script directly.
+</p>
+<p>The script owns host-side payload staging: input checks, content hashes,
+optional voice-data caches, diagnostics, provenance, path files, and selection
+of the completed runtime.  Make passes the Emacsvox root as
+<code class="code">EMACSVOX_STAGE_ROOT</code>, the resolved <code class="code">OMNIVOX_*</code> source/build/runtime paths and
+feature switches, and the two pinned Roslyn/reference-assembly archive hashes.
+The assignments at the call site and the script&rsquo;s initial parameter checks
+define the complete internal input list.  Optional user inputs retain their
+<code class="code">OMNIVOX_PIPER_MODEL</code>, <code class="code">OMNIVOX_RHVOICE_*</code>, and <code class="code">OMNIVOX_ECI_DLL</code> environment
+variables.  Main-only development staging remains separately owned by
+&lsquo;<samp class="samp">stage-main-dev.sh</samp>&rsquo; with its existing reuse restrictions.
+</p>
+<p>Run <code class="code">make windows-staging-test</code> on a GNU/Linux host with Python 3, Git, Make,
+and the standard GNU file/checksum tools.  The tests use private repositories,
+prepared payloads, runtime directories, and a simulated LocalAppData.  Docker,
+Windows commands, and compiler/verifier boundaries are replaced by fixtures;
+Git guards, copying, hashing, provenance, and link activation execute normally.
+The suite is also included in <code class="code">make test</code> and its own CI job.  It exercises
+clean/development variants, optional companions and external voice inputs,
+paths containing spaces, corrupt caches, missing inputs, rejected main-only
+reuse, interruption, and activation failure.
+</p>
+<p>Preserve the current activation sequence during maintenance.  The script
+selects the staged runtime before Make&rsquo;s final runtime and live checks; a
+failure in those final checks does not restore the previous selection.
+Interruption before activation can leave temporary files in a new version
+directory while preserving the current link.  The fixture tests characterize
+these existing behaviors and successful retry.  Changing cleanup or rollback
+requires a separate fix and acceptance decision.  Fixture success does not
+establish native compiler reproducibility, real Windows path conversion,
+engine startup, or audible playback; run the existing native gates for that
+acceptance in an appropriate staging environment.
+</p>
+</div>
+<div class="subsection-level-extent" id="Aural-experiments-and-guided-changes">
+<h4 class="subsection"><span>16.3.15 Aural experiments and guided changes<a class="copiable-link" href="#Aural-experiments-and-guided-changes"> &para;</a></span></h4>
+
+<p>Physical experiments reuse the tuner with an exact engine/voice selector,
+an immutable opening snapshot, a mutable working style, and undo history.
+They do not modify the palette registry, active palette, or route profile
+until the user explicitly keeps a reviewed result.  Navigation and Help use
+the working style.  A failed exact preview must be reported before ordinary
+speech can provide navigation fallback; a fallback sample must never be
+reported as the requested physical voice.
+</p>
+<p>Keep proposals snapshot the destination palette and routing profile as well
+as the proposed result.  Check those snapshots before writing, and retain
+separate completion flags for palette write, route write, and route apply.
+A retry must not repeat a successful write.  If routing saves but application
+fails, keep that distinction visible and retry the application step.  Never
+report the combined operation complete while one selected destination failed.
+Portable style storage and machine-local routing storage remain separate.
+</p>
+<p>Labelled comparisons use one controlled preview sequence, with identical
+sample text and separately configurable labels.  Each sequence belongs to
+its speech lane.  Stopping that lane cancels remaining entries and invalidates
+late callbacks; stopping foreground speech must not cancel notifications.
+Requested parameters and advertised capabilities are distinct from playback
+reports.  Do not fabricate exact effective numeric values when the adapter
+reports only support, acceptance, or degradation.
+</p>
+<p>Guided feedback changes use existing declarative rules and registered facts.
+The draft selects a component, matching criteria, and lifetime separately;
+preview dynamically overlays the intended layer without mutating live rules.
+Explicit buffer-rule snapshots in captured context must also be overlaid.
+Generated IDs remain stable for the matched component; new rules follow
+existing explicit order within the layer.  Apply checks a Current-item source
+guard and refuses to overwrite another unfinished editor for the same scope.
+Historical selection chooses a frozen part when a transaction contains
+several runs.  Original replay uses that part; proposed preview deliberately
+resolves it with current rules and the captured buffer context.
+</p>
+<p>Shared Help and offline task nodes preserve the original source and exact
+return position.  New interfaces should use the shared parent modes and add
+a task-node mapping to <code class="code">emacsvox-aural-ui-manual-nodes</code>.  Row action predicates
+should hide operations that cannot apply to that row; this includes editing
+built-in options and reordering items outside the active-order view.
 </p>
 </div>
 </div>

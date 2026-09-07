@@ -16,11 +16,12 @@
 <link href="Concept-Index.html" rel="index" title="Concept Index">
 <link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="Installation.html" rel="up" title="Installation">
-<link href="Building-And-Testing-The-Speech-Server.html" rel="next" title="Building And Testing The Speech Server">
+<link href="Installing-Remote-Emacsvox.html" rel="next" title="Installing Remote Emacsvox">
 <style type="text/css">
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
+kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -33,21 +34,27 @@ span:hover a.copiable-link {visibility: visible}
 <div class="section-level-extent" id="Obtaining-Emacsvox">
 <div class="nav-panel">
 <p>
-Next: <a href="Building-And-Testing-The-Speech-Server.html" accesskey="n" rel="next">Install And Check Omnivox</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Installing-Remote-Emacsvox.html" accesskey="n" rel="next">Installing On A Remote Linux Host</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Before-You-Begin"><span>2.1 Before You Begin<a class="copiable-link" href="#Before-You-Begin"> &para;</a></span></h3>
+<h3 class="section" id="Before-You-Begin"><span>2.2 Before You Begin<a class="copiable-link" href="#Before-You-Begin"> &para;</a></span></h3>
 
 <p>Install <code class="code">git</code> so you can obtain the Emacsvox checkout.  Emacsvox requires
-<a class="uref" href="https://www.gnu.org/software/emacs/download.html">Emacs 31 or newer</a>, but WSL2 users do not need to find a separate Emacs
+<a class="uref" href="https://www.gnu.org/software/emacs/download.html">Emacs 30.2 or newer</a>, but WSL2 users do not need to find a separate Emacs
 package before beginning.  The guided installer below uses an existing
-supported Emacs or builds the pinned stable release for the current user.
+supported Emacs, suggests a suitable package, or offers an explicit source build.
 </p>
-<p>On GNU/Linux and macOS, install Emacs 31 or newer and <code class="code">make</code>.  Omnivox 1.6.4
+<p>On GNU/Linux and macOS, install Emacs 30.2 or newer and <code class="code">make</code>.  Omnivox 1.7.0
 or newer is the supported speech-server baseline.  Installing its release
 archive also requires <code class="code">curl</code> and either <code class="code">sha256sum</code> on GNU/Linux or <code class="code">shasum</code>
 on macOS, plus <code class="code">tar</code>.  GNU Texinfo is needed only when building or editing the
 documentation, not for an ordinary installation.
+</p>
+<p>Ubuntu 26.04 provides Emacs 30.2 as a distribution package, which satisfies
+this requirement. The same minimum applies to native Windows.
+On Emacs 30, install <code class="code">lua-mode</code> separately if you use Lua; on Emacs 31 it is
+built in. Corfu on an Emacs 30 text terminal also needs <code class="code">corfu-terminal</code>;
+Emacs 31 supports its terminal popup directly.
 </p>
 <p>To check the Emacs found by your shell, run:
 </p>
@@ -55,7 +62,7 @@ documentation, not for an ordinary installation.
 <pre class="example-preformatted">emacs --version
 </pre></div>
 
-<p>The first line should begin with <code class="code">GNU Emacs 31</code> or a higher version number.  If
+<p>The reported version must be 30.2 or newer.  If
 the command is not found or reports an older version, install a supported Emacs
 or locate its executable.  You can check a specific executable in the same way:
 </p>
@@ -72,27 +79,43 @@ requirements for the recommended WSL2 binary route.  Docker and Windows .NET
 Framework are needed only for the advanced reproducible source-build route in
 <a class="ref" href="Building-Omnivox-For-WSL2.html">Building Omnivox For WSL2</a>.
 </p>
-<p>Choose a permanent parent directory and clone Emacsvox:
+<p>Run the clone from a Linux or WSL terminal and keep the checkout on the Linux
+filesystem.  The following concrete location works for an ordinary per-user
+installation:
 </p>
 <div class="example">
-<pre class="example-preformatted">cd /path/where/you/keep/source
+<pre class="example-preformatted">mkdir -p ~/src
+cd ~/src
 git clone https://github.com/bartbunting/emacsvox
+cd emacsvox
 </pre></div>
 
 <p>The Emacsvox checkout is the installation directory.  It builds in place and
-does not create a second tree to copy elsewhere.  Clone Omnivox beside it only
-when following the Omnivox source-build or reproducible WSL2 build route.
+does not create a second tree to copy elsewhere.  Do not put the ordinary WSL2
+checkout below a Windows-mounted path such as <code class="code">/mnt/c</code>; Windows filesystem
+semantics can interfere with Unix executable permissions and build tools.
+Clone Omnivox beside Emacsvox only when following the Omnivox source-build or
+reproducible WSL2 build route.
 </p>
-<p>Under WSL2, first ask the guided installer to inspect the machine without
+<p>If this machine will send speech to another workstation, use
+<a class="ref" href="Installing-Remote-Emacsvox.html">Installing On A Remote Linux Host</a> instead of installing a local
+speech server.  For a local WSL2 desktop, first ask the guided installer to inspect the machine without
 changing it:
 </p>
 <div class="example">
-<pre class="example-preformatted">cd /path/where/you/keep/source/emacsvox
+<pre class="example-preformatted">cd ~/src/emacsvox
 ./bin/emacsvox-wsl-install --check
 </pre></div>
 
-<p>The report names the Emacs it will use, the matching Omnivox Windows archive,
-and the per-user installation paths.  If Emacs build packages are missing, it
+<p>If Emacs is missing, the report checks the available apt version and suggests
+<code class="code">sudo apt install emacs</code> only when that candidate satisfies 30.2. Older or
+unavailable candidates are identified without being recommended. You can
+refresh apt metadata and check again, or choose the pinned source build with
+<code class="code">./bin/emacsvox-wsl-install --build-emacs</code>. Add <code class="code">--check</code> to inspect that
+build&rsquo;s prerequisites first. The installer never begins a source build by default.
+</p>
+<p>With Emacs selected, the report names it, the matching Omnivox Windows archive,
+and the per-user installation paths. If source-build packages are missing, it
 prints one <code class="code">apt</code> command for you to review and run.  The installer never invokes
 <code class="code">sudo</code> itself.  After resolving any reported prerequisite, run:
 </p>
@@ -100,8 +123,8 @@ prints one <code class="code">apt</code> command for you to review and run.  The
 <pre class="example-preformatted">./bin/emacsvox-wsl-install
 </pre></div>
 
-<p>It builds the pinned stable Emacs only when Emacs 31 or newer is unavailable,
-downloads and verifies the matching Omnivox 1.6.4 Windows archive, records its
+<p>If you chose <code class="code">--build-emacs</code>, it prepares the pinned stable Emacs for your user.
+It then downloads and verifies the matching Omnivox 1.7.1 Windows archive, records its
 path without editing a shell startup file, compiles Emacsvox, runs a diagnostic,
 and plays the final speech-server check.  The Emacs build can take a while on
 a fresh machine; later runs reuse it and the verified downloads.  Routine
@@ -111,11 +134,25 @@ lines and the complete log path.  Continue only after hearing both the final
 tone and speech.  You can then skip to the last step in
 <a class="ref" href="Quick-Installation.html">Build And Start Emacsvox</a> and start Emacsvox.
 </p>
+<p>After the core installation works, optional speech engines are available from
+<kbd class="kbd">M-x emacsvox-omnivox-manage-components RET</kbd>.  The same manager
+is the <em class="emph">Omnivox engine modules</em> row in Aural Home, opened with
+<kbd class="kbd">C-e H</kbd> and then <kbd class="kbd">I</kbd>.  It distinguishes engines
+already included in the core, downloadable modules, and bridges that still
+need a user-supplied runtime.  Press <kbd class="kbd">i</kbd> on a downloadable row
+to confirm, checksum-verify, install, and validate that module without &lsquo;<samp class="samp">sudo</samp>&rsquo;.
+Press <kbd class="kbd">u</kbd> on a manager-installed module to confirm and remove
+it while retaining the verified download cache; press <kbd class="kbd">i</kbd> to
+reinstall it later.  The manager never removes core engines or separately
+supplied runtimes.
+See <a class="xref" href="Optional-Omnivox-Engine-Modules.html">Optional Omnivox Engine Modules</a> explains the choices and
+licensing boundaries.
+</p>
 </div>
 <hr>
 <div class="nav-panel">
 <p>
-Next: <a href="Building-And-Testing-The-Speech-Server.html">Install And Check Omnivox</a>, Up: <a href="Installation.html">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+Next: <a href="Installing-Remote-Emacsvox.html">Installing On A Remote Linux Host</a>, Up: <a href="Installation.html">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

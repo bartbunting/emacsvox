@@ -22,6 +22,7 @@
 <!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
 span:hover a.copiable-link {visibility: visible}
 -->
 </style>
@@ -64,8 +65,16 @@ actions.
 </p></dd>
 </dl>
 
+<p>For a first experiment, press <kbd class="kbd">C-e H</kbd> and use
+<kbd class="kbd">/</kbd> to find <em class="emph">Browse and try voices</em>.  Select an engine with
+<kbd class="key">RET</kbd>, then a voice with <kbd class="kbd">P</kbd> to hear it.  Nothing
+is saved by browsing or previewing.  To change something you just heard, use
+<kbd class="kbd">C-e H c</kbd> for the current item, or
+<kbd class="kbd">C-e H H</kbd> to select past feedback.  See
+<a data-manual="emacsvox" href="../Voices-And-Routing.html#Voices-And-Routing">Voices And Routing</a> for complete examples.
+</p>
 <p>This chapter gives a user-level model of the system and practical workflows for
-common changes.  The generated reference remains the authority for rule
+common changes.  The generated reference provides rule
 schemas, transport contracts, and extension development.
 </p>
 
@@ -82,6 +91,11 @@ schemas, transport contracts, and extension development.
 <li><a href="Voice-Lock.html">Voice Lock Compatibility</a></li>
 <li><a href="Voice-Lock.html#Further-Detail">Further Detail</a></li>
 </ul>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Using-Online-Help.html">Find Help While You Work</a>, Previous: <a href="Audio-Desktop.html">Work With The Audio Desktop</a>, Up: <a href="index.html">Emacsvox</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 

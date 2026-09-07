@@ -24,6 +24,7 @@ a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
 span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 <link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
@@ -38,49 +39,122 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Installing-Omnivox-From-Source.html" accesskey="n" rel="next">Installing Omnivox From Source</a>, Previous: <a href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html" accesskey="p" rel="prev">Install An Omnivox Windows Release Under WSL2</a>, Up: <a href="Speech-Backends.html" accesskey="u" rel="up">Speech Backends</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Trying-Native-Windows-Emacsvox-1"><span>4.4 Trying Native Windows Emacsvox<a class="copiable-link" href="#Trying-Native-Windows-Emacsvox-1"> &para;</a></span></h3>
+<h3 class="section" id="Installing-Native-Windows-Emacsvox"><span>4.4 Installing Native Windows Emacsvox<a class="copiable-link" href="#Installing-Native-Windows-Emacsvox"> &para;</a></span></h3>
 
-<p>This is a <em class="emph">preview evaluation</em>, not yet the recommended first installation.
-It runs both Emacs and Omnivox directly on Windows; it does not use WSL2 or the
-POSIX <code class="code">bin/emacsvox</code> and <code class="code">servers/omnivox</code> launchers.  The procedure is
-self-contained so a useful result records exactly where success or failure
-occurred.
-</p>
-<p>You need a native Windows build of Emacs 31 or newer, PowerShell, Git, an
-Emacsvox checkout on the Windows filesystem, and network access for the
-Omnivox release download.  Windows audio must work and at least one Windows
-speech voice must be installed.  You do not need WSL2, Docker, Rust, MinGW,
-Visual Studio, or Windows .NET Framework.  Use <code class="code">windows-x64</code> on an Intel or
-AMD Windows computer.  Use <code class="code">windows-arm64</code> only on Windows on ARM.
-</p>
-<p>If Emacsvox is not already checked out on Windows, open PowerShell and place a
-checkout on the Windows filesystem:
-</p>
-<div class="example">
-<pre class="example-preformatted">$SourceRoot = Join-Path $env:USERPROFILE &quot;src&quot;
-New-Item -ItemType Directory -Force $SourceRoot | Out-Null
-Set-Location $SourceRoot
-git clone https://github.com/bartbunting/emacsvox.git
-$Emacsvox = Join-Path $SourceRoot &quot;emacsvox&quot;
-</pre></div>
-
-<p>If the checkout already exists, skip <code class="code">git clone</code> and set <code class="code">$Emacsvox</code> to its
-absolute Windows path instead.  Continue in the same PowerShell window.
+<p>Native Windows x64 is a supported desktop installation with Emacs 30.2 or
+newer. The guided PowerShell installer runs entirely on Windows. WSL,
+Docker, Rust, and a system MSYS2 installation are not required.
 </p>
 <ul class="mini-toc">
-<li><a href="#Download-And-Verify-Omnivox" accesskey="1">Download And Verify Omnivox</a></li>
-<li><a href="#Install-And-Check-The-Native-Server" accesskey="2">Install And Check The Native Server</a></li>
-<li><a href="#Start-Native-Emacsvox" accesskey="3">Start Native Emacsvox</a></li>
-<li><a href="#Accept-Or-Report-The-Trial" accesskey="4">Accept Or Report The Trial</a></li>
+<li><a href="#Guided-Windows-x64-Installation" accesskey="1">Guided Windows x64 Installation</a></li>
+<li><a href="#Manual-Native-Installation" accesskey="2">Manual Native Installation</a></li>
+<li><a href="#Download-And-Verify-Omnivox" accesskey="3">Download And Verify Omnivox</a></li>
+<li><a href="#Install-And-Check-The-Native-Server" accesskey="4">Install And Check The Native Server</a></li>
+<li><a href="#Start-Native-Emacsvox" accesskey="5">Start Native Emacsvox</a></li>
+<li><a href="#Verify-Speech-And-Report-Problems" accesskey="6">Verify Speech And Report Problems</a></li>
 </ul>
+<div class="subsection-level-extent" id="Guided-Windows-x64-Installation">
+<h4 class="subsection"><span>4.4.1 Guided Windows x64 Installation<a class="copiable-link" href="#Guided-Windows-x64-Installation"> &para;</a></span></h4>
+
+<p>You need Windows PowerShell 5.1 or newer, Git for cloning, network access, and
+working Windows audio with an installed speech voice.  Put the checkout on a
+local Windows drive, rather than a WSL or network path.  From PowerShell:
+</p>
+<div class="example">
+<pre class="example-preformatted">git clone https://github.com/bartbunting/emacsvox.git
+Set-Location emacsvox
+.\bin\emacsvox-install.ps1 -Role Desktop -Check
+.\bin\emacsvox-install.ps1 -Role Desktop
+</pre></div>
+
+<p>Skip cloning if you already have a Windows checkout and change into it instead.
+The check reports the selected Emacs and planned paths without downloading,
+writing configuration, or playing audio.
+</p>
+<p>The installer reuses native Emacs 30.2 or newer. If none is selected, it offers
+a <a class="uref" href="https://www.gnu.org/software/emacs/download.html">prebuilt Windows Emacs</a> first. Install a release at least 30.2 and select its
+<code class="code">bin/emacs.exe</code> with <code class="code">-Emacs</code>. Alternatively, choose <code class="code">-BuildEmacs</code> to build
+GNU Emacs 31.1 using a private MSYS2 UCRT64 toolchain. No source build starts
+without that option. It then installs the pinned Omnivox core and prepares Emacsvox.  Allow several gigabytes of disk space and
+time for the initial downloads and source build.  Later runs reuse the
+installed Emacs and cached archives.  An existing native Emacs does not need
+MSYS2 to prepare Emacsvox.
+</p>
+<p>To select an existing Emacs explicitly, add
+&lsquo;<samp class="samp">-Emacs &quot;C:\path\to\Emacs\bin\emacs.exe&quot;</samp>&rsquo;.  Explicit &lsquo;<samp class="samp">-Emacs</samp>&rsquo;, &lsquo;<samp class="samp">EMACS</samp>&rsquo; environment,
+and &lsquo;<samp class="samp">local.mk</samp>&rsquo; selections must agree and require native Emacs 30.2 or newer.
+&lsquo;<samp class="samp">-BuildEmacs</samp>&rsquo; selects the managed source build instead of a saved or PATH
+selection; it reuses a complete managed build when one exists.  It cannot
+replace an explicit selection.
+</p>
+<p>Installation is per-user.  The defaults are:
+</p>
+<ul class="itemize mark-bullet">
+<li>Emacs, Omnivox, the isolated profile, and logs below
+&lsquo;<samp class="samp">%LOCALAPPDATA%\Emacsvox\Native</samp>&rsquo;.
+</li><li>Private build tools below &lsquo;<samp class="samp">%LOCALAPPDATA%\Emacsvox\Toolchains\msys2-20260611</samp>&rsquo;.
+</li><li>Verified archive cache below &lsquo;<samp class="samp">%LOCALAPPDATA%\Emacsvox\Downloads</samp>&rsquo;.
+</li><li>A data-only &lsquo;<samp class="samp">native-install.json</samp>&rsquo; in this checkout, ignored by Git.
+</li></ul>
+
+<p>&lsquo;<samp class="samp">-InstallRoot</samp>&rsquo;, &lsquo;<samp class="samp">-ToolchainRoot</samp>&rsquo;, and &lsquo;<samp class="samp">-CacheDirectory</samp>&rsquo; select other local
+Windows directories.  The MSYS2 build-tool path must not contain spaces;
+choose &lsquo;<samp class="samp">-ToolchainRoot</samp>&rsquo; if the default does.  Checkout and installed Emacs
+paths may contain spaces.  The installer leaves personal Emacs initialization,
+system PATH, Windows services, and JAWS settings alone.
+</p>
+<p>The source archives are checksum-pinned.  MSYS2 compiler packages come from
+its signed rolling repositories; their installed versions are recorded with
+the build.  Lisp native compilation is disabled in the managed source build.  The built
+Emacs includes its runtime DLLs, so launching it does not need MSYS2 on PATH.
+</p>
+<p>The default final check opens a temporary native Emacs window, verifies both
+speech lanes, speaks two announcements, and closes that test window.  Confirm
+that you hear both announcements.  &lsquo;<samp class="samp">-NoAudioCheck</samp>&rsquo; skips this step when needed;
+run the explicit check before accepting speech:
+</p>
+<div class="example">
+<pre class="example-preformatted">.\bin\emacsvox.ps1 -Diagnose
+.\bin\emacsvox.ps1 -Check
+.\bin\emacsvox.ps1
+</pre></div>
+
+<p>The last command opens the isolated native desktop.  It uses Windows speech
+by default.  An explicit &lsquo;<samp class="samp">OMNIVOX_ENGINE</samp>&rsquo; environment selection remains
+available for separately configured engines.  Native optional-engine
+installation, ARM64, and other native Windows roles are not provided by this
+guided installer.
+</p>
+<p>After pulling source changes, rerun the installer before launching.  It
+preserves source changes and refreshes the compiled files.  Missing or stale
+compiled files stop launch with instructions to rerun installation.  For a
+failed build, retain the logs under the reported build directory.  Inspect an
+incomplete installation before moving it aside or selecting a new directory;
+the installer does not overwrite an unknown partial tree.
+</p>
+<p>JAWS speech muting does not disable its keyboard shortcuts.  If &lsquo;<samp class="samp">M-&lt;</samp>&rsquo; or
+&lsquo;<samp class="samp">M-&gt;</samp>&rsquo; is intercepted, test with &lsquo;<samp class="samp">JAWSKey+3</samp>&rsquo; before the shortcut.  Bart&rsquo;s
+&lsquo;<samp class="samp">workstation-config</samp>&rsquo; repository supplies the separately installed,
+Emacs-specific JAWS override used on the test workstation.
+</p>
+</div>
+<div class="subsection-level-extent" id="Manual-Native-Installation">
+<h4 class="subsection"><span>4.4.2 Manual Native Installation<a class="copiable-link" href="#Manual-Native-Installation"> &para;</a></span></h4>
+
+<p>The following manual procedure remains available for an already installed
+native Windows Emacs 30.2 or newer.  It does not acquire Emacs or replace the
+guided x64 checks above.  Set &lsquo;<samp class="samp">$Emacsvox</samp>&rsquo; to the checkout&rsquo;s absolute Windows
+path and continue in one PowerShell window.
+</p>
+</div>
 <div class="subsection-level-extent" id="Download-And-Verify-Omnivox">
-<h4 class="subsection"><span>4.4.1 Download And Verify Omnivox<a class="copiable-link" href="#Download-And-Verify-Omnivox"> &para;</a></span></h4>
+<h4 class="subsection"><span>4.4.3 Download And Verify Omnivox<a class="copiable-link" href="#Download-And-Verify-Omnivox"> &para;</a></span></h4>
 
 <p>Set <code class="code">$Platform</code> for the computer.  The example below uses the usual Intel or
 AMD Windows x64 archive:
 </p>
 <div class="example">
-<pre class="example-preformatted">$Version = &quot;1.6.4&quot;
+<pre class="example-preformatted">$Version = &quot;1.7.1&quot;
 $Platform = &quot;windows-x64&quot; # Use windows-arm64 only on Windows on ARM.
 $DownloadDir = Join-Path $env:USERPROFILE &quot;Downloads\omnivox-$Version&quot;
 $Archive = &quot;omnivox-$Version-$Platform.zip&quot;
@@ -109,7 +183,7 @@ refuses it, stop rather than weakening that policy.
 </p>
 </div>
 <div class="subsection-level-extent" id="Install-And-Check-The-Native-Server">
-<h4 class="subsection"><span>4.4.2 Install And Check The Native Server<a class="copiable-link" href="#Install-And-Check-The-Native-Server"> &para;</a></span></h4>
+<h4 class="subsection"><span>4.4.4 Install And Check The Native Server<a class="copiable-link" href="#Install-And-Check-The-Native-Server"> &para;</a></span></h4>
 
 <p>Continue in the same PowerShell window.  Extract the complete release into a
 versioned directory below the current user&rsquo;s <code class="code">LocalAppData</code>:
@@ -138,7 +212,7 @@ if ($LASTEXITCODE -ne 0) { throw &quot;Omnivox voice discovery failed&quot; }
 if ($LASTEXITCODE -ne 0) { throw &quot;Omnivox audio check failed&quot; }
 </pre></div>
 
-<p>The version must report 1.6.4 or newer, voice discovery must list at least one
+<p>The version must report 1.7.0 or newer, voice discovery must list at least one
 Windows voice, and the final check must produce both a tone and spoken confirmation.
 Keep <code class="code">omnivox.exe</code>, <code class="code">espeak-ng-data</code>, and <code class="code">third-party-licenses</code> together.
 Do not copy or load the archive&rsquo;s <code class="code">omnivox-voices.el</code>: it is the adapter for
@@ -146,7 +220,7 @@ upstream Emacspeak, while Emacsvox supplies its own adapter.
 </p>
 </div>
 <div class="subsection-level-extent" id="Start-Native-Emacsvox">
-<h4 class="subsection"><span>4.4.3 Start Native Emacsvox<a class="copiable-link" href="#Start-Native-Emacsvox"> &para;</a></span></h4>
+<h4 class="subsection"><span>4.4.5 Start Native Emacsvox<a class="copiable-link" href="#Start-Native-Emacsvox"> &para;</a></span></h4>
 
 <p>Keep the same PowerShell window so <code class="code">$Omnivox</code> still identifies the verified
 executable.  Set <code class="code">$Emacs</code> to the native <code class="code">emacs.exe</code>.  If this window did not
@@ -163,17 +237,18 @@ $env:TTS_PROGRAM = $Omnivox
 &amp; $Emacs -Q --no-splash --load &quot;$Emacsvox\lisp\emacsvox-setup.el&quot;
 </pre></div>
 
-<p>The Emacs version must be 31 or newer.  Use <code class="code">emacs.exe</code>, rather than
-<code class="code">runemacs.exe</code>, for this first trial so startup errors remain visible in the
+<p>The Emacs version must be 30.2 or newer.  Use <code class="code">emacs.exe</code>, rather than
+<code class="code">runemacs.exe</code>, for this first launch so startup errors remain visible in the
 PowerShell window.  Loading <code class="code">emacsvox-setup.el</code> directly is intentional: the
-repository&rsquo;s <code class="code">bin/emacsvox</code> launcher is a POSIX shell script and is not the
-native Windows entry point.
+repository&rsquo;s <code class="code">bin/emacsvox</code> launcher is a POSIX shell script.  The guided
+native entry point is <code class="code">bin/emacsvox.ps1</code>; this subsection describes the manual
+alternative.
 </p>
 </div>
-<div class="subsection-level-extent" id="Accept-Or-Report-The-Trial">
-<h4 class="subsection"><span>4.4.4 Accept Or Report The Trial<a class="copiable-link" href="#Accept-Or-Report-The-Trial"> &para;</a></span></h4>
+<div class="subsection-level-extent" id="Verify-Speech-And-Report-Problems">
+<h4 class="subsection"><span>4.4.6 Verify Speech And Report Problems<a class="copiable-link" href="#Verify-Speech-And-Report-Problems"> &para;</a></span></h4>
 
-<p>A successful trial satisfies every item below:
+<p>Verify the installation with these checks:
 </p>
 <ol class="enumerate">
 <li> Emacsvox speaks its startup introduction.
@@ -204,20 +279,20 @@ exits, retain the PowerShell error, the Emacs <code class="code">*Messages*</cod
 version and architecture, the complete <code class="code">emacs.exe --version</code> output, and
 <code class="code">omnivox.exe --version</code> output.
 </p>
-<p>After a successful trial, the same absolute selection can be placed before
+<p>After successful verification, the same absolute selection can be placed before
 loading Emacsvox in the user&rsquo;s Emacs initialization file:
 </p>
 <div class="example lisp">
 <pre class="lisp-preformatted">(setenv &quot;TTS_PROGRAM&quot;
-        &quot;C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.6.4-windows-x64/omnivox.exe&quot;)
+        &quot;C:/Users/NAME/AppData/Local/Emacsvox/Omnivox/releases/1.7.1-windows-x64/omnivox.exe&quot;)
 (load-file &quot;C:/path/to/emacsvox/lisp/emacsvox-setup.el&quot;)
 </pre></div>
 
 <p>Replace both example paths.  This initial configuration deliberately uses an
 absolute executable path.  Adding the Omnivox directory to <code class="code">exec-path</code> is
 optional and is needed only when later selecting it by the short name
-<code class="code">omnivox</code>.  A successful report is evidence for promoting native Windows out
-of preview; it does not silently change the support status on its own.
+<code class="code">omnivox</code>. Native Windows support covers the x64 desktop route above; remote
+workstation speech remains a separate preview feature.
 </p>
 </div>
 </div>

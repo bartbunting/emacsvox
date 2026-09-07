@@ -36,7 +36,7 @@ strong.def-name {font-family: monospace; font-weight: bold; font-size: larger}
 Next: <a href="emacsvox_002daural_002dsubmission.html" accesskey="n" rel="next">emacsvox-aural-submission</a>, Previous: <a href="emacsvox_002daural_002dsource.html" accesskey="p" rel="prev">emacsvox-aural-source</a>, Up: <a href="Emacsvox-Commands-And-Options.html" accesskey="u" rel="up">Emacsvox Commands And Options</a> &nbsp; [<a href="Reference-Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="emacsvox_002daural_002dspatial-1"><span>2.46 emacsvox-aural-spatial<a class="copiable-link" href="#emacsvox_002daural_002dspatial-1"> &para;</a></span></h3>
+<h3 class="section" id="emacsvox_002daural_002dspatial-1"><span>2.48 emacsvox-aural-spatial<a class="copiable-link" href="#emacsvox_002daural_002dspatial-1"> &para;</a></span></h3>
 
 <p>Define the portable spatial contract and user policy independently of
 speech and cue transports.  Declarative presentation rules request normalized
@@ -47,10 +47,10 @@ that request to the capability of the selected backend.
 <li><a href="#emacsvox_002daural_002dspatial-Options" accesskey="1">emacsvox-aural-spatial Options</a></li>
 </ul>
 <div class="subsection-level-extent" id="emacsvox_002daural_002dspatial-Options">
-<h4 class="subsection"><span>2.46.1 emacsvox-aural-spatial Options<a class="copiable-link" href="#emacsvox_002daural_002dspatial-Options"> &para;</a></span></h4>
+<h4 class="subsection"><span>2.48.1 emacsvox-aural-spatial Options<a class="copiable-link" href="#emacsvox_002daural_002dspatial-Options"> &para;</a></span></h4>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-35"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-cue-enabled</var><a class="copiable-link" href="#index-User-Option-35"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-36"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-cue-enabled</var><a class="copiable-link" href="#index-User-Option-36"> &para;</a></span></dt>
 <dd><pre class="verbatim">Non-nil permits spatial presentation of auditory cues.
 </pre>
 <p>Default Value:
@@ -61,7 +61,7 @@ t
 </dd></dl>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-36"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-enabled</var><a class="copiable-link" href="#index-User-Option-36"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-37"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-enabled</var><a class="copiable-link" href="#index-User-Option-37"> &para;</a></span></dt>
 <dd><pre class="verbatim">Non-nil enables spatial presentation globally.
 
 Disabling this option preserves every speech and cue action but centers it.
@@ -74,7 +74,7 @@ t
 </dd></dl>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-37"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-maximum-separation</var><a class="copiable-link" href="#index-User-Option-37"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-38"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-maximum-separation</var><a class="copiable-link" href="#index-User-Option-38"> &para;</a></span></dt>
 <dd><pre class="verbatim">Maximum absolute stereo balance after user remapping.
 
 The value is between 0.0 for centered output and 1.0 for full separation.
@@ -87,7 +87,7 @@ The value is between 0.0 for centered output and 1.0 for full separation.
 </dd></dl>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-38"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-output</var><a class="copiable-link" href="#index-User-Option-38"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-39"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-output</var><a class="copiable-link" href="#index-User-Option-39"> &para;</a></span></dt>
 <dd><pre class="verbatim">Declared spatial capability of the final audio output.
 
 ‘auto’ uses each transport adapter’s reported capability.  ‘mono’ forces
@@ -101,7 +101,7 @@ auto
 </dd></dl>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-39"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-remapping</var><a class="copiable-link" href="#index-User-Option-39"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-40"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-remapping</var><a class="copiable-link" href="#index-User-Option-40"> &para;</a></span></dt>
 <dd><pre class="verbatim">User remapping applied to normalized balance requests.
 
 ‘normal’ preserves direction, ‘reverse’ swaps left and right,
@@ -117,7 +117,7 @@ normal
 </dd></dl>
 
 <dl class="first-defvr first-defvar-alias-first-defvr def-block">
-<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-40"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-speech-enabled</var><a class="copiable-link" href="#index-User-Option-40"> &para;</a></span></dt>
+<dt class="defvr defvar-alias-defvr def-line" id="index-User-Option-41"><span class="category-def">Variable: </span><span><strong class="def-name">User Option</strong> <var class="def-var-arguments">emacsvox-aural-spatial-speech-enabled</var><a class="copiable-link" href="#index-User-Option-41"> &para;</a></span></dt>
 <dd><pre class="verbatim">Non-nil permits spatial presentation of speech.
 </pre>
 <p>Default Value:

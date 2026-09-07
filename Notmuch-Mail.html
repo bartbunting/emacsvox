@@ -160,13 +160,13 @@ does not disclose the query, sender, recipients, subject, tags, or attachment
 metadata.  Killing the owning search buffer cancels this delivery silently.
 </li></ul>
 
-<p>The notification stream uses <code class="code">tts-notification-device</code> when one is
-available and otherwise falls back to the primary process.  The
-<code class="code">summary</code> policy always sends a generic count there; <code class="code">cue</code> sends only
-a completion cue; and <code class="code">silent</code> suppresses successful completion.
-Failures remain audible and generic for every policy.  A normal refresh is
-always treated as background-style completion, while the deliberate global
-refresh-all command remains silent.
+<p>The <code class="code">summary</code> policy plays a generic count and its completion cue on the
+notification stream; <code class="code">cue</code> plays only that cue, and <code class="code">silent</code> suppresses
+successful completion.  Failures remain audible and generic for every policy.
+A normal refresh is always treated as background-style completion, while the
+deliberate global refresh-all command remains silent.  See
+<a class="ref" href="Aural-Presentation.html">Aural Presentation: Speech, Voices, And Sound</a> for the streams&rsquo; general behavior and
+configuration.
 </p>
 </div>
 </div>

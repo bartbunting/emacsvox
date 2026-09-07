@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Installing Remote Emacsvox (Emacsvox User Manual)</title>
+
+<meta name="description" content="Installing Remote Emacsvox (Emacsvox User Manual)">
+<meta name="keywords" content="Installing Remote Emacsvox (Emacsvox User Manual)">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="index.html" rel="start" title="Top">
+<link href="Concept-Index.html" rel="index" title="Concept Index">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="Installation.html" rel="up" title="Installation">
+<link href="Updating-Emacsvox-Under-WSL2.html" rel="next" title="Updating Emacsvox Under WSL2">
+<link href="Obtaining-Emacsvox.html" rel="prev" title="Obtaining Emacsvox">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+span:hover a.copiable-link {visibility: visible}
+-->
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/Core/Modernist">
+
+
+</head>
+
+<body lang="en">
+<div class="section-level-extent" id="Installing-Remote-Emacsvox">
+<div class="nav-panel">
+<p>
+Next: <a href="Updating-Emacsvox-Under-WSL2.html" accesskey="n" rel="next">Updating An Existing WSL2 Installation</a>, Previous: <a href="Obtaining-Emacsvox.html" accesskey="p" rel="prev">Before You Begin</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<h3 class="section" id="Installing-On-A-Remote-Linux-Host"><span>2.3 Installing On A Remote Linux Host<a class="copiable-link" href="#Installing-On-A-Remote-Linux-Host"> &para;</a></span></h3>
+
+<p>Use this route when Emacs runs on a Linux host and speech plays on your
+workstation through an SSH reverse forward.  It also works for remote-only
+Emacs under WSL, without Windows interoperability.  This is currently a
+preview feature: the workstation needs an Omnivox build with <code class="code">--serve</code>;
+the published Omnivox 1.7.1 archive does not include that option.
+</p>
+<p>After cloning Emacsvox on the Emacs host, run:
+</p>
+<div class="example">
+<pre class="example-preformatted">cd ~/src/emacsvox
+./bin/emacsvox-install --role remote-emacs --check
+./bin/emacsvox-install --role remote-emacs
+</pre></div>
+
+<p>The first command reports prerequisites and paths without changing files.
+The second reuses Emacs 30.2 or newer and compiles Emacsvox. If Emacs is missing,
+it checks the local apt candidate and suggests <code class="code">sudo apt install emacs-nox</code>
+when that version is suitable. To choose the source build instead, run
+<code class="code">./bin/emacsvox-install --role remote-emacs --build-emacs</code>. Add <code class="code">--check</code> to
+inspect build prerequisites first. The checksum-verified GNU Emacs 31.1 source
+is built as a terminal-only installation under
+<code class="code">~/.local/opt/emacs-31.1-terminal</code>.  Other Linux distributions currently need
+an existing Emacs 30.2 or newer.  A supported GUI Emacs can also be reused.
+Explicit <code class="code">EMACS</code> and <code class="code">local.mk</code> selections are preserved; if they conflict or
+select an unsupported version, resolve the reported setting first.
+</p>
+<p>No local Omnivox, sound device, GUI build packages, or Windows speech tools
+are required.  Missing Debian/Ubuntu build packages are reported as one
+<code class="code">apt</code> command for you to review and run.  The installer never invokes <code class="code">sudo</code>
+or changes a shell startup file.  Build logs are kept below
+<code class="code">~/.cache/emacsvox/logs</code>, or the corresponding <code class="code">XDG_CACHE_HOME</code> location.
+</p>
+<p>Installation can finish before the workstation is connected.  Follow the
+<em class="emph">Remote workstation speech</em> instructions in
+<a class="ref" href="Supported-Platform-Routes.html">Supported Platform Routes</a> to prepare its service, private
+token, and SSH reverse forward.  Then run on the Emacs host:
+</p>
+<div class="example">
+<pre class="example-preformatted">./bin/emacsvox --remote --diagnose
+./bin/emacsvox --remote --check
+./bin/emacsvox --remote
+</pre></div>
+
+<p>Diagnosis reports local configuration without connecting or reading the
+token&rsquo;s contents.  The check connects both speech lanes, waits for workstation
+inventory and voice registration, and speaks a short foreground announcement
+followed by a notification announcement.  Confirm that both are audible.
+The last command starts an isolated terminal Emacsvox session.
+</p>
+<p>The default forwarded endpoint is <code class="code">127.0.0.1:6417</code>.  The token file defaults
+to <code class="code">~/.config/omnivox/remote-token</code>, respecting <code class="code">XDG_CONFIG_HOME</code> when set.
+To select another forwarded port or private token path, supply environment
+values to the same command:
+</p>
+<div class="example">
+<pre class="example-preformatted">EMACSVOX_REMOTE_PORT=6418 \
+EMACSVOX_REMOTE_TOKEN_FILE=&quot;$HOME/.config/omnivox/other-token&quot; \
+  ./bin/emacsvox --remote --check
+</pre></div>
+
+<p><code class="code">EMACSVOX_REMOTE_HOST</code> accepts only <code class="code">127.0.0.1</code> or <code class="code">::1</code>.  The token path
+must be absolute; its contents stay in the private file.  Use the same
+settings when starting the session.  Remote mode selects the Omnivox
+transport and skips local speech executable and playback probes; leave
+<code class="code">TTS_PROGRAM</code> unset or set it to <code class="code">omnivox</code>.
+</p>
+<p>For updates, keep your speaking session open, pull the checkout with
+<code class="code">git pull --ff-only</code>, and rerun the remote installer.  It rebuilds byte-code
+with the selected Emacs.  Perform the connected check while the workstation
+service is free, and test the updated session before closing the known-good
+one.  A single service admits only one Emacs session at a time: use a
+separate test service or explicitly disconnect the old remote session before
+connecting its replacement.
+</p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Updating-Emacsvox-Under-WSL2.html">Updating An Existing WSL2 Installation</a>, Previous: <a href="Obtaining-Emacsvox.html">Before You Begin</a>, Up: <a href="Installation.html">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>

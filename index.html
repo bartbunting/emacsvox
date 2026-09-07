@@ -96,12 +96,15 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
   </ul></li>
   <li><a id="toc-Getting-Started_003a-Installation-and-First-Speech" href="Installation.html">2 Getting Started: Installation and First Speech</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Before-You-Begin" href="Obtaining-Emacsvox.html">2.1 Before You Begin</a></li>
-    <li><a id="toc-Install-And-Check-Omnivox" href="Building-And-Testing-The-Speech-Server.html">2.2 Install And Check Omnivox</a></li>
-    <li><a id="toc-Build-And-Start-Emacsvox" href="Quick-Installation.html">2.3 Build And Start Emacsvox</a></li>
-    <li><a id="toc-Confirming-First-Speech" href="Confirming-First-Speech.html">2.4 Confirming First Speech</a></li>
-    <li><a id="toc-Recovering-From-No-Speech" href="Recovering-From-No-Speech.html">2.5 Recovering From No Speech</a></li>
-    <li><a id="toc-Persistent-Startup" href="Persistent-Startup.html">2.6 Persistent Startup</a></li>
+    <li><a id="toc-Debian-and-Ubuntu-package" href="Installation.html#Debian-and-Ubuntu-package">2.1 Debian and Ubuntu package</a></li>
+    <li><a id="toc-Before-You-Begin" href="Obtaining-Emacsvox.html">2.2 Before You Begin</a></li>
+    <li><a id="toc-Installing-On-A-Remote-Linux-Host" href="Installing-Remote-Emacsvox.html">2.3 Installing On A Remote Linux Host</a></li>
+    <li><a id="toc-Updating-An-Existing-WSL2-Installation" href="Updating-Emacsvox-Under-WSL2.html">2.4 Updating An Existing WSL2 Installation</a></li>
+    <li><a id="toc-Install-And-Check-Omnivox" href="Building-And-Testing-The-Speech-Server.html">2.5 Install And Check Omnivox</a></li>
+    <li><a id="toc-Build-And-Start-Emacsvox" href="Quick-Installation.html">2.6 Build And Start Emacsvox</a></li>
+    <li><a id="toc-Confirming-First-Speech" href="Confirming-First-Speech.html">2.7 Confirming First Speech</a></li>
+    <li><a id="toc-Recovering-From-No-Speech" href="Recovering-From-No-Speech.html">2.8 Recovering From No Speech</a></li>
+    <li><a id="toc-Persistent-Startup" href="Persistent-Startup.html">2.9 Persistent Startup</a></li>
   </ul></li>
   <li><a id="toc-Basic-Usage" href="Basic-Usage.html">3 Basic Usage</a>
   <ul class="toc-numbered-mark">
@@ -126,13 +129,16 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
     <li><a id="toc-Install-An-Omnivox-Windows-Release-Under-WSL2" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html">4.3 Install An Omnivox Windows Release Under WSL2</a>
     <ul class="toc-numbered-mark">
       <li><a id="toc-Manual-Release-Installation" href="Installing-An-Omnivox-Windows-Release-Under-WSL2.html#Manual-Release-Installation">4.3.1 Manual Release Installation</a></li>
+      <li><a id="toc-Optional-Omnivox-Engine-Modules" href="Optional-Omnivox-Engine-Modules.html">4.3.2 Optional Omnivox Engine Modules</a></li>
     </ul></li>
-    <li><a id="toc-Trying-Native-Windows-Emacsvox" href="Trying-Native-Windows-Emacsvox.html">4.4 Trying Native Windows Emacsvox</a>
+    <li><a id="toc-Installing-Native-Windows-Emacsvox" href="Trying-Native-Windows-Emacsvox.html">4.4 Installing Native Windows Emacsvox</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Download-And-Verify-Omnivox" href="Trying-Native-Windows-Emacsvox.html#Download-And-Verify-Omnivox">4.4.1 Download And Verify Omnivox</a></li>
-      <li><a id="toc-Install-And-Check-The-Native-Server" href="Trying-Native-Windows-Emacsvox.html#Install-And-Check-The-Native-Server">4.4.2 Install And Check The Native Server</a></li>
-      <li><a id="toc-Start-Native-Emacsvox" href="Trying-Native-Windows-Emacsvox.html#Start-Native-Emacsvox">4.4.3 Start Native Emacsvox</a></li>
-      <li><a id="toc-Accept-Or-Report-The-Trial" href="Trying-Native-Windows-Emacsvox.html#Accept-Or-Report-The-Trial">4.4.4 Accept Or Report The Trial</a></li>
+      <li><a id="toc-Guided-Windows-x64-Installation" href="Trying-Native-Windows-Emacsvox.html#Guided-Windows-x64-Installation">4.4.1 Guided Windows x64 Installation</a></li>
+      <li><a id="toc-Manual-Native-Installation" href="Trying-Native-Windows-Emacsvox.html#Manual-Native-Installation">4.4.2 Manual Native Installation</a></li>
+      <li><a id="toc-Download-And-Verify-Omnivox" href="Trying-Native-Windows-Emacsvox.html#Download-And-Verify-Omnivox">4.4.3 Download And Verify Omnivox</a></li>
+      <li><a id="toc-Install-And-Check-The-Native-Server" href="Trying-Native-Windows-Emacsvox.html#Install-And-Check-The-Native-Server">4.4.4 Install And Check The Native Server</a></li>
+      <li><a id="toc-Start-Native-Emacsvox" href="Trying-Native-Windows-Emacsvox.html#Start-Native-Emacsvox">4.4.5 Start Native Emacsvox</a></li>
+      <li><a id="toc-Verify-Speech-And-Report-Problems" href="Trying-Native-Windows-Emacsvox.html#Verify-Speech-And-Report-Problems">4.4.6 Verify Speech And Report Problems</a></li>
     </ul></li>
     <li><a id="toc-Installing-Omnivox-From-Source" href="Installing-Omnivox-From-Source.html">4.5 Installing Omnivox From Source</a></li>
     <li><a id="toc-Building-Omnivox-For-WSL2" href="Building-Omnivox-For-WSL2.html">4.6 Building Omnivox For WSL2</a></li>
@@ -142,7 +148,10 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
   </ul></li>
   <li><a id="toc-Work-With-The-Audio-Desktop" href="Audio-Desktop.html">5 Work With The Audio Desktop</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Buffers-Hold-Your-Work" href="Desktop-Objects.html">5.1 Buffers Hold Your Work</a></li>
+    <li><a id="toc-Buffers-Hold-Your-Work" href="Desktop-Objects.html">5.1 Buffers Hold Your Work</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Cycle-Between-Buffers-of-the-Same-Kind" href="Desktop-Objects.html#Cycle-Between-Buffers-of-the-Same-Kind">5.1.1 Cycle Between Buffers of the Same Kind</a></li>
+    </ul></li>
     <li><a id="toc-Let-Modes-Give-Each-Buffer-Its-Tools" href="Object-Oriented-Desktop.html">5.2 Let Modes Give Each Buffer Its Tools</a></li>
     <li><a id="toc-Hear-And-Navigate-The-Current-Context" href="Context_002dSensitive-Interaction.html">5.3 Hear And Navigate The Current Context</a>
     <ul class="toc-numbered-mark">
@@ -155,16 +164,24 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
   <li><a id="toc-Aural-Presentation_003a-Speech_002c-Voices_002c-And-Sound" href="Aural-Presentation.html">6 Aural Presentation: Speech, Voices, And Sound</a>
   <ul class="toc-numbered-mark">
     <li><a id="toc-A-Practical-Model-Of-Presentation" href="Presentation-Model.html">6.1 A Practical Model Of Presentation</a></li>
-    <li><a id="toc-What-You-Can-Hear" href="Presentation-Modalities.html">6.2 What You Can Hear</a></li>
+    <li><a id="toc-What-You-Can-Hear" href="Presentation-Modalities.html">6.2 What You Can Hear</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Main-And-Notification-Speech-Streams" href="Presentation-Modalities.html#Main-And-Notification-Speech-Streams">6.2.1 Main And Notification Speech Streams</a></li>
+    </ul></li>
     <li><a id="toc-Begin-With-Aural-Home" href="Aural-Home.html">6.3 Begin With Aural Home</a></li>
     <li><a id="toc-Understand-Why-Something-Sounded-That-Way" href="Explaining-Presentation.html">6.4 Understand Why Something Sounded That Way</a></li>
     <li><a id="toc-Make-A-Small-Change-Safely" href="Adjusting-Presentation.html">6.5 Make A Small Change Safely</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Remap-One-Item-At-Point" href="Adjusting-Presentation.html#Remap-One-Item-At-Point">6.5.1 Remap One Item At Point</a></li>
-      <li><a id="toc-Try-A-Presentation-Option" href="Adjusting-Presentation.html#Try-A-Presentation-Option">6.5.2 Try A Presentation Option</a></li>
+      <li><a id="toc-Guided-Change-This-Feedback" href="Adjusting-Presentation.html#Guided-Change-This-Feedback">6.5.1 Guided Change This Feedback</a></li>
+      <li><a id="toc-Remap-One-Item-At-Point" href="Adjusting-Presentation.html#Remap-One-Item-At-Point">6.5.2 Remap One Item At Point</a></li>
+      <li><a id="toc-Try-A-Presentation-Option" href="Adjusting-Presentation.html#Try-A-Presentation-Option">6.5.3 Try A Presentation Option</a></li>
     </ul></li>
     <li><a id="toc-Save-Complete-Setups-With-Profiles" href="Presentation-Profiles.html">6.6 Save Complete Setups With Profiles</a></li>
-    <li><a id="toc-Choose-Voices-And-Speech-Engines" href="Voices-And-Routing.html">6.7 Choose Voices And Speech Engines</a></li>
+    <li><a id="toc-Choose-Voices-And-Speech-Engines" href="Voices-And-Routing.html">6.7 Choose Voices And Speech Engines</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Tune-A-Physical-Voice-Temporarily" href="Voices-And-Routing.html#Tune-A-Physical-Voice-Temporarily">6.7.1 Tune A Physical Voice Temporarily</a></li>
+      <li><a id="toc-Worked-Presentation-Recipes" href="Voices-And-Routing.html#Worked-Presentation-Recipes">6.7.2 Worked Presentation Recipes</a></li>
+    </ul></li>
     <li><a id="toc-Choose-Sounds-And-Spatial-Cues" href="Sounds-And-Space.html">6.8 Choose Sounds And Spatial Cues</a></li>
     <li><a id="toc-Diagnose-Unexpected-Presentation" href="Presentation-Troubleshooting.html">6.9 Diagnose Unexpected Presentation</a></li>
     <li><a id="toc-Voice-Lock-Compatibility" href="Voice-Lock.html">6.10 Voice Lock Compatibility</a></li>
@@ -186,14 +203,17 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
     <li><a id="toc-Web-Browsing-With-EWW" href="Web-Browsing.html">8.4 Web Browsing With EWW</a></li>
     <li><a id="toc-Messaging" href="Messaging.html">8.5 Messaging</a></li>
     <li><a id="toc-Editing-Code" href="Editing-Code.html">8.6 Editing Code</a></li>
-    <li><a id="toc-Development-Environment" href="Development-Environment.html">8.7 Development Environment</a></li>
+    <li><a id="toc-Development-Environment" href="Development-Environment.html">8.7 Development Environment</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Magit" href="Development-Environment.html#Magit">8.7.1 Magit</a></li>
+    </ul></li>
     <li><a id="toc-Desktop-Management" href="Desktop-Management.html">8.8 Desktop Management</a></li>
     <li><a id="toc-Personal-Information-Management" href="Personal-Information-Management.html">8.9 Personal Information Management</a></li>
     <li><a id="toc-Desktop-Applications" href="Desktop-Applications.html">8.10 Desktop Applications</a>
     <ul class="toc-numbered-mark">
       <li><a id="toc-Terminal-Applications" href="Desktop-Applications.html#Terminal-Applications">8.10.1 Terminal Applications</a></li>
       <li><a id="toc-Forms-Mode" href="Desktop-Applications.html#Forms-Mode">8.10.2 Forms Mode</a></li>
-      <li><a id="toc-Experimental-OCR-Front-End" href="Desktop-Applications.html#Experimental-OCR-Front-End">8.10.3 Experimental OCR Front End</a></li>
+      <li><a id="toc-OCR-And-PDF_002dTo_002dText-With-PaddleOCR" href="Desktop-Applications.html#OCR-And-PDF_002dTo_002dText-With-PaddleOCR">8.10.3 OCR And PDF-To-Text With PaddleOCR</a></li>
     </ul></li>
   </ul></li>
   <li><a id="toc-Notmuch-Mail" href="Notmuch-Mail.html">9 Notmuch Mail</a>
@@ -267,11 +287,20 @@ Presentation rule-authoring details, also consult <samp class="file">README.org<
     <li><a id="toc-Integration-Maintenance" href="Integration-Maintenance.html">16.3 Integration Maintenance</a>
     <ul class="toc-numbered-mark">
       <li><a id="toc-Source-checkout-and-byte_002dcode-lifecycle" href="Integration-Maintenance.html#Source-checkout-and-byte_002dcode-lifecycle">16.3.1 Source checkout and byte-code lifecycle</a></li>
-      <li><a id="toc-Emacsvox-release-staging-and-publication" href="Integration-Maintenance.html#Emacsvox-release-staging-and-publication">16.3.2 Emacsvox release staging and publication</a></li>
-      <li><a id="toc-Future-Aural-contract-decisions" href="Integration-Maintenance.html#Future-Aural-contract-decisions">16.3.3 Future Aural contract decisions</a></li>
-      <li><a id="toc-Notmuch-contracts" href="Integration-Maintenance.html#Notmuch-contracts">16.3.4 Notmuch contracts</a></li>
-      <li><a id="toc-Agent-Shell-contracts" href="Integration-Maintenance.html#Agent-Shell-contracts">16.3.5 Agent Shell contracts</a></li>
-      <li><a id="toc-WSL2-Omnivox-development-staging" href="Integration-Maintenance.html#WSL2-Omnivox-development-staging">16.3.6 WSL2 Omnivox development staging</a></li>
+      <li><a id="toc-Debian-package-builds" href="Integration-Maintenance.html#Debian-package-builds">16.3.2 Debian package builds</a></li>
+      <li><a id="toc-Emacsvox-release-staging-and-publication" href="Integration-Maintenance.html#Emacsvox-release-staging-and-publication">16.3.3 Emacsvox release staging and publication</a></li>
+      <li><a id="toc-Future-Aural-contract-decisions" href="Integration-Maintenance.html#Future-Aural-contract-decisions">16.3.4 Future Aural contract decisions</a></li>
+      <li><a id="toc-Voice_002dstyle-metadata-ownership" href="Integration-Maintenance.html#Voice_002dstyle-metadata-ownership">16.3.5 Voice-style metadata ownership</a></li>
+      <li><a id="toc-Timeline-preparation-boundaries" href="Integration-Maintenance.html#Timeline-preparation-boundaries">16.3.6 Timeline preparation boundaries</a></li>
+      <li><a id="toc-Aural-interface-source-ownership" href="Integration-Maintenance.html#Aural-interface-source-ownership">16.3.7 Aural interface source ownership</a></li>
+      <li><a id="toc-Remote-speech-recovery" href="Integration-Maintenance.html#Remote-speech-recovery">16.3.8 Remote speech recovery</a></li>
+      <li><a id="toc-Omnivox-voice-configuration-applies" href="Integration-Maintenance.html#Omnivox-voice-configuration-applies">16.3.9 Omnivox voice configuration applies</a></li>
+      <li><a id="toc-Notmuch-contracts" href="Integration-Maintenance.html#Notmuch-contracts">16.3.10 Notmuch contracts</a></li>
+      <li><a id="toc-Agent-Shell-contracts" href="Integration-Maintenance.html#Agent-Shell-contracts">16.3.11 Agent Shell contracts</a></li>
+      <li><a id="toc-Magit-contracts" href="Integration-Maintenance.html#Magit-contracts">16.3.12 Magit contracts</a></li>
+      <li><a id="toc-WSL2-Omnivox-development-staging" href="Integration-Maintenance.html#WSL2-Omnivox-development-staging">16.3.13 WSL2 Omnivox development staging</a></li>
+      <li><a id="toc-Windows-staging-implementation-and-fixtures" href="Integration-Maintenance.html#Windows-staging-implementation-and-fixtures">16.3.14 Windows staging implementation and fixtures</a></li>
+      <li><a id="toc-Aural-experiments-and-guided-changes" href="Integration-Maintenance.html#Aural-experiments-and-guided-changes">16.3.15 Aural experiments and guided changes</a></li>
     </ul></li>
   </ul></li>
   <li><a id="toc-Concept-Index" href="Concept-Index.html" rel="index">17 Concept Index</a></li>

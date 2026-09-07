@@ -37,7 +37,7 @@ span:hover a.copiable-link {visibility: visible}
 Next: <a href="Recovering-From-No-Speech.html" accesskey="n" rel="next">Recovering From No Speech</a>, Previous: <a href="Quick-Installation.html" accesskey="p" rel="prev">Build And Start Emacsvox</a>, Up: <a href="Installation.html" accesskey="u" rel="up">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 <hr>
-<h3 class="section" id="Confirming-First-Speech-1"><span>2.4 Confirming First Speech<a class="copiable-link" href="#Confirming-First-Speech-1"> &para;</a></span></h3>
+<h3 class="section" id="Confirming-First-Speech-1"><span>2.7 Confirming First Speech<a class="copiable-link" href="#Confirming-First-Speech-1"> &para;</a></span></h3>
 
 <p>You will know the isolated start succeeded when Omnivox acknowledges the
 initial engine inventory, routing policy, and logical voices, and Emacsvox
@@ -55,6 +55,13 @@ acknowledged and therefore uses the restored engine policy.  If routing does
 not finish within five seconds, Emacsvox speaks the checkpoint through the
 capability-ready fallback so a routing error cannot suppress it indefinitely.
 </p>
+<p>This checkpoint describes the speech server.  Type
+<kbd class="kbd">M-x emacsvox-startup-status RET</kbd> to check background preparation
+of Emacsvox and its package integrations.  The command speaks a summary and
+opens a report.  Integrations waiting for their packages are normal: their
+speech support loads when you open those packages.  Run the command again to
+refresh the report; <kbd class="kbd">q</kbd> closes it.
+</p>
 <p>You now have a working Emacsvox session.  Try these checks before connecting
 it to your personal configuration:
 </p>
@@ -70,10 +77,22 @@ navigation.  Type <kbd class="kbd">M-x emacsvox-describe-emacsvox RET</kbd> for 
 overview.  See <a class="xref" href="Basic-Usage.html">Basic Usage</a>, for the tested starter commands.
 </li></ol>
 
+<p>If the initial speech is too fast, press <kbd class="kbd">C-e d -</kbd> and then repeat
+<kbd class="kbd">-</kbd> to slow the current buffer, or use <kbd class="kbd">C-e d r</kbd> to enter an exact
+rate such as <code class="code">40</code>.  For individually echoed characters, use
+<kbd class="kbd">C-e d f</kbd> and try a multiplier below one, such as <code class="code">0.7</code>.  Put
+<kbd class="kbd">C-u</kbd> before the exact-rate or character-factor command to change the
+global default rather than only the current buffer.
+</p>
 <p>When these checks pass, continue to <a class="ref" href="Basic-Usage.html">Basic Usage</a> for a short guided
 first session, or use <a class="ref" href="Persistent-Startup.html">Persistent Startup</a> to connect Emacsvox to your
 normal Emacs configuration.
 </p>
+</div>
+<hr>
+<div class="nav-panel">
+<p>
+Next: <a href="Recovering-From-No-Speech.html">Recovering From No Speech</a>, Previous: <a href="Quick-Installation.html">Build And Start Emacsvox</a>, Up: <a href="Installation.html">Getting Started: Installation and First Speech</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="Concept-Index.html" title="Index" rel="index">Index</a>]</p>
 </div>
 
 
