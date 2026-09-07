@@ -137,6 +137,7 @@ emacsvox-abc-mode.elc \
 emacsvox-ace-window.elc \
 emacsvox-add-log.elc \
 emacsvox-amark.elc \
+emacsvox-agent-shell-render.elc \
 emacsvox-agent-shell.elc \
 emacsvox-annotate.elc \
 emacsvox-arc.elc \
@@ -362,6 +363,8 @@ $(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc
 emacsvox-bookshare.elc emacsvox-epub.elc emacsvox-eww.elc emacsvox-librivox.elc: dom-addons.elc
 
 emacsvox-preamble.elc: emacsvox-version.elc
+
+emacsvox-agent-shell.elc: emacsvox-agent-shell-render.elc
 
 emacsvox-eat-input.elc: emacsvox-eat-core.elc
 emacsvox-eat-review.elc: emacsvox-eat-core.elc emacsvox-eat-input.elc

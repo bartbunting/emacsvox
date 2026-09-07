@@ -31,7 +31,8 @@
                     emacsvox-speak-tests
                     emacsvox-aural-transport-tests
                     emacsvox-aural-voice-workbench-tests
-                    emacsvox-startup-tests))
+                    emacsvox-startup-tests
+                    emacsvox-agent-shell-render-tests))
     (require module)))
 
 (ert-run-tests-batch-and-exit)

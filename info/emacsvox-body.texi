@@ -6066,6 +6066,70 @@ including real displayed-window reading for both advance paths.
 Use @code{M-x emacsvox-agent-shell-enable} to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
+@enumerate
+@item
+@anchor{Internal ownership and renderer tests}Internal ownership and renderer tests
+
+
+The main @samp{lisp/emacsvox-agent-shell.el} module requires the internal
+@samp{lisp/emacsvox-agent-shell-render.el} module.  The renderer module depends
+only on Emacs libraries@comma{} with no reverse dependency on the main integration.
+Its private helper names and argument contracts remain available through the
+main module.
+
+@multitable @columnfractions .30 .70
+@headitem Owner
+@tab Responsibilities
+@item Renderer module
+@tab Interpret prompt faces and chat label strings@comma{} current and legacy status glyphs@comma{} semantic fragment provenance@comma{} decorative controls@comma{} answer body ranges@comma{} and legacy clipboard properties. Most helpers inspect supplied strings; fragment classification can also read the current buffer without changing it.
+@item Main integration
+@tab Capture buffer and overlay context; apply user customization@comma{} speech limits@comma{} and delivery; own response accumulation@comma{} event subscriptions@comma{} timers@comma{} callback generations@comma{} navigation@comma{} permission handling@comma{} activation@comma{} and cleanup.
+@end multitable
+
+Renderer metadata supplies presentation and navigation facts; it does not
+authorize permission responses or establish lifecycle completion.  Status
+label customization stays with the main integration.  Keep compatibility
+interpretation together in the renderer module@comma{} and keep registration and
+speech side effects in the main owner.
+
+This is the first bounded separation of responsibilities.  Event state@comma{}
+navigation and table commands@comma{} and permission handling still share the main
+module.  Assess their private dependencies and lifecycle contracts before
+considering another extraction; a heading or a line count alone is not a
+reason to create a module.
+
+The independent @samp{test/emacsvox-agent-shell-render-tests.el} suite runs in the
+core and integration gates without needing optional packages of its own.  It
+checks property-preserving copies@comma{} compatibility renderings@comma{} group provenance@comma{}
+answer selection@comma{} and a fresh module load without integration registrations.
+With the Emacs selected by @samp{local.mk}@comma{} it can also run directly:
+
+@example
+/path/to/emacs -Q --batch -L lisp \
+  -l test/emacsvox-agent-shell-render-tests.el -f ert-run-tests-batch-and-exit
+@end example
+
+Keep the existing Agent Shell integration tests alongside these smaller
+contracts.  They exercise real pinned upstream renderers@comma{} speech delivery@comma{}
+enable/disable@comma{} and buffer-death cleanup.  After preparing the pinned
+dependencies with @code{make test-deps}@comma{} run source and compiled parity checks:
+
+@example
+make integration-test
+make bytecode
+make bytecode-check
+EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make integration-test
+@end example
+
+The environment setting selects the exact renderer and main integration
+@code{.elc} files in a fresh Emacs; other dependencies retain the runner's source
+preference.  Without it@comma{} both modules load explicitly from @code{.el} sources.
+The tests capture speech events and do not establish audible playback.
+
+@item
+@anchor{Upstream contract layers}Upstream contract layers
+
+
 The integration uses three deliberately different contract layers:
 
 @multitable @columnfractions .18 .37 .45
@@ -6118,6 +6182,7 @@ permission-detail submissions explicitly select the notification lane; list
 editing and diff entry remain foreground interactions.  All new events and
 their outcome@comma{} count@comma{} or setting attributes are registered by the workflow
 semantic provider so Aural rules can customize their presentation.
+@end enumerate
 
 @subsection Magit contracts
 

@@ -15,7 +15,23 @@
 (require 'seq)
 (require 'subr-x)
 (package-initialize)
-(require 'emacsvox-agent-shell)
+(let* ((kind (or (getenv "EMACSVOX_AGENT_SHELL_TEST_LOAD") "source"))
+       (suffix (pcase kind
+                 ("source" ".el")
+                 ("compiled" ".elc")
+                 (_ (error "Unknown Agent Shell test load kind: %s" kind))))
+       (directory (expand-file-name
+                   "../lisp/" (file-name-directory
+                               (or load-file-name buffer-file-name)))))
+  ;; Exercise the exact renderer and facade in a fresh compiled run, or load
+  ;; both sources explicitly.  Other dependencies retain the runner's policy.
+  (dolist (entry '(("emacsvox-agent-shell-render" . emacsvox-agent-shell--semantic-block-type)
+                   ("emacsvox-agent-shell" . emacsvox-agent-shell-enable)))
+    (let ((path (expand-file-name (concat (car entry) suffix) directory)))
+      (load path nil nil t)
+      (unless (equal (file-truename path)
+                     (file-truename (symbol-file (cdr entry) 'defun)))
+        (error "Agent Shell tests loaded the wrong implementation: %s" path)))))
 
 (defvar emacsvox-agent-shell--advice-list)
 (defvar emacsvox-agent-shell--lifecycle-subscription)
@@ -108,7 +124,7 @@
 (declare-function emacsvox-agent-shell--accept-block-type-default
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--agent-answer-from-response
-                  "emacsvox-agent-shell" (response))
+                  "emacsvox-agent-shell-render" (response))
 (declare-function emacsvox-agent-shell--latest-agent-answer-state
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--source-block-locations
@@ -173,7 +189,7 @@
 (declare-function emacsvox-agent-shell--replace-status-icons-for-speech
                   "emacsvox-agent-shell" (text))
 (declare-function emacsvox-agent-shell--remove-visual-chrome-for-speech
-                  "emacsvox-agent-shell" (text))
+                  "emacsvox-agent-shell-render" (text))
 (declare-function emacsvox-agent-shell--record-response-section
                   "emacsvox-agent-shell" (range))
 (declare-function emacsvox-agent-shell--record-out-of-turn-snapshot
@@ -183,7 +199,7 @@
 (declare-function emacsvox-agent-shell--section-marker-snapshot
                   "emacsvox-agent-shell" (qualified-id pair))
 (declare-function emacsvox-agent-shell--semantic-block-type
-                  "emacsvox-agent-shell"
+                  "emacsvox-agent-shell-render"
                   (qualified-id state &optional position text))
 (declare-function emacsvox-agent-shell--response-overview
                   "emacsvox-agent-shell" (answer))
@@ -194,7 +210,7 @@
 (declare-function emacsvox-agent-shell--response-section-setup
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--speech-copy-without-yank-handler
-                  "emacsvox-agent-shell" (text))
+                  "emacsvox-agent-shell-render" (text))
 (declare-function emacsvox-agent-shell--install-speech-control-bindings
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--filter-vertical-toggle-hint

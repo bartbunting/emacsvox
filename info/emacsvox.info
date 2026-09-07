@@ -5797,77 +5797,145 @@ advance paths.
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
-   The integration uses three deliberately different contract layers:
+  1. Internal ownership and renderer tests
 
-Layer         Agent Shell owner           Emacsvox rule
----------------------------------------------------------------------------
-Public        ‘agent-shell-subscribe-to’, Primary authority for
-structured    ‘agent-shell-unsubscribe’,  processing, completion,
-API           ‘agent-shell-status’, and   errors, permission urgency,
-              ‘agent-shell-shell-buffer’; and tool status.  The public
-              lifecycle, permission,      turn boundary triggers
-              and tool events             inspection of renderer-owned
-                                          response sections.  Event and
-                                          response data is treated as
-                                          untrusted content and bounded
-                                          before automatic Aural
-                                          submission.
-Experimental  ‘agent-shell-ui-state’,     Feature-detected navigation
-renderer      ‘agent-shell-ui-section’,   and presentation input.
-metadata      rendered Markdown           Renderer group provenance
-              table/source properties,    outranks provider-controlled
-              and renderer-owned faces    IDs; prose and IDs cannot
-                                          manufacture structured
-                                          permission or lifecycle
-                                          authority.
-Private       The aggregate               Kept in narrow adapter
-compatibility ‘agent-shell--state’, the   functions for older Agent
-fallback      legacy viewport ownership   Shell releases or incomplete
-              resolver, viewport          renderers.  A missing optional
-              position helpers, and       detail may reduce header or
-              legacy face, prompt, or     navigation richness but must
-              ID inference                not create a permission action
-                                          or completed response.
+     The main ‘lisp/emacsvox-agent-shell.el’ module requires the
+     internal ‘lisp/emacsvox-agent-shell-render.el’ module.  The
+     renderer module depends only on Emacs libraries, with no reverse
+     dependency on the main integration.  Its private helper names and
+     argument contracts remain available through the main module.
 
-   The lifecycle subscription currently consumes ‘init-started’,
-‘init-finished’, ‘session-selected’, ‘session-restored’,
-‘input-submitted’, ‘turn-complete’, and ‘error’.  Dedicated
-subscriptions consume ‘permission-request’, ‘permission-response’, and
-‘tool-call-update’.  Add new semantic behavior at the public event layer
-when Agent Shell exposes it; keep renderer and private fallbacks
-isolated and covered by compatibility tests.
+     Owner                  Responsibilities
+     --------------------------------------------------------------------------
+     Renderer module        Interpret prompt faces and chat label strings,
+                            current and legacy status glyphs, semantic
+                            fragment provenance, decorative controls, answer
+                            body ranges, and legacy clipboard properties.
+                            Most helpers inspect supplied strings; fragment
+                            classification can also read the current buffer
+                            without changing it.
+     Main integration       Capture buffer and overlay context; apply user
+                            customization, speech limits, and delivery; own
+                            response accumulation, event subscriptions,
+                            timers, callback generations, navigation,
+                            permission handling, activation, and cleanup.
 
-   The lifecycle subscription also observes ‘config-option-update’.
-Configuration snapshots suppress initial inventory and duplicate
-callback/event confirmation.  Late tool details are compared only for
-permissions established by a public ‘permission-request’ event, and
-their snapshots are removed on resolution.
+     Renderer metadata supplies presentation and navigation facts; it
+     does not authorize permission responses or establish lifecycle
+     completion.  Status label customization stays with the main
+     integration.  Keep compatibility interpretation together in the
+     renderer module, and keep registration and speech side effects in
+     the main owner.
 
-   Current Agent Shell omits rendered Codex ‘rawOutput’ and textual
-diffs from ‘tool-call-update’.  A narrow ‘agent-shell--on-notification’
-adapter joins that public event to the body rendered during the same
-call, matching both the owning buffer and qualified fragment ID.  Full
-tool speech is submitted after rendering returns.  Output digests and
-lifecycle statuses are tracked separately so late output is spoken
-without repeating identical updates.  Renderer IDs without a matching
-public event do not authorize tool feedback.
+     This is the first bounded separation of responsibilities.  Event
+     state, navigation and table commands, and permission handling still
+     share the main module.  Assess their private dependencies and
+     lifecycle contracts before considering another extraction; a
+     heading or a line count alone is not a reason to create a module.
 
-   Until upstream exposes public steering and push lifecycle events,
-small adapters wrap the structured steering request's callbacks and the
-accepted ‘session/push’ lifecycle.  Push speech finishes before the
-original completion callback can drain the next queued prompt.  Callback
-generations invalidate pending speech feedback on session change or
-integration cleanup; original transport callbacks still run.  No
-transcript text is interpreted as a steering outcome or push completion.
+     The independent ‘test/emacsvox-agent-shell-render-tests.el’ suite
+     runs in the core and integration gates without needing optional
+     packages of its own.  It checks property-preserving copies,
+     compatibility renderings, group provenance, answer selection, and a
+     fresh module load without integration registrations.  With the
+     Emacs selected by ‘local.mk’, it can also run directly:
 
-   The queue adapter marks actual queue draining and lets
-‘input-submitted’ confirm that a queued prompt started.  Prompt list
-editing and diff entry have native command feedback.  New asynchronous
-tool, queue, steering, setting, and permission-detail submissions
-explicitly select the notification lane; list editing and diff entry
-remain foreground interactions.  All new events and their outcome,
-count, or setting attributes are registered by the workflow semantic
-provider so Aural rules can customize their presentation.
+          /path/to/emacs -Q --batch -L lisp \
+            -l test/emacsvox-agent-shell-render-tests.el -f ert-run-tests-batch-and-exit
+
+     Keep the existing Agent Shell integration tests alongside these
+     smaller contracts.  They exercise real pinned upstream renderers,
+     speech delivery, enable/disable, and buffer-death cleanup.  After
+     preparing the pinned dependencies with ‘make test-deps’, run source
+     and compiled parity checks:
+
+          make integration-test
+          make bytecode
+          make bytecode-check
+          EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make integration-test
+
+     The environment setting selects the exact renderer and main
+     integration ‘.elc’ files in a fresh Emacs; other dependencies
+     retain the runner's source preference.  Without it, both modules
+     load explicitly from ‘.el’ sources.  The tests capture speech
+     events and do not establish audible playback.
+
+  2. Upstream contract layers
+
+     The integration uses three deliberately different contract layers:
+
+     Layer         Agent Shell owner           Emacsvox rule
+     ---------------------------------------------------------------------------
+     Public        ‘agent-shell-subscribe-to’, Primary authority for
+     structured    ‘agent-shell-unsubscribe’,  processing, completion,
+     API           ‘agent-shell-status’, and   errors, permission urgency,
+                   ‘agent-shell-shell-buffer’; and tool status.  The public
+                   lifecycle, permission,      turn boundary triggers
+                   and tool events             inspection of renderer-owned
+                                               response sections.  Event and
+                                               response data is treated as
+                                               untrusted content and bounded
+                                               before automatic Aural
+                                               submission.
+     Experimental  ‘agent-shell-ui-state’,     Feature-detected navigation
+     renderer      ‘agent-shell-ui-section’,   and presentation input.
+     metadata      rendered Markdown           Renderer group provenance
+                   table/source properties,    outranks provider-controlled
+                   and renderer-owned faces    IDs; prose and IDs cannot
+                                               manufacture structured
+                                               permission or lifecycle
+                                               authority.
+     Private       The aggregate               Kept in narrow adapter
+     compatibility ‘agent-shell--state’, the   functions for older Agent
+     fallback      legacy viewport ownership   Shell releases or incomplete
+                   resolver, viewport          renderers.  A missing optional
+                   position helpers, and       detail may reduce header or
+                   legacy face, prompt, or     navigation richness but must
+                   ID inference                not create a permission action
+                                               or completed response.
+
+     The lifecycle subscription currently consumes ‘init-started’,
+     ‘init-finished’, ‘session-selected’, ‘session-restored’,
+     ‘input-submitted’, ‘turn-complete’, and ‘error’.  Dedicated
+     subscriptions consume ‘permission-request’, ‘permission-response’,
+     and ‘tool-call-update’.  Add new semantic behavior at the public
+     event layer when Agent Shell exposes it; keep renderer and private
+     fallbacks isolated and covered by compatibility tests.
+
+     The lifecycle subscription also observes ‘config-option-update’.
+     Configuration snapshots suppress initial inventory and duplicate
+     callback/event confirmation.  Late tool details are compared only
+     for permissions established by a public ‘permission-request’ event,
+     and their snapshots are removed on resolution.
+
+     Current Agent Shell omits rendered Codex ‘rawOutput’ and textual
+     diffs from ‘tool-call-update’.  A narrow
+     ‘agent-shell--on-notification’ adapter joins that public event to
+     the body rendered during the same call, matching both the owning
+     buffer and qualified fragment ID.  Full tool speech is submitted
+     after rendering returns.  Output digests and lifecycle statuses are
+     tracked separately so late output is spoken without repeating
+     identical updates.  Renderer IDs without a matching public event do
+     not authorize tool feedback.
+
+     Until upstream exposes public steering and push lifecycle events,
+     small adapters wrap the structured steering request's callbacks and
+     the accepted ‘session/push’ lifecycle.  Push speech finishes before
+     the original completion callback can drain the next queued prompt.
+     Callback generations invalidate pending speech feedback on session
+     change or integration cleanup; original transport callbacks still
+     run.  No transcript text is interpreted as a steering outcome or
+     push completion.
+
+     The queue adapter marks actual queue draining and lets
+     ‘input-submitted’ confirm that a queued prompt started.  Prompt
+     list editing and diff entry have native command feedback.  New
+     asynchronous tool, queue, steering, setting, and permission-detail
+     submissions explicitly select the notification lane; list editing
+     and diff entry remain foreground interactions.  All new events and
+     their outcome, count, or setting attributes are registered by the
+     workflow semantic provider so Aural rules can customize their
+     presentation.
 
 16.3.10 Magit contracts
 -----------------------
@@ -6348,7 +6416,9 @@ Ref: Background startup ownership and failure recovery246240
 Ref: Supported Emacs versions249393
 Ref: Native Windows builds251599
 Ref: Remote preview validation253659
-Node: Concept Index284949
+Ref: Internal ownership and renderer tests266808
+Ref: Upstream contract layers270264
+Node: Concept Index288757
 
 End Tag Table
 

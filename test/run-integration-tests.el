@@ -55,7 +55,8 @@
   (add-to-list 'load-path (expand-file-name "test/" root))
   (load (expand-file-name "lisp/emacsvox-preamble.el" root) nil nil t)
   ;; This order also covers core advice being installed after Agent Shell.
-  (dolist (module '(emacsvox-agent-shell-tests emacsvox-notmuch-tests
+  (dolist (module '(emacsvox-agent-shell-render-tests
+                    emacsvox-agent-shell-tests emacsvox-notmuch-tests
                                              emacsvox-eat-tests))
     (require module)))
 

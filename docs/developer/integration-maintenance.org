@@ -444,6 +444,68 @@ including real displayed-window reading for both advance paths.
 Use ~M-x emacsvox-agent-shell-enable~ to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
 
+*** Internal ownership and renderer tests
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+The main =lisp/emacsvox-agent-shell.el= module requires the internal
+=lisp/emacsvox-agent-shell-render.el= module.  The renderer module depends
+only on Emacs libraries, with no reverse dependency on the main integration.
+Its private helper names and argument contracts remain available through the
+main module.
+
+#+attr_texinfo: :columns .30 .70
+| Owner | Responsibilities |
+|---+---|
+| Renderer module | Interpret prompt faces and chat label strings, current and legacy status glyphs, semantic fragment provenance, decorative controls, answer body ranges, and legacy clipboard properties. Most helpers inspect supplied strings; fragment classification can also read the current buffer without changing it. |
+| Main integration | Capture buffer and overlay context; apply user customization, speech limits, and delivery; own response accumulation, event subscriptions, timers, callback generations, navigation, permission handling, activation, and cleanup. |
+
+Renderer metadata supplies presentation and navigation facts; it does not
+authorize permission responses or establish lifecycle completion.  Status
+label customization stays with the main integration.  Keep compatibility
+interpretation together in the renderer module, and keep registration and
+speech side effects in the main owner.
+
+This is the first bounded separation of responsibilities.  Event state,
+navigation and table commands, and permission handling still share the main
+module.  Assess their private dependencies and lifecycle contracts before
+considering another extraction; a heading or a line count alone is not a
+reason to create a module.
+
+The independent =test/emacsvox-agent-shell-render-tests.el= suite runs in the
+core and integration gates without needing optional packages of its own.  It
+checks property-preserving copies, compatibility renderings, group provenance,
+answer selection, and a fresh module load without integration registrations.
+With the Emacs selected by =local.mk=, it can also run directly:
+
+#+begin_example
+/path/to/emacs -Q --batch -L lisp \
+  -l test/emacsvox-agent-shell-render-tests.el -f ert-run-tests-batch-and-exit
+#+end_example
+
+Keep the existing Agent Shell integration tests alongside these smaller
+contracts.  They exercise real pinned upstream renderers, speech delivery,
+enable/disable, and buffer-death cleanup.  After preparing the pinned
+dependencies with ~make test-deps~, run source and compiled parity checks:
+
+#+begin_example
+make integration-test
+make bytecode
+make bytecode-check
+EMACSVOX_AGENT_SHELL_TEST_LOAD=compiled make integration-test
+#+end_example
+
+The environment setting selects the exact renderer and main integration
+~.elc~ files in a fresh Emacs; other dependencies retain the runner's source
+preference.  Without it, both modules load explicitly from ~.el~ sources.
+The tests capture speech events and do not establish audible playback.
+
+*** Upstream contract layers
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
 The integration uses three deliberately different contract layers:
 
 #+attr_texinfo: :columns .18 .37 .45
