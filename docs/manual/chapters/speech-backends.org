@@ -127,6 +127,13 @@ connection, Emacsvox reconnects with fresh voice and routing information;
 unfinished speech is discarded.  Foreground and notification speech retain
 separate workers.  Only one Emacs session may own a service at a time.
 
+If startup connects main speech but the notification connection fails,
+Emacsvox keeps main speech available and retries the missing notification
+connection automatically.  Recovery does not replace the working main
+connection.  Set ~omnivox-remote-auto-reconnect~ to nil to disable automatic
+retries; an explicit disconnect also suspends them until you connect again.
+The status command reports the pending retry and latest connection error.
+
 The service and forwarded endpoint must stay on loopback.  Do not enable SSH
 ~GatewayPorts~.  SSH encrypts the connection; the private token also excludes
 other users on the remote host.  To rotate it, stop the service, replace both

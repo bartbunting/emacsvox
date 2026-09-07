@@ -1224,6 +1224,13 @@ connection@comma{} Emacsvox reconnects with fresh voice and routing information;
 unfinished speech is discarded.  Foreground and notification speech retain
 separate workers.  Only one Emacs session may own a service at a time.
 
+If startup connects main speech but the notification connection fails@comma{}
+Emacsvox keeps main speech available and retries the missing notification
+connection automatically.  Recovery does not replace the working main
+connection.  Set @code{omnivox-remote-auto-reconnect} to nil to disable automatic
+retries; an explicit disconnect also suspends them until you connect again.
+The status command reports the pending retry and latest connection error.
+
 The service and forwarded endpoint must stay on loopback.  Do not enable SSH
 @code{GatewayPorts}.  SSH encrypts the connection; the private token also excludes
 other users on the remote host.  To rotate it@comma{} stop the service@comma{} replace both
@@ -5880,6 +5887,18 @@ Find rule editors by scope and target identity@comma{} not by a formatted buffer
 name.  Buffer scopes belong to buffer objects@comma{} fragment scopes to fragment
 identifiers@comma{} and personal/session scopes each share one working editor.
 Reopening a dirty editor preserves its draft and source association.
+
+@subsection Remote speech recovery
+
+Ordinary @code{tts-initialize} startup schedules the existing remote retry when
+main speech starts but a configured notification connection fails.  The
+scheduler respects @code{omnivox-remote-auto-reconnect}@comma{} explicit suspension@comma{} and
+its single pending timer.  The retry restores only missing lanes; it keeps a
+working main process and negotiates fresh configuration for the new notifier.
+@code{omnivox-remote-disconnect} cancels the timer and suspends even a retry callback
+that has already been dispatched.  Local speech and disabled notification
+streams do not start remote recovery.  Exercise these boundaries in
+@code{test/omnivox-remote-tests.el} with controlled connection failures and timers.
 
 @subsection Omnivox voice configuration applies
 

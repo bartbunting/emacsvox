@@ -3061,6 +3061,11 @@ platforms prefer a bundled launcher and fall back to `exec-path'."
       (condition-case error-data
           (tts-notify-initialize)
         (error
+         (when (and (omnivox-remote-enabled-p)
+                    (tts--notification-process-configured-p)
+                    (not (process-live-p tts-notify-process)))
+           (setq omnivox-remote--last-error (error-message-string error-data))
+           (omnivox-remote--schedule-retry))
          (message
           "Notification speech server unavailable; using available speech: %s"
           (error-message-string error-data)))))

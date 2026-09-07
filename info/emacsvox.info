@@ -1240,6 +1240,14 @@ information; unfinished speech is discarded.  Foreground and
 notification speech retain separate workers.  Only one Emacs session may
 own a service at a time.
 
+   If startup connects main speech but the notification connection
+fails, Emacsvox keeps main speech available and retries the missing
+notification connection automatically.  Recovery does not replace the
+working main connection.  Set ‘omnivox-remote-auto-reconnect’ to nil to
+disable automatic retries; an explicit disconnect also suspends them
+until you connect again.  The status command reports the pending retry
+and latest connection error.
+
    The service and forwarded endpoint must stay on loopback.  Do not
 enable SSH ‘GatewayPorts’.  SSH encrypts the connection; the private
 token also excludes other users on the remote host.  To rotate it, stop
@@ -5589,7 +5597,22 @@ fragment identifiers, and personal/session scopes each share one working
 editor.  Reopening a dirty editor preserves its draft and source
 association.
 
-16.3.6 Omnivox voice configuration applies
+16.3.6 Remote speech recovery
+-----------------------------
+
+Ordinary ‘tts-initialize’ startup schedules the existing remote retry
+when main speech starts but a configured notification connection fails.
+The scheduler respects ‘omnivox-remote-auto-reconnect’, explicit
+suspension, and its single pending timer.  The retry restores only
+missing lanes; it keeps a working main process and negotiates fresh
+configuration for the new notifier.  ‘omnivox-remote-disconnect’ cancels
+the timer and suspends even a retry callback that has already been
+dispatched.  Local speech and disabled notification streams do not start
+remote recovery.  Exercise these boundaries in
+‘test/omnivox-remote-tests.el’ with controlled connection failures and
+timers.
+
+16.3.7 Omnivox voice configuration applies
 ------------------------------------------
 
 ‘omnivox-apply-voice-configuration’ captures one generation and its
@@ -5615,7 +5638,7 @@ late-reply, overlapping-apply, and replacement regressions in
 ‘test/emacsvox-tts-tests.el’ and spoken timeout feedback coverage in
 ‘test/emacsvox-aural-voice-workbench-tests.el’.
 
-16.3.7 Notmuch contracts
+16.3.8 Notmuch contracts
 ------------------------
 
 The live module is registered as an optional package integration.  Its
@@ -5646,7 +5669,7 @@ exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
 focused selector, including real displayed-window reading for both
 advance paths.
 
-16.3.8 Agent Shell contracts
+16.3.9 Agent Shell contracts
 ----------------------------
 
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
@@ -5724,8 +5747,8 @@ remain foreground interactions.  All new events and their outcome,
 count, or setting attributes are registered by the workflow semantic
 provider so Aural rules can customize their presentation.
 
-16.3.9 Magit contracts
-----------------------
+16.3.10 Magit contracts
+-----------------------
 
 Staging and selected synchronous operations collect Git outcomes at
 ‘magit-process-finish’, before Magit can raise an error.  One
@@ -5751,7 +5774,7 @@ from source, then again in a fresh Emacs with
 live buffer created with the former highlight mirroring needs a Magit
 refresh to rebuild its source properties.
 
-16.3.10 WSL2 Omnivox development staging
+16.3.11 WSL2 Omnivox development staging
 ----------------------------------------
 
 The ordinary WSL2 user route is implemented by
@@ -5910,7 +5933,7 @@ repository to make its release guard pass.  Use ‘make windows-omnivox’
 only for the reproducible clean-release path documented in the
 user-facing WSL2 route.
 
-16.3.11 Aural experiments and guided changes
+16.3.12 Aural experiments and guided changes
 --------------------------------------------
 
 Physical experiments reuse the tuner with an exact engine/voice
@@ -6138,71 +6161,71 @@ Node: Voice-lock43572
 Node: Status Information44822
 Node: Speech Backends45885
 Node: Supported Platform Routes47845
-Node: Installing An Omnivox Release Binary55591
-Node: Installing An Omnivox Windows Release Under WSL258984
-Node: Optional Omnivox Engine Modules64905
-Node: Trying Native Windows Emacsvox70377
-Node: Installing Omnivox From Source81746
-Node: Building Omnivox For WSL283610
-Node: Selecting And Checking Omnivox91269
-Node: Compatibility Speech Servers93551
-Node: Backend Diagnostics And Ownership95477
-Node: Audio Desktop98654
-Node: Desktop Objects99784
-Node: Object Oriented Desktop102631
-Node: Context-Sensitive Interaction103744
-Node: Aural Presentation106859
-Node: Presentation Model109452
-Node: Presentation Modalities111919
-Node: Aural Home115088
-Node: Explaining Presentation118667
-Node: Adjusting Presentation120695
-Node: Presentation Profiles126581
-Node: Voices And Routing128258
-Ref: Browse Eloquence And Compare Pitch137048
-Ref: Keep A Voice Experiment138295
-Ref: Change A Heading Voice Add A Cue Or Silence One139295
-Ref: Change A Blank-Line Tone140256
-Ref: Choose An Engine And Recover Unfinished Work141013
-Node: Sounds And Space142171
-Node: Presentation Troubleshooting143807
-Node: Voice Lock145845
-Node: Using Online Help149052
-Node: Emacs Packages153114
-Node: Document Authoring154488
-Node: Structured Editing155042
-Node: Browsing Structure156025
-Node: Web Browsing156623
-Node: Messaging157458
-Node: Editing Code157956
-Node: Development Environment158475
-Node: Desktop Management160011
-Node: Personal Information Management160513
-Node: Desktop Applications161045
-Node: Notmuch Mail168433
-Ref: Notmuch fields and privacy177776
-Node: Agent Shell183484
-Node: EAT Terminal Access195955
-Node: Running Terminal Based Applications213214
-Node: Starting Term214169
-Node: Term Input Modes215008
-Node: Term Speech Feedback216168
-Node: Reviewing The Term Screen217362
-Node: Term Help And Recovery219263
-Node: Emacsvox Keyboard Commands220162
-Node: Copyright221566
-Node: Acknowledgments222153
-Node: Developer Guide223179
-Node: Documentation Maintenance224343
-Node: Speech Server Protocols229143
-Ref: Testing A Direct Legacy Server235050
-Ref: Commands That Queue Output235609
-Ref: Commands That Set State238643
-Node: Integration Maintenance241237
-Ref: Supported Emacs versions243279
-Ref: Native Windows builds243967
-Ref: Remote preview validation246027
-Node: Concept Index276556
+Node: Installing An Omnivox Release Binary56042
+Node: Installing An Omnivox Windows Release Under WSL259435
+Node: Optional Omnivox Engine Modules65356
+Node: Trying Native Windows Emacsvox70828
+Node: Installing Omnivox From Source82197
+Node: Building Omnivox For WSL284061
+Node: Selecting And Checking Omnivox91720
+Node: Compatibility Speech Servers94002
+Node: Backend Diagnostics And Ownership95928
+Node: Audio Desktop99105
+Node: Desktop Objects100235
+Node: Object Oriented Desktop103082
+Node: Context-Sensitive Interaction104195
+Node: Aural Presentation107310
+Node: Presentation Model109903
+Node: Presentation Modalities112370
+Node: Aural Home115539
+Node: Explaining Presentation119118
+Node: Adjusting Presentation121146
+Node: Presentation Profiles127032
+Node: Voices And Routing128709
+Ref: Browse Eloquence And Compare Pitch137499
+Ref: Keep A Voice Experiment138746
+Ref: Change A Heading Voice Add A Cue Or Silence One139746
+Ref: Change A Blank-Line Tone140707
+Ref: Choose An Engine And Recover Unfinished Work141464
+Node: Sounds And Space142622
+Node: Presentation Troubleshooting144258
+Node: Voice Lock146296
+Node: Using Online Help149503
+Node: Emacs Packages153565
+Node: Document Authoring154939
+Node: Structured Editing155493
+Node: Browsing Structure156476
+Node: Web Browsing157074
+Node: Messaging157909
+Node: Editing Code158407
+Node: Development Environment158926
+Node: Desktop Management160462
+Node: Personal Information Management160964
+Node: Desktop Applications161496
+Node: Notmuch Mail168884
+Ref: Notmuch fields and privacy178227
+Node: Agent Shell183935
+Node: EAT Terminal Access196406
+Node: Running Terminal Based Applications213665
+Node: Starting Term214620
+Node: Term Input Modes215459
+Node: Term Speech Feedback216619
+Node: Reviewing The Term Screen217813
+Node: Term Help And Recovery219714
+Node: Emacsvox Keyboard Commands220613
+Node: Copyright222017
+Node: Acknowledgments222604
+Node: Developer Guide223630
+Node: Documentation Maintenance224794
+Node: Speech Server Protocols229594
+Ref: Testing A Direct Legacy Server235501
+Ref: Commands That Queue Output236060
+Ref: Commands That Set State239094
+Node: Integration Maintenance241688
+Ref: Supported Emacs versions243730
+Ref: Native Windows builds244418
+Ref: Remote preview validation246478
+Node: Concept Index277768
 
 End Tag Table
 

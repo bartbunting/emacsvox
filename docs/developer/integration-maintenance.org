@@ -288,6 +288,21 @@ name.  Buffer scopes belong to buffer objects, fragment scopes to fragment
 identifiers, and personal/session scopes each share one working editor.
 Reopening a dirty editor preserves its draft and source association.
 
+** Remote speech recovery
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+Ordinary ~tts-initialize~ startup schedules the existing remote retry when
+main speech starts but a configured notification connection fails.  The
+scheduler respects ~omnivox-remote-auto-reconnect~, explicit suspension, and
+its single pending timer.  The retry restores only missing lanes; it keeps a
+working main process and negotiates fresh configuration for the new notifier.
+~omnivox-remote-disconnect~ cancels the timer and suspends even a retry callback
+that has already been dispatched.  Local speech and disabled notification
+streams do not start remote recovery.  Exercise these boundaries in
+~test/omnivox-remote-tests.el~ with controlled connection failures and timers.
+
 ** Omnivox voice configuration applies
 :PROPERTIES:
 :TEXINFO_NODE: no
