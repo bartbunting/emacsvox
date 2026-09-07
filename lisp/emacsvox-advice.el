@@ -2313,9 +2313,20 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 (emacsvox-advice--define-interactive-after-advice
     (search-forward search-backward
-                    word-search-forward word-search-backward)
+                    word-search-forward word-search-backward
+                    nonincremental-search-forward nonincremental-search-backward
+                    nonincremental-re-search-forward
+                    nonincremental-re-search-backward
+                    nonincremental-repeat-search-forward
+                    nonincremental-repeat-search-backward)
     "Speak the line reached by an interactive search."
-  (emacsvox-speak-line)
+  (save-match-data
+    (let ((start (match-beginning 0))
+          (end (match-end 0)))
+      (if (and start end (<= (point-min) start end (point-max)))
+          (ems-set-personality-temporarily start end 'voice-bolden
+            (emacsvox-speak-line))
+        (emacsvox-speak-line))))
   (emacsvox-icon 'search-hit))
 
 ;;;  customize isearch:
@@ -2387,7 +2398,7 @@ Keep the owner because multi-buffer searches can end in a different buffer.")
              (save-excursion
                (ems-set-personality-temporarily (point)
                                                 isearch-other-end
-                                                voice-bolden
+                                                'voice-bolden
                                                 (tts-speak
                                                  (buffer-substring
                                                   (line-beginning-position)
@@ -2399,7 +2410,7 @@ Keep the owner because multi-buffer searches can end in a different buffer.")
 
 (defun emacsvox--advice-isearch-delete-char-after (&rest _)
   "Speak the shortened isearch string and current hit."
-  (tts-speak (propertize isearch-string 'personality voice-bolden))
+  (tts-speak (propertize isearch-string 'personality 'voice-bolden))
   (when (sit-for 0.1)
     (emacsvox-icon 'search-hit)
     (ems-set-personality-temporarily (point)
@@ -2408,7 +2419,7 @@ Keep the owner because multi-buffer searches can end in a different buffer.")
                                             (length isearch-string))
                                        (+ (point)
                                           (length isearch-string)))
-                                     voice-bolden
+                                     'voice-bolden
                                      (emacsvox-speak-line))))
 
 (advice-add
@@ -2418,14 +2429,14 @@ Keep the owner because multi-buffer searches can end in a different buffer.")
 (emacsvox-advice--define-interactive-after-advice
     (isearch-yank-word isearch-yank-kill isearch-yank-line)
     "Speak text yanked into an incremental search."
-  (tts-speak (propertize isearch-string 'personality voice-bolden))
+  (tts-speak (propertize isearch-string 'personality 'voice-bolden))
   (emacsvox-icon 'yank-object))
 
 (emacsvox-advice--define-interactive-after-advice
     (isearch-ring-advance isearch-ring-retreat
                           isearch-ring-advance-edit isearch-ring-retreat-edit)
     "Speak the incremental search ring item."
-  (tts-speak (propertize isearch-string 'personality voice-bolden))
+  (tts-speak (propertize isearch-string 'personality 'voice-bolden))
   (emacsvox-icon 'item))
 
 ;; Note the advice on the next two toggle commands

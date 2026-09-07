@@ -8,6 +8,7 @@
 
 (require 'cl-lib)
 (require 'ert)
+(require 'menu-bar)
 (require 'emacsvox-advice)
 
 (defconst emacsvox-test--replace-after-targets
@@ -17,6 +18,9 @@
 (defconst emacsvox-test--search-after-targets
   '(search-forward search-backward
     word-search-forward word-search-backward
+    nonincremental-search-forward nonincremental-search-backward
+    nonincremental-re-search-forward nonincremental-re-search-backward
+    nonincremental-repeat-search-forward nonincremental-repeat-search-backward
     occur-prev occur-next occur-mode-goto-occurrence)
   "Non-incremental search commands using generated native after advice.")
 
@@ -112,6 +116,119 @@
       (nreverse events)
       '(speak-line (icon search-hit))))))
 
+(ert-deftest emacsvox-nonincremental-commands-speak-destination-once ()
+  "Real search commands announce hits, including history and nested repeats."
+  (dolist (command '(nonincremental-search-forward
+                     nonincremental-search-backward
+                     nonincremental-re-search-forward
+                     nonincremental-re-search-backward
+                     nonincremental-repeat-search-forward
+                     nonincremental-repeat-search-backward))
+    (dolist (search-type '(string regexp))
+      (dolist (input '("cov" ""))
+        (with-temp-buffer
+          (insert "before\nfound cov here\nafter\n")
+          (goto-char (if (string-suffix-p "backward" (symbol-name command))
+                         (point-max) (point-min)))
+          (let ((search-ring '("cov"))
+                (regexp-search-ring '("cov"))
+                (menu-bar-last-search-type search-type)
+                events)
+            (cl-letf (((symbol-function 'emacsvox-speak-line)
+                       (lambda (&rest _)
+                         (push (buffer-substring-no-properties
+                                (line-beginning-position) (line-end-position))
+                               events)))
+                      ((symbol-function 'emacsvox-icon)
+                       (lambda (icon) (push icon events))))
+              (if (string-prefix-p "nonincremental-repeat-" (symbol-name command))
+                  (funcall-interactively command)
+                (funcall-interactively command input)))
+            (should (equal (nreverse events)
+                           '("found cov here" search-hit)))))))))
+
+(ert-deftest emacsvox-nonincremental-commands-silence-programmatic-and-failed-searches ()
+  "Search helpers stay quiet and failed commands never announce a hit."
+  (dolist (command '(nonincremental-search-forward
+                     nonincremental-search-backward
+                     nonincremental-re-search-forward
+                     nonincremental-re-search-backward
+                     nonincremental-repeat-search-forward
+                     nonincremental-repeat-search-backward))
+    (with-temp-buffer
+      (insert "cov")
+      (let ((search-ring '("cov"))
+            (regexp-search-ring '("cov"))
+            (menu-bar-last-search-type 'regexp)
+            (backward (string-suffix-p "backward" (symbol-name command)))
+            (args (unless (string-prefix-p "nonincremental-repeat-"
+                                           (symbol-name command))
+                    '("cov")))
+            events)
+        (cl-letf (((symbol-function 'emacsvox-speak-line)
+                   (lambda (&rest _) (push 'speech events)))
+                  ((symbol-function 'emacsvox-icon)
+                   (lambda (icon) (push icon events))))
+          (goto-char (if backward (point-max) (point-min)))
+          (apply command args)
+          (should-not events)
+          (goto-char (if backward (point-min) (point-max)))
+          (should-error (apply #'funcall-interactively command args)
+                        :type 'search-failed)
+          (should-not events))))))
+
+(ert-deftest emacsvox-nonincremental-search-boldens-only-the-hit ()
+  "Search feedback boldens the match and leaves buffer text unchanged."
+  (dolist (command '(search-forward search-backward
+                     word-search-forward word-search-backward
+                     nonincremental-search-forward nonincremental-search-backward
+                     nonincremental-re-search-forward
+                     nonincremental-re-search-backward
+                     nonincremental-repeat-search-forward
+                     nonincremental-repeat-search-backward))
+    (with-temp-buffer
+      (insert "before\nfound cov here\nafter\n")
+      (set-buffer-modified-p nil)
+      (goto-char (if (string-suffix-p "backward" (symbol-name command))
+                     (point-max) (point-min)))
+      (let ((search-ring '("cov"))
+            (regexp-search-ring '("c.v"))
+            (menu-bar-last-search-type 'regexp)
+            (voice-lock-mode t)
+            (emacsvox-aural-voice-palette-registry
+             (copy-hash-table emacsvox-aural-voice-palette-registry))
+            (emacsvox-aural-voice-palette-override 'search-test)
+            spoken)
+        (emacsvox-aural-register-voice-palette-data
+         '(:schema-version 1 :id search-test :summary "Search test voices"
+           :parent acss-default
+           :entries ((bolden :style (:family nil :average-pitch 4
+                                    :pitch-range 5 :stress 9 :richness 5)))))
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (text &rest _) (setq spoken text)))
+                  ((symbol-function 'emacsvox-icon) #'ignore))
+          (if (string-prefix-p "nonincremental-repeat-" (symbol-name command))
+              (funcall-interactively command)
+            (funcall-interactively
+             command (if (string-prefix-p "nonincremental-re-"
+                                          (symbol-name command))
+                         "c.v" "cov"))))
+        (should (equal (substring-no-properties spoken) "found cov here"))
+        (dotimes (index (length spoken))
+          (should (equal (get-text-property index 'personality spoken)
+                         (when (<= 6 index 8) 'voice-bolden))))
+        (let* ((prepared (emacsvox-aural-prepare-text spoken))
+               (hit (emacsvox-aural-concrete-plan-content
+                     (emacsvox-aural-concrete-plan-at 6 prepared))))
+          (should (eq (emacsvox-aural-concrete-content-voice-request hit)
+                      'bolden))
+          (should (equal
+                   (emacsvox-aural-concrete-content-voice-command hit)
+                   (emacsvox-aural-compile-voice 'bolden))))
+        (should-not (text-property-not-all
+                     (point-min) (point-max) 'personality nil))
+        (should-not (buffer-modified-p))))))
+
 (ert-deftest emacsvox-isearch-search-distinguishes-hit-and-miss ()
   "Incremental search emits miss or highlighted-hit feedback from its state."
   (with-temp-buffer
@@ -136,10 +253,51 @@
       (should
        (equal
         (nreverse events)
-        `((icon search-miss)
+        '((icon search-miss)
           (icon search-hit)
-          (speak "alpha beta" ,voice-bolden))))
+          (speak "alpha beta" voice-bolden))))
       (should-not (get-text-property 1 'personality)))))
+
+(ert-deftest emacsvox-isearch-feedback-resolves-custom-bolden ()
+  "Hits and search-string feedback resolve through the active voice palette."
+  (let ((emacsvox-aural-voice-palette-registry
+         (copy-hash-table emacsvox-aural-voice-palette-registry))
+        (emacsvox-aural-voice-palette-override 'isearch-test))
+    (emacsvox-aural-register-voice-palette-data
+     '(:schema-version 1 :id isearch-test :summary "Isearch test voices"
+       :parent acss-default :entries ((bolden :personality voice-animate))))
+    (dolist (command '(isearch-search isearch-delete-char
+                       isearch-yank-word isearch-yank-kill isearch-yank-line
+                       isearch-ring-advance isearch-ring-retreat
+                       isearch-ring-advance-edit isearch-ring-retreat-edit))
+      (dolist (forward '(nil t))
+        (with-temp-buffer
+          (insert "found cov here")
+          (goto-char (if forward 10 7))
+          (let ((voice-lock-mode t)
+                (isearch-success t)
+                (isearch-forward forward)
+                (isearch-other-end (if forward 7 10))
+                (isearch-string "cov")
+                (ems--interactive-fn-name command)
+                texts)
+            (cl-letf (((symbol-function 'sit-for) (lambda (&rest _) t))
+                      ((symbol-function 'emacsvox-icon) #'ignore)
+                      ((symbol-function 'tts-speak)
+                       (lambda (text) (push text texts)))
+                      ((symbol-function 'emacsvox-aural-submit)
+                       (lambda (text &rest _) (push text texts))))
+              (funcall (intern (format "emacsvox--advice-%s-after" command))))
+            (should texts)
+            (dolist (text texts)
+              (let* ((position (string-match "cov" text))
+                     (prepared (emacsvox-aural-prepare-text text))
+                     (hit (emacsvox-aural-concrete-plan-content
+                           (emacsvox-aural-concrete-plan-at position prepared))))
+                (should (eq (emacsvox-aural-concrete-content-voice-request hit)
+                            'bolden))
+                (should (equal (emacsvox-aural-concrete-content-voice-command hit)
+                               (emacsvox-aural-compile-voice 'bolden)))))))))))
 
 (ert-deftest emacsvox-isearch-exit-and-quit-restore-message-preference ()
   "Real Isearch exit and abort preserve both preference value and locality."
@@ -270,7 +428,7 @@
     (should
      (equal
       (nreverse events)
-      `((speak "search text" ,voice-bolden)
+      '((speak "search text" voice-bolden)
         (icon yank-object))))))
 
 (ert-deftest emacsvox-isearch-toggle-feedback-reflects-state ()
