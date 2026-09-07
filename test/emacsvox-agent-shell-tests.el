@@ -962,8 +962,14 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   "Return native advice state for each Agent Shell target."
   (mapcar (lambda (entry)
             (pcase-let ((`(,target ,where ,function) entry))
-              (list target where function
-                    (advice-member-p function target))))
+              (let (properties)
+                (when (advice-member-p function target)
+                  (advice-mapc
+                   (lambda (advice props)
+                     (when (eq advice function)
+                       (setq properties (copy-tree props))))
+                   target))
+                (list target where function properties))))
           emacsvox-agent-shell--advice-list))
 
 (defun emacsvox-agent-shell-test--restore-advice-state (states)
@@ -973,7 +979,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (if active
           (unless (advice-member-p function target)
             (advice-add target where function
-                        '((name . emacsvox-agent-shell))))
+                        active))
         (when (advice-member-p function target)
           (advice-remove target function))))))
 
@@ -3271,6 +3277,34 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                (emacsvox-agent-shell--prepare-speech-text "abcdefghij"))))
       (should
        (equal spoken "abcde [line truncated; 5 characters omitted]")))))
+
+(ert-deftest emacsvox-agent-shell-visual-line-kill-survives-advice-load-order ()
+  "Both module load orders preserve the prompt and speak only deleted input."
+  (let ((emacs (expand-file-name invocation-name invocation-directory))
+        (root emacsvox-agent-shell-test--repository-directory))
+    (dolist (order '(("emacsvox-advice.el" "emacsvox-agent-shell.el")
+                     ("emacsvox-agent-shell.el" "emacsvox-advice.el")))
+      (with-temp-buffer
+        (let ((status
+               (call-process
+                emacs nil t nil "-Q" "--batch" "--eval"
+                (prin1-to-string
+                 `(progn
+                    (require 'package)
+                    (setq load-path ',load-path
+                          package-user-dir ,package-user-dir
+                          package-directory-list ',package-directory-list
+                          load-prefer-newer t)
+                    (package-initialize)
+                    (dolist (file ',order)
+                      (load (expand-file-name (concat "lisp/" file) ,root)
+                            nil nil t))))
+                "-l" (expand-file-name "test/emacsvox-agent-shell-tests.el" root)
+                "--eval"
+                (concat "(ert-run-tests-batch-and-exit "
+                        "'emacsvox-agent-shell-visual-line-kill-speaks-only-killed-input)"))))
+          (unless (eq status 0)
+            (ert-fail (format "Load order %S: %s" order (buffer-string)))))))))
 
 (ert-deftest emacsvox-agent-shell-visual-line-kill-speaks-only-killed-input ()
   "A visual-line kill should omit the prompt and its visible chat label."

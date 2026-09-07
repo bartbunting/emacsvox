@@ -7040,7 +7040,12 @@ fragment.  Fragment names alone never manufacture a tool event."
              (fboundp target)
              (not (advice-member-p function target)))
         (advice-add target where function
-                    '((name . emacsvox-agent-shell)))))))
+                    (append
+                     '((name . emacsvox-agent-shell))
+                     ;; Capture the interactive marker before core kill
+                     ;; advice consumes it, whichever module loads first.
+                     (when (eq target 'kill-visual-line)
+                       '((depth . -10)))))))))
 
 (defun emacsvox-agent-shell--remove-advice ()
   "Remove native Agent Shell advice."
