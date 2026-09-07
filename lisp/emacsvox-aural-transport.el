@@ -791,6 +791,20 @@ Signal a clear installation error when negotiation found an older version."
         (/ (1+ (float (max -1.0 (min 1.0 balance)))) 2.0))))
     result))
 
+(defun emacsvox-aural--timeline-effect-transition (previous effects span-id)
+  "Return (DIRECTIVE . NEXT-STATE) for PREVIOUS, EFFECTS, and SPAN-ID.
+EFFECTS is an already normalized effects plist.  Neither input is modified.
+Retaining effects returns PREVIOUS as the next state; replacing them copies
+EFFECTS for the next state while the directive shares EFFECTS."
+  (cond
+   ((equal effects previous) (cons '(:mode "retain") previous))
+   (effects
+    (cons (list :mode "replace"
+                :state_id (format "emacsvox.effects.%d" span-id)
+                :style effects)
+          (copy-tree effects)))
+   (t (cons '(:mode "end") nil))))
+
 (defun emacsvox-aural--timeline-action-pan (action)
   "Return ACTION's normalized concrete stereo position, defaulting to center."
   (let ((balance (emacsvox-aural-concrete-action-balance action)))
@@ -843,24 +857,28 @@ the concrete request has no named preset."
 
 (defun emacsvox-aural--timeline-delivery-fields ()
   "Return V3 delivery fields for the current Aural submission."
-  (let ((policy (or emacsvox-aural-submission-delivery-policy 'ordered)))
+  (emacsvox-aural--encode-timeline-delivery-fields
+   emacsvox-aural-submission-delivery-policy
+   emacsvox-aural-submission-replacement-key))
+
+(defun emacsvox-aural--encode-timeline-delivery-fields (policy replacement-key)
+  "Return V3 fields for POLICY and REPLACEMENT-KEY, checking wire bounds.
+Nil POLICY means ordered delivery.  Only replaceable delivery uses the key."
+  (let ((policy (or policy 'ordered)))
     (unless (memq policy '(ordered replaceable urgent))
       (error "Unsupported aural delivery policy: %S" policy))
     (append
      (list :delivery_policy (symbol-name policy))
      (when (eq policy 'replaceable)
-       (unless emacsvox-aural-submission-replacement-key
+       (unless replacement-key
          (error "Replaceable aural delivery requires a replacement key"))
        (let ((key
               (cond
-               ((symbolp emacsvox-aural-submission-replacement-key)
-                (symbol-name emacsvox-aural-submission-replacement-key))
-               ((stringp emacsvox-aural-submission-replacement-key)
-                emacsvox-aural-submission-replacement-key)
+               ((symbolp replacement-key) (symbol-name replacement-key))
+               ((stringp replacement-key) replacement-key)
                (t
                 (let ((print-circle t))
-                  (prin1-to-string
-                   emacsvox-aural-submission-replacement-key))))))
+                  (prin1-to-string replacement-key))))))
          (when
              (or
               (string-empty-p key)
@@ -990,20 +1008,13 @@ recorded plans contain no speech span and therefore require legacy lowering."
           (format "%s.%d" prefix (cl-incf action-sequence)))
          (effect-directive
           (style balance)
-          (let ((effects
-                 (emacsvox-aural--timeline-style-effects style balance)))
-            (cond
-             ((equal effects active-effects) '(:mode "retain"))
-             (effects
-              (setq active-effects (copy-tree effects))
-              (list
-               :mode "replace"
-               :state_id (format "emacsvox.effects.%d" span-sequence)
-               :style effects))
-             (active-effects
-              (setq active-effects nil)
-              '(:mode "end"))
-             (t '(:mode "retain")))))
+          (let* ((effects
+                  (emacsvox-aural--timeline-style-effects style balance))
+                 (transition
+                  (emacsvox-aural--timeline-effect-transition
+                   active-effects effects span-sequence)))
+            (setq active-effects (cdr transition))
+            (car transition)))
          (add-wire-action
           (wire-id position lifecycle fields semantic-value)
           (push

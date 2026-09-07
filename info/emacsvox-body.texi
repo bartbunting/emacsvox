@@ -6021,8 +6021,8 @@ and blank clears the explicit adjustment to @code{nil}.  From @code{nil}@comma{}
 adjustment starts at five for ordinary fields and at plus/minus one for rate.
 Digit shortcuts retain their zero-through-nine values.  Invalid boundary steps
 must fail before history@comma{} dirty state@comma{} refresh@comma{} or audition changes.
-Delivery preparation and asynchronous operation ownership remain separate
-refactoring proposals.
+Delivery preparation has the limited helper boundaries described below;
+asynchronous operation ownership remains a separate refactoring proposal.
 
 The rule tests state field inventories@comma{} bounds@comma{} error precedence@comma{} and
 composition expectations independently of the metadata.  Scheme tests cover
@@ -6037,6 +6037,38 @@ source and compiled runs.  They capture auditions and do not start audio.
 Preserve final-write@comma{} timeout@comma{} reentrancy@comma{} and trace regressions when
 working on later delivery slices; metadata validation alone cannot establish
 process lifecycle or audible behavior.
+
+@subsection Timeline preparation boundaries
+
+Two private helpers in @samp{lisp/emacsvox-aural-transport.el} make preparation
+inputs explicit.  @code{emacsvox-aural--timeline-effect-transition} takes previous
+effects@comma{} normalized next effects@comma{} and a span ID@comma{} returning a directive and the
+next state.  Replacement copies the saved state separately from the directive;
+retention preserves the previous state.  The builder still owns the state
+accumulator@comma{} span numbering@comma{} and when normalization runs.  Suppressed or empty
+content does not advance effects@comma{} while spoken boundary actions do.
+
+@code{emacsvox-aural--encode-timeline-delivery-fields} takes a policy and replacement
+key.  The existing @code{emacsvox-aural--timeline-delivery-fields} wrapper reads the
+dynamic submission variables at the end of timeline construction.  Preserve
+that capture point: resource resolution earlier in construction can re-enter
+Lisp and change the submission state.  The serializer preserves ordered
+defaults@comma{} key conversion@comma{} circular printing@comma{} diagnostics@comma{} and byte bounds.
+
+The complete builder is not pure.  Cue resolution through
+@code{omnivox-remote-resource} may perform I/O; relative-rate support comes from the
+live speech process.  Those operations@comma{} action placement@comma{} dispatch
+registration@comma{} framing@comma{} fallback@comma{} and process writes retain their existing
+owners and sequence.  Separating a complete delivery candidate from those
+effects requires further design and failure-path characterization.
+
+The @code{delivery-preparation} tests in @samp{test/emacsvox-aural-transport-tests.el}
+check complete serialized timelines and final writes@comma{} semantic bindings@comma{}
+state ownership@comma{} policy inputs@comma{} and capture timing.  The compiled Aural gate
+also runs these contracts and existing stop and send-failure regressions with
+the compiled implementation resident.  Keep the full failure@comma{} reentrancy@comma{}
+and golden-trace suites as regression checks; captured writes establish
+protocol behavior@comma{} not audible playback.
 
 @subsection Aural interface source ownership
 

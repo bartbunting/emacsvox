@@ -670,6 +670,217 @@ write.  State synchronization lines in a combined write are ignored."
          (base64-decode-string (match-string 1 wire)) 'utf-8)
         "q {café 日本 }\nd\n")))))
 
+(defun emacsvox-test--effect-transition-runs ()
+  "Return runs exercising effects across silent content and boundary speech."
+  (let ((runs
+         (mapcar
+          (lambda (entry)
+            (pcase-let ((`(,text ,speak ,style) entry))
+              (list (emacsvox-aural--make-concrete-plan
+                     :content (emacsvox-aural--make-concrete-content
+                               :text text :speak speak :voice-style style)
+                     :context '(:icons-enabled nil))
+                    text nil)))
+          '(("plain" t nil) ("one" t (:gain 0))
+            ("hidden" nil (:gain 9)) ("" t (:gain 9))
+            ("two" t (:gain 0)) ("three" t (:gain 9))
+            ("hidden boundary" nil nil) ("four" t nil) ("five" t nil)))))
+    (setf (emacsvox-aural-concrete-plan-before (car (nth 2 runs)))
+          (list (emacsvox-aural--make-concrete-action
+                 :id 'quiet :kind 'pause :duration 20 :anchor 'run :source 'test))
+          (emacsvox-aural-concrete-plan-before (car (nth 6 runs)))
+          (list (emacsvox-aural--make-concrete-action
+                 :id 'label :kind 'speech :text "label" :voice-style '(:gain 9)
+                 :anchor 'object :source 'test)))
+    ;; Suppressed positioned actions must not advance effects or be validated.
+    (setcdr (nthcdr 2 (nth 2 runs)) '(((:utf8-offset 999 :actions nil))))
+    runs))
+
+(defun emacsvox-test--effect-transition-envelope (generation dispatch-id)
+  "Return the independently specified expected envelope for the effect runs."
+  (list
+   :protocol_version 3 :generation generation :dispatch_id dispatch-id
+   :delivery_policy "ordered"
+   :spans
+   [(:id 1 :text "plain" :logical_voice_id :null :acss #s(hash-table test equal) :effects (:mode "retain"))
+    (:id 2 :text "one" :logical_voice_id :null :acss #s(hash-table test equal)
+     :effects (:mode "replace" :state_id "emacsvox.effects.2" :style (:gain 0.0)))
+    (:id 3 :text "two" :logical_voice_id :null :acss #s(hash-table test equal) :effects (:mode "retain"))
+    (:id 4 :text "three" :logical_voice_id :null :acss #s(hash-table test equal)
+     :effects (:mode "replace" :state_id "emacsvox.effects.4" :style (:gain 1.0)))
+    (:id 5 :text "label" :logical_voice_id :null :acss #s(hash-table test equal) :effects (:mode "retain"))
+    (:id 6 :text "four" :logical_voice_id :null :acss #s(hash-table test equal) :effects (:mode "end"))
+    (:id 7 :text "five" :logical_voice_id :null :acss #s(hash-table test equal) :effects (:mode "retain"))]
+   :actions
+   [(:id "action.1" :position (:position "span_boundary" :span_id 3 :affinity "before")
+     :lifecycle_anchor "run" :type "silence" :duration_ms 20)
+    (:id "semantic.2" :position (:position "span_boundary" :span_id 3 :affinity "before")
+     :lifecycle_anchor "run" :type "semantic_event")
+    (:id "semantic.3" :position (:position "span_boundary" :span_id 5 :affinity "before")
+     :lifecycle_anchor "object" :type "semantic_event")]))
+
+(ert-deftest emacsvox-aural-preparation-effects-preserve-complete-timeline ()
+  "Silent content does not advance effects; boundary speech and actions survive."
+  :tags '(delivery-preparation)
+  (let* ((emacsvox-aural-submission-delivery-policy nil)
+         (runs (emacsvox-test--effect-transition-runs))
+         (before (copy-tree runs t))
+         (built (emacsvox-aural--build-structured-timeline 7 19 runs)))
+    (should (equal (json-serialize (car built))
+                   (json-serialize (emacsvox-test--effect-transition-envelope 7 19))))
+    (should (equal (cadr built)
+                   '(("action.1" :id quiet :kind pause :anchor run :source test
+                      :cue nil :tone nil :audio-mode nil)
+                     ("semantic.2" :id quiet :kind pause :anchor run :source test
+                      :cue nil :tone nil :audio-mode nil)
+                     ("semantic.3" :id label :kind speech :anchor object :source test
+                      :cue nil :tone nil :audio-mode nil))))
+    (should (equal runs before))))
+
+(ert-deftest emacsvox-aural-preparation-effects-reach-final-write-once ()
+  "The complete effect sequence reaches one registered, serialized write."
+  :tags '(delivery-preparation)
+  (let* ((process (make-pipe-process :name "aural-effect-wire-test" :noquery t))
+         (tts-speaker-process process)
+         (tts--tracked-dispatch-sequence 40)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         (tts--marker-event-function #'ignore)
+         (tts--tracked-completion-function #'ignore)
+         (emacsvox-aural--delivery-sequence 0)
+         (emacsvox-aural-submission-delivery-policy nil)
+         (emacsvox-aural-presentation-history nil)
+         writes identifier)
+    (unwind-protect
+        (progn
+          (process-put process emacsvox-aural--structured-timeline-process-property 3)
+          (process-put process tts--tracked-playback-completion-property t)
+          (process-put process tts--marker-playback-events-property t)
+          (cl-letf (((symbol-function 'process-send-string)
+                     (lambda (owner wire) (push (list owner wire) writes)))
+                    ((symbol-function 'tts-voice-reset-code) (lambda () "")))
+            (setq identifier
+                  (emacsvox-aural-call-with-delivery-transaction
+                   process
+                   (lambda ()
+                     (emacsvox-aural-queue-concrete-runs
+                      (emacsvox-test--effect-transition-runs))
+                     (tts--protocol-dispatch)))))
+          (should (= identifier 41))
+          (should (= (hash-table-count tts--tracked-dispatches) 1))
+          (should (= (hash-table-count tts--marker-dispatches) 1))
+          (should (gethash identifier tts--tracked-dispatches))
+          (should (gethash identifier tts--marker-dispatches))
+          (should
+           (equal writes
+                  (list (list process
+                              (format "emacsvox_timeline {%s}\n"
+                                      (base64-encode-string
+                                       (encode-coding-string
+                                        (json-serialize
+                                         (emacsvox-test--effect-transition-envelope 1 41))
+                                        'utf-8 t)
+                                       t)))))))
+      (when identifier (tts-cancel-tracked-dispatch identifier))
+      (delete-process process))))
+
+(ert-deftest emacsvox-aural-preparation-delivery-policy-contract ()
+  "Delivery policy preserves defaults, key spellings, and rejection diagnostics."
+  :tags '(delivery-preparation)
+  (dolist (fixture
+           `((nil ignored (:delivery_policy "ordered"))
+             (ordered "" (:delivery_policy "ordered"))
+             (urgent nil (:delivery_policy "urgent"))
+             (replaceable navigation (:delivery_policy "replaceable" :replacement_key "navigation"))
+             (replaceable "café" (:delivery_policy "replaceable" :replacement_key "café"))
+             (replaceable (navigation 7) (:delivery_policy "replaceable" :replacement_key "(navigation 7)"))
+             (replaceable ,(make-string 128 ?x)
+                          (:delivery_policy "replaceable" :replacement_key ,(make-string 128 ?x)))
+             (replaceable ,(make-string 64 ?é)
+                          (:delivery_policy "replaceable" :replacement_key ,(make-string 64 ?é)))))
+    (pcase-let ((`(,emacsvox-aural-submission-delivery-policy
+                  ,emacsvox-aural-submission-replacement-key ,expected) fixture))
+      (should (equal (emacsvox-aural--timeline-delivery-fields) expected))))
+  (dolist (fixture
+           `((invalid nil "Unsupported aural delivery policy: invalid")
+             (replaceable nil "Replaceable aural delivery requires a replacement key")
+             (replaceable "" "Aural replacement key must contain 1 to 128 UTF-8 bytes")
+             (replaceable ,(make-string 129 ?x) "Aural replacement key must contain 1 to 128 UTF-8 bytes")
+             (replaceable ,(concat (make-string 64 ?é) "x")
+                          "Aural replacement key must contain 1 to 128 UTF-8 bytes")))
+    (pcase-let ((`(,emacsvox-aural-submission-delivery-policy
+                  ,emacsvox-aural-submission-replacement-key ,message) fixture))
+      (should (equal (should-error (emacsvox-aural--timeline-delivery-fields))
+                     (list 'error message)))))
+  (let* ((key (list 'navigation))
+         (emacsvox-aural-submission-delivery-policy 'replaceable)
+         (emacsvox-aural-submission-replacement-key key)
+         (print-circle nil))
+    (setcdr key key)
+    (should (equal (emacsvox-aural--timeline-delivery-fields)
+                   '(:delivery_policy "replaceable" :replacement_key "#1=(navigation . #1#)")))
+    (should (eq (cdr key) key))
+    (should-not print-circle)))
+
+(ert-deftest emacsvox-aural-preparation-policy-capture-follows-resource-resolution ()
+  "A reentrant resource resolver can change the policy before it is captured."
+  :tags '(delivery-preparation)
+  (let* ((emacsvox-aural-submission-delivery-policy 'ordered)
+         (emacsvox-aural-submission-replacement-key nil)
+         (plan (emacsvox-aural--make-concrete-plan
+                :before (list (emacsvox-aural--make-concrete-action
+                               :kind 'cue :resource "/tmp/policy.ogg"))
+                :content (emacsvox-aural--make-concrete-content :text "policy" :speak t)
+                :context '(:icons-enabled t)))
+         (calls 0))
+    (cl-letf (((symbol-function 'omnivox-remote-resource)
+               (lambda (path)
+                 (cl-incf calls)
+                 (setq emacsvox-aural-submission-delivery-policy 'replaceable
+                       emacsvox-aural-submission-replacement-key 'resolved)
+                 path)))
+      (let ((envelope (car (emacsvox-aural--build-structured-timeline
+                            1 1 (list (list plan "policy" nil))))))
+        (should (= calls 1))
+        (should (equal (plist-get envelope :delivery_policy) "replaceable"))
+        (should (equal (plist-get envelope :replacement_key) "resolved"))))))
+
+(ert-deftest emacsvox-aural-preparation-effect-transition-state-ownership ()
+  "Transitions preserve inputs and isolate saved state from replacement output."
+  :tags '(delivery-preparation)
+  (dolist (fixture
+           '((nil nil 1 (:mode "retain"))
+             (nil (:gain 0.0) 2
+                  (:mode "replace" :state_id "emacsvox.effects.2" :style (:gain 0.0)))
+             ((:gain 0.0) (:gain 0.0) 3 (:mode "retain"))
+             ((:gain 0.0) (:gain 1.0) 4
+              (:mode "replace" :state_id "emacsvox.effects.4" :style (:gain 1.0)))
+             ((:gain 1.0) nil 6 (:mode "end"))))
+    (pcase-let* ((`(,previous ,effects ,span-id ,expected) (copy-tree fixture))
+                 (before (copy-tree (list previous effects)))
+                 (result (emacsvox-aural--timeline-effect-transition previous effects span-id)))
+      (should (equal (car result) expected))
+      (should (equal (list previous effects) before))
+      (should (equal (cdr result) effects))
+      (cond
+       ((equal (plist-get (car result) :mode) "retain")
+        (should (eq (cdr result) previous)))
+       (effects
+        (should-not (eq (cdr result) effects))
+        (should (eq (plist-get (car result) :style) effects))
+        (setcar (cdr effects) 0.25)
+        (should (equal (cdr result) (cadr before))))))))
+
+(ert-deftest emacsvox-aural-preparation-explicit-policy-ignores-submission-state ()
+  "Explicit serialization does not read a different ambient submission policy."
+  :tags '(delivery-preparation)
+  (let ((emacsvox-aural-submission-delivery-policy 'invalid)
+        (emacsvox-aural-submission-replacement-key 'ambient))
+    (should (equal (emacsvox-aural--encode-timeline-delivery-fields 'replaceable 'explicit)
+                   '(:delivery_policy "replaceable" :replacement_key "explicit")))
+    (should (equal (emacsvox-aural--encode-timeline-delivery-fields nil nil)
+                   '(:delivery_policy "ordered")))))
+
 (ert-deftest emacsvox-aural-builds-rich-structured-timeline ()
   "Structured plans retain voices, effects, overlays, pauses, and semantics."
   (let* ((cue

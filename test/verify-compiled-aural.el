@@ -329,7 +329,7 @@
           (unless (= calls 1)
             (error "Compiled protocol function bypassed native advice")))
       (advice-remove 'tts--protocol-stop advice)))
-  ;; Reuse the independently stated style contracts with the compiled rules,
+  ;; Reuse the independently stated style and delivery contracts with the compiled rules,
   ;; compiler, adapter, and transport already resident.  Test files require
   ;; these features; they must not reload their source implementations.
   (dolist (file '("emacsvox-aural-rules-tests.el"
@@ -342,6 +342,11 @@
                       emacsvox-aural-compile-voice-style
                       omnivox--portable-style-acss
                       emacsvox-aural--timeline-style-acss
+                      emacsvox-aural--timeline-effect-transition
+                      emacsvox-aural--encode-timeline-delivery-fields
+                      emacsvox-aural--timeline-delivery-fields
+                      emacsvox-aural--build-structured-timeline
+                      emacsvox-aural--finalize-structured-delivery
                       emacsvox-aural-voice-palettes--read-style-number
                       emacsvox-aural-voice-palettes--read-style
                       emacsvox-aural-voice-tuner--set-value
@@ -349,13 +354,17 @@
                       emacsvox-aural-voice-tuner-decrease
                       emacsvox-aural-voice-tuner-edit))
     (unless (file-in-directory-p (symbol-file function 'defun) build-directory)
-      (error "Voice-style contract escaped compiled build: %S" function)))
-  (unless (ert-select-tests '(tag voice-style-ui) t)
-    (error "No compiled voice-style UI contracts were loaded"))
+      (error "Aural contract escaped compiled build: %S" function)))
+  (dolist (tag '(voice-style-ui delivery-preparation))
+    (unless (ert-select-tests (list 'tag tag) t)
+      (error "No compiled %S contracts were loaded" tag)))
   (let ((stats
          (ert-run-tests-batch
           '(or "^emacsvox-aural-rules-"
                (tag voice-style-ui)
+               (tag delivery-preparation)
+               emacsvox-aural-delivery-keeps-stops-immediate-and-cancellable
+               emacsvox-aural-delivery-contains-process-send-failure
                emacsvox-aural-schemes-persist-personal-voice-palettes
                emacsvox-aural-native-voice-fields-preserve-zero-and-omission
                emacsvox-aural-transport-preset-nil-and-zero-retain-current-behavior))))
@@ -363,6 +372,6 @@
                  (= (ert-stats-completed stats) (ert-stats-total stats))
                  (= (ert-stats-completed-unexpected stats) 0)
                  (= (ert-stats-skipped stats) 0))
-      (error "Compiled voice-style contracts failed"))))
+      (error "Compiled Aural contracts failed"))))
 
 ;;; verify-compiled-aural.el ends here
