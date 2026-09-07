@@ -742,11 +742,35 @@
 
 ;;;  Helper: recover end-of-line
 
+(defun emacsvox-keymap--bind-recovery (keymap command &optional repeat-only)
+  "Bind recovery COMMAND beneath `emacsvox-prefix' in KEYMAP.
+Keep the historical repeated shortcut for a single-event prefix.  For a
+multi-event prefix, bind the repetition only if it is unused or already
+names COMMAND.  Leave intervening commands and existing submaps intact.
+Bind prefix followed by e unless REPEAT-ONLY requests the historical
+single-event behavior used by widgets and Term.  Multi-event prefixes
+always get the e fallback.  Accept both string and vector key sequences."
+  (let* ((single-event (= (length emacsvox-prefix) 1))
+         (repeated (vconcat emacsvox-prefix emacsvox-prefix)))
+    (when (or (not repeat-only) (not single-event))
+      (define-key keymap (vconcat emacsvox-prefix "e") command))
+    (when
+        (or single-event
+            ;; A lookup of the whole sequence returns a number for both a
+            ;; missing submap and an intervening command.  Walk its prefixes
+            ;; to distinguish a path we can create from a binding to preserve.
+            (cl-loop for end from 1 to (length repeated)
+                     for binding = (lookup-key keymap (substring repeated 0 end))
+                     when (null binding) return t
+                     when (= end (length repeated)) return (eq binding command)
+                     unless (keymapp binding) return nil))
+      (define-key keymap repeated command))))
+
 (defun emacsvox-keymap-recover-eol ()
-  "Recover EOL ."
-  
-  (global-set-key (concat emacsvox-prefix "e") 'move-end-of-line)
-  (global-set-key (concat emacsvox-prefix emacsvox-prefix) 'move-end-of-line))
+  "Restore end-of-line recovery keys beneath `emacsvox-prefix'.
+For a multi-event prefix, preserve bindings that conflict with repetition;
+the prefix followed by e remains available."
+  (emacsvox-keymap--bind-recovery (current-global-map) 'move-end-of-line))
 (add-hook 'after-change-major-mode-hook  'emacsvox-keymap-recover-eol)
 
 ;;;  Global Bindings From Other Modules:

@@ -4857,6 +4857,22 @@ maps.  Which of those keys are available depends on the current major
 and minor modes, your window system or terminal, and your configuration;
 therefore this conceptual chapter does not duplicate their inventories.
 
+   To choose a different main prefix, set ‘emacsvox-prefix’ before
+loading Emacsvox.  For example:
+
+     (setq emacsvox-prefix (kbd "C-c e"))
+
+   With this setting, ‘C-c e l’ speaks the line and ‘C-c e e’ provides
+end-of-line recovery.  Evil, EXWM, widgets and Term use the prefix
+followed by ‘e’ for their corresponding recovery command when the prefix
+contains multiple events.  Repeating such a prefix is also bound when
+the sequence is unused or already runs that recovery command.  Existing
+commands and submaps take precedence: ‘C-c e C-c’ retains selective
+display, so ‘C-c e C-c e’ is not installed as a recovery shortcut.
+Single-event prefixes retain their existing repeated-key behavior,
+including the default ‘C-e C-e’.  Mode-local bindings can still shadow
+the chosen prefix; inspect them with Help.
+
    Use Emacs Help to inspect the effective result:
 
    • ‘C-h m’ describes the modes and their bindings in the current
@@ -6554,22 +6570,22 @@ Node: Term Speech Feedback218441
 Node: Reviewing The Term Screen219635
 Node: Term Help And Recovery221536
 Node: Emacsvox Keyboard Commands222435
-Node: Copyright223839
-Node: Acknowledgments224426
-Node: Developer Guide225452
-Node: Documentation Maintenance226616
-Node: Speech Server Protocols231416
-Ref: Testing A Direct Legacy Server237323
-Ref: Commands That Queue Output237882
-Ref: Commands That Set State240916
-Node: Integration Maintenance243510
-Ref: Background startup ownership and failure recovery246240
-Ref: Supported Emacs versions249393
-Ref: Native Windows builds251599
-Ref: Remote preview validation253659
-Ref: Internal ownership and renderer tests272734
-Ref: Upstream contract layers276190
-Node: Concept Index297294
+Node: Copyright224680
+Node: Acknowledgments225267
+Node: Developer Guide226293
+Node: Documentation Maintenance227457
+Node: Speech Server Protocols232257
+Ref: Testing A Direct Legacy Server238164
+Ref: Commands That Queue Output238723
+Ref: Commands That Set State241757
+Node: Integration Maintenance244351
+Ref: Background startup ownership and failure recovery247081
+Ref: Supported Emacs versions250234
+Ref: Native Windows builds252440
+Ref: Remote preview validation254500
+Ref: Internal ownership and renderer tests273575
+Ref: Upstream contract layers277031
+Node: Concept Index298135
 
 End Tag Table
 

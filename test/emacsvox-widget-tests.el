@@ -174,6 +174,26 @@
         (lookup-key map "\215")
         'emacsvox-widget-update-from-minibuffer)))))
 
+(ert-deftest emacsvox-widget-setup-supports-multi-event-prefixes ()
+  "Widget recovery keeps speech commands and offers a working fallback."
+  (dolist (prefix '("C-c e" "<f12> <f11>"))
+    (let ((emacsvox-prefix (kbd prefix))
+          (emacsvox-keymap (copy-keymap emacsvox-keymap))
+          (widget-field-keymap (make-sparse-keymap))
+          (widget-text-keymap (make-sparse-keymap)))
+      (cl-letf (((symbol-function 'emacsvox-keymap) emacsvox-keymap))
+        (dotimes (_ 2) (emacsvox--advice-widget-setup-after))
+        (dolist (map (list widget-field-keymap widget-text-keymap))
+          (should (eq (lookup-key map (vconcat emacsvox-prefix "e"))
+                      'widget-end-of-line))
+          (should (eq (lookup-key map (vconcat emacsvox-prefix (kbd "C-c")))
+                      'emacsvox-selective-display))
+          (should (eq (lookup-key map (vconcat emacsvox-prefix "l"))
+                      'emacsvox-speak-line))
+          (when (equal prefix "<f12> <f11>")
+            (should (eq (lookup-key map (kbd "<f12> <f11> <f12> <f11>"))
+                        'widget-end-of-line))))))))
+
 (ert-deftest emacsvox-widget-button-advice-is-directly-registered ()
   "Widget button advice uses native advice directly."
   (should

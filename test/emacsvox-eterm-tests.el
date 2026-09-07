@@ -16,6 +16,32 @@
   ;; Exercise source even when a compiled integration module exists.
   (load module nil nil))
 
+(ert-deftest emacsvox-eterm-prefix-recovery-preserves-speech-commands ()
+  "Raw Term input has a recovery key with single- and multi-event prefixes."
+  (dolist (prefix '("C-e" "C-c e" "<f12> <f11>"))
+    (let ((emacsvox-prefix (kbd prefix))
+          (emacsvox-keymap (copy-keymap emacsvox-keymap))
+          (emacsvox-eterm-keymap (make-sparse-keymap))
+          (term-raw-map (make-sparse-keymap)))
+      (cl-letf (((symbol-function 'emacsvox-keymap) emacsvox-keymap)
+                ((symbol-function 'emacsvox-eterm-prefix-command)
+                 emacsvox-eterm-keymap))
+        (dotimes (_ 2) (emacsvox-eterm-setup-raw-keys))
+        (should
+         (eq (lookup-key term-raw-map
+                         (if (equal prefix "C-e")
+                             (kbd "C-e C-e")
+                           (vconcat emacsvox-prefix "e")))
+             'emacsvox-eterm-maybe-send-raw))
+        (should (eq (lookup-key emacsvox-keymap (kbd "C-c"))
+                    'emacsvox-selective-display))
+        (when (equal prefix "<f12> <f11>")
+          (should (eq (lookup-key term-raw-map
+                                 (kbd "<f12> <f11> <f12> <f11>"))
+                      'emacsvox-eterm-maybe-send-raw)))
+        (when (equal prefix "C-e")
+          (should (eq (lookup-key emacsvox-keymap "e") 'move-end-of-line)))))))
+
 (defconst emacsvox-test--eterm-root
   (file-name-as-directory
    (expand-file-name

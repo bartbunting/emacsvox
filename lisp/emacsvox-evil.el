@@ -269,14 +269,15 @@
 ;;;  Update keymaps:
 
 (defun emacsvox-evil-fix-emacsvox-prefix (keymap)
-  "Move original evil command on C-e to C-e e."
+  "Keep the Evil command displaced by `emacsvox-prefix' reachable in KEYMAP."
   
   (when (keymapp keymap)
     (let ((orig (lookup-key keymap emacsvox-prefix)))
-      (when orig
+      ;; A numeric lookup means a shorter key is not a prefix.  An already
+      ;; installed Emacsvox map must not become its own recovery command.
+      (when (and orig (not (numberp orig)) (not (eq orig 'emacsvox-keymap)))
         (define-key keymap emacsvox-prefix  'emacsvox-keymap)
-        (define-key keymap (concat emacsvox-prefix "e") orig)
-        (define-key keymap (concat emacsvox-prefix emacsvox-prefix) orig)))))
+        (emacsvox-keymap--bind-recovery keymap orig)))))
 
 (cl-declaim (special
              evil-normal-state-map evil-insert-state-map

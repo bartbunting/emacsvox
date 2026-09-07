@@ -170,14 +170,9 @@
 (defun emacsvox-exwm-mode-hook ()
   "EXWM Setup For Emacsvox"
   
-  (define-key exwm-mode-map emacsvox-prefix 'emacsvox-keymap)
   (define-key exwm-mode-map  emacsvox-prefix 'emacsvox-keymap)
-  (define-key exwm-mode-map
-              (concat emacsvox-prefix "e")
-              'exwm-input-send-simulation-key)
-  (define-key exwm-mode-map
-              (concat emacsvox-prefix emacsvox-prefix)
-              'exwm-input-send-simulation-key)
+  (emacsvox-keymap--bind-recovery
+   exwm-mode-map 'exwm-input-send-simulation-key)
   (emacsvox-speak-frame-title))
 
 (cl-declaim (special exwm-mode-hook))

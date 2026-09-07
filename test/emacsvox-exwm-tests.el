@@ -25,5 +25,23 @@
        "Workspace: "))
     (should (equal spoken "Workspace: "))))
 
+(ert-deftest emacsvox-exwm-prefix-recovery-preserves-speech-commands ()
+  "EXWM offers simulation-key recovery without consuming another command."
+  (dolist (prefix '("C-e" "C-c e" "<f12> <f11>"))
+    (let ((emacsvox-prefix (kbd prefix))
+          (emacsvox-keymap (copy-keymap emacsvox-keymap))
+          (exwm-mode-map (make-sparse-keymap)))
+      (cl-letf (((symbol-function 'emacsvox-keymap) emacsvox-keymap)
+                ((symbol-function 'emacsvox-speak-frame-title) #'ignore))
+        (dotimes (_ 2) (emacsvox-exwm-mode-hook))
+        (should (eq (lookup-key exwm-mode-map (vconcat emacsvox-prefix "e"))
+                    'exwm-input-send-simulation-key))
+        (should (eq (lookup-key emacsvox-keymap (kbd "C-c"))
+                    'emacsvox-selective-display))
+        (unless (equal prefix "C-c e")
+          (should (eq (lookup-key exwm-mode-map
+                                     (vconcat emacsvox-prefix emacsvox-prefix))
+                      'exwm-input-send-simulation-key)))))))
+
 (provide 'emacsvox-exwm-tests)
 ;;; emacsvox-exwm-tests.el ends here

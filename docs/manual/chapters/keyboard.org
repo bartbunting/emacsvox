@@ -27,6 +27,25 @@ maps.  Which of those keys are available depends on the current major
 and minor modes, your window system or terminal, and your configuration;
 therefore this conceptual chapter does not duplicate their inventories.
 
+To choose a different main prefix, set =emacsvox-prefix= before loading
+Emacsvox.  For example:
+
+#+begin_src emacs-lisp
+(setq emacsvox-prefix (kbd "C-c e"))
+#+end_src
+
+With this setting, @@texinfo:@kbd{C-c e l}@@ speaks the line and
+@@texinfo:@kbd{C-c e e}@@ provides end-of-line recovery.  Evil, EXWM,
+widgets and Term use the prefix followed by @@texinfo:@kbd{e}@@ for their
+corresponding recovery command when the prefix contains multiple events.
+Repeating such a prefix is also bound when the sequence is unused or already
+runs that recovery command.  Existing commands and submaps take precedence:
+@@texinfo:@kbd{C-c e C-c}@@ retains selective display, so
+@@texinfo:@kbd{C-c e C-c e}@@ is not installed as a recovery shortcut.
+Single-event prefixes retain their existing repeated-key behavior, including
+the default @@texinfo:@kbd{C-e C-e}@@.  Mode-local bindings can still shadow
+the chosen prefix; inspect them with Help.
+
 Use Emacs Help to inspect the effective result:
 
 - @@texinfo:@kbd{C-h m}@@ describes the modes and their bindings in the current buffer.

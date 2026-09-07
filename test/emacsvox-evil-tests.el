@@ -9,6 +9,32 @@
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 
+(ert-deftest emacsvox-evil-prefix-recovery-keeps-displaced-command ()
+  "Evil keeps its displaced command reachable without corrupting speech keys."
+  (dolist (prefix '("C-e" "C-c e" "<f12> <f11>"))
+    (let ((emacsvox-prefix (kbd prefix))
+          (emacsvox-keymap (copy-keymap emacsvox-keymap))
+          (map (make-sparse-keymap)))
+      (cl-letf (((symbol-function 'emacsvox-keymap) emacsvox-keymap))
+        (define-key map emacsvox-prefix 'evil-scroll-line-down)
+        (dotimes (_ 2) (emacsvox-evil-fix-emacsvox-prefix map))
+        (should (eq (lookup-key map emacsvox-prefix) 'emacsvox-keymap))
+        (should (eq (lookup-key map (vconcat emacsvox-prefix "e"))
+                    'evil-scroll-line-down))
+        (should (eq (lookup-key emacsvox-keymap (kbd "C-c"))
+                    'emacsvox-selective-display))
+        (unless (equal prefix "C-c e")
+          (should (eq (lookup-key map (vconcat emacsvox-prefix emacsvox-prefix))
+                      'evil-scroll-line-down)))))))
+
+(ert-deftest emacsvox-evil-prefix-recovery-ignores-incomplete-sequences ()
+  "A shorter mode command is not a displaced command at the full prefix."
+  (let ((emacsvox-prefix (kbd "C-c e"))
+        (map (make-sparse-keymap)))
+    (define-key map (kbd "C-c") 'ignore)
+    (emacsvox-evil-fix-emacsvox-prefix map)
+    (should (eq (lookup-key map (kbd "C-c")) 'ignore))))
+
 (ert-deftest emacsvox-evil-advice-is-current-and-direct ()
   "Current Evil targets use native advice directly."
   (dolist (entry emacsvox-evil--advice)

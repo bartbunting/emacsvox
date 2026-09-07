@@ -15,6 +15,74 @@
     "../" (file-name-directory (or load-file-name buffer-file-name))))
   "Repository root used by keymap documentation checks.")
 
+(ert-deftest emacsvox-keymap-prefix-survives-fresh-startup-and-mode-changes ()
+  "Supported prefix shapes load in fresh Emacs and retain speech commands."
+  (let ((emacs (expand-file-name invocation-name invocation-directory))
+        (lisp (expand-file-name "lisp/" emacsvox-keymap-test--repository-directory)))
+    (dolist (prefix '("C-e" "C-t" "C-c e" "<f12>" "<f12> <f11>"))
+      (with-temp-buffer
+        (let ((status
+               (call-process
+                emacs nil t nil "-Q" "--batch" "-L" lisp
+                "--eval"
+                (prin1-to-string
+                 `(progn
+                    (setq load-prefer-newer t emacsvox-prefix (kbd ,prefix))
+                    (require 'ert)
+                    (require 'emacsvox)
+                    (with-temp-buffer
+                      (dolist (mode '(text-mode special-mode fundamental-mode))
+                        (funcall mode)
+                        (should
+                         (eq (key-binding (vconcat emacsvox-prefix "e"))
+                             'move-end-of-line))
+                        (should
+                         (eq (key-binding (vconcat emacsvox-prefix "l"))
+                             'emacsvox-speak-line)))))))))
+          (unless (eq status 0)
+            (ert-fail (list prefix (buffer-string)))))))))
+
+(ert-deftest emacsvox-keymap-recovery-preserves-multi-event-conflicts ()
+  "Recovery never consumes a command or submap along a repeated prefix."
+  (dolist (case '(("C-c e" "C-c" emacsvox-selective-display)
+                  ("M-e x" "M-e" emacsvox-epub)
+                  ("<f12> <f11>" "<f12> <f11>" ignore)
+                  ("<f12> <f11>" "<f12> <f11>" keymap)))
+    (pcase-let* ((`(,prefix ,occupied ,binding) case)
+                 (emacsvox-prefix (kbd prefix))
+                 (global-map (make-sparse-keymap))
+                 (saved-global-map (current-global-map))
+                 (emacsvox-keymap (copy-keymap emacsvox-keymap))
+                 (command (if (eq binding 'keymap) (make-sparse-keymap) binding)))
+      (cl-letf (((symbol-function 'emacsvox-keymap) emacsvox-keymap))
+        (define-key emacsvox-keymap (kbd occupied) command)
+        (unwind-protect
+            (progn
+              (define-key global-map emacsvox-prefix 'emacsvox-keymap)
+              (use-global-map global-map)
+              (dotimes (_ 2) (emacsvox-keymap-recover-eol))
+              (should (eq (lookup-key emacsvox-keymap (kbd occupied)) command))
+              (should (eq (lookup-key emacsvox-keymap "e") 'move-end-of-line)))
+          (use-global-map saved-global-map))))))
+
+(ert-deftest emacsvox-keymap-recovery-keeps-uncontested-repeat-shortcuts ()
+  "Default, customized single-event and unused repeated prefixes still work."
+  (dolist (prefix '("C-e" "C-t" "<f12>" "<f12> <f11>"))
+    (let ((emacsvox-prefix (kbd prefix))
+          (global-map (make-sparse-keymap))
+          (saved-global-map (current-global-map))
+          (emacsvox-keymap (copy-keymap emacsvox-keymap)))
+      (cl-letf (((symbol-function 'emacsvox-keymap) emacsvox-keymap))
+        (unwind-protect
+            (progn
+              (define-key global-map emacsvox-prefix 'emacsvox-keymap)
+              (use-global-map global-map)
+              (dotimes (_ 2) (emacsvox-keymap-recover-eol))
+              (should
+               (eq (lookup-key global-map (vconcat emacsvox-prefix emacsvox-prefix))
+                   'move-end-of-line)))
+          (use-global-map saved-global-map))))))
+
 (defun emacsvox-keymap-test--basic-usage-bindings ()
   "Return key/command pairs published by the Basic Usage starter tables."
   (with-temp-buffer

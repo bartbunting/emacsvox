@@ -9,6 +9,8 @@ It records the remediation through Emacsvox commit
 =39001000377f14a356529b7aee666ec1d141b23c= and the subsequent native Windows
 speech-runtime acceptance. It is an internal engineering report, outside the
 published manual and generated documentation workflow.
+The prefix recovery follow-up below records subsequent work separately from
+that original implementation snapshot.
 
 All 20 findings have received implementation work. AUD-01–16 have committed
 corrections; AUD-17, AUD-18 and AUD-20 have completed the agreed bounded
@@ -53,7 +55,7 @@ Commit IDs are local Git references; inspect any with =git show COMMIT=.
 | AUD-12 | Unsigned release tags | 7cb8c6de9 | Implemented | No real release publication is needed to validate this fix. |
 | AUD-13 | CI speech/integration coverage | 9582f1dc5, 2b1e00315, 1b9c220f3 | Implemented | Hosted Actions and actual Emacs 31.1 execution unverified here. |
 | AUD-14 | Isearch preference ownership | 05230f31f | Implemented | Listening with enabled/disabled message speech. |
-| AUD-15 | Prefix keys in Help | 299ea3cd4 | Implemented | Interactive Help; separate multi-event prefix lead below. |
+| AUD-15 | Prefix keys in Help | 299ea3cd4 | Implemented | Multi-event prefix follow-up completed below; live integration acceptance remains. |
 | AUD-16 | Test entry documentation | 68956c6ea | Implemented | Full Emacs 30.2 suite with all prerequisites remains distinct. |
 | AUD-17 | Background startup ownership | ee8fc21ff | Bounded change complete | Fresh interactive status/error feedback. |
 | AUD-18 | Agent Shell responsibilities | 4f5dbd1c9 | Bounded change complete | Live rendering/permission feedback; other responsibilities retained. |
@@ -207,10 +209,10 @@ Fresh batch Help checks covered the default and a customized single-event
 prefix; bytecode, reference and docs checks passed. This slice did not add a
 new test suite for a small documentation correction.
 
-A separate multi-event-prefix probe using =C-c e= failed during configuration;
+A separate multi-event-prefix probe using =C-c e= initially failed during configuration;
 the customized single-event path passed. This is a follow-up lead, not a claim
-that the Help correction solved arbitrary prefix installation. Reproduce and
-identify its owner before proposing an additional fix.
+that the Help correction solved arbitrary prefix installation. The subsequent
+prefix recovery follow-up below identifies and corrects that failure.
 
 ** AUD-16 — Accurate test entry guidance
 
@@ -361,7 +363,7 @@ to the repository.
 | Remote partial startup/recovery | [[file:docs/manual/chapters/speech-backends.org][Speech backends]] and [[file:docs/developer/integration-maintenance.org][integration maintenance]] | Real reconnect and spoken diagnosis. |
 | Packaged OCR invocation | [[file:docs/manual/chapters/applications.org][Applications]] | Installed OCR stack and recognition. |
 | Voice timeout/unconfirmed outcome | [[file:docs/manual/chapters/aural-presentation.org][Aural presentation]] and integration maintenance | Live Workbench recovery. |
-| Active Help prefix | [[file:lisp/emacsvox.el][Main Lisp docstring]] | Interactive Help; separate multi-event-prefix lead. |
+| Active Help prefix | [[file:lisp/emacsvox.el][Main Lisp docstring]] | Fresh compiled Help now also checked with C-c e; live integrations remain. |
 | Test prerequisites and scope | [[file:test/README.org][Test entry guide]] | Complete 30.2 environment and hosted CI. |
 | Startup completion/error ownership | [[file:docs/manual/chapters/installation.org][Installation]] and integration maintenance | Delayed/failed interactive startup. |
 | Renderer, metadata, preparation, staging boundaries | Integration maintenance and relevant test guidance | Larger design proposals are not described as implemented. |
@@ -415,8 +417,8 @@ limits rather than prompting unrelated dependency/runtime changes.
 
 ** 5. Small independent follow-ups
 
-- Reproduce the =C-c e= multi-event-prefix lead in a fresh isolated profile;
-  identify the configuration contract and owner before proposing a correction.
+- The =C-c e= multi-event-prefix lead is now corrected as recorded below;
+  retain its regression coverage during future keymap changes.
 - Promote a newly reproduced listening/integration failure into the smallest
   meaningful regression and correction, committed separately.
 - Retain a hosted CI result with exact source and toolchain identities when
@@ -436,9 +438,10 @@ does not materially reduce change risk. No generic framework, lane-contract
 change, compatibility removal or broad file split is authorized by this
 close-out report.
 
-* Close-out report checks and preservation
+* Initial close-out report checks and preservation
 
-This slice adds only this companion report. The original audit remains
+The initial close-out commit (=c508fcdca=) added only this companion report.
+The original audit remains
 unchanged and untracked; its historical line references are intentionally not
 rewritten. Existing backlog, password-advice and input-test changes are not
 part of the audit close-out commit. No build, dependency update, generated
@@ -461,5 +464,48 @@ Close-out validation passed:
 - SHA256 checks confirmed the original audit and all three pre-existing
   modified files remained byte-for-byte unchanged during this slice.
 
-Runtime test suites and native builds were not repeated for this report-only
+Runtime test suites and native builds were not repeated for that report-only
 change. This report preserves their earlier results with their stated limits.
+
+* Prefix recovery follow-up — 2026-09-07
+
+The =C-c e= failure was reproduced in a fresh Emacs. The mode-change hook
+attempted to install =C-c e C-c e=, but =C-c e C-c= already runs
+=emacsvox-selective-display=. Evil, EXWM, widgets and Term repeated the same
+assumption. Concatenating keys as strings also rejected function-key events.
+
+The approved correction shares a private recovery-binding helper among these
+five callers. Single-event prefixes retain their historical behavior.
+Multi-event prefixes get the =prefix e= fallback; a repeated prefix is installed
+only along an unused path or where it already names the recovery command.
+Existing intervening commands and final commands/submaps remain intact.
+Evil also ignores an incomplete-sequence lookup and repeated setup of an
+already installed Emacsvox map, preserving its displaced recovery command.
+The maintained keyboard chapter explains configuration before startup and
+the conflict rule.
+
+Eight new regressions failed before the correction. All 54 focused keymap,
+widget, Term, Evil and EXWM tests passed against source and compiled code on
+Emacs 31.0.90 and 30.2. Compiled checks asserted the implementation file for
+each affected module. Fresh child sessions exercised default, customized
+single-event, =C-c e= and function-key prefixes through startup and mode
+changes. Fresh compiled Help agreed with the live =C-c e= bindings.
+
+An isolated full selected-Emacs bytecode rebuild passed, followed by 3,078
+unit passes and the existing Mu4e skip. Org preview, reference generation,
+manual regeneration, headers, bytecode preflight and documentation release
+checks passed. Reference generation produced no changed reference artifacts;
+only the maintained keyboard chapter's generated Texinfo body and Info manual
+changed. The working checkout's incremental bytecode build also passed.
+
+The first 30.2 integration attempt encountered installed XELB byte-code that
+called an Emacs 31-only function. Private copies of the same dependency
+sources allowed the source/compiled checks to pass; the installed packages
+were not changed. This was a test-environment incompatibility, separate from
+the reproduced prefix defect.
+
+The original audit, existing backlog and concurrent password-advice/input-test
+changes remain excluded from this fix. The live profile was not restarted.
+Actual interactive use of the window manager, modal editor, widgets and
+terminal still needs acceptance; batch setup and binding assertions do not
+establish audible feedback in those sessions.

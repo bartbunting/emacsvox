@@ -636,9 +636,7 @@ widget before summarizing."
   (cl-loop for map in (list widget-field-keymap widget-text-keymap) do
            (when (keymapp map)
              (define-key map emacsvox-prefix 'emacsvox-keymap)
-             (define-key map
-                         (concat emacsvox-prefix emacsvox-prefix)
-                         'widget-end-of-line)
+             (emacsvox-keymap--bind-recovery map 'widget-end-of-line t)
              (define-key map "\350" 'emacsvox-widget-help)
              (define-key map "\360" 'emacsvox-widget-summarize-parent)
              (define-key map "\215"

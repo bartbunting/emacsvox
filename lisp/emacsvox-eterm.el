@@ -154,8 +154,8 @@ Useful when eterm is in review mode.")
   "Setup emacsvox keys for raw terminal mode."
   (when term-raw-map
     (define-key term-raw-map emacsvox-prefix 'emacsvox-keymap)
-    (define-key term-raw-map (concat emacsvox-prefix emacsvox-prefix)
-                'emacsvox-eterm-maybe-send-raw)
+    (emacsvox-keymap--bind-recovery
+     term-raw-map 'emacsvox-eterm-maybe-send-raw t)
     (define-key term-raw-map emacsvox-eterm-prefix
                 'emacsvox-eterm-prefix-command)
     (define-key term-raw-map emacsvox-eterm-raw-prefix term-raw-map)
