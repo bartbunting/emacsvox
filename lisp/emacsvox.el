@@ -452,11 +452,13 @@ Use Emacs as you normally would, emacsvox provides spoken feedback.
 Emacsvox also provides commands for having parts of the current buffer,
 the mode-line etc to be spoken.
 
-Commands invoked with prefix \\`C-e' provide the primary Emacsvox interface.
+Commands invoked with prefix \\[emacsvox-keymap] provide the primary Emacsvox interface.
+This prefix defaults to \\`C-e'.  Set `emacsvox-prefix' before loading
+Emacsvox to change it.
 
 \\{emacsvox-keymap}
 
-Commands invoked with prefix \\`C-e d' control text-to-speech.
+Commands invoked with prefix \\[emacsvox-tts-submap] control text-to-speech.
 
 \\{emacsvox-tts-submap}
 
@@ -476,13 +478,13 @@ Press C-, to access keybindings in `emacsvox-alt-keymap':
 Press C-' to access keybindings in `emacsvox-multi-keymap':
 \\{emacsvox-multi-keymap}
 
-Press C-v to access keybindings in `emacsvox-v-keymap':
+Press \\[emacsvox-v-keymap] to access keybindings in `emacsvox-v-keymap':
 \\{emacsvox-v-keymap}
 
-Press C-x to access keybindings in `emacsvox-x-keymap':
+Press \\[emacsvox-x-keymap] to access keybindings in `emacsvox-x-keymap':
 \\{emacsvox-x-keymap}
 
-Press C-y to access keybindings in `emacsvox-y-keymap':
+Press \\[emacsvox-y-keymap] to access keybindings in `emacsvox-y-keymap':
 \\{emacsvox-y-keymap}
 
 Press C-z to access keybindings in `emacsvox-z-keymap':
