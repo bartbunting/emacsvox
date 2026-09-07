@@ -276,6 +276,9 @@
      (emacsvox-aural-audit--scan-source-forms
       emacsvox-test--aural-audit-root
       (lambda (form file function)
+        (when (and (eq (car form) 'tts-speak-using-voice)
+                   (not (equal file "lisp/tts-speak.el")))
+          (push (list file function 'bypasses-palette) early-evaluations))
         (when (memq (car form)
                     '(propertize put-text-property defvar defvar-local defcustom
                       ems-set-personality-temporarily emacsvox-corfu--voice))

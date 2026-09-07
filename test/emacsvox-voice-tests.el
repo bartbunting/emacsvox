@@ -678,5 +678,16 @@
           (eval form t)
           (should (eq (symbol-value option) 'test-personal-voice)))))))
 
+(ert-deftest emacsvox-voice-revision-retains-the-smoothen-name ()
+  "Revision feedback follows the palette rather than hard-coded ACSS."
+  (let ((emacsvox-git t))
+    (cl-letf (((symbol-function 'file-exists-p) (lambda (_) t))
+              ((symbol-function 'shell-command-to-string)
+               (lambda (_) "abcdef123\n")))
+      (let ((revision (emacsvox-get-revision)))
+        (should (equal revision "abcdef1"))
+        (should (eq (get-text-property 0 'personality revision)
+                    'voice-smoothen))))))
+
 (provide 'emacsvox-voice-tests)
 ;;; emacsvox-voice-tests.el ends here

@@ -216,13 +216,8 @@ for the current voice family."
       (cl-loop
        for v in voices do
        (insert
-        (concat
-         "This is a sample of "
-         (propertize (symbol-name v) 'personality (symbol-value v))
-         " --- It uses "
-         (propertize
-          (symbol-name (symbol-value v)) 'personality (symbol-value v))))
-       (insert ".\n")))
+        (propertize (format "This is a sample of %s." v) 'personality v))
+       (insert "\n")))
     (funcall-interactively #'pop-to-buffer buffer)
     (goto-char (point-min))))
 

@@ -136,9 +136,9 @@
     (cond
      (emacsvox-line-echo (emacsvox-speak-line))
      (t
-      (tts-speak-using-voice
-       voice-annotate (format "indent %s" (current-column)))
-      (tts--protocol-dispatch))))
+      (tts-speak
+       (propertize (format "indent %s" (current-column))
+                   'personality 'voice-annotate)))))
   (apply orig-fun args))
 
 (advice-add

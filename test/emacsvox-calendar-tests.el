@@ -99,6 +99,42 @@
       (should (fboundp function))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-calendar-marked-date-uses-the-active-palette ()
+  "Marked dates use native speech and retain explicit user voice choices."
+  (let ((emacsvox-aural-voice-palette-registry
+         (copy-hash-table emacsvox-aural-voice-palette-registry))
+        (emacsvox-aural-voice-palette-override 'calendar-test)
+        (voice-lock-mode t))
+    (emacsvox-aural-register-voice-palette-data
+     '(:schema-version 1 :id calendar-test :summary "Calendar test voices"
+       :parent acss-default :entries ((bolden :personality voice-animate))))
+    (dolist (marked '(t nil))
+      (dolist (personality '(voice-bolden voice-lighten nil))
+        (let ((emacsvox-calendar-mark-personality personality)
+              requests)
+          (cl-letf (((symbol-function 'calendar-cursor-to-date)
+                     (lambda (&rest _) '(9 8 2026)))
+                    ((symbol-function 'calendar-date-string)
+                     (lambda (_) "Tuesday"))
+                    ((symbol-function 'emacsvox-calendar-entry-marked-p)
+                     (lambda () marked))
+                    ((symbol-function 'tts-speak-using-voice)
+                     (lambda (&rest _) (ert-fail "Bypassed native speech")))
+                    ((symbol-function 'tts-speak)
+                     (lambda (text)
+                       (should (equal text "Tuesday"))
+                       (let* ((prepared (emacsvox-aural-prepare-text text))
+                              (content (emacsvox-aural-concrete-plan-content
+                                        (emacsvox-aural-concrete-plan-at
+                                         0 prepared))))
+                         (push (emacsvox-aural-concrete-content-voice-request
+                                content) requests)))))
+            (emacsvox-calendar-speak-date))
+          (should (equal requests
+                         (list (and marked
+                                    (if (eq personality 'voice-bolden)
+                                        'bolden personality))))))))))
+
 (ert-deftest emacsvox-calendar-movement-feedback-is-target-aware ()
   "Only the matching interactive Calendar movement produces feedback."
   (let ((ems--interactive-fn-name 'calendar-forward-month)

@@ -87,7 +87,8 @@
      'some
      (cond
       ((emacsvox-calendar-entry-marked-p)
-       (tts-speak-using-voice emacsvox-calendar-mark-personality date))
+       (tts-speak (propertize date 'personality
+                              emacsvox-calendar-mark-personality)))
       (t (tts-speak date))))))
 
 ;;;   Advice:

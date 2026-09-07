@@ -7,6 +7,34 @@
 (load "emacsvox-wizards" nil nil)
 (load "emacsvox-extras" nil nil)
 
+(ert-deftest emacsvox-wizards-voice-sampler-follows-the-active-palette ()
+  "Named samples retain their identity instead of freezing legacy presets."
+  (let ((buffer (generate-new-buffer " *voice-sampler-test*"))
+        (emacsvox-aural-voice-palette-registry
+         (copy-hash-table emacsvox-aural-voice-palette-registry))
+        (emacsvox-aural-voice-palette-override 'sampler-test))
+    (unwind-protect
+        (save-current-buffer
+          (emacsvox-aural-register-voice-palette-data
+           '(:schema-version 1 :id sampler-test :summary "Sampler test voices"
+             :parent acss-default
+             :entries ((bolden :personality voice-animate))))
+          (cl-letf (((symbol-function 'voice-setup-defined-voices)
+                     (lambda () '(voice-bolden)))
+                    ((symbol-function 'get-buffer-create) (lambda (_) buffer))
+                    ((symbol-function 'pop-to-buffer)
+                     (lambda (target &rest _) (set-buffer target))))
+            (emacsvox-wizards-show-voices))
+          (with-current-buffer buffer
+            (should (equal (buffer-string) "This is a sample of voice-bolden.\n"))
+            (let* ((voice-lock-mode t)
+                   (prepared (emacsvox-aural-prepare-text (buffer-string)))
+                   (content (emacsvox-aural-concrete-plan-content
+                             (emacsvox-aural-concrete-plan-at 0 prepared))))
+              (should (eq (emacsvox-aural-concrete-content-voice-request content)
+                          'bolden)))))
+      (kill-buffer buffer))))
+
 (defun emacsvox-test--remove-wizards-advice (target advice)
   "Remove ADVICE from TARGET and discard both test functions."
   (when (advice-member-p advice target)

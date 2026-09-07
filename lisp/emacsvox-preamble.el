@@ -173,7 +173,7 @@
          (substring
           (shell-command-to-string "git show -s --pretty=format:%h HEAD ")
           0 7)
-         'personality 'acss-s4-r6)
+         'personality 'voice-smoothen)
       "")))
 
 (defconst emacsvox-git-revision

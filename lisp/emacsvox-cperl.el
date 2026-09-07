@@ -62,10 +62,9 @@
   (when (ems-interactive-p 'cperl-linefeed)
     (if emacsvox-line-echo
         (emacsvox-speak-line)
-      (tts-speak-using-voice
-       voice-annotate
-       (format "indent %s" (current-column)))
-      (tts--protocol-dispatch)))
+      (tts-speak
+       (propertize (format "indent %s" (current-column))
+                   'personality 'voice-annotate))))
   (apply original arguments))
 
 (advice-add

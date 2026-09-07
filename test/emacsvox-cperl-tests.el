@@ -103,12 +103,12 @@
     (insert "  code")
     (let ((ems--interactive-fn-name 'cperl-linefeed)
           (emacsvox-line-echo nil)
-          (voice-annotate 'annotation)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'tts-speak-using-voice)
-                 (lambda (voice text)
-                   (push (list 'speech voice text) events)))
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text)
+                   (push (list 'speech (get-text-property 0 'personality text)
+                               (substring-no-properties text)) events)))
                 ((symbol-function 'tts--protocol-dispatch)
                  (lambda () (push 'speak events))))
         (should
@@ -124,7 +124,7 @@
       (should
        (equal
         (nreverse events)
-        '((speech annotation "indent 6") speak original))))))
+        '((speech voice-annotate "indent 6") original))))))
 
 (ert-deftest emacsvox-cperl-comment-feedback-uses-native-region ()
   "CPerl comment feedback uses Emacs's explicit bounds and prefix."

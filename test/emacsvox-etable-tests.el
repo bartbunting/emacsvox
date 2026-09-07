@@ -116,8 +116,10 @@
   (let ((ems--interactive-fn-name '*table--cell-newline-and-indent)
         (emacsvox-line-echo nil)
         events)
-    (cl-letf (((symbol-function 'tts-speak-using-voice)
-               (lambda (_voice text) (push (list 'speak text) events)))
+    (cl-letf (((symbol-function 'tts-speak)
+               (lambda (text)
+                 (push (list 'speak (substring-no-properties text)
+                             (get-text-property 0 'personality text)) events)))
               ((symbol-function 'tts--protocol-dispatch)
                (lambda () (push 'speak-now events))))
       (should
@@ -130,7 +132,7 @@
       (should
        (equal
        (nreverse events)
-       '((speak "indent 0") speak-now original))))))
+       '((speak "indent 0" voice-annotate) original))))))
 
 (ert-deftest emacsvox-etable-newline-presents-line-created-after-stop ()
   "Cell newline finishes work and stops before line-created feedback."
