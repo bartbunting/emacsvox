@@ -5705,6 +5705,15 @@ third-party packages. CI builds all maintained modules and runs this gate on
 Emacs 30.2 and 31.1. The full @code{make test} suite additionally requires the
 optional integration packages@comma{} including @code{lua-mode} on Emacs 30.
 
+The separate core speech CI job runs @code{make core-test}@comma{} @code{make trace-test}@comma{} and
+@code{make compiled-aural-test} on both versions with a private home directory.
+It covers speech@comma{} voice configuration@comma{} transport@comma{} Voice Workbench@comma{} startup@comma{}
+and golden speech traces without optional Emacs packages.  It requires GNU
+Make@comma{} Git@comma{} a POSIX shell@comma{} and Tcl (@code{tclsh}); missing prerequisites fail before
+the core tests run.  The fresh CI checkout exercises source@comma{} followed by an
+isolated compiled Aural check.  Optional integration suites remain outside
+this job.  See @samp{test/README.org} for the local commands and coverage boundaries.
+
 Keep each Emacs version's build in a separate checkout; never reuse @code{.elc}
 files across versions. All platforms@comma{} including native Windows x64@comma{} use this minimum.
 The documentation toolchain retains its independent pin.

@@ -16,6 +16,36 @@ do not start a speech server or play audio.
 Use =make trace= to print the current structured core trace without comparing
 it to the committed baseline.
 
+* Core speech CI
+
+Run the core speech, voice, transport, Voice Workbench, and startup regressions
+without optional Emacs packages:
+
+#+begin_src sh
+make core-test
+make trace-test
+make compiled-aural-test
+#+end_src
+
+These checks require Emacs 30.2 or newer, GNU Make, Git, a POSIX shell (=sh=),
+and Tcl (=tclsh=).  The core runner checks these prerequisites before loading
+tests; missing Make or Tcl must not silently skip their regression cases.
+The tests capture speech events and use disposable subprocesses and files.
+They do not need a speech server or audio device.
+
+The =core-speech= CI job runs these commands on Emacs 30.2 and 31.1 in a fresh
+checkout with a private home directory, so the core tests and traces exercise
+source without personal packages or in-tree byte-code.  The last command
+compiles the Aural subsystem in a temporary directory and verifies it in a
+fresh child Emacs.  ERT lists failures and skipped tests in the job log.
+The separate compatibility job still builds every maintained module.
+
+=make core-test= neither regenerates autoloads nor rebuilds local byte-code.
+In an existing checkout it prefers newer source, but can load current compiled
+dependencies.  Use =make bytecode-check= separately before using a live profile.
+This core job does not cover the optional Agent Shell, Notmuch, or EAT suites;
+they remain part of =make unit-test= and =make test= with their dependencies.
+
 * Pinned Emacspeak Reference
 
 The original reference is Emacspeak revision:

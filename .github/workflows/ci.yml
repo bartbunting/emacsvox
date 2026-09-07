@@ -81,6 +81,28 @@ jobs:
             -l utils/emacsvox-docs-check.el \
             --eval '(emacsvox-docs-check--check-local-links default-directory)'
 
+  core-speech:
+    name: Core speech and transport (Emacs ${{ matrix.emacs }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        emacs: ['30.2', '31.1']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs }}
+      - name: Run core regressions, speech traces, and compiled Aural checks
+        run: |
+          emacs_binary=$(command -v emacs)
+          core_home="$RUNNER_TEMP/emacsvox-core-home"
+          mkdir -p "$core_home"
+          env HOME="$core_home" make core-test EMACS="$emacs_binary"
+          env HOME="$core_home" make trace-test EMACS="$emacs_binary"
+          env HOME="$core_home" make compiled-aural-test EMACS="$emacs_binary"
+
   compatibility:
     name: Build and compatibility (Emacs ${{ matrix.emacs }})
     runs-on: ubuntu-latest

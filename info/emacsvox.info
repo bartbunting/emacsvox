@@ -5405,6 +5405,17 @@ checker runs.
      test’ suite additionally requires the optional integration
      packages, including ‘lua-mode’ on Emacs 30.
 
+     The separate core speech CI job runs ‘make core-test’, ‘make
+     trace-test’, and ‘make compiled-aural-test’ on both versions with a
+     private home directory.  It covers speech, voice configuration,
+     transport, Voice Workbench, startup, and golden speech traces
+     without optional Emacs packages.  It requires GNU Make, Git, a
+     POSIX shell, and Tcl (‘tclsh’); missing prerequisites fail before
+     the core tests run.  The fresh CI checkout exercises source,
+     followed by an isolated compiled Aural check.  Optional integration
+     suites remain outside this job.  See ‘test/README.org’ for the
+     local commands and coverage boundaries.
+
      Keep each Emacs version's build in a separate checkout; never reuse
      ‘.elc’ files across versions.  All platforms, including native
      Windows x64, use this minimum.  The documentation toolchain retains
@@ -6250,9 +6261,9 @@ Ref: Commands That Queue Output236814
 Ref: Commands That Set State239848
 Node: Integration Maintenance242442
 Ref: Supported Emacs versions245172
-Ref: Native Windows builds245860
-Ref: Remote preview validation247920
-Node: Concept Index279210
+Ref: Native Windows builds246547
+Ref: Remote preview validation248607
+Node: Concept Index279897
 
 End Tag Table
 
