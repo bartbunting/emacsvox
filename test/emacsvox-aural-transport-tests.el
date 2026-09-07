@@ -883,7 +883,10 @@ write.  State synchronization lines in a combined write are ignored."
 
 (ert-deftest emacsvox-aural-builds-rich-structured-timeline ()
   "Structured plans retain voices, effects, overlays, pauses, and semantics."
-  (let* ((cue
+  (require 'omnivox-voices)
+  (let* ((tts-program "omnivox")
+         (omnivox-average-pitch-contrast 0.5)
+         (cue
           (emacsvox-aural--make-concrete-action
            :id 'opening :kind 'cue :resource "/tmp/opening.ogg"
            :anchor 'object :source 'scheme :cue 'open-object :balance -0.5))
