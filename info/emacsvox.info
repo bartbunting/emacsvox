@@ -600,6 +600,13 @@ policy.  If routing does not finish within five seconds, Emacsvox speaks
 the checkpoint through the capability-ready fallback so a routing error
 cannot suppress it indefinitely.
 
+   This checkpoint describes the speech server.  Type ‘M-x
+emacsvox-startup-status RET’ to check background preparation of Emacsvox
+and its package integrations.  The command speaks a summary and opens a
+report.  Integrations waiting for their packages are normal: their
+speech support loads when you open those packages.  Run the command
+again to refresh the report; ‘q’ closes it.
+
    You now have a working Emacsvox session.  Try these checks before
 connecting it to your personal configuration:
 
@@ -663,6 +670,16 @@ The audible check passes, but "Emacsvox is ready" is absent
      Correct the reported speech-server path rather than adding more
      init-file configuration.  For an Omnivox process error, inspect the
      private log directory described below.
+The ready message is heard, but one mode lacks spoken feedback
+     Type ‘M-x emacsvox-startup-status RET’.  The report names failed
+     startup work or package integrations and retains the original
+     error.  Use ‘M-x emacsvox-speak-buffer RET’ to hear the full
+     report.  Correct the named package, configuration, or Emacsvox
+     problem, then verify in a fresh session.  For source edits, follow
+     the byte-code build procedure before testing.  Repeating startup or
+     restarting the speech server does not retry failed integrations: an
+     interrupted load can leave some hooks or advice installed.  Keep
+     the original error when requesting help.
 The ready message is heard, but speech later stops
      If Emacs reports that an Emacsvox speech server exited, inspect the
      Omnivox session log and type ‘M-x tts-restart RET’ after correcting
@@ -5396,7 +5413,61 @@ not use ‘load-library’ as the first load after editing the source tree:
 Emacs can select an old ‘emacsvox-setup.elc’ before the newer source
 checker runs.
 
-  1. Supported Emacs versions
+  1. Background startup ownership and failure recovery
+
+     ‘emacsvox’ starts two named background tasks: ‘core-advice’ loads
+     core command feedback and ‘package-preparation’ registers optional
+     package adapters.  The private task registry retains each thread,
+     state, start/end times, and original error for the Emacs session.
+     Repeated startup reuses these records, including completed and
+     failed tasks, instead of starting duplicate background work.  Other
+     startup effects, including speech-server initialization, still run
+     when ‘emacsvox’ is called again; this is not a general-purpose
+     retry command.
+
+     Registration completion is separate from adapter loading.  An
+     already-loaded package triggers its adapter immediately; another
+     package gets a deferred load callback.  Each package/adapter pair
+     is registered once.  Both load paths record failures without
+     aborting later registrations.  Failed or completed adapters are not
+     automatically retried on another package load.  User quit is
+     recorded and still propagates.  Source fallback from the setup
+     guard is preserved in both background tasks and deferred callbacks.
+
+     ‘M-x emacsvox-startup-status’ speaks a summary and selects a Help
+     report with task durations and original adapter errors.  Calling
+     ‘emacsvox-startup-status’ from Lisp returns the summary without
+     speech or a window.  Failures also issue a warning and attempt a
+     notification in interactive Emacs; retained records remain
+     available if either feedback path fails.  Successful completion
+     adds no new unconditional announcement.  The protocol and routing
+     checkpoints defined in the startup ADRs retain their separate
+     meanings; task completion does not declare the speech server ready,
+     or establish that every adapter has loaded.
+
+     Correct the reported cause and verify in a fresh session,
+     rebuilding changed Lisp first.  A failed adapter can leave partial
+     advice or hooks: error isolation does not roll those effects back.
+     Do not clear private ownership tables as a retry mechanism, since
+     deferred callbacks can still refer to their records.  Retain error
+     details, selected Emacs version, and phase durations when
+     debugging.  Background scheduling is preserved; these records do
+     not guarantee that core advice finishes before the first input
+     command, and batch timings do not measure interactive startup
+     latency.
+
+     The focused tests exercise real deferred loads, failure isolation,
+     task reuse, source fallback, and spoken status with speech
+     intercepted.  Check source with the selected Emacs using
+     ‘test/emacsvox-startup-tests.el’.  For fresh compiled parity, first
+     run ‘make bytecode-check’, then set
+     ‘EMACSVOX_STARTUP_TEST_LOAD=compiled’ when loading the same test
+     file in a new batch Emacs.  This selects ‘emacsvox.elc’ explicitly;
+     it does not make every test dependency compiled.  Audible diagnosis
+     and real startup latency still need an isolated interactive
+     session.
+
+  2. Supported Emacs versions
 
      The Lisp runtime and all platform routes support Emacs 30.2 and
      newer.  Run ‘make compat-test’ for the core compatibility contracts
@@ -5434,7 +5505,7 @@ checker runs.
      Windows x64, use this minimum.  The documentation toolchain retains
      its independent pin.
 
-  2. Native Windows builds
+  3. Native Windows builds
 
      Use a separate checkout on a Windows drive.  The native installer
      regenerates autoloads and all modules from the ‘lisp/Makefile’
@@ -5472,7 +5543,7 @@ checker runs.
      remote workstation speech remains preview, as recorded in ADR 0014
      (../adr/0014-native-windows-support.org).
 
-  3. Remote preview validation
+  4. Remote preview validation
 
      Keep remote installer fixtures separate from connected acceptance.
      In the Omnivox checkout, run ‘make dev’ followed by ‘make
@@ -6196,87 +6267,88 @@ Node: Updating Emacsvox Under WSL218629
 Node: Building And Testing The Speech Server21787
 Node: Quick Installation23467
 Node: Confirming First Speech25970
-Node: Recovering From No Speech27963
-Node: Persistent Startup30837
-Node: Basic Usage31851
-Node: Overview34475
-Node: Working35613
-Ref: Working-Footnote-137165
-Ref: Working-Footnote-237258
-Node: Reading37368
-Node: Speech System39148
-Node: Controlling Echo40060
-Node: Speech Output Control40895
-Node: Miscellaneous42625
-Node: Voice-lock43572
-Node: Status Information44822
-Node: Speech Backends45885
-Node: Supported Platform Routes47845
-Node: Installing An Omnivox Release Binary56042
-Node: Installing An Omnivox Windows Release Under WSL259435
-Node: Optional Omnivox Engine Modules65356
-Node: Trying Native Windows Emacsvox70828
-Node: Installing Omnivox From Source82197
-Node: Building Omnivox For WSL284061
-Node: Selecting And Checking Omnivox91720
-Node: Compatibility Speech Servers94002
-Node: Backend Diagnostics And Ownership95928
-Node: Audio Desktop99105
-Node: Desktop Objects100235
-Node: Object Oriented Desktop103082
-Node: Context-Sensitive Interaction104195
-Node: Aural Presentation107310
-Node: Presentation Model109903
-Node: Presentation Modalities112370
-Node: Aural Home115539
-Node: Explaining Presentation119118
-Node: Adjusting Presentation121146
-Node: Presentation Profiles127032
-Node: Voices And Routing128709
-Ref: Browse Eloquence And Compare Pitch137499
-Ref: Keep A Voice Experiment138746
-Ref: Change A Heading Voice Add A Cue Or Silence One139746
-Ref: Change A Blank-Line Tone140707
-Ref: Choose An Engine And Recover Unfinished Work141464
-Node: Sounds And Space142622
-Node: Presentation Troubleshooting144258
-Node: Voice Lock146296
-Node: Using Online Help149503
-Node: Emacs Packages153565
-Node: Document Authoring154939
-Node: Structured Editing155493
-Node: Browsing Structure156476
-Node: Web Browsing157074
-Node: Messaging157909
-Node: Editing Code158407
-Node: Development Environment158926
-Node: Desktop Management160462
-Node: Personal Information Management160964
-Node: Desktop Applications161496
-Node: Notmuch Mail169638
-Ref: Notmuch fields and privacy178981
-Node: Agent Shell184689
-Node: EAT Terminal Access197160
-Node: Running Terminal Based Applications214419
-Node: Starting Term215374
-Node: Term Input Modes216213
-Node: Term Speech Feedback217373
-Node: Reviewing The Term Screen218567
-Node: Term Help And Recovery220468
-Node: Emacsvox Keyboard Commands221367
-Node: Copyright222771
-Node: Acknowledgments223358
-Node: Developer Guide224384
-Node: Documentation Maintenance225548
-Node: Speech Server Protocols230348
-Ref: Testing A Direct Legacy Server236255
-Ref: Commands That Queue Output236814
-Ref: Commands That Set State239848
-Node: Integration Maintenance242442
-Ref: Supported Emacs versions245172
-Ref: Native Windows builds247378
-Ref: Remote preview validation249438
-Node: Concept Index280728
+Node: Recovering From No Speech28355
+Node: Persistent Startup31905
+Node: Basic Usage32919
+Node: Overview35543
+Node: Working36681
+Ref: Working-Footnote-138233
+Ref: Working-Footnote-238326
+Node: Reading38436
+Node: Speech System40216
+Node: Controlling Echo41128
+Node: Speech Output Control41963
+Node: Miscellaneous43693
+Node: Voice-lock44640
+Node: Status Information45890
+Node: Speech Backends46953
+Node: Supported Platform Routes48913
+Node: Installing An Omnivox Release Binary57110
+Node: Installing An Omnivox Windows Release Under WSL260503
+Node: Optional Omnivox Engine Modules66424
+Node: Trying Native Windows Emacsvox71896
+Node: Installing Omnivox From Source83265
+Node: Building Omnivox For WSL285129
+Node: Selecting And Checking Omnivox92788
+Node: Compatibility Speech Servers95070
+Node: Backend Diagnostics And Ownership96996
+Node: Audio Desktop100173
+Node: Desktop Objects101303
+Node: Object Oriented Desktop104150
+Node: Context-Sensitive Interaction105263
+Node: Aural Presentation108378
+Node: Presentation Model110971
+Node: Presentation Modalities113438
+Node: Aural Home116607
+Node: Explaining Presentation120186
+Node: Adjusting Presentation122214
+Node: Presentation Profiles128100
+Node: Voices And Routing129777
+Ref: Browse Eloquence And Compare Pitch138567
+Ref: Keep A Voice Experiment139814
+Ref: Change A Heading Voice Add A Cue Or Silence One140814
+Ref: Change A Blank-Line Tone141775
+Ref: Choose An Engine And Recover Unfinished Work142532
+Node: Sounds And Space143690
+Node: Presentation Troubleshooting145326
+Node: Voice Lock147364
+Node: Using Online Help150571
+Node: Emacs Packages154633
+Node: Document Authoring156007
+Node: Structured Editing156561
+Node: Browsing Structure157544
+Node: Web Browsing158142
+Node: Messaging158977
+Node: Editing Code159475
+Node: Development Environment159994
+Node: Desktop Management161530
+Node: Personal Information Management162032
+Node: Desktop Applications162564
+Node: Notmuch Mail170706
+Ref: Notmuch fields and privacy180049
+Node: Agent Shell185757
+Node: EAT Terminal Access198228
+Node: Running Terminal Based Applications215487
+Node: Starting Term216442
+Node: Term Input Modes217281
+Node: Term Speech Feedback218441
+Node: Reviewing The Term Screen219635
+Node: Term Help And Recovery221536
+Node: Emacsvox Keyboard Commands222435
+Node: Copyright223839
+Node: Acknowledgments224426
+Node: Developer Guide225452
+Node: Documentation Maintenance226616
+Node: Speech Server Protocols231416
+Ref: Testing A Direct Legacy Server237323
+Ref: Commands That Queue Output237882
+Ref: Commands That Set State240916
+Node: Integration Maintenance243510
+Ref: Background startup ownership and failure recovery246240
+Ref: Supported Emacs versions249393
+Ref: Native Windows builds251599
+Ref: Remote preview validation253659
+Node: Concept Index284949
 
 End Tag Table
 

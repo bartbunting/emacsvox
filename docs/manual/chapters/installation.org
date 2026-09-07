@@ -468,6 +468,13 @@ acknowledged and therefore uses the restored engine policy.  If routing does
 not finish within five seconds, Emacsvox speaks the checkpoint through the
 capability-ready fallback so a routing error cannot suppress it indefinitely.
 
+This checkpoint describes the speech server.  Type
+@@texinfo:@kbd{M-x emacsvox-startup-status RET}@@ to check background preparation
+of Emacsvox and its package integrations.  The command speaks a summary and
+opens a report.  Integrations waiting for their packages are normal: their
+speech support loads when you open those packages.  Run the command again to
+refresh the report; @@texinfo:@kbd{q}@@ closes it.
+
 You now have a working Emacsvox session.  Try these checks before connecting
 it to your personal configuration:
 
@@ -535,6 +542,16 @@ point and find the first command below that did not work:
   reported speech-server path rather than adding more init-file configuration.
   For an Omnivox process error, inspect the private log directory described
   below.
+- The ready message is heard, but one mode lacks spoken feedback ::
+
+  Type @@texinfo:@kbd{M-x emacsvox-startup-status RET}@@.  The report names failed
+  startup work or package integrations and retains the original error.  Use
+  @@texinfo:@kbd{M-x emacsvox-speak-buffer RET}@@ to hear the full report.  Correct
+  the named package, configuration, or Emacsvox problem, then verify in a fresh
+  session.  For source edits, follow the byte-code build procedure before
+  testing.  Repeating startup or restarting the speech server does not retry
+  failed integrations: an interrupted load can leave some hooks or advice
+  installed.  Keep the original error when requesting help.
 - The ready message is heard, but speech later stops ::
 
   If Emacs reports that an Emacsvox speech server exited, inspect the Omnivox

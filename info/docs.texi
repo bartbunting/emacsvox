@@ -65,7 +65,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1526 commands and 207 options.
+This chapter documents a total of 1527 commands and 207 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -547,6 +547,22 @@ system.
 @item It provides affordances for  setting up consistent behavior in
 programming modes.
 @end itemize
+
+@subsection Emacsvox Commands
+
+@subsubsection emacsvox-startup-status
+@deffn {Command} emacsvox-startup-status
+@findex emacsvox-startup-status
+
+@format
+Report background startup progress and optional integration failures.
+Interactively, speak a summary and display the full report in Help.
+Programmatically, return the summary without opening a window or speaking.
+This reports integration preparation, not speech-server or routing readiness.
+Repeated startup does not retry failed work; correct the reported problem
+and verify in a fresh Emacs session.
+@end format
+@end deffn
 
 @subsection emacsvox Options
 

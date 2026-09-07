@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1526 commands and 207 options.
+   This chapter documents a total of 1527 commands and 207 options.
 
 * Menu:
 
@@ -856,7 +856,22 @@ the main emacsvox module.  It actually does very little:
    • It provides affordances for setting up consistent behavior in
      programming modes.
 
-2.4.1 emacsvox Options
+2.4.1 Emacsvox Commands
+-----------------------
+
+2.4.1.1 emacsvox-startup-status
+...............................
+
+ -- Command: emacsvox-startup-status
+
+     Report background startup progress and optional integration failures.
+     Interactively, speak a summary and display the full report in Help.
+     Programmatically, return the summary without opening a window or speaking.
+     This reports integration preparation, not speech-server or routing readiness.
+     Repeated startup does not retry failed work; correct the reported problem
+     and verify in a fresh Emacs session.
+
+2.4.2 emacsvox Options
 ----------------------
 
  -- Variable: User Option emacsvox-pip-enable

@@ -67,6 +67,54 @@ files, ~(load-library "emacsvox-setup")~ may be used.  Do not use
 ~load-library~ as the first load after editing the source tree: Emacs can
 select an old ~emacsvox-setup.elc~ before the newer source checker runs.
 
+*** Background startup ownership and failure recovery
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+~emacsvox~ starts two named background tasks: ~core-advice~ loads core command
+feedback and ~package-preparation~ registers optional package adapters.  The
+private task registry retains each thread, state, start/end times, and original
+error for the Emacs session.  Repeated startup reuses these records, including
+completed and failed tasks, instead of starting duplicate background work.
+Other startup effects, including speech-server initialization, still run when
+~emacsvox~ is called again; this is not a general-purpose retry command.
+
+Registration completion is separate from adapter loading.  An already-loaded
+package triggers its adapter immediately; another package gets a deferred load
+callback.  Each package/adapter pair is registered once.  Both load paths record
+failures without aborting later registrations.  Failed or completed adapters
+are not automatically retried on another package load.  User quit is recorded
+and still propagates.  Source fallback from the setup guard is preserved in
+both background tasks and deferred callbacks.
+
+~M-x emacsvox-startup-status~ speaks a summary and selects a Help report with
+task durations and original adapter errors.  Calling ~emacsvox-startup-status~
+from Lisp returns the summary without speech or a window.  Failures also issue
+a warning and attempt a notification in interactive Emacs; retained records
+remain available if either feedback path fails.  Successful completion adds no
+new unconditional announcement.  The protocol and routing checkpoints defined
+in the startup ADRs retain their separate meanings; task completion does not
+declare the speech server ready, or establish that every adapter has loaded.
+
+Correct the reported cause and verify in a fresh session, rebuilding changed
+Lisp first.  A failed adapter can leave partial advice or hooks: error isolation
+does not roll those effects back.  Do not clear private ownership tables as a
+retry mechanism, since deferred callbacks can still refer to their records.
+Retain error details, selected Emacs version, and phase durations when debugging.
+Background scheduling is preserved; these records do not guarantee that core
+advice finishes before the first input command, and batch timings do not measure
+interactive startup latency.
+
+The focused tests exercise real deferred loads, failure isolation, task reuse,
+source fallback, and spoken status with speech intercepted.  Check source with
+the selected Emacs using =test/emacsvox-startup-tests.el=.  For fresh compiled
+parity, first run ~make bytecode-check~, then set
+=EMACSVOX_STARTUP_TEST_LOAD=compiled= when loading the same test file in a new
+batch Emacs.  This selects =emacsvox.elc= explicitly; it does not make every
+test dependency compiled.  Audible diagnosis and real startup latency still
+need an isolated interactive session.
+
 *** Supported Emacs versions
 :PROPERTIES:
 :TEXINFO_NODE: no

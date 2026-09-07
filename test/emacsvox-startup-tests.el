@@ -8,9 +8,19 @@
 
 (require 'cl-lib)
 (require 'ert)
-(load (expand-file-name "../lisp/emacsvox.el"
-                        (file-name-directory (or load-file-name buffer-file-name)))
-      nil nil)
+(let* ((kind (or (getenv "EMACSVOX_STARTUP_TEST_LOAD") "source"))
+       (file (pcase kind
+               ("source" "emacsvox.el")
+               ("compiled" "emacsvox.elc")
+               (_ (error "Unknown startup test load kind: %s" kind))))
+       (path (expand-file-name (concat "../lisp/" file)
+                               (file-name-directory (or load-file-name buffer-file-name)))))
+  ;; The compiled invocation follows make bytecode-check and loads this exact
+  ;; file.  Do not silently prefer source for the lifecycle parity check.
+  (load path nil nil t)
+  (unless (equal (file-truename (symbol-file 'emacsvox--startup-thread 'defun))
+                 (file-truename path))
+    (error "Startup tests loaded the wrong implementation: %s" path)))
 
 (defconst emacsvox-startup-tests--root
   (expand-file-name "../" (file-name-directory (or load-file-name buffer-file-name))))
@@ -150,12 +160,213 @@
 (ert-deftest emacsvox-startup-threads-preserve-source-loading-preference ()
   "A startup thread retains the setup guard after its dynamic extent ends."
   (dolist (preference '(nil t))
-    (let* ((load-prefer-newer (not preference))
+    (let* ((emacsvox--startup-tasks (make-hash-table :test #'eq))
+           (load-prefer-newer (not preference))
            (thread
             (let ((load-prefer-newer preference))
-              (emacsvox--startup-thread (lambda () load-prefer-newer)))))
+              (emacsvox--startup-thread 'fixture (lambda () load-prefer-newer)))))
       (should (eq (thread-join thread) preference))
       (should (eq load-prefer-newer (not preference))))))
+
+(ert-deftest emacsvox-startup-retains-delayed-tasks-and-completion ()
+  "Repeated starts reuse a task before and after its observable completion."
+  (let* ((emacsvox--startup-tasks (make-hash-table :test #'eq))
+         (released nil)
+         (started nil)
+         (calls 0)
+         (thread (emacsvox--startup-thread
+                  'delayed
+                  (lambda ()
+                    (setq started t)
+                    (while (not released) (thread-yield))
+                    (cl-incf calls)
+                    'finished))))
+    (unwind-protect
+        (progn
+          (should (eq thread (emacsvox--startup-thread 'delayed #'ignore)))
+          (let ((deadline (+ (float-time) 2)))
+            (while (and (not started) (< (float-time) deadline)) (thread-yield)))
+          (should started)
+          (should (string-match-p "1 running" (emacsvox-startup-status)))
+          (setq released t)
+          (should (eq (thread-join thread) 'finished))
+          (should (string-match-p "1 completed" (emacsvox-startup-status)))
+          (should (eq thread (emacsvox--startup-thread 'delayed #'ignore)))
+          (should (= calls 1))
+          (let ((record (gethash 'delayed emacsvox--startup-tasks)))
+            (should (numberp (plist-get record :started)))
+            (should (>= (plist-get record :finished) (plist-get record :started)))))
+      (setq released t)
+      (thread-join thread))))
+
+(ert-deftest emacsvox-startup-retains-task-errors-when-warning-path-fails ()
+  "A task error survives failed warning delivery and is not retried."
+  (let ((emacsvox--startup-tasks (make-hash-table :test #'eq))
+        (calls 0))
+    (cl-letf (((symbol-function 'display-warning)
+               (lambda (&rest _) (error "broken warning path"))))
+      (let ((thread (emacsvox--startup-thread
+                     'broken (lambda () (cl-incf calls) (error "original task failure")))))
+        (thread-join thread)
+        (should (string-match-p "broken: original task failure" (emacsvox-startup-status)))
+        (should (eq thread (emacsvox--startup-thread 'broken #'ignore)))
+        (should (= calls 1))
+        (should (equal (plist-get (gethash 'broken emacsvox--startup-tasks) :error)
+                       '(error "original task failure")))))))
+
+(ert-deftest emacsvox-startup-retains-thread-creation-failure ()
+  "Thread creation errors remain visible and cannot cause duplicate retries."
+  (let ((emacsvox--startup-tasks (make-hash-table :test #'eq))
+        (calls 0))
+    (cl-letf (((symbol-function 'make-thread)
+               (lambda (&rest _) (cl-incf calls) (error "threads unavailable")))
+              ((symbol-function 'display-warning) #'ignore))
+      (should-not (emacsvox--startup-thread 'broken #'ignore))
+      (should-not (emacsvox--startup-thread 'broken #'ignore))
+      (should (= calls 1))
+      (should (string-match-p "threads unavailable" (emacsvox-startup-status))))))
+
+(ert-deftest emacsvox-startup-records-quit-without-consuming-it ()
+  "User quit propagates while the failed operation remains inspectable."
+  (let ((record (emacsvox--startup-record "interrupted" 'registered))
+        caught)
+    (cl-letf (((symbol-function 'display-warning) #'ignore))
+      (condition-case nil
+          (emacsvox--startup-run record (lambda () (signal 'quit nil)))
+        (quit (setq caught t))))
+    (should caught)
+    (should (eq (plist-get record :state) 'failed))
+    (should (equal (plist-get record :error) '(quit)))))
+
+(ert-deftest emacsvox-startup-failure-notifies-despite-warning-failure ()
+  "A real-session failure attempts a notification even when warnings fail."
+  (let ((record (emacsvox--startup-record "core-advice" 'pending))
+        (noninteractive nil)
+        notifications)
+    (cl-letf (((symbol-function 'display-warning)
+               (lambda (&rest _) (error "warning unavailable")))
+              ((symbol-function 'tts-notify)
+               (lambda (text &rest _) (push text notifications))))
+      (emacsvox--startup-run record (lambda () (error "adapter load failed"))))
+    (should (= (length notifications) 1))
+    (should (string-match-p "core-advice failed.*M-x emacsvox-startup-status"
+                            (car notifications)))
+    (should (equal (plist-get record :error) '(error "adapter load failed")))))
+
+(defmacro emacsvox-startup-tests--with-packages (&rest body)
+  "Run BODY with disposable package libraries and isolated registrations."
+  (declare (indent 0) (debug t))
+  `(let* ((directory (make-temp-file "emacsvox-startup-packages-" t))
+          (load-path (cons directory load-path))
+          (load-history (copy-tree load-history))
+          (after-load-alist (copy-tree after-load-alist))
+          (emacsvox--startup-adapters (make-hash-table :test #'equal))
+          (emacsvox--startup-tasks (make-hash-table :test #'eq)))
+     (unwind-protect
+         (cl-letf (((symbol-function 'display-warning) #'ignore))
+           (dolist (package '("ev-immediate" "ev-deferred" "ev-later"))
+             (with-temp-file (expand-file-name (concat package ".el") directory)
+               (insert (format "(provide '%s)\n" package))))
+           (with-temp-file (expand-file-name "ev-broken-adapter.el" directory)
+             (insert "(signal 'file-missing '(\"adapter fixture\" \"missing-data\"))\n"))
+           (with-temp-file (expand-file-name "ev-good-adapter.el" directory)
+             (insert "(provide 'ev-good-adapter)\n"))
+           ,@body)
+       ;; `features' is not dynamically bindable on supported Emacs versions.
+       ;; Remove the actual disposable features before restoring load-history.
+       (dolist (feature '(ev-immediate ev-deferred ev-later
+                                      ev-broken-adapter ev-good-adapter))
+         (when (featurep feature) (unload-feature feature t)))
+       (delete-directory directory t))))
+
+(ert-deftest emacsvox-startup-isolates-immediate-and-deferred-adapter-failures ()
+  "Real after-load dispatch retains both failures and still loads a later adapter."
+  (emacsvox-startup-tests--with-packages
+    (require 'ev-immediate)
+    (let ((pairs '(("ev-immediate" ev-broken-adapter)
+                   ("ev-deferred" ev-broken-adapter)
+                   ("ev-later" ev-good-adapter))))
+      (mapc #'emacsvox-package-setup pairs)
+      (should (string-match-p "2 waiting for packages, 0 running, 1 failed"
+                              (emacsvox-startup-status)))
+      (require 'ev-deferred)
+      (require 'ev-later)
+      (should (featurep 'ev-good-adapter))
+      (should (string-match-p "1 loaded, 0 waiting for packages, 0 running, 2 failed"
+                              (emacsvox-startup-status)))
+      (let ((callbacks (copy-tree after-load-alist)))
+        (mapc #'emacsvox-package-setup pairs)
+        (should (equal callbacks after-load-alist)))
+      ;; Correcting a file and reloading its package must not silently retry
+      ;; an adapter whose first attempt might have installed partial advice.
+      (with-temp-file (expand-file-name "ev-broken-adapter.el" directory)
+        (insert "(provide 'ev-broken-adapter)\n"))
+      (load "ev-deferred" nil t)
+      (should-not (featurep 'ev-broken-adapter))
+      (should (equal
+               (plist-get (gethash (car pairs) emacsvox--startup-adapters) :error)
+               '(file-missing "adapter fixture" "missing-data"))))))
+
+(ert-deftest emacsvox-startup-preparation-continues-after-adapter-failure ()
+  "The actual preparation walk reaches later packages after an immediate error."
+  (emacsvox-startup-tests--with-packages
+    (require 'info)
+    (require 'ev-immediate)
+    (require 'ev-later)
+    (let ((emacsvox-packages-to-prepare '(("ev-immediate" ev-broken-adapter)
+                                         ("ev-later" ev-good-adapter)))
+          (Info-file-list-for-emacs (copy-sequence Info-file-list-for-emacs))
+          (line-move-visual (default-value 'line-move-visual))
+          (use-dialog-box use-dialog-box))
+      (emacsvox-prepare-emacs)
+      (emacsvox-prepare-emacs)
+      (should (featurep 'ev-good-adapter))
+      (should (= (cl-count "emacsvox" Info-file-list-for-emacs :test #'equal) 1))
+      (should (= (hash-table-count emacsvox--startup-adapters) 2)))))
+
+(ert-deftest emacsvox-startup-deferred-adapter-retains-source-preference ()
+  "An adapter registered under source fallback keeps it when loaded later."
+  (emacsvox-startup-tests--with-packages
+    (let ((load-prefer-newer t))
+      (emacsvox-package-setup '("ev-deferred" ev-good-adapter)))
+    (let ((load-prefer-newer nil)
+          (original (symbol-function 'require))
+          observed)
+      (cl-letf (((symbol-function 'require)
+                 (lambda (feature &rest arguments)
+                   (when (eq feature 'ev-good-adapter)
+                     (setq observed load-prefer-newer))
+                   (apply original feature arguments))))
+        (require 'ev-deferred))
+      (should observed)
+      (should-not load-prefer-newer))))
+
+(ert-deftest emacsvox-startup-status-speaks-once-and-opens-readable-errors ()
+  "Interactive status selects its report and speaks; programmatic status is quiet."
+  (emacsvox-startup-tests--with-packages
+    (require 'ev-immediate)
+    (emacsvox-package-setup '("ev-immediate" ev-broken-adapter))
+    (let (spoken)
+      (cl-letf (((symbol-function 'tts-speak) (lambda (text) (push text spoken))))
+        (let ((origin (current-buffer))
+              (summary (emacsvox-startup-status)))
+          (should-not spoken)
+          (should (eq origin (current-buffer)))
+          (save-window-excursion
+            (unwind-protect
+                (progn
+                  (let ((noninteractive nil))
+                    (funcall-interactively #'emacsvox-startup-status))
+                  (should (equal spoken (list summary)))
+                  (should (equal (buffer-name (window-buffer (selected-window)))
+                                 "*Emacsvox Startup*"))
+                  (with-current-buffer "*Emacsvox Startup*"
+                    (should buffer-read-only)
+                    (should (string-match-p "Original condition: (file-missing"
+                                            (buffer-string)))
+                    (should (string-match-p "missing-data" (buffer-string)))
+                    (should (string-match-p "fresh session" (buffer-string)))))
+              (when (get-buffer "*Emacsvox Startup*") (kill-buffer "*Emacsvox Startup*")))))))))
 
 (ert-deftest emacsvox-programming-mode-uses-canonical-tts-state ()
   "Programming-mode setup configures speech through the canonical TTS API."

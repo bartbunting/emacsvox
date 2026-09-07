@@ -73,13 +73,77 @@
 
 ;;;  Package Setup Helper
 
-;; This function adds the appropriate form to `after-load-alist' to
-;; set up Emacsvox support for a given package.  Argument MODULE (a
-;; symbol)specifies the emacsvox module that implements the
-;; speech-enabling extensions for `package' (a string).
+(defvar emacsvox--startup-tasks (make-hash-table :test #'eq)
+  "Named background tasks retained for this Emacs session.
+Completed and failed tasks are retained; starting Emacsvox again does not
+retry partially executed work.")
+
+(defvar emacsvox--startup-adapters (make-hash-table :test #'equal)
+  "Package/adapter registrations and load outcomes for this Emacs session.")
+
+(defun emacsvox--startup-record (label state)
+  "Return an owned startup record with LABEL and initial STATE."
+  (list :label label :state state :started nil :finished nil :error nil
+        :thread nil))
+
+(defun emacsvox--startup-failed (record error-data)
+  "Retain ERROR-DATA in RECORD before attempting failure feedback."
+  (setf (plist-get record :error) error-data
+        (plist-get record :finished) (float-time)
+        (plist-get record :state) 'failed)
+  (let ((summary
+         (format "Emacsvox startup: %s failed. Use M-x emacsvox-startup-status."
+                 (plist-get record :label))))
+    ;; A broken warning or speech path must not erase the original failure
+    ;; or prevent the remaining optional integrations from registering.
+    (condition-case nil
+        (display-warning
+         'emacsvox (format "%s\n%s" summary (error-message-string error-data))
+         :warning)
+      (error nil))
+    (unless noninteractive
+      (condition-case nil (tts-notify summary) (error nil)))))
+
+(defun emacsvox--startup-run (record function)
+  "Run FUNCTION once for RECORD and retain its completion or original error.
+Return FUNCTION's result on success.  Errors are recorded and reported;
+quitting is recorded too, but still propagates to the caller."
+  (setf (plist-get record :state) 'running
+        (plist-get record :started) (float-time))
+  (unwind-protect
+      (condition-case error-data
+          (prog1 (funcall function)
+            (setf (plist-get record :finished) (float-time)
+                  (plist-get record :state) 'completed))
+        (error (emacsvox--startup-failed record error-data) nil)
+        (quit
+         (emacsvox--startup-failed record error-data)
+         (signal (car error-data) (cdr error-data))))
+    (when (eq (plist-get record :state) 'running)
+      (emacsvox--startup-failed
+       record '(error "Startup work exited without completing")))))
+
 (defsubst emacsvox-package-setup (pair)
-  "Setup Emacsvox extension for   PACKAGE by loading MODULE."
-  (with-eval-after-load (cl-first pair) (require (cl-second pair))))
+  "Register the package and adapter in PAIR once for this Emacs session.
+PAIR contains a package library name and its Emacsvox adapter feature.
+Load the adapter immediately if the package is already present; otherwise
+load it after the package.  Retain failures for `emacsvox-startup-status'
+without aborting other registrations or automatically retrying partial loads."
+  (unless (gethash pair emacsvox--startup-adapters)
+    (let* ((package (cl-first pair))
+           (module (cl-second pair))
+           (prefer-newer load-prefer-newer)
+           (record (emacsvox--startup-record
+                    (format "%s (package %s)" module package) 'registered)))
+      ;; Publish ownership before eval-after-load can invoke the callback.
+      (puthash (copy-sequence pair) record emacsvox--startup-adapters)
+      (condition-case error-data
+          (eval-after-load package
+            (lambda ()
+              (when (eq (plist-get record :state) 'registered)
+                (let ((load-prefer-newer (or prefer-newer load-prefer-newer)))
+                  (emacsvox--startup-run record (lambda () (require module)))))))
+        (error (emacsvox--startup-failed record error-data))))))
 
 ;; DocView
 (declare-function doc-view-open-text "doc-view")
@@ -278,7 +342,7 @@
 (defun emacsvox-prepare-emacs ()
   "Prepare Emacs to speech-enable packages when loaded."
   (unless (boundp 'Info-file-list-for-emacs) (require 'info))
-  (push "emacsvox" Info-file-list-for-emacs)
+  (cl-pushnew "emacsvox" Info-file-list-for-emacs :test #'equal)
   (setq-default line-move-visual nil)
   (setq use-dialog-box nil)
   (mapc #'emacsvox-package-setup emacsvox-packages-to-prepare)
@@ -437,14 +501,114 @@ the rest of Emacsvox startup."
       'chimes))
     nil))
 
-(defun emacsvox--startup-thread (function)
-  "Run FUNCTION in a thread with the startup source-loading preference."
-  ;; New threads do not inherit dynamic bindings from the setup guard.
-  (let ((prefer-newer load-prefer-newer))
-    (make-thread
-     (lambda ()
-       (let ((load-prefer-newer prefer-newer))
-         (funcall function))))))
+(defun emacsvox--startup-thread (name function)
+  "Run FUNCTION in the owned background task NAME, returning its thread.
+Retain active, completed, and failed tasks, so repeated startup does not
+duplicate work.  Preserve the setup guard's source-loading preference."
+  (let ((existing (gethash name emacsvox--startup-tasks)))
+    (if existing (plist-get existing :thread)
+      (let ((record (emacsvox--startup-record (symbol-name name) 'pending))
+            (tasks emacsvox--startup-tasks)
+            (adapters emacsvox--startup-adapters)
+            (prefer-newer load-prefer-newer))
+        (puthash name record tasks)
+        (condition-case error-data
+            (setf (plist-get record :thread)
+                  (make-thread
+                   (lambda ()
+                     ;; Threads do not inherit the caller's dynamic bindings.
+                     ;; Capture both the loading policy and the owning tables.
+                     (let ((load-prefer-newer prefer-newer)
+                           (emacsvox--startup-tasks tasks)
+                           (emacsvox--startup-adapters adapters))
+                       (emacsvox--startup-run record function)))
+                   (format "Emacsvox %s" name)))
+          (error (emacsvox--startup-failed record error-data) nil))))))
+
+(defun emacsvox--startup-snapshot (table)
+  "Return sorted copies of the records in TABLE for a status report."
+  (let (records)
+    (maphash (lambda (_ record) (push (copy-sequence record) records)) table)
+    (sort records (lambda (a b) (string-lessp (plist-get a :label)
+                                            (plist-get b :label))))))
+
+(defun emacsvox--startup-count (state records)
+  "Count records with STATE in RECORDS."
+  (cl-count state records :key (lambda (record) (plist-get record :state))))
+
+(defun emacsvox--startup-print-record (record)
+  "Print the state, duration, and original error of RECORD."
+  (let ((started (plist-get record :started))
+        (finished (plist-get record :finished)))
+    (princ (format "%s: %s%s\n" (plist-get record :label)
+                   (plist-get record :state)
+                   (if started
+                       (format " (%.3f seconds%s)" (- (or finished (float-time)) started)
+                               (if finished "" ", still running"))
+                     "")))
+    (when-let* ((error-data (plist-get record :error)))
+      (princ (format "  %s\n  Original condition: %S\n"
+                     (error-message-string error-data) error-data)))))
+
+;;;###autoload
+(defun emacsvox-startup-status ()
+  "Report background startup progress and optional integration failures.
+Interactively, speak a summary and display the full report in Help.
+Programmatically, return the summary without opening a window or speaking.
+This reports integration preparation, not speech-server or routing readiness.
+Repeated startup does not retry failed work; correct the reported problem
+and verify in a fresh Emacs session."
+  (interactive)
+  (let* ((tasks (emacsvox--startup-snapshot emacsvox--startup-tasks))
+         (adapters (emacsvox--startup-snapshot emacsvox--startup-adapters))
+         (failures (cl-remove-if-not
+                    (lambda (record) (eq (plist-get record :state) 'failed))
+                    (append tasks adapters)))
+         (summary
+          (concat
+           (if tasks
+               (format "Startup tasks: %d completed, %d running, %d pending, %d failed. "
+                       (emacsvox--startup-count 'completed tasks)
+                       (emacsvox--startup-count 'running tasks)
+                       (emacsvox--startup-count 'pending tasks)
+                       (emacsvox--startup-count 'failed tasks))
+             "Background startup has not been scheduled. ")
+           (format "Integrations: %d loaded, %d waiting for packages, %d running, %d failed."
+                   (emacsvox--startup-count 'completed adapters)
+                   (emacsvox--startup-count 'registered adapters)
+                   (emacsvox--startup-count 'running adapters)
+                   (emacsvox--startup-count 'failed adapters))
+           (when failures
+             (format " Failure: %s: %s. Correct the problem and test in a fresh Emacs."
+                     (plist-get (car failures) :label)
+                     (truncate-string-to-width
+                      (error-message-string (plist-get (car failures) :error))
+                      160 nil nil t))))))
+    (when (called-interactively-p 'interactive)
+      (let ((emacsvox-speak-messages nil)
+            (inhibit-message t)
+            (help-window-select t))
+        (with-help-window "*Emacsvox Startup*"
+          (princ (concat "Emacsvox startup status\n\n" summary "\n\nBackground tasks\n"))
+          (mapc #'emacsvox--startup-print-record tasks)
+          (princ "\nIntegration load failures\n")
+          (dolist (record adapters)
+            (when (eq (plist-get record :state) 'failed)
+              (emacsvox--startup-print-record record)))
+          (princ
+           (concat
+            "\nWaiting integrations load when their packages are opened.\n"
+            "Package registration completion does not mean every adapter is loaded.\n"
+            "Server protocol and routing readiness are separate checkpoints.\n\n"
+            "For failures, retain the original condition and correct the named\n"
+            "package, adapter, or configuration. Rebuild changed Lisp with the\n"
+            "selected Emacs and verify in a fresh session. Repeating startup or\n"
+            "restarting the speech server does not retry failed adapter loads.\n"
+            "Failed loads can leave partial advice or hooks; no rollback is claimed.\n\n"
+            "Run M-x emacsvox-startup-status again to refresh. Use\n"
+            "M-x emacsvox-speak-buffer to hear this report; q closes it.\n"))))
+      (tts-speak summary))
+    summary))
 
 (defun emacsvox()
   "Start the Emacsvox Audio Desktop.
@@ -506,10 +670,11 @@ commands and options."
   (emacsvox-aural-validate-scheme-registry)
   (emacsvox--restore-startup-presentation)
   (emacsvox-pronounce-load-dictionaries)
-  (emacsvox--startup-thread (lambda () (ems--fastload "emacsvox-advice")))
+  (emacsvox--startup-thread
+   'core-advice (lambda () (ems--fastload "emacsvox-advice")))
   (ems--fastload "emacsvox-websearch")
   (emacsvox-setup-programming-modes)
-  (emacsvox--startup-thread #'emacsvox-prepare-emacs)
+  (emacsvox--startup-thread 'package-preparation #'emacsvox-prepare-emacs)
   (setq line-number-mode nil column-number-mode nil)
   (global-visual-line-mode -1)
   (transient-mark-mode -1)

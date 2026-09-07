@@ -6041,6 +6041,8 @@ Function Index
 * emacsvox-speedbar-click <1>:           emacsvox-speedbar.  (line   20)
 * emacsvox-speedbar-goto-speedbar:       emacsvox-speedbar.  (line   26)
 * emacsvox-speedbar-goto-speedbar <1>:   emacsvox-speedbar.  (line   27)
+* emacsvox-startup-status:               emacsvox.           (line   20)
+* emacsvox-startup-status <1>:           emacsvox.           (line   21)
 * emacsvox-submit-bug:                   emacsvox-speak.     (line  960)
 * emacsvox-submit-bug <1>:               emacsvox-speak.     (line  961)
 * emacsvox-sudoku-board-columns-summarize: emacsvox-sudoku.  (line   17)
