@@ -10,6 +10,23 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.4][NEWS for Emacsvox 2026.9.4]].
 
+** Voice palette selections apply consistently
+
+Search and incremental-search hits now use the active palette's bolden voice.
+Nonincremental searches, including regexp and history-repeat commands, speak
+the destination line and cue a successful hit once.
+
+Completion, status speech, spelling feedback, widgets, and other integrations
+now retain named voices instead of freezing legacy ACSS presets. Calendar
+marked dates and CPerl/table indentation use the normal speech path, and the
+named-voice sampler follows the active palette. Voice Lock and explicit aural
+rules retain their existing control over formatting voices.
+
+Restart Emacs after updating to pick up the new voice defaults. Explicit
+personal voice assignments are preserved; use names such as ='voice-bolden=
+when those assignments should follow the palette. Legacy =voice-*-settings=
+remain the fallback for voices without custom palette definitions.
+
 ** Responsive shell completion under WSL
 
 Shell command-name completion now skips Windows drive directories by default,

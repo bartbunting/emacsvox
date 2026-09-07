@@ -474,6 +474,23 @@ use @@texinfo:@kbd{P}@@ to audition the palette sequence before editing, and use
 activate a selected palette.  Built-in palettes remain intact; editing can
 create a personal copy.
 
+With Voice Lock enabled, named formatting voices such as /bolden/ and
+/annotate/ follow the active palette in search feedback, completion,
+status speech, and the named-voice sampler. Explicit aural rules can override
+these formatting voices.
+
+If you assign voices in your personal Lisp configuration, use a name such as
+~'voice-bolden~ to follow the palette. For example:
+
+#+begin_src emacs-lisp
+(setq emacsvox-calendar-mark-personality 'voice-bolden)
+#+end_src
+
+Legacy settings such as ~voice-bolden-settings~ still supply the fallback
+when the palette has no custom definition. Explicit ACSS styles retain their
+own settings. Restart Emacs after updating Emacsvox to load changed voice
+defaults; explicit choices in your personal configuration remain in effect.
+
 Use /Voice Workbench/ when the question involves installed voices, engines, or
 routes.  Open it from Aural Home with @@texinfo:@kbd{W}@@.  Its main views are:
 

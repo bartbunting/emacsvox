@@ -1,0 +1,320 @@
+#+title: Voice customisation audit and resolution
+#+date: 2026-09-08
+
+* Resolution
+
+Implemented on 2026-09-08 in four commits:
+
+- =d0de0deea=: search and isearch preserve the named bolden voice, including
+  the previously uncommitted nonincremental search feedback.
+- =f6a8effe8=: the other 88 text-emission sites retain named voices.
+- =60f32731e=: all 12 integration defaults retain names and preserve explicit
+  user assignments.
+- =497e6a4ae=: Calendar, CPerl and etable use normal native speech; the named
+  voice sampler resolves through the palette; revision speech uses
+  voice-smoothen, whose default matches the old hard-coded ACSS style.
+
+The post-change structural scan finds no remaining early evaluations of the
+built-in voice variables. The 107 occurrences in the original inventory are
+resolved. The two dynamic sampler properties and literal revision style are
+also addressed. A source audit test guards emitted personalities, cached
+defaults, and new direct application calls to the low-level voice helper.
+
+The low-level tts-speak-using-voice API itself remains available for the legacy
+renderer. Applications now use the native path rather than changing that
+compatibility API's queuing contract. Explicit ACSS experiment samples retain
+their intended concrete styles.
+
+There is no automatic rewrite of already bound voice options in a live Emacs:
+those values cannot reliably be distinguished from explicit personal choices.
+Restart after updating to load the new defaults. Personal assignments remain
+in effect; use a quoted voice name when an assignment should follow a palette.
+
+Validation after implementation:
+
+- Full unit suite: 3,091 passed, one mu4e registration test skipped,
+  no unexpected results (3,092 total).
+- Compatibility suite on the selected Emacs 31.0.90: all 257 passed. This is
+  not a claim of a separate Emacs 30.2 run.
+- Targeted tests exercise palette changes after text generation, disabled
+  Voice Lock, legacy fallback, preserved explicit options, isearch in both
+  directions, the sampler, and the migrated speech callers.
+- Fresh compiled-code checks passed for search, core spelling, and migrated
+  direct callers. Byte-code and non-mutating documentation checks passed.
+- No audio listening test was performed. The running user's Emacs was not
+  restarted or broadly reloaded during this repair.
+
+The following findings and inventory describe the original audit snapshot,
+before these repairs. Their source line numbers refer to that snapshot.
+
+* Original findings
+
+The early-evaluation mismatch is widespread. In the audited working tree,
+107 references across 30 Lisp files evaluate built-in voice variables before
+palette resolution: 93 text-formatting sites, 12 cached defaults, and two
+calls to the low-level voice-speaking function. Of these, 29 evaluate
+voice-bolden specifically. This excludes the already corrected nonincremental
+search advice, which now retains the symbol 'voice-bolden.
+
+These are source-level occurrences, not 107 independently reproduced audible
+failures. Some belong to optional or retained integrations. Actual output
+also depends on Voice Lock, semantic rules, the active palette, and adapter
+capabilities. Four isolated behavioural probes confirm the underlying
+mechanisms; integrations were not all activated or tested with audio.
+
+The initial audit changed no production code or live Emacs settings.
+The resolution above records the subsequent implementation.
+
+* What users can and cannot customise
+
+Palette selections such as the bolden entry in the Aural Voice Workbench
+are bypassed at these sites. The statement that users cannot customise
+voices at all would be too broad:
+
+- Legacy voice-bolden-settings customisation still updates the voice-bolden
+  variable through the defvoice setter. A later direct evaluation of that
+  variable can therefore use the new legacy preset.
+- A separate variable initialised with (defvar option voice-bolden) captures
+  the preset at initialisation. Later changes to voice-bolden do not update
+  that copy. Text already given the generated personality has the same issue.
+- Quoted face-to-voice mappings retain names and can use customised palette
+  entries through the native planner. They do not have this early-evaluation
+  defect, although other presentation policy can legitimately override them.
+- Deliberate explicit ACSS styles and physical voice samples are a separate
+  use case; they should not automatically be converted to named palette roles.
+
+* Root cause and evidence
+
+In [[file:lisp/voice-setup.el::(defmacro defvoice][defvoice]], a variable such as
+voice-bolden holds a generated ACSS symbol. Its custom setter replaces that
+value when the legacy settings change. The default bolden value is
+acss-a4-s6.
+
+#+begin_src emacs-lisp
+;; Loses the named role before the planner sees it:
+(propertize "hit" 'personality voice-bolden)
+;; Preserves the role so the active palette can resolve it:
+(propertize "hit" 'personality 'voice-bolden)
+#+end_src
+
+[[file:lisp/emacsvox-aural-compiler.el::(defun emacsvox-aural--palette-voice-definition][Palette resolution]]
+recognises voice-bolden as the legacy alias for the portable bolden entry.
+It does not reconstruct bolden from acss-a4-s6. That reverse inference would
+be unreliable: multiple named voices may share an identical generated style.
+
+This loss can also affect named routing preferences. The native transport
+uses the compiled request as its logical voice identity; an ACSS request and
+a named bolden request are different identities. See
+[[file:lisp/emacsvox-aural-transport.el::(defun emacsvox-aural--timeline-logical-voice][timeline logical voice selection]].
+
+* Priority findings
+
+** Search and completion feedback
+
+[[file:lisp/emacsvox-advice.el::(defun emacsvox--advice-isearch-search-after][Isearch]]
+still has five early evaluations: match speech, the shortened search string,
+the match following deletion, yanked text, and history-item speech.
+The isolated isearch probe confirms that its matched text still carries the
+generated ACSS symbol. Existing tests had asserted that same value, so they
+accepted the mismatch.
+
+[[file:lisp/emacsvox-corfu.el::(defun emacsvox-corfu--candidate-with-annotation][Corfu]]
+has ten occurrences, including candidates, annotations, completion counts,
+expansion feedback, and completed text. Its --voice helper copies the
+supplied personality into text without preserving or recovering the name.
+Helm update feedback has another occurrence.
+
+** Common speech and editing feedback
+
+emacsvox-speak.el has 22 occurrences, including its paragraph default,
+mode/header-line summaries, line numbers, spelling, mark/kill context,
+window descriptions, and selective-display feedback.
+
+Other examples include spelling suggestions (ispell), widget selections,
+RefTeX highlighting, package summaries, colour descriptions, error feedback,
+and buffer summaries for Dired, Org, Notmuch, Magit, Python and Transient.
+Magit alone has 12 occurrences, chiefly annotate and summary voices.
+
+** Cached defaults
+
+Twelve defvar initialisers copy generated presets in Calendar, Eterm, EUDC,
+Forms, Hide, paragraph speech, and Speedbar. These can miss both palette
+selection and subsequent legacy-setting changes. Fixing a default in source
+will not automatically replace an already bound value in a live Emacs.
+Any migration needs to preserve explicit user choices.
+
+** Low-level speech bypass
+
+[[file:lisp/tts-speak.el::(defun tts-speak-using-voice][tts-speak-using-voice]]
+resolves a bound symbol directly to its value and queues backend voice codes,
+without the native palette compiler. Therefore merely quoting its argument
+is insufficient. Direct application callers are Calendar marked-date speech,
+CPerl indentation, and etable indentation. The last two are included in the
+107 occurrences; Calendar reaches this path through its cached default.
+The legacy fallback branch of tts-audio-format also calls this helper;
+prepared native text takes the concrete-plan branch instead.
+
+** Additional sites outside the 107 direct references
+
+[[file:lisp/emacsvox-extras.el::(defun emacsvox-wizards-show-voices][The legacy named-voice sampler]]
+uses (symbol-value v) in two text properties. Thus it demonstrates legacy
+preset values rather than current named palette voices. Its desired role
+needs to be made explicit before changing it: its current text also displays
+the generated preset name.
+
+[[file:lisp/emacsvox-preamble.el::(defun emacsvox-get-revision][Revision speech]]
+uses the literal acss-s4-r6. It cannot follow a named role's palette override.
+This is a related hard-coded style, not an early-evaluated voice variable;
+the intended semantic role must be decided rather than guessed.
+
+* Repair approach
+
+1. Preserve built-in personality names at text-emission sites, beginning
+   with search, completion, core speech, and widget feedback. Test final
+   prepared voice requests against a deliberately distinct custom palette.
+2. Handle the 12 cached defaults separately. Preserve user-assigned values,
+   and provide a deliberate strategy for already running sessions.
+3. Migrate the three direct low-level application callers to native
+   presentation, or design a compatible low-level change after checking
+   transaction and adapter requirements. A blanket quote replacement does
+   not address this path.
+4. Decide whether the old named-voice sampler should show legacy presets or
+   active palette voices. Keep explicit ACSS experiment samplers intentional.
+5. Add an audit check for newly introduced early evaluations and cover
+   legacy settings, palette overrides, routing identity, and Voice Lock.
+   Do not try to globally reverse-map arbitrary ACSS symbols to named roles.
+
+This was the proposed repair sequence. All repository ADRs were read before
+the subsequent implementation; see Resolution for the completed changes.
+
+* Verification and scope
+
+- Read all 285 .el files currently under lisp with the selected Emacs 31.0.90.
+  The structural scan excludes quoted declarations, comments, strings, and
+  defvoice declarations, and tracks evaluated references to the built-in
+  voices declared in voice-defs.el. No reader errors remained in the scan.
+- Inspected all resulting call shapes: propertize (59), put-text-property
+  (19), temporary-personality wrappers (5), Corfu's helper (10), defvar
+  initialisers (12), and low-level speech (2).
+- Supplemented this with searches for symbol-value, explicit ACSS constants,
+  direct backend voice commands, and low-level speech callers.
+- make check-emacs passed.
+- Four fresh-process behavioural probes passed, confirming evaluated versus
+  named palette resolution, the current isearch output, legacy setter versus
+  cached-default behaviour, and the low-level helper's bypass.
+- The existing ERT test
+  emacsvox-aural-transport-legacy-personality-uses-custom-palette-entry passed,
+  confirming that the native path already supports preserved names.
+- No audio listening test or full integration suite was performed. Reports
+  do not require a rebuild; production source was unchanged during this audit.
+
+The inventory is specific to this dirty worktree. Counts are not a proof
+that dynamically generated or third-party code contains no further cases.
+
+* Inventory
+
+Locations below identify enclosing source forms. Counts greater than one
+mean several evaluated voice references within that form.
+
+| File / source form | Voice | Count | Mechanism |
+|-
+| [[file:lisp/amixer.el::354][amixer.el:354 amixer-volume-adjust]] | voice-bolden | 1 | propertize |
+| [[file:lisp/emacsvox-advice.el::452][emacsvox-advice.el:452 emacsvox-advice--define-interactive-after-advice]] | voice-smoothen | 1 | propertize |
+| [[file:lisp/emacsvox-advice.el::1038][emacsvox-advice.el:1038 emacsvox-fancy-error-handler]] | voice-bolden | 1 | propertize |
+| [[file:lisp/emacsvox-advice.el::2393][emacsvox-advice.el:2393 emacsvox--advice-isearch-search-after]] | voice-bolden | 1 | ems-set-personality-temporarily |
+| [[file:lisp/emacsvox-advice.el::2411][emacsvox-advice.el:2411 emacsvox--advice-isearch-delete-char-after]] | voice-bolden | 1 | propertize |
+| [[file:lisp/emacsvox-advice.el::2411][emacsvox-advice.el:2411 emacsvox--advice-isearch-delete-char-after]] | voice-bolden | 1 | ems-set-personality-temporarily |
+| [[file:lisp/emacsvox-advice.el::2429][emacsvox-advice.el:2429 emacsvox-advice--define-interactive-after-advice]] | voice-bolden | 1 | propertize |
+| [[file:lisp/emacsvox-advice.el::2435][emacsvox-advice.el:2435 emacsvox-advice--define-interactive-after-advice]] | voice-bolden | 1 | propertize |
+| [[file:lisp/emacsvox-bs.el::74][emacsvox-bs.el:74 emacsvox-bs--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[file:lisp/emacsvox-bs.el::74][emacsvox-bs.el:74 emacsvox-bs--buffer-summary]] | voice-animate | 1 | propertize |
+| [[file:lisp/emacsvox-bs.el::101][emacsvox-bs.el:101 emacsvox-bs-speak-buffer-line]] | voice-smoothen | 1 | propertize |
+| [[file:lisp/emacsvox-calendar.el::59][emacsvox-calendar.el:59 emacsvox-calendar-mark-personality]] | voice-bolden | 1 | defvar |
+| [[file:lisp/emacsvox-chess.el::147][emacsvox-chess.el:147 emacsvox-chess-describe-square]] | voice-bolden-extra | 1 | propertize |
+| [[file:lisp/emacsvox-chess.el::147][emacsvox-chess.el:147 emacsvox-chess-describe-square]] | voice-monotone-extra | 1 | propertize |
+| [[file:lisp/emacsvox-chess.el::147][emacsvox-chess.el:147 emacsvox-chess-describe-square]] | voice-lighten-extra | 1 | propertize |
+| [[file:lisp/emacsvox-chess.el::491][emacsvox-chess.el:491 emacsvox-chess-square-name]] | voice-monotone-extra | 1 | propertize |
+| [[file:lisp/emacsvox-chess.el::491][emacsvox-chess.el:491 emacsvox-chess-square-name]] | voice-lighten-extra | 1 | propertize |
+| [[file:lisp/emacsvox-corfu.el::128][emacsvox-corfu.el:128 emacsvox-corfu--candidate-with-annotation]] | voice-annotate | 3 | emacsvox-corfu--voice |
+| [[file:lisp/emacsvox-corfu.el::128][emacsvox-corfu.el:128 emacsvox-corfu--candidate-with-annotation]] | voice-bolden | 1 | emacsvox-corfu--voice |
+| [[file:lisp/emacsvox-corfu.el::164][emacsvox-corfu.el:164 emacsvox-corfu--count-text]] | voice-annotate | 1 | emacsvox-corfu--voice |
+| [[file:lisp/emacsvox-corfu.el::269][emacsvox-corfu.el:269 emacsvox-corfu--expansion-text]] | voice-bolden | 1 | emacsvox-corfu--voice |
+| [[file:lisp/emacsvox-corfu.el::269][emacsvox-corfu.el:269 emacsvox-corfu--expansion-text]] | voice-annotate | 1 | emacsvox-corfu--voice |
+| [[file:lisp/emacsvox-corfu.el::342][emacsvox-corfu.el:342 emacsvox-corfu--complete-around]] | voice-bolden | 1 | emacsvox-corfu--voice |
+| [[file:lisp/emacsvox-corfu.el::419][emacsvox-corfu.el:419 emacsvox--advice-corfu--in-region-1-around]] | voice-bolden | 1 | emacsvox-corfu--voice |
+| [[file:lisp/emacsvox-corfu.el::443][emacsvox-corfu.el:443 emacsvox--advice-corfu--update-after]] | voice-annotate | 1 | emacsvox-corfu--voice |
+| [[file:lisp/emacsvox-cperl.el::59][emacsvox-cperl.el:59 emacsvox--advice-cperl-linefeed-around]] | voice-annotate | 1 | tts-speak-using-voice |
+| [[file:lisp/emacsvox-dired.el::189][emacsvox-dired.el:189 emacsvox-dired--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[file:lisp/emacsvox-dired.el::189][emacsvox-dired.el:189 emacsvox-dired--buffer-summary]] | voice-animate | 1 | propertize |
+| [[file:lisp/emacsvox-elfeed.el::147][emacsvox-elfeed.el:147 emacsvox-elfeed-speak-entry-at-point]] | voice-brighten | 1 | propertize |
+| [[file:lisp/emacsvox-etable.el::132][emacsvox-etable.el:132 emacsvox--advice-*table--cell-newline-and-indent-around]] | voice-annotate | 1 | tts-speak-using-voice |
+| [[file:lisp/emacsvox-eterm.el::174][emacsvox-eterm.el:174 emacsvox-eterm-highlight-personality]] | voice-bolden | 1 | defvar |
+| [[file:lisp/emacsvox-eterm.el::177][emacsvox-eterm.el:177 emacsvox-eterm-bold-personality]] | voice-bolden | 1 | defvar |
+| [[file:lisp/emacsvox-eudc.el::88][emacsvox-eudc.el:88 emacsvox--advice-eudc-query-form-after]] | voice-smoothen | 1 | propertize |
+| [[file:lisp/emacsvox-eudc.el::131][emacsvox-eudc.el:131 emacsvox-eudc-attribute-value-personality]] | voice-animate | 1 | defvar |
+| [[file:lisp/emacsvox-forms.el::71][emacsvox-forms.el:71 emacsvox-forms-ro-voice]] | voice-annotate | 1 | defvar |
+| [[file:lisp/emacsvox-helm.el::64][emacsvox-helm.el:64 emacsvox-helm-cue-update]] | voice-bolden | 1 | propertize |
+| [[file:lisp/emacsvox-hide.el::44][emacsvox-hide.el:44 emacsvox-hidden-header-line-personality]] | voice-annotate | 1 | defvar |
+| [[file:lisp/emacsvox-ispell.el::84][emacsvox-ispell.el:84 emacsvox--advice-ispell-command-loop-before]] | voice-bolden | 1 | ems-set-personality-temporarily |
+| [[file:lisp/emacsvox-ispell.el::84][emacsvox-ispell.el:84 emacsvox--advice-ispell-command-loop-before]] | voice-smoothen | 1 | propertize |
+| [[file:lisp/emacsvox-m-player.el::157][emacsvox-m-player.el:157 emacsvox-m-player-mode-line]] | voice-smoothen-extra | 2 | propertize |
+| [[file:lisp/emacsvox-magit.el::343][emacsvox-magit.el:343 emacsvox-magit--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::343][emacsvox-magit.el:343 emacsvox-magit--buffer-summary]] | voice-animate | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::451][emacsvox-magit.el:451 emacsvox-magit--line-content]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::648][emacsvox-magit.el:648 emacsvox-magit--present-visibility]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::815][emacsvox-magit.el:815 emacsvox-magit--blob-summary]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::1232][emacsvox-magit.el:1232 emacsvox-magit--copied-content]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::1471][emacsvox-magit.el:1471 emacsvox-magit--present-view-setting]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::1497][emacsvox-magit.el:1497 emacsvox-magit--call-transient-refresh]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::1870][emacsvox-magit.el:1870 emacsvox-magit--present-opened-buffer]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::2105][emacsvox-magit.el:2105 emacsvox-magit--repolist-result-content]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::2399][emacsvox-magit.el:2399 emacsvox-magit--commit-labelled-content]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-magit.el::2727][emacsvox-magit.el:2727 emacsvox-magit--present-rebase-line]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-notmuch.el::573][emacsvox-notmuch.el:573 emacsvox-notmuch--view-summary]] | voice-lighten-medium | 1 | propertize |
+| [[file:lisp/emacsvox-notmuch.el::573][emacsvox-notmuch.el:573 emacsvox-notmuch--view-summary]] | voice-animate | 1 | propertize |
+| [[file:lisp/emacsvox-org.el::140][emacsvox-org.el:140 emacsvox-org--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[file:lisp/emacsvox-org.el::140][emacsvox-org.el:140 emacsvox-org--buffer-summary]] | voice-animate | 1 | propertize |
+| [[file:lisp/emacsvox-package.el::64][emacsvox-package.el:64 emacsvox-package-summarize-line]] | voice-bolden-medium | 1 | put-text-property |
+| [[file:lisp/emacsvox-pronounce.el::60][emacsvox-pronounce.el:60 ems--pronounce-string-template]] | voice-smoothen | 1 | propertize |
+| [[file:lisp/emacsvox-py.el::106][emacsvox-py.el:106 emacsvox-py--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[file:lisp/emacsvox-py.el::106][emacsvox-py.el:106 emacsvox-py--buffer-summary]] | voice-animate | 1 | propertize |
+| [[file:lisp/emacsvox-py.el::371][emacsvox-py.el:371 emacsvox--advice-py-newline-and-indent-after]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-reftex.el::261][emacsvox-reftex.el:261 emacsvox--advice-reftex-highlight-after]] | voice-bolden | 1 | put-text-property |
+| [[file:lisp/emacsvox-speak.el::372][emacsvox-speak.el:372 emacsvox-speak-paragraph-personality]] | voice-animate | 1 | defvar |
+| [[file:lisp/emacsvox-speak.el::528][emacsvox-speak.el:528 emacsvox-get-current-percentage-verbosely]] | voice-monotone-extra | 1 | propertize |
+| [[file:lisp/emacsvox-speak.el::1115][emacsvox-speak.el:1115 emacsvox-speak-line-with-speaker]] | voice-lighten | 1 | propertize |
+| [[file:lisp/emacsvox-speak.el::1398][emacsvox-speak.el:1398 emacsvox-speak-spell-word]] | voice-animate | 1 | put-text-property |
+| [[file:lisp/emacsvox-speak.el::2031][emacsvox-speak.el:2031 emacsvox-get-voicefied-recursion-info]] | voice-smoothen | 1 | propertize |
+| [[file:lisp/emacsvox-speak.el::2039][emacsvox-speak.el:2039 emacsvox-get-voicefied-frame-info]] | voice-lighten-extra | 1 | propertize |
+| [[file:lisp/emacsvox-speak.el::2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-lighten | 1 | propertize |
+| [[file:lisp/emacsvox-speak.el::2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-bolden-medium | 1 | put-text-property |
+| [[file:lisp/emacsvox-speak.el::2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-lighten-medium | 1 | propertize |
+| [[file:lisp/emacsvox-speak.el::2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-smoothen | 2 | propertize |
+| [[file:lisp/emacsvox-speak.el::2137][emacsvox-speak.el:2137 emacsvox-speak-mode-line]] | voice-animate | 1 | propertize |
+| [[file:lisp/emacsvox-speak.el::2282][emacsvox-speak.el:2282 emacsvox-speak-header-line]] | voice-smoothen | 1 | propertize |
+| [[file:lisp/emacsvox-speak.el::2493][emacsvox-speak.el:2493 emacsvox-speak-current-kill]] | voice-annotate | 1 | put-text-property |
+| [[file:lisp/emacsvox-speak.el::2558][emacsvox-speak.el:2558 emacsvox-speak-current-mark]] | voice-annotate | 1 | put-text-property |
+| [[file:lisp/emacsvox-speak.el::2558][emacsvox-speak.el:2558 emacsvox-speak-current-mark]] | voice-animate | 1 | ems-set-personality-temporarily |
+| [[file:lisp/emacsvox-speak.el::3083][emacsvox-speak.el:3083 emacsvox-mark-speak-mark-line]] | voice-animate | 1 | ems-set-personality-temporarily |
+| [[file:lisp/emacsvox-speak.el::3255][emacsvox-speak.el:3255 emacsvox-describe-tapestry]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-speak.el::3255][emacsvox-speak.el:3255 emacsvox-describe-tapestry]] | voice-animate | 1 | propertize |
+| [[file:lisp/emacsvox-speak.el::3255][emacsvox-speak.el:3255 emacsvox-describe-tapestry]] | voice-bolden | 2 | put-text-property |
+| [[file:lisp/emacsvox-speak.el::3507][emacsvox-speak.el:3507 emacsvox-selective-display]] | voice-bolden | 1 | propertize |
+| [[file:lisp/emacsvox-speedbar.el::252][emacsvox-speedbar.el:252 emacsvox-speedbar-button-personality]] | voice-bolden | 1 | defvar |
+| [[file:lisp/emacsvox-speedbar.el::255][emacsvox-speedbar.el:255 emacsvox-speedbar-selected-personality]] | voice-animate | 1 | defvar |
+| [[file:lisp/emacsvox-speedbar.el::258][emacsvox-speedbar.el:258 emacsvox-speedbar-directory-personality]] | voice-bolden-medium | 1 | defvar |
+| [[file:lisp/emacsvox-speedbar.el::265][emacsvox-speedbar.el:265 emacsvox-speedbar-highlight-personality]] | voice-animate | 1 | defvar |
+| [[file:lisp/emacsvox-speedbar.el::268][emacsvox-speedbar.el:268 emacsvox-speedbar-tag-personality]] | voice-monotone-extra | 1 | defvar |
+| [[file:lisp/emacsvox-transient.el::471][emacsvox-transient.el:471 emacsvox-transient--buffer-summary]] | voice-lighten-medium | 1 | propertize |
+| [[file:lisp/emacsvox-transient.el::471][emacsvox-transient.el:471 emacsvox-transient--buffer-summary]] | voice-animate | 1 | propertize |
+| [[file:lisp/emacsvox-view.el::155][emacsvox-view.el:155 emacsvox--advice-View-goto-line-after]] | voice-annotate | 1 | put-text-property |
+| [[file:lisp/emacsvox-widget.el::73][emacsvox-widget.el:73 emacsvox-widget-help-echo]] | voice-animate | 1 | put-text-property |
+| [[file:lisp/emacsvox-widget.el::138][emacsvox-widget.el:138 emacsvox-widget-default-summarize]] | voice-bolden | 1 | put-text-property |
+| [[file:lisp/emacsvox-widget.el::354][emacsvox-widget.el:354 emacsvox-widget-help-checklist]] | voice-bolden | 1 | put-text-property |
+| [[file:lisp/emacsvox-widget.el::426][emacsvox-widget.el:426 emacsvox-widget-help-radio-button-choice]] | voice-bolden | 1 | put-text-property |
+| [[file:lisp/emacsvox-widget.el::449][emacsvox-widget.el:449 emacsvox-widget-help-editable-list]] | voice-bolden | 1 | put-text-property |
+| [[file:lisp/emacsvox-wizards.el::567][emacsvox-wizards.el:567 emacsvox-skip-blank-lines-forward]] | voice-annotate | 1 | put-text-property |
+| [[file:lisp/emacsvox-wizards.el::600][emacsvox-wizards.el:600 emacsvox-skip-blank-lines-backward]] | voice-annotate | 1 | put-text-property |
+| [[file:lisp/emacsvox-wizards.el::1894][emacsvox-wizards.el:1894 ems--color-name]] | voice-bolden | 1 | propertize |
+| [[file:lisp/emacsvox-wizards.el::1894][emacsvox-wizards.el:1894 ems--color-name]] | voice-annotate | 1 | propertize |
+| [[file:lisp/emacsvox-wizards.el::1987][emacsvox-wizards.el:1987 ems--color-wheel-describe]] | voice-bolden | 3 | put-text-property |

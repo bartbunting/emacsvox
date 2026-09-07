@@ -2842,6 +2842,22 @@ voices, use ‘P’ to audition the palette sequence before editing, and use
 ‘a’ in the palette manager to activate a selected palette.  Built-in
 palettes remain intact; editing can create a personal copy.
 
+   With Voice Lock enabled, named formatting voices such as _bolden_ and
+_annotate_ follow the active palette in search feedback, completion,
+status speech, and the named-voice sampler.  Explicit aural rules can
+override these formatting voices.
+
+   If you assign voices in your personal Lisp configuration, use a name
+such as ‘'voice-bolden’ to follow the palette.  For example:
+
+     (setq emacsvox-calendar-mark-personality 'voice-bolden)
+
+   Legacy settings such as ‘voice-bolden-settings’ still supply the
+fallback when the palette has no custom definition.  Explicit ACSS
+styles retain their own settings.  Restart Emacs after updating Emacsvox
+to load changed voice defaults; explicit choices in your personal
+configuration remain in effect.
+
    Use _Voice Workbench_ when the question involves installed voices,
 engines, or routes.  Open it from Aural Home with ‘W’.  Its main views
 are:
@@ -6539,53 +6555,53 @@ Node: Explaining Presentation120186
 Node: Adjusting Presentation122214
 Node: Presentation Profiles128100
 Node: Voices And Routing129777
-Ref: Browse Eloquence And Compare Pitch138567
-Ref: Keep A Voice Experiment139814
-Ref: Change A Heading Voice Add A Cue Or Silence One140814
-Ref: Change A Blank-Line Tone141775
-Ref: Choose An Engine And Recover Unfinished Work142532
-Node: Sounds And Space143690
-Node: Presentation Troubleshooting145326
-Node: Voice Lock147364
-Node: Using Online Help150571
-Node: Emacs Packages154633
-Node: Document Authoring156007
-Node: Structured Editing156561
-Node: Browsing Structure157544
-Node: Web Browsing158142
-Node: Messaging158977
-Node: Editing Code159475
-Node: Development Environment159994
-Node: Desktop Management161530
-Node: Personal Information Management162032
-Node: Desktop Applications162564
-Node: Notmuch Mail170706
-Ref: Notmuch fields and privacy180049
-Node: Agent Shell185757
-Node: EAT Terminal Access198228
-Node: Running Terminal Based Applications215487
-Node: Starting Term216442
-Node: Term Input Modes217281
-Node: Term Speech Feedback218441
-Node: Reviewing The Term Screen219635
-Node: Term Help And Recovery221536
-Node: Emacsvox Keyboard Commands222435
-Node: Copyright224680
-Node: Acknowledgments225267
-Node: Developer Guide226293
-Node: Documentation Maintenance227457
-Node: Speech Server Protocols232257
-Ref: Testing A Direct Legacy Server238164
-Ref: Commands That Queue Output238723
-Ref: Commands That Set State241757
-Node: Integration Maintenance244351
-Ref: Background startup ownership and failure recovery247081
-Ref: Supported Emacs versions250234
-Ref: Native Windows builds252440
-Ref: Remote preview validation254500
-Ref: Internal ownership and renderer tests273575
-Ref: Upstream contract layers277031
-Node: Concept Index298135
+Ref: Browse Eloquence And Compare Pitch139325
+Ref: Keep A Voice Experiment140572
+Ref: Change A Heading Voice Add A Cue Or Silence One141572
+Ref: Change A Blank-Line Tone142533
+Ref: Choose An Engine And Recover Unfinished Work143290
+Node: Sounds And Space144448
+Node: Presentation Troubleshooting146084
+Node: Voice Lock148122
+Node: Using Online Help151329
+Node: Emacs Packages155391
+Node: Document Authoring156765
+Node: Structured Editing157319
+Node: Browsing Structure158302
+Node: Web Browsing158900
+Node: Messaging159735
+Node: Editing Code160233
+Node: Development Environment160752
+Node: Desktop Management162288
+Node: Personal Information Management162790
+Node: Desktop Applications163322
+Node: Notmuch Mail171464
+Ref: Notmuch fields and privacy180807
+Node: Agent Shell186515
+Node: EAT Terminal Access198986
+Node: Running Terminal Based Applications216245
+Node: Starting Term217200
+Node: Term Input Modes218039
+Node: Term Speech Feedback219199
+Node: Reviewing The Term Screen220393
+Node: Term Help And Recovery222294
+Node: Emacsvox Keyboard Commands223193
+Node: Copyright225438
+Node: Acknowledgments226025
+Node: Developer Guide227051
+Node: Documentation Maintenance228215
+Node: Speech Server Protocols233015
+Ref: Testing A Direct Legacy Server238922
+Ref: Commands That Queue Output239481
+Ref: Commands That Set State242515
+Node: Integration Maintenance245109
+Ref: Background startup ownership and failure recovery247839
+Ref: Supported Emacs versions250992
+Ref: Native Windows builds253198
+Ref: Remote preview validation255258
+Ref: Internal ownership and renderer tests274333
+Ref: Upstream contract layers277789
+Node: Concept Index298893
 
 End Tag Table
 
