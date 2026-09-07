@@ -8,6 +8,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'ert)
 (require 'subr-x)
 
 (let* ((build-directory
@@ -327,6 +328,30 @@
               (tts--protocol-stop)))
           (unless (= calls 1)
             (error "Compiled protocol function bypassed native advice")))
-      (advice-remove 'tts--protocol-stop advice))))
+      (advice-remove 'tts--protocol-stop advice)))
+  ;; Reuse the independently stated style contracts with the compiled rules,
+  ;; compiler, adapter, and transport already resident.  Test files require
+  ;; these features; they must not reload their source implementations.
+  (dolist (file '("emacsvox-aural-rules-tests.el"
+                  "emacsvox-aural-schemes-tests.el"
+                  "emacsvox-aural-transport-tests.el"))
+    (load (expand-file-name (concat "test/" file) root-directory) nil nil t))
+  (dolist (function '(emacsvox-aural--validate-voice-style
+                      emacsvox-aural-compile-voice-style
+                      omnivox--portable-style-acss
+                      emacsvox-aural--timeline-style-acss))
+    (unless (file-in-directory-p (symbol-file function 'defun) build-directory)
+      (error "Voice-style contract escaped compiled build: %S" function)))
+  (let ((stats
+         (ert-run-tests-batch
+          '(or "^emacsvox-aural-rules-"
+               emacsvox-aural-schemes-persist-personal-voice-palettes
+               emacsvox-aural-native-voice-fields-preserve-zero-and-omission
+               emacsvox-aural-transport-preset-nil-and-zero-retain-current-behavior))))
+    (unless (and (> (ert-stats-total stats) 0)
+                 (= (ert-stats-completed stats) (ert-stats-total stats))
+                 (= (ert-stats-completed-unexpected stats) 0)
+                 (= (ert-stats-skipped stats) 0))
+      (error "Compiled voice-style contracts failed"))))
 
 ;;; verify-compiled-aural.el ends here

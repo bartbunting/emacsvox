@@ -67,15 +67,54 @@
   '(overlay insert)
   "Ways a tone action may share or advance the speech timeline.")
 
+(defconst emacsvox-aural--voice-style-fields
+  '((:preset :group preset :type preset)
+    (:family :group acss :type family)
+    (:average-pitch :group acss :type integer :minimum 0 :maximum 9)
+    (:pitch-range :group acss :type integer :minimum 0 :maximum 9)
+    (:stress :group acss :type integer :minimum 0 :maximum 9)
+    (:richness :group acss :type integer :minimum 0 :maximum 9)
+    (:gain :group post-synthesis :type integer :minimum 0 :maximum 9)
+    (:low-pass :group post-synthesis :type integer :minimum 0 :maximum 9)
+    (:high-pass :group post-synthesis :type integer :minimum 0 :maximum 9)
+    (:pan :group post-synthesis :type integer :minimum 0 :maximum 9)
+    (:reverb :group post-synthesis :type integer :minimum 0 :maximum 9)
+    (:echo :group post-synthesis :type integer :minimum 0 :maximum 9)
+    (:chorus :group post-synthesis :type integer :minimum 0 :maximum 9)
+    (:rate-offset :group relative-rate :type integer :minimum -20 :maximum 20)
+    (:rate :group legacy-rate :type integer :minimum 0 :maximum 9))
+  "Private metadata for accepted voice-style fields, in validation order.
+Each entry is (KEYWORD . METADATA), with a group, value type, and integer
+bounds where applicable.  Every field also accepts nil; field presence remains
+distinct from its value.  Legacy rate stays loadable but is not applied by the
+compiler.  This table defines no defaults, normalization, or backend support.
+
+Validation historically checks post-synthesis fields before rate fields.
+The accepted-key inventory has its own group order for composition and
+provenance; retain both orders when adding a field.")
+
+(defun emacsvox-aural--voice-style-fields-in-group (group)
+  "Return the voice-style field descriptors belonging to GROUP, in order."
+  (cl-remove-if-not
+   (lambda (field) (eq group (plist-get (cdr field) :group)))
+   emacsvox-aural--voice-style-fields))
+
+(defun emacsvox-aural--voice-style-dimensions-in-group (group)
+  "Return dimension symbols for voice-style GROUP, in order."
+  (mapcar
+   (lambda (field) (intern (substring (symbol-name (car field)) 1)))
+   (emacsvox-aural--voice-style-fields-in-group group)))
+
 (defconst emacsvox-aural-voice-dimensions
-  '(family average-pitch pitch-range stress richness)
+  (emacsvox-aural--voice-style-dimensions-in-group 'acss)
   "Device-independent dimensions supported by aural voice styles.")
 
-(defconst emacsvox-aural-voice-rate-dimensions '(rate-offset)
+(defconst emacsvox-aural-voice-rate-dimensions
+  (emacsvox-aural--voice-style-dimensions-in-group 'relative-rate)
   "Portable relative speech-rate dimensions carried with voice styles.")
 
 (defconst emacsvox-aural-post-synthesis-dimensions
-  '(gain low-pass high-pass pan reverb echo chorus)
+  (emacsvox-aural--voice-style-dimensions-in-group 'post-synthesis)
   "Portable post-synthesis dimensions carried with aural voice styles.")
 
 (defun emacsvox-aural-normalize-post-synthesis-value (dimension value)
@@ -99,9 +138,8 @@ endpoints.  The other dimensions use the ordinary linear mapping."
   "All dimensions editable as one portable rich voice style.")
 
 (defconst emacsvox-aural--voice-style-keys
-  '(:preset :family :average-pitch :pitch-range :stress :richness
-    :rate-offset :rate
-    :gain :low-pass :high-pass :pan :reverb :echo :chorus)
+  (cl-loop for group in '(preset acss relative-rate legacy-rate post-synthesis)
+           append (mapcar #'car (emacsvox-aural--voice-style-fields-in-group group)))
   "Properties accepted in an explicit aural voice style.
 
 `:rate' is accepted only to load legacy palettes.  New styles use the signed
@@ -275,52 +313,32 @@ rate, or post-synthesis dimensions."
     (when unknown
       (emacsvox-aural--rule-error
        "Unknown properties in %s: %S" label unknown)))
-  (when (plist-member style :preset)
-    (let ((preset (plist-get style :preset)))
-      (unless (or
-               (null preset)
-               (and
-                (symbolp preset)
-                (not (keywordp preset))))
-        (emacsvox-aural--rule-error
-         "%s :preset must be a non-keyword symbol or nil: %S"
-         label preset))))
-  (when (plist-member style :family)
-    (let ((family (plist-get style :family)))
-      (unless (or (null family) (symbolp family) (stringp family))
-        (emacsvox-aural--rule-error
-         "%s :family must be a symbol, string, or nil: %S" label family))))
-  (dolist (dimension
-           (append
-            '(average-pitch pitch-range stress richness)
-            emacsvox-aural-post-synthesis-dimensions))
-    (let ((key (emacsvox-aural--voice-dimension-key dimension)))
+  (dolist (field emacsvox-aural--voice-style-fields)
+    (let ((key (car field))
+          (metadata (cdr field)))
       (when (plist-member style key)
         (let ((value (plist-get style key)))
-          (unless (or
-                   (null value)
-                   (and (integerp value) (<= 0 value 9)))
-            (emacsvox-aural--rule-error
-             "%s %S must be an integer from 0 through 9, or nil: %S"
-             label key value))))))
-  (when (plist-member style :rate-offset)
-    (let ((value (plist-get style :rate-offset)))
-      (unless (or
-               (null value)
-               (and (integerp value) (<= -20 value 20)))
-        (emacsvox-aural--rule-error
-         "%s :rate-offset must be an integer from -20 through 20, or nil: %S"
-         label value))))
-  ;; Keep old palette files loadable, but compilation deliberately does not
-  ;; apply this absolute zero-to-nine value.
-  (when (plist-member style :rate)
-    (let ((value (plist-get style :rate)))
-      (unless (or
-               (null value)
-               (and (integerp value) (<= 0 value 9)))
-        (emacsvox-aural--rule-error
-         "%s legacy :rate must be an integer from 0 through 9, or nil: %S"
-         label value))))
+          (unless (null value)
+            (pcase (plist-get metadata :type)
+              ('preset
+               (unless (and (symbolp value) (not (keywordp value)))
+                 (emacsvox-aural--rule-error
+                  "%s :preset must be a non-keyword symbol or nil: %S"
+                  label value)))
+              ('family
+               (unless (or (symbolp value) (stringp value))
+                 (emacsvox-aural--rule-error
+                  "%s :family must be a symbol, string, or nil: %S" label value)))
+              ('integer
+               (let ((minimum (plist-get metadata :minimum))
+                     (maximum (plist-get metadata :maximum)))
+                 (unless (and (integerp value) (<= minimum value maximum))
+                   (emacsvox-aural--rule-error
+                    "%s %s%S must be an integer from %d through %d, or nil: %S"
+                    label
+                    (if (eq (plist-get metadata :group) 'legacy-rate) "legacy " "")
+                    key minimum maximum value))))
+              (type (error "Unknown voice-style field type: %S" type))))))))
   style)
 
 (defun emacsvox-aural-validate-voice-value (voice label)

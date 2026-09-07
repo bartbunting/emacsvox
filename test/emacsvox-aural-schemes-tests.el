@@ -1195,7 +1195,7 @@
      :type 'emacsvox-aural-scheme-error)))
 
 (ert-deftest emacsvox-aural-schemes-persist-personal-voice-palettes ()
-  "Personal voice palettes round-trip as versioned non-evaluated data."
+  "Rich styles and explicit nil round-trip as versioned non-evaluated data."
   (emacsvox-test--with-isolated-schemes
     (let* ((directory (make-temp-file "emacsvox-voice-palettes-" t))
            (file (expand-file-name "aural-schemes.el" directory))
@@ -1208,22 +1208,31 @@
               ((heading
                 :style
                 (:family paul :average-pitch 6 :pitch-range 4
-                 :stress nil :richness 7))))))
+                 :stress nil :richness 7 :rate-offset -20 :rate 9
+                 :gain 0 :low-pass nil :high-pass 9 :pan 5
+                 :reverb 1 :echo 2 :chorus 3)))))
+           (rules '((:id nil-preset :match (:role heading)
+                     :render (:content (:voice (:preset nil :average-pitch 0 :pan nil)))))))
       (unwind-protect
           (progn
             (emacsvox-aural-register-voice-palette-data palette)
+            (setq emacsvox-aural-user-rules (copy-tree rules))
             (emacsvox-aural-save-user-data file)
             (let ((saved (emacsvox-aural-read-user-data file)))
               (should (equal (plist-get saved :voice-palettes)
                              (list palette))))
             (let ((emacsvox-aural-voice-palette-registry
-                   (emacsvox-aural--built-in-voice-palette-registry)))
+                   (emacsvox-aural--built-in-voice-palette-registry))
+                  (emacsvox-aural-user-rules nil))
               (emacsvox-aural-load-user-data file)
+              (should (equal emacsvox-aural-user-rules rules))
               (should
                (equal
                 (emacsvox-aural-voice 'heading 'reading)
                 '(:family paul :average-pitch 6 :pitch-range 4
-                  :stress nil :richness 7)))))
+                  :stress nil :richness 7 :rate-offset -20 :rate 9
+                  :gain 0 :low-pass nil :high-pass 9 :pan 5
+                  :reverb 1 :echo 2 :chorus 3)))))
         (delete-directory directory t)))))
 
 (ert-deftest emacsvox-aural-schemes-palette-load-is-atomic ()

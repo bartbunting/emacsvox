@@ -5978,6 +5978,51 @@ or to a module-owned extension.
 Do not infer answers from the archived proposals.  Current behavior is defined
 by the Aural implementation@comma{} its generated reference@comma{} and accepted ADRs.
 
+@subsection Voice-style metadata ownership
+
+The private @code{emacsvox-aural--voice-style-fields} table in
+@samp{lisp/emacsvox-aural-rules.el} owns accepted field names@comma{} groups@comma{} value types@comma{}
+and integer bounds.  The existing public dimension lists and private accepted
+key list are derived from it; validation traverses the descriptors directly.
+Composition and provenance continue to consume the accepted-key inventory.
+
+Keep the two established orders explicit.  Validation checks preset@comma{} family@comma{}
+the four numeric ACSS fields@comma{} post-synthesis fields@comma{} relative rate@comma{} and legacy
+rate.  The accepted-key inventory places relative and legacy rate before the
+post-synthesis fields.  ACSS dimension order also determines positional legacy
+personality settings@comma{} and rich dimension order determines tuner rows.
+
+Every accepted field allows @code{nil}.  Validation preserves the original plist@comma{}
+including duplicate fields@comma{} for which the first value is used.  Field absence@comma{}
+explicit @code{nil}@comma{} and zero remain distinct during composition and persistence.
+Legacy @code{:rate} is accepted for loading saved data but is not applied as a new
+rate; nonzero legacy values produce the existing retuning degradation.
+The table supplies no implicit defaults and does not declare engine support.
+
+An explicit @code{nil} over a preset is a compatibility behavior to characterize@comma{}
+not an authoring decision settled by the metadata table.  For example@comma{} the
+current compiler clears the reported average-pitch value for
+@code{(:preset base :average-pitch nil)} while retaining the base voice command and
+emitting no pitch-reset command.  The tests preserve this distinction.  A
+future inheritance@comma{} omission@comma{} or reset policy needs a separate decision.
+
+Compiler conversion@comma{} backend wire names@comma{} capability discovery@comma{} normalization@comma{}
+and delivery stay in their existing owners.  When adding a field@comma{} update those
+consumers explicitly and test final serialized output or an explicit
+degradation.  Editor labels@comma{} controls@comma{} and preview descriptions also need
+review; they are not generated from this table.  Delivery preparation and
+asynchronous operation ownership remain separate refactoring proposals.
+
+The rule tests state field inventories@comma{} bounds@comma{} error precedence@comma{} and
+composition expectations independently of the metadata.  Scheme tests cover
+saved rich palettes and explicit-nil rules; transport tests check distinct
+ACSS mappings@comma{} zero and omitted wire fields@comma{} effects@comma{} and preset behavior.
+@code{make compiled-aural-test} also runs these style contracts with the isolated
+compiled subsystem loaded@comma{} checking that the implementations stay in that
+build.  Preserve final-write@comma{} timeout@comma{} reentrancy@comma{} and trace regressions when
+working on later delivery slices; metadata validation alone cannot establish
+process lifecycle or audible behavior.
+
 @subsection Aural interface source ownership
 
 Ordinary-buffer entry captures a source buffer@comma{} a marker@comma{} and a guarded source

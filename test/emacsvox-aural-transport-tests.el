@@ -19,6 +19,8 @@
 
 (defvar emacsvox-pronounce-personality)
 (defvar emacsvox-pronounce-table)
+(defvar omnivox-average-pitch-contrast)
+(declare-function omnivox--portable-style-acss "omnivox-voices" (style))
 
 (defmacro emacsvox-test--with-transport-scheme (&rest body)
   "Run BODY with isolated scheme and contextual override state."
@@ -150,6 +152,31 @@ Use a private process advertising structured delivery, without sending audio."
                        (:reverb . ,(/ 7.0 9.0)) (:echo . ,(/ 8.0 9.0))
                        (:chorus . 1.0)))
         (should (= (plist-get effects (car entry)) (cdr entry)))))))
+
+(ert-deftest emacsvox-aural-native-voice-fields-preserve-zero-and-omission ()
+  "Distinct ACSS values reach both adapter mappings; nil effects stay absent."
+  (require 'omnivox-voices)
+  (emacsvox-test--with-transport-scheme
+    (let ((omnivox-average-pitch-contrast 1.0))
+      (setq emacsvox-aural-session-rules
+            '((:id fields :match (:role heading)
+               :render (:content (:voice (:average-pitch 0 :pitch-range 3
+                                          :stress 6 :richness 9 :rate-offset 0
+                                          :gain 0 :pan nil))))))
+      (let* ((result (emacsvox-test--capture-native-timeline "Heading" :facts '(:role heading)))
+             (span (car (plist-get (plist-get result :timeline) :spans)))
+             (expected (list :average_pitch 0.0 :pitch_range (/ 1.0 3.0)
+                             :stress (/ 2.0 3.0) :richness 1.0)))
+        (should span)
+        (should (equal (plist-get span :acss) expected))
+        (should
+         (equal (omnivox--portable-style-acss
+                 '(:average-pitch 0 :pitch-range 3 :stress 6 :richness 9))
+                expected))
+        (should (equal (omnivox--portable-style-acss '(:average-pitch nil :richness 0))
+                       '(:richness 0.0)))
+        (should-not (plist-member span :rate_offset))
+        (should (equal (plist-get (plist-get span :effects) :style) '(:gain 0.0)))))))
 
 (ert-deftest emacsvox-aural-native-suppression-preserves-surviving-effects ()
   "Inaudible runs do not downgrade other runs or lose their boundary actions."
@@ -4522,6 +4549,37 @@ is the default inherited by a newly created TTS scratch buffer."
            (equal
             (emacsvox-aural-concrete-content-voice-style content)
             custom)))))))
+
+(ert-deftest emacsvox-aural-transport-preset-nil-and-zero-retain-current-behavior ()
+  "An explicit nil clears reported pitch without adding a reset command."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-aural-voice-palette-registry
+           (copy-hash-table emacsvox-aural-voice-palette-registry)))
+      (emacsvox-aural-register-voice-palette
+       'nil-contract :summary "Nil contract fixture"
+       :entries '((base :family nil :average-pitch 6 :pitch-range 3 :stress 4 :richness 5)))
+      (dolist (fixture '((absent 6 "<voice-1>" 1)
+                         (nil nil "<voice-1>" 1)
+                         (0 0 "<voice-1> <voice-2>" 2)))
+        (pcase-let ((`(,override ,expected-pitch ,expected-command ,expected-count) fixture))
+          (let ((calls 0))
+            (cl-letf (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+                       (lambda () '(:adapter test :dimensions
+                                    (family average-pitch pitch-range stress richness))))
+                      ((symbol-function 'voice-from-acss)
+                       (lambda (_) (intern (format "voice-%d" (cl-incf calls)))))
+                      ((symbol-function 'tts-get-voice-command)
+                       (lambda (voice) (format "<%s>" voice))))
+              (let ((compiled (emacsvox-aural-compile-voice-style
+                               (append '(:preset base)
+                                       (unless (eq override 'absent)
+                                         (list :average-pitch override)))
+                               'nil-contract)))
+                (should (equal (plist-get (emacsvox-aural-compiled-voice-style compiled)
+                                          :average-pitch) expected-pitch))
+                (should (equal (emacsvox-aural-compiled-voice-command compiled)
+                               expected-command))
+                (should (= calls expected-count))))))))))
 
 (ert-deftest emacsvox-aural-transport-ignores-legacy-absolute-rate ()
   "Old rate zero is neutral and nonzero values request explicit retuning."

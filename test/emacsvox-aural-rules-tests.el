@@ -583,6 +583,149 @@
       (list :rate-offset value)
       "relative rate test"))))
 
+(ert-deftest emacsvox-aural-rules-voice-field-inventories-are-compatible ()
+  "Public dimension order and accepted legacy keys remain stable."
+  (should (equal emacsvox-aural-voice-dimensions
+                 '(family average-pitch pitch-range stress richness)))
+  (should (equal emacsvox-aural-voice-rate-dimensions '(rate-offset)))
+  (should (equal emacsvox-aural-post-synthesis-dimensions
+                 '(gain low-pass high-pass pan reverb echo chorus)))
+  (should (equal emacsvox-aural-rich-voice-dimensions
+                 '(family average-pitch pitch-range stress richness rate-offset
+                   gain low-pass high-pass pan reverb echo chorus)))
+  (should (equal emacsvox-aural--voice-style-keys
+                 '(:preset :family :average-pitch :pitch-range :stress :richness
+                   :rate-offset :rate :gain :low-pass :high-pass :pan
+                   :reverb :echo :chorus))))
+
+(ert-deftest emacsvox-aural-rules-voice-field-values-and-diagnostics ()
+  "Every numeric field retains its bounds, nil handling, and error text."
+  ;; Expected fields and limits are deliberately independent of the schema.
+  (dolist (fixture '((:average-pitch 0 9) (:pitch-range 0 9)
+                     (:stress 0 9) (:richness 0 9) (:rate-offset -20 20)
+                     (:rate 0 9) (:gain 0 9) (:low-pass 0 9) (:high-pass 0 9)
+                     (:pan 0 9) (:reverb 0 9) (:echo 0 9) (:chorus 0 9)))
+    (pcase-let ((`(,key ,minimum ,maximum) fixture))
+      (dolist (value (list nil minimum 0 5 maximum))
+        (let* ((style (list key value))
+               (before (copy-tree style)))
+          (should (eq style (emacsvox-aural-validate-voice-value style "voice")))
+          (should (equal style before))))
+      (dolist (value (list (1- minimum) (1+ maximum) 1.0 "5" t :default '(5)))
+        (should
+         (equal
+          (should-error
+           (emacsvox-aural-validate-voice-value (list key value) "voice")
+           :type 'emacsvox-aural-rule-error)
+          (list 'emacsvox-aural-rule-error
+                (format "voice %s%S must be an integer from %s through %s, or nil: %S"
+                        (if (eq key :rate) "legacy " "") key
+                        minimum maximum value))))))))
+
+(ert-deftest emacsvox-aural-rules-voice-preset-and-family-values ()
+  "Preset and family retain their distinct symbol and nil contracts."
+  (dolist (fixture '((:preset (nil t bolden))
+                     (:family (nil t :keyword family "engine voice" ""))))
+    (dolist (value (cadr fixture))
+      (let ((style (list (car fixture) value)))
+        (should (eq style (emacsvox-aural-validate-voice-value style "voice"))))))
+  (dolist (fixture '((:preset (:keyword "bolden" 0 (bolden))
+                     "a non-keyword symbol or nil")
+                    (:family (0 1.0 (family) [family])
+                     "a symbol, string, or nil")))
+    (pcase-let ((`(,key ,values ,description) fixture))
+      (dolist (value values)
+        (should
+         (equal
+          (should-error
+           (emacsvox-aural-validate-voice-value (list key value) "voice")
+           :type 'emacsvox-aural-rule-error)
+          (list 'emacsvox-aural-rule-error
+                (format "voice %S must be %s: %S" key description value))))))))
+
+(ert-deftest emacsvox-aural-rules-voice-validation-precedence ()
+  "Report unknown fields first, then the historical field-validation order."
+  (should
+   (equal
+    (should-error (emacsvox-aural-validate-voice-value
+                   '(:rate 99 :unknown 1 :preset 42 :unknown 2) "voice"))
+    '(emacsvox-aural-rule-error
+      "Unknown properties in voice: (:unknown :unknown)")))
+  ;; Reverse the input order: the validator's priority must win each time.
+  (let* ((fixtures
+          '((:preset 42 "voice :preset must be a non-keyword symbol or nil: 42")
+            (:family 42 "voice :family must be a symbol, string, or nil: 42")
+            (:average-pitch 10 "voice :average-pitch must be an integer from 0 through 9, or nil: 10")
+            (:pitch-range 10 "voice :pitch-range must be an integer from 0 through 9, or nil: 10")
+            (:stress 10 "voice :stress must be an integer from 0 through 9, or nil: 10")
+            (:richness 10 "voice :richness must be an integer from 0 through 9, or nil: 10")
+            (:gain 10 "voice :gain must be an integer from 0 through 9, or nil: 10")
+            (:low-pass 10 "voice :low-pass must be an integer from 0 through 9, or nil: 10")
+            (:high-pass 10 "voice :high-pass must be an integer from 0 through 9, or nil: 10")
+            (:pan 10 "voice :pan must be an integer from 0 through 9, or nil: 10")
+            (:reverb 10 "voice :reverb must be an integer from 0 through 9, or nil: 10")
+            (:echo 10 "voice :echo must be an integer from 0 through 9, or nil: 10")
+            (:chorus 10 "voice :chorus must be an integer from 0 through 9, or nil: 10")
+            (:rate-offset 21 "voice :rate-offset must be an integer from -20 through 20, or nil: 21")
+            (:rate 10 "voice legacy :rate must be an integer from 0 through 9, or nil: 10"))))
+    (while fixtures
+      (let ((style (apply #'append
+                          (mapcar (lambda (fixture) (list (car fixture) (cadr fixture)))
+                                  (reverse fixtures)))))
+        (should (equal
+                 (should-error (emacsvox-aural-validate-voice-value style "voice"))
+                 (list 'emacsvox-aural-rule-error (caddar fixtures)))))
+      (setq fixtures (cdr fixtures)))))
+
+(ert-deftest emacsvox-aural-rules-voice-plist-shape-and-duplicates ()
+  "Malformed styles fail, while duplicate fields keep first-value semantics."
+  (dolist (style '((:gain) (:gain . 2) (:gain 2 :pan) (gain 2)
+                   [:gain 2] (:unknown 2)))
+    (should-not (emacsvox-aural-voice-style-p style))
+    (should-error (emacsvox-aural--validate-voice-style style "voice")
+                  :type 'emacsvox-aural-rule-error))
+  (dolist (style '((:gain nil :gain 42) (:gain 0 :gain 42)
+                   (:preset nil :preset 42) (:family "voice" :family 42)))
+    (should (eq style (emacsvox-aural-validate-voice-value style "voice"))))
+  (should-error
+   (emacsvox-aural-validate-voice-value '(:gain 42 :gain 0) "voice")
+   :type 'emacsvox-aural-rule-error))
+
+(ert-deftest emacsvox-aural-rules-voice-presence-and-provenance ()
+  "Composition distinguishes nil, zero, and omission for every style field."
+  (dolist (fixture '((:family "test voice" nil)
+                     (:average-pitch 7 0) (:pitch-range 7 0)
+                     (:stress 7 0) (:richness 7 0) (:rate-offset -4 0)
+                     (:rate 7 0) (:gain 7 0) (:low-pass 7 0) (:high-pass 7 0)
+                     (:pan 7 0) (:reverb 7 0) (:echo 7 0) (:chorus 7 0)))
+    (pcase-let ((`(,key ,initial ,zero) fixture))
+      (dolist (value (list nil zero))
+        (let* ((initial-style (list :preset 'bolden key initial))
+               (content (emacsvox-aural--make-content-style :voice initial-style))
+               (dimension (intern (substring (symbol-name key) 1))))
+          (emacsvox-aural--apply-voice content (list key value) 'override)
+          (should (equal (emacsvox-aural-content-style-voice content)
+                         (list :preset 'bolden key value)))
+          (should (eq (alist-get dimension
+                                (emacsvox-aural-content-style-voice-provenance content))
+                      'override))
+          (should (equal initial-style (list :preset 'bolden key initial)))))
+      (let ((content (emacsvox-aural--make-content-style :voice 'bolden)))
+        (emacsvox-aural--apply-voice content (list key nil) 'override)
+        (should (equal (emacsvox-aural-content-style-voice content)
+                       (list :preset 'bolden key nil))))))
+  (let ((content (emacsvox-aural--make-content-style
+                  :voice '(:average-pitch 7 :pan 0))))
+    (emacsvox-aural--apply-voice content '(:richness nil) 'override)
+    (should (equal (emacsvox-aural-content-style-voice content)
+                   '(:average-pitch 7 :pan 0 :richness nil)))
+    (should-not (plist-member (emacsvox-aural-content-style-voice content) :gain))
+    (emacsvox-aural--apply-voice content '(:preset nil) 'reset)
+    (should (equal (emacsvox-aural-content-style-voice content) '(:preset nil)))
+    (should (eq (alist-get 'gain
+                          (emacsvox-aural-content-style-voice-provenance content))
+                'reset))))
+
 (ert-deftest emacsvox-aural-rules-compose-layered-face-presentations ()
   "Every named face may add actions while the strongest face wins voice ties."
   (let* ((warning

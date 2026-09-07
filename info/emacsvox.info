@@ -5692,7 +5692,59 @@ implementation:
 is defined by the Aural implementation, its generated reference, and
 accepted ADRs.
 
-16.3.5 Aural interface source ownership
+16.3.5 Voice-style metadata ownership
+-------------------------------------
+
+The private ‘emacsvox-aural--voice-style-fields’ table in
+‘lisp/emacsvox-aural-rules.el’ owns accepted field names, groups, value
+types, and integer bounds.  The existing public dimension lists and
+private accepted key list are derived from it; validation traverses the
+descriptors directly.  Composition and provenance continue to consume
+the accepted-key inventory.
+
+   Keep the two established orders explicit.  Validation checks preset,
+family, the four numeric ACSS fields, post-synthesis fields, relative
+rate, and legacy rate.  The accepted-key inventory places relative and
+legacy rate before the post-synthesis fields.  ACSS dimension order also
+determines positional legacy personality settings, and rich dimension
+order determines tuner rows.
+
+   Every accepted field allows ‘nil’.  Validation preserves the original
+plist, including duplicate fields, for which the first value is used.
+Field absence, explicit ‘nil’, and zero remain distinct during
+composition and persistence.  Legacy ‘:rate’ is accepted for loading
+saved data but is not applied as a new rate; nonzero legacy values
+produce the existing retuning degradation.  The table supplies no
+implicit defaults and does not declare engine support.
+
+   An explicit ‘nil’ over a preset is a compatibility behavior to
+characterize, not an authoring decision settled by the metadata table.
+For example, the current compiler clears the reported average-pitch
+value for ‘(:preset base :average-pitch nil)’ while retaining the base
+voice command and emitting no pitch-reset command.  The tests preserve
+this distinction.  A future inheritance, omission, or reset policy needs
+a separate decision.
+
+   Compiler conversion, backend wire names, capability discovery,
+normalization, and delivery stay in their existing owners.  When adding
+a field, update those consumers explicitly and test final serialized
+output or an explicit degradation.  Editor labels, controls, and preview
+descriptions also need review; they are not generated from this table.
+Delivery preparation and asynchronous operation ownership remain
+separate refactoring proposals.
+
+   The rule tests state field inventories, bounds, error precedence, and
+composition expectations independently of the metadata.  Scheme tests
+cover saved rich palettes and explicit-nil rules; transport tests check
+distinct ACSS mappings, zero and omitted wire fields, effects, and
+preset behavior.  ‘make compiled-aural-test’ also runs these style
+contracts with the isolated compiled subsystem loaded, checking that the
+implementations stay in that build.  Preserve final-write, timeout,
+reentrancy, and trace regressions when working on later delivery slices;
+metadata validation alone cannot establish process lifecycle or audible
+behavior.
+
+16.3.6 Aural interface source ownership
 ---------------------------------------
 
 Ordinary-buffer entry captures a source buffer, a marker, and a guarded
@@ -5719,7 +5771,7 @@ fragment identifiers, and personal/session scopes each share one working
 editor.  Reopening a dirty editor preserves its draft and source
 association.
 
-16.3.6 Remote speech recovery
+16.3.7 Remote speech recovery
 -----------------------------
 
 Ordinary ‘tts-initialize’ startup schedules the existing remote retry
@@ -5734,7 +5786,7 @@ remote recovery.  Exercise these boundaries in
 ‘test/omnivox-remote-tests.el’ with controlled connection failures and
 timers.
 
-16.3.7 Omnivox voice configuration applies
+16.3.8 Omnivox voice configuration applies
 ------------------------------------------
 
 ‘omnivox-apply-voice-configuration’ captures one generation and its
@@ -5760,7 +5812,7 @@ late-reply, overlapping-apply, and replacement regressions in
 ‘test/emacsvox-tts-tests.el’ and spoken timeout feedback coverage in
 ‘test/emacsvox-aural-voice-workbench-tests.el’.
 
-16.3.8 Notmuch contracts
+16.3.9 Notmuch contracts
 ------------------------
 
 The live module is registered as an optional package integration.  Its
@@ -5791,8 +5843,8 @@ exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
 focused selector, including real displayed-window reading for both
 advance paths.
 
-16.3.9 Agent Shell contracts
-----------------------------
+16.3.10 Agent Shell contracts
+-----------------------------
 
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
 deliberately disabling them or while testing live integration changes.
@@ -5937,7 +5989,7 @@ deliberately disabling them or while testing live integration changes.
      workflow semantic provider so Aural rules can customize their
      presentation.
 
-16.3.10 Magit contracts
+16.3.11 Magit contracts
 -----------------------
 
 Staging and selected synchronous operations collect Git outcomes at
@@ -5964,7 +6016,7 @@ from source, then again in a fresh Emacs with
 live buffer created with the former highlight mirroring needs a Magit
 refresh to rebuild its source properties.
 
-16.3.11 WSL2 Omnivox development staging
+16.3.12 WSL2 Omnivox development staging
 ----------------------------------------
 
 The ordinary WSL2 user route is implemented by
@@ -6123,7 +6175,7 @@ repository to make its release guard pass.  Use ‘make windows-omnivox’
 only for the reproducible clean-release path documented in the
 user-facing WSL2 route.
 
-16.3.12 Aural experiments and guided changes
+16.3.13 Aural experiments and guided changes
 --------------------------------------------
 
 Physical experiments reuse the tuner with an exact engine/voice
@@ -6416,9 +6468,9 @@ Ref: Background startup ownership and failure recovery246240
 Ref: Supported Emacs versions249393
 Ref: Native Windows builds251599
 Ref: Remote preview validation253659
-Ref: Internal ownership and renderer tests266808
-Ref: Upstream contract layers270264
-Node: Concept Index288757
+Ref: Internal ownership and renderer tests269675
+Ref: Upstream contract layers273131
+Node: Concept Index291624
 
 End Tag Table
 
