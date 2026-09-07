@@ -68,7 +68,7 @@ speak the first field")
 (defvar emacsvox-forms-rw-voice 'paul
   "Personality for read-write fields. ")
 
-(defvar emacsvox-forms-ro-voice voice-annotate
+(defvar emacsvox-forms-ro-voice 'voice-annotate
   "Personality for read-only fields. ")
 
 (defun emacsvox-forms-speak-field ()

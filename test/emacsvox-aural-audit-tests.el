@@ -277,7 +277,7 @@
       emacsvox-test--aural-audit-root
       (lambda (form file function)
         (when (memq (car form)
-                    '(propertize put-text-property
+                    '(propertize put-text-property defvar defvar-local defcustom
                       ems-set-personality-temporarily emacsvox-corfu--voice))
           (dolist (argument (cdr form))
             (when (memq argument voice-setup-defined-voices)

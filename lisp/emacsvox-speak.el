@@ -369,7 +369,7 @@ Argument BODY specifies forms to execute."
           (put-text-property (point) (+ 2 (point))
                              'auditory-icon sound-cue))))))
 
-(defvar emacsvox-speak-paragraph-personality voice-animate
+(defvar emacsvox-speak-paragraph-personality 'voice-animate
   "Personality used to mark start of paragraph.")
 
 (defvar-local  emacsvox-speak-voice-annotated-paragraphs nil

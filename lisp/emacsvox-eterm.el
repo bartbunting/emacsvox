@@ -171,10 +171,10 @@ Useful when eterm is in review mode.")
 
 ;;;   voice definitions  for eterm  highlight, underline etc
 
-(defvar emacsvox-eterm-highlight-personality voice-bolden
+(defvar emacsvox-eterm-highlight-personality 'voice-bolden
   "Personality to show terminal highlighting.")
 
-(defvar emacsvox-eterm-bold-personality voice-bolden
+(defvar emacsvox-eterm-bold-personality 'voice-bolden
   "Personality to indicate terminal bold.")
 
 (defvar emacsvox-eterm-underline-personality 'ursula

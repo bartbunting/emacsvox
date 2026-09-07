@@ -41,7 +41,7 @@
 
 ;;;  voice locking for block header lines
 
-(defvar emacsvox-hidden-header-line-personality voice-annotate
+(defvar emacsvox-hidden-header-line-personality 'voice-annotate
   "Personality used to identify header lines of blocks.")
 
 ;; forcibly set this to t to avoid a possible Emacs bug:

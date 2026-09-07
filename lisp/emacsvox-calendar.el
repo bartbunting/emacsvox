@@ -56,7 +56,7 @@
    (diary voice-bolden)
    ))
 
-(defvar emacsvox-calendar-mark-personality voice-bolden
+(defvar emacsvox-calendar-mark-personality 'voice-bolden
   "Personality to use when showing marked calendar entries.")
 
 ;;;   functions:

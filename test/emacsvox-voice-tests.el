@@ -622,5 +622,61 @@
            0 emacsvox-aural-source-faces-property captured)
           expected))))))
 
+(ert-deftest emacsvox-voice-defaults-resolve-late-and-preserve-user-values ()
+  "Integration defaults keep names and never overwrite existing choices."
+  (dolist (entry
+           '(("emacsvox-calendar.el"
+              emacsvox-calendar-mark-personality voice-bolden)
+             ("emacsvox-eterm.el"
+              emacsvox-eterm-highlight-personality voice-bolden)
+             ("emacsvox-eterm.el"
+              emacsvox-eterm-bold-personality voice-bolden)
+             ("emacsvox-eudc.el"
+              emacsvox-eudc-attribute-value-personality voice-animate)
+             ("emacsvox-forms.el"
+              emacsvox-forms-ro-voice voice-annotate)
+             ("emacsvox-hide.el"
+              emacsvox-hidden-header-line-personality voice-annotate)
+             ("emacsvox-speak.el"
+              emacsvox-speak-paragraph-personality voice-animate)
+             ("emacsvox-speedbar.el"
+              emacsvox-speedbar-button-personality voice-bolden)
+             ("emacsvox-speedbar.el"
+              emacsvox-speedbar-selected-personality voice-animate)
+             ("emacsvox-speedbar.el"
+              emacsvox-speedbar-directory-personality voice-bolden-medium)
+             ("emacsvox-speedbar.el"
+              emacsvox-speedbar-highlight-personality voice-animate)
+             ("emacsvox-speedbar.el"
+              emacsvox-speedbar-tag-personality voice-monotone-extra)))
+    (pcase-let ((`(,file ,option ,personality) entry))
+      (let ((form
+             (with-temp-buffer
+               (insert-file-contents
+                (expand-file-name file emacsvox-lisp-directory))
+               (goto-char (point-min))
+               (re-search-forward
+                (concat "^(defvar[ \n]+" (regexp-quote (symbol-name option))
+                        "[ \n]+"))
+               (goto-char (match-beginning 0))
+               (read (current-buffer)))))
+        ;; Evaluate the actual initializer using a private symbol so the
+        ;; test cannot change defaults in already loaded integrations.
+        (let ((option (make-symbol (symbol-name option))))
+          (setcar (cdr form) option)
+          (eval form t)
+          (should (eq (symbol-value option) personality))
+          (cl-progv (list personality) '(test-updated-legacy-voice)
+            (cl-letf (((symbol-function 'tts-get-voice-command)
+                       (lambda (voice) (format "%s" voice))))
+              (should
+               (equal
+                (emacsvox-aural-compile-voice (symbol-value option) 'acss-default)
+                "test-updated-legacy-voice"))))
+          ;; An existing session or personal init may have assigned a voice.
+          (set option 'test-personal-voice)
+          (eval form t)
+          (should (eq (symbol-value option) 'test-personal-voice)))))))
+
 (provide 'emacsvox-voice-tests)
 ;;; emacsvox-voice-tests.el ends here

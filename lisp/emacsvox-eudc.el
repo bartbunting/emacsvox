@@ -129,7 +129,7 @@
 ;;;  voiceify values in results 
 
 (defvar emacsvox-eudc-attribute-value-personality
-  voice-animate
+  'voice-animate
   "Personality t use for voiceifying attribute values. ")
 
 (defun emacsvox--advice-eudc-print-attribute-value-around

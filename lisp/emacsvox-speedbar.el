@@ -249,23 +249,23 @@ An automatically updating speedbar consumes resources.")
 ;;;   voice locking 
 ;; Map speedbar faces to voices
 ;;
-(defvar emacsvox-speedbar-button-personality  voice-bolden
+(defvar emacsvox-speedbar-button-personality  'voice-bolden
   "personality used for speedbar buttons")
 
-(defvar emacsvox-speedbar-selected-personality  voice-animate
+(defvar emacsvox-speedbar-selected-personality  'voice-animate
   "Personality used to indicate speedbar selection")
 
-(defvar emacsvox-speedbar-directory-personality voice-bolden-medium
+(defvar emacsvox-speedbar-directory-personality 'voice-bolden-medium
   "Speedbar personality for directory buttons"
   )
 
 (defvar emacsvox-speedbar-file-personality  'paul
   "Personality used for file buttons")
 
-(defvar emacsvox-speedbar-highlight-personality voice-animate
+(defvar emacsvox-speedbar-highlight-personality 'voice-animate
   "Personality used for for speedbar highlight.")
 
-(defvar emacsvox-speedbar-tag-personality voice-monotone-extra
+(defvar emacsvox-speedbar-tag-personality 'voice-monotone-extra
   "Personality used for speedbar tags")
 
 (defvar emacsvox-speedbar-default-personality 'paul
