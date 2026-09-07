@@ -25,6 +25,8 @@
           outloud-voices
           mac-voices
           swiftmac-voices
+          omnivox-voices
+          omnivox-remote
           emacsvox-pronounce
           emacsvox-speak
           emacsvox-aural
@@ -73,6 +75,8 @@
           outloud-voice-capabilities
           mac-voice-capabilities
           swiftmac-voice-capabilities
+          omnivox-voice-capabilities
+          omnivox-remote-make-process
           emacsvox-pronounce-refresh-pronunciations
           emacsvox-speak-line
           voice-setup-face-mapping-diagnostic

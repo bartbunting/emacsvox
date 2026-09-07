@@ -8,7 +8,12 @@
 
 (require 'cl-lib)
 (require 'ert)
-(require 'emacsvox)
+(load (expand-file-name "../lisp/emacsvox.el"
+                        (file-name-directory (or load-file-name buffer-file-name)))
+      nil nil)
+
+(defconst emacsvox-startup-tests--root
+  (expand-file-name "../" (file-name-directory (or load-file-name buffer-file-name))))
 
 (let* ((test-directory
         (file-name-directory (or load-file-name buffer-file-name)))
@@ -38,37 +43,90 @@
             (list source))))
       (delete-directory directory t))))
 
-(ert-deftest emacsvox-setup-tracks-aural-runtime-sources ()
-  "The stale guard covers the TTS and voice dependencies of aural startup."
-  (dolist
-      (source
-       '("tts-speak.el"
-         "emacsvox-version.el"
-         "voice-setup.el"
-         "voice-defs.el"
-         "dectalk-voices.el"
-         "plain-voices.el"
-         "espeak-voices.el"
-         "outloud-voices.el"
-         "mac-voices.el"
-         "swiftmac-voices.el"
-         "emacsvox-pronounce.el"
-         "emacsvox-speak.el"))
-    (should (member source emacsvox-setup--startup-sources))))
+(ert-deftest emacsvox-setup-tracks-maintained-runtime-inventory ()
+  "New TTS, voice, or speech build members must also enter the stale guard."
+  (skip-unless (executable-find "make"))
+  (let ((default-directory (expand-file-name "lisp/" emacsvox-startup-tests--root)))
+    (with-temp-buffer
+      (insert "audit-startup-inventory:\n"
+              "\t@printf '%s\\n' $(TTS_OBJECTS) $(SPEAK_OBJECTS)\n")
+      (let ((status (call-process-region
+                     (point-min) (point-max) "make" t t nil
+                     "--no-print-directory" "-s" "-f" "Makefile" "-f" "-"
+                     "audit-startup-inventory")))
+        (unless (eq status 0) (ert-fail (buffer-string))))
+      (dolist (compiled (split-string (buffer-string)))
+        (should (member (string-remove-suffix "c" compiled)
+                        emacsvox-setup--startup-sources))))))
 
-(ert-deftest emacsvox-setup-tracks-extracted-aural-services ()
-  "The stale guard covers independently compiled aural service modules."
-  (dolist
-      (source
-       '("emacsvox-aural-concrete.el"
-         "emacsvox-aural-history.el"
-         "emacsvox-aural-profile-service.el"
-         "emacsvox-aural-providers.el"
-         "emacsvox-aural-compiler.el"
-         "emacsvox-aural-source.el"
-         "emacsvox-aural-planner.el"
-         "emacsvox-omnivox-components.el"))
-    (should (member source emacsvox-setup--startup-sources))))
+(ert-deftest emacsvox-setup-tracks-loaded-core-dependencies ()
+  "A fresh core load cannot silently introduce an unguarded local dependency."
+  (let ((emacs (expand-file-name invocation-name invocation-directory))
+        (lisp (expand-file-name "lisp/" emacsvox-startup-tests--root)))
+    (with-temp-buffer
+      (let ((status
+             (call-process
+              emacs nil t nil "-Q" "--batch" "-L" lisp "-l"
+              (expand-file-name "emacsvox-setup.el" lisp)
+              "--eval"
+              (prin1-to-string
+               `(progn
+                  ;; These are explicit interactive startup loads.  Do not
+                  ;; start speech or prepare arbitrary optional packages here.
+                  (require 'emacsvox-advice)
+                  (require 'emacsvox-websearch)
+                  (dolist (entry load-history)
+                    (when (and (stringp (car entry))
+                               (file-in-directory-p (car entry) ,lisp))
+                      (let ((source (concat (file-name-base (car entry)) ".el")))
+                        (unless (member source emacsvox-setup--startup-sources)
+                          (error "Startup dependency missing from guard: %s"
+                                 source))))))))))
+        (unless (eq status 0) (ert-fail (buffer-string)))))))
+
+(ert-deftest emacsvox-setup-loads-newer-omnivox-and-advice-source ()
+  "Each formerly omitted dependency enables fallback in a fresh session."
+  (let ((emacs (expand-file-name invocation-name invocation-directory)))
+    (dolist (module '(omnivox-voices omnivox-remote emacsvox-advice))
+      (let* ((root (make-temp-file "emacsvox-startup-fallback-" t))
+             (source (expand-file-name (format "%s.el" module) root)))
+        (unwind-protect
+            (progn
+              (copy-file (expand-file-name "lisp/emacsvox-setup.el"
+                                           emacsvox-startup-tests--root)
+                         (expand-file-name "emacsvox-setup.el" root))
+              (with-temp-file (expand-file-name "emacsvox-preamble.el" root)
+                (insert "(provide 'emacsvox-preamble)\n"))
+              (with-temp-file (expand-file-name "emacsvox.el" root)
+                (prin1 `(require ',module) (current-buffer))
+                (insert "\n(provide 'emacsvox)\n"))
+              (with-temp-file source
+                (insert "(defun ev-startup-fixture () 'compiled)\n")
+                (prin1 `(provide ',module) (current-buffer)))
+              (with-temp-buffer
+                (should (eq 0 (call-process emacs nil t nil "-Q" "--batch"
+                                            "-f" "batch-byte-compile" source))))
+              (with-temp-file source
+                (insert "(defun ev-startup-fixture () 'source)\n")
+                (prin1 `(provide ',module) (current-buffer)))
+              (set-file-times (concat source "c") (seconds-to-time 1000000000))
+              (set-file-times source (seconds-to-time 1000000010))
+              (with-temp-buffer
+                (let ((status
+                       (call-process
+                        emacs nil t nil "-Q" "--batch" "-L" root
+                        "--eval" "(setq load-prefer-newer nil)"
+                        "-l" (expand-file-name "emacsvox-setup.el" root)
+                        "--eval"
+                        (prin1-to-string
+                         `(progn
+                            (require 'ert)
+                            (should (eq (ev-startup-fixture) 'source))
+                            (should (equal (symbol-file 'ev-startup-fixture 'defun)
+                                           ,source))
+                            (should-not load-prefer-newer))))))
+                  (unless (eq status 0) (ert-fail (buffer-string))))))
+          (delete-directory root t))))))
 
 (ert-deftest emacsvox-setup-prefers-source-while-loading-stale-tree ()
   "Stale startup byte-code enables `load-prefer-newer' for dependencies."
@@ -88,6 +146,16 @@
      (equal
       (nreverse observed)
       '((emacsvox-preamble t) (emacsvox t))))))
+
+(ert-deftest emacsvox-startup-threads-preserve-source-loading-preference ()
+  "A startup thread retains the setup guard after its dynamic extent ends."
+  (dolist (preference '(nil t))
+    (let* ((load-prefer-newer (not preference))
+           (thread
+            (let ((load-prefer-newer preference))
+              (emacsvox--startup-thread (lambda () load-prefer-newer)))))
+      (should (eq (thread-join thread) preference))
+      (should (eq load-prefer-newer (not preference))))))
 
 (ert-deftest emacsvox-programming-mode-uses-canonical-tts-state ()
   "Programming-mode setup configures speech through the canonical TTS API."

@@ -437,6 +437,15 @@ the rest of Emacsvox startup."
       'chimes))
     nil))
 
+(defun emacsvox--startup-thread (function)
+  "Run FUNCTION in a thread with the startup source-loading preference."
+  ;; New threads do not inherit dynamic bindings from the setup guard.
+  (let ((prefer-newer load-prefer-newer))
+    (make-thread
+     (lambda ()
+       (let ((load-prefer-newer prefer-newer))
+         (funcall function))))))
+
 (defun emacsvox()
   "Start the Emacsvox Audio Desktop.
 Use Emacs as you normally would, emacsvox provides spoken feedback.
@@ -495,10 +504,10 @@ commands and options."
   (emacsvox-aural-validate-scheme-registry)
   (emacsvox--restore-startup-presentation)
   (emacsvox-pronounce-load-dictionaries)
-  (make-thread #'(lambda nil  (ems--fastload "emacsvox-advice")))
+  (emacsvox--startup-thread (lambda () (ems--fastload "emacsvox-advice")))
   (ems--fastload "emacsvox-websearch")
   (emacsvox-setup-programming-modes)
-  (make-thread #'emacsvox-prepare-emacs)
+  (emacsvox--startup-thread #'emacsvox-prepare-emacs)
   (setq line-number-mode nil column-number-mode nil)
   (global-visual-line-mode -1)
   (transient-mark-mode -1)

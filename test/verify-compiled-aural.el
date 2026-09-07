@@ -105,7 +105,8 @@
      "Aural compiler, planner, source, and inspection loaded queue transport"))
   (dolist
       (library
-       '("tts-speak"
+       '("omnivox-remote"
+         "tts-speak"
          "voice-setup"
          "voice-defs"
          "dectalk-voices"
@@ -114,6 +115,7 @@
          "outloud-voices"
          "mac-voices"
          "swiftmac-voices"
+         "omnivox-voices"
          "emacsvox-pronounce"
          "emacsvox-speak"
          "emacsvox-aural-transport"
@@ -161,6 +163,8 @@
          outloud-voice-capabilities
          mac-voice-capabilities
          swiftmac-voice-capabilities
+         omnivox-voice-capabilities
+         omnivox-remote-make-process
          emacsvox-pronounce-refresh-pronunciations
          emacsvox-speak-line
          voice-setup-face-mapping-diagnostic
@@ -224,6 +228,10 @@
         (string-suffix-p
          ".elc" (or (symbol-file function 'defun) ""))
       (error "%S was not loaded from byte-code: %S"
+             function (symbol-file function 'defun))))
+  (dolist (function '(omnivox-voice-capabilities omnivox-remote-make-process))
+    (unless (file-in-directory-p (symbol-file function 'defun) build-directory)
+      (error "%S escaped the isolated compiled build: %S"
              function (symbol-file function 'defun))))
   (unless
       (string-suffix-p

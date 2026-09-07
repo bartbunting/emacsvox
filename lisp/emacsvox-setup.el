@@ -46,6 +46,8 @@
 
 (declare-function emacsvox "emacsvox" ())
 
+;; Tests compare this guard with the maintained TTS/speech build groups and
+;; the core load path.  Optional package preparation remains demand-driven.
 (defconst emacsvox-setup--startup-sources
   '("emacsvox-version.el"
     "emacsvox-preamble.el"
@@ -60,8 +62,18 @@
     "outloud-voices.el"
     "mac-voices.el"
     "swiftmac-voices.el"
+    "omnivox-voices.el"
+    "omnivox-remote.el"
     "emacsvox-pronounce.el"
     "emacsvox-speak.el"
+    "sox-gen.el"
+    "emacsvox-advice.el"
+    "emacsvox-websearch.el"
+    "emacsvox-google.el"
+    "emacsvox-we.el"
+    "emacsvox-xslt.el"
+    "gweb.el"
+    "g-utils.el"
     "emacsvox-aural.el"
     "emacsvox-aural-concrete.el"
     "emacsvox-aural-history.el"
@@ -71,6 +83,7 @@
     "emacsvox-aural-schemes.el"
     "emacsvox-aural-routing-profiles.el"
     "emacsvox-aural-profile-service.el"
+    "emacsvox-aural-compatibility-voice.el"
     "emacsvox-aural-providers.el"
     "emacsvox-aural-compiler.el"
     "emacsvox-aural-source.el"
@@ -95,6 +108,8 @@
     "emacsvox-aural-profiles.el"
     "emacsvox-aural-voice-palettes.el"
     "emacsvox-aural-voice-workbench.el"
+    "emacsvox-aural-voice-experiment.el"
+    "emacsvox-aural-change-feedback.el"
     "emacsvox-aural-provider-org.el"
     "emacsvox-aural-provider-org-srs.el"
     "emacsvox-aural-provider-workflows.el"
