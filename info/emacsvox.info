@@ -3556,6 +3556,13 @@ packages:
 
      ./bin/emacsvox-paddleocr --check
 
+   With the Debian package, use the installed launcher instead:
+
+     /usr/share/emacsvox/bin/emacsvox-paddleocr --check
+
+   Use that installed path in the image-recognition examples below as
+well.
+
    The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the
 CPU device.  A warning that ‘ccache’ is absent is harmless for normal
 inference.  oneDNN, formerly called MKL-DNN, is Paddle's optional
@@ -6202,30 +6209,30 @@ Node: Development Environment158926
 Node: Desktop Management160462
 Node: Personal Information Management160964
 Node: Desktop Applications161496
-Node: Notmuch Mail168884
-Ref: Notmuch fields and privacy178227
-Node: Agent Shell183935
-Node: EAT Terminal Access196406
-Node: Running Terminal Based Applications213665
-Node: Starting Term214620
-Node: Term Input Modes215459
-Node: Term Speech Feedback216619
-Node: Reviewing The Term Screen217813
-Node: Term Help And Recovery219714
-Node: Emacsvox Keyboard Commands220613
-Node: Copyright222017
-Node: Acknowledgments222604
-Node: Developer Guide223630
-Node: Documentation Maintenance224794
-Node: Speech Server Protocols229594
-Ref: Testing A Direct Legacy Server235501
-Ref: Commands That Queue Output236060
-Ref: Commands That Set State239094
-Node: Integration Maintenance241688
-Ref: Supported Emacs versions243730
-Ref: Native Windows builds244418
-Ref: Remote preview validation246478
-Node: Concept Index277768
+Node: Notmuch Mail169083
+Ref: Notmuch fields and privacy178426
+Node: Agent Shell184134
+Node: EAT Terminal Access196605
+Node: Running Terminal Based Applications213864
+Node: Starting Term214819
+Node: Term Input Modes215658
+Node: Term Speech Feedback216818
+Node: Reviewing The Term Screen218012
+Node: Term Help And Recovery219913
+Node: Emacsvox Keyboard Commands220812
+Node: Copyright222216
+Node: Acknowledgments222803
+Node: Developer Guide223829
+Node: Documentation Maintenance224993
+Node: Speech Server Protocols229793
+Ref: Testing A Direct Legacy Server235700
+Ref: Commands That Queue Output236259
+Ref: Commands That Set State239293
+Node: Integration Maintenance241887
+Ref: Supported Emacs versions243929
+Ref: Native Windows builds244617
+Ref: Remote preview validation246677
+Node: Concept Index277967
 
 End Tag Table
 

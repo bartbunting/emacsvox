@@ -286,6 +286,14 @@ From the Emacsvox checkout, verify that the launcher finds both packages:
 ./bin/emacsvox-paddleocr --check
 #+end_src
 
+With the Debian package, use the installed launcher instead:
+
+#+begin_src sh
+/usr/share/emacsvox/bin/emacsvox-paddleocr --check
+#+end_src
+
+Use that installed path in the image-recognition examples below as well.
+
 The expected line names PaddlePaddle 3.3.0, PaddleOCR 3.7.0, and the CPU
 device.  A warning that ~ccache~ is absent is harmless for normal inference.
 oneDNN, formerly called MKL-DNN, is Paddle's optional optimized CPU execution

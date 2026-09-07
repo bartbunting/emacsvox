@@ -24,7 +24,7 @@ DEPENDS = " | ".join(f"{name} (>= 1:30.2)" for name in
 RECOMMENDS = "omnivox (>= 1.7.0)"
 RUNTIME_FILES = {
     "VERSION", "README.org", "COPYING", "AUTHORS", "THIRD_PARTY_NOTICES",
-    "bin/emacsvox", "bin/emacsvox-omnivox-components",
+    "bin/emacsvox", "bin/emacsvox-omnivox-components", "bin/emacsvox-paddleocr",
     "servers/omnivox", "servers/omnivox-log-filter",
     "utils/emacsvox-remote-startup.el", "utils/emacsvox-remote-check.el",
 }

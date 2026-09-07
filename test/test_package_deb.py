@@ -60,10 +60,33 @@ class DebianPackageTests(unittest.TestCase):
         self.assertIn(str(self.runtime), result.stdout)
         self.assertEqual([], list(Path(self.environment["HOME"]).iterdir()))
 
+    def test_ocr_launcher_preserves_relocated_paths_arguments_and_environment(self):
+        launcher = self.runtime / "bin/emacsvox-paddleocr"
+        self.assertTrue(launcher.is_file())
+        self.assertTrue(os.access(launcher, os.X_OK))
+        python = self.work / "stub python"
+        python.write_text('#!/bin/sh\nprintf "%s\\n" "$EMACSVOX_PADDLEOCR_VENV" '
+                          '"$XDG_DATA_HOME" "$@"\n')
+        python.chmod(0o755)
+        environment = {**self.environment,
+                       "EMACSVOX_PADDLEOCR_PYTHON": str(python),
+                       "EMACSVOX_PADDLEOCR_VENV": str(self.work / "private venv"),
+                       "XDG_DATA_HOME": str(self.work / "user data")}
+        arguments = ["a page's;$name.png", "--check"]
+        result = subprocess.run([str(launcher), *arguments], env=environment,
+                                capture_output=True, text=True, check=True)
+        self.assertEqual([environment["EMACSVOX_PADDLEOCR_VENV"],
+                          environment["XDG_DATA_HOME"],
+                          str(self.runtime / "etc/emacsvox-paddleocr.py"), *arguments],
+                         result.stdout.splitlines())
+
     def test_source_startup_and_offline_resources(self):
         expression = '''(progn
           (load (expand-file-name "lisp/emacsvox-loaddefs.el" emacsvox-directory))
           (require 'eww) (require 'emacsvox-eww)
+          (require 'emacsvox-ocr)
+          (unless (file-executable-p emacsvox-ocr-engine)
+            (error "Packaged default OCR launcher is unavailable"))
           (unless (equal "hello world" (emacsvox-dom-inner-text
               '(p nil "hello " (script nil "hidden") (b nil "world"))))
             (error "DOM compatibility failed"))

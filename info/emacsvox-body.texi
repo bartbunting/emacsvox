@@ -3656,6 +3656,14 @@ From the Emacsvox checkout@comma{} verify that the launcher finds both packages:
 ./bin/emacsvox-paddleocr --check
 @end example
 
+With the Debian package@comma{} use the installed launcher instead:
+
+@example
+/usr/share/emacsvox/bin/emacsvox-paddleocr --check
+@end example
+
+Use that installed path in the image-recognition examples below as well.
+
 The expected line names PaddlePaddle 3.3.0@comma{} PaddleOCR 3.7.0@comma{} and the CPU
 device.  A warning that @code{ccache} is absent is harmless for normal inference.
 oneDNN@comma{} formerly called MKL-DNN@comma{} is Paddle's optional optimized CPU execution
