@@ -2333,21 +2333,47 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 (define-key isearch-mode-map (kbd "M-C-f") 'emacsvox-speak-face-forward )
 ;; ISearch setup/teardown
 
-;; Produce auditory icon
+(defvar emacsvox-isearch--message-states nil
+  "Stack of message-speech states owned by active Isearch sessions.
+Each entry records the originating buffer, prior locality, and prior value.
+Keep the owner because multi-buffer searches can end in a different buffer.")
+
+(defun emacsvox-isearch--restore-message-state ()
+  "Restore and retire the innermost owned message-speech state."
+  (when emacsvox-isearch--message-states
+    (pcase-let ((`(,buffer ,local ,value)
+                 (pop emacsvox-isearch--message-states)))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (if local
+              (setq-local emacsvox-speak-messages value)
+            (kill-local-variable 'emacsvox-speak-messages)))))))
+
 (defun emacsvox-isearch-setup ()
   "Setup emacsvox isearch."
-  (emacsvox-icon 'open-object)
-  (setq emacsvox-speak-messages isearch-lazy-count)
-  (tts-speak (isearch-message-prefix)))
+  (push (list (current-buffer)
+              (local-variable-p 'emacsvox-speak-messages)
+              emacsvox-speak-messages)
+        emacsvox-isearch--message-states)
+  (condition-case error-data
+      (progn
+        (emacsvox-icon 'open-object)
+        (setq-local emacsvox-speak-messages isearch-lazy-count)
+        (tts-speak (isearch-message-prefix)))
+    ((error quit)
+     (emacsvox-isearch--restore-message-state)
+     (signal (car error-data) (cdr error-data)))))
 
 (defun emacsvox-isearch-teardown ()
   "Teardown emacsvox isearch."
-  (setq emacsvox-speak-messages t)
-  (emacsvox-icon 'close-object))
+  (when emacsvox-isearch--message-states
+    (emacsvox-isearch--restore-message-state)
+    (emacsvox-icon 'close-object)))
 
 (add-hook 'isearch-mode-hook 'emacsvox-isearch-setup)
 (add-hook 'isearch-mode-end-hook 'emacsvox-isearch-teardown)
-(add-hook 'isearch-mode-end-hook-quit 'emacsvox-isearch-teardown)
+;; `isearch-mode-end-hook-quit' is a boolean bound while the end hook runs,
+;; not a separate hook.  The end hook above handles both exit and quit.
 
 ;; Advice isearch-search to speak
 

@@ -141,6 +141,116 @@
           (speak "alpha beta" ,voice-bolden))))
       (should-not (get-text-property 1 'personality)))))
 
+(ert-deftest emacsvox-isearch-exit-and-quit-restore-message-preference ()
+  "Real Isearch exit and abort preserve both preference value and locality."
+  (let ((original-default (default-value 'emacsvox-speak-messages))
+        (emacsvox-isearch--message-states nil)
+        (isearch-lazy-highlight nil))
+    (unwind-protect
+        (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                  ((symbol-function 'tts-speak) #'ignore)
+                  ((symbol-function 'tts-notify) #'ignore))
+          (dolist (value '(nil t))
+            (set-default 'emacsvox-speak-messages value)
+            (dolist (local '(nil t))
+              (dolist (lazy-count '(nil t))
+                (dolist (abort '(nil t))
+                  (save-window-excursion
+                    (with-temp-buffer
+                      (switch-to-buffer (current-buffer))
+                      (insert "alpha beta")
+                      (goto-char (point-min))
+                      (when local (setq-local emacsvox-speak-messages value))
+                      (let ((isearch-lazy-count lazy-count))
+                        (unwind-protect
+                            (progn
+                              (isearch-mode t)
+                              (isearch-yank-string "alpha")
+                              (should (eq emacsvox-speak-messages lazy-count))
+                              (should (eq (default-value 'emacsvox-speak-messages) value))
+                              (if abort
+                                  (condition-case nil (isearch-abort) (quit nil))
+                                (isearch-exit))
+                              (should (eq emacsvox-speak-messages value))
+                              (should (eq (local-variable-p 'emacsvox-speak-messages) local))
+                              (should-not emacsvox-isearch--message-states))
+                          (when isearch-mode (isearch-done t)))))))))))
+      (set-default 'emacsvox-speak-messages original-default))))
+
+(ert-deftest emacsvox-isearch-suspension-and-nested-search-restore-state ()
+  "Suspending Isearch restores the preference until the outer search resumes."
+  (let ((emacsvox-isearch--message-states nil)
+        (isearch-lazy-highlight nil)
+        (isearch-lazy-count t))
+    (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+              ((symbol-function 'tts-speak) #'ignore)
+              ((symbol-function 'tts-notify) #'ignore))
+      (save-window-excursion
+        (with-temp-buffer
+          (switch-to-buffer (current-buffer))
+          (setq-local emacsvox-speak-messages nil)
+          (unwind-protect
+              (progn
+                (isearch-mode t)
+                (should emacsvox-speak-messages)
+                (with-isearch-suspended
+                 (should-not emacsvox-speak-messages)
+                 (should-not emacsvox-isearch--message-states)
+                 (isearch-mode t)
+                 (should emacsvox-speak-messages)
+                 (isearch-done)
+                 (should-not emacsvox-speak-messages))
+                (should isearch-mode)
+                (should emacsvox-speak-messages)
+                (isearch-done)
+                (should-not emacsvox-speak-messages)
+                (should (local-variable-p 'emacsvox-speak-messages))
+                (should-not emacsvox-isearch--message-states))
+            (when isearch-mode (isearch-done t))))))))
+
+(ert-deftest emacsvox-isearch-restores-owner-after-buffer-switch-or-death ()
+  "Ending in another buffer restores only the owner and tolerates its death."
+  (let ((emacsvox-isearch--message-states nil)
+        (isearch-lazy-count t)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon) (lambda (icon) (push icon events)))
+              ((symbol-function 'tts-speak) #'ignore))
+      (with-temp-buffer
+        (setq-local emacsvox-speak-messages nil)
+        (let ((owner (current-buffer)))
+          (emacsvox-isearch-setup)
+          (with-temp-buffer
+            (setq-local emacsvox-speak-messages 'other)
+            (emacsvox-isearch-teardown)
+            (should (eq emacsvox-speak-messages 'other)))
+          (should-not emacsvox-speak-messages)
+          (emacsvox-isearch-setup)
+          (kill-buffer owner)
+          (emacsvox-isearch-teardown)
+          (emacsvox-isearch-teardown)
+          (should-not emacsvox-isearch--message-states)))
+      (should (equal (nreverse events)
+                     '(open-object close-object open-object close-object))))))
+
+(ert-deftest emacsvox-isearch-feedback-errors-preserve-preference ()
+  "Opening and closing speech failures do not strand temporary preferences."
+  (let ((emacsvox-isearch--message-states nil)
+        (isearch-lazy-count t))
+    (with-temp-buffer
+      (setq-local emacsvox-speak-messages nil)
+      (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                ((symbol-function 'tts-speak) (lambda (&rest _) (error "speech failed"))))
+        (should-error (emacsvox-isearch-setup)))
+      (should-not emacsvox-speak-messages)
+      (should-not emacsvox-isearch--message-states)
+      (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
+                ((symbol-function 'tts-speak) #'ignore))
+        (emacsvox-isearch-setup))
+      (cl-letf (((symbol-function 'emacsvox-icon) (lambda (&rest _) (error "icon failed"))))
+        (should-error (emacsvox-isearch-teardown)))
+      (should-not emacsvox-speak-messages)
+      (should-not emacsvox-isearch--message-states))))
+
 (ert-deftest emacsvox-isearch-yank-feedback-is-target-aware ()
   "Only the matching interactive isearch yank command emits feedback."
   (let ((ems--interactive-fn-name 'isearch-yank-word)
