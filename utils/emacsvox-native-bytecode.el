@@ -8,8 +8,8 @@
 (require 'cl-lib)
 (require 'subr-x)
 
-(defun emacsvox-native-bytecode-plan (root)
-  "Return the Makefile's compiled modules in dependency order below ROOT."
+(defun emacsvox-native-bytecode--plan (root)
+  "Return ordered :sources and their compiled :dependencies below ROOT."
   (let ((variables (make-hash-table :test #'equal))
         (dependencies (make-hash-table :test #'equal))
         (visited (make-hash-table :test #'equal)) lines result)
@@ -58,7 +58,11 @@
         (unless (string-match-p "\\`[a-zA-Z0-9_-]+\\.elc\\'" module)
           (error "Unsupported compiled module: %s" module))
         (visit module)))
-    (nreverse result)))
+    (list :sources (nreverse result) :dependencies dependencies)))
+
+(defun emacsvox-native-bytecode-plan (root)
+  "Return the Makefile's compiled modules in dependency order below ROOT."
+  (plist-get (emacsvox-native-bytecode--plan root) :sources))
 
 (defun emacsvox-native-bytecode-main ()
   "Build or check this native checkout, selected through environment data."
@@ -66,7 +70,8 @@
     (error "Native Windows Emacs 30.2+ required"))
   (let* ((root (decode-coding-string (base64-decode-string (getenv "EMACSVOX_NATIVE_ROOT")) 'utf-8))
          (directory (expand-file-name "lisp" root))
-         (sources (emacsvox-native-bytecode-plan root))
+         (plan (emacsvox-native-bytecode--plan root))
+         (sources (plist-get plan :sources))
          (load-prefer-newer t)
          (gc-cons-threshold 64000000))
     (if (equal (getenv "EMACSVOX_NATIVE_BYTECODE") "check")
@@ -81,7 +86,13 @@
                            (with-temp-buffer
                              (insert-file-contents compiled nil 0 200)
                              (search-forward (concat ";;; in Emacs version " emacs-version "\n") nil t)))
-                (error "Missing or stale native byte-code; rerun the Windows installer: %s" compiled)))))
+                (error "Missing or stale native byte-code; rerun the Windows installer: %s" compiled))
+              (dolist (dependency (gethash (file-name-nondirectory compiled)
+                                          (plist-get plan :dependencies)))
+                (let ((input (expand-file-name dependency directory)))
+                  (when (file-newer-than-file-p input compiled)
+                    (error "Native byte-code %s is older than dependency %s; rerun the Windows installer"
+                           compiled input)))))))
       (dolist (compiled (directory-files directory t "\\.elc\\'")) (delete-file compiled))
       (load (expand-file-name "emacsvox-preamble.el" directory) nil t)
       (load (expand-file-name "emacsvox-autoload.el" directory) nil t)

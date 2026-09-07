@@ -52,5 +52,56 @@
           (should-error (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main))))
       (delete-directory root t))))
 
+(ert-deftest emacsvox-native-check-matches-make-dependency-freshness ()
+  "Native checks reject the same source and dependency staleness as Make."
+  (skip-unless (executable-find "make"))
+  (let* ((root (make-temp-file "emacsvox-native-edges-" t))
+         (directory (expand-file-name "lisp" root))
+         (process-environment (copy-sequence process-environment)))
+    (unwind-protect
+        (progn
+          (make-directory directory)
+          (with-temp-file (expand-file-name "Makefile" directory)
+            (insert "OBJECTS = app.elc middle.elc base.elc\n"
+                    "all: $(OBJECTS)\napp.elc: middle.elc\nmiddle.elc: base.elc\n"
+                    "%.elc: %.el\n\t@touch $@\n"))
+          (setenv "EMACSVOX_NATIVE_ROOT"
+                  (base64-encode-string (encode-coding-string root 'utf-8) t))
+          (setenv "EMACSVOX_NATIVE_BYTECODE" "check")
+          (dolist (case '((current (100 100 100) nil t)
+                          (direct (100 120 110) nil nil)
+                          (transitive (120 110 130) nil nil)
+                          (missing (100 110 120) missing nil)
+                          (source (100 110 120) source nil)))
+            (ert-info ((format "Freshness case: %s" (car case)))
+              (cl-mapc
+               (lambda (name age)
+                 (let* ((source (expand-file-name (concat name ".el") directory))
+                        (compiled (concat source "c")))
+                   (with-temp-file source (insert "; fixture source\n"))
+                   (set-file-times source (seconds-to-time 1000000000))
+                   (with-temp-file compiled
+                     (insert ";;; in Emacs version " emacs-version "\n"))
+                   (set-file-times compiled (seconds-to-time (+ 1000000000 age)))))
+               '("base" "middle" "app") (nth 1 case))
+              (pcase (nth 2 case)
+                ('missing (delete-file (expand-file-name "base.elc" directory)))
+                ('source (set-file-times (expand-file-name "base.el" directory)
+                                         (seconds-to-time 1000000200))))
+              (let (failure)
+                (condition-case error-data
+                    (with-output-to-string
+                      (let ((system-type 'windows-nt)) (emacsvox-native-bytecode-main)))
+                  (error (setq failure (error-message-string error-data))))
+                (should (eq (not failure) (nth 3 case)))
+                (when (memq (car case) '(direct transitive))
+                  (should (string-match-p "dependency" failure))))
+              (with-temp-buffer
+                (let ((status (call-process "make" nil t nil "-C" directory
+                                            "--question" "all")))
+                  (should (memq status '(0 1)))
+                  (should (eq (zerop status) (nth 3 case))))))))
+      (delete-directory root t))))
+
 (provide 'emacsvox-native-bytecode-tests)
 ;;; emacsvox-native-bytecode-tests.el ends here
