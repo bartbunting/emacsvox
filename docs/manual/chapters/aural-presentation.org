@@ -518,6 +518,15 @@ you press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ to save and apply the
 Returning to the engine list preserves staged route changes.  Leaving the
 workbench with @@texinfo:@kbd{q}@@ warns when those changes remain unsaved.
 
+Applying waits for each speech stream to acknowledge its configuration.  If
+an Omnivox apply times out, the Workbench reports /server outcome unconfirmed/.
+Emacsvox stops that apply and sends no later steps, but changes already sent
+may still take effect on the server.  A timeout does not undo the saved profile
+or confirm that the server rejected it.  Press @@texinfo:@kbd{r}@@ to reapply
+the committed profile and obtain a fresh result.  Save or cancel any newer
+staged edits before retrying.  A partial result retains the streams that
+acknowledged success and identifies those that timed out.
+
 The tuner names neutral effect values instead of speaking an ambiguous number:
 gain five is /unchanged/, low-pass nine is /disabled/, high-pass zero is
 /disabled/, pan five is /centre/, and reverb, echo, or chorus zero is

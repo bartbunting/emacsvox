@@ -196,6 +196,11 @@
    (equal emacsvox-aural-voice-workbench-staged-profile
           emacsvox-aural-voice-workbench-committed-profile)))
 
+(defun emacsvox-aural-voice-workbench--apply-timed-out-p (status)
+  "Return non-nil when any stream in apply STATUS timed out."
+  (seq-some (lambda (process) (eq 'timeout (plist-get process :phase)))
+            (plist-get status :processes)))
+
 (defun emacsvox-aural-voice-workbench--apply-status-description ()
   "Return concise apply status for the staged profile."
   (let* ((status emacsvox-aural-routing-apply-status)
@@ -209,9 +214,12 @@
               (cl-count
                'applied processes
                :key (lambda (process) (plist-get process :status)))))
-        (if processes
-            (format "%s %d/%d" state applied (length processes))
-          (format "%s" state))))))
+        (concat
+         (if processes
+             (format "%s %d/%d" state applied (length processes))
+           (format "%s" state))
+         (when (emacsvox-aural-voice-workbench--apply-timed-out-p status)
+           "; timed out; server outcome unconfirmed"))))))
 
 (defun emacsvox-aural-voice-workbench--inventory-counts ()
   "Return the engine and physical voice counts in the current inventory."
@@ -634,8 +642,10 @@ or persisting a routing choice."
       (let ((role (or (plist-get process :role) 'speech)))
         (if (not (eq (plist-get process :status) 'applied))
             (push
-             (format "%s failed %s"
-                     role (or (plist-get process :phase) "apply"))
+             (if (eq 'timeout (plist-get process :phase))
+                 (format "%s timed out; server outcome unconfirmed" role)
+               (format "%s failed %s"
+                       role (or (plist-get process :phase) "apply")))
              parts)
           (let* ((registration (plist-get process :registration))
                  (binding
@@ -2121,8 +2131,11 @@ command does not stop speech already playing."
                emacsvox-aural-voice-workbench-staged-profile))
         (emacsvox-aural-voice-workbench-refresh)
         (emacsvox-aural-voice-workbench--announce
-         "Voice configuration apply %s"
-         (plist-get status :status))))))
+         "Voice configuration apply %s%s"
+         (plist-get status :status)
+         (if (emacsvox-aural-voice-workbench--apply-timed-out-p status)
+             "; timed out; server outcome unconfirmed. Press r to reapply"
+           ""))))))
 
 (defun emacsvox-aural-voice-workbench--apply-callback ()
   "Return a callback targeting the current workbench buffer."

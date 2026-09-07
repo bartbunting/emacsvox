@@ -2867,6 +2867,16 @@ you press ‘w’ or ‘C-c C-c’ to save and apply them.  Returning to the
 engine list preserves staged route changes.  Leaving the workbench with
 ‘q’ warns when those changes remain unsaved.
 
+   Applying waits for each speech stream to acknowledge its
+configuration.  If an Omnivox apply times out, the Workbench reports
+_server outcome unconfirmed_.  Emacsvox stops that apply and sends no
+later steps, but changes already sent may still take effect on the
+server.  A timeout does not undo the saved profile or confirm that the
+server rejected it.  Press ‘r’ to reapply the committed profile and
+obtain a fresh result.  Save or cancel any newer staged edits before
+retrying.  A partial result retains the streams that acknowledged
+success and identifies those that timed out.
+
    The tuner names neutral effect values instead of speaking an
 ambiguous number: gain five is _unchanged_, low-pass nine is _disabled_,
 high-pass zero is _disabled_, pan five is _centre_, and reverb, echo, or
@@ -5579,7 +5589,33 @@ fragment identifiers, and personal/session scopes each share one working
 editor.  Reopening a dirty editor preserves its draft and source
 association.
 
-16.3.6 Notmuch contracts
+16.3.6 Omnivox voice configuration applies
+------------------------------------------
+
+‘omnivox-apply-voice-configuration’ captures one generation and its
+definitions for the original speech processes.  Applies may overlap.
+Each owns its request identifiers and retires only those callbacks when
+a process result becomes terminal.  Acknowledging routing precedes
+logical registration; one aggregate reports applied, partial, or failed
+after all participating processes finish.
+
+   The timeout closes pending results as failed with phase ‘timeout’,
+cancels the timer, and releases the apply's pending callbacks.  A late
+acknowledgement cannot start another phase, update acknowledged
+configuration, or publish a second terminal result.  A reply from a
+stopped or replaced process also cannot advance its old apply.  Request
+ownership must remain correct when replies are dispatched while a send
+is still returning.
+
+   This closes client work; it cannot undo a change already sent to the
+server.  The Workbench therefore describes a timeout as an unconfirmed
+server outcome and offers reapplication of the committed profile.  No
+late-reply history is retained for expired applies.  Keep request-table,
+late-reply, overlapping-apply, and replacement regressions in
+‘test/emacsvox-tts-tests.el’ and spoken timeout feedback coverage in
+‘test/emacsvox-aural-voice-workbench-tests.el’.
+
+16.3.7 Notmuch contracts
 ------------------------
 
 The live module is registered as an optional package integration.  Its
@@ -5610,7 +5646,7 @@ exact loaded ‘emacsvox-notmuch.elc’, compiler version, and the same
 focused selector, including real displayed-window reading for both
 advance paths.
 
-16.3.7 Agent Shell contracts
+16.3.8 Agent Shell contracts
 ----------------------------
 
 Use ‘M-x emacsvox-agent-shell-enable’ to reinstall speech hooks after
@@ -5688,7 +5724,7 @@ remain foreground interactions.  All new events and their outcome,
 count, or setting attributes are registered by the workflow semantic
 provider so Aural rules can customize their presentation.
 
-16.3.8 Magit contracts
+16.3.9 Magit contracts
 ----------------------
 
 Staging and selected synchronous operations collect Git outcomes at
@@ -5715,8 +5751,8 @@ from source, then again in a fresh Emacs with
 live buffer created with the former highlight mirroring needs a Magit
 refresh to rebuild its source properties.
 
-16.3.9 WSL2 Omnivox development staging
----------------------------------------
+16.3.10 WSL2 Omnivox development staging
+----------------------------------------
 
 The ordinary WSL2 user route is implemented by
 ‘bin/emacsvox-wsl-install’ and pinned by ‘etc/wsl-install.conf’.  Treat
@@ -5874,7 +5910,7 @@ repository to make its release guard pass.  Use ‘make windows-omnivox’
 only for the reproducible clean-release path documented in the
 user-facing WSL2 route.
 
-16.3.10 Aural experiments and guided changes
+16.3.11 Aural experiments and guided changes
 --------------------------------------------
 
 Physical experiments reuse the tuner with an exact engine/voice
@@ -6123,50 +6159,50 @@ Node: Explaining Presentation118667
 Node: Adjusting Presentation120695
 Node: Presentation Profiles126581
 Node: Voices And Routing128258
-Ref: Browse Eloquence And Compare Pitch136458
-Ref: Keep A Voice Experiment137705
-Ref: Change A Heading Voice Add A Cue Or Silence One138705
-Ref: Change A Blank-Line Tone139666
-Ref: Choose An Engine And Recover Unfinished Work140423
-Node: Sounds And Space141581
-Node: Presentation Troubleshooting143217
-Node: Voice Lock145255
-Node: Using Online Help148462
-Node: Emacs Packages152524
-Node: Document Authoring153898
-Node: Structured Editing154452
-Node: Browsing Structure155435
-Node: Web Browsing156033
-Node: Messaging156868
-Node: Editing Code157366
-Node: Development Environment157885
-Node: Desktop Management159421
-Node: Personal Information Management159923
-Node: Desktop Applications160455
-Node: Notmuch Mail167843
-Ref: Notmuch fields and privacy177186
-Node: Agent Shell182894
-Node: EAT Terminal Access195365
-Node: Running Terminal Based Applications212624
-Node: Starting Term213579
-Node: Term Input Modes214418
-Node: Term Speech Feedback215578
-Node: Reviewing The Term Screen216772
-Node: Term Help And Recovery218673
-Node: Emacsvox Keyboard Commands219572
-Node: Copyright220976
-Node: Acknowledgments221563
-Node: Developer Guide222589
-Node: Documentation Maintenance223753
-Node: Speech Server Protocols228553
-Ref: Testing A Direct Legacy Server234460
-Ref: Commands That Queue Output235019
-Ref: Commands That Set State238053
-Node: Integration Maintenance240647
-Ref: Supported Emacs versions242689
-Ref: Native Windows builds243377
-Ref: Remote preview validation245437
-Node: Concept Index274567
+Ref: Browse Eloquence And Compare Pitch137048
+Ref: Keep A Voice Experiment138295
+Ref: Change A Heading Voice Add A Cue Or Silence One139295
+Ref: Change A Blank-Line Tone140256
+Ref: Choose An Engine And Recover Unfinished Work141013
+Node: Sounds And Space142171
+Node: Presentation Troubleshooting143807
+Node: Voice Lock145845
+Node: Using Online Help149052
+Node: Emacs Packages153114
+Node: Document Authoring154488
+Node: Structured Editing155042
+Node: Browsing Structure156025
+Node: Web Browsing156623
+Node: Messaging157458
+Node: Editing Code157956
+Node: Development Environment158475
+Node: Desktop Management160011
+Node: Personal Information Management160513
+Node: Desktop Applications161045
+Node: Notmuch Mail168433
+Ref: Notmuch fields and privacy177776
+Node: Agent Shell183484
+Node: EAT Terminal Access195955
+Node: Running Terminal Based Applications213214
+Node: Starting Term214169
+Node: Term Input Modes215008
+Node: Term Speech Feedback216168
+Node: Reviewing The Term Screen217362
+Node: Term Help And Recovery219263
+Node: Emacsvox Keyboard Commands220162
+Node: Copyright221566
+Node: Acknowledgments222153
+Node: Developer Guide223179
+Node: Documentation Maintenance224343
+Node: Speech Server Protocols229143
+Ref: Testing A Direct Legacy Server235050
+Ref: Commands That Queue Output235609
+Ref: Commands That Set State238643
+Node: Integration Maintenance241237
+Ref: Supported Emacs versions243279
+Ref: Native Windows builds243967
+Ref: Remote preview validation246027
+Node: Concept Index276556
 
 End Tag Table
 

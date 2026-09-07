@@ -2933,6 +2933,15 @@ you press @kbd{w} or @kbd{C-c C-c} to save and apply them.
 Returning to the engine list preserves staged route changes.  Leaving the
 workbench with @kbd{q} warns when those changes remain unsaved.
 
+Applying waits for each speech stream to acknowledge its configuration.  If
+an Omnivox apply times out@comma{} the Workbench reports @emph{server outcome unconfirmed}.
+Emacsvox stops that apply and sends no later steps@comma{} but changes already sent
+may still take effect on the server.  A timeout does not undo the saved profile
+or confirm that the server rejected it.  Press @kbd{r} to reapply
+the committed profile and obtain a fresh result.  Save or cancel any newer
+staged edits before retrying.  A partial result retains the streams that
+acknowledged success and identifies those that timed out.
+
 The tuner names neutral effect values instead of speaking an ambiguous number:
 gain five is @emph{unchanged}@comma{} low-pass nine is @emph{disabled}@comma{} high-pass zero is
 @emph{disabled}@comma{} pan five is @emph{centre}@comma{} and reverb@comma{} echo@comma{} or chorus zero is
@@ -5871,6 +5880,28 @@ Find rule editors by scope and target identity@comma{} not by a formatted buffer
 name.  Buffer scopes belong to buffer objects@comma{} fragment scopes to fragment
 identifiers@comma{} and personal/session scopes each share one working editor.
 Reopening a dirty editor preserves its draft and source association.
+
+@subsection Omnivox voice configuration applies
+
+@code{omnivox-apply-voice-configuration} captures one generation and its definitions
+for the original speech processes.  Applies may overlap.  Each owns its request
+identifiers and retires only those callbacks when a process result becomes
+terminal.  Acknowledging routing precedes logical registration; one aggregate
+reports applied@comma{} partial@comma{} or failed after all participating processes finish.
+
+The timeout closes pending results as failed with phase @code{timeout}@comma{} cancels
+the timer@comma{} and releases the apply's pending callbacks.  A late acknowledgement
+cannot start another phase@comma{} update acknowledged configuration@comma{} or publish a
+second terminal result.  A reply from a stopped or replaced process also
+cannot advance its old apply.  Request ownership must remain correct when
+replies are dispatched while a send is still returning.
+
+This closes client work; it cannot undo a change already sent to the server.
+The Workbench therefore describes a timeout as an unconfirmed server outcome
+and offers reapplication of the committed profile.  No late-reply history is
+retained for expired applies.  Keep request-table@comma{} late-reply@comma{} overlapping-apply@comma{}
+and replacement regressions in @code{test/emacsvox-tts-tests.el} and spoken timeout
+feedback coverage in @code{test/emacsvox-aural-voice-workbench-tests.el}.
 
 @subsection Notmuch contracts
 

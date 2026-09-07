@@ -99,6 +99,27 @@
          (emacsvox-aural-voice-workbench-refresh)
          ,@body))))
 
+(ert-deftest emacsvox-aural-voice-workbench-timeout-reports-unconfirmed-outcome ()
+  "Timeout feedback preserves partial success and offers a retry without claiming rollback."
+  (emacsvox-test--with-voice-workbench
+    (setq emacsvox-aural-routing-apply-status
+          '(:profile-id workstation :status partial
+            :processes ((:role speaker :status applied)
+                        (:role notification :status failed :phase timeout))))
+    (let (spoken)
+      (cl-letf (((symbol-function 'emacsvox-aural-voice-workbench--announce)
+                 (lambda (format-string &rest arguments)
+                   (setq spoken (apply #'format format-string arguments)))))
+        (emacsvox-aural-voice-workbench--apply-complete
+         (current-buffer) emacsvox-aural-routing-apply-status))
+      (should (string-match-p "partial 1/2; timed out; server outcome unconfirmed"
+                              (emacsvox-aural-voice-workbench--apply-status-description)))
+      (should (string-match-p "notification timed out; server outcome unconfirmed"
+                              (emacsvox-aural-voice-workbench--registration-description
+                               'voice-bolden)))
+      (should (string-match-p "partial; timed out; server outcome unconfirmed" spoken))
+      (should (string-match-p "Press r to reapply" spoken)))))
+
 (ert-deftest emacsvox-aural-voice-workbench-lists-only-usable-engines ()
   "Quick preference excludes disabled, unavailable, and failed engines."
   (emacsvox-test--with-voice-workbench

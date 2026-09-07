@@ -1303,7 +1303,10 @@ Return the number of processes sent the atomic registry replacement."
 
 CALLBACK receives one terminal aggregate with a result for each distinct live
 speaker or notification process.  A process policy is acknowledged before its
-logical registry is replaced, so partial failure is explicit and retryable."
+logical registry is replaced, so partial failure is explicit and retryable.
+Timeout closes the apply and discards its pending callbacks.  Late replies
+cannot advance it or confirm its outcome; changes already sent may still have
+taken effect on the server.  Reapply to confirm the desired configuration."
   (let* ((processes (omnivox--voice-configuration-processes))
          (registrations
           (mapcar
@@ -1326,7 +1329,7 @@ logical registry is replaced, so partial failure is explicit and retryable."
                :time (current-time))
          callback)
       (let ((pending (make-hash-table :test #'eq))
-            results timer done)
+            requests results timer done)
         (dolist (process processes) (puthash process t pending))
         (cl-labels
             ((complete
@@ -1354,8 +1357,40 @@ logical registry is replaced, so partial failure is explicit and retryable."
               (process result)
               (when (gethash process pending)
                 (remhash process pending)
+                (dolist (request requests)
+                  (when (eq process (car request))
+                    (remhash (cdr request) (omnivox--pending-requests process))))
+                (setq requests (cl-delete process requests :key #'car :test #'eq))
                 (push result results)
                 (when (zerop (hash-table-count pending)) (complete))))
+             (send-request
+              (process request response-function)
+              (when (gethash process pending)
+                (condition-case error-data
+                    (let ((identifier
+                           (omnivox--send-control-request
+                            process request
+                            (lambda (owner response)
+                              (when (gethash owner pending)
+                                (if (and (process-live-p owner)
+                                         (memq owner (list tts-speaker-process
+                                                           tts-notify-process)))
+                                    (funcall response-function owner response)
+                                  (finish
+                                   owner
+                                   (omnivox--voice-configuration-result
+                                    owner 'failed :phase 'submission
+                                    :code 'process-unavailable))))))))
+                      ;; Writing may dispatch replies, including completion,
+                      ;; before the request identifier is returned to us.
+                      (if (gethash process pending)
+                          (push (cons process identifier) requests)
+                        (remhash identifier (omnivox--pending-requests process))))
+                  (error
+                   (finish
+                    process
+                    (omnivox--voice-configuration-result
+                     process 'failed :phase 'submission :condition error-data))))))
              (registration-response
               (process response)
               (if (equal (plist-get response :type)
@@ -1379,7 +1414,7 @@ logical registry is replaced, so partial failure is explicit and retryable."
                   :response (copy-tree response)))))
              (register
               (process)
-              (omnivox--send-control-request
+              (send-request
                process
                (append
                 (list :type "register_logical_voices"
@@ -1433,7 +1468,7 @@ logical registry is replaced, so partial failure is explicit and retryable."
                       process "runtime_routing_policy")
                      (not
                       (omnivox--process-routing-policy-current-p process)))
-                    (omnivox--send-control-request
+                    (send-request
                      process
                      (append
                       (list

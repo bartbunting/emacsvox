@@ -288,6 +288,31 @@ name.  Buffer scopes belong to buffer objects, fragment scopes to fragment
 identifiers, and personal/session scopes each share one working editor.
 Reopening a dirty editor preserves its draft and source association.
 
+** Omnivox voice configuration applies
+:PROPERTIES:
+:TEXINFO_NODE: no
+:END:
+
+~omnivox-apply-voice-configuration~ captures one generation and its definitions
+for the original speech processes.  Applies may overlap.  Each owns its request
+identifiers and retires only those callbacks when a process result becomes
+terminal.  Acknowledging routing precedes logical registration; one aggregate
+reports applied, partial, or failed after all participating processes finish.
+
+The timeout closes pending results as failed with phase ~timeout~, cancels
+the timer, and releases the apply's pending callbacks.  A late acknowledgement
+cannot start another phase, update acknowledged configuration, or publish a
+second terminal result.  A reply from a stopped or replaced process also
+cannot advance its old apply.  Request ownership must remain correct when
+replies are dispatched while a send is still returning.
+
+This closes client work; it cannot undo a change already sent to the server.
+The Workbench therefore describes a timeout as an unconfirmed server outcome
+and offers reapplication of the committed profile.  No late-reply history is
+retained for expired applies.  Keep request-table, late-reply, overlapping-apply,
+and replacement regressions in ~test/emacsvox-tts-tests.el~ and spoken timeout
+feedback coverage in ~test/emacsvox-aural-voice-workbench-tests.el~.
+
 ** Notmuch contracts
 :PROPERTIES:
 :TEXINFO_NODE: no

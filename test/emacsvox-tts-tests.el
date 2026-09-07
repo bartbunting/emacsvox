@@ -1958,6 +1958,184 @@
           (delete-process speaker)
           (delete-process notification))))))
 
+(defmacro emacsvox-test--with-configuration-requests (&rest body)
+  "Run BODY with real request tables and controlled transport and timers."
+  (declare (indent 0) (debug t))
+  `(let* ((speaker (make-pipe-process :name "config-timeout-main" :noquery t))
+          (notification (make-pipe-process :name "config-timeout-notify" :noquery t))
+          (tts-speaker-process speaker) (tts-notify-process notification)
+          (omnivox--logical-registry-generation 0)
+          (omnivox--logical-registry-signature nil)
+          (omnivox-engine-priority-ids '("espeak"))
+          (omnivox-fallback-engine-ids nil) (omnivox-disabled-engine-ids nil)
+          (omnivox-voice-configuration-last-result nil)
+          (omnivox-voice-configuration-applied-hook nil)
+          (omnivox-initial-routing-ready-hook nil)
+          (omnivox-logical-voice-registration nil)
+          (cancel-timer-function (symbol-function 'cancel-timer))
+          requests timers cancelled-timers terminal)
+     (unwind-protect
+         (progn
+           (dolist (process (list speaker notification))
+             (process-put process omnivox--control-capabilities-property
+                          '(:features ("runtime_routing_policy"
+                                        "logical_voice_registration"))))
+           (cl-letf
+               (((symbol-function 'process-send-string)
+                 (lambda (process command)
+                   (push (cons process (emacsvox-test--omnivox-decode-command command))
+                         requests)))
+                ((symbol-function 'run-at-time)
+                 (lambda (_seconds _repeat function &rest arguments)
+                   (let ((timer (timer-create)))
+                     (timer-set-function timer function arguments)
+                     (push timer timers)
+                     timer)))
+                ((symbol-function 'cancel-timer)
+                 (lambda (timer)
+                   (push timer cancelled-timers)
+                   (funcall cancel-timer-function timer)))
+                ((symbol-function 'omnivox--process-logical-registry-content)
+                 (lambda (_) '(:definitions [] :fallback_policy nil))))
+             ,@body))
+       (dolist (timer timers) (cancel-timer timer))
+       (delete-process speaker)
+       (delete-process notification))))
+
+(defun emacsvox-test--configuration-ack (write)
+  "Return a successful server acknowledgement for captured WRITE."
+  (let ((request (cdr write)))
+    (append
+     (list :protocol_version 1 :request_id (plist-get request :request_id))
+     (if (equal (plist-get request :type) "set_routing_policy")
+         (list :type "routing_policy_applied"
+               :routing_policy
+               (list :routing_policy_generation
+                     (plist-get request :routing_policy_generation)
+                     :policy '(:preferred_engine_ids ["espeak"]
+                               :fallback_engine_ids [] :disabled_engine_ids [])))
+       (list :type "logical_voices_registered"
+             :registration
+             (list :registry_generation (plist-get request :registry_generation)
+                   :bindings []))))))
+
+(ert-deftest emacsvox-tts-omnivox-timeout-retires-only-owned-requests ()
+  "Timeout releases its callbacks and cannot send a later registration."
+  (emacsvox-test--with-configuration-requests
+    (setq tts-notify-process nil)
+    (let ((unrelated (omnivox--send-control-request
+                      speaker '(:type "get_inventory") #'ignore)))
+      (omnivox-apply-voice-configuration (lambda (result) (push result terminal)))
+      (let* ((write (car requests))
+             (response (emacsvox-test--configuration-ack write))
+             (callback (gethash (plist-get response :request_id)
+                                (omnivox--pending-requests speaker))))
+        (should (= 2 (hash-table-count (omnivox--pending-requests speaker))))
+        (funcall (timer--function (car timers)))
+        (funcall (timer--function (car timers)))
+        (should (= 1 (hash-table-count (omnivox--pending-requests speaker))))
+        (should (gethash unrelated (omnivox--pending-requests speaker)))
+        (should (memq (car timers) cancelled-timers))
+        (omnivox--dispatch-control-response speaker response)
+        ;; A callback already captured by a dispatcher must also be harmless.
+        (funcall callback speaker response)
+        (should (= 2 (length requests)))
+        (should-not (omnivox--process-routing-registration speaker))
+        (should (= 1 (length terminal)))
+        (should (eq 'timeout
+                    (plist-get (car (plist-get (car terminal) :processes)) :phase)))))))
+
+(ert-deftest emacsvox-tts-omnivox-timeout-ignores-late-registration ()
+  "A late registration cannot turn a timed-out apply into acknowledged state."
+  (emacsvox-test--with-configuration-requests
+    (setq tts-notify-process nil)
+    (process-put speaker omnivox--control-capabilities-property
+                 '(:features ("logical_voice_registration")))
+    (omnivox-apply-voice-configuration (lambda (result) (push result terminal)))
+    (let ((response (emacsvox-test--configuration-ack (car requests))))
+      (funcall (timer--function (car timers)))
+      (should (= 0 (hash-table-count (omnivox--pending-requests speaker))))
+      (omnivox--dispatch-control-response speaker response)
+      (should-not (process-get speaker omnivox--control-registration-property))
+      (should-not omnivox-logical-voice-registration)
+      (should (= 1 (length terminal)))
+      (should (eq 'failed (plist-get (car terminal) :status))))))
+
+(ert-deftest emacsvox-tts-omnivox-timeout-leaves-overlapping-apply-live ()
+  "Expiring one apply cannot consume either lane's newer apply callbacks."
+  (emacsvox-test--with-configuration-requests
+    (omnivox-apply-voice-configuration
+     (lambda (result) (push (cons 'old result) terminal)))
+    (let ((expired-timer (car timers)) (old-writes requests))
+      (setq requests nil)
+      (omnivox-apply-voice-configuration
+       (lambda (result) (push (cons 'new result) terminal)))
+      (let ((new-writes requests))
+        (setq requests nil)
+        (funcall (timer--function expired-timer))
+        (dolist (process (list speaker notification))
+          (should (= 1 (hash-table-count (omnivox--pending-requests process)))))
+        (dolist (write old-writes)
+          (omnivox--dispatch-control-response
+           (car write) (emacsvox-test--configuration-ack write)))
+        (should-not requests)
+        (dolist (write new-writes)
+          (omnivox--dispatch-control-response
+           (car write) (emacsvox-test--configuration-ack write)))
+        (should (= 2 (length requests)))
+        (dolist (write requests)
+          (omnivox--dispatch-control-response
+           (car write) (emacsvox-test--configuration-ack write)))
+        (should (= 2 (length terminal)))
+        (should (eq 'failed (plist-get (cdr (assq 'old terminal)) :status)))
+        (should (eq 'applied (plist-get (cdr (assq 'new terminal)) :status)))
+        (dolist (process (list speaker notification))
+          (should (= 0 (hash-table-count (omnivox--pending-requests process)))))))))
+
+(ert-deftest emacsvox-tts-omnivox-apply-rejects-replaced-owner ()
+  "An old process reply cannot advance an apply after its owner is replaced."
+  (emacsvox-test--with-configuration-requests
+    (setq tts-notify-process nil)
+    (omnivox-apply-voice-configuration (lambda (result) (push result terminal)))
+    (setq tts-speaker-process notification)
+    (omnivox--dispatch-control-response
+     speaker (emacsvox-test--configuration-ack (car requests)))
+    (should (= 1 (length requests)))
+    (should (= 1 (length terminal)))
+    (should (eq 'failed (plist-get (car terminal) :status)))
+    (should (= 0 (hash-table-count (omnivox--pending-requests speaker))))
+    (should-not (process-get notification omnivox--control-registration-property))))
+
+(ert-deftest emacsvox-tts-omnivox-apply-closes-on-second-phase-send-error ()
+  "A failed registration send closes the operation and releases its timer."
+  (emacsvox-test--with-configuration-requests
+    (setq tts-notify-process nil)
+    (omnivox-apply-voice-configuration (lambda (result) (push result terminal)))
+    (cl-letf (((symbol-function 'process-send-string)
+               (lambda (&rest _) (error "registration pipe failed"))))
+      (omnivox--dispatch-control-response
+       speaker (emacsvox-test--configuration-ack (car requests))))
+    (should (= 1 (length terminal)))
+    (should (eq 'failed (plist-get (car terminal) :status)))
+    (should (= 0 (hash-table-count (omnivox--pending-requests speaker))))
+    (should (memq (car timers) cancelled-timers))))
+
+(ert-deftest emacsvox-tts-omnivox-apply-handles-replies-during-send ()
+  "Responses received while writing cannot leave completed requests retained."
+  (emacsvox-test--with-configuration-requests
+    (setq tts-notify-process nil)
+    (cl-letf (((symbol-function 'process-send-string)
+               (lambda (process command)
+                 (omnivox--dispatch-control-response
+                  process
+                  (emacsvox-test--configuration-ack
+                   (cons process (emacsvox-test--omnivox-decode-command command)))))))
+      (omnivox-apply-voice-configuration (lambda (result) (push result terminal))))
+    (should (= 1 (length terminal)))
+    (should (eq 'applied (plist-get (car terminal) :status)))
+    (should (= 0 (hash-table-count (omnivox--pending-requests speaker))))
+    (should (memq (car timers) cancelled-timers))))
+
 (ert-deftest emacsvox-tts-omnivox-reports-partial-configuration-apply ()
   "Complete configuration apply returns one terminal result per speech stream."
   (let* ((speaker
