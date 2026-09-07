@@ -1,4 +1,4 @@
-;; Emacsvox compatibility-bridge baseline: 69e71b0b2.
+;; Emacsvox compatibility-bridge baseline, updated for named palette voices.
 ;; Captured with Emacs 31 from test/scenarios/emacsvox-core-scenarios.el.
 ((:name forward-char :events ((stop nil) (letter "l")) :value nil
 	:state
@@ -19,14 +19,14 @@
  (:name beginning-of-buffer :events
 	((message "Mark set") (icon large-movement) (stop nil)
 	 (speak (:text "first"))
-	 (notify (:text " top " :personalities ((0 5 acss-p0-s0))) nil))
+	 (notify (:text " top " :personalities ((0 5 voice-monotone-extra))) nil))
 	:value nil :state
 	(:text "first\nsecond\n" :point 1 :mark 9 :mark-active t
 	       :modified nil :kill-ring nil))
  (:name end-of-buffer :events
 	((message "Mark set") (icon large-movement) (stop nil)
 	 (tone 130.8 150 force)
-	 (notify (:text " bottom " :personalities ((0 8 acss-p0-s0)))
+	 (notify (:text " bottom " :personalities ((0 8 voice-monotone-extra)))
 		 nil))
 	:value nil :state
 	(:text "first\nsecond\n" :point 14 :mark 1 :mark-active t
