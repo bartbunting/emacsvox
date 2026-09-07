@@ -808,6 +808,14 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
   (dolist (event '(nil 8 tab escape ?x))
     (should-not (emacsvox-eat--raw-input-action event))))
 
+(ert-deftest emacsvox-eat-raw-input-parses-fresh-key-symbols ()
+  "Raw input actions do not depend on a previously parsed key event."
+  (dolist (case '(("return" . submit) ("C-backspace" . backspace)
+                  ("M-deletechar" . delete) ("tab" . nil)))
+    (ert-info ((car case))
+      (should (eq (emacsvox-eat--raw-input-action (make-symbol (car case)))
+                  (cdr case))))))
+
 (ert-deftest emacsvox-eat-raw-deletion-cannot-speak-adjacent-screen-text ()
   "A deletion key clears the legacy character-correlation path."
   (with-temp-buffer
@@ -1147,6 +1155,18 @@ When EVENT is non-nil, record it through EAT's real input-advice path first."
     (should (eq (emacsvox-eat--navigation-unit (car case)) (caddr case))))
   (should-not (emacsvox-eat--navigation-direction ?j))
   (should-not (emacsvox-eat--navigation-direction 'return)))
+
+(ert-deftest emacsvox-eat-navigation-parses-fresh-key-symbols ()
+  "Navigation works before Emacs has cached a symbolic event's modifiers."
+  (dolist (case '(("up" up nil) ("tab" forward nil)
+                  ("backtab" backward nil) ("iso-lefttab" backward nil)
+                  ("M-left" backward word) ("C-right" forward word)))
+    (ert-info ((car case))
+      ;; Uninterned symbols have no event parsing cache, even in GUI builds.
+      (should (eq (emacsvox-eat--navigation-direction (make-symbol (car case)))
+                  (cadr case)))
+      (should (eq (emacsvox-eat--navigation-unit (make-symbol (car case)))
+                  (caddr case))))))
 
 (ert-deftest emacsvox-eat-meta-word-navigation-speaks-rendered-span ()
   "Meta-word motion is navigation and speaks its exact rendered span."

@@ -387,8 +387,9 @@ reaches this advice."
 (defun emacsvox-eat--navigation-direction (event)
   "Return a normalized terminal navigation direction for EVENT."
   (when event
-    (let ((basic (event-basic-type event))
-          (modifiers (event-modifiers event)))
+    ;; Parse modifiers first: a fresh symbol has no cached basic type yet.
+    (let* ((modifiers (event-modifiers event))
+           (basic (event-basic-type event)))
       (or
        (and (or (memq 'meta modifiers)
                 (and (memq 'control modifiers)
@@ -413,8 +414,8 @@ reaches this advice."
 (defun emacsvox-eat--navigation-unit (event)
   "Return `word' when EVENT conventionally moves by a terminal word."
   (when event
-    (let ((basic (event-basic-type event))
-          (modifiers (event-modifiers event)))
+    (let* ((modifiers (event-modifiers event))
+           (basic (event-basic-type event)))
       (when (or (and (memq 'meta modifiers)
                      (memq basic '(?b ?f left right)))
                 (and (memq 'control modifiers)
@@ -425,8 +426,8 @@ reaches this advice."
   "Return the content-free main-screen action represented by EVENT.
 The return value is one of `submit', `backspace', `delete', `kill', or nil."
   (when event
-    (let ((basic (event-basic-type event))
-          (modifiers (event-modifiers event)))
+    (let* ((modifiers (event-modifiers event))
+           (basic (event-basic-type event)))
       (cond
        ((or (memq event '(10 13))
             (memq basic '(linefeed return)))
