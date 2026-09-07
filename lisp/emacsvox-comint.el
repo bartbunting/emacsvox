@@ -1058,6 +1058,75 @@ Routine Comint history-position messages are silenced while ORIGINAL runs."
  #'emacsvox--advice-comint-dynamic-list-filename-completions-after
  '((name . emacsvox)))
 
+;;; Shell command completion:
+
+(defcustom emacsvox-shell-complete-windows-commands nil
+  "Include Windows drive directories in WSL shell command-name completion.
+The default omits these directories from command lookup to avoid long
+pauses scanning Windows files.  The shell's PATH and ordinary program
+execution are unchanged, as is explicit filename completion.
+This option affects only local Shell buffers under GNU/Linux with Windows
+drive mounts.  Set it to t to restore Windows command-name candidates."
+  :group 'emacsvox
+  :type 'boolean)
+
+(defun emacsvox-shell--windows-mounts ()
+  "Return Windows drive mount directories from the local mount table.
+Recognize both WSL's drvfs and its 9p transport, including custom mount
+locations.  Return nil if the mount table cannot be read."
+  (condition-case nil
+      (with-temp-buffer
+        (insert-file-contents "/proc/mounts")
+        (cl-loop
+         for line in (split-string (buffer-string) "\n" t)
+         for fields = (split-string line)
+         for type = (nth 2 fields)
+         when (or (equal type "drvfs")
+                  (and (equal type "9p")
+                       (string-match-p
+                        "\\(?:\\`\\|[,;]\\)aname=drvfs\\(?:[,;]\\|\\'\\)"
+                        (or (nth 3 fields) ""))))
+         collect
+         (file-name-as-directory
+          (replace-regexp-in-string
+           "\\\\\\([0-7]\\{3\\}\\)"
+           (lambda (escape)
+             (string (string-to-number (substring escape 1) 8)))
+           (nth 1 fields) t t))))
+    (file-error nil)))
+
+(defun emacsvox--advice-shell-command-completion-data-around
+    (original &rest arguments)
+  "Call ORIGINAL with ARGUMENTS using the selected shell completion path.
+Only command-name lookup excludes Windows mounts; do not change the shell
+environment or retain a filtered `exec-path' outside this call."
+  (if-let* (((not emacsvox-shell-complete-windows-commands))
+            ((eq system-type 'gnu/linux))
+            ((derived-mode-p 'shell-mode))
+            ((not (file-remote-p default-directory)))
+            (mounts (emacsvox-shell--windows-mounts)))
+      (let ((exec-path
+             ;; Shell excludes the final exec-directory entry itself.  Keep
+             ;; that slot even when Emacs is installed on a Windows drive.
+             (append
+              (cl-remove-if
+               (lambda (directory)
+                 (let ((expanded
+                        (file-name-as-directory
+                         (expand-file-name (or directory ".")))))
+                   (cl-some (lambda (mount)
+                              (string-prefix-p mount expanded))
+                            mounts)))
+               (butlast exec-path))
+              (last exec-path))))
+        (apply original arguments))
+    (apply original arguments)))
+
+(advice-add
+ 'shell--command-completion-data :around
+ #'emacsvox--advice-shell-command-completion-data-around
+ '((name . emacsvox)))
+
 ;;; dirtrack-procfs:
 
 (declare-function shell-dirtrack-mode "shell" (&optional arg))

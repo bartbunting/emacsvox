@@ -3505,6 +3505,15 @@ a built-in terminal with no additional package is preferable, use *note
 Running Terminal Based Applications::.  For ordinary line-oriented shell
 commands, ‘M-x shell’ is usually the simplest route.
 
+   In WSL Shell buffers, command-name completion skips Windows drive
+directories by default.  Scanning large directories such as
+‘C:\Windows\System32’ can otherwise pause Emacs for many seconds.
+Windows programs still run by name, and explicit filename completion,
+including paths under ‘/mnt/c/’, remains available.  To include Windows
+command names in completion again, use ‘M-x customize-option RET
+emacsvox-shell-complete-windows-commands RET’ and enable the option.
+This setting leaves native Windows and remote Shell buffers unchanged.
+
 8.10.2 Forms Mode
 -----------------
 
@@ -6061,7 +6070,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * finding:                               Context-Sensitive Interaction.
                                                               (line  56)
 * Forms mode:                            Desktop Applications.
-                                                              (line  17)
+                                                              (line  26)
 * frozen EAT review:                     EAT Terminal Access. (line 176)
 * integrations:                          Emacs Packages.      (line   6)
 * Introduction:                          Introduction.        (line   6)
@@ -6084,16 +6093,16 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
 * Notmuch Show:                          Notmuch Mail.        (line 140)
 * Notmuch Tree support:                  Notmuch Mail.        (line 302)
 * OCR:                                   Desktop Applications.
-                                                              (line  27)
+                                                              (line  36)
 * Online Help:                           Using Online Help.   (line   6)
 * OSC 52, EAT:                           EAT Terminal Access. (line 295)
 * Outline mode:                          Structured Editing.  (line   6)
 * packages, speech support:              Emacs Packages.      (line   6)
 * PaddleOCR:                             Desktop Applications.
-                                                              (line  27)
+                                                              (line  36)
 * password input, EAT:                   EAT Terminal Access. (line 270)
 * PDF, converting to text:               Desktop Applications.
-                                                              (line  27)
+                                                              (line  36)
 * personal information management:       Personal Information Management.
                                                               (line   6)
 * presentation modalities:               Presentation Modalities.
@@ -6130,7 +6139,7 @@ File: emacsvox.info,  Node: Concept Index,  Prev: Developer Guide,  Up: Top
                                                               (line  28)
 * structured navigation <1>:             Browsing Structure.  (line   6)
 * tables, OCR:                           Desktop Applications.
-                                                              (line  27)
+                                                              (line  36)
 * tabs:                                  Desktop Management.  (line   6)
 * tags, Notmuch:                         Notmuch Mail.        (line 202)
 * Tempo:                                 Structured Editing.  (line   6)
@@ -6220,30 +6229,30 @@ Node: Development Environment158926
 Node: Desktop Management160462
 Node: Personal Information Management160964
 Node: Desktop Applications161496
-Node: Notmuch Mail169083
-Ref: Notmuch fields and privacy178426
-Node: Agent Shell184134
-Node: EAT Terminal Access196605
-Node: Running Terminal Based Applications213864
-Node: Starting Term214819
-Node: Term Input Modes215658
-Node: Term Speech Feedback216818
-Node: Reviewing The Term Screen218012
-Node: Term Help And Recovery219913
-Node: Emacsvox Keyboard Commands220812
-Node: Copyright222216
-Node: Acknowledgments222803
-Node: Developer Guide223829
-Node: Documentation Maintenance224993
-Node: Speech Server Protocols229793
-Ref: Testing A Direct Legacy Server235700
-Ref: Commands That Queue Output236259
-Ref: Commands That Set State239293
-Node: Integration Maintenance241887
-Ref: Supported Emacs versions244617
-Ref: Native Windows builds245305
-Ref: Remote preview validation247365
-Node: Concept Index278655
+Node: Notmuch Mail169638
+Ref: Notmuch fields and privacy178981
+Node: Agent Shell184689
+Node: EAT Terminal Access197160
+Node: Running Terminal Based Applications214419
+Node: Starting Term215374
+Node: Term Input Modes216213
+Node: Term Speech Feedback217373
+Node: Reviewing The Term Screen218567
+Node: Term Help And Recovery220468
+Node: Emacsvox Keyboard Commands221367
+Node: Copyright222771
+Node: Acknowledgments223358
+Node: Developer Guide224384
+Node: Documentation Maintenance225548
+Node: Speech Server Protocols230348
+Ref: Testing A Direct Legacy Server236255
+Ref: Commands That Queue Output236814
+Ref: Commands That Set State239848
+Node: Integration Maintenance242442
+Ref: Supported Emacs versions245172
+Ref: Native Windows builds245860
+Ref: Remote preview validation247920
+Node: Concept Index279210
 
 End Tag Table
 

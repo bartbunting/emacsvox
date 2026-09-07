@@ -65,7 +65,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1526 commands and 206 options.
+This chapter documents a total of 1526 commands and 207 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -7577,6 +7577,25 @@ setting. Do not set this globally. Also see custom option
 project-specific shells that have autospeak turned on. The
 default is intentionally nil, since this option should only be
 turned on where needed.
+@end verbatim
+
+Default Value:
+@verbatim
+
+nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} emacsvox-shell-complete-windows-commands
+@verbatim
+Include Windows drive directories in WSL shell command-name completion.
+The default omits these directories from command lookup to avoid long
+pauses scanning Windows files.  The shell’s PATH and ordinary program
+execution are unchanged, as is explicit filename completion.
+This option affects only local Shell buffers under GNU/Linux with Windows
+drive mounts.  Set it to t to restore Windows command-name candidates.
 @end verbatim
 
 Default Value:

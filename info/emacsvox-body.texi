@@ -3590,6 +3590,17 @@ built-in terminal with no additional package is preferable@comma{} use
 @ref{Running Terminal Based Applications}.  For ordinary line-oriented shell
 commands@comma{} @kbd{M-x shell} is usually the simplest route.
 
+@vindex emacsvox-shell-complete-windows-commands
+
+In WSL Shell buffers@comma{} command-name completion skips Windows drive directories
+by default.  Scanning large directories such as @samp{C:\Windows\System32} can
+otherwise pause Emacs for many seconds.  Windows programs still run by name@comma{}
+and explicit filename completion@comma{} including paths under @samp{/mnt/c/}@comma{} remains
+available.  To include Windows command names in completion again@comma{} use
+@kbd{M-x customize-option RET emacsvox-shell-complete-windows-commands RET}
+and enable the option.  This setting leaves native Windows and remote Shell
+buffers unchanged.
+
 @subsection Forms Mode
 
 @cindex Forms mode

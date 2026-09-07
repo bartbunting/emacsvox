@@ -9,3 +9,11 @@ Maintained by Emacsvox Contributors.
 * Emacsvox Unreleased --- Current User-Visible Changes
 
 Released notes are preserved in [[file:NEWS-2026.9.4][NEWS for Emacsvox 2026.9.4]].
+
+** Responsive shell completion under WSL
+
+Shell command-name completion now skips Windows drive directories by default,
+avoiding long pauses scanning directories such as System32. Windows programs
+still run by name, and explicit Windows filename completion remains available.
+Enable =emacsvox-shell-complete-windows-commands= to restore those command-name
+candidates. Native Windows and remote Shell buffers are unchanged.

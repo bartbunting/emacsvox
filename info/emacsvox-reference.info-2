@@ -9265,12 +9265,3 @@ Contains various wizards for the Emacsvox desktop.
      Default Value:
 
      nil
-
-
-
-File: emacsvox-reference.info,  Node: emacsvox-woman,  Next: emacsvox-xkcd,  Prev: emacsvox-wizards,  Up: Emacsvox Commands And Options
-
-2.251 emacsvox-woman
-====================
-
-WOMAN == Man pages implemented in Emacs Lisp

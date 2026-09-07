@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1526 commands and 206 options.
+   This chapter documents a total of 1526 commands and 207 options.
 
 * Menu:
 
@@ -6793,6 +6793,19 @@ comint == command interaction.  Advice comint and friends to speak.
      project-specific shells that have autospeak turned on. The
      default is intentionally nil, since this option should only be
      turned on where needed.
+
+     Default Value:
+
+     nil
+
+
+ -- Variable: User Option emacsvox-shell-complete-windows-commands
+     Include Windows drive directories in WSL shell command-name completion.
+     The default omits these directories from command lookup to avoid long
+     pauses scanning Windows files.  The shell’s PATH and ordinary program
+     execution are unchanged, as is explicit filename completion.
+     This option affects only local Shell buffers under GNU/Linux with Windows
+     drive mounts.  Set it to t to restore Windows command-name candidates.
 
      Default Value:
 

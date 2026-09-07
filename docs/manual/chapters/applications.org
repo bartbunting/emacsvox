@@ -214,6 +214,17 @@ built-in terminal with no additional package is preferable, use
 @@texinfo:@ref{Running Terminal Based Applications}@@.  For ordinary line-oriented shell
 commands, @@texinfo:@kbd{M-x shell}@@ is usually the simplest route.
 
+#+vindex: emacsvox-shell-complete-windows-commands
+
+In WSL Shell buffers, command-name completion skips Windows drive directories
+by default.  Scanning large directories such as =C:\Windows\System32= can
+otherwise pause Emacs for many seconds.  Windows programs still run by name,
+and explicit filename completion, including paths under =/mnt/c/=, remains
+available.  To include Windows command names in completion again, use
+@@texinfo:@kbd{M-x customize-option RET emacsvox-shell-complete-windows-commands RET}@@
+and enable the option.  This setting leaves native Windows and remote Shell
+buffers unchanged.
+
 *** Forms Mode
 :PROPERTIES:
 :TEXINFO_NODE: no

@@ -1371,5 +1371,135 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
             (substring-no-properties rendered)
             "12 34 shell-header-test /tmp/ Autospeak")))))))
 
+(ert-deftest emacsvox-shell-windows-mounts-recognize-wsl-transports ()
+  "Recognize drive mounts without assuming /mnt or filtering other 9p mounts."
+  (cl-letf (((symbol-function 'insert-file-contents)
+             (lambda (file &rest _)
+               (should (equal file "/proc/mounts"))
+               (insert
+                "C: /mnt/c 9p rw,aname=drvfs;path=C: 0 0\n"
+                "D: /windows\\040drives/d drvfs rw 0 0\n"
+                "drivers /usr/lib/wsl/drivers 9p rw,aname=drivers 0 0\n"
+                "/dev/sda /mnt/linux ext4 rw 0 0\n"))))
+    (should (equal (emacsvox-shell--windows-mounts)
+                   '("/mnt/c/" "/windows drives/d/"))))
+  (cl-letf (((symbol-function 'insert-file-contents)
+             (lambda (&rest _) (signal 'file-error '("Unavailable")))))
+    (should-not (emacsvox-shell--windows-mounts))))
+
+(defmacro emacsvox-test--with-shell-command-path (&rest body)
+  "Run BODY with real temporary Linux and simulated Windows commands."
+  (declare (indent 0) (debug t))
+  `(let* ((root (make-temp-file "emacsvox-command-path-" t))
+          (linux (expand-file-name "linux" root))
+          (windows (expand-file-name "windows drive" root))
+          ;; This sibling catches accidental prefix matches without a slash.
+          (sibling (concat windows "-linux"))
+          (exec-path (list linux windows sibling exec-directory))
+          (original-path (copy-sequence exec-path))
+          (process-environment (copy-sequence process-environment))
+          (emacsvox-shell-complete-windows-commands nil)
+          (system-type 'gnu/linux))
+     (unwind-protect
+         (progn
+           (cl-loop for directory in (list linux windows sibling)
+                    for command in '("evxlinux" "evxwindows" "evxsibling")
+                    do (make-directory directory)
+                    do (let ((file (expand-file-name command directory)))
+                         (write-region "#!/bin/sh\nprintf 'command still runs'\n"
+                                       nil file nil 'silent)
+                         (set-file-modes file #o700)))
+           (setenv "PATH" (mapconcat #'identity (butlast exec-path) ":"))
+           (with-temp-buffer
+             (setq default-directory (file-name-as-directory root))
+             (shell-mode)
+             (cl-letf (((symbol-function 'emacsvox-shell--windows-mounts)
+                        (lambda () (list (file-name-as-directory windows)))))
+               ,@body)))
+       (delete-directory root t))))
+
+(ert-deftest emacsvox-shell-command-completion-filters-only-lookup ()
+  "Both Shell and Pcomplete omit Windows names; execution keeps the PATH."
+  (emacsvox-test--with-shell-command-path
+    (let ((environment (copy-sequence process-environment)))
+      (dolist (providers '((shell-command-completion)
+                           (pcomplete-completions-at-point)))
+        (erase-buffer)
+        (insert "evx")
+        (let ((comint-dynamic-complete-functions providers)
+              (completion-in-region-function
+               (lambda (start end table predicate)
+                 (should
+                  (equal (sort (all-completions
+                                (buffer-substring start end) table predicate)
+                               #'string-lessp)
+                         '("evxlinux" "evxsibling")))
+                 t)))
+          (should (completion-at-point))))
+      (should (equal exec-path original-path))
+      (should (equal process-environment environment))
+      (erase-buffer)
+      (should (zerop (call-process "/bin/sh" nil t nil "-c" "evxwindows")))
+      (should (equal (buffer-string) "command still runs")))))
+
+(ert-deftest emacsvox-shell-command-completion-option-round-trip ()
+  "Changing the option immediately affects new lookups, without a stale cache."
+  (emacsvox-test--with-shell-command-path
+    (insert "evx")
+    (dolist (enabled '(nil t nil))
+      (let ((emacsvox-shell-complete-windows-commands enabled)
+            (completion-in-region-function
+             (lambda (start end table predicate)
+               (should
+                (eq (not (null (member "evxwindows"
+                                       (all-completions
+                                        (buffer-substring start end)
+                                        table predicate))))
+                    (not (null emacsvox-shell-complete-windows-commands))))
+               t)))
+        (should (completion-at-point))))))
+
+(ert-deftest emacsvox-shell-windows-filename-completion-remains-available ()
+  "An explicit Windows filename, including spaces, still completes publicly."
+  (emacsvox-test--with-shell-command-path
+    (insert "cat \"" windows "/evxw")
+    (let (completed)
+      (let ((completion-in-region-function
+             (lambda (start end table predicate)
+               (let ((candidates (all-completions
+                                  (buffer-substring start end) table predicate)))
+                 (should (= 1 (length candidates)))
+                 (should (string-match-p "evxwindows" (car candidates))))
+               (setq completed t))))
+        (completion-at-point))
+      (should completed))))
+
+(ert-deftest emacsvox-shell-command-path-scope-and-unwind ()
+  "Other modes, remote directories, platforms, and failed lookups keep PATH."
+  (dolist (context '((shell-mode gnu/linux "/tmp/" nil)
+                     (shell-mode gnu/linux "/ssh:example:/tmp/" t)
+                     (shell-mode windows-nt "/tmp/" t)
+                     (comint-mode gnu/linux "/tmp/" t)))
+    (pcase-let ((`(,mode ,platform ,directory ,unchanged) context))
+      (with-temp-buffer
+        (funcall mode)
+        (let* ((system-type platform)
+               (default-directory directory)
+               (exec-path '("/usr/bin" "/mnt/c/bin" "/mnt/c/emacs/libexec"))
+               (before (copy-sequence exec-path))
+               (emacsvox-shell-complete-windows-commands nil)
+               observed)
+          (cl-letf (((symbol-function 'emacsvox-shell--windows-mounts)
+                     (lambda () '("/mnt/c/"))))
+            (should-error
+             (emacsvox--advice-shell-command-completion-data-around
+              (lambda ()
+                (setq observed (copy-sequence exec-path))
+                (error "Lookup failed"))))
+            (should (equal observed
+                           (if unchanged before
+                             '("/usr/bin" "/mnt/c/emacs/libexec"))))
+            (should (equal exec-path before))))))))
+
 (provide 'emacsvox-comint-tests)
 ;;; emacsvox-comint-tests.el ends here

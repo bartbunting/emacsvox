@@ -510,6 +510,62 @@
                     (corfu-quit)))))))
       (delete-directory root t))))
 
+(ert-deftest emacsvox-corfu-shell-command-recheck-skips-windows-scans ()
+  "The post-command continuation predicate also uses the WSL lookup policy."
+  (require 'emacsvox-comint)
+  (let* ((root (make-temp-file "emacsvox-corfu-command-" t))
+         (windows (expand-file-name "windows" root))
+         (exec-path (list root windows exec-directory))
+         (system-type 'gnu/linux)
+         (emacsvox-shell-complete-windows-commands nil)
+         (enumerate (symbol-function 'file-name-all-completions))
+         (scans 0))
+    (unwind-protect
+        (progn
+          (make-directory windows)
+          (dolist (name '("evxone" "evxtwo"))
+            (let ((file (expand-file-name name root)))
+              (write-region "#!/bin/sh\n" nil file nil 'silent)
+              (set-file-modes file #o700)))
+          (save-window-excursion
+            (with-temp-buffer
+              (setq default-directory (file-name-as-directory root))
+              (shell-mode)
+              (set-window-buffer (selected-window) (current-buffer))
+              (insert "evx")
+              (let ((corfu-preselect 'prompt)
+                    (corfu-preview-current nil)
+                    (corfu-quit-at-boundary t)
+                    (this-command 'completion-at-point))
+                (corfu-mode 1)
+                (cl-letf
+                    (((symbol-function 'emacsvox-shell--windows-mounts)
+                      (lambda () (list (file-name-as-directory windows))))
+                     ((symbol-function 'file-name-all-completions)
+                      (lambda (prefix directory)
+                        (should-not
+                         (string-prefix-p (file-name-as-directory windows)
+                                          directory))
+                        (cl-incf scans)
+                        (funcall enumerate prefix directory)))
+                     ((symbol-function 'corfu--popup-support-p) (lambda () t))
+                     ((symbol-function 'corfu--candidates-popup) #'ignore)
+                     ((symbol-function 'corfu--popup-hide) #'ignore)
+                     ((symbol-function 'emacsvox-icon) #'ignore)
+                     ((symbol-function 'tts-speak) #'ignore)
+                     ((symbol-function 'emacsvox-aural-submit) #'ignore))
+                  (unwind-protect
+                      (progn
+                        (completion-at-point)
+                        (should completion-in-region-mode)
+                        (let ((initial-scans scans))
+                          (corfu--post-command)
+                          (should (> scans initial-scans)))
+                        (should (equal corfu--candidates '("evxone" "evxtwo")))
+                        (should (member windows exec-path)))
+                    (corfu-quit)))))))
+      (delete-directory root t))))
+
 (ert-deftest emacsvox-corfu-initial-completion-handles-unchanged-and-finished ()
   "Initial completion announces unchanged choices or a finished word once."
   (dolist (initial '("t" "to"))
