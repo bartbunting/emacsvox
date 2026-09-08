@@ -4,13 +4,14 @@
 
 * Status and working agreement
 
-Planning, data-contract and storage slices are complete; runtime integration is next.
+Planning, data-contract and storage slices are complete. Runtime integration
+is paused for the draft-preview decision below.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
 [[file:voice-editor-data-contract.org][data and resolution contract]] defines the new formats and acceptance cases.
-No live personal configuration has changed. Continue at High for runtime
-integration, draft coordination and the editor.
+No live personal configuration has changed. Return to XHI to decide how
+unsaved fallback chains are previewed before continuing runtime integration.
 
 The maintainer requested work in tested, committed slices, stopping when a
 decision or a reasoning-level change is needed. Start at XHI for ownership,
@@ -125,6 +126,39 @@ Implemented schema-2 palette metadata, envelope migrations, immutable local
 snapshots, nonactivating atomic writers, independent conversion and owned-copy
 proposals, and portable export with omission reporting. Existing palette
 constructors remain legacy. Conversion does not register or activate its result.
+
+* Earlier decision boundary: previewing an unsaved fallback chain
+
+Runtime inspection after storage commit =052dade27= found an unplanned protocol
+boundary. =omnivox--preview-one= sends one =:selector=; the sibling Omnivox
+=ControlRequest::Preview= also accepts one =VoiceSelector=. Its server handler
+builds a private logical definition with =preferences: vec![selector.clone()]=.
+Normal logical-voice registration accepts an ordered preference list. The
+current preview therefore cannot submit an unsaved DECtalk-then-Eloquence chain
+unchanged. Choosing one candidate from inventory would not test runtime fallback.
+
+Stop and return to XHI for this decision. The repository workflow requires asking
+before a public API change; this would change the preview protocol earlier than
+the originally planned per-choice tuning boundary. Shared adjustments are still
+the current scope; individual fallback tuning remains slice 7.
+
+| Choice | Benefit | Cost or limitation |
+|--------+---------+--------------------|
+| A. Add ordered-choice preview support (recommended) | Unsaved and inactive voices can exercise their whole chain through a private server routing snapshot, with shared tuning and actual realization feedback. | Requires coordinated Emacsvox/Omnivox protocol work, capability negotiation and an explicit older-server behavior. Check workstation fallback-policy parity as part of the contract. |
+| B. Keep individual-choice auditions initially | Retains the current preview API and lets the base editor proceed sooner. | Clearly label each audition as one choice. Unsaved chain fallback is unverified until save/apply and normal speech; this defers the original full-preview acceptance case. |
+| C. Register temporary logical voices for previews | Could use existing logical routing to exercise full chains without a new preview request format. | Adds temporary registry identities and lifecycle coordination, including both lanes, cancellation and concurrent applies; more state than a private preview request. Feasibility needs review. |
+
+Recommendation: A. The server already routes previews through a private snapshot;
+extending that boundary keeps original/edited comparison meaningful without
+publishing a draft as active configuration. Decide the exact request and response
+contract at XHI, after reading all sibling ADRs. Do not silently degrade a chain
+preview to its first choice on an older server.
+
+The initial runtime wiring was preserved as a local scratch patch, then removed
+from the source tree so this checkpoint contains only tested storage code.
+Slice 3 is not delivered. No Omnivox source or live personal settings changed.
+
+* Remaining implementation slices
 
 ** TODO 3. Resolve owned choices through normal speech and preview
 

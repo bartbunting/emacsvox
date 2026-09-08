@@ -239,6 +239,8 @@ migrator and validators; never generate expected results from the implementation
 | Concurrent edit and old callback | Before-value conflict is reported; a completed older proposal cannot clear newer draft changes. |
 | Old files and older application | Old data loads without conversion/writes; older applications may reject the new envelope explicitly. |
 
-The next reasoning-level boundary is now High for storage/migration and the
-ordinary implementation slices. Return to XHI and a maintainer decision before
-per-choice runtime adjustments or any revision of the accepted migration behavior.
+Storage/migration is implemented. Runtime inspection found an earlier XHI
+boundary: the existing one-selector preview protocol cannot carry an unsaved
+fallback chain. The implementation plan records the options for a maintainer
+decision. Also return to XHI before individual fallback adjustments or any
+revision of the accepted migration behavior.

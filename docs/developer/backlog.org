@@ -30,8 +30,10 @@ The new formats, read-only conversion proposals and nonactivating writers are
 implemented. Runtime integration and the common UI remain pending.
 The [[file:../voice-editor-implementation-plan.org][implementation plan]] now records the source inventory, ordered slices,
 acceptance checks and reasoning-level stops. Planning, the
-[[file:../voice-editor-data-contract.org][data contract]] and storage/migration are complete. Continue at High with owned
-voice resolution through normal speech and preview.
+[[file:../voice-editor-data-contract.org][data contract]] and storage/migration are complete. Runtime inspection found that
+the existing preview request accepts only one physical selector. Return to XHI
+for the implementation plan's ordered-preview decision before continuing; full
+unsaved fallback-chain preview needs a new contract or explicit deferral.
 
 Preserve the existing aural CSS cascade: partial styles combine by dimension,
 competing values use rule precedence, and named presets replace the base.
