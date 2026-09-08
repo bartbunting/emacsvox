@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MAINTAINER = "Bart Bunting <bartbunting@users.noreply.github.com>"
 DEPENDS = " | ".join(f"{name} (>= 1:30.2)" for name in
                       ("emacs", "emacs-gtk", "emacs-pgtk", "emacs-lucid", "emacs-nox"))
-RECOMMENDS = "omnivox (>= 1.7.0)"
+RECOMMENDS = "omnivox (>= 1.9.0)"
 RUNTIME_FILES = {
     "VERSION", "README.org", "COPYING", "AUTHORS", "THIRD_PARTY_NOTICES",
     "bin/emacsvox", "bin/emacsvox-omnivox-components", "bin/emacsvox-paddleocr",

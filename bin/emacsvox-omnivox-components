@@ -329,7 +329,7 @@ list_status()
             emit_status "$bridge" "$bridge_name" runtime-required 0 "$bridge_detail"
         else
             emit_status "$bridge" "$bridge_name" core-update-required 0 \
-                'Bridge will be included in Omnivox 1.7.1 Windows core archives'
+                'Reinstall the Omnivox core archive to restore its included bridge'
         fi
     done
     for component in flite rutts piper tgspeechbox; do

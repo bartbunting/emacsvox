@@ -10,6 +10,15 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.4][NEWS for Emacsvox 2026.9.4]].
 
+** Omnivox 1.9.0 minimum for voice previews
+
+Omnivox 1.9.0 or newer is now the supported speech-server baseline for complete
+voice previews. The guided Windows and WSL installers pin 1.9.0, together with
+matching optional engine modules, and Debian packages recommend that minimum.
+
+Upgrade an existing Omnivox installation separately. Updating Emacsvox does
+not replace your selected server or install optional engine modules.
+
 ** Voice palette selections apply consistently
 
 Search and incremental-search hits now use the active palette's bolden voice.

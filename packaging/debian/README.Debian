@@ -5,7 +5,7 @@ Install a downloaded package with apt, which resolves its Emacs dependency:
 
   sudo apt install ./emacsvox_VERSION_all.deb
 
-Emacs 30.2 or newer is required. Omnivox 1.7.0 or newer is recommended.
+Emacs 30.2 or newer is required. Omnivox 1.9.0 or newer is recommended.
 If Omnivox is not in your configured apt repositories, install its downloaded
 deb in the same apt command, or supply an existing Omnivox installation.
 The package does not add repositories, download engines or build GNU Emacs.
@@ -30,8 +30,8 @@ Linux speech engine with:
 
 For remote speech, use emacsvox --remote --diagnose and then emacsvox --remote
 after preparing the workstation service, private token and SSH reverse tunnel.
-Published Omnivox 1.7.1 lacks the remote service; use a compatible development
-service until a release includes it. For WSL desktop speech, select the native
+Omnivox 1.9.0 includes the remote service; Emacsvox remote access remains a
+preview feature. For WSL desktop speech, select the native
 Windows omnivox.exe with OMNIVOX_PROGRAM or your existing per-user setting.
 The guided WSL source installer remains the route for acquiring that runtime.
 
