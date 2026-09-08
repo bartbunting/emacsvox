@@ -11,8 +11,9 @@ Draft/save coordination and the common base editor are implemented and tested.
 Optional context inspection and scoped field editing are also implemented.
 The maintainer selected A for slice 7: shared -> choice -> context. Accepted
 [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], the [[file:voice-editor-fallback-tuning-contract.org][storage/runtime contract]] and the
-[[file:voice-editor-fallback-wire-contract.org][wire/compatibility contract]] complete its XHI review. Stop for High before
-implementing individual fallback tuning; no new reader or wire codec exists yet.
+[[file:voice-editor-fallback-wire-contract.org][wire/compatibility contract]] complete its XHI review. The maintainer authorized
+continuation at the High handoff. Slice 7b now implements storage readers,
+validation and pure choice operations; wire codecs and playback remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -334,7 +335,7 @@ The maintainer returned to XHI on 2026-09-09 and selected A: shared base, select
 choice overrides, then contextual dimensions, with no numeric accumulation.
 The [[file:voice-editor-fallback-tuning-contract.org][storage/runtime contract]], [[file:voice-editor-fallback-wire-contract.org][wire/compatibility contract]] and
 [[file:adr/0017-per-fallback-voice-tuning.org][accepted ADR 0017]] now settle this boundary. No further design decision is
-outstanding. Stop for High before ordinary coding.
+outstanding. The maintainer authorized continuation after the High handoff.
 
 The contract divides implementation into storage, server, client/runtime and
 editor slices, each tested and committed. Omnivox 1.9.0 remains the shared-style
@@ -348,12 +349,20 @@ and bounded playback evidence. Preserve contextual nil, legacy messages, both
 lanes and no replay. Independent raw-unit, storage and wire fixtures define the
 acceptance boundary. This is design completion, not implemented runtime support.
 
-*** TODO 7b. Storage and pure choice operations at High
+*** DONE 7b. Storage and pure choice operations at High
 
-Add readers/validators, lossless writer support, draft identities and ordered
-publication before enabling schema promotion. Test empty/zero/default round
-trips, mixed old/new snapshots, inheritance, portable export and failed-save
-retry with stable IDs. Loading data must not write or activate configuration.
+Readers now accept palette/routing schema 3 and envelope 9. Strict sparse patches
+preserve empty/zero/default distinctions. Pure promotion, patch adjustment,
+reorder and explicit keep/reset replacement preserve record identity. Resolution
+retains records alongside the legacy selector projection, with untuned temporary
+routes and checked portable/local agreement. Ordinary shared edits and common
+editor copies preserve tuning; save recovery retains immutable old/new snapshots.
+Old data loads without writing or allocating persistent IDs.
+
+The older palette-manager copy command directs schema-3 palettes to the common
+editor because it cannot publish fresh local ownership. Individual controls and
+the negotiated playback path remain disabled/pending; this slice does not claim
+that saved individual settings are audible.
 
 *** TODO 7c. Omnivox negotiated runtime at High
 
@@ -453,8 +462,8 @@ All eleven examples passed data-only identity, range, composition and rate
 checks. Local links, Emacs/byte-code preflight, documentation release validation
 and whitespace checks passed. These checks do not establish runtime support.
 The maintainer subsequently accepted the recommended precedence. Slice 7a now
-adds exact wire/compatibility and storage examples; its current stop is the
-High handoff. No runtime, storage reader or personal configuration changed.
+adds exact wire/compatibility and storage examples; that slice stopped at the
+High handoff. No runtime, storage reader or personal configuration changed then.
 
 Slice 7a's data-only checks pass for eleven raw-unit and eleven normalized wire
 composition cases, four nil/zero/inherit projections, thirteen malformed patch
@@ -463,6 +472,16 @@ passes existing input validators and independent checks for immutable snapshots,
 portable projection, parent ownership and frozen retry IDs. Local links,
 Emacs/byte-code preflight and documentation release validation pass. These are
 fixture consistency checks, not tests of future codecs, migration or synthesis.
+
+For slice 7b, 227 focused resource, scheme, routing and voice tests pass in a
+fresh Emacs with the rebuilt storage/editing functions confirmed as byte-code.
+This includes thirteen new storage/preservation tests. Isolated compiled aural
+parity also passes. An initial fresh-build command loaded an old ignored test
+=.elc=; using current test sources with verified compiled product functions
+resolved those three stale-test failures without changing or deleting that file.
+Full byte-code rebuild followed by refresh of edits made during the build,
+preflight, attribution headers, generated reference, documentation release,
+local-link and whitespace checks pass. No live profile or speech runtime changed.
 
 For later Lisp slices, run focused ERT and =make bytecode=, or
 =make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh

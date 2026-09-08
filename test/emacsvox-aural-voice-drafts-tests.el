@@ -29,7 +29,7 @@
           (progn
             (maphash (lambda (_ record) (push (emacsvox-aural-voice-palette-data-form record) palettes))
                      emacsvox-aural-voice-palette-registry)
-            (emacsvox-aural--write-user-data (list :schema-version 8 :voice-palettes palettes))
+            (emacsvox-aural--write-user-data (list :schema-version 9 :voice-palettes palettes))
             (emacsvox-aural-save-routing-profiles)
             (let ((entry (assq 'bolden (plist-get palette :entries))))
               (setcdr entry (plist-put (cdr entry) :local-choices "saved-chain"))

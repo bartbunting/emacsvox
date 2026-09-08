@@ -6,8 +6,9 @@
 
 Accepted after the maintainer selected A on 2026-09-09. [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]] records
 shared -> choice -> context precedence; the [[file:voice-editor-fallback-wire-contract.org][wire/compatibility contract]] completes
-the XHI design slice. These are implementation contracts, not implemented
-storage or runtime behavior. Keep the existing shared editor working until this
+the XHI design slice. Storage readers, pure operations and save preservation
+are now implemented; individual playback and controls remain pending.
+Keep the existing shared editor working until this
 entire path is available. Omnivox 1.9.0 supplies complete shared-style preview;
 it does not supply individual fallback tuning. No new minimum release is assigned.
 
@@ -344,8 +345,9 @@ Required acceptance additionally includes:
 1. Done: settle the exact wire/compatibility contract at XHI, with storage,
    contextual nil and old-client/new-server examples. Stop and request High.
    Mirror the accepted decision in Omnivox before server implementation.
-2. Add storage readers/validators and pure choice operations; migrate nothing
-   implicitly. Test round trips, old writer preservation and save failures.
+2. Done: storage readers/validators, pure choice operations and save preservation.
+   Readers write nothing. Tests cover round trips, inheritance, portable export,
+   shared edits, complete copies and failed-save retries with stable IDs.
 3. Implement negotiated Omnivox registration, resolution, layered spans,
    preview and bounded result metadata with simulated engines. Use its pinned
    Rust toolchain, formatting preflight and locked checks.

@@ -72,7 +72,7 @@
 (defconst emacsvox-aural-routing-profile-schema-version 2
   "Current data schema for one routing profile.")
 
-(defconst emacsvox-aural-routing-user-data-schema-version 2
+(defconst emacsvox-aural-routing-user-data-schema-version 3
   "Current data schema for the machine-local routing file.")
 
 (defconst emacsvox-aural-routing-engine-order-presets
@@ -1107,8 +1107,16 @@ the previous known-good profile."
     (emacsvox-aural-routing--error "Choice sets must be a proper list"))
   (let (ids)
     (dolist (record records)
-      (emacsvox-aural-routing--strict-properties
-       record '(:id :palette :voice :selectors) '(:id :palette :voice :selectors))
+      (if (plist-member record :schema-version)
+          (progn
+            (emacsvox-aural-routing--strict-properties
+             record '(:schema-version :id :palette :voice :choices)
+             '(:schema-version :id :palette :voice :choices))
+            (unless (eq (plist-get record :schema-version) 3)
+              (emacsvox-aural-routing--error "Unsupported choice-set schema"))
+            (emacsvox-aural-routing--validate-choices (plist-get record :choices)))
+        (emacsvox-aural-routing--strict-properties
+         record '(:id :palette :voice :selectors) '(:id :palette :voice :selectors)))
       (let ((id (plist-get record :id)))
         (emacsvox-aural-routing--require-id id "Choice-set ID")
         (when (member id ids)
@@ -1123,6 +1131,46 @@ the previous known-good profile."
       (dolist (selector (plist-get record :selectors))
         (emacsvox-aural-validate-routing-selector selector t)))
     (copy-tree records)))
+
+(defconst emacsvox-aural-routing--choice-dimensions
+  '(:average-pitch :pitch-range :stress :richness :rate-offset
+    :gain :low-pass :high-pass :pan :reverb :echo :chorus)
+  "Stored dimensions permitted in an individual choice patch.")
+
+(defun emacsvox-aural-routing--validate-choice-adjustments (adjustments)
+  "Validate sparse ADJUSTMENTS, preserving omission, zero and explicit nil."
+  (emacsvox-aural-routing--strict-properties
+   adjustments emacsvox-aural-routing--choice-dimensions nil)
+  (cl-loop for (key value) on adjustments by #'cddr do
+           (unless (or (null value)
+                       (and (integerp value)
+                            (if (eq key :rate-offset)
+                                (<= -20 value 20) (<= 0 value 9))))
+             (emacsvox-aural-routing--error "Invalid choice adjustment %S: %S" key value)))
+  (copy-tree adjustments))
+
+(defun emacsvox-aural-routing--validate-choices (choices &optional portable)
+  "Validate ordered choice records in CHOICES; require PORTABLE scope if non-nil."
+  (unless (and (proper-list-p choices) (<= (length choices) 32))
+    (emacsvox-aural-routing--error "Choices must be a proper list of at most 32 records"))
+  (let (ids)
+    (dolist (choice choices)
+      (emacsvox-aural-routing--strict-properties
+       choice '(:id :selector :adjustments) '(:id :selector :adjustments))
+      (let ((id (plist-get choice :id))
+            (selector (plist-get choice :selector)))
+        (unless (and (stringp id)
+                     (let ((case-fold-search nil))
+                       (string-match-p "\\`[A-Za-z0-9_.-]\\{1,128\\}\\'" id)))
+          (emacsvox-aural-routing--error "Invalid choice ID: %S" id))
+        (when (member id ids)
+          (emacsvox-aural-routing--error "Duplicate choice ID: %S" id))
+        (push id ids)
+        (emacsvox-aural-validate-routing-selector selector t)
+        (when (and portable (not (eq (plist-get selector :scope) 'portable)))
+          (emacsvox-aural-routing--error "Palette choices must be portable")))
+      (emacsvox-aural-routing--validate-choice-adjustments (plist-get choice :adjustments))))
+  (copy-tree choices))
 
 (defun emacsvox-aural-routing--merge-choice-sets (existing proposed)
   "Merge immutable EXISTING and PROPOSED snapshots, permitting identical retries."
@@ -1167,14 +1215,18 @@ the previous known-good profile."
             '(:schema-version :active-profile :profiles)
           '(:schema-version :active-profile :profiles :choice-sets))
    "Routing user data")
-  (unless (memq (plist-get data :schema-version) '(1 2))
+  (unless (memq (plist-get data :schema-version) '(1 2 3))
     (emacsvox-aural-routing--error
      "Unsupported routing user data version: %S"
      (plist-get data :schema-version)))
-  (when (eq (plist-get data :schema-version) 2)
+  (when (memq (plist-get data :schema-version) '(2 3))
     (emacsvox-aural-routing--strict-properties
      data '(:schema-version :active-profile :profiles :choice-sets)
      '(:schema-version :active-profile :profiles :choice-sets)))
+  (unless (eq (plist-get data :schema-version) 3)
+    (when (cl-some (lambda (record) (plist-member record :schema-version))
+                   (plist-get data :choice-sets))
+      (emacsvox-aural-routing--error "Versioned choice sets require routing schema 3")))
   (let ((active (plist-get data :active-profile))
         (profiles (plist-get data :profiles))
         ids normalized)

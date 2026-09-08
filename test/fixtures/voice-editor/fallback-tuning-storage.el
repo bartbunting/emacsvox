@@ -1,5 +1,5 @@
 ;;; Per-fallback storage contract, read as one non-evaluated data form.
-;;; Expected promotion and export; no new storage reader is implemented yet.
+;;; Expected promotion and export for the storage read/write contracts.
 (:fixture-version 1
  :expected-user-data-envelope-version 9
  :unchanged-parent

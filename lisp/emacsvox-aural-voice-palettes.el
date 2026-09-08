@@ -583,6 +583,9 @@ replaces live state.  Return the value of MUTATION."
 
 (defun emacsvox-aural-voice-palettes--copy (source)
   "Copy voice palette SOURCE to a prompted personal palette."
+  (when (eq (plist-get (emacsvox-aural-voice-palette-data-form
+                        (emacsvox-aural-voice-palette source)) :schema-version) 3)
+    (user-error "Copy this palette through the common voice editor to preserve individual settings"))
   (let* ((source-palette (emacsvox-aural-voice-palette source))
          (id
           (emacsvox-aural-voice-palettes--read-new-id

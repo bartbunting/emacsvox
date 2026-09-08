@@ -133,7 +133,7 @@ configuration; callers can then report it as diverged.")
   :type 'file
   :group 'emacsvox-aural)
 
-(defconst emacsvox-aural-user-data-schema-version 8
+(defconst emacsvox-aural-user-data-schema-version 9
   "Current schema version for the personal presentation data file.")
 
 (defun emacsvox-aural--migrate-user-data-v1-to-v2 (data)
@@ -186,6 +186,10 @@ configuration; callers can then report it as diverged.")
   "Allow owned palettes in user DATA without converting legacy palettes."
   (plist-put data :schema-version 8))
 
+(defun emacsvox-aural--migrate-user-data-v8-to-v9 (data)
+  "Allow choice records in user DATA without promoting any palette."
+  (plist-put data :schema-version 9))
+
 (defconst emacsvox-aural--built-in-user-data-migrations
   '((1 . emacsvox-aural--migrate-user-data-v1-to-v2)
     (2 . emacsvox-aural--migrate-user-data-v2-to-v3)
@@ -193,7 +197,8 @@ configuration; callers can then report it as diverged.")
     (4 . emacsvox-aural--migrate-user-data-v4-to-v5)
     (5 . emacsvox-aural--migrate-user-data-v5-to-v6)
     (6 . emacsvox-aural--migrate-user-data-v6-to-v7)
-    (7 . emacsvox-aural--migrate-user-data-v7-to-v8))
+    (7 . emacsvox-aural--migrate-user-data-v7-to-v8)
+    (8 . emacsvox-aural--migrate-user-data-v8-to-v9))
   "Required migrations supplied by Emacsvox.")
 
 (defvar emacsvox-aural-user-data-migrations nil

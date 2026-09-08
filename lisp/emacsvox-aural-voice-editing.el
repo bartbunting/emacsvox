@@ -48,11 +48,14 @@ Temporary choices are deliberately excluded from the editable saved base."
     (list :name name :owner (plist-get resolved :palette)
           :diagnostics (copy-tree (plist-get resolved :diagnostics))
           :snapshot
-          (list :definition (copy-tree (plist-get resolved :definition))
+          (append
+           (list :definition (copy-tree (plist-get resolved :definition))
                 :selectors (copy-tree (if (eq (plist-get resolved :mode) 'owned)
                                           (plist-get resolved :selectors) (plist-get binding :selectors)))
                 :language (if (eq (plist-get resolved :mode) 'owned)
-                              (plist-get resolved :language) (plist-get binding :language))))))
+                              (plist-get resolved :language) (plist-get binding :language)))
+           (when (plist-member resolved :choices)
+             (list :choices (copy-tree (plist-get resolved :choices))))))))
 
 (defun emacsvox-aural-voice-editing--definition-style (definition &optional seen)
   "Read raw DEFINITION as a style without compiling or registering a voice."
@@ -155,18 +158,46 @@ Legacy conversion uses explicitly captured ROUTING.  No registry is changed."
     (setq properties (copy-tree (cdr (plist-get item :entry))))
     (setq old-choices (emacsvox-aural-voice-data--choices
                        (plist-get item :palette) voice properties
-                       (emacsvox-aural-routing--merge-choice-sets emacsvox-aural-routing--choice-sets sets)))
+                       (emacsvox-aural-routing--merge-choice-sets emacsvox-aural-routing--choice-sets sets)
+                       (plist-get item :schema-version)))
     (let* ((selectors (copy-tree (plist-get snapshot :selectors)))
            (portable (cl-remove-if-not (lambda (s) (eq (plist-get s :scope) 'portable)) selectors))
            (reference (and (not (plist-get snapshot :reset-choices))
                            (eq (plist-get item :palette) destination)
                            (equal selectors (plist-get old-choices :selectors))
                            (plist-get properties :local-choices)))
-           (definition (plist-get snapshot :definition)))
+           (definition (plist-get snapshot :definition))
+           (layered (or (eq (plist-get data :schema-version) 3)
+                        (plist-member snapshot :choices) (plist-member old-choices :choices)))
+           (rows (when layered
+                   (cond
+                    ((and (plist-get snapshot :reset-choices)
+                          (not (equal selectors (emacsvox-aural-voice-data--selectors
+                                                 (plist-get snapshot :choices)))))
+                     (emacsvox-aural-voice-data--wrap-selectors selectors))
+                    ((plist-member snapshot :choices) (copy-tree (plist-get snapshot :choices)))
+                    ((equal selectors (plist-get old-choices :selectors))
+                     (if (plist-member old-choices :choices) (plist-get old-choices :choices)
+                       (emacsvox-aural-voice-data--wrap-selectors selectors)))
+                    (t (user-error "Edit complete choice records to preserve individual settings"))))))
+      (when layered
+        (emacsvox-aural-routing--validate-choices rows)
+        (unless (equal selectors (emacsvox-aural-voice-data--selectors rows))
+          (user-error "Physical choices and individual settings disagree"))
+        (setq data (emacsvox-aural-voice-data--promote data)
+              portable (emacsvox-aural-voice-data--portable-choices rows))
+        (unless (equal rows (plist-get old-choices :choices)) (setq reference nil)))
       (dolist (selector selectors) (emacsvox-aural-validate-routing-selector selector t))
-      (when (and (not reference) (not (equal selectors portable)))
+      (when (and (plist-get old-choices :diagnostics)
+                 (not (plist-get snapshot :reset-choices))
+                 (or (not (equal selectors (plist-get old-choices :selectors)))
+                     (and layered (not (equal rows (plist-get old-choices :choices))))))
+        (user-error "Reset missing local choices explicitly before changing the chain"))
+      (when (and (not reference) (not (equal (if layered rows selectors) portable)))
         (setq reference (emacsvox-aural-voice-editing--new-id))
-        (push (list :id reference :palette destination :voice voice :selectors selectors) sets))
+        (push (if layered
+                  (list :schema-version 3 :id reference :palette destination :voice voice :choices rows)
+                (list :id reference :palette destination :voice voice :selectors selectors)) sets))
       (setq properties (append (list (if (symbolp definition) :personality :style) (copy-tree definition)
                                      :choices portable)
                                (when reference (list :local-choices reference))

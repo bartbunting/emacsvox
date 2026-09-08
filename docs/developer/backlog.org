@@ -46,9 +46,10 @@ The session draft/save service now handles ordered two-store publication,
 conflicts, partial retries and operation-owned application. The maintainer
 accepted shared -> choice -> context in [[file:../adr/0017-per-fallback-voice-tuning.org][ADR 0017]]. The
 [[file:../voice-editor-fallback-tuning-contract.org][storage/runtime contract]], [[file:../voice-editor-fallback-wire-contract.org][wire/compatibility contract]] and independent examples
-complete the XHI review. Stop for High before storage, server and client/editor
-implementation in tested, committed slices. Individual tuning remains
-unimplemented. Earlier, the maintainer
+complete the XHI review. The maintainer authorized continuation at the High
+handoff. Schema-3 storage, strict patches, identity-preserving pure operations
+and save/copy preservation now pass storage tests. Server, client playback and
+individual editor controls remain pending in tested, committed slices. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.

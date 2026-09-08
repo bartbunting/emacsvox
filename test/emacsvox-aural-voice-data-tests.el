@@ -326,7 +326,7 @@
             (with-temp-file file (insert text))
             (let ((read (if routing (emacsvox-aural-read-routing-profiles file)
                           (emacsvox-aural-read-user-data file))))
-              (should (= (plist-get read :schema-version) (if routing 2 8)))
+              (should (= (plist-get read :schema-version) (if routing 3 9)))
               (unless routing
                 (should (= (plist-get (car (plist-get read :voice-palettes))
                                       :schema-version) 1))))
@@ -342,9 +342,9 @@
          (routing-file (expand-file-name "routing.el" directory))
          (conversion (emacsvox-test--voice-data-conversion))
          (sets (plist-get conversion :expected-local-choice-sets))
-         (aural (list :schema-version 8 :voice-palettes
+         (aural (list :schema-version 9 :voice-palettes
                       (list (plist-get conversion :expected-palette))))
-         (routing (list :schema-version 2 :active-profile nil :profiles nil
+         (routing (list :schema-version 3 :active-profile nil :profiles nil
                         :choice-sets sets))
          (emacsvox-aural-routing--choice-sets nil)
          (emacsvox-aural-routing-profile-registry (make-hash-table :test #'eq))
@@ -366,7 +366,7 @@
             (cl-letf (((symbol-function 'rename-file)
                        (lambda (&rest _) (error "Injected rename failure"))))
               (should-error (emacsvox-aural--write-user-data
-                             '(:schema-version 8 :voice-palettes nil) aural-file))
+                             '(:schema-version 9 :voice-palettes nil) aural-file))
               (should-error (emacsvox-aural-routing--write-user-data routing routing-file)))
             (should (equal old-aural (emacsvox-aural-read-user-data aural-file)))
             (should (equal old-routing (emacsvox-aural-read-routing-profiles routing-file))))

@@ -7,8 +7,9 @@
 The maintainer selected A: shared settings, selected choice, then contextual
 overrides. [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]] and the [[file:voice-editor-fallback-tuning-contract.org][storage/runtime contract]] govern this extension.
 This document completes the XHI contract slice. It specifies future behavior;
-neither endpoint implements these messages yet. Switch to High for the tested
-implementation slices. Mirror this contract and the accepted decision into
+neither endpoint implements these messages yet. Storage slice 7b is implemented;
+the tested implementation slices continue after the High handoff.
+Mirror this contract and the accepted decision into
 Omnivox's ADR/protocol documentation before implementing its endpoint.
 
 The baseline inspected is Omnivox 1.9.0, commit

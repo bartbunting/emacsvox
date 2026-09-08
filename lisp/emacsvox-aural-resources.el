@@ -41,6 +41,8 @@
                   "emacsvox-aural-routing-profiles" (data allowed required))
 (declare-function emacsvox-aural-validate-routing-selector
                   "emacsvox-aural-routing-profiles" (selector &optional persisted))
+(declare-function emacsvox-aural-routing--validate-choices
+                  "emacsvox-aural-routing-profiles" (choices &optional portable))
 
 (defvar read-eval)
 
@@ -864,10 +866,12 @@ for management and persistence."
       (emacsvox-aural-routing--strict-properties properties allowed '(:choices))
       (unless (proper-list-p (plist-get properties :choices))
         (emacsvox-aural--resource-error "Voice choices must be a proper list"))
-      (dolist (selector (plist-get properties :choices))
-        (emacsvox-aural-validate-routing-selector selector t)
-        (unless (eq (plist-get selector :scope) 'portable)
-          (emacsvox-aural--resource-error "Palette choices must be portable")))
+      (if (eq owned 3)
+          (emacsvox-aural-routing--validate-choices (plist-get properties :choices) t)
+        (dolist (selector (plist-get properties :choices))
+          (emacsvox-aural-validate-routing-selector selector t)
+          (unless (eq (plist-get selector :scope) 'portable)
+            (emacsvox-aural--resource-error "Palette choices must be portable"))))
       (dolist (key '(:language :local-choices))
         (when-let* ((value (plist-get properties key)))
           (unless (and (stringp value) (not (string-empty-p value)))
@@ -895,7 +899,7 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
     (emacsvox-aural--resource-error
      "Voice palette data must be a keyword plist: %S" data))
   (let* ((allowed
-          (if (eq (plist-get data :schema-version) 2)
+          (if (memq (plist-get data :schema-version) '(2 3))
               '(:schema-version :id :summary :parent :entries :routing)
             '(:schema-version :id :summary :parent :entries)))
          (unknown
@@ -911,15 +915,15 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
     (when unknown
       (emacsvox-aural--resource-error
        "Unknown voice palette properties: %S" unknown))
-    (unless (memq version '(1 2))
+    (unless (memq version '(1 2 3))
       (emacsvox-aural--resource-error
        "Unsupported voice palette schema version: %S" version))
-    (when (eq version 2)
+    (when (memq version '(2 3))
       (require 'emacsvox-aural-routing-profiles)
       (emacsvox-aural-routing--strict-properties
        data allowed '(:schema-version :id :summary :parent :entries :routing))
       (unless (eq (plist-get data :routing) 'owned)
-        (emacsvox-aural--resource-error "Schema-2 palettes require owned routing")))
+        (emacsvox-aural--resource-error "Owned palettes require owned routing")))
     (emacsvox-aural--validate-id id "Voice palette identifier")
     (emacsvox-aural--validate-summary summary (format "Voice palette %S" id))
     (when parent
@@ -930,7 +934,8 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
     (let ((entries
            (mapcar
             (lambda (entry)
-              (emacsvox-aural--compile-voice-palette-entry entry id (eq version 2)))
+              (emacsvox-aural--compile-voice-palette-entry entry id
+                                                         (and (memq version '(2 3)) version)))
             raw-entries)))
       (let ((names (mapcar #'car entries)))
         (unless
