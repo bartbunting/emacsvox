@@ -5,14 +5,15 @@
 * Status and working agreement
 
 Planning, data-contract and storage slices are complete. The maintainer selected
-full-chain preview, and its XHI protocol contract is complete. Runtime integration
-and the new preview protocol are not implemented yet.
+full-chain preview, and its XHI protocol contract is complete. The server preview
+slice is implemented and tested; client integration, runtime integration and the
+editor remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
 [[file:voice-editor-data-contract.org][data and resolution contract]] defines the new formats and acceptance cases.
-No live personal configuration has changed. Switch to High before implementing
-the accepted [[file:voice-editor-preview-contract.org][complete-voice preview contract]] and resuming runtime integration.
+No live personal configuration has changed. Implementation resumed after the
+requested High handoff, following the accepted [[file:voice-editor-preview-contract.org][complete-voice preview contract]] and resuming runtime integration.
 
 The maintainer requested work in tested, committed slices, stopping when a
 decision or a reasoning-level change is needed. Start at XHI for ownership,
@@ -153,11 +154,13 @@ The selected design preserves individual auditions and adds a separate complete
 voice preview. Full previews send a frozen choice/policy snapshot, retain applied
 server disablement, and report accepted-audio realizations. Older servers report
 full preview unsupported; no first-choice substitution or temporary application.
-The XHI contract is complete. Stop for a switch to High before coding.
+The XHI contract is complete; implementation resumed after the requested High
+handoff.
 
 The initial runtime wiring was preserved as a local scratch patch, then removed
 from the source tree so this checkpoint contains only tested storage code.
-Slice 3 is not delivered. No Omnivox source or live personal settings changed.
+Slice 3 is not delivered. The server-only preview slice below has since changed
+Omnivox source. No live personal settings changed.
 
 * Remaining implementation slices
 
@@ -176,6 +179,15 @@ preserve its unrelated =docs/plans/NEXT_STEPS.md= changes. Use its pinned Rust
 toolchain and locked checks. Add private full-policy snapshots, capability-gated
 control messages, bounded result evidence and client callback handling. Preserve
 old exact-audition tests. Stop again only for a new decision or reasoning boundary.
+
+Server slice committed in Omnivox as =99f88b7=. It adds the negotiated operation,
+private policy/disablement snapshots, rate comparison guard, accepted-audio
+metadata and bounded terminal responses. Shared JSON examples execute against
+simulated engines. Streaming fallback now applies effect capabilities of the
+engine that actually accepts audio. The full locked Rust workspace suite,
+warning-denied Clippy and formatting checks pass. The sibling's newer unrelated
+documentation commit was preserved. Client work is next; this is not yet a
+usable complete-preview feature in Emacs.
 
 Run stub-engine and null-output tests for ordered choices, Automatic, unavailable
 and disabled engines, pre/post-PCM failures, queue bounds, cancellation, policy

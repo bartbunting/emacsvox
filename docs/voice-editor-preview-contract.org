@@ -6,7 +6,9 @@
 
 Implementation contract for the maintainer's selection of full-chain preview,
 option 1 in the [[file:voice-editor-implementation-plan.org][implementation plan]].
-[[file:adr/0016-complete-voice-preview.org][ADR 0016]] records the decision. This protocol is specified, not implemented.
+[[file:adr/0016-complete-voice-preview.org][ADR 0016]] records the decision. Omnivox server commit =99f88b7= implements the
+protocol and passes simulated-engine, full workspace and static checks. Client
+negotiation and comparison lifecycle work remain pending.
 Storage slice 2 is complete; runtime and editor delivery remain pending.
 
 The Emacsvox ADRs 0001–0016 and sibling Omnivox ADRs 0001–0009 govern this
@@ -193,8 +195,10 @@ After this XHI contract slice, switch to High before coding:
 4. Resume owned-voice runtime slice 3, then draft coordination and editor slices.
 
 [[file:../test/fixtures/voice-editor/preview-chain.json][Independent wire examples]] state an ordered local chain and Automatic, with
-expected shared tuning and realization examples. They are future-format data,
-not evidence of a working server. Implementation tests must additionally cover:
+expected shared tuning and realization examples. The server now executes paired
+wire copies against simulated engines; the fixture retains its original design
+metadata. This does not establish client or audible acceptance. The complete
+acceptance matrix is:
 
 | Case | Required evidence |
 |------+-------------------|
