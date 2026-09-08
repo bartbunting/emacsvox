@@ -34,6 +34,8 @@
 (require 'button)
 (require 'emacsvox-aural-voice-editing)
 (require 'emacsvox-aural-voice-workbench)
+(autoload 'emacsvox-aural-voice-context-open "emacsvox-aural-voice-context"
+  "Inspect this voice draft in a captured source context." t)
 
 (defvar emacsvox-aural-voice-editor--contexts (make-hash-table :test #'equal)
   "Retained editor context for each authoritative draft.")
@@ -234,6 +236,9 @@
     (emacsvox-aural-voice-editor--button 'undo "Undo last edit" #'emacsvox-aural-voice-editor-undo)
     (emacsvox-aural-voice-editor--button 'leave "Leave and keep draft for this session" #'emacsvox-aural-voice-editor-leave)
     (emacsvox-aural-voice-editor--button 'details "Details and last playback evidence" #'emacsvox-aural-voice-editor-details)
+    (when voice
+      (emacsvox-aural-voice-editor--button 'context "Effective sound / Where settings came from…"
+                                           #'emacsvox-aural-voice-context-open))
     (setq header-line-format (format "%s | %s" (or voice "Experiment")
                                      (plist-get (emacsvox-aural-voice-drafts--status draft) :label)))
     (emacsvox-aural-voice-editor--locate field)
@@ -549,7 +554,8 @@
   ;; Keep context identity stable for the registry and asynchronous callbacks.
   (dolist (key '(:origin-row :origin-column :announced-apply))
     (unless (plist-member context key) (nconc context (list key nil))))
-  (let ((buffer (or (and (buffer-live-p (plist-get context :buffer)) (plist-get context :buffer))
+  (let ((ordinary (and (buffer-live-p source) (emacsvox-aural-inspection-remember-source-buffer source)))
+        (buffer (or (and (buffer-live-p (plist-get context :buffer)) (plist-get context :buffer))
                     (generate-new-buffer (format "*Voice editor: %s*" (or (plist-get context :voice) "experiment"))))))
     (when (and (buffer-live-p source) (not (eq source buffer)))
       (with-current-buffer source
@@ -560,6 +566,7 @@
     (with-current-buffer buffer
       (unless (derived-mode-p 'emacsvox-aural-voice-editor-mode) (emacsvox-aural-voice-editor-mode))
       (setq emacsvox-aural-voice-editor--context context)
+      (emacsvox-aural-inspection-attach-source ordinary)
       (emacsvox-aural-voice-editor-refresh))
     (emacsvox-aural-ui-pop-to-buffer buffer)
     (emacsvox-aural-voice-editor-speak)

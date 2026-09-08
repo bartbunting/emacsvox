@@ -46,6 +46,7 @@
   (require 'emacsvox-aural-voice-drafts-tests)
   (require 'emacsvox-aural-voice-editing-tests)
   (require 'emacsvox-aural-voice-editor-tests)
+  (require 'emacsvox-aural-voice-context-tests)
   (require 'emacsvox-aural-voice-workbench-tests)
   (require 'emacsvox-aural-voice-palettes-tests)
   (require 'emacsvox-aural-voice-experiment-tests)

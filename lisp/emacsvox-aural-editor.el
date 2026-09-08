@@ -1148,6 +1148,7 @@ LABEL identifies the speech or cue being edited."
       "Open a different editor buffer to choose another persistence scope.\n\n"
       "n/p or up/down move N add rule\n"
       "RET or e edit rule  C-c C-a available actions\n"
+      "V adjust one voice field; Inherit removes the field\n"
       "c copy rule         d delete rule\n"
       "t enable/disable    M-up/M-down reorder\n"
       "m metadata          P preview; S stop\n"
@@ -1166,6 +1167,9 @@ LABEL identifies the speech or cue being edited."
        (not emacsvox-aural-editor-dirty)
        (yes-or-no-p "Discard unsaved aural editor changes? "))
     (emacsvox-aural-quit t)))
+
+(autoload 'emacsvox-aural-voice-context-adjust-rule "emacsvox-aural-voice-context"
+  "Adjust one voice field in a scoped rule, with explicit Inherit." t)
 
 (defvar emacsvox-aural-scheme-editor-mode-map
   (let ((map (make-sparse-keymap)))
@@ -1186,6 +1190,7 @@ LABEL identifies the speech or cue being edited."
     (define-key map (kbd "P") #'emacsvox-aural-editor-preview-rule)
     (define-key map (kbd "x") #'emacsvox-aural-editor-explain-rule)
     (define-key map (kbd "v") #'emacsvox-aural-editor-validate)
+    (define-key map (kbd "V") #'emacsvox-aural-voice-context-adjust-rule)
     (define-key map (kbd "s") nil)
     (define-key map (kbd "w") #'emacsvox-aural-editor-save)
     (define-key map (kbd "C-c C-c") #'emacsvox-aural-editor-save)

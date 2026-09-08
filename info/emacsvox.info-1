@@ -3058,7 +3058,54 @@ existing Presentation Profile action to retain that selection after
 restart.  Palette and local-choice files are separate; the editor
 coordinates their writes and reports partial failures in the same view.
 
-6.7.2 Worked Presentation Recipes
+6.7.2 Inspect Or Adjust A Voice In Context
+------------------------------------------
+
+In the common named-voice editor, choose _Effective sound / Where
+settings came from_.  It uses the source item captured when you entered
+Aural Home or the voice list.  If none is attached, choose an ordinary
+buffer at its current point.  The item must have inspectable
+presentation facts or a valid retained presentation.  _Choose another
+source context_ selects a new item explicitly.
+
+   This is a simulation using captured facts and rules.  It shows the
+selected base preset, matching rules, requested values and each
+dimension's source.  A rule can override pitch while another supplies
+richness.  A stronger pitch rule can hide a base pitch edit; a rule
+selecting a different preset can make the open base voice irrelevant to
+this item.  Rates follow precedence too: competing relative-rate values
+do not add together.
+
+   ‘P’ plays the edited voice in this context; ‘B’ compares original and
+edited using the same captured facts, rules and text.  These voice-only
+previews omit cues, spatial placement and temporary routing overrides.
+Family remains a portable fallback outside full preview.  Requested
+values are separate from accepted playback evidence and unsupported
+adjustments.  A changed or deleted source is rejected.  After saving a
+rule, use _Refresh facts and rules from this source item_ to capture its
+new contribution.  ‘q’ returns to the base editor.
+
+   _Adjust for this context_ presents the matching criteria and asks
+whether the rule lasts always (personal), for this Emacs session, or for
+this buffer.  Choose one adjustment and its value.  It opens the
+ordinary rule editor with that field prepared; changing richness alone
+produces a richness-only patch and does not select a complete preset.
+Review the rule's match with <RET>, use ‘V’ to adjust another voice
+field, and save that scope with ‘w’.  Palette definitions are unchanged.
+Existing unsaved work in that rule editor must be completed before
+preparing another contextual rule.
+
+   In the scoped field control, _Inherit_ removes the field so weaker
+contributions can supply its value.  Removing the final voice field
+removes the voice patch.  An existing explicit nil is displayed
+separately and retained when editing other fields.  For ACSS fields, the
+existing transport reports nil but sends no reset over a preset; rate
+and effect fields use their existing clearing behavior.  Inherit,
+explicit nil and zero are distinct.  Named presets continue to reset the
+base and earlier voice overrides.  These operations never save a
+flattened contextual result back into the palette.
+
+6.7.3 Worked Presentation Recipes
 ---------------------------------
 
   1. Browse Eloquence And Compare Pitch

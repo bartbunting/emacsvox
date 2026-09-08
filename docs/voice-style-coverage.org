@@ -6,8 +6,9 @@
 This maintenance audit follows portable voice settings through editing,
 preview, persistence, compilation and speech requests.  It completes the
 bounded consumer-coverage backlog item and supplies regression protection for
-the [[file:voice-editor-design.org][proposed voice editor]].  It does not implement that design or establish
-that different physical engines sound alike.
+the [[file:voice-editor-design.org][voice editor]]. Later implementation added the common editor and contextual
+inspection described below. These checks do not establish that different physical
+engines sound alike.
 
 Two Workbench defects were found and corrected:
 
@@ -30,11 +31,22 @@ Two Workbench defects were found and corrected:
 | Palette styles and persistence | Resources validate complete five-field ACSS styles with optional rate/effects; schemes save and load them as data. Scheme tests round-trip family, numeric ACSS, every effect, relative rate, legacy rate and explicit nil. Palette entries do not accept rule-style =:preset= composition. |
 | Numeric editing | =emacsvox-aural-voice-palettes.el= uses field metadata for bounds. Existing =voice-style-ui= tests cover digits, prompts, blank input, limits and undo. The small complete-ACSS editor deliberately edits only its five fields; the tuner adds relative rate and effects. |
 | Filter presentation | Tuner amount is =9 - stored cutoff= for low-pass and unchanged for high-pass. Existing tests cover direction, neutral labels, input and stored values. The new connected test saves amount two as low-pass cutoff seven and reads it back as amount two. |
-| Rule editor | =emacsvox-aural-editor.el= selects named voices from the active palette, preserves existing styling when requested, and previews via rule resolution and compilation. It has no separate numeric dimension mapping. Tools tests cover active-palette choices; preview tests retain compiled voice effects. |
+| Rule editor | =emacsvox-aural-editor.el= selects named voices and preserves existing styling. Its V action uses =emacsvox-aural-voice-context.el= for partial numeric adjustments and explicit Inherit, sharing tuner amount conversion and rule validation. Tests retain preset resets, nil, zero and unrelated contributions. |
 | Tuner preview | Converts four numeric ACSS fields, signed relative rate and all seven effects; physical choice/family uses route and adapter policy. Existing tests cover a selected engine, unsupported settings and unavailable structured previews. |
 | Workbench preview | Resolves the effective palette style, chooses a route, then converts ACSS, relative rate and effects. The two fixes above close gaps in alias resolution and gain/pan normalization. |
 | Compiler and normal speech | Compiler owns preset/personality resolution and capabilities; transport owns final timeline construction. Existing tests check distinct ACSS wire fields, nil/zero, every effect, relative rate, unavailable family and explicit degradation. |
 | Adapter preview wire | =omnivox-voices.el= owns wire names and discovered capability handling. TTS tests capture preview requests and completion/degradation results, including older servers without relative-rate preview. |
+
+* Common editor and context additions
+
+[[file:../test/emacsvox-aural-voice-editing-tests.el][Editing model tests]] and [[file:../test/emacsvox-aural-voice-editor-tests.el][common editor tests]] cover complete owned proposals,
+immutable original comparisons, raw filter values, neutral effect conversion,
+explicit experiment scope, fallback preservation, coordinated saving and retained
+drafts. Both ordinary Tune entry points resume the same authoritative draft.
+[[file:../test/emacsvox-aural-voice-context-tests.el][Context tests]] add precedence, per-dimension origins, preset reset, Inherit,
+source validity, saved-scope isolation and labelled full previews. Requested
+ACSS nil remains distinct from its existing no-reset command behavior; rate and
+effect clearing stays separate. These contracts also run with isolated byte-code.
 
 * Connected regression
 
@@ -72,8 +84,8 @@ hardware bypass.
 
 These checks establish preservation and conversion of requested settings.
 They do not measure audible equivalence across DECtalk and Eloquence or test
-live device availability.  Optional tuning for each fallback choice and a
-single coherent editor save workflow remain proposed design work.
+live device availability. The common save workflow is implemented; optional
+tuning for each fallback choice and live spoken acceptance remain pending.
 
 When adding a field, review each boundary above and add independent expected
 values or explicit degradation checks.  Keep normalization, UI amount policy

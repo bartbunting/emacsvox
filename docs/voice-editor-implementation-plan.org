@@ -8,7 +8,8 @@ Planning, data-contract and storage slices are complete. The maintainer selected
 full-chain preview, and its XHI protocol contract is complete. The server preview
 and client slices and owned runtime integration are implemented and tested.
 Draft/save coordination and the common base editor are implemented and tested.
-Context inspection/editing remains the next slice.
+Optional context inspection and scoped field editing are also implemented.
+Stop at slice 7 for the agreed XHI design review before individual fallback tuning.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -193,8 +194,8 @@ frozen requests, rate/disablement guards, bounded timeouts and operation-owned
 callbacks preserve cancellation and prevent replay after reconnect. Standalone
 adapters explicitly reject the unimplemented full-chain projection. Existing
 individual auditions retain their wire contract. Client request/response fixtures
-and stale, stopped, replaced and failed callback cases are tested. The new editor
-does not yet produce these complete entries; that remains in later slices.
+and stale, stopped, replaced and failed callback cases are tested. The common base and context editors now produce these complete entries
+through the preview service delivered here.
 
 Run stub-engine and null-output tests for ordered choices, Automatic, unavailable
 and disabled engines, pre/post-PCM failures, queue bounds, cancellation, policy
@@ -294,10 +295,10 @@ searchable physical auditions, ordered fallbacks, explicit experiment keeps,
 Home resumption and truthful asynchronous save state. Voice lists show physical
 choices separately from adjustments and draft state. Legacy first save creates
 an independent palette; old style-only writes are guarded against erasing owned
-choices. Contextual inspection is deliberately the next slice. Per-choice tuning
+choices. Contextual inspection follows in slice 6. Per-choice tuning
 and live spoken acceptance remain pending. No live runtime was restarted.
 
-** TODO 6. Expose the cascade without complicating base editing
+** DONE 6. Expose the cascade without complicating base editing
 
 Add optional Effective sound / Where settings came from inspection and labelled
 base/context previews using current inspection services. Add contextual editing
@@ -307,6 +308,22 @@ for Inherit; preserve existing explicit nil distinctly.
 Test independent dimensions, competing values, preset reset, source validity,
 masked base edits, unsupported fields and per-dimension origins. Context saves
 must not change palette definitions; previews must not persist flattened results.
+
+The optional captured-context view now explains the selected preset, matching
+rules, requested fields and per-dimension origins. Full original/edited previews
+use the same captured rules and preserve the existing ACSS nil no-reset contract
+separately from rate/effect clearing. Source identity is checked before inspection,
+preview and scoped preparation. The view labels its simulation basis, omitted
+cues/spatial placement and excluded temporary routes. Compound legacy voices that
+cannot be represented by a complete preview report that limitation explicitly.
+
+Context adjustment prepares only the chosen dimension in the existing personal,
+session or buffer rule editor. Its V action edits another field or removes it
+for Inherit, retaining other fields, explicit nil, zero and existing preset resets.
+Saving uses the established scoped rule service and leaves palette data intact.
+The first workflow inspects a captured source item; it does not provide synthetic
+example authoring or individual fallback adjustments. Live spoken acceptance is
+still required after the agreed reasoning boundary.
 
 ** TODO 7. Decide and implement optional individual fallback tuning
 
@@ -376,6 +393,17 @@ sandbox-denied Magit server socket, and stalled in the startup dependency
 subprocess after 2,561 completed tests; it was interrupted rather than claimed
 as a full-suite pass. These unrelated failures remain outside this slice.
 Live spoken acceptance is still required.
+
+For context slice 6, 186 focused voice, rule/editor and source-inspection tests
+pass, including twelve new context contracts. Isolated compiled parity and fresh
+normal build-tree startup pass. All 21 common-editor/context interaction tests
+also pass with the full unit suite's libraries and interactive advice loaded;
+this verifies the audio-fixture correction from slice 5. The separate startup
+guard subprocess also timed out after 30 seconds; the full suite is not claimed
+as passing. Full rebuild, byte-code/header preflight, Org preview/update,
+generated reference, documentation release and whitespace checks pass.
+The planned stop is now slice 7's XHI design review. No live session, settings,
+server runtime or release publication was changed.
 
 For later Lisp slices, run focused ERT and =make bytecode=, or
 =make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh

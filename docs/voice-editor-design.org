@@ -4,12 +4,14 @@
 
 * Status and purpose
 
-Draft for discussion; describes proposed behaviour, not the current product.
-Implementation and changes to existing commands remain separate work.
+The common base editor and first optional context workflow are implemented.
+This document also describes later interactions, including individual fallback
+tuning, which remain proposed. Live spoken acceptance is still pending.
 The [[file:voice-editor-implementation-plan.org][implementation plan]] defines tested delivery slices.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] accepts palette ownership and independent conversion on first save;
-the [[file:voice-editor-data-contract.org][data contract]] specifies its implementation. Detailed interaction choices
-and individual fallback tuning remain proposed until their respective slices.
+the [[file:voice-editor-data-contract.org][data contract]] specifies its implementation. The implementation plan records
+the delivered scope and remaining acceptance
+work. Individual fallback tuning remains proposed until its own design review.
 
 Make it possible to answer three questions in one place: which physical voice
 does bolden use, what adjustments change its sound, and have my changes been

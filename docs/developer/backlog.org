@@ -28,7 +28,9 @@ Simple editing should expose one voice, common adjustments, preview and one
 save action; fallback configuration and individual tuning expand on demand.
 The new formats, read-only conversion proposals and nonactivating writers are
 implemented. Owned runtime integration, draft/save recovery and the common base
-editor are tested. Context inspection and scoped adjustment editing remain next.
+editor are tested. Optional context inspection and scoped field editing now
+preserve the existing cascade. Individual fallback tuning and live spoken
+acceptance remain pending.
 The [[file:../voice-editor-implementation-plan.org][implementation plan]] now records the source inventory, ordered slices,
 acceptance checks and reasoning-level stops. Planning, the
 [[file:../voice-editor-data-contract.org][data contract]] and storage/migration are complete. Runtime inspection found that
@@ -40,8 +42,9 @@ Owned palette selection now registers matching definitions and choices on both
 speech lanes, and Workbench logical previews use the complete chain. Shared
 style compilation preserves contextual precedence and inactive-palette routing.
 The session draft/save service now handles ordered two-store publication,
-conflicts, partial retries and operation-owned application. Continue at High
-with contextual inspection and editing. The maintainer selected shared tuning first, with explicit
+conflicts, partial retries and operation-owned application. Stop for the agreed
+XHI design review before individual fallback storage/runtime work. The maintainer
+selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.
 

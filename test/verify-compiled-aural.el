@@ -339,6 +339,7 @@
                   "emacsvox-aural-voice-drafts-tests.el"
                   "emacsvox-aural-voice-editing-tests.el"
                   "emacsvox-aural-voice-editor-tests.el"
+                  "emacsvox-aural-voice-context-tests.el"
                   "emacsvox-aural-transport-tests.el"
                   "emacsvox-aural-voice-palettes-tests.el"
                   "emacsvox-aural-voice-workbench-tests.el"))
@@ -348,6 +349,7 @@
                      emacsvox-aural-voice-drafts--save
                      emacsvox-aural-voice-editing--proposal
                      emacsvox-aural-voice-editor-open
+                     emacsvox-aural-voice-context--resolve
                       emacsvox-aural--validate-voice-style
                       emacsvox-aural--voice-style-field
                       emacsvox-aural-compile-voice-style
@@ -378,6 +380,7 @@
                "^emacsvox-aural-voice-drafts-"
                "^emacsvox-aural-voice-editing-"
                "^emacsvox-aural-voice-editor-"
+               "^emacsvox-aural-voice-context-"
                (tag voice-style-ui)
                (tag delivery-preparation)
                emacsvox-aural-delivery-keeps-stops-immediate-and-cancellable
