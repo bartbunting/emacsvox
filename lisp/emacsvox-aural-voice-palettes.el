@@ -1418,7 +1418,7 @@ in that overlay so subsequent edits do not create more palettes."
    (format
     " Voice: %s    Palette: %s    %s    %s"
     emacsvox-aural-voice-tuner-voice
-    (or emacsvox-aural-voice-tuner-palette "temporary experiment; nothing saved")
+    (or emacsvox-aural-voice-tuner-palette "temporary experiment")
     (emacsvox-aural-voice-tuner--route-description)
     (concat
      (if emacsvox-aural-voice-tuner-dirty "modified" "unchanged")

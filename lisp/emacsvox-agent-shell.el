@@ -839,6 +839,18 @@ after that response row was already visited directly."
     (cons (max (point-min) (overlay-start overlay))
           (min (1- (point-max)) (1- (overlay-end overlay))))))
 
+(defun emacsvox-agent-shell--adjacent-chat-padding-source-bounds (direction)
+  "Return chat padding immediately beyond this visual row in DIRECTION."
+  (when (or line-move-visual visual-line-mode)
+    (save-excursion
+      (let* ((bounds (emacsvox-agent-shell--visual-line-source-bounds))
+             (position (pcase direction
+                         ('forward (1+ (cdr bounds)))
+                         ('backward (1- (car bounds))))))
+        (when (<= (point-min) position (1- (point-max)))
+          (goto-char position)
+          (emacsvox-agent-shell--chat-padding-source-bounds))))))
+
 (defun emacsvox-agent-shell--move-beyond-visual-source-row
     (direction bounds)
   "Move in DIRECTION beyond visual source BOUNDS.
@@ -922,6 +934,15 @@ a positive argument to the advised command."
                        (signal (car error-data) (cdr error-data)))))))
             (apply original-function arguments)))
     (when normalize-p
+      ;; A multiline chat label can also stall motion on the preceding
+      ;; ordinary row (for example, Cancelled), outside the label overlay.
+      ;; Cross only the adjacent chat padding, and only if motion stalled.
+      (when-let* (((= origin-point (point)))
+                  (adjacent-padding
+                   (emacsvox-agent-shell--adjacent-chat-padding-source-bounds
+                    direction)))
+        (emacsvox-agent-shell--move-beyond-visual-source-row
+         direction adjacent-padding))
       (let (previous padding)
         ;; A folded or transient row can make core visual motion return while
         ;; point remains at the row anchor.  Escape when source remains in the
@@ -6378,13 +6399,13 @@ DISMISS means the compose window is dismissed."
   "Extract speakable text from ACP tool content BLOCK."
   (cond
    ((stringp block) (substring-no-properties block))
-   ((listp block)
+   ((consp block)
     (let ((text (or (map-elt block :text) (map-elt block 'text)))
           (content (or (map-elt block :content) (map-elt block 'content))))
       (cond
        ((stringp text) (substring-no-properties text))
        ((stringp content) (substring-no-properties content))
-       ((listp content)
+       ((consp content)
         (emacsvox-agent-shell--tool-content-block-text content)))))
    (t nil)))
 

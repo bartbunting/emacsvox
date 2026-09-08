@@ -242,11 +242,18 @@
        (t (format "%d hours" (floor (/ age 3600)))))
     "not timed"))
 
+(defun emacsvox-aural-voice-workbench--physical-filter ()
+  "Return explicit filters with the current engine browser's temporary scope."
+  (if emacsvox-aural-voice-workbench--voice-list-parent
+      (plist-put (copy-tree emacsvox-aural-voice-workbench-filter)
+                 :engine emacsvox-aural-voice-workbench--voice-list-parent)
+    emacsvox-aural-voice-workbench-filter))
+
 (defun emacsvox-aural-voice-workbench--filter-description ()
   "Return concise physical filter text."
   (let (parts)
     (cl-loop
-     for (key value) on emacsvox-aural-voice-workbench-filter by #'cddr
+     for (key value) on (emacsvox-aural-voice-workbench--physical-filter) by #'cddr
      when value
      do (push (format "%s=%s" (substring (symbol-name key) 1) value) parts))
     (if parts (mapconcat #'identity (nreverse parts) ",") "none")))
@@ -689,7 +696,7 @@ or persisting a routing choice."
 
 (defun emacsvox-aural-voice-workbench--filter-match-p (key actual)
   "Return non-nil when physical filter KEY accepts ACTUAL."
-  (let ((wanted (plist-get emacsvox-aural-voice-workbench-filter key)))
+  (let ((wanted (plist-get (emacsvox-aural-voice-workbench--physical-filter) key)))
     (or (null wanted)
         (emacsvox-aural-voice-workbench--same-value-p wanted actual))))
 
@@ -2661,9 +2668,13 @@ refreshing the Workbench at LOGICAL-VOICE."
   (emacsvox-aural-voice-workbench--switch 'logical))
 
 (defun emacsvox-aural-voice-workbench-physical-view ()
-  "Show discovered physical voices."
+  "Browse the selected engine's voices, or show the physical voice inventory.
+Outside the engine view, leave any temporary engine browsing scope."
   (interactive)
-  (emacsvox-aural-voice-workbench--switch 'physical))
+  (if (eq emacsvox-aural-voice-workbench-view 'engines)
+      (emacsvox-aural-voice-workbench-open-row)
+    (setq emacsvox-aural-voice-workbench--voice-list-parent nil)
+    (emacsvox-aural-voice-workbench--switch 'physical)))
 
 (defun emacsvox-aural-voice-workbench-engine-view ()
   "Show speech engines and their capabilities."
@@ -2722,6 +2733,8 @@ refreshing the Workbench at LOGICAL-VOICE."
     (setq emacsvox-aural-voice-workbench-filter
           (plist-put emacsvox-aural-voice-workbench-filter key
                      (unless (string-empty-p value) value)))
+    (when (eq field 'engine)
+      (setq emacsvox-aural-voice-workbench--voice-list-parent nil))
     (unless (eq emacsvox-aural-voice-workbench-view 'physical)
       (setq emacsvox-aural-voice-workbench-view 'physical))
     (emacsvox-aural-voice-workbench-refresh)
@@ -2734,7 +2747,8 @@ refreshing the Workbench at LOGICAL-VOICE."
 (defun emacsvox-aural-voice-workbench-clear-filters ()
   "Clear all physical-voice filters and refresh."
   (interactive)
-  (setq emacsvox-aural-voice-workbench-filter nil)
+  (setq emacsvox-aural-voice-workbench-filter nil
+        emacsvox-aural-voice-workbench--voice-list-parent nil)
   (emacsvox-aural-voice-workbench-refresh)
   (if (fboundp 'tts-speak)
       (tts-speak "Physical voice filters cleared")
@@ -2745,9 +2759,7 @@ refreshing the Workbench at LOGICAL-VOICE."
   (interactive)
   (if (eq emacsvox-aural-voice-workbench-view 'engines)
       (let ((engine (or (tabulated-list-get-id) (user-error "Select an engine first"))))
-        (setq emacsvox-aural-voice-workbench--voice-list-parent engine
-              emacsvox-aural-voice-workbench-filter
-              (plist-put emacsvox-aural-voice-workbench-filter :engine engine))
+        (setq emacsvox-aural-voice-workbench--voice-list-parent engine)
         (emacsvox-aural-voice-workbench--switch 'physical))
     (emacsvox-aural-voice-workbench-describe)))
 
@@ -2797,45 +2809,46 @@ when they remain unsaved."
   (emacsvox-aural-ui-with-help-window
     (princ
      (concat
-      "Emacsvox Voice Workbench\n\n"
-      "The workbench presents portable voice style and machine-local routing\n"
-      "together while keeping their saved data separate. Exact native IDs are\n"
-      "local; property selectors can be portable; session routes are temporary.\n"
-      "Tuner w saves portable style only; Workbench w saves and applies routes.\n\n"
-      "l logical voices      v physical voices\n"
-      "e engines             s styles and effects\n"
-      "n/p or up/down rows   left/right columns\n"
-      ". speak titled cell   SPC speak complete row\n"
-      "RET browse engine voices or describe row; F set filter\n"
-      "C clear filters       R request fresh inventory\n"
-      "P preview row         A preview all visible voices\n"
-      "B selected voice versus a matching voice; T edit sample text\n"
-      "B also offers Search all engines. Unavailable voices are skipped by A.\n"
-      "Customize emacsvox-aural-preview-label-verbosity for sample labels.\n"
-      "S stop preview        t tune selected physical or logical voice\n"
-      "Physical tuning is temporary; Keep result opens a review before saving.\n"
-      "a assign or choose physical voice\n"
-      "j review one route suggestion\n"
-      "c cancel assignment   [/] move selector earlier/later\n"
-      "d delete selector     y copy another logical route\n"
-      "M map all unmapped    X replace engine in selected routes\n"
-      "Engine view: O toggle preferred; [/] reorder preferred\n"
-      "Availability reports discovery; Routing policy allowed only permits use.\n"
-      "Missing runtimes remain visible with their unavailable reason.\n"
-      "f toggle fallback     {/} reorder fallback\n"
-      "D disable/restore     K request failed-engine recovery probe\n"
-      "C-e d e prefer engine for session; prefix saves it\n"
-      "M-x emacsvox-aural-restore-saved-engine-order restores saved order\n"
-      "u undo staged edit    C-c C-k cancel all staged edits\n"
-      "x explain row\n"
-      "m migrate legacy setup  N stage routing preset\n"
-      "E export profile        I import profile\n"
-      "w or C-c C-c save and apply\n"
-      "r retry committed apply\n"
-      "U restore previous saved revision\n"
-      "g redraw quietly      h aural home\n"
-      "q back to the engine that opened this voice list; otherwise hide\n"
-      "Hiding warns if a route is unsaved. ? help\n")))
+      "Browse and try voices — Voice Workbench\n\n"
+      "Choose a view for your task\n"
+      "e: Engines are speech synthesizers, such as Flite or Eloquence.\n"
+      "   Select an engine, then RET or v to browse just its voices.\n"
+      "v: Physical voices are the actual installed voices you can hear.\n"
+      "   From another view, v shows voices across engines; F filters still apply.\n"
+      "   From an engine's voice list, v removes that temporary engine limit.\n"
+      "l: Logical voices are named roles, such as bolden or annotate.\n"
+      "   Use this view to choose which physical voice reads a role.\n"
+      "s: Styles and effects shows the pitch, rate, and effects for those roles.\n"
+      "   Use it to inspect a role's sound and what its engine supports.\n\n"
+      "Try voices without changing your setup\n"
+      "1. Start with e, select an engine, and press RET.\n"
+      "2. Move with n/p or up/down. P plays the selected voice; S stops.\n"
+      "3. A plays all available visible voices. B compares two voices;\n"
+      "   its Search all engines option looks beyond the current filters.\n"
+      "4. t opens temporary tuning for the physical voice.\n"
+      "   In the tuner, w chooses what to keep and opens a review.\n"
+      "   In that review, w or C-c C-c saves and applies; q returns to tuning.\n"
+      "q returns to the engine that opened its voice list. Switching views\n"
+      "also ends that temporary engine limit. C clears all filters.\n\n"
+      "Change the voice used for a role\n"
+      "1. Press l and select the logical voice. P previews its current sound.\n"
+      "2. Press a, choose and preview a physical voice, then a to assign it.\n"
+      "   c cancels that selection. Assignment returns to the logical list.\n"
+      "3. Press w in the Workbench to save and apply the route.\n"
+      "To change only a role's parameters, press t on its logical or style row.\n"
+      "That tuner saves the style with w and returns; it has no Keep review.\n"
+      "Any route staged in the Workbench still needs Workbench w.\n\n"
+      "Navigation and listening\n"
+      "left/right columns; . reads a cell; SPC reads the whole row.\n"
+      "RET describes a voice; x explains it. T changes the sample text.\n"
+      "F sets a physical voice filter; C clears filters; R refreshes inventory.\n"
+      "g redraws; h opens Home; q hides the Workbench outside an engine's list.\n"
+      "C-c C-a offers available actions; C-c C-i opens the offline manual.\n\n"
+      "Save and recover routing changes\n"
+      "u undoes a staged edit; C-c C-k cancels staged edits.\n"
+      "w or C-c C-c saves routes and engine policy; r retries a saved apply;\n"
+      "U restores the previous saved revision. Hiding warns about staged edits.\n"
+      "For engine preferences, fallback, and other routing tools, use C-c C-a.\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 

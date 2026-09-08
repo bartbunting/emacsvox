@@ -184,5 +184,97 @@
           (should (string-match-p "exact value not reported"
                                   (emacsvox-aural-voice-tuner--effective-value 'average-pitch))))))))
 
+(ert-deftest emacsvox-aural-experiment-saved-changes-are-clean-before-apply-completes ()
+  "Saving both components permits quitting even while apply is pending or failed."
+  (emacsvox-test--with-voice-experiment
+    (emacsvox-aural-ui-goto-row 'average-pitch)
+    (emacsvox-aural-voice-tuner-increase)
+    (should emacsvox-aural-voice-tuner-dirty)
+    (let ((origin (current-buffer))
+          (plan (emacsvox-aural-voice-experiment--prepare-keep 'both 'bolden 'experiment-test))
+          callback)
+      (with-temp-buffer
+        (emacsvox-aural-voice-experiment-keep-mode)
+        (setq emacsvox-aural-voice-experiment-origin origin
+              emacsvox-aural-voice-experiment-keep-plan plan)
+        (cl-letf (((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
+                  ((symbol-function 'emacsvox-aural-save-routing-profiles) #'ignore)
+                  ((symbol-function 'tts-apply-voice-configuration)
+                   (lambda (function) (setq callback function))))
+          (call-interactively (key-binding (kbd "C-c C-c"))))
+        (should (string-match-p "Saved. Applying" (buffer-string)))
+        (should-not (buffer-modified-p))
+        (with-current-buffer origin (should-not emacsvox-aural-voice-tuner-dirty))
+        (funcall callback '(:status failed :message "Speech server unavailable"))
+        (should (string-match-p "Saved. Apply failed" (buffer-string)))
+        (should (string-match-p "Speech server unavailable" (buffer-string)))
+        (with-current-buffer origin
+          (should-not emacsvox-aural-voice-tuner-dirty)
+          (cl-letf (((symbol-function 'yes-or-no-p)
+                     (lambda (&rest _) (ert-fail "Saved tuning asked to discard changes")))
+                    ((symbol-function 'emacsvox-aural-quit) #'ignore))
+            (call-interactively (key-binding (kbd "q")))))))))
+
+(ert-deftest emacsvox-aural-experiment-apply-callback-preserves-newer-edits ()
+  "An asynchronous apply result cannot mark later tuning edits as saved."
+  (emacsvox-test--with-voice-experiment
+    (emacsvox-aural-ui-goto-row 'average-pitch)
+    (emacsvox-aural-voice-tuner-increase)
+    (let ((origin (current-buffer))
+          (plan (emacsvox-aural-voice-experiment--prepare-keep 'both 'bolden 'experiment-test))
+          callback)
+      (with-temp-buffer
+        (emacsvox-aural-voice-experiment-keep-mode)
+        (setq emacsvox-aural-voice-experiment-origin origin
+              emacsvox-aural-voice-experiment-keep-plan plan)
+        (cl-letf (((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
+                  ((symbol-function 'emacsvox-aural-save-routing-profiles) #'ignore)
+                  ((symbol-function 'tts-apply-voice-configuration)
+                   (lambda (function) (setq callback function))))
+          (call-interactively (key-binding (kbd "w"))))
+        (with-current-buffer origin
+          (should-not emacsvox-aural-voice-tuner-dirty)
+          (emacsvox-aural-voice-tuner-increase))
+        (funcall callback '(:status applied))
+        (should (string-match-p "Saved and applied" (buffer-string)))
+        (with-current-buffer origin
+          (should emacsvox-aural-voice-tuner-dirty)
+          (emacsvox-aural-voice-experiment-undo)
+          (should-not emacsvox-aural-voice-tuner-dirty))))))
+
+(ert-deftest emacsvox-aural-experiment-accepts-only-persisted-components ()
+  "Route-only, style-only, and partial saves leave other changed components dirty."
+  (dolist (kind '(style route both))
+    (emacsvox-test--with-voice-experiment
+      (let ((opening-style (copy-tree emacsvox-aural-voice-tuner-initial-style))
+            (opening-route (copy-tree emacsvox-aural-voice-experiment-accepted-route)))
+        (emacsvox-aural-ui-goto-row 'average-pitch)
+        (emacsvox-aural-voice-tuner-increase)
+        (setq emacsvox-aural-voice-tuner-route-selector
+              '(:kind exact :scope session :engine-id "winrt" :voice-id "David"))
+        (let ((origin (current-buffer))
+              (plan (emacsvox-aural-voice-experiment--prepare-keep
+                     kind 'bolden (unless (eq kind 'route) 'experiment-test))))
+          (with-temp-buffer
+            (emacsvox-aural-voice-experiment-keep-mode)
+            (setq emacsvox-aural-voice-experiment-origin origin
+                  emacsvox-aural-voice-experiment-keep-plan plan)
+            (cl-letf (((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
+                      ((symbol-function 'emacsvox-aural-save-routing-profiles)
+                       (lambda (&rest _) (when (eq kind 'both) (error "Disk full"))))
+                      ((symbol-function 'tts-apply-voice-configuration)
+                       (lambda (callback) (funcall callback '(:status applied)))))
+              (emacsvox-aural-voice-experiment-save-and-apply))
+            (when (eq kind 'both)
+              (should (string-match-p "Partly saved" (buffer-string)))))
+          (should emacsvox-aural-voice-tuner-dirty)
+          (if (eq kind 'route)
+              (progn
+                (should (equal opening-style emacsvox-aural-voice-tuner-initial-style))
+                (should-not (emacsvox-aural-voice-experiment--route-dirty-p)))
+            (should (equal opening-route emacsvox-aural-voice-experiment-accepted-route))
+            (should (equal emacsvox-aural-voice-tuner-working-style
+                           emacsvox-aural-voice-tuner-initial-style))))))))
+
 (provide 'emacsvox-aural-voice-experiment-tests)
 ;;; emacsvox-aural-voice-experiment-tests.el ends here

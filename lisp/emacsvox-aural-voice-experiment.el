@@ -271,8 +271,11 @@ KIND is `style', `route', or `both'.  This function performs no writes."
          (palette (plist-get plan :palette)) (routing (plist-get plan :routing))
          (snapshot (plist-get plan :snapshot)))
     (concat
-     (format "Keep result for %s\n\nPhysical voice: %s\nPreview parameters: %S\n\n"
-             (plist-get plan :name) (plist-get snapshot :voice) (plist-get snapshot :style))
+     (format "Keep result for %s\n\n%s\n\n"
+             (plist-get plan :name)
+             (emacsvox-aural-voice-experiment--keep-status))
+     "w or C-c C-c: Save and apply, or retry unfinished steps.\n"
+     "q: Return to tuning. P: Preview this proposal. ?: Read this review.\n\n"
      (format "Keep: %s.\n"
              (pcase (plist-get plan :kind)
                ('style "parameters as a named style, using existing routes")
@@ -286,15 +289,44 @@ KIND is `style', `route', or `both'.  This function performs no writes."
        (format "Exact physical route for %s in routing profile %s: %s. Any session route for this logical voice will also be replaced.\n"
                (plist-get plan :name) (plist-get routing :id)
                (if (plist-get plan :route-saved) "saved" "will be saved")))
-     (format "Apply status: %s.\n" (plist-get plan :apply-status))
+     (format "\nPhysical voice: %s\nParameters:\n" (plist-get snapshot :voice))
+     (mapconcat
+      (lambda (dimension)
+        (format "  %s: %s\n"
+                (emacsvox-aural-voice-tuner--dimension-label dimension)
+                (emacsvox-aural-voice-tuner--value-description
+                 dimension (plist-get (plist-get snapshot :style)
+                                      (emacsvox-aural--voice-dimension-key dimension)))))
+      emacsvox-aural-rich-voice-dimensions "")
+     (when-let* ((result (plist-get plan :apply-result)))
+       (concat
+        (when (emacsvox-aural-voice-workbench--apply-timed-out-p result)
+          "Apply timed out; server outcome unconfirmed.\n")
+        (when-let* ((message (plist-get result :message)))
+          (format "Apply detail: %s\n" message))))
      (when-let* ((failure (plist-get plan :failure))) (format "Incomplete: %s\n" failure))
-     "\nC-c C-c saves and applies this proposal, or retries unfinished steps.\nP previews the frozen voice and parameters above. q returns; h opens Home. ? reads this review.\n")))
+     "\nReturning does not undo saved changes. h opens Home.\n")))
+
+(defun emacsvox-aural-voice-experiment--keep-status ()
+  "Describe persistence and application separately, with the next useful action."
+  (let* ((plan emacsvox-aural-voice-experiment-keep-plan)
+         (saved (and (or (not (plist-get plan :palette)) (plist-get plan :palette-saved))
+                     (or (not (plist-get plan :routing)) (plist-get plan :route-saved)))))
+    (if saved
+        (pcase (plist-get plan :apply-status)
+          ('applied "Saved and applied. Press q to return to tuning.")
+          ('applying "Saved. Applying to speech; please wait for the result.")
+          (status (format "Saved. Apply %s. Press w to retry applying the saved result." status)))
+      (if (or (plist-get plan :palette-saved) (plist-get plan :route-saved))
+          "Partly saved. Press w to retry the unfinished steps; saved changes are retained."
+        "Not saved yet. Press w to save and apply, or q to return without saving."))))
 
 (defun emacsvox-aural-voice-experiment--show-keep ()
   "Refresh this review without losing point."
   (let ((inhibit-read-only t) (position (point)))
     (erase-buffer) (insert (emacsvox-aural-voice-experiment--keep-summary))
-    (goto-char (min position (point-max)))))
+    (goto-char (min position (point-max)))
+    (set-buffer-modified-p nil)))
 
 (defun emacsvox-aural-voice-experiment-review ()
   "Speak the complete Keep result proposal and current save/apply status."
@@ -317,26 +349,38 @@ KIND is `style', `route', or `both'.  This function performs no writes."
                    (tts-speak (format "Kept-result preview failed: %s"
                                       (plist-get result :message))))))))
 
+(defun emacsvox-aural-voice-experiment--accept-saved ()
+  "Update the experiment's saved baselines for each completed persistence step.
+Later edits and components not included in this save remain unsaved."
+  (let* ((plan emacsvox-aural-voice-experiment-keep-plan)
+         (origin emacsvox-aural-voice-experiment-origin)
+         (snapshot (plist-get plan :snapshot)))
+    (when (buffer-live-p origin)
+      (with-current-buffer origin
+        (when (and (plist-get plan :palette-saved)
+                   (not (plist-get plan :palette-accepted)))
+          (setq emacsvox-aural-voice-tuner-initial-style
+                (copy-tree (plist-get snapshot :style)))
+          (setf (plist-get plan :palette-accepted) t))
+        (when (and (plist-get plan :route-saved)
+                   (not (plist-get plan :route-accepted)))
+          (setq emacsvox-aural-voice-experiment-accepted-route
+                (copy-tree (plist-get snapshot :experiment-route)))
+          (setf (plist-get plan :route-accepted) t))
+        (emacsvox-aural-voice-tuner--update-dirty)
+        (emacsvox-aural-voice-tuner-refresh)))))
+
 (defun emacsvox-aural-voice-experiment--apply-complete (buffer status)
   "Record the adapter's apply STATUS in review BUFFER."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
       (setf (plist-get emacsvox-aural-voice-experiment-keep-plan :apply-status)
-            (plist-get status :status))
-      (when (eq (plist-get status :status) 'applied)
-        (let* ((origin emacsvox-aural-voice-experiment-origin)
-               (snapshot (plist-get emacsvox-aural-voice-experiment-keep-plan :snapshot)))
-          (when (buffer-live-p origin)
-            (with-current-buffer origin
-              (when (equal snapshot (emacsvox-aural-voice-experiment--snapshot))
-                (setq emacsvox-aural-voice-tuner-initial-style
-                      (copy-tree emacsvox-aural-voice-tuner-working-style)
-                      emacsvox-aural-voice-experiment-accepted-route
-                      (copy-tree emacsvox-aural-voice-tuner-route-selector))
-                (emacsvox-aural-voice-tuner--update-dirty))))))
+            (plist-get status :status)
+            (plist-get emacsvox-aural-voice-experiment-keep-plan :apply-result)
+            status)
       (emacsvox-aural-voice-experiment--show-keep)
       (when (eq buffer (window-buffer (selected-window)))
-        (emacsvox-aural-ui-speak (format "Keep result: apply %s" (plist-get status :status)))))))
+        (emacsvox-aural-ui-speak (emacsvox-aural-voice-experiment--keep-status))))))
 
 (defun emacsvox-aural-voice-experiment-save-and-apply ()
   "Save reviewed destinations and apply them, retaining completed steps for retry."
@@ -347,7 +391,8 @@ KIND is `style', `route', or `both'.  This function performs no writes."
          (callback (lambda (status) (emacsvox-aural-voice-experiment--apply-complete buffer status))))
     (when (eq (plist-get plan :apply-status) 'applying)
       (user-error "The saved result is still being applied"))
-    (setf (plist-get plan :failure) nil)
+    (setf (plist-get plan :failure) nil
+          (plist-get plan :apply-result) nil)
     (condition-case error-data
         (progn
           ;; Recheck both stores before any write, including on partial retries.
@@ -383,12 +428,14 @@ KIND is `style', `route', or `both'.  This function performs no writes."
        (setf (plist-get plan :apply-status) 'failed
              (plist-get plan :failure) (error-message-string error-data))))
     (setq emacsvox-aural-voice-experiment-keep-plan plan)
+    (emacsvox-aural-voice-experiment--accept-saved)
     (emacsvox-aural-voice-experiment--show-keep)
     (emacsvox-aural-voice-experiment-review)))
 
 (define-derived-mode emacsvox-aural-voice-experiment-keep-mode
     emacsvox-aural-interface-mode "Aural-Keep-Voice"
-  "Review separate style and route changes before saving and applying them.")
+  "Review separate style and route changes before saving and applying them."
+  (setq-local header-line-format " w: Save and apply    P: Preview    q: Return to tuning    ?: Review"))
 
 (dolist (binding '(("C-c C-c" . emacsvox-aural-voice-experiment-save-and-apply)
                    ("w" . emacsvox-aural-voice-experiment-save-and-apply)
@@ -400,13 +447,26 @@ KIND is `style', `route', or `both'.  This function performs no writes."
 (defun emacsvox-aural-voice-experiment-help ()
   "Describe the temporary physical tuner using its working voice."
   (interactive)
-  (let ((text (concat "Temporary physical voice experiment. Nothing is saved on opening or adjustment.\n"
+  (let ((text (concat "Try and tune a physical voice\n\n"
+                      "Changes are temporary until you save them from the Keep result review.\n\n"
+                      "Adjust and listen\n"
                       "n/p or up/down select parameters; left/right adjust; RET enters a value.\n"
                       "P plays; B alternates opening and working versions; S stops.\n"
                       "u undoes; R restores opening voice and parameters; v tries another voice.\n"
                       "c copies an existing style; T changes sample text; D demonstrates three values.\n"
-                      "w or C-c C-c chooses what to keep and opens a review. Saving happens in that review.\n"
-                      "C-c C-i opens the offline voice manual. C-c C-a offers actions. h opens Home; q or C-c C-k cancels, confirming changed experiments.\n"
+                      "\nKeep your result\n"
+                      "1. Press w (or C-c C-c) and choose what to save:\n"
+                      "   Parameters as a named style keeps the settings with existing voice routes.\n"
+                      "   Physical voice for a logical voice keeps the voice with that role's existing settings.\n"
+                      "   Voice and parameters for a logical voice keeps both for that role.\n"
+                      "2. Choose the destination name and, if asked, a personal palette name.\n"
+                      "3. In the review, press w (or C-c C-c) again to Save and apply.\n"
+                      "4. Read the result at the top. Saved and applied means you are finished.\n"
+                      "   Press q to return to tuning, then q again to finish.\n"
+                      "If applying fails, the review says what was saved; w retries unfinished steps.\n"
+                      "\nLeave or get more help\n"
+                      "q or C-c C-k leaves tuning, asking before discarding unsaved changes.\n"
+                      "C-c C-i opens the offline voice manual. C-c C-a offers actions. h opens Home.\n"
                       "Requested parameters and advertised support are separate from playback reports.\n"
                       "Exact applied parameter values are not reported by the adapter.\n")))
     (emacsvox-aural-ui-with-help-window (princ text))

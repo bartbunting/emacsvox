@@ -5590,7 +5590,8 @@ palettes or routing profiles.
 
  -- Command: emacsvox-aural-voice-workbench-physical-view
 
-     Show discovered physical voices.
+     Browse the selected engine’s voices, or show the physical voice inventory.
+     Outside the engine view, leave any temporary engine browsing scope.
 
 2.56.1.30 emacsvox-aural-voice-workbench-preview
 ................................................

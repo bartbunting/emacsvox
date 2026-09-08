@@ -495,15 +495,25 @@ Use /Voice Workbench/ when the question involves installed voices, engines, or
 routes.  Open it from Aural Home with @@texinfo:@kbd{W}@@.  Its main views are:
 
 #+attr_texinfo: :indic kbd :compact t
-- l :: Logical voices and their current routes.
-- v :: Physical voices reported by the engines.
-- e :: Engines, preference, fallback, and health.
-- s :: Portable styles and effects.
+- e :: Engines, such as Flite or Eloquence. Start here to try voices from a
+  particular synthesizer or inspect its availability.
+- v :: Physical voices: the actual installed voices you can hear. Use this
+  list to listen, compare, and experiment with their parameters. On an engine
+  row, this key opens just that engine's voices.
+- l :: Logical voices: named roles such as /bolden/ and /annotate/. Start here
+  to change which physical voice reads a role.
+- s :: Styles and effects for those logical roles. Use this view to inspect
+  their parameters and what their current engines support.
 
 For physical voices, choose /Browse and try voices/ in Home, then press
-@@texinfo:@key{RET}@@ on an engine to browse its voices.  @@texinfo:@key{RET}@@
+@@texinfo:@key{RET}@@ or @@texinfo:@kbd{v}@@ on an engine to browse its voices.  @@texinfo:@key{RET}@@
 on a voice shows details; @@texinfo:@kbd{P}@@ plays a named sample.  Filters
-and each view's selected row and column survive navigation through Home.
+set with @@texinfo:@kbd{F}@@ and each view's selected row and column survive
+navigation through Home. The engine selected for browsing is a temporary
+limit: switching to the logical, styles, or engine view removes it.
+Pressing @@texinfo:@kbd{v}@@ from a voice list also removes that temporary
+limit. Your explicit filters still apply; @@texinfo:@kbd{C}@@ clears all
+filters to show voices across engines.
 Press @@texinfo:@kbd{q}@@ in an engine's voice list to return to that engine's
 row and column.  Press @@texinfo:@kbd{q}@@ again from the engine list to leave
 the workbench.  The direct view shortcuts remain available.
@@ -529,11 +539,21 @@ An exact-preview failure is reported instead of accepting a different voice
 as the requested one.  Availability and capability reports describe what the
 adapter advertises; they are not a listening test of every parameter.
 
-Use @@texinfo:@kbd{a}@@ to assign a physical voice and @@texinfo:@kbd{t}@@ to tune the
-selected logical voice on its effective route.  Route changes are staged until
-you press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ to save and apply them.
+To change the physical voice used for a role, press @@texinfo:@kbd{l}@@,
+select the logical voice, then press @@texinfo:@kbd{a}@@. Preview candidates
+with @@texinfo:@kbd{P}@@ and press @@texinfo:@kbd{a}@@ on your choice to assign
+it and return to the logical list. @@texinfo:@kbd{c}@@ cancels the selection.
+Route changes are staged until you press @@texinfo:@kbd{w}@@ or
+@@texinfo:@kbd{C-c C-c}@@ in the Workbench to save and apply them.
 Returning to the engine list preserves staged route changes.  Leaving the
 workbench with @@texinfo:@kbd{q}@@ warns when those changes remain unsaved.
+
+To change only a role's parameters, press @@texinfo:@kbd{t}@@ on its logical
+or style row. This tuner saves its style with @@texinfo:@kbd{w}@@ and returns
+directly. Any route staged in the Workbench still needs a separate
+@@texinfo:@kbd{w}@@ there. To experiment freely with an installed voice and
+then choose where to use it, start tuning from a physical voice row instead,
+as described below.
 
 Applying waits for each speech stream to acknowledge its configuration.  If
 an Omnivox apply times out, the Workbench reports /server outcome unconfirmed/.
@@ -612,17 +632,33 @@ or acceptance; adapters do not report exact effective numeric values.  A
 failed physical voice is reported explicitly.  If it prevents navigation,
 ordinary speech keeps the tuner operable and announces that fallback.
 
-Press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ to choose /Keep result/:
-parameters as a named style, a physical voice route retaining the existing
-style, or both voice and parameters for a named logical voice.  A built-in
-palette is copied only when you save the reviewed result.  The review names
-the destinations and shows the parameters.  Press @@texinfo:@kbd{C-c C-c}@@
-in that review to save and apply them.  Palette selection applies for the
-session; a Presentation Profile can retain that choice.  Route and style
-files remain separate.  Any partial save or failed apply is reported, and
-the review retains completed steps so you can retry without repeating writes.
-@@texinfo:@kbd{q}@@ returns from the review; cancelling before Save and apply
-leaves configuration unchanged.
+Saving an experiment has two steps: choose what to keep, then save from the
+review.
+
+1. Press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@ in the tuner to open
+   /Keep result/. Choose what you want to use:
+   - /Parameters as a named style/ saves your settings under a name, using
+     existing physical voice routes.
+   - /Physical voice for a logical voice/ assigns this physical voice to a
+     role, retaining that role's existing parameters.
+   - /Voice and parameters for a logical voice/ keeps both for the chosen role.
+2. Choose the destination name and, if asked, a personal palette name. A
+   built-in palette is copied only when you save the reviewed result.
+3. In the review, press @@texinfo:@kbd{w}@@ or @@texinfo:@kbd{C-c C-c}@@
+   /again/ to save and apply. The result appears at the top of the review.
+4. When it says /Saved and applied/, press @@texinfo:@kbd{q}@@ to return to
+   tuning, then @@texinfo:@kbd{q}@@ again to finish.
+
+The review distinguishes /Not saved yet/, /Partly saved/, /Saved. Applying/,
+and /Saved and applied/. If applying fails, saved settings remain on disk;
+press @@texinfo:@kbd{w}@@ in the review to retry unfinished steps without
+repeating completed writes. Returning with @@texinfo:@kbd{q}@@ does not undo
+saved changes. The tuner asks before discarding parameters or voice changes
+you did not save, including changes made after preparing the review.
+
+Palette selection applies for the session; a Presentation Profile can retain
+that choice. Route and style files remain separate. Returning from the review
+before Save and apply leaves configuration unchanged.
 
 *** Worked Presentation Recipes
 :PROPERTIES:

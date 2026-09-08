@@ -7867,6 +7867,56 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (should (= (point) destination))
             (should (equal presentations (list destination)))))))))
 
+(ert-deftest emacsvox-agent-shell-chat-navigation-escapes-row-before-label ()
+  "Down must leave a status row when visual motion stalls before a Me label."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (save-window-excursion
+    (with-temp-buffer
+      (set-window-buffer (selected-window) (current-buffer))
+      (setq major-mode 'agent-shell-mode)
+      (setq-local agent-shell--state
+                  '((:agent-config . ((:mode-line-name . "Codex"))))
+                  agent-shell-chat--labeled t)
+      (insert "Cancelled\n\n")
+      (let ((prompt-start (point)) question-start)
+	(insert (propertize "Codex> " 'font-lock-face 'comint-highlight-prompt))
+	(setq question-start (point))
+	(insert "go on\n")
+	(insert (propertize "<shell-maker-end-of-prompt>"
+                            'invisible t 'shell-maker--marker t))
+	(insert "\nNext response\n")
+	(agent-shell-chat--relabel)
+	(dolist (case '((next-line emacsvox-agent-shell--next-line-around 1)
+			(previous-line emacsvox-agent-shell--previous-line-around -1)))
+          (pcase-let ((`(,command ,wrapper ,count) case))
+            (goto-char (point-min))
+            (let ((ems--interactive-fn-name command)
+                  (line-move-visual t)
+                  (visual-line-mode t)
+                  presentations)
+              (cl-letf (((symbol-function 'emacsvox-agent-shell--visual-line-source-bounds)
+			 ;; Batch Emacs has no redisplay geometry.  This short
+			 ;; status line occupies one visual row in the live UI.
+			 (lambda () (cons (line-beginning-position) (line-end-position))))
+			((symbol-function 'emacsvox-agent-shell--present-current-navigation-line)
+			 (lambda () (push (point) presentations))))
+		;; Emacs can stall on the preceding status row without ever
+		;; putting point inside the multiline label's overlay.
+		(funcall wrapper (lambda (&rest _) nil) count))
+              (should (<= prompt-start (point) question-start))
+              (should (equal presentations (list (point)))))))
+	;; A zero count and movement onto an ordinary row still keep their
+	;; original destination instead of skipping content near a chat label.
+	(dolist (count '(0 1))
+          (goto-char (point-min))
+          (let ((ems--interactive-fn-name 'next-line)
+		(line-move-visual t)
+		(visual-line-mode t))
+            (cl-letf (((symbol-function 'emacsvox-agent-shell--present-current-navigation-line) #'ignore))
+              (emacsvox-agent-shell--next-line-around
+               (lambda (&rest _) (when (= count 1) (goto-char 3))) count))
+            (should (= (point) (if (= count 0) (point-min) 3)))))))))
+
 (ert-deftest emacsvox-agent-shell-chat-navigation-crosses-label-padding ()
   "The Me label's blank source rows must not trap vertical navigation."
   (with-temp-buffer
@@ -8913,6 +8963,18 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (unwind-protect (progn ,@body)
          (delete-process process)
          (emacsvox-agent-shell--buffer-cleanup))))))
+
+(ert-deftest emacsvox-agent-shell-tool-output-ignores-empty-and-nontext-blocks ()
+  "Empty or nontext ACP blocks must not recurse or suppress neighbouring text."
+  (let ((max-lisp-eval-depth 200))
+    (dolist (block '(nil ((type . "image")) ((content))
+                         ((content . ((type . "image"))))))
+      (should-not (emacsvox-agent-shell--tool-content-block-text block))))
+  (should
+   (equal (emacsvox-agent-shell--tool-output-text
+           '[nil ((type . "image"))
+             ((type . "content") (content . ((type . "text") (text . "Tests passed"))))])
+          "Tests passed")))
 
 (ert-deftest emacsvox-agent-shell-current-codex-output-reaches-full-speech ()
   "Real upstream tool dispatch must preserve rawOutput and changed output."

@@ -6163,7 +6163,8 @@ Browse the selected engine’s physical voices, or show details of another row.
 @findex emacsvox-aural-voice-workbench-physical-view
 
 @format
-Show discovered physical voices.
+Browse the selected engine’s voices, or show the physical voice inventory.
+Outside the engine view, leave any temporary engine browsing scope.
 @end format
 @end deffn
 

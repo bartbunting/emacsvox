@@ -2928,20 +2928,30 @@ Use @emph{Voice Workbench} when the question involves installed voices@comma{} e
 routes.  Open it from Aural Home with @kbd{W}.  Its main views are:
 
 @table @kbd
-@item l
-Logical voices and their current routes.
-@item v
-Physical voices reported by the engines.
 @item e
-Engines@comma{} preference@comma{} fallback@comma{} and health.
+Engines@comma{} such as Flite or Eloquence. Start here to try voices from a
+particular synthesizer or inspect its availability.
+@item v
+Physical voices: the actual installed voices you can hear. Use this
+list to listen@comma{} compare@comma{} and experiment with their parameters. On an engine
+row@comma{} this key opens just that engine's voices.
+@item l
+Logical voices: named roles such as @emph{bolden} and @emph{annotate}. Start here
+to change which physical voice reads a role.
 @item s
-Portable styles and effects.
+Styles and effects for those logical roles. Use this view to inspect
+their parameters and what their current engines support.
 @end table
 
 For physical voices@comma{} choose @emph{Browse and try voices} in Home@comma{} then press
-@key{RET} on an engine to browse its voices.  @key{RET}
+@key{RET} or @kbd{v} on an engine to browse its voices.  @key{RET}
 on a voice shows details; @kbd{P} plays a named sample.  Filters
-and each view's selected row and column survive navigation through Home.
+set with @kbd{F} and each view's selected row and column survive
+navigation through Home. The engine selected for browsing is a temporary
+limit: switching to the logical@comma{} styles@comma{} or engine view removes it.
+Pressing @kbd{v} from a voice list also removes that temporary
+limit. Your explicit filters still apply; @kbd{C} clears all
+filters to show voices across engines.
 Press @kbd{q} in an engine's voice list to return to that engine's
 row and column.  Press @kbd{q} again from the engine list to leave
 the workbench.  The direct view shortcuts remain available.
@@ -2967,11 +2977,21 @@ An exact-preview failure is reported instead of accepting a different voice
 as the requested one.  Availability and capability reports describe what the
 adapter advertises; they are not a listening test of every parameter.
 
-Use @kbd{a} to assign a physical voice and @kbd{t} to tune the
-selected logical voice on its effective route.  Route changes are staged until
-you press @kbd{w} or @kbd{C-c C-c} to save and apply them.
+To change the physical voice used for a role@comma{} press @kbd{l}@comma{}
+select the logical voice@comma{} then press @kbd{a}. Preview candidates
+with @kbd{P} and press @kbd{a} on your choice to assign
+it and return to the logical list. @kbd{c} cancels the selection.
+Route changes are staged until you press @kbd{w} or
+@kbd{C-c C-c} in the Workbench to save and apply them.
 Returning to the engine list preserves staged route changes.  Leaving the
 workbench with @kbd{q} warns when those changes remain unsaved.
+
+To change only a role's parameters@comma{} press @kbd{t} on its logical
+or style row. This tuner saves its style with @kbd{w} and returns
+directly. Any route staged in the Workbench still needs a separate
+@kbd{w} there. To experiment freely with an installed voice and
+then choose where to use it@comma{} start tuning from a physical voice row instead@comma{}
+as described below.
 
 Applying waits for each speech stream to acknowledge its configuration.  If
 an Omnivox apply times out@comma{} the Workbench reports @emph{server outcome unconfirmed}.
@@ -3047,17 +3067,44 @@ or acceptance; adapters do not report exact effective numeric values.  A
 failed physical voice is reported explicitly.  If it prevents navigation@comma{}
 ordinary speech keeps the tuner operable and announces that fallback.
 
-Press @kbd{w} or @kbd{C-c C-c} to choose @emph{Keep result}:
-parameters as a named style@comma{} a physical voice route retaining the existing
-style@comma{} or both voice and parameters for a named logical voice.  A built-in
-palette is copied only when you save the reviewed result.  The review names
-the destinations and shows the parameters.  Press @kbd{C-c C-c}
-in that review to save and apply them.  Palette selection applies for the
-session; a Presentation Profile can retain that choice.  Route and style
-files remain separate.  Any partial save or failed apply is reported@comma{} and
-the review retains completed steps so you can retry without repeating writes.
-@kbd{q} returns from the review; cancelling before Save and apply
-leaves configuration unchanged.
+Saving an experiment has two steps: choose what to keep@comma{} then save from the
+review.
+
+@enumerate
+@item
+Press @kbd{w} or @kbd{C-c C-c} in the tuner to open
+@emph{Keep result}. Choose what you want to use:
+@itemize
+@item
+@emph{Parameters as a named style} saves your settings under a name@comma{} using
+existing physical voice routes.
+@item
+@emph{Physical voice for a logical voice} assigns this physical voice to a
+role@comma{} retaining that role's existing parameters.
+@item
+@emph{Voice and parameters for a logical voice} keeps both for the chosen role.
+@end itemize
+@item
+Choose the destination name and@comma{} if asked@comma{} a personal palette name. A
+built-in palette is copied only when you save the reviewed result.
+@item
+In the review@comma{} press @kbd{w} or @kbd{C-c C-c}
+@emph{again} to save and apply. The result appears at the top of the review.
+@item
+When it says @emph{Saved and applied}@comma{} press @kbd{q} to return to
+tuning@comma{} then @kbd{q} again to finish.
+@end enumerate
+
+The review distinguishes @emph{Not saved yet}@comma{} @emph{Partly saved}@comma{} @emph{Saved. Applying}@comma{}
+and @emph{Saved and applied}. If applying fails@comma{} saved settings remain on disk;
+press @kbd{w} in the review to retry unfinished steps without
+repeating completed writes. Returning with @kbd{q} does not undo
+saved changes. The tuner asks before discarding parameters or voice changes
+you did not save@comma{} including changes made after preparing the review.
+
+Palette selection applies for the session; a Presentation Profile can retain
+that choice. Route and style files remain separate. Returning from the review
+before Save and apply leaves configuration unchanged.
 
 @subsection Worked Presentation Recipes
 

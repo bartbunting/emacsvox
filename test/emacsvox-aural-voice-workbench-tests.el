@@ -851,6 +851,8 @@
     (emacsvox-aural-voice-workbench-open-row)
     (should (eq emacsvox-aural-voice-workbench-view 'physical))
     (should (equal emacsvox-aural-voice-workbench-filter
+                   '(:language "en-AU")))
+    (should (equal (emacsvox-aural-voice-workbench--physical-filter)
                    '(:language "en-AU" :engine "eloquence")))
     (should (equal (tabulated-list-get-id) '("eloquence" "eci:Reed")))
     (emacsvox-aural-ui-goto-tabulated-column 3)
@@ -898,6 +900,42 @@
         (emacsvox-aural-voice-workbench-physical-view)
         (call-interactively (key-binding (kbd "q")))
         (should (= dismissed 2))))))
+
+(ert-deftest emacsvox-aural-workbench-engine-scope-does-not-leak-into-other-views ()
+  "Engine v limits browsing only until the user leaves that engine's list."
+  (emacsvox-test--with-voice-workbench
+    (emacsvox-aural-voice-workbench-engine-view)
+    (emacsvox-aural-ui-goto-row "winrt")
+    (call-interactively (key-binding (kbd "v")))
+    (should (= (length tabulated-list-entries) 1))
+    (should (equal (tabulated-list-get-id) '("winrt" "David")))
+    (emacsvox-aural-voice-workbench-logical-view)
+    (call-interactively (key-binding (kbd "v")))
+    (should (= (length tabulated-list-entries) 2))
+    (should-not emacsvox-aural-voice-workbench--voice-list-parent)
+    (emacsvox-aural-voice-workbench-logical-view)
+    (emacsvox-aural-ui-goto-row "voice-bolden")
+    (emacsvox-aural-voice-workbench-begin-assignment)
+    (should (equal (tabulated-list-get-id) '("eloquence" "eci:Reed")))))
+
+(ert-deftest emacsvox-aural-workbench-engine-scope-preserves-explicit-filters ()
+  "Temporary browsing restores explicit filters; v and C can leave its scope."
+  (emacsvox-test--with-voice-workbench
+    (setq emacsvox-aural-voice-workbench-filter '(:engine "eloquence" :gender "male"))
+    (emacsvox-aural-voice-workbench-engine-view)
+    (emacsvox-aural-ui-goto-row "winrt")
+    (emacsvox-aural-voice-workbench-open-row)
+    (should (equal (tabulated-list-get-id) '("winrt" "David")))
+    (call-interactively (key-binding (kbd "v")))
+    (should (equal (tabulated-list-get-id) '("eloquence" "eci:Reed")))
+    (should (equal emacsvox-aural-voice-workbench-filter
+                   '(:engine "eloquence" :gender "male")))
+    (emacsvox-aural-voice-workbench-engine-view)
+    (emacsvox-aural-voice-workbench-open-row)
+    (call-interactively (key-binding (kbd "C")))
+    (should (= (length tabulated-list-entries) 2))
+    (should-not emacsvox-aural-voice-workbench--voice-list-parent)
+    (should-not emacsvox-aural-voice-workbench-filter)))
 
 (ert-deftest emacsvox-aural-workbench-bulk-preview-follows-rendered-order ()
   "Sorted rows determine audible order; unavailable engines are skipped."
