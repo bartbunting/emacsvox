@@ -172,8 +172,8 @@
     (let (opened)
       (cl-letf (((symbol-function 'completing-read)
                  (lambda (_prompt choices &rest _)
-                   (should (assoc "Browse and try voices" choices))
-                   "Browse and try voices"))
+                   (should (assoc "Browse and adjust voices" choices))
+                   "Browse and adjust voices"))
                 ((symbol-function 'emacsvox-aural-voice-workbench)
                  (lambda (view) (setq opened view))))
         (emacsvox-aural-home-search))
@@ -2369,6 +2369,9 @@
                 (should (string-prefix-p "Remap voice at point: " spoken))
                 (emacsvox-aural-home-next)
                 (should (string-prefix-p "Remap earcon at point: " spoken))
+                (emacsvox-aural-home-next-column)
+                (should
+                 (string-prefix-p "Purpose, " spoken))
                 (emacsvox-aural-home-next-column)
                 (should
                  (string-prefix-p "Current status, " spoken))

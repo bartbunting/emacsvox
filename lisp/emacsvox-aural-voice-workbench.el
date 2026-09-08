@@ -2809,7 +2809,7 @@ when they remain unsaved."
   (emacsvox-aural-ui-with-help-window
     (princ
      (concat
-      "Browse and try voices — Voice Workbench\n\n"
+      "Browse and adjust voices — Voice Workbench\n\n"
       "Choose a view for your task\n"
       "e: Engines are speech synthesizers, such as Flite or Eloquence.\n"
       "   Select an engine, then RET or v to browse just its voices.\n"

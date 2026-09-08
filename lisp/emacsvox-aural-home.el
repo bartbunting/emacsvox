@@ -220,7 +220,7 @@
            (vector "Change this feedback" source-name
                    "Preview a component change, then choose matching criteria and lifetime"))
      (list 'browse-voices
-           (vector "Browse and try voices" "Installed engines and voices"
+           (vector "Browse and adjust voices" "Installed engines and voices"
                    "Hear physical voices, compare samples, and try temporary tuning"))
      (list 'speech-engine
            (vector "Ordinary speech engine" "Session; prefix to save"
@@ -353,7 +353,12 @@
         (when expanded
           (dolist (id (cddr group))
             (when-let* ((entry (assq id actions))) (push entry rows))))))
-    (nreverse rows)))
+    (mapcar
+     (lambda (row)
+       (let ((columns (cadr row)))
+         (list (car row)
+               (vector (aref columns 0) (aref columns 2) (aref columns 1)))))
+     (nreverse rows))))
 
 (defun emacsvox-aural-home-toggle-group ()
   "Expand or collapse the task group at point, retaining its position."
@@ -577,7 +582,7 @@
      (concat
       "Emacsvox Aural Home\n\n"
       "Start with a task: change the captured item with c, review past feedback\n"
-      "with H, or use / to find Browse and try voices or any other action.\n"
+      "with H, or use / to find Browse and adjust voices or any other action.\n"
       "Home keeps your source position and unfinished drafts.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
@@ -622,8 +627,8 @@
   (setq
    tabulated-list-format
    [("Task or action" 35 nil)
-    ("Current status" 38 nil)
-    ("Purpose" 0 nil)])
+    ("Purpose" 60 nil)
+    ("Current status" 0 nil)])
   (setq tabulated-list-padding 2)
   (add-hook
    'tabulated-list-revert-hook
