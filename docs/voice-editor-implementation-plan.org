@@ -9,7 +9,9 @@ full-chain preview, and its XHI protocol contract is complete. The server previe
 and client slices and owned runtime integration are implemented and tested.
 Draft/save coordination and the common base editor are implemented and tested.
 Optional context inspection and scoped field editing are also implemented.
-Stop at slice 7 for the agreed XHI design review before individual fallback tuning.
+Slice 7's XHI storage/runtime review has produced a concrete proposal in
+[[file:voice-editor-fallback-tuning-contract.org][the per-fallback tuning contract]] and proposed [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]]. It awaits the
+maintainer's precedence decision before wire specification or implementation.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -327,11 +329,19 @@ still required after the agreed reasoning boundary.
 
 ** TODO 7. Decide and implement optional individual fallback tuning
 
-Stop and return to XHI before specifying storage and server-side fallback
-behavior. Review the Omnivox repository's applicable instructions and ADRs.
-The proposed order is shared base, selected choice overrides, then contextual
-dimensions, with no numeric accumulation. Confirm or revise that contract with
-the maintainer before changing the wire or advertising the feature.
+The maintainer returned to XHI on 2026-09-09. Storage/runtime inspection is
+complete and the [[file:voice-editor-fallback-tuning-contract.org][proposal]] is ready for review, with independent composition
+examples and [[file:adr/0017-per-fallback-voice-tuning.org][proposed ADR 0017]]. Recommended order: shared base, selected choice
+overrides, then contextual dimensions, with no numeric accumulation. The
+alternative puts choice overrides after context, protecting tuning at the cost
+of potentially defeating heading/emphasis rules. Confirm the recommendation
+before changing storage readers or the wire; neither is implemented here.
+
+After that decision, remain at XHI to settle exact registration, layered-span,
+preview and compatibility messages. Then stop for High before ordinary coding.
+The proposal divides implementation into storage, server, client/runtime and
+editor slices, each tested and committed. Omnivox 1.9.0 remains the shared-style
+baseline; a future capability, not its release number alone, enables tuning.
 
 Implement only with negotiated support and explicit behavior for older servers.
 Verify adjustment selection after actual runtime fallback, including two voices
@@ -402,8 +412,22 @@ this verifies the audio-fixture correction from slice 5. The separate startup
 guard subprocess also timed out after 30 seconds; the full suite is not claimed
 as passing. Full rebuild, byte-code/header preflight, Org preview/update,
 generated reference, documentation release and whitespace checks pass.
-The planned stop is now slice 7's XHI design review. No live session, settings,
+The planned stop after slice 6 was slice 7's XHI design review. No live session, settings,
 server runtime or release publication was changed.
+
+Slice 7's design review inspected all Emacsvox ADRs 0001–0016, all Omnivox
+ADRs 0001–0010, the current saved formats, rule/compiler/context projections,
+logical registration, resolver and buffered/progressive synthesis boundaries.
+It identified that flattened contextual styles must be separated before actual
+fallback can select its own tuning. The proposal preserves the distinct old
+contextual nil behaviors and specifies explicit defaults only in new choice
+patches. Eleven independent examples cover precedence, nil/zero, same-engine
+voices, global-policy fallback, reorder, preset replacement and rate clamping.
+All eleven examples passed data-only identity, range, composition and rate
+checks. Local links, Emacs/byte-code preflight, documentation release validation
+and whitespace checks passed. These checks do not establish runtime support. The current stop
+is maintainer approval of precedence; remain at XHI for the subsequent wire
+contract. No runtime, storage reader or personal configuration changed.
 
 For later Lisp slices, run focused ERT and =make bytecode=, or
 =make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh

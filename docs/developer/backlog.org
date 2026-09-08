@@ -42,8 +42,10 @@ Owned palette selection now registers matching definitions and choices on both
 speech lanes, and Workbench logical previews use the complete chain. Shared
 style compilation preserves contextual precedence and inactive-palette routing.
 The session draft/save service now handles ordered two-store publication,
-conflicts, partial retries and operation-owned application. Stop for the agreed
-XHI design review before individual fallback storage/runtime work. The maintainer
+conflicts, partial retries and operation-owned application. The XHI review has
+produced the [[file:../voice-editor-fallback-tuning-contract.org][per-fallback storage/runtime proposal]] and proposed
+[[file:../adr/0017-per-fallback-voice-tuning.org][ADR 0017]]. Confirm shared -> choice -> context precedence before finalizing
+the wire contract; individual tuning remains unimplemented. The maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.

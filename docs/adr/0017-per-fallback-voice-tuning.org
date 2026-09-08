@@ -1,0 +1,87 @@
+#+title: ADR 0017: Per-Fallback Voice Tuning Before Contextual Rules
+#+date: 2026-09-09
+#+startup: content
+
+* Status
+
+Proposed for maintainer approval at the requested XHI review. No storage reader,
+wire protocol or runtime behavior is changed by this record. The accompanying
+[[file:../voice-editor-fallback-tuning-contract.org][storage and runtime proposal]] gives the concrete scope and acceptance cases.
+
+* Context
+
+ADRs 0015 and 0016 delivered palette-owned choices and complete shared-style
+previews. The common editor and optional context workflow now use that path.
+Omnivox 1.9.0 can test an ordered fallback chain, but every choice receives one
+shared style. DECtalk and Eloquence can require different settings for the
+same intended sound, as can two physical voices from the same engine.
+
+Individual settings must follow the actual selected choice, including runtime
+synthesis failure before PCM commitment. Client inventory prediction cannot
+supply that guarantee. The current structured transport also flattens base
+and context values; adding choice settings to registration alone would let
+normal speech overwrite them with that flattened style.
+
+* Proposed decision
+
+Keep shared settings as the simple default. Store an optional sparse adjustment
+patch on each stable ordered choice record, separate from its selector. Scope
+identity to palette, named voice and choice; never attach tuning to an engine
+for every voice using that engine.
+
+Compose shared base, selected choice overrides and winning contextual dimensions
+in that order. Explicit values replace, rather than numerically accumulate.
+Selecting another named preset selects its base and choices under the existing
+cascade. Global policy fallback has no individual patch. Preserve existing
+contextual nil behavior; only the new choice patch defines nil as an explicit
+adapter-default request. Omission means use shared, and zero remains a value.
+
+Use versioned readers and immutable local snapshots under ADR 0015. Preserve
+legacy data, whole-entry inheritance, alias resolution, portable export and
+ordered multi-store publication. Changing an adjustment must not move choices
+or rewrite another palette's data. Temporary legacy session routes use the
+shared base without accidentally inheriting saved choice patches.
+
+Carry shared/choice/context layers through a negotiated server path. Compose
+fresh settings for the actual route on every eligible synthesis attempt, before
+capability adaptation. Keep the Omnivox attempt cap, health classification,
+progressive commitment boundary and output-failure rules. Preserve both speech
+lanes, remote isolation and no-replay behavior under ADRs 0007, 0009 and 0010.
+No helper protocol, process boundary, engine calibration or dependency change
+is proposed.
+
+Keep ordinary speech available on older servers using explicitly degraded
+shared tuning, retaining all saved custom data and reporting that individual
+tuning was not applied. Do not label degraded apply as fully successful or
+silently flatten a predicted choice. Complete customized previews require the
+new capability; separately labelled exact auditions may use the old operation.
+
+* Alternatives for the precedence decision
+
+| Order | Benefits | Costs |
+|-------+----------+-------|
+| Shared -> choice -> context (recommended) | Fallbacks have their own base sound while rules remain dependable for headings, emphasis and other content. Preserves the existing aural CSS model. | An explicit contextual field can mask a base adjustment; the effective-sound view must explain it. |
+| Shared -> context -> choice | A customized choice always keeps its tuning when that dimension is contested. | A heading or emphasis rule can stop working on one fallback; context changes cannot reliably control the final sound. |
+
+Numeric addition is outside the accepted plan. It is especially ambiguous for
+absolute pitch/effect values, clamping and adapter-default resets, and would
+need a separate user model rather than an implicit extra cascade layer.
+
+* Consequences and next boundary
+
+A single-choice voice needs no additional setup. Advanced users can customize
+fallbacks independently and preview the automatic route or one particular
+choice. Reordering preserves tuning; replacing a tuned physical voice requires
+an explicit keep/reset choice. Similar parameter values still do not prove
+similar acoustic results between engines.
+
+The implementation costs are new data readers, typed protocol forms, sparse
+context transport, actual-route composition, two-lane capability handling and
+broader normal-speech tests. Preview-only delivery is insufficient.
+
+Remain at XHI until the maintainer confirms the proposed precedence and the
+exact wire/compatibility contract is complete. Then stop for High before
+ordinary implementation in tested, committed slices. Max is not currently
+needed: inspection has identified concrete contracts rather than an unresolved
+reasoning problem. No release, deployment or personal-settings change follows
+from approval of this design.

@@ -11,7 +11,8 @@ The [[file:voice-editor-implementation-plan.org][implementation plan]] defines t
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] accepts palette ownership and independent conversion on first save;
 the [[file:voice-editor-data-contract.org][data contract]] specifies its implementation. The implementation plan records
 the delivered scope and remaining acceptance
-work. Individual fallback tuning remains proposed until its own design review.
+work. The XHI review is now recorded in the proposed
+[[file:voice-editor-fallback-tuning-contract.org][per-fallback storage/runtime contract]] and [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], awaiting approval.
 
 Make it possible to answer three questions in one place: which physical voice
 does bolden use, what adjustments change its sound, and have my changes been
@@ -289,7 +290,9 @@ styles. The optional overrides above therefore require storage and playback
 design, including selection of matching adjustments when the server falls back
 at runtime. Picking adjustments from a client prediction is insufficient.
 That extension is proposed, not an existing feature or an approved schema or
-protocol change. Under the recommended model these overrides belong to the
+protocol change. The [[file:voice-editor-fallback-tuning-contract.org][storage/runtime proposal]] specifies stable choice records,
+sparse patches, versioned storage and actual-route composition. Under the
+recommended model these overrides belong to the
 palette's complete named voice, even if local choices are stored separately.
 
 * Speech and keyboard interaction
