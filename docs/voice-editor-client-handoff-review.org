@@ -1,0 +1,85 @@
+#+title: Per-Fallback Tuning: Client Dispatch Handoff Review
+#+date: 2026-09-09
+#+startup: content
+
+* Status and next reasoning level
+
+Stop at the requested reasoning-level boundary and resume this review at XHI.
+The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
+lossless value conversion and =ccf193879= adds per-lane registration with frozen
+acknowledged definitions and explicit older-server limitations. Ordinary
+layered transport, marker-3 readback, private preview v2 and optional editor
+controls remain pending. No live runtime or personal configuration was changed.
+
+The accepted [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], [[file:voice-editor-fallback-wire-contract.org][wire contract]] and
+[[file:voice-editor-implementation-plan.org][implementation plan]] remain authoritative. This review concerns client
+ownership during submission and receipt handling; it does not reopen the
+shared -> actual choice -> context precedence or the server wire grammar.
+
+* Concrete finding
+
+=tts--prepare-structured-dispatch= in [[file:../lisp/tts-speak.el][tts-speak.el]] allocates an ID and
+returns a registration effect. Its documented contract installs tracking only
+after the complete timeline write. [[file:../lisp/emacsvox-aural-transport.el][Aural transport]] retains that effect until
+=emacsvox-aural--commit-delivery-effects= runs after sending the commands.
+
+=tts--dispatch-playback-marker-event= requires an installed marker dispatch.
+A deterministic isolated probe used a real pipe process and the normal dispatch
+preparation function, then delivered an event from a substituted
+=process-send-string= before invoking the returned registration effect:
+
+#+begin_example
+early-event-delivered=nil; callback-count=0; dispatch-installed-after-write=t
+#+end_example
+
+The probe sent no speech and changed no live process. It demonstrates the
+reentrant-write ordering gap; it is not a claim that this race was reproduced
+with a live speech engine. Existing control/apply tests already model replies
+arriving during submission, so the new receipt path must cover that ordering.
+
+There is a second ownership distinction: current Omnivox route diagnostics are
+recorded before dispatch callback ownership is checked. Ordinary structured
+speech can also have no marker callback. Merely adding a new recognized event
+name would therefore neither preserve early receipts nor establish sufficient
+ownership for new per-choice evidence.
+
+A receipt belongs to the frozen registration used by its submitted timeline,
+not whatever registry is current when the receipt arrives. Reconnect, later
+registration, cancellation, failed writes and repeated physical selectors must
+not erase that distinction. Playback observation and successful client submission
+are different facts: an observed consumed source cannot be declared unheard
+merely because a later write or callback failed.
+
+* XHI review work
+
+1. Map the exact preparation, write, deferred-effect, terminal and retirement
+   paths. Identify the smallest internal extension that preserves existing
+   public submission semantics while retaining early playback evidence.
+2. Define provisional ownership before writing, successful publication and
+   failure retirement. Include reentrant stop/reconnect and callbacks that
+   start another submission. Do not promise successful delivery before the
+   existing write boundary, and never replay an uncertain write.
+3. Retain the dispatch's immutable registry generation and relevant voice/row
+   identities. Specify bounded storage and cleanup for ordinary speech even
+   when there is no user marker callback. Do not infer row identity from a
+   physical engine/voice pair or validate against a later registration.
+4. Define when route diagnostics may change independently of user callbacks,
+   and how cancelled, retired and replaced owners affect late evidence. Keep
+   actual consumed-source evidence distinct from queue acceptance and from a
+   client-side prediction.
+5. Add deterministic tests for replies during the final write, failed/partial
+   multipart writes, terminal-before-return, cancellation, replaced processes,
+   both lanes, registry changes and callback reentrancy. Retain existing
+   post-write success and no-replay regression tests.
+6. After the ownership contract is settled, return to High for ordinary
+   timeline-4 projection, strict marker-3 readback, private preview v2 and
+   optional per-choice editor controls in tested commits.
+
+The starting recommendation is a small provisional dispatch record with
+separate publication and retirement transitions. It offers a single owner for
+early events and frozen registry metadata. Its tradeoff is a change to the
+submission lifecycle that needs careful failure and callback-order tests.
+Buffering unowned incoming events until post-write registration is an alternative,
+but it adds another bounded queue and makes terminal, overflow and reconnect
+ordering harder to establish. XHI should validate this recommendation against
+all accepted ADRs and the existing delivery tests before implementation.

@@ -20,6 +20,10 @@ native Windows default restoration, DSP ownership, playback observations and
 private preview v2, timeline-4 reader/queue execution and marker-3 receipts are
 now tested and committed. Both-lane/reconnect acceptance passes and Omnivox
 =31a0b9a= advertises the complete bundle. Client integration remains in slice 7d.
+The High run now stops for the [[file:voice-editor-client-handoff-review.org][client dispatch handoff review]] at XHI:
+a deterministic reentrant-write probe shows that a marker arriving before the
+post-write registration effect is not delivered. Freeze submission/receipt
+ownership before extending ordinary speech and readback.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -489,6 +493,13 @@ invalid and late acknowledgements, temporary routing and truthful unsupported
 save status. All 226 selected client/voice/transport tests and isolated compiled
 parity pass. Ordinary layered transport, playback readback, preview v2 and the
 optional customization controls remain next.
+
+Before continuing ordinary transport, complete the
+[[file:voice-editor-client-handoff-review.org][XHI submission/receipt ownership review]]. The existing post-write dispatch
+registration leaves an early-event gap; current route diagnostics also precede
+callback ownership validation. The review must preserve bounded frozen metadata,
+actual playback evidence, retirement and no-replay semantics. This is the
+requested reasoning-level stop, not a completed client feature.
 
 Implement lossless context projection, lane negotiation and apply reporting.
 Audit ordinary speech paths before enabling customization, then add per-choice
