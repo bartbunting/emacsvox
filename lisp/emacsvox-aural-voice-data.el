@@ -113,6 +113,71 @@ Each result contains :palette and :entry.  PATH detects inheritance cycles."
           :choice-source (if local 'local 'portable)
           :diagnostics (and id (not local) (list 'missing-local-choices)))))
 
+(cl-defun emacsvox-aural-voice-data--resolve
+    (requested palette registry local-sets routing session policy
+               &optional (aliases emacsvox-aural-default-voice-entries))
+  "Resolve REQUESTED in PALETTE using explicit immutable inputs.
+REGISTRY and LOCAL-SETS supply definitions and choices.  ROUTING supplies
+legacy bindings; SESSION is the existing logical-name selector alist.  POLICY
+is carried unchanged to the adapter.  ALIASES declares stable logical names."
+  (let* ((logical-name (emacsvox-aural-routing--logical-name requested))
+         (name (if (symbolp requested) requested (intern-soft logical-name)))
+         (routing (and routing (emacsvox-aural-validate-routing-profile-data routing)))
+         (entries (emacsvox-aural-voice-data--entries palette registry))
+         (direct (cl-find name entries
+                          :key (lambda (item) (car (plist-get item :entry)))))
+         (canonical (or (and direct name)
+                        (car (rassq name aliases))))
+         (item (or direct (cl-find canonical entries
+                                  :key (lambda (entry)
+                                         (car (plist-get entry :entry))))))
+         (owner (plist-get item :palette))
+         (properties (cdr (plist-get item :entry)))
+         (owned (and item
+                     (eq (plist-get (emacsvox-aural-voice-palette-data-form
+                                     (gethash owner registry)) :routing) 'owned)))
+         (names (if owned
+                    (emacsvox-aural-voice-data--names canonical entries aliases)
+                  (and name (list name))))
+         (saved (unless owned
+                  (emacsvox-aural-routing--binding requested
+                                                  (plist-get routing :bindings))))
+         (choices (if owned
+                      (emacsvox-aural-voice-data--choices owner canonical properties
+                                                         local-sets)
+                    (list :selectors (copy-tree (plist-get saved :selectors))
+                          :language (plist-get saved :language)
+                          :choice-source 'legacy :diagnostics nil)))
+         (temporary
+          (if owned
+              (emacsvox-aural-voice-data--binding
+               names (mapcar (lambda (entry)
+                               (list :logical-voice (car entry)
+                                     :selectors (cdr entry))) session))
+            (when-let* ((entry (cl-find (emacsvox-aural-routing--logical-name requested)
+                                        session :test #'equal
+                                        :key (lambda (entry)
+                                               (emacsvox-aural-routing--logical-name
+                                                (car entry))))))
+              (list :logical-voice (car entry) :selectors (copy-tree (cdr entry)))))))
+    (when temporary
+      (unless (proper-list-p (plist-get temporary :selectors))
+        (emacsvox-aural-routing--error "Session choices must be a proper list"))
+      (dolist (selector (plist-get temporary :selectors))
+        (emacsvox-aural-validate-routing-selector selector))
+      (setq choices (plist-put choices :selectors (copy-tree (plist-get temporary :selectors))))
+      (setq choices (plist-put choices :choice-source 'session)))
+    (append
+     (list :requested requested :name (and item canonical) :palette owner
+           :definition (copy-tree (if (plist-member properties :personality)
+                                      (plist-get properties :personality)
+                                    (plist-get properties :style)))
+           :mode (if owned 'owned 'legacy)
+           :automatic (and owned (null (plist-get choices :selectors))
+                           (or (and temporary t) (null (plist-get choices :diagnostics))))
+           :names names :entry (copy-tree (plist-get item :entry)) :session (copy-tree temporary) :policy (copy-tree policy))
+     choices)))
+
 (cl-defun emacsvox-aural-voice-data--convert
     (registry source destination summary routing local-ids
               &optional (aliases emacsvox-aural-default-voice-entries))

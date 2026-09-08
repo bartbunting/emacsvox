@@ -202,6 +202,13 @@ Do not stage or restart the user's runtime as an implicit part of implementation
 
 ** TODO 3. Resolve owned choices through normal speech and preview
 
+The pure resolver is implemented and tested as the first part of this slice.
+It accepts explicit registry, local choices, routing, session and policy inputs;
+returns fresh definition/owner/alias/choice data; and distinguishes Automatic,
+missing-local fallback and legacy lookup. Direct entries beat aliases; conflicting
+owned session aliases are diagnosed, while legacy session matching is unchanged.
+It does not yet drive either adapter or a palette-switch apply.
+
 Feed the common result into standalone adapter routing and Omnivox registration.
 Switching palettes must switch corresponding definitions and owned choices;
 legacy palettes retain their old behavior. Preserve global fallback and temporary
