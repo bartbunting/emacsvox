@@ -59,11 +59,11 @@ syntheses across all 17 Windows voices, and =7e3ecab= adds committed-choice
 DSP ownership and failure cleanup. =a652e6b= and =621da61= add immediate ticket
 handoff and accepted/started observations. =a2064cc= and =77a9c81= add strict
 private preview v2, original-row auditions and terminal playback evidence.
-All 694 workspace tests and Clippy pass.
-Timeline-4 ordinary speech and marker-3 receipts are next in the
-[[file:../voice-editor-implementation-plan.org][implementation plan]]. Complete layered playback admission, remaining codecs,
-client integration and individual editor controls remain pending in tested,
-committed slices. Earlier, the maintainer
+Commits =c76acd3= through =8cab289= add timeline-4 mixed playback, marker-3
+start/choice pairs and validated reader/queue/multipart admission. All 716
+workspace tests and Clippy pass. Both-lane/reconnect acceptance is next in the
+[[file:../voice-editor-implementation-plan.org][implementation plan]], before advertising the bundle. Client integration and
+individual editor controls remain pending in tested, committed slices. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.

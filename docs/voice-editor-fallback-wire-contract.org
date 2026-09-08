@@ -10,8 +10,10 @@ This document completes the XHI contract slice. Storage slice 7b, Omnivox typed
 composition, version-2 registration, actual-attempt preparation and DSP
 ownership are implemented and tested. The native Windows default audit passes.
 Accepted/started observations and private preview v2 are now implemented and
-tested through the server worker and terminal reporter. Timeline 4, marker 3 and client integration are still
-future behavior; the capability bundle is unadvertised. Implementation continues
+tested through the server worker and terminal reporter. Timeline-4 reader,
+queue and ordinary playback now produce marker-3 choice receipts in acceptance
+tests. Both-lane/reconnect acceptance and client integration remain pending;
+the capability bundle is unadvertised. Implementation continues
 at High under the reviewed [[file:voice-editor-implementation-plan.org][implementation plan]].
 Omnivox commit =ff5cb5f= mirrors the accepted contract and decision into its
 ADR/protocol documentation; that snapshot retains its original design status.

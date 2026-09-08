@@ -17,7 +17,8 @@ validation and pure choice operations. Omnivox now has typed composition and
 mixed registration with its version-2 control codec. The maintainer returned
 to High after the completed XHI streaming review. Actual-attempt preparation,
 native Windows default restoration, DSP ownership, playback observations and
-private preview v2 are now tested and committed; timeline 4, marker 3 and client integration
+private preview v2, timeline-4 reader/queue execution and marker-3 receipts are
+now tested and committed. Both-lane/reconnect acceptance and client integration
 remain in progress in slice 7c/7d.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
@@ -457,13 +458,17 @@ accepted PCM from first-frame consumption with bounded choice evidence.
 =a2064cc= adds strict preview v2 codecs; =77a9c81= connects private admission,
 actual-choice synthesis and terminal reporting after all playback tickets settle.
 Individual auditions preserve the original row and cannot use another row or
-policy substitute. All 694 workspace tests, workspace Clippy, formatting and
+policy substitute. Commits =c76acd3= through =8cab289= implement timeline-4
+codecs, mixed ordinary playback, marker-3 start/choice pairs and bounded
+reader/queue/multipart admission. Invalid later requests cannot replace valid
+speech, old/new replacement domains stay separate, and queued documents retain
+the admitted registry. All 716 workspace tests, workspace Clippy, formatting and
 documentation checks pass. The bundle is still unadvertised; no live runtime
 has been replaced.
 
-Next: timeline-4 admission/framing and ordinary layered speech, then adjacent
-marker-3 start/choice receipts. Client negotiation, readback and editor controls
-remain pending after complete server acceptance.
+Next: real isolated speaker/notification and reconnect acceptance before
+advertising the bundle. Client negotiation, readback and editor controls remain
+pending after complete server acceptance.
 
 Commit and test: (1) attempt preparation, native defaults, sink handoff and DSP
 ownership; (2) ticket/acceptance/first-frame ownership and bounded observations;
