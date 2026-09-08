@@ -16,7 +16,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 Indirect:
 emacsvox.info-1: 384
-emacsvox.info-2: 301807
+emacsvox.info-2: 302520
 
 Tag Table:
 (Indirect)
@@ -110,9 +110,9 @@ Ref: Background startup ownership and failure recovery250369
 Ref: Supported Emacs versions253522
 Ref: Native Windows builds255728
 Ref: Remote preview validation257788
-Ref: Internal ownership and renderer tests276863
-Ref: Upstream contract layers280319
-Node: Concept Index301807
+Ref: Internal ownership and renderer tests277576
+Ref: Upstream contract layers281032
+Node: Concept Index302520
 
 End Tag Table
 

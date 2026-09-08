@@ -19,6 +19,30 @@ Collect and triage live feedback on the validated Phase 9 support recorded in
 separately, preserving the documented privacy and conservative-speech
 boundaries.
 
+** TODO Settle and implement the unified voice editor design
+
+Review [[file:../voice-editor-design.org][the voice editor draft]] before changing ownership or storage.  It recommends
+that each palette own its complete named voices: preferred physical choices,
+fallback order, shared adjustments, and optional adjustments for each choice.
+Simple editing should expose one voice, common adjustments, preview and one
+save action; fallback configuration and individual tuning expand on demand.
+This is a proposal, not an accepted architecture decision or implemented UI.
+
+Settle palette ownership, navigation speech, persistence of palette selection,
+and the first delivery slice.  Specify migration from today's shared routing
+profiles without changing existing sound unexpectedly.  Individual fallback
+adjustments must follow the voice actually selected at runtime, including
+server-side fallback; preview-only selection is insufficient.  Record accepted
+ownership and runtime contracts in an ADR before implementation.
+
+The first complete workflow should cover editing =bolden=, comparing opening
+and edited sound, saving once, and leaving/resuming a draft through Home or a
+voice list.  Verify consistent save/apply status, inactive palettes, inherited
+definitions, fallback order and failure recovery, then conduct a spoken
+walkthrough.  Keep this behavior-changing work separate from the maintenance
+extractions below.  The Home label/column changes and filter-amount controls
+are already implemented in =b22bfda67= and =350e0a1f2= respectively.
+
 * Aural contract decisions
 
 Resolve the remaining ownership questions recorded in
@@ -29,6 +53,303 @@ Resolve the remaining ownership questions recorded in
 ** TODO Decide ordering when several minor-mode selectors match
 
 ** TODO Decide when integrations or transport own presentation occasions
+
+* Aural presentation refactoring
+
+These are proposed maintenance improvements following the 2026-09-06 aural
+presentation review.  Its eight confirmed defects, =EVX-2026-018= through
+=EVX-2026-025=, were fixed through commit =96b8e634b=.  The work below reduces
+the chance of similar defects and makes future changes easier to assess.
+It does not identify four additional confirmed bugs or schedule a release.
+
+Shared voice metadata, numeric tuner consumers and limited delivery helpers
+have since been implemented in =20af4ba4c=, =940373aed= and =eb1e5cf3b=.
+The [[file:../../CODE-QUALITY-AUDIT-2026-09-07-CLOSEOUT.org][2026-09-07 audit closeout]] records those completed slices.  The entries below
+describe the remaining work, with completed foundations retained as context.
+
+The remaining consumer-coverage and inspection work can be scoped narrowly;
+delivery and asynchronous state require more extensive lifecycle verification.
+Choose the next slice around a concrete maintenance need.  Each entry can be
+implemented and reviewed independently, and the new voice editor does not
+require all four refactors first.  A delivery-provenance extension would
+benefit from the common inspection model, but is a separate
+design decision rather than a prerequisite for extracting transport helpers.
+
+Use small commits that preserve observable behavior.  Keep source semantics,
+presentation policy, resource realization and process delivery as distinct
+owners.  Preserve the main/notification isolation in
+[[file:../adr/0009-foreground-and-notification-speech-lanes.org][ADR 0009]], remote lifecycle in
+[[file:../adr/0010-remote-workstation-speech.org][ADR 0010]], and Emacs 30.2 minimum in
+[[file:../adr/0012-emacs-30-compatibility.org][ADR 0012]].  Follow
+[[file:integration-maintenance.org][the source and byte-code workflow]], including a full rebuild when
+record layouts, macros or public interfaces change, and verify in a fresh
+Emacs.  Keep compatibility probes in separate checkouts.
+
+Document accepted ownership or behavioral decisions in an ADR before changing
+those contracts.  Routine private helper extraction can retain the existing
+contracts.  Update the maintained developer guidance when implementation
+settles, and remove completed backlog entries.  Do not use a refactor to
+silently resolve an open behavior question or remove a compatibility path.
+
+** TODO Complete voice-style consumer coverage
+
+*** Why this is needed
+
+[[file:../../lisp/emacsvox-aural-rules.el][Voice rules]] now have one private field table for accepted keys, groups,
+types and integer bounds.  Dimension/key inventories and validation derive
+from it (=20af4ba4c=); composition and provenance consume the key inventory.
+Numeric palette/tuner controls use that metadata (=940373aed=).  These are
+completed foundations, not a table or control migration still to introduce.
+
+Compiler mappings, preview conversion, backend capabilities, normalization
+and UI policy remain in their respective owners.  Changes still need coverage
+across those boundaries.  The table intentionally does not define defaults or
+engine support; the remaining need is to detect omissions in consumers without
+turning the metadata into a general schema language.
+
+*** Proposed plan
+
+1. Inventory the remaining consumers and existing coverage.  Distinguish
+   shared field metadata from normalization, neutral values, UI amount scales,
+   backend support and legacy behavior.  Preserve the existing characterization
+   of absent keys, explicit nil, zero, duplicate fields and preset composition.
+2. Check the completeness of
+   [[file:../../lisp/emacsvox-aural-compiler.el][compiler]] and
+   [[file:../../lisp/omnivox-voices.el][Omnivox adapter]] mappings and preview paths against the accepted inventory.
+   Add independently specified cases for demonstrated gaps.  Keep backend
+   capability discovery and wire conversion owned by their adapters; accepting a portable dimension does
+   not imply that every engine supports it.
+3. Review remaining [[file:../../lisp/emacsvox-aural-editor.el][rule editor]] and
+   [[file:../../lisp/emacsvox-aural-voice-workbench.el][Voice Workbench]] consumers when adding a dimension or changing a control.
+   Reuse field descriptors for field metadata, while preserving each editor's
+   intended scope and keeping presentation policy out of the descriptor table.
+
+*** Benefits
+
+The existing metadata stays authoritative for spelling and legal values.
+Consumer checks would make missing adapter or preview coverage easier to
+detect, reducing settings that appear valid but lose their effect on delivery.
+
+*** Disadvantages and decisions
+
+The existing table can become harder to understand than explicit code if it
+grows into a general schema language.  Keep conversion functions
+ordinary Lisp and represent exceptions explicitly.  Migration can accidentally
+change defaults, ordering or compatibility with saved palettes.
+
+The meaning of an explicit nil over a named preset remains an open authoring
+contract: for example, =(:preset bolden :average-pitch nil)=.  Preserve the
+current behavior already characterized by tests; decide whether nil means
+inheritance, omission or reset separately.  Do not infer that meaning from a
+table's default representation.
+
+*** Acceptance checks
+
+Preserve [[file:../../test/emacsvox-aural-rules-tests.el][rule tests]], saved-data round trips and
+[[file:../../test/emacsvox-aural-transport-tests.el][public submission/transport tests]] for accepted dimensions, validation,
+composition, final delivery and explicit degradation.  Existing coverage
+includes zero, nil, absent keys, relative rate, legacy absolute rate,
+named-preset replacement and provenance.  Add tests for uncovered consumer
+paths found in the inventory and verify Workbench preview parity.  Expected
+wire values must be independently stated; deriving test expectations from the
+same descriptor table would miss a wrong
+mapping.  Existing final-write regressions and compiled parity must pass.
+
+** TODO Share a complete presentation inspection model
+
+*** Why this is needed
+
+[[file:../../lisp/emacsvox-aural-explanation.el][Explanation]] now retains additional plans alongside its first-plan fields.
+The =EVX-2026-021= through =EVX-2026-023= fixes added retained-part inspection,
+captured-position guards and source-identity checks.  [[file:../../lisp/emacsvox-aural-change-feedback.el][Change Feedback]] already
+reuses the input assembly and source-identity helpers in [[file:../../lisp/emacsvox-aural-tools.el][remapping tools]],
+and the inspection service owns captured source access.  A complete common
+view of parts, component eligibility, summaries and explanation basis is still
+missing; future consumers must combine those pieces and choose the correct
+source-validity policy.
+
+*** Proposed plan
+
+1. Define one internal inspection view over the complete retained plan list,
+   selected part/component and explanation basis.  Adapt the existing
+   first-plan accessors so callers can migrate incrementally.
+2. Build on existing input assembly and identity helpers; consolidate the
+   remaining component eligibility and part summaries for explanation,
+   Recent Feedback, remapping and the guided workflow.  Preserve
+   automatic selection when only one part is eligible and explicit selection
+   when several parts qualify.
+3. Move shared source-association policy to
+   [[file:../../lisp/emacsvox-aural-inspection.el][the inspection service]], retaining distinct policies for current-item
+   operations and historical feedback.  Current-item changes need their
+   captured-position/edit guards; historical feedback may outlive the source
+   and can associate with a surviving source by identity.
+4. Keep live buffers and markers in temporary inspection state.  Preserve
+   [[file:../../lisp/emacsvox-aural-history.el][history]] as bounded frozen data, without retaining dead source buffers.
+
+*** Benefits
+
+Every consumer would see the same parts, labels, cues and degradation.
+Consistent selection and source association would reduce wrong-item edits and
+make spoken inspection more predictable.  A new inspection command could reuse
+these contracts instead of reconstructing them from several modules.
+
+*** Disadvantages and decisions
+
+A common model adds another representation and a migration period for old
+accessors.  It must not erase the useful distinction between inspecting past
+feedback and modifying the current item.  A single universal freshness check
+could wrongly reject valid history or accept stale current-item edits.
+Building summaries eagerly could also add cost for large retained records.
+
+Preserve current prompts and summary verbosity during extraction.  Changes to
+what users hear or which changes remain available after source edits need an
+explicit interaction decision.  Overlay-only invalidation remains a separate
+question requiring a contract and reproduction.
+
+*** Acceptance checks
+
+Reuse the native multi-part history regression in
+[[file:../../test/emacsvox-aural-transport-tests.el][transport tests]] and the public remapping regressions in
+[[file:../../test/emacsvox-aural-tools-tests.el][tools tests]].  Exercise labels, voices, cues and degradation found only in a
+later part; multiple eligible parts; truncated history; moved point; renamed,
+edited, killed and same-name replacement buffers.  Assert selected facts,
+actual editor targets and spoken summaries.  Verify that historical records
+retain no live source references and that current-item guards still reject
+stale edits.  Run the focused inspection and guided-change suites as well.
+
+** TODO Separate delivery preparation from process effects
+
+*** Why this is needed
+
+[[file:../../lisp/emacsvox-aural-transport.el][Transport]] combines span construction, suppression, effect transitions,
+action positioning, wire encoding and dispatch preparation.  Its structured
+and compatibility paths also interpret overlapping presentation policy.
+=EVX-2026-020= showed that adding a silent run could change delivery for the
+whole transaction and lose effects on surviving speech.  That bug is fixed,
+but the interactions remain difficult to inspect in one large builder.
+
+Commit =eb1e5cf3b= extracted the pure effect-state transition and explicit
+delivery-field encoder, with source and compiled parity coverage.  The wrapper
+still captures policy at its established point after resource resolution.
+The complete builder, resource resolution, registration and process effects
+remain coupled; the full delivery-candidate boundary is still future work.
+
+*** Proposed plan
+
+1. Preserve the extracted effect-state and delivery-field helpers.  Map the
+   remaining builder inputs and effects, including run normalization and
+   boundary-action placement, before proposing a complete candidate boundary.
+   Capture current final-output behavior for any additional extraction and
+   pass context/capabilities explicitly without moving their capture time.
+2. Separate preparation of a complete delivery candidate from callback
+   registration and process writes.  Model resource resolution explicitly as
+   well: it may perform I/O, so it must not be hidden inside a helper described
+   as pure.  Retain the existing all-or-nothing conversion and failure cleanup.
+3. Make structured eligibility and compatibility fallback return an explicit
+   internal result rather than requiring consumers to infer the chosen path
+   from entries.  Preserve character positions internally and the deliberate
+   conversion to UTF-8 byte offsets at the wire boundary.
+4. Consider a later delivery-provenance extension recording requested style,
+   compiled support, selected wire path and omitted dimensions for history
+   and explanation.  Decide its owner, capture time, size bound and failure
+   meaning in an ADR; implement that extension separately from extraction.
+
+*** Benefits
+
+Preparation could be exercised without sending speech or installing completion
+callbacks.  Smaller steps would make suppression, coalescing and action
+placement easier to reason about, including differences between structured
+and compatibility output.  The optional provenance extension could help users
+understand what a particular transaction actually submitted.
+
+*** Disadvantages and decisions
+
+This has the highest delivery-regression risk of the four proposals.  Moving
+work across registration or send boundaries can change interruption timing,
+duplicate callbacks or leave pending state after failure.  Intermediate data
+structures can add allocations and copying on frequent navigation paths.
+Measure representative long presentations before claiming a performance gain.
+
+Keep lane ownership, stop/replacement policy and compatibility support intact.
+The leading-whitespace/before-cue observation from remediation remains an
+unconfirmed lead; establish its contract and reproduction separately so an
+output change is not concealed as refactoring.  Delivery provenance must
+distinguish submitted commands from confirmed completion and actual sound.
+
+*** Acceptance checks
+
+Compare captured final protocol output before and after each extraction using
+[[file:../../test/emacsvox-aural-transport-tests.el][native submission tests]].  Combine styled text, silent/empty runs, boundary
+and positioned actions, harmless run splitting, Unicode, punctuation cleanup,
+coalescing and chunking.  Cover preparation/registration/send failure,
+cancellation, late callbacks, replacement and independent notification output.
+Normalize only opaque generated identifiers in comparisons, retaining action
+ordering, positions and interruption semantics as assertions.  Require fresh
+compiled Aural parity and all semantic golden traces to pass.  Automated
+protocol comparisons do not replace human listening if behavior is changed.
+
+** TODO Represent asynchronous voice applies as explicit operations
+
+*** Why this is needed
+
+=omnivox-apply-voice-configuration= in
+[[file:../../lisp/omnivox-voices.el][the Omnivox adapter]] owns definitions, generation, pending processes, results,
+timeout and completion through nested closures.  =EVX-2026-025= is fixed by
+capturing the generation with its definitions.  An explicit operation would
+make that ownership easier to inspect and make further lifecycle changes less
+dependent on understanding every closure's captured variables.
+
+Commit =d3f7c9383= also fixed timeout request cleanup and rejection of late
+responses, with regressions for overlapping applies, replaced owners, send
+failure and replies during sending.  The proposed operation record has not
+been implemented; preserve these lifecycle fixes while extracting it.
+
+*** Proposed plan
+
+1. Introduce an internal operation record separating its immutable configuration
+   snapshot from mutable progress: generation, per-process definitions, process
+   identity, phase, pending responses, results, timeout and terminal state.
+2. Extract named transitions for routing acknowledgement, registration,
+   success/failure and timeout.  Each response must refer to its operation and
+   original process; terminal completion must be guarded and published once.
+3. Preserve the public callback/result shape, routing-before-registration
+   ordering, partial-success reporting and retry behavior.  Migrate the apply
+   path first; assess shared startup/preview machinery only after parity.
+
+*** Benefits
+
+Operation state would be directly inspectable in diagnostics and tests.
+Generation ownership, per-lane progress and exactly-once completion would be
+visible contracts.  Reordered replies and partial failure would be easier to
+reason about without reading a long lexical scope.
+
+*** Disadvantages and decisions
+
+The record and transition helpers add code and explicit cleanup obligations;
+closures currently provide useful encapsulation.  Retained operations could
+hold callbacks, timers or dead processes longer than intended.  Over-generalizing
+into a shared asynchronous framework would increase scope without a proven
+benefit.
+
+Preserve overlap and retry behavior during migration.  Serializing applies,
+automatically cancelling earlier applies or suppressing their results would
+change user-visible semantics and requires a separate decision.  Keep protocol
+readiness distinct from acknowledged routing readiness under
+[[file:../adr/0007-routing-ready-startup-checkpoint.org][ADR 0007]].
+
+*** Acceptance checks
+
+Preserve [[file:../../test/emacsvox-tts-tests.el][the existing apply regressions]] through the public API: FIFO and reverse
+acknowledgements, both lanes, changed definitions, unchanged retries, partial
+failure, timeout cleanup, late registration replies, overlapping applies,
+replaced owners, second-phase send failure and replies received during sending.
+Keep assertions on generation/content identity, per-process results, one
+aggregate callback and retired timers/request state.  Add cases only for gaps
+identified while mapping the operation, such as process death without a reply
+or repeated terminal responses if not covered by the existing scenarios.
+Check Workbench apply status and fresh compiled behavior.  Model-based receiver
+checks prove the client contract; real backend lifecycle claims still need an
+isolated connected check.
 
 * Repository stewardship
 

@@ -6109,8 +6109,20 @@ policy.  Ordinary numeric input accepts a single digit; blank retains an
 existing value@comma{} including zero.  Relative-rate input accepts signed integers
 and blank clears the explicit adjustment to @code{nil}.  From @code{nil}@comma{} horizontal
 adjustment starts at five for ordinary fields and at plus/minus one for rate.
-Digit shortcuts retain their zero-through-nine values.  Invalid boundary steps
-must fail before history@comma{} dirty state@comma{} refresh@comma{} or audition changes.
+Low-pass and high-pass are exceptions: increase starts at amount one@comma{} while
+decrease rejects a step below their neutral amount zero.
+
+The tuner displays both filters as amounts from zero through nine@comma{} increasing
+with stronger filtering.  Low-pass converts between amount and stored cutoff
+with @code{9 - value}; high-pass retains its numeric direction.  Zero is labelled
+neutral rather than claiming a filter bypass.  Stored cutoff values and
+adapter-default @code{nil} retain their meaning@comma{} preserving saved styles' sound.
+Arrows@comma{} digit shortcuts@comma{} typed entry@comma{} demonstrations and spoken review use the
+amount scale; blank numeric entry retains the current value without changing
+its stored representation.  Preview and persistence continue to use stored
+cutoffs.  Invalid boundary steps must fail before history@comma{} dirty state@comma{}
+refresh@comma{} or audition changes.
+
 Delivery preparation has the limited helper boundaries described below;
 asynchronous operation ownership remains a separate refactoring proposal.
 
