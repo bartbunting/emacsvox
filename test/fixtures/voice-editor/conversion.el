@@ -1,5 +1,5 @@
 ;;; Voice editor contract examples, read as one non-evaluated data form.
-;;; Future formats are expectations; the current runtime does not load them.
+;;; Independent expected outputs for the owned voice storage tests.
 (:fixture-version 1
  :source-palettes
  ((:schema-version 1 :id source-base :summary "Source base" :parent nil

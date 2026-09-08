@@ -4,13 +4,13 @@
 
 * Status and working agreement
 
-Planning and data-contract slices complete; storage implementation is next.
+Planning, data-contract and storage slices are complete; runtime integration is next.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
 [[file:voice-editor-data-contract.org][data and resolution contract]] defines the new formats and acceptance cases.
-No runtime or personal configuration has changed. Stop here for a switch from
-XHI to High before slice 2.
+No live personal configuration has changed. Continue at High for runtime
+integration, draft coordination and the editor.
 
 The maintainer requested work in tested, committed slices, stopping when a
 decision or a reasoning-level change is needed. Start at XHI for ownership,
@@ -27,8 +27,8 @@ the existing untracked =CODE-QUALITY-AUDIT-2026-09-07.org=.
 
 | Concern | Existing owner and implication |
 |---------+--------------------------------|
-| Portable definitions | [[file:../lisp/emacsvox-aural-resources.el][Resources]] validates palette entries and inherits whole named definitions. [[file:../lisp/emacsvox-aural-schemes.el][Schemes]] persists palettes in user-data schema 7; palette schema is 1. Preserve symbolic presets, nil, zero, and raw stored filter values. |
-| Physical routes | [[file:../lisp/emacsvox-aural-routing-profiles.el][Routing profiles]] uses profile schema 2 inside routing-file schema 1. Bindings identify logical voices, with no palette key. The active profile, session bindings, global engine order and fallback policy are independent of palette selection. |
+| Portable definitions | [[file:../lisp/emacsvox-aural-resources.el][Resources]] validates palette entries and inherits whole named definitions. [[file:../lisp/emacsvox-aural-schemes.el][Schemes]] persists palette schemas 1 and 2 in user-data schema 8. Preserve symbolic presets, nil, zero, and raw stored filter values. |
+| Physical routes | [[file:../lisp/emacsvox-aural-routing-profiles.el][Routing profiles]] uses profile schema 2 inside routing-file schema 2. Legacy bindings identify logical voices; immutable choice sets identify palette and voice owners. The active profile, session bindings, global engine order and fallback policy are independent of palette selection. |
 | Presentation profiles | [[file:../lisp/emacsvox-aural-profile-service.el][Profile service]] captures a palette selection with presentation options, sound pack and spatial settings. It does not capture a routing-profile selection. Do not invent an existing palette-to-route association during migration. |
 | Cascade | [[file:../lisp/emacsvox-aural-rules.el][Rules]] combines explicit dimensions by precedence; named presets reset the base. [[file:../lisp/emacsvox-aural-compiler.el][Compiler]] resolves the base, capabilities and legacy personalities. Keep these semantics independent of ownership. |
 | Preview parity | [[file:voice-style-coverage.org][The completed consumer audit]] protects editing, saved-data readback, previews and final speech requests, including custom bolden aliases and exact gain/pan neutral values. |
@@ -110,7 +110,7 @@ APIs remain compatible; implementation uses private data services.
 Stop and recommend High for slices 2 through 6. The formats and fixtures define
 future behavior; they do not claim a working migration or editor.
 
-** TODO 2. Add storage and migration without automatic activation
+** DONE 2. Add storage and migration without automatic activation
 
 Implement versioned validators, readers, writers and a pure migration proposal
 using the chosen contract. Keep local identities out of ordinary portable
@@ -120,6 +120,11 @@ Check old-data loading, complete round trips, unknown-version rejection,
 duplicate IDs, malformed selectors, file-write failure and idempotent retry.
 Verify that opening/cancelling conversion leaves registries, files and active
 selection unchanged. Verify originals survive the selected migration strategy.
+
+Implemented schema-2 palette metadata, envelope migrations, immutable local
+snapshots, nonactivating atomic writers, independent conversion and owned-copy
+proposals, and portable export with omission reporting. Existing palette
+constructors remain legacy. Conversion does not register or activate its result.
 
 ** TODO 3. Resolve owned choices through normal speech and preview
 
@@ -212,6 +217,15 @@ selector validators. Their expected definitions and local selector chains match
 the specified source configuration. This checks fixture consistency, not the
 future migrator. Documentation, local-link and whitespace checks passed; no
 runtime Lisp changed, so no new byte-code build was required.
+
+For storage slice 2, 396 focused resource, scheme, routing, conversion, editor,
+cascade and transport tests passed, including ten new storage contracts. The
+transport subset requires loading the mail provider used by its notification
+test; an initial command omitted that setup and was corrected. Isolated compiled
+aural parity passed with the new conversion tests included. A full byte-code
+rebuild followed by an incremental refresh of edits made during the build passed
+preflight; all ten new contracts also passed in a fresh Emacs using that byte-code.
+Header, Org preview/update and generated reference checks passed.
 
 For later Lisp slices, run focused ERT and =make bytecode=, or
 =make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh

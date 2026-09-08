@@ -37,6 +37,11 @@
 (require 'emacsvox-aural)
 (require 'emacsvox-aural-rules)
 
+(declare-function emacsvox-aural-routing--strict-properties
+                  "emacsvox-aural-routing-profiles" (data allowed required))
+(declare-function emacsvox-aural-validate-routing-selector
+                  "emacsvox-aural-routing-profiles" (selector &optional persisted))
+
 (defvar read-eval)
 
 (define-error
@@ -214,7 +219,8 @@ standard personal discovery root.  The directory need not exist."
   "Map voice-palette identifiers to palette records.")
 
 (defconst emacsvox-aural-voice-palette-schema-version 1
-  "Current safe data schema for personal voice palettes.")
+  "Legacy definition-only schema used by existing palette constructors.
+Owned palettes use schema 2 through the versioned data compiler.")
 
 (defconst emacsvox-aural-resource-pack-manifest
   "emacsvox-sound-pack.el"
@@ -827,14 +833,17 @@ for management and persistence."
     (puthash id record emacsvox-aural-voice-palette-registry)
     record))
 
-(defun emacsvox-aural--compile-voice-palette-entry (data palette-id)
-  "Compile safe voice entry DATA for PALETTE-ID."
-  (unless (and (consp data) (symbolp (car data)))
+(defun emacsvox-aural--compile-voice-palette-entry (data palette-id &optional owned)
+  "Compile safe voice entry DATA for PALETTE-ID, validating OWNED metadata."
+  (unless (and (consp data) (car data) (symbolp (car data))
+               (not (keywordp (car data))))
     (emacsvox-aural--resource-error
      "Voice palette %S entry must start with a symbol: %S" palette-id data))
   (let* ((name (car data))
          (properties (cdr data))
-         (allowed '(:personality :style))
+         (allowed (if owned
+                      '(:personality :style :choices :language :local-choices)
+                    '(:personality :style)))
          (unknown
           (and
            (emacsvox-aural--plist-p properties)
@@ -850,6 +859,19 @@ for management and persistence."
       (emacsvox-aural--resource-error
        "Unknown properties for voice %S in palette %S: %S"
        name palette-id unknown))
+    (when owned
+      (require 'emacsvox-aural-routing-profiles)
+      (emacsvox-aural-routing--strict-properties properties allowed '(:choices))
+      (unless (proper-list-p (plist-get properties :choices))
+        (emacsvox-aural--resource-error "Voice choices must be a proper list"))
+      (dolist (selector (plist-get properties :choices))
+        (emacsvox-aural-validate-routing-selector selector t)
+        (unless (eq (plist-get selector :scope) 'portable)
+          (emacsvox-aural--resource-error "Palette choices must be portable")))
+      (dolist (key '(:language :local-choices))
+        (when-let* ((value (plist-get properties key)))
+          (unless (and (stringp value) (not (string-empty-p value)))
+            (emacsvox-aural--resource-error "Invalid voice %S: %S" key value)))))
     (when
         (eq
          (and (plist-member properties :personality) t)
@@ -873,7 +895,9 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
     (emacsvox-aural--resource-error
      "Voice palette data must be a keyword plist: %S" data))
   (let* ((allowed
-          '(:schema-version :id :summary :parent :entries))
+          (if (eq (plist-get data :schema-version) 2)
+              '(:schema-version :id :summary :parent :entries :routing)
+            '(:schema-version :id :summary :parent :entries)))
          (unknown
           (cl-loop
            for (key _) on data by #'cddr
@@ -887,20 +911,26 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
     (when unknown
       (emacsvox-aural--resource-error
        "Unknown voice palette properties: %S" unknown))
-    (unless (eq version emacsvox-aural-voice-palette-schema-version)
+    (unless (memq version '(1 2))
       (emacsvox-aural--resource-error
        "Unsupported voice palette schema version: %S" version))
+    (when (eq version 2)
+      (require 'emacsvox-aural-routing-profiles)
+      (emacsvox-aural-routing--strict-properties
+       data allowed '(:schema-version :id :summary :parent :entries :routing))
+      (unless (eq (plist-get data :routing) 'owned)
+        (emacsvox-aural--resource-error "Schema-2 palettes require owned routing")))
     (emacsvox-aural--validate-id id "Voice palette identifier")
     (emacsvox-aural--validate-summary summary (format "Voice palette %S" id))
     (when parent
       (emacsvox-aural--validate-id parent (format "Parent palette for %S" id)))
-    (unless (listp raw-entries)
+    (unless (proper-list-p raw-entries)
       (emacsvox-aural--resource-error
        "Voice palette %S entries must be a list" id))
     (let ((entries
            (mapcar
             (lambda (entry)
-              (emacsvox-aural--compile-voice-palette-entry entry id))
+              (emacsvox-aural--compile-voice-palette-entry entry id (eq version 2)))
             raw-entries)))
       (let ((names (mapcar #'car entries)))
         (unless
@@ -1650,6 +1680,13 @@ PATH protects this helper from invalid inheritance cycles."
     (unless palette
       (emacsvox-aural--resource-error
        "Unknown voice palette: %S" palette-id))
+    (when-let* ((parent-id (emacsvox-aural-voice-palette-parent palette))
+                (parent (emacsvox-aural-voice-palette parent-id)))
+      (unless (eq (plist-get (emacsvox-aural-voice-palette-data palette) :routing)
+                  (plist-get (emacsvox-aural-voice-palette-data parent) :routing))
+        (emacsvox-aural--resource-error
+         "Cannot mix legacy and owned palette inheritance: %S -> %S"
+         palette-id parent-id)))
     (let ((entries
            (if-let* ((parent (emacsvox-aural-voice-palette-parent palette)))
                (emacsvox-aural-effective-voice-entries

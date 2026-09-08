@@ -6,9 +6,11 @@
 
 Implementation contract for slices 2 through 6 of the
 [[file:voice-editor-implementation-plan.org][implementation plan]], following the maintainer's selection of independent
-conversion on first save in [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]]. The formats below are specified, not
-implemented. The current runtime still uses palette schema 1, user-data schema
-7 and routing-file schema 1. Individual fallback tuning remains later work.
+conversion on first save in [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]]. Storage validators, readers, nonactivating writers and pure copy proposals now
+implement the formats below. Runtime routing and the common editor remain
+pending. Readers accept palette schemas 1 and 2, user-data schema 8 (with old
+envelope migrations), and routing-file schemas 1 and 2. Individual fallback
+tuning remains later work.
 
 * Identity and ownership
 

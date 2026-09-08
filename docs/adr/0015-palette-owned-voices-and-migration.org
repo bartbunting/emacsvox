@@ -7,8 +7,9 @@
 Accepted for palette ownership and independent conversion on first save,
 selected by the maintainer on 2026-09-08. The
 [[file:../voice-editor-data-contract.org][data and resolution contract]] specifies the implementation of that choice.
-Neither the new formats nor the editor are implemented yet. Optional individual
-fallback tuning still requires a subsequent runtime decision.
+The new formats and pure conversion proposals are implemented; runtime
+integration and the editor remain pending. Optional individual fallback tuning
+still requires a subsequent runtime decision.
 The [[file:../voice-editor-implementation-plan.org][implementation plan]] records delivery slices and reasoning-level stops.
 
 * Context

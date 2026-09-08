@@ -62,7 +62,7 @@
 (defconst emacsvox-aural-routing-profile-schema-version 2
   "Current data schema for one routing profile.")
 
-(defconst emacsvox-aural-routing-user-data-schema-version 1
+(defconst emacsvox-aural-routing-user-data-schema-version 2
   "Current data schema for the machine-local routing file.")
 
 (defconst emacsvox-aural-routing-engine-order-presets
@@ -101,6 +101,9 @@ unless the user has reviewed those bindings."
 
 (defvar emacsvox-aural-active-routing-profile nil
   "Identifier of the active machine routing profile, or nil.")
+
+(defvar emacsvox-aural-routing--choice-sets nil
+  "Immutable local choice snapshots loaded from the routing file.")
 
 (defvar emacsvox-aural-session-routing-bindings nil
   "Temporary logical-voice routing overrides for this Emacs session.
@@ -1048,6 +1051,53 @@ the previous known-good profile."
           :profile (copy-tree validated)
           :previous-profile old-data :previous-active-profile old-active)))
 
+(defun emacsvox-aural-routing--strict-properties (data allowed required)
+  "Validate DATA against ALLOWED and REQUIRED metadata keys."
+  (emacsvox-aural-routing--require-plist data "Voice metadata")
+  (emacsvox-aural-routing--reject-unknown-keys data allowed "Voice metadata")
+  (let ((keys (cl-loop for (key _) on data by #'cddr collect key)))
+    (unless (= (length keys) (length (delete-dups (copy-sequence keys))))
+      (emacsvox-aural-routing--error "Duplicate voice metadata keys"))
+    (dolist (key required)
+      (unless (memq key keys)
+        (emacsvox-aural-routing--error "Missing voice metadata key: %S" key)))))
+
+(defun emacsvox-aural-routing--validate-choice-sets (records)
+  "Return a validated independent copy of local choice RECORDS."
+  (unless (proper-list-p records)
+    (emacsvox-aural-routing--error "Choice sets must be a proper list"))
+  (let (ids)
+    (dolist (record records)
+      (emacsvox-aural-routing--strict-properties
+       record '(:id :palette :voice :selectors) '(:id :palette :voice :selectors))
+      (let ((id (plist-get record :id)))
+        (emacsvox-aural-routing--require-id id "Choice-set ID")
+        (when (member id ids)
+          (emacsvox-aural-routing--error "Duplicate choice-set ID: %S" id))
+        (push id ids))
+      (dolist (key '(:palette :voice))
+        (let ((id (plist-get record key)))
+          (unless (and id (symbolp id) (not (keywordp id)))
+            (emacsvox-aural-routing--error "Invalid choice-set %S: %S" key id))))
+      (unless (proper-list-p (plist-get record :selectors))
+        (emacsvox-aural-routing--error "Choice selectors must be a proper list"))
+      (dolist (selector (plist-get record :selectors))
+        (emacsvox-aural-validate-routing-selector selector t)))
+    (copy-tree records)))
+
+(defun emacsvox-aural-routing--merge-choice-sets (existing proposed)
+  "Merge immutable EXISTING and PROPOSED snapshots, permitting identical retries."
+  (let ((result (emacsvox-aural-routing--validate-choice-sets existing)))
+    (dolist (record (emacsvox-aural-routing--validate-choice-sets proposed))
+      (let ((old (cl-find (plist-get record :id) result
+                          :key (lambda (item) (plist-get item :id)) :test #'equal)))
+        (cond
+         ((and old (not (equal old record)))
+          (emacsvox-aural-routing--error
+           "Choice-set ID cannot be changed: %S" (plist-get record :id)))
+         ((not old) (setq result (append result (list record)))))))
+    result))
+
 (defun emacsvox-aural-routing-user-data ()
   "Return sorted machine-local routing profile data."
   (let (profiles)
@@ -1067,18 +1117,25 @@ the previous known-good profile."
     (list
      :schema-version emacsvox-aural-routing-user-data-schema-version
      :active-profile emacsvox-aural-active-routing-profile
-     :profiles profiles)))
+     :profiles profiles
+     :choice-sets (copy-tree emacsvox-aural-routing--choice-sets))))
 
 (defun emacsvox-aural-validate-routing-user-data (data)
   "Validate and return machine-local routing user DATA."
   (emacsvox-aural-routing--require-plist data "Routing user data")
   (emacsvox-aural-routing--reject-unknown-keys
-   data '(:schema-version :active-profile :profiles) "Routing user data")
-  (unless (eq (plist-get data :schema-version)
-              emacsvox-aural-routing-user-data-schema-version)
+   data (if (eq (plist-get data :schema-version) 1)
+            '(:schema-version :active-profile :profiles)
+          '(:schema-version :active-profile :profiles :choice-sets))
+   "Routing user data")
+  (unless (memq (plist-get data :schema-version) '(1 2))
     (emacsvox-aural-routing--error
      "Unsupported routing user data version: %S"
      (plist-get data :schema-version)))
+  (when (eq (plist-get data :schema-version) 2)
+    (emacsvox-aural-routing--strict-properties
+     data '(:schema-version :active-profile :profiles :choice-sets)
+     '(:schema-version :active-profile :profiles :choice-sets)))
   (let ((active (plist-get data :active-profile))
         (profiles (plist-get data :profiles))
         ids normalized)
@@ -1101,7 +1158,9 @@ the previous known-good profile."
        "Active routing profile is not saved: %S" active))
     (list
      :schema-version emacsvox-aural-routing-user-data-schema-version
-     :active-profile active :profiles (nreverse normalized))))
+     :active-profile active :profiles (nreverse normalized)
+     :choice-sets (emacsvox-aural-routing--validate-choice-sets
+                   (plist-get data :choice-sets)))))
 
 (defun emacsvox-aural-read-routing-profiles (&optional file)
   "Read and validate routing data from FILE without evaluating it."
@@ -1124,6 +1183,7 @@ When APPLY-ACTIVE is non-nil, also apply the saved active profile."
                  :id id :data (copy-tree profile) :source source)))
           (puthash id entry registry)))
       (setq emacsvox-aural-routing-profile-registry registry
+            emacsvox-aural-routing--choice-sets (plist-get data :choice-sets)
             emacsvox-aural-active-routing-profile
             (plist-get data :active-profile)
             emacsvox-aural-session-routing-bindings nil
@@ -1135,13 +1195,22 @@ When APPLY-ACTIVE is non-nil, also apply the saved active profile."
 
 (defun emacsvox-aural-save-routing-profiles (&optional file)
   "Atomically save machine-local routing profiles to FILE."
+  (emacsvox-aural-routing--write-user-data
+   (emacsvox-aural-routing-user-data) file))
+
+(defun emacsvox-aural-routing--write-user-data (data &optional file)
+  "Persist DATA to FILE without activation, retaining immutable old snapshots."
   (let* ((file
           (expand-file-name (or file emacsvox-aural-routing-profiles-file)))
          (directory (file-name-directory file))
-         (data
-          (emacsvox-aural-validate-routing-user-data
-           (emacsvox-aural-routing-user-data)))
+         (data (emacsvox-aural-validate-routing-user-data data))
          temporary)
+    (setq data
+          (plist-put data :choice-sets
+                     (emacsvox-aural-routing--merge-choice-sets
+                      (plist-get (emacsvox-aural-read-routing-profiles file)
+                                 :choice-sets)
+                      (plist-get data :choice-sets))))
     (make-directory directory t)
     (setq temporary
           (make-temp-file

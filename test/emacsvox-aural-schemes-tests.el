@@ -1126,7 +1126,7 @@
               :active-profile nil
               :user-rules nil))
             (let ((loaded (emacsvox-aural-load-user-data file)))
-              (should (= (plist-get loaded :schema-version) 7))
+              (should (= (plist-get loaded :schema-version) 8))
               (should-not (plist-member loaded :schemes)))
             (should-not (emacsvox-aural-scheme-entry 'work))
             (should (emacsvox-aural-scheme-entry 'default)))
@@ -1145,7 +1145,7 @@
        (equal
         (emacsvox-aural-migrate-user-data
          '(:schema-version 0 :schemes nil :user-rules nil))
-        '(:schema-version 7
+        '(:schema-version 8
           :user-rules nil
           :feature-fragments nil
           :enabled-feature-fragments nil
@@ -1170,7 +1170,7 @@
               :voice-palettes nil
               :profiles nil
               :user-rules nil))))
-      (should (eq (plist-get migrated :schema-version) 7))
+      (should (eq (plist-get migrated :schema-version) 8))
       (should-not (plist-member migrated :schemes))
       (should
        (equal

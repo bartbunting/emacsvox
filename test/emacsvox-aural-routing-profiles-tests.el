@@ -38,6 +38,7 @@
   (declare (indent 0) (debug t))
   `(let ((emacsvox-aural-routing-profile-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-routing--choice-sets nil)
          (emacsvox-aural-active-routing-profile nil)
          (emacsvox-aural-session-routing-bindings nil)
          (emacsvox-aural-session-engine-order nil)

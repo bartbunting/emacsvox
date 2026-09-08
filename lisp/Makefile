@@ -85,6 +85,7 @@ emacsvox-aural-rules.elc \
 emacsvox-aural-resources.elc \
 emacsvox-aural-schemes.elc \
 emacsvox-aural-routing-profiles.elc \
+emacsvox-aural-voice-data.elc \
 emacsvox-aural-profile-service.elc \
 emacsvox-aural-compatibility-voice.elc \
 emacsvox-aural-providers.elc \
@@ -376,6 +377,7 @@ emacsvox-aural-rules.elc: emacsvox-aural.elc emacsvox-aural-spatial.elc
 emacsvox-aural-resources.elc: emacsvox-aural.elc emacsvox-aural-rules.elc
 emacsvox-aural-schemes.elc: emacsvox-aural-resources.elc
 emacsvox-aural-routing-profiles.elc: emacsvox-preamble.elc
+emacsvox-aural-voice-data.elc: emacsvox-aural-resources.elc emacsvox-aural-routing-profiles.elc
 emacsvox-aural-profile-service.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
 emacsvox-aural-compatibility-voice.elc: emacsvox-aural.elc

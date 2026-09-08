@@ -130,7 +130,7 @@ configuration; callers can then report it as diverged.")
   :type 'file
   :group 'emacsvox-aural)
 
-(defconst emacsvox-aural-user-data-schema-version 7
+(defconst emacsvox-aural-user-data-schema-version 8
   "Current schema version for the personal presentation data file.")
 
 (defun emacsvox-aural--migrate-user-data-v1-to-v2 (data)
@@ -179,13 +179,18 @@ configuration; callers can then report it as diverged.")
   (cl-remf data :schemes)
   (plist-put data :schema-version 7))
 
+(defun emacsvox-aural--migrate-user-data-v7-to-v8 (data)
+  "Allow owned palettes in user DATA without converting legacy palettes."
+  (plist-put data :schema-version 8))
+
 (defconst emacsvox-aural--built-in-user-data-migrations
   '((1 . emacsvox-aural--migrate-user-data-v1-to-v2)
     (2 . emacsvox-aural--migrate-user-data-v2-to-v3)
     (3 . emacsvox-aural--migrate-user-data-v3-to-v4)
     (4 . emacsvox-aural--migrate-user-data-v4-to-v5)
     (5 . emacsvox-aural--migrate-user-data-v5-to-v6)
-    (6 . emacsvox-aural--migrate-user-data-v6-to-v7))
+    (6 . emacsvox-aural--migrate-user-data-v6-to-v7)
+    (7 . emacsvox-aural--migrate-user-data-v7-to-v8))
   "Required migrations supplied by Emacsvox.")
 
 (defvar emacsvox-aural-user-data-migrations nil
@@ -1682,10 +1687,13 @@ The file is read as data and is never evaluated."
   "Atomically save personal aural presentation data to FILE.
 
 An existing file is copied to FILE~ before replacement."
+  (emacsvox-aural--write-user-data (emacsvox-aural-user-data) file))
+
+(defun emacsvox-aural--write-user-data (data &optional file)
+  "Persist validated DATA to FILE without changing registries or selection."
   (let* ((file (expand-file-name (or file emacsvox-aural-schemes-file)))
          (directory (file-name-directory file))
-         (data (emacsvox-aural--validate-user-data
-                (emacsvox-aural-user-data)))
+         (data (emacsvox-aural--validate-user-data data))
          temporary)
     (make-directory directory t)
     (setq temporary

@@ -41,6 +41,7 @@
   (require 'emacsvox-aural-providers-tests)
   (require 'emacsvox-aural-schemes-tests)
   (require 'emacsvox-aural-routing-profiles-tests)
+  (require 'emacsvox-aural-voice-data-tests)
   (require 'emacsvox-aural-voice-workbench-tests)
   (require 'emacsvox-aural-voice-palettes-tests)
   (require 'emacsvox-aural-voice-experiment-tests)
