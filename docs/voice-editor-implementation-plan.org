@@ -254,6 +254,25 @@ retain truthful save/apply state. Saving an unrelated inactive palette leaves
 current selection and apply ownership intact. Draft retention is session-only;
 no editor entry point or live personal data changed in this service slice.
 
+** Pending maintainer decision: physical-experiment adjustment scope
+
+Runtime slice =31488e062= and draft/save slice =8ebdc7e75= are committed and
+verified. Before wiring the common editor, settle one detailed interaction
+choice left proposed by the design. Its physical-experiment workflow defaults
+to adjustments for the selected choice. Current storage and runtime support
+shared adjustments only; per-choice tuning is deliberately deferred to slice 7.
+The complete-preview decision did not settle this experiment destination default.
+
+| Choice | Result | Pros | Cons |
+|--------+--------+------+------|
+| A. Shared tuning first (recommended) | Continue slices 5 and 6. Keeping an experiment explicitly offers physical voice only, shared adjustments only, or both; combined saves say adjustments affect all choices in this named voice. Preserve the existing fallback chain. | Delivers the common editor using tested capabilities; one-choice use stays simple; scope is visible before saving. | Different settings for each fallback still wait for slice 7; combined experiments cannot yet promise selected-choice-only tuning. |
+| B. Bring individual fallback tuning forward | Pause the editor implementation and perform slice 7's XHI storage/runtime design review now. | The experiment can eventually use the selected-choice default described in the full design. | Adds another server/storage contract before the ordinary editor arrives; implementation and negotiation are broader. |
+
+This is a maintainer decision checkpoint, not completion of the editor. No UI
+entry points or live personal settings changed. If A is selected, record the
+shared-scope interim behavior explicitly in the interaction design. If B is
+selected, stop for the agreed reasoning-level change before drafting that contract.
+
 ** TODO 5. Deliver the complete base editor workflow
 
 Provide the common editor for named voices and physical experiments. Implement

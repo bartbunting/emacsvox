@@ -41,7 +41,8 @@ speech lanes, and Workbench logical previews use the complete chain. Shared
 style compilation preserves contextual precedence and inactive-palette routing.
 The session draft/save service now handles ordered two-store publication,
 conflicts, partial retries and operation-owned application. Continue at High
-with the editor UI. Individual
+with the editor UI after the pending experiment-scope decision: explicitly shared
+adjustments first, or bring individual fallback tuning forward. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.
 
 Preserve the existing aural CSS cascade: partial styles combine by dimension,
