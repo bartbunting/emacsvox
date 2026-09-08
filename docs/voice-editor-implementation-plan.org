@@ -13,7 +13,10 @@ The maintainer selected A for slice 7: shared -> choice -> context. Accepted
 [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], the [[file:voice-editor-fallback-tuning-contract.org][storage/runtime contract]] and the
 [[file:voice-editor-fallback-wire-contract.org][wire/compatibility contract]] complete its XHI review. The maintainer authorized
 continuation at the High handoff. Slice 7b now implements storage readers,
-validation and pure choice operations; wire codecs and playback remain pending.
+validation and pure choice operations. Omnivox now has typed composition and
+mixed registration with its version-2 control codec; playback remains pending.
+Implementation pauses for a return to XHI at the streaming route/effects/evidence
+handoff described in slice 7c below.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -371,6 +374,50 @@ negotiated messages, actual-route composition and bounded evidence. Use paired
 fixture tests through fake engine settings, PCM commitment and first-frame
 consumption, retaining old protocol regression tests and pinned-toolchain gates.
 
+**** DONE Typed values and pure composition
+
+Omnivox commit =ff5cb5f= mirrors the accepted contract and independent wire
+examples and adds strict shared settings, sparse set/default patches, stable
+choice records and shared/choice/context composition. The resolver's selected
+record index determines its patch; matching a physical voice does not. Native
+adapter application and playback remain pending.
+
+**** DONE Mixed registry and version-2 registration codec
+
+Omnivox commit =0cbfa93= retains authoritative legacy/layered definitions beside
+the compatibility projection, in one generation domain. Identical retries are
+idempotent; changing a row ID, patch, order or definition mode conflicts at the
+same generation. Invalid requests preserve the registry. New messages reject
+duplicate keys and incomplete policies, recover only unambiguous request IDs,
+and preflight bounded flat acknowledgements before publication.
+
+These commits are on branch =voice-choice-tuning= in
+=/tmp/omnivox-voice-choice-tuning=; the original Omnivox checkout remains at its
+release commit. The complete capability bundle is deliberately unadvertised.
+
+**** TODO Review streaming route handoff at XHI, then resume implementation
+
+Stop for the requested reasoning-level change before modifying this boundary.
+Inspection of =omnivox-cli/src/pipeline.rs= shows that
+=synthesize_routed_chunk_progressively= prepares its effect sink before
+=routing.rs= performs text/health/failure rerouting. The sink currently adapts
+one shared effect style using the physical engine reported at stream start.
+That is sufficient for current shared tuning but cannot identify an individual
+choice row, particularly when two records name the same physical selector.
+
+At XHI, settle the internal handoff of the actual selected row, freshly composed
+settings/effects and bounded identity from each routing attempt to the playback
+sink, without extending helper protocols. Review both buffered and progressive
+paths, frozen registry/context/rate ownership, capability adaptation, discarded
+pre-PCM attempts, and consumed-first-frame evidence. Preserve the existing
+four-attempt limit and no-replay boundary. The accepted user-facing composition
+and storage decisions remain unchanged; this is an implementation ownership
+review, not a new product choice. Max is not indicated.
+
+Then implement routed execution, timeline-4 admission/framing, private preview
+v2 and marker-3 evidence in tested commits. Advertise the bundle only after the
+whole path works. Client integration and optional editor controls remain 7d.
+
 *** TODO 7d. Client, ordinary consumers and optional editor controls at High
 
 Implement lossless context projection, lane negotiation and apply reporting.
@@ -482,6 +529,15 @@ resolved those three stale-test failures without changing or deleting that file.
 Full byte-code rebuild followed by refresh of edits made during the build,
 preflight, attribution headers, generated reference, documentation release,
 local-link and whitespace checks pass. No live profile or speech runtime changed.
+
+For slice 7c's typed composition commit, all 655 Omnivox workspace tests pass,
+including nine new focused tests. The registration commit adds seven tests;
+all 662 workspace tests, locked workspace Clippy with warnings denied,
+formatting, documentation links and whitespace checks pass with pinned Rust
+1.97.1. Paired wire fixtures remain identical. Offline native builds use the
+existing pinned source inputs and a clean archive of the pinned Sonic commit;
+generated build files stay in the isolated worktree. No dependency, live
+runtime, release version or installed payload changed.
 
 For later Lisp slices, run focused ERT and =make bytecode=, or
 =make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh

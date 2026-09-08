@@ -48,8 +48,13 @@ accepted shared -> choice -> context in [[file:../adr/0017-per-fallback-voice-tu
 [[file:../voice-editor-fallback-tuning-contract.org][storage/runtime contract]], [[file:../voice-editor-fallback-wire-contract.org][wire/compatibility contract]] and independent examples
 complete the XHI review. The maintainer authorized continuation at the High
 handoff. Schema-3 storage, strict patches, identity-preserving pure operations
-and save/copy preservation now pass storage tests. Server, client playback and
-individual editor controls remain pending in tested, committed slices. Earlier, the maintainer
+and save/copy preservation now pass storage tests. Omnivox commits =ff5cb5f= and
+=0cbfa93= add typed composition and authoritative mixed registration with its
+version-2 codec; all 662 workspace tests and Clippy pass. The capability bundle
+is not advertised. Implementation pauses for XHI review of the actual-choice
+handoff to streaming effects and first-frame evidence, as recorded in the
+[[file:../voice-editor-implementation-plan.org][implementation plan]]. Routed playback, remaining codecs, client integration
+and individual editor controls remain pending in tested, committed slices. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.
