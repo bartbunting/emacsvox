@@ -1,0 +1,360 @@
+#+title: Voice Editor Interaction Design
+#+date: 2026-09-08
+#+startup: content
+
+* Status and purpose
+
+Draft for discussion; describes proposed behaviour, not the current product.
+Implementation and changes to existing commands remain separate work.
+
+Make it possible to answer three questions in one place: which physical voice
+does bolden use, what adjustments change its sound, and have my changes been
+saved and applied? A user should not need to visit a palette manager to finish
+saving a physical-voice experiment.
+
+* Recommended ownership model and alternatives
+
+Recommendation for discussion: each palette owns the complete sound of its
+named voices, including preferred physical choices, ordered fallbacks, shared
+adjustments, and optional adjustments for individual choices. Editing bolden
+in one palette should not silently change another palette's own definition.
+Switching palettes selects the corresponding complete voice definitions.
+This recommendation has not yet been accepted as an architecture decision.
+
+| Option | Benefits | Costs |
+|--------+----------+-------|
+| Separate palettes and routing profiles, as today | Reuse machine assignments across palettes; separate portable styles. | Two configurations to understand; edits and palette switching can surprise users. |
+| Complete voices owned by each palette | Predictable edit scope, palette switching, and one save action. | Repeated assignments; changing a favourite voice across palettes requires more work. |
+| Shared complete definitions with local overrides | Reuse plus customization. | More inheritance and indirect effects; harder to explain which palettes an edit affects. |
+
+Prefer complete palette-owned voices for ordinary use. Explicit sharing can
+follow as an advanced feature rather than becoming a prerequisite to editing.
+Copy voice produces an independent definition. A future Link to shared voice
+action must state that subsequent shared edits affect every linked consumer.
+Editing an inherited voice creates a local override by default; a separate
+Edit parent action identifies the affected descendants before saving.
+
+Ownership in the user model does not require putting machine-specific physical
+IDs in portable palette exports. Local assignment data may remain stored
+separately, keyed to the owning palette and voice. Cross-machine import must
+identify unavailable choices and preserve fallback behaviour. The precise
+storage, migration, and runtime contracts require a subsequent design review.
+
+* Simple controls first, optional detail
+
+The ordinary editor initially exposes the named voice, palette, physical voice,
+common adjustments, preview/compare, and Save and apply. Fallbacks initially
+appears as Automatic, using the existing general policy, or as a brief summary
+of an already customized chain. Existing customization is never hidden behind
+an inaccurate Automatic label.
+
+#+begin_example
+Edit bolden — Personal palette
+Voice: DECtalk / <voice>
+Adjustments: pitch, rate, voice characteristics…
+Fallbacks: Automatic                         [Expand]
+[Play]  [Compare original]  [Save and apply]
+#+end_example
+
+Three levels of use remain available in the same editor:
+
+1. Choose and tune one voice; fallbacks remain automatic.
+2. Expand Fallbacks and arrange specific choices; use shared adjustments.
+3. Choose Tune this voice to customize particular fallback choices.
+
+Use exactly two adjustment levels initially: settings shared by the named
+voice's choices, and optional overrides for each choice. Do not introduce an
+intermediate engine-wide adjustment layer. A single-choice editor can label
+the first level simply Adjustments; expanding individual customization makes
+the shared scope explicit.
+
+* One editor, two ways to start
+
+Opening a named voice from a palette, Logical voices, or Styles opens the same
+editor with its destination already selected. It loads that destination's
+style and physical assignment together. Existing unfinished edits resume.
+
+Opening Tune on a physical voice opens the same editor as an experiment. It
+has no destination yet and makes no live changes. Users can change voices,
+tune, and compare before choosing where to use the result. The initial style
+must be identified explicitly; do not silently borrow bolden's settings.
+
+The destination section offers named actions:
+
+- Use voice and adjustments for a named voice: choose, for example, bolden.
+- Use physical voice only: preserve the destination's existing adjustments.
+- Save adjustments as a named style: preserve existing physical assignments.
+
+After destination selection, the sample previews exactly the proposed saved
+combination. If that differs from the experiment, announce why. Keep the
+original experiment available when changing this choice or cancelling it.
+
+* Editor layout
+
+Use one vertically navigable buffer with labelled fields and collapsible
+sections. This example shows the optional sections expanded; values are
+illustrative, not a runtime report.
+
+#+begin_example
+Edit voice: bolden
+Unsaved changes: physical voice, relative rate
+
+Destination
+  Use for: bolden
+  Keep: physical voice and adjustments
+  Palette: personal-voices
+  Applies to: bolden in this palette, including inheriting descendants
+
+Voices in preference order
+  1. DECtalk / <voice>     available     shared adjustments
+  2. Eloquence / <voice>   available     2 custom adjustments
+  [Add fallback]  [Move earlier]  [Move later]
+  Currently selected for editing: DECtalk / <voice>
+
+Shared adjustments
+  Relative rate: +4 points                      [changed; was 0]
+  Average pitch: adapter default
+  Pitch range: adapter default
+  More voice characteristics and effects…
+
+Adjustments for selected physical voice
+  Use shared adjustments
+  [Customize this voice]
+
+Listen
+  Sample text: The quick brown fox jumps over the lazy dog.
+  Automatic sample after adjustment: on
+  [Play edited]  [Compare with original]  [Stop]
+
+Changes to save
+  bolden: physical voice <original> -> <selected>
+  bolden: relative rate 0 -> +4 points
+  [Save and apply to bolden]  [Leave and keep draft]
+
+Details…
+#+end_example
+
+The destination and state stay available in a short header. The change summary
+updates in place; ordinary saving does not open another review buffer. All
+actions have spoken labels and keyboard access. Details contains inheritance,
+aliases, raw definitions, advanced routing policy, storage destinations,
+capability diagnostics, and last playback evidence.
+
+Physical voice selection opens the existing searchable inventory as a picker.
+Users can filter by engine or search across engines, audition candidates, and
+return to the same field. Cancelling preserves the previous choice and point.
+Automatic or inherited assignments remain valid choices; opening an editor
+must not replace a fallback chain with its currently predicted physical voice.
+
+* Ordered fallback voices and optional individual adjustments
+
+Ordered physical choices are an existing capability and belong in the ordinary
+editor. A named voice can prefer an exact DECtalk voice, then an exact Eloquence
+voice. Preserve engine-default and property-based choices as well. Show the
+remaining global fallback policy after the explicit list so users know what
+happens if every listed choice is unavailable. Changing one choice must not
+silently erase the rest of the chain.
+
+Show preference, availability, predicted choice, and last actual playback as
+distinct information. Runtime routing and health policy decide eligibility;
+an inventory entry alone does not prove a voice will play successfully. Do not
+promise retry or replay of an utterance after playback has already begun.
+
+Proposed extension: keep shared adjustments for the named voice, with optional
+overrides attached to each fallback choice. This lets two physical voices,
+including two voices from the same engine, use different values. A choice uses
+the shared value unless explicitly customized. An override replaces that
+dimension's shared value; it does not add another offset. For relative rate,
+an override of +4 means +4 from the global rate, not +4 from the shared offset.
+Use shared value is distinct from an explicit adapter default.
+
+Users select a fallback row and choose Customize this voice. The adjustment
+fields then identify that voice and which values are inherited or overridden.
+Keep the shared controls available as a separate, clearly named section. A
+shared edit affects every choice inheriting that value; announce that scope.
+Customizations follow the choice when reordered. Replacing its physical voice
+offers to retain or reset customizations instead of silently losing them.
+
+P auditions the selected choice with its complete effective adjustments, even
+when it is a fallback. It fails explicitly if that exact choice cannot play.
+Play fallback sequence compares each choice using the same text; Play automatic
+selection separately tests normal routing. Selecting a row for editing or
+preview does not change routing preference. If a fallback has never been
+auditioned, report that fact rather than claiming its sound matches the primary.
+
+For physical experiments destined for an existing named voice, explicitly
+choose Replace selected choice, Add as preferred, or Add as fallback. Preserve
+other choices. Voice-and-adjustment experiments default to adjustments for
+that choice; saving shared adjustments is a separate, clearly labelled choice.
+
+Current routing selectors contain identity/matching fields, not per-choice
+styles. The optional overrides above therefore require storage and playback
+design, including selection of matching adjustments when the server falls back
+at runtime. Picking adjustments from a client prediction is insufficient.
+That extension is proposed, not an existing feature or an approved schema or
+protocol change. Under the recommended model these overrides belong to the
+palette's complete named voice, even if local choices are stored separately.
+
+* Speech and keyboard interaction
+
+Provisional default pending user preference: ordinary navigation uses the usual
+speech voice; samples use the edited voice. Offer an explicit option to speak
+the editor in the edited voice. Neither setting changes speech outside the
+editor before Save and apply.
+
+Move between fields with n/p or up/down. TAB and backtab move between controls;
+RET edits a field or invokes its action. Left/right adjust numeric fields by
+one documented step. Announce the field, value, unit, and changed state on
+entry; successive adjustments announce only the new value and then the sample.
+Rapid changes replace obsolete samples rather than queueing them.
+
+Retain P for edited preview, B for original/edited comparison, S for stopping
+the preview, T for sample text, u for undo, and ? for help. Comparison uses
+the same text and clearly labels original and edited versions. Original means
+the configuration at opening, or the most recently successfully applied save;
+it must not silently change during an asynchronous apply.
+
+w and C-c C-c invoke the visible primary action. With no destination, that
+action is Choose where to use this voice; after selection it becomes Save and
+apply to NAME. The first action is never announced as a save. SPC reads the
+current field; a discoverable Read changes action speaks the full proposal.
+Exact shortcut choices must be checked against the shared interface keymap.
+
+Unsupported adjustments remain inspectable with a reason and their stored
+value. Label them as having no effect on this engine. Distinguish advertised
+support from successful playback; do not infer an audible effect from either.
+Changing engines preserves values and announces newly unsupported adjustments.
+Exact-voice preview failure is reported without substituting another voice.
+
+Foreground navigation interrupts obsolete samples. Asynchronous apply results
+use notification semantics and leave point alone, following ADR 0009. Provide
+a way to repeat status without waiting for or replaying an announcement.
+
+* Saving, application, and scope
+
+Save and apply captures one immutable proposal containing the chosen voice,
+adjustments, destination, and expected existing definitions. Validate before
+writing. One user action coordinates palette and routing persistence and
+application, even when the implementation uses separate stores.
+
+Show the actual impact before saving. Under the recommended ownership model,
+ordinary edits belong to the selected palette, including descendants inheriting
+that definition. Parent edits or explicitly shared definitions must identify
+their wider impact. Today's routing profiles can affect multiple palettes;
+any transitional editor must disclose that behaviour until ownership migration
+is complete, rather than claiming palette isolation it cannot provide.
+If the editor replaces a stronger session assignment, name that consequence.
+Explicit presentation overrides can still change what a particular buffer
+speaks; explain those when entering from an inspected item.
+
+Built-in palettes remain intact. Propose a personal overlay with an editable
+name, creating and selecting it only when saving. Distinguish saving its
+definition from restoring its selection after restart. Show whether selection
+is for this session or retained by a Presentation Profile; provide an explicit
+action to retain the selection using the existing profile workflow. Do not
+silently modify unrelated profile settings or promise persistence of selection.
+
+Editing an inactive palette must expose that context. Offer Save to collection
+without activating as an explicit alternative to Save and apply. The primary
+action must state when it will select a different palette.
+
+| State | Meaning and next action |
+|-------+-------------------------|
+| No changes | Working values equal the saved baseline. |
+| Unsaved changes | Only the draft has changed; Save and apply is available. |
+| Saving | Persistence is in progress; repeated save cannot duplicate work. |
+| Saved; applying | Values are stored; speech-server acknowledgement is pending. |
+| Saved and applied | All required active speech lanes acknowledged the saved proposal. |
+| Saved; apply failed | Stored values remain; show cause and Retry apply. |
+| Apply unconfirmed | A timeout means the server outcome is unknown; offer reconciliation/retry. |
+| Partly saved | Identify completed and unfinished writes; keep the draft and retry unfinished work. |
+| Destination changed | Another editor changed the baseline; resolve differences before writing. |
+
+After success stay in the editor, announce completion, and clear saved changes.
+q returns to the exact originating row and column. Saving does not require
+visiting a palette manager or Workbench for a second commit.
+
+Later edits made while application is pending remain unsaved and cannot be
+cleared by the earlier completion. Bind every result to its proposal and
+destination. A callback never steals focus or writes another editor's state.
+Application acknowledgement is not a claim that a user has heard the result.
+
+* Drafts and leaving
+
+q with unsaved work offers Keep draft and return, Discard changes and return,
+or Continue editing. Keep draft is the default. Leaving for Home preserves
+the draft and makes it discoverable through Resume unfinished changes.
+Draft retention initially lasts for this Emacs session and says so explicitly;
+restart recovery is a separate enhancement. Killing the buffer or exiting
+Emacs must give an equivalent opportunity to resolve unsaved work.
+
+One authoritative draft owns each destination and scope. Opening the same
+voice through another view resumes it. An experiment selecting a destination
+that already has a draft must offer to resume or explicitly replace that draft;
+it must not silently overwrite it. Detect conflicts involving parent edits,
+explicit shared definitions, and legacy routing targets during migration;
+distinct palette-owned definitions should otherwise remain independent.
+
+Apply failures remain discoverable even when there are no unsaved edits.
+Discarding a draft never claims to undo completed saves or application.
+
+* Voice lists agree with the editor
+
+The ordinary named-voice list shows Voice, Physical voice, Engine, Adjustments,
+and State. Style inheritance and raw definitions move into details. Examples
+of readable values are Default selection, <voice> (fallback), +4 rate points,
+Unsaved changes, and Saved; apply failed.
+
+Where a draft exists, the list identifies its values as a draft and offers
+comparison with the saved configuration. A pending choice must never look
+like an already applied assignment. Details separates configured selection,
+predicted fallback, and last actual playback. State is derived from the same
+draft/save operation used by the editor and Home, including inactive palettes.
+
+* Implementation boundaries and acceptance
+
+Reuse the existing palette, route, preview, capability, and apply services.
+Deliver the recommended ownership model through an agreed migration, not just
+new labels on the existing shared routes. Per-choice adjustments additionally
+require a storage and runtime fallback contract. A preliminary editor may
+expose today's chains and shared styles, but must label their existing scope
+and must not be presented as the completed palette-owned design.
+Neither stage requires removing public commands. Existing commands can open
+the new editor after behaviour is checked. Keep advanced routing and bulk
+operations available in Workbench. Implementation order remains open; the
+recommended user model should guide it rather than be dictated by current stores.
+
+The current implementation is in [[file:../lisp/emacsvox-aural-voice-palettes.el][palette browsing and tuning]],
+[[file:../lisp/emacsvox-aural-voice-workbench.el][Workbench]], and [[file:../lisp/emacsvox-aural-voice-experiment.el][physical voice experiments]].
+The separate [[file:developer/backlog.org][backlog]] describes voice-style schema and asynchronous apply
+refactoring; those are related concerns, not prerequisites to a wholesale rewrite.
+All accepted [[file:adr/][ADRs]] were considered, particularly audience boundaries,
+acknowledged routing readiness, and foreground/notification lane ownership.
+
+Acceptance scenarios must cover editing bolden through both entry paths;
+keeping only parameters, only the physical voice, and both; built-in overlays;
+inactive palettes and restart selection; inherited/fallback assignments;
+palette switching restoring complete choices and adjustments; independent
+copies; local overrides preserving parents; disclosed descendant/shared impact;
+unsupported controls; preview cancellation and original/edited parity;
+ordered exact/default/property fallback choices; preserving the chain while
+editing one choice; individual overrides and shared edits if that extension is
+implemented; correct adjustments after runtime fallback rather than only in
+explicit previews;
+leaving/resuming through Home and another voice view; competing destinations;
+partial persistence; failed or timed-out application; two-lane results; and
+late callbacks after further edits. Include a real spoken walkthrough with the
+user: automated tests alone cannot establish that navigation feels usable.
+
+* Decisions to settle during walkthrough
+
+- Accept or revise the recommendation that each palette owns complete named
+  voices, with sharing explicit and optional; then specify migration and storage.
+- Whether optional per-choice adjustments ship with the first editor or follow
+  the initial editor using today's shared style and existing fallback chains.
+- Navigation voice: usual voice or the voice being tuned.
+- Which adjustments belong in the initially expanded section.
+- Whether editing commonly means an existing named voice or an experiment
+  later assigned to a destination; both remain supported.
+- Whether retaining palette selection across restarts should remain an
+  explicit profile action or become a new editor-owned workflow in a later design.
