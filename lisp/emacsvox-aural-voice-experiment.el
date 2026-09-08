@@ -156,14 +156,16 @@
          (values
           (mapcar (lambda (letter)
                     (read-number (format "%s value %s, %d through %d: "
-                                         (emacsvox-aural-humanize dimension) letter minimum maximum)))
+                                         (emacsvox-aural-voice-tuner--dimension-label dimension)
+                                         letter minimum maximum)))
                   '(A B C)))
          entries)
     (unless (cl-every (lambda (value) (and (integerp value) (<= minimum value maximum))) values)
       (user-error "Choose three integer values from %d through %d" minimum maximum))
     (dolist (value values)
       (let* ((style (plist-put (copy-tree emacsvox-aural-voice-tuner-working-style)
-                               (emacsvox-aural--voice-dimension-key dimension) value))
+                               (emacsvox-aural--voice-dimension-key dimension)
+                               (emacsvox-aural-voice-tuner--stored-value dimension value)))
              (entry (list :text emacsvox-aural-voice-tuner-preview-text
                           :selector (copy-tree emacsvox-aural-voice-tuner-route-selector)
                           :language emacsvox-aural-voice-tuner-route-language
@@ -174,7 +176,9 @@
         (setq entries
               (nconc entries
                      (list (plist-put (copy-tree entry) :text
-                                      (format "%s %s." (emacsvox-aural-humanize dimension) value)) entry)))))
+                                      (format "%s %s."
+                                              (emacsvox-aural-voice-tuner--dimension-label dimension)
+                                              value)) entry)))))
     (tts-preview-voices entries
                         (lambda (result)
                           (when (eq (plist-get result :status) 'failed)
@@ -451,6 +455,7 @@ Later edits and components not included in this save remain unsaved."
                       "Changes are temporary until you save them from the Keep result review.\n\n"
                       "Adjust and listen\n"
                       "n/p or up/down select parameters; left/right adjust; RET enters a value.\n"
+                      "Low-pass and high-pass amounts: zero is neutral; higher means more filtering.\n"
                       "P plays; B alternates opening and working versions; S stops.\n"
                       "u undoes; R restores opening voice and parameters; v tries another voice.\n"
                       "c copies an existing style; T changes sample text; D demonstrates three values.\n"

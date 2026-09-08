@@ -2935,14 +2935,21 @@ obtain a fresh result.  Save or cancel any newer staged edits before
 retrying.  A partial result retains the streams that acknowledged
 success and identifies those that timed out.
 
-   The tuner names neutral effect values instead of speaking an
-ambiguous number: gain five is _unchanged_, low-pass nine is _disabled_,
-high-pass zero is _disabled_, pan five is _centre_, and reverb, echo, or
-chorus zero is _disabled_.  Chorus adds a bounded doubled-voice
-modulation without changing speech duration or marker positions.  It is
-applied by Omnivox to buffered audio; the tuner reports when the
-selected route cannot apply it.  These portable levels are translated to
-the exact values required by the active adapter.
+   The tuner presents _Low-pass Amount_ and _High-pass Amount_ from zero
+through nine.  Higher amounts mean more filtering: low-pass removes more
+high frequencies, and high-pass removes more low frequencies.  Zero is
+the neutral cutoff; ‘d’ requests the adapter default.  The amount scale
+applies to arrows, typed digits, numeric entry, and three-value
+demonstrations.  Existing saved styles retain their sound; stored
+low-pass cutoff values keep their original meaning.
+
+   The tuner names other neutral effect values instead of speaking an
+ambiguous number: gain five is _unchanged_, pan five is _centre_, and
+reverb, echo, or chorus zero is _disabled_.  Chorus adds a bounded
+doubled-voice modulation without changing speech duration or marker
+positions.  It is applied by Omnivox to buffered audio; the tuner
+reports when the selected route cannot apply it.  These portable levels
+are translated to the exact values required by the active adapter.
 
    The built-in ‘acss-default’ palette also includes a ‘telephone’
 logical voice.  It combines high-pass and low-pass filtering to give any

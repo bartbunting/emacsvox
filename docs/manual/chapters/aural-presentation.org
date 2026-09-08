@@ -564,9 +564,16 @@ the committed profile and obtain a fresh result.  Save or cancel any newer
 staged edits before retrying.  A partial result retains the streams that
 acknowledged success and identifies those that timed out.
 
-The tuner names neutral effect values instead of speaking an ambiguous number:
-gain five is /unchanged/, low-pass nine is /disabled/, high-pass zero is
-/disabled/, pan five is /centre/, and reverb, echo, or chorus zero is
+The tuner presents /Low-pass Amount/ and /High-pass Amount/ from zero through
+nine. Higher amounts mean more filtering: low-pass removes more high
+frequencies, and high-pass removes more low frequencies. Zero is the neutral
+cutoff; @@texinfo:@kbd{d}@@ requests the adapter default. The amount scale applies
+to arrows, typed digits, numeric entry, and three-value demonstrations. Existing
+saved styles retain their sound; stored low-pass cutoff values keep their
+original meaning.
+
+The tuner names other neutral effect values instead of speaking an ambiguous number:
+gain five is /unchanged/, pan five is /centre/, and reverb, echo, or chorus zero is
 /disabled/.  Chorus adds a bounded doubled-voice modulation without changing
 speech duration or marker positions.  It is applied by Omnivox to buffered
 audio; the tuner reports when the selected route cannot apply it.  These

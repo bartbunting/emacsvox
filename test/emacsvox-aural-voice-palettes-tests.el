@@ -729,7 +729,7 @@
         (car entry) (cdr entry)))
      '((gain . 5) (low-pass . 9) (high-pass . 0)
        (pan . 5) (reverb . 0) (echo . 0) (chorus . 0)))
-    '("unchanged" "disabled" "disabled"
+    '("unchanged" "0 (neutral)" "0 (neutral)"
       "centre" "disabled" "disabled" "disabled")))
   (with-temp-buffer
     (emacsvox-aural-voice-tuner-mode)
@@ -1360,8 +1360,11 @@
                      (low-pass 0 9) (high-pass 0 9) (pan 0 9)
                      (reverb 0 9) (echo 0 9) (chorus 0 9)))
     (pcase-let ((`(,dimension ,minimum ,maximum) fixture))
-      (dolist (step (list (list #'emacsvox-aural-voice-tuner-decrease (1+ minimum) minimum)
-                         (list #'emacsvox-aural-voice-tuner-increase (1- maximum) maximum)))
+      (dolist (step (if (eq dimension 'low-pass)
+                       '((emacsvox-aural-voice-tuner-decrease 8 9)
+                         (emacsvox-aural-voice-tuner-increase 1 0))
+                     (list (list #'emacsvox-aural-voice-tuner-decrease (1+ minimum) minimum)
+                           (list #'emacsvox-aural-voice-tuner-increase (1- maximum) maximum))))
         (pcase-let ((`(,command ,initial ,boundary) step))
           (emacsvox-test--with-numeric-tuner dimension initial
             (call-interactively command)
@@ -1373,7 +1376,9 @@
             (should (= 1 (length tuner-test-auditions)))
             (let ((before (copy-tree emacsvox-aural-voice-tuner-working-style)))
               (should (equal (should-error (call-interactively command) :type 'user-error)
-                             (list 'user-error (format "%s is already at %s" dimension boundary))))
+                             (list 'user-error
+                                   (format "%s is already at %s" dimension
+                                           (if (eq dimension 'low-pass) (- 9 boundary) boundary)))))
               (should (equal emacsvox-aural-voice-tuner-working-style before)))
             (should (equal emacsvox-aural-voice-tuner-history (list tuner-test-initial)))
             (should (= 1 (length tuner-test-refreshes)))
@@ -1389,7 +1394,7 @@
   "Nil starts at five for ordinary fields, and plus/minus one for rate."
   :tags '(voice-style-ui)
   (dolist (dimension '(average-pitch pitch-range stress richness rate-offset
-                      gain low-pass high-pass pan reverb echo chorus))
+                      gain pan reverb echo chorus))
     (dolist (command '(emacsvox-aural-voice-tuner-increase emacsvox-aural-voice-tuner-decrease))
       (emacsvox-test--with-numeric-tuner dimension nil
         (call-interactively command)
@@ -1410,12 +1415,14 @@
       (let ((last-command-event ?0))
         (call-interactively #'emacsvox-aural-voice-tuner-set-digit)
         (call-interactively #'emacsvox-aural-voice-tuner-set-digit))
-      (should (= (plist-get emacsvox-aural-voice-tuner-working-style tuner-test-key) 0))
+      (should (= (plist-get emacsvox-aural-voice-tuner-working-style tuner-test-key)
+                 (if (eq dimension 'low-pass) 9 0)))
       (should (= 1 (length emacsvox-aural-voice-tuner-history)))
       (should (= 1 (length tuner-test-auditions)))
       (let ((last-command-event ?9))
         (call-interactively #'emacsvox-aural-voice-tuner-set-digit))
-      (should (= (plist-get emacsvox-aural-voice-tuner-working-style tuner-test-key) 9))
+      (should (= (plist-get emacsvox-aural-voice-tuner-working-style tuner-test-key)
+                 (if (eq dimension 'low-pass) 0 9)))
       (call-interactively #'emacsvox-aural-voice-tuner-use-default)
       (call-interactively #'emacsvox-aural-voice-tuner-use-default)
       (should (equal emacsvox-aural-voice-tuner-working-style tuner-test-initial))
@@ -1439,7 +1446,9 @@
                         (member trimmed '("" "0" "9" "3"))))
                (expected (if (string-empty-p trimmed)
                              (unless rate-p current)
-                           (string-to-number trimmed)))
+                           (if (eq dimension 'low-pass)
+                               (- 9 (string-to-number trimmed))
+                             (string-to-number trimmed))))
                prompt)
           (emacsvox-test--with-numeric-tuner dimension current
             (cl-letf (((symbol-function 'read-string)
@@ -1475,6 +1484,41 @@
               (should-not emacsvox-aural-voice-tuner-dirty)
               (should-not tuner-test-refreshes)
               (should-not tuner-test-auditions))))))))
+
+(ert-deftest emacsvox-aural-tuner-filter-amounts-preserve-cutoffs ()
+  "Amount edits, display, previews and undo preserve stored cutoff semantics."
+  ;; Existing saved cutoff 8 means amount 1; inspection and blank RET are inert.
+  (emacsvox-test--with-numeric-tuner 'low-pass 8
+    (should (equal (emacsvox-aural-voice-tuner--requested-value 'low-pass) "1"))
+    (should (= (plist-get (emacsvox-aural-voice-tuner--normalized-effects
+                          emacsvox-aural-voice-tuner-working-style) :low-pass)
+               (/ 8.0 9.0)))
+    (cl-letf (((symbol-function 'read-string)
+               (lambda (prompt &rest _)
+                 (should (string-prefix-p "Low-pass Amount, " prompt))
+                 (should (string-match-p "blank keeps 1" prompt))
+                 "")))
+      (emacsvox-aural-voice-tuner-edit))
+    (should-not emacsvox-aural-voice-tuner-dirty)
+    (emacsvox-aural-voice-tuner-increase)
+    (should (= (plist-get emacsvox-aural-voice-tuner-working-style :low-pass) 7))
+    (should (equal (car tuner-test-auditions) "2"))
+    (should (= (plist-get (emacsvox-aural-voice-tuner--normalized-effects
+                          emacsvox-aural-voice-tuner-working-style) :low-pass)
+               (/ 7.0 9.0)))
+    (emacsvox-aural-voice-tuner-undo)
+    (should (equal emacsvox-aural-voice-tuner-working-style tuner-test-initial))
+    (should-not emacsvox-aural-voice-tuner-dirty))
+  ;; From adapter defaults, right adds one unit; left cannot go below neutral.
+  (dolist (fixture '((low-pass 8) (high-pass 1)))
+    (emacsvox-test--with-numeric-tuner (car fixture) nil
+      (should-error (emacsvox-aural-voice-tuner-decrease) :type 'user-error)
+      (should-not emacsvox-aural-voice-tuner-dirty)
+      (should-not tuner-test-auditions)
+      (emacsvox-aural-voice-tuner-increase)
+      (should (= (plist-get emacsvox-aural-voice-tuner-working-style tuner-test-key)
+                 (cadr fixture)))
+      (should (equal (car tuner-test-auditions) "1")))))
 
 (ert-deftest emacsvox-aural-tuner-numeric-editor-keeps-five-field-acss-scope ()
   "The complete-style editor asks only for family and four ACSS dimensions."

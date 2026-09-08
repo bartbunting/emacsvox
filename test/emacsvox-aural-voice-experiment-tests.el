@@ -73,6 +73,29 @@
       (should (= (plist-get (plist-get (nth 1 entries) :acss) :average-pitch) (/ 2.0 9.0)))
       (should (equal before (emacsvox-aural-voice-experiment--snapshot))))))
 
+(ert-deftest emacsvox-aural-experiment-filter-sweep-uses-amounts ()
+  "Filter demonstrations label amounts and send compatible cutoff values."
+  (emacsvox-test--with-voice-experiment
+    (setq emacsvox-aural-voice-tuner-route-engine
+          (plist-put (copy-tree emacsvox-aural-voice-tuner-route-engine)
+                     :post-synthesis-dimensions '(low-pass high-pass)))
+    (dolist (fixture '((low-pass :low-pass "Low-pass Amount 2." 7 4 1)
+                       (high-pass :high-pass "High-pass Amount 2." 2 5 8)))
+      (emacsvox-aural-ui-goto-row (car fixture))
+      (let ((values '(2 5 8)) entries
+            (before (emacsvox-aural-voice-experiment--snapshot)))
+        (cl-letf (((symbol-function 'read-number) (lambda (&rest _) (pop values)))
+                  ((symbol-function 'tts-preview-voices)
+                   (lambda (value _callback) (setq entries value))))
+          (emacsvox-aural-voice-experiment-sweep))
+        (should (equal (plist-get (car entries) :text) (nth 2 fixture)))
+        (should (equal
+                 (mapcar (lambda (i) (plist-get (plist-get (nth i entries) :effects)
+                                               (nth 1 fixture)))
+                         '(1 3 5))
+                 (mapcar (lambda (cutoff) (/ (float cutoff) 9.0)) (nthcdr 3 fixture))))
+        (should (equal before (emacsvox-aural-voice-experiment--snapshot)))))))
+
 (ert-deftest emacsvox-aural-experiment-keep-proposal-has-separate-destinations ()
   "Preparing all three keep variants does not change either registry or selection."
   (emacsvox-test--with-voice-experiment

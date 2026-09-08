@@ -77,8 +77,8 @@
     (richness . "Spectral richness from zero through nine")
     (rate-offset . "Relative rate from twenty points slower through twenty points faster; zero is unchanged")
     (gain . "Post-synthesis gain; five is unchanged")
-    (low-pass . "Low-pass cutoff; nine disables filtering")
-    (high-pass . "High-pass cutoff; zero disables filtering")
+    (low-pass . "Low-pass amount; zero is neutral, nine removes the most high frequencies")
+    (high-pass . "High-pass amount; zero is neutral, nine removes the most low frequencies")
     (pan . "Stereo position; zero is left, five centre, and nine right")
     (reverb . "Post-synthesis reverberation; zero is disabled")
     (echo . "Post-synthesis echo; zero is disabled")
@@ -388,15 +388,15 @@ replaces live state.  Return the value of MUTATION."
     (sort (delete-dups names) #'string-lessp)))
 
 (defun emacsvox-aural-voice-palettes--read-style-number
-    (dimension current)
-  "Read optional ACSS DIMENSION, offering CURRENT."
+    (dimension current &optional label)
+  "Read optional ACSS DIMENSION, offering CURRENT with optional LABEL."
   (let* ((field (emacsvox-aural--voice-style-field dimension))
          (minimum (plist-get field :minimum))
          (maximum (plist-get field :maximum))
          (prompt
           (format
            "%s, %d through %d; blank %s: "
-           (emacsvox-aural-humanize dimension)
+           (or label (emacsvox-aural-humanize dimension))
            minimum maximum
            (if current (format "keeps %s" current) "uses the adapter default")))
          (answer (string-trim (read-string prompt))))
@@ -1244,6 +1244,16 @@ in that overlay so subsequent edits do not create more palettes."
   "Return a user-facing description of voice VALUE."
   (if (null value) "adapter default" (format "%s" value)))
 
+(defun emacsvox-aural-voice-tuner--control-value (dimension value)
+  "Convert stored DIMENSION VALUE to its displayed control value.
+Low-pass amounts run opposite to stored cutoffs.  All other values,
+including nil for the adapter default, retain their representation."
+  (if (and (eq dimension 'low-pass) (numberp value)) (- 9 value) value))
+
+(defun emacsvox-aural-voice-tuner--stored-value (dimension value)
+  "Convert displayed DIMENSION VALUE to its stored representation."
+  (emacsvox-aural-voice-tuner--control-value dimension value))
+
 (defun emacsvox-aural-voice-tuner--rate-offset-description (value)
   "Return a concise description of relative rate VALUE."
   (cond
@@ -1260,8 +1270,10 @@ in that overlay so subsequent edits do not create more palettes."
    ((eq dimension 'rate-offset)
     (emacsvox-aural-voice-tuner--rate-offset-description value))
    ((and (eq dimension 'gain) (= value 5)) "unchanged")
-   ((and (eq dimension 'low-pass) (= value 9)) "disabled")
-   ((and (memq dimension '(high-pass reverb echo chorus)) (zerop value))
+   ((memq dimension '(low-pass high-pass))
+    (let ((amount (emacsvox-aural-voice-tuner--control-value dimension value)))
+      (if (zerop amount) "0 (neutral)" (number-to-string amount))))
+   ((and (memq dimension '(reverb echo chorus)) (zerop value))
     "disabled")
    ((and (eq dimension 'pan) (= value 5)) "centre")
    (t (emacsvox-aural-voice-tuner--display-value value))))
@@ -1276,6 +1288,8 @@ in that overlay so subsequent edits do not create more palettes."
          "Portable Fallback Family"
        "Base Voice (ACSS Family)"))
     ('rate-offset "Relative Rate")
+    ('low-pass "Low-pass Amount")
+    ('high-pass "High-pass Amount")
     (_ (capitalize (emacsvox-aural-humanize dimension)))))
 
 (defun emacsvox-aural-voice-tuner--family-description
@@ -1669,46 +1683,49 @@ ANNOUNCEMENT overrides the normal setting description."
       (user-error "Press RET to edit the voice family"))
     dimension))
 
+(defun emacsvox-aural-voice-tuner--set-control-value (dimension value)
+  "Set displayed DIMENSION VALUE and audition its stored equivalent."
+  (let ((stored (emacsvox-aural-voice-tuner--stored-value dimension value)))
+    (emacsvox-aural-voice-tuner--set-value
+     dimension stored
+     (emacsvox-aural-voice-tuner--value-description dimension stored))))
+
 (defun emacsvox-aural-voice-tuner-increase ()
   "Increase the current numeric dimension and audition its new value."
   (interactive)
   (let* ((dimension (emacsvox-aural-voice-tuner--numeric-dimension))
-         (current (emacsvox-aural-voice-tuner--value dimension))
+         (current (emacsvox-aural-voice-tuner--control-value
+                   dimension (emacsvox-aural-voice-tuner--value dimension)))
          (rate-offset-p (eq dimension 'rate-offset))
          (value (if (numberp current)
                     (1+ current)
-                  (if rate-offset-p 1 5)))
+                  (if (or rate-offset-p (memq dimension '(low-pass high-pass))) 1 5)))
          (maximum (plist-get (emacsvox-aural--voice-style-field dimension) :maximum)))
     (when (> value maximum)
       (user-error "%s is already at %s" dimension maximum))
-    (emacsvox-aural-voice-tuner--set-value
-     dimension value
-     (emacsvox-aural-voice-tuner--value-description dimension value))))
+    (emacsvox-aural-voice-tuner--set-control-value dimension value)))
 
 (defun emacsvox-aural-voice-tuner-decrease ()
   "Decrease the current numeric dimension and audition its new value."
   (interactive)
   (let* ((dimension (emacsvox-aural-voice-tuner--numeric-dimension))
-         (current (emacsvox-aural-voice-tuner--value dimension))
+         (current (emacsvox-aural-voice-tuner--control-value
+                   dimension (emacsvox-aural-voice-tuner--value dimension)))
          (rate-offset-p (eq dimension 'rate-offset))
          (value (if (numberp current)
                     (1- current)
-                  (if rate-offset-p -1 5)))
+                  (if (or rate-offset-p (memq dimension '(low-pass high-pass))) -1 5)))
          (minimum (plist-get (emacsvox-aural--voice-style-field dimension) :minimum)))
     (when (< value minimum)
       (user-error "%s is already at %s" dimension minimum))
-    (emacsvox-aural-voice-tuner--set-value
-     dimension value
-     (emacsvox-aural-voice-tuner--value-description dimension value))))
+    (emacsvox-aural-voice-tuner--set-control-value dimension value)))
 
 (defun emacsvox-aural-voice-tuner-set-digit ()
   "Set the current numeric dimension from the typed digit and audition it."
   (interactive)
   (let ((dimension (emacsvox-aural-voice-tuner--numeric-dimension))
         (value (- last-command-event ?0)))
-    (emacsvox-aural-voice-tuner--set-value
-     dimension value
-     (emacsvox-aural-voice-tuner--value-description dimension value))))
+    (emacsvox-aural-voice-tuner--set-control-value dimension value)))
 
 (defun emacsvox-aural-voice-tuner-use-default ()
   "Use the adapter default for the current dimension and audition it."
@@ -1801,7 +1818,8 @@ ANNOUNCEMENT overrides the normal setting description."
   "Edit the current dimension and audition the new value."
   (interactive)
   (let* ((dimension (emacsvox-aural-voice-tuner--current-dimension))
-         (current (emacsvox-aural-voice-tuner--value dimension))
+         (current (emacsvox-aural-voice-tuner--control-value
+                   dimension (emacsvox-aural-voice-tuner--value dimension)))
          (value
           (if (eq dimension 'family)
               (emacsvox-aural-voice-tuner--read-family current)
@@ -1829,8 +1847,11 @@ ANNOUNCEMENT overrides the normal setting description."
                                 minimum maximum))
                   value)
               (emacsvox-aural-voice-palettes--read-style-number
-               dimension current)))))
-    (emacsvox-aural-voice-tuner--set-value dimension value)))
+               dimension current
+               (when (memq dimension '(low-pass high-pass))
+                 (emacsvox-aural-voice-tuner--dimension-label dimension)))))))
+    (emacsvox-aural-voice-tuner--set-value
+     dimension (emacsvox-aural-voice-tuner--stored-value dimension value))))
 
 (defun emacsvox-aural-voice-tuner-undo ()
   "Undo the most recent unsaved tuner change and audition it."
@@ -1967,8 +1988,10 @@ ANNOUNCEMENT overrides the normal setting description."
            "Relative Rate is a signed offset from the current global 0-to-100 rate.\n"
            "For example, global 75 plus minus 1 is 74; plus 4 is 79.  Zero or\n"
            "adapter default means unchanged.  Left and right adjust one point.\n"
-           "Gain five is unchanged; low-pass nine is disabled; high-pass, reverb,\n"
-           "echo, and chorus zero are disabled; pan five is centre.\n"
+           "Low-pass and high-pass amounts increase filtering from zero through nine.\n"
+           "Zero is the neutral cutoff; d requests the adapter default.\n"
+           "Gain five is unchanged; reverb, echo, and chorus zero are disabled;\n"
+           "pan five is centre.\n"
            "Omnivox pitch contrast defaults to a gentle 0.5; customize\n"
            "omnivox-average-pitch-contrast to use zero through two.\n"
            "For a routed adapter, Portable Fallback Family is retained for other\n"
