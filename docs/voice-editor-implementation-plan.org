@@ -7,7 +7,8 @@
 Planning, data-contract and storage slices are complete. The maintainer selected
 full-chain preview, and its XHI protocol contract is complete. The server preview
 and client slices and owned runtime integration are implemented and tested.
-Draft/save coordination is implemented and tested; the editor UI remains pending.
+Draft/save coordination and the common base editor are implemented and tested.
+Context inspection/editing remains the next slice.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -254,10 +255,11 @@ retain truthful save/apply state. Saving an unrelated inactive palette leaves
 current selection and apply ownership intact. Draft retention is session-only;
 no editor entry point or live personal data changed in this service slice.
 
-** Pending maintainer decision: physical-experiment adjustment scope
+** Selected A: shared tuning before individual fallback adjustments
 
 Runtime slice =31488e062= and draft/save slice =8ebdc7e75= are committed and
-verified. Before wiring the common editor, settle one detailed interaction
+verified. The maintainer selected A: deliver shared tuning first, then revisit
+individual fallback adjustments in slice 7. This settles the interim interaction
 choice left proposed by the design. Its physical-experiment workflow defaults
 to adjustments for the selected choice. Current storage and runtime support
 shared adjustments only; per-choice tuning is deliberately deferred to slice 7.
@@ -265,15 +267,15 @@ The complete-preview decision did not settle this experiment destination default
 
 | Choice | Result | Pros | Cons |
 |--------+--------+------+------|
-| A. Shared tuning first (recommended) | Continue slices 5 and 6. Keeping an experiment explicitly offers physical voice only, shared adjustments only, or both; combined saves say adjustments affect all choices in this named voice. Preserve the existing fallback chain. | Delivers the common editor using tested capabilities; one-choice use stays simple; scope is visible before saving. | Different settings for each fallback still wait for slice 7; combined experiments cannot yet promise selected-choice-only tuning. |
+| A. Shared tuning first (selected) | Continue slices 5 and 6. Keeping an experiment explicitly offers physical voice only, shared adjustments only, or both; combined saves say adjustments affect all choices in this named voice. Preserve the existing fallback chain. | Delivers the common editor using tested capabilities; one-choice use stays simple; scope is visible before saving. | Different settings for each fallback still wait for slice 7; combined experiments cannot yet promise selected-choice-only tuning. |
 | B. Bring individual fallback tuning forward | Pause the editor implementation and perform slice 7's XHI storage/runtime design review now. | The experiment can eventually use the selected-choice default described in the full design. | Adds another server/storage contract before the ordinary editor arrives; implementation and negotiation are broader. |
 
-This is a maintainer decision checkpoint, not completion of the editor. No UI
-entry points or live personal settings changed. If A is selected, record the
-shared-scope interim behavior explicitly in the interaction design. If B is
-selected, stop for the agreed reasoning-level change before drafting that contract.
+The common editor will offer physical voice only, shared adjustments only, or
+both. Combined and adjustment-only keeps explicitly affect all choices in the
+destination named voice. Continue slices 5 and 6; stop at slice 7 for its agreed
+XHI design review. No live personal settings changed at this decision.
 
-** TODO 5. Deliver the complete base editor workflow
+** DONE 5. Deliver the complete base editor workflow
 
 Provide the common editor for named voices and physical experiments. Implement
 physical choice, shared tuning, original/edited comparison, ordered fallbacks,
@@ -285,6 +287,15 @@ Check the full bolden workflow through both entry paths, style-only/route-only/
 combined keeps, inherited and inactive palettes, original preview stability,
 preservation of an existing fallback chain and restoration of the originating
 row/column. Test spoken navigation and failure messages as observable behavior.
+
+Both ordinary Tune entry points now share a retained draft and one Save and
+apply operation. The editor exposes shared adjustments, full base comparison,
+searchable physical auditions, ordered fallbacks, explicit experiment keeps,
+Home resumption and truthful asynchronous save state. Voice lists show physical
+choices separately from adjustments and draft state. Legacy first save creates
+an independent palette; old style-only writes are guarded against erasing owned
+choices. Contextual inspection is deliberately the next slice. Per-choice tuning
+and live spoken acceptance remain pending. No live runtime was restarted.
 
 ** TODO 6. Expose the cascade without complicating base editing
 
@@ -354,6 +365,17 @@ consistency only; the future control messages and fallback outcomes are not yet
 implemented. Emacs/byte-code preflight, local links, Org preview/update,
 documentation release validation and whitespace checks passed. No maintained
 Lisp or Rust source changed, and no live configuration was applied.
+
+For base-editor slice 5, 127 focused voice tests, isolated compiled parity and
+fresh normal build-tree verification pass. Full byte-code rebuild, preflight,
+headers, Org preview/update, generated reference and documentation release
+checks pass. The broad unit run also exercised the editor with interactive
+button advice loaded; its fixture now suppresses audio cues while retaining
+observable spoken messages. That run hit the known split-Info assertion, a
+sandbox-denied Magit server socket, and stalled in the startup dependency
+subprocess after 2,561 completed tests; it was interrupted rather than claimed
+as a full-suite pass. These unrelated failures remain outside this slice.
+Live spoken acceptance is still required.
 
 For later Lisp slices, run focused ERT and =make bytecode=, or
 =make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh

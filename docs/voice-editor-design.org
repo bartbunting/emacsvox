@@ -109,6 +109,18 @@ Use the current inspection services and their source-validity checks when
 capturing an item. An example or historical context must not masquerade as
 the current live item.
 
+* Accepted first delivery: shared adjustments
+
+The maintainer selected shared tuning first. The initial common editor exposes
+one adjustment set for all choices in a named voice. Physical experiments offer
+Use physical voice only, Use shared adjustments only, and Use both. Adjustment
+keeps explicitly disclose that all fallback choices receive those settings.
+Preserve the other physical choices when replacing, prepending or appending one.
+The selected-choice-only experiment default described in the advanced design
+below applies after individual fallback tuning is designed and implemented;
+it is not offered or implied by the first editor. One-choice editing remains
+simple; optional fallback controls reveal the shared scope and global policy.
+
 * Simple controls first, optional detail
 
 The ordinary editor initially exposes the named voice, palette, physical voice,

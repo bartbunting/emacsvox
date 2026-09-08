@@ -6,8 +6,8 @@
 
 Accepted direction: the maintainer selected option 1, full-chain preview support,
 after storage slice 2. The [[file:../voice-editor-preview-contract.org][implementation contract]] specifies the additive
-protocol and acceptance cases. Neither the new protocol nor runtime integration
-is implemented yet.
+protocol and acceptance cases. The server/client protocol and owned runtime
+integration are implemented and tested; the common editor is in progress.
 
 * Context
 

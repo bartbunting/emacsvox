@@ -16,7 +16,7 @@ This manual documents *Emacsvox, The Complete Audio Desktop*.
 
 Indirect:
 emacsvox.info-1: 384
-emacsvox.info-2: 302984
+emacsvox.info-2: 303745
 
 Tag Table:
 (Indirect)
@@ -59,60 +59,60 @@ Node: Desktop Objects101303
 Node: Object Oriented Desktop104150
 Node: Context-Sensitive Interaction105263
 Node: Aural Presentation108378
-Node: Presentation Model110971
-Node: Presentation Modalities113438
-Node: Aural Home116607
-Node: Explaining Presentation120186
-Node: Adjusting Presentation122214
-Node: Presentation Profiles128100
-Node: Voices And Routing129777
-Ref: Browse Eloquence And Compare Pitch141855
-Ref: Keep A Voice Experiment143102
-Ref: Change A Heading Voice Add A Cue Or Silence One144102
-Ref: Change A Blank-Line Tone145063
-Ref: Choose An Engine And Recover Unfinished Work145820
-Node: Sounds And Space146978
-Node: Presentation Troubleshooting148614
-Node: Voice Lock150652
-Node: Using Online Help153859
-Node: Emacs Packages157921
-Node: Document Authoring159295
-Node: Structured Editing159849
-Node: Browsing Structure160832
-Node: Web Browsing161430
-Node: Messaging162265
-Node: Editing Code162763
-Node: Development Environment163282
-Node: Desktop Management164818
-Node: Personal Information Management165320
-Node: Desktop Applications165852
-Node: Notmuch Mail173994
-Ref: Notmuch fields and privacy183337
-Node: Agent Shell189045
-Node: EAT Terminal Access201516
-Node: Running Terminal Based Applications218775
-Node: Starting Term219730
-Node: Term Input Modes220569
-Node: Term Speech Feedback221729
-Node: Reviewing The Term Screen222923
-Node: Term Help And Recovery224824
-Node: Emacsvox Keyboard Commands225723
-Node: Copyright227968
-Node: Acknowledgments228555
-Node: Developer Guide229581
-Node: Documentation Maintenance230745
-Node: Speech Server Protocols235545
-Ref: Testing A Direct Legacy Server241452
-Ref: Commands That Queue Output242011
-Ref: Commands That Set State245045
-Node: Integration Maintenance247639
-Ref: Background startup ownership and failure recovery250369
-Ref: Supported Emacs versions253522
-Ref: Native Windows builds255728
-Ref: Remote preview validation257788
-Ref: Internal ownership and renderer tests278040
-Ref: Upstream contract layers281496
-Node: Concept Index302984
+Node: Presentation Model110974
+Node: Presentation Modalities113441
+Node: Aural Home116610
+Node: Explaining Presentation120192
+Node: Adjusting Presentation122220
+Node: Presentation Profiles128106
+Node: Voices And Routing129783
+Ref: Browse Eloquence And Compare Pitch142815
+Ref: Keep A Voice Experiment143996
+Ref: Change A Heading Voice Add A Cue Or Silence One144873
+Ref: Change A Blank-Line Tone145834
+Ref: Choose An Engine And Recover Unfinished Work146591
+Node: Sounds And Space147739
+Node: Presentation Troubleshooting149375
+Node: Voice Lock151413
+Node: Using Online Help154620
+Node: Emacs Packages158682
+Node: Document Authoring160056
+Node: Structured Editing160610
+Node: Browsing Structure161593
+Node: Web Browsing162191
+Node: Messaging163026
+Node: Editing Code163524
+Node: Development Environment164043
+Node: Desktop Management165579
+Node: Personal Information Management166081
+Node: Desktop Applications166613
+Node: Notmuch Mail174755
+Ref: Notmuch fields and privacy184098
+Node: Agent Shell189806
+Node: EAT Terminal Access202277
+Node: Running Terminal Based Applications219536
+Node: Starting Term220491
+Node: Term Input Modes221330
+Node: Term Speech Feedback222490
+Node: Reviewing The Term Screen223684
+Node: Term Help And Recovery225585
+Node: Emacsvox Keyboard Commands226484
+Node: Copyright228729
+Node: Acknowledgments229316
+Node: Developer Guide230342
+Node: Documentation Maintenance231506
+Node: Speech Server Protocols236306
+Ref: Testing A Direct Legacy Server242213
+Ref: Commands That Queue Output242772
+Ref: Commands That Set State245806
+Node: Integration Maintenance248400
+Ref: Background startup ownership and failure recovery251130
+Ref: Supported Emacs versions254283
+Ref: Native Windows builds256489
+Ref: Remote preview validation258549
+Ref: Internal ownership and renderer tests278801
+Ref: Upstream contract layers282257
+Node: Concept Index303745
 
 End Tag Table
 

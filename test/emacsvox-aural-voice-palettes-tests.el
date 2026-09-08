@@ -64,7 +64,10 @@
       (cl-letf
           (((symbol-function 'emacsvox-aural-voice-tuner--play-text)
             #'ignore))
-        (emacsvox-aural-voice-palette-previews-tune)))
+        (emacsvox-aural-voice-tuner-open
+         emacsvox-aural-voice-palette-previews-palette
+         (emacsvox-aural-voice-palette-previews--current-voice)
+         (current-buffer) emacsvox-aural-voice-palette-previews-text)))
     (list source (get-buffer "*Aural Voice Tuner*"))))
 
 (ert-deftest emacsvox-aural-voice-palettes-rows-and-bindings-are-complete ()
@@ -312,11 +315,11 @@
             (should
              (equal
               (aref (cadr (assq 'heading tabulated-list-entries)) 1)
-              "direct"))
+              "Automatic"))
             (should
              (equal
-              (aref (cadr (assq 'annotate tabulated-list-entries)) 1)
-              "from acss-default"))
+              (aref (cadr (assq 'annotate tabulated-list-entries)) 4)
+              "Legacy shared routing"))
             (should
              (eq
               (key-binding (kbd "<down>"))
@@ -524,7 +527,10 @@
               (cl-letf (((symbol-function 'yes-or-no-p)
                          (lambda (&rest _) (ert-fail "Unexpected discard prompt")))
                         ((symbol-function 'emacsvox-aural-voice-tuner--play-text) #'ignore))
-                (emacsvox-aural-voice-palette-previews-tune)))
+                (emacsvox-aural-voice-tuner-open
+         emacsvox-aural-voice-palette-previews-palette
+         (emacsvox-aural-voice-palette-previews--current-voice)
+         (current-buffer) emacsvox-aural-voice-palette-previews-text)))
             (with-current-buffer (cadr buffers)
               (should emacsvox-aural-voice-tuner-dirty)
               (should (= 7 (plist-get emacsvox-aural-voice-tuner-working-style

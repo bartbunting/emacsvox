@@ -42,6 +42,10 @@
 (require 'emacsvox-aural-inspection)
 (require 'emacsvox-aural-preview)
 (require 'emacsvox-aural-voice-palettes)
+(declare-function emacsvox-aural-voice-editor-open "emacsvox-aural-voice-editor" (palette voice &optional source text))
+(declare-function emacsvox-aural-voice-editor-experiment "emacsvox-aural-voice-editor" (pair source text))
+(declare-function emacsvox-aural-voice-editor--status-for "emacsvox-aural-voice-editor" (palette voice))
+
 
 (declare-function emacsvox-aural "emacsvox-aural-home"
                   (&optional source-buffer))
@@ -324,11 +328,13 @@
 
 (defun emacsvox-aural-voice-workbench--selectors (logical-voice)
   "Return staged effective selectors for LOGICAL-VOICE."
-  (emacsvox-aural-routing-selectors-from-data
-   logical-voice
-   (emacsvox-aural-routing-effective-profile-data
-    emacsvox-aural-voice-workbench-staged-profile)
-   t))
+  (if-let* ((owned (emacsvox-aural-voice-runtime--owned
+                    logical-voice (emacsvox-aural-voice-workbench--active-palette)
+                    emacsvox-aural-voice-workbench-staged-profile)))
+      (copy-tree (plist-get owned :selectors))
+    (emacsvox-aural-routing-selectors-from-data
+     logical-voice
+     (emacsvox-aural-routing-effective-profile-data emacsvox-aural-voice-workbench-staged-profile) t)))
 
 (defun emacsvox-aural-voice-workbench--logical-voices ()
   "Return stable logical voice names visible in the current workbench."
@@ -381,12 +387,14 @@
 
 (defun emacsvox-aural-voice-workbench--scope-description (logical-voice)
   "Return distinct selector scopes for LOGICAL-VOICE."
+  (if (emacsvox-aural-voice-runtime--owned logical-voice (emacsvox-aural-voice-workbench--active-palette))
+      "palette-owned; policy shared"
   (let ((scopes
          (delete-dups
           (mapcar
            (lambda (selector) (plist-get selector :scope))
            (emacsvox-aural-voice-workbench--selectors logical-voice)))))
-    (if scopes (mapconcat #'symbol-name scopes ", ") "inherited")))
+    (if scopes (mapconcat #'symbol-name scopes ", ") "inherited"))))
 
 (defun emacsvox-aural-voice-workbench--provenance-description
     (logical-voice)
@@ -507,7 +515,9 @@
       (emacsvox-aural-voice-workbench--registration-description logical-voice)
       (or (plist-get binding :language) "")
       (emacsvox-aural-voice-workbench--scope-description logical-voice)
-      (if (equal route "adapter default") "unmapped" "routed")
+      (or (and (fboundp 'emacsvox-aural-voice-editor--status-for)
+               (emacsvox-aural-voice-editor--status-for palette logical-voice))
+          (if (equal route "adapter default") "unmapped" "routed"))
       (emacsvox-aural-voice-workbench--provenance-description logical-voice)
       (emacsvox-aural-voice-workbench--family-diagnostic logical-voice)))))
 
@@ -917,7 +927,9 @@ or persisting a routing choice."
 
 (defun emacsvox-aural-voice-workbench--replace-binding
     (logical-voice selectors &optional inferred-language)
-  "Stage SELECTORS for LOGICAL-VOICE, retaining or inferring language."
+  "Stage SELECTORS for legacy LOGICAL-VOICE, retaining or inferring language."
+  (when (emacsvox-aural-voice-runtime--owned logical-voice (emacsvox-aural-voice-workbench--active-palette))
+    (user-error "This voice owns its choices in its palette; use Tune to edit it"))
   (let* ((name (format "%s" logical-voice))
          (bindings
           (plist-get emacsvox-aural-voice-workbench-staged-profile :bindings))
@@ -2557,15 +2569,19 @@ refreshing the Workbench at LOGICAL-VOICE."
       copy)))
 
 (defun emacsvox-aural-voice-workbench-tune ()
-  "Temporarily tune a physical voice, or edit a logical voice's portable style."
+  "Open the common editor for a named voice or physical experiment."
   (interactive)
+  (require 'emacsvox-aural-voice-editor)
   (if (eq emacsvox-aural-voice-workbench-view 'physical)
-      (progn
-        (require 'emacsvox-aural-voice-experiment)
-        (emacsvox-aural-voice-experiment-open
-         (emacsvox-aural-voice-workbench--physical-pair (tabulated-list-get-id))
-         (current-buffer) emacsvox-aural-voice-workbench-preview-text))
-    (emacsvox-aural-voice-workbench--tune-logical)))
+      (emacsvox-aural-voice-editor-experiment
+       (emacsvox-aural-voice-workbench--physical-pair (tabulated-list-get-id))
+       (current-buffer) emacsvox-aural-voice-workbench-preview-text)
+    (unless (memq emacsvox-aural-voice-workbench-view '(logical styles))
+      (user-error "Choose a named or physical voice to edit"))
+    (emacsvox-aural-voice-editor-open
+     (emacsvox-aural-voice-workbench--active-palette)
+     (or (tabulated-list-get-id) (user-error "Choose a named voice"))
+     (current-buffer) emacsvox-aural-voice-workbench-preview-text)))
 
 (defun emacsvox-aural-voice-workbench--tune-logical ()
   "Tune the current logical voice against its effective preview route."

@@ -88,6 +88,8 @@ emacsvox-aural-routing-profiles.elc \
 emacsvox-aural-voice-data.elc \
 emacsvox-aural-voice-runtime.elc \
 emacsvox-aural-voice-drafts.elc \
+emacsvox-aural-voice-editing.elc \
+emacsvox-aural-voice-editor.elc \
 emacsvox-aural-profile-service.elc \
 emacsvox-aural-compatibility-voice.elc \
 emacsvox-aural-providers.elc \
@@ -382,6 +384,8 @@ emacsvox-aural-routing-profiles.elc: emacsvox-aural.elc
 emacsvox-aural-voice-data.elc: emacsvox-aural-resources.elc emacsvox-aural-routing-profiles.elc
 emacsvox-aural-voice-runtime.elc: emacsvox-aural-voice-data.elc emacsvox-aural-schemes.elc
 emacsvox-aural-voice-drafts.elc: emacsvox-aural-voice-runtime.elc
+emacsvox-aural-voice-editing.elc: emacsvox-aural-voice-drafts.elc emacsvox-aural-compiler.elc
+emacsvox-aural-voice-editor.elc: emacsvox-aural-voice-editing.elc emacsvox-aural-voice-workbench.elc
 omnivox-voices.elc: voice-defs.elc emacsvox-aural-voice-runtime.elc
 emacsvox-aural-profile-service.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
@@ -463,6 +467,7 @@ emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-description.elc \
 emacsvox-aural-profile-service.elc
 emacsvox-aural-voice-palettes.elc: \
+emacsvox-aural-voice-editing.elc \
 emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc

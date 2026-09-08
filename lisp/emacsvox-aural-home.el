@@ -30,6 +30,9 @@
 
 ;;; Code:
 
+(declare-function emacsvox-aural-voice-editor--pending "emacsvox-aural-voice-editor" ())
+(declare-function emacsvox-aural-voice-editor--show "emacsvox-aural-voice-editor" (context source))
+
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-history)
@@ -95,6 +98,7 @@
 
 (defun emacsvox-aural-home--pending-drafts ()
   "Return unfinished Aural editors without changing their working state."
+  (append
   (cl-remove-if-not
    (lambda (buffer)
      (with-current-buffer buffer
@@ -104,7 +108,9 @@
            (bound-and-true-p emacsvox-aural-voice-tuner-dirty)
            (and (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
                 (emacsvox-aural-voice-workbench--dirty-p)))))
-   (buffer-list)))
+   (buffer-list))
+  (when (fboundp 'emacsvox-aural-voice-editor--pending)
+    (emacsvox-aural-voice-editor--pending))))
 
 (defun emacsvox-aural-home--header ()
   "Describe the captured source and number of unfinished editors."
@@ -113,15 +119,19 @@
           (length (emacsvox-aural-home--pending-drafts))))
 
 (defun emacsvox-aural-home-drafts ()
-  "Resume an unfinished rule, voice, or routing editor."
+  "Resume an unfinished rule, voice, or routing editor, including retained drafts."
   (interactive)
-  (let ((drafts (emacsvox-aural-home--pending-drafts)))
+  (let* ((drafts (emacsvox-aural-home--pending-drafts))
+         (choices (mapcar (lambda (draft)
+                            (cons (if (bufferp draft) (buffer-name draft)
+                                    (format "Voice %s in %s" (or (plist-get draft :voice) "experiment")
+                                            (or (plist-get draft :palette) "no destination"))) draft)) drafts)))
     (unless drafts (user-error "There are no unfinished Aural drafts"))
-    (emacsvox-aural-ui-pop-to-buffer
-     (if (cdr drafts)
-         (get-buffer (completing-read "Resume draft: "
-                                      (mapcar #'buffer-name drafts) nil t))
-       (car drafts)))))
+    (let ((selected (if (cdr choices)
+                        (cdr (assoc (completing-read "Resume draft: " choices nil t) choices))
+                      (cdar choices))))
+      (if (bufferp selected) (emacsvox-aural-ui-pop-to-buffer selected)
+        (emacsvox-aural-voice-editor--show selected (current-buffer))))))
 
 (defun emacsvox-aural-home-browse-voices ()
   "Browse installed engines and try their physical voices."

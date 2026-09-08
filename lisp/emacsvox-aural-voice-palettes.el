@@ -29,6 +29,11 @@
 
 ;;; Code:
 
+(require 'emacsvox-aural-voice-editing)
+(declare-function emacsvox-aural-voice-editor--status-for "emacsvox-aural-voice-editor" (palette voice))
+
+(declare-function emacsvox-aural-voice-editor-open "emacsvox-aural-voice-editor" (palette voice &optional source text))
+
 (require 'cl-lib)
 (require 'subr-x)
 (require 'tabulated-list)
@@ -608,6 +613,8 @@ replaces live state.  Return the value of MUTATION."
 (defun emacsvox-aural-voice-palettes--install-entry-definition
     (id name definition)
   "Install complete voice DEFINITION as NAME in personal palette ID."
+  (when (emacsvox-aural-voice-runtime--owned-p id)
+    (user-error "Use Tune in the common voice editor to preserve palette-owned choices"))
   (let* ((palette (emacsvox-aural-voice-palette id))
          (data (emacsvox-aural-voice-palette-data-form palette))
          (updated
@@ -840,36 +847,32 @@ replaces live state.  Return the value of MUTATION."
      (t "ready"))))
 
 (defun emacsvox-aural-voice-palette-previews--row (entry)
-  "Return one tabulated preview row for effective voice ENTRY."
-  (let* ((name (car entry))
-         (definition (cdr entry))
-         (palette emacsvox-aural-voice-palette-previews-palette)
-         (provider
-          (emacsvox-aural-voice-palettes--entry-provider name palette)))
-    (condition-case error
-        (let ((compiled
-               (emacsvox-aural-compile-voice-style name palette)))
-          (list
-           name
-           (vector
-            (symbol-name name)
-            (if (eq provider palette)
-                "direct"
-              (format "from %s" provider))
-            (emacsvox-aural-voice-palettes--definition-summary definition)
-            (emacsvox-aural-voice-palettes--effective-summary compiled)
-            (emacsvox-aural-voice-palettes--preview-status compiled))))
-      (error
-       (list
-        name
-        (vector
-         (symbol-name name)
-         (if (eq provider palette)
-             "direct"
-           (format "from %s" provider))
-         (emacsvox-aural-voice-palettes--definition-summary definition)
-         "unavailable"
-         (error-message-string error)))))))
+  "Describe saved physical choices, shared adjustments and draft state for ENTRY."
+  (let ((name (car entry)) (palette emacsvox-aural-voice-palette-previews-palette))
+    (condition-case err
+        (let* ((opened (emacsvox-aural-voice-editing--snapshot palette name (emacsvox-aural-voice-runtime--profile)))
+               (snapshot (plist-get opened :snapshot))
+               (chain (plist-get snapshot :selectors)) (first (car chain))
+               (style (emacsvox-aural-voice-editing--style snapshot palette))
+               (changes (cl-loop for dimension in '(rate-offset average-pitch pitch-range stress richness gain low-pass high-pass pan reverb echo chorus)
+                                 for key = (emacsvox-aural--voice-dimension-key dimension)
+                                 when (numberp (plist-get style key))
+                                 collect (format "%s %s" (emacsvox-aural-humanize dimension)
+                                                 (emacsvox-aural-voice-tuner--value-description dimension (plist-get style key))))))
+          (list name
+                (vector (symbol-name name)
+                        (concat (pcase (plist-get first :kind)
+                                  ('exact (plist-get first :voice-id)) ('engine-default "Engine default")
+                                  ('properties "Matching properties") (_ "Automatic"))
+                                (if (cdr chain) (format " (+%d fallback)" (length (cdr chain))) ""))
+                        (or (plist-get first :engine-id) "Automatic")
+                        (if changes (string-join changes "; ") "Adapter defaults")
+                        (or (and (fboundp 'emacsvox-aural-voice-editor--status-for)
+                                 (emacsvox-aural-voice-editor--status-for palette name))
+                            (if (plist-get opened :diagnostics) "Missing local choices"
+                              (if (emacsvox-aural-voice-runtime--owned-p palette)
+                                  "Saved; palette-owned" "Legacy shared routing"))))))
+      (error (list name (vector (symbol-name name) "Unavailable" "" "" (error-message-string err)))))))
 
 (defun emacsvox-aural-voice-palette-previews--set-entries ()
   "Populate the current voice-palette preview buffer."
@@ -944,7 +947,7 @@ replaces live state.  Return the value of MUTATION."
            (user-error "Unknown voice: %s" voice)))
          (summary
           (format
-           "%s. Source %s. Requested %s. Effective %s. Status %s."
+           "%s. Physical choice %s. Engine %s. Adjustments %s. State %s."
            (aref row 0)
            (aref row 1)
            (aref row 2)
@@ -1127,11 +1130,13 @@ in that overlay so subsequent edits do not create more palettes."
   (interactive)
   (let* ((voice
           (emacsvox-aural-voice-palette-previews--current-voice)))
-    (let ((palette-id
+    (if (emacsvox-aural-voice-runtime--owned-p emacsvox-aural-voice-palette-previews-palette)
+        (emacsvox-aural-voice-palette-previews-tune)
+      (let ((palette-id
            (emacsvox-aural-voice-palette-previews--editable-palette)))
       (emacsvox-aural-voice-palettes--edit-entry palette-id voice)
       (emacsvox-aural-voice-palette-previews-refresh voice)
-      voice)))
+        voice))))
 
 (defun emacsvox-aural-voice-tuner--complete-style
     (definition palette)
@@ -2161,16 +2166,13 @@ identity."
       buffer)))
 
 (defun emacsvox-aural-voice-palette-previews-tune ()
-  "Open a transactional tuner for the effective voice at point."
+  "Open the common voice editor without changing the palette or its selection."
   (interactive)
-  (let* ((voice
-          (emacsvox-aural-voice-palette-previews--current-voice))
-         (palette
-          (emacsvox-aural-voice-palette-previews--editable-palette)))
-    (emacsvox-aural-voice-palette-previews-refresh voice)
-    (emacsvox-aural-voice-tuner-open
-     palette voice (current-buffer)
-     emacsvox-aural-voice-palette-previews-text)))
+  (require 'emacsvox-aural-voice-editor)
+  (emacsvox-aural-voice-editor-open
+   emacsvox-aural-voice-palette-previews-palette
+   (emacsvox-aural-voice-palette-previews--current-voice)
+   (current-buffer) emacsvox-aural-voice-palette-previews-text))
 
 (defun emacsvox-aural-voice-palette-previews-new ()
   "Create a new voice in the palette shown by the current preview."
@@ -2228,7 +2230,7 @@ identity."
       "e also tunes; s also stops for compatibility\n"
       "c copy voice         N new voice\n"
       "E replace definition\n"
-      "Editing a built-in creates one active personal overlay\n"
+      "Tune opens a draft; first save creates an independent personal palette\n"
       "x explain voice\n"
       "g refresh            o palette manager\n"
       "h aural home         q quit\n")))
@@ -2249,10 +2251,10 @@ identity."
   (setq
    tabulated-list-format
    [("Voice" 24 t)
-    ("Source" 22 t)
-    ("Requested" 42 t)
-    ("Effective" 48 t)
-    ("Status" 0 t)])
+    ("Physical voice" 28 t)
+    ("Engine" 16 t)
+    ("Adjustments" 48 t)
+    ("State" 0 t)])
   (setq tabulated-list-padding 2)
   (add-hook
    'tabulated-list-revert-hook

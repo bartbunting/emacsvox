@@ -337,6 +337,8 @@
                   "emacsvox-aural-voice-data-tests.el"
                   "emacsvox-aural-voice-runtime-tests.el"
                   "emacsvox-aural-voice-drafts-tests.el"
+                  "emacsvox-aural-voice-editing-tests.el"
+                  "emacsvox-aural-voice-editor-tests.el"
                   "emacsvox-aural-transport-tests.el"
                   "emacsvox-aural-voice-palettes-tests.el"
                   "emacsvox-aural-voice-workbench-tests.el"))
@@ -344,6 +346,8 @@
   (dolist (function '(emacsvox-aural-voice-data--convert
                      emacsvox-aural-voice-runtime--resolve
                      emacsvox-aural-voice-drafts--save
+                     emacsvox-aural-voice-editing--proposal
+                     emacsvox-aural-voice-editor-open
                       emacsvox-aural--validate-voice-style
                       emacsvox-aural--voice-style-field
                       emacsvox-aural-compile-voice-style
@@ -372,6 +376,8 @@
                "^emacsvox-aural-voice-data-"
                "^emacsvox-aural-voice-runtime-"
                "^emacsvox-aural-voice-drafts-"
+               "^emacsvox-aural-voice-editing-"
+               "^emacsvox-aural-voice-editor-"
                (tag voice-style-ui)
                (tag delivery-preparation)
                emacsvox-aural-delivery-keeps-stops-immediate-and-cancellable

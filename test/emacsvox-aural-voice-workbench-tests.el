@@ -1058,7 +1058,7 @@
               (should-not (plist-member effects key)))))))))
 
 (ert-deftest emacsvox-aural-voice-workbench-opens-route-aware-tuner ()
-  "Logical tuning passes the staged selector and realized engine unchanged."
+  "Advanced logical tuning passes the staged selector and realized engine unchanged."
   (emacsvox-test--with-voice-workbench
     (should (emacsvox-aural-ui-goto-row "voice-bolden"))
     (let (arguments)
@@ -1068,7 +1068,7 @@
             (lambda (palette _logical) palette))
            ((symbol-function 'emacsvox-aural-voice-tuner-open)
             (lambda (&rest values) (setq arguments values))))
-        (emacsvox-aural-voice-workbench-tune))
+        (emacsvox-aural-voice-workbench--tune-logical))
       (should (eq (nth 0 arguments) 'acss-default))
       (should (eq (nth 1 arguments) 'bolden))
       (let ((selector (plist-get (nthcdr 4 arguments) :selector))
@@ -1082,7 +1082,7 @@
                 '(:engine-id "eloquence" :voice-id "eci:Reed")))))))
 
 (ert-deftest emacsvox-aural-voice-workbench-tunes-unrouted-voice-on-default ()
-  "An unrouted logical voice auditions without persisting a route."
+  "Advanced tuning of an unrouted logical voice auditions without persisting a route."
   (emacsvox-test--with-voice-workbench
     (should (emacsvox-aural-ui-goto-row "voice-annotate"))
     (setf (plist-get emacsvox-aural-voice-workbench-staged-profile
@@ -1097,7 +1097,7 @@
             (lambda (palette _logical) palette))
            ((symbol-function 'emacsvox-aural-voice-tuner-open)
             (lambda (&rest values) (setq arguments values))))
-        (emacsvox-aural-voice-workbench-tune))
+        (emacsvox-aural-voice-workbench--tune-logical))
       (let ((selector (plist-get (nthcdr 4 arguments) :selector))
             (engine (plist-get (nthcdr 4 arguments) :engine)))
         (should (eq (plist-get selector :kind) 'engine-default))
@@ -1108,7 +1108,7 @@
        (equal emacsvox-aural-voice-workbench-staged-profile before)))))
 
 (ert-deftest emacsvox-aural-voice-workbench-tunes-on-session-preference ()
-  "An unrouted voice honors temporary engine order without staging it."
+  "Advanced tuning of an unrouted voice honors temporary engine order without staging it."
   (emacsvox-test--with-voice-workbench
     (should (emacsvox-aural-ui-goto-row "voice-annotate"))
     (setq emacsvox-aural-session-engine-order '("winrt" "eloquence"))
@@ -1121,7 +1121,7 @@
             (lambda (palette _logical) palette))
            ((symbol-function 'emacsvox-aural-voice-tuner-open)
             (lambda (&rest values) (setq arguments values))))
-        (emacsvox-aural-voice-workbench-tune))
+        (emacsvox-aural-voice-workbench--tune-logical))
       (let ((selector (plist-get (nthcdr 4 arguments) :selector))
             (engine (plist-get (nthcdr 4 arguments) :engine)))
         (should (eq (plist-get selector :kind) 'engine-default))
@@ -1131,7 +1131,7 @@
        (equal emacsvox-aural-voice-workbench-staged-profile before)))))
 
 (ert-deftest emacsvox-aural-voice-workbench-copies-built-in-before-tuning ()
-  "Logical tuning can create and activate an editable palette in place."
+  "Advanced logical tuning can create and activate an editable palette in place."
   (emacsvox-test--with-voice-workbench
     (should (emacsvox-aural-ui-goto-row "voice-bolden"))
     (let (copied selected refreshed arguments)
@@ -1149,7 +1149,7 @@
             (lambda (&optional id) (setq refreshed id)))
            ((symbol-function 'emacsvox-aural-voice-tuner-open)
             (lambda (&rest values) (setq arguments values))))
-        (emacsvox-aural-voice-workbench-tune))
+        (emacsvox-aural-voice-workbench--tune-logical))
       (should (eq copied 'acss-default))
       (should (eq selected 'acss-personal))
       (should (equal refreshed "voice-bolden"))
@@ -1168,7 +1168,7 @@
            ((symbol-function 'emacsvox-aural-voice-tuner-open)
             (lambda (&rest _) (setq opened t))))
         (should-error
-         (emacsvox-aural-voice-workbench-tune)
+         (emacsvox-aural-voice-workbench--tune-logical)
          :type 'user-error))
       (should-not copied)
       (should-not opened))))
