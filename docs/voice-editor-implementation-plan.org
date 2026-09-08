@@ -18,8 +18,8 @@ mixed registration with its version-2 control codec. The maintainer returned
 to High after the completed XHI streaming review. Actual-attempt preparation,
 native Windows default restoration, DSP ownership, playback observations and
 private preview v2, timeline-4 reader/queue execution and marker-3 receipts are
-now tested and committed. Both-lane/reconnect acceptance and client integration
-remain in progress in slice 7c/7d.
+now tested and committed. Both-lane/reconnect acceptance passes and Omnivox
+=31a0b9a= advertises the complete bundle. Client integration remains in slice 7d.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -396,7 +396,7 @@ and preflight bounded flat acknowledgements before publication.
 
 These commits are on branch =voice-choice-tuning= in
 =/tmp/omnivox-voice-choice-tuning=; the original Omnivox checkout remains at its
-release commit. The complete capability bundle is deliberately unadvertised.
+release commit. The complete capability bundle is now advertised after the acceptance recorded below.
 
 **** DONE Review streaming route handoff at XHI
 
@@ -444,7 +444,7 @@ classification, output-failure handling, both lanes and no replay remain the
 accepted boundaries. The new bundle stays unadvertised until end-to-end tests
 cover the full feature.
 
-**** TODO Continue the reviewed implementation at High
+**** DONE Complete the reviewed server implementation at High
 
 The maintainer returned to High. Omnivox =97481e7= retains admitted layered
 records and prepares native settings and identity afresh for each actual route,
@@ -463,12 +463,11 @@ codecs, mixed ordinary playback, marker-3 start/choice pairs and bounded
 reader/queue/multipart admission. Invalid later requests cannot replace valid
 speech, old/new replacement domains stay separate, and queued documents retain
 the admitted registry. All 716 workspace tests, workspace Clippy, formatting and
-documentation checks pass. The bundle is still unadvertised; no live runtime
-has been replaced.
-
-Next: real isolated speaker/notification and reconnect acceptance before
-advertising the bundle. Client negotiation, readback and editor controls remain
-pending after complete server acceptance.
+documentation checks pass. Omnivox =31a0b9a= passes real isolated muted
+speaker/notification and reconnect acceptance, plus legacy remote regressions,
+and advertises the complete bundle. Five remote tests pass; three optional
+live/lease/workstation tests are skipped. No live runtime has been replaced.
+Client negotiation, readback and editor controls remain pending.
 
 Commit and test: (1) attempt preparation, native defaults, sink handoff and DSP
 ownership; (2) ticket/acceptance/first-frame ownership and bounded observations;
@@ -478,6 +477,13 @@ advertising the bundle. Client integration and optional editor controls remain
 7d. These are implementation tasks, not completed playback support.
 
 *** TODO 7d. Client, ordinary consumers and optional editor controls at High
+
+The first client slice adds pure raw-to-wire conversion for complete shared
+values and sparse choice/context patches. Six contracts preserve inheritance,
+zero/default, legacy contextual nil, pitch contrast and gain/pan neutral values,
+and duplicate physical occurrence IDs. Fresh compiled tests and isolated
+compiled parity pass. Conversion alone does not enable registration, layered
+speech or customization controls; those remain next.
 
 Implement lossless context projection, lane negotiation and apply reporting.
 Audit ordinary speech paths before enabling customization, then add per-choice

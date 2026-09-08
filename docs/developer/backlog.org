@@ -51,7 +51,7 @@ handoff. Schema-3 storage, strict patches, identity-preserving pure operations
 and save/copy preservation now pass storage tests. Omnivox commits =ff5cb5f= and
 =0cbfa93= add typed composition and authoritative mixed registration with its
 version-2 codec; all 662 workspace tests and Clippy pass. The capability bundle
-is not advertised. The XHI review of actual-choice handoff, streaming effects,
+was initially withheld. The XHI review of actual-choice handoff, streaming effects,
 early playback-ticket retention and separate accepted/started evidence is
 complete. Implementation resumed at High: =97481e7= adds fresh actual-attempt
 settings and identity, =3771c0e= verifies native defaults with 85 captured
@@ -61,9 +61,11 @@ handoff and accepted/started observations. =a2064cc= and =77a9c81= add strict
 private preview v2, original-row auditions and terminal playback evidence.
 Commits =c76acd3= through =8cab289= add timeline-4 mixed playback, marker-3
 start/choice pairs and validated reader/queue/multipart admission. All 716
-workspace tests and Clippy pass. Both-lane/reconnect acceptance is next in the
-[[file:../voice-editor-implementation-plan.org][implementation plan]], before advertising the bundle. Client integration and
-individual editor controls remain pending in tested, committed slices. Earlier, the maintainer
+workspace tests and Clippy pass. Omnivox =31a0b9a= passes isolated muted
+both-lane/reconnect and legacy remote acceptance and advertises the bundle.
+Client pure wire conversion now passes six contracts and compiled parity;
+registration, layered transport/readback and individual editor controls remain
+pending in the [[file:../voice-editor-implementation-plan.org][implementation plan]]. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.

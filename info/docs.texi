@@ -1,7 +1,7 @@
 @c Auto-generated, do not hand-edit.
 @c Generator Emacs: GNU Emacs 31.0.90
 @c Manifest: lisp/Makefile OBJECTS via documentation-modules.
-@c Modules: 286 loaded; 0 intentionally omitted.
+@c Modules: 287 loaded; 0 intentionally omitted.
 @c Loaded: amixer.elc dectalk-voices.elc dom-addons.elc emacsvox-2048.elc emacsvox-abc-mode.elc
 @c Loaded: emacsvox-ace-window.elc emacsvox-add-log.elc emacsvox-advice.elc emacsvox-agent-shell-render.elc emacsvox-agent-shell.elc
 @c Loaded: emacsvox-amark.elc emacsvox-annotate.elc emacsvox-arc.elc emacsvox-auctex.elc emacsvox-aural-change-feedback.elc
@@ -56,10 +56,10 @@
 @c Loaded: emacsvox-wizards.elc emacsvox-woman.elc emacsvox-xkcd.elc emacsvox-xref.elc emacsvox-xslt.elc
 @c Loaded: emacsvox-yaml.elc emacsvox-yasnippet.elc emacsvox.elc espeak-voices.elc g-utils.elc
 @c Loaded: gm-nnir.elc gmaps.elc gweb.elc ladspa.elc light.elc
-@c Loaded: mac-voices.elc omaps.elc omnivox-remote.elc omnivox-voices.elc outloud-voices.elc
-@c Loaded: pip.elc plain-voices.elc soundscape.elc sox-gen.elc sox.elc
-@c Loaded: swiftmac-voices.elc tetris.elc tts-speak.elc voice-defs.elc voice-setup.elc
-@c Loaded: xbacklight.elc
+@c Loaded: mac-voices.elc omaps.elc omnivox-choice-codec.elc omnivox-remote.elc omnivox-voices.elc
+@c Loaded: outloud-voices.elc pip.elc plain-voices.elc soundscape.elc sox-gen.elc
+@c Loaded: sox.elc swiftmac-voices.elc tetris.elc tts-speak.elc voice-defs.elc
+@c Loaded: voice-setup.elc xbacklight.elc
 @c Omitted: none.
 @node Emacsvox Commands And Options
 
@@ -342,6 +342,7 @@ This chapter documents a total of 1561 commands and 207 options.
 * light:: Control Brightness.
 * mac-voices:: Define  Mac tags.
 * omaps:: Open street  Maps.
+* omnivox-choice-codec:: Individual voice wire values.
 * omnivox-remote:: Workstation speech transport.
 * omnivox-voices:: Omnivox voice adapter.
 * outloud-voices:: Define  OutLoud tags.
@@ -24474,6 +24475,13 @@ Default Value:
 
 Implements geocoding via the Open Street Maps API
 https://nominatim.org/
+
+@node omnivox-choice-codec
+@section omnivox-choice-codec
+
+Pure conversions for the negotiated per-choice voice bundle.  Raw saved
+values retain presence until conversion; contextual nil keeps its existing
+ACSS meaning.  Physical route selection belongs to the server.
 
 @node omnivox-remote
 @section omnivox-remote

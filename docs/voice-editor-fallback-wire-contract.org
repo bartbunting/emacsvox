@@ -12,8 +12,9 @@ ownership are implemented and tested. The native Windows default audit passes.
 Accepted/started observations and private preview v2 are now implemented and
 tested through the server worker and terminal reporter. Timeline-4 reader,
 queue and ordinary playback now produce marker-3 choice receipts in acceptance
-tests. Both-lane/reconnect acceptance and client integration remain pending;
-the capability bundle is unadvertised. Implementation continues
+tests. Isolated two-lane/reconnect acceptance passes and Omnivox =31a0b9a=
+advertises the complete bundle. Client integration remains in progress;
+its first slice supplies pure shared/choice/context wire conversions. Implementation continues
 at High under the reviewed [[file:voice-editor-implementation-plan.org][implementation plan]].
 Omnivox commit =ff5cb5f= mirrors the accepted contract and decision into its
 ADR/protocol documentation; that snapshot retains its original design status.
