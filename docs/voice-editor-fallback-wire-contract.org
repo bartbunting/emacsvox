@@ -9,7 +9,8 @@ overrides. [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]] and the [[f
 This document completes the XHI contract slice. Storage slice 7b, Omnivox typed
 composition, version-2 registration, actual-attempt preparation and DSP
 ownership are implemented and tested. The native Windows default audit passes.
-Playback observations, remaining codecs and client integration are still
+Accepted/started observations and private preview v2 are now implemented and
+tested through the server worker and terminal reporter. Timeline 4, marker 3 and client integration are still
 future behavior; the capability bundle is unadvertised. Implementation continues
 at High under the reviewed [[file:voice-editor-implementation-plan.org][implementation plan]].
 Omnivox commit =ff5cb5f= mirrors the accepted contract and decision into its

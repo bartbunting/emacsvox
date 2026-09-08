@@ -56,8 +56,11 @@ early playback-ticket retention and separate accepted/started evidence is
 complete. Implementation resumed at High: =97481e7= adds fresh actual-attempt
 settings and identity, =3771c0e= verifies native defaults with 85 captured
 syntheses across all 17 Windows voices, and =7e3ecab= adds committed-choice
-DSP ownership and failure cleanup. All 671 workspace tests and Clippy pass.
-Playback ticket/observation ownership is next in the
+DSP ownership and failure cleanup. =a652e6b= and =621da61= add immediate ticket
+handoff and accepted/started observations. =a2064cc= and =77a9c81= add strict
+private preview v2, original-row auditions and terminal playback evidence.
+All 694 workspace tests and Clippy pass.
+Timeline-4 ordinary speech and marker-3 receipts are next in the
 [[file:../voice-editor-implementation-plan.org][implementation plan]]. Complete layered playback admission, remaining codecs,
 client integration and individual editor controls remain pending in tested,
 committed slices. Earlier, the maintainer
