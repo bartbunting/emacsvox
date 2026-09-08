@@ -31,9 +31,11 @@ implemented. Runtime integration and the common UI remain pending.
 The [[file:../voice-editor-implementation-plan.org][implementation plan]] now records the source inventory, ordered slices,
 acceptance checks and reasoning-level stops. Planning, the
 [[file:../voice-editor-data-contract.org][data contract]] and storage/migration are complete. Runtime inspection found that
-the existing preview request accepts only one physical selector. Return to XHI
-for the implementation plan's ordered-preview decision before continuing; full
-unsaved fallback-chain preview needs a new contract or explicit deferral.
+the existing preview request accepts only one physical selector. The maintainer
+selected full-chain preview; [[file:../adr/0016-complete-voice-preview.org][ADR 0016]] and the
+[[file:../voice-editor-preview-contract.org][preview contract]] specify separate negotiated complete-voice previews. Continue at
+High with server/client implementation, then owned runtime routing. Individual
+auditions remain available on older servers; full preview is explicitly unsupported.
 
 Preserve the existing aural CSS cascade: partial styles combine by dimension,
 competing values use rule precedence, and named presets replace the base.

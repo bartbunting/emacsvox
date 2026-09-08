@@ -1,0 +1,73 @@
+#+title: ADR 0016: Complete Voice Preview Through a Private Routing Snapshot
+#+date: 2026-09-08
+#+startup: content
+
+* Status
+
+Accepted direction: the maintainer selected option 1, full-chain preview support,
+after storage slice 2. The [[file:../voice-editor-preview-contract.org][implementation contract]] specifies the additive
+protocol and acceptance cases. Neither the new protocol nor runtime integration
+is implemented yet.
+
+* Context
+
+ADR 0015 makes a named voice own its complete selector chain and shared tuning.
+The editor must preview original and edited voices before saving, including an
+inactive palette or a DECtalk-to-Eloquence fallback chain.
+
+The existing Emacsvox preview request and Omnivox =ControlRequest::Preview= accept
+one selector. The server deliberately builds a private one-choice logical voice
+with no global fallback. That is appropriate for auditioning one physical voice,
+but does not test the same route as a complete saved named voice. Selecting a
+candidate from inventory cannot establish synthesis-time fallback behavior.
+
+* Decision
+
+Add a capability-negotiated complete-voice preview alongside existing individual
+auditions. Submit the ordered chain, shared tuning and a frozen effective
+workstation policy to a private server routing snapshot. Empty choices mean
+Automatic. Preserve ordering and unavailable entries; do not consult old per-voice
+bindings or temporarily publish the draft into the live logical registry.
+
+The private snapshot honors applied server disablement in addition to the captured
+client policy. It uses ordinary runtime health and bounded synthesis fallback,
+with the existing no-replay boundary once audio is committed. Report actual
+realizations, degradations and terminal playback status without treating a valid
+fallback as an exact-audition mismatch.
+
+Keep the old preview operation and its semantics. Older servers can still audition
+individual choices, but must explicitly report full preview unsupported. Do not
+silently reduce a full preview to its first choice, save/apply it first, or replay
+it after a lost connection.
+
+The linked contract defines =voice_chain_preview_v1=, =preview_voice= and
+=preview_voice_completed= within control envelope version 1. It bounds payloads
+and result evidence, preserves request correlation and protects comparisons from
+changing relative-rate bases. The common Emacsvox projection supplies the same
+effective choice/policy data to preview and normal speech.
+
+This decision adds shared-tuning preview parity. It does not settle individual
+fallback adjustments, move engine process boundaries, change helper protocols,
+or alter foreground/notification ownership. Read and follow every sibling Omnivox
+ADR before its implementation; mirror the decision in that repository's maintained
+architecture and protocol records as part of the server slice.
+
+* Alternatives and consequences
+
+| Alternative | Benefit | Reason not selected |
+|-------------+---------+---------------------|
+| Individual auditions only | Smallest client change; old servers suffice. | Cannot test unsaved chain fallback before save/apply. |
+| Temporary logical registrations | Could reuse existing routing messages. | Adds shared registry identities and lifecycle coordination around concurrent speech, cancellation and applies. |
+| Replace the existing exact preview semantics | One operation for all callers. | Would change physical auditions and make old clients misinterpret legitimate fallback. |
+
+The selected private-snapshot approach keeps preview isolated from configuration
+publication and reuses the server's routing/synthesis path. Its cost is coordinated
+client/server delivery and explicit capability handling. Device-free tests establish
+requests and lifecycle behavior; live spoken acceptance remains necessary.
+
+* Delivery boundary
+
+Complete this protocol contract at XHI, then stop for a switch to High before
+implementation. Keep runtime slice 3 pending until server/client preview support
+and owned normal-speech routing pass their acceptance cases. Individual fallback
+tuning retains its later XHI decision boundary in slice 7.

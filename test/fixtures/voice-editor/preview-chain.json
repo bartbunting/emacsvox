@@ -1,0 +1,174 @@
+{
+  "fixture_version": 1,
+  "capability": "voice_chain_preview_v1",
+  "status": "specified-not-implemented",
+  "cases": [
+    {
+      "name": "unavailable-primary",
+      "request": {
+        "protocol_version": 1,
+        "type": "preview_voice",
+        "text": "The quick brown fox jumps over the lazy dog.",
+        "language": "en-AU",
+        "acss": {
+          "average_pitch": 0.0,
+          "richness": 1.0
+        },
+        "rate_offset": 4,
+        "effects": {
+          "gain": 0.5,
+          "pan": 0.5
+        },
+        "fallback_policy": {
+          "preferred_engines": [
+            "dectalk",
+            "eloquence"
+          ],
+          "allow_same_language_on_requested_engine": true,
+          "global_default": null,
+          "fallback_engines": [
+            "espeak"
+          ]
+        },
+        "disabled_engine_ids": [
+          "winrt"
+        ],
+        "request_id": 41,
+        "preferences": [
+          {
+            "kind": "exact",
+            "engine_id": "dectalk",
+            "voice_id": "Paul"
+          },
+          {
+            "kind": "exact",
+            "engine_id": "eloquence",
+            "voice_id": "Reed"
+          }
+        ]
+      },
+      "scenario": {
+        "unavailable_engines": [
+          "dectalk"
+        ],
+        "available_voices": [
+          {
+            "engine_id": "eloquence",
+            "voice_id": "Reed"
+          }
+        ],
+        "server_disabled_engine_ids": [
+          "winrt"
+        ],
+        "base_rate": 0.65,
+        "stub_engines_accept_requested_language_and_tuning": true,
+        "eloquence_default_voice_id": "Reed"
+      },
+      "expected_response": {
+        "protocol_version": 1,
+        "request_id": 41,
+        "type": "preview_voice_completed",
+        "status": "completed",
+        "realized": {
+          "engine_id": "eloquence",
+          "voice_id": "Reed"
+        },
+        "realizations": [
+          {
+            "engine_id": "eloquence",
+            "voice_id": "Reed"
+          }
+        ],
+        "realizations_truncated": false,
+        "degraded_acss": [],
+        "degraded_effects": [],
+        "message": null,
+        "base_rate": 0.65,
+        "effective_disabled_engine_ids": [
+          "winrt"
+        ]
+      }
+    },
+    {
+      "name": "automatic-ignores-legacy-binding",
+      "request": {
+        "protocol_version": 1,
+        "type": "preview_voice",
+        "text": "The quick brown fox jumps over the lazy dog.",
+        "language": "en-AU",
+        "acss": {
+          "average_pitch": 0.0,
+          "richness": 1.0
+        },
+        "rate_offset": 4,
+        "effects": {
+          "gain": 0.5,
+          "pan": 0.5
+        },
+        "fallback_policy": {
+          "preferred_engines": [
+            "dectalk",
+            "eloquence"
+          ],
+          "allow_same_language_on_requested_engine": true,
+          "global_default": null,
+          "fallback_engines": [
+            "espeak"
+          ]
+        },
+        "disabled_engine_ids": [
+          "winrt"
+        ],
+        "request_id": 42,
+        "preferences": [],
+        "expected_base_rate": 0.65
+      },
+      "scenario": {
+        "unavailable_engines": [
+          "dectalk"
+        ],
+        "available_voices": [
+          {
+            "engine_id": "eloquence",
+            "voice_id": "Reed"
+          }
+        ],
+        "legacy_bolden_binding": {
+          "kind": "exact",
+          "engine_id": "winrt",
+          "voice_id": "David"
+        },
+        "server_disabled_engine_ids": [
+          "winrt"
+        ],
+        "base_rate": 0.65,
+        "stub_engines_accept_requested_language_and_tuning": true,
+        "eloquence_default_voice_id": "Reed"
+      },
+      "expected_response": {
+        "protocol_version": 1,
+        "request_id": 42,
+        "type": "preview_voice_completed",
+        "status": "completed",
+        "realized": {
+          "engine_id": "eloquence",
+          "voice_id": "Reed"
+        },
+        "realizations": [
+          {
+            "engine_id": "eloquence",
+            "voice_id": "Reed"
+          }
+        ],
+        "realizations_truncated": false,
+        "degraded_acss": [],
+        "degraded_effects": [],
+        "message": null,
+        "base_rate": 0.65,
+        "effective_disabled_engine_ids": [
+          "winrt"
+        ]
+      }
+    }
+  ]
+}

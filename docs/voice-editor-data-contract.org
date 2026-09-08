@@ -239,8 +239,8 @@ migrator and validators; never generate expected results from the implementation
 | Concurrent edit and old callback | Before-value conflict is reported; a completed older proposal cannot clear newer draft changes. |
 | Old files and older application | Old data loads without conversion/writes; older applications may reject the new envelope explicitly. |
 
-Storage/migration is implemented. Runtime inspection found an earlier XHI
-boundary: the existing one-selector preview protocol cannot carry an unsaved
-fallback chain. The implementation plan records the options for a maintainer
-decision. Also return to XHI before individual fallback adjustments or any
-revision of the accepted migration behavior.
+Storage/migration is implemented. The maintainer selected full-chain preview
+at the earlier XHI boundary. [[file:voice-editor-preview-contract.org][The preview contract]] now specifies that addition;
+it is not yet implemented. Switch to High for server/client preview and ordinary
+runtime/editor slices. Return to XHI before individual fallback adjustments or
+any revision of the accepted ownership/migration behavior.

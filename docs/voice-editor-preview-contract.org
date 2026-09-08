@@ -1,0 +1,217 @@
+#+title: Complete Voice Preview Contract
+#+date: 2026-09-08
+#+startup: content
+
+* Status
+
+Implementation contract for the maintainer's selection of full-chain preview,
+option 1 in the [[file:voice-editor-implementation-plan.org][implementation plan]].
+[[file:adr/0016-complete-voice-preview.org][ADR 0016]] records the decision. This protocol is specified, not implemented.
+Storage slice 2 is complete; runtime and editor delivery remain pending.
+
+The Emacsvox ADRs 0001–0016 and sibling Omnivox ADRs 0001–0009 govern this
+work. Engine helpers, progressive output, foreground/notification lanes,
+remote framing, and no-replay behavior keep their existing boundaries.
+
+* User behavior
+
+Play edited previews the complete draft voice: ordered choices, shared tuning
+and the displayed workstation policy. Compare with original uses the original
+and edited snapshots captured when comparison starts. Neither operation saves
+or selects a palette. Editing a choice must not reduce the chain to whichever
+voice inventory currently predicts will speak.
+
+An individual physical-voice audition remains available in the inventory picker.
+It tests that choice and keeps the existing exact-audition behavior. Its label
+must distinguish it from previewing the complete named voice. Successful fallback
+in a complete-voice preview is a success, even when it realizes a different voice
+from the first choice. Report the actual realization and relevant degradations.
+
+On an older server, keep Save and individual auditions available. Disable the
+complete-voice preview action with: "Full voice preview needs a newer speech
+server. You can still audition individual choices." Do not silently play the
+first choice, temporarily apply the draft, or claim that fallback was tested.
+
+* Additive control protocol
+
+Keep control envelope version 1 and existing =preview= / =preview_completed=
+messages unchanged. Add feature =voice_chain_preview_v1=, request
+=preview_voice= and terminal response =preview_voice_completed=. Negotiate the
+feature on the actual foreground process before dispatch, including after
+reconnection. Advertising =exact_voice_preview= alone is insufficient.
+
+Use the existing Base64-JSON control envelope and request ID correlation. A
+complete-voice request contains these fields:
+
+| Field | Meaning |
+|-------+---------|
+| =text= | Required nonempty bounded sample, using the existing preview text limit. |
+| =preferences= | Required ordered array of existing wire =VoiceSelector= values. Empty means Automatic. Never infer old logical bindings. |
+| =language= | Optional language using existing logical-voice validation. |
+| =acss= | Shared normalized ACSS object, following existing preview conversion. |
+| =rate_offset= | Optional signed relative rate, using existing bounds and mutual exclusion with =acss.rate=. |
+| =effects= | Shared normalized post-synthesis effects object. |
+| =fallback_policy= | Required complete effective =FallbackPolicy=: =preferred_engines=, =allow_same_language_on_requested_engine=, =global_default= and =fallback_engines=. |
+| =disabled_engine_ids= | Required array of engines disabled in the captured workstation policy. |
+| =expected_base_rate= | Optional normalized host rate from the first comparison response. A mismatch fails before synthesis, so a comparison cannot silently use different relative-rate bases. |
+
+The client freezes this data from the same pure voice result and policy
+projection used for save/apply. Exact local selectors become ordinary wire
+identities; local choice-set IDs, palette IDs and persistence scope never need
+to cross the wire. Omitted effects and explicit neutral values retain their
+existing conversion semantics. This is one shared style, without per-choice
+adjustments or a new numeric cascade.
+
+The effective policy is sent explicitly so an unsaved voice does not accidentally
+inherit an unrelated logical registry's bindings or fallback defaults. Do not
+append engine priority to =preferences= as well as sending it in the policy.
+For parity, the common projection must produce the same effective order as
+normal logical registration plus =RoutingPolicyRegistry::effective_fallback_policy=.
+Client session engine order belongs in this captured policy; temporary per-voice
+selectors replace the chain only for a preview explicitly labelled effective
+session sound. Ordinary base preview uses the draft's intended saved chain.
+
+The request cannot re-enable an engine disabled on the target process. Effective
+disablement is the union of the request's list and the process's applied disabled
+list at admission. Freeze that union for the queued request, as ordinary routing
+freezes administrative policy. A policy change requires a fresh preview. Report
+the effective union so a client can explain any difference from its snapshot.
+
+* Validation and resource bounds
+
+Require the new array/policy keys, including explicit empty arrays. Missing is not
+Automatic. Reject mixed =selector= / =preferences= shapes and unknown new-request
+fields. Preserve the older message's accepted shape and behavior.
+
+Reuse existing selector, ID, language, normalized style and fallback validation.
+At most =MAX_VOICE_PREFERENCES= (currently 32) explicit choices may be submitted;
+reject overflow instead of dropping entries. Keep native voice IDs, engine IDs,
+text, control frames, queued payloads and terminal output under their existing
+bounds. Account for the complete private routing snapshot in queue admission.
+Retain the existing runtime synthesis-attempt cap; a stored list is an order of
+eligible candidates, not a promise that every entry will be attempted after
+repeated synthesis failures.
+
+Validate =expected_base_rate= as a finite host rate in its existing range. Compare
+against the reader-thread state captured for this request before queueing. A
+mismatch returns =invalid_configuration= with an actionable comparison-changed
+message. The client offers restarting comparison; it does not retry speech
+without another user action. Both comparison halves carry identical routing
+policy snapshots; a different returned disablement set also invalidates the
+comparison summary. Inventory and runtime health remain live evidence and may
+legitimately cause different realizations.
+
+* Server execution and results
+
+Build one private logical definition from =preferences=, =language=, shared ACSS
+and effects. It has an internal preview identity, not a user-chosen persistent ID.
+Validate and resolve it using the supplied effective fallback policy and effective
+disablement. Adapt the existing private routing-snapshot path to retain that
+policy; the old =capture_preview= deliberately suppresses global fallback and
+must continue doing so for individual auditions.
+
+Use the existing synthesis worker, runtime-health admission and routed preview
+pipeline. Refresh inventory/health at the existing worker boundary. No live
+logical registry, active engine preference or persistent TTS configuration is
+replaced. Engine warming and health accounting still occur as part of synthesis.
+There is no temporary registration/restore sequence on either speech lane.
+
+Apply shared tuning to whichever voice actually resolves. Reuse the ordinary
+synthesis fallback commitment boundary: an eligible failure before PCM is
+committed may try another route; failure after commitment cannot replay or splice
+the failed audio through another engine. Output-device failures must not become
+cross-engine retries. Keep bounded progressive channels and helper retirement.
+
+Return one terminal =preview_voice_completed= response with:
+
+- =status=: existing =completed=, =cancelled= or =failed= values;
+- =realized=: the last physical realization, or null when none occurred;
+- =realizations=: ordered distinct physical identities that actually produced
+  accepted audio, bounded to 32 entries, with =realizations_truncated= explicitly
+  true if the count or encoded-output bound prevents reporting them all;
+- existing =degraded_acss=, =degraded_effects= and =message= fields;
+- =base_rate=: the host rate captured at admission before applying the offset;
+- =effective_disabled_engine_ids=: the frozen union used for this request.
+
+Do not echo the full chain in the response; the correlated client snapshot already
+owns it. This leaves room for bounded realization metadata. Unplayed resolution
+candidates must not enter =realizations=. A failure may still report the last
+resolved target in =realized=; the status and accepted-audio list prevent that
+from being presented as successful playback. Aggregate degradation metadata over
+attempts that produced accepted audio; failed attempts may be explained in the
+bounded diagnostic message instead.
+
+Playback completion retains its current meaning: consumed server audio, not
+proof of physical acoustic output. A long sample may use different voices across
+normal chunk boundaries; do not label the last identity as proof of one voice
+throughout. Successful full-chain fallback must bypass the old single-selector
+mismatch check in =omnivox--normalize-preview-response=.
+
+Malformed input uses the existing control error response. Queue rejection,
+retirement, cancellation and output-size failure must each produce the existing
+bounded terminal/error behavior without an additional synthesis attempt. Never
+truncate choices to make the request valid or lose request-ID correlation when
+formatting an error.
+
+* Client lifecycle and adapter boundary
+
+Extend the generic preview entry with an explicit complete-voice shape using
+=:selectors=, =:fallback-policy= and =:disabled-engine-ids=. Require exactly one
+of the old =:selector= or new =:selectors= keys; explicit nil selectors are valid.
+Keep existing public command signatures and single-audition callers compatible.
+Preflight a whole comparison before playing either half. Expose chain support
+separately from exact-audition support in generic adapter capabilities.
+
+A standalone adapter may project a complete chain onto its one engine only when
+it implements and advertises that behavior, including disabled-engine policy
+and honest unavailable/degraded results. It cannot claim cross-engine runtime
+fallback. Until that projection is tested, report complete preview unsupported;
+individual auditions remain available.
+
+Freeze original/edited entries, policy, sample and draft revision for a comparison.
+Preview uses the foreground process and its cancellation domain; notifications
+retain their own queue. Existing save/apply still acknowledges both lanes.
+
+Track process identity, request ID and editor operation/revision. Cancellation,
+timeout, process death or buffer destruction completes the client operation once.
+Discard stale callbacks without changing a newer draft or its saved/apply state.
+Do not reconnect and replay a preview after transport failure. Capability checks
+restart on each connection; an acknowledgement on one lane says nothing about
+another lane or a replacement process.
+
+* Implementation order and acceptance
+
+After this XHI contract slice, switch to High before coding:
+
+1. In Omnivox, record the accepted boundary in its ADR/protocol documentation,
+   add negotiated request/response types, validation and bounded private-snapshot
+   execution. Keep old preview tests unchanged and passing.
+2. Test resolution parity with the normal routing snapshot and stub engines;
+   capture actual synthesis requests, accepted PCM, failures and terminal records.
+3. Add the Emacsvox generic complete-preview shape, capability checks and adapter
+   encoding/normalization. Test through the final request and callback boundaries.
+4. Resume owned-voice runtime slice 3, then draft coordination and editor slices.
+
+[[file:../test/fixtures/voice-editor/preview-chain.json][Independent wire examples]] state an ordered local chain and Automatic, with
+expected shared tuning and realization examples. They are future-format data,
+not evidence of a working server. Implementation tests must additionally cover:
+
+| Case | Required evidence |
+|------+-------------------|
+| DECtalk unavailable; Eloquence available | Full ordered request survives; shared tuning reaches Eloquence; successful fallback is accepted. |
+| Primary synthesis failure before PCM | Existing health/fallback policy selects the next eligible choice without emitting failed-attempt audio. |
+| Failure after PCM commitment | Failure is terminal at the existing commitment boundary; no replay via fallback. |
+| All explicit choices unavailable | Supplied workstation fallback policy governs the result. Empty choices use Automatic and never an old bolden binding. |
+| Disablement differs on the server | Effective union excludes disabled engines and is reported; no draft enables them. |
+| Changed global relative-rate base | Comparison refuses a mismatched second half before synthesis. |
+| Bounds and malformed data | 33 choices, oversized IDs/text, missing arrays, invalid selectors and mixed request forms fail without mutation. |
+| State and policy isolation | Registry, applied policy and TTS state remain equal before/after success, failure and cancellation; concurrent ordinary speech retains its own snapshot. |
+| Older server or mixed capabilities | No new request is sent without the feature; individual audition remains separate and honest. |
+| Multiple realized voices | Report accepted-audio identities with bounded/truthful truncation; never substitute inventory predictions. |
+| Stop, timeout, disconnect and late reply | One terminal client result; newer draft and notification lane remain intact; no replay after reconnect. |
+
+Use the sibling's pinned Rust toolchain, formatting preflight and locked checks.
+Preserve unrelated =docs/plans/NEXT_STEPS.md= changes. Protocol changes require the
+full Emacsvox development staging path if Windows runtime staging is later
+requested; do not use the main-only reuse path. This contract does not authorize
+publication, release tags, or changing the user's running speech configuration.

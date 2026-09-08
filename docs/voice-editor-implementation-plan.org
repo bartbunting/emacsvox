@@ -4,14 +4,15 @@
 
 * Status and working agreement
 
-Planning, data-contract and storage slices are complete. Runtime integration
-is paused for the draft-preview decision below.
+Planning, data-contract and storage slices are complete. The maintainer selected
+full-chain preview, and its XHI protocol contract is complete. Runtime integration
+and the new preview protocol are not implemented yet.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
 [[file:voice-editor-data-contract.org][data and resolution contract]] defines the new formats and acceptance cases.
-No live personal configuration has changed. Return to XHI to decide how
-unsaved fallback chains are previewed before continuing runtime integration.
+No live personal configuration has changed. Switch to High before implementing
+the accepted [[file:voice-editor-preview-contract.org][complete-voice preview contract]] and resuming runtime integration.
 
 The maintainer requested work in tested, committed slices, stopping when a
 decision or a reasoning-level change is needed. Start at XHI for ownership,
@@ -127,7 +128,7 @@ snapshots, nonactivating atomic writers, independent conversion and owned-copy
 proposals, and portable export with omission reporting. Existing palette
 constructors remain legacy. Conversion does not register or activate its result.
 
-* Earlier decision boundary: previewing an unsaved fallback chain
+* Selected preview: complete voice through a private routing snapshot
 
 Runtime inspection after storage commit =052dade27= found an unplanned protocol
 boundary. =omnivox--preview-one= sends one =:selector=; the sibling Omnivox
@@ -137,28 +138,49 @@ Normal logical-voice registration accepts an ordered preference list. The
 current preview therefore cannot submit an unsaved DECtalk-then-Eloquence chain
 unchanged. Choosing one candidate from inventory would not test runtime fallback.
 
-Stop and return to XHI for this decision. The repository workflow requires asking
-before a public API change; this would change the preview protocol earlier than
-the originally planned per-choice tuning boundary. Shared adjustments are still
-the current scope; individual fallback tuning remains slice 7.
+The maintainer selected option 1 (A below). [[file:adr/0016-complete-voice-preview.org][ADR 0016]] and the
+[[file:voice-editor-preview-contract.org][preview contract]] now define the additive capability, request, response, policy
+isolation, compatibility behavior and acceptance cases. Shared adjustments remain
+the current scope; individual fallback tuning is still slice 7.
 
 | Choice | Benefit | Cost or limitation |
 |--------+---------+--------------------|
-| A. Add ordered-choice preview support (recommended) | Unsaved and inactive voices can exercise their whole chain through a private server routing snapshot, with shared tuning and actual realization feedback. | Requires coordinated Emacsvox/Omnivox protocol work, capability negotiation and an explicit older-server behavior. Check workstation fallback-policy parity as part of the contract. |
+| A. Add ordered-choice preview support (selected) | Unsaved and inactive voices can exercise their whole chain through a private server routing snapshot, with shared tuning and actual realization feedback. | Requires coordinated Emacsvox/Omnivox protocol work, capability negotiation and an explicit older-server behavior. Check workstation fallback-policy parity as part of the contract. |
 | B. Keep individual-choice auditions initially | Retains the current preview API and lets the base editor proceed sooner. | Clearly label each audition as one choice. Unsaved chain fallback is unverified until save/apply and normal speech; this defers the original full-preview acceptance case. |
 | C. Register temporary logical voices for previews | Could use existing logical routing to exercise full chains without a new preview request format. | Adds temporary registry identities and lifecycle coordination, including both lanes, cancellation and concurrent applies; more state than a private preview request. Feasibility needs review. |
 
-Recommendation: A. The server already routes previews through a private snapshot;
-extending that boundary keeps original/edited comparison meaningful without
-publishing a draft as active configuration. Decide the exact request and response
-contract at XHI, after reading all sibling ADRs. Do not silently degrade a chain
-preview to its first choice on an older server.
+The selected design preserves individual auditions and adds a separate complete
+voice preview. Full previews send a frozen choice/policy snapshot, retain applied
+server disablement, and report accepted-audio realizations. Older servers report
+full preview unsupported; no first-choice substitution or temporary application.
+The XHI contract is complete. Stop for a switch to High before coding.
 
 The initial runtime wiring was preserved as a local scratch patch, then removed
 from the source tree so this checkpoint contains only tested storage code.
 Slice 3 is not delivered. No Omnivox source or live personal settings changed.
 
 * Remaining implementation slices
+
+** DONE 2a. Specify complete-voice preview after the maintainer decision
+
+Read Emacsvox ADRs 0001–0015 and Omnivox ADRs 0001–0009. Trace the existing
+one-selector request, private snapshot, administrative disablement, runtime
+fallback and terminal response paths. Record ADR 0016, the concrete protocol
+contract and independent JSON examples. No runtime source changes in this slice.
+
+** TODO 2b. Implement negotiated complete-voice preview
+
+Follow the preview contract in server-first and then client slices, testing and
+committing each. Record the accepted boundary in the sibling ADR/protocol docs;
+preserve its unrelated =docs/plans/NEXT_STEPS.md= changes. Use its pinned Rust
+toolchain and locked checks. Add private full-policy snapshots, capability-gated
+control messages, bounded result evidence and client callback handling. Preserve
+old exact-audition tests. Stop again only for a new decision or reasoning boundary.
+
+Run stub-engine and null-output tests for ordered choices, Automatic, unavailable
+and disabled engines, pre/post-PCM failures, queue bounds, cancellation, policy
+isolation, older servers and stale callbacks. Add fresh compiled Emacs checks.
+Do not stage or restart the user's runtime as an implicit part of implementation.
 
 ** TODO 3. Resolve owned choices through normal speech and preview
 
@@ -260,6 +282,13 @@ aural parity passed with the new conversion tests included. A full byte-code
 rebuild followed by an incremental refresh of edits made during the build passed
 preflight; all ten new contracts also passed in a fresh Emacs using that byte-code.
 Header, Org preview/update and generated reference checks passed.
+
+For preview-contract slice 2a, both JSON examples parse and their converted
+selector/policy data pass the existing routing validators. This checks fixture
+consistency only; the future control messages and fallback outcomes are not yet
+implemented. Emacs/byte-code preflight, local links, Org preview/update,
+documentation release validation and whitespace checks passed. No maintained
+Lisp or Rust source changed, and no live configuration was applied.
 
 For later Lisp slices, run focused ERT and =make bytecode=, or
 =make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh
