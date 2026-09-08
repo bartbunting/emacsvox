@@ -67,7 +67,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1559 commands and 207 options.
+This chapter documents a total of 1561 commands and 207 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -5220,6 +5220,15 @@ explicit; individual fallback adjustments are intentionally not advertised.
 
 @subsection Emacsvox-Aural-Voice-Editor Commands
 
+@subsubsection emacsvox-aural-voice-editor-activate
+@deffn {Command} emacsvox-aural-voice-editor-activate
+@findex emacsvox-aural-voice-editor-activate
+
+@format
+Activate the current field, leaving its spoken result as the final feedback.
+@end format
+@end deffn
+
 @subsubsection emacsvox-aural-voice-editor-automatic
 @deffn {Command} emacsvox-aural-voice-editor-automatic
 @findex emacsvox-aural-voice-editor-automatic
@@ -5243,7 +5252,16 @@ Compare captured original and edited base voices.
 @findex emacsvox-aural-voice-editor-decrease
 
 @format
-Decrease the current displayed adjustment.
+Decrease a numeric adjustment, or move to the previous field.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-voice-editor-default
+@deffn {Command} emacsvox-aural-voice-editor-default
+@findex emacsvox-aural-voice-editor-default
+
+@format
+Restore the current adjustment to the adapter default and audition it.
 @end format
 @end deffn
 
@@ -5272,7 +5290,7 @@ Edit DIMENSION or the current numeric field; blank means adapter default.
 @findex emacsvox-aural-voice-editor-increase
 
 @format
-Increase the current displayed adjustment.
+Increase a numeric adjustment, or move to the next field.
 @end format
 @end deffn
 
@@ -5319,6 +5337,7 @@ B		emacsvox-aural-voice-editor-compare
 P		emacsvox-aural-voice-editor-play
 S		emacsvox-aural-voice-editor-stop
 T		emacsvox-aural-voice-editor-text
+d		emacsvox-aural-voice-editor-default
 g		revert-buffer
 h		emacsvox-aural-home
 n		emacsvox-aural-voice-editor-next
@@ -5338,6 +5357,7 @@ C-c C-c		emacsvox-aural-voice-editor-save
 
 <remap> <backward-button>	emacsvox-aural-voice-editor-previous
 <remap> <forward-button>	emacsvox-aural-voice-editor-next
+<remap> <push-button>		emacsvox-aural-voice-editor-activate
 
 C-c C-a		emacsvox-aural-ui-actions
 C-c TAB		emacsvox-aural-ui-open-manual

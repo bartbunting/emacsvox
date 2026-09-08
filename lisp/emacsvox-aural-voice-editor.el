@@ -91,8 +91,20 @@
   "Insert a spoken field ID labelled TEXT invoking COMMAND, with DIMENSION."
   (insert "  ")
   (insert-text-button text 'follow-link t 'voice-field id 'voice-dimension dimension
-                      'action (lambda (_) (funcall command)))
+                      'action (lambda (button)
+                                (goto-char (button-start button))
+                                (funcall command)))
   (insert "\n"))
+
+(defun emacsvox-aural-voice-editor--toggle (key field)
+  "Toggle context KEY and announce FIELD's new state."
+  (emacsvox-aural-voice-editor-stop)
+  (let ((enabled (not (emacsvox-aural-voice-editor--get key))))
+    (emacsvox-aural-voice-editor--put key enabled)
+    (emacsvox-aural-voice-editor-refresh)
+    (emacsvox-aural-voice-editor--locate field)
+    (emacsvox-icon (if enabled 'on 'off))
+    (emacsvox-aural-voice-editor-speak)))
 
 (defun emacsvox-aural-voice-editor--locate (field)
   "Move to the button identified by FIELD, or the first available button."
@@ -182,9 +194,8 @@
     (when voice
       (emacsvox-aural-voice-editor--button 'fallbacks
                                            (format "Fallbacks: %s — %s" (if (cdr chain) (format "%d explicit" (length (cdr chain))) "Automatic")
-                                                   (if (emacsvox-aural-voice-editor--get :expanded) "collapse" "expand"))
-                                           (lambda () (emacsvox-aural-voice-editor--put :expanded (not (emacsvox-aural-voice-editor--get :expanded)))
-                                             (emacsvox-aural-voice-editor-refresh)))
+                                                   (if (emacsvox-aural-voice-editor--get :expanded) "expanded" "collapsed"))
+                                           (lambda () (emacsvox-aural-voice-editor--toggle :expanded 'fallbacks)))
       (when (emacsvox-aural-voice-editor--get :expanded)
         (cl-loop for choice in chain for index from 0 do
                  (let ((selected index))
@@ -199,6 +210,8 @@
                         (plist-get (plist-get (emacsvox-aural-voice-editor--get :policy) :fallback) :engines))))
       )
     (insert "\nShared adjustments\n")
+    (insert "Left/right adjusts numeric fields; otherwise moves between fields.\n"
+            "RET edits a value; d restores adapter default. Zero is an explicit value.\n")
     (dolist (dimension (append '(rate-offset average-pitch pitch-range stress richness)
                                (when (emacsvox-aural-voice-editor--get :effects)
                                  '(family gain low-pass high-pass pan reverb echo chorus))))
@@ -206,9 +219,10 @@
         (emacsvox-aural-voice-editor--button dimension
                                              (emacsvox-aural-voice-editor--adjustment-text dimension style chain)
                                              (lambda () (emacsvox-aural-voice-editor-edit field)) dimension)))
-    (emacsvox-aural-voice-editor--button 'more "More adjustments and effects…"
-                                         (lambda () (emacsvox-aural-voice-editor--put :effects (not (emacsvox-aural-voice-editor--get :effects)))
-                                           (emacsvox-aural-voice-editor-refresh)))
+    (emacsvox-aural-voice-editor--button 'more
+                                         (format "More adjustments and effects: %s"
+                                                 (if (emacsvox-aural-voice-editor--get :effects) "expanded" "collapsed"))
+                                         (lambda () (emacsvox-aural-voice-editor--toggle :effects 'more)))
     (insert "\nListen — base voice, without contextual rules\n")
     (emacsvox-aural-voice-editor--button 'play "Play edited" #'emacsvox-aural-voice-editor-play)
     (emacsvox-aural-voice-editor--button 'compare "Compare original and edited" #'emacsvox-aural-voice-editor-compare)
@@ -217,9 +231,7 @@
                                          #'emacsvox-aural-voice-editor-text)
     (emacsvox-aural-voice-editor--button 'auto-sample
                                          (format "Automatic sample after adjustment: %s" (if (emacsvox-aural-voice-editor--get :automatic-sample) "on" "off"))
-                                         (lambda () (emacsvox-aural-voice-editor--put :automatic-sample (not (emacsvox-aural-voice-editor--get :automatic-sample)))
-                                           (emacsvox-aural-voice-editor-refresh)
-                                           (emacsvox-aural-voice-editor-speak)))
+                                         (lambda () (emacsvox-aural-voice-editor--toggle :automatic-sample 'auto-sample)))
     (when (emacsvox-aural-voice-editor--get :preview-result)
       (emacsvox-aural-voice-editor--button 'preview-status
                                            (emacsvox-aural-voice-editor--preview-status (emacsvox-aural-voice-editor--get :preview-result))
@@ -315,6 +327,24 @@
                     (unless (string-match-p "\\`[+-]?[0-9]+\\'" input) (user-error "Enter a whole number"))
                     (string-to-number input)))))
     (emacsvox-aural-voice-editor--set dimension value)))
+
+(defun emacsvox-aural-voice-editor-default ()
+  "Restore the current adjustment to the adapter default and audition it."
+  (interactive)
+  (emacsvox-aural-voice-editor--set
+   (or (get-text-property (point) 'voice-dimension)
+       (user-error "Choose an adjustment to restore its adapter default"))
+   nil))
+
+(defun emacsvox-aural-voice-editor-activate ()
+  "Activate the current field, leaving its spoken result as the final feedback."
+  (interactive)
+  (let ((button (or (button-at (point)) (user-error "Choose an editor field"))))
+    ;; Generic push-button advice cues after the action. Keep this editor's
+    ;; feedback ordered, with state-specific cues owned by the toggle action.
+    (unless (memq (button-get button 'voice-field) '(more fallbacks auto-sample))
+      (emacsvox-icon 'button))
+    (button-activate button)))
 (defun emacsvox-aural-voice-editor-adjust (delta)
   "Adjust the current field by DELTA in displayed units."
   (let* ((dimension (or (get-text-property (point) 'voice-dimension) (user-error "Choose a numeric adjustment")))
@@ -333,8 +363,18 @@
             (emacsvox-aural-ui-speak
              (format "%s %s" (if (> delta 0) "Maximum" "Minimum") next)))
         (emacsvox-aural-voice-editor--set dimension next)))))
-(defun emacsvox-aural-voice-editor-increase () "Increase the current displayed adjustment." (interactive) (emacsvox-aural-voice-editor-adjust 1))
-(defun emacsvox-aural-voice-editor-decrease () "Decrease the current displayed adjustment." (interactive) (emacsvox-aural-voice-editor-adjust -1))
+(defun emacsvox-aural-voice-editor-increase ()
+  "Increase a numeric adjustment, or move to the next field."
+  (interactive)
+  (if (memq (get-text-property (point) 'voice-dimension) '(nil family))
+      (emacsvox-aural-voice-editor-next)
+    (emacsvox-aural-voice-editor-adjust 1)))
+(defun emacsvox-aural-voice-editor-decrease ()
+  "Decrease a numeric adjustment, or move to the previous field."
+  (interactive)
+  (if (memq (get-text-property (point) 'voice-dimension) '(nil family))
+      (emacsvox-aural-voice-editor-previous)
+    (emacsvox-aural-voice-editor-adjust -1)))
 
 (defun emacsvox-aural-voice-editor--pick ()
   "Search the inventory and audition candidates before choosing a selector."
@@ -553,12 +593,14 @@
     (let ((origin (emacsvox-aural-voice-editor--get :origin))
           (row (emacsvox-aural-voice-editor--get :origin-row))
           (column (emacsvox-aural-voice-editor--get :origin-column)))
+      ;; Selecting the origin alone leaves this editor in the window history,
+      ;; so quitting the workbench can immediately reveal it again.
+      (quit-window)
       (if (and (markerp origin) (marker-buffer origin))
           (progn (pop-to-buffer (marker-buffer origin))
                  (if (and row (derived-mode-p 'tabulated-list-mode))
                      (progn (emacsvox-aural-ui-goto-row row) (move-to-column (or column 0)))
-                   (goto-char origin)))
-        (quit-window)))))
+                   (goto-char origin)))))))
 
 (defvar emacsvox-aural-voice-editor-mode-map
   (let ((map (make-sparse-keymap)))
@@ -568,10 +610,12 @@
     ;; Button-local Tab bindings otherwise take precedence over this map.
     (define-key map [remap forward-button] #'emacsvox-aural-voice-editor-next)
     (define-key map [remap backward-button] #'emacsvox-aural-voice-editor-previous)
+    (define-key map [remap push-button] #'emacsvox-aural-voice-editor-activate)
     (dolist (pair '(("SPC" . emacsvox-aural-voice-editor-speak) ("<right>" . emacsvox-aural-voice-editor-increase)
                     ("<left>" . emacsvox-aural-voice-editor-decrease) ("P" . emacsvox-aural-voice-editor-play)
                     ("B" . emacsvox-aural-voice-editor-compare) ("S" . emacsvox-aural-voice-editor-stop)
                     ("T" . emacsvox-aural-voice-editor-text) ("u" . emacsvox-aural-voice-editor-undo)
+                    ("d" . emacsvox-aural-voice-editor-default)
                     ("w" . emacsvox-aural-voice-editor-save) ("C-c C-c" . emacsvox-aural-voice-editor-save)
                     ("h" . emacsvox-aural-home)
                     ("q" . emacsvox-aural-voice-editor-leave) ("?" . describe-mode)))

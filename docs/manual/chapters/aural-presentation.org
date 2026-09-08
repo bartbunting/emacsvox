@@ -620,9 +620,14 @@ voice, adapter-default speech characteristics, the current base speech rate,
 and neutral audio effects. Opening, adjusting and comparing write no settings.
 
 The editor uses the ordinary navigation voice for its labelled fields.
-@@texinfo:@kbd{n/p}@@, up/down or Tab moves between fields; left/right adjusts
-a numeric field; @@texinfo:@key{RET}@@ enters a value. Blank entry explicitly
-requests the adapter default. /More adjustments and effects/ exposes filters,
+@@texinfo:@kbd{n/p}@@, up/down or Tab moves between fields. Left/right adjusts
+a numeric field and moves between fields elsewhere; @@texinfo:@key{RET}@@
+activates a button or enters an adjustment value. Press @@texinfo:@kbd{d}@@
+on an adjustment to restore the adapter default; blank numeric entry does the
+same. Zero is an explicit value, such as the lowest pitch or leftmost pan,
+whereas adapter default leaves that setting to the speech adapter. They may
+sound the same for some effects, but they are different settings.
+/More adjustments and effects/ exposes filters,
 gain, pan and other optional controls. Changed values say what they were before
 editing; unsupported settings remain visible and are retained.
 Field navigation stops at the first and last field without wrapping. Numeric
@@ -633,8 +638,13 @@ captured original with the edited version using the same text, with spoken
 labels. @@texinfo:@kbd{T}@@ changes that text; @@texinfo:@kbd{S}@@ stops.
 An automatic sample follows each adjustment unless you turn that field off.
 The new value precedes the sample text, for example ``1. The quick brown fox…''.
-Toggling /Automatic sample after adjustment/ announces on or off.
-Navigation stops an outstanding sample. @@texinfo:@kbd{u}@@ undoes an edit.
+Toggling /Automatic sample after adjustment/ announces on or off with distinct
+cues. /More adjustments and effects/ and /Fallbacks/ announce expanded or
+collapsed, both when toggled and when reached during field navigation.
+Navigation stops an outstanding sample. @@texinfo:@kbd{u}@@ undoes an edit,
+including a reset to adapter default. @@texinfo:@kbd{q}@@ dismisses the editor
+and returns to its originating view, offering to retain or discard unsaved
+changes. Quitting the workbench afterwards does not reopen the experiment.
 
 Choose the /Physical voice/ field to search by engine or voice name. You can
 audition a candidate with the working adjustments before accepting it. Cancel
