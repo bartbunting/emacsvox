@@ -59,16 +59,7 @@ Temporary choices are deliberately excluded from the editable saved base."
 
 (defun emacsvox-aural-voice-editing--definition-style (definition &optional seen)
   "Read raw DEFINITION as a style without compiling or registering a voice."
-  (cond ((null definition) (emacsvox-aural--empty-voice-style))
-        ((emacsvox-aural-voice-style-p definition) (copy-tree definition))
-        ((emacsvox-aural--acss-p definition) (emacsvox-aural--acss-to-voice-style definition))
-        ((and (symbolp definition) (not (memq definition seen)))
-         (or (emacsvox-aural--personality-style definition)
-             (and (boundp definition)
-                  (emacsvox-aural-voice-editing--definition-style
-                   (symbol-value definition) (cons definition seen)))
-             (user-error "No inspectable settings for personality %s" definition)))
-        (t (user-error "Cannot inspect this personality definition"))))
+  (emacsvox-aural-voice-runtime--definition-style definition seen))
 
 (defun emacsvox-aural-voice-editing--style (snapshot _palette)
   "Return SNAPSHOT's base style without compilation or contextual flattening."

@@ -340,6 +340,7 @@
                   "emacsvox-aural-voice-editing-tests.el"
                   "emacsvox-aural-voice-choice-tests.el"
                   "omnivox-choice-codec-tests.el"
+                  "omnivox-choice-registration-tests.el"
                   "emacsvox-aural-voice-editor-tests.el"
                   "emacsvox-aural-voice-context-tests.el"
                   "emacsvox-aural-transport-tests.el"
@@ -357,6 +358,7 @@
                       emacsvox-aural--validate-voice-style
                       emacsvox-aural--voice-style-field
                       emacsvox-aural-compile-voice-style
+                      omnivox--accept-registration-response
                       omnivox--choice-patch-json
                       omnivox--portable-style-acss
                       emacsvox-aural--timeline-style-acss
@@ -386,6 +388,7 @@
                "^emacsvox-aural-voice-editing-"
                "^emacsvox-aural-voice-choice-"
                "^omnivox-choice-codec-"
+               "^omnivox-choice-registration-"
                "^emacsvox-aural-voice-editor-"
                "^emacsvox-aural-voice-context-"
                (tag voice-style-ui)

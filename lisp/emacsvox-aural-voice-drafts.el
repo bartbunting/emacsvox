@@ -341,7 +341,9 @@ Errors remain attached to the proposal.  Repeating an in-flight save is a no-op.
                  (list (and dirty "Unsaved changes")
                        (pcase state
                          ('saving "Saving") ('applying "Saved; applying")
-                         ('applied "Saved and applied") ('saved "Saved to collection")
+                         ('applied (if (plist-get result :choice-tuning-unapplied)
+                                       "Saved; individual tuning not applied" "Saved and applied"))
+                         ('saved "Saved to collection")
                          ('apply-failed (if timeout "Saved; apply unconfirmed" "Saved; apply failed"))
                          ('partial "Partly saved; retry required")
                          ('failed "Save failed") ('superseded "Saved; a newer configuration is active")

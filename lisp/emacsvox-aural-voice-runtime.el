@@ -122,6 +122,30 @@ PALETTE and PROFILE optionally select inactive data for inspection."
                 (list :status 'failed :palette palette
                       :message (error-message-string error-data)))))))))))
 
+(defun emacsvox-aural-voice-runtime--definition-style (definition &optional seen)
+  "Read raw DEFINITION without compiling, routing or registering a voice.
+SEEN prevents personality-variable cycles; opaque personalities are rejected."
+  (cond
+   ((null definition)
+    (cl-loop for dimension in emacsvox-aural-voice-dimensions
+             append (list (emacsvox-aural--voice-dimension-key dimension) nil)))
+   ((emacsvox-aural-voice-style-p definition) (copy-tree definition))
+   ((emacsvox-aural--acss-p definition)
+    (emacsvox-aural--acss-to-voice-style definition))
+   ((and (symbolp definition) (not (memq definition seen)))
+    (let ((settings (intern-soft (format "%s-settings" definition))))
+      (cond
+       ((and settings (boundp settings) (proper-list-p (symbol-value settings)))
+        (cl-loop for dimension in emacsvox-aural-voice-dimensions
+                 for index from 0
+                 append (list (emacsvox-aural--voice-dimension-key dimension)
+                              (nth index (symbol-value settings)))))
+       ((boundp definition)
+        (emacsvox-aural-voice-runtime--definition-style
+         (symbol-value definition) (cons definition seen)))
+       (t (user-error "No inspectable settings for personality %s" definition)))))
+   (t (user-error "Cannot inspect this personality definition"))))
+
 (defun emacsvox-aural-voice-runtime--preview-policy (resolved)
   "Return the complete generic preview policy for RESOLVED workstation state."
   (let* ((policy (plist-get resolved :policy))

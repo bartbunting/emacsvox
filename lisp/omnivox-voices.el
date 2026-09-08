@@ -36,6 +36,7 @@
 (require 'json)
 (require 'subr-x)
 (require 'emacsvox-aural-voice-runtime)
+(require 'omnivox-choice-codec)
 
 (declare-function emacsvox-aural-enable-framed-delivery
                   "emacsvox-aural-transport" (process))
@@ -1296,7 +1297,7 @@ RUNTIME-ROUTING-POLICY keeps global order out of logical definitions."
 (defun omnivox--update-logical-registry-generation (signature)
   "Advance the logical registry generation when SIGNATURE changed."
   (unless (equal signature omnivox--logical-registry-signature)
-    (setq omnivox--logical-registry-signature (copy-tree signature))
+    (setq omnivox--logical-registry-signature (copy-tree signature t))
     (cl-incf omnivox--logical-registry-generation)))
 
 (defun omnivox--logical-registry-snapshot (&optional preferred-engine-id)
@@ -1315,6 +1316,98 @@ RUNTIME-ROUTING-POLICY keeps global order out of logical definitions."
    (plist-get
     (process-get process omnivox--control-capabilities-property)
     :features)))
+
+(defun omnivox--choice-tuning-supported-p (process)
+  "Return non-nil when PROCESS advertises the complete individual tuning bundle."
+  (and (processp process)
+       (cl-every (lambda (feature) (omnivox--process-supports-p process feature))
+                 '("voice_choice_tuning_v1" "presentation_timeline_v4"
+                   "playback_marker_events_v3"))))
+
+(defconst omnivox--choice-registration-property 'omnivox--choice-registration
+  "Process property retaining the acknowledged layered registry snapshot.")
+
+(defun omnivox--choice-definition-json (definition)
+  "Wrap legacy wire DEFINITION or project its inspectable owned base and rows."
+  (let* ((id (plist-get definition :id))
+         (owned (emacsvox-aural-voice-runtime--owned id))
+         (style (when owned
+                  (condition-case nil
+                      (emacsvox-aural-voice-runtime--definition-style (plist-get owned :definition))
+                    (user-error nil)))))
+    (if (not style)
+        (list :mode "legacy" :definition definition)
+      (list :mode "layered"
+            :definition
+            (list :id id :language (or (plist-get owned :language) :null)
+                  :shared (omnivox--choice-style-json style)
+                  :choices (omnivox--choice-records-json
+                            (if (plist-member owned :choices) (plist-get owned :choices)
+                              (emacsvox-aural-voice-data--wrap-selectors
+                               (plist-get owned :selectors)))))))))
+
+(defun omnivox--registration-request (generation content)
+  "Build a request using frozen GENERATION and versioned CONTENT."
+  (append (list :registry_generation generation
+                :type (or (plist-get content :type) "register_logical_voices"))
+          (let ((copy (copy-tree content t)))
+            (cl-remf copy :type)
+            (cl-remf copy :choice-tuning-unapplied)
+            copy)))
+
+(defun omnivox--choice-tuned-configuration-p ()
+  "Return non-nil when current owned voices retain individual adjustments."
+  (cl-some (lambda (id)
+             (cl-some (lambda (row) (plist-get row :adjustments))
+                      (plist-get (emacsvox-aural-voice-runtime--owned id) :choices)))
+           (omnivox--logical-voice-ids)))
+
+(defun omnivox--choice-warn-unapplied (process content)
+  "Explain CONTENT's retained tuning limitation once for PROCESS."
+  (when (and (plist-get content :choice-tuning-unapplied)
+             (not (process-get process 'omnivox--choice-warning-issued)))
+    (process-put process 'omnivox--choice-warning-issued t)
+    (message "Individual tuning is not applied on %s; shared settings remain active"
+             (omnivox--voice-configuration-process-role process))))
+
+(defun omnivox--choice-registration-valid-p (response generation content)
+  "Validate a flat RESPONSE against its operation's GENERATION and CONTENT."
+  (let ((unresolved (plist-get response :unresolved_logical_voice_ids))
+        (definitions (append (plist-get content :definitions) nil)))
+    (and (equal (plist-get response :type) "logical_voices_registered_v2")
+         (eql (plist-get response :registry_generation) generation)
+         (integerp (plist-get response :inventory_generation))
+         (> (plist-get response :inventory_generation) 0)
+         (eql (plist-get response :definition_count) (length definitions))
+         (plist-member response :unresolved_logical_voice_ids)
+         (or (vectorp unresolved) (proper-list-p unresolved))
+         (cl-every (lambda (id)
+                     (and (stringp id)
+                          (cl-find id definitions :test #'equal
+                                   :key (lambda (entry)
+                                          (plist-get (plist-get entry :definition) :id)))))
+                   unresolved)
+         (= (length unresolved) (length (delete-dups (append unresolved nil)))))))
+
+(defun omnivox--accept-registration-response (process response generation content)
+  "Accept PROCESS's RESPONSE only for its frozen GENERATION and CONTENT."
+  (if (equal (plist-get content :type) "register_logical_voices_v2")
+      (when (omnivox--choice-registration-valid-p response generation content)
+        (let ((old (process-get process omnivox--choice-registration-property)))
+          (when (>= generation (or (plist-get old :registry-generation) 0))
+            (process-put process omnivox--choice-registration-property
+                         (list :registry-generation generation :content (copy-tree content t)
+                               :response (copy-tree response)))
+            (omnivox--handle-registration-response process response)))
+        (omnivox--choice-warn-unapplied process content)
+        t)
+    (when (equal (plist-get response :type) "logical_voices_registered")
+      (when (>= generation (or (plist-get (process-get process omnivox--choice-registration-property)
+                                          :registry-generation) 0))
+        (process-put process omnivox--choice-registration-property nil)
+        (omnivox--handle-registration-response process response))
+      (omnivox--choice-warn-unapplied process content)
+      t)))
 
 (defun omnivox--routing-engine-list (values description)
   "Validate and copy ordered engine VALUES described by DESCRIPTION."
@@ -1475,7 +1568,8 @@ Return the number of processes sent a generation-safe policy replacement."
 
 (defun omnivox--handle-registration-response (process response)
   "Store logical voice registration RESPONSE received from PROCESS."
-  (if (equal (plist-get response :type) "logical_voices_registered")
+  (if (member (plist-get response :type)
+              '("logical_voices_registered" "logical_voices_registered_v2"))
       (progn
         (process-put process omnivox--control-registration-property response)
         (when (eq process tts-speaker-process)
@@ -1511,12 +1605,29 @@ Return the number of processes sent a generation-safe policy replacement."
           (omnivox--process-supports-p process "runtime_routing_policy"))
          (preferred-engine-id
           (plist-get inventory :preferred_engine_id)))
-    (omnivox--logical-registry-content
-     (and (not runtime-routing-policy)
-          (stringp preferred-engine-id)
-          (not (string-empty-p preferred-engine-id))
-          preferred-engine-id)
-     runtime-routing-policy)))
+    (let ((content
+           (omnivox--logical-registry-content
+            (and (not runtime-routing-policy)
+                 (stringp preferred-engine-id)
+                 (not (string-empty-p preferred-engine-id)) preferred-engine-id)
+            runtime-routing-policy)))
+      (if (not (omnivox--choice-tuning-supported-p process))
+          (if (omnivox--choice-tuned-configuration-p)
+              (append content '(:choice-tuning-unapplied t)) content)
+        (let* ((definitions (vconcat (mapcar #'omnivox--choice-definition-json
+                                            (plist-get content :definitions))))
+               (unapplied
+                (cl-some (lambda (entry)
+                           (and (equal (plist-get entry :mode) "legacy")
+                                (cl-some
+                                 (lambda (row) (plist-get row :adjustments))
+                                 (plist-get (emacsvox-aural-voice-runtime--owned
+                                             (plist-get (plist-get entry :definition) :id)) :choices))))
+                         definitions)))
+          (append (list :type "register_logical_voices_v2" :definitions definitions
+                        :fallback_policy
+                        (append (list :preferred_engines []) (plist-get content :fallback_policy)))
+                  (when unapplied '(:choice-tuning-unapplied t))))))))
 
 (defun omnivox-register-logical-voices ()
   "Register all Emacsvox logical voices with live Omnivox processes.
@@ -1532,13 +1643,13 @@ Return the number of processes sent the atomic registry replacement."
     (omnivox--update-logical-registry-generation
      (mapcar #'cdr registrations))
     (dolist (registration registrations)
-      (omnivox--send-control-request
-       (car registration)
-       (append
-        (list :type "register_logical_voices"
-              :registry_generation omnivox--logical-registry-generation)
-        (cdr registration))
-       #'omnivox--handle-registration-response))
+      (let ((generation omnivox--logical-registry-generation)
+            (content (copy-tree (cdr registration) t)))
+        (omnivox--send-control-request
+         (car registration) (omnivox--registration-request generation content)
+         (lambda (process response)
+           (unless (omnivox--accept-registration-response process response generation content)
+             (omnivox--record-control-error process response))))))
     (when (and (called-interactively-p 'interactive) (null processes))
       (user-error "No live Omnivox process supports logical voice registration"))
     (when (called-interactively-p 'interactive)
@@ -1601,7 +1712,7 @@ taken effect on the server.  Reapply to confirm the desired configuration."
           (mapcar
            (lambda (process)
              (cons process
-                   (copy-tree (omnivox--process-logical-registry-content process))))
+                   (copy-tree (omnivox--process-logical-registry-content process) t)))
            processes))
          ;; Definitions and generation belong to this apply, including callbacks
          ;; that run after another apply has advanced the desired configuration.
@@ -1627,6 +1738,7 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                 (setq done t)
                 (when (timerp timer) (cancel-timer timer))
                 (let* ((ordered (nreverse results))
+                       (unapplied (cl-some (lambda (result) (plist-get result :choice-tuning-unapplied)) ordered))
                        (applied
                         (cl-count 'applied ordered
                                   :key (lambda (result)
@@ -1640,7 +1752,9 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                    (list
                     :status status :adapter 'omnivox
                     :registry-generation generation
-                    :processes ordered :time (current-time))
+                    :processes ordered :time (current-time)
+                    :choice-tuning-unapplied (and unapplied t)
+                    :message (when unapplied "Saved; individual tuning not applied on every speech lane"))
                    callback))))
              (finish
               (process result)
@@ -1682,19 +1796,21 @@ taken effect on the server.  Reapply to confirm the desired configuration."
                      process 'failed :phase 'submission :condition error-data))))))
              (registration-response
               (process response)
-              (if (equal (plist-get response :type)
-                         "logical_voices_registered")
+              (if (omnivox--accept-registration-response
+                   process response generation (cdr (assq process registrations)))
                   (progn
-                    (omnivox--handle-registration-response process response)
                     (finish
                      process
                      (omnivox--voice-configuration-result
                       process 'applied
+                      :choice-tuning-unapplied
+                      (plist-get (cdr (assq process registrations)) :choice-tuning-unapplied)
                       :routing-policy
                       (copy-tree
                        (omnivox--process-routing-registration process))
                       :registration
-                      (copy-tree (plist-get response :registration)))))
+                      (copy-tree (if (equal (plist-get response :type) "logical_voices_registered_v2")
+                                     response (plist-get response :registration))))))
                 (omnivox--record-control-error process response)
                 (finish
                  process
@@ -1705,10 +1821,7 @@ taken effect on the server.  Reapply to confirm the desired configuration."
               (process)
               (send-request
                process
-               (append
-                (list :type "register_logical_voices"
-                      :registry_generation generation)
-                (cdr (assq process registrations)))
+               (omnivox--registration-request generation (cdr (assq process registrations)))
                #'registration-response))
              (policy-response
               (process response)

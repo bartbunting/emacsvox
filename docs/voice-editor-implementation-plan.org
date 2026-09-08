@@ -482,8 +482,13 @@ The first client slice adds pure raw-to-wire conversion for complete shared
 values and sparse choice/context patches. Six contracts preserve inheritance,
 zero/default, legacy contextual nil, pitch contrast and gain/pan neutral values,
 and duplicate physical occurrence IDs. Fresh compiled tests and isolated
-compiled parity pass. Conversion alone does not enable registration, layered
-speech or customization controls; those remain next.
+compiled parity pass. The registration slice now negotiates the complete bundle
+per lane, projects inspectable owned bases and choice rows into version 2, and
+retains frozen acknowledged definitions. Six new tests cover old/new lanes,
+invalid and late acknowledgements, temporary routing and truthful unsupported
+save status. All 226 selected client/voice/transport tests and isolated compiled
+parity pass. Ordinary layered transport, playback readback, preview v2 and the
+optional customization controls remain next.
 
 Implement lossless context projection, lane negotiation and apply reporting.
 Audit ordinary speech paths before enabling customization, then add per-choice

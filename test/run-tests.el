@@ -47,6 +47,7 @@
   (require 'emacsvox-aural-voice-editing-tests)
   (require 'emacsvox-aural-voice-choice-tests)
   (require 'omnivox-choice-codec-tests)
+  (require 'omnivox-choice-registration-tests)
   (require 'emacsvox-aural-voice-editor-tests)
   (require 'emacsvox-aural-voice-context-tests)
   (require 'emacsvox-aural-voice-workbench-tests)

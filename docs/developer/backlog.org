@@ -63,9 +63,10 @@ Commits =c76acd3= through =8cab289= add timeline-4 mixed playback, marker-3
 start/choice pairs and validated reader/queue/multipart admission. All 716
 workspace tests and Clippy pass. Omnivox =31a0b9a= passes isolated muted
 both-lane/reconnect and legacy remote acceptance and advertises the bundle.
-Client pure wire conversion now passes six contracts and compiled parity;
-registration, layered transport/readback and individual editor controls remain
-pending in the [[file:../voice-editor-implementation-plan.org][implementation plan]]. Earlier, the maintainer
+Client wire conversion and per-lane version-2 registration now pass focused
+contracts and compiled parity. All 226 selected client/voice/transport tests
+pass. Layered transport/readback, preview v2 and individual editor controls
+remain pending in the [[file:../voice-editor-implementation-plan.org][implementation plan]]. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.
