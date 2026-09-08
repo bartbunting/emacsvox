@@ -6,7 +6,7 @@
 
 Planning, data-contract and storage slices are complete. The maintainer selected
 full-chain preview, and its XHI protocol contract is complete. The server preview
-slice is implemented and tested; client integration, runtime integration and the
+and client slices are implemented and tested. Owned runtime integration and the
 editor remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
@@ -171,7 +171,7 @@ one-selector request, private snapshot, administrative disablement, runtime
 fallback and terminal response paths. Record ADR 0016, the concrete protocol
 contract and independent JSON examples. No runtime source changes in this slice.
 
-** TODO 2b. Implement negotiated complete-voice preview
+** DONE 2b. Implement negotiated complete-voice preview
 
 Follow the preview contract in server-first and then client slices, testing and
 committing each. Record the accepted boundary in the sibling ADR/protocol docs;
@@ -186,8 +186,14 @@ metadata and bounded terminal responses. Shared JSON examples execute against
 simulated engines. Streaming fallback now applies effect capabilities of the
 engine that actually accepts audio. The full locked Rust workspace suite,
 warning-denied Clippy and formatting checks pass. The sibling's newer unrelated
-documentation commit was preserved. Client work is next; this is not yet a
-usable complete-preview feature in Emacs.
+documentation commit was preserved. The client slice adds complete entries to the generic preview API and
+negotiates support on the actual foreground process. Whole-comparison preflight,
+frozen requests, rate/disablement guards, bounded timeouts and operation-owned
+callbacks preserve cancellation and prevent replay after reconnect. Standalone
+adapters explicitly reject the unimplemented full-chain projection. Existing
+individual auditions retain their wire contract. Client request/response fixtures
+and stale, stopped, replaced and failed callback cases are tested. The new editor
+does not yet produce these complete entries; that remains in later slices.
 
 Run stub-engine and null-output tests for ordered choices, Automatic, unavailable
 and disabled engines, pre/post-PCM failures, queue bounds, cancellation, policy

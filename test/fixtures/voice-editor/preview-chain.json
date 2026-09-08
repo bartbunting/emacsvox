@@ -1,7 +1,7 @@
 {
   "fixture_version": 1,
   "capability": "voice_chain_preview_v1",
-  "status": "specified-not-implemented",
+  "status": "implemented-protocol-fixture",
   "cases": [
     {
       "name": "unavailable-primary",

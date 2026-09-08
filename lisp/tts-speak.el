@@ -2497,6 +2497,7 @@ function."
        ('enumerated "family")
        ('free-form "free-form")
        (_ "unsupported"))
+     :complete-preview-support "unsupported"
      :routing-policy-support "unsupported"
      :engines
      (list
@@ -2743,6 +2744,8 @@ Return a plist with separate `:engine-id' and `:voice-id' fields."
 Legacy servers cannot acknowledge playback, so the result truthfully reports
 `queued' after one dispatch. Each entry restores the configured default voice
 before the following entry or subsequent ordinary speech."
+  (when (cl-some (lambda (entry) (plist-member entry :selectors)) entries)
+    (user-error "This adapter cannot preview complete voice chains; use an individual audition"))
   (let ((prepared
          (mapcar
           (lambda (entry)
@@ -2786,19 +2789,31 @@ before the following entry or subsequent ordinary speech."
   "Function previewing a sequence of normalized voice entries.
 
 The function receives ENTRIES and CALLBACK. Each entry is a plist containing
-`:text', `:selector', `:acss', `:rate-offset', `:effects', and `:language'.
+`:text', `:acss', `:rate-offset', `:effects', and `:language', plus exactly
+one of `:selector' for an individual audition or `:selectors' for a complete
+voice.  Complete entries require explicit `:fallback-policy' and
+`:disabled-engine-ids'; nil selectors mean Automatic.  The fallback policy
+contains `:preferred-engines', `:allow-same-language-on-requested-engine',
+`:global-default' and `:fallback-engines'.
 CALLBACK receives one terminal result. Adapters without playback
 acknowledgement use `queued' and `queued-only' rather than claiming natural
 completion.")
+
+(defun tts--validate-voice-preview-entry (entry)
+  "Validate the common shape of individual or complete preview ENTRY."
+  (unless (and (proper-list-p entry) (zerop (% (length entry) 2)))
+    (error "Voice preview entry must be a plist"))
+  (unless (and (stringp (plist-get entry :text))
+               (not (string-empty-p (plist-get entry :text))))
+    (error "Each voice preview entry requires nonempty text"))
+  (when (eq (not (plist-member entry :selector)) (not (plist-member entry :selectors)))
+    (error "Preview requires exactly one of :selector or :selectors")))
 
 (defun tts-preview-voices (entries callback)
   "Preview normalized ENTRIES and call CALLBACK with one terminal result."
   (unless (and (listp entries) entries)
     (error "Voice preview requires at least one entry"))
-  (dolist (entry entries)
-    (unless (and (stringp (plist-get entry :text))
-                 (not (string-empty-p (plist-get entry :text))))
-      (error "Each voice preview entry requires nonempty text")))
+  (mapc #'tts--validate-voice-preview-entry entries)
   (unless (functionp tts-voice-preview-function)
     (error "The active speech adapter does not support voice preview"))
   (funcall tts-voice-preview-function (copy-tree entries) callback))

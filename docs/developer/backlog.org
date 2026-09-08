@@ -31,10 +31,12 @@ implemented. Runtime integration and the common UI remain pending.
 The [[file:../voice-editor-implementation-plan.org][implementation plan]] now records the source inventory, ordered slices,
 acceptance checks and reasoning-level stops. Planning, the
 [[file:../voice-editor-data-contract.org][data contract]] and storage/migration are complete. Runtime inspection found that
-the existing preview request accepts only one physical selector. The maintainer
+the original preview request accepted only one physical selector. The maintainer
 selected full-chain preview; [[file:../adr/0016-complete-voice-preview.org][ADR 0016]] and the
-[[file:../voice-editor-preview-contract.org][preview contract]] specify separate negotiated complete-voice previews. Continue at
-High with server/client implementation, then owned runtime routing. Individual
+[[file:../voice-editor-preview-contract.org][preview contract]] specify separate negotiated complete-voice previews. Server and
+client protocol slices now pass simulated-engine and callback/lifecycle checks.
+Continue at High with owned runtime routing, draft/save coordination and the
+editor UI; the editor does not yet construct complete previews. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.
 
 Preserve the existing aural CSS cascade: partial styles combine by dimension,
