@@ -14,12 +14,14 @@ saving a physical-voice experiment.
 
 * Recommended ownership model and alternatives
 
-Recommendation for discussion: each palette owns the complete sound of its
+Recommendation for discussion: each palette owns the complete base sound of its
 named voices, including preferred physical choices, ordered fallbacks, shared
 adjustments, and optional adjustments for individual choices. Editing bolden
 in one palette should not silently change another palette's own definition.
 Switching palettes selects the corresponding complete voice definitions.
 This recommendation has not yet been accepted as an architecture decision.
+Presentation rules can still adjust that base for particular content. Palette
+ownership must preserve the existing aural CSS cascade described below.
 
 | Option | Benefits | Costs |
 |--------+----------+-------|
@@ -39,6 +41,67 @@ IDs in portable palette exports. Local assignment data may remain stored
 separately, keyed to the owning palette and voice. Cross-machine import must
 identify unavailable choices and preserve fallback behaviour. The precise
 storage, migration, and runtime contracts require a subsequent design review.
+
+* Preserve the aural CSS cascade
+
+The existing presentation system combines matching rules by voice dimension.
+A rule can choose =bolden= as a base, another set average pitch to two, and a
+stronger rule set richness to eight. The result retains the other settings of
+=bolden=. Rule origin, specificity and ordering determine precedence; the
+winning source is recorded separately for each dimension.
+
+Preserve these current contracts during editor and ownership changes:
+
+- A partial style changes only the dimensions it mentions. ACSS dimensions,
+  relative rate and post-synthesis effects can compose this way.
+- When rules set the same dimension, the stronger value replaces the weaker
+  one. Numeric adjustments do not accumulate: rate offsets of +2 and +3
+  resolve to the winning offset, not +5.
+- A named voice or explicit =:preset= establishes a complete new base and
+  discards earlier voice overrides. Later partial styles can adjust it.
+- Palette inheritance supplies whole named entries. Redefining =bolden= in a
+  child replaces that entry; it does not merge its fields with the parent.
+- Omitted fields, explicit nil and zero remain distinct. Existing behaviour
+  for explicit nil over a preset is characterized in tests and does not define a universal
+  reset operation. Do not change that contract through new UI labels.
+
+The editor must distinguish two intentions:
+
+| Intention | Destination and impact |
+|-----------+------------------------|
+| Edit base voice | Change the selected palette's named voice. Contextual rules still apply wherever that voice is used. |
+| Adjust for this context | Change a presentation rule for an explicit match and scope, such as unread headings in a personal override. Keep the base palette definition intact. |
+
+Ordinary palette browsing opens Edit base voice. From inspected content,
+offer Adjust for this context with the proposed match and personal, session
+or buffer scope visible before saving. Reuse the existing rule services;
+contextual editing need not ship in the first base-editor delivery. Its draft
+and save destination are the chosen rule and scope, not the palette voice.
+Opening a contextual adjustment must not silently select a complete preset:
+changing richness alone should create a richness-only patch.
+
+In contextual controls, Inherit means this rule does not set the dimension.
+Implement that action by removing the field from the rule, allowing weaker
+contributions to win. Display an existing explicit nil distinctly until its
+meaning has been settled; do not relabel it Inherit or normalize it away.
+Inherit from weaker rules, use a shared fallback adjustment, and adapter
+default describe different operations and require distinct labels.
+
+Keep ordinary base editing simple. An optional Effective sound / Where
+settings came from view selects inspected content or a clearly labelled
+example context. Show the base voice, matching rules, final requested values,
+and the source of each value, with unsupported settings and actual playback
+evidence separate. For example, pitch two may come from a heading rule while
+richness eight comes from a personal override. Explain when a stronger rule
+hides a draft base adjustment, rather than implying that the control is broken.
+
+Base preview auditions the voice without contextual rule adjustments.
+Context preview resolves original and edited proposals against the same facts
+and context, without saving either. Label the two preview modes explicitly;
+never save the flattened contextual result back into the base voice implicitly.
+Use the current inspection services and their source-validity checks when
+capturing an item. An example or historical context must not masquerade as
+the current live item.
 
 * Simple controls first, optional detail
 
@@ -62,11 +125,12 @@ Three levels of use remain available in the same editor:
 2. Expand Fallbacks and arrange specific choices; use shared adjustments.
 3. Choose Tune this voice to customize particular fallback choices.
 
-Use exactly two adjustment levels initially: settings shared by the named
-voice's choices, and optional overrides for each choice. Do not introduce an
+Within a named voice, use exactly two adjustment levels: settings shared by
+the named voice's choices, and optional overrides for each choice. Do not introduce an
 intermediate engine-wide adjustment layer. A single-choice editor can label
 the first level simply Adjustments; expanding individual customization makes
-the shared scope explicit.
+the shared scope explicit. These levels describe base-voice tuning; the
+presentation-rule cascade remains available independently.
 
 * One editor, two ways to start
 
@@ -97,6 +161,7 @@ illustrative, not a runtime report.
 
 #+begin_example
 Edit voice: bolden
+Editing: base voice
 Unsaved changes: physical voice, relative rate
 
 Destination
@@ -122,6 +187,7 @@ Adjustments for selected physical voice
   [Customize this voice]
 
 Listen
+  Preview: base voice                         [Choose context…]
   Sample text: The quick brown fox jumps over the lazy dog.
   Automatic sample after adjustment: on
   [Play edited]  [Compare with original]  [Stop]
@@ -138,7 +204,8 @@ The destination and state stay available in a short header. The change summary
 updates in place; ordinary saving does not open another review buffer. All
 actions have spoken labels and keyboard access. Details contains inheritance,
 aliases, raw definitions, advanced routing policy, storage destinations,
-capability diagnostics, and last playback evidence.
+capability diagnostics, and last playback evidence. Effective sound / Where
+settings came from provides the optional contextual inspection described above.
 
 Physical voice selection opens the existing searchable inventory as a picker.
 Users can filter by engine or search across engines, audition candidates, and
@@ -167,6 +234,16 @@ the shared value unless explicitly customized. An override replaces that
 dimension's shared value; it does not add another offset. For relative rate,
 an override of +4 means +4 from the global rate, not +4 from the shared offset.
 Use shared value is distinct from an explicit adapter default.
+
+Recommended precedence for this proposed extension: resolve the named voice's
+shared settings and selected physical choice's overrides as its base, then
+apply the winning explicit contextual dimensions. A rule choosing a different
+named preset uses that preset's base and choices. This preserves a contextual
+instruction such as richness eight even when a fallback has its own base
+richness. Confirm this order in the storage/runtime decision before shipping
+individual tuning. Runtime fallback must recompute the selected base while
+retaining the contextual patch; it must not replace that patch with fallback
+defaults or reuse the preferred voice's individual settings.
 
 Users select a fallback row and choose Customize this voice. The adjustment
 fields then identify that voice and which values are inherited or overridden.
@@ -326,8 +403,9 @@ recommended user model should guide it rather than be dictated by current stores
 
 The current implementation is in [[file:../lisp/emacsvox-aural-voice-palettes.el][palette browsing and tuning]],
 [[file:../lisp/emacsvox-aural-voice-workbench.el][Workbench]], and [[file:../lisp/emacsvox-aural-voice-experiment.el][physical voice experiments]].
-The separate [[file:developer/backlog.org][backlog]] describes voice-style schema and asynchronous apply
-refactoring; those are related concerns, not prerequisites to a wholesale rewrite.
+The [[file:voice-style-coverage.org][completed voice-style consumer audit]] provides edit/save/preview/delivery
+regressions. The separate [[file:developer/backlog.org][backlog]] tracks remaining inspection, delivery and
+asynchronous apply work; these are not prerequisites to the first editor slice.
 All accepted [[file:adr/][ADRs]] were considered, particularly audience boundaries,
 acknowledged routing readiness, and foreground/notification lane ownership.
 
@@ -346,12 +424,25 @@ partial persistence; failed or timed-out application; two-lane results; and
 late callbacks after further edits. Include a real spoken walkthrough with the
 user: automated tests alone cannot establish that navigation feels usable.
 
+Cascade acceptance must additionally cover a base voice plus independent pitch,
+richness and effect patches; competing values for one dimension; named-preset
+replacement; removing a contextual field to inherit; preserving existing nil
+and zero; and per-dimension source explanations. Verify that base and context
+previews differ only as labelled, context saves leave palette definitions
+intact, and base edits remain subject to stronger rules. If individual fallback
+tuning ships, test contextual precedence through actual runtime fallback.
+
 * Decisions to settle during walkthrough
 
 - Accept or revise the recommendation that each palette owns complete named
   voices, with sharing explicit and optional; then specify migration and storage.
 - Whether optional per-choice adjustments ship with the first editor or follow
   the initial editor using today's shared style and existing fallback chains.
+- Confirm that per-choice settings form the named voice's base before explicit
+  contextual dimensions, including runtime fallback. Numeric addition of
+  adjustments would require a separate proposal and is outside this plan.
+- Scope the first contextual workflow and Effective sound view. Preserve the
+  cascade from the first base-editor slice even if these interfaces follow.
 - Navigation voice: usual voice or the voice being tuned.
 - Which adjustments belong in the initially expanded section.
 - Whether editing commonly means an existing named voice or an experiment

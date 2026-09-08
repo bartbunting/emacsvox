@@ -28,6 +28,14 @@ Simple editing should expose one voice, common adjustments, preview and one
 save action; fallback configuration and individual tuning expand on demand.
 This is a proposal, not an accepted architecture decision or implemented UI.
 
+Preserve the existing aural CSS cascade: partial styles combine by dimension,
+competing values use rule precedence, and named presets replace the base.
+Distinguish editing a palette's base voice from editing a contextual rule;
+offer optional effective-value and source inspection with labelled context
+previews. Contextual Inherit removes a field rather than writing explicit nil.
+Confirm how proposed individual fallback tuning interacts with contextual
+overrides at runtime; do not introduce numeric accumulation implicitly.
+
 Settle palette ownership, navigation speech, persistence of palette selection,
 and the first delivery slice.  Specify migration from today's shared routing
 profiles without changing existing sound unexpectedly.  Individual fallback
