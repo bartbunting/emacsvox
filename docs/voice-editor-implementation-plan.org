@@ -15,8 +15,8 @@ The maintainer selected A for slice 7: shared -> choice -> context. Accepted
 continuation at the High handoff. Slice 7b now implements storage readers,
 validation and pure choice operations. Omnivox now has typed composition and
 mixed registration with its version-2 control codec; playback remains pending.
-Implementation pauses for a return to XHI at the streaming route/effects/evidence
-handoff described in slice 7c below.
+The maintainer returned to XHI and the streaming route/effects/evidence review
+in slice 7c is complete. Implementation pauses for the return to High.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -395,9 +395,13 @@ These commits are on branch =voice-choice-tuning= in
 =/tmp/omnivox-voice-choice-tuning=; the original Omnivox checkout remains at its
 release commit. The complete capability bundle is deliberately unadvertised.
 
-**** TODO Review streaming route handoff at XHI, then resume implementation
+**** DONE Review streaming route handoff at XHI
 
-Stop for the requested reasoning-level change before modifying this boundary.
+The maintainer returned to XHI after the common editor usability fixes in
+=893b7c75b=. This review completes the internal ownership design; no further
+user-facing choice or wire-contract change is needed. Stop for High before
+implementing this handoff. Max is not indicated.
+
 Inspection of =omnivox-cli/src/pipeline.rs= shows that
 =synthesize_routed_chunk_progressively= prepares its effect sink before
 =routing.rs= performs text/health/failure rerouting. The sink currently adapts
@@ -405,18 +409,46 @@ one shared effect style using the physical engine reported at stream start.
 That is sufficient for current shared tuning but cannot identify an individual
 choice row, particularly when two records name the same physical selector.
 
-At XHI, settle the internal handoff of the actual selected row, freshly composed
-settings/effects and bounded identity from each routing attempt to the playback
-sink, without extending helper protocols. Review both buffered and progressive
-paths, frozen registry/context/rate ownership, capability adaptation, discarded
-pre-PCM attempts, and consumed-first-frame evidence. Preserve the existing
-four-attempt limit and no-replay boundary. The accepted user-facing composition
-and storage decisions remain unchanged; this is an implementation ownership
-review, not a new product choice. Max is not indicated.
+The implementation note =docs/per-fallback-streaming-handoff.md= in the isolated
+Omnivox worktree, committed as =48c7411=, records the complete design, code
+references and required test matrix under ADR 0011. Its selected handoff is:
 
-Then implement routed execution, timeline-4 admission/framing, private preview
-v2 and marker-3 evidence in tested commits. Advertise the bundle only after the
-whole path works. Client integration and optional editor controls remain 7d.
+- Keep authoritative registry/policy/rate snapshots immutable and carry context
+  on each span. Retain the resolver's original row index and reason; strict
+  individual auditions explicitly map back to that index.
+- Build one immutable attempt containing fresh native settings, adapted ACSS,
+  effects, degradation and audio-choice identity after each actual resolution.
+  A CLI-local sink passes this record with validated start metadata at the
+  existing commitment boundary. Buffered results carry the same record.
+- Keep DSP state with its committed route owner. Preserve same-owner window
+  continuity; finish old committed tails and start clean on owner/mode changes.
+  Default clearing also needs adapter-boundary tests, not just pure nil values.
+- Retain a playback ticket immediately when a source is created, before later
+  cue/window setup can fail. Inspection found that the current success-only
+  ticket handoff in =finish= can miss partially failed sources.
+- Count accepted PCM separately from first-frame consumption. The existing
+  =published_frames= counter catches a send that succeeds before attachment
+  fails. A preallocated observation handle survives callbacks arriving before
+  producer bookkeeping. Maintain the last-started identity independently of
+  the bounded 32-entry accepted-audio list.
+- Use existing non-empty-source frame callbacks for private preview evidence
+  and the adjacent start/choice receipt pair. Wait for all retained tickets
+  before building the terminal response. Metadata, wholly trimmed audio and
+  unconsumed cancellation cannot establish last actual playback.
+
+The native engine/helper messages stay unchanged. Four attempts, health
+classification, output-failure handling, both lanes and no replay remain the
+accepted boundaries. The new bundle stays unadvertised until end-to-end tests
+cover the full feature.
+
+**** TODO Resume the reviewed implementation at High
+
+Commit and test: (1) attempt preparation, native defaults, sink handoff and DSP
+ownership; (2) ticket/acceptance/first-frame ownership and bounded observations;
+(3) timeline-4 admission/framing, private preview v2 and marker-3 integration;
+(4) full ordinary-playback, compatibility, lane and reconnect acceptance before
+advertising the bundle. Client integration and optional editor controls remain
+7d. These are implementation tasks, not completed playback support.
 
 *** TODO 7d. Client, ordinary consumers and optional editor controls at High
 
@@ -538,6 +570,13 @@ formatting, documentation links and whitespace checks pass with pinned Rust
 existing pinned source inputs and a clean archive of the pinned Sonic commit;
 generated build files stay in the isolated worktree. No dependency, live
 runtime, release version or installed payload changed.
+
+The subsequent XHI streaming review traced both buffered/progressive paths,
+source queue/callback/ticket lifetimes, native default inputs and the marker
+reporter through Omnivox =0cbfa93=. Its design note and test matrix pass local
+documentation-link and whitespace checks; Emacsvox documentation release
+validation passes. This review changes notes only and does not claim new
+runtime tests, native resets or playback behavior are implemented.
 
 For later Lisp slices, run focused ERT and =make bytecode=, or
 =make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh
