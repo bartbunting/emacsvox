@@ -28,6 +28,7 @@
           "emacsvox-aural-routing-profiles.el"
           "emacsvox-aural-voice-data.el"
           "emacsvox-aural-voice-runtime.el"
+          "emacsvox-aural-voice-drafts.el"
           "emacsvox-aural-profile-service.el"
           "emacsvox-aural-providers.el"
           "emacsvox-aural-compiler.el"

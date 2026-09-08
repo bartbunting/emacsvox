@@ -91,11 +91,13 @@ PALETTE and PROFILE optionally select inactive data for inspection."
 (defun emacsvox-aural-voice-runtime--snapshot ()
   "Capture owned data that must be registered after a palette or session change."
   (when (emacsvox-aural-voice-runtime--owned-p)
-    (list (emacsvox-aural-voice-runtime--palette)
-          (emacsvox-aural-voice-data--entries
-           (emacsvox-aural-voice-runtime--palette) emacsvox-aural-voice-palette-registry)
-          (copy-tree emacsvox-aural-routing--choice-sets)
-          (copy-tree emacsvox-aural-session-routing-bindings))))
+    (let* ((entries (emacsvox-aural-voice-data--entries
+                     (emacsvox-aural-voice-runtime--palette) emacsvox-aural-voice-palette-registry))
+           (ids (mapcar (lambda (item) (plist-get (cdr (plist-get item :entry)) :local-choices)) entries)))
+      (list (emacsvox-aural-voice-runtime--palette) entries
+            (copy-tree (cl-remove-if-not (lambda (set) (member (plist-get set :id) ids))
+                                        emacsvox-aural-routing--choice-sets))
+            (copy-tree emacsvox-aural-session-routing-bindings)))))
 
 (defun emacsvox-aural-voice-runtime--configuration-changed (&rest _)
   "Apply changed owned definitions and choices through the acknowledged service."

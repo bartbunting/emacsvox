@@ -242,5 +242,6 @@ migrator and validators; never generate expected results from the implementation
 Storage/migration is implemented. The maintainer selected full-chain preview
 at the earlier XHI boundary. [[file:voice-editor-preview-contract.org][The preview contract]] now specifies that addition;
 server/client preview and owned runtime integration are implemented and tested.
-Continue at High for draft/save coordination and the ordinary editor slices. Return to XHI before individual fallback adjustments or
+Draft/save coordination is also implemented with tested recovery and conflict
+checks. Continue at High for the ordinary editor slices. Return to XHI before individual fallback adjustments or
 any revision of the accepted ownership/migration behavior.

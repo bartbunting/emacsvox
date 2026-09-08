@@ -336,12 +336,14 @@
                   "emacsvox-aural-schemes-tests.el"
                   "emacsvox-aural-voice-data-tests.el"
                   "emacsvox-aural-voice-runtime-tests.el"
+                  "emacsvox-aural-voice-drafts-tests.el"
                   "emacsvox-aural-transport-tests.el"
                   "emacsvox-aural-voice-palettes-tests.el"
                   "emacsvox-aural-voice-workbench-tests.el"))
     (load (expand-file-name (concat "test/" file) root-directory) nil nil t))
   (dolist (function '(emacsvox-aural-voice-data--convert
                      emacsvox-aural-voice-runtime--resolve
+                     emacsvox-aural-voice-drafts--save
                       emacsvox-aural--validate-voice-style
                       emacsvox-aural--voice-style-field
                       emacsvox-aural-compile-voice-style
@@ -369,6 +371,7 @@
           '(or "^emacsvox-aural-rules-"
                "^emacsvox-aural-voice-data-"
                "^emacsvox-aural-voice-runtime-"
+               "^emacsvox-aural-voice-drafts-"
                (tag voice-style-ui)
                (tag delivery-preparation)
                emacsvox-aural-delivery-keeps-stops-immediate-and-cancellable

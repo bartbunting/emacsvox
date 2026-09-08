@@ -7,7 +7,7 @@
 Planning, data-contract and storage slices are complete. The maintainer selected
 full-chain preview, and its XHI protocol contract is complete. The server preview
 and client slices and owned runtime integration are implemented and tested.
-Draft/save coordination and the editor remain pending.
+Draft/save coordination is implemented and tested; the editor UI remains pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -227,7 +227,7 @@ readiness. Capture final registration and speech requests, not only UI strings.
 Existing cascade, source/compiled parity and build-tree checks cover this slice.
 No per-choice effects protocol was introduced.
 
-** TODO 4. Add draft and save coordination
+** DONE 4. Add draft and save coordination
 
 Create one draft per destination and scope, with immutable save proposals and
 operation IDs. Track changed fields, completed persistence steps, desired
@@ -239,6 +239,20 @@ save, idempotent retry, timeout, stale callback, buffer destruction, and newer
 edits while an old proposal applies. A partial save remains recoverable and
 visible. No callback can clear changes it did not save or select another draft.
 Keep inactive-palette saving and restart selection distinct from runtime apply.
+
+The private session draft registry now retains working, saved and last-applied
+snapshots independently of view buffers. Frozen proposals retain destination and
+source watches, file fingerprints, immutable choice IDs and completed writes.
+Both stores are checked before writing, local snapshots are published first,
+and live registry/hooks follow only after both writes succeed. Retry recognizes
+a completed rename even if its writer reported an error afterwards. Changed
+files conservatively require a fresh review; the coordinator does not silently
+merge a concurrent external edit into an already approved proposal. These are
+optimistic conflict checks, not an exclusive lock against arbitrary external
+writers. Newer edits, duplicate or stale callbacks, timeouts and palette switches
+retain truthful save/apply state. Saving an unrelated inactive palette leaves
+current selection and apply ownership intact. Draft retention is session-only;
+no editor entry point or live personal data changed in this service slice.
 
 ** TODO 5. Deliver the complete base editor workflow
 
