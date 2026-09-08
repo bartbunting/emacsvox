@@ -7,10 +7,11 @@
 The maintainer selected A: shared settings, selected choice, then contextual
 overrides. [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]] and the [[file:voice-editor-fallback-tuning-contract.org][storage/runtime contract]] govern this extension.
 This document completes the XHI contract slice. Storage slice 7b, Omnivox typed
-composition and its version-2 registration codec are implemented. Layered
-playback, remaining codecs and client integration are still future behavior;
-the capability bundle is unadvertised. The streaming handoff review is complete
-in the [[file:voice-editor-implementation-plan.org][implementation plan]], with implementation resuming after the High handoff.
+composition, version-2 registration, actual-attempt preparation and DSP
+ownership are implemented and tested. The native Windows default audit passes.
+Playback observations, remaining codecs and client integration are still
+future behavior; the capability bundle is unadvertised. Implementation continues
+at High under the reviewed [[file:voice-editor-implementation-plan.org][implementation plan]].
 Omnivox commit =ff5cb5f= mirrors the accepted contract and decision into its
 ADR/protocol documentation; that snapshot retains its original design status.
 

@@ -14,9 +14,11 @@ The maintainer selected A for slice 7: shared -> choice -> context. Accepted
 [[file:voice-editor-fallback-wire-contract.org][wire/compatibility contract]] complete its XHI review. The maintainer authorized
 continuation at the High handoff. Slice 7b now implements storage readers,
 validation and pure choice operations. Omnivox now has typed composition and
-mixed registration with its version-2 control codec; playback remains pending.
-The maintainer returned to XHI and the streaming route/effects/evidence review
-in slice 7c is complete. Implementation pauses for the return to High.
+mixed registration with its version-2 control codec. The maintainer returned
+to High after the completed XHI streaming review. Actual-attempt preparation,
+native Windows default restoration and DSP ownership are now tested and
+committed; playback observations, remaining codecs and client integration
+remain in progress in slice 7c/7d.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -399,8 +401,8 @@ release commit. The complete capability bundle is deliberately unadvertised.
 
 The maintainer returned to XHI after the common editor usability fixes in
 =893b7c75b=. This review completes the internal ownership design; no further
-user-facing choice or wire-contract change is needed. Stop for High before
-implementing this handoff. Max is not indicated.
+user-facing choice or wire-contract change is needed. The maintainer supplied
+the requested return to High, and implementation resumed. Max is not indicated.
 
 Inspection of =omnivox-cli/src/pipeline.rs= shows that
 =synthesize_routed_chunk_progressively= prepares its effect sink before
@@ -441,7 +443,21 @@ classification, output-failure handling, both lanes and no replay remain the
 accepted boundaries. The new bundle stays unadvertised until end-to-end tests
 cover the full feature.
 
-**** TODO Resume the reviewed implementation at High
+**** TODO Continue the reviewed implementation at High
+
+The maintainer returned to High. Omnivox =97481e7= retains admitted layered
+records and prepares native settings and identity afresh for each actual route,
+including all four buffered/streaming fallback combinations. =3771c0e= adds a
+repeatable native-parameter audit: all 17 Windows voices pass 85 captured
+set/default/set syntheses, without changing helper protocols or calibration.
+=7e3ecab= installs committed-choice DSP ownership, rebuilds speech-bus sounds
+using actual effects, preserves old tails and drops rejected output state.
+All 671 workspace tests, workspace Clippy, formatting and documentation checks
+pass. The bundle is still unadvertised; no live runtime has been replaced.
+
+Next: retain progressive playback tickets before fallible cue setup, then add
+accepted-versus-started observations and terminal reporting. The complete new
+wire admission and layered pipeline entry remain pending.
 
 Commit and test: (1) attempt preparation, native defaults, sink handoff and DSP
 ownership; (2) ticket/acceptance/first-frame ownership and bounded observations;
