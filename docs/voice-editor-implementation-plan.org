@@ -4,10 +4,13 @@
 
 * Status and working agreement
 
-Planning slice complete; implementation awaits the migration decision below.
+Planning and data-contract slices complete; storage implementation is next.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
-[[file:adr/0015-palette-owned-voices-and-migration.org][Proposed ADR 0015]] makes the first ownership/migration choice reviewable;
-it is not accepted yet. No runtime or personal configuration has changed.
+The maintainer selected option A, independent conversion on first save.
+[[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
+[[file:voice-editor-data-contract.org][data and resolution contract]] defines the new formats and acceptance cases.
+No runtime or personal configuration has changed. Stop here for a switch from
+XHI to High before slice 2.
 
 The maintainer requested work in tested, committed slices, stopping when a
 decision or a reasoning-level change is needed. Start at XHI for ownership,
@@ -39,9 +42,9 @@ explicit route belongs to that palette.
 A single new palette-owned choice cannot preserve both as automatic alternate
 definitions without retaining sharing or introducing explicit variants.
 
-* First decision: how existing palettes enter the new editor model
+* Selected migration: independent conversion on first save
 
-Recommendation: option A, an independent copy on the first saved conversion.
+The maintainer selected option A on 2026-09-08.
 Opening and auditioning remain read-only; the normal save proposal names the
 new palette and source routing profile. Subsequent edits use that converted
 palette directly. The original palette and its presentation-profile references
@@ -50,13 +53,11 @@ a new palette on every save.
 
 | Option | Result | Pros | Cons |
 |--------+--------+------+------|
-| A. Copy when first saved (recommended) | Create a personal palette with independent definitions and choices copied from the selected legacy palette and routing profile. | Leaves old setups intact; scope and rollback are visible; avoids guessing which unused profiles to convert. | Adds a palette; retaining its selection after restart requires the existing explicit Presentation Profile action; the copy no longer follows the old palette's parent edits. |
+| A. Copy when first saved (selected) | Create a personal palette with independent definitions and choices copied from the selected legacy palette and routing profile. | Leaves old setups intact; scope and rollback are visible; avoids guessing which unused profiles to convert. | Adds a palette; retaining its selection after restart requires the existing explicit Presentation Profile action; the copy no longer follows the old palette's parent edits. |
 | B. Upgrade the selected palette in place | Personal palettes keep their IDs while acquiring owned choices; built-ins still need personal copies. | Fewer duplicates; existing presentation profiles keep selecting the upgraded palette. | Every reference to that palette changes semantics; later routing-profile switches stop replacing its owned choices; inheritance and recovery require more migration work. |
 | C. Unify the editor over shared routing first | Keep current stores and ownership while improving navigation, drafts and saving. | Fastest route to a usable editor; smallest initial migration risk. | A physical assignment still affects multiple palettes; palette switching cannot restore complete voice choices; ownership migration remains later work. |
 
-The interaction design recommends palette ownership but does not choose among
-these transition behaviors. The maintainer must choose before schema or runtime
-changes. If A is chosen, use the following as the proposed migration contract:
+The migration contract is:
 
 1. Choose a source palette and saved routing profile explicitly in the proposal;
    default the latter to the current saved selection when available. Do not
@@ -95,24 +96,19 @@ and registration boundaries. Create this plan and the proposed ADR. Verify
 the relevant current contracts and documentation, then commit the planning
 slice. Stop for the migration decision while remaining at XHI.
 
-** TODO 1. Settle the data and resolution contract
+** DONE 1. Settle the data and resolution contract
 
-After the decision, finalize the ADR and concrete saved-data examples at XHI.
-Specify palette/voice identity, local versus portable choice storage,
-inheritance, legacy routing lookup, and how an empty owned choice list differs
-from absence of owned data. Define stable alias handling before route writes.
+The [[file:voice-editor-data-contract.org][contract]] specifies owner identity, whole-entry inheritance, versioned
+portable/local formats, immutable local choice snapshots, pure resolution,
+alias conflicts, session precedence and crash-safe publication order.
+[[file:../test/fixtures/voice-editor/conversion.el][Independent conversion fixtures]] define two different owned palettes from one
+legacy child and two routing profiles, preserving inherited entries and stored
+values. The acceptance matrix also covers Automatic, aliases, missing local
+data, fallback, session overrides and save failure. Existing public definition
+APIs remain compatible; implementation uses private data services.
 
-Specify a pure resolution result containing requested base, explicit choices,
-automatic policy, source identities and diagnostics. Use it for editor display,
-preview and adapter registration without adding UI state to the compiler.
-Keep contextual style patches and per-dimension provenance separate.
-
-Acceptance fixtures must cover two palettes with different bolden routes, one
-legacy palette with several selectable routing profiles, alias conflicts,
-inherited names, nil/zero, Automatic, unavailable engines and session overrides.
-Resolve any public-interface changes explicitly in the ADR before coding.
-Once this contract is concrete and accepted, stop and recommend High for
-slices 2 through 6.
+Stop and recommend High for slices 2 through 6. The formats and fixtures define
+future behavior; they do not claim a working migration or editor.
 
 ** TODO 2. Add storage and migration without automatic activation
 
@@ -209,6 +205,13 @@ rule/cascade and connected saved-style tests passed in a fresh batch Emacs.
 These establish the starting contracts; they do not test the proposed editor.
 The documentation release check, local-link checks and whitespace checks also
 passed for this planning slice.
+
+For data-contract slice 1, both independent conversion examples were read as
+non-evaluated data and checked against current palette inheritance and routing
+selector validators. Their expected definitions and local selector chains match
+the specified source configuration. This checks fixture consistency, not the
+future migrator. Documentation, local-link and whitespace checks passed; no
+runtime Lisp changed, so no new byte-code build was required.
 
 For later Lisp slices, run focused ERT and =make bytecode=, or
 =make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh

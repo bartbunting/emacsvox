@@ -21,15 +21,15 @@ boundaries.
 
 ** TODO Settle and implement the unified voice editor design
 
-Review [[file:../voice-editor-design.org][the voice editor draft]] before changing ownership or storage.  It recommends
-that each palette own its complete named voices: preferred physical choices,
-fallback order, shared adjustments, and optional adjustments for each choice.
+Follow [[file:../voice-editor-design.org][the voice editor design]] and [[file:../adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] for palette-owned base voices:
+preferred physical choices, fallback order and shared adjustments. Independent
+conversion on first save is accepted; individual choice adjustments remain proposed.
 Simple editing should expose one voice, common adjustments, preview and one
 save action; fallback configuration and individual tuning expand on demand.
-This is a proposal, not an accepted architecture decision or implemented UI.
+The new formats and UI are not implemented yet.
 The [[file:../voice-editor-implementation-plan.org][implementation plan]] now records the source inventory, ordered slices,
-acceptance checks and reasoning-level stops. Planning is complete; the first
-implementation gate is the migration choice in [[file:../adr/0015-palette-owned-voices-and-migration.org][proposed ADR 0015]].
+acceptance checks and reasoning-level stops. Planning and the
+[[file:../voice-editor-data-contract.org][data contract]] are complete. Storage/migration is next after switching to High.
 
 Preserve the existing aural CSS cascade: partial styles combine by dimension,
 competing values use rule precedence, and named presets replace the base.
@@ -39,10 +39,11 @@ previews. Contextual Inherit removes a field rather than writing explicit nil.
 Confirm how proposed individual fallback tuning interacts with contextual
 overrides at runtime; do not introduce numeric accumulation implicitly.
 
-Settle palette ownership, navigation speech, persistence of palette selection,
-and the first delivery slice.  Specify migration from today's shared routing
-profiles without changing existing sound unexpectedly.  Individual fallback
-adjustments must follow the voice actually selected at runtime, including
+Implement the accepted independent-copy migration while preserving original
+palettes and routing profiles. Retaining palette selection across restart stays
+an explicit Presentation Profile action. Settle remaining navigation choices
+during the editor slice. Individual fallback adjustments must follow the voice
+actually selected at runtime, including
 server-side fallback; preview-only selection is insufficient.  Record accepted
 ownership and runtime contracts in an ADR before implementation.
 

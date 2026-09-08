@@ -4,9 +4,12 @@
 
 * Status
 
-Proposed; awaiting the maintainer's migration choice. This record does not
-authorize a saved-data schema or runtime behavior change until accepted.
-The [[file:../voice-editor-implementation-plan.org][implementation plan]] records the decision boundary and delivery slices.
+Accepted for palette ownership and independent conversion on first save,
+selected by the maintainer on 2026-09-08. The
+[[file:../voice-editor-data-contract.org][data and resolution contract]] specifies the implementation of that choice.
+Neither the new formats nor the editor are implemented yet. Optional individual
+fallback tuning still requires a subsequent runtime decision.
+The [[file:../voice-editor-implementation-plan.org][implementation plan]] records delivery slices and reasoning-level stops.
 
 * Context
 
@@ -27,7 +30,7 @@ local storage, and per-choice runtime tuning unresolved. Existing data cannot
 identify one uniquely correct route for every palette: users can combine the
 same palette with multiple independently selected routing profiles.
 
-* Proposed decision
+* Decision
 
 ** Own base definitions and choice policy by palette and named voice
 
@@ -40,11 +43,16 @@ Physical availability, disabled engines, global fallback and Automatic remain
 workstation policy. Owning a choice policy does not guarantee that the same
 physical voice is available on every workstation. Exact native identifiers
 remain local; ordinary portable palette exports do not silently include them.
-Precise schema placement and versioning are to be finalized before acceptance.
+Palette schema 2 marks owned routing and keeps portable choices with each
+definition. Routing-file schema 2 holds immutable local choice snapshots
+referenced by palette and voice; user-data schema 8 contains old and new palettes.
+The linked contract defines validation, whole-entry inheritance, alias handling,
+session precedence and compatibility. New private services preserve existing
+public definition-only APIs and command signatures.
 
-** Prefer independent conversion when first saved
+** Convert independently when first saved
 
-Recommended transition: opening or auditioning an old palette writes nothing.
+Opening or auditioning an old palette writes nothing.
 The first saved conversion creates a named personal copy containing effective
 definitions and choices from an explicitly identified saved routing profile.
 Keep the source palette, routing profiles and existing Presentation Profile
@@ -86,25 +94,32 @@ Partial multi-store writes must be reported and recoverable. Saved data and
 acknowledged live application are separate states; retries and callbacks are
 bound to the proposal and cannot clear newer edits.
 
+Persist new immutable local choice snapshots before publishing their references
+in the palette file. Keep old snapshots, so interruption between the two writes
+leaves the old palette's chain intact. Publish coordinated live state only after
+both writes succeed. Do not represent two independent renames as an atomic
+multi-file transaction. Missing local references on another workstation use
+labelled portable fallback; malformed or wrong-owner references are rejected.
+
 Preserve the routing-ready checkpoint in ADR 0007, lane ownership in ADR 0009,
 and remote topology and no-replay behavior in ADR 0010. Palette activation must
 publish consistent choices and definitions to both lanes. Follow the refined
 Emacs minimum in ADR 0012 and native-platform scope in ADR 0014. Other accepted
 ADRs continue to govern attribution, documentation, installation and release.
 
-* Alternatives requiring a maintainer choice
+* Alternatives considered
 
 | Option | Advantages | Disadvantages |
 |--------+------------+---------------|
-| Independent copy on first saved conversion (recommended) | Preserves originals and existing profile references; clear edit scope; reversible selection. | Additional palette names; copied definitions stop following the old parent; restart selection needs an explicit profile update. |
+| Independent copy on first saved conversion (selected) | Preserves originals and existing profile references; clear edit scope; reversible selection. | Additional palette names; copied definitions stop following the old parent; restart selection needs an explicit profile update. |
 | Upgrade personal palettes in place | Stable IDs; existing presentation profiles select the upgraded voices. | Changes all existing consumers; routing-profile switches no longer replace owned choices; inheritance and rollback are more involved. Built-ins still need personal copies. |
 | Improve the UI with shared routing first | Earliest navigation/save improvements; avoids an initial ownership migration. | Physical edits still affect several palettes; cannot claim full palette isolation; later migration is still required. |
 
-* Acceptance before implementation
+* Implementation acceptance
 
-Choose the transition option, then finalize the concrete schema, inheritance,
-alias resolution, session precedence and migration examples. Test equivalent
-requested styles and selector chains before and after conversion. Do not
+Follow the linked data contract and independent conversion fixtures. Test
+equivalent requested styles and selector chains before and after conversion,
+including complete-copy inheritance, Automatic and conflicting aliases. Do not
 infer a guaranteed audible result from a saved value or adapter acknowledgement.
 
 Keep the optional per-choice runtime extension proposed until the maintainer

@@ -6,8 +6,10 @@
 
 Draft for discussion; describes proposed behaviour, not the current product.
 Implementation and changes to existing commands remain separate work.
-The [[file:voice-editor-implementation-plan.org][implementation plan]] now defines tested delivery slices and the first
-migration decision. [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015 is proposed]], pending that decision.
+The [[file:voice-editor-implementation-plan.org][implementation plan]] defines tested delivery slices.
+[[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] accepts palette ownership and independent conversion on first save;
+the [[file:voice-editor-data-contract.org][data contract]] specifies its implementation. Detailed interaction choices
+and individual fallback tuning remain proposed until their respective slices.
 
 Make it possible to answer three questions in one place: which physical voice
 does bolden use, what adjustments change its sound, and have my changes been
@@ -16,12 +18,13 @@ saving a physical-voice experiment.
 
 * Recommended ownership model and alternatives
 
-Recommendation for discussion: each palette owns the complete base sound of its
-named voices, including preferred physical choices, ordered fallbacks, shared
-adjustments, and optional adjustments for individual choices. Editing bolden
-in one palette should not silently change another palette's own definition.
+Accepted ownership: converted palettes own the complete base sound of their
+named voices, including preferred physical choices, ordered fallbacks and shared
+adjustments. Individual choice adjustments remain a proposed extension.
+Editing bolden in one palette should not silently change another palette's own definition.
 Switching palettes selects the corresponding complete voice definitions.
-This recommendation has not yet been accepted as an architecture decision.
+Legacy palettes retain their current behavior until an independent personal
+copy is saved through the new workflow; that workflow is not implemented yet.
 Presentation rules can still adjust that base for particular content. Palette
 ownership must preserve the existing aural CSS cascade described below.
 
@@ -42,7 +45,8 @@ Ownership in the user model does not require putting machine-specific physical
 IDs in portable palette exports. Local assignment data may remain stored
 separately, keyed to the owning palette and voice. Cross-machine import must
 identify unavailable choices and preserve fallback behaviour. The precise
-storage, migration, and runtime contracts require a subsequent design review.
+storage and migration contract is specified in ADR 0015 and the linked data
+contract. Individual fallback adjustments still require a runtime design review.
 
 * Preserve the aural CSS cascade
 
@@ -436,8 +440,9 @@ tuning ships, test contextual precedence through actual runtime fallback.
 
 * Decisions to settle during walkthrough
 
-- Accept or revise the recommendation that each palette owns complete named
-  voices, with sharing explicit and optional; then specify migration and storage.
+- Ownership and independent-copy migration are accepted in ADR 0015. Review
+  their implementation against the data contract; do not reopen that choice
+  through incidental UI changes.
 - Whether optional per-choice adjustments ship with the first editor or follow
   the initial editor using today's shared style and existing fallback chains.
 - Confirm that per-choice settings form the named voice's base before explicit

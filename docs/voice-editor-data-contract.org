@@ -1,0 +1,242 @@
+#+title: Voice Editor Data and Resolution Contract
+#+date: 2026-09-08
+#+startup: content
+
+* Status and boundary
+
+Implementation contract for slices 2 through 6 of the
+[[file:voice-editor-implementation-plan.org][implementation plan]], following the maintainer's selection of independent
+conversion on first save in [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]]. The formats below are specified, not
+implemented. The current runtime still uses palette schema 1, user-data schema
+7 and routing-file schema 1. Individual fallback tuning remains later work.
+
+* Identity and ownership
+
+An owned voice is identified by its defining palette ID and named entry.
+Palette selection is an explicit resolver input, not inferred from the active
+routing profile or from a Presentation Profile. Portable data owns the style
+and portable choice policy. Local data can replace the complete selector chain
+for that same owner; it never contributes an unrelated palette's choices.
+
+The first conversion copies effective legacy entries into a new personal
+palette with no parent. Preserve personality symbols and complete style plists
+as data; do not materialize engine-dependent settings or contextual results.
+The copy stops following old parent edits. No source palette, old routing
+profile or existing Presentation Profile reference is rewritten.
+
+Subsequent owned-palette inheritance follows whole entries. The nearest
+definition supplies both style and choice metadata; a local choice reference
+is resolved against that defining palette. Editing an inherited voice creates
+a complete entry in the child and copies its effective choice data to that new
+owner. It cannot reuse a local record owned by the parent. Child edits therefore
+leave the parent intact; explicitly editing a parent can affect descendants.
+
+Legacy palettes retain existing inheritance and shared routing. New owned
+palettes may inherit only from owned palettes. Reject new mixed-model parent
+links; conversion creates an independent copy instead of such a link. A legacy
+palette with no owned data must not be implicitly converted by a reader.
+
+* Saved formats
+
+** Portable palettes: schema 2
+
+Retain =:id=, =:summary=, =:parent= and =:entries=. Require
+=:routing owned= in schema 2; schema 1 has legacy routing and does not gain
+this marker merely by being loaded or re-saved. Do not add a routing key to
+voice-style plists, which remain governed by the existing field metadata.
+
+Each schema-2 entry contains exactly one existing =:personality= or =:style=
+definition, plus these choice fields:
+
+| Field | Contract |
+|-------+----------|
+| =:choices= | Required list of persisted portable selectors, including an explicit empty list. Use the existing selector grammar and require portable scope; exact native IDs are excluded. |
+| =:language= | Optional nonempty language string, or nil, following current routing validation. |
+| =:local-choices= | Optional opaque local choice-set ID, or nil. This references the complete local chain, not additional selectors to append. |
+
+An empty owned chain means Automatic and deliberately bypasses old per-voice
+bindings. It remains subject to global engine priority, disabled engines,
+fallback policy and capability limitations. Absence of an owned palette entry
+for an unrelated logical ID retains that ID's existing routing path.
+
+Continue requiring all five ACSS fields in explicit palette styles. Preserve
+nil, zero, optional effects, signed relative rate, loadable legacy absolute
+rate, and raw stored filter values. No new numeric accumulation or nil semantics.
+Palette and entry IDs, duplicate names, unknown keys and malformed plists must
+be validated. Retain the existing style-validation behavior for duplicate style
+fields; stricter new metadata validation must not rewrite that contract.
+
+** Local routing file: schema 2
+
+Retain =:active-profile= and =:profiles= unchanged, and add =:choice-sets=.
+Each choice-set record has =:id=, =:palette=, =:voice= and =:selectors=.
+Selectors use the existing persisted grammar, retaining their complete order
+and local/portable scope. Session selectors are invalid here. An empty local
+chain is valid and overrides a nonempty portable chain with Automatic.
+
+IDs are nonempty opaque strings, unique within the local file; their allocation
+must support retrying the same proposal without creating a different record.
+A referenced record must match the defining palette and voice. Reject duplicate
+IDs, wrong-owner references and attempts to replace an existing ID's payload.
+Keep old choice records during ordinary writes; garbage collection is separate.
+
+Choice sets are immutable snapshots. Updating physical choices creates a fresh
+record and then changes the portable entry's reference. Copying to a different
+owner creates a record for that owner. Retaining immutable snapshots prevents
+a partly completed save from changing the choices still referenced by the old
+palette definition.
+
+All-portable chains need no local record. For a mixed chain, =:choices= stores
+the ordered subsequence already marked portable, while the local record stores
+the full chain. Do not invent property matches from native IDs or discovered
+voices. Locally, the full chain replaces that portable subsequence; there is
+no concatenation or second interpretation of fallback order.
+
+If a referenced local record is missing on another machine, resolve the stored
+portable chain with a =missing-local-choices= diagnostic and identify the changed
+selection basis. Never recover it from an old global binding. A routine style
+edit preserves the unresolved reference; changing/resetting choices is explicit.
+Malformed or wrong-owner data is an error, not a missing-record fallback.
+
+** Aural user-data envelope: schema 8
+
+The envelope keeps the existing keys and allows schema-1 and schema-2 palettes.
+Version 7 migrates in memory to version 8 without converting any palette or
+selecting new configuration. Versions earlier than 7 follow existing migrations
+first. Routing-file version 1 similarly gains an empty choice-set collection
+in memory. Loading either file writes nothing.
+
+Readers accept old formats; writers preserve each palette's ownership version
+inside the current envelope. Old Emacsvox versions may reject the new envelope;
+do not promise backward readability or silently remove choices to make it load.
+Preserve backups through the existing writer conventions.
+
+** Portable export and import
+
+An ordinary portable export retains =:routing owned= and =:choices=, omits
+=:local-choices= and local choice-set records, and reports omitted local choices.
+This is deliberate selection fallback, not a claim of identical physical sound
+on import. Copying or renaming an owned palette in the same installation is a
+different operation and copies the full local chain to its new owner.
+
+Do not silently overwrite an existing palette ID during import. A reviewed
+replacement or a new ID is required. An explicit styles-only export can use the
+legacy form only when it states that owned choices are omitted. Raw local files
+remain machine-local data, not the portable export format.
+
+* Pure resolution and alias rules
+
+Introduce a private data service, =emacsvox-aural-voice-data.el=, over existing
+resource and routing validation. Supply immutable palette records, local choice
+sets, source routing data, session bindings and workstation policy as inputs.
+Its result is fresh data and performs no registry mutation, I/O, speech or
+live inventory lookup. Keep UI buffers, save operations and adapter process
+state out of this service.
+
+Resolve an exact palette entry name first. Only when no direct entry exists
+may a canonical default alias such as =voice-bolden= identify =bolden=.
+Use the existing declared default alias mapping; do not strip arbitrary
+=voice-= prefixes or follow generated =acss-*= implementation names. When
+both names are actual entries, they are distinct and direct matches win.
+
+For a converted entry, registration supplies owned choices for its canonical
+name and its applicable legacy aliases. Preserve legacy personality compilation
+without recursively resolving an unchanged personality alias to itself. Route
+identity and personality implementation remain distinct. Unrelated logical IDs
+retain their existing definitions and routing.
+
+Select the full local chain when its reference resolves, otherwise the portable
+chain. A matching temporary session binding then replaces that chain without
+being persisted. Retain the current global, logical-name session scope; this
+feature does not silently make old session overrides palette-local. For an owned
+name and its applicable aliases, conflicting simultaneous session bindings are
+diagnosed before apply rather than selecting one by list order. Identical
+bindings may coalesce. Legacy-palette session behavior is unchanged.
+
+The result includes requested logical ID, canonical name, defining palette,
+original style definition, routing mode, ordered selectors, language, choice
+source, session override information, workstation policy and diagnostics.
+Keep explicit Automatic distinct from legacy lookup and from missing local
+data even when their resulting selector lists are empty. Capability adaptation
+and actual realization belong to the adapters; inventory does not mutate this
+result or silently discard unavailable choices.
+
+The compiler, Workbench, new editor, standalone-family routing and Omnivox
+registration consume this shared result. Source/effective dimension provenance
+remains in the presentation-rule resolver. The base then receives the existing
+contextual dimension patch with existing precedence. Physical-choice selection
+does not add another style cascade in the first implementation.
+
+Preserve public command signatures and the definition-only return contract of
+=emacsvox-aural-voice= and =emacsvox-aural-effective-voice-entries=. Retain owned
+metadata in the validated palette data and access it through private helpers.
+Keep current public registration compatible with legacy definition-only calls;
+new owned records enter through the versioned data validator. The common editor
+command will be additive; existing commands delegate after parity is established.
+
+* Migration and save publication
+
+The source routing profile is part of the proposal, not guessed from history.
+The proposal also supplies the destination palette ID and any allocated local
+choice-set IDs. Retain those IDs for retries; the pure migration function does
+not allocate random identities or consult mutable global state. Fixtures supply
+literal IDs for independently checkable expected output.
+If no source routing profile is selected, identify existing saved choices or an explicit Automatic
+source before preparing conversion. Do not turn live Omnivox variables or
+temporary bindings into saved defaults without an explicit user action.
+
+For each effective source entry, find bindings for its direct name and applicable
+declared aliases. Copy identical candidates once. If candidates disagree in
+selector order, scope or language, return a blocking conflict showing both
+sources; do not resolve it by precedence invented during migration. Source
+entries, source routing profiles and unrelated logical IDs remain untouched.
+Capture before-values/file identities so another edit cannot be overwritten.
+
+The save coordinator stages a complete validated proposal, then persists local
+choice snapshots before publishing palette references in the aural-data file.
+New snapshots do not replace old snapshots. If the local write fails, publish
+nothing. If the palette write fails, retain the old palette and a retryable
+partial-save status; unreferenced snapshots are harmless. If the process exits
+between writes, the old palette still references the old chain on restart.
+This is ordered publication, not an atomic transaction across two files.
+
+After both writes succeed, publish the corresponding registries/selection and
+start acknowledged apply. Validate both stores and conflicts again on retry;
+reuse the frozen snapshot IDs. Do not run palette/routing observer hooks against
+a half-installed proposal. A restart after palette publication can reconstruct
+the complete saved configuration even if live apply had not finished.
+
+Style-only edits can retain an existing choice reference. Changing only portable
+choices needs no local write. Do not republish or modify an old choice-set ID.
+The coordinator must not use a combined persist-and-apply helper where a
+non-activating writer is required. Existing independent storage clients must
+preserve choice snapshots when rewriting their own portion of the file.
+
+* Acceptance fixtures for implementation
+
+[[file:../test/fixtures/voice-editor/conversion.el][Conversion data]] contains source palettes/profiles and independently specified
+expected converted data. It is one non-evaluated form, not executable setup or
+evidence that the future schemas already load. Reuse it when implementing the
+migrator and validators; never generate expected results from the implementation.
+
+| Case | Required observation |
+|------+----------------------|
+| Legacy child copied from a parent | Converted palette has no parent and retains both effective definitions unchanged. |
+| Same source, two explicit routing profiles | Two converted palettes retain different local chains; source palette/profile bytes remain unchanged. |
+| Palette A to B to A | Registered choices and styles return to A, with both speech lanes reporting their own apply outcome. |
+| Owned Automatic with an old bolden binding | No old binding is used, even when the owned selector list is empty. |
+| Mixed selector chain | Local resolution preserves the entire order; portable export retains only the explicit portable subsequence. |
+| Inherited owned voice | Parent owns style and referenced choices until a complete child override is saved. |
+| Direct entry and default alias | Direct identity wins; conflicting migration alias bindings block conversion. |
+| Generated personality implementation | Never treated as a substitute routing key for a stable named voice. |
+| Nil, zero and low-pass cutoff | Stored nil, zero and cutoff seven survive exactly; UI amount remains two. |
+| Session override | Visible temporary selection wins; saved conversion does not capture it; conflicting alias overrides are diagnosed. |
+| Unavailable primary | Stored chain is unchanged; actual runtime fallback follows adapter policy and shared style. |
+| Missing or wrong-owner local reference | Missing data uses labelled portable fallback; wrong owner is rejected. Neither uses legacy bindings. |
+| Failure between files and restart | Old references remain valid; retry reuses staged snapshots; new style cannot pick up a mutated old chain. |
+| Concurrent edit and old callback | Before-value conflict is reported; a completed older proposal cannot clear newer draft changes. |
+| Old files and older application | Old data loads without conversion/writes; older applications may reject the new envelope explicitly. |
+
+The next reasoning-level boundary is now High for storage/migration and the
+ordinary implementation slices. Return to XHI and a maintainer decision before
+per-choice runtime adjustments or any revision of the accepted migration behavior.
