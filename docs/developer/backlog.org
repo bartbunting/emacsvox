@@ -27,6 +27,9 @@ fallback order, shared adjustments, and optional adjustments for each choice.
 Simple editing should expose one voice, common adjustments, preview and one
 save action; fallback configuration and individual tuning expand on demand.
 This is a proposal, not an accepted architecture decision or implemented UI.
+The [[file:../voice-editor-implementation-plan.org][implementation plan]] now records the source inventory, ordered slices,
+acceptance checks and reasoning-level stops. Planning is complete; the first
+implementation gate is the migration choice in [[file:../adr/0015-palette-owned-voices-and-migration.org][proposed ADR 0015]].
 
 Preserve the existing aural CSS cascade: partial styles combine by dimension,
 competing values use rule precedence, and named presets replace the base.

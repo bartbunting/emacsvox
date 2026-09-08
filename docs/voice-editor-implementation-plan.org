@@ -1,0 +1,223 @@
+#+title: Unified Voice Editor Implementation Plan
+#+date: 2026-09-08
+#+startup: content
+
+* Status and working agreement
+
+Planning slice complete; implementation awaits the migration decision below.
+The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
+[[file:adr/0015-palette-owned-voices-and-migration.org][Proposed ADR 0015]] makes the first ownership/migration choice reviewable;
+it is not accepted yet. No runtime or personal configuration has changed.
+
+The maintainer requested work in tested, committed slices, stopping when a
+decision or a reasoning-level change is needed. Start at XHI for ownership,
+migration and the implementation contract. After those contracts and their
+acceptance fixtures are settled, recommend High before ordinary implementation
+and stop for the level change. Revisit XHI for the per-choice runtime design.
+Max is reserved for a demonstrated problem that remains unresolved at XHI.
+
+Commits are authorized for completed slices. Publication, release tags, and
+changes to live personal settings are not part of that authorization. Preserve
+the existing untracked =CODE-QUALITY-AUDIT-2026-09-07.org=.
+
+* What the current code establishes
+
+| Concern | Existing owner and implication |
+|---------+--------------------------------|
+| Portable definitions | [[file:../lisp/emacsvox-aural-resources.el][Resources]] validates palette entries and inherits whole named definitions. [[file:../lisp/emacsvox-aural-schemes.el][Schemes]] persists palettes in user-data schema 7; palette schema is 1. Preserve symbolic presets, nil, zero, and raw stored filter values. |
+| Physical routes | [[file:../lisp/emacsvox-aural-routing-profiles.el][Routing profiles]] uses profile schema 2 inside routing-file schema 1. Bindings identify logical voices, with no palette key. The active profile, session bindings, global engine order and fallback policy are independent of palette selection. |
+| Presentation profiles | [[file:../lisp/emacsvox-aural-profile-service.el][Profile service]] captures a palette selection with presentation options, sound pack and spatial settings. It does not capture a routing-profile selection. Do not invent an existing palette-to-route association during migration. |
+| Cascade | [[file:../lisp/emacsvox-aural-rules.el][Rules]] combines explicit dimensions by precedence; named presets reset the base. [[file:../lisp/emacsvox-aural-compiler.el][Compiler]] resolves the base, capabilities and legacy personalities. Keep these semantics independent of ownership. |
+| Preview parity | [[file:voice-style-coverage.org][The completed consumer audit]] protects editing, saved-data readback, previews and final speech requests, including custom bolden aliases and exact gain/pan neutral values. |
+| Current save operations | [[file:../lisp/emacsvox-aural-voice-experiment.el][Experiments]] already retain proposals, completed persistence steps and failure status, while [[file:../lisp/emacsvox-aural-voice-workbench.el][Workbench]] saves/applies a shared routing profile. Reuse validated storage and adapter services; do not assume either UI already implements the new ownership or draft model. |
+| Runtime registration | [[file:../lisp/omnivox-voices.el][Omnivox adapter]] registers logical IDs and ordered preferences separately from global fallback policy. A palette switch must publish the matching definitions and choices to both speech lanes. Inventory prediction cannot establish actual fallback. |
+
+A concrete migration conflict is possible today: one routing profile explicitly
+assigns =voice-bolden= to DECtalk, and another assigns it to Eloquence, while
+both are used with the same palette. There is no saved fact saying either
+explicit route belongs to that palette.
+A single new palette-owned choice cannot preserve both as automatic alternate
+definitions without retaining sharing or introducing explicit variants.
+
+* First decision: how existing palettes enter the new editor model
+
+Recommendation: option A, an independent copy on the first saved conversion.
+Opening and auditioning remain read-only; the normal save proposal names the
+new palette and source routing profile. Subsequent edits use that converted
+palette directly. The original palette and its presentation-profile references
+remain available. This is a one-time conversion for each chosen palette, not
+a new palette on every save.
+
+| Option | Result | Pros | Cons |
+|--------+--------+------+------|
+| A. Copy when first saved (recommended) | Create a personal palette with independent definitions and choices copied from the selected legacy palette and routing profile. | Leaves old setups intact; scope and rollback are visible; avoids guessing which unused profiles to convert. | Adds a palette; retaining its selection after restart requires the existing explicit Presentation Profile action; the copy no longer follows the old palette's parent edits. |
+| B. Upgrade the selected palette in place | Personal palettes keep their IDs while acquiring owned choices; built-ins still need personal copies. | Fewer duplicates; existing presentation profiles keep selecting the upgraded palette. | Every reference to that palette changes semantics; later routing-profile switches stop replacing its owned choices; inheritance and recovery require more migration work. |
+| C. Unify the editor over shared routing first | Keep current stores and ownership while improving navigation, drafts and saving. | Fastest route to a usable editor; smallest initial migration risk. | A physical assignment still affects multiple palettes; palette switching cannot restore complete voice choices; ownership migration remains later work. |
+
+The interaction design recommends palette ownership but does not choose among
+these transition behaviors. The maintainer must choose before schema or runtime
+changes. If A is chosen, use the following as the proposed migration contract:
+
+1. Choose a source palette and saved routing profile explicitly in the proposal;
+   default the latter to the current saved selection when available. Do not
+   treat an unrelated Presentation Profile as a route mapping.
+2. Copy effective named definitions into an independent personal palette,
+   retaining their representation. Do not bake adapter normalization, inferred
+   physical realization, or contextual rule results into saved values.
+3. Copy ordered explicit selectors and language metadata, preserving exact,
+   engine-default and property choices, including unavailable choices. Keep
+   exact IDs local. Report conflicting routes for portable and legacy aliases
+   instead of arbitrarily selecting one; preserve unrelated logical IDs.
+4. No explicit route means Automatic. Keep global engine priority, disabled
+   engines and fallback policy as workstation policy; do not expand them into
+   per-voice exact assignments. Automatic remains subject to that policy.
+5. Session overrides remain temporary and visible. They are not silently saved
+   as the new base. Pinning a temporary choice requires an explicit editor
+   action. Show when the proposed saved result differs from current speech.
+6. Persist and validate the complete proposal before selecting the new palette
+   and applying its configuration. Leave original data and Presentation Profile
+   selections intact. Retaining the new selection across restarts is the
+   existing explicit profile workflow.
+7. Preserve old readers/commands through the transition. Legacy palettes use
+   legacy shared routing; converted palettes use their owned choices. Label
+   the scope accurately wherever both models are exposed.
+
+* Implementation slices
+
+Each slice finishes with its focused checks and a commit. A commit records
+implementation status and remaining acceptance work; it does not imply audible
+acceptance or complete implementation of optional later stages.
+
+** DONE 0. Inspect ownership and prepare the migration decision
+
+Read all accepted ADRs and the existing style, route, profile, preview, save
+and registration boundaries. Create this plan and the proposed ADR. Verify
+the relevant current contracts and documentation, then commit the planning
+slice. Stop for the migration decision while remaining at XHI.
+
+** TODO 1. Settle the data and resolution contract
+
+After the decision, finalize the ADR and concrete saved-data examples at XHI.
+Specify palette/voice identity, local versus portable choice storage,
+inheritance, legacy routing lookup, and how an empty owned choice list differs
+from absence of owned data. Define stable alias handling before route writes.
+
+Specify a pure resolution result containing requested base, explicit choices,
+automatic policy, source identities and diagnostics. Use it for editor display,
+preview and adapter registration without adding UI state to the compiler.
+Keep contextual style patches and per-dimension provenance separate.
+
+Acceptance fixtures must cover two palettes with different bolden routes, one
+legacy palette with several selectable routing profiles, alias conflicts,
+inherited names, nil/zero, Automatic, unavailable engines and session overrides.
+Resolve any public-interface changes explicitly in the ADR before coding.
+Once this contract is concrete and accepted, stop and recommend High for
+slices 2 through 6.
+
+** TODO 2. Add storage and migration without automatic activation
+
+Implement versioned validators, readers, writers and a pure migration proposal
+using the chosen contract. Keep local identities out of ordinary portable
+exports. Create copies or upgrades only through the reviewed save operation.
+
+Check old-data loading, complete round trips, unknown-version rejection,
+duplicate IDs, malformed selectors, file-write failure and idempotent retry.
+Verify that opening/cancelling conversion leaves registries, files and active
+selection unchanged. Verify originals survive the selected migration strategy.
+
+** TODO 3. Resolve owned choices through normal speech and preview
+
+Feed the common result into standalone adapter routing and Omnivox registration.
+Switching palettes must switch corresponding definitions and owned choices;
+legacy palettes retain their old behavior. Preserve global fallback and temporary
+override policy. This slice uses shared style adjustments for all choices.
+
+Check A-to-B-to-A palette switching, legacy aliases, explicit and automatic
+selection, disabled/unavailable engines, two-lane apply failure and startup
+readiness. Capture final registration and speech requests, not only UI strings.
+Run existing cascade and compiled parity tests. Introduce no per-choice effects
+protocol in this slice.
+
+** TODO 4. Add draft and save coordination
+
+Create one draft per destination and scope, with immutable save proposals and
+operation IDs. Track changed fields, completed persistence steps, desired
+selection, lane acknowledgements, and retryable failures. Reuse atomic writers
+and adapter apply services; two file renames are not one atomic transaction.
+
+Check conflicts before writes; test failure between writes, cancellation before
+save, idempotent retry, timeout, stale callback, buffer destruction, and newer
+edits while an old proposal applies. A partial save remains recoverable and
+visible. No callback can clear changes it did not save or select another draft.
+Keep inactive-palette saving and restart selection distinct from runtime apply.
+
+** TODO 5. Deliver the complete base editor workflow
+
+Provide the common editor for named voices and physical experiments. Implement
+physical choice, shared tuning, original/edited comparison, ordered fallbacks,
+one primary save action, undo, leave/resume and explicit experiment destinations.
+Use the shared draft/save status in Home and voice lists. Retain advanced
+Workbench commands and accurately disclose legacy scope during migration.
+
+Check the full bolden workflow through both entry paths, style-only/route-only/
+combined keeps, inherited and inactive palettes, original preview stability,
+preservation of an existing fallback chain and restoration of the originating
+row/column. Test spoken navigation and failure messages as observable behavior.
+
+** TODO 6. Expose the cascade without complicating base editing
+
+Add optional Effective sound / Where settings came from inspection and labelled
+base/context previews using current inspection services. Add contextual editing
+through explicit rule match and personal/session/buffer scope. Remove a field
+for Inherit; preserve existing explicit nil distinctly.
+
+Test independent dimensions, competing values, preset reset, source validity,
+masked base edits, unsupported fields and per-dimension origins. Context saves
+must not change palette definitions; previews must not persist flattened results.
+
+** TODO 7. Decide and implement optional individual fallback tuning
+
+Stop and return to XHI before specifying storage and server-side fallback
+behavior. Review the Omnivox repository's applicable instructions and ADRs.
+The proposed order is shared base, selected choice overrides, then contextual
+dimensions, with no numeric accumulation. Confirm or revise that contract with
+the maintainer before changing the wire or advertising the feature.
+
+Implement only with negotiated support and explicit behavior for older servers.
+Verify adjustment selection after actual runtime fallback, including two voices
+from the same engine, unavailable primary choices, reordered choices and a
+fallback selected differently from the client prediction. Preview parity alone
+does not establish correctness. Keep this stage visibly pending until delivered
+or explicitly deferred by the maintainer.
+
+** TODO 8. Spoken acceptance and closeout
+
+Conduct a live walkthrough of both entry paths, save status, fallback behavior,
+context explanations, draft resumption and recovery. Automated tests cannot
+approve whether speech navigation feels usable or different engines sound alike.
+Request user feedback at that boundary; do not claim completion without it.
+
+Update current user and developer guidance, generate tracked docs, rerun the
+required gates, and commit final status. Retain any explicitly deferred optional
+work in the backlog rather than reporting the entire plan implemented.
+
+* Checks and evidence
+
+For planning slice 0, =make check-emacs= and =make bytecode-check= passed with
+the Emacs selected by =local.mk=. Seventy existing routing, presentation-profile,
+rule/cascade and connected saved-style tests passed in a fresh batch Emacs.
+These establish the starting contracts; they do not test the proposed editor.
+The documentation release check, local-link checks and whitespace checks also
+passed for this planning slice.
+
+For later Lisp slices, run focused ERT and =make bytecode=, or
+=make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh
+Emacs and run =make bytecode-check=. Expand compiled parity for new boundaries.
+Run =make headers-check= for new maintained Lisp headers or metadata changes.
+Follow ADRs 0001/0004 for current documentation and =make docs-release-check=
+before review/commit. No release, installation or public publication is implied.
+
+Known baseline limit: the full suite's offline-manual node assertion expects
+an unsplit Info file. The [[file:voice-style-coverage.org][coverage report]] records this pre-existing failure
+and the sandbox-sensitive checks. Do not hide it or silently fix unrelated code
+as part of this feature.

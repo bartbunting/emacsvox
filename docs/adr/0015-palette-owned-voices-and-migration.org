@@ -1,0 +1,112 @@
+#+title: ADR 0015: Palette-Owned Voices and Legacy Migration
+#+date: 2026-09-08
+#+startup: content
+
+* Status
+
+Proposed; awaiting the maintainer's migration choice. This record does not
+authorize a saved-data schema or runtime behavior change until accepted.
+The [[file:../voice-editor-implementation-plan.org][implementation plan]] records the decision boundary and delivery slices.
+
+* Context
+
+Voice tuning, physical routing and save status currently span palette, tuner,
+Workbench and experiment interfaces. Styles belong to portable palettes;
+physical bindings belong to a separately selected machine routing profile.
+Bindings have logical voice names but no palette identity. Presentation
+Profiles select palettes, but do not select routing profiles.
+
+Consequently editing a physical route for bolden can affect its use in several
+palettes. Conversely, switching a palette can change its style without changing
+the physical assignment. A common editor alone cannot deliver the proposed
+promise that a palette restores its complete named voice choices.
+
+The [[file:../voice-editor-design.org][interaction design]] recommends complete base voices owned by palettes,
+while retaining the existing presentation-rule cascade. It leaves migration,
+local storage, and per-choice runtime tuning unresolved. Existing data cannot
+identify one uniquely correct route for every palette: users can combine the
+same palette with multiple independently selected routing profiles.
+
+* Proposed decision
+
+** Own base definitions and choice policy by palette and named voice
+
+A converted palette owns its named voice definitions, preferred physical
+selectors, and ordered explicit fallbacks. Optional per-choice adjustments are
+a later extension requiring a separate runtime contract. Ordinary edits to one
+converted palette must not rewrite another palette's routes.
+
+Physical availability, disabled engines, global fallback and Automatic remain
+workstation policy. Owning a choice policy does not guarantee that the same
+physical voice is available on every workstation. Exact native identifiers
+remain local; ordinary portable palette exports do not silently include them.
+Precise schema placement and versioning are to be finalized before acceptance.
+
+** Prefer independent conversion when first saved
+
+Recommended transition: opening or auditioning an old palette writes nothing.
+The first saved conversion creates a named personal copy containing effective
+definitions and choices from an explicitly identified saved routing profile.
+Keep the source palette, routing profiles and existing Presentation Profile
+references intact. Future saves update the converted copy.
+
+The copy is independent of old parent-palette edits. Preserve source definition
+representations and explicit selector order, including unavailable choices;
+do not materialize inferred engine defaults, temporary session overrides,
+adapter-normalized parameters or contextual results as saved base settings.
+Show session differences and alias conflicts before saving. New independent
+copies are not evidence that explicit sharing has been implemented.
+
+Legacy palettes continue to use shared routing. Converted palettes use their
+owned choices, including explicitly Automatic choices, which must not fall
+back through an old per-voice binding merely because their explicit list is
+empty. Advanced interfaces must identify which scope they edit.
+
+Selection of the converted palette happens only as part of its save/apply
+proposal. Retaining selection across restart uses the existing explicit
+Presentation Profile workflow. Do not silently repoint existing profiles.
+
+** Preserve the aural CSS cascade
+
+Palette ownership determines the base. Matching rules still compose partial
+dimensions using existing precedence and provenance. Named presets reset the
+base; offsets on the same dimension do not numerically accumulate. Preserve
+nil, zero, omission and legacy preset behavior.
+
+Base editing and contextual rule editing have different destinations and
+draft identities. Contextual Inherit removes a field; it is not an alias for
+explicit nil. Context previews and effective-value explanations must not
+flatten the resolved result back into a palette definition.
+
+** Coordinate saving and acknowledged application
+
+One editor action captures one immutable proposal. Existing atomic storage
+writers and adapter services remain the persistence and playback owners.
+Partial multi-store writes must be reported and recoverable. Saved data and
+acknowledged live application are separate states; retries and callbacks are
+bound to the proposal and cannot clear newer edits.
+
+Preserve the routing-ready checkpoint in ADR 0007, lane ownership in ADR 0009,
+and remote topology and no-replay behavior in ADR 0010. Palette activation must
+publish consistent choices and definitions to both lanes. Follow the refined
+Emacs minimum in ADR 0012 and native-platform scope in ADR 0014. Other accepted
+ADRs continue to govern attribution, documentation, installation and release.
+
+* Alternatives requiring a maintainer choice
+
+| Option | Advantages | Disadvantages |
+|--------+------------+---------------|
+| Independent copy on first saved conversion (recommended) | Preserves originals and existing profile references; clear edit scope; reversible selection. | Additional palette names; copied definitions stop following the old parent; restart selection needs an explicit profile update. |
+| Upgrade personal palettes in place | Stable IDs; existing presentation profiles select the upgraded voices. | Changes all existing consumers; routing-profile switches no longer replace owned choices; inheritance and rollback are more involved. Built-ins still need personal copies. |
+| Improve the UI with shared routing first | Earliest navigation/save improvements; avoids an initial ownership migration. | Physical edits still affect several palettes; cannot claim full palette isolation; later migration is still required. |
+
+* Acceptance before implementation
+
+Choose the transition option, then finalize the concrete schema, inheritance,
+alias resolution, session precedence and migration examples. Test equivalent
+requested styles and selector chains before and after conversion. Do not
+infer a guaranteed audible result from a saved value or adapter acknowledgement.
+
+Keep the optional per-choice runtime extension proposed until the maintainer
+accepts its storage and protocol contract. The recommended contextual precedence
+in the interaction design is not yet implemented server behavior.

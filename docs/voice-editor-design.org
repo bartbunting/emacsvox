@@ -6,6 +6,8 @@
 
 Draft for discussion; describes proposed behaviour, not the current product.
 Implementation and changes to existing commands remain separate work.
+The [[file:voice-editor-implementation-plan.org][implementation plan]] now defines tested delivery slices and the first
+migration decision. [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015 is proposed]], pending that decision.
 
 Make it possible to answer three questions in one place: which physical voice
 does bolden use, what adjustments change its sound, and have my changes been
