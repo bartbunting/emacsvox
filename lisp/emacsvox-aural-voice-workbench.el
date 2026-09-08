@@ -425,25 +425,30 @@
         (palette (emacsvox-aural-voice-workbench--active-palette)))
     (and
      (emacsvox-aural-voice-palette palette)
-     (cl-find-if
-      (lambda (entry)
-        (or (equal name (format "%s" (car entry)))
-            (and (symbolp (cdr entry))
-                 (equal name (symbol-name (cdr entry))))))
-      (emacsvox-aural-effective-voice-entries palette)))))
+     (or
+      (when-let* ((symbol (intern-soft name))
+                  (definition (emacsvox-aural--palette-voice-definition symbol palette)))
+        (cons (car definition) (cadr definition)))
+      (cl-find-if
+       (lambda (entry)
+         (or (equal name (format "%s" (car entry)))
+             (and (symbolp (cdr entry))
+                  (equal name (symbol-name (cdr entry))))))
+       (emacsvox-aural-effective-voice-entries palette))))))
 
 (defun emacsvox-aural-voice-workbench--palette-aliases (logical-voice)
   "Return active palette names resolving to LOGICAL-VOICE."
   (let ((name (format "%s" logical-voice))
         (palette (emacsvox-aural-voice-workbench--active-palette))
+        (resolved (car (emacsvox-aural-voice-workbench--palette-entry logical-voice)))
         aliases)
     (when (emacsvox-aural-voice-palette palette)
       (dolist (entry (emacsvox-aural-effective-voice-entries palette))
         (let ((definition (cdr entry)))
-          (when
-              (or (equal name (format "%s" (car entry)))
-                  (and (symbolp definition)
-                       (equal name (symbol-name definition))))
+          (when (or (eq resolved (car entry))
+                    (equal name (format "%s" (car entry)))
+                    (and (symbolp definition)
+                         (equal name (symbol-name definition))))
             (push (symbol-name (car entry)) aliases)))))
     (sort (delete-dups aliases) #'string-lessp)))
 
@@ -2275,8 +2280,8 @@ command does not stop speech already playing."
                       style
                       (emacsvox-aural--voice-dimension-key dimension)))
                     (normalized
-                     (emacsvox-aural-voice-workbench--normalized-acss-value
-                      value)))
+                     (emacsvox-aural-normalize-post-synthesis-value
+                      dimension value)))
           (setq
            result
            (plist-put

@@ -1,0 +1,101 @@
+#+title: Voice-style consumer coverage
+#+date: 2026-09-08
+
+* Scope and outcome
+
+This maintenance audit follows portable voice settings through editing,
+preview, persistence, compilation and speech requests.  It completes the
+bounded consumer-coverage backlog item and supplies regression protection for
+the [[file:voice-editor-design.org][proposed voice editor]].  It does not implement that design or establish
+that different physical engines sound alike.
+
+Two Workbench defects were found and corrected:
+
+- Gain and pan previews divided levels by nine, although tuner and normal
+  speech use a piecewise scale with level five exactly neutral at 0.5.
+  Workbench now uses the existing effect normalization function.  Independent
+  expectations cover nil and levels 0, 4, 5, 6 and 9, including both sides of
+  the neutral point.
+- A saved custom =bolden= style was resolved by normal speech from the legacy
+  personality =voice-bolden=, but Workbench could miss that entry and omit its
+  adjustments.  Workbench now uses the compiler's existing palette resolver
+  and includes the resolved palette name in its alias display.  Unchanged
+  personality aliases retain their existing lookup fallback.
+
+* Consumer inventory
+
+| Boundary | Owner and coverage |
+|----------+--------------------|
+| Accepted keys, groups, bounds | =emacsvox-aural-rules.el= owns the private field table. Rule tests independently enumerate fields and cover validation precedence, duplicates, presence, nil, zero, composition and provenance. |
+| Palette styles and persistence | Resources validate complete five-field ACSS styles with optional rate/effects; schemes save and load them as data. Scheme tests round-trip family, numeric ACSS, every effect, relative rate, legacy rate and explicit nil. Palette entries do not accept rule-style =:preset= composition. |
+| Numeric editing | =emacsvox-aural-voice-palettes.el= uses field metadata for bounds. Existing =voice-style-ui= tests cover digits, prompts, blank input, limits and undo. The small complete-ACSS editor deliberately edits only its five fields; the tuner adds relative rate and effects. |
+| Filter presentation | Tuner amount is =9 - stored cutoff= for low-pass and unchanged for high-pass. Existing tests cover direction, neutral labels, input and stored values. The new connected test saves amount two as low-pass cutoff seven and reads it back as amount two. |
+| Rule editor | =emacsvox-aural-editor.el= selects named voices from the active palette, preserves existing styling when requested, and previews via rule resolution and compilation. It has no separate numeric dimension mapping. Tools tests cover active-palette choices; preview tests retain compiled voice effects. |
+| Tuner preview | Converts four numeric ACSS fields, signed relative rate and all seven effects; physical choice/family uses route and adapter policy. Existing tests cover a selected engine, unsupported settings and unavailable structured previews. |
+| Workbench preview | Resolves the effective palette style, chooses a route, then converts ACSS, relative rate and effects. The two fixes above close gaps in alias resolution and gain/pan normalization. |
+| Compiler and normal speech | Compiler owns preset/personality resolution and capabilities; transport owns final timeline construction. Existing tests check distinct ACSS wire fields, nil/zero, every effect, relative rate, unavailable family and explicit degradation. |
+| Adapter preview wire | =omnivox-voices.el= owns wire names and discovered capability handling. TTS tests capture preview requests and completion/degradation results, including older servers without relative-rate preview. |
+
+* Connected regression
+
+=emacsvox-aural-native-saved-style-matches-voice-previews= in
+[[file:../test/emacsvox-aural-transport-tests.el][transport tests]] edits a personal =bolden= through actual tuner commands,
+captures its preview, saves to a temporary file, reads the stored data, drops
+the live palette entry, and registers the read-back definition.  It then
+checks the reopened style, Workbench alias and public preview, and the final
+serialized normal-speech request for text bearing =voice-bolden=.
+
+Expected settings and wire values are written independently of the field
+table and conversion functions.  The case exercises distinct numeric ACSS
+values including zero, negative relative rate, every effect, exact neutral
+gain/pan, and the filter amount conversion.  It captures preview API arguments
+and the final speech wire without playing audio.  Existing scheme tests cover
+the full user-data loader separately; this case reads and re-registers the
+saved palette to isolate the consumer path.
+
+[[file:../test/verify-compiled-aural.el][Compiled verification]] runs this case and the Workbench scale regressions
+alongside the existing style contracts in a fresh Emacs, checking that the
+production implementations come from the isolated compiled build.
+
+* Boundaries retained
+
+Family selection and engine capabilities remain adapter policy.  A portable
+field being valid does not imply support by every engine.  Unsupported
+dimensions and old preview protocols remain visible through existing
+degradation reporting.
+
+Legacy absolute =:rate= stays loadable but is not applied as a new rate.
+Explicit nil over a preset retains its characterized compiler behavior; this
+audit does not settle a new inheritance or reset contract.  Nil effect values
+remain omitted, and filter amount zero is called neutral, not a guaranteed
+hardware bypass.
+
+These checks establish preservation and conversion of requested settings.
+They do not measure audible equivalence across DECtalk and Eloquence or test
+live device availability.  Optional tuning for each fallback choice and a
+single coherent editor save workflow remain proposed design work.
+
+When adding a field, review each boundary above and add independent expected
+values or explicit degradation checks.  Keep normalization, UI amount policy
+and backend support outside the field metadata table.
+
+* Verification
+
+Using the Emacs selected by =local.mk=:
+
+- 500 tests passed across rules, schemes, transport, palettes/tuner,
+  Workbench, voice experiments and TTS.  The focused invocation loads the
+  notmuch provider needed by the transport notification fixture.
+- =make compiled-aural-test= passed, including the new connected and scale
+  cases in a fresh compiled process.
+- =make bytecode= and =make bytecode-check= passed.
+- =make docs-org-preview=, =make docs-update= and =make docs-release-check=
+  passed; generated manual artifacts are current.
+- The full unit run had 3,101 passing tests, three failures and one optional
+  mu4e skip.  The Magit socket and Windows launcher tests both passed when
+  rerun outside the sandbox.  The remaining manual assertion searches only
+  =emacsvox.info= for node headers, but the already committed manual is split
+  and its Aural Home header is in =emacsvox.info-1=.  This pre-existing test
+  issue is outside the voice-style changes.
+
+No live listening session was performed.

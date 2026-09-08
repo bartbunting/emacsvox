@@ -1029,11 +1029,33 @@
         (should (= (plist-get entry :rate-offset) -6))
         (should (= (plist-get acss :average-pitch) (/ 4.0 9.0)))
         (should-not (plist-member acss :pitch-range))
+        (should (= (plist-get effects :gain) 0.5))
+        (should (= (plist-get effects :pan) 0.5))
         (should (= (plist-get effects :low-pass) (/ 8.0 9.0)))
         (should (= (plist-get effects :high-pass) (/ 1.0 9.0)))
         (should (= (plist-get effects :reverb) (/ 7.0 9.0)))
         (should (= (plist-get effects :echo) (/ 3.0 9.0)))
         (should (= (plist-get effects :chorus) (/ 6.0 9.0)))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-preview-preserves-effect-scale ()
+  "Public logical previews use exact gain/pan neutral points and keep omissions."
+  (emacsvox-test--with-voice-workbench
+    (setq emacsvox-aural-voice-workbench-view 'logical)
+    (should (emacsvox-aural-ui-goto-row "voice-bolden"))
+    ;; Values on both sides of five distinguish the piecewise effect scale
+    ;; from the ordinary ACSS division by nine.  State expectations explicitly.
+    (dolist (fixture '((nil nil) (0 0.0) (4 0.4) (5 0.5) (6 0.625) (9 1.0)))
+      (let ((level (car fixture)) (expected (cadr fixture)) entries)
+        (cl-letf (((symbol-function 'emacsvox-aural-voice-workbench--palette-entry)
+                   (lambda (_voice) (list 'bolden :gain level :pan level)))
+                  ((symbol-function 'tts-preview-voices)
+                   (lambda (value _callback) (setq entries value))))
+          (emacsvox-aural-voice-workbench-preview))
+        (let ((effects (plist-get (car entries) :effects)))
+          (dolist (key '(:gain :pan))
+            (if expected
+                (should (= (plist-get effects key) expected))
+              (should-not (plist-member effects key)))))))))
 
 (ert-deftest emacsvox-aural-voice-workbench-opens-route-aware-tuner ()
   "Logical tuning passes the staged selector and realized engine unchanged."

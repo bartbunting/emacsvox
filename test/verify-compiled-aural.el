@@ -335,7 +335,8 @@
   (dolist (file '("emacsvox-aural-rules-tests.el"
                   "emacsvox-aural-schemes-tests.el"
                   "emacsvox-aural-transport-tests.el"
-                  "emacsvox-aural-voice-palettes-tests.el"))
+                  "emacsvox-aural-voice-palettes-tests.el"
+                  "emacsvox-aural-voice-workbench-tests.el"))
     (load (expand-file-name (concat "test/" file) root-directory) nil nil t))
   (dolist (function '(emacsvox-aural--validate-voice-style
                       emacsvox-aural--voice-style-field
@@ -350,6 +351,7 @@
                       emacsvox-aural-voice-palettes--read-style-number
                       emacsvox-aural-voice-palettes--read-style
                       emacsvox-aural-voice-tuner--set-value
+                      emacsvox-aural-voice-workbench--preview-effects
                       emacsvox-aural-voice-tuner-increase
                       emacsvox-aural-voice-tuner-decrease
                       emacsvox-aural-voice-tuner-edit))
@@ -367,6 +369,9 @@
                emacsvox-aural-delivery-contains-process-send-failure
                emacsvox-aural-schemes-persist-personal-voice-palettes
                emacsvox-aural-native-voice-fields-preserve-zero-and-omission
+               emacsvox-aural-native-saved-style-matches-voice-previews
+               emacsvox-aural-voice-workbench-logical-preview-carries-effects
+               emacsvox-aural-voice-workbench-preview-preserves-effect-scale
                emacsvox-aural-transport-preset-nil-and-zero-retain-current-behavior))))
     (unless (and (> (ert-stats-total stats) 0)
                  (= (ert-stats-completed stats) (ert-stats-total stats))

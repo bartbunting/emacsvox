@@ -412,6 +412,12 @@ build.  The ~voice-style-ui~ tests in
 =test/emacsvox-aural-voice-palettes-tests.el= exercise interactive numeric
 commands, prompts, blank input, boundaries, unchanged values, and undo in both
 source and compiled runs.  They capture auditions and do not start audio.
+The connected saved-style regression edits a custom =bolden=, reads its saved
+data back, and compares tuner and Workbench preview settings with the final
+normal-speech wire for =voice-bolden=.  Workbench uses the compiler's palette
+resolution and the shared effect normalizer: gain and pan level five must
+remain exactly neutral at 0.5.  Preserve both this path and the independently
+specified Workbench scale cases when changing preview or palette lookup.
 Preserve final-write, timeout, reentrancy, and trace regressions when
 working on later delivery slices; metadata validation alone cannot establish
 process lifecycle or audible behavior.

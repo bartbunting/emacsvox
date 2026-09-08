@@ -67,12 +67,15 @@ have since been implemented in =20af4ba4c=, =940373aed= and =eb1e5cf3b=.
 The [[file:../../CODE-QUALITY-AUDIT-2026-09-07-CLOSEOUT.org][2026-09-07 audit closeout]] records those completed slices.  The entries below
 describe the remaining work, with completed foundations retained as context.
 
-The remaining consumer-coverage and inspection work can be scoped narrowly;
-delivery and asynchronous state require more extensive lifecycle verification.
+The [[file:../voice-style-coverage.org][voice-style consumer audit]] is complete: it added edit/save/preview/delivery
+coverage and fixed Workbench effect normalization and custom-style lookup.
+
+The remaining inspection work can be scoped narrowly; delivery and
+asynchronous state require more extensive lifecycle verification.
 Choose the next slice around a concrete maintenance need.  Each entry can be
 implemented and reviewed independently, and the new voice editor does not
-require all four refactors first.  A delivery-provenance extension would
-benefit from the common inspection model, but is a separate
+require all three remaining refactors first.  A delivery-provenance extension
+would benefit from the common inspection model, but is a separate
 design decision rather than a prerequisite for extracting transport helpers.
 
 Use small commits that preserve observable behavior.  Keep source semantics,
@@ -90,70 +93,6 @@ those contracts.  Routine private helper extraction can retain the existing
 contracts.  Update the maintained developer guidance when implementation
 settles, and remove completed backlog entries.  Do not use a refactor to
 silently resolve an open behavior question or remove a compatibility path.
-
-** TODO Complete voice-style consumer coverage
-
-*** Why this is needed
-
-[[file:../../lisp/emacsvox-aural-rules.el][Voice rules]] now have one private field table for accepted keys, groups,
-types and integer bounds.  Dimension/key inventories and validation derive
-from it (=20af4ba4c=); composition and provenance consume the key inventory.
-Numeric palette/tuner controls use that metadata (=940373aed=).  These are
-completed foundations, not a table or control migration still to introduce.
-
-Compiler mappings, preview conversion, backend capabilities, normalization
-and UI policy remain in their respective owners.  Changes still need coverage
-across those boundaries.  The table intentionally does not define defaults or
-engine support; the remaining need is to detect omissions in consumers without
-turning the metadata into a general schema language.
-
-*** Proposed plan
-
-1. Inventory the remaining consumers and existing coverage.  Distinguish
-   shared field metadata from normalization, neutral values, UI amount scales,
-   backend support and legacy behavior.  Preserve the existing characterization
-   of absent keys, explicit nil, zero, duplicate fields and preset composition.
-2. Check the completeness of
-   [[file:../../lisp/emacsvox-aural-compiler.el][compiler]] and
-   [[file:../../lisp/omnivox-voices.el][Omnivox adapter]] mappings and preview paths against the accepted inventory.
-   Add independently specified cases for demonstrated gaps.  Keep backend
-   capability discovery and wire conversion owned by their adapters; accepting a portable dimension does
-   not imply that every engine supports it.
-3. Review remaining [[file:../../lisp/emacsvox-aural-editor.el][rule editor]] and
-   [[file:../../lisp/emacsvox-aural-voice-workbench.el][Voice Workbench]] consumers when adding a dimension or changing a control.
-   Reuse field descriptors for field metadata, while preserving each editor's
-   intended scope and keeping presentation policy out of the descriptor table.
-
-*** Benefits
-
-The existing metadata stays authoritative for spelling and legal values.
-Consumer checks would make missing adapter or preview coverage easier to
-detect, reducing settings that appear valid but lose their effect on delivery.
-
-*** Disadvantages and decisions
-
-The existing table can become harder to understand than explicit code if it
-grows into a general schema language.  Keep conversion functions
-ordinary Lisp and represent exceptions explicitly.  Migration can accidentally
-change defaults, ordering or compatibility with saved palettes.
-
-The meaning of an explicit nil over a named preset remains an open authoring
-contract: for example, =(:preset bolden :average-pitch nil)=.  Preserve the
-current behavior already characterized by tests; decide whether nil means
-inheritance, omission or reset separately.  Do not infer that meaning from a
-table's default representation.
-
-*** Acceptance checks
-
-Preserve [[file:../../test/emacsvox-aural-rules-tests.el][rule tests]], saved-data round trips and
-[[file:../../test/emacsvox-aural-transport-tests.el][public submission/transport tests]] for accepted dimensions, validation,
-composition, final delivery and explicit degradation.  Existing coverage
-includes zero, nil, absent keys, relative rate, legacy absolute rate,
-named-preset replacement and provenance.  Add tests for uncovered consumer
-paths found in the inventory and verify Workbench preview parity.  Expected
-wire values must be independently stated; deriving test expectations from the
-same descriptor table would miss a wrong
-mapping.  Existing final-write regressions and compiled parity must pass.
 
 ** TODO Share a complete presentation inspection model
 
