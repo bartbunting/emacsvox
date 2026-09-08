@@ -5336,6 +5336,9 @@ S-SPC		scroll-down-command
 
 C-c C-c		emacsvox-aural-voice-editor-save
 
+<remap> <backward-button>	emacsvox-aural-voice-editor-previous
+<remap> <forward-button>	emacsvox-aural-voice-editor-next
+
 C-c C-a		emacsvox-aural-ui-actions
 C-c TAB		emacsvox-aural-ui-open-manual
 

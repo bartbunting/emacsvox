@@ -4002,45 +4002,45 @@ Function Index
 * emacsvox-aural-voice-editor-mode <1>:  emacsvox-aural-voice-editor.
                                                              (line   76)
 * emacsvox-aural-voice-editor-next:      emacsvox-aural-voice-editor.
-                                                             (line  120)
+                                                             (line  123)
 * emacsvox-aural-voice-editor-next <1>:  emacsvox-aural-voice-editor.
-                                                             (line  121)
+                                                             (line  124)
 * emacsvox-aural-voice-editor-play:      emacsvox-aural-voice-editor.
-                                                             (line  127)
+                                                             (line  130)
 * emacsvox-aural-voice-editor-play <1>:  emacsvox-aural-voice-editor.
-                                                             (line  128)
+                                                             (line  131)
 * emacsvox-aural-voice-editor-previous:  emacsvox-aural-voice-editor.
-                                                             (line  134)
+                                                             (line  137)
 * emacsvox-aural-voice-editor-previous <1>: emacsvox-aural-voice-editor.
-                                                             (line  135)
+                                                             (line  138)
 * emacsvox-aural-voice-editor-refresh:   emacsvox-aural-voice-editor.
-                                                             (line  141)
+                                                             (line  144)
 * emacsvox-aural-voice-editor-refresh <1>: emacsvox-aural-voice-editor.
-                                                             (line  142)
+                                                             (line  145)
 * emacsvox-aural-voice-editor-save:      emacsvox-aural-voice-editor.
-                                                             (line  148)
+                                                             (line  151)
 * emacsvox-aural-voice-editor-save <1>:  emacsvox-aural-voice-editor.
-                                                             (line  149)
+                                                             (line  152)
 * emacsvox-aural-voice-editor-save-to-collection: emacsvox-aural-voice-editor.
-                                                             (line  155)
+                                                             (line  158)
 * emacsvox-aural-voice-editor-save-to-collection <1>: emacsvox-aural-voice-editor.
-                                                             (line  156)
+                                                             (line  159)
 * emacsvox-aural-voice-editor-speak:     emacsvox-aural-voice-editor.
-                                                             (line  162)
+                                                             (line  165)
 * emacsvox-aural-voice-editor-speak <1>: emacsvox-aural-voice-editor.
-                                                             (line  163)
+                                                             (line  166)
 * emacsvox-aural-voice-editor-stop:      emacsvox-aural-voice-editor.
-                                                             (line  169)
+                                                             (line  172)
 * emacsvox-aural-voice-editor-stop <1>:  emacsvox-aural-voice-editor.
-                                                             (line  170)
+                                                             (line  173)
 * emacsvox-aural-voice-editor-text:      emacsvox-aural-voice-editor.
-                                                             (line  176)
+                                                             (line  179)
 * emacsvox-aural-voice-editor-text <1>:  emacsvox-aural-voice-editor.
-                                                             (line  177)
+                                                             (line  180)
 * emacsvox-aural-voice-editor-undo:      emacsvox-aural-voice-editor.
-                                                             (line  183)
+                                                             (line  186)
 * emacsvox-aural-voice-editor-undo <1>:  emacsvox-aural-voice-editor.
-                                                             (line  184)
+                                                             (line  187)
 * emacsvox-aural-voice-experiment-compare: emacsvox-aural-voice-experiment.
                                                              (line   17)
 * emacsvox-aural-voice-experiment-compare <1>: emacsvox-aural-voice-experiment.

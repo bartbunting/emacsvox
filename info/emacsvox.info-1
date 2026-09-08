@@ -3004,13 +3004,17 @@ a numeric field; <RET> enters a value.  Blank entry explicitly requests
 the adapter default.  _More adjustments and effects_ exposes filters,
 gain, pan and other optional controls.  Changed values say what they
 were before editing; unsupported settings remain visible and are
-retained.
+retained.  Field navigation stops at the first and last field without
+wrapping.  Numeric adjustments stop at their limits and announce the
+minimum or maximum.
 
    ‘P’ plays the edited voice.  ‘B’ compares the captured original with
 the edited version using the same text, with spoken labels.  ‘T’ changes
 that text; ‘S’ stops.  An automatic sample follows each adjustment
-unless you turn that field off.  Navigation stops an outstanding sample.
-‘u’ undoes an edit.
+unless you turn that field off.  The new value precedes the sample text,
+for example "1.  The quick brown fox…".  Toggling _Automatic sample
+after adjustment_ announces on or off.  Navigation stops an outstanding
+sample.  ‘u’ undoes an edit.
 
    Choose the _Physical voice_ field to search by engine or voice name.
 You can audition a candidate with the working adjustments before

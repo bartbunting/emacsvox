@@ -10,6 +10,13 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.4][NEWS for Emacsvox 2026.9.4]].
 
+** Voice editor gives spoken adjustment feedback
+
+Automatic samples now start with the new adjustment value. Numeric controls
+stop at their limits and announce minimum or maximum, and the automatic-sample
+toggle announces on or off. Arrow and Tab navigation stop at the first and
+last fields without wrapping around the editor.
+
 ** Omnivox 1.9.0 minimum for voice previews
 
 Omnivox 1.9.0 or newer is now the supported speech-server baseline for complete

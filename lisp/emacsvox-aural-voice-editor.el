@@ -218,7 +218,8 @@
     (emacsvox-aural-voice-editor--button 'auto-sample
                                          (format "Automatic sample after adjustment: %s" (if (emacsvox-aural-voice-editor--get :automatic-sample) "on" "off"))
                                          (lambda () (emacsvox-aural-voice-editor--put :automatic-sample (not (emacsvox-aural-voice-editor--get :automatic-sample)))
-                                           (emacsvox-aural-voice-editor-refresh)))
+                                           (emacsvox-aural-voice-editor-refresh)
+                                           (emacsvox-aural-voice-editor-speak)))
     (when (emacsvox-aural-voice-editor--get :preview-result)
       (emacsvox-aural-voice-editor--button 'preview-status
                                            (emacsvox-aural-voice-editor--preview-status (emacsvox-aural-voice-editor--get :preview-result))
@@ -258,26 +259,51 @@
                              (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))
 (defun emacsvox-aural-voice-editor-next ()
   "Move to and read the next editor field."
-  (interactive) (forward-button 1 t t) (emacsvox-aural-voice-editor-speak))
+  (interactive) (emacsvox-aural-voice-editor--move-field 1))
 (defun emacsvox-aural-voice-editor-previous ()
   "Move to and read the previous editor field."
-  (interactive) (backward-button 1 t t) (emacsvox-aural-voice-editor-speak))
+  (interactive) (emacsvox-aural-voice-editor--move-field -1))
 
-(defun emacsvox-aural-voice-editor--changed (snapshot)
-  "Install edited SNAPSHOT and replace any obsolete automatic sample."
+(defun emacsvox-aural-voice-editor--move-field (direction)
+  "Move in DIRECTION without wrapping, announcing the field or boundary."
+  (let* ((current (button-at (point)))
+         (next (if (> direction 0)
+                   (next-button (if current (button-end current) (point)))
+                 (previous-button (if current (button-start current) (point))))))
+    (if next
+        (progn (goto-char (button-start next))
+               (emacsvox-aural-voice-editor-speak))
+      (emacsvox-aural-voice-editor-stop)
+      (emacsvox-aural-ui-speak
+       (format "%s field%s" (if (> direction 0) "Last" "First")
+               (if current (concat ". " (button-label current)) ""))))))
+
+(defun emacsvox-aural-voice-editor--changed (snapshot &optional value-label)
+  "Install SNAPSHOT and prefix its automatic sample with VALUE-LABEL."
   (emacsvox-aural-voice-drafts--edit (emacsvox-aural-voice-editor--draft) snapshot)
   (emacsvox-aural-voice-editor-refresh)
-  (emacsvox-aural-voice-editor-speak)
-  (when (emacsvox-aural-voice-editor--get :automatic-sample)
-    (condition-case err (emacsvox-aural-voice-editor-play)
-      (error (emacsvox-aural-preview-message "Changes kept. Preview unavailable: %s" (error-message-string err))))))
+  (if (emacsvox-aural-voice-editor--get :automatic-sample)
+      (progn
+        (emacsvox-aural-voice-editor-stop)
+        (condition-case err (emacsvox-aural-voice-editor--preview nil nil value-label)
+          (error (emacsvox-aural-ui-speak
+                  (format "Changes kept. Preview unavailable: %s" (error-message-string err))))))
+    (emacsvox-aural-voice-editor-speak)))
 
 (defun emacsvox-aural-voice-editor--set (dimension displayed)
   "Set DIMENSION from DISPLAYED control units, retaining stored cutoff semantics."
+  (when (and displayed (not (eq dimension 'family)))
+    (let* ((metadata (emacsvox-aural--voice-style-field dimension))
+           (minimum (plist-get metadata :minimum))
+           (maximum (plist-get metadata :maximum)))
+      (unless (and (integerp displayed) (<= minimum displayed maximum))
+        (user-error "Enter a whole number from %s to %s, or leave blank for adapter default"
+                    minimum maximum))))
   (emacsvox-aural-voice-editor--changed
    (emacsvox-aural-voice-editing--adjust
     (emacsvox-aural-voice-editor--working) (emacsvox-aural-voice-editor--get :palette) dimension
-    (emacsvox-aural-voice-tuner--stored-value dimension displayed))))
+    (emacsvox-aural-voice-tuner--stored-value dimension displayed))
+   (if displayed (format "%s" displayed) "Adapter default")))
 (defun emacsvox-aural-voice-editor-edit (&optional dimension)
   "Edit DIMENSION or the current numeric field; blank means adapter default."
   (interactive)
@@ -296,9 +322,17 @@
                                                      (emacsvox-aural-voice-editor--get :palette)))
          (value (plist-get style (emacsvox-aural--voice-dimension-key dimension))))
     (when (eq dimension 'family) (user-error "Press RET to choose a family"))
-    (emacsvox-aural-voice-editor--set dimension
-                                      (+ delta (or (emacsvox-aural-voice-tuner--control-value dimension value)
-                                                   (if (memq dimension '(gain pan)) 5 0))))))
+    (let* ((metadata (emacsvox-aural--voice-style-field dimension))
+           (minimum (plist-get metadata :minimum))
+           (maximum (plist-get metadata :maximum))
+           (current (emacsvox-aural-voice-tuner--control-value dimension value))
+           (next (max minimum (min maximum (+ delta (or current (if (memq dimension '(gain pan)) 5 0)))))))
+      (if (equal current next)
+          (progn
+            (emacsvox-aural-voice-editor-stop)
+            (emacsvox-aural-ui-speak
+             (format "%s %s" (if (> delta 0) "Maximum" "Minimum") next)))
+        (emacsvox-aural-voice-editor--set dimension next)))))
 (defun emacsvox-aural-voice-editor-increase () "Increase the current displayed adjustment." (interactive) (emacsvox-aural-voice-editor-adjust 1))
 (defun emacsvox-aural-voice-editor-decrease () "Decrease the current displayed adjustment." (interactive) (emacsvox-aural-voice-editor-adjust -1))
 
@@ -363,13 +397,14 @@
              (cl-rotatef (nth index chain) (nth target chain))))
          (emacsvox-aural-voice-editor--changed (plist-put snapshot :selectors chain))))))
 
-(defun emacsvox-aural-voice-editor--preview (compare &optional individual)
-  "Preview edited or COMPARE voices, optionally auditioning INDIVIDUAL choice."
+(defun emacsvox-aural-voice-editor--preview (compare &optional individual value-label)
+  "Preview COMPARE or INDIVIDUAL voices, prefixing sample text with VALUE-LABEL."
   (let* ((context emacsvox-aural-voice-editor--context)
          (generation (1+ (emacsvox-aural-voice-editor--get :preview-generation)))
          (draft (emacsvox-aural-voice-editor--draft))
          (policy (emacsvox-aural-voice-editor--get :policy))
-         (text (emacsvox-aural-voice-editor--get :text))
+         (text (concat (when value-label (concat value-label ". "))
+                       (emacsvox-aural-voice-editor--get :text)))
          (palette (emacsvox-aural-voice-editor--get :palette))
          (snapshots (append (when compare (list (emacsvox-aural-voice-draft-original draft)))
                             (list (emacsvox-aural-voice-draft-working draft)))) entries)
@@ -530,6 +565,9 @@
     (set-keymap-parent map emacsvox-aural-interface-mode-map)
     (dolist (key '("n" "<down>" "TAB")) (define-key map (kbd key) #'emacsvox-aural-voice-editor-next))
     (dolist (key '("p" "<up>" "<backtab>")) (define-key map (kbd key) #'emacsvox-aural-voice-editor-previous))
+    ;; Button-local Tab bindings otherwise take precedence over this map.
+    (define-key map [remap forward-button] #'emacsvox-aural-voice-editor-next)
+    (define-key map [remap backward-button] #'emacsvox-aural-voice-editor-previous)
     (dolist (pair '(("SPC" . emacsvox-aural-voice-editor-speak) ("<right>" . emacsvox-aural-voice-editor-increase)
                     ("<left>" . emacsvox-aural-voice-editor-decrease) ("P" . emacsvox-aural-voice-editor-play)
                     ("B" . emacsvox-aural-voice-editor-compare) ("S" . emacsvox-aural-voice-editor-stop)

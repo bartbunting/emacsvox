@@ -625,11 +625,15 @@ a numeric field; @@texinfo:@key{RET}@@ enters a value. Blank entry explicitly
 requests the adapter default. /More adjustments and effects/ exposes filters,
 gain, pan and other optional controls. Changed values say what they were before
 editing; unsupported settings remain visible and are retained.
+Field navigation stops at the first and last field without wrapping. Numeric
+adjustments stop at their limits and announce the minimum or maximum.
 
 @@texinfo:@kbd{P}@@ plays the edited voice. @@texinfo:@kbd{B}@@ compares the
 captured original with the edited version using the same text, with spoken
 labels. @@texinfo:@kbd{T}@@ changes that text; @@texinfo:@kbd{S}@@ stops.
 An automatic sample follows each adjustment unless you turn that field off.
+The new value precedes the sample text, for example ``1. The quick brown fox…''.
+Toggling /Automatic sample after adjustment/ announces on or off.
 Navigation stops an outstanding sample. @@texinfo:@kbd{u}@@ undoes an edit.
 
 Choose the /Physical voice/ field to search by engine or voice name. You can
