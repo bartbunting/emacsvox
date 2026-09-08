@@ -38,6 +38,8 @@
           emacsvox-aural-resources
           emacsvox-aural-schemes
           emacsvox-aural-routing-profiles
+          emacsvox-aural-voice-data
+          emacsvox-aural-voice-runtime
           emacsvox-aural-profile-service
           emacsvox-aural-providers
           emacsvox-aural-compiler

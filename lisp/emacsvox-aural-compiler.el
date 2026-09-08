@@ -36,6 +36,7 @@
 (require 'emacsvox-aural-concrete)
 (require 'emacsvox-aural-providers)
 (require 'emacsvox-aural-schemes)
+(require 'emacsvox-aural-voice-runtime)
 (require 'emacsvox-aural-spatial)
 
 (declare-function tts-get-voice-command "tts-speak" (voice))
@@ -255,6 +256,7 @@ Return nil when an enumerated adapter cannot provide the requested family."
 Existing personality-backed presets are adapter-owned compatibility values
 and are not reconstructed or rejected here."
   (let* ((palette (or palette (emacsvox-aural-effective-voice-palette)))
+         (emacsvox-aural-voice-runtime--palette palette)
          (capability (emacsvox-aural-active-voice-capabilities))
          (supported (plist-get capability :dimensions))
          degradations)
@@ -492,6 +494,32 @@ portable palette object and every other dimension remain untouched."
         preset
         (and base (emacsvox-aural-compiled-voice-preset base)))))))
 
+(defun emacsvox-aural--compile-owned-voice (resolved palette provenance)
+  "Compile owned RESOLVED data in PALETTE with contextual PROVENANCE."
+  (let* ((name (plist-get resolved :name))
+         (definition (plist-get resolved :definition))
+         (value (if (and (symbolp definition) (boundp definition))
+                    (symbol-value definition) definition))
+         (style (cond
+                 ((null definition) (emacsvox-aural--empty-voice-style))
+                 ((emacsvox-aural-voice-style-p definition) definition)
+                 ((emacsvox-aural--acss-p value)
+                  (emacsvox-aural--acss-to-voice-style value))
+                 ((symbolp definition)
+                  (emacsvox-aural--personality-style definition))))
+         (compiled
+          (if style
+              (emacsvox-aural--compile-explicit-voice-style
+               (emacsvox-aural--route-palette-voice-definition name style)
+               palette provenance)
+            (emacsvox-aural--make-compiled-voice
+             :command (emacsvox-aural--compile-personality-command value)
+             :style nil :provenance (copy-tree provenance)
+             :capability (emacsvox-aural-active-voice-capabilities)))))
+    (setf (emacsvox-aural-compiled-voice-request compiled) name
+          (emacsvox-aural-compiled-voice-preset compiled) name)
+    compiled))
+
 (defun emacsvox-aural-compile-voice-style
     (voice &optional palette provenance)
   "Compile VOICE once and return a concrete voice result.
@@ -499,6 +527,7 @@ portable palette object and every other dimension remain untouched."
 PALETTE defaults to the active palette.  PROVENANCE maps the winning preset
 and ACSS dimensions to the rules that supplied them."
   (let* ((palette (or palette (emacsvox-aural-effective-voice-palette)))
+         (emacsvox-aural-voice-runtime--palette palette)
          (capability (emacsvox-aural-active-voice-capabilities)))
     (cond
      ((null voice)
@@ -546,6 +575,10 @@ and ACSS dimensions to the rules that supplied them."
          (mapcar
            #'emacsvox-aural-compiled-voice-degradations parts))
          :preset (copy-tree voice))))
+     ((and (symbolp voice)
+           (emacsvox-aural-voice-runtime--owned voice palette))
+      (emacsvox-aural--compile-owned-voice
+       (emacsvox-aural-voice-runtime--owned voice palette) palette provenance))
      ((symbolp voice)
       (let* ((palette-entry
               (emacsvox-aural--palette-voice-definition voice palette))

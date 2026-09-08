@@ -34,7 +34,13 @@
 (require 'cl-lib)
 (require 'pp)
 (require 'subr-x)
-(require 'emacsvox-preamble)
+(require 'emacsvox-aural)
+
+(defvar emacsvox-user-directory (expand-file-name "~/.emacsvox/")
+  "Directory for personal Emacsvox data, also declared by the preamble.")
+
+(defvar emacsvox-aural-routing--apply-operation 0
+  "Generation owning the latest shared routing or palette apply status.")
 
 (defvar read-eval)
 (defvar omnivox-logical-voice-preferences nil)
@@ -54,6 +60,10 @@
 (declare-function tts-voice-inventory "tts-speak" ())
 (declare-function emacsvox-aural-voice "emacsvox-aural-resources"
                   (name &optional palette-id))
+(declare-function emacsvox-aural-voice-runtime--owned "emacsvox-aural-voice-runtime"
+                  (voice &optional palette profile))
+(declare-function emacsvox-aural-voice-runtime--validate "emacsvox-aural-voice-runtime"
+                  (&optional palette))
 
 (define-error
   'emacsvox-aural-routing-profile-error
@@ -560,9 +570,32 @@ Missing engines, voices, or traits degrade to the portable ACSS request."
          (adapter (plist-get capabilities :adapter)))
     (if (not (eq (plist-get capabilities :family-selection) 'enumerated))
         requested-family
-      (let ((selectors (emacsvox-aural-routing-selectors logical-voice))
-            (inventory (or inventory (tts-voice-inventory)))
-            family)
+      (let* ((owned (and (fboundp 'emacsvox-aural-voice-runtime--owned)
+                         (emacsvox-aural-voice-runtime--owned logical-voice)))
+             (policy (plist-get owned :policy))
+             (fallback (plist-get policy :fallback))
+             (selectors
+              (if owned
+                  (append (copy-tree (plist-get owned :selectors))
+                          (mapcar (lambda (engine) (list :kind 'engine-default :engine-id engine))
+                                  (plist-get policy :engine-order))
+                          (when (plist-get fallback :global-default)
+                            (list (copy-tree (plist-get fallback :global-default))))
+                          (mapcar (lambda (engine) (list :kind 'engine-default :engine-id engine))
+                                  (plist-get fallback :engines)))
+                (emacsvox-aural-routing-selectors logical-voice)))
+             (inventory (or inventory (tts-voice-inventory)))
+             family)
+        (when owned
+          (setq selectors
+                (cl-remove-if
+                 (lambda (selector)
+                   (cl-some (lambda (disabled)
+                              (or (emacsvox-aural-routing--engine-equivalent-p disabled adapter)
+                                  (emacsvox-aural-routing--engine-equivalent-p
+                                   disabled (plist-get selector :engine-id))))
+                            (plist-get policy :disabled-engines)))
+                 selectors)))
         (while (and selectors (null family))
           (setq family
                 (emacsvox-aural-routing--static-selector-family
@@ -580,15 +613,16 @@ Missing engines, voices, or traits degrade to the portable ACSS request."
                (setq copy (plist-put copy :scope 'session))
                (emacsvox-aural-validate-routing-selector copy)))
            selectors)))
-    (setq emacsvox-aural-session-routing-bindings
-          (cl-remove-if
-           (lambda (entry)
-             (equal name
-                    (emacsvox-aural-routing--logical-name (car entry))))
-           emacsvox-aural-session-routing-bindings))
-    (when selectors
-      (push (cons logical-voice normalized)
-            emacsvox-aural-session-routing-bindings))
+    (let ((candidate (cl-remove-if
+                      (lambda (entry)
+                        (equal name
+                               (emacsvox-aural-routing--logical-name (car entry))))
+                      emacsvox-aural-session-routing-bindings)))
+      (when selectors (push (cons logical-voice normalized) candidate))
+      (when (fboundp 'emacsvox-aural-voice-runtime--validate)
+        (let ((emacsvox-aural-session-routing-bindings candidate))
+          (emacsvox-aural-voice-runtime--validate)))
+      (setq emacsvox-aural-session-routing-bindings candidate))
     (run-hooks 'emacsvox-aural-routing-profile-changed-hook)
     normalized))
 
@@ -907,7 +941,10 @@ generation-safe asynchronous apply."
              (emacsvox-aural-routing-profile-entry-data entry)))
            (fallback (plist-get data :fallback))
            (bindings (plist-get data :bindings))
+           (operation (cl-incf emacsvox-aural-routing--apply-operation))
            voices preferences languages)
+      (when (fboundp 'emacsvox-aural-voice-runtime--validate)
+        (emacsvox-aural-voice-runtime--validate))
       (dolist (binding bindings)
         (push (plist-get binding :logical-voice) voices))
       (dolist (session emacsvox-aural-session-routing-bindings)
@@ -957,7 +994,8 @@ generation-safe asynchronous apply."
                         (append
                          (list :profile-id id :finished (current-time))
                          (copy-tree result))))
-                   (emacsvox-aural-routing--publish-apply-status status)
+                   (when (= operation emacsvox-aural-routing--apply-operation)
+                     (emacsvox-aural-routing--publish-apply-status status))
                    (emacsvox-aural-routing--call-apply-callback
                     callback status))))
             (progn

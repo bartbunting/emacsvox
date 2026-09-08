@@ -27,7 +27,8 @@ conversion on first save is accepted; individual choice adjustments remain propo
 Simple editing should expose one voice, common adjustments, preview and one
 save action; fallback configuration and individual tuning expand on demand.
 The new formats, read-only conversion proposals and nonactivating writers are
-implemented. Runtime integration and the common UI remain pending.
+implemented. Owned runtime integration is tested; draft/save coordination and
+the common UI remain pending.
 The [[file:../voice-editor-implementation-plan.org][implementation plan]] now records the source inventory, ordered slices,
 acceptance checks and reasoning-level stops. Planning, the
 [[file:../voice-editor-data-contract.org][data contract]] and storage/migration are complete. Runtime inspection found that
@@ -35,8 +36,10 @@ the original preview request accepted only one physical selector. The maintainer
 selected full-chain preview; [[file:../adr/0016-complete-voice-preview.org][ADR 0016]] and the
 [[file:../voice-editor-preview-contract.org][preview contract]] specify separate negotiated complete-voice previews. Server and
 client protocol slices now pass simulated-engine and callback/lifecycle checks.
-Continue at High with owned runtime routing, draft/save coordination and the
-editor UI; the editor does not yet construct complete previews. Individual
+Owned palette selection now registers matching definitions and choices on both
+speech lanes, and Workbench logical previews use the complete chain. Shared
+style compilation preserves contextual precedence and inactive-palette routing.
+Continue at High with draft/save coordination and the editor UI. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.
 
 Preserve the existing aural CSS cascade: partial styles combine by dimension,

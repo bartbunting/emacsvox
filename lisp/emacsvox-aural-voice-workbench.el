@@ -2356,21 +2356,30 @@ command does not stop speech already playing."
 
 (defun emacsvox-aural-voice-workbench--logical-preview-entry (logical-voice)
   "Return one staged preview entry for LOGICAL-VOICE."
-  (let* ((binding
+  (let* ((owned (emacsvox-aural-voice-runtime--owned
+                 logical-voice (emacsvox-aural-voice-workbench--active-palette)
+                 emacsvox-aural-voice-workbench-staged-profile))
+         (binding
           (emacsvox-aural-voice-workbench--profile-binding logical-voice))
          (language (plist-get binding :language))
          (selector
-          (or
-           (car (emacsvox-aural-voice-workbench--selectors logical-voice))
-           (emacsvox-aural-voice-workbench--default-tuning-selector)
-           (list :kind 'properties :language language :scope 'portable))))
-    (list
-     :text emacsvox-aural-voice-workbench-preview-text
-     :selector selector :language language
-     :acss (emacsvox-aural-voice-workbench--preview-acss logical-voice)
-     :rate-offset
-     (emacsvox-aural-voice-workbench--preview-rate-offset logical-voice)
-     :effects (emacsvox-aural-voice-workbench--preview-effects logical-voice))))
+          (unless owned (or
+                         (car (emacsvox-aural-voice-workbench--selectors logical-voice))
+                         (emacsvox-aural-voice-workbench--default-tuning-selector)
+                         (list :kind 'properties :language language :scope 'portable)))))
+    (append
+     (list
+      :text emacsvox-aural-voice-workbench-preview-text
+      :language (if owned (plist-get owned :language) language)
+      :acss (emacsvox-aural-voice-workbench--preview-acss logical-voice)
+      :rate-offset
+      (emacsvox-aural-voice-workbench--preview-rate-offset logical-voice)
+      :effects (emacsvox-aural-voice-workbench--preview-effects logical-voice))
+     (if owned
+         (list :selectors (copy-tree (plist-get owned :selectors))
+               :fallback-policy (emacsvox-aural-voice-runtime--preview-policy owned)
+               :disabled-engine-ids (copy-sequence (plist-get (plist-get owned :policy) :disabled-engines)))
+       (list :selector selector)))))
 
 (defun emacsvox-aural-voice-workbench--current-preview-entry ()
   "Return a preview entry for the current Workbench row."

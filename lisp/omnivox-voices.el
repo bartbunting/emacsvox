@@ -35,6 +35,7 @@
 (require 'emacsvox-preamble)
 (require 'json)
 (require 'subr-x)
+(require 'emacsvox-aural-voice-runtime)
 
 (declare-function emacsvox-aural-enable-framed-delivery
                   "emacsvox-aural-transport" (process))
@@ -667,11 +668,14 @@ SEEN prevents malformed personality-variable cycles."
 
 (defun omnivox--logical-acss (id)
   "Return normalized ACSS for stable logical voice ID."
-  (or
-   (omnivox--logical-acss-for-value (or (intern-soft id) id))
-   (when-let* ((entry
-                (assq (intern-soft id) (omnivox--active-palette-entries))))
-     (omnivox--logical-acss-for-value (cdr entry)))))
+  (if-let* ((owned (emacsvox-aural-voice-runtime--owned id)))
+      (and (plist-get owned :definition)
+           (omnivox--logical-acss-for-value (plist-get owned :definition)))
+    (or
+     (omnivox--logical-acss-for-value (or (intern-soft id) id))
+     (when-let* ((entry
+                  (assq (intern-soft id) (omnivox--active-palette-entries))))
+       (omnivox--logical-acss-for-value (cdr entry))))))
 
 (defun omnivox--required-selector-id (value kind)
   "Validate and return selector ID VALUE described by KIND."
@@ -1196,7 +1200,10 @@ edited voices."
     (dolist (voice voice-setup-defined-voices)
       (push (omnivox--logical-voice-id voice) ids))
     (dolist (entry (omnivox--active-palette-entries))
-      (push (omnivox--logical-voice-id (car entry)) ids))
+      (push (omnivox--logical-voice-id (car entry)) ids)
+      (when-let* ((owned (emacsvox-aural-voice-runtime--owned (car entry))))
+        (dolist (name (plist-get owned :names))
+          (push (symbol-name name) ids))))
     (dolist (entry omnivox-logical-voice-preferences)
       (push (omnivox--logical-voice-id (car entry)) ids))
     (dolist (entry omnivox-logical-voice-languages)
@@ -1227,18 +1234,27 @@ edited voices."
 Use PREFERRED-ENGINE-ID for an otherwise unconfigured voice.
 When RUNTIME-ROUTING-POLICY is non-nil, do not duplicate global engine order
 inside this logical definition."
-  (let* ((configured
-          (omnivox--logical-setting id omnivox-logical-voice-preferences))
+  (let* ((owned (emacsvox-aural-voice-runtime--owned id))
+         (configured
+          (if owned
+              (mapcar #'emacsvox-aural-routing--selector-to-omnivox
+                      (plist-get owned :selectors))
+            (omnivox--logical-setting id omnivox-logical-voice-preferences)))
          (selectors
-          (or
-           (if runtime-routing-policy
-               (copy-tree configured)
-             (omnivox--selectors-with-engine-priority configured))
-           (if preferred-engine-id
-               `((engine-default ,preferred-engine-id))
-             '((properties)))))
+          (if owned
+              (if runtime-routing-policy configured
+                (or (omnivox--selectors-with-engine-priority configured)
+                    (and preferred-engine-id `((engine-default ,preferred-engine-id)))))
+            (or
+             (if runtime-routing-policy
+                 (copy-tree configured)
+               (omnivox--selectors-with-engine-priority configured))
+             (if preferred-engine-id
+                 `((engine-default ,preferred-engine-id))
+               '((properties))))))
          (language
-          (omnivox--logical-setting id omnivox-logical-voice-languages)))
+          (if owned (plist-get owned :language)
+            (omnivox--logical-setting id omnivox-logical-voice-languages))))
     (when (and language (not (stringp language)))
       (error "Language for logical Omnivox voice %s must be a string" id))
     (list

@@ -38,6 +38,9 @@
 (require 'subr-x)
 (require 'emacsvox-aural-resources)
 
+(declare-function emacsvox-aural-voice-runtime--validate
+                  "emacsvox-aural-voice-runtime" (&optional palette))
+
 (defvar emacsvox-user-directory (expand-file-name "~/.emacsvox/")
   "Emacsvox user data directory.")
 (defvar read-eval)
@@ -1344,6 +1347,9 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
       (and palette (not (emacsvox-aural-voice-palette palette)))
     (emacsvox-aural--scheme-error
      "Unknown voice palette: %S" palette))
+  (require 'emacsvox-aural-voice-runtime)
+  (emacsvox-aural-voice-runtime--validate
+   (or palette (emacsvox-aural-effective-scheme-provider 'voice-palette) 'acss-default))
   (let ((previous (emacsvox-aural--capture-coordinated-state)))
     (setq emacsvox-aural-voice-palette-override palette)
     (emacsvox-aural--notify-coordinated-state-change

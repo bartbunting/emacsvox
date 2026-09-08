@@ -6,8 +6,8 @@
 
 Planning, data-contract and storage slices are complete. The maintainer selected
 full-chain preview, and its XHI protocol contract is complete. The server preview
-and client slices are implemented and tested. Owned runtime integration and the
-editor remain pending.
+and client slices and owned runtime integration are implemented and tested.
+Draft/save coordination and the editor remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -159,8 +159,8 @@ handoff.
 
 The initial runtime wiring was preserved as a local scratch patch, then removed
 from the source tree so this checkpoint contains only tested storage code.
-Slice 3 is not delivered. The server-only preview slice below has since changed
-Omnivox source. No live personal settings changed.
+Slice 3 has since replaced that scratch work with tested runtime integration.
+The server preview slice below has changed Omnivox source. No live personal settings changed.
 
 * Remaining implementation slices
 
@@ -200,14 +200,21 @@ and disabled engines, pre/post-PCM failures, queue bounds, cancellation, policy
 isolation, older servers and stale callbacks. Add fresh compiled Emacs checks.
 Do not stage or restart the user's runtime as an implicit part of implementation.
 
-** TODO 3. Resolve owned choices through normal speech and preview
+** DONE 3. Resolve owned choices through normal speech and preview
 
 The pure resolver is implemented and tested as the first part of this slice.
 It accepts explicit registry, local choices, routing, session and policy inputs;
 returns fresh definition/owner/alias/choice data; and distinguishes Automatic,
 missing-local fallback and legacy lookup. Direct entries beat aliases; conflicting
 owned session aliases are diagnosed, while legacy session matching is unchanged.
-It does not yet drive either adapter or a palette-switch apply.
+The runtime bridge now feeds owned definitions and choices to Omnivox registration,
+standalone family projection and complete Workbench previews. Palette selection
+validates ownership/session aliases before mutation and applies both speech lanes.
+A shared operation counter protects palette/profile status from older callbacks.
+Inactive compilation carries its explicit palette through routing; Automatic
+retains an empty chain and uses workstation policy, including the foreground
+startup default. Shared effects and rate remain in the existing speech-span
+transport so contextual clearing and per-dimension precedence stay intact.
 
 Feed the common result into standalone adapter routing and Omnivox registration.
 Switching palettes must switch corresponding definitions and owned choices;
@@ -217,8 +224,8 @@ override policy. This slice uses shared style adjustments for all choices.
 Check A-to-B-to-A palette switching, legacy aliases, explicit and automatic
 selection, disabled/unavailable engines, two-lane apply failure and startup
 readiness. Capture final registration and speech requests, not only UI strings.
-Run existing cascade and compiled parity tests. Introduce no per-choice effects
-protocol in this slice.
+Existing cascade, source/compiled parity and build-tree checks cover this slice.
+No per-choice effects protocol was introduced.
 
 ** TODO 4. Add draft and save coordination
 
