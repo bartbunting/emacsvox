@@ -1,6 +1,6 @@
 {
   "fixture_version": 1,
-  "status": "proposed-design-examples-not-wire-or-runtime-tests",
+  "status": "accepted-design-examples-not-wire-or-runtime-tests",
   "units": "raw stored editor values; low_pass is cutoff, not displayed amount",
   "base_rate": 0.65,
   "shared": {

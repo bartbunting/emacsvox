@@ -4,9 +4,10 @@
 
 * Status
 
-Proposed for maintainer approval at the requested XHI review. No storage reader,
-wire protocol or runtime behavior is changed by this record. The accompanying
-[[file:../voice-editor-fallback-tuning-contract.org][storage and runtime proposal]] gives the concrete scope and acceptance cases.
+Accepted on 2026-09-09: the maintainer selected A, shared -> choice -> context.
+The [[file:../voice-editor-fallback-tuning-contract.org][storage/runtime contract]] and [[file:../voice-editor-fallback-wire-contract.org][wire/compatibility contract]] specify the
+implementation and acceptance cases. No storage reader, wire codec or runtime
+behavior is implemented by these design records.
 
 * Context
 
@@ -22,7 +23,7 @@ supply that guarantee. The current structured transport also flattens base
 and context values; adding choice settings to registration alone would let
 normal speech overwrite them with that flattened style.
 
-* Proposed decision
+* Decision
 
 Keep shared settings as the simple default. Store an optional sparse adjustment
 patch on each stable ordered choice record, separate from its selector. Scope
@@ -48,7 +49,7 @@ capability adaptation. Keep the Omnivox attempt cap, health classification,
 progressive commitment boundary and output-failure rules. Preserve both speech
 lanes, remote isolation and no-replay behavior under ADRs 0007, 0009 and 0010.
 No helper protocol, process boundary, engine calibration or dependency change
-is proposed.
+is included in this contract.
 
 Keep ordinary speech available on older servers using explicitly degraded
 shared tuning, retaining all saved custom data and reporting that individual
@@ -60,7 +61,7 @@ new capability; separately labelled exact auditions may use the old operation.
 
 | Order | Benefits | Costs |
 |-------+----------+-------|
-| Shared -> choice -> context (recommended) | Fallbacks have their own base sound while rules remain dependable for headings, emphasis and other content. Preserves the existing aural CSS model. | An explicit contextual field can mask a base adjustment; the effective-sound view must explain it. |
+| Shared -> choice -> context (selected) | Fallbacks have their own base sound while rules remain dependable for headings, emphasis and other content. Preserves the existing aural CSS model. | An explicit contextual field can mask a base adjustment; the effective-sound view must explain it. |
 | Shared -> context -> choice | A customized choice always keeps its tuning when that dimension is contested. | A heading or emphasis rule can stop working on one fallback; context changes cannot reliably control the final sound. |
 
 Numeric addition is outside the accepted plan. It is especially ambiguous for
@@ -79,9 +80,8 @@ The implementation costs are new data readers, typed protocol forms, sparse
 context transport, actual-route composition, two-lane capability handling and
 broader normal-speech tests. Preview-only delivery is insufficient.
 
-Remain at XHI until the maintainer confirms the proposed precedence and the
-exact wire/compatibility contract is complete. Then stop for High before
-ordinary implementation in tested, committed slices. Max is not currently
-needed: inspection has identified concrete contracts rather than an unresolved
-reasoning problem. No release, deployment or personal-settings change follows
-from approval of this design.
+The precedence decision and exact wire/compatibility contract are complete.
+Stop for High before ordinary implementation in tested, committed slices.
+No further design choice is outstanding for this handoff. Max is not currently
+needed. No release, deployment or personal-settings change follows from approval
+of this design.

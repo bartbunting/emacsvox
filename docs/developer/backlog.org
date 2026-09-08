@@ -23,7 +23,8 @@ boundaries.
 
 Follow [[file:../voice-editor-design.org][the voice editor design]] and [[file:../adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] for palette-owned base voices:
 preferred physical choices, fallback order and shared adjustments. Independent
-conversion on first save is accepted; individual choice adjustments remain proposed.
+conversion on first save is accepted. Individual choice adjustments have an
+accepted contract and remain unimplemented.
 Simple editing should expose one voice, common adjustments, preview and one
 save action; fallback configuration and individual tuning expand on demand.
 The new formats, read-only conversion proposals and nonactivating writers are
@@ -42,10 +43,12 @@ Owned palette selection now registers matching definitions and choices on both
 speech lanes, and Workbench logical previews use the complete chain. Shared
 style compilation preserves contextual precedence and inactive-palette routing.
 The session draft/save service now handles ordered two-store publication,
-conflicts, partial retries and operation-owned application. The XHI review has
-produced the [[file:../voice-editor-fallback-tuning-contract.org][per-fallback storage/runtime proposal]] and proposed
-[[file:../adr/0017-per-fallback-voice-tuning.org][ADR 0017]]. Confirm shared -> choice -> context precedence before finalizing
-the wire contract; individual tuning remains unimplemented. The maintainer
+conflicts, partial retries and operation-owned application. The maintainer
+accepted shared -> choice -> context in [[file:../adr/0017-per-fallback-voice-tuning.org][ADR 0017]]. The
+[[file:../voice-editor-fallback-tuning-contract.org][storage/runtime contract]], [[file:../voice-editor-fallback-wire-contract.org][wire/compatibility contract]] and independent examples
+complete the XHI review. Stop for High before storage, server and client/editor
+implementation in tested, committed slices. Individual tuning remains
+unimplemented. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.
@@ -55,8 +58,8 @@ competing values use rule precedence, and named presets replace the base.
 Distinguish editing a palette's base voice from editing a contextual rule;
 offer optional effective-value and source inspection with labelled context
 previews. Contextual Inherit removes a field rather than writing explicit nil.
-Confirm how proposed individual fallback tuning interacts with contextual
-overrides at runtime; do not introduce numeric accumulation implicitly.
+Implement the accepted runtime precedence: shared base, actual choice patch,
+then explicit contextual dimensions. Do not introduce numeric accumulation.
 
 The common editor connects independent-copy conversion to its save operation,
 preserving original palettes and routing profiles. Retaining palette selection

@@ -1,0 +1,369 @@
+#+title: Per-Fallback Voice Tuning: Wire and Compatibility Contract
+#+date: 2026-09-09
+#+startup: content
+
+* Status and scope
+
+The maintainer selected A: shared settings, selected choice, then contextual
+overrides. [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]] and the [[file:voice-editor-fallback-tuning-contract.org][storage/runtime contract]] govern this extension.
+This document completes the XHI contract slice. It specifies future behavior;
+neither endpoint implements these messages yet. Switch to High for the tested
+implementation slices. Mirror this contract and the accepted decision into
+Omnivox's ADR/protocol documentation before implementing its endpoint.
+
+The baseline inspected is Omnivox 1.9.0, commit
+=69d1e9496be68eaa27f06908b10b2fc5591a9918=. Control envelope 1, remote envelope 1,
+old registration/preview operations, and timeline versions 1–3 keep their
+contracts. No helper API, engine calibration, dependency or minimum release
+change is part of this slice.
+
+* Negotiation and framing
+
+Advertise =voice_choice_tuning_v1= only with the complete implementation below,
+including ordinary speech, previews and playback evidence. It requires the
+additional features =presentation_timeline_v4= and =playback_marker_events_v3=.
+Emacsvox checks all three on the actual process. Check each lane independently
+and repeat on reconnect; never reuse capabilities from the replaced process.
+
+New control operations use the existing =omnivox_control BASE64_JSON= request
+line, =__OMNIVOX_CONTROL__ BASE64_JSON= response line, envelope
+=protocol_version: 1= and existing request-ID correlation:
+
+| Request type | Success/terminal response type |
+|--------------+--------------------------------|
+| =register_logical_voices_v2= | =logical_voices_registered_v2= |
+| =preview_voice_v2= | =preview_voice_completed_v2= |
+
+New timelines use =emacsvox_timeline BASE64_JSON= with =protocol_version: 4=.
+Multipart uses the existing syntax with version 4:
+
+#+begin_example
+emacsvox_timeline_part 4 GENERATION DISPATCH_ID INDEX COUNT DECODED_BYTES BASE64_FRAGMENT
+#+end_example
+
+Fragments are ordered slices of the Base64 encoding of one UTF-8 JSON document,
+not separately encoded JSON objects. Preserve version 3's index/count rules,
+padding rule, five-second assembly deadline and agreement between outer and
+inner identity. Capture no registry or policy until the complete request is
+validated and admitted. A stop, reset, malformed part or disconnect discards
+the assembly through the existing correlated rejection path. Never admit a
+prefix, prepare its resources, or replay after reconnect.
+
+Remote envelope 1 remains a carrier for these bounded command/event lines.
+Extend its command allowlist and multipart-version validation; do not change
+authentication, lane ownership, or the 512 KiB line bound.
+
+* Value and definition types
+
+** Complete shared settings and sparse patches
+
+Wire names use underscores. Stored Lisp retains hyphens and raw editor units.
+The complete =shared= object requires =acss=, =rate_offset= and =effects=:
+
+- =acss= has exactly =rate=, =average_pitch=, =pitch_range=, =stress=,
+  =richness= and =volume=. Each is null or a finite normalized number in [0, 1].
+- =rate_offset= is null or an integer in [-20, 20]. It cannot be non-null when
+  =acss.rate= is non-null, including when the offset is zero.
+- =effects= has exactly =gain=, =low_pass=, =high_pass=, =pan=, =reverb=,
+  =echo= and =chorus=. Each is null or a finite number in [0, 1].
+
+Null in this complete base means no voice-specific override. Retaining absolute
+rate and volume here preserves representable legacy shared definitions; they
+are not new editor controls. Existing family/personality compilation selects
+the base before projection. Opaque forms that cannot be represented retain
+their explicit legacy limitation; they must not be guessed into layered data.
+
+A patch is an object with zero to twelve members: the four ACSS characteristics
+(excluding rate and volume), =rate_offset= and the seven effects. A member has
+exactly one of these forms:
+
+#+begin_example
+"richness": {"op": "set", "value": 0}
+"low_pass": {"op": "default"}
+#+end_example
+
+Omitted member means inherit. =set= requires a value in the field's bounds;
+=default= forbids a value. Bare numbers, JSON null, extra operation members,
+unknown dimensions and repeated JSON keys are invalid. Enforce duplicate-key
+rejection while decoding, before a generic map can overwrite the first member.
+Missing, null and zero must not collapse into an ordinary optional number.
+
+The client converts each explicit stored field once, using the existing
+normalizers, including Omnivox average-pitch scaling and the gain/pan neutral
+conversion. Raw low-pass cutoff 9 becomes wire 1; the displayed amount remains
+0. Do not reverse it a second time. Choice nil becomes =default=; contextual
+ACSS nil becomes an omitted wire member, retaining explicit nil in client
+provenance. Contextual rate/effect nil becomes =default=. Contextual zero or a
+value equal to the shared value remains an explicit =set= operation.
+
+Compose the shared base, actual choice patch (if any), and contextual patch by
+field replacement. A rate patch clears any shared absolute rate. Default ACSS
+clears the normalized override and the corresponding voice-derived native
+setting; build from the selected adapter's clean defaults. Default rate uses
+the captured global rate. Default effects are neutral: gain/pan 0.5, low-pass
+1, high-pass 0, and reverb/echo/chorus 0. No previous voice or failed attempt may
+provide a default. Preserve independent global volume and lane controls.
+
+Retain current relative-rate behavior: absent/default/zero offset leaves the
+captured host rate unchanged, including host rates above 1. A nonzero offset
+uses =clamp(base_rate + offset / 100, 0, 1)= once. Host rates are finite in
+[0, 2]. This existing distinction is not a new calibration decision.
+
+** Ordered definitions
+
+A layered definition has exactly =id=, =language=, =shared= and =choices=.
+=language= is required and either null or a valid existing language string.
+=choices= is required, ordered, and contains zero to 32 records. Empty means
+Automatic. Each record has exactly =id=, =selector= and =adjustments=.
+
+Choice IDs contain 1–128 ASCII characters from =[A-Za-z0-9_.-]= and are unique
+within the full definition. Logical IDs retain existing validation. The
+=selector= is an existing exact, engine-default or property wire selector;
+persistence scope and local snapshot/owner IDs never cross the wire. Two records
+may have identical selectors and different adjustments. Preserve occurrence
+identity through resolution; do not recover it by matching physical IDs.
+
+A complete registration can contain existing unrelated logical voices:
+
+#+begin_example
+{"mode": "legacy", "definition": EXISTING_LOGICAL_VOICE_DEFINITION}
+{"mode": "layered", "definition": LAYERED_DEFINITION}
+#+end_example
+
+Each wrapper requires exactly those two keys. The legacy payload keeps its
+existing accepted shape and semantics; the new layered payload rejects unknown
+keys. Logical IDs must be unique across both modes. Do not convert arbitrary
+legacy personalities merely to replace the registry with owned definitions.
+
+* Registration, admission and snapshots
+
+=register_logical_voices_v2= requires =registry_generation=, =definitions= and
+=fallback_policy=. The last has the same complete four-field shape required by
+=preview_voice=, including explicit arrays and null =global_default=. It is
+combined with applied routing policy by the existing effective-policy rules;
+neither registration version replaces that separately owned policy.
+
+Registration is a complete replacement, with the existing 256-definition limit.
+Validate and construct the entire candidate before mutation. A positive u64
+generation below the current generation returns =stale_generation=; the same
+generation with different content returns =generation_conflict=. Equality is
+typed structural equality: object member order is immaterial; choice/definition
+array order, modes, IDs and explicit default operations are significant.
+Identical same-generation content is idempotent, with predictions refreshed
+against current inventory. New content requires a greater generation.
+
+The success response requires =registry_generation=, =inventory_generation=,
+=definition_count= and =unresolved_logical_voice_ids=. The latter lists unresolved
+IDs once, in submitted order, and may be empty. It is an admission/prediction
+summary, not evidence of playback. Do not echo full definitions or failed-route
+histories into this bounded acknowledgement. Validate its encoding bound before
+publishing the candidate. Request IDs distinguish retries and lane processes.
+
+Retain a compatibility projection for existing diagnostic and routing-policy
+responses: layered definitions project to their shared settings and ordered
+bare selectors. Such views never replace or mutate the authoritative layered
+registry. Old registration can replace the registry with legacy definitions
+using a later generation; same-generation mode changes conflict as above.
+An old request identical to the shared projection is not identical to a layered
+definition. Do not treat registration as two unrelated generation domains.
+The compatibility definition carries shared normalized ACSS/effects and bare
+preferences; it has no new rate-offset field. Older speech paths still transport
+their shared relative rate through the existing span mechanism. Never bake an
+offset into an absolute registration rate using a guessed future host rate.
+
+At timeline admission, require =registry_generation= to equal the lane's current
+accepted generation and verify every layered reference. Freeze the referenced
+definitions, effective policy, administrative disablement, context, placement
+and host rate for the whole presentation. Later registrations and global-rate
+changes do not alter queued work. Inventory/health may refresh at the existing
+worker boundary; that is precisely why choice composition remains server-side.
+
+Both lanes acknowledge the proposed configuration independently. Do not mark
+an editor operation applied until its policy and definition acknowledgements
+belong to the same current operation on every required lane. After reconnect,
+register current content anew; never replay previously admitted speech.
+
+* Timeline version 4
+
+The envelope requires =protocol_version=, =generation=, =dispatch_id=,
+=registry_generation=, =delivery_policy=, =spans= and =actions=. All generations
+and dispatch IDs are positive u64 values. =replacement_key= is required only
+for replaceable delivery and forbidden for ordered/urgent delivery. Preserve
+version 3's action/position grammar and whole-document reference validation.
+Replacement domains remain =(protocol_version, replacement_key)=; version 4
+does not silently replace version 3 work with the same key. Stop retains the
+existing lane cancellation domain.
+
+Each span is exactly one of these wrappers:
+
+#+begin_example
+{"mode": "legacy", "span": EXISTING_TIMELINE_SPAN}
+{"mode": "layered", "span": {
+  "id": 1, "text": "A heading", "logical_voice_id": "bolden",
+  "context": {"richness": {"op": "set", "value": 0}},
+  "placement": {"pan": null}
+}}
+#+end_example
+
+Layered inner spans require exactly the five illustrated fields. Span IDs retain
+the existing unique u64 grammar and action references use those IDs. The named
+ID must identify a layered definition in the admitted registry; missing IDs or
+a reference to a legacy definition reject the whole presentation. An unresolved
+but registered voice remains eligible for ordinary policy fallback. If none can
+synthesize, it fails through the normal terminal path, without silently using
+an unrelated legacy voice.
+
+Layered spans cannot also carry =acss=, =rate_offset= or persistent =effects=
+directives. Each carries its own complete context and derives effects afresh
+from its actual route. =placement= requires just =pan=, null or finite [0, 1];
+a non-null value applies the existing spatial-balance override after voice
+composition. It is not another editable voice dimension. Presentation action
+placement, cue buses and lane pan/volume keep their existing owners.
+
+Legacy spans keep existing flattened ACSS/rate behavior. Their retain/replace/end
+effect directives apply within consecutive legacy runs. Entering or leaving a
+layered run ends that legacy effect state; retain at the start of a legacy run
+means neutral, as at the start of an old timeline. The version-4 client encoder
+must reset its effect-transition cache at this boundary and emit replace when
+resuming a non-neutral legacy style. Neither path inherits the other's filters.
+Old timelines are unchanged and consist of one legacy run.
+
+Resolve each actual attempt, select its record (or no record for policy fallback),
+compose the immutable layers, apply placement, adapt capabilities, and construct
+fresh native settings/DSP. Preserve compatible within-route DSP continuity,
+but never carry uncommitted failed-route state into another route. Preserve
+the four-attempt cap, repertoire admission, voice-versus-engine failure policy,
+progressive PCM commitment and output-error rules. No cross-engine replay or
+splicing after PCM has been committed, even if playback has not started yet.
+
+* Private previews and individual choices
+
+=preview_voice_v2= requires =text=, =voice=, =context=, =placement=, =selection=,
+=fallback_policy= and =disabled_engine_ids=. Optional =expected_base_rate= has
+the existing finite [0, 2] validation and comparison guard. Omission captures
+the current host rate. =voice= has exactly =language=, =shared= and =choices=
+as above, without a public logical ID; the server owns its private identity.
+
+=selection= is exactly ={"mode":"automatic"}= or
+={"mode":"choice","choice_id":"ID"}=. Automatic uses the full chain and
+captured policy. Choice requires an existing record and auditions only that
+selector with its adjustments and context: no other record or global-policy
+substitute is allowed. Property/default selectors still resolve a physical
+voice normally; the result identifies it. Preserve the record's original ID
+and index, rather than renumbering it to the front of a temporary chain.
+
+Apply the union of requested and process-disabled engines. Freeze the same
+inputs as ordinary speech; private previews do not replace the registry or
+policy. Use the same composition and actual-attempt execution, including native
+default clearing. Health accounting still occurs. A comparison freezes both
+voice snapshots, policy, text, context and placement; validate both halves before
+the first speaks, then check base rate and effective disablement as in 1.9.
+
+The terminal =preview_voice_completed_v2= has exactly these payload fields:
+
+| Field | Meaning |
+|-------+---------|
+| =status= | =completed=, =cancelled= or =failed=. |
+| =accepted_audio= | Ordered distinct audio-choice records defined below, at most 32. |
+| =accepted_audio_truncated= | True if count or encoded-output budget prevented complete reporting. |
+| =last_started= | Last audio-choice identity whose first frame was consumed, or null. |
+| =message= | Bounded diagnostic string or null; never substitute it for typed status. |
+| =base_rate= | Frozen host rate before any voice adjustment. |
+| =effective_disabled_engine_ids= | Frozen effective union. |
+
+An audio-choice identity requires =choice_id= (string or null), =reason= (existing
+tagged resolution reason), =realized= (existing physical voice ID), and
+=degraded_acss= / =degraded_effects= arrays using existing dimension enums.
+An =accepted_audio= record adds required boolean =playback_started=. Distinct
+means equality of identity, including choice ID and degradation; first-acceptance
+order is retained. Later first-frame consumption sets that record's boolean.
+=last_started= is maintained separately even if the bounded list is truncated.
+
+Acceptance means PCM crossed the existing playback commitment boundary; it
+does not prove any frame was consumed. A cancelled request may have accepted
+audio but null =last_started=. Failed uncommitted attempts never enter the list.
+Only consumed first-frame evidence supports the editor's /last actual playback/
+label. Completion means consumed server audio, not proof of acoustic output.
+
+* Ordinary playback evidence
+
+Version-4 timelines emit marker/event envelope version 3, preserving the existing
+prefix, dispatch ID and monotonically increasing sequence. Existing event types
+retain their fields and timing under that version. Versions 1–3 of the timeline
+continue to emit their existing event versions, even on an upgraded server.
+
+For a layered chunk, emit =voice_choice_applied= immediately after its
+=utterance_started= event, when the source consumes the first frame. It requires
+=utterance_id=, =span_id=, =registry_generation=, =logical_voice_id= and =choice=;
+=choice= is the audio-choice identity above. No sample text, full chain or
+private palette metadata is repeated. No receipt is emitted for a failed
+uncommitted attempt, unconsumed cancellation or purely predicted resolution.
+
+Primary/explicit-alternative reasons carry a choice ID and retain the existing
+preference-index meaning. A policy reason carries null choice ID, even if its
+physical target also appears in a stored record. Defaults and inherited values
+remain explainable from the correlated client snapshot; these events do not
+invent a numeric native default or assert acoustic equality between engines.
+Discard late events by process, dispatch and registry identity. Keep bounded
+per-dispatch observations and the latest playback summary, not unlimited history.
+
+* Bounds, errors and compatibility
+
+Retain 256 KiB decoded control data, 16 KiB preview text, 32 choices per voice,
+256 definitions, 128-byte logical/engine IDs, 4096-byte physical IDs and existing
+language/selector/policy bounds. New choice IDs have the ASCII bound above.
+Single-frame timelines retain the 256 KiB frame budget; multipart retains 64
+parts, 16 MiB aggregate data, at most 262144 aggregate spans, 4096 total actions
+and 512 actions per prepared speech window. Count IDs, patches, text and frozen
+snapshots in queued memory; splitting transport must not bypass admission bounds.
+
+Bound a new =voice_choice_applied= record to 32 KiB decoded. Every version-3
+marker record must also fit the existing remote line limit after encoding;
+preflight the existing text chunking/escaping against that bound before handing
+a chunk to synthesis. Fail before commitment if a chunk cannot be represented
+without losing its text/marker correspondence. Do not increase remote bounds
+or silently truncate speech. Bound preview response metadata under the control
+limit, retaining correlation, status, =last_started= and the truncation flag.
+Bound diagnostic text to 1024 UTF-8 bytes, truncating only at a character boundary.
+
+Strictly reject unknown new fields, duplicate JSON keys/IDs, malformed operations,
+nonfinite/out-of-range numbers, mixed representations and overflow before registry
+mutation or playback admission. Reuse existing control error codes and timeline
+rejection/terminal framing. Recover request/dispatch identity only when trustworthy;
+never report malformed duplicate identity fields under a guessed ID. Once a
+preview is admitted, success, failure, cancellation, queue retirement and output
+failure each complete the client operation once. No fallback retry after an
+output or transport failure.
+
+| Client/server path | Required behavior |
+|--------------------+-------------------|
+| New/new, tuned owned voice | Version-2 registration, version-4 layered speech, version-2 preview; actual-route patches and context. |
+| Old/new | Old operations and flattened style semantics; no implicit individual tuning. |
+| New/1.9 or missing bundle | Register ordered shared-only projection and speak through old messages. Keep saved patches; show Saved; individual tuning not applied for affected lanes. |
+| New, mixed lane support | Apply/report per lane; one successful lane cannot imply both applied. Notice once per connection; reconnect renegotiates. |
+| Customized full preview without bundle | Refuse before speaking. Save remains available. Never flatten a predicted fallback. |
+| Individual audition without bundle | Old exact audition only if the composed request, including defaults, is faithfully representable. Otherwise report unsupported; label successful use as an individual audition. |
+| Version-4 legacy span or old inline speech | Compatibility projection and legacy semantics; no individual patch claim. Upgraded owned-voice consumers must use the layered path. |
+
+Before advertising editor support, audit speech actions, notifications, spelling,
+direct named-voice speech and both structured/inline entry points. Route supported
+owned requests through the layered path; retain a visible limitation for opaque
+legacy forms. Intermediate protocol support alone must not enable customization
+in a client that still loses patches in ordinary speech.
+
+* Fixtures and handoff
+
+[[file:../test/fixtures/voice-editor/fallback-tuning-wire.json][Wire examples]] contain request/response objects, invalid-input mutations,
+context/default projection cases, and expected execution/compatibility outcomes.
+They complement the [[file:../test/fixtures/voice-editor/fallback-tuning-design.json][raw-unit composition examples]]. Data-only checks verify
+syntax, bounds, identity references, framing and expected arithmetic. They do
+not prove either future codec or actual synthesis behavior.
+
+At High, copy these independent examples into paired server/client tests and
+exercise final encoding/decoding, fake-engine requests, accepted PCM and consumed
+first frames. Test default clearing through native settings, failure before and
+after commitment, same-engine and duplicate-selector choices, policy fallback,
+mixed legacy spans, multipart rejection, stale registry/late replies, both lanes
+and disconnect without replay. Exercise the [[file:../test/fixtures/voice-editor/fallback-tuning-storage.el][storage promotion/save-retry example]]
+through the real readers and writers before enabling them. Listening acceptance
+remains a separate final slice.

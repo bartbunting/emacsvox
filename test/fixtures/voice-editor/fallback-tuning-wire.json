@@ -1,0 +1,896 @@
+{
+  "fixture_version": 1,
+  "status": "accepted-contract-examples-not-implemented-codec-or-runtime-tests",
+  "units": "wire-normalized values after client scaling; these are independent of raw-unit examples",
+  "required_features": [
+    "voice_choice_tuning_v1",
+    "presentation_timeline_v4",
+    "playback_marker_events_v3"
+  ],
+  "messages": {
+    "registration": {
+      "protocol_version": 1,
+      "request_id": 701,
+      "type": "register_logical_voices_v2",
+      "registry_generation": 41,
+      "definitions": [
+        {
+          "mode": "layered",
+          "definition": {
+            "id": "bolden",
+            "language": "en-AU",
+            "shared": {
+              "acss": {
+                "rate": null,
+                "average_pitch": 0.4,
+                "pitch_range": null,
+                "stress": null,
+                "richness": 0.5,
+                "volume": null
+              },
+              "rate_offset": 2,
+              "effects": {
+                "gain": null,
+                "low_pass": 0.75,
+                "high_pass": null,
+                "pan": null,
+                "reverb": null,
+                "echo": null,
+                "chorus": null
+              }
+            },
+            "choices": [
+              {
+                "id": "dectalk-paul",
+                "selector": {
+                  "kind": "exact",
+                  "engine_id": "dectalk",
+                  "voice_id": "Paul"
+                },
+                "adjustments": {
+                  "average_pitch": {
+                    "op": "set",
+                    "value": 0.2
+                  },
+                  "richness": {
+                    "op": "set",
+                    "value": 0.8
+                  },
+                  "rate_offset": {
+                    "op": "set",
+                    "value": 4
+                  },
+                  "low_pass": {
+                    "op": "default"
+                  }
+                }
+              },
+              {
+                "id": "eloquence-reed",
+                "selector": {
+                  "kind": "exact",
+                  "engine_id": "eloquence",
+                  "voice_id": "Reed"
+                },
+                "adjustments": {
+                  "average_pitch": {
+                    "op": "set",
+                    "value": 0.6
+                  },
+                  "richness": {
+                    "op": "set",
+                    "value": 0.3
+                  },
+                  "rate_offset": {
+                    "op": "set",
+                    "value": -1
+                  },
+                  "low_pass": {
+                    "op": "set",
+                    "value": 0.33
+                  }
+                }
+              },
+              {
+                "id": "eloquence-reed-soft",
+                "selector": {
+                  "kind": "exact",
+                  "engine_id": "eloquence",
+                  "voice_id": "Reed"
+                },
+                "adjustments": {
+                  "richness": {
+                    "op": "set",
+                    "value": 1
+                  },
+                  "rate_offset": {
+                    "op": "set",
+                    "value": 0
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "mode": "legacy",
+          "definition": {
+            "id": "voice-annotate",
+            "language": null,
+            "preferences": [],
+            "acss": {
+              "richness": 0.5
+            },
+            "effects": {}
+          }
+        }
+      ],
+      "fallback_policy": {
+        "preferred_engines": [],
+        "allow_same_language_on_requested_engine": true,
+        "global_default": null,
+        "fallback_engines": [
+          "espeak"
+        ]
+      }
+    },
+    "registration_ack": {
+      "protocol_version": 1,
+      "request_id": 701,
+      "type": "logical_voices_registered_v2",
+      "registry_generation": 41,
+      "inventory_generation": 12,
+      "definition_count": 2,
+      "unresolved_logical_voice_ids": []
+    },
+    "timeline": {
+      "protocol_version": 4,
+      "generation": 8,
+      "dispatch_id": 91,
+      "registry_generation": 41,
+      "delivery_policy": "ordered",
+      "spans": [
+        {
+          "mode": "layered",
+          "span": {
+            "id": 1,
+            "text": "A heading",
+            "logical_voice_id": "bolden",
+            "context": {
+              "richness": {
+                "op": "set",
+                "value": 0.5
+              },
+              "rate_offset": {
+                "op": "set",
+                "value": 0
+              }
+            },
+            "placement": {
+              "pan": null
+            }
+          }
+        },
+        {
+          "mode": "legacy",
+          "span": {
+            "id": 2,
+            "text": "An annotation",
+            "logical_voice_id": "voice-annotate",
+            "acss": {
+              "richness": 0.5
+            },
+            "effects": {
+              "mode": "replace",
+              "state_id": "annotation.effects",
+              "style": {
+                "low_pass": 0.75
+              }
+            }
+          }
+        },
+        {
+          "mode": "layered",
+          "span": {
+            "id": 3,
+            "text": "Plain again",
+            "logical_voice_id": "bolden",
+            "context": {},
+            "placement": {
+              "pan": null
+            }
+          }
+        },
+        {
+          "mode": "legacy",
+          "span": {
+            "id": 4,
+            "text": "Neutral annotation",
+            "logical_voice_id": "voice-annotate",
+            "acss": {},
+            "effects": {
+              "mode": "retain"
+            }
+          }
+        }
+      ],
+      "actions": []
+    },
+    "preview": {
+      "protocol_version": 1,
+      "request_id": 702,
+      "type": "preview_voice_v2",
+      "text": "6 The quick brown fox jumps over the lazy dog.",
+      "voice": {
+        "language": "en-AU",
+        "shared": {
+          "acss": {
+            "rate": null,
+            "average_pitch": 0.4,
+            "pitch_range": null,
+            "stress": null,
+            "richness": 0.5,
+            "volume": null
+          },
+          "rate_offset": 2,
+          "effects": {
+            "gain": null,
+            "low_pass": 0.75,
+            "high_pass": null,
+            "pan": null,
+            "reverb": null,
+            "echo": null,
+            "chorus": null
+          }
+        },
+        "choices": [
+          {
+            "id": "dectalk-paul",
+            "selector": {
+              "kind": "exact",
+              "engine_id": "dectalk",
+              "voice_id": "Paul"
+            },
+            "adjustments": {
+              "average_pitch": {
+                "op": "set",
+                "value": 0.2
+              },
+              "richness": {
+                "op": "set",
+                "value": 0.8
+              },
+              "rate_offset": {
+                "op": "set",
+                "value": 4
+              },
+              "low_pass": {
+                "op": "default"
+              }
+            }
+          },
+          {
+            "id": "eloquence-reed",
+            "selector": {
+              "kind": "exact",
+              "engine_id": "eloquence",
+              "voice_id": "Reed"
+            },
+            "adjustments": {
+              "average_pitch": {
+                "op": "set",
+                "value": 0.6
+              },
+              "richness": {
+                "op": "set",
+                "value": 0.3
+              },
+              "rate_offset": {
+                "op": "set",
+                "value": -1
+              },
+              "low_pass": {
+                "op": "set",
+                "value": 0.33
+              }
+            }
+          },
+          {
+            "id": "eloquence-reed-soft",
+            "selector": {
+              "kind": "exact",
+              "engine_id": "eloquence",
+              "voice_id": "Reed"
+            },
+            "adjustments": {
+              "richness": {
+                "op": "set",
+                "value": 1
+              },
+              "rate_offset": {
+                "op": "set",
+                "value": 0
+              }
+            }
+          }
+        ]
+      },
+      "context": {
+        "richness": {
+          "op": "set",
+          "value": 0.5
+        },
+        "rate_offset": {
+          "op": "set",
+          "value": 0
+        }
+      },
+      "placement": {
+        "pan": null
+      },
+      "selection": {
+        "mode": "automatic"
+      },
+      "fallback_policy": {
+        "preferred_engines": [],
+        "allow_same_language_on_requested_engine": true,
+        "global_default": null,
+        "fallback_engines": [
+          "espeak"
+        ]
+      },
+      "disabled_engine_ids": [],
+      "expected_base_rate": 0.65
+    },
+    "preview_completed": {
+      "protocol_version": 1,
+      "request_id": 702,
+      "type": "preview_voice_completed_v2",
+      "status": "completed",
+      "accepted_audio": [
+        {
+          "choice_id": "eloquence-reed",
+          "reason": {
+            "reason": "explicit_alternative",
+            "preference_index": 1
+          },
+          "realized": {
+            "engine_id": "eloquence",
+            "voice_id": "Reed"
+          },
+          "degraded_acss": [],
+          "degraded_effects": [],
+          "playback_started": true
+        }
+      ],
+      "accepted_audio_truncated": false,
+      "last_started": {
+        "choice_id": "eloquence-reed",
+        "reason": {
+          "reason": "explicit_alternative",
+          "preference_index": 1
+        },
+        "realized": {
+          "engine_id": "eloquence",
+          "voice_id": "Reed"
+        },
+        "degraded_acss": [],
+        "degraded_effects": []
+      },
+      "message": null,
+      "base_rate": 0.65,
+      "effective_disabled_engine_ids": []
+    },
+    "playback_receipt": {
+      "protocol_version": 3,
+      "dispatch_id": 91,
+      "sequence": 2,
+      "type": "voice_choice_applied",
+      "utterance_id": 1,
+      "span_id": 1,
+      "registry_generation": 41,
+      "logical_voice_id": "bolden",
+      "choice": {
+        "choice_id": "eloquence-reed",
+        "reason": {
+          "reason": "explicit_alternative",
+          "preference_index": 1
+        },
+        "realized": {
+          "engine_id": "eloquence",
+          "voice_id": "Reed"
+        },
+        "degraded_acss": [],
+        "degraded_effects": []
+      }
+    }
+  },
+  "composition_cases": [
+    {
+      "name": "primary-base",
+      "choice_id": "dectalk-paul",
+      "context": {},
+      "base_rate": 0.65,
+      "expected": {
+        "average_pitch": 0.2,
+        "richness": 0.8,
+        "low_pass": null,
+        "rate_offset": 4,
+        "effective_rate": 0.69
+      }
+    },
+    {
+      "name": "fallback-retains-explicit-context-equal-to-shared",
+      "choice_id": "eloquence-reed",
+      "context": {
+        "richness": {
+          "op": "set",
+          "value": 0.5
+        },
+        "rate_offset": {
+          "op": "set",
+          "value": 0
+        }
+      },
+      "base_rate": 0.65,
+      "expected": {
+        "average_pitch": 0.6,
+        "richness": 0.5,
+        "low_pass": 0.33,
+        "rate_offset": 0,
+        "effective_rate": 0.65
+      }
+    },
+    {
+      "name": "duplicate-selector-retains-record-identity",
+      "choice_id": "eloquence-reed-soft",
+      "context": {},
+      "base_rate": 0.65,
+      "expected": {
+        "average_pitch": 0.4,
+        "richness": 1,
+        "low_pass": 0.75,
+        "rate_offset": 0,
+        "effective_rate": 0.65
+      }
+    },
+    {
+      "name": "policy-does-not-match-saved-patch",
+      "choice_id": null,
+      "context": {},
+      "base_rate": 0.65,
+      "expected": {
+        "average_pitch": 0.4,
+        "richness": 0.5,
+        "low_pass": 0.75,
+        "rate_offset": 2,
+        "effective_rate": 0.67
+      }
+    },
+    {
+      "name": "context-nil-projection-keeps-acss",
+      "choice_id": "eloquence-reed",
+      "context": {
+        "rate_offset": {
+          "op": "default"
+        },
+        "low_pass": {
+          "op": "default"
+        }
+      },
+      "base_rate": 0.65,
+      "expected": {
+        "average_pitch": 0.6,
+        "richness": 0.3,
+        "low_pass": null,
+        "rate_offset": null,
+        "effective_rate": 0.65
+      }
+    },
+    {
+      "name": "context-zero-is-explicit",
+      "choice_id": "eloquence-reed",
+      "context": {
+        "average_pitch": {
+          "op": "set",
+          "value": 0
+        },
+        "low_pass": {
+          "op": "set",
+          "value": 0
+        },
+        "rate_offset": {
+          "op": "set",
+          "value": 0
+        }
+      },
+      "base_rate": 0.65,
+      "expected": {
+        "average_pitch": 0,
+        "richness": 0.3,
+        "low_pass": 0,
+        "rate_offset": 0,
+        "effective_rate": 0.65
+      }
+    },
+    {
+      "name": "zero-offset-preserves-host-rate-above-one",
+      "choice_id": "eloquence-reed-soft",
+      "context": {},
+      "base_rate": 1.4,
+      "expected": {
+        "average_pitch": 0.4,
+        "richness": 1,
+        "low_pass": 0.75,
+        "rate_offset": 0,
+        "effective_rate": 1.4
+      }
+    },
+    {
+      "name": "default-offset-preserves-host-rate-above-one",
+      "choice_id": "eloquence-reed",
+      "context": {
+        "rate_offset": {
+          "op": "default"
+        }
+      },
+      "base_rate": 1.4,
+      "expected": {
+        "average_pitch": 0.6,
+        "richness": 0.3,
+        "low_pass": 0.33,
+        "rate_offset": null,
+        "effective_rate": 1.4
+      }
+    },
+    {
+      "name": "nonzero-offset-retains-existing-clamp",
+      "choice_id": "eloquence-reed",
+      "context": {},
+      "base_rate": 1.4,
+      "expected": {
+        "average_pitch": 0.6,
+        "richness": 0.3,
+        "low_pass": 0.33,
+        "rate_offset": -1,
+        "effective_rate": 1
+      }
+    },
+    {
+      "name": "legacy-shared-absolute-rate-survives-without-patch",
+      "choice_id": null,
+      "context": {},
+      "base_rate": 1.4,
+      "shared_absolute_rate": 0.8,
+      "expected": {
+        "average_pitch": 0.4,
+        "richness": 0.5,
+        "low_pass": 0.75,
+        "rate_offset": null,
+        "effective_rate": 0.8
+      }
+    },
+    {
+      "name": "choice-zero-clears-shared-absolute-rate",
+      "choice_id": "eloquence-reed-soft",
+      "context": {},
+      "base_rate": 1.4,
+      "shared_absolute_rate": 0.8,
+      "expected": {
+        "average_pitch": 0.4,
+        "richness": 1,
+        "low_pass": 0.75,
+        "rate_offset": 0,
+        "effective_rate": 1.4
+      }
+    }
+  ],
+  "projection_cases": [
+    {
+      "name": "choice-adapter-default",
+      "layer": "choice",
+      "stored": {
+        "average_pitch": null,
+        "low_pass": null
+      },
+      "expected_patch": {
+        "average_pitch": {
+          "op": "default"
+        },
+        "low_pass": {
+          "op": "default"
+        }
+      }
+    },
+    {
+      "name": "context-nil-has-two-meanings",
+      "layer": "context",
+      "stored": {
+        "average_pitch": null,
+        "rate_offset": null,
+        "low_pass": null
+      },
+      "expected_patch": {
+        "rate_offset": {
+          "op": "default"
+        },
+        "low_pass": {
+          "op": "default"
+        }
+      },
+      "expected_provenance_nil": [
+        "average_pitch",
+        "rate_offset",
+        "low_pass"
+      ]
+    },
+    {
+      "name": "raw-zero-and-low-pass-cutoff",
+      "layer": "context",
+      "stored": {
+        "richness": 0,
+        "low_pass": 9,
+        "pan": 5
+      },
+      "expected_patch": {
+        "richness": {
+          "op": "set",
+          "value": 0
+        },
+        "low_pass": {
+          "op": "set",
+          "value": 1
+        },
+        "pan": {
+          "op": "set",
+          "value": 0.5
+        }
+      }
+    },
+    {
+      "name": "inherit-is-absence",
+      "layer": "choice",
+      "stored": {},
+      "expected_patch": {}
+    }
+  ],
+  "invalid_patch_cases": [
+    {
+      "json": "{\"richness\":null}",
+      "reason": "bare-null"
+    },
+    {
+      "json": "{\"richness\":0}",
+      "reason": "bare-number"
+    },
+    {
+      "json": "{\"richness\":{\"op\":\"default\",\"value\":0}}",
+      "reason": "default-with-value"
+    },
+    {
+      "json": "{\"richness\":{\"op\":\"set\"}}",
+      "reason": "set-without-value"
+    },
+    {
+      "json": "{\"richness\":{\"op\":\"set\",\"value\":1.1}}",
+      "reason": "out-of-range"
+    },
+    {
+      "json": "{\"rate_offset\":{\"op\":\"set\",\"value\":21}}",
+      "reason": "rate-out-of-range"
+    },
+    {
+      "json": "{\"rate_offset\":{\"op\":\"set\",\"value\":0.5}}",
+      "reason": "fractional-rate"
+    },
+    {
+      "json": "{\"rate_offset\":{\"op\":\"set\",\"value\":true}}",
+      "reason": "boolean-is-not-a-number"
+    },
+    {
+      "json": "{\"family\":{\"op\":\"default\"}}",
+      "reason": "unknown-dimension"
+    },
+    {
+      "json": "{\"richness\":{\"op\":\"set\",\"value\":NaN}}",
+      "reason": "nonfinite-json"
+    },
+    {
+      "json": "{\"richness\":{\"op\":\"set\",\"value\":1e999}}",
+      "reason": "nonfinite-decoded-number"
+    },
+    {
+      "json": "{\"richness\":{\"op\":\"set\",\"value\":0},\"richness\":{\"op\":\"default\"}}",
+      "reason": "duplicate-dimension"
+    },
+    {
+      "json": "{\"richness\":{\"op\":\"set\",\"value\":0,\"value\":1}}",
+      "reason": "duplicate-operation-member"
+    }
+  ],
+  "execution_cases": [
+    {
+      "name": "primary-fails-before-commit",
+      "attempts": [
+        "dectalk-paul",
+        "eloquence-reed"
+      ],
+      "committed": [
+        "eloquence-reed"
+      ],
+      "started": [
+        "eloquence-reed"
+      ],
+      "expected_status": "completed"
+    },
+    {
+      "name": "primary-fails-after-commit-before-consumption",
+      "attempts": [
+        "dectalk-paul"
+      ],
+      "committed": [
+        "dectalk-paul"
+      ],
+      "started": [],
+      "expected_status": "failed",
+      "expected_last_started": null
+    },
+    {
+      "name": "cancel-after-commit-before-consumption",
+      "attempts": [
+        "dectalk-paul"
+      ],
+      "committed": [
+        "dectalk-paul"
+      ],
+      "started": [],
+      "expected_status": "cancelled",
+      "expected_last_started": null
+    },
+    {
+      "name": "strict-choice-unavailable",
+      "selection": {
+        "mode": "choice",
+        "choice_id": "dectalk-paul"
+      },
+      "available": [
+        "eloquence-reed"
+      ],
+      "committed": [],
+      "started": [],
+      "expected_status": "failed"
+    },
+    {
+      "name": "output-failure-does-not-fallback",
+      "attempts": [
+        "dectalk-paul"
+      ],
+      "expected_status": "failed",
+      "expected_retry_count": 0
+    },
+    {
+      "name": "queued-registry-is-frozen",
+      "admitted_generation": 41,
+      "later_generation": 42,
+      "expected_execution_generation": 41
+    },
+    {
+      "name": "stale-timeline-rejected",
+      "requested_generation": 41,
+      "current_generation": 42,
+      "expected_admitted": false
+    },
+    {
+      "name": "same-generation-mode-change-conflicts",
+      "current_generation": 41,
+      "requested_generation": 41,
+      "expected_error": "generation_conflict"
+    },
+    {
+      "name": "legacy-run-does-not-resume-filter",
+      "span_ids": [
+        2,
+        3,
+        4
+      ],
+      "expected_legacy_low_pass": {
+        "2": 0.75,
+        "4": null
+      }
+    },
+    {
+      "name": "disconnected-multipart-no-replay",
+      "received_parts": [
+        0
+      ],
+      "part_count": 2,
+      "expected_admitted": false,
+      "expected_replayed": false
+    }
+  ],
+  "invalid_request_cases": [
+    {
+      "message": "registration",
+      "operation": "duplicate-choice-id",
+      "expected_error": "invalid_configuration"
+    },
+    {
+      "message": "registration",
+      "operation": "append-choices-to-33",
+      "expected_error": "invalid_configuration"
+    },
+    {
+      "message": "registration",
+      "operation": "remove-fallback-policy",
+      "expected_error": "malformed_request"
+    },
+    {
+      "message": "preview",
+      "operation": "unknown-selected-choice",
+      "expected_error": "invalid_configuration"
+    },
+    {
+      "message": "preview",
+      "operation": "set-text-to-16385-ascii-bytes",
+      "expected_error": "invalid_configuration"
+    },
+    {
+      "message": "preview",
+      "operation": "set-expected-base-rate-to-2.01",
+      "expected_error": "invalid_configuration"
+    },
+    {
+      "message": "timeline",
+      "operation": "add-acss-to-layered-span",
+      "expected_admitted": false
+    },
+    {
+      "message": "timeline",
+      "operation": "reference-legacy-definition-from-layered-span",
+      "expected_admitted": false
+    },
+    {
+      "message": "timeline",
+      "operation": "duplicate-inner-span-id",
+      "expected_admitted": false
+    }
+  ],
+  "compatibility_cases": [
+    {
+      "name": "one-lane-is-1.9",
+      "foreground_features": [
+        "voice_choice_tuning_v1",
+        "presentation_timeline_v4",
+        "playback_marker_events_v3"
+      ],
+      "notification_features": [
+        "voice_chain_preview_v1",
+        "presentation_timeline_v3"
+      ],
+      "expected_foreground": "layered",
+      "expected_notification": "shared-only",
+      "expected_fully_applied": false,
+      "expected_saved_patches": "preserved"
+    },
+    {
+      "name": "partial-bundle-is-insufficient",
+      "features": [
+        "voice_choice_tuning_v1",
+        "presentation_timeline_v4"
+      ],
+      "expected_path": "shared-only",
+      "expected_custom_preview": "unsupported"
+    },
+    {
+      "name": "old-client-on-new-server",
+      "expected_path": "legacy",
+      "expected_implicit_choice_tuning": false
+    },
+    {
+      "name": "older-replacement-process",
+      "expected_renegotiation": true,
+      "expected_replayed": false,
+      "expected_fully_applied": false
+    }
+  ]
+}

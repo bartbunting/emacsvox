@@ -1,22 +1,23 @@
-#+title: Per-Fallback Voice Tuning: Storage and Runtime Proposal
+#+title: Per-Fallback Voice Tuning: Storage and Runtime Contract
 #+date: 2026-09-09
 #+startup: content
 
 * Status and decision boundary
 
-Proposed at slice 7's requested XHI review. This is a design, not implemented
-storage or an accepted wire protocol. [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]] presents the decision for
-maintainer approval. Keep the existing shared editor working until this entire
-path is available. Omnivox 1.9.0 supplies complete shared-style preview; it does
-not supply individual fallback tuning. No new minimum release is assigned here.
+Accepted after the maintainer selected A on 2026-09-09. [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]] records
+shared -> choice -> context precedence; the [[file:voice-editor-fallback-wire-contract.org][wire/compatibility contract]] completes
+the XHI design slice. These are implementation contracts, not implemented
+storage or runtime behavior. Keep the existing shared editor working until this
+entire path is available. Omnivox 1.9.0 supplies complete shared-style preview;
+it does not supply individual fallback tuning. No new minimum release is assigned.
 
 This review inspected all Emacsvox ADRs 0001–0016 and Omnivox ADRs 0001–0010.
 The Omnivox checkout is at release commit =69d1e9496be68eaa27f06908b10b2fc5591a9918=.
 The accepted [[file:voice-editor-data-contract.org][ownership contract]] and [[file:voice-editor-preview-contract.org][preview contract]] remain authoritative
-for delivered features. This proposal extends them without changing ordinary
+for delivered features. This contract extends them without changing ordinary
 selector matching, helper boundaries, engine rate calibration or no-replay rules.
 
-* Recommended user model
+* Accepted user model
 
 An ordinary named voice retains one shared adjustment panel. Every preferred
 or fallback choice uses those settings unless the user chooses /Customize this
@@ -54,7 +55,7 @@ prepending or appending preserves every other choice and its patch. An
 adjustments-only keep requires a destination choice; it must not guess one
 from inventory or overwrite shared settings.
 
-* Precedence requiring approval
+* Accepted precedence
 
 For each dimension, use the last explicitly supplied value in:
 
@@ -99,7 +100,7 @@ these existing observations alone do not prove new server behavior. Unsupported
 or opaque legacy personality forms retain their compatibility path and an
 explicit limitation, rather than acquiring guessed reset semantics.
 
-* Storage proposal
+* Storage contract
 
 ** Choice records, not engine-keyed patches
 
@@ -128,8 +129,8 @@ all their current loadable fields. Engine-specific native knobs need a later
 capability and schema proposal; different settings of the current controls are
 sufficient for this delivery.
 
-IDs are unique within the complete chain, bounded to 128 ASCII identifier
-characters, and allocated once in a save proposal. Two choices from one
+IDs are unique within the complete chain, contain 1–128 ASCII characters from
+=[A-Za-z0-9_.-]=, and are allocated once in a save proposal. Two choices from one
 engine, or even duplicate selectors, remain separate rows. Do not join patches
 by engine ID, native voice ID or array index across edits. Portable records
 keep their IDs in the portable subsequence of a local chain. Copying an entire
@@ -138,8 +139,9 @@ its immutable local snapshot receives a fresh snapshot ID as today.
 
 ** Versioned ownership and ordered publication
 
-Reserve palette schema 3, routing-file schema 3 and user-data envelope 9 for
-this extension, subject to checking availability when implementation begins.
+Use palette schema 3, routing-file schema 3 and user-data envelope 9 for this
+extension. Those versions are unused at this contract's baseline; check for
+intervening allocations before implementation rather than reusing a version.
 Routing-profile schema 2 does not change. Palette schema 3 retains =:routing
 owned= and existing entry keys, but =:choices= contains portable choice records
 instead of bare selectors. Shared =:style= / =:personality= is unchanged.
@@ -159,6 +161,19 @@ entry chains, preserving order and empty patches. Old local references remain
 resolvable; only edited local chains need new snapshots. Unrelated palettes
 retain their schemas. All existing writers must preserve new records before
 any new-format writer is enabled.
+
+The [[file:../test/fixtures/voice-editor/fallback-tuning-storage.el][storage example]] freezes a promotion with a mixed local/portable chain,
+an unchanged schema-2 parent, immutable old/new snapshots and expected portable
+export. New snapshots' portable projection must equal the entry's =:choices=,
+including IDs and patches. Validate that agreement before publication and when
+both records are available to the reader. A mismatch is malformed data, not
+missing data. Old unversioned references remain a compatibility case: they
+contain no individual patches, and their selectors retain existing resolution.
+An old reference does not justify attaching a nonempty portable patch to an
+unidentified local occurrence; the first choice customization publishes a new
+complete snapshot. Loading or a shared-style edit need not promote that snapshot.
+Reject a resolvable old snapshot paired with nonempty portable patches as
+malformed. Missing local data still uses the portable chain as described below.
 
 Keep whole-entry palette inheritance across owned schemas 2 and 3. Saving an
 inherited entry copies its complete effective chain to the child owner. Keep
@@ -193,7 +208,7 @@ never a saved patch found by matching a coincidentally identical physical ID.
 The editor shows that distinction and saves only its explicit base proposal.
 Extending temporary bindings to carry tuning is outside this first delivery.
 
-* Runtime and transport proposal
+* Runtime and transport contract
 
 ** Carry layers until the engine is actually chosen
 
@@ -235,27 +250,25 @@ be mistaken for per-choice voice patches.
 
 ** Negotiate a complete path
 
-Propose one bundle capability, =voice_choice_tuning_v1=, advertised only when
+Use one bundle capability, =voice_choice_tuning_v1=, advertised only when
 registration, ordinary routed speech, contextual spans and private previews
-all implement these semantics. Negotiate independently on both lanes and again
-after reconnect. Omnivox 1.9.0 must take the older-server path.
+all implement these semantics. Require =presentation_timeline_v4= and
+=playback_marker_events_v3= alongside it. Negotiate independently on both lanes
+and again after reconnect. Omnivox 1.9.0 must take the older-server path.
 
-Use new typed logical-registration and complete-preview operations in control
-envelope 1, leaving existing operations unchanged. Use a new timeline version
-(after current version 3) for spans that preserve named base identity and a
-sparse contextual patch. Include the new path in bounded multipart transport,
+Use =register_logical_voices_v2= and =preview_voice_v2= in control envelope 1,
+leaving existing operations unchanged. Use timeline version 4 for spans that
+preserve named base identity and a sparse contextual patch. Include bounded
+multipart transport,
 remote record validation, dispatch identity, admission, cancellation and
 completion. Do not add optional fields to old requests and hope that older
 servers reject rather than ignore them.
 
-The detailed wire specification follows approval of this proposal. It must
-settle operation names, version/capability checks, a discriminated legacy versus
-layered span form, registration acknowledgements and accepted-audio evidence.
-The patch DTO must distinguish omitted, explicit default, numeric zero and
-custom value; ordinary Rust =Option<f32>= decoding is insufficient for this
-three-state input. An explicit tagged default or a validated presence-aware
-map is required. Contextual nil is projected according to the earlier table,
-not automatically serialized as the new choice-default operation.
+The [[file:voice-editor-fallback-wire-contract.org][wire specification]] fixes the discriminated legacy/layered forms,
+registration acknowledgements and accepted-audio/playback evidence. Patch
+members use explicit =set= / =default= operations; omission means inherit.
+Ordinary Rust =Option<f32>= decoding is insufficient. Contextual nil projects
+according to the earlier table, not automatically to the new default operation.
 
 Retain limits of 32 explicit choices, 16 KiB preview text and 256 KiB decoded
 control data. Count patches and IDs in queue memory and multipart bounds.
@@ -286,8 +299,10 @@ data, but must report /Saved; individual tuning not applied/ on affected lanes.
 
 Complete previews involving custom choices require the capability and must
 refuse rather than falsely demonstrate the saved result. Existing exact
-physical auditions can still test one client-composed base choice through the
-old operation, labelled as an individual audition. Comparisons preflight both
+physical auditions can test one client-composed base choice through the old
+operation only when its settings and resets are faithfully representable,
+labelled as an individual audition. Otherwise report unsupported. Comparisons
+preflight both
 halves before speaking. Standalone adapters need an explicit tested projection
 before claiming individual tuning; absence never silently destroys saved data.
 
@@ -302,7 +317,7 @@ adapter defaults unless the adapter reports them. No acoustic equivalence is
 inferred from matching normalized values.
 
 The [[file:../test/fixtures/voice-editor/fallback-tuning-design.json][independent design examples]] use raw editor storage units and expected
-composition, not proposed wire messages. Validate their arithmetic and IDs now;
+composition, rather than wire messages. Validate their arithmetic and IDs now;
 replay their scenarios through final client requests and simulated server
 synthesis after implementation. They are not evidence of runtime support.
 
@@ -324,12 +339,11 @@ Required acceptance additionally includes:
 - normal speech and preview parity at final requests and accepted audio, plus
   a separate maintainer listening walkthrough on real engines.
 
-* Implementation slices after approval
+* Implementation slices and High handoff
 
-1. Finish the exact wire and compatibility contract at XHI, including fixtures
-   for contextual nil and old-client/new-server interoperation. Mirror the
-   accepted decision in Omnivox before server implementation. Stop and request
-   High only after this contract and its acceptance examples are settled.
+1. Done: settle the exact wire/compatibility contract at XHI, with storage,
+   contextual nil and old-client/new-server examples. Stop and request High.
+   Mirror the accepted decision in Omnivox before server implementation.
 2. Add storage readers/validators and pure choice operations; migrate nothing
    implicitly. Test round trips, old writer preservation and save failures.
 3. Implement negotiated Omnivox registration, resolution, layered spans,

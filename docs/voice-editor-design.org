@@ -6,13 +6,14 @@
 
 The common base editor and first optional context workflow are implemented.
 This document also describes later interactions, including individual fallback
-tuning, which remain proposed. Live spoken acceptance is still pending.
+tuning, whose design is accepted but implementation remains pending. Live
+spoken acceptance is still pending.
 The [[file:voice-editor-implementation-plan.org][implementation plan]] defines tested delivery slices.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] accepts palette ownership and independent conversion on first save;
 the [[file:voice-editor-data-contract.org][data contract]] specifies its implementation. The implementation plan records
 the delivered scope and remaining acceptance
-work. The XHI review is now recorded in the proposed
-[[file:voice-editor-fallback-tuning-contract.org][per-fallback storage/runtime contract]] and [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], awaiting approval.
+work. The accepted [[file:voice-editor-fallback-tuning-contract.org][per-fallback storage/runtime contract]],
+[[file:voice-editor-fallback-wire-contract.org][wire/compatibility contract]] and [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]] complete the XHI review.
 
 Make it possible to answer three questions in one place: which physical voice
 does bolden use, what adjustments change its sound, and have my changes been
@@ -23,11 +24,11 @@ saving a physical-voice experiment.
 
 Accepted ownership: converted palettes own the complete base sound of their
 named voices, including preferred physical choices, ordered fallbacks and shared
-adjustments. Individual choice adjustments remain a proposed extension.
+adjustments. Individual choice adjustments are an accepted, unimplemented extension.
 Editing bolden in one palette should not silently change another palette's own definition.
 Switching palettes selects the corresponding complete voice definitions.
 Legacy palettes retain their current behavior until an independent personal
-copy is saved through the new workflow; that workflow is not implemented yet.
+copy is saved through the implemented common editor workflow.
 Presentation rules can still adjust that base for particular content. Palette
 ownership must preserve the existing aural CSS cascade described below.
 
@@ -248,21 +249,20 @@ distinct information. Runtime routing and health policy decide eligibility;
 an inventory entry alone does not prove a voice will play successfully. Do not
 promise retry or replay of an utterance after playback has already begun.
 
-Proposed extension: keep shared adjustments for the named voice, with optional
-overrides attached to each fallback choice. This lets two physical voices,
+Accepted extension, pending implementation: keep shared adjustments for the named
+voice, with optional overrides attached to each fallback choice. This lets two physical voices,
 including two voices from the same engine, use different values. A choice uses
 the shared value unless explicitly customized. An override replaces that
 dimension's shared value; it does not add another offset. For relative rate,
 an override of +4 means +4 from the global rate, not +4 from the shared offset.
 Use shared value is distinct from an explicit adapter default.
 
-Recommended precedence for this proposed extension: resolve the named voice's
+Accepted precedence for this extension: resolve the named voice's
 shared settings and selected physical choice's overrides as its base, then
 apply the winning explicit contextual dimensions. A rule choosing a different
 named preset uses that preset's base and choices. This preserves a contextual
 instruction such as richness eight even when a fallback has its own base
-richness. Confirm this order in the storage/runtime decision before shipping
-individual tuning. Runtime fallback must recompute the selected base while
+richness. Runtime fallback must recompute the selected base while
 retaining the contextual patch; it must not replace that patch with fallback
 defaults or reuse the preferred voice's individual settings.
 
@@ -289,10 +289,10 @@ Current routing selectors contain identity/matching fields, not per-choice
 styles. The optional overrides above therefore require storage and playback
 design, including selection of matching adjustments when the server falls back
 at runtime. Picking adjustments from a client prediction is insufficient.
-That extension is proposed, not an existing feature or an approved schema or
-protocol change. The [[file:voice-editor-fallback-tuning-contract.org][storage/runtime proposal]] specifies stable choice records,
+That extension is an accepted implementation contract, not an existing feature.
+The [[file:voice-editor-fallback-tuning-contract.org][storage/runtime contract]] specifies stable choice records,
 sparse patches, versioned storage and actual-route composition. Under the
-recommended model these overrides belong to the
+accepted model these overrides belong to the
 palette's complete named voice, even if local choices are stored separately.
 
 * Speech and keyboard interaction

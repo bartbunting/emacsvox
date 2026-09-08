@@ -9,9 +9,10 @@ full-chain preview, and its XHI protocol contract is complete. The server previe
 and client slices and owned runtime integration are implemented and tested.
 Draft/save coordination and the common base editor are implemented and tested.
 Optional context inspection and scoped field editing are also implemented.
-Slice 7's XHI storage/runtime review has produced a concrete proposal in
-[[file:voice-editor-fallback-tuning-contract.org][the per-fallback tuning contract]] and proposed [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]]. It awaits the
-maintainer's precedence decision before wire specification or implementation.
+The maintainer selected A for slice 7: shared -> choice -> context. Accepted
+[[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], the [[file:voice-editor-fallback-tuning-contract.org][storage/runtime contract]] and the
+[[file:voice-editor-fallback-wire-contract.org][wire/compatibility contract]] complete its XHI review. Stop for High before
+implementing individual fallback tuning; no new reader or wire codec exists yet.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -327,21 +328,46 @@ The first workflow inspects a captured source item; it does not provide syntheti
 example authoring or individual fallback adjustments. Live spoken acceptance is
 still required after the agreed reasoning boundary.
 
-** TODO 7. Decide and implement optional individual fallback tuning
+** TODO 7. Implement optional individual fallback tuning
 
-The maintainer returned to XHI on 2026-09-09. Storage/runtime inspection is
-complete and the [[file:voice-editor-fallback-tuning-contract.org][proposal]] is ready for review, with independent composition
-examples and [[file:adr/0017-per-fallback-voice-tuning.org][proposed ADR 0017]]. Recommended order: shared base, selected choice
-overrides, then contextual dimensions, with no numeric accumulation. The
-alternative puts choice overrides after context, protecting tuning at the cost
-of potentially defeating heading/emphasis rules. Confirm the recommendation
-before changing storage readers or the wire; neither is implemented here.
+The maintainer returned to XHI on 2026-09-09 and selected A: shared base, selected
+choice overrides, then contextual dimensions, with no numeric accumulation.
+The [[file:voice-editor-fallback-tuning-contract.org][storage/runtime contract]], [[file:voice-editor-fallback-wire-contract.org][wire/compatibility contract]] and
+[[file:adr/0017-per-fallback-voice-tuning.org][accepted ADR 0017]] now settle this boundary. No further design decision is
+outstanding. Stop for High before ordinary coding.
 
-After that decision, remain at XHI to settle exact registration, layered-span,
-preview and compatibility messages. Then stop for High before ordinary coding.
-The proposal divides implementation into storage, server, client/runtime and
+The contract divides implementation into storage, server, client/runtime and
 editor slices, each tested and committed. Omnivox 1.9.0 remains the shared-style
 baseline; a future capability, not its release number alone, enables tuning.
+
+*** DONE 7a. XHI storage/runtime and exact wire contract
+
+Specify schema-3 choice records and immutable snapshots, envelope 9, strict
+set/default patches, mixed legacy/layered registration, timeline 4, preview v2
+and bounded playback evidence. Preserve contextual nil, legacy messages, both
+lanes and no replay. Independent raw-unit, storage and wire fixtures define the
+acceptance boundary. This is design completion, not implemented runtime support.
+
+*** TODO 7b. Storage and pure choice operations at High
+
+Add readers/validators, lossless writer support, draft identities and ordered
+publication before enabling schema promotion. Test empty/zero/default round
+trips, mixed old/new snapshots, inheritance, portable export and failed-save
+retry with stable IDs. Loading data must not write or activate configuration.
+
+*** TODO 7c. Omnivox negotiated runtime at High
+
+Mirror the accepted decision and contract into Omnivox, then implement the
+negotiated messages, actual-route composition and bounded evidence. Use paired
+fixture tests through fake engine settings, PCM commitment and first-frame
+consumption, retaining old protocol regression tests and pinned-toolchain gates.
+
+*** TODO 7d. Client, ordinary consumers and optional editor controls at High
+
+Implement lossless context projection, lane negotiation and apply reporting.
+Audit ordinary speech paths before enabling customization, then add per-choice
+controls and experiment keeps over the tested services. Verify fresh compiled
+behavior, update current documentation and commit each completed slice.
 
 Implement only with negotiated support and explicit behavior for older servers.
 Verify adjustment selection after actual runtime fallback, including two voices
@@ -425,9 +451,18 @@ patches. Eleven independent examples cover precedence, nil/zero, same-engine
 voices, global-policy fallback, reorder, preset replacement and rate clamping.
 All eleven examples passed data-only identity, range, composition and rate
 checks. Local links, Emacs/byte-code preflight, documentation release validation
-and whitespace checks passed. These checks do not establish runtime support. The current stop
-is maintainer approval of precedence; remain at XHI for the subsequent wire
-contract. No runtime, storage reader or personal configuration changed.
+and whitespace checks passed. These checks do not establish runtime support.
+The maintainer subsequently accepted the recommended precedence. Slice 7a now
+adds exact wire/compatibility and storage examples; its current stop is the
+High handoff. No runtime, storage reader or personal configuration changed.
+
+Slice 7a's data-only checks pass for eleven raw-unit and eleven normalized wire
+composition cases, four nil/zero/inherit projections, thirteen malformed patch
+examples, six message examples and control/multipart framing. The storage fixture
+passes existing input validators and independent checks for immutable snapshots,
+portable projection, parent ownership and frozen retry IDs. Local links,
+Emacs/byte-code preflight and documentation release validation pass. These are
+fixture consistency checks, not tests of future codecs, migration or synthesis.
 
 For later Lisp slices, run focused ERT and =make bytecode=, or
 =make bytecode-rebuild= after macro/public-interface changes. Verify in a fresh
