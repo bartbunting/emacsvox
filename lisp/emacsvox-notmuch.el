@@ -60,6 +60,8 @@
 (declare-function notmuch-search-get-result "notmuch" (&optional pos))
 (declare-function notmuch-search-next-thread "notmuch" ())
 (declare-function notmuch-search-previous-thread "notmuch" ())
+(declare-function notmuch-search-first-thread "notmuch" ())
+(declare-function notmuch-search-last-thread "notmuch" ())
 (declare-function notmuch-show-clean-address "notmuch-show" (address))
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 (declare-function notmuch-show-get-message-properties "notmuch-show" ())
@@ -2798,6 +2800,10 @@ FACTS describe the event, ICON is its leading cue, and TEXT is optional."
    notmuch-search-mode-map (kbd "<down>") #'notmuch-search-next-thread)
   (define-key
    notmuch-search-mode-map (kbd "<up>") #'notmuch-search-previous-thread)
+  (define-key
+   notmuch-search-mode-map (kbd "M-<") #'notmuch-search-first-thread)
+  (define-key
+   notmuch-search-mode-map (kbd "M->") #'notmuch-search-last-thread)
   (define-key
    notmuch-search-mode-map (kbd "C-c C-p")
    #'emacsvox-notmuch-speak-search-details))
