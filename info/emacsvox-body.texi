@@ -2928,6 +2928,11 @@ use @kbd{P} to audition the palette sequence before editing@comma{} and use @kbd
 activate a selected palette.  Built-in palettes remain intact; editing can
 create a personal copy.
 
+In a personal palette's voice list@comma{} press @kbd{c} on a voice and
+enter a new name to save an independent copy.  For palette-owned voices this
+includes physical voice choices@comma{} their fallback order@comma{} and individual tuning.
+The new voice is selected after saving; the original voice is unchanged.
+
 To rename a personal palette@comma{} select it in @emph{Voice Palettes}@comma{} press
 @kbd{r}@comma{} and enter its new name.  The rename is saved immediately.
 It preserves voice settings and individual fallback tuning@comma{} updates child

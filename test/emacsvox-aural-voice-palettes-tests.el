@@ -607,6 +607,69 @@
       (when (get-buffer "*Aural Voice Palette Preview*")
         (kill-buffer "*Aural Voice Palette Preview*")))))
 
+(ert-deftest emacsvox-aural-voice-palette-preview-copies-owned-voice-completely ()
+  "The c command saves and selects a copy with independent local choices."
+  (emacsvox-test--with-palette-rename
+    (let* ((before (emacsvox-aural-voice-palette-data-form (emacsvox-aural-voice-palette 'reading)))
+           (source (emacsvox-aural-voice-runtime--resolve 'bolden 'reading)))
+      (with-temp-buffer
+        (emacsvox-aural-voice-palette-previews-mode)
+        (setq emacsvox-aural-voice-palette-previews-palette 'reading)
+        (emacsvox-aural-voice-palette-previews-refresh 'bolden)
+        (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--read-new-entry-name)
+                   (lambda (palette initial)
+                     (should (eq palette 'reading))
+                     (should (equal initial "bolden-copy"))
+                     'bolden-copy)))
+          (should (eq (emacsvox-aural-voice-palette-previews-copy) 'bolden-copy)))
+        (should (eq (tabulated-list-get-id) 'bolden-copy)))
+      (let* ((after (emacsvox-aural-voice-palette-data-form (emacsvox-aural-voice-palette 'reading)))
+             (copy (emacsvox-aural-voice-runtime--resolve 'bolden-copy 'reading))
+             (reference (plist-get (cdr (assq 'bolden-copy (plist-get after :entries))) :local-choices))
+             (sets (plist-get (emacsvox-aural-read-routing-profiles) :choice-sets)))
+        (dolist (key '(:definition :choices :selectors :language))
+          (should (equal (plist-get source key) (plist-get copy key))))
+        (should (equal (plist-get before :entries)
+                       (cl-remove 'bolden-copy (plist-get after :entries) :key #'car)))
+        (should-not (equal reference (plist-get (cdr (assq 'bolden (plist-get before :entries))) :local-choices)))
+        (should (eq (plist-get (cl-find reference sets :test #'equal :key (lambda (set) (plist-get set :id))) :voice)
+                    'bolden-copy))
+        (should (assq 'bolden-copy
+                      (plist-get (cl-find 'reading (plist-get (emacsvox-aural-read-user-data) :voice-palettes)
+                                           :key (lambda (data) (plist-get data :id))) :entries)))))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-copies-inherited-and-older-owned-voices ()
+  "Inherited Automatic voices and schema-2 local chains retain their settings."
+  (emacsvox-test--with-palette-rename
+    (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'annotate 'annotation-copy)
+    (should (equal (plist-get (emacsvox-aural-voice-runtime--resolve 'annotate 'reading) :definition)
+                   (plist-get (emacsvox-aural-voice-runtime--resolve 'annotation-copy 'reading) :definition)))
+    (should-not (plist-get (emacsvox-aural-voice-runtime--resolve 'annotation-copy 'reading) :choices)))
+  (emacsvox-test--with-palette-rename
+    (puthash 'reading (emacsvox-aural-compile-voice-palette-data
+                      (emacsvox-test--choice-fixture :source-palette)) emacsvox-aural-voice-palette-registry)
+    (emacsvox-aural-save-user-data)
+    (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'bolden 'bolden-copy)
+    (should (eq 2 (plist-get (emacsvox-aural-voice-palette-data-form
+                              (emacsvox-aural-voice-palette 'reading)) :schema-version)))
+    (should (equal (plist-get (emacsvox-aural-voice-runtime--resolve 'bolden 'reading) :selectors)
+                   (plist-get (emacsvox-aural-voice-runtime--resolve 'bolden-copy 'reading) :selectors)))))
+
+(ert-deftest emacsvox-aural-voice-palette-preview-copy-owned-failure-is-retryable ()
+  "Either store failing leaves the source intact and permits retrying c."
+  (dolist (writer '(emacsvox-aural-routing--write-user-data emacsvox-aural--write-user-data))
+    (emacsvox-test--with-palette-rename
+      (let ((before (emacsvox-aural-read-user-data))
+            (registry emacsvox-aural-voice-palette-registry))
+        (cl-letf (((symbol-function writer) (lambda (&rest _) (error "Simulated write failure"))))
+          (should-error (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'bolden 'bolden-copy)
+                        :type 'user-error))
+        (should (eq registry emacsvox-aural-voice-palette-registry))
+        (should (equal before (emacsvox-aural-read-user-data)))
+        (should-not (assq 'bolden-copy (emacsvox-aural-effective-voice-entries 'reading)))
+        (should (eq (emacsvox-aural-voice-palettes--copy-owned-voice 'reading 'bolden 'bolden-copy)
+                    'bolden-copy))))))
+
 (ert-deftest emacsvox-aural-voice-palette-preview-uses-one-built-in-overlay ()
   "The first built-in edit creates one active overlay reused by later edits."
   (emacsvox-test--with-voice-palettes

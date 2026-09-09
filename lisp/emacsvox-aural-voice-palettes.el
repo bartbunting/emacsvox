@@ -2363,6 +2363,50 @@ identity."
     (emacsvox-aural-voice-palette-previews-refresh voice)
     voice))
 
+(defun emacsvox-aural-voice-palettes--copy-owned-voice (palette source name)
+  "Save an independent copy of PALETTE's effective SOURCE voice as NAME."
+  (let* ((record (emacsvox-aural-voice-palette palette))
+         (data (emacsvox-aural-voice-palette-data-form record))
+         (entries (emacsvox-aural-voice-data--entries
+                   palette emacsvox-aural-voice-palette-registry))
+         (item (cl-find source entries :key (lambda (entry) (car (plist-get entry :entry)))))
+         (properties (copy-tree (cdr (plist-get item :entry))))
+         (choices (and item (emacsvox-aural-voice-data--choices
+                             (plist-get item :palette) source properties
+                             emacsvox-aural-routing--choice-sets (plist-get item :schema-version))))
+         (layered (or (eq (plist-get data :schema-version) 3)
+                      (eq (plist-get item :schema-version) 3)))
+         (rows (and layered (if (plist-member choices :choices) (plist-get choices :choices)
+                              (emacsvox-aural-voice-data--wrap-selectors (plist-get choices :selectors)))))
+         sets)
+    (when (emacsvox-aural-voice-palette-built-in record)
+      (user-error "Copy the built-in palette first"))
+    (unless item (user-error "Unknown voice: %s" source))
+    (when (cl-find name entries :key (lambda (entry) (car (plist-get entry :entry))))
+      (user-error "Voice already exists in palette %s: %s" palette name))
+    (when (plist-get choices :diagnostics)
+      (user-error "Cannot copy %s: its saved local voice choices are missing" source))
+    (when layered
+      (setq data (emacsvox-aural-voice-data--promote data)
+            properties (plist-put properties :choices (emacsvox-aural-voice-data--portable-choices rows))))
+    (when (plist-get properties :local-choices)
+      (let ((id (emacsvox-aural-voice-editing--new-id)))
+        (setq properties (plist-put properties :local-choices id)
+              sets (list (if layered
+                             (list :schema-version 3 :id id :palette palette :voice name :choices rows)
+                           (list :id id :palette palette :voice name :selectors (plist-get choices :selectors)))))))
+    (setq data (emacsvox-aural-voice-palettes--put-entry data (cons name properties)))
+    (let* ((draft (emacsvox-aural-voice-drafts--make
+                   :key (list 'copy palette name)
+                   :watches (emacsvox-aural-voice-drafts--watch (list palette))))
+           (proposal (emacsvox-aural-voice-drafts--prepare draft data sets :sources (list palette))))
+      (emacsvox-aural-voice-drafts--save proposal)
+      (unless (memq 'published (emacsvox-aural-voice-save-completed proposal))
+        (user-error "Copy did not complete (%s): %s. Retry c; the original voice is unchanged"
+                    (plist-get (emacsvox-aural-voice-drafts--status draft) :label)
+                    (plist-get (emacsvox-aural-voice-save-result proposal) :message))))
+    name))
+
 (defun emacsvox-aural-voice-palette-previews-copy ()
   "Copy the current voice to a new, independently routable voice."
   (interactive)
@@ -2370,20 +2414,19 @@ identity."
           emacsvox-aural-voice-palette-previews-palette)
          (source-voice
           (emacsvox-aural-voice-palette-previews--current-voice))
-         (definition
-          (or
-           (emacsvox-aural-voice source-voice source-palette)
-           (user-error "Unknown voice: %s" source-voice)))
-         (style
-          (emacsvox-aural-voice-tuner--complete-style
-           definition source-palette))
          (palette
           (emacsvox-aural-voice-palette-previews--editable-palette))
          (voice
           (emacsvox-aural-voice-palettes--read-new-entry-name
            palette (format "%s-copy" source-voice))))
-    (emacsvox-aural-voice-palettes--install-entry-definition
-     palette voice style)
+    (if (emacsvox-aural-voice-runtime--owned-p palette)
+        (emacsvox-aural-voice-palettes--copy-owned-voice palette source-voice voice)
+      (emacsvox-aural-voice-palettes--install-entry-definition
+       palette voice
+       (emacsvox-aural-voice-tuner--complete-style
+        (or (emacsvox-aural-voice source-voice source-palette)
+            (user-error "Unknown voice: %s" source-voice))
+        source-palette)))
     (emacsvox-aural-voice-palette-previews-refresh voice)
     voice))
 
@@ -2404,6 +2447,7 @@ identity."
       "SPC speak voice      t tune voice\n"
       "e also tunes; s also stops for compatibility\n"
       "c copy voice         N new voice\n"
+      "Copy saves a new voice, including owned choices and individual tuning.\n"
       "E replace definition\n"
       "Tune opens a draft; first save creates an independent personal palette\n"
       "x explain voice\n"

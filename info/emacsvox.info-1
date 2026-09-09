@@ -2866,6 +2866,12 @@ voices, use ‘P’ to audition the palette sequence before editing, and use
 ‘a’ in the palette manager to activate a selected palette.  Built-in
 palettes remain intact; editing can create a personal copy.
 
+   In a personal palette's voice list, press ‘c’ on a voice and enter a
+new name to save an independent copy.  For palette-owned voices this
+includes physical voice choices, their fallback order, and individual
+tuning.  The new voice is selected after saving; the original voice is
+unchanged.
+
    To rename a personal palette, select it in _Voice Palettes_, press
 ‘r’, and enter its new name.  The rename is saved immediately.  It
 preserves voice settings and individual fallback tuning, updates child
