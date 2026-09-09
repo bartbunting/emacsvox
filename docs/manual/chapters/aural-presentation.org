@@ -258,6 +258,9 @@ simulation of what the current rules would produce at point.
 
 To inspect something heard earlier, open Aural Home and choose /Recent Aural
 Feedback/, or press @@texinfo:@kbd{H}@@ there.  Each row is a bounded frozen record.
+Moving through the Content column speaks the preview using its recorded voices,
+including voice changes within an entry.  Column titles and the other fields use
+the normal interface voice.
 Useful commands in the feedback browser include:
 
 #+attr_texinfo: :indic kbd :compact t
@@ -350,18 +353,35 @@ frozen example.
 1. Move to a representative object and press @@texinfo:@kbd{C-e E}@@ so you know what
    currently controls it.
 
-2. Press @@texinfo:@kbd{C-e H}@@.  Use @@texinfo:@kbd{r}@@ to remap its voice or @@texinfo:@kbd{R}@@ to
-   remap one exact earcon.
+2. Press @@texinfo:@kbd{C-e H}@@.  Choose /Remap voice at point/ with
+   @@texinfo:@kbd{r}@@ to use a different named voice here, or /Tune voice used
+   here/ with @@texinfo:@kbd{T}@@ to open the current named voice in its tuner.
+   Tuning changes that voice wherever it is used in the palette; remapping
+   changes which voice is used for the face or item.  For example, at a shell
+   prompt you can assign another voice to the prompt face, or tune the voice
+   currently used by prompts.  You do not need to hear the prompt first.
 
-3. Choose the scope deliberately:
+   In the remapping screen, move with @@texinfo:@kbd{n}@@ and
+   @@texinfo:@kbd{p}@@ or the arrow keys.  Press @@texinfo:@kbd{RET}@@ on
+   /Voice/ to choose a voice, /Preview original/ to hear the captured item, or
+   /Preview change/ to hear your choice.  @@texinfo:@kbd{O}@@ and
+   @@texinfo:@kbd{P}@@ also play these previews; @@texinfo:@kbd{S}@@ stops.
+   Previewing does not save the mapping or retune the named voice.
+
+   @@texinfo:@kbd{R}@@ in Home still remaps one exact earcon.
+
+3. Choose /How long/ deliberately:
 
    - a /personal/ override persists across Emacs sessions;
    - a /session/ override lasts until this Emacs exits; and
    - a /buffer/ override affects only the remembered live buffer.
 
-4. Review the generated rule in the editor.  It is initially unwritten.  Use
-   the editor's @@texinfo:@kbd{?}@@ help, preview when offered, and press @@texinfo:@kbd{w}@@ only
-   when the target, scope, and change are correct.
+4. Check /Applies to/, /Voice/, and /How long/, then activate /Save/ or press
+   @@texinfo:@kbd{w}@@.  A face mapping affects matching uses of that face
+   within the displayed module or mode and chosen lifetime.  /Advanced/
+   opens the full rule editor when you need more detailed matching controls.
+   @@texinfo:@kbd{q}@@ hides the simple remapping screen and keeps its draft;
+   /Resume unfinished changes/ in Home finds it again after a voice is chosen.
 
 5. Return to the source, repeat the action, and use @@texinfo:@kbd{C-e E}@@ again to
    confirm which rule now wins.

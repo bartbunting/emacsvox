@@ -35,6 +35,10 @@
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-preview)
+(declare-function emacsvox-aural-voice-runtime--resolve
+                  "emacsvox-aural-voice-runtime" (voice &optional palette profile))
+(declare-function emacsvox-aural-voice-editor-open
+                  "emacsvox-aural-voice-editor" (palette voice &optional source text))
 
 (defvar-local emacsvox-aural-change-feedback-input nil
   "Frozen current-item or explicit history input for this draft.")
@@ -54,6 +58,91 @@
   "Explicitly selected lifetime: buffer, session, or personal.")
 (defvar-local emacsvox-aural-change-feedback-applied nil
   "Non-nil after this draft has been successfully saved or applied.")
+(defvar-local emacsvox-aural-change-feedback--voice-remap nil
+  "Non-nil for the simple named-voice mapping view.")
+
+(defun emacsvox-aural-change-feedback--named-voice (input)
+  "Return (PALETTE NAME) for INPUT's base voice, without copying its tuning."
+  (require 'emacsvox-aural-voice-runtime)
+  (let* ((plan (plist-get input :concrete))
+         (palette (or (and plan (emacsvox-aural-concrete-plan-voice-palette plan))
+                      (emacsvox-aural-effective-voice-palette)))
+         (content (emacsvox-aural-render-plan-content (plist-get input :render)))
+         (voice (if (assq 'voice (emacsvox-aural-content-style-provenance content))
+                    (emacsvox-aural-content-style-voice content)
+                  (emacsvox-aural-tools--voice-remap-current-voice
+                   (plist-get input :render) (plist-get input :context))))
+         (preset (if (emacsvox-aural-voice-style-p voice)
+                     (plist-get voice :preset) voice))
+         (name (and preset (symbolp preset)
+                    (plist-get (emacsvox-aural-voice-runtime--resolve preset palette) :name))))
+    (when name (list palette name))))
+
+(defun emacsvox-aural-change-feedback--tune-at-point ()
+  "Open the current named voice's base tuner from the captured source."
+  (interactive)
+  (let* ((input (emacsvox-aural-tools--remap-source-input nil 'voice))
+         (identity (emacsvox-aural-change-feedback--named-voice input)))
+    (unless identity
+      (user-error "This item has no named voice to tune; remap it to a named voice first"))
+    (require 'emacsvox-aural-voice-editor)
+    (emacsvox-aural-voice-editor-open
+     (car identity) (cadr identity) (plist-get input :source)
+     (or (plist-get (plist-get input :facts) :content)
+         (emacsvox-aural-concrete-content-text
+          (emacsvox-aural-concrete-plan-content (plist-get input :concrete)))))
+    (emacsvox-aural-ui-announce-result
+     "Tuning %s in palette %s; changes affect every use of this named voice"
+     (cadr identity) (car identity))))
+
+(defun emacsvox-aural-change-feedback--remap-at-point ()
+  "Open a simple voice mapping draft for the current source item."
+  (interactive)
+  (let* ((input (emacsvox-aural-tools--remap-source-input nil 'voice))
+         (context (plist-get input :context))
+         (face (car (plist-get context :legacy-faces)))
+         (selector
+          (if face
+              (append (if (plist-get context :module)
+                          (list :module (plist-get context :module))
+                        (list :mode (plist-get context :mode)))
+                      (list :legacy-face face))
+            (emacsvox-aural-tools--voice-remap-selector (plist-get input :facts) context)))
+         (source (emacsvox-aural-inspection-remember-source-buffer))
+         (buffer (generate-new-buffer "*Remap Voice*")))
+    (with-current-buffer buffer
+      (emacsvox-aural-change-feedback-mode)
+      (emacsvox-aural-inspection-attach-source source)
+      (setq emacsvox-aural-change-feedback-input input
+            emacsvox-aural-change-feedback--voice-remap t
+            emacsvox-aural-change-feedback-selector selector
+            emacsvox-aural-change-feedback-component '(content))
+      (emacsvox-aural-change-feedback-refresh))
+    (emacsvox-aural-ui-pop-to-buffer buffer)
+    (emacsvox-aural-ui-speak
+     (concat (emacsvox-aural-change-feedback--summary)
+             " Choose Voice, How long, then Save. P previews; O plays the original."))
+    buffer))
+
+(defun emacsvox-aural-change-feedback--remap-rows ()
+  "Return the simple voice mapping fields and actions."
+  (let ((identity (emacsvox-aural-change-feedback--named-voice emacsvox-aural-change-feedback-input)))
+    (list
+     (list 'target (vector "Applies to"
+                           (emacsvox-aural-change-feedback--selector-description
+                            emacsvox-aural-change-feedback-selector)))
+     (list 'change (vector "Voice"
+                           (or emacsvox-aural-change-feedback-description
+                               (format "Currently %s; RET chooses another voice"
+                                       (or (cadr identity) "default or custom voice")))))
+     (list 'original (vector "Preview original" "Hear the captured item"))
+     (list 'proposed (vector "Preview change" "Hear this item with the chosen voice"))
+     (list 'lifetime (vector "How long" (emacsvox-aural-change-feedback--lifetime-description)))
+     (list 'apply (vector "Save"
+                          (cond (emacsvox-aural-change-feedback-applied "Saved or applied")
+                                ((emacsvox-aural-change-feedback--ready-p) "Ready; RET or w saves")
+                                (t "Choose a voice and how long to keep it"))))
+     (list 'advanced (vector "Advanced" "Review the detailed rule")))))
 
 (defun emacsvox-aural-change-feedback--source ()
   "Return this draft's still-live source buffer, if any."
@@ -181,7 +270,8 @@
 (defun emacsvox-aural-change-feedback-change ()
   "Choose a component change without applying or saving any partial choice."
   (interactive)
-  (let* ((operation (completing-read "Change this feedback: " (emacsvox-aural-change-feedback--operations) nil t))
+  (let* ((operation (if emacsvox-aural-change-feedback--voice-remap "Change the content voice"
+                     (completing-read "Change this feedback: " (emacsvox-aural-change-feedback--operations) nil t)))
          (selector (or emacsvox-aural-change-feedback-selector
                        (emacsvox-aural-change-feedback--suggested-selector)))
          (id (emacsvox-aural-tools--remap-rule-id 'guided selector (list (intern operation))))
@@ -255,7 +345,8 @@
                       (emacsvox-aural-change-feedback--suggested-selector))))
     (list :id (emacsvox-aural-tools--remap-rule-id
                (or emacsvox-aural-change-feedback-scope 'preview) selector
-               (cons 'guided emacsvox-aural-change-feedback-component))
+               (if emacsvox-aural-change-feedback--voice-remap '(voice)
+                 (cons 'guided emacsvox-aural-change-feedback-component)))
           :match selector :render (copy-tree emacsvox-aural-change-feedback-render))))
 
 (defun emacsvox-aural-change-feedback--layer-rules (scope)
@@ -356,7 +447,14 @@
 
 (defun emacsvox-aural-change-feedback--summary ()
   "Describe the target, proposed change, matching breadth, and lifetime."
-  (format "%s. Change: %s. Matching criteria: %s. Lifetime: %s. %s"
+  (if emacsvox-aural-change-feedback--voice-remap
+      (format "Voice mapping for %s. %s. How long: %s. %s"
+              (emacsvox-aural-change-feedback--selector-description emacsvox-aural-change-feedback-selector)
+              (or emacsvox-aural-change-feedback-description
+                  (aref (cadr (assq 'change (emacsvox-aural-change-feedback--remap-rows))) 1))
+              (emacsvox-aural-change-feedback--lifetime-description)
+              (if emacsvox-aural-change-feedback-applied "Saved or applied." "Unsaved."))
+    (format "%s. Change: %s. Matching criteria: %s. Lifetime: %s. %s"
           (if emacsvox-aural-change-feedback-record
               (format "Recent Feedback record %s%s" (emacsvox-aural-presentation-record-id emacsvox-aural-change-feedback-record)
                       (or emacsvox-aural-change-feedback-part ""))
@@ -368,7 +466,7 @@
           (emacsvox-aural-change-feedback--lifetime-description)
           (if emacsvox-aural-change-feedback-applied
               (if (eq emacsvox-aural-change-feedback-scope 'personal) "Saved." "Applied temporarily.")
-            "Unsaved draft.")))
+            "Unsaved draft."))))
 
 (defun emacsvox-aural-change-feedback-refresh (&optional id)
   "Refresh the guided draft while retaining selected row ID."
@@ -376,7 +474,9 @@
   (emacsvox-aural-ui-refresh-tabulated
    (lambda ()
      (setq tabulated-list-entries
-           (list
+           (if emacsvox-aural-change-feedback--voice-remap
+               (emacsvox-aural-change-feedback--remap-rows)
+             (list
             (list 'target (vector "Target" (if emacsvox-aural-change-feedback-record (concat "Recent Feedback" (or emacsvox-aural-change-feedback-part "")) "Current item")))
             (list 'change (vector "Change" (or emacsvox-aural-change-feedback-description "Choose a component change")))
             (list 'match (vector "What should match"
@@ -387,7 +487,7 @@
             (list 'apply (vector "Apply or save" (cond (emacsvox-aural-change-feedback-applied
 							(if (eq emacsvox-aural-change-feedback-scope 'personal) "Saved" "Applied temporarily"))
                                                        ((emacsvox-aural-change-feedback--ready-p) "Ready; a or C-c C-c applies the reviewed change")
-                                                       (t "Choose change, match, and lifetime first"))))))) id 'change))
+                                                       (t "Choose change, match, and lifetime first")))))))) id 'change))
 
 (defun emacsvox-aural-change-feedback-details ()
   "Show the full reviewed summary without applying it."
@@ -402,18 +502,28 @@
     ('change (emacsvox-aural-change-feedback-change))
     ('match (emacsvox-aural-change-feedback-match))
     ('lifetime (emacsvox-aural-change-feedback-lifetime))
+    ('original (emacsvox-aural-change-feedback-original))
+    ('proposed (emacsvox-aural-change-feedback-proposed))
+    ('apply (emacsvox-aural-change-feedback-apply))
+    ('advanced (emacsvox-aural-change-feedback-advanced))
     (_ (emacsvox-aural-change-feedback-details))))
 
 (defun emacsvox-aural-change-feedback-help ()
   "Explain guided changes, previews, matching criteria, and lifetimes."
   (interactive)
-  (let ((text (concat (emacsvox-aural-change-feedback--summary)
+  (let ((text (if emacsvox-aural-change-feedback--voice-remap
+                  (concat (emacsvox-aural-change-feedback--summary)
+                          "\n\nChoose Voice to use another named voice for this face or item. The named voice itself is not retuned.\n"
+                          "RET opens the selected row. n/p or arrows move. P previews the change; O plays the original; S stops.\n"
+                          "Choose How long, then Save or w. q hides and preserves the draft. e opens Advanced.\n"
+                          "To retune the named voice everywhere it is used, return to Home and choose Tune voice used here (T).\n")
+                (concat (emacsvox-aural-change-feedback--summary)
                       "\n\nc chooses a component change. P previews before choosing a lifetime. O plays the original. S stops.\n"
                       "m chooses matching facts; l chooses lifetime. A buffer rule affects every matching item in that buffer.\n"
                       "Preview uses the selected example with current rules and its captured buffer context.\n"
                       "a or C-c C-c applies only after all choices are made; e opens the full Advanced rule editor.\n"
                       "RET opens choices or details. n/p and arrows navigate. Space reads the row.\n"
-                      "C-c C-a lists applicable actions. h opens Home. q hides and preserves the unfinished draft.\n")))
+                      "C-c C-a lists applicable actions. h opens Home. q hides and preserves the unfinished draft.\n"))))
     (emacsvox-aural-ui-with-help-window (princ text))
     (emacsvox-aural-ui-speak text)))
 
@@ -438,6 +548,7 @@
                    ("P" . emacsvox-aural-change-feedback-proposed)
                    ("O" . emacsvox-aural-change-feedback-original)
                    ("a" . emacsvox-aural-change-feedback-apply)
+                   ("w" . emacsvox-aural-change-feedback-apply)
                    ("C-c C-c" . emacsvox-aural-change-feedback-apply)
                    ("e" . emacsvox-aural-change-feedback-advanced)
                    ("h" . emacsvox-aural)

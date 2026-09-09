@@ -540,19 +540,41 @@
               (should-not (emacsvox-aural-facts-at-point))
               (should-not emacsvox-aural-presentation-history)
               (emacsvox-aural source)
-              (cl-letf (((symbol-function 'completing-read)
-                         (lambda (question &rest _)
-                           (if (string-prefix-p "Voice for " question)
-                               "animate"
-                             "this Emacs session"))))
-                (emacsvox-aural-home-remap-voice))
+              (emacsvox-aural-home-remap-voice)
               (with-current-buffer (window-buffer (selected-window))
-                (should (derived-mode-p 'emacsvox-aural-scheme-editor-mode))
-                (should emacsvox-aural-editor-dirty)
+                (when (= position 1)
+                  (cl-letf (((symbol-function 'emacsvox-aural-preview-play-plan)
+                             (lambda (plan)
+                               (should (equal (emacsvox-aural-concrete-content-text
+                                               (emacsvox-aural-concrete-plan-content plan)) prompt))
+                               (should (eq (emacsvox-aural-concrete-content-voice-request
+                                            (emacsvox-aural-concrete-plan-content plan)) 'voice-lighten-extra)))))
+                    (emacsvox-aural-ui-goto-row 'original)
+                    (emacsvox-aural-change-feedback-open-row)))
+                (cl-letf (((symbol-function 'completing-read)
+                           (lambda (question &rest _)
+                             (if (string-prefix-p "Content voice" question)
+                                 "animate"
+                               "This Emacs session"))))
+                  (emacsvox-aural-change-feedback-change)
+                  (emacsvox-aural-change-feedback-lifetime))
+                (let ((before (copy-tree emacsvox-aural-session-rules)))
+                  (cl-letf (((symbol-function 'emacsvox-aural-preview-play-plan)
+                             (lambda (plan)
+                               (should (eq (emacsvox-aural-concrete-content-voice-request
+                                            (emacsvox-aural-concrete-plan-content plan)) 'animate)))))
+                    (emacsvox-aural-ui-goto-row 'proposed)
+                    (emacsvox-aural-change-feedback-open-row))
+                  (should (equal before emacsvox-aural-session-rules)))
+                (should (derived-mode-p 'emacsvox-aural-change-feedback-mode))
+                (should-not emacsvox-aural-change-feedback-applied)
                 (should
-                 (equal (plist-get (car emacsvox-aural-editor-rules) :match)
+                 (equal (plist-get (emacsvox-aural-change-feedback--rule) :match)
                         '(:module shell :legacy-face comint-highlight-prompt)))
-                (emacsvox-aural-editor-save)))
+                (emacsvox-aural-ui-goto-row 'apply)
+                (emacsvox-aural-change-feedback-open-row)
+                (should emacsvox-aural-change-feedback-applied)
+                (should (= 1 (length emacsvox-aural-session-rules)))))
             ;; Exercise speech planning with the saved rule, including a
             ;; different face for command input on the same shell line.
             (with-current-buffer source
@@ -572,6 +594,50 @@
                         (should (eq voice 'animate))
                       (should-not (eq voice 'animate))))))))
         (delete-process process)))))
+
+(ert-deftest emacsvox-aural-tools-home-tunes-the-named-voice-at-source ()
+  "Tuning follows the captured face, then its remap, without editing a rule."
+  (require 'shell)
+  (require 'emacsvox-comint)
+  (require 'emacsvox-aural-voice-editor)
+  (emacsvox-test--with-home-context
+    (switch-to-buffer source)
+    (erase-buffer)
+    (shell-mode)
+    (insert (propertize "prompt" 'font-lock-face 'comint-highlight-prompt)
+            "\nplain input")
+    (goto-char 1)
+    (emacsvox-aural source)
+    ;; Moving the source cursor must not retarget the Home command.
+    (with-current-buffer source (goto-char (point-max)))
+    (let (opened)
+      (cl-letf (((symbol-function 'emacsvox-aural-voice-editor-open)
+                 (lambda (&rest arguments) (setq opened arguments))))
+        (emacsvox-aural-home-tune-voice)
+        (should (equal (seq-take opened 3) (list 'acss-default 'lighten-extra source)))
+        (should (equal (nth 3 opened) "prompt"))
+        (should-not emacsvox-aural-session-rules)
+        (setq emacsvox-aural-session-rules
+              '((:id prompt-remap :match (:module shell :legacy-face comint-highlight-prompt)
+                 :render (:content (:voice animate)))))
+        (emacsvox-aural-configuration-changed)
+        (emacsvox-aural-home-tune-voice)
+        (should (eq (cadr opened) 'animate))
+        (should (= 1 (length emacsvox-aural-session-rules)))
+        ;; A contextual preset identifies its base; contextual dimensions
+        ;; must not become edits to that base voice.
+        (setf (plist-get (plist-get (car emacsvox-aural-session-rules) :render) :content)
+              '(:voice (:preset bolden :average-pitch 2)))
+        (emacsvox-aural-configuration-changed)
+        (emacsvox-aural-home-tune-voice)
+        (should (equal (seq-take opened 3) (list 'acss-default 'bolden source)))
+        ;; An explicit reset must not accidentally tune the underlying face.
+        (setf (plist-get (plist-get (car emacsvox-aural-session-rules) :render) :content)
+              '(:voice nil))
+        (emacsvox-aural-configuration-changed)
+        (setq opened nil)
+        (should-error (emacsvox-aural-home-tune-voice) :type 'user-error)
+        (should-not opened)))))
 
 (ert-deftest emacsvox-aural-tools-face-fallback-requires-a-voice-target ()
   "Plain text still needs a presentation; a face cannot identify an earcon."
@@ -1355,6 +1421,60 @@
               (should (equal emacsvox-aural-editor-rules (list keep)))))
         (kill-buffer buffer)
         (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-tools-recent-feedback-navigation-retains-voices ()
+  "Content navigation keeps each voice while titles and metadata stay neutral."
+  (emacsvox-test--with-aural-tools
+    (let* ((first (emacsvox-aural--make-concrete-content
+                   :text "Hello " :speak t :voice-request 'bolden
+                   :voice-command "[[logical_voice bolden]]"
+                   :voice-style '(:average-pitch 3)))
+           (second (emacsvox-aural--make-concrete-content
+                    :text "world" :speak t :voice-request 'lighten
+                    :voice-command "[[logical_voice lighten]]"
+                    :voice-style '(:echo 4)))
+           (plans (mapcar
+                   (lambda (content)
+                     (emacsvox-aural--make-concrete-plan
+                      :content content
+                      :context '(:module shell :occasion navigation)))
+                   (list first second)))
+           (record (emacsvox-aural--make-presentation-record
+                    :id 1 :plan (car plans) :plans plans
+                    :queued-at (seconds-to-time 100)))
+           spoken)
+      (with-temp-buffer
+        (emacsvox-aural-recent-feedback-mode)
+        (setq tabulated-list-entries
+              (list (emacsvox-aural-recent-feedback--entry record)))
+        (tabulated-list-print)
+        (emacsvox-aural-ui-goto-row 1)
+        (cl-letf (((symbol-function 'tts-speak)
+                   (lambda (text) (setq spoken text)))
+                  ((symbol-function 'emacsvox-icon) #'ignore))
+          (dolist (value-first '(nil t))
+            (emacsvox-aural-ui-speak-current-cell value-first)
+            (should (emacsvox-aural-prepared-text-p spoken))
+            (dolist (pair `(("Hello" . ,first) ("world" . ,second)))
+              (let* ((start (string-match (car pair) spoken))
+                     (plan (emacsvox-aural-concrete-plan-at start spoken))
+                     (content (emacsvox-aural-concrete-plan-content plan)))
+                (should (equal (emacsvox-aural-concrete-content-voice-request content)
+                               (emacsvox-aural-concrete-content-voice-request (cdr pair))))
+                (should (equal (emacsvox-aural-concrete-content-voice-style content)
+                               (emacsvox-aural-concrete-content-voice-style (cdr pair))))
+                (should-not (emacsvox-aural-concrete-plan-before plan))
+                (should-not (emacsvox-aural-concrete-plan-after plan))))
+            (should-not
+             (emacsvox-aural-concrete-content-voice-request
+              (emacsvox-aural-concrete-plan-content
+               (emacsvox-aural-concrete-plan-at
+                (string-match "Content" spoken) spoken)))))
+          (emacsvox-aural-ui-next-column)
+          (should-not (get-text-property
+                       0 'emacsvox-aural-recent-feedback-voice spoken)))
+        (should (equal (emacsvox-aural-concrete-content-text first) "Hello "))
+        (should (equal (emacsvox-aural-concrete-content-text second) "world"))))))
 
 (ert-deftest emacsvox-aural-tools-recent-feedback-browses-frozen-output ()
   "Recent feedback exposes exact records for explanation and audition."
@@ -2363,6 +2483,7 @@
                    '(("RET" . emacsvox-aural-home-activate)
                      ("x" . emacsvox-aural-home-explain)
                      ("r" . emacsvox-aural-home-remap-voice)
+                     ("T" . emacsvox-aural-home-tune-voice)
                      ("R" . emacsvox-aural-home-remap-earcon)
                      ("O" . emacsvox-aural-home-overrides)
                      ("H" . emacsvox-aural-home-recent-feedback)
@@ -2433,6 +2554,8 @@
                 (should (string-prefix-p "Explain at point: " spoken))
                 (emacsvox-aural-home-next)
                 (should (string-prefix-p "Remap voice at point: " spoken))
+                (emacsvox-aural-home-next)
+                (should (string-prefix-p "Tune voice used here: " spoken))
                 (emacsvox-aural-home-next)
                 (should (string-prefix-p "Remap earcon at point: " spoken))
                 (emacsvox-aural-home-next-column)

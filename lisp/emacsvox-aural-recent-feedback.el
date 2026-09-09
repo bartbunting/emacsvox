@@ -101,7 +101,9 @@
           (emacsvox-aural-recent-feedback--clean-text
            (mapconcat
             (lambda (content)
-              (or (emacsvox-aural-concrete-content-text content) ""))
+              (propertize
+               (or (emacsvox-aural-concrete-content-text content) "")
+               'emacsvox-aural-recent-feedback-voice content))
             contents
             "")
            72))
@@ -116,7 +118,7 @@
        (not (string-empty-p text)))
       text)
      ((not (string-empty-p text))
-      (format "Content suppressed: %s" text))
+      (format "Content suppressed: %s" (substring-no-properties text)))
      (speech
       (format
        "Speech: %s"
@@ -245,6 +247,32 @@
     (if parts
         (string-join (nreverse parts) ", ")
       "ok")))
+
+(defun emacsvox-aural-recent-feedback--speak (text)
+  "Speak interface TEXT with retained content voices where annotated."
+  (if (not (fboundp 'tts-speak))
+      (message "%s" text)
+    (let ((prepared (emacsvox-aural-prepare-text text))
+          (position 0))
+      (while (< position (length text))
+        (let* ((end (next-single-property-change
+                     position 'emacsvox-aural-recent-feedback-voice
+                     text (length text)))
+               (voice (get-text-property
+                       position 'emacsvox-aural-recent-feedback-voice text)))
+          (when voice
+            (let ((plan (copy-emacsvox-aural-concrete-plan
+                         (emacsvox-aural-concrete-plan-at position prepared)))
+                  (content (copy-emacsvox-aural-concrete-content voice)))
+              (setf (emacsvox-aural-concrete-content-text content)
+                    (substring-no-properties text position end)
+                    (emacsvox-aural-concrete-plan-content plan) content
+                    (emacsvox-aural-concrete-plan-before plan) nil
+                    (emacsvox-aural-concrete-plan-after plan) nil)
+              (put-text-property
+               position end emacsvox-aural-concrete-plan-property plan prepared)))
+          (setq position end)))
+      (tts-speak prepared))))
 
 (defun emacsvox-aural-recent-feedback--entry (record)
   "Return a tabulated-list entry for RECORD."
@@ -486,6 +514,8 @@ the value across sessions."
     ("Status" 24 nil)
     ("Time" 8 nil)])
   (setq tabulated-list-padding 2)
+  (setq-local emacsvox-aural-ui-speech-function
+              #'emacsvox-aural-recent-feedback--speak)
   (add-hook
    'tabulated-list-revert-hook
    #'emacsvox-aural-recent-feedback-refresh nil t)

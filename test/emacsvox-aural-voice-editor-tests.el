@@ -43,6 +43,33 @@
      (should-not callbacks)
      (should (equal before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file))))))
 
+(ert-deftest emacsvox-aural-voice-editor-home-tuning-resumes-the-base-draft ()
+  "The point action opens the existing named-voice editor without saving."
+  (require 'emacsvox-aural-change-feedback)
+  (emacsvox-test--with-voice-editor
+   (save-window-excursion
+     (with-temp-buffer
+       (switch-to-buffer (current-buffer))
+       (let ((source (current-buffer))
+             (voice-setup-face-voice-table (copy-hash-table voice-setup-face-voice-table))
+             (before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file)))
+         (puthash 'bold 'voice-bolden voice-setup-face-voice-table)
+         (insert (propertize "Example heading" 'face 'bold))
+         (goto-char 1)
+         (emacsvox-aural-change-feedback--tune-at-point)
+         (with-current-buffer (window-buffer (selected-window))
+           (should (derived-mode-p 'emacsvox-aural-voice-editor-mode))
+           (should (eq (emacsvox-aural-voice-editor--get :voice) 'bolden))
+           (should (eq (emacsvox-aural-voice-editor--get :palette) 'reading-owned))
+           (should (equal (emacsvox-aural-voice-editor--get :text) "Example heading"))
+           (should (eq (marker-buffer (emacsvox-aural-voice-editor--get :origin)) source))
+           (let ((draft (emacsvox-aural-voice-editor--draft)))
+             (with-current-buffer source
+               (emacsvox-aural-change-feedback--tune-at-point))
+             (should (eq draft (emacsvox-aural-voice-editor--draft)))))
+         (should-not callbacks)
+         (should (equal before (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file))))))))
+
 (ert-deftest emacsvox-aural-voice-editor-comparison-and-save-retain-newer-changes ()
   (emacsvox-test--with-voice-editor
    (emacsvox-aural-voice-editor-open 'reading-owned 'bolden)

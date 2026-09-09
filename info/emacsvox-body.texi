@@ -2654,6 +2654,9 @@ simulation of what the current rules would produce at point.
 
 To inspect something heard earlier@comma{} open Aural Home and choose @emph{Recent Aural
 Feedback}@comma{} or press @kbd{H} there.  Each row is a bounded frozen record.
+Moving through the Content column speaks the preview using its recorded voices@comma{}
+including voice changes within an entry.  Column titles and the other fields use
+the normal interface voice.
 Useful commands in the feedback browser include:
 
 @table @kbd
@@ -2767,11 +2770,25 @@ Move to a representative object and press @kbd{C-e E} so you know what
 currently controls it.
 
 @item
-Press @kbd{C-e H}.  Use @kbd{r} to remap its voice or @kbd{R} to
-remap one exact earcon.
+Press @kbd{C-e H}.  Choose @emph{Remap voice at point} with
+@kbd{r} to use a different named voice here@comma{} or @emph{Tune voice used
+here} with @kbd{T} to open the current named voice in its tuner.
+Tuning changes that voice wherever it is used in the palette; remapping
+changes which voice is used for the face or item.  For example@comma{} at a shell
+prompt you can assign another voice to the prompt face@comma{} or tune the voice
+currently used by prompts.  You do not need to hear the prompt first.
+
+In the remapping screen@comma{} move with @kbd{n} and
+@kbd{p} or the arrow keys.  Press @kbd{RET} on
+@emph{Voice} to choose a voice@comma{} @emph{Preview original} to hear the captured item@comma{} or
+@emph{Preview change} to hear your choice.  @kbd{O} and
+@kbd{P} also play these previews; @kbd{S} stops.
+Previewing does not save the mapping or retune the named voice.
+
+@kbd{R} in Home still remaps one exact earcon.
 
 @item
-Choose the scope deliberately:
+Choose @emph{How long} deliberately:
 
 @itemize
 @item
@@ -2783,9 +2800,12 @@ a @emph{buffer} override affects only the remembered live buffer.
 @end itemize
 
 @item
-Review the generated rule in the editor.  It is initially unwritten.  Use
-the editor's @kbd{?} help@comma{} preview when offered@comma{} and press @kbd{w} only
-when the target@comma{} scope@comma{} and change are correct.
+Check @emph{Applies to}@comma{} @emph{Voice}@comma{} and @emph{How long}@comma{} then activate @emph{Save} or press
+@kbd{w}.  A face mapping affects matching uses of that face
+within the displayed module or mode and chosen lifetime.  @emph{Advanced}
+opens the full rule editor when you need more detailed matching controls.
+@kbd{q} hides the simple remapping screen and keeps its draft;
+@emph{Resume unfinished changes} in Home finds it again after a voice is chosen.
 
 @item
 Return to the source@comma{} repeat the action@comma{} and use @kbd{C-e E} again to

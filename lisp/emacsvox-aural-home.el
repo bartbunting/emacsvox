@@ -70,6 +70,10 @@
                   "emacsvox-omnivox-components" ())
 (declare-function emacsvox-aural-change-feedback
                   "emacsvox-aural-change-feedback" (&optional record))
+(declare-function emacsvox-aural-change-feedback--remap-at-point
+                  "emacsvox-aural-change-feedback" ())
+(declare-function emacsvox-aural-change-feedback--tune-at-point
+                  "emacsvox-aural-change-feedback" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
@@ -86,7 +90,7 @@
 
 (defconst emacsvox-aural-home-task-groups
   '((understand "Understand or change feedback"
-                change-feedback explain remap remap-earcon recent-feedback semantics return-source)
+                change-feedback explain remap tune-voice remap-earcon recent-feedback semantics return-source)
     (resources "Choose voices and sounds"
                browse-voices voices sounds speech-engine speech-rate
                notifications notification-log stop-notifications
@@ -262,7 +266,12 @@
       'remap
       (vector
        "Remap voice at point" source-name
-       "Prepare a persistent, session, or buffer voice override for the current item"))
+       "Choose another named voice here, preview it, and save the mapping"))
+     (list
+      'tune-voice
+      (vector
+       "Tune voice used here" source-name
+       "Open the current named voice in its tuner; affects every use of that voice"))
      (list
       'remap-earcon
       (vector
@@ -469,10 +478,18 @@
    #'emacsvox-aural-explain-presentation))
 
 (defun emacsvox-aural-home-remap-voice ()
-  "Prepare a voice override for the remembered source item."
+  "Choose, preview, and save a voice mapping for the remembered source item."
   (interactive)
+  (require 'emacsvox-aural-change-feedback)
   (emacsvox-aural-home--call-in-source
-   #'emacsvox-aural-remap-voice-at-point))
+   #'emacsvox-aural-change-feedback--remap-at-point))
+
+(defun emacsvox-aural-home-tune-voice ()
+  "Tune the named voice used at the remembered source item."
+  (interactive)
+  (require 'emacsvox-aural-change-feedback)
+  (emacsvox-aural-home--call-in-source
+   #'emacsvox-aural-change-feedback--tune-at-point))
 
 (defun emacsvox-aural-home-remap-earcon ()
   "Prepare an earcon override for the remembered source item."
@@ -544,6 +561,8 @@
      (emacsvox-aural-home-explain))
     ('remap
      (emacsvox-aural-home-remap-voice))
+    ('tune-voice
+     (emacsvox-aural-home-tune-voice))
     ('remap-earcon
      (emacsvox-aural-home-remap-earcon))
     ('overrides
@@ -600,7 +619,7 @@
       "/ search all actions, including collapsed groups\n"
       "SPC speak complete row; source and draft count are announced on entry\n"
       "c guided Change this feedback\n"
-      "x explain at point   r remap voice at point\n"
+      "x explain at point   r remap voice at point   T tune voice used here\n"
       "R remap one exact earcon at point\n"
       "O presentation overrides\n"
       "H recent feedback\n"
@@ -616,7 +635,7 @@
       "C-e H opens this home from any ordinary buffer\n"
       "C-e E explains presentation from any ordinary buffer\n"
       "To change an item, move to it, open C-e H, then press c.\n"
-      "r and R retain the direct advanced remapping shortcuts.\n"
+      "r chooses another named voice here; T tunes that voice wherever it is used.\n"
       "The generated override opens unwritten; review it and press w to write.\n"
       "h returns here from any aural manager or editor\n"
       "Reopening Home or an editor keeps its selection and unfinished edits.\n"
@@ -654,6 +673,7 @@
        ("c" . emacsvox-aural-home-change-feedback)
        ("x" . emacsvox-aural-home-explain)
        ("r" . emacsvox-aural-home-remap-voice)
+       ("T" . emacsvox-aural-home-tune-voice)
        ("R" . emacsvox-aural-home-remap-earcon)
        ("O" . emacsvox-aural-home-overrides)
        ("H" . emacsvox-aural-home-recent-feedback)

@@ -210,6 +210,12 @@ When COMPONENT is non-nil, select the retained part to remap."
                     ;; existing face selector without a retained presentation.
                     (when (and (eq component 'voice)
                                (plist-get context :legacy-faces))
+                      (when-let* ((voice
+                                   (and (fboundp 'voice-setup-get-voice-for-face)
+                                        (cl-loop for face in (plist-get context :legacy-faces)
+                                                 thereis (voice-setup-get-voice-for-face face)))))
+                        (setq context (plist-put context :legacy-personality voice)
+                              context (plist-put context :legacy-source 'face)))
                       (list :content
                             (buffer-substring-no-properties
                              (line-beginning-position)

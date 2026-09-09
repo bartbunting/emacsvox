@@ -418,7 +418,7 @@ useful in understanding how emacsvox works with a given package; thus,
 when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
-   This chapter documents a total of 1561 commands and 207 options.
+   This chapter documents a total of 1562 commands and 207 options.
 
 * Menu:
 
@@ -1891,6 +1891,7 @@ for full control.
      h		emacsvox-aural
      l		emacsvox-aural-change-feedback-lifetime
      m		emacsvox-aural-change-feedback-match
+     w		emacsvox-aural-change-feedback-apply
 
      C-c C-c		emacsvox-aural-change-feedback-apply
 
@@ -2968,6 +2969,7 @@ diagnosis, and contextual remapping.
      O		emacsvox-aural-home-overrides
      P		emacsvox-aural-home-profiles
      R		emacsvox-aural-home-remap-earcon
+     T		emacsvox-aural-home-tune-voice
      V		emacsvox-aural-home-voice-palettes
      W		emacsvox-aural-home-voice-workbench
      c		emacsvox-aural-home-change-feedback
@@ -3047,7 +3049,7 @@ diagnosis, and contextual remapping.
 
  -- Command: emacsvox-aural-home-remap-voice
 
-     Prepare a voice override for the remembered source item.
+     Choose, preview, and save a voice mapping for the remembered source item.
 
 2.27.1.20 emacsvox-aural-home-search
 ....................................
@@ -3087,14 +3089,21 @@ diagnosis, and contextual remapping.
 
      Toggle training explanations for this Emacs session.
 
-2.27.1.25 emacsvox-aural-home-voice-palettes
+2.27.1.25 emacsvox-aural-home-tune-voice
+........................................
+
+ -- Command: emacsvox-aural-home-tune-voice
+
+     Tune the named voice used at the remembered source item.
+
+2.27.1.26 emacsvox-aural-home-voice-palettes
 ............................................
 
  -- Command: emacsvox-aural-home-voice-palettes
 
      Open the accessible voice-palette manager.
 
-2.27.1.26 emacsvox-aural-home-voice-workbench
+2.27.1.27 emacsvox-aural-home-voice-workbench
 .............................................
 
  -- Command: emacsvox-aural-home-voice-workbench

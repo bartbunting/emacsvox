@@ -67,7 +67,7 @@
 
 @include intro-docs.texi
 
-This chapter documents a total of 1561 commands and 207 options.
+This chapter documents a total of 1562 commands and 207 options.
 
 @menu
 * amixer:: Set Audio Volume from Emacs.
@@ -1816,6 +1816,7 @@ e		emacsvox-aural-change-feedback-advanced
 h		emacsvox-aural
 l		emacsvox-aural-change-feedback-lifetime
 m		emacsvox-aural-change-feedback-match
+w		emacsvox-aural-change-feedback-apply
 
 C-c C-c		emacsvox-aural-change-feedback-apply
 
@@ -3082,6 +3083,7 @@ I		emacsvox-aural-home-engine-modules
 O		emacsvox-aural-home-overrides
 P		emacsvox-aural-home-profiles
 R		emacsvox-aural-home-remap-earcon
+T		emacsvox-aural-home-tune-voice
 V		emacsvox-aural-home-voice-palettes
 W		emacsvox-aural-home-voice-workbench
 c		emacsvox-aural-home-change-feedback
@@ -3182,7 +3184,7 @@ Prepare an earcon override for the remembered source item.
 @findex emacsvox-aural-home-remap-voice
 
 @format
-Prepare a voice override for the remembered source item.
+Choose, preview, and save a voice mapping for the remembered source item.
 @end format
 @end deffn
 
@@ -3230,6 +3232,15 @@ Expand or collapse the task group at point, retaining its position.
 
 @format
 Toggle training explanations for this Emacs session.
+@end format
+@end deffn
+
+@subsubsection emacsvox-aural-home-tune-voice
+@deffn {Command} emacsvox-aural-home-tune-voice
+@findex emacsvox-aural-home-tune-voice
+
+@format
+Tune the named voice used at the remembered source item.
 @end format
 @end deffn
 

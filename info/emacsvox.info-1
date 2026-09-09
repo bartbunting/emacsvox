@@ -2631,7 +2631,10 @@ simulation of what the current rules would produce at point.
 
    To inspect something heard earlier, open Aural Home and choose
 _Recent Aural Feedback_, or press ‘H’ there.  Each row is a bounded
-frozen record.  Useful commands in the feedback browser include:
+frozen record.  Moving through the Content column speaks the preview
+using its recorded voices, including voice changes within an entry.
+Column titles and the other fields use the normal interface voice.
+Useful commands in the feedback browser include:
 
 ‘RET or e’
      Explain the selected retained presentation.
@@ -2728,18 +2731,36 @@ remain tied to the selected frozen example.
   1. Move to a representative object and press ‘C-e E’ so you know what
      currently controls it.
 
-  2. Press ‘C-e H’.  Use ‘r’ to remap its voice or ‘R’ to remap one
-     exact earcon.
+  2. Press ‘C-e H’.  Choose _Remap voice at point_ with ‘r’ to use a
+     different named voice here, or _Tune voice used here_ with ‘T’ to
+     open the current named voice in its tuner.  Tuning changes that
+     voice wherever it is used in the palette; remapping changes which
+     voice is used for the face or item.  For example, at a shell prompt
+     you can assign another voice to the prompt face, or tune the voice
+     currently used by prompts.  You do not need to hear the prompt
+     first.
 
-  3. Choose the scope deliberately:
+     In the remapping screen, move with ‘n’ and ‘p’ or the arrow keys.
+     Press ‘RET’ on _Voice_ to choose a voice, _Preview original_ to
+     hear the captured item, or _Preview change_ to hear your choice.
+     ‘O’ and ‘P’ also play these previews; ‘S’ stops.  Previewing does
+     not save the mapping or retune the named voice.
+
+     ‘R’ in Home still remaps one exact earcon.
+
+  3. Choose _How long_ deliberately:
 
         • a _personal_ override persists across Emacs sessions;
         • a _session_ override lasts until this Emacs exits; and
         • a _buffer_ override affects only the remembered live buffer.
 
-  4. Review the generated rule in the editor.  It is initially
-     unwritten.  Use the editor's ‘?’ help, preview when offered, and
-     press ‘w’ only when the target, scope, and change are correct.
+  4. Check _Applies to_, _Voice_, and _How long_, then activate _Save_
+     or press ‘w’.  A face mapping affects matching uses of that face
+     within the displayed module or mode and chosen lifetime.
+     _Advanced_ opens the full rule editor when you need more detailed
+     matching controls.  ‘q’ hides the simple remapping screen and keeps
+     its draft; _Resume unfinished changes_ in Home finds it again after
+     a voice is chosen.
 
   5. Return to the source, repeat the action, and use ‘C-e E’ again to
      confirm which rule now wins.
