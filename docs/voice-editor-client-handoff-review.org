@@ -4,7 +4,9 @@
 
 * Status and next reasoning level
 
-Stop at the requested reasoning-level boundary and resume this review at XHI.
+The maintainer resumed at XHI. The review is complete; stop for High before
+implementing the lifecycle contract below. No further product decision or Max
+review is needed. The probes characterize existing behavior; the fix is pending.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Ordinary
@@ -50,36 +52,322 @@ not erase that distinction. Playback observation and successful client submissio
 are different facts: an observed consumed source cannot be declared unheard
 merely because a later write or callback failed.
 
-* XHI review work
+* Audited paths and reproducible findings
 
-1. Map the exact preparation, write, deferred-effect, terminal and retirement
-   paths. Identify the smallest internal extension that preserves existing
-   public submission semantics while retaining early playback evidence.
-2. Define provisional ownership before writing, successful publication and
-   failure retirement. Include reentrant stop/reconnect and callbacks that
-   start another submission. Do not promise successful delivery before the
-   existing write boundary, and never replay an uncertain write.
-3. Retain the dispatch's immutable registry generation and relevant voice/row
-   identities. Specify bounded storage and cleanup for ordinary speech even
-   when there is no user marker callback. Do not infer row identity from a
-   physical engine/voice pair or validate against a later registration.
-4. Define when route diagnostics may change independently of user callbacks,
-   and how cancelled, retired and replaced owners affect late evidence. Keep
-   actual consumed-source evidence distinct from queue acceptance and from a
-   client-side prediction.
-5. Add deterministic tests for replies during the final write, failed/partial
-   multipart writes, terminal-before-return, cancellation, replaced processes,
-   both lanes, registry changes and callback reentrancy. Retain existing
-   post-write success and no-replay regression tests.
-6. After the ownership contract is settled, return to High for ordinary
-   timeline-4 projection, strict marker-3 readback, private preview v2 and
-   optional per-choice editor controls in tested commits.
+All accepted Emacsvox ADRs 0001--0017 were read together. The reviewed source
+baseline is Emacsvox =b0ca10afe= and the development server is =31a0b9a=.
+Unrelated Agent Shell edits and the untracked quality audit remain untouched.
 
-The starting recommendation is a small provisional dispatch record with
-separate publication and retirement transitions. It offers a single owner for
-early events and frozen registry metadata. Its tradeoff is a change to the
-submission lifecycle that needs careful failure and callback-order tests.
-Buffering unowned incoming events until post-write registration is an alternative,
-but it adds another bounded queue and makes terminal, overflow and reconnect
-ordering harder to establish. XHI should validate this recommendation against
-all accepted ADRs and the existing delivery tests before implementation.
+| Path | Finding and required consequence |
+|------+----------------------------------|
+| =tts--prepare-structured-dispatch= | Allocates an ID before framing, but installs callbacks and timing after sending. Preparation must remain inactive until validation finishes. |
+| =emacsvox-aural--submit-delivery-entries= | Navigation/urgent policy can stop the lane after preparation. Arm the new owner after this intentional interruption, immediately before writing; otherwise the new dispatch cancels itself. |
+| =emacsvox-aural--send-delivery-entries= | Adjacent commands for one process, including all multipart fragments, are concatenated into one Lisp write. One Lisp call is not an atomic operating-system write. |
+| =emacsvox-aural--commit-delivery-effects= | Still runs inside the dynamic delivery transaction. Callback-generated speech here can join the already-sent transaction and never be flushed. |
+| =tts--complete-tracked-dispatch= | An early terminal finds no tracking; the later effect creates an owner for speech that has already finished. Terminal receipt must close observation without waiting for callback publication. |
+| Stop, sentinel and retirement | They remove existing tracking before callbacks. A delayed registration effect can currently recreate it. Publication must never allocate a replacement owner or reopen a retired one. |
+| =emacsvox--tracked-reading-next= | Stores the returned ID after =tts-speak-tracked=. Synchronous early completion cannot match the session's ID. Post-write callback invocation is still too early. |
+| Omnivox marker/filter handling | Route hooks currently precede callback ownership checks. New evidence needs validation before either route mutation or external notification. |
+
+The selected Emacs's =process-send-string= documentation explicitly permits
+process output between partial writes. The local GNU Emacs source at
+=/home/bart/src/emacs/src/process.c= also documents =send_process='s reentrant
+wait and ordered =write_queue=. It queues subsequent writes behind the existing
+remainder. A second client byte-stream scheduler is unnecessary; a stop cannot
+retract bytes already handed to Emacs. This source inspection is not a claim
+of measured live speech latency or cross-platform audible acceptance.
+
+Run [[file:../test/diagnose-client-handoff.el][the standalone diagnostic]] in a fresh batch process using the Emacs selected
+by =local.mk=, for example on this workstation:
+
+#+begin_src sh
+/home/bart/opt/emacs-31/bin/emacs -Q --batch -l test/diagnose-client-handoff.el
+#+end_src
+
+It uses real, isolated pipe-process objects and substitutes the write function;
+it starts no engine, sends no speech and writes no configuration. Observations
+at the reviewed baseline are:
+
+| Probe | Observed result |
+|-------+-----------------|
+| Marker during structured write | ID returned; no callback or source-onset observation. |
+| Ordinary speech without callbacks | ID returned; early source-onset observation lost. |
+| Terminal during write | ID returned; no completion callback; lifecycle remains installed. |
+| Local stop during write | Stop issued; later effect installs lifecycle again. |
+| Process exit during write | Later effect installs lifecycle for the dead process. |
+| Simulated consumed source followed by write error | No ID or lifecycle; existing route diagnostics nevertheless record the actual source. |
+| Delivery effect starts a nested transaction | Nested command is captured; only the original transaction is written. |
+| Tracked-reader completion before ID return | Reader stores ID 99 but remains at position 1 after completion. |
+
+These are fault-injection observations, not live reproductions or passing
+acceptance tests for the future fix. Keep the diagnostic observational rather
+than asserting that these defects must persist.
+
+* Selected internal ownership contract
+
+** Prepare, arm, publish and retire
+
+Use one private dispatch owner for structured speech, with or without callbacks.
+It owns process identity and process generation, dispatch/submission IDs, frozen
+receipt context, sequence state, bounded evidence and callback delivery state.
+The existing tracked/marker tables may remain indexes; they must not become
+independent authorities for publication or retirement. Existing public speech
+signatures and terminal status symbols remain unchanged.
+
+Track three independent facts: the write outcome, whether more server events
+may be accepted, and whether client callbacks may run. One combined
+pending/sent/done flag cannot represent an early terminal followed by a failed
+write. The required transitions are:
+
+| Boundary | Observation ownership | Public result and callbacks |
+|----------+-----------------------+-----------------------------|
+| Prepared | Allocate an inactive record and ID; validate the entire framed payload and reserve bounded retention capacity. | No sent/history claim and no callbacks. Validation failure releases everything without a write. |
+| Armed | After policy interruption, recheck the exact live process, cancellation epoch and frozen registration; install the same record immediately before the first write. | Callback publication remains held. Early valid events may update evidence. |
+| Complete write | Mark the existing record sent. Commit the existing successful-delivery effects; never recreate removed tracking. | Eligible successful submissions retain their ID return. Schedule callback draining outside the submission stack. |
+| Early server terminal | Record terminal status once and close incoming-event ownership immediately; retain only the bounded callback/evidence ticket. | After a successful uncancelled write, publish the ID and deliver preceding events followed by this terminal asynchronously. No new live observer is installed. |
+| Write error or quit | Close ownership and discard unpublished callback work in unwind cleanup. Keep already validated consumed-source evidence as historical evidence. | Preserve failure/no-ID behavior; no successful delivery effects and no retry. Lack of evidence means unknown, not proof that nothing played. |
+| Local cancellation or retirement before publication | Invalidate the record and any held terminal ticket. Later success effects cannot revive it. | No ID is published for the invalidated submission; tracked wrappers retain their existing not-submitted error path. |
+| Local cancellation after publication | Close incoming events and invalidate queued marker notifications before calling external code. | Process stop/failure delivers at most one cancelled/failed terminal. Explicit =tts-cancel-tracked-dispatch= remains silent. |
+
+Server terminal status and local cancellation are separate. A terminal received
+before return can describe a successfully submitted request; a locally invalidated
+owner cannot be resurrected because its write later returns. A cancellation
+epoch is process-local, advances before stop/retirement callbacks, and includes
+held terminal tickets as well as live observers. Ordinary server-side keyed
+replacement relies on correlated terminal records, not a process-wide epoch.
+
+Ensure cleanup covers nonlocal exits from framing, sending and post-send
+effects. If an effect fails after the complete write, retain that write outcome
+and evidence in diagnostics, suppress unpublished callbacks and propagate the
+error; do not reinterpret it as permission to resend. History and configuration
+apply remain their existing owners. Lifecycle cleanup cannot depend on the last
+effect in a list being reached.
+
+Give =tts--protocol-dispatch-tracked= and =tts--protocol-dispatch-marked= the
+same pre-write ownership discipline, both inside a captured transaction and
+for direct callers. Do not leave those entry points with the same early-terminal
+gap. Captured preparation creates inactive tokens; actually sending the batch
+arms its tokens. No observer exists for unsent, discarded idle work. Version-4
+native replacement must be recognized before enabling its transport.
+
+** Deliver callbacks after the submission stack unwinds
+
+Recording source consumption is immediate, internal and data-only. Server marker
+callbacks, server terminal callbacks and playback route/timeline hooks run from one
+bounded notification drain per process. In particular, recording a route must
+not synchronously speak through a hook while its parent write is active.
+
+Schedule an ordinary next-turn timer, not an input-idle timer. Its drain must
+defer again while a submission, delivery transaction, process-input drain or
+notification drain is active. A zero-delay timer alone is insufficient because
+Emacs can run timers during a blocked write. Add private dynamic depth guards at
+the common submission and direct dispatch boundaries; do not merely bind the
+old transaction flag to nil while the actual stack is still active.
+
+When safe, deliver events in observed per-process order, preserving each
+dispatch's sequence and placing its terminal last. Remove or mark each item
+consumed before calling it. A callback that submits new speech owns a fresh
+transaction and source context. A callback that waits for process output can
+enqueue further events, but cannot recursively drain them ahead of the callback
+already executing. Catch ordinary callback errors as today; preserve consumed
+items and reschedule remaining work on quit.
+
+Local lifecycle control retains its existing ordering: remove owners first,
+notify already-published cancellation callbacks, run stopped observers, then
+delete a deliberately retired process. Do not put =tts-stopped-hook= into a
+delayed dispatch queue: it could otherwise cancel a newer reading session on
+the same process. Unpublished dispatch callbacks remain suppressed. When a
+local cancellation callback or lifecycle hook runs within a submission, use a
+private independent callback context for any speech it initiates: fresh capture
+lists, history and source-policy bindings, with the callback's process/lane
+scope explicitly retained. Keep the outer depth guard active so server events
+still cannot drain there. Resetting only the delivery flag is insufficient.
+Preserve synchronous local retirement tests alongside the new deferred server
+callback tests; this is not a wholesale asynchronous rewrite of TTS hooks.
+
+Local cancel/stop/reconnect invalidates queued notifications through owner
+identity and epoch checks before each invocation. A server-terminal ticket can
+drain after its observation record closes, but cannot bypass a later local
+cancellation. A stop after terminal receipt may suppress that undelivered
+completion; preserve the server terminal in diagnostics and report the local
+cancellation to a still-published callback at most once. This prevents an old
+completion starting the next reading chunk after a user stop.
+
+The two line filters must consume a line/remove its saved fragment before
+dispatching external control callbacks. Guard reentrant input drains so later
+output cannot overtake the unprocessed remainder of the current chunk or
+restore an old fragment. Preserve control correlation and the existing remote
+filter/sentinel chain. This is a small filter-ordering change, not a replacement
+protocol or an unbounded queue for unknown dispatches.
+
+** Freeze registration and span identity
+
+At projection, capture the lane's acknowledged immutable version-2 registration
+and use that exact snapshot for both timeline construction and receipt checking.
+Capture the raw owner/provenance sidecar in the same registration operation as
+the normalized definitions: palette, canonical named voice and aliases, ordered
+choice IDs/selectors/patches, and raw shared values needed for explanation.
+Current registration retains normalized wire content only; that alone cannot
+later reconstruct an old palette's edit provenance. Sidecars stay client-local
+and must never become extra fields in the strict server request.
+
+Include changes of owner/provenance in the client registration signature, even
+when two palettes happen to project identical wire values. Freeze strings,
+vectors and nested values, not just cons cells, and give callbacks copies of
+public values. Do not rebuild sidecars from current palettes on acknowledgement.
+Reuse an immutable snapshot across its dispatches with explicit retention
+accounting. Terminal cleanup releases it when no active or draining owner needs it.
+
+Each dispatch also retains a compact span-ID index: legacy/layered mode, logical
+ID, raw and wire context, and placement. It need not retain sample text, complete
+render plans or duplicate chains per span. Capture enough source provenance for
+an explanation to distinguish shared, choice, context and adapter default.
+Reject a changed/missing acknowledgement before writing; do not guess a choice
+or replay a server rejection if a newer registration overtakes admission.
+
+An acknowledgement received after admission affects future work. Receipts for
+an active older dispatch remain valid against its frozen snapshot, even after
+re-registration or palette edits. A replacement process never owns the older
+snapshot. Identical logical/choice IDs on the other lane do not establish
+identity. Never recover a choice ID by comparing physical engine and voice.
+
+** Accept actual choice evidence and publish truthful readback
+
+For version 3 markers, first validate the exact new grammar, duplicate keys,
+types, u64 identities and encoded/decoded bounds in the wire contract. Then
+check active process/dispatch ownership and increasing sequence. No route or
+callback state changes on a rejected event. Continue to support legacy marker
+versions under their existing grammar; do not demand a choice receipt for a
+legacy chunk in a mixed timeline.
+
+Keep one pending start identity per dispatch, including sequence, utterance,
+logical voice and realized physical voice, without retaining its sample text
+unless the marker callback needs it. A =voice_choice_applied= event must directly
+follow that dispatch's start in sequence, agree with its identity, reference a
+layered span with that logical ID, and match the dispatch's frozen registry
+generation. The selected ID/reason/index must identify the original row;
+policy fallback requires a null choice ID even when the physical voice happens
+to match a saved row. Validate selectors where the request constrains an exact
+target; do not turn an engine-default/property selector into a guessed exact ID.
+
+A start and its receipt may arrive in separate process-output chunks. Update
+source-consumption timing on the validated start; publish the detailed choice
+summary only on its validated receipt. A missing, invalid or nonadjacent receipt
+means individual tuning is unverified. It does not erase the start or manufacture
+a successful application. Preserve sequence-gap diagnostics; a gap breaks the
+pending pair, and a later complete start/receipt pair can establish new evidence.
+
+Keep bounded distinct per-dispatch observations and a separately retained latest
+started identity. Update historical evidence before notifying observers. Include
+lane, process generation, dispatch, registry, palette/voice/choice and span
+identity in the internal record. Update degradation only for that exact
+utterance; an older chunk or the other lane must not modify a newer route's
+summary just because the logical name matches. Route hooks receive copies.
+
+After cancellation/terminal/retirement, reject late new evidence. Previously
+observed playback remains labelled historical; changing the active palette
+must not present it as the current draft's result. Record write-start, write-end,
+source-observed and terminal times separately. Early source evidence may precede
+write-end; compute onset from write-start instead of producing negative latency
+or claiming the write was already complete.
+
+** Bound retention and handle overload explicitly
+
+Use private named limits and test the boundaries. Initial implementation budgets
+per process are 128 retained dispatch owners/tickets, 32 MiB of accounted frozen
+metadata, and 8192 queued callback/hook records with a 16 MiB encoded-data budget.
+The latter accommodates the server's existing bounded marker burst. Account
+semantic values and retained strings as well as event envelopes; fixed record
+counts and validated shapes also bound Lisp container overhead. Count shared
+snapshots once and release their charge at the last owner.
+
+Reserve terminal bookkeeping with each owner so notification overflow cannot
+discard the only completion. Keep at most 32 distinct choice observations per
+dispatch plus a separately reserved last-started summary and a truncation flag.
+The ordinary no-callback path consumes markers without queueing their text.
+Keep latest summaries bounded across logical voices and lanes; they must not
+retain whole registries or dead process objects indefinitely.
+
+Reject a new submission that cannot reserve ownership metadata before writing
+or interrupting older speech; never evict an active callback owner silently.
+Do not expire an otherwise healthy long utterance by a guessed playback timeout.
+Notification overflow records an explicit tracking failure, suppresses further
+marker callbacks for that owner and uses its reserved terminal slot. An
+unpublished tracked submission then fails without an ID; an already-published
+one receives one failed tracking result. Retain actual evidence independently;
+tracking failure is not proof of synthesis failure. Overflow must not replay
+speech or stop the other lane. Ordinary bounded observation truncation alone
+does not fail speech.
+
+* Implementation slices and acceptance at High
+
+1. Implement dispatch ownership and deferred notification ordering using the
+   current version-3 transport first. Keep wire negotiation unchanged. Cover the
+   three dispatch entry points, whole-write success/failure, history effects,
+   callback-free speech, cleanup, process filters and tracked-reader reentrancy.
+   Commit only after source tests, rebuilt byte-code and fresh compiled tests.
+2. Add the frozen registration sidecar, strict marker-3 codec/correlation and
+   timeline-4 projection together before enabling ordinary layered transport.
+   Retain sparse context and reset legacy effect transitions at layered
+   boundaries. Test old/new capability combinations independently on both lanes.
+3. Connect private preview v2 and original-row auditions to the existing preview
+   operation ownership, preserving terminal correlation and bounded last-started
+   evidence. Then add optional per-choice editor controls and experiment keeps.
+4. Complete current documentation and the existing spoken acceptance slice.
+   The installed server, published dependency minimum and personal settings are
+   separate from these development commits.
+
+The first two implementation slices must add regression tests for:
+
+- start/receipt/terminal before the write returns, including a terminal split
+  across filter calls and ordinary speech with no callback;
+- incomplete multipart prefix followed by error or quit, and complete simulated
+  consumption followed by write/effect failure, with zero replay;
+- validation failure before a navigation stop, intentional stop before arming,
+  reentrant stop after arming, cancel after terminal but before callback drain,
+  repeated cancellation and dead/replaced process cleanup;
+- callbacks that enqueue another transaction, cancel themselves, stop the lane,
+  signal an error/quit, or wait for output while more events arrive;
+- synchronous local retirement ordering and lifecycle-hook speech with fresh
+  capture state, including a notification stop inside a foreground submission;
+- tracked reading that actually advances after an early completion and cannot
+  resume after cancellation; successful-send/history regressions remain valid;
+- later acknowledgements and changed palettes, mutable string/vector inputs,
+  duplicate physical rows, invalid row/reason/index, wrong span/registry/process,
+  per-dispatch sequence gaps and older-utterance degradation;
+- interleaved foreground/notification output, lane-local interruption, remote
+  reconnect without replay, strict size limits and bounded overflow cleanup;
+- one-part versus multipart version-4 parity, mixed legacy/layered spans, and
+  callback/evidence behavior in a fresh compiled Emacs.
+
+Do not present the eight diagnostic probes as satisfying this future matrix.
+They justify the reviewed contract and provide reproducible starting cases.
+
+* Alternatives and review outcome
+
+| Alternative | Benefit | Cost and outcome |
+|-------------+---------+------------------|
+| Provisional owner with deferred, owned notifications (selected) | Validates early evidence once; preserves caller initialization and lifecycle ownership; supports callback-free readback. | Requires explicit write/publication/retirement states and bounded notification draining. |
+| Register early and invoke callbacks immediately | Small code change and low callback latency. | Fails the tracked-reader and nested-transaction probes; callbacks can stop their parent write before it publishes. Rejected. |
+| Register only after writing and buffer unowned input globally | Leaves the old registration effect largely intact. | Cannot safely associate unknown events with frozen metadata; adds stale-event, overflow and reconnect ambiguity. Rejected. |
+| Retain the current ordering and add only marker-3 decoding | Smallest feature patch. | Loses early events, recreates completed/cancelled owners and permits unowned route changes. Rejected. |
+
+The selected design preserves the accepted ownership, precedence, wire and
+no-replay decisions. No public command, storage schema, server protocol or
+dependency decision needs reopening. Runtime implementation remains pending;
+resume its first slice at High.
+
+* Validation of this review
+
+=make check-emacs= passes using Emacs 31.0.90. The standalone diagnostic runs
+all eight cases against explicitly loaded source. A fresh batch run of
+=emacsvox-tts-tests=, =emacsvox-speak-tests=,
+=emacsvox-aural-transport-tests=, =omnivox-remote-tests= and
+=omnivox-choice-registration-tests= passes all 429 tests after loading the
+normal =emacsvox-aural-provider-workflows= vocabulary. The initial selective
+runner omitted that provider and failed one mail-view vocabulary test; adding
+the fixture dependency resolved it without changing application or test code.
+
+This slice changes a design record, plans and a standalone diagnostic only.
+No production Lisp or Omnivox runtime fix is claimed by these passing baseline
+checks. Implementation must add the future behavior tests listed above.

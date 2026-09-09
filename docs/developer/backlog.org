@@ -66,9 +66,12 @@ both-lane/reconnect and legacy remote acceptance and advertises the bundle.
 Client wire conversion and per-lane version-2 registration now pass focused
 contracts and compiled parity. All 226 selected client/voice/transport tests
 pass. Layered transport/readback, preview v2 and individual editor controls
-remain pending in the [[file:../voice-editor-implementation-plan.org][implementation plan]]. The current High run stops for the
-[[file:../voice-editor-client-handoff-review.org][XHI client dispatch handoff review]] after demonstrating an early-marker gap
-before post-write tracking registration. Earlier, the maintainer
+remain pending in the [[file:../voice-editor-implementation-plan.org][implementation plan]]. The
+[[file:../voice-editor-client-handoff-review.org][XHI client dispatch handoff review]] is complete, with eight reproducible
+probes and 429 passing selected baseline tests. The lifecycle fix remains next
+at High: arm ownership before writing, retain frozen receipt context, prevent
+retired tracking from returning, and defer server callbacks until the caller
+has stored its ID. Layered transport must wait for that fix. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.

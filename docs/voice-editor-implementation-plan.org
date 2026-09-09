@@ -20,10 +20,11 @@ native Windows default restoration, DSP ownership, playback observations and
 private preview v2, timeline-4 reader/queue execution and marker-3 receipts are
 now tested and committed. Both-lane/reconnect acceptance passes and Omnivox
 =31a0b9a= advertises the complete bundle. Client integration remains in slice 7d.
-The High run now stops for the [[file:voice-editor-client-handoff-review.org][client dispatch handoff review]] at XHI:
-a deterministic reentrant-write probe shows that a marker arriving before the
-post-write registration effect is not delivered. Freeze submission/receipt
-ownership before extending ordinary speech and readback.
+The [[file:voice-editor-client-handoff-review.org][XHI client dispatch handoff review]] is now complete. Eight isolated probes
+expose early-event loss, retirement resurrection and callback reentrancy in the
+current client. The selected contract gives each dispatch pre-write ownership,
+frozen receipt context and deferred server callbacks after caller initialization.
+Stop for High before implementing that lifecycle fix and layered readback.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -374,7 +375,7 @@ editor because it cannot publish fresh local ownership. Individual controls and
 the negotiated playback path remain disabled/pending; this slice does not claim
 that saved individual settings are audible.
 
-*** TODO 7c. Omnivox negotiated runtime at High
+*** DONE 7c. Omnivox negotiated runtime at High
 
 Mirror the accepted decision and contract into Omnivox, then implement the
 negotiated messages, actual-route composition and bounded evidence. Use paired
@@ -387,7 +388,7 @@ Omnivox commit =ff5cb5f= mirrors the accepted contract and independent wire
 examples and adds strict shared settings, sparse set/default patches, stable
 choice records and shared/choice/context composition. The resolver's selected
 record index determines its patch; matching a physical voice does not. Native
-adapter application and playback remain pending.
+adapter application and playback were completed in the later server slices below.
 
 **** DONE Mixed registry and version-2 registration codec
 
@@ -400,7 +401,10 @@ and preflight bounded flat acknowledgements before publication.
 
 These commits are on branch =voice-choice-tuning= in
 =/tmp/omnivox-voice-choice-tuning=; the original Omnivox checkout remains at its
-release commit. The complete capability bundle is now advertised after the acceptance recorded below.
+release commit on =main=. This is a linked worktree: the committed source and
+branch are stored in =/home/bart/src/omnivox/.git=, independent of the temporary
+working files. The branch has not been merged into =main=. The complete
+capability bundle is now advertised after the acceptance recorded below.
 
 **** DONE Review streaming route handoff at XHI
 
@@ -471,14 +475,15 @@ documentation checks pass. Omnivox =31a0b9a= passes real isolated muted
 speaker/notification and reconnect acceptance, plus legacy remote regressions,
 and advertises the complete bundle. Five remote tests pass; three optional
 live/lease/workstation tests are skipped. No live runtime has been replaced.
-Client negotiation, readback and editor controls remain pending.
+Client version-2 registration is implemented; layered transport, readback and
+individual editor controls remain pending.
 
-Commit and test: (1) attempt preparation, native defaults, sink handoff and DSP
+Completed and tested: (1) attempt preparation, native defaults, sink handoff and DSP
 ownership; (2) ticket/acceptance/first-frame ownership and bounded observations;
 (3) timeline-4 admission/framing, private preview v2 and marker-3 integration;
 (4) full ordinary-playback, compatibility, lane and reconnect acceptance before
 advertising the bundle. Client integration and optional editor controls remain
-7d. These are implementation tasks, not completed playback support.
+7d. Server completion does not establish complete Emacsvox feature delivery.
 
 *** TODO 7d. Client, ordinary consumers and optional editor controls at High
 
@@ -494,12 +499,31 @@ save status. All 226 selected client/voice/transport tests and isolated compiled
 parity pass. Ordinary layered transport, playback readback, preview v2 and the
 optional customization controls remain next.
 
-Before continuing ordinary transport, complete the
-[[file:voice-editor-client-handoff-review.org][XHI submission/receipt ownership review]]. The existing post-write dispatch
-registration leaves an early-event gap; current route diagnostics also precede
-callback ownership validation. The review must preserve bounded frozen metadata,
-actual playback evidence, retirement and no-replay semantics. This is the
-requested reasoning-level stop, not a completed client feature.
+**** DONE Review client submission and receipt ownership at XHI
+
+The [[file:voice-editor-client-handoff-review.org][submission/receipt ownership review]] is complete. Its eight reproducible
+probes expose early marker/terminal loss, post-stop/dead-process resurrection,
+lost callback-generated speech and tracked-reader initialization ordering.
+The selected contract separates write outcome, observation lifetime and callback
+publication. It specifies frozen owner/registry/span provenance, strict receipt
+correlation, bounded retention, failure cleanup and both-lane no-replay behavior.
+All 429 selected baseline tests pass; the probes characterize defects rather
+than claiming the future fix is implemented. Stop for High at this handoff.
+
+**** TODO Implement dispatch lifecycle before enabling layered transport
+
+First implement inactive preparation, pre-write arming after policy interruption,
+irrevocable retirement and deferred server callback draining. Preserve local
+retirement ordering and prove callback-generated speech has its own transaction.
+Cover ordinary callback-free speech and both legacy tracked dispatch entry points.
+Run the review's failure/reentrancy matrix, rebuild byte-code for private struct
+changes, verify in a fresh compiled Emacs and commit this slice independently.
+
+**** TODO Complete layered transport, readback, preview and editor controls
+
+Add frozen registration provenance and strict marker-3 correlation with timeline-4
+projection before enabling that path. Then connect private preview v2 and the
+optional per-choice controls in the review's remaining implementation slices.
 
 Implement lossless context projection, lane negotiation and apply reporting.
 Audit ordinary speech paths before enabling customization, then add per-choice
