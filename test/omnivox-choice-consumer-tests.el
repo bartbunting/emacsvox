@@ -26,6 +26,13 @@
                  ((symbol-function 'voice-from-acss) (lambda (_) 'generated))
                  ((symbol-function 'tts-get-voice-command)
                   (lambda (_) "[[logical_voice generated]]")))
+         (tts-queue--install)
+         (dolist (lane (list speaker notification))
+           (set-process-coding-system lane 'utf-8-unix 'utf-8-unix)
+           (process-put lane 'tts-queue--state
+                        (tts-queue--make-state
+                         :generation (process-get lane 'tts--speech-process-generation)
+                         :queue 0 :framing 0)))
          ,@body)))))
 
 (defun omnivox-choice-consumer-test--timeline (write)
@@ -147,19 +154,24 @@
      (should (equal (plist-get wrapper :mode) "legacy"))
      (should-not (plist-member (plist-get wrapper :span) :context)))))
 
-(ert-deftest omnivox-choice-consumer-raw-named-queue-prevents-layered-transaction ()
-  "Expose the remaining compatibility boundary, including its whole-packet effect."
+(ert-deftest omnivox-choice-consumer-complete-named-queue-uses-layered-transaction ()
+  "A named queue prefix and ordinary speech retain their owned identities."
   (omnivox-choice-consumer-test--with-speech
    (emacsvox-aural-call-with-delivery-transaction
     speaker
     (lambda ()
       (tts-speak-using-voice 'voice-bolden "raw")
       (tts-speak (propertize "prepared" 'personality 'voice-bolden))))
-   (should writes)
-   (should (string-match-p "raw" (cdar writes)))
-   (should (string-match-p "prepared" (cdar writes)))
-   (should-not (string-match-p "emacsvox_timeline" (cdar writes)))
-   (should-not (gethash 1 tts--marker-dispatches))))
+   (should (= 1 (length writes)))
+   (let* ((document (omnivox-choice-consumer-test--timeline (car writes)))
+          (spans (plist-get document :spans)))
+     (should (equal "rawprepared"
+                    (mapconcat (lambda (row) (plist-get (plist-get row :span) :text)) spans "")))
+     (dolist (row spans)
+       (should (equal "layered" (plist-get row :mode)))
+       (should (equal "bolden" (plist-get (plist-get row :span) :logical_voice_id)))
+       (should-not (plist-get (plist-get row :span) :context))))
+   (should (gethash 1 tts--marker-dispatches))))
 
 (ert-deftest omnivox-choice-consumer-isolated-letter-retains-legacy-protocol ()
   "Character review still uses the server's special rate/capital/interrupt path."

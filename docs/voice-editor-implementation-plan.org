@@ -50,8 +50,12 @@ local/remote recovery, birth observation and exact own-stop receipts are specifi
 Twenty-six muted server observations cover local and remote framing. The High
 proof implementation now passes 526 selected source tests and muted client/server
 acceptance on both lanes over local and remote connections, including reconnect.
-Guarded named promotion is next. Scope A remains selected; broader cross-call tuning is deferred. Preview and editor work remain
-pending.
+Guarded named promotion is implemented: 536 selected source tests pass, with
+muted local/remote named playback and verified fallback receipts on both lanes
+and reconnect. The next reasoning boundary is XHI for preview-operation ownership
+and original-row/context handoff before private preview v2 and editor integration.
+Scope A remains selected; broader cross-call tuning is deferred. Preview and
+editor work remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -732,13 +736,44 @@ client/server acceptance verifies both lanes and reconnect for local pipes and
 private loopback authentication. Named-queue promotion remains disabled in this
 slice; no live configuration or runtime installation changed.
 
-**** TODO Promote complete named queues through layered transport
+**** DONE Promote complete named queues through layered transport
 
-Connect inspectable names to version-4 projection with final admission rechecks,
-reserved-owner reuse and bounded compatibility diagnostics. Convert supported
-consumer cases to positive layered tests, retaining explicit limits for the
-others. Verify actual fallback receipts on both lanes, source/compiled parity
-and muted real-server reconnect acceptance, then commit.
+Inspectable named queue entries now retain their unevaluated name, copied text
+and original constructor commands. The finalizer selects one whole-capture
+representation. A complete queue prefix followed by ordinary speech or an
+explicit tracked/marked dispatch uses version-4 projection when the lane has
+acknowledged matching ownership and usable empty-queue proof. Names retain empty
+context; concrete runs keep their original sparse context. Reserved callback IDs
+survive the transformation.
+
+Queue-only calls, tails, multiple flushes, opaque definitions/commands, changing
+state, older servers and cross-call pending/unknown input retain the original
+compatibility commands. A planned Stop cannot justify promotion. Once prepared,
+changed registration, intervening queue/dispatch/letter output, command mutation
+or overlapping I/O aborts without legacy replay. Bounded per-lane reasons update
+only after the selected delivery succeeds, separately from actual-playback data.
+
+Ten new connected contracts and the converted ordinary-consumer test bring the
+selected source matrix to 536 passing tests. Muted real named-queue playback
+passes on both lanes over local pipes and private loopback, including reconnect,
+reserved IDs and verified actual fallback receipts. The isolated compiled gate
+also passes, as do fresh compiled real-server checks on both transports. Final
+byte-code, header, generated-reference and documentation release checks pass.
+No live runtime was installed.
+
+**** TODO XHI review private preview ownership and editor handoff
+
+Stop after the promotion commit and request XHI before changing the private
+preview lifecycle. Existing complete and individual preview sequences own their
+own generation, timers, control callbacks and Stop hooks; they are distinct from
+the ordinary dispatch preparation just completed. Audit their Stop-before-queue
+paths under reentrancy, original-choice targeting and terminal/partial evidence.
+Specify how edited/original samples preserve sparse context, exact stable row
+identity, operation cancellation and bounded last-started evidence. Also settle
+how the existing editor/explanation consumes compatibility limits without
+confusing them with playback receipts. Keep the accepted wire and storage
+contracts; request a product decision only if the review exposes a real gap.
+Return to High for tested implementation once that handoff is concrete.
 
 **** TODO Complete preview and editor controls
 

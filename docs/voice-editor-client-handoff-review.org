@@ -29,8 +29,10 @@ state, conservative local/remote recovery, birth observation and exact own-stop
 receipts. The High proof implementation now passes 526 selected source tests,
 including connected producer/Stop-hook and remote lifecycle checks. Muted
 client/server acceptance passes on both lanes, locally and remotely, including
-reconnect. Guarded named promotion is next; scope A remains selected. Preview v2
-and editor controls are also pending.
+reconnect. Guarded named promotion is now implemented, with 536 selected source
+tests and muted named playback on both lanes locally/remotely after reconnect.
+Scope A remains selected. Stop for XHI to review the separate preview-operation
+ownership and original-row/context handoff before preview v2 and editor controls.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated

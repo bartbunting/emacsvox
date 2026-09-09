@@ -17,13 +17,16 @@ protocol and ownership design. Isolated-character voice selection is unchanged.
 The [[file:voice-editor-queue-handoff-contract.org][selected implementation contract]] completes the XHI handoff. The maintainer
 resumed at High. The first slice now preserves dispatch intent, callback IDs and
 sync/flush boundaries, with fifteen new contracts and 505 passing selected source
-tests. Named-queue promotion remains disabled pending the queue-proof slices.
+tests. The subsequent proof and promotion slices are now complete.
 The [[file:voice-editor-queue-proof-review.org][subsequent XHI boundary refinement]] is complete, with separate framing proof,
 local/remote recovery, observed birth and exact own-stop receipts. Twenty-six
 muted server observations pass. The High proof implementation now passes 526
 selected source tests and muted local/remote client acceptance on both lanes
-and reconnect. Guarded named promotion remains the next slice; selected scope A
-is unchanged.
+and reconnect. Guarded named promotion now passes 536 selected source tests and
+muted actual-fallback receipt checks on both lanes and reconnect, locally and
+remotely. Cross-call queues and unsupported shapes retain compatibility; scope A
+is unchanged. The next XHI review covers separate preview ownership and editor
+handoff.
 The broader
 [[file:voice-editor-implementation-plan.org][implementation plan]] remains active; preview v2, optional
 controls and spoken acceptance are not complete.

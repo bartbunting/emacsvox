@@ -60,6 +60,8 @@
 (declare-function ems--fastload "emacsvox-preamble" (file))
 (declare-function emacsvox-aural-diagnostic-log-event
                   "emacsvox-aural-submission" (event &rest fields))
+(declare-function emacsvox-aural--call-with-named-queue
+                  "emacsvox-aural-transport" (name text function))
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
 (declare-function emacsvox-icon "emacsvox-sounds.el" (icon))
 (declare-function emacsvox-queue-icon "emacsvox-sounds.el" (icon))
@@ -235,6 +237,11 @@ a `cancelled' record when pending input interrupts that wait.")
   (and tts--current-preparation
        (eq process (tts--preparation-process tts--current-preparation))
        (tts--preparation-queue-guard tts--current-preparation)))
+
+(defun tts--preparation-set-queue-guard (guard)
+  "Attach GUARD to the current preparation without exposing its structure."
+  (unless tts--current-preparation (signal 'tts--preparation-cancelled nil))
+  (setf (tts--preparation-queue-guard tts--current-preparation) guard))
 
 (defun tts--preparation-cancel-current ()
   "Mark the current preparation cancelled, even if its caller catches an error."
@@ -2147,25 +2154,30 @@ Argument COMPLEMENT  is the complement of separator."
               (and (listp voice) (memq 'inaudible voice)))
     ;; ensure text is a  string
     (unless (stringp text) (setq text (format "%s" text)))
-    (tts--protocol-queue-code
-     (cond
-      ((symbolp voice)
-       (tts-get-voice-command
-        (if (boundp voice)
-            (symbol-value voice)
-          voice)))
-      ((listp voice)
-       (mapconcat
-        #'(lambda (v)
-            (tts-get-voice-command
-             (if (boundp v)
-                 (symbol-value v)
-               v)))
-        voice
-        " "))
-      (t "")))
-    (tts--protocol-queue-text text)
-    (tts--protocol-queue-code (tts-voice-reset-code))))
+    (emacsvox-aural--call-with-named-queue
+     voice text (lambda () (tts--queue-using-voice voice text)))))
+
+(defun tts--queue-using-voice (voice text)
+  "Emit the original compatibility commands for VOICE and TEXT."
+  (tts--protocol-queue-code
+   (cond
+    ((symbolp voice)
+     (tts-get-voice-command
+      (if (boundp voice)
+          (symbol-value voice)
+        voice)))
+    ((listp voice)
+     (mapconcat
+      #'(lambda (v)
+          (tts-get-voice-command
+           (if (boundp v)
+               (symbol-value v)
+             v)))
+      voice
+      " "))
+    (t "")))
+  (tts--protocol-queue-text text)
+  (tts--protocol-queue-code (tts-voice-reset-code)))
 
 ;; Internal function used by tts-speak to send text out.
 ;; Handles voice locking etc.

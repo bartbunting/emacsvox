@@ -152,8 +152,8 @@ now verify real compatibility dispatch order, tails and sync changes. Other
 contracts cover one-timeline coalescing, tracked/marked owner reuse, distinct
 callback IDs, framing before Stop, one-shot metadata binding, nonlocal failures,
 capture bounds and reentrancy. Presentation hooks submit independently. New
-named-queue promotion remains disabled until the separate promotion integration;
-the earlier raw-queue limitation is still an explicit baseline.
+named-queue promotion was disabled in that slice; the earlier raw-queue limitation
+is retained as historical baseline, superseded below for eligible captures.
 
 The [[file:voice-editor-queue-proof-review.org][XHI protocol-boundary refinement]] is now complete. Separate queue/framing state,
 local/remote recovery, observed birth and exact own-stop receipts are specified.
@@ -163,7 +163,18 @@ input. The High observer now drives all 24 framing and 11 queue-effect fixture
 cases, with focused birth, authentication, alias, advice, mutation, nonlocal and
 Stop-guard checks. All 526 selected source tests pass. Muted client acceptance
 passes on both lanes and reconnect over local pipes and private loopback.
-Guarded named promotion is next; scope A is unchanged.
+Guarded named promotion is now implemented. The ordinary named-prefix consumer
+is a positive layered test; ten new connected contracts bring the selected
+source matrix to 536 passing tests. Complete Q,N and Q,D captures retain original
+names, text and callback IDs; named context is empty and ordinary sparse context
+is preserved. Queue-only/tail/multiple-flush/opaque/old-server/cross-call cases
+retain compatibility with bounded sent-delivery reasons. Planned Stop never
+justifies promotion, and changed proof aborts without replay.
+
+Muted real named playback verifies fallback receipts on both lanes, locally and
+remotely, including reconnect. Scope A is unchanged. Preview v2, optional controls
+and spoken acceptance remain pending; stop for XHI to review their separate
+preview-operation ownership and original-row/context handoff.
 
 Eight new consumer contracts and all 490 selected source tests pass. Fresh
 compiled verification includes the same eight cases. The compiled fixture loads

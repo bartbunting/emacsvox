@@ -106,8 +106,14 @@ exact own-stop receipts. All 26 muted local/remote server observations pass.
 The High bounded observer and guards are implemented: 526 selected source tests
 pass, including actual primitive, producer/Stop-hook and remote lifecycle checks.
 Muted client/server acceptance passes on both lanes and reconnect, locally and
-remotely. Guarded named-queue promotion is next and remains disabled. Scope A
-remains selected. Preserve queue order, cancellation and character review.
+remotely. Guarded named-queue promotion is now implemented, with 536 selected
+source tests and real local/remote actual-fallback receipts on both lanes after
+reconnect. Complete captured prefixes retain names and reserved IDs; unsupported
+shapes and cross-call queues keep compatibility, with bounded sent-delivery
+reasons. Scope A remains selected. The next reasoning boundary is XHI for the
+separate private-preview ownership and original-row/context handoff before
+preview v2 and editor controls. Preserve queue order, cancellation and character
+review.
 The remaining compatibility fixes, preview v2, individual controls and spoken acceptance
 are still pending; this is not complete feature delivery. Earlier, the maintainer
 selected shared tuning first, with explicit

@@ -76,8 +76,11 @@
 (defvar tts-notify-process)
 (defvar emacsvox-aural--current-submission-id)
 (defvar emacsvox-aural--presented-plan-collector)
+(defvar omnivox--choice-registration-property)
 
 (declare-function omnivox--choice-current-registration "omnivox-voices" (process))
+(declare-function omnivox--choice-provenance "omnivox-voices" (snapshot logical))
+(declare-function omnivox--choice-tuning-supported-p "omnivox-voices" (process))
 (declare-function omnivox--prepare-choice-dispatch "omnivox-voices" (owner snapshot spans))
 (declare-function omnivox--choice-span-projection "omnivox-choice-codec" (registration logical request balance))
 (declare-function omnivox--choice-validate-wire-patch "omnivox-choice-codec" (patch))
@@ -129,6 +132,7 @@ delay.  Ordered and urgent transactions are never delayed."
 (declare-function tts--dispatch-owner-published "tts-speak" (owner))
 (declare-function tts--dispatch-publish "tts-speak" (owner))
 (declare-function tts--preparation-cancel-current "tts-speak" ())
+(declare-function tts--preparation-set-queue-guard "tts-speak" (guard))
 
 (defvar emacsvox-aural--delivery-timeline-runs nil
   "Reverse-ordered concrete runs captured for structured delivery.")
@@ -138,6 +142,10 @@ delay.  Ordered and urgent transactions are never delayed."
 (defvar emacsvox-aural--capture-count 0)
 (defvar emacsvox-aural--capture-bytes 0)
 (defvar emacsvox-aural--capture-sealed-p nil)
+(defvar emacsvox-aural--named-queue-active-p nil)
+
+(defconst emacsvox-aural--queue-limitation-property
+  'emacsvox-aural--queue-limitation)
 
 (defvar emacsvox-aural--delivery-entry-kind nil
   "Dynamic origin tag applied to captured delivery entries.")
@@ -797,6 +805,10 @@ timelines with native replacement are never left pending."
                        (and (eq emacsvox-aural-submission-delivery-policy 'replaceable)
                             generation)
                        entries))
+                (dolist (entry entries)
+                  (when-let* ((description (emacsvox-aural--delivery-entry-queue-description entry)))
+                    (unless (tts-queue--matches-p description (emacsvox-aural--delivery-entry-command entry))
+                      (error "Speech command changed before delivery admission"))))
                 (tts--preparation-before-delivery owner)
                 t)
             (tts--preparation-cancelled
@@ -964,40 +976,114 @@ Signal a clear installation error when negotiation found an older version."
 (defun emacsvox-aural--structured-compatible-delivery-entry-p (entry)
   "Return non-nil when ENTRY can accompany a structured timeline."
   (memq (emacsvox-aural--delivery-entry-kind entry)
-        '(structured-fallback sync-state sync-capitalization
+        '(structured-fallback named-fallback sync-state sync-capitalization
           ordinary-dispatch explicit-dispatch)))
 
-(defun emacsvox-aural--capture-single-timeline-p (entries)
-  "Check ordered ENTRIES for one complete timeline without moving boundaries."
-  (and
-   (cl-every #'emacsvox-aural--structured-compatible-delivery-entry-p entries)
-   (let ((valid t) (dispatches 0) callback-owner last-dispatch tail states)
-     (dolist (record (reverse emacsvox-aural--capture-journal))
-       (if (eq (car record) 'run)
-           (progn
-             (when (eq last-dispatch 'explicit-dispatch) (setq valid nil))
-             (setq tail t))
-         (let* ((entry (cdr record))
-                (kind (emacsvox-aural--delivery-entry-kind entry))
+(defun emacsvox-aural--call-with-named-queue (name text function)
+  "Retain unevaluated NAME and TEXT around original compatibility FUNCTION."
+  (if (or (not emacsvox-aural--delivery-transaction-active-p)
+          emacsvox-aural--delivery-entry-kind emacsvox-aural--named-queue-active-p)
+      (funcall function)
+    (let* ((emacsvox-aural--named-queue-active-p t)
+           (palette (emacsvox-aural-effective-voice-palette))
+           (owned (and (symbolp name)
+                       (emacsvox-aural-voice-runtime--owned name palette)))
+           (style (and owned
+                       (condition-case nil
+                           (emacsvox-aural-voice-runtime--definition-style
+                            (plist-get owned :definition))
+                         (user-error nil))))
+           (compiled (and style (emacsvox-aural-compile-voice-style name palette)))
+           (plan (and compiled
+                      (emacsvox-aural--make-concrete-plan
+                       :voice-palette palette
+                       :content (emacsvox-aural--make-concrete-content
+                                 :speak t :voice-command (emacsvox-aural-compiled-voice-command compiled)
+                                 :voice-request (emacsvox-aural-compiled-voice-request compiled)
+                                 :voice-style (emacsvox-aural-compiled-voice-style compiled)))))
+           (data (list :name name :owned owned :run (and plan (list plan text nil nil))
+                       :entries nil :complete nil))
+           (print-circle t) (print-length nil) (print-level nil)
+           (bytes (string-bytes (prin1-to-string data)))
+           (prior emacsvox-aural--delivery-transaction-entries)
+           result entries)
+      ;; Charge before retaining copied input; original commands remain only in
+      ;; the delivery journal.  This helper never preprocesses text or rules.
+      (emacsvox-aural--capture-record 'named data bytes)
+      (setq data (tts--dispatch-copy-data data))
+      (setcdr (car emacsvox-aural--capture-journal) data)
+      (setq result (funcall function))
+      (let ((tail emacsvox-aural--delivery-transaction-entries))
+        (while (not (eq tail prior))
+          (push (pop tail) entries)))
+      (setf (plist-get data :entries) entries)
+      ;; Only the exact three constructor records can be replaced.  Additional
+      ;; writes from advice, raw fragments and whitespace-only queues stay legacy.
+      (when (and plan (= (length entries) 3)
+                 (equal (emacsvox-aural--delivery-entry-command (nth 1 entries))
+                        (format "q {%s }\n" (nth 1 (plist-get data :run))))
+                 (cl-every
+                  (lambda (entry)
+                    (let ((command (emacsvox-aural--delivery-entry-command entry)))
+                      (and (null (emacsvox-aural--delivery-entry-kind entry))
+                           (tts-queue--record-valid-p command)
+                           (tts-queue--matches-p
+                            (emacsvox-aural--delivery-entry-queue-description entry) command))))
+                  entries)
+                 (cl-every (lambda (entry)
+                             (string-prefix-p "c {" (emacsvox-aural--delivery-entry-command entry)))
+                           (list (car entries) (nth 2 entries))))
+        (setf (plist-get data :complete) t)
+        (dolist (entry entries)
+          (setf (emacsvox-aural--delivery-entry-kind entry) 'named-fallback)))
+      result)))
+
+(defun emacsvox-aural--named-queue-records ()
+  "Return named contributions in original capture order."
+  (cl-loop for (kind . value) in (reverse emacsvox-aural--capture-journal)
+           when (eq kind 'named) collect value))
+
+(defun emacsvox-aural--queue-shape-reason (entries named)
+  "Return a bounded compatibility reason for ordered ENTRIES and NAMED queues."
+  (let (last-dispatch tail named-after-dispatch states reason (dispatches 0) owners)
+    (dolist (record (reverse emacsvox-aural--capture-journal))
+      (pcase (car record)
+        ((or 'run 'named)
+         (when (and (eq (car record) 'named) last-dispatch)
+           (setq named-after-dispatch t))
+         (when (eq last-dispatch 'explicit-dispatch) (setq reason 'multiple-flushes))
+         (setq tail t))
+        ('entry
+         (let* ((entry (cdr record)) (kind (emacsvox-aural--delivery-entry-kind entry))
                 (command (emacsvox-aural--delivery-entry-command entry)))
            (cond
             ((memq kind '(ordinary-dispatch explicit-dispatch))
              (when (and last-dispatch
-                        (or (eq kind 'explicit-dispatch)
+                        (or named-after-dispatch (eq kind 'explicit-dispatch)
                             (eq last-dispatch 'explicit-dispatch)))
-               (setq valid nil))
+               (setq reason 'multiple-flushes))
              (cl-incf dispatches)
-             (setq callback-owner (or callback-owner
-                                      (emacsvox-aural--delivery-entry-owners entry))
+             (setq owners (append (emacsvox-aural--delivery-entry-owners entry) owners)
                    last-dispatch kind tail nil))
             ((memq kind '(sync-state sync-capitalization))
              (let ((prior (assq kind states)))
                (if prior
-                   (unless (equal (cdr prior) command) (setq valid nil))
-                 (push (cons kind command) states))))))))
-     (and valid
-          (not (and callback-owner (> dispatches 1)))
-          (not (and (> dispatches 0) tail))))))
+                   (unless (equal (cdr prior) command) (setq reason 'state-transition))
+                 (push (cons kind command) states)))))))))
+    (cond
+     ((cl-some (lambda (data) (not (plist-get data :run))) named) 'opaque-definition)
+     ((or (cl-some (lambda (data) (not (plist-get data :complete))) named)
+          (not (cl-every #'emacsvox-aural--structured-compatible-delivery-entry-p entries)))
+      'opaque-command)
+     ((and named (= dispatches 0)) 'queue-only)
+     ((and tail (> dispatches 0)) 'unsealed-tail)
+     ((and owners (> dispatches 1)) 'multiple-owners)
+     (t reason))))
+
+(defun emacsvox-aural--capture-single-timeline-p (entries)
+  "Check ordered ENTRIES for one complete timeline without moving boundaries."
+  (not (emacsvox-aural--queue-shape-reason
+        entries (emacsvox-aural--named-queue-records))))
 
 (defun emacsvox-aural-structured-delivery-pending-p ()
   "Return non-nil when the current transaction can replace its legacy queue."
@@ -1825,7 +1911,87 @@ the authoritative check after punctuation and split-cap preprocessing."
           generation dispatch-id part-index part-count payload-bytes
           (substring encoded start end)))))))
 
+(defun emacsvox-aural--named-queue-proof-reason (owner)
+  "Return OWNER's compatibility reason, or nil when queue proof holds."
+  (let ((state (tts-queue--state owner)))
+    (cond
+     ((not (and (eql (process-get owner emacsvox-aural--structured-timeline-process-property) 4)
+                (omnivox--choice-tuning-supported-p owner))) 'old-server)
+     ((tts-queue--known-empty-p owner) nil)
+     ((and state (tts-queue--state-remote state) (tts-queue--state-unusable state))
+      'remote-proof-unusable)
+     ((and state (= (tts-queue--state-framing state) 1)) 'input-boundary-unproven)
+     ((and state (= (tts-queue--state-queue state) 1)) 'cross-call-queue)
+     (t 'unknown-queue))))
+
+(defun emacsvox-aural--named-queue-runs (named snapshot)
+  "Validate NAMED ownership against SNAPSHOT and return journal-ordered runs."
+  (dolist (data named)
+    (let* ((owned (plist-get data :owned))
+           (name (plist-get owned :name))
+           (logical (symbol-name name))
+           (provenance (omnivox--choice-provenance snapshot logical)))
+      (unless (and (omnivox--choice-span-projection snapshot logical name nil)
+                   (cl-every (lambda (key) (equal (plist-get owned key) (plist-get provenance key)))
+                             '(:palette :name :definition :choices)))
+        (error "Named voice registration changed while preparing speech"))
+      (dolist (entry (plist-get data :entries))
+        (unless (tts-queue--matches-p (emacsvox-aural--delivery-entry-queue-description entry)
+                                      (emacsvox-aural--delivery-entry-command entry))
+          (error "Named voice command changed while preparing speech")))))
+  (cl-loop for (kind . data) in (reverse emacsvox-aural--capture-journal)
+           when (memq kind '(named run))
+           collect (if (eq kind 'named) (plist-get data :run) data)))
+
+(defun emacsvox-aural--queue-limitation-effect (owner generation named reason)
+  "Create one bounded sent-delivery diagnostic for NAMED and REASON."
+  (let (ids truncated)
+    (dolist (data named)
+      (let* ((name (or (plist-get (plist-get data :owned) :name) (plist-get data :name)))
+             (id (and (symbolp name) (symbol-name name))))
+        (when (and id (not (member id ids)))
+          (if (and (< (length ids) 32) (<= (string-bytes id) 128))
+              (push (copy-sequence id) ids)
+            (setq truncated t)))))
+    (let ((diagnostic (list :generation (process-get owner 'tts--speech-process-generation)
+                            :submission generation :reason reason
+                            :logical-ids (nreverse ids) :truncated truncated)))
+      (lambda ()
+        (when (and (equal (plist-get diagnostic :generation)
+                          (process-get owner 'tts--speech-process-generation))
+                   (> generation (or (plist-get (process-get owner emacsvox-aural--queue-limitation-property)
+                                                :submission) -1)))
+          (process-put owner emacsvox-aural--queue-limitation-property diagnostic))))))
+
 (defun emacsvox-aural--finalize-structured-delivery
+    (owner generation entries effects runs)
+  "Select one representation for OWNER's complete captured ENTRIES and RUNS."
+  (let* ((named (emacsvox-aural--named-queue-records))
+         (reason (and named (or (emacsvox-aural--queue-shape-reason entries named)
+                                (emacsvox-aural--named-queue-proof-reason owner))))
+         selected)
+    (setq selected
+          (if reason
+              (emacsvox-aural--finalize-legacy-delivery entries effects)
+            (when named
+              (tts--preparation-set-queue-guard
+               (or (tts-queue--guard owner omnivox--choice-registration-property)
+                   (signal 'tts--preparation-cancelled nil)))
+              (setq runs (emacsvox-aural--named-queue-runs
+                          named (omnivox--choice-current-registration owner)))
+              (tts--preparation-check))
+            (emacsvox-aural--finalize-timeline-delivery owner generation entries effects runs)))
+    (when named
+      (unless (cl-some (lambda (entry) (eq (emacsvox-aural--delivery-entry-kind entry) 'structured))
+                       (car selected))
+        (setq reason (or reason 'opaque-command))
+        (tts--preparation-set-queue-guard nil))
+      (setf (cadr selected)
+            (append (cadr selected)
+                    (list (emacsvox-aural--queue-limitation-effect owner generation named reason)))))
+    selected))
+
+(defun emacsvox-aural--finalize-timeline-delivery
     (owner generation entries effects runs)
   "Replace eligible legacy ENTRIES with one structured timeline for OWNER."
   (if
@@ -1866,7 +2032,7 @@ the authoritative check after punctuation and split-cap preprocessing."
             (cl-remove-if
              (lambda (entry)
                (memq (emacsvox-aural--delivery-entry-kind entry)
-                     '(structured-fallback ordinary-dispatch explicit-dispatch)))
+                     '(structured-fallback named-fallback ordinary-dispatch explicit-dispatch)))
              entries)
             (mapcar
              (lambda (command)

@@ -354,5 +354,207 @@
               (should-error (tts--preparation-interrupt speaker)
                             :type 'tts--preparation-cancelled)))))))))
 
+(ert-deftest tts-queue-named-fixture-promotes-only-complete-empty-captures ()
+  (let ((read-eval nil))
+    (dolist (case (plist-get (emacsvox-aural-routing--read-one-form
+                             tts-queue-test--fixture "queue fixture") :cases))
+      (when (memq (plist-get case :id)
+                  '(queue-only named-normal named-explicit unsealed-tail sealed-tail
+                    explicit-prefix earlier-pending unknown-pending old-server))
+        (ert-info ((format "Fixture %S" (plist-get case :id)))
+          (omnivox-choice-consumer-test--with-speech
+           (tts-queue-state-test--set speaker (list (plist-get case :initial) 'boundary 'usable))
+           (when (eq (plist-get case :id) 'old-server)
+             (process-put speaker emacsvox-aural--structured-timeline-process-property 3))
+           (emacsvox-aural-call-with-delivery-transaction
+            speaker (lambda () (mapc #'tts-queue-test--event (plist-get case :events))))
+           (if (eq (plist-get case :output) 'layered)
+               (let ((doc (omnivox-choice-consumer-test--timeline (car writes))))
+                 (should (equal (mapconcat (lambda (row) (plist-get (plist-get row :span) :text))
+                                           (plist-get doc :spans) "")
+                                (if (eq (plist-get case :id) 'named-normal) "RAWNORMAL" "RAW"))))
+             (should (equal (tts-queue-test--legacy-sequence (cdar writes))
+                            (cl-subst 'dispatch 'D
+                                      (cl-subst 'dispatch 'ordinary-dispatch (plist-get case :sequence))))))
+           (should (eq (plist-get case :reason)
+                       (plist-get (process-get speaker emacsvox-aural--queue-limitation-property) :reason)))))))))
+
+(ert-deftest tts-queue-named-closing-callback-reuses-owner-on-both-lanes ()
+  (dolist (marked '(nil t))
+    (omnivox-choice-consumer-test--with-speech
+     (dolist (lane (list speaker notification))
+       (let ((tts-speaker-process lane) returned outer)
+         (setq outer
+               (emacsvox-aural-call-with-delivery-transaction
+                lane (lambda ()
+                       (tts-speak-using-voice 'voice-bolden "Exact named text")
+                       (setq returned (if marked
+                                          (tts--protocol-dispatch-marked #'ignore #'ignore)
+                                        (tts--protocol-dispatch-tracked #'ignore))))))
+         (let* ((doc (omnivox-choice-consumer-test--timeline (car writes)))
+                (span (car (plist-get doc :spans))))
+           (should (= returned outer (plist-get doc :dispatch_id)))
+           (should (equal "layered" (plist-get span :mode)))
+           (should (equal "Exact named text" (plist-get (plist-get span :span) :text)))
+           (should-not (plist-get (plist-get span :span) :context)))
+         (should (tts-queue--known-empty-p lane)))))))
+
+(ert-deftest tts-queue-named-limits-preserve-original-helper-behavior ()
+  (dolist (case '((voice-bolden " " opaque-command)
+                  (voice-bolden "first\nsecond" opaque-command)
+                  ((voice-bolden voice-monotone) "compound" opaque-definition)))
+    (omnivox-choice-consumer-test--with-speech
+     (emacsvox-aural-call-with-delivery-transaction
+      speaker (lambda () (tts-speak-using-voice (car case) (cadr case)) (tts--protocol-dispatch)))
+     (should-not (string-match-p "emacsvox_timeline" (cdar writes)))
+     (should (eq (nth 2 case) (plist-get (process-get speaker emacsvox-aural--queue-limitation-property) :reason)))))
+  (omnivox-choice-consumer-test--with-speech
+   (dolist (voice '(inaudible (voice-bolden inaudible)))
+     (emacsvox-aural-call-with-delivery-transaction
+      speaker (lambda () (tts-speak-using-voice voice "quiet"))))
+   (should-not writes)))
+
+(ert-deftest tts-queue-named-registration-mismatch-fails-before-stop ()
+  (dolist (fault '(pending changed-palette changed-definition))
+    (omnivox-choice-consumer-test--with-speech
+     (let ((emacsvox-aural-submission-controls-interruption t)
+           (emacsvox-aural-submission-delivery-policy 'urgent))
+       (should-error
+        (emacsvox-aural-call-with-delivery-transaction
+         speaker
+         (lambda ()
+           (tts-speak-using-voice 'voice-bolden "named")
+           (tts--protocol-dispatch)
+           (if (eq fault 'pending)
+               (process-put speaker omnivox--choice-registration-property nil)
+             (let* ((snapshot (tts--dispatch-copy-data (process-get speaker omnivox--choice-registration-property)))
+                    (source (omnivox--choice-provenance snapshot "bolden")))
+               (setf (plist-get source (if (eq fault 'changed-palette) :palette :definition)) 'changed)
+               (process-put speaker omnivox--choice-registration-property snapshot))))))
+       (should-not writes)
+       (tts-preparation-test--empty speaker)))))
+
+(ert-deftest tts-queue-named-own-stop-hooks-recheck-prepared-projection ()
+  (dolist (nested '(nil neutral queue dispatch letter))
+    (omnivox-choice-consumer-test--with-speech
+     (let ((emacsvox-aural-submission-controls-interruption t)
+           (emacsvox-aural-submission-delivery-policy 'urgent)
+           (tts-stopped-hook
+            (list (lambda (_)
+                    (pcase nested
+                      ('neutral (tts-queue--send-typed speaker "OMNIVOX-REMOTE ping\n" 'neutral))
+                      ('queue (tts--protocol-queue-text "OTHER"))
+                      ('dispatch (tts--protocol-dispatch))
+                      ('letter (tts--protocol-letter "A")))))))
+       (emacsvox-aural-call-with-delivery-transaction
+        speaker (lambda () (tts-speak-using-voice 'voice-bolden "named") (tts--protocol-dispatch)))
+       (should (equal "s\n" (cdr (car (last writes)))))
+       (if (memq nested '(nil neutral))
+           (should (string-match-p "emacsvox_timeline" (cdar writes)))
+         (should-not (cl-some (lambda (write) (string-match-p "emacsvox_timeline" (cdr write))) writes))
+         (should-not (process-get speaker emacsvox-aural--queue-limitation-property))
+         (tts-preparation-test--empty speaker))))))
+
+(ert-deftest tts-queue-named-diagnostic-is-bounded-and-published-only-after-send ()
+  (omnivox-choice-consumer-test--with-speech
+   (let ((named (cl-loop for index below 40 collect (list :name (intern (format "name-%d" index))))))
+     (let ((old (emacsvox-aural--queue-limitation-effect speaker 10 named 'unknown-queue))
+           (new (emacsvox-aural--queue-limitation-effect speaker 11 nil nil)))
+       (should-not (process-get speaker emacsvox-aural--queue-limitation-property))
+       (funcall old)
+       (let ((diagnostic (process-get speaker emacsvox-aural--queue-limitation-property)))
+         (should (= 32 (length (plist-get diagnostic :logical-ids))))
+         (should (plist-get diagnostic :truncated)))
+       (funcall new)
+       (funcall old)
+       (should (= 11 (plist-get (process-get speaker emacsvox-aural--queue-limitation-property) :submission)))
+       (should-not (plist-get (process-get speaker emacsvox-aural--queue-limitation-property) :reason))))))
+
+(ert-deftest tts-queue-named-intervening-output-aborts-without-legacy-replay ()
+  (dolist (phase '(binding framing))
+    (omnivox-choice-consumer-test--with-speech
+     (let* ((function (if (eq phase 'binding) 'tts--dispatch-bind-semantics
+                        'emacsvox-aural--frame-structured-timeline))
+            (original (symbol-function function)) injected)
+       (cl-letf (((symbol-function function)
+                  (lambda (&rest arguments)
+                    (prog1 (apply original arguments)
+                      (unless injected
+                        (setq injected t)
+                        ;; This restores empty, but must still invalidate the serial.
+                        (tts-queue--send-typed speaker "q {OTHER}\nd\n" '(queue clear)))))))
+         (should-not
+          (emacsvox-aural-call-with-delivery-transaction
+           speaker (lambda () (tts-speak-using-voice 'voice-bolden "named")
+                     (tts--protocol-dispatch-tracked #'ignore)))))
+       (should injected)
+       (should (equal (mapcar #'cdr writes) '("q {OTHER}\nd\n")))
+       (should-not (process-get speaker emacsvox-aural--queue-limitation-property))
+       (tts-preparation-test--empty speaker)))))
+
+(ert-deftest tts-queue-named-overlap-at-primitive-is-ambiguous-without-replay ()
+  (omnivox-choice-consumer-test--with-speech
+   (let (injected)
+     (cl-letf (((symbol-function 'process-send-string)
+                (lambda (process command)
+                  (push (cons process command) writes)
+                  (when (and (not injected) (string-match-p "emacsvox_timeline" command))
+                    (setq injected t)
+                    (tts-queue--send-typed process "OMNIVOX-REMOTE ping\n" 'neutral)))))
+       (tts-queue--install)
+       (should-not
+        (emacsvox-aural-call-with-delivery-transaction
+         speaker (lambda () (tts-speak-using-voice 'voice-bolden "named")
+                   (tts--protocol-dispatch-tracked #'ignore)))))
+     (should injected)
+     (should (= 2 (length writes)))
+     (should (= 1 (cl-count-if (lambda (write) (string-match-p "emacsvox_timeline" (cdr write))) writes)))
+     (should-not (tts-queue--known-empty-p speaker))
+     (should-not (process-get speaker emacsvox-aural--queue-limitation-property))
+     (tts-preparation-test--empty speaker))))
+
+(ert-deftest tts-queue-named-future-stop-cannot-justify-promotion ()
+  (dolist (case '(((pending boundary usable) nil cross-call-queue)
+                  ((empty unproven usable) nil input-boundary-unproven)
+                  ((unknown unproven unusable) t remote-proof-unusable)))
+    (omnivox-choice-consumer-test--with-speech
+     (tts-queue-state-test--set speaker (car case) (cadr case))
+     (let ((emacsvox-aural-submission-controls-interruption t)
+           (emacsvox-aural-submission-delivery-policy 'urgent))
+       (emacsvox-aural-call-with-delivery-transaction
+        speaker (lambda () (tts-speak-using-voice 'voice-bolden "named") (tts--protocol-dispatch))))
+     (should (equal "s\n" (cdr (car (last writes)))))
+     (should-not (cl-some (lambda (write) (string-match-p "emacsvox_timeline" (cdr write))) writes))
+     (should (eq (nth 2 case) (plist-get (process-get speaker emacsvox-aural--queue-limitation-property) :reason))))))
+
+(ert-deftest tts-queue-named-command-mutation-fails-before-policy-stop ()
+  (omnivox-choice-consumer-test--with-speech
+   (let ((emacsvox-aural-submission-controls-interruption t)
+         (emacsvox-aural-submission-delivery-policy 'urgent)
+         (emacsvox-aural-last-delivery-failure nil))
+     (emacsvox-aural-call-with-delivery-transaction
+      speaker (lambda ()
+                (tts--protocol-sync)
+                (aset (emacsvox-aural--delivery-entry-command
+                       (car emacsvox-aural--delivery-transaction-entries)) 0 ?X)
+                (tts-speak-using-voice 'voice-bolden "named")
+                (tts--protocol-dispatch)))
+     (should-not writes)
+     (should (eq 'dispatch-admission-failed (plist-get emacsvox-aural-last-delivery-failure :reason)))
+     (tts-preparation-test--empty speaker)))
+  (omnivox-choice-consumer-test--with-speech
+   (let ((emacsvox-aural-submission-controls-interruption t)
+         (emacsvox-aural-submission-delivery-policy 'urgent))
+     (should-error
+      (emacsvox-aural-call-with-delivery-transaction
+       speaker (lambda ()
+                 (tts-speak-using-voice 'voice-bolden "named")
+                 (let* ((data (car (emacsvox-aural--named-queue-records)))
+                        (entry (cadr (plist-get data :entries))))
+                   (aset (emacsvox-aural--delivery-entry-command entry) 3 ?X))
+                 (tts--protocol-dispatch))))
+     (should-not writes)
+     (tts-preparation-test--empty speaker))))
+
 (provide 'tts-queue-handoff-tests)
 ;;; tts-queue-handoff-tests.el ends here

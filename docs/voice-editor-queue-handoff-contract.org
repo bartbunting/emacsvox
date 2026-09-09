@@ -33,13 +33,14 @@ Presentation hooks run in independent captures. Legacy replacement framing is
 validated before interruption, including the server's requirement for exactly
 one final plain dispatch. Ordered compatibility packets retain multiple flushes.
 
-Bounded queue-state proof is now implemented; new named-queue promotion is the
-next implementation slice. The [[file:voice-editor-queue-proof-review.org][completed protocol-boundary refinement]] now specifies
+Bounded queue-state proof and guarded named-queue promotion are now implemented.
+The [[file:voice-editor-queue-proof-review.org][completed protocol-boundary refinement]] specifies
 framing separately from queue contents, conservative local/remote recovery,
 composable effects, birth ownership and exact own-stop receipts. The High
 observer slice passes 526 selected source tests and the isolated compiled gate;
-no further product decision is needed. Scope A is unchanged; no claim of
-individual tuning is made for those raw queue entries yet.
+no further product decision is needed for queue handoff. Scope A is unchanged.
+Complete eligible named queue captures now use individual tuning; cross-call
+queues, opaque commands and separate flushes retain explicit compatibility limits.
 
 Validation for this first runtime slice: all 505 selected source tests and the
 fresh compiled aural gate pass. The complete byte-code rebuild was followed by
@@ -403,5 +404,36 @@ queue-only assumptions. The subsequent High proof implementation passes 526
 selected source tests, including actual observer and connected producer/Stop
 guard checks. It drives the 24 framing and 11 queue-effect fixture cases. Muted
 client/server acceptance passes on both lanes locally and remotely after
-reconnect. See the refinement for details. Promotion remains disabled pending
-the separate guarded finalizer integration.
+reconnect. See the refinement for details. Guarded promotion is now implemented as described below.
+
+* Guarded promotion implementation
+
+The finalizer now upgrades complete owned named captures using their original
+journal order, frozen ownership and exact constructor commands. Names project
+with empty context against the acknowledged registry; ordinary concrete runs
+retain their sparse contextual patch. Queue-only calls and unsupported capture
+shapes preserve compatibility output. Prepared proposals require the queue guard
+through policy Stop and the actual write; failure never replays legacy speech.
+Bounded per-lane compatibility reasons are published only after successful send.
+
+All 536 selected source tests pass, including ten new connected contracts and a
+positive ordinary named-prefix consumer test. They cover fixture selection,
+both-lane tracked/marked IDs, registration mismatch, policy hooks, intervening
+writes, primitive overlap, command mutation, future Stop and bounded diagnostics.
+Muted local and remote named playback verifies actual fallback receipts on both
+lanes and after reconnect. Preview v2, editor controls and spoken acceptance are
+still pending. The next XHI review concerns their separate preview ownership and
+original-row/context handoff, not a change to selected queue scope A.
+
+The isolated compiled aural gate passes. Its initial failure exposed a direct
+structure setter across the compile boundary; a private TTS setter now owns
+that update. Retained typed state commands are fingerprint-checked before policy
+Stop, as well as at actual output. Named spans retain separate run boundaries;
+no client concatenation joins adjacent named words.
+
+Fresh compiled real-server acceptance also passes on both transports and lanes,
+including reconnect and verified receipts. =make bytecode=, =make bytecode-check=,
+=make headers-check=, =make docs-reference=, =make docs-org-preview=,
+=make docs-release-check= and =git diff --check= pass with the selected Emacs.
+Generated reference artifacts remain unchanged in this slice. No live settings,
+installed speech server, Omnivox source or unrelated audit file changed.
