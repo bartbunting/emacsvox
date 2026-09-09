@@ -7,11 +7,13 @@
 The reviewed lifecycle, registration, codec and structured runtime slices are
 implemented at High. All 490 selected source tests and the isolated compiled
 suite pass. Muted real-server acceptance passes on both lanes and after reconnect.
-A further preparation-window cancellation probe now demonstrates a gap shared by
-versions 3 and 4: a second =tts-stop= during the transaction's own policy stop does
-not cancel its inactive prepared owner. Stop for XHI to settle that distinction
-before continuing consumer audits, preview v2 or editor controls. No new product
-choice or Max review is requested at this boundary.
+The subsequent XHI preparation review is complete. Twenty diagnostic observations
+cover cancellation before owner allocation, during the policy stop, in nested
+hooks and legacy dispatch, plus pending quits during bookkeeping. The selected
+refinement uses cancellable preparation scopes, explicit own-stop preservation
+and unwind-safe reservations. It is a design handoff, not an implemented fix.
+Stop for High to implement the matrix below before continuing consumer audits,
+preview v2 or editor controls. No new product choice or Max review is needed.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated
@@ -490,7 +492,7 @@ the ordinary registration service and timed out without submitting a registry.
 Using the real acknowledged apply service resolved that fixture setup error.
 No application workaround, live server replacement or personal save was used.
 
-* New XHI boundary: explicit Stop while the policy stop is being written
+* Preparation review baseline: explicit Stop during the policy stop
 
 The [[file:../test/diagnose-prepared-cancellation.el][prepared-cancellation diagnostic]] substitutes all writes and starts no engine.
 For each of timeline versions 3 and 4 it compares a normal urgent submission
@@ -512,14 +514,14 @@ This is a deterministic ordering probe, not a report of audible reproduction.
 It narrows an incompletely handled preparation boundary in the existing contract;
 it is not a new marker-3 decoding defect or permission to replay.
 
-Resume at XHI to settle preparation cancellation without making a request cancel
-itself through its own required policy interruption. Review all direct/captured
+The XHI follow-up below settles preparation cancellation without making a request
+cancel itself through its own required policy interruption. Its scope includes all direct/captured
 entry points, nested stopped-hook speech, both lanes, reentrant output, sentinel
 retirement and nonlocal exits during reservation/metadata attachment. Keep the
 existing normal policy-stop and synchronous local teardown contracts passing.
-Then return to High for the bounded fix and regression tests.
+Implementation and regression tests remain the next High slice.
 
-Two approaches merit that review:
+The starting alternatives were:
 
 | Approach | Benefit | Cost / concern |
 |----------+---------+----------------|
@@ -530,3 +532,191 @@ The maintainer's intended Stop behavior needs no new product decision. This is
 an ownership review stop under the agreed reasoning-level workflow. The feature
 is not complete: ordinary-consumer coverage, private previews, optional editor
 controls, current guidance and spoken acceptance remain after this fix.
+
+* Completed XHI review: cancellable preparation and safe reservation
+
+** Additional evidence at Emacsvox 23ece51d1
+
+All accepted ADRs 0001--0017 were read together. The extended diagnostic uses
+the selected Emacs 31.0.90, source-loaded implementations and isolated pipe
+fixtures. No engine, audio device, live profile or personal save is involved.
+The original four observations above remain reproducible. The added cases are:
+
+| Injected boundary | Current observation | Required result |
+|-------------------+---------------------+-----------------|
+| Public Stop during projection, before owner allocation; versions 3 and 4 | ID 1 returned and timeline written in both cases. | Cancel the encompassing preparation before it can allocate or send a new dispatch. |
+| Public Stop during framing; versions 3 and 4 | ID 1 returned and timeline written. | No timeline, publication or successful-delivery effects. |
+| Public Stop from the policy stop's stopped hook | Parent ID 1 returned and written. | Cancel the parent preparation. |
+| Ordered announcement from that hook | Parent ID 1 and nested ID 2 both written. | Preserve this independent, non-interrupting announcement and the parent. |
+| New urgent announcement from that hook | Parent ID 1 and nested ID 2 both written. | Only nested ID 2 proceeds; its interruption supersedes the older parent. |
+| Stop before the legacy dispatch command; tracked/marked, direct/captured | All four return ID 1 and write a dispatch. | All four suppress the cancelled request. |
+| Stop inside final choice admission | ID 1 returned and timeline written. | Recheck cancellation after admission validation, before installing observers or writing. |
+| Silent forget of a prepared dispatch ID | ID 1 returned and dispatch written. | Retire that owner silently, including before arming. |
+| Pending quit after owner-count update | Count 1 remains, with no bytes or owner available to transaction cleanup. | No retained count, owner or metadata. |
+| Pending quit after first snapshot reference insertion | Snapshot count 1 remains after the owner count returns to zero. | Release the last snapshot reference and its charge. |
+| Pending quit after metadata charge | 273968 bytes and one snapshot remain with owner count zero. | Release both, without any write. |
+
+The three quit cases set the actual =quit-flag= after a bookkeeping primitive.
+They respect =inhibit-quit= and catch the eventual quit; they do not force a quit
+through an otherwise protected critical section. The runner disables native
+subroutine trampoline creation before substituting primitives, so fixture writes
+cannot intercept an unrelated compiler subprocess. These are fault-injection
+observations, not acoustic acceptance or assertions that bugs should persist.
+
+** Start cancellation ownership before allocating a dispatch
+
+Select a small private /preparation scope/ for each outer delivery transaction,
+registered against its exact process and generation before calling its body,
+history preparation or timeline projection. Direct legacy tracked/marked entry
+points establish the same scope before reservation; captured calls join their
+existing scope. Independent callbacks start a fresh scope. Never infer ownership
+from whichever transaction happens to be dynamically visible during a Stop.
+
+The scope records irrevocable cancellation and owns every unpublished dispatch
+reservation created within it. Give active scopes a separate bound of 128 per
+process; keep the existing 128-owner and 32 MiB metadata limits. Scope records
+contain ownership references, not another copy of text or the registration.
+Admission failure precedes the native policy stop. An empty or failed transaction
+still unregisters its scope. Standalone private preparation callers must use the
+same guarded scope service; they must not create an unowned reservation.
+
+Index prepared owners for cancellation and silent ID-based forgetting without
+installing marker, completion or timing observers. A prepared owner is never a
+valid source of playback evidence. Preserve the existing armed indexes and
+deferred terminal tickets. Scope lifetime ends on delivery handoff or unwind;
+detach its owner references so a published owner cannot retain sibling metadata.
+Published owners retain their existing completion/retirement lifetime.
+Silent ID-based forgetting retires only the named owner. If an unsent atomic
+packet still references that owner, discard that packet and clean up its other
+unpublished reservations; do not cancel unrelated published dispatches.
+
+Recheck scope cancellation, process identity/generation and all owner admission
+conditions after any validation or hook that can reenter. Check the complete
+packet's owners before the write, including multiple captured legacy dispatches
+and multipart timelines. A cancelled scope cannot allocate another owner,
+perform its later policy stop, install a pending delivery or commit success
+effects. This also protects captured cue-only and untracked legacy transactions.
+Idle delivery keeps its existing scheduler ownership: transfer only an uncancelled
+transaction, and remove only that transaction's pending generation on failed
+handoff. Tracked/structured owners must never be left waiting for idle delivery.
+
+** Make own-policy preservation explicit and non-inheritable
+
+Pass one private, one-use preservation token from the fully prepared transaction
+to its required lane interruption. It names the exact scope and its still-inactive
+owners. Validate it before interrupting; a cancelled, foreign, already-armed or
+previously used scope cannot acquire protection. Apply the token explicitly to
+that interruption's invalidation and unwind cleanup. Do not bind a global or
+dynamic "ignore cancellation" flag, and never reset a cancelled scope to live.
+
+Public Stops, input failure, sentinel handling and deliberate retirement have
+no preservation token; ID-based forgetting also cannot be exempted. Invalidate affected scopes
+before a stop write can accept output, and again at existing cancellation cleanup
+boundaries before external callbacks. A nested public Stop therefore cancels the
+parent even inside its own policy stop. A nested urgent submission protects only
+its new scope and cancels the parent; an ordered callback that performs no stop
+does not cancel the parent. Preserve synchronous local teardown ordering and the
+independent callback bindings already implemented.
+
+Scope invalidation is process-local. Explicit stop-all first marks existing
+preparations for both distinct target processes before either stop write can
+yield, then preserves the existing per-lane stop/callback order. A normal main
+interruption must not invalidate notification preparations. No exception extends
+to another lane, a replacement process, retirement, or a later public Stop.
+
+The source audit found an important compatibility call site:
+=tts--speak-transaction= currently calls public =tts-stop= for
+=tts-stop-immediately= when source policy does not own interruption. Record that
+automatic-stop intent on its preparation and perform it once at the prepared
+delivery boundary through the private token path. Do not let adding scope
+cancellation make ordinary =tts-speak= cancel itself. Keep the setting's existing
+choice of whether older speech is interrupted, its lane scope and stop-before-new
+output ordering; validate the new packet before that automatic stop. Explicit
+public Stop always retains its cancelling meaning. Audit the legacy fallback
+preview's stop-before-queue call separately when connecting preview ownership.
+
+Retain process cancellation epochs for armed observers and callback tickets.
+Their increment count is not the authority for preserving a preparation; no
+"expected number of increments" calculation is required. Admission can capture
+the current epoch only after the scope and exact owners pass the final check.
+Cancellation before writing returns no dispatch ID and commits no success effects;
+it is not a server-send failure to announce. Existing tracked wrappers retain
+their not-submitted error contract. Once a packet is handed to Emacs, bytes may
+already have reached the server: invalidate observation/publication, keep any
+previously validated consumption as historical evidence, and never replay.
+
+** Make reservation and release unwind-safe
+
+Establish the scope's unwind cleanup before registering it or allocating owners.
+Build copies, serialize for size and allocate proposed context before mutating
+shared counters. Then recheck capacity and cancellation against current state.
+Publish the owner-to-scope link, cancellation index and accounting in one short,
+data-only critical section. A pending quit must leave either no reservation or
+a fully cleanup-owned reservation, including direct calls before they receive
+the newly allocated owner.
+
+Use the same pattern for choice metadata: commit the immutable context/release
+ownership, snapshot reference count, unique snapshot charge and per-owner charge
+together. Cover both a first snapshot reference and sharing an existing one.
+Record exactly which reservations were acquired so rollback neither subtracts an
+unacquired charge nor releases another owner's reference. Repeated abandonment,
+cancellation and scope cleanup must be harmless.
+
+Limit =inhibit-quit= to these short bookkeeping sections and their matching
+release. Never inhibit it across projection, serialization, process writes,
+waiting, diagnostic I/O or external hooks. Keep an enclosing unwind guard active
+when the binding ends, so a deferred quit releases committed reservations before
+propagating. Ordinary errors and throws need that guard too; quit inhibition
+alone is not rollback. Release bookkeeping must finish even if lifecycle logging
+or another cleanup step fails, and one failed cleanup must not strand peer owners.
+Do not mark release complete before its accounting and shared references are
+settled. Preserve cancelled state immediately and retry only remaining cleanup
+steps; never retry speech. Source headers and public speech signatures stay intact.
+
+** Alternatives and implementation handoff
+
+| Approach | Benefit | Cost / conclusion |
+|----------+---------+-------------------|
+| Preparation scope plus explicit own-stop token (selected) | Covers Stop before an owner exists, multiple captured owners, nested speech and exact cleanup ownership. | Adds bounded scope bookkeeping and requires the legacy automatic-stop call site to declare its intent. |
+| Index only inactive dispatch owners | Smaller patch for the original second-Stop probe. | Still misses projection before owner allocation and ownerless captured output; insufficient after the expanded probes. |
+| Compare expected epoch increments around the policy stop | Few additional objects. | Couples admission to nested stop/cleanup implementation details and does not fix unowned reservation windows; rejected. |
+| Let all speech created inside a policy stop inherit protection | Minimal call-site plumbing. | A public Stop or newer urgent request cannot reliably supersede its parent; rejected. |
+
+Return to High for two tested, committed slices:
+
+1. Add guarded scopes, exact cancellation/preservation and atomic generic owner
+   reservation/release. Cover all dispatch entry points, legacy automatic stop,
+   both lanes, ownerless capture and pending handoff before proceeding.
+2. Make shared choice metadata attachment/release atomic, integrate its final
+   admission with the same scope, and rerun layered runtime acceptance.
+
+Convert the 20 diagnostic observations into behavior tests with expected results;
+keep the diagnostic observational. Extend the matrix with stop-all while the
+other lane is prepared, process replacement/sentinel during policy stop, repeated
+cancel, ID forgetting with multiple owners, interrupted scope registration,
+error/quit/throw during reservation and release, last versus shared snapshot
+release, framing failure before interruption, and Stop from final admission.
+Check no callbacks or success history for suppressed work, zero released charges,
+no revived indexes, and preserved independent newer speech. Keep existing early
+receipt/terminal, after-write failure and tracked-reader regressions passing.
+
+After Lisp changes, rebuild byte-code for changed structs/macros, run the source
+matrix and isolated compiled gate, then the muted real-server both-lane/reconnect
+runner. No server change, dependency upgrade, storage migration or product choice
+is required. The remaining consumer audit, private previews and editor controls
+follow these slices; the preparation fix is still pending at this design commit.
+
+** Validation of the preparation review
+
+The standalone diagnostic completes all 20 observations. A fresh Emacs explicitly
+loading the reviewed TTS, transport, codec and Omnivox source passes all 461
+selected TTS, transport, handoff and choice-playback baseline tests. The reduced
+runner initially omitted =emacsvox-aural-provider-workflows=, leaving =mail-view=
+unregistered in one notification test; loading that normal provider fixes the
+runner without any application change. These baseline tests do not yet assert
+the new cancellation and reservation outcomes.
+
+=make check-emacs=, =make bytecode-check=, =make docs-release-check= and
+=make headers-check= pass. Runtime Lisp is unchanged by this review, so no new
+runtime build or acoustic acceptance is claimed. The implementation plan and
+backlog mark the review complete and both implementation slices pending at High.

@@ -29,8 +29,11 @@ Registration now freezes raw palette/voice/choice provenance alongside wire
 definitions. Structured runtime now uses acknowledged version-4 spans and correlated
 marker-3 evidence, with bounded frozen metadata. All 490 selected source tests,
 fresh compiled checks and muted real-server both-lane/reconnect acceptance pass.
-A new preparation-window Stop probe exposes an unresolved cancellation boundary
-in both versions 3 and 4. Stop for XHI before continuing the remaining work.
+The subsequent XHI preparation review is complete: 20 diagnostic observations
+expose cancellation before/during preparation and interrupted reservation leaks.
+The selected refinement uses cancellable scopes, explicit own-stop preservation
+and unwind-safe bookkeeping. Stop for High to implement it; the cancellation
+fix and remaining feature work are still pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -503,8 +506,8 @@ retains frozen acknowledged definitions. Six new tests cover old/new lanes,
 invalid and late acknowledgements, temporary routing and truthful unsupported
 save status. All 226 selected client/voice/transport tests and isolated compiled
 parity passed at that registration checkpoint. Subsequent lifecycle, projection
-and runtime slices are recorded below. The current stop is the new XHI review
-of prepared-request cancellation; preview and editor controls remain pending.
+and runtime slices are recorded below. The current stop is the High implementation
+handoff after the preparation review; preview and editor controls remain pending.
 
 **** DONE Review client submission and receipt ownership at XHI
 
@@ -585,17 +588,43 @@ It applies actual configuration, selects a fallback after an unavailable primary
 checks both lanes, replaces the foreground process and re-registers without
 replay. No installed runtime or personal configuration changes.
 
-**** TODO Review prepared-request cancellation at XHI
+**** DONE Review prepared-request cancellation at XHI
 
-Stop for XHI. =test/diagnose-prepared-cancellation.el= demonstrates that a second
-public Stop during the policy stop's write leaves the inactive request eligible
-to arm and send afterward. Both versions 3 and 4 reproduce it; the normal
-single policy stop still correctly permits the new request. The
-[[file:voice-editor-client-handoff-review.org][handoff review]] records exact output, the affected boundary and approaches.
-Settle cancellable preparation with an explicit own-policy-stop exemption, or a
-better justified alternative, and audit atomic reservation cleanup. Preserve
-nested lifecycle-hook speech and both-lane ownership. No Max or new product
-choice is requested. Return to High for the fix and its regression matrix.
+The extended =test/diagnose-prepared-cancellation.el= records 20 observations.
+Stop misses preparation before owner allocation, framing, admission and all four
+direct/captured tracked/marked cases. A nested urgent announcement does not
+supersede its prepared parent. Pending-quit probes also reproduce leaked owner
+counts, shared references and metadata charges. Normal own-stop and ordered-hook
+speech are controls that must continue to work.
+
+The [[file:voice-editor-client-handoff-review.org][handoff review]] selects a cancellable scope beginning with delivery preparation,
+an explicit one-use own-policy-stop token, prepared-ID cancellation and guarded
+atomic reservation/release. Scopes are bounded and separate from playback
+observation. The legacy =tts-stop-immediately= path must declare automatic-stop
+intent through the same service so ordinary speech does not cancel itself.
+No public signature, server protocol, dependency, storage or product decision
+changes. Stop for High; no Max review is required.
+
+**** TODO Implement preparation cancellation and generic reservation at High
+
+Add scopes before transaction bodies and direct dispatch reservation. Preserve
+only the exact preparation during its own policy stop; public Stop, sentinel
+and retirement have no exemption. Cover both lanes, nested ordered/urgent hook
+speech, silent ID forgetting, multiple owners, ownerless capture and pending
+handoff. Cancelled preparations must not write, interrupt newer speech, publish
+an ID or commit successful-delivery effects. Make generic owner accounting safe
+through error, quit and throw. Preserve existing public tracked-wrapper errors.
+Run source contracts and a fresh compiled gate after the required rebuild,
+update status and commit this slice.
+
+**** TODO Make per-choice metadata reservation unwind-safe at High
+
+Commit context ownership, shared snapshot references and byte charges together,
+and release only acquired resources exactly once. Integrate final choice
+admission with scope cancellation. Turn the first/shared/last-reference and
+pending-quit cases into passing regressions. Run the complete selected source
+matrix, rebuilt compiled gate and muted real-server both-lane/reconnect runner;
+update status and commit before resuming the remaining consumers and editor work.
 
 **** TODO Complete ordinary consumers, preview and editor controls
 

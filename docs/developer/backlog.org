@@ -77,10 +77,12 @@ definitions; four new contracts and all 457 selected tests pass.
 Acknowledged structured runtime now uses timeline 4 and correlated marker-3
 readback with bounded frozen metadata. All 490 selected source tests, the full
 rebuild, compiled gate and muted real-server both-lane/reconnect acceptance pass.
-A further probe finds that an explicit second Stop during the policy stop's
-write does not cancel the inactive prepared request, in versions 3 and 4 alike.
-Stop for XHI to settle that preparation boundary before proceeding. The remaining
-ordinary-consumer audit, preview v2, individual controls and spoken acceptance
+A subsequent XHI review records 20 preparation observations, including Stop
+before owner allocation and pending quits that leak reservation accounting.
+The selected design adds bounded cancellable scopes, explicit own-stop
+preservation and unwind-safe reservation/release. The review is complete;
+stop for High to implement and test its two slices. The fix remains pending.
+The remaining ordinary-consumer audit, preview v2, individual controls and spoken acceptance
 are still pending; this is not complete feature delivery. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
