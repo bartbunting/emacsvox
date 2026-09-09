@@ -68,10 +68,13 @@ contracts and compiled parity. All 226 selected client/voice/transport tests
 pass. Layered transport/readback, preview v2 and individual editor controls
 remain pending in the [[file:../voice-editor-implementation-plan.org][implementation plan]]. The
 [[file:../voice-editor-client-handoff-review.org][XHI client dispatch handoff review]] is complete, with eight reproducible
-probes and 429 passing selected baseline tests. The lifecycle fix remains next
-at High: arm ownership before writing, retain frozen receipt context, prevent
-retired tracking from returning, and defer server callbacks until the caller
-has stored its ID. Layered transport must wait for that fix. Earlier, the maintainer
+probes and 429 passing selected baseline tests. Implementation resumed at High.
+The lifecycle slice now arms ownership before writing, prevents retired tracking
+from returning and defers server callbacks until the caller has stored its ID.
+Regression tests cover early completion, failure cleanup, callback speech,
+reentrant filters and lane-local cancellation. Frozen registration provenance
+and timeline-4/marker-3 integration remain next; the bundle is not yet enabled
+for ordinary speech. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.

@@ -191,10 +191,289 @@ a `cancelled' record when pending input interrupts that wait.")
 
 (cl-defstruct (tts--marker-dispatch
                (:constructor tts--marker-dispatch-create))
-  process callback semantic-actions (last-sequence 0))
+  process callback semantic-actions owner (last-sequence 0))
 
 (defvar tts--marker-dispatches (make-hash-table :test #'eql)
   "Marker callback state indexed by tracked dispatch identifier.")
+
+(cl-defstruct (tts--dispatch-owner (:constructor tts--dispatch-owner-create))
+  id process generation epoch submission-id marker completion semantics
+  (state 'prepared) published terminal retired released tracking-failed metadata-bytes
+  write-started-at write-ended-at)
+
+(defconst tts--dispatch-owner-limit 128)
+(defconst tts--dispatch-metadata-limit (* 32 1024 1024))
+(defconst tts--dispatch-notification-limit 8192)
+(defconst tts--dispatch-notification-byte-limit (* 16 1024 1024))
+(defvar tts--dispatch-call-depth 0)
+(defvar tts--dispatch-drain-active nil)
+(defvar tts--input-drain-depth 0)
+(defvar emacsvox-aural--submission-depth 0)
+(defvar emacsvox-aural--delivery-dispatch-owners nil)
+
+(defun tts--dispatch-copy-data (value)
+  "Copy bounded dispatch VALUE, including strings and vector contents."
+  (let ((copies (make-hash-table :test #'eq)) pending)
+    (cl-labels
+        ((allocate (source)
+           (if (not (or (stringp source) (consp source) (vectorp source))) source
+             (or (gethash source copies)
+                 (let ((copy (if (consp source) (cons nil nil) (copy-sequence source))))
+                   (puthash source copy copies)
+                   (unless (stringp source) (push (cons source copy) pending))
+                   copy)))))
+      (let ((result (allocate value)))
+        (while pending
+          (let* ((pair (pop pending)) (source (car pair)) (copy (cdr pair)))
+            (if (consp source)
+                (progn (setcar copy (allocate (car source)))
+                       (setcdr copy (allocate (cdr source))))
+              (dotimes (index (length source))
+                (aset copy index (allocate (aref source index)))))))
+        result))))
+
+(defun tts--dispatch-owner-for (process identifier)
+  "Return PROCESS's retained owner for IDENTIFIER, including a terminal ticket."
+  (when-let* ((entry (gethash identifier tts--marker-dispatches)))
+    (when (eq process (tts--marker-dispatch-process entry))
+      (tts--marker-dispatch-owner entry))))
+
+(defun tts--dispatch-new-owner (marker completion semantics)
+  "Reserve an inactive dispatch for MARKER, COMPLETION and SEMANTICS."
+  (let* ((process tts-speaker-process)
+         (count (or (process-get process 'tts--dispatch-owner-count) 0))
+         (used (or (process-get process 'tts--dispatch-metadata-bytes) 0))
+         (print-circle t) (print-length nil) (print-level nil)
+         (bytes (string-bytes (prin1-to-string semantics))))
+    (when (or (>= count tts--dispatch-owner-limit)
+              (> (+ used bytes) tts--dispatch-metadata-limit))
+      (error "Speech dispatch tracking capacity is exhausted"))
+    (let ((owner
+           (tts--dispatch-owner-create
+            :id (cl-incf tts--tracked-dispatch-sequence) :process process
+            :generation (process-get process 'tts--speech-process-generation)
+            :submission-id (and (boundp 'emacsvox-aural--current-submission-id)
+                                emacsvox-aural--current-submission-id)
+            :marker marker :completion completion
+            :semantics (tts--dispatch-copy-data semantics) :metadata-bytes bytes)))
+      (process-put process 'tts--dispatch-owner-count (1+ count))
+      (process-put process 'tts--dispatch-metadata-bytes (+ used bytes))
+      (when emacsvox-aural--delivery-transaction-active-p
+        (push owner emacsvox-aural--delivery-dispatch-owners))
+      owner)))
+
+(defun tts--dispatch-arm (owner)
+  "Install inactive OWNER immediately before writing its complete packet."
+  (let ((process (tts--dispatch-owner-process owner))
+        (id (tts--dispatch-owner-id owner)))
+    (unless (and (eq (tts--dispatch-owner-state owner) 'prepared)
+                 (not (tts--dispatch-owner-retired owner))
+                 (process-live-p process)
+                 (not (process-get process 'tts--speech-process-retiring))
+                 (equal (tts--dispatch-owner-generation owner)
+                        (process-get process 'tts--speech-process-generation)))
+      (error "Speech dispatch owner is no longer available"))
+    (setf (tts--dispatch-owner-state owner) 'writing
+          (tts--dispatch-owner-write-started-at owner) (float-time)
+          (tts--dispatch-owner-epoch owner)
+          (or (process-get process 'tts--dispatch-cancellation-epoch) 0))
+    (process-put process 'tts--owns-playback-events t)
+    (puthash id (tts--marker-dispatch-create
+                 :process process :callback (tts--dispatch-owner-marker owner)
+                 :semantic-actions (tts--dispatch-owner-semantics owner)
+                 :owner owner)
+             tts--marker-dispatches)
+    (when (tts--dispatch-owner-completion owner)
+      (puthash id (cons process (tts--dispatch-owner-completion owner))
+               tts--tracked-dispatches))
+    (puthash id (tts--dispatch-lifecycle-create
+                 :process process :submission-id (tts--dispatch-owner-submission-id owner)
+                 :submitted-at (tts--dispatch-owner-write-started-at owner))
+             tts--dispatch-lifecycles)))
+
+(defun tts--dispatch-release (owner)
+  "Release OWNER's reservation and indexes exactly once."
+  (unless (tts--dispatch-owner-released owner)
+    (let ((process (tts--dispatch-owner-process owner))
+          (id (tts--dispatch-owner-id owner)))
+      (setf (tts--dispatch-owner-released owner) t)
+      (remhash id tts--tracked-dispatches)
+      (remhash id tts--marker-dispatches)
+      (remhash id tts--dispatch-lifecycles)
+      (process-put process 'tts--dispatch-owner-count
+                   (max 0 (1- (or (process-get process 'tts--dispatch-owner-count) 0))))
+      (process-put process 'tts--dispatch-metadata-bytes
+                   (max 0 (- (or (process-get process 'tts--dispatch-metadata-bytes) 0)
+                             (tts--dispatch-owner-metadata-bytes owner)))))))
+
+(defun tts--dispatch-discard-notifications (owner)
+  "Remove queued notifications for OWNER and release their budget."
+  (let* ((process (tts--dispatch-owner-process owner))
+         (queue (process-get process 'tts--dispatch-notifications))
+         kept (bytes 0) (count 0))
+    (dolist (item queue)
+      (unless (eq owner (aref item 0))
+        (push item kept)
+        (cl-incf bytes (aref item 3))
+        (cl-incf count)))
+    (setq kept (nreverse kept))
+    (process-put process 'tts--dispatch-notifications kept)
+    (process-put process 'tts--dispatch-notification-tail (last kept))
+    (process-put process 'tts--dispatch-notification-count count)
+    (process-put process 'tts--dispatch-notification-bytes bytes)))
+
+(defun tts--dispatch-abandon (owner &optional status)
+  "Irrevocably retire OWNER, retaining diagnostics with terminal STATUS."
+  (unless (tts--dispatch-owner-retired owner)
+    (setf (tts--dispatch-owner-retired owner) t)
+    (tts--finish-dispatch-lifecycle
+     (tts--dispatch-owner-process owner) (tts--dispatch-owner-id owner)
+     (or status 'failed))
+    (tts--dispatch-discard-notifications owner)
+    (tts--dispatch-release owner)))
+
+(defun tts--dispatch-schedule-drain (process)
+  "Arrange one asynchronous notification drain for PROCESS."
+  (when (and (process-get process 'tts--dispatch-notifications)
+             (not (process-get process 'tts--dispatch-notification-timer)))
+    (process-put process 'tts--dispatch-notification-timer
+                 (run-at-time 0.01 nil #'tts--dispatch-drain process))))
+
+(defun tts--dispatch-enqueue (owner function arguments &optional terminal)
+  "Queue FUNCTION with ARGUMENTS for OWNER, reserving TERMINAL separately."
+  (let* ((process (tts--dispatch-owner-process owner))
+         (print-circle t) (print-length nil) (print-level nil)
+         (bytes (if terminal 0 (string-bytes (prin1-to-string arguments))))
+         (used (or (process-get process 'tts--dispatch-notification-bytes) 0))
+         (count (or (process-get process 'tts--dispatch-notification-count) 0)))
+    (if (and (not terminal)
+             (or (>= count tts--dispatch-notification-limit)
+                 (> (+ used bytes) tts--dispatch-notification-byte-limit)))
+        (progn
+          (tts--dispatch-discard-notifications owner)
+          (setf (tts--dispatch-owner-terminal owner) 'failed
+                (tts--dispatch-owner-tracking-failed owner) t)
+          (process-put process 'tts--dispatch-tracking-error
+                       (list :reason 'notification-overflow :dispatch-id (tts--dispatch-owner-id owner)))
+          (tts--finish-dispatch-lifecycle process (tts--dispatch-owner-id owner) 'failed)
+          (tts--dispatch-enqueue owner nil nil t)
+          nil)
+      (let ((cell (list (vector owner function
+                                (tts--dispatch-copy-data arguments) bytes terminal))))
+        (if-let* ((tail (process-get process 'tts--dispatch-notification-tail)))
+            (setcdr tail cell)
+          (process-put process 'tts--dispatch-notifications cell))
+        (process-put process 'tts--dispatch-notification-tail cell)
+        (process-put process 'tts--dispatch-notification-bytes (+ used bytes))
+        (process-put process 'tts--dispatch-notification-count (1+ count)))
+      (when (tts--dispatch-owner-published owner)
+        (tts--dispatch-schedule-drain process))
+      t)))
+
+(defun tts--dispatch-drain (process)
+  "Deliver ready PROCESS notifications outside submission and filter stacks."
+  (when-let* ((timer (process-get process 'tts--dispatch-notification-timer)))
+    (cancel-timer timer))
+  (process-put process 'tts--dispatch-notification-timer nil)
+  (if (or (> tts--dispatch-call-depth 0) (> emacsvox-aural--submission-depth 0)
+          emacsvox-aural--delivery-transaction-active-p tts--dispatch-drain-active
+          (> tts--input-drain-depth 0)
+          (process-get process 'tts--input-draining)
+          (process-get process 'omnivox--input-draining))
+      (tts--dispatch-schedule-drain process)
+    (let ((tts--dispatch-drain-active t) waiting)
+      (unwind-protect
+          (while (and (not waiting) (process-get process 'tts--dispatch-notifications))
+            (let* ((queue (process-get process 'tts--dispatch-notifications))
+                   (item (car queue)) (owner (aref item 0)))
+              (cond
+               ((and (not (tts--dispatch-owner-retired owner))
+                     (not (tts--dispatch-owner-published owner)))
+                (setq waiting t))
+               (t
+                (process-put process 'tts--dispatch-notifications (cdr queue))
+                (unless (cdr queue)
+                  (process-put process 'tts--dispatch-notification-tail nil))
+                (process-put process 'tts--dispatch-notification-count
+                             (1- (process-get process 'tts--dispatch-notification-count)))
+                (process-put process 'tts--dispatch-notification-bytes
+                             (- (process-get process 'tts--dispatch-notification-bytes)
+                                (aref item 3)))
+                (unless (and (equal (tts--dispatch-owner-generation owner)
+                                    (process-get process 'tts--speech-process-generation))
+                             (equal (tts--dispatch-owner-epoch owner)
+                                    (or (process-get process 'tts--dispatch-cancellation-epoch) 0)))
+                  (tts--dispatch-abandon owner 'cancelled))
+                (unless (tts--dispatch-owner-retired owner)
+                  (if (aref item 4)
+                      (progn
+                        (tts--dispatch-release owner)
+                        (when-let* ((callback (tts--dispatch-owner-completion owner)))
+                          (tts--call-tracked-dispatch-callback
+                           callback (tts--dispatch-owner-id owner)
+                           (tts--dispatch-owner-terminal owner))))
+                    (condition-case error-data
+                        (apply #'emacsvox-aural--call-independent-callback
+                               (aref item 1) (aref item 2))
+                      (error (message "Marker speech callback failed: %s"
+                                      (error-message-string error-data))))))))))
+        (unless waiting (tts--dispatch-schedule-drain process))))))
+
+(defun tts--dispatch-publish (owner)
+  "Publish successfully written OWNER without reopening terminal tracking."
+  (let ((process (tts--dispatch-owner-process owner)))
+    (when (and (eq (tts--dispatch-owner-state owner) 'sent)
+               (not (tts--dispatch-owner-retired owner))
+               (not (tts--dispatch-owner-tracking-failed owner))
+               (process-live-p process)
+               (equal (tts--dispatch-owner-epoch owner)
+                      (or (process-get process 'tts--dispatch-cancellation-epoch) 0)))
+      (setf (tts--dispatch-owner-published owner) t)
+      (when emacsvox-aural--submission-failure-cleanups
+        (push (lambda () (tts--dispatch-abandon owner))
+              (cdr emacsvox-aural--submission-failure-cleanups)))
+      (tts--dispatch-schedule-drain process)
+      t)))
+
+(defun tts--dispatch-write-packet (process command owners)
+  "Arm OWNERS and send COMMAND to PROCESS once, retaining the write outcome."
+  (let ((tts--dispatch-call-depth (1+ tts--dispatch-call-depth))
+        complete)
+    (unwind-protect
+        (progn
+          (dolist (owner owners) (tts--dispatch-arm owner))
+          (process-send-string process command)
+          (setq complete t)
+          (dolist (owner owners)
+            (setf (tts--dispatch-owner-state owner) 'sent
+                  (tts--dispatch-owner-write-ended-at owner) (float-time))
+            (tts--diagnostic-log-dispatch-event
+             'dispatch-sent :submission-id (tts--dispatch-owner-submission-id owner)
+             :dispatch-id (tts--dispatch-owner-id owner)
+             :process-name (process-name process)
+             :process-generation (tts--dispatch-owner-generation owner)
+             :write-started-at (tts--dispatch-owner-write-started-at owner)
+             :write-ended-at (tts--dispatch-owner-write-ended-at owner)
+             :server-program tts-program)))
+      (unless complete
+        (dolist (owner owners) (tts--dispatch-abandon owner))))))
+
+(defun tts--dispatch-command (owner command)
+  "Capture OWNER and COMMAND or send and publish them directly."
+  (if emacsvox-aural--delivery-transaction-active-p
+      (progn
+        (push (emacsvox-aural--make-delivery-entry
+               :process (tts--dispatch-owner-process owner)
+               :command command :owners (list owner))
+              emacsvox-aural--delivery-transaction-entries)
+        (tts--dispatch-owner-id owner))
+    (unwind-protect
+        (progn
+          (tts--dispatch-write-packet
+           (tts--dispatch-owner-process owner) command (list owner))
+          (when (tts--dispatch-publish owner) (tts--dispatch-owner-id owner)))
+      (unless (tts--dispatch-owner-published owner)
+        (tts--dispatch-abandon owner)))))
 
 (defun tts--diagnostic-log-dispatch-event (event &rest fields)
   "Append diagnostic dispatch EVENT and FIELDS when logging is available."
@@ -340,7 +619,36 @@ not proof that audio reached a physical output device."
      "Speech server `%s' does not support marker-aware playback"
      (file-name-nondirectory (or tts-program "unset")))))
 
+(defun tts--dispatch-observing-p (owner)
+  "Return non-nil while OWNER can accept new playback evidence."
+  (let ((process (tts--dispatch-owner-process owner)))
+    (and (not (tts--dispatch-owner-retired owner))
+         (not (tts--dispatch-owner-terminal owner))
+         (process-live-p process)
+         (not (process-get process 'tts--speech-process-retiring))
+         (equal (tts--dispatch-owner-generation owner)
+                (process-get process 'tts--speech-process-generation))
+         (equal (tts--dispatch-owner-epoch owner)
+                (or (process-get process 'tts--dispatch-cancellation-epoch) 0)))))
+
 (defun tts--complete-tracked-dispatch (process line)
+  "Handle terminal LINE from PROCESS, retaining early owned completion."
+  (if (string-match
+       (concat "\\`" (regexp-quote tts--tracked-status-prefix)
+               " \\([[:digit:]]+\\) \\(completed\\|cancelled\\|failed\\)\\'") line)
+      (let* ((id (string-to-number (match-string 1 line)))
+             (status (intern (match-string 2 line)))
+             (owner (tts--dispatch-owner-for process id)))
+        (if (not owner)
+            (tts--complete-legacy-tracked-dispatch process line)
+          (when (tts--dispatch-observing-p owner)
+            (setf (tts--dispatch-owner-terminal owner) status)
+            (tts--finish-dispatch-lifecycle process id status)
+            (tts--dispatch-enqueue owner nil nil t)))
+        t)
+    nil))
+
+(defun tts--complete-legacy-tracked-dispatch (process line)
   "Handle tracked status LINE from PROCESS.
 Return non-nil when LINE is a tracked status record."
   (when
@@ -366,12 +674,48 @@ Return non-nil when LINE is a tracked status record."
 (defun tts--call-tracked-dispatch-callback (callback identifier status)
   "Call tracked CALLBACK for IDENTIFIER with terminal STATUS safely."
   (condition-case error-data
-      (funcall callback identifier status)
+      (emacsvox-aural--call-independent-callback
+       callback identifier status)
     (error
      (message "Tracked speech callback failed: %s"
               (error-message-string error-data)))))
 
-(defun tts--dispatch-playback-marker-event (process event)
+(defun tts--dispatch-playback-marker-event (process event &optional observer)
+  "Observe owned PROCESS EVENT immediately and deliver callbacks asynchronously."
+  (let* ((id (plist-get event :dispatch_id))
+         (owner (and (integerp id) (tts--dispatch-owner-for process id))))
+    (if (not owner)
+        (unless (process-get process 'tts--owns-playback-events)
+          (when observer (funcall observer nil))
+          (tts--dispatch-legacy-playback-marker-event process event))
+      (let ((entry (gethash id tts--marker-dispatches))
+            (sequence (plist-get event :sequence)))
+        (when (and (tts--dispatch-observing-p owner) (integerp sequence)
+                   (> sequence (tts--marker-dispatch-last-sequence entry)))
+          (unless (= sequence (1+ (tts--marker-dispatch-last-sequence entry)))
+            (process-put process 'tts--marker-sequence-gap
+                         (list :dispatch-id id
+                               :previous (tts--marker-dispatch-last-sequence entry)
+                               :received sequence))
+            (tts--dispatch-enqueue
+             owner #'message
+             (list "Marker dispatch %d skipped from sequence %d to %d"
+                   id (tts--marker-dispatch-last-sequence entry) sequence)))
+          (setf (tts--marker-dispatch-last-sequence entry) sequence)
+          (tts--observe-dispatch-source process id event)
+          (when (and observer (tts--dispatch-observing-p owner))
+            (funcall observer owner))
+          (when-let* (((tts--dispatch-observing-p owner))
+                      (callback (tts--dispatch-owner-marker owner)))
+            (let* ((action (plist-get event :action_id))
+                   (semantic (and action (alist-get action (tts--dispatch-owner-semantics owner)
+                                                    nil nil #'equal)))
+                   (delivered (if semantic (plist-put (copy-sequence event) :semantic_value semantic)
+                                event)))
+              (tts--dispatch-enqueue owner callback (list id delivered))))
+          t)))))
+
+(defun tts--dispatch-legacy-playback-marker-event (process event)
   "Deliver decoded marker EVENT owned by PROCESS.
 Return non-nil when EVENT belongs to a live marker dispatch."
   (let* ((identifier (plist-get event :dispatch_id))
@@ -416,19 +760,46 @@ Return non-nil when EVENT belongs to a live marker dispatch."
                   (error-message-string error-data))))
       t)))
 
+(defun tts--consume-process-lines (process output fragment busy handler limit)
+  "Drain PROCESS OUTPUT through HANDLER using FRAGMENT and BUSY properties.
+Retain at most LIMIT bytes between calls; nested input follows existing input."
+  (let ((pending (concat (or (process-get process fragment) "") output)))
+    (when (> (string-bytes pending) (* 16 1024 1024))
+      (process-put process fragment "")
+      (tts--cancel-process-tracked-dispatches process 'failed)
+      (error "Speech process input queue exceeded its bound"))
+    (process-put process fragment pending))
+  (unless (process-get process busy)
+    (let ((tts--input-drain-depth (1+ tts--input-drain-depth)) complete)
+      (process-put process busy t)
+      (unwind-protect
+          (progn
+            (while (string-search "\n" (or (process-get process fragment) ""))
+              (let* ((pending (process-get process fragment))
+                     (end (string-search "\n" pending))
+                     (line (string-trim-right (substring pending 0 end) "\r")))
+                ;; Consume before invoking a callback that can accept more input.
+                (process-put process fragment (substring pending (1+ end)))
+                (if (> (string-bytes line) limit)
+                    (error "Speech process output line exceeded its bound")
+                  (funcall handler process line))))
+            (when (> (string-bytes (or (process-get process fragment) "")) limit)
+              (process-put process fragment "")
+              (error "Speech process output fragment exceeded its bound"))
+            (setq complete t))
+        (process-put process busy nil)
+        (when (and (not complete) (string-search "\n" (or (process-get process fragment) "")))
+          (run-at-time 0.01 nil #'tts--consume-process-lines
+                       process "" fragment busy handler limit))))))
+
 (defun tts--speaker-process-filter (process output)
   "Recognize tracked completion records in PROCESS OUTPUT."
-  (let ((pending
-         (concat
-          (or (process-get process tts--tracked-fragment-property) "")
-          output))
-        line-end)
-    (while (setq line-end (string-search "\n" pending))
-      (let ((line (string-trim-right (substring pending 0 line-end) "\r")))
-        (unless (tts--complete-tracked-dispatch process line)
-          (tts--forward-untracked-output process (concat line "\n"))))
-      (setq pending (substring pending (1+ line-end))))
-    (process-put process tts--tracked-fragment-property pending)))
+  (tts--consume-process-lines
+   process output tts--tracked-fragment-property 'tts--input-draining
+   (lambda (owner line)
+     (unless (tts--complete-tracked-dispatch owner line)
+       (tts--forward-untracked-output owner (concat line "\n"))))
+   (* 4 1024 1024)))
 
 (defun tts--ensure-tracked-process-filter (process)
   "Install tracked completion filtering on PROCESS."
@@ -439,6 +810,9 @@ Return non-nil when EVENT belongs to a live marker dispatch."
 
 (defun tts-cancel-tracked-dispatch (identifier)
   "Forget tracked speech dispatch IDENTIFIER."
+  (when-let* ((entry (gethash identifier tts--marker-dispatches))
+              (owner (tts--marker-dispatch-owner entry)))
+    (tts--dispatch-abandon owner 'cancelled))
   (when-let* ((lifecycle (gethash identifier tts--dispatch-lifecycles)))
     (tts--finish-dispatch-lifecycle
      (tts--dispatch-lifecycle-process lifecycle) identifier 'cancelled))
@@ -452,22 +826,28 @@ Entries are removed before callbacks run, so reentrant stop and server output
 cannot deliver a second terminal result."
   (unless (memq status '(completed cancelled failed))
     (error "Invalid tracked dispatch terminal status: %S" status))
+  (when (processp process)
+    (process-put process 'tts--dispatch-cancellation-epoch
+                 (1+ (or (process-get process 'tts--dispatch-cancellation-epoch) 0))))
   (let (entries marker-identifiers lifecycle-identifiers)
     (maphash
      (lambda (identifier entry)
        (when (eq process (car entry))
-         (push (cons identifier (cdr entry)) entries)))
+         (let ((owner (tts--dispatch-owner-for process identifier)))
+           (when (or (not owner) (tts--dispatch-owner-published owner))
+             (push (cons identifier (cdr entry)) entries)))))
      tts--tracked-dispatches)
-    (dolist (entry entries)
-      (remhash (car entry) tts--tracked-dispatches)
-      (remhash (car entry) tts--marker-dispatches))
     (maphash
      (lambda (identifier entry)
        (when (eq process (tts--marker-dispatch-process entry))
          (push identifier marker-identifiers)))
      tts--marker-dispatches)
     (dolist (identifier marker-identifiers)
+      (when-let* ((owner (tts--dispatch-owner-for process identifier)))
+        (tts--dispatch-abandon owner status))
       (remhash identifier tts--marker-dispatches))
+    (dolist (entry entries)
+      (remhash (car entry) tts--tracked-dispatches))
     (maphash
      (lambda (identifier lifecycle)
        (when (eq process (tts--dispatch-lifecycle-process lifecycle))
@@ -525,7 +905,8 @@ cannot deliver a second terminal result."
           (setq tts-notify-process nil))
         (when current
           (condition-case error-data
-              (run-hook-with-args 'tts-stopped-hook process)
+              (emacsvox-aural--call-independent-callback
+               #'run-hook-with-args 'tts-stopped-hook process)
             (error
              (message "Speech stopped hook failed: %s"
                       (error-message-string error-data)))))
@@ -559,11 +940,15 @@ urgent policies cancel different scopes."
   ;; call `tts-stop', so do not enter the same hook again for that owner.
   (unless (and (processp process)
                (process-get process tts--speech-process-retiring-property))
+    (when (processp process)
+      (process-put process 'tts--dispatch-cancellation-epoch
+                   (1+ (or (process-get process 'tts--dispatch-cancellation-epoch) 0))))
     (unwind-protect
         (when (process-live-p process)
           (emacsvox-aural-delivery-send process "s\n" 'stop))
       (tts--cancel-process-tracked-dispatches process 'cancelled))
-    (run-hook-with-args 'tts-stopped-hook process)))
+    (emacsvox-aural--call-independent-callback
+     #'run-hook-with-args 'tts-stopped-hook process)))
 
 (defun tts--retire-process (process)
   "Cancel state owned by PROCESS, stop it, and delete it.
@@ -598,8 +983,8 @@ the same owner is harmless."
                          #'emacsvox-aural-delivery-send process "s\n" 'stop))
               (attempt "tracked callbacks"
                        #'tts--cancel-process-tracked-dispatches process 'cancelled)
-              (run-hook-wrapped
-               'tts-stopped-hook
+              (emacsvox-aural--call-independent-callback
+               #'run-hook-wrapped 'tts-stopped-hook
                (lambda (function owner)
                  (attempt
                   (if (symbolp function)
@@ -622,28 +1007,9 @@ or `failed'.  Return the identifier allocated to this dispatch."
     (signal 'wrong-type-argument (list 'functionp callback)))
   (tts--require-tracked-playback-completion)
   (tts--ensure-tracked-process-filter tts-speaker-process)
-  (let ((identifier (cl-incf tts--tracked-dispatch-sequence))
-        (process tts-speaker-process)
-        (submission-id
-         (and
-          (boundp 'emacsvox-aural--current-submission-id)
-          emacsvox-aural--current-submission-id)))
-    (condition-case error-data
-        (progn
-          (emacsvox-aural-delivery-send
-           process
-           (format "emacsvox_tracked_dispatch %d\n" identifier))
-          (emacsvox-aural--defer-delivery-effect
-           (lambda ()
-             (puthash
-              identifier (cons process callback)
-              tts--tracked-dispatches)
-             (tts--register-dispatch-lifecycle
-              identifier process submission-id))))
-      (error
-       (tts-cancel-tracked-dispatch identifier)
-       (signal (car error-data) (cdr error-data))))
-    identifier))
+  (let ((owner (tts--dispatch-new-owner nil callback nil)))
+    (tts--dispatch-command
+     owner (format "emacsvox_tracked_dispatch %d\n" (tts--dispatch-owner-id owner)))))
 
 (defun tts--protocol-dispatch-marked (marker-callback completion-callback)
   "Dispatch queued speech with marker and terminal callbacks.
@@ -656,37 +1022,13 @@ COMPLETION-CALLBACK receives the identifier and terminal status."
   (tts--require-marker-playback-events)
   (tts--require-tracked-playback-completion)
   (tts--ensure-tracked-process-filter tts-speaker-process)
-  (let ((identifier (cl-incf tts--tracked-dispatch-sequence))
-        (process tts-speaker-process)
-        (submission-id
-         (and
-          (boundp 'emacsvox-aural--current-submission-id)
-          emacsvox-aural--current-submission-id)))
-    (condition-case error-data
-        (progn
-          (emacsvox-aural-delivery-send
-           process
-           (format "emacsvox_marker_dispatch %d\n" identifier))
-          (emacsvox-aural--defer-delivery-effect
-           (lambda ()
-             (puthash
-              identifier (cons process completion-callback)
-              tts--tracked-dispatches)
-             (puthash
-              identifier
-              (tts--marker-dispatch-create
-               :process process :callback marker-callback)
-              tts--marker-dispatches)
-             (tts--register-dispatch-lifecycle
-              identifier process submission-id))))
-      (error
-       (tts-cancel-tracked-dispatch identifier)
-       (signal (car error-data) (cdr error-data))))
-    identifier))
+  (let ((owner (tts--dispatch-new-owner marker-callback completion-callback nil)))
+    (tts--dispatch-command
+     owner (format "emacsvox_marker_dispatch %d\n" (tts--dispatch-owner-id owner)))))
 
 (defun tts--prepare-structured-dispatch
     (marker-callback completion-callback semantic-actions)
-  "Allocate a structured dispatch and return its ID plus registration effect.
+  "Return a structured dispatch ID, publication function and inactive owner.
 
 SEMANTIC-ACTIONS maps opaque wire IDs to richer client values.  The returned
 effect must run only after the complete timeline command has been sent."
@@ -697,29 +1039,9 @@ effect must run only after the complete timeline command has been sent."
   (tts--require-tracked-playback-completion)
   (when marker-callback (tts--require-marker-playback-events))
   (tts--ensure-tracked-process-filter tts-speaker-process)
-  (let ((identifier (cl-incf tts--tracked-dispatch-sequence))
-        (process tts-speaker-process)
-        (submission-id
-         (and
-          (boundp 'emacsvox-aural--current-submission-id)
-          emacsvox-aural--current-submission-id)))
-    (cons
-     identifier
-     (lambda ()
-       (when completion-callback
-         (puthash
-          identifier (cons process completion-callback)
-          tts--tracked-dispatches))
-       (when marker-callback
-         (puthash
-          identifier
-          (tts--marker-dispatch-create
-           :process process
-           :callback marker-callback
-           :semantic-actions (copy-tree semantic-actions))
-          tts--marker-dispatches))
-       (tts--register-dispatch-lifecycle
-        identifier process submission-id)))))
+  (let ((owner (tts--dispatch-new-owner marker-callback completion-callback semantic-actions)))
+    (list (tts--dispatch-owner-id owner)
+          (lambda () (tts--dispatch-publish owner)) owner)))
 
 ;;;;  say
 

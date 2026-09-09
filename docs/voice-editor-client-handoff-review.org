@@ -4,9 +4,12 @@
 
 * Status and next reasoning level
 
-The maintainer resumed at XHI. The review is complete; stop for High before
-implementing the lifecycle contract below. No further product decision or Max
-review is needed. The probes characterize existing behavior; the fix is pending.
+The review is complete and the maintainer resumed implementation at High.
+The first lifecycle slice now arms dispatch ownership before writing and defers
+server callbacks until submission returns. The probes below describe the reviewed
+baseline; passing regression tests cover the new behavior. Frozen registration
+provenance, timeline-4 projection and strict marker-3 readback remain next.
+No further product decision or Max review is needed.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Ordinary
@@ -179,8 +182,10 @@ delayed dispatch queue: it could otherwise cancel a newer reading session on
 the same process. Unpublished dispatch callbacks remain suppressed. When a
 local cancellation callback or lifecycle hook runs within a submission, use a
 private independent callback context for any speech it initiates: fresh capture
-lists, history and source-policy bindings, with the callback's process/lane
-scope explicitly retained. Keep the outer depth guard active so server events
+lists, history and source-policy bindings. Preserve the ambient speech-process
+handle and derive the fresh lane from it; pass the event owner as callback data.
+Do not temporarily bind that handle to the event emitter: doing so would lose
+a replacement process installed by a recovery hook when the binding unwinds. Keep the outer depth guard active so server events
 still cannot drain there. Resetting only the delivery flag is insufficient.
 Preserve synchronous local retirement tests alongside the new deferred server
 callback tests; this is not a wholesale asynchronous rewrite of TTS hooks.
@@ -354,8 +359,8 @@ They justify the reviewed contract and provide reproducible starting cases.
 
 The selected design preserves the accepted ownership, precedence, wire and
 no-replay decisions. No public command, storage schema, server protocol or
-dependency decision needs reopening. Runtime implementation remains pending;
-resume its first slice at High.
+dependency decision needs reopening. The lifecycle slice is implemented;
+continue frozen provenance and layered transport at High.
 
 * Validation of this review
 
@@ -371,3 +376,32 @@ the fixture dependency resolved it without changing application or test code.
 This slice changes a design record, plans and a standalone diagnostic only.
 No production Lisp or Omnivox runtime fix is claimed by these passing baseline
 checks. Implementation must add the future behavior tests listed above.
+
+* Lifecycle implementation at High
+
+The new private dispatch owner is reserved during preparation and armed after
+intentional interruption, immediately before the packet write. Early source and
+terminal records are retained; successful delivery effects finish before callback
+publication. Deferred notifications cannot drain inside submission, input or
+notification stacks. Local stop/retirement keeps its synchronous ordering and
+invalidates held tickets before external callbacks. History/effect errors, quit,
+write failure and cancellation release ownership without replay.
+
+Both filters consume the current line before dispatching it and preserve
+reentrant input order. Ordinary callback-free speech now has an observation
+owner. Existing marker-2 route hooks are deferred and late retired events cannot
+relabel routes. Process-generation/epoch checks guard queued notifications;
+sequence-gap diagnostics are retained. Frozen registry/span provenance and
+marker-3 choice correlation are intentionally still pending.
+
+The new =tts-dispatch-handoff-tests= exercise substituted writes on isolated
+pipe processes, including the real tracked-reader consumer. These checks do not
+establish audible acceptance or change the installed Omnivox runtime.
+
+Validation: all 453 selected source tests pass, including 24 new handoff tests.
+=make bytecode-rebuild=, the final incremental =make bytecode= and
+=make compiled-aural-test= pass with Emacs 31.0.90. The compiled gate includes
+the handoff tests and checks that the ownership/filter functions came from its
+isolated compiled tree. =make docs-release-check= (including version and byte-code
+preflight), =make headers-check= and =git diff --check= pass. Optional-package
+compiler warnings remain; no live Emacs restart or server installation was done.

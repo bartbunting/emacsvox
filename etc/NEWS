@@ -10,6 +10,13 @@ Maintained by Emacsvox Contributors.
 
 Released notes are preserved in [[file:NEWS-2026.9.4][NEWS for Emacsvox 2026.9.4]].
 
+** Tracked speech handles early playback replies
+
+Tracked reading now retains playback completion received while a speech request
+is still being written. Stopping speech cancels pending callbacks, and failed
+submissions cannot restore cancelled tracking or replay the request. Speech
+started by playback callbacks gets its own submission.
+
 ** Voice editor gives spoken adjustment feedback
 
 Automatic samples now start with the new adjustment value. Numeric controls

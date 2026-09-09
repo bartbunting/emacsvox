@@ -45,6 +45,12 @@
 (defvar emacsvox-aural-submission-context nil
   "Dynamically bound source context for the current speech submission.")
 
+(defvar emacsvox-aural--submission-depth 0
+  "Dynamic submission depth guarding deferred playback callbacks.")
+
+(defvar emacsvox-aural--submission-failure-cleanups nil
+  "Shared cleanup cell for dispatches in the current submission call.")
+
 (defvar emacsvox-aural-submission-facts nil
   "Dynamically bound semantic facts for the current speech submission.")
 
@@ -233,7 +239,11 @@ delivery; the default key is `speaker'.  INTERRUPTION-POLICY is `none' or
 `lane'; main-lane navigation defaults to `lane'.  An enclosing submission
 remains authoritative so nested compatibility helpers cannot replace more
 specific presentation or delivery intent."
-  (let* ((effective-facts
+  (let* ((outermost (null emacsvox-aural--submission-failure-cleanups))
+         (emacsvox-aural--submission-failure-cleanups
+          (or emacsvox-aural--submission-failure-cleanups (list nil)))
+         (emacsvox-aural--submission-depth (1+ emacsvox-aural--submission-depth))
+         (effective-facts
           (or emacsvox-aural-submission-facts facts))
          (effective-module
           (or emacsvox-aural-submission-module module))
@@ -281,7 +291,13 @@ specific presentation or delivery intent."
     (emacsvox-aural--validate-delivery
      effective-lane effective-delivery-policy effective-replacement-key
      effective-interruption-policy)
-    (apply function arguments)))
+    (let (complete)
+      (unwind-protect
+          (prog1 (apply function arguments) (setq complete t))
+        (when (and outermost (not complete))
+          (let ((inhibit-quit t))
+            (dolist (cleanup (cdr emacsvox-aural--submission-failure-cleanups))
+              (funcall cleanup))))))))
 
 (defun emacsvox-aural-face-names (value)
   "Return ordered named faces explicitly represented by face VALUE.

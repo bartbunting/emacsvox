@@ -2699,6 +2699,7 @@ write.  State synchronization lines in a combined write are ignored."
               (and
                (eq property emacsvox-aural--presentation-tone-process-property)
                1)))
+           ((symbol-function 'process-put) #'ignore)
            ((symbol-function 'process-send-string)
             (lambda (process command)
               (push (list process command) writes))))

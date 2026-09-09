@@ -65,6 +65,9 @@
 (defvar tts-speaker-process)
 (defvar tts--marker-event-function)
 (defvar tts--tracked-completion-function)
+(defvar tts-notify-process)
+(defvar emacsvox-aural--current-submission-id)
+(defvar emacsvox-aural--presented-plan-collector)
 
 (defvar emacsvox-aural--queued-run-leading-pause nil
   "Leading pause retained while queueing one concrete formatting run.")
@@ -73,7 +76,7 @@
     (emacsvox-aural--delivery-entry
      (:constructor emacsvox-aural--make-delivery-entry))
   "One server command captured inside a complete delivery transaction."
-  process command kind)
+  process command kind owners)
 
 (cl-defstruct
     (emacsvox-aural--pending-delivery
@@ -97,6 +100,15 @@ delay.  Ordered and urgent transactions are never delayed."
 
 (defvar emacsvox-aural--delivery-transaction-effects nil
   "Reverse-ordered effects committed after the current transaction is sent.")
+
+(defvar emacsvox-aural--delivery-dispatch-owners nil
+  "Inactive or armed dispatch owners captured by the current transaction.")
+
+(declare-function tts--dispatch-write-packet "tts-speak" (process command owners))
+(declare-function tts--dispatch-abandon "tts-speak" (owner &optional status))
+(declare-function tts--dispatch-owner-id "tts-speak" (owner))
+(declare-function tts--dispatch-owner-published "tts-speak" (owner))
+(declare-function tts--dispatch-publish "tts-speak" (owner))
 
 (defvar emacsvox-aural--delivery-timeline-runs nil
   "Reverse-ordered concrete runs captured for structured delivery.")
@@ -188,6 +200,37 @@ Each function receives the failure plist stored in
 
 (defconst emacsvox-aural--timeline-speech-window-words 15
   "Maximum words synthesized in one prepared Omnivox speech window.")
+
+(defun emacsvox-aural--call-independent-callback (function &rest arguments)
+  "Call FUNCTION with ARGUMENTS in fresh capture state.
+Preserve the ambient speech process, including replacements made by FUNCTION."
+  (let ((tts--marker-event-function nil)
+        (tts--tracked-completion-function nil)
+        (emacsvox-aural--delivery-transaction-active-p nil)
+        (emacsvox-aural--delivery-transaction-entries nil)
+        (emacsvox-aural--delivery-transaction-effects nil)
+        (emacsvox-aural--delivery-dispatch-owners nil)
+        (emacsvox-aural--submission-failure-cleanups nil)
+        (emacsvox-aural--delivery-timeline-runs nil)
+        (emacsvox-aural--delivery-entry-kind nil)
+        (emacsvox-aural--structured-runs-recorded-p nil)
+        (emacsvox-aural--history-transaction-id nil)
+        (emacsvox-aural--history-transaction-runs nil)
+        (emacsvox-aural--delivery-history-registrar nil)
+        (emacsvox-aural--current-submission-id nil)
+        (emacsvox-aural--presented-plan-collector nil)
+        (emacsvox-aural-submission-context nil)
+        (emacsvox-aural-submission-facts nil)
+        (emacsvox-aural-submission-module nil)
+        (emacsvox-aural-submission-occasion nil)
+        (emacsvox-aural-submission-lane
+         (if (and tts-speaker-process (eq tts-speaker-process tts-notify-process))
+             'notification 'main))
+        (emacsvox-aural-submission-delivery-policy nil)
+        (emacsvox-aural-submission-replacement-key nil)
+        (emacsvox-aural-submission-interruption-policy nil)
+        (emacsvox-aural-submission-controls-interruption nil))
+    (apply function arguments)))
 
 (defun emacsvox-aural-enable-framed-delivery (process)
   "Enable complete replaceable transaction framing for PROCESS."
@@ -332,6 +375,9 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
         (list
          (emacsvox-aural--make-delivery-entry
           :process owner
+          :owners (delete-dups
+                   (apply #'append
+                          (mapcar #'emacsvox-aural--delivery-entry-owners entries)))
           :command
           (format "emacsvox_tx %d {%s}\n" generation encoded))))
     entries))
@@ -367,8 +413,8 @@ one was signalled."
           (and error-data (error-message-string error-data)))))
     (setq emacsvox-aural-last-delivery-failure failure)
     (condition-case hook-error
-        (run-hook-with-args
-         'emacsvox-aural-delivery-failed-hook failure)
+        (emacsvox-aural--call-independent-callback
+         #'run-hook-with-args 'emacsvox-aural-delivery-failed-hook failure)
       (error
        (message
         "Emacsvox delivery failure hook failed: %s"
@@ -389,35 +435,41 @@ Return non-nil when every entry was sent to a live process."
    (emacsvox-aural--framed-delivery-entries
     owner generation entries))
   (let ((sent t)
-        current-process commands)
+        current-process commands dispatch-owners)
     (cl-labels
         ((flush
-          ()
-          (when (and sent current-process)
-            (if
-                (and
-                 (processp current-process)
-                 (not (process-live-p current-process)))
-                (progn
+           ()
+           (when (and sent current-process)
+             (if
+                 (and
+                  (processp current-process)
+                  (not (process-live-p current-process)))
+                 (progn
+                   (setq sent nil)
+                   (emacsvox-aural--record-delivery-failure
+                    'process-not-live current-process owner generation
+                    transaction-id))
+               (condition-case error-data
+                   (if dispatch-owners
+                       (tts--dispatch-write-packet
+                        current-process (apply #'concat (nreverse commands))
+                        (delete-dups (nreverse dispatch-owners)))
+                     (process-send-string
+                      current-process (apply #'concat (nreverse commands))))
+                 (error
                   (setq sent nil)
                   (emacsvox-aural--record-delivery-failure
-                   'process-not-live current-process owner generation
-                   transaction-id))
-              (condition-case error-data
-                  (process-send-string
-                   current-process (apply #'concat (nreverse commands)))
-                (error
-                 (setq sent nil)
-                 (emacsvox-aural--record-delivery-failure
-                  'process-send-error current-process owner generation
-                  transaction-id error-data)))))
-          (setq current-process nil commands nil)))
+                   'process-send-error current-process owner generation
+                   transaction-id error-data)))))
+           (setq current-process nil commands nil dispatch-owners nil)))
       (dolist (entry entries)
         (let ((process (emacsvox-aural--delivery-entry-process entry))
               (command (emacsvox-aural--delivery-entry-command entry)))
           (unless (eq process current-process)
             (flush)
             (setq current-process process))
+          (dolist (dispatch (emacsvox-aural--delivery-entry-owners entry))
+            (push dispatch dispatch-owners))
           (push command commands)))
       (flush))
     sent))
@@ -526,7 +578,8 @@ Return non-nil when every entry was sent to a live process."
 
 (defun emacsvox-aural--tracked-submission-p ()
   "Return non-nil when the current submission promises terminal callbacks."
-  (or tts--tracked-completion-function tts--marker-event-function))
+  (or tts--tracked-completion-function tts--marker-event-function
+      emacsvox-aural--delivery-dispatch-owners))
 
 (defun emacsvox-aural--native-replacement-delivery-p (owner entries)
   "Return non-nil when OWNER natively replaces structured ENTRIES."
@@ -629,36 +682,50 @@ OWNER so a logical transaction cannot be partially delivered across streams."
           (emacsvox-aural--delivery-transaction-entries nil)
           (emacsvox-aural--delivery-transaction-effects nil)
           (emacsvox-aural--delivery-timeline-runs nil)
+          (emacsvox-aural--delivery-dispatch-owners nil)
           result)
-      (setq result (apply function arguments))
-      (let* ((entries (nreverse emacsvox-aural--delivery-transaction-entries))
-             (effects (nreverse emacsvox-aural--delivery-transaction-effects))
-             (history-effect
-              (and
-               entries
-               (functionp emacsvox-aural--delivery-history-registrar)
-               (funcall emacsvox-aural--delivery-history-registrar)))
-             (generation (cl-incf emacsvox-aural--delivery-sequence))
-             (structured
-              (emacsvox-aural--finalize-structured-delivery
-               owner generation entries effects
-               (nreverse emacsvox-aural--delivery-timeline-runs))))
-        (setq entries (car structured)
-              effects (cadr structured))
-        (when (integerp (caddr structured))
-          (setq result (caddr structured)))
-        (when (and entries history-effect)
-          (setq effects (cons history-effect effects)))
-        (let ((outcome
-               (emacsvox-aural--submit-delivery-entries
-                owner entries effects generation)))
-          (when
-              (and
-               (integerp result)
-               (emacsvox-aural--tracked-submission-p)
-               (not (eq outcome 'sent)))
-            (setq result nil))))
-      result))))
+      (unwind-protect
+          (progn
+            (setq result (apply function arguments))
+            (let* ((entries (nreverse emacsvox-aural--delivery-transaction-entries))
+                   (effects (nreverse emacsvox-aural--delivery-transaction-effects))
+                   (history-effect
+                    (and
+                     entries
+                     (functionp emacsvox-aural--delivery-history-registrar)
+                     (funcall emacsvox-aural--delivery-history-registrar)))
+                   (generation (cl-incf emacsvox-aural--delivery-sequence))
+                   (structured
+                    (emacsvox-aural--finalize-structured-delivery
+                     owner generation entries effects
+                     (nreverse emacsvox-aural--delivery-timeline-runs))))
+              (setq entries (car structured)
+                    effects (cadr structured))
+              (when (integerp (caddr structured))
+                (setq result (caddr structured)))
+              (when (and entries history-effect)
+                (setq effects (cons history-effect effects)))
+              (let ((outcome
+                     (emacsvox-aural--submit-delivery-entries
+                      owner entries effects generation)))
+                (when (eq outcome 'sent)
+                  (dolist (dispatch emacsvox-aural--delivery-dispatch-owners)
+                    (tts--dispatch-publish dispatch)))
+                (when
+                    (and
+                     (integerp result)
+                     (emacsvox-aural--tracked-submission-p)
+                     (not (eq outcome 'sent)))
+                  (setq result nil))))
+            (when (cl-some (lambda (dispatch)
+                             (and (eql result (tts--dispatch-owner-id dispatch))
+                                  (not (tts--dispatch-owner-published dispatch))))
+                           emacsvox-aural--delivery-dispatch-owners)
+              (setq result nil))
+            result)
+        (dolist (dispatch emacsvox-aural--delivery-dispatch-owners)
+          (unless (tts--dispatch-owner-published dispatch)
+            (tts--dispatch-abandon dispatch))))))))
 
 (defun emacsvox-aural--structured-capture-p ()
   "Return non-nil when the current transaction can carry a timeline."
@@ -1530,9 +1597,10 @@ the authoritative check after punctuation and split-cap preprocessing."
             (mapcar
              (lambda (command)
                (emacsvox-aural--make-delivery-entry
-                :process owner :kind 'structured :command command))
+                :process owner :kind 'structured :command command
+                :owners (list (nth 2 registration))))
              (emacsvox-aural--frame-structured-timeline envelope)))
-           (append effects (list (cdr registration)))
+           effects
            actual-id))))))
 
 (defun emacsvox-aural-queue-concrete-action (action &optional context)

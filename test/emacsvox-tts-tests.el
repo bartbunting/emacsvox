@@ -1815,28 +1815,19 @@
 
 (ert-deftest emacsvox-tts-protocol-dispatches-tracked-speech ()
   "Tracked speech uses the supported playback command and returns its token."
-  (let ((tts--tracked-dispatch-sequence 40)
-        (tts-program "windows-outloud")
-        identifier
-        writes)
+  (let* ((process (make-pipe-process :name "tracked-protocol" :noquery t))
+         (tts-speaker-process process)
+         (tts--tracked-dispatch-sequence 40)
+         (tts-program "windows-outloud")
+         identifier writes)
     (unwind-protect
-        (cl-letf
-            (((symbol-function 'tts--ensure-tracked-process-filter)
-              #'ignore))
-          (setq
-           writes
-           (emacsvox-test--tts-capture-protocol
-            (lambda ()
-              (setq
-               identifier
-               (tts--protocol-dispatch-tracked #'ignore)))))
+        (cl-letf (((symbol-function 'process-send-string)
+                   (lambda (owner command) (push (list owner command) writes))))
+          (setq identifier (tts--protocol-dispatch-tracked #'ignore))
           (should (= identifier 41))
-          (should
-           (equal
-            writes
-            '((speaker
-               "emacsvox_tracked_dispatch 41\n")))))
-      (tts-cancel-tracked-dispatch identifier))))
+          (should (equal writes (list (list process "emacsvox_tracked_dispatch 41\n")))))
+      (when identifier (tts-cancel-tracked-dispatch identifier))
+      (delete-process process))))
 
 (ert-deftest emacsvox-tts-tracked-direct-write-failure-does-not-register ()
   "A synchronous write failure leaves no tracked callback ownership behind."
@@ -1854,7 +1845,7 @@
           (process-put process tts--tracked-playback-completion-property t)
           (cl-letf
               (((symbol-function 'tts--ensure-tracked-process-filter) #'ignore)
-               ((symbol-function 'emacsvox-aural-delivery-send)
+               ((symbol-function 'process-send-string)
                 (lambda (&rest _arguments)
                   (error "simulated tracked write failure"))))
             (should-error
@@ -1886,7 +1877,7 @@
           (cl-letf
               (((symbol-function 'tts--ensure-tracked-process-filter)
                 #'ignore)
-               ((symbol-function 'emacsvox-aural-delivery-send)
+               ((symbol-function 'process-send-string)
                 (lambda (_process command &optional _kind)
                   (push command writes))))
             (setq

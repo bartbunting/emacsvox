@@ -341,6 +341,7 @@
                   "emacsvox-aural-voice-choice-tests.el"
                   "omnivox-choice-codec-tests.el"
                   "omnivox-choice-registration-tests.el"
+                  "tts-dispatch-handoff-tests.el"
                   "emacsvox-aural-voice-editor-tests.el"
                   "emacsvox-aural-voice-context-tests.el"
                   "emacsvox-aural-transport-tests.el"
@@ -359,6 +360,10 @@
                       emacsvox-aural--voice-style-field
                       emacsvox-aural-compile-voice-style
                       omnivox--accept-registration-response
+                      tts--dispatch-arm
+                      tts--dispatch-publish
+                      tts--dispatch-drain
+                      tts--consume-process-lines
                       omnivox--choice-patch-json
                       omnivox--portable-style-acss
                       emacsvox-aural--timeline-style-acss
@@ -389,6 +394,7 @@
                "^emacsvox-aural-voice-choice-"
                "^omnivox-choice-codec-"
                "^omnivox-choice-registration-"
+               "^tts-handoff-"
                "^emacsvox-aural-voice-editor-"
                "^emacsvox-aural-voice-context-"
                (tag voice-style-ui)

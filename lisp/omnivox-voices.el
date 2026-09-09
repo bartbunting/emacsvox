@@ -53,7 +53,7 @@
 (declare-function emacsvox-aural-effective-voice-palette
                   "emacsvox-aural-providers" ())
 (declare-function tts--dispatch-playback-marker-event
-                  "tts-speak" (process event))
+                  "tts-speak" (process event &optional observer))
 (declare-function tts-stop "tts-speak" (&optional all))
 
 (defvar emacsvox-servers-directory)
@@ -444,7 +444,21 @@ Return non-nil when LINE is a control event, including a malformed one."
         (plist-get event :dispatch_id)
         (plist-get event :utterance_id)))
 
-(defun omnivox--record-realized-route (process event)
+(declare-function tts--dispatch-enqueue "tts-speak" (owner function arguments &optional terminal))
+(declare-function tts--consume-process-lines "tts-speak" (process output fragment busy handler limit))
+
+(defun omnivox--notify-realized-route (route)
+  "Notify route observers with independent copies of ROUTE."
+  (run-hook-with-args 'omnivox-realized-route-changed-hook (copy-tree route))
+  (run-hook-with-args 'tts-realized-voice-changed-hook (copy-tree route)))
+
+(defun omnivox--queue-realized-route (owner route)
+  "Publish ROUTE hooks immediately for legacy events or defer them for OWNER."
+  (if owner
+      (tts--dispatch-enqueue owner #'omnivox--notify-realized-route (list route))
+    (omnivox--notify-realized-route route)))
+
+(defun omnivox--record-realized-route (process event &optional owner)
   "Record route or degradation from playback marker EVENT on PROCESS."
   (pcase (plist-get event :type)
     ("utterance_started"
@@ -459,30 +473,30 @@ Return non-nil when LINE is a control event, including a malformed one."
         omnivox--utterance-logical-voices)
        (let* ((actual (plist-get event :actual_voice))
               (route
-              (list
-               :logical-voice logical
-               :engine-id (or (and (listp actual)
-                                   (plist-get actual :engine_id))
-                              engine)
-               :voice-id (if (listp actual)
-                             (plist-get actual :voice_id)
-                           actual)
-               :dispatch-id (plist-get event :dispatch_id)
-               :utterance-id (plist-get event :utterance_id)
-               :process process :time (current-time)
-               :degraded-acss nil :degraded-effects nil)))
+               (list
+                :logical-voice logical
+                :engine-id (or (and (listp actual)
+                                    (plist-get actual :engine_id))
+                               engine)
+                :voice-id (if (listp actual)
+                              (plist-get actual :voice_id)
+                            actual)
+                :dispatch-id (plist-get event :dispatch_id)
+                :utterance-id (plist-get event :utterance_id)
+                :process process :time (current-time)
+                :degraded-acss nil :degraded-effects nil)))
          (puthash logical route omnivox-last-realized-routes)
-         (run-hook-with-args 'omnivox-realized-route-changed-hook
-                             (copy-tree route))
-         (run-hook-with-args 'tts-realized-voice-changed-hook
-                             (copy-tree route)))))
+         (omnivox--queue-realized-route owner route))))
     ("timeline_style_degraded"
      (when-let* ((logical
                   (gethash
                    (omnivox--utterance-key process event)
                    omnivox--utterance-logical-voices))
                  (route (copy-tree
-                         (gethash logical omnivox-last-realized-routes))))
+                         (gethash logical omnivox-last-realized-routes)))
+                 ((eq process (plist-get route :process)))
+                 ((eql (plist-get event :dispatch_id) (plist-get route :dispatch-id)))
+                 ((eql (plist-get event :utterance_id) (plist-get route :utterance-id))))
        (setq route
              (plist-put route :degraded-acss
                         (copy-sequence
@@ -492,10 +506,7 @@ Return non-nil when LINE is a control event, including a malformed one."
                         (copy-sequence
                          (plist-get event :degraded_effects))))
        (puthash logical route omnivox-last-realized-routes)
-       (run-hook-with-args 'omnivox-realized-route-changed-hook
-                           (copy-tree route))
-       (run-hook-with-args 'tts-realized-voice-changed-hook
-                           (copy-tree route))))))
+       (omnivox--queue-realized-route owner route)))))
 
 (defun omnivox--handle-marker-line (process line)
   "Handle an Omnivox playback marker LINE from PROCESS.
@@ -516,27 +527,22 @@ Return non-nil for every marker-prefixed line, including malformed records."
                (integerp sequence) (> sequence 0)
                (stringp type))
             (error "Invalid Omnivox marker event envelope"))
-          (when (member type '("utterance_started"
+          (when (member type '("utterance_started" "marker_reached"
+                               "semantic_event_reached" "timeline_action_resolved"
                                "timeline_style_degraded"))
-            (omnivox--record-realized-route process event))
-          (when
-              (member
-               type
-               '("semantic_event_reached"
-                 "timeline_action_resolved"
-                 "timeline_style_degraded"))
-            (setq omnivox-timeline-last-event
-                  (list :process process :event (copy-tree event)
-                        :time (current-time)))
-            (run-hook-with-args 'omnivox-timeline-event-hook event))
-          (when
-              (member
-               type
-               '("utterance_started" "marker_reached"
-                 "semantic_event_reached"
-                 "timeline_action_resolved"
-                 "timeline_style_degraded"))
-            (tts--dispatch-playback-marker-event process event)))
+            (tts--dispatch-playback-marker-event
+             process event
+             (lambda (owner)
+               (when (member type '("utterance_started" "timeline_style_degraded"))
+                 (omnivox--record-realized-route process event owner))
+               (when (member type '("semantic_event_reached" "timeline_action_resolved"
+                                    "timeline_style_degraded"))
+                 (setq omnivox-timeline-last-event
+                       (list :process process :event (copy-tree event) :time (current-time)))
+                 (if owner
+                     (tts--dispatch-enqueue owner #'run-hook-with-args
+                                            (list 'omnivox-timeline-event-hook event))
+                   (run-hook-with-args 'omnivox-timeline-event-hook event)))))))
       (error
        (setq omnivox-marker-last-error
              (list :process process :error error-data :time (current-time)))
@@ -554,28 +560,18 @@ Return non-nil for every marker-prefixed line, including malformed records."
 
 (defun omnivox--control-process-filter (process output)
   "Extract Omnivox control events from PROCESS OUTPUT."
-  (let ((pending
-         (concat
-          (or (process-get process omnivox--control-fragment-property) "")
-          output))
-        line-end)
-    (while (setq line-end (string-search "\n" pending))
-      (let ((line (string-trim-right (substring pending 0 line-end) "\r")))
-        (unless
-            (or
-             (omnivox--handle-control-line process line)
-             (omnivox--handle-marker-line process line))
-          (omnivox--forward-process-output process (concat line "\n"))))
-      (setq pending (substring pending (1+ line-end))))
-    (if (> (string-bytes pending) omnivox--maximum-event-line-bytes)
-        (progn
-          (setq omnivox-marker-last-error
-                (list
-                 :process process :error 'oversized-fragment
-                 :time (current-time)))
-          (process-put process omnivox--control-fragment-property "")
-          (message "Discarded oversized Omnivox output fragment"))
-      (process-put process omnivox--control-fragment-property pending))))
+  (condition-case error-data
+      (tts--consume-process-lines
+       process output omnivox--control-fragment-property 'omnivox--input-draining
+       (lambda (owner line)
+         (unless (or (omnivox--handle-control-line owner line)
+                     (omnivox--handle-marker-line owner line))
+           (omnivox--forward-process-output owner (concat line "\n"))))
+       omnivox--maximum-event-line-bytes)
+    (error
+     (setq omnivox-marker-last-error
+           (list :process process :error error-data :time (current-time)))
+     (message "Invalid Omnivox output: %s" (error-message-string error-data)))))
 
 (defun omnivox--install-control-filter (process)
   "Install bounded control-event filtering on Omnivox PROCESS once."

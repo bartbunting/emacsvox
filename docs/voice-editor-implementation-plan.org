@@ -21,10 +21,11 @@ private preview v2, timeline-4 reader/queue execution and marker-3 receipts are
 now tested and committed. Both-lane/reconnect acceptance passes and Omnivox
 =31a0b9a= advertises the complete bundle. Client integration remains in slice 7d.
 The [[file:voice-editor-client-handoff-review.org][XHI client dispatch handoff review]] is now complete. Eight isolated probes
-expose early-event loss, retirement resurrection and callback reentrancy in the
-current client. The selected contract gives each dispatch pre-write ownership,
+exposed early-event loss, retirement resurrection and callback reentrancy in the
+reviewed client baseline. The selected contract gives each dispatch pre-write ownership,
 frozen receipt context and deferred server callbacks after caller initialization.
-Stop for High before implementing that lifecycle fix and layered readback.
+The maintainer resumed at High; the lifecycle fix is now implemented and tested.
+Frozen registration provenance, layered transport and readback remain next.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -508,16 +509,23 @@ The selected contract separates write outcome, observation lifetime and callback
 publication. It specifies frozen owner/registry/span provenance, strict receipt
 correlation, bounded retention, failure cleanup and both-lane no-replay behavior.
 All 429 selected baseline tests pass; the probes characterize defects rather
-than claiming the future fix is implemented. Stop for High at this handoff.
+than claiming the fix was implemented at that review. The maintainer then
+resumed implementation at High.
 
-**** TODO Implement dispatch lifecycle before enabling layered transport
+**** DONE Implement dispatch lifecycle before enabling layered transport
 
-First implement inactive preparation, pre-write arming after policy interruption,
-irrevocable retirement and deferred server callback draining. Preserve local
-retirement ordering and prove callback-generated speech has its own transaction.
-Cover ordinary callback-free speech and both legacy tracked dispatch entry points.
-Run the review's failure/reentrancy matrix, rebuild byte-code for private struct
-changes, verify in a fresh compiled Emacs and commit this slice independently.
+Inactive preparation, pre-write arming after policy interruption, irrevocable
+retirement and deferred server callback draining are implemented. Local lifecycle
+hooks retain synchronous ordering and fresh callback capture state without losing
+replacement process handles. Ordinary callback-free speech and both legacy
+tracked entry points share ownership. The filters preserve reentrant line order;
+late retired markers cannot relabel current routes. Bounded retention, reserved
+terminal notifications and whole-submission failure cleanup prevent replay or
+tracking resurrection. Tests exercise early completion through the real tracked
+reader as well as both lanes and multipart failures. Wire negotiation is unchanged.
+
+The private struct changes require a complete byte-code rebuild and fresh compiled
+verification; source and compiled results are recorded in the handoff review.
 
 **** TODO Complete layered transport, readback, preview and editor controls
 
