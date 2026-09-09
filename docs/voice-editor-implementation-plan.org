@@ -26,8 +26,11 @@ reviewed client baseline. The selected contract gives each dispatch pre-write ow
 frozen receipt context and deferred server callbacks after caller initialization.
 The maintainer resumed at High; the lifecycle fix is now implemented and tested.
 Registration now freezes raw palette/voice/choice provenance alongside wire
-definitions. Explicit snapshot projection now builds version-4 spans and multipart commands;
-the strict marker-3 codec is tested. Runtime correlation and enablement remain next.
+definitions. Structured runtime now uses acknowledged version-4 spans and correlated
+marker-3 evidence, with bounded frozen metadata. All 490 selected source tests,
+fresh compiled checks and muted real-server both-lane/reconnect acceptance pass.
+A new preparation-window Stop probe exposes an unresolved cancellation boundary
+in both versions 3 and 4. Stop for XHI before continuing the remaining work.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -499,8 +502,9 @@ per lane, projects inspectable owned bases and choice rows into version 2, and
 retains frozen acknowledged definitions. Six new tests cover old/new lanes,
 invalid and late acknowledgements, temporary routing and truthful unsupported
 save status. All 226 selected client/voice/transport tests and isolated compiled
-parity pass. Ordinary layered transport, playback readback, preview v2 and the
-optional customization controls remain next.
+parity passed at that registration checkpoint. Subsequent lifecycle, projection
+and runtime slices are recorded below. The current stop is the new XHI review
+of prepared-request cancellation; preview and editor controls remain pending.
 
 **** DONE Review client submission and receipt ownership at XHI
 
@@ -563,9 +567,39 @@ This is explicit projection only: ordinary negotiation remains at version 3.
 Runtime snapshot retention, start/receipt correlation and bounded historical
 readback must be connected before enabling the new wire path.
 
-**** TODO Complete layered transport, readback, preview and editor controls
+**** DONE Connect owned structured runtime and correlated readback
 
-Connect snapshot retention and strict marker-3 correlation before enabling timeline 4. Then connect private preview v2 and the
+Each acknowledged capable lane now submits version-4 timelines. Inactive owners
+retain and account for immutable registration/span metadata, recheck admission,
+and release shared snapshots after the last ticket. Strict receipt correlation
+validates the original row and its preceding consumed start before mutation.
+Bounded historical readback includes raw shared/choice/context provenance,
+preserves actual evidence through write failure and rejects stale receipts or
+degradation from another lane/utterance. Ordinary older-server negotiation stays
+on its existing path. The 16 new runtime contracts pass within all 490 selected
+source tests; full rebuild and isolated compiled verification pass.
+
+The opt-in =test/verify-omnivox-choice-runtime.el= also passes with a staged
+Omnivox =31a0b9a= server and null audio output, in both source and compiled Emacs.
+It applies actual configuration, selects a fallback after an unavailable primary,
+checks both lanes, replaces the foreground process and re-registers without
+replay. No installed runtime or personal configuration changes.
+
+**** TODO Review prepared-request cancellation at XHI
+
+Stop for XHI. =test/diagnose-prepared-cancellation.el= demonstrates that a second
+public Stop during the policy stop's write leaves the inactive request eligible
+to arm and send afterward. Both versions 3 and 4 reproduce it; the normal
+single policy stop still correctly permits the new request. The
+[[file:voice-editor-client-handoff-review.org][handoff review]] records exact output, the affected boundary and approaches.
+Settle cancellable preparation with an explicit own-policy-stop exemption, or a
+better justified alternative, and audit atomic reservation cleanup. Preserve
+nested lifecycle-hook speech and both-lane ownership. No Max or new product
+choice is requested. Return to High for the fix and its regression matrix.
+
+**** TODO Complete ordinary consumers, preview and editor controls
+
+After the cancellation fix, audit all ordinary and legacy-inline consumers. Then connect private preview v2 and the
 optional per-choice controls in the review's remaining implementation slices.
 
 Implement lossless context projection, lane negotiation and apply reporting.

@@ -433,7 +433,7 @@ Return non-nil when LINE is a control event, including a malformed one."
 
 (defun omnivox-last-realized-voice (logical-voice)
   "Return the last playback-observed route for LOGICAL-VOICE."
-  (copy-tree
+  (tts--dispatch-copy-data
    (gethash
     (omnivox--logical-voice-name logical-voice)
     omnivox-last-realized-routes)))
@@ -449,8 +449,8 @@ Return non-nil when LINE is a control event, including a malformed one."
 
 (defun omnivox--notify-realized-route (route)
   "Notify route observers with independent copies of ROUTE."
-  (run-hook-with-args 'omnivox-realized-route-changed-hook (copy-tree route))
-  (run-hook-with-args 'tts-realized-voice-changed-hook (copy-tree route)))
+  (run-hook-with-args 'omnivox-realized-route-changed-hook (tts--dispatch-copy-data route))
+  (run-hook-with-args 'tts-realized-voice-changed-hook (tts--dispatch-copy-data route)))
 
 (defun omnivox--queue-realized-route (owner route)
   "Publish ROUTE hooks immediately for legacy events or defer them for OWNER."
@@ -508,6 +508,244 @@ Return non-nil when LINE is a control event, including a malformed one."
        (puthash logical route omnivox-last-realized-routes)
        (omnivox--queue-realized-route owner route)))))
 
+(defconst omnivox--choice-registration-property 'omnivox--choice-registration
+  "Process property retaining the acknowledged layered registry snapshot.")
+
+(defconst omnivox--choice-observation-limit 32)
+(defconst omnivox--choice-observation-bytes 8192)
+(defconst omnivox--realized-route-byte-limit (* 4 1024 1024))
+(defconst omnivox--realized-route-limit 512)
+
+(defun omnivox--choice-current-registration (process)
+  "Return PROCESS's acknowledged snapshot or fail before preparing speech."
+  (let ((snapshot (process-get process omnivox--choice-registration-property)))
+    (unless (and (process-live-p process) (omnivox--choice-tuning-supported-p process)
+                 snapshot
+                 (equal (plist-get snapshot :process-generation)
+                        (process-get process 'tts--speech-process-generation)))
+      (error "Individual voice registration has not been acknowledged on this speech lane"))
+    snapshot))
+
+(defun omnivox--choice-dispatch-admission (owner)
+  "Require OWNER's frozen registration still to be current before writing."
+  (unless (eq (plist-get (tts--dispatch-owner-context owner) :registration)
+              (omnivox--choice-current-registration (tts--dispatch-owner-process owner)))
+    (error "Individual voice registration changed while preparing speech")))
+
+(defun omnivox--choice-dispatch-release (owner)
+  "Release OWNER's shared registry charge after its last retained ticket."
+  (let* ((process (tts--dispatch-owner-process owner))
+         (snapshot (plist-get (tts--dispatch-owner-context owner) :registration))
+         (references (process-get process 'omnivox--choice-snapshot-references))
+         (entry (gethash snapshot references)))
+    (when entry
+      (if (> (car entry) 1)
+          (setcar entry (1- (car entry)))
+        (remhash snapshot references)
+        (process-put process 'tts--dispatch-metadata-bytes
+                     (- (process-get process 'tts--dispatch-metadata-bytes) (cdr entry)))))
+    (setf (tts--dispatch-owner-context owner) nil)))
+
+(defun omnivox--prepare-choice-dispatch (owner snapshot spans)
+  "Attach frozen SNAPSHOT and compact SPANS to inactive OWNER within budget."
+  (let* ((process (tts--dispatch-owner-process owner))
+         (references (or (process-get process 'omnivox--choice-snapshot-references)
+                         (make-hash-table :test #'eq)))
+         (retained (gethash snapshot references))
+         (print-circle t) (print-length nil) (print-level nil)
+         (span-bytes (+ (string-bytes (prin1-to-string spans))
+                        (* (1+ omnivox--choice-observation-limit) omnivox--choice-observation-bytes)))
+         (registry-bytes (if retained 0 (string-bytes (prin1-to-string snapshot))))
+         (used (or (process-get process 'tts--dispatch-metadata-bytes) 0)))
+    (unless (eq (tts--dispatch-owner-state owner) 'prepared)
+      (error "Individual voice metadata requires an inactive speech dispatch"))
+    (when (> (+ used span-bytes registry-bytes) tts--dispatch-metadata-limit)
+      (error "Individual voice dispatch metadata capacity is exhausted"))
+    (let ((context (list :protocol-version 4 :registration snapshot
+                         :lane (if (eq process tts-notify-process) 'notification 'main)
+                         :spans (tts--dispatch-copy-data spans)
+                         :last-started nil :observations nil :truncated nil)))
+      (process-put process 'omnivox--choice-snapshot-references references)
+      (if retained (setcar retained (1+ (car retained)))
+        (puthash snapshot (cons 1 registry-bytes) references))
+      (process-put process 'tts--dispatch-metadata-bytes (+ used span-bytes registry-bytes))
+      (cl-incf (tts--dispatch-owner-metadata-bytes owner) span-bytes)
+      (setf (tts--dispatch-owner-context owner) context
+            (tts--dispatch-owner-admission-function owner) #'omnivox--choice-dispatch-admission
+            (tts--dispatch-owner-release-function owner) #'omnivox--choice-dispatch-release))))
+
+(defun omnivox--choice-provenance (snapshot logical)
+  "Return the immutable provenance for LOGICAL in SNAPSHOT."
+  (cl-find logical (plist-get (plist-get snapshot :content) :choice-provenance)
+           :test #'equal :key (lambda (entry) (plist-get entry :logical-id))))
+
+(defun omnivox--choice-receipt-context (owner event)
+  "Validate EVENT's start, span and original choice against OWNER without mutation."
+  (let* ((context (tts--dispatch-owner-context owner))
+         (snapshot (plist-get context :registration))
+         (start (plist-get context :last-started))
+         (span (gethash (plist-get event :span_id) (plist-get context :spans)))
+         (logical (plist-get event :logical_voice_id))
+         (choice (plist-get event :choice))
+         (physical (plist-get choice :realized))
+         (id (plist-get choice :choice_id))
+         (provenance (omnivox--choice-provenance snapshot logical))
+         (rows (plist-get provenance :choices))
+         (index (cl-position id rows :test #'equal :key (lambda (row) (plist-get row :id))))
+         (reason (plist-get choice :reason))
+         (entry (gethash (tts--dispatch-owner-id owner) tts--marker-dispatches)))
+    (unless (and start (eq (plist-get span :mode) 'layered)
+                 (equal logical (plist-get span :logical-id))
+                 (equal logical (plist-get start :logical_voice_id))
+                 (eql (plist-get event :registry_generation) (plist-get snapshot :registry-generation))
+                 (eql (plist-get event :utterance_id) (plist-get start :utterance_id))
+                 (eql (plist-get event :sequence) (1+ (plist-get start :sequence)))
+                 (eql (tts--marker-dispatch-last-sequence entry) (plist-get start :sequence))
+                 (equal physical (plist-get start :actual_voice))
+                 provenance)
+      (error "Individual voice receipt does not match its owned start and span"))
+    (unless (if (eq id :null) (null index)
+              (and index
+                   (pcase (plist-get reason :reason)
+                     ("preferred" (= index 0))
+                     ("explicit_alternative" (= index (plist-get reason :preference_index)))
+                     (_ nil))))
+      (error "Individual voice receipt does not identify its original fallback row"))
+    (when index
+      (let* ((selector (plist-get (nth index rows) :selector))
+             (engine (plist-get selector :engine-id)))
+        (when (and engine (not (equal engine (plist-get physical :engine_id))))
+          (error "Individual voice receipt disagrees with the requested engine"))
+        (when (and (eq (plist-get selector :kind) 'exact)
+                   (not (equal (plist-get selector :voice-id) (plist-get physical :voice_id))))
+          (error "Individual voice receipt disagrees with the requested voice"))))
+    (list :span span :provenance provenance :row (and index (nth index rows)))))
+
+(defun omnivox--store-realized-route (route &optional names)
+  "Keep bounded latest ROUTE summaries under its logical ID and alias NAMES."
+  (let* ((print-circle t) (print-length nil) (print-level nil)
+         (bytes (string-bytes (prin1-to-string route))))
+    (when (> bytes omnivox--choice-receipt-limit)
+      ;; Keep consumed identity even if an unusually large client rule source
+      ;; cannot fit the historical summary. Full span provenance stays owned.
+      (setq route (copy-sequence route))
+      (cl-remf route :voice-provenance)
+      (cl-remf route :shared)
+      (setq route (plist-put route :details-truncated t)
+            bytes (string-bytes (prin1-to-string route))))
+    (setq route (plist-put route :retained-bytes bytes))
+    (dolist (logical (delete-dups (cons (plist-get route :logical-voice)
+                                        (mapcar #'omnivox--logical-voice-name names))))
+      (when logical
+        (let ((used 0))
+          (maphash (lambda (key value)
+                     (unless (equal key logical)
+                       (cl-incf used (or (plist-get value :retained-bytes)
+                                         (string-bytes (prin1-to-string value))))))
+                   omnivox-last-realized-routes)
+          (while (or (> (+ used bytes) omnivox--realized-route-byte-limit)
+                     (and (not (gethash logical omnivox-last-realized-routes))
+                          (>= (hash-table-count omnivox-last-realized-routes) omnivox--realized-route-limit)))
+            (let (oldest oldest-time oldest-bytes)
+              (maphash (lambda (key value)
+                         (when (and (not (equal key logical))
+                                    (or (not oldest-time) (time-less-p (plist-get value :time) oldest-time)))
+                           (setq oldest key oldest-time (plist-get value :time)
+                                 oldest-bytes (or (plist-get value :retained-bytes)
+                                                  (string-bytes (prin1-to-string value))))))
+                       omnivox-last-realized-routes)
+              (unless oldest (error "Historical voice summary exceeds its reserved budget"))
+              (remhash oldest omnivox-last-realized-routes)
+              (cl-decf used oldest-bytes)))
+          (puthash logical route omnivox-last-realized-routes))))))
+
+(defun omnivox--choice-base-route (owner start)
+  "Build process-free historical source evidence for OWNER's START."
+  (let* ((process (tts--dispatch-owner-process owner))
+         (snapshot (plist-get (tts--dispatch-owner-context owner) :registration))
+         (logical (plist-get start :logical_voice_id))
+         (provenance (omnivox--choice-provenance snapshot logical))
+         (actual (plist-get start :actual_voice)))
+    (list :logical-voice logical :engine-id (plist-get start :engine_id)
+          :voice-id (and (listp actual) (plist-get actual :voice_id))
+          :dispatch-id (tts--dispatch-owner-id owner) :utterance-id (plist-get start :utterance_id)
+          :process-name (process-name process) :process-generation (tts--dispatch-owner-generation owner)
+          :lane (plist-get (tts--dispatch-owner-context owner) :lane)
+          :registry-generation (plist-get snapshot :registry-generation)
+          :palette (plist-get provenance :palette) :voice-name (plist-get provenance :name)
+          :choice-status 'unverified :historical t :time (current-time))))
+
+(defun omnivox--record-choice-marker (owner event receipt)
+  "Record validated EVENT and optional RECEIPT context for OWNER before hooks."
+  (let* ((context (tts--dispatch-owner-context owner))
+         (snapshot (plist-get context :registration))
+         (type (plist-get event :type)))
+    (cond
+     ((equal type "utterance_started")
+      (let ((start (cl-loop for key in '(:sequence :utterance_id :logical_voice_id :engine_id :actual_voice)
+                            append (list key (tts--dispatch-copy-data (plist-get event key))))))
+        (setf (plist-get context :last-started) start)
+        (when (stringp (plist-get event :logical_voice_id))
+          (let* ((route (omnivox--choice-base-route owner start))
+                 (provenance (omnivox--choice-provenance snapshot (plist-get event :logical_voice_id))))
+            (omnivox--store-realized-route route (plist-get provenance :names))
+            (omnivox--queue-realized-route owner route)))))
+     ((equal type "voice_choice_applied")
+      (let* ((choice (plist-get event :choice))
+             (span (plist-get receipt :span))
+             (provenance (plist-get receipt :provenance))
+             (observation (list :span-id (plist-get event :span_id) :choice (tts--dispatch-copy-data choice)))
+             (route (append (list :choice-id (plist-get choice :choice_id)
+                                  :span-id (plist-get event :span_id) :reason (plist-get choice :reason)
+                                  :shared (plist-get provenance :shared)
+                                  :choice-adjustments (plist-get (plist-get receipt :row) :adjustments)
+                                  :context (plist-get span :raw-context) :placement (plist-get span :placement)
+                                  :voice-provenance (plist-get span :voice-provenance)
+                                  :degraded-acss (append (plist-get choice :degraded_acss) nil)
+                                  :degraded-effects (append (plist-get choice :degraded_effects) nil))
+                            (plist-put (omnivox--choice-base-route owner (plist-get context :last-started))
+                                       :choice-status 'verified))))
+        (unless (member observation (plist-get context :observations))
+          (if (< (length (plist-get context :observations)) omnivox--choice-observation-limit)
+              (push observation (plist-get context :observations))
+            (setf (plist-get context :truncated) t)))
+        (setq route (append (list :observations-truncated (plist-get context :truncated)) route))
+        (omnivox--store-realized-route (tts--dispatch-copy-data route) (plist-get provenance :names))
+        (omnivox--queue-realized-route owner route)))
+     ((equal type "timeline_style_degraded")
+      (when-let* ((start (plist-get context :last-started))
+                  ((eql (plist-get event :utterance_id) (plist-get start :utterance_id)))
+                  (logical (plist-get start :logical_voice_id))
+                  (route (tts--dispatch-copy-data (gethash logical omnivox-last-realized-routes)))
+                  ((eql (plist-get route :dispatch-id) (tts--dispatch-owner-id owner)))
+                  ((eql (plist-get route :utterance-id) (plist-get event :utterance_id)))
+                  ((equal (plist-get route :process-generation) (tts--dispatch-owner-generation owner)))
+                  ((equal (plist-get route :process-name) (process-name (tts--dispatch-owner-process owner))))
+                  ((eq (plist-get route :lane) (plist-get context :lane))))
+        (setq route (plist-put route :degraded-acss (append (plist-get event :degraded_acss) nil)))
+        (setq route (plist-put route :degraded-effects (append (plist-get event :degraded_effects) nil)))
+        (omnivox--store-realized-route route (plist-get (omnivox--choice-provenance snapshot logical) :names))
+        (omnivox--queue-realized-route owner route))))))
+
+(defun omnivox--handle-choice-marker (process event)
+  "Correlate strict version-3 EVENT before mutating any playback state."
+  (when-let* ((owner (tts--dispatch-owner-for process (plist-get event :dispatch_id)))
+              ((tts--dispatch-observing-p owner))
+              ((eql (plist-get (tts--dispatch-owner-context owner) :protocol-version) 4)))
+    (let ((receipt (when (equal (plist-get event :type) "voice_choice_applied")
+                     (omnivox--choice-receipt-context owner event))))
+      (tts--dispatch-playback-marker-event
+       process event
+       (lambda (dispatch)
+         (omnivox--record-choice-marker dispatch event receipt)
+         (when (member (plist-get event :type) '("semantic_event_reached" "timeline_action_resolved" "timeline_style_degraded"))
+           (setq omnivox-timeline-last-event
+                 (list :process-name (process-name process)
+                       :process-generation (tts--dispatch-owner-generation dispatch)
+                       :event (tts--dispatch-copy-data event) :time (current-time)))
+           (tts--dispatch-enqueue dispatch #'run-hook-with-args
+                                  (list 'omnivox-timeline-event-hook event))))))))
+
 (defun omnivox--handle-marker-line (process line)
   "Handle an Omnivox playback marker LINE from PROCESS.
 Return non-nil for every marker-prefixed line, including malformed records."
@@ -520,34 +758,40 @@ Return non-nil for every marker-prefixed line, including malformed records."
                (identifier (plist-get event :dispatch_id))
                (sequence (plist-get event :sequence))
                (type (plist-get event :type)))
-          (unless
-              (and
-               (memq version omnivox-marker-event-protocol-versions)
-               (integerp identifier) (> identifier 0)
-               (integerp sequence) (> sequence 0)
-               (stringp type))
-            (error "Invalid Omnivox marker event envelope"))
-          (when (member type '("utterance_started" "marker_reached"
-                               "semantic_event_reached" "timeline_action_resolved"
-                               "timeline_style_degraded"))
-            (tts--dispatch-playback-marker-event
-             process event
-             (lambda (owner)
-               (when (member type '("utterance_started" "timeline_style_degraded"))
-                 (omnivox--record-realized-route process event owner))
-               (when (member type '("semantic_event_reached" "timeline_action_resolved"
-                                    "timeline_style_degraded"))
-                 (setq omnivox-timeline-last-event
-                       (list :process process :event (copy-tree event) :time (current-time)))
-                 (if owner
-                     (tts--dispatch-enqueue owner #'run-hook-with-args
-                                            (list 'omnivox-timeline-event-hook event))
-                   (run-hook-with-args 'omnivox-timeline-event-hook event)))))))
+          (if (eql version 3)
+              (omnivox--handle-choice-marker
+               process (omnivox--choice-decode-marker (substring line (length omnivox-marker-event-prefix))))
+            (unless
+                (and
+                 (memq version omnivox-marker-event-protocol-versions)
+                 (integerp identifier) (> identifier 0)
+                 (integerp sequence) (> sequence 0)
+                 (stringp type))
+              (error "Invalid Omnivox marker event envelope"))
+            (when (and (not (when-let* ((dispatch (tts--dispatch-owner-for process identifier)))
+                              (tts--dispatch-owner-context dispatch)))
+                       (member type '("utterance_started" "marker_reached"
+                                      "semantic_event_reached" "timeline_action_resolved"
+                                      "timeline_style_degraded")))
+              (tts--dispatch-playback-marker-event
+               process event
+               (lambda (owner)
+                 (when (member type '("utterance_started" "timeline_style_degraded"))
+                   (omnivox--record-realized-route process event owner))
+                 (when (member type '("semantic_event_reached" "timeline_action_resolved"
+                                      "timeline_style_degraded"))
+                   (setq omnivox-timeline-last-event
+                         (list :process process :event (copy-tree event) :time (current-time)))
+                   (if owner
+                       (tts--dispatch-enqueue owner #'run-hook-with-args
+                                              (list 'omnivox-timeline-event-hook event))
+                     (run-hook-with-args 'omnivox-timeline-event-hook event))))))))
       (error
        (setq omnivox-marker-last-error
              (list :process process :error error-data :time (current-time)))
-       (message "Invalid Omnivox marker event: %s"
-                (error-message-string error-data))))
+       (let ((emacsvox-speak-messages nil))
+         (message "Invalid Omnivox marker event: %s"
+                  (error-message-string error-data)))))
     t))
 
 (defun omnivox--forward-process-output (process output)
@@ -1320,9 +1564,6 @@ RUNTIME-ROUTING-POLICY keeps global order out of logical definitions."
                  '("voice_choice_tuning_v1" "presentation_timeline_v4"
                    "playback_marker_events_v3"))))
 
-(defconst omnivox--choice-registration-property 'omnivox--choice-registration
-  "Process property retaining the acknowledged layered registry snapshot.")
-
 (defun omnivox--choice-definition-projection (definition)
   "Return wire wrapper, provenance and unapplied flag for DEFINITION.
 Read raw ownership once so the wire values and their sources cannot diverge."
@@ -1364,6 +1605,7 @@ Read raw ownership once so the wire values and their sources cannot diverge."
             (cl-remf copy :type)
             (cl-remf copy :choice-tuning-unapplied)
             (cl-remf copy :choice-provenance)
+            (cl-remf copy :choice-process-generation)
             copy)))
 
 (defun omnivox--choice-tuned-configuration-p ()
@@ -1403,13 +1645,22 @@ Read raw ownership once so the wire values and their sources cannot diverge."
 (defun omnivox--accept-registration-response (process response generation content)
   "Accept PROCESS's RESPONSE only for its frozen GENERATION and CONTENT."
   (if (equal (plist-get content :type) "register_logical_voices_v2")
-      (when (omnivox--choice-registration-valid-p response generation content)
+      (when (and (process-live-p process)
+                 (not (process-get process 'tts--speech-process-retiring))
+                 (equal (plist-get content :choice-process-generation)
+                        (process-get process 'tts--speech-process-generation))
+                 (omnivox--choice-registration-valid-p response generation content))
         (let ((old (process-get process omnivox--choice-registration-property)))
           (when (>= generation (or (plist-get old :registry-generation) 0))
-            (process-put process omnivox--choice-registration-property
-                         (list :registry-generation generation :process-generation (process-get process 'tts--speech-process-generation)
-                               :content (tts--dispatch-copy-data content)
-                               :response (tts--dispatch-copy-data response)))
+            (unless (and (eql generation (plist-get old :registry-generation))
+                         (equal content (plist-get old :content)))
+              (process-put process omnivox--choice-registration-property
+                           (list :registry-generation generation
+                                 :process-generation (plist-get content :choice-process-generation)
+                                 :content (tts--dispatch-copy-data content)
+                                 :response (tts--dispatch-copy-data response))))
+            (when (omnivox--choice-tuning-supported-p process)
+              (emacsvox-aural-enable-structured-timeline process 4))
             (omnivox--handle-registration-response process response)))
         (omnivox--choice-warn-unapplied process content)
         t)
@@ -1417,6 +1668,8 @@ Read raw ownership once so the wire values and their sources cannot diverge."
       (when (>= generation (or (plist-get (process-get process omnivox--choice-registration-property)
                                           :registry-generation) 0))
         (process-put process omnivox--choice-registration-property nil)
+        (when (eql (process-get process emacsvox-aural--structured-timeline-process-property) 4)
+          (emacsvox-aural-enable-structured-timeline process 3))
         (omnivox--handle-registration-response process response))
       (omnivox--choice-warn-unapplied process content)
       t)))
@@ -1634,6 +1887,7 @@ Return the number of processes sent a generation-safe policy replacement."
                (snapshot
                 (append (list :type "register_logical_voices_v2" :definitions definitions
                               :choice-provenance provenance
+                              :choice-process-generation (process-get process 'tts--speech-process-generation)
                               :fallback_policy
                               (append (list :preferred_engines []) (plist-get content :fallback_policy)))
                         (when unapplied '(:choice-tuning-unapplied t))))
@@ -2013,7 +2267,8 @@ taken effect on the server.  Reapply to confirm the desired configuration."
        (member "playback_marker_events_v1"
                (plist-get response :features))
        (member "playback_marker_events_v2"
-               (plist-get response :features)))
+               (plist-get response :features))
+       (omnivox--choice-tuning-supported-p process))
       t))
     (process-put
      process tts--capitalization-presentation-property

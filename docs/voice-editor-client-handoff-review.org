@@ -4,18 +4,19 @@
 
 * Status and next reasoning level
 
-The review is complete and the maintainer resumed implementation at High.
-The first lifecycle slice now arms dispatch ownership before writing and defers
-server callbacks until submission returns. The probes below describe the reviewed
-baseline; passing regression tests cover the new behavior. Registration now captures frozen raw provenance alongside wire definitions;
-explicit timeline-4 projection and strict marker-3 decoding are tested.
-Runtime correlation, bounded retention and ordinary enablement remain next.
-No further product decision or Max review is needed.
+The reviewed lifecycle, registration, codec and structured runtime slices are
+implemented at High. All 490 selected source tests and the isolated compiled
+suite pass. Muted real-server acceptance passes on both lanes and after reconnect.
+A further preparation-window cancellation probe now demonstrates a gap shared by
+versions 3 and 4: a second =tts-stop= during the transaction's own policy stop does
+not cancel its inactive prepared owner. Stop for XHI to settle that distinction
+before continuing consumer audits, preview v2 or editor controls. No new product
+choice or Max review is requested at this boundary.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
-acknowledged definitions and explicit older-server limitations. Ordinary
-layered transport, marker-3 readback, private preview v2 and optional editor
-controls remain pending. No live runtime or personal configuration was changed.
+acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated
+marker-3 readback. The remaining ordinary-consumer audit, private preview v2
+and optional editor controls are pending. No live runtime or personal configuration was changed.
 
 The accepted [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], [[file:voice-editor-fallback-wire-contract.org][wire contract]] and
 [[file:voice-editor-implementation-plan.org][implementation plan]] remain authoritative. This review concerns client
@@ -361,7 +362,7 @@ They justify the reviewed contract and provide reproducible starting cases.
 The selected design preserves the accepted ownership, precedence, wire and
 no-replay decisions. No public command, storage schema, server protocol or
 dependency decision needs reopening. The lifecycle slice is implemented;
-continue frozen provenance and layered transport at High.
+the implemented slices and new XHI preparation boundary are recorded below.
 
 * Validation of this review
 
@@ -436,3 +437,96 @@ All 474 selected source tests and the isolated compiled gate pass, including
 11 new codec/projection contracts. Negotiation and normal submission still use
 version 3. The next slice must connect ownership retention, start/receipt
 correlation and bounded readback before enabling the new path.
+
+* Structured runtime integration at High
+
+Acknowledgement activates timeline 4 only on a process advertising the complete
+bundle. Dispatch preparation attaches the exact immutable registration and a
+compact span index. The shared registration is charged once per retained set of
+owners and released after the final ticket. Preparation reserves bounded space
+for 32 distinct observations and a separate latest-started record; byte and owner
+limits reject before navigation interruption. Admission rechecks the frozen
+acknowledgement. Equivalent same-generation acknowledgement refreshes reuse the
+snapshot; replaced-process acknowledgements cannot establish a new owner.
+
+Strict start/receipt correlation precedes sequence or route mutation. The
+receipt must match process/dispatch ownership, the immediately preceding start,
+utterance, registry, layered span, logical voice, realized physical voice and
+original row/reason/index. Exact selectors also constrain the physical voice;
+property selectors do not imply an exact voice ID. Policy fallback carries no
+row patch even when it selects a stored physical voice. Older marker versions
+cannot relabel a layered dispatch. Later registration changes do not rewrite
+an already admitted dispatch's evidence.
+
+Historical summaries retain palette, canonical voice, lane/process generation,
+choice, raw layers and source provenance without retaining a process or whole
+registry. Public queries and hooks receive deep copies. Summaries have count
+and byte bounds; oversized rule provenance is explicitly truncated. Per-dispatch
+observation truncation preserves the separate latest consumed source. Late
+receipts after cancellation are discarded; validated consumed evidence survives
+a subsequent write error without replay. Degradation from an older utterance or
+the other lane cannot change the newer route.
+
+All 490 selected source tests pass, including 16 new actual-playback contracts.
+The full =make bytecode-rebuild= and isolated =make compiled-aural-test= pass.
+The opt-in [[file:../test/verify-omnivox-choice-runtime.el][real-server acceptance runner]] starts separate eSpeak workers with
+=--audio-output null= and uses the actual apply/registration, transport, filters
+and callback path. Both source and fresh compiled runs select the explicit
+fallback after an unavailable primary on both lanes. Replacing the foreground
+process requires fresh registration; the notification lane remains usable.
+The four dispatches complete with verified choice identity and zero retained
+metadata. This is server-consumption evidence, not an acoustic listening test.
+
+Example (use the Emacs selected by =local.mk=):
+
+#+begin_src sh
+EMACSVOX_CHOICE_TEST_SERVER=/path/to/staged/omnivox \
+  /path/to/selected/emacs -Q --batch -l test/verify-omnivox-choice-runtime.el
+#+end_src
+
+Set =EMACSVOX_CHOICE_TEST_SOURCE=1 only for deliberate source acceptance.
+An initial temporary runner omitted the inventory/policy preparation needed by
+the ordinary registration service and timed out without submitting a registry.
+Using the real acknowledged apply service resolved that fixture setup error.
+No application workaround, live server replacement or personal save was used.
+
+* New XHI boundary: explicit Stop while the policy stop is being written
+
+The [[file:../test/diagnose-prepared-cancellation.el][prepared-cancellation diagnostic]] substitutes all writes and starts no engine.
+For each of timeline versions 3 and 4 it compares a normal urgent submission
+with a public =tts-stop t= invoked reentrantly from the policy stop's write.
+The prepared owner already exists, but it is not in the armed event indexes.
+Current observed output is:
+
+#+begin_example
+version=3 second-stop=nil returned-id=1 timeline-written=t observing=t
+version=3 second-stop=t returned-id=1 timeline-written=t observing=t
+version=4 second-stop=nil returned-id=1 timeline-written=t observing=t
+version=4 second-stop=t returned-id=1 timeline-written=t observing=t
+#+end_example
+
+The normal case should still submit. The second explicit Stop should suppress
+the prepared request. Currently cancellation visits armed indexes only; arming
+later captures the advanced cancellation epoch and allows the request to write.
+This is a deterministic ordering probe, not a report of audible reproduction.
+It narrows an incompletely handled preparation boundary in the existing contract;
+it is not a new marker-3 decoding defect or permission to replay.
+
+Resume at XHI to settle preparation cancellation without making a request cancel
+itself through its own required policy interruption. Review all direct/captured
+entry points, nested stopped-hook speech, both lanes, reentrant output, sentinel
+retirement and nonlocal exits during reservation/metadata attachment. Keep the
+existing normal policy-stop and synchronous local teardown contracts passing.
+Then return to High for the bounded fix and regression tests.
+
+Two approaches merit that review:
+
+| Approach | Benefit | Cost / concern |
+|----------+---------+----------------|
+| Cancellable inactive owners with an explicit exemption for their own policy stop (preferred starting point) | Expresses which prepared request a stop may preserve; a nested public Stop has no implicit exemption. | Adds a preparation index and cleanup responsibility; ensure it is not an active playback observer. |
+| Detect additional cancellation by counting epoch changes around policy interruption | Smaller apparent change to the owner indexes. | Current interruption advances the epoch at several stages; nested callbacks and cleanup make expected-count arithmetic fragile. |
+
+The maintainer's intended Stop behavior needs no new product decision. This is
+an ownership review stop under the agreed reasoning-level workflow. The feature
+is not complete: ordinary-consumer coverage, private previews, optional editor
+controls, current guidance and spoken acceptance remain after this fix.

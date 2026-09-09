@@ -69,6 +69,8 @@
 (defvar emacsvox-aural--current-submission-id)
 (defvar emacsvox-aural--presented-plan-collector)
 
+(declare-function omnivox--choice-current-registration "omnivox-voices" (process))
+(declare-function omnivox--prepare-choice-dispatch "omnivox-voices" (owner snapshot spans))
 (declare-function omnivox--choice-span-projection "omnivox-choice-codec" (registration logical request balance))
 (declare-function omnivox--choice-validate-wire-patch "omnivox-choice-codec" (patch))
 (declare-function omnivox--choice-object-keys "omnivox-choice-codec" (object keys))
@@ -254,7 +256,7 @@ VERSION defaults to 3 for direct callers.  Older versions are recorded only
 so an installation mismatch can be reported before Aural semantics are
 lowered."
   (setq version (or version 3))
-  (unless (memq version '(1 2 3))
+  (unless (memq version '(1 2 3 4))
     (error "Unsupported structured timeline version: %S" version))
   (process-put
    process emacsvox-aural--structured-timeline-process-property version)
@@ -594,10 +596,7 @@ Return non-nil when every entry was sent to a live process."
   "Return non-nil when OWNER natively replaces structured ENTRIES."
   (and
    (processp owner)
-   (eql
-    (process-get
-     owner emacsvox-aural--structured-timeline-process-property)
-    emacsvox-aural--structured-timeline-version)
+   (memq (process-get owner emacsvox-aural--structured-timeline-process-property) '(3 4))
    (cl-some
     (lambda (entry)
       (eq 'structured (emacsvox-aural--delivery-entry-kind entry)))
@@ -743,7 +742,7 @@ OWNER so a logical transaction cannot be partially delivered across streams."
    (emacsvox-aural-structured-timeline-available-p)))
 
 (defun emacsvox-aural-structured-timeline-available-p ()
-  "Return non-nil when the speaker accepts version 3 presentation timelines.
+  "Return non-nil when the speaker accepts version 3 or 4 timelines.
 
 Signal a clear installation error when negotiation found an older version."
   (when (processp tts-speaker-process)
@@ -752,7 +751,7 @@ Signal a clear installation error when negotiation found an older version."
             tts-speaker-process
             emacsvox-aural--structured-timeline-process-property)))
       (cond
-       ((eql version 3) t)
+       ((memq version '(3 4)) t)
        ((memq version '(1 2))
         (error
          "Omnivox timeline V3 is required; rebuild and restart the speech server"))
@@ -1615,9 +1614,9 @@ the authoritative check after punctuation and split-cap preprocessing."
          #'emacsvox-aural--structured-compatible-delivery-entry-p
          entries)))
       (list entries effects)
-    (let* ((built
-            (emacsvox-aural--build-structured-timeline
-             generation 1 runs)))
+    (let* ((snapshot (when (eql (process-get owner emacsvox-aural--structured-timeline-process-property) 4)
+                       (omnivox--choice-current-registration owner)))
+           (built (emacsvox-aural--build-structured-timeline generation 1 runs snapshot)))
       (if (not built)
           (list entries effects)
         (let* ((envelope (car built))
@@ -1628,6 +1627,8 @@ the authoritative check after punctuation and split-cap preprocessing."
                  tts--tracked-completion-function
                  bindings))
                (actual-id (car registration)))
+          (when snapshot
+            (omnivox--prepare-choice-dispatch (nth 2 registration) snapshot (nth 2 built)))
           (unless (= actual-id 1)
             (setq envelope (plist-put envelope :dispatch_id actual-id)))
           (list

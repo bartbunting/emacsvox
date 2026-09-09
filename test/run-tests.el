@@ -50,6 +50,7 @@
   (require 'omnivox-choice-codec-tests)
   (require 'omnivox-choice-registration-tests)
   (require 'omnivox-choice-timeline-tests)
+  (require 'omnivox-choice-playback-tests)
   (require 'emacsvox-aural-voice-editor-tests)
   (require 'emacsvox-aural-voice-context-tests)
   (require 'emacsvox-aural-voice-workbench-tests)

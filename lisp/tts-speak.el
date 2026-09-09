@@ -199,7 +199,7 @@ a `cancelled' record when pending input interrupts that wait.")
 (cl-defstruct (tts--dispatch-owner (:constructor tts--dispatch-owner-create))
   id process generation epoch submission-id marker completion semantics
   (state 'prepared) published terminal retired released tracking-failed metadata-bytes
-  write-started-at write-ended-at)
+  write-started-at write-ended-at context admission-function release-function)
 
 (defconst tts--dispatch-owner-limit 128)
 (defconst tts--dispatch-metadata-limit (* 32 1024 1024))
@@ -281,6 +281,8 @@ a `cancelled' record when pending input interrupts that wait.")
                  (equal (tts--dispatch-owner-generation owner)
                         (process-get process 'tts--speech-process-generation)))
       (error "Speech dispatch owner is no longer available"))
+    (when-let* ((validate (tts--dispatch-owner-admission-function owner)))
+      (funcall validate owner))
     (setf (tts--dispatch-owner-state owner) 'writing
           (tts--dispatch-owner-write-started-at owner) (float-time)
           (tts--dispatch-owner-epoch owner)
@@ -308,6 +310,8 @@ a `cancelled' record when pending input interrupts that wait.")
       (remhash id tts--tracked-dispatches)
       (remhash id tts--marker-dispatches)
       (remhash id tts--dispatch-lifecycles)
+      (when-let* ((release (tts--dispatch-owner-release-function owner)))
+        (funcall release owner))
       (process-put process 'tts--dispatch-owner-count
                    (max 0 (1- (or (process-get process 'tts--dispatch-owner-count) 0))))
       (process-put process 'tts--dispatch-metadata-bytes

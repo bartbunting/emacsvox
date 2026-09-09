@@ -65,8 +65,8 @@ workspace tests and Clippy pass. Omnivox =31a0b9a= passes isolated muted
 both-lane/reconnect and legacy remote acceptance and advertises the bundle.
 Client wire conversion and per-lane version-2 registration now pass focused
 contracts and compiled parity. All 226 selected client/voice/transport tests
-pass. Layered transport/readback, preview v2 and individual editor controls
-remain pending in the [[file:../voice-editor-implementation-plan.org][implementation plan]]. The
+passed at that registration checkpoint. Subsequent client slices are recorded
+below and in the [[file:../voice-editor-implementation-plan.org][implementation plan]]. The
 [[file:../voice-editor-client-handoff-review.org][XHI client dispatch handoff review]] is complete, with eight reproducible
 probes and 429 passing selected baseline tests. Implementation resumed at High.
 The lifecycle slice now arms ownership before writing, prevents retired tracking
@@ -74,10 +74,14 @@ from returning and defers server callbacks until the caller has stored its ID.
 Regression tests cover early completion, failure cleanup, callback speech,
 reentrant filters and lane-local cancellation. Registration now freezes raw palette/voice/choice provenance with its wire
 definitions; four new contracts and all 457 selected tests pass.
-Explicit timeline-4 projection and strict marker-3 decoding now pass 474 selected
-source tests and compiled parity. Shared snapshot retention, correlated readback
-and ordinary runtime integration remain next; the bundle is not yet enabled
-for ordinary speech. Earlier, the maintainer
+Acknowledged structured runtime now uses timeline 4 and correlated marker-3
+readback with bounded frozen metadata. All 490 selected source tests, the full
+rebuild, compiled gate and muted real-server both-lane/reconnect acceptance pass.
+A further probe finds that an explicit second Stop during the policy stop's
+write does not cancel the inactive prepared request, in versions 3 and 4 alike.
+Stop for XHI to settle that preparation boundary before proceeding. The remaining
+ordinary-consumer audit, preview v2, individual controls and spoken acceptance
+are still pending; this is not complete feature delivery. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
 auditions remain available on older servers; full preview is explicitly unsupported.
