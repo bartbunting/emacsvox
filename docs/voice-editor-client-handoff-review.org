@@ -16,9 +16,12 @@ Stop ownership, generic reservation cleanup and shared choice metadata cleanup
 are implemented. The subsequent ordinary-consumer audit adds eight connected
 contracts; all 490 selected source tests pass. It exposes whole-transaction
 legacy fallback when raw named speech is mixed with prepared speech, and the
-separate isolated-letter protocol. Return to XHI for the bounded compatibility
-handoff design described in the implementation plan before continuing at High.
-Preview v2 and editor controls remain pending.
+separate isolated-letter protocol. The maintainer returned to XHI; the
+[[file:voice-editor-legacy-queue-review.org][legacy queue review]] adds twelve observations, including lost dispatch
+intent after late raw commands. Its A/B scope decision is pending. Isolated
+characters supply no named palette voice and retain their existing selection.
+Stay at XHI until the scope and handoff are complete. Preview v2 and editor
+controls remain pending.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated

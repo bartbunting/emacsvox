@@ -89,8 +89,13 @@ adds eight connected contracts; all 490 selected source tests pass. Normal named
 speech, notifications, sparse context, speech actions and word spelling preserve
 layered requests. Raw named-voice queue entries still force an entire mixed
 transaction to legacy projection, and isolated characters retain the separate
-letter protocol. Return to XHI for the bounded compatibility handoff design,
-preserving queue order, cancellation and character-review behavior.
+letter protocol. The maintainer returned to XHI. The
+[[file:../voice-editor-legacy-queue-review.org][legacy queue review]] reproduces missing dispatch after late raw entries
+and clarifies that isolated characters supply no named palette voice. A scope
+decision is pending: complete captured submissions first (recommended A), or
+also upgrade cross-call legacy queues now (B). Preserve queue order, cancellation
+and existing character review under either option; finish the handoff at XHI
+before returning to High.
 The remaining compatibility fixes, preview v2, individual controls and spoken acceptance
 are still pending; this is not complete feature delivery. Earlier, the maintainer
 selected shared tuning first, with explicit

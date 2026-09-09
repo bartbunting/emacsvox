@@ -127,10 +127,22 @@ behaviors are visible in Omnivox's =CommandId::Letter= handling and
 =process_letter= pipeline. They are not reproduced merely by sending a one-letter
 ordinary text span. No listening or server behavior change was performed here.
 
-Return to XHI for the bounded legacy-queue/character handoff design before
-implementation or enabling editor support. Preserve the accepted shared -> actual
-choice -> context precedence and existing public queue behavior. The remaining
-preview and editor work stays pending.
+The maintainer returned to XHI. The [[file:voice-editor-legacy-queue-review.org][queue handoff review]] records twelve further
+observations and a scope decision. It also reproduces a missing-dispatch defect:
+late raw commands can prevent structured replacement after dispatch was suppressed.
+That needs repair regardless of the selected tuning scope.
+
+The review narrows the character finding: isolated character review supplies no
+named palette voice, so it does not identify a particular saved fallback patch
+to apply. Retain its existing voice selection and letter semantics. Choosing a
+voice from formatting at point would be separate UX work. Word spelling and
+phonetic review remain ordinary speech consumers.
+
+The recommended scope upgrades complete captured submissions and explicitly
+retains cross-call legacy queue limitations; the alternative also extends those
+pending queues through new negotiated support. Neither is selected yet.
+Preserve shared -> actual choice -> context and the existing public queue API.
+Preview and editor work remain pending.
 
 Eight new consumer contracts and all 490 selected source tests pass. Fresh
 compiled verification includes the same eight cases. The compiled fixture loads

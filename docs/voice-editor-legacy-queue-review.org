@@ -1,0 +1,206 @@
+#+title: Per-Fallback Tuning: Legacy Queue Handoff Review
+#+date: 2026-09-09
+#+startup: content
+
+* Status and scope decision
+
+The maintainer returned to XHI after consumer audit =32c7494ac=. This review
+narrows the character finding and reproduces a missing-dispatch defect in
+mixed submissions. No production behavior changes here. Twelve source-only
+observations are retained in [[file:../test/diagnose-choice-queue.el][the muted diagnostic]].
+
+A scope decision is required before completing the implementation contract.
+Recommend A: upgrade named speech inside complete captured submissions, repair
+dispatch preservation, and explicitly retain the old cross-call queue as a
+compatibility path. B also upgrades named speech queued across separate calls;
+that requires an additional pending-queue protocol and ownership design.
+Neither option changes isolated-character voice selection.
+
+Stay at XHI until the maintainer selects the scope and the corresponding
+handoff is complete. Then return to High for tested, committed implementation
+slices. The broader [[file:voice-editor-implementation-plan.org][implementation plan]] remains active; preview v2, optional
+controls and spoken acceptance are not complete.
+
+* What the code actually does
+
+=tts-speak-using-voice= queues voice code, text and reset code. It does not
+dispatch. Its public signature must keep that behavior. Maintained source
+producers do not call it outside =tts-speak.el=; the static aural audit guards
+that fact. External Lisp can still use it to build a queue over several calls.
+
+=tts-speak= prepares concrete runs and normally submits a complete presentation.
+Inside a larger delivery transaction it joins that transaction. Structured
+finalization replaces the captured compatibility queue only if all commands
+are compatible. The ordinary producer suppresses its dispatch while that
+replacement appears possible.
+
+That decision is currently made too early. A later raw command can make the
+transaction incompatible after the dispatch has already been omitted. This
+is a delivery bug in addition to the missing individual settings.
+
+| Sequence inside one capture | Current observation |
+|-----------------------------+---------------------|
+| Named queue only | Code/text/reset, no dispatch; correctly remains queued. |
+| Named queue, normal speech | Entire queue uses legacy commands and one dispatch; individual tuning is lost. |
+| Normal speech, named queue | Legacy commands with no dispatch; normal speech can remain pending. |
+| Normal speech, named queue, explicit dispatch | Legacy commands and one final dispatch. |
+| Normal speech twice | One structured timeline, preserving the existing enclosing-submission behavior. |
+| Named queue, explicit dispatch, normal speech | Two legacy dispatches; the explicit boundary must not disappear during conversion. |
+| Normal speech, opaque pitch code | Legacy commands with no dispatch; the same late-incompatibility defect. |
+| Normal speech, isolated letter | Legacy normal text remains queued, followed by the letter command. |
+| Isolated letter, normal speech | Letter command precedes a legacy normal-speech dispatch. |
+
+Three additional observations run without an enclosing capture: named queue
+alone, named queue followed by explicit dispatch, and named queue followed by
+normal speech. The last case leaves the earlier raw queue separate from the
+normal structured timeline. A new timeline cannot silently be treated as the
+flush of arbitrary previously queued server commands.
+
+These outputs establish client commands, not audible results. Server inspection
+confirms that =q=/=c= append to the bounded pending batch; =d= consumes it with
+the state and routing snapshot captured at dispatch. A structured timeline has
+its own admission. Queue overflow poisons the batch until dispatch, Stop or
+reset; conversion must not resurrect a partial batch.
+
+* Isolated characters: preserve the current selection contract
+
+=emacsvox-speak-this-char= passes only the letter to =tts-letter=. It supplies
+neither a named palette voice nor the personality at point. The server uses
+its current legacy physical state and implicit routing. Consequently this path
+does not identify a saved choice patch that can simply be restored.
+
+The server's special path lowercases the synthesis input, uses speech rate
+times character scale, and applies its established capital pitch cue. Its
+immediate interruption is not equivalent to emitting the ordinary Stop command:
+the letter branch does not clear the server's pending legacy batch. Replacing
+it with =tts-stop= followed by =tts-speak= would change queue behavior too.
+
+Keep the existing character command and do not infer a palette voice from the
+last playback receipt, a global default symbol, or a face at point. Word
+spelling and phonetic review remain ordinary speech consumers; the new tests
+already cover owned capital-cue voices and contextual spelling.
+
+A future request for characters to follow formatting at point would need an
+explicit selection and capitalization policy. It is outside both proposed
+queue scopes. The editor should explain that isolated character review keeps
+its separate voice behavior; do not report it as verified playback of the
+currently edited named voice.
+
+* Required design in both options
+
+** Preserve intent until finalization
+
+Capture dispatch intent before considering structured replacement. Retain
+command order, the distinction between a complete ordinary submission and a
+queue-only helper, and every explicit dispatch boundary. Do not implement the
+bridge by calling =tts-speak= from the queue-only helper.
+
+Use a single ordered capture representation, or explicit ordering links between
+the existing command and run collections. A second list of unpositioned runs
+is insufficient once opaque commands or dispatch boundaries intervene.
+Do not recover typed requests by parsing generated engine command strings.
+
+Finalization must be able to emit a complete compatibility fallback, including
+the dispatch that the producer intended, if later entries prevent promotion.
+Queue-only tails remain queued. Adjacent ordinary submissions may retain their
+current enclosing-transaction coalescing; explicit low-level dispatches are
+hard boundaries. Preserve sync/state commands at their original boundaries.
+
+** Retain ownership and old semantics
+
+Finish all validation and projection before policy interruption or writes.
+Retain preparation-scope cancellation, exact own-stop preservation, shared
+snapshot accounting, returned tracked IDs and deferred notifications. Do not
+discard or replace an already allocated callback owner when selecting a
+different wire representation. Do not replay after a partial write or reconnect.
+
+Treat opaque commands conservatively. Their effects on pending text, voice
+state or playback cannot be guessed from the surrounding named voice. A
+fallback must be explicit in diagnostics, preserve the original queue behavior,
+and make no individual-adjustment claim. Admission and bounds failures remain
+failures; they are not reasons to retry through legacy output.
+
+Both lanes make their own capability and acknowledged-registry decisions.
+Older servers keep shared tuning and retained saved patches. No dependency,
+engine helper, calibration, installation or release change is proposed.
+
+* Option A: complete captured submissions first (recommended)
+
+Promote inspectable named queue entries only when a complete captured submission
+owns their order and flush boundary. Keep the original logical name and raw
+context until projection. Use the existing layered timeline and receipt path;
+do not generate a physical route or flatten the predicted choice.
+
+The final handoff must specify a conservative proof of a self-contained group:
+all input is owned and representable, the closing dispatch is known, no opaque
+state crosses the group, and no earlier legacy pending queue would be silently
+consumed, overtaken or discarded. If that proof is unavailable, preserve the
+legacy group with a visible limitation. Never equate the start of a client
+capture with an empty server pending queue.
+
+This needs bounded per-process queue-state knowledge and admission rechecks,
+not indefinite retention of arbitrary external Lisp submissions. Unknown state
+stays unknown until an observed successful boundary reestablishes it. Direct
+unstructured writes and partial writes invalidate the proof. Finalize this
+mechanism at XHI after scope selection, including its interaction with nested
+speech and automatic Stop; do not improvise it during High implementation.
+
+The queue-only helper outside a complete capture remains legacy. An old add-on
+can therefore retain shared tuning when it builds speech across separate calls.
+Document that limit in the editor's runtime explanation and developer guidance.
+Do not label registration acknowledgement as proof of tuning on every consumer.
+
+Advantages: covers maintained ordinary producers, preserves the public queue
+API, reuses current wire/runtime machinery, and keeps work focused on the editor.
+Costs: old cross-call producers retain a visible tuning limitation; a later
+extension would still be needed to give those callers equivalent tuning.
+
+* Option B: upgrade cross-call legacy queues in this feature
+
+Also support a named queue call now and its dispatch in a later call, while
+retaining intervening raw commands and separate flushes. It must stay silent
+until the caller actually dispatches.
+
+This requires a negotiated typed pending representation understood by the
+server and corresponding bounded client ownership/readback metadata. Specify
+when registration, host rate and contextual data freeze; how several queued
+names and generations share one dispatch; and how errors, overflow, Stop,
+letter commands, reset, process retirement and remote loss clear or preserve
+the pending work. Keep older clients' =q=/=c=/=d=/=l= behavior unchanged.
+
+Buffering arbitrary old queues only in Emacs is not the recommended solution:
+it moves the existing pending-queue owner, delays validation and changes what
+the server sees between calls. Nor may a new typed queue command dispatch each
+entry immediately; that would violate the public helper's behavior.
+
+Advantages: fewer differences between modern speech and old add-ons; named
+voices can retain tuning even when assembled over several calls.
+Costs: another client/server protocol and pending-work lifecycle, a larger
+compatibility and failure matrix, and more work before the editor is ready.
+Opaque engine-specific commands still need explicit limits; B cannot promise
+lossless interpretation of arbitrary raw code.
+
+* Acceptance matrix after the decision
+
+1. Preserve queue-only silence and text/reset order, inside and outside capture.
+2. Repair late-incompatibility dispatch loss without dispatching trailing queued
+   text early. Cover named and opaque tails, empty speech and two explicit flushes.
+3. Convert the supported named-queue/normal-speech cases into positive layered
+   tests with raw sparse context, aliases, effects and actual fallback receipts.
+4. Keep compound/opaque compatibility explicit; test state before and after a
+   layered boundary, legacy pending input and unknown queue state.
+5. Cover plain, tracked and marked dispatch identity; nested Stop and urgent
+   speech; cancellation during projection; pending quits; bounds; failed and
+   partial writes; both lanes and reconnect without replay.
+6. Preserve isolated-letter wire and server state/queue semantics. Do not add
+   heading cues, contextual voice selection or new character-rate arithmetic.
+7. For B, additionally test queueing across calls, intervening registrations,
+   state changes, queue poisoning, future dispatch and stale readback prevention.
+8. Run selected source tests, rebuilt byte-code, fresh compiled parity and muted
+   real-server acceptance before each runtime commit. Retain live listening as
+   the final UX acceptance boundary.
+
+All Emacsvox ADRs 0001–0017 and Omnivox ADRs 0001–0011 were read together for
+this review. It refines implementation scope under the existing contracts;
+it does not change accepted shared -> actual choice -> context precedence or
+silently adopt either scope before the maintainer's decision.
