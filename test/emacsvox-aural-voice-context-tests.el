@@ -4,6 +4,7 @@
 ;;; Code:
 (require 'ert)
 (require 'emacsvox-aural-voice-editor-tests)
+(require 'emacsvox-aural-voice-editing-tests)
 (require 'emacsvox-aural-voice-context)
 
 (defun emacsvox-test--voice-context-input (&rest contributions)
@@ -231,6 +232,35 @@
        (setq emacsvox-aural-voice-editor--preview-owner base)
        (emacsvox-aural-voice-context-stop)
        (should (eq emacsvox-aural-voice-editor--preview-owner base))))))
+
+(ert-deftest emacsvox-aural-voice-context-retains-unflattened-base-and-winning-patch ()
+  (let* ((snapshot (emacsvox-test--cascade-snapshot))
+         (before (copy-tree snapshot))
+         (base '(:palette reading :voice bolden))
+         (input (emacsvox-test--voice-context-input '(base bolden) '(weak (:richness 1))
+                                                   '(strong (:richness 9 :average-pitch nil :echo nil)))))
+    (cl-letf (((symbol-function 'emacsvox-aural-voice-runtime--resolve) (lambda (&rest _) '(:name bolden))))
+      (let* ((resolved (emacsvox-aural-voice-context--resolve base snapshot input))
+             (entry (emacsvox-aural-voice-editing--cascade
+                     (plist-get resolved :base-snapshot) 'reading nil "Sample" (plist-get resolved :context) "normal")))
+        (should (equal snapshot before))
+        (should (equal (plist-get resolved :base-snapshot) snapshot))
+        (should (= (plist-get (plist-get resolved :context) :richness) 9))
+        (should (plist-member (plist-get resolved :context) :average-pitch))
+        (should-not (plist-get (plist-get resolved :context) :average-pitch))
+        (should (plist-member (plist-get resolved :context) :echo))
+        (should (eq (alist-get 'richness (plist-get resolved :origins)) 'strong))
+        (should (= (plist-get (plist-get (emacsvox-aural-voice-editing--compose-preview entry) :style) :richness) 9))
+        (should (= (plist-get (plist-get (plist-get resolved :base-snapshot) :definition) :echo) 4))))))
+
+(ert-deftest emacsvox-aural-voice-context-preset-reset-clears-earlier-sparse-overrides ()
+  (let ((snapshot (emacsvox-test--cascade-snapshot)) (base '(:palette reading :voice bolden)))
+    (cl-letf (((symbol-function 'emacsvox-aural-voice-runtime--resolve) (lambda (&rest _) '(:name bolden))))
+      (let ((result (emacsvox-aural-voice-context--resolve
+                     base snapshot (emacsvox-test--voice-context-input '(early (:richness 1 :echo nil))
+                                                                        '(reset bolden) '(later (:rate-offset 0))))))
+        (should (equal (plist-get result :context) '(:rate-offset 0)))
+        (should (equal (plist-get result :base-snapshot) snapshot))))))
 
 (provide 'emacsvox-aural-voice-context-tests)
 ;;; emacsvox-aural-voice-context-tests.el ends here

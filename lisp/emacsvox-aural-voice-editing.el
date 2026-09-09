@@ -199,9 +199,9 @@ Legacy conversion uses explicitly captured ROUTING.  No registry is changed."
     (emacsvox-aural-compile-voice-palette-data data)
     (list :palette data :choice-sets sets)))
 
-(defun emacsvox-aural-voice-editing--preview (snapshot palette policy text)
-  "Create a full-chain base preview for SNAPSHOT, PALETTE, frozen POLICY and TEXT."
-  (let ((style (emacsvox-aural-voice-editing--style snapshot palette)) acss effects)
+(defun emacsvox-aural-voice-editing--preview-style (style selectors language text)
+  "Normalize raw STYLE with SELECTORS, LANGUAGE and TEXT for legacy previews."
+  (let (acss effects)
     (dolist (dimension '(average-pitch pitch-range stress richness))
       (let* ((key (emacsvox-aural--voice-dimension-key dimension)) (value (plist-get style key)))
         (when (numberp value) (setq acss (plist-put acss key (/ (float (max 0 (min 9 value))) 9))))))
@@ -209,11 +209,97 @@ Legacy conversion uses explicitly captured ROUTING.  No registry is changed."
       (let* ((key (emacsvox-aural--voice-dimension-key dimension)) (value (plist-get style key)))
         (when (numberp value)
           (setq effects (plist-put effects key (emacsvox-aural-normalize-post-synthesis-value dimension value))))))
-    (list :text text :selectors (copy-tree (plist-get snapshot :selectors))
-          :language (plist-get snapshot :language) :acss acss
-          :rate-offset (plist-get style :rate-offset) :effects effects
-          :fallback-policy (emacsvox-aural-voice-runtime--preview-policy (list :policy policy))
+    (list :text text :selectors (copy-tree selectors) :language language :acss acss
+          :rate-offset (plist-get style :rate-offset) :effects effects)))
+
+(defun emacsvox-aural-voice-editing--preview (snapshot palette policy text)
+  "Create a full-chain base preview for SNAPSHOT, PALETTE, frozen POLICY and TEXT."
+  (append (emacsvox-aural-voice-editing--preview-style
+           (emacsvox-aural-voice-editing--style snapshot palette)
+           (plist-get snapshot :selectors) (plist-get snapshot :language) text)
+          (list :fallback-policy (emacsvox-aural-voice-runtime--preview-policy (list :policy policy))
+                :disabled-engine-ids (copy-sequence (plist-get policy :disabled-engines)))))
+
+(defun emacsvox-aural-voice-editing--rows (snapshot)
+  "Return complete SNAPSHOT rows, refusing a conflicting selector projection."
+  (let ((rows (if (plist-member snapshot :choices) (copy-tree (plist-get snapshot :choices))
+                (emacsvox-aural-voice-data--wrap-selectors (plist-get snapshot :selectors)))))
+    (emacsvox-aural-routing--validate-choices rows)
+    (unless (equal (plist-get snapshot :selectors) (emacsvox-aural-voice-data--selectors rows))
+      (user-error "Physical choices and individual settings disagree"))
+    rows))
+
+(defun emacsvox-aural-voice-editing--cascade (snapshot palette policy text &optional context choice-id)
+  "Project SNAPSHOT, PALETTE, captured POLICY and TEXT without flattening CONTEXT.
+CHOICE-ID selects the original row, retaining the full chain and its indices.
+Family and legacy absolute rate remain outside the established preview fields."
+  (let ((style (emacsvox-aural-voice-editing--style snapshot palette))
+        (rows (emacsvox-aural-voice-editing--rows snapshot))
+        (fallback (plist-get policy :fallback)) shared)
+    (when (plist-get style :preset)
+      (user-error "Resolve the shared preset before previewing this voice"))
+    (dolist (key emacsvox-aural-routing--choice-dimensions)
+      (when (plist-member style key) (setq shared (plist-put shared key (plist-get style key)))))
+    (emacsvox-aural-routing--validate-choice-adjustments shared)
+    (emacsvox-aural-routing--validate-choice-adjustments context)
+    (when (and choice-id (not (cl-find choice-id rows :test #'equal :key (lambda (row) (plist-get row :id)))))
+      (user-error "Choice has no matching row in this snapshot; compare the full voice or audition the edited row"))
+    (list :text (copy-sequence text) :role 'sample
+          :voice (list :language (plist-get snapshot :language) :shared shared :choices rows)
+          :context (copy-tree context) :placement '(:pan nil)
+          :selection (if choice-id (list :mode 'choice :choice-id choice-id) '(:mode automatic))
+          :fallback-policy
+          (list :preferred-engines (copy-sequence (plist-get policy :engine-order))
+                :allow-same-language-on-requested-engine (plist-get fallback :allow-same-language)
+                :global-default (copy-tree (plist-get fallback :global-default))
+                :fallback-engines (copy-sequence (plist-get fallback :engines)))
           :disabled-engine-ids (copy-sequence (plist-get policy :disabled-engines)))))
+
+(defun emacsvox-aural-voice-editing--compose-preview (entry)
+  "Return ENTRY's legacy effective style and surviving explicit native defaults.
+Only a selected row may be composed; automatic selection cannot predict a row."
+  (let* ((voice (plist-get entry :voice))
+         (selection (plist-get entry :selection))
+         (id (plist-get selection :choice-id))
+         (row (and id (cl-find id (plist-get voice :choices) :test #'equal
+                               :key (lambda (choice) (plist-get choice :id)))))
+         (style (copy-tree (plist-get voice :shared))) defaults)
+    (when (and id (not row)) (user-error "Selected preview row is missing"))
+    (cl-loop for patch in (list (plist-get row :adjustments) (plist-get entry :context))
+             for contextual in '(nil t) do
+             (emacsvox-aural-routing--validate-choice-adjustments patch)
+             (cl-loop for (key value) on patch by #'cddr do
+                      (unless (and contextual (null value)
+                                   (memq key '(:average-pitch :pitch-range :stress :richness)))
+                        (setq style (plist-put style key value))
+                        (setq defaults (delq key defaults))
+                        (when (null value) (push key defaults)))))
+    (list :style style :defaults (nreverse defaults))))
+
+(defun emacsvox-aural-voice-editing--legacy-preview (entry)
+  "Project private ENTRY faithfully onto an existing generic preview form.
+Refuse automatic previews of customized chains and unrepresentable row resets.
+Adapter feature support is checked by the caller before starting any entry."
+  (let* ((voice (plist-get entry :voice))
+         (rows (plist-get voice :choices))
+         (id (plist-get (plist-get entry :selection) :choice-id))
+         (composed (emacsvox-aural-voice-editing--compose-preview entry))
+         (policy (plist-get entry :fallback-policy)))
+    (when (and (not id) (cl-some (lambda (row) (plist-get row :adjustments)) rows))
+      (user-error "Customized full voice preview needs an updated Omnivox server; saving remains available"))
+    (when (and id (plist-get composed :defaults))
+      (user-error "This individual audition needs native default clearing; update Omnivox or use shared settings"))
+    (let ((preview (append (emacsvox-aural-voice-editing--preview-style
+                            (plist-get composed :style) (emacsvox-aural-voice-data--selectors rows)
+                            (plist-get voice :language) (plist-get entry :text))
+                           (list :fallback-policy (copy-tree policy)
+                                 :disabled-engine-ids (copy-sequence (plist-get entry :disabled-engine-ids))))))
+      (when id
+        (cl-remf preview :selectors)
+        (setq preview (plist-put preview :selector
+                                 (copy-tree (plist-get (cl-find id rows :test #'equal
+                                                               :key (lambda (row) (plist-get row :id))) :selector)))))
+      (append preview (list :role (plist-get entry :role) :variant (plist-get entry :variant))))))
 
 (provide 'emacsvox-aural-voice-editing)
 ;;; emacsvox-aural-voice-editing.el ends here

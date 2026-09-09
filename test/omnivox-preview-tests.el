@@ -8,6 +8,10 @@
 (require 'emacsvox-tts-tests)
 (require 'tts-queue-state-tests)
 
+(defconst omnivox-preview-test--wire-fixture
+  (expand-file-name "fixtures/voice-editor/fallback-tuning-wire.json"
+                    (file-name-directory (or load-file-name buffer-file-name))))
+
 (defun omnivox-preview-test--entry (individual)
   (if individual (emacsvox-test--individual-preview-entry)
     (emacsvox-test--complete-preview-entry)))
@@ -454,9 +458,7 @@
 
 (ert-deftest omnivox-preview-v2-accepts-the-paired-server-terminal-fixture ()
   (let* ((fixture (with-temp-buffer
-                    (insert-file-contents
-                     (expand-file-name "fixtures/voice-editor/fallback-tuning-wire.json"
-                                       (file-name-directory (locate-library "omnivox-preview-tests"))))
+                    (insert-file-contents omnivox-preview-test--wire-fixture)
                     (json-parse-buffer :object-type 'plist :array-type 'array :null-object :null :false-object :false)))
          (terminal (plist-get (plist-get fixture :messages) :preview_completed))
          (entry (omnivox-preview-test--layered))

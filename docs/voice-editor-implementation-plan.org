@@ -56,8 +56,9 @@ and reconnect. The [[file:voice-editor-preview-handoff-review.org][XHI preview-o
 complete, with twelve reproduced gaps and forty independent desired cases.
 The maintainer resumed at High. The owned coordinator and guarded startup are
 implemented. Private v2 request/terminal handling now passes 595 selected tests
-and muted local/remote compiled acceptance. Editor snapshot/context projection
-and optional controls remain next; no new product decision is required.
+and muted local/remote compiled acceptance. Pure editor snapshot/context
+projection now passes 607 selected tests. Connecting views and optional
+controls remains next; no new product decision is required.
 Scope A remains selected; broader cross-call tuning is deferred. Preview and
 editor work remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
@@ -825,8 +826,18 @@ slice supplies the service; it does not yet connect the new editor projection.
 **** TODO Complete preview and editor controls
 
 The ordinary consumer slices and private preview service are complete.
-Continue at High with editor original-row auditions and unflattened context
-projection. Finally add optional per-choice
+Pure editor projection now retains the full chain, sparse context and selected
+ID. Context resolution returns its chosen unflattened base alongside the
+existing display projection. Equal-to-shared overrides and contextual ACSS nil
+remain explicit; reset presets clear earlier sparse fields. Legacy projection
+refuses customized automatic chains and surviving native-default operations
+in individual auditions. It preserves an explicitly empty captured engine order.
+Six new contracts plus the existing editing suite expand the selected matrix to
+607 passing tests; compiled parity covers the new pure entry points.
+
+Continue at High by connecting editor original-row auditions and contextual
+previews with view/draft revision ownership and adapter capability checks.
+Finally add optional per-choice
 controls, revision-aware explanations and experiment keeps over those tested
 services. The [[file:voice-editor-preview-handoff-review.org][handoff]] specifies lifecycle, compatibility and evidence gates.
 Verify fresh compiled behavior, update current documentation and commit each

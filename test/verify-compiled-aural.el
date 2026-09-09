@@ -384,6 +384,8 @@
                       omnivox--choice-patch-json
                       omnivox--preview-sequence
                       omnivox--preview-drive
+                      emacsvox-aural-voice-editing--cascade
+                      emacsvox-aural-voice-editing--legacy-preview
                       omnivox--portable-style-acss
                       emacsvox-aural--timeline-style-acss
                       emacsvox-aural--timeline-effect-transition

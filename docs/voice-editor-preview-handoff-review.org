@@ -9,8 +9,8 @@ The maintainer's accepted choices still cover the feature; no new product
 decision is needed. The maintainer resumed at High. The first implementation
 slice now gives complete v1 and individual auditions one owned coordinator,
 guarded startup, deferred advancement and unwind-safe request cleanup. Private
-preview v2 request/terminal handling is now implemented; editor projection and
-optional controls remain pending. Continue the implementation
+preview v2 request/terminal handling and pure editor projection are implemented;
+view integration and optional controls remain pending. Continue the implementation
 slices below, stopping for a contract conflict or user spoken acceptance.
 
 All Emacsvox ADRs 0001–0017 and Omnivox ADRs 0001–0011 were read together.
@@ -280,9 +280,9 @@ save recovery. This implements accepted behavior rather than changing storage.
    unchanged wire shapes. Turn the lifecycle observations into positive tests,
    including both supersession directions, early replies, all nonlocal exits,
    callback-started replacement, retired process and notification isolation.
-2. IN PROGRESS: The strict v2 request/terminal service is implemented, including
-   automatic, original-row and paired sequence handling. Add the editor's raw
-   snapshot/context projection and connect it to that service. Test
+2. IN PROGRESS: The strict v2 request/terminal service and pure editor projection
+   are implemented, including automatic, original-row and paired sequence
+   handling. Connect editor views to those services. Test
    independent [[file:../test/fixtures/voice-editor/preview-handoff.el][handoff cases]] and the existing [[file:../test/fixtures/voice-editor/fallback-tuning-wire.json][paired wire fixture]], including
    duplicate physical voices, missing originals, nullable fields, truncated
    last-started evidence, no silent old-server flattening and metadata changes.
@@ -375,5 +375,17 @@ retains actual-fallback receipts on both lanes and transports after reconnect.
 One malformed-wire fixture initially used =json-serialize=, which removes
 duplicate plist keys; it now supplies literal duplicate-key JSON.
 
-The editor still uses its old projection. Its sparse context handoff, view
-revisions, compatibility presentation and optional controls remain pending.
+The editor views still use their old preview calls. The pure projection slice
+now retains complete rows and sparse context independently of the effective
+legacy display. It rejects missing selected IDs and inconsistent selector/row
+snapshots, and refuses older individual auditions with surviving native resets.
+Six new contracts cover equal-to-shared overrides, preset resets, row identity,
+default/zero and frozen empty policy. Including the existing editing suite
+expands the selected matrix to 607 passing tests; fresh compiled parity checks
+the new entry points. View revisions, adapter capability checks, compatibility
+presentation and optional controls remain pending.
+
+Byte-code and documentation preflight pass. The expanded isolated compiled run
+also caught the paired terminal fixture relying on a test-directory load path;
+it now resolves its file relative to its own source at load time. This changes
+the test harness only. No live session was restarted or personal data changed.
