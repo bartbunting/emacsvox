@@ -11,9 +11,10 @@ The subsequent XHI preparation review is complete. Twenty diagnostic observation
 cover cancellation before owner allocation, during the policy stop, in nested
 hooks and legacy dispatch, plus pending quits during bookkeeping. The selected
 refinement uses cancellable preparation scopes, explicit own-stop preservation
-and unwind-safe reservations. It is a design handoff, not an implemented fix.
-Stop for High to implement the matrix below before continuing consumer audits,
-preview v2 or editor controls. No new product choice or Max review is needed.
+and unwind-safe reservations. Implementation resumed at High. Generic scopes,
+Stop ownership and generic reservation cleanup are implemented; shared choice
+metadata cleanup remains the next slice before consumer audits, preview v2 and
+editor controls. No new product choice or reasoning-level change is needed.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated
@@ -720,3 +721,29 @@ the new cancellation and reservation outcomes.
 =make headers-check= pass. Runtime Lisp is unchanged by this review, so no new
 runtime build or acoustic acceptance is claimed. The implementation plan and
 backlog mark the review complete and both implementation slices pending at High.
+
+* Generic preparation implementation at High
+
+Delivery transactions now register bounded scopes before their bodies, and
+direct tracked/marked calls use the same guarded service. Prepared owners have
+a cancellation index without playback observation. Automatic policy interruption
+preserves only its exact ready scope, while public Stop, nested urgent speech,
+process retirement and stop-all invalidate the affected scopes. Legacy automatic
+stop intent is carried to the validated delivery boundary. Final admission
+rechecks cancellation, and interrupted pending handoff preserves a newer pending
+generation. Cancelled preparation returns no ID, writes no stale packet and
+commits no success effects.
+
+Generic reservation links the owner to unwind cleanup before charging counters.
+Short bookkeeping sections defer pending quits and roll back ordinary nonlocal
+exits. Release cleanup handles peers and repeated abandonment. Sixteen new ERT
+contracts cover the diagnostic cancellation cases, both lanes, final admission,
+ordinary legacy speech, pending handoff, full owner capacity and quit/error/throw
+injection during scope/owner registration and release. All 477 selected source
+tests pass. The two shared-choice snapshot quit probes still reproduce their
+known leaks; those are explicitly reserved for the next slice.
+
+The isolated compiled gate and muted real-server both-lane/reconnect runner
+pass. Full byte-code regeneration completed; a final indentation edit to the
+transport required the ordinary incremental refresh before its current-bytecode
+preflight. Documentation and header gates pass after that refresh.

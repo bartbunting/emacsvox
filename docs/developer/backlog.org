@@ -80,8 +80,9 @@ rebuild, compiled gate and muted real-server both-lane/reconnect acceptance pass
 A subsequent XHI review records 20 preparation observations, including Stop
 before owner allocation and pending quits that leak reservation accounting.
 The selected design adds bounded cancellable scopes, explicit own-stop
-preservation and unwind-safe reservation/release. The review is complete;
-stop for High to implement and test its two slices. The fix remains pending.
+preservation and unwind-safe reservation/release. High implementation now covers
+generic preparation cancellation and reservation cleanup, with 16 new contracts
+and all 477 selected source tests passing. Shared-choice metadata cleanup is next.
 The remaining ordinary-consumer audit, preview v2, individual controls and spoken acceptance
 are still pending; this is not complete feature delivery. Earlier, the maintainer
 selected shared tuning first, with explicit

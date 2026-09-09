@@ -2056,7 +2056,7 @@ write.  State synchronization lines in a combined write are ignored."
               (((symbol-function 'process-send-string)
                 (lambda (_owner command) (push command writes)))
                ((symbol-function 'tts--interrupt-process)
-                (lambda (owner &optional notifications)
+                (lambda (owner &optional notifications _preserved)
                   (push (list owner notifications) interruptions)))
                ((symbol-function 'tts-voice-reset-code) (lambda () "")))
             (let ((emacsvox-aural-submission-delivery-policy 'replaceable)

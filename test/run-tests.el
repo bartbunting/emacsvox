@@ -33,6 +33,7 @@
   (require 'emacsvox-tts-audit-tests)
   (require 'emacsvox-tts-tests)
   (require 'tts-dispatch-handoff-tests)
+  (require 'tts-preparation-tests)
   (require 'omnivox-remote-tests)
   (require 'emacsvox-speak-tests)
   (require 'emacsvox-aural-tests)

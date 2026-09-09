@@ -454,14 +454,15 @@
 
 (ert-deftest tts-handoff-semantic-snapshot-copies-mutable-strings-and-vectors ()
   (tts-handoff-test--with-process
-   (let* ((name (copy-sequence "original")) (data (vector name))
+   (tts--call-with-preparation process (lambda ()
+    (let* ((name (copy-sequence "original")) (data (vector name))
           (owner (tts--dispatch-new-owner nil nil (list (cons "event" data)))))
      (unwind-protect
          (progn
            (aset name 0 ?X)
            (aset data 0 "replacement")
            (should (equal (cdr (car (tts--dispatch-owner-semantics owner))) ["original"])))
-       (tts--dispatch-abandon owner)))))
+       (tts--dispatch-abandon owner)))))))
 
 (ert-deftest tts-handoff-outer-submission-error-suppresses-published-callbacks ()
   (tts-handoff-test--with-process

@@ -17,6 +17,10 @@ is still being written. Stopping speech cancels pending callbacks, and failed
 submissions cannot restore cancelled tracking or replay the request. Speech
 started by playback callbacks gets its own submission.
 
+Stop also cancels speech still being prepared, including a request interrupted
+during its automatic stop of older speech. A newer urgent announcement can
+supersede that request. Interrupted preparation releases its tracking slots.
+
 ** Voice editor gives spoken adjustment feedback
 
 Automatic samples now start with the new adjustment value. Numeric controls

@@ -32,8 +32,9 @@ fresh compiled checks and muted real-server both-lane/reconnect acceptance pass.
 The subsequent XHI preparation review is complete: 20 diagnostic observations
 expose cancellation before/during preparation and interrupted reservation leaks.
 The selected refinement uses cancellable scopes, explicit own-stop preservation
-and unwind-safe bookkeeping. Stop for High to implement it; the cancellation
-fix and remaining feature work are still pending.
+and unwind-safe bookkeeping. High implementation now covers preparation
+cancellation and generic reservations. Shared-choice metadata cleanup and the
+remaining feature work are still pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -605,7 +606,7 @@ intent through the same service so ordinary speech does not cancel itself.
 No public signature, server protocol, dependency, storage or product decision
 changes. Stop for High; no Max review is required.
 
-**** TODO Implement preparation cancellation and generic reservation at High
+**** DONE Implement preparation cancellation and generic reservation at High
 
 Add scopes before transaction bodies and direct dispatch reservation. Preserve
 only the exact preparation during its own policy stop; public Stop, sentinel
@@ -615,7 +616,9 @@ handoff. Cancelled preparations must not write, interrupt newer speech, publish
 an ID or commit successful-delivery effects. Make generic owner accounting safe
 through error, quit and throw. Preserve existing public tracked-wrapper errors.
 Run source contracts and a fresh compiled gate after the required rebuild,
-update status and commit this slice.
+update status and commit this slice. Implemented with 16 new regression
+contracts and all 477 selected source tests passing. Shared choice metadata
+attachment remains the separate next slice below.
 
 **** TODO Make per-choice metadata reservation unwind-safe at High
 
