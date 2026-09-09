@@ -52,8 +52,10 @@ proof implementation now passes 526 selected source tests and muted client/serve
 acceptance on both lanes over local and remote connections, including reconnect.
 Guarded named promotion is implemented: 536 selected source tests pass, with
 muted local/remote named playback and verified fallback receipts on both lanes
-and reconnect. The next reasoning boundary is XHI for preview-operation ownership
-and original-row/context handoff before private preview v2 and editor integration.
+and reconnect. The [[file:voice-editor-preview-handoff-review.org][XHI preview-operation and original-row/context handoff]] is
+complete, with twelve reproduced gaps and forty independent desired cases.
+Return to High for the owned coordinator, guarded startup, strict v2 projection
+and optional editor integration; no new product decision is required.
 Scope A remains selected; broader cross-call tuning is deferred. Preview and
 editor work remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
@@ -761,29 +763,35 @@ also passes, as do fresh compiled real-server checks on both transports. Final
 byte-code, header, generated-reference and documentation release checks pass.
 No live runtime was installed.
 
-**** TODO XHI review private preview ownership and editor handoff
+**** DONE XHI review private preview ownership and editor handoff
 
-Stop after the promotion commit and request XHI before changing the private
-preview lifecycle. Existing complete and individual preview sequences own their
-own generation, timers, control callbacks and Stop hooks; they are distinct from
-the ordinary dispatch preparation just completed. Audit their Stop-before-queue
-paths under reentrancy, original-choice targeting and terminal/partial evidence.
-Specify how edited/original samples preserve sparse context, exact stable row
-identity, operation cancellation and bounded last-started evidence. Also settle
-how the existing editor/explanation consumes compatibility limits without
-confusing them with playback receipts. Keep the accepted wire and storage
-contracts; request a product decision only if the review exposes a real gap.
-Return to High for tested implementation once that handoff is concrete.
+The [[file:voice-editor-preview-handoff-review.org][private preview handoff review]] is complete. Twelve muted source observations
+reproduce lost row/context projection, competing preview ownership, nonlocal
+reservation leaks, reply-during-write advancement, timeout interruption of a
+new sample and stale editor/context results. Independent fixture data specifies
+seven projection, twenty lifecycle, eight evidence and five compatibility cases.
+Existing validators confirm fixture value consistency; these are not passing
+tests of the future preview implementation.
+
+Use one coordinator for all Omnivox preview types, explicit startup Stop ownership,
+framing receipts, unwind-safe control reservations and deferred advancement until
+the actual write succeeds. Preserve complete stable rows and sparse context;
+validate bounded v2 terminals independently from ordinary playback receipts.
+Draft/context/view revisions prevent stale callbacks updating newer inputs.
+The accepted storage/wire contracts and scope A remain unchanged. No product
+decision is needed. Return to High for the reviewed implementation slices.
 
 **** TODO Complete preview and editor controls
 
-After the three reviewed consumer slices, connect private preview v2
-and optional per-choice controls in the review's remaining implementation slices.
-
-Implement lossless context projection, lane negotiation and apply reporting.
-Close the audited ordinary speech gaps before enabling customization, then add per-choice
-controls and experiment keeps over the tested services. Verify fresh compiled
-behavior, update current documentation and commit each completed slice.
+The ordinary consumer slices and preview review are complete. At High, first
+implement the shared preview coordinator and guarded startup while preserving
+existing wire forms. Then connect strict private preview v2, original-row
+auditions and unflattened context projection. Finally add optional per-choice
+controls, revision-aware explanations and experiment keeps over those tested
+services. The [[file:voice-editor-preview-handoff-review.org][handoff]] specifies lifecycle, compatibility and evidence gates.
+Verify fresh compiled behavior, update current documentation and commit each
+completed slice. Stop for a real contract conflict or the spoken acceptance
+boundary, rather than treating review evidence as feature completion.
 
 Implement only with negotiated support and explicit behavior for older servers.
 Verify adjustment selection after actual runtime fallback, including two voices

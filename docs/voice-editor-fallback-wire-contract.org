@@ -15,8 +15,10 @@ queue and ordinary playback now produce marker-3 choice receipts in acceptance
 tests. Isolated two-lane/reconnect acceptance passes and Omnivox =31a0b9a=
 advertises the complete bundle. Client integration remains in progress;
 shared/choice/context wire conversions and per-lane version-2 registration are
-tested, while ordinary layered transport, preview v2 and readback remain next. Implementation continues
-at High under the reviewed [[file:voice-editor-implementation-plan.org][implementation plan]].
+tested. Ordinary layered transport, marker-3 readback and guarded complete named
+queues are now implemented. The [[file:voice-editor-preview-handoff-review.org][private-preview ownership/projection review]]
+is complete; return to High for client preview v2 and optional controls under
+the reviewed [[file:voice-editor-implementation-plan.org][implementation plan]].
 Omnivox commit =ff5cb5f= mirrors the accepted contract and decision into its
 ADR/protocol documentation; that snapshot retains its original design status.
 

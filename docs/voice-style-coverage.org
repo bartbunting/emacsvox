@@ -173,8 +173,15 @@ justifies promotion, and changed proof aborts without replay.
 
 Muted real named playback verifies fallback receipts on both lanes, locally and
 remotely, including reconnect. Scope A is unchanged. Preview v2, optional controls
-and spoken acceptance remain pending; stop for XHI to review their separate
-preview-operation ownership and original-row/context handoff.
+and spoken acceptance remain pending. The
+[[file:voice-editor-preview-handoff-review.org][XHI preview ownership and projection handoff]] is now complete. Twelve muted
+source observations reproduce lost row/context information, competing preview
+owners, nonlocal leaks, recursive early-response advancement and stale view
+updates. Forty independent expected cases cover projection, lifecycle, evidence
+and compatibility; existing pure validators check fixture consistency only.
+Return to High for the common coordinator and startup guard, strict v2 previews,
+then optional controls and experiment keeps. No runtime fix is claimed by this
+review, and no new product decision is required.
 
 Eight new consumer contracts and all 490 selected source tests pass. Fresh
 compiled verification includes the same eight cases. The compiled fixture loads

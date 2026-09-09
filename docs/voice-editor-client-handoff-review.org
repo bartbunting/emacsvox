@@ -31,13 +31,18 @@ including connected producer/Stop-hook and remote lifecycle checks. Muted
 client/server acceptance passes on both lanes, locally and remotely, including
 reconnect. Guarded named promotion is now implemented, with 536 selected source
 tests and muted named playback on both lanes locally/remotely after reconnect.
-Scope A remains selected. Stop for XHI to review the separate preview-operation
-ownership and original-row/context handoff before preview v2 and editor controls.
+Scope A remains selected. The [[file:voice-editor-preview-handoff-review.org][XHI private-preview handoff]] is complete,
+with twelve reproducible observations and forty independent desired cases.
+Return to High for the common preview coordinator, startup framing guard,
+strict v2 projection/readback and optional editor controls. No new product
+decision is required; those runtime/UI slices remain pending.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated
-marker-3 readback. The remaining ordinary compatibility fixes, private preview v2
-and optional editor controls are pending. No live runtime or personal configuration was changed.
+marker-3 readback. Complete named queues are promoted under scope A; cross-call
+and unsupported shapes retain their reviewed compatibility limits. Private
+preview v2 and optional editor controls are pending. No live runtime or personal
+configuration was changed.
 
 The accepted [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], [[file:voice-editor-fallback-wire-contract.org][wire contract]] and
 [[file:voice-editor-implementation-plan.org][implementation plan]] remain authoritative. This review concerns client

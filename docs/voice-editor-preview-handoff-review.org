@@ -1,0 +1,309 @@
+#+title: Per-Fallback Tuning: Private Preview and Editor Handoff
+#+date: 2026-09-09
+#+startup: content
+
+* Status and next reasoning level
+
+The XHI review is complete against Emacsvox =b46f0d682= and Omnivox =31a0b9a=.
+The maintainer's accepted choices still cover the feature; no new product
+decision is needed. Return to High for the implementation slices below, testing
+and committing each slice. Stop again for a contract conflict or user spoken
+acceptance. This review does not implement preview v2 or enable customization.
+
+All Emacsvox ADRs 0001–0017 and Omnivox ADRs 0001–0011 were read together.
+[[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]], the [[file:voice-editor-fallback-wire-contract.org][wire contract]], [[file:voice-editor-fallback-tuning-contract.org][storage contract]] and
+[[file:voice-editor-design.org][editor design]] remain authoritative. Shared settings, the actual choice's
+patch, then context replace individual fields; values do not add. No draft is
+registered, saved, activated or substituted into a live logical registry to preview it.
+The [[file:voice-editor-queue-proof-review.org][queue proof]] remains separate from playback evidence.
+
+* Reproduced baseline and limits of the evidence
+
+Run [[file:../test/diagnose-choice-preview.el][diagnose-choice-preview.el]] with the Emacs selected by =local.mk=:
+
+#+begin_example
+/home/bart/opt/emacs-31/bin/emacs -Q --batch -l test/diagnose-choice-preview.el
+#+end_example
+
+Twelve assertions reproduce the current source behavior using synthetic drafts,
+private pipe objects and muted writes/timers. These are baseline observations,
+not passing tests of the desired behavior. No live speech engine was involved.
+
+| Observation | Consequence |
+|-------------+-------------|
+| Full preview projection drops stable rows and their patches | A saved customized fallback cannot yet be faithfully auditioned through this path. |
+| Individual preview captures its process after Stop | Reentrant replacement can move the sample to another connection. |
+| Quit during actual individual submission leaves a callback and Stop hook | Non-error exits do not retire preview ownership. |
+| Throw during that submission has the same leak | Cleanup must use unwind protection, not just error handlers. |
+| A reply inside the first write starts the second write recursively | The second sample is submitted even if the first write subsequently fails. |
+| New individual preview inside old complete preview's Stop does not supersede it | Both sample types can submit under incompatible generation rules. |
+| Old timeout notifies before interrupting | Its callback can start a new individual sample which the old timeout then interrupts. |
+| Editor Stop leaves the callback generation valid | Late evidence can be presented after ownership was cleared. |
+| Changing sample text also leaves that generation valid | Evidence for old text can appear beside new text. |
+| Context recapture keeps the preview generation | Old captured facts can supply evidence to the new view. |
+| Context projection flattens an explicit field into shared style | Equality with shared loses the fact that context must override a row. |
+| Old decoding maps null, false and an empty array to nil | It cannot validate the v2 response grammar. |
+
+Inspection also finds no individual-sequence timeout/pending-ID cleanup;
+complete preview installs its Stop hook only after the initial public Stop;
+picker notifications lack operation ownership; and the draft record has no
+revision field. The current editor mutates selector lists by index, whereas
+the save projector already rejects disagreement with complete choice records.
+New controls must use those complete records throughout.
+
+The server already validates private requests, preserves original indices in
+choice auditions and collects accepted/started evidence in its worker/reporter.
+Its =omnivox-cli/src/voice_preview_tests.rs= covers no substitute after individual
+failure, frozen disablement, empty/cancelled/partial terminals and default/zero
+rate above host rate one. These existing server tests do not prove client
+ownership. This slice leaves the server unchanged.
+
+* One owned operation for every Omnivox sample
+
+Use one private coordinator for complete v2, shared-only v1 and legacy individual
+auditions, including picker and experiment previews. Preserve existing generic
+entry forms and callbacks. Add a distinct private layered entry/service for the
+editor; do not reinterpret =:selectors= or route a customized draft through the
+old projector. Keep the generic non-Omnivox queued-only guarantee explicit.
+
+An operation owns a frozen foreground process and its lifecycle generation, a
+unique token, a view/session token, draft and context revisions, the complete
+validated sequence, entry cursor, one control reservation, one timer, one Stop
+observer and bounded terminal evidence. Every continuation checks both operation
+and entry identity. No step consults a replacement =tts-speaker-process= to send
+the next entry. Notification-lane Stop cannot cancel the foreground operation.
+
+Preflight is a pure phase before superseding current playback: deep-copy strings,
+lists and vectors, validate all labels and samples in both comparison halves,
+selectors/IDs, context, capabilities and encoded bounds. Reject malformed or
+unsupported input before any Stop, request reservation or speech. No partial
+comparison is allowed merely because its first half was valid.
+Capture process/lifecycle/configuration identity at preflight entry and recheck
+it before interruption; preflight must not silently switch connections either.
+
+After preflight, install an owned operation under unwind protection /before/
+interruption. Retire the previous token and detach its resources first. Startup
+uses an explicit private own-Stop grant; every public/reentrant Stop remains
+cancellation, including one called inside the startup Stop's observers. Recheck
+ownership after every hook and before reserving or sending an entry. A newer
+preview started by a callback wins; the superseded outer startup sends nothing.
+The grant is tied to this particular invocation and consumed once, never an
+ambient boolean inherited by arbitrary callbacks. Adapt the existing private
+interrupt/preparation helpers narrowly; do not weaken public Stop semantics.
+
+Control submission needs a reservation before writing, with its ID known to the
+operation before the sender can call a filter. A response arriving during that
+write is validated and latched, not delivered recursively. Only a successful,
+non-overlapping complete write may advance the sequence or invoke callbacks.
+An error, quit or throw retires the reservation, timer and hook exactly once,
+discards pending advancement and never retries via legacy preview. Propagate a
+nonlocal exit after cleanup; cleanup itself cannot invoke client code prematurely.
+Callbacks run outside the enclosing ordinary speech capture/preparation scope.
+
+At timeout or local cancellation, first mark terminal, detach pending work and
+retire ownership. If an interrupt is needed, complete it against that owner
+/before/ notifying user code. Check for intervening replacement before sending
+any interrupt; a stale timeout must never stop new playback. A callback error,
+quit or new preview cannot undo cleanup. Process death/reconnect ends the old
+operation without replay. Leaving/killing a view or cancelling its picker retires
+only that view's token; it cannot stop another view's newer sample.
+
+* Framing, bounds and comparison sequencing
+
+A preview explicitly requests foreground interruption. It may start with a
+framed pending legacy queue, clear it once, and then submit the private request.
+Unlike ordinary named-queue promotion, this does not require the queue to have
+been empty before the requested Stop. It does require a proven command boundary,
+usable process/coding identity, no write in flight and intact observer coverage.
+Reject unproven framing before sending anything; never add a repair newline or
+an extra Stop, reconnect automatically, or use a legacy audition to bypass it.
+
+Add a narrowly scoped startup receipt for this case: capture boundary/process/
+serial identity without asserting empty, observe the exact typed Stop through
+the actual write, and require resulting empty/boundary proof with its matching
+serial after observers return. Intervening queue, dispatch, letter, unrelated
+Stop or overlapping heartbeat invalidates startup. This is a new private
+admission helper, not permission to relax the existing ordinary empty-queue guard.
+Subsequent requests use the existing empty-queue guard without a registry
+dependency: the request contains the full private voice. Check capabilities and
+captured settings at each send. A neutral control write still needs intact
+framing and non-overlap. Ambiguous transport failure ends the comparison without
+repair/replay and follows existing process/proof retirement rules.
+
+Keep wire bounds unchanged: 16 KiB UTF-8 text per entry, 32 choices, 256 KiB
+decoded control envelope, 32 accepted identities and 1024-byte diagnostic text.
+Use an explicit client sequence limit of 64 entries (label plus sample for all
+32 rows); paired original/edited comparison uses four. Bound cumulative prepared
+wire bytes at 16 MiB, including later =expected_base_rate= and maximum u64 request
+ID space; reject before Stop. Freeze normalization inputs as well as raw values.
+Only one entry is outstanding; no speculative submission of the edited half.
+
+Keep per-entry label/sample and original/edited tags. The first valid completed
+entry captures base rate and effective disabled-engine union. Subsequent entries
+send that exact expected rate and compare returned disablement as a set. Changed
+metadata stops further comparison; retain already verified evidence as evidence
+for the captured sample, with the mismatch explained. The existing protocol does
+not provide an expected-disablement admission guard, so a changed union can only
+be detected after that entry's response; do not claim it never spoke.
+
+Retain at most one result per bounded entry, one independent last-started summary
+for sample entries, and one last operation result per retained editor context.
+Do not build request histories or unbounded late-response tombstones. Release
+prepared strings and callbacks on completion. Local cancellation/timeout gets
+one terminal callback; late server replies are ignored. If no validated terminal
+arrived, playback is /unconfirmed/, not proof that no audio started. Evidence from
+earlier completed entries may remain, labelled with their frozen input revision.
+
+* Projection without flattening the cascade
+
+Build each v2 request directly from the snapshot: a complete shared style plus
+ordered records =id/selector/adjustments=, sparse context and explicit placement.
+Use the already tested =omnivox--choice-style-json=, =--choice-records-json= and
+=--choice-patch-json= conversions. Never derive a patch by subtracting shared
+values from an effective style. Normalize once, including pitch contrast and
+the tuner's existing low-pass stored/display conversion.
+
+Choice omission means use shared; choice nil means adapter default; zero is an
+explicit set operation. Contextual ACSS nil retains the existing no-reset
+behavior; contextual rate/effect nil clears that field. Preserve these raw
+distinctions in inspection even where the audible context patch omits ACSS nil.
+A context value equal to shared still masks a different row-specific value.
+
+The contextual resolver must return the chosen unflattened base snapshot and
+the winning sparse context separately, alongside requested values/provenance.
+Resolve the same frozen facts/rules for original and edited snapshots. Preserve
+preset-reset behavior, other-base selection and suppressed-content refusal.
+The current voice-only context view continues to omit cues and spatial placement;
+send =placement.pan=null= and state that limitation. Do not silently add spatial
+audio to this editor in the guise of fixing sparse context.
+
+Automatic preview sends the complete original chain and automatic selection.
+Row audition also sends the complete chain, selecting its stable ID. Never move
+that row to index zero or remove its siblings to audition it. Original/edited
+row comparison looks up the same ID in each frozen chain, so reorder changes
+the index and preserves identity. A newly added row has no original: explain
+that comparison is unavailable, retaining edited audition and full-voice compare.
+Do not select an original row by matching physical engine/voice IDs; duplicates
+are valid distinct choices. Missing/deleted IDs reject before Stop.
+
+* Strict response admission and truthful speech
+
+Add v2 decoding alongside the old control path. Preserve JSON null/false/arrays,
+reject duplicate/unknown/missing members and validate canonical Base64/UTF-8 and
+bounds before correlation. Reuse the marker-3 audio-identity validators and
+frozen-chain correlation rules; v2 has the existing control envelope 1, not a
+marker envelope. An invalid response with a unique trustworthy request ID fails
+that owned entry. An uncorrelatable record cannot consume any reservation and
+leaves the ordinary deadline in force. Duplicate/late responses do not advance.
+A valid correlated control error (for example, admission rejecting a changed
+base rate) also ends the operation; it is not a fabricated v2 playback terminal.
+
+Validate status, finite base rate, distinct bounded disablement, ordered distinct
+accepted identities and boolean playback flags. Match row ID to its /original/
+index and reason. A choice audition permits only that row; automatic policy
+substitutes use null row IDs and their typed reason. Apply exact-selector checks
+where justified; property/default selection is resolved by the server, not by
+the client inventory. Bounds/correlation apply to failed/cancelled terminals too.
+
+Validate =last_started= independently. Without truncation it must agree with a
+started accepted identity; with truncation it may be absent from the acceptance
+list. A started identity retained in that list must agree with the matching
+flag. Never infer last-start order from first-acceptance order. Failed attempts
+without committed PCM are not accepted audio; accepted audio alone is not started
+audio. A null last-started identity cannot accompany a true playback-started
+flag, even when truncated. A completed empty preview can have neither.
+
+Status speech distinguishes /completed/, /cancelled/, /failed/ and /unconfirmed/.
+Only =last_started= for a sample supports “Last sample playback started on …”.
+Keep spoken-label evidence separately: hearing “Original” does not establish
+that the following sample started. Show accepted-but-unconfirmed audio and
+partial failure in Details. Use request-snapshot values to explain shared,
+choice and context sources; receipts report actual identity and unsupported
+dimensions, not measured pitch or acoustic output. Preview receipts never
+overwrite ordinary lane playback receipts or compatibility reasons.
+
+On input change, undo, save rebase, text change, context recapture, leave or kill,
+invalidate current-view ownership before Stop or other callbacks can run.
+Track a monotonic draft revision (not dirty-field equality: undo can return to
+the same values), context/text revision and view incarnation. Retained historical
+evidence is explicitly labelled as earlier; a late callback cannot refresh the
+current result, clear a newer owner, or announce into a closed/reopened picker.
+Successful save/apply acknowledgement and dirty status remain independent of
+preview completion.
+
+* Older servers and the optional controls
+
+The full bundle is checked on the actual foreground connection after reconnect;
+private preview does not need logical-registration acknowledgement. With it,
+prefer v2 for the new editor's base, row and context previews. Without it, retain
+v1 for shared-only chains. Customized full-chain/context previews are unavailable
+when they cannot be represented faithfully; saving remains available.
+
+An old exact audition is permitted only when its selected composition and
+required rate/effects/default clearing are demonstrably representable. Build
+that decision from typed values and capabilities, not successful serialization
+or current predicted engine. A nil/default request must not become an ignored
+omission over a retained setting. If fidelity cannot be proved, explain the
+limitation before Stop. Label permitted legacy auditions as such; their old
+terminal is not a v2 row receipt. Preserve existing generic legacy degradation
+reporting without using it to claim a faithful customized comparison.
+
+The simple editor still opens at shared adjustments. Fallback rows say “uses
+shared settings” or “customized” and expose Customize explicitly. The selected
+row's controls offer Use shared, Adapter default and Set value with value/state
+spoken on traversal and adjustment. Maintain nonwrapping navigation, distinct
+toggle state speech, value-before-sample and the established low/high-pass
+directions. Availability predictions and compatibility limits are labelled
+separately from last playback evidence.
+
+Implement row mutations by stable ID over complete records, synchronizing any
+legacy selector projection. Reorder preserves IDs/patches; added rows get new
+IDs; removed rows invalidate their tuner target. Replacement of a tuned physical
+voice asks the already agreed keep/reset question. Experiment keeps select the
+destination row and scope; physical-plus-adjustments defaults to that row,
+shared changes remain explicit. Keep complete proposed combinations in the
+authoritative destination draft, preserving unrelated fallbacks and acknowledged
+save recovery. This implements accepted behavior rather than changing storage.
+
+* High implementation slices and acceptance
+
+1. Implement the owned preview coordinator, startup framing grant and unwind-safe
+   control reservation. Move existing complete/individual previews onto it with
+   unchanged wire shapes. Turn the lifecycle observations into positive tests,
+   including both supersession directions, early replies, all nonlocal exits,
+   callback-started replacement, retired process and notification isolation.
+2. Add the strict v2 request/terminal codec and raw snapshot/context projection.
+   Connect automatic, row and paired comparisons to that coordinator. Test
+   independent [[file:../test/fixtures/voice-editor/preview-handoff.el][handoff cases]] and the existing [[file:../test/fixtures/voice-editor/fallback-tuning-wire.json][paired wire fixture]], including
+   duplicate physical voices, missing originals, nullable fields, truncated
+   last-started evidence, no silent old-server flattening and metadata changes.
+3. Add per-choice controls, generation-aware context/Details and experiment keeps
+   over these services. Test spoken labels, boundaries, save/dirty status and
+   retained drafts through both entry paths. Verify actual fallback and context
+   parity with a muted real server locally and over private loopback, including
+   reconnect and fresh compiled Emacs. Existing ordinary two-lane acceptance
+   remains a regression gate where shared helpers changed.
+4. Update current manuals/reference as applicable, run required build/docs gates,
+   and commit each completed slice. Ask for the live spoken walkthrough at the
+   acceptance boundary: automated checks cannot judge engine sound or navigation
+   comfort. Keep optional controls and whole-feature completion pending until then.
+
+The fixture describes desired behavior independently; the diagnostic asserts
+today's contrary behavior. Fixture consistency and baseline reproduction are
+review evidence, not a claim that future runtime behavior already passes.
+
+* Review validation
+
+All twelve source observations reproduce; all forty fixture cases are read as
+non-evaluated data with distinct IDs, and the raw voice/patch examples pass the
+existing pure validators and expected conversion checks. The focused preview,
+editor and context selection passes 54/54 existing tests in a fresh batch Emacs.
+Its first run omitted the SwiftMac inventory selection needed by that isolated
+fixture; explicitly configuring that batch-only input makes the same selection
+pass. No unrelated adapter or test implementation was changed.
+
+=make check-emacs=, =make bytecode-check=, =make headers-check= and
+=make docs-release-check= pass. All 123 local file links in the seven touched
+reports resolve; whitespace checks pass. Only reports, a diagnostic and fixture
+data changed, so no new production byte-code build or runtime installation was
+needed. Real-server and spoken acceptance of the future client remain pending.

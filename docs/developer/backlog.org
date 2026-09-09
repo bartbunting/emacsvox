@@ -110,15 +110,19 @@ remotely. Guarded named-queue promotion is now implemented, with 536 selected
 source tests and real local/remote actual-fallback receipts on both lanes after
 reconnect. Complete captured prefixes retain names and reserved IDs; unsupported
 shapes and cross-call queues keep compatibility, with bounded sent-delivery
-reasons. Scope A remains selected. The next reasoning boundary is XHI for the
-separate private-preview ownership and original-row/context handoff before
-preview v2 and editor controls. Preserve queue order, cancellation and character
-review.
-The remaining compatibility fixes, preview v2, individual controls and spoken acceptance
-are still pending; this is not complete feature delivery. Earlier, the maintainer
+reasons. Scope A remains selected. The
+[[file:../voice-editor-preview-handoff-review.org][XHI private-preview handoff]] is now complete: twelve muted observations reproduce
+ownership, cancellation and projection gaps; independent data covers forty
+desired projection/lifecycle/evidence/compatibility cases. Return to High for
+one owned preview coordinator, guarded startup and strict v2 projection/readback,
+then optional controls and experiment keeps. Preserve stable row identity,
+sparse context and separate accepted/started evidence. Preview v2, individual
+controls and spoken acceptance remain pending; this is not complete feature
+delivery. Earlier, the maintainer
 selected shared tuning first, with explicit
 physical-only, shared-adjustment-only and combined experiment keeps. Individual
-auditions remain available on older servers; full preview is explicitly unsupported.
+auditions retain older-server support where faithfully representable; customized
+full-chain preview requires the negotiated bundle. Saving remains available.
 
 Preserve the existing aural CSS cascade: partial styles combine by dimension,
 competing values use rule precedence, and named presets replace the base.

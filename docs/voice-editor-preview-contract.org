@@ -9,12 +9,14 @@ option 1 in the [[file:voice-editor-implementation-plan.org][implementation plan
 [[file:adr/0016-complete-voice-preview.org][ADR 0016]] records the decision. Omnivox server commit =99f88b7= implements the
 protocol and passes simulated-engine, full workspace and static checks. Client
 negotiation, complete request encoding and comparison lifecycle handling are now
-implemented and tested in Emacsvox. Editor integration and audible acceptance
-remain pending.
-Storage slice 2 is complete; runtime and editor delivery remain pending.
+implemented and tested in Emacsvox, including the shared base editor. This is
+the retained v1 contract. Per-choice tuning is governed by [[file:adr/0017-per-fallback-voice-tuning.org][ADR 0017]] and the
+[[file:voice-editor-fallback-wire-contract.org][v2 wire contract]]. Its [[file:voice-editor-preview-handoff-review.org][client ownership/projection review]] is complete;
+v2 client previews, optional controls and audible acceptance remain pending.
 
-The Emacsvox ADRs 0001–0016 and sibling Omnivox ADRs 0001–0009 govern this
-work. Engine helpers, progressive output, foreground/notification lanes,
+The original review read Emacsvox ADRs 0001–0016 and sibling Omnivox ADRs
+0001–0009; later accepted ADRs refine the extension above. Engine helpers,
+progressive output, foreground/notification lanes,
 remote framing, and no-replay behavior keep their existing boundaries.
 
 * User behavior
