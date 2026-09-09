@@ -8,6 +8,8 @@
 
 (require 'ert)
 (require 'emacsvox-aural-voice-palettes)
+(require 'emacsvox-aural-voice-choice-tests)
+(require 'emacsvox-aural-voice-editor)
 
 (defmacro emacsvox-test--with-voice-palettes (&rest body)
   "Run BODY with isolated voice-palette and presentation state."
@@ -93,6 +95,7 @@
              ("f" . emacsvox-aural-voice-palettes-follow-baseline)
              ("N" . emacsvox-aural-voice-palettes-create)
              ("c" . emacsvox-aural-voice-palettes-copy)
+             ("r" . emacsvox-aural-voice-palettes-rename)
              ("e" . emacsvox-aural-voice-palettes-edit-entry)
              ("E" . emacsvox-aural-voice-palettes-edit-metadata)
              ("D" . emacsvox-aural-voice-palettes-delete-entry)
@@ -108,6 +111,157 @@
            emacsvox-aural-voice-palettes-mode-map
            (kbd (car binding)))
           (cdr binding)))))))
+
+(defmacro emacsvox-test--with-palette-rename (&rest body)
+  "Run BODY with personal tuned voices and isolated writable stores."
+  (declare (indent 0) (debug t))
+  `(emacsvox-test--with-voice-palettes
+     (let* ((directory (make-temp-file "palette-rename-" t))
+            (emacsvox-aural-schemes-file (expand-file-name "aural.el" directory))
+            (emacsvox-aural-routing-profiles-file (expand-file-name "routing.el" directory))
+            (emacsvox-aural-voice-drafts--registry (make-hash-table :test #'equal))
+            (emacsvox-aural-voice-editor--contexts (make-hash-table :test #'equal))
+            (emacsvox-aural-routing--choice-sets
+             (plist-get (emacsvox-test--choice-fixture :expected-routing) :choice-sets))
+            (emacsvox-aural-routing-profile-registry (make-hash-table :test #'eq))
+            (emacsvox-aural-active-routing-profile nil)
+            (emacsvox-aural-active-profile nil)
+            (emacsvox-aural-session-routing-bindings nil)
+            (emacsvox-aural-configuration-changed-hook nil))
+       (unwind-protect
+           (progn
+             (dolist (data (list (emacsvox-test--choice-fixture :unchanged-parent)
+                                (emacsvox-test--choice-fixture :expected-palette)))
+               (emacsvox-aural-register-voice-palette-data data))
+             (emacsvox-aural-save-user-data)
+             (emacsvox-aural-save-routing-profiles)
+             (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--at-point-or-read)
+                        (lambda () 'reading))
+                       ((symbol-function 'read-string) (lambda (&rest _) "renamed"))
+                       ((symbol-function 'emacsvox-aural-voice-palettes-refresh) #'ignore)
+                       ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live) #'ignore)
+                       ((symbol-function 'emacsvox-aural-ui-announce-result) #'ignore))
+               ,@body))
+         (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-voice-palettes-rename-preserves-owned-tuning-and-references ()
+  "Rename preserves complete choices, inheritance, profiles and selection on disk."
+  (emacsvox-test--with-palette-rename
+    (emacsvox-aural-register-voice-palette-data
+     '(:schema-version 3 :id child :summary "Child" :parent reading :routing owned :entries nil))
+    (emacsvox-aural-register-profile '(:id everyday :summary "Everyday" :voice-palette reading))
+    (setq emacsvox-aural-active-profile 'everyday
+          emacsvox-aural-voice-palette-override 'reading)
+    (let* ((original (emacsvox-aural-voice-palette-data-form (emacsvox-aural-voice-palette 'reading)))
+           (old-sets (copy-tree emacsvox-aural-routing--choice-sets))
+           (before (emacsvox-aural-voice-runtime--resolve 'bolden 'reading)))
+      (should (eq (emacsvox-aural-voice-palettes-rename) 'renamed))
+      (should-not (gethash 'reading emacsvox-aural-voice-palette-registry))
+      (should (eq emacsvox-aural-voice-palette-override 'renamed))
+      (should (eq (emacsvox-aural-voice-palette-parent (emacsvox-aural-voice-palette 'child)) 'renamed))
+      (let ((after (emacsvox-aural-voice-runtime--resolve 'bolden 'renamed)))
+        (dolist (key '(:definition :choices :selectors :language))
+          (should (equal (plist-get before key) (plist-get after key)))))
+      (dolist (set old-sets)
+        (should (member set emacsvox-aural-routing--choice-sets)))
+      (let* ((saved (emacsvox-aural-read-user-data))
+             (renamed (cl-find 'renamed (plist-get saved :voice-palettes)
+                               :key (lambda (data) (plist-get data :id))))
+             (sets (plist-get (emacsvox-aural-read-routing-profiles) :choice-sets)))
+        (should-not (cl-find 'reading (plist-get saved :voice-palettes)
+                             :key (lambda (data) (plist-get data :id))))
+        (should (eq (plist-get (car (plist-get saved :profiles)) :voice-palette) 'renamed))
+        (should (eq (plist-get renamed :parent) (plist-get original :parent)))
+        (dolist (entry (plist-get renamed :entries))
+          (when-let* ((id (plist-get (cdr entry) :local-choices)))
+            (should (eq (plist-get (cl-find id sets :test #'equal
+                                           :key (lambda (set) (plist-get set :id))) :palette)
+                        'renamed))))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-rename-failure-leaves-original-usable ()
+  "A failed palette write leaves live state and old local snapshots usable."
+  (emacsvox-test--with-palette-rename
+    (let ((before (emacsvox-aural-read-user-data))
+          (registry emacsvox-aural-voice-palette-registry)
+          (sets (copy-tree emacsvox-aural-routing--choice-sets)))
+      (cl-letf (((symbol-function 'emacsvox-aural--write-user-data)
+                 (lambda (&rest _) (error "Simulated palette write failure"))))
+        (should-error (emacsvox-aural-voice-palettes-rename)))
+      (should (eq registry emacsvox-aural-voice-palette-registry))
+      (should (equal sets emacsvox-aural-routing--choice-sets))
+      (should (equal before (emacsvox-aural-read-user-data)))
+      (emacsvox-aural-voice-runtime--validate 'reading)
+      (should (eq (emacsvox-aural-voice-palettes-rename) 'renamed)))))
+
+(ert-deftest emacsvox-aural-voice-palettes-rename-legacy-preserves-schema ()
+  "Renaming older palettes neither converts them nor changes their definitions."
+  (dolist (data (list emacsvox-test--voice-palette-data
+                     (emacsvox-test--choice-fixture :source-palette)))
+    (emacsvox-test--with-palette-rename
+      (puthash 'reading (emacsvox-aural-compile-voice-palette-data data)
+               emacsvox-aural-voice-palette-registry)
+      (emacsvox-aural-save-user-data)
+      (emacsvox-aural-voice-palettes-rename)
+      (let ((renamed (emacsvox-aural-voice-palette-data-form
+                      (emacsvox-aural-voice-palette 'renamed))))
+        (should (eq (plist-get renamed :schema-version) (plist-get data :schema-version)))
+        (should (eq (plist-get renamed :parent) (plist-get data :parent)))
+        (cl-loop for before in (plist-get data :entries)
+                 for after in (plist-get renamed :entries)
+                 do (dolist (key '(:style :personality :choices :language))
+                      (should (equal (plist-get (cdr before) key)
+                                     (plist-get (cdr after) key)))))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-rename-preserves-concurrent-file-change ()
+  "A change between the two writes prevents replacing the changed palette file."
+  (emacsvox-test--with-palette-rename
+    (let ((write-routing (symbol-function 'emacsvox-aural-routing--write-user-data))
+          (registry emacsvox-aural-voice-palette-registry)
+          changed)
+      (cl-letf (((symbol-function 'emacsvox-aural-routing--write-user-data)
+                 (lambda (&rest arguments)
+                   (apply write-routing arguments)
+                   (with-temp-buffer
+                     (insert-file-contents emacsvox-aural-schemes-file)
+                     (goto-char (point-max))
+                     (insert "\n;; Concurrent editor change\n")
+                     (write-region (point-min) (point-max) emacsvox-aural-schemes-file nil 'silent))
+                   (setq changed (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file)))))
+        (should-error (emacsvox-aural-voice-palettes-rename)))
+      (should (eq registry emacsvox-aural-voice-palette-registry))
+      (should (equal changed (emacsvox-aural-voice-drafts--file-id emacsvox-aural-schemes-file))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-rename-rejects-builtins-and-missing-local-data ()
+  "Read-only or incomplete palettes fail without any persisted change."
+  (emacsvox-test--with-palette-rename
+    (let ((before (emacsvox-aural-read-user-data)))
+      (cl-letf (((symbol-function 'emacsvox-aural-voice-palettes--at-point-or-read)
+                 (lambda () 'acss-default)))
+        (should-error (emacsvox-aural-voice-palettes-rename) :type 'user-error))
+      (let ((emacsvox-aural-routing--choice-sets nil))
+        (cl-letf (((symbol-function 'emacsvox-aural-read-routing-profiles) #'ignore))
+          (should-error (emacsvox-aural-voice-palettes-rename) :type 'user-error)))
+      (should (equal before (emacsvox-aural-read-user-data))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-rename-rejects-conflicts-and-preserves-drafts ()
+  "Duplicate names and dirty drafts cannot overwrite saved voices or edits."
+  (emacsvox-test--with-palette-rename
+    (cl-letf (((symbol-function 'read-string) (lambda (&rest _) "reading-parent")))
+      (should-error (emacsvox-aural-voice-palettes-rename) :type 'user-error))
+    (let* ((draft (emacsvox-aural-voice-drafts--open '(base reading bolden)
+                   '(:definition (:average-pitch 4)) '(reading)))
+           (context (list :draft draft :palette 'reading :owner 'reading :destination 'reading)))
+      (puthash '(base reading bolden) context emacsvox-aural-voice-editor--contexts)
+      (emacsvox-aural-voice-drafts--edit draft '(:definition (:average-pitch 7)))
+      (should-error (emacsvox-aural-voice-palettes-rename) :type 'user-error)
+      (should (equal (emacsvox-aural-voice-draft-working draft) '(:definition (:average-pitch 7))))
+      (emacsvox-aural-voice-drafts--discard draft)
+      (should (eq (emacsvox-aural-voice-palettes-rename) 'renamed))
+      (should (eq (gethash '(base renamed bolden) emacsvox-aural-voice-drafts--registry) draft))
+      (should-not (gethash '(base reading bolden) emacsvox-aural-voice-editor--contexts))
+      (should (eq (plist-get context :palette) 'renamed))
+      (should (equal (emacsvox-aural-voice-draft-watches draft)
+                     (emacsvox-aural-voice-drafts--watch '(renamed)))))))
 
 (ert-deftest emacsvox-aural-voice-tuner-uses-consistent-save-bindings ()
   "The tuner saves with Workbench-compatible acceptance keys."

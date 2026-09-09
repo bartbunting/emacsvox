@@ -428,12 +428,13 @@ the value across sessions."
          (emacsvox-aural-presentation-record-payload-preview record)
          ""))
        (emacsvox-aural-presentation-record-payload-byte-count record)))
-    (if (cdr plans)
-        (emacsvox-aural-preview-play-runs
-         (emacsvox-aural-presentation-record-runs record)
-         (emacsvox-aural-presentation-record-effective-transaction-id
-          record))
-      (emacsvox-aural-preview-play-plan (car plans)))
+    (let ((emacsvox-aural--history-recording-inhibited t))
+      (if (cdr plans)
+          (emacsvox-aural-preview-play-runs
+           (emacsvox-aural-presentation-record-runs record)
+           (emacsvox-aural-presentation-record-effective-transaction-id
+            record))
+        (emacsvox-aural-preview-play-plan (car plans))))
     (emacsvox-aural-recent-feedback-refresh id)
     (emacsvox-aural-preview-message
      "Replayed aural presentation %s" id)

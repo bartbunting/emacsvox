@@ -265,7 +265,7 @@ Useful commands in the feedback browser include:
 
 #+attr_texinfo: :indic kbd :compact t
 - RET or e :: Explain the selected retained presentation.
-- P :: Replay its complete ordered presentation.
+- P :: Replay its complete ordered presentation without adding a history entry.
 - c :: Audition only its auditory cues.
 - r :: Prepare a voice remap from the selected record.
 - R :: Replace, suppress, or restore one exact earcon.
@@ -493,6 +493,14 @@ style vocabulary.  Press @@texinfo:@key{RET}@@ on a palette to browse its voices
 use @@texinfo:@kbd{P}@@ to audition the palette sequence before editing, and use @@texinfo:@kbd{a}@@ in the palette manager to
 activate a selected palette.  Built-in palettes remain intact; editing can
 create a personal copy.
+
+To rename a personal palette, select it in /Voice Palettes/, press
+@@texinfo:@kbd{r}@@, and enter its new name.  The rename is saved immediately.
+It preserves voice settings and individual fallback tuning, updates child
+palettes and personal Presentation Profiles, and keeps an active palette
+selected under its new name.  Save or discard unfinished voice edits first.
+Built-in palettes cannot be renamed.  If a separately maintained scheme
+references the palette, update that scheme before renaming it.
 
 With Voice Lock enabled, named formatting voices such as /bolden/ and
 /annotate/ follow the active palette in search feedback, completion,

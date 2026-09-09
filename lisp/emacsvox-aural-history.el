@@ -83,6 +83,9 @@ Enable it temporarily when diagnosing presentation inside the Aural UI."
 (defvar emacsvox-aural--presentation-sequence 0
   "Sequence used to identify frozen presentation records.")
 
+(defvar emacsvox-aural--history-recording-inhibited nil
+  "Non-nil while replaying retained output without recording it again.")
+
 (defvar emacsvox-aural--history-respect-icon-policy nil
   "Non-nil while queue history must remove disabled cue actions.")
 
@@ -382,6 +385,7 @@ combined history record."
        emacsvox-aural-presentation-history-limit))))
   (let ((context (emacsvox-aural-concrete-plan-context plan)))
     (cond
+     (emacsvox-aural--history-recording-inhibited nil)
      ((zerop emacsvox-aural-presentation-history-limit)
       (setq emacsvox-aural-presentation-history nil))
      ((plist-get context :history-recording-inhibited) nil)

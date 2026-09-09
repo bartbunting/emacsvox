@@ -1790,6 +1790,51 @@
       (emacsvox-aural-recent-feedback--content record)
       "Tone: line empty"))))
 
+(ert-deftest emacsvox-aural-tools-recent-feedback-replay-does-not-record ()
+  "Single and grouped replays leave history intact, even with UI recording on."
+  (emacsvox-test--with-aural-tools
+    (dolist (grouped '(nil t))
+      (dolist (emacsvox-aural-history-record-interface-presentations '(nil t))
+        (let* ((plan (emacsvox-aural--make-concrete-plan
+                      :content (emacsvox-aural--make-concrete-content
+                                :text "Retained" :speak t :voice-request 'bolden)
+                      :context '(:module shell :presentation-transaction-id 7)))
+               (record (emacsvox-aural--make-presentation-record
+                        :id 1 :plan plan
+                        :plans (if grouped (list plan plan) (list plan))
+                        :transaction-id (and grouped 7)))
+               (emacsvox-aural-presentation-history (list record))
+               (emacsvox-aural--presentation-sequence 1)
+               (original-history emacsvox-aural-presentation-history)
+               queued)
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-recent-feedback--record)
+                (lambda (&optional _) record))
+               ((symbol-function 'emacsvox-aural-preview-begin) #'ignore)
+               ((symbol-function 'emacsvox-aural-preview-dispatch) #'ignore)
+               ((symbol-function 'emacsvox-aural-call-with-delivery-transaction)
+                (lambda (_owner function &rest arguments)
+                  (apply function arguments)))
+               ((symbol-function 'emacsvox-aural-queue-concrete-plan)
+                (lambda (concrete)
+                  (push concrete queued)
+                  (emacsvox-aural-record-presentation concrete)))
+               ((symbol-function 'emacsvox-aural-queue-concrete-runs)
+                (lambda (runs)
+                  (dolist (run runs)
+                    (push (car run) queued)
+                    (apply #'emacsvox-aural-record-presentation run))))
+               ((symbol-function 'emacsvox-aural-recent-feedback-refresh) #'ignore)
+               ((symbol-function 'emacsvox-aural-preview-message) #'ignore))
+            (dotimes (_ 2) (emacsvox-aural-recent-feedback-replay)))
+          (should (= (length queued) (if grouped 4 2)))
+          (should (eq emacsvox-aural-presentation-history original-history))
+          (should (= emacsvox-aural--presentation-sequence 1))
+          (should-not (plist-get (emacsvox-aural-concrete-plan-context plan)
+                                 :history-recording-inhibited))
+          (emacsvox-aural-record-presentation plan)
+          (should (= (length emacsvox-aural-presentation-history) 2)))))))
+
 (ert-deftest emacsvox-aural-tools-recent-feedback-preserves-transaction-runs ()
   "Recent feedback summarizes and replays every frozen transaction run."
   (emacsvox-test--with-aural-tools

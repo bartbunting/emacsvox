@@ -2639,7 +2639,8 @@ Useful commands in the feedback browser include:
 ‘RET or e’
      Explain the selected retained presentation.
 ‘P’
-     Replay its complete ordered presentation.
+     Replay its complete ordered presentation without adding a history
+     entry.
 ‘c’
      Audition only its auditory cues.
 ‘r’
@@ -2864,6 +2865,14 @@ portable style vocabulary.  Press <RET> on a palette to browse its
 voices, use ‘P’ to audition the palette sequence before editing, and use
 ‘a’ in the palette manager to activate a selected palette.  Built-in
 palettes remain intact; editing can create a personal copy.
+
+   To rename a personal palette, select it in _Voice Palettes_, press
+‘r’, and enter its new name.  The rename is saved immediately.  It
+preserves voice settings and individual fallback tuning, updates child
+palettes and personal Presentation Profiles, and keeps an active palette
+selected under its new name.  Save or discard unfinished voice edits
+first.  Built-in palettes cannot be renamed.  If a separately maintained
+scheme references the palette, update that scheme before renaming it.
 
    With Voice Lock enabled, named formatting voices such as _bolden_ and
 _annotate_ follow the active palette in search feedback, completion,
