@@ -7,8 +7,8 @@
 The review is complete and the maintainer resumed implementation at High.
 The first lifecycle slice now arms dispatch ownership before writing and defers
 server callbacks until submission returns. The probes below describe the reviewed
-baseline; passing regression tests cover the new behavior. Frozen registration
-provenance, timeline-4 projection and strict marker-3 readback remain next.
+baseline; passing regression tests cover the new behavior. Registration now captures frozen raw provenance alongside wire definitions;
+timeline-4 projection and strict marker-3 readback remain next.
 No further product decision or Max review is needed.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
@@ -405,3 +405,18 @@ the handoff tests and checks that the ownership/filter functions came from its
 isolated compiled tree. =make docs-release-check= (including version and byte-code
 preflight), =make headers-check= and =git diff --check= pass. Optional-package
 compiler warnings remain; no live Emacs restart or server installation was done.
+
+* Registration provenance implementation at High
+
+Each registration now freezes client-only palette, canonical voice, aliases,
+raw shared definition/style and ordered choice records at projection. Local,
+portable and session origin remains explicit. The signature includes provenance,
+so a different owner with equal wire settings advances the generation. Request
+encoding removes this sidecar; acknowledgement uses the original operation's
+snapshot, with process generation. Deep copying includes mutable strings,
+vectors and hash keys/values. Metadata bounds are checked before any policy or
+registry write. Shared per-dispatch retention and compact span context are next.
+
+All 457 selected source tests and the fresh isolated compiled gate pass, including
+four new registration tests. =make bytecode= and its preflight pass. This slice
+does not enable timeline 4, marker 3 or individual editor controls.

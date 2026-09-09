@@ -25,7 +25,8 @@ exposed early-event loss, retirement resurrection and callback reentrancy in the
 reviewed client baseline. The selected contract gives each dispatch pre-write ownership,
 frozen receipt context and deferred server callbacks after caller initialization.
 The maintainer resumed at High; the lifecycle fix is now implemented and tested.
-Frozen registration provenance, layered transport and readback remain next.
+Registration now freezes raw palette/voice/choice provenance alongside wire
+definitions. Layered transport and correlated playback readback remain next.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -527,10 +528,24 @@ reader as well as both lanes and multipart failures. Wire negotiation is unchang
 The private struct changes require a complete byte-code rebuild and fresh compiled
 verification; source and compiled results are recorded in the handoff review.
 
+**** DONE Freeze registration provenance with the submitted wire definitions
+
+Registration now captures raw shared settings, palette/canonical voice/alias
+identity, ordered choice IDs/selectors/patches and their local/portable/session
+source in the same operation as wire projection. Client-only provenance never
+enters the strict server request. Identity changes advance the generation even
+when wire settings are identical. Deep copies include strings, vectors and hash
+members; acknowledgements retain the submitted snapshot and process generation.
+Oversized metadata is rejected before policy or registration writes.
+
+All 457 selected source tests and isolated compiled parity pass, including four
+new contracts for immutable provenance, identical-value owner changes, wire
+separation and preparation bounds. Shared dispatch retention/accounting and span
+context capture remain part of the next transport integration.
+
 **** TODO Complete layered transport, readback, preview and editor controls
 
-Add frozen registration provenance and strict marker-3 correlation with timeline-4
-projection before enabling that path. Then connect private preview v2 and the
+Add strict marker-3 correlation with timeline-4 projection before enabling that path. Then connect private preview v2 and the
 optional per-choice controls in the review's remaining implementation slices.
 
 Implement lossless context projection, lane negotiation and apply reporting.

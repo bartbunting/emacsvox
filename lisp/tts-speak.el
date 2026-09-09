@@ -216,20 +216,28 @@ a `cancelled' record when pending input interrupts that wait.")
   (let ((copies (make-hash-table :test #'eq)) pending)
     (cl-labels
         ((allocate (source)
-           (if (not (or (stringp source) (consp source) (vectorp source))) source
+           (if (not (or (stringp source) (consp source) (vectorp source)
+                        (hash-table-p source))) source
              (or (gethash source copies)
-                 (let ((copy (if (consp source) (cons nil nil) (copy-sequence source))))
+                 (let ((copy (cond ((consp source) (cons nil nil))
+                                   ((hash-table-p source) (copy-hash-table source))
+                                   (t (copy-sequence source)))))
                    (puthash source copy copies)
                    (unless (stringp source) (push (cons source copy) pending))
                    copy)))))
       (let ((result (allocate value)))
         (while pending
           (let* ((pair (pop pending)) (source (car pair)) (copy (cdr pair)))
-            (if (consp source)
-                (progn (setcar copy (allocate (car source)))
-                       (setcdr copy (allocate (cdr source))))
+            (cond
+             ((consp source)
+              (setcar copy (allocate (car source)))
+              (setcdr copy (allocate (cdr source))))
+             ((hash-table-p source)
+              (clrhash copy)
+              (maphash (lambda (key item) (puthash (allocate key) (allocate item) copy)) source))
+             (t
               (dotimes (index (length source))
-                (aset copy index (allocate (aref source index)))))))
+                (aset copy index (allocate (aref source index))))))))
         result))))
 
 (defun tts--dispatch-owner-for (process identifier)

@@ -1293,7 +1293,7 @@ RUNTIME-ROUTING-POLICY keeps global order out of logical definitions."
 (defun omnivox--update-logical-registry-generation (signature)
   "Advance the logical registry generation when SIGNATURE changed."
   (unless (equal signature omnivox--logical-registry-signature)
-    (setq omnivox--logical-registry-signature (copy-tree signature t))
+    (setq omnivox--logical-registry-signature (tts--dispatch-copy-data signature))
     (cl-incf omnivox--logical-registry-generation)))
 
 (defun omnivox--logical-registry-snapshot (&optional preferred-engine-id)
@@ -1323,32 +1323,47 @@ RUNTIME-ROUTING-POLICY keeps global order out of logical definitions."
 (defconst omnivox--choice-registration-property 'omnivox--choice-registration
   "Process property retaining the acknowledged layered registry snapshot.")
 
-(defun omnivox--choice-definition-json (definition)
-  "Wrap legacy wire DEFINITION or project its inspectable owned base and rows."
+(defun omnivox--choice-definition-projection (definition)
+  "Return wire wrapper, provenance and unapplied flag for DEFINITION.
+Read raw ownership once so the wire values and their sources cannot diverge."
   (let* ((id (plist-get definition :id))
-         (owned (emacsvox-aural-voice-runtime--owned id))
+         (owned (tts--dispatch-copy-data (emacsvox-aural-voice-runtime--owned id)))
          (style (when owned
                   (condition-case nil
                       (emacsvox-aural-voice-runtime--definition-style (plist-get owned :definition))
-                    (user-error nil)))))
-    (if (not style)
-        (list :mode "legacy" :definition definition)
-      (list :mode "layered"
-            :definition
-            (list :id id :language (or (plist-get owned :language) :null)
-                  :shared (omnivox--choice-style-json style)
-                  :choices (omnivox--choice-records-json
-                            (if (plist-member owned :choices) (plist-get owned :choices)
-                              (emacsvox-aural-voice-data--wrap-selectors
-                               (plist-get owned :selectors)))))))))
+                    (user-error nil))))
+         (choices (when owned
+                    (if (plist-member owned :choices) (plist-get owned :choices)
+                      (emacsvox-aural-voice-data--wrap-selectors (plist-get owned :selectors)))))
+         (provenance
+          (when owned
+            (list :logical-id id :palette (plist-get owned :palette)
+                  :name (plist-get owned :name) :names (plist-get owned :names)
+                  :definition (plist-get owned :definition) :shared style
+                  :choice-source (plist-get owned :choice-source) :choices choices))))
+    (list
+     (if (not style)
+         (list :mode "legacy" :definition definition)
+       (list :mode "layered"
+             :definition
+             (list :id id :language (or (plist-get owned :language) :null)
+                   :shared (omnivox--choice-style-json style)
+                   :choices (omnivox--choice-records-json choices))))
+     provenance
+     (and (not style) (cl-some (lambda (row) (plist-get row :adjustments)) choices)))))
+
+(defun omnivox--choice-definition-json (definition)
+  "Wrap legacy wire DEFINITION or project its inspectable owned base and rows."
+  (car (omnivox--choice-definition-projection definition)))
 
 (defun omnivox--registration-request (generation content)
   "Build a request using frozen GENERATION and versioned CONTENT."
   (append (list :registry_generation generation
                 :type (or (plist-get content :type) "register_logical_voices"))
-          (let ((copy (copy-tree content t)))
+          (let ((copy (tts--dispatch-copy-data content)))
             (cl-remf copy :type)
             (cl-remf copy :choice-tuning-unapplied)
+            (cl-remf copy :choice-provenance)
             copy)))
 
 (defun omnivox--choice-tuned-configuration-p ()
@@ -1392,8 +1407,9 @@ RUNTIME-ROUTING-POLICY keeps global order out of logical definitions."
         (let ((old (process-get process omnivox--choice-registration-property)))
           (when (>= generation (or (plist-get old :registry-generation) 0))
             (process-put process omnivox--choice-registration-property
-                         (list :registry-generation generation :content (copy-tree content t)
-                               :response (copy-tree response)))
+                         (list :registry-generation generation :process-generation (process-get process 'tts--speech-process-generation)
+                               :content (tts--dispatch-copy-data content)
+                               :response (tts--dispatch-copy-data response)))
             (omnivox--handle-registration-response process response)))
         (omnivox--choice-warn-unapplied process content)
         t)
@@ -1610,20 +1626,21 @@ Return the number of processes sent a generation-safe policy replacement."
       (if (not (omnivox--choice-tuning-supported-p process))
           (if (omnivox--choice-tuned-configuration-p)
               (append content '(:choice-tuning-unapplied t)) content)
-        (let* ((definitions (vconcat (mapcar #'omnivox--choice-definition-json
-                                            (plist-get content :definitions))))
-               (unapplied
-                (cl-some (lambda (entry)
-                           (and (equal (plist-get entry :mode) "legacy")
-                                (cl-some
-                                 (lambda (row) (plist-get row :adjustments))
-                                 (plist-get (emacsvox-aural-voice-runtime--owned
-                                             (plist-get (plist-get entry :definition) :id)) :choices))))
-                         definitions)))
-          (append (list :type "register_logical_voices_v2" :definitions definitions
-                        :fallback_policy
-                        (append (list :preferred_engines []) (plist-get content :fallback_policy)))
-                  (when unapplied '(:choice-tuning-unapplied t))))))))
+        (let* ((projections (mapcar #'omnivox--choice-definition-projection
+                                    (plist-get content :definitions)))
+               (definitions (vconcat (mapcar #'car projections)))
+               (provenance (vconcat (delq nil (mapcar #'cadr projections))))
+               (unapplied (cl-some #'caddr projections))
+               (snapshot
+                (append (list :type "register_logical_voices_v2" :definitions definitions
+                              :choice-provenance provenance
+                              :fallback_policy
+                              (append (list :preferred_engines []) (plist-get content :fallback_policy)))
+                        (when unapplied '(:choice-tuning-unapplied t))))
+               (print-circle t) (print-length nil) (print-level nil))
+          (when (> (string-bytes (prin1-to-string snapshot)) tts--dispatch-metadata-limit)
+            (error "Individual voice registration metadata is too large"))
+          (tts--dispatch-copy-data snapshot))))))
 
 (defun omnivox-register-logical-voices ()
   "Register all Emacsvox logical voices with live Omnivox processes.
@@ -1640,7 +1657,7 @@ Return the number of processes sent the atomic registry replacement."
      (mapcar #'cdr registrations))
     (dolist (registration registrations)
       (let ((generation omnivox--logical-registry-generation)
-            (content (copy-tree (cdr registration) t)))
+            (content (tts--dispatch-copy-data (cdr registration))))
         (omnivox--send-control-request
          (car registration) (omnivox--registration-request generation content)
          (lambda (process response)
@@ -1708,7 +1725,7 @@ taken effect on the server.  Reapply to confirm the desired configuration."
           (mapcar
            (lambda (process)
              (cons process
-                   (copy-tree (omnivox--process-logical-registry-content process) t)))
+                   (tts--dispatch-copy-data (omnivox--process-logical-registry-content process))))
            processes))
          ;; Definitions and generation belong to this apply, including callbacks
          ;; that run after another apply has advanced the desired configuration.
