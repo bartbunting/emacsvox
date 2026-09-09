@@ -150,5 +150,21 @@
           (should (= (plist-get (plist-get legacy :acss) :richness) (/ 2.0 9)))
           (should-not (plist-get (plist-get legacy :effects) :echo)))))))
 
+(ert-deftest emacsvox-aural-voice-editing-temporary-row-ids-do-not-force-schema-promotion ()
+  (emacsvox-test--with-owned-runtime
+   (let* ((snapshot (emacsvox-aural-voice-editing--freeze
+                     (plist-get (emacsvox-aural-voice-editing--snapshot 'reading-owned 'bolden nil) :snapshot) 'reading-owned))
+          (edited (emacsvox-aural-voice-editing--adjust snapshot 'reading-owned 'echo nil))
+          (shared (emacsvox-aural-voice-editing--proposal 'reading-owned 'bolden edited 'reading-owned "" nil)))
+     (should (plist-get snapshot :transient-choices))
+     (should (plist-get snapshot :choices))
+     (should (= (plist-get (plist-get shared :palette) :schema-version) 2))
+     (should-not (plist-get shared :choice-sets))
+     (plist-put (car (plist-get edited :choices)) :adjustments '(:richness 0))
+     (let ((tuned (emacsvox-aural-voice-editing--proposal 'reading-owned 'bolden edited 'reading-owned "" nil)))
+       (should (= (plist-get (plist-get tuned :palette) :schema-version) 3))
+       (should (equal (plist-get (car (plist-get (car (plist-get tuned :choice-sets)) :choices)) :id)
+                      (plist-get (car (plist-get edited :choices)) :id)))))))
+
 (provide 'emacsvox-aural-voice-editing-tests)
 ;;; emacsvox-aural-voice-editing-tests.el ends here

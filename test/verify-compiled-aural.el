@@ -347,13 +347,13 @@
                   "omnivox-choice-playback-tests.el"
                   "tts-dispatch-handoff-tests.el"
                   "tts-preparation-tests.el"
+                  "tts-queue-state-tests.el"
+                  "emacsvox-tts-tests.el"
+                  "omnivox-preview-tests.el"
                   "emacsvox-aural-voice-editor-tests.el"
                   "emacsvox-aural-voice-context-tests.el"
                   "emacsvox-aural-transport-tests.el"
                   "omnivox-choice-consumer-tests.el"
-                  "tts-queue-state-tests.el"
-                  "emacsvox-tts-tests.el"
-                  "omnivox-preview-tests.el"
                   "tts-queue-handoff-tests.el"
                   "emacsvox-aural-voice-palettes-tests.el"
                   "emacsvox-aural-voice-workbench-tests.el"))
@@ -384,6 +384,9 @@
                       omnivox--choice-patch-json
                       omnivox--preview-sequence
                       omnivox--preview-drive
+                      omnivox--preview-token-operation
+                      emacsvox-aural-voice-editor--submit-preview
+                      emacsvox-aural-voice-context--preview
                       emacsvox-aural-voice-editing--cascade
                       emacsvox-aural-voice-editing--legacy-preview
                       omnivox--portable-style-acss

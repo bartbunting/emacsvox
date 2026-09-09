@@ -52,6 +52,17 @@
       (emacsvox-aural-voice-drafts--discard draft)
       (should (equal (emacsvox-aural-voice-draft-working draft) '(:pitch 0))))))
 
+(ert-deftest emacsvox-aural-voice-drafts-revision-does-not-rewind-with-values ()
+  (let* ((emacsvox-aural-voice-drafts--changed-hook nil)
+         (draft (emacsvox-aural-voice-drafts--make :working '(:pitch 0) :baseline '(:pitch 0)))
+         (initial (emacsvox-aural-voice-draft-revision draft)))
+    (emacsvox-aural-voice-drafts--edit draft '(:pitch 8))
+    (let ((edited (emacsvox-aural-voice-draft-revision draft)))
+      (should (> edited initial))
+      (emacsvox-aural-voice-drafts--undo draft)
+      (should (> (emacsvox-aural-voice-draft-revision draft) edited))
+      (should (equal (emacsvox-aural-voice-draft-working draft) '(:pitch 0))))))
+
 (ert-deftest emacsvox-aural-voice-drafts-partial-write-keeps-old-live-and-saved-chain ()
   "Failure between stores keeps the old reference, and retry reuses the new ID."
   (emacsvox-test--with-voice-save

@@ -262,5 +262,27 @@
         (should (equal (plist-get result :context) '(:rate-offset 0)))
         (should (equal (plist-get result :base-snapshot) snapshot))))))
 
+(ert-deftest emacsvox-aural-voice-context-v2-sends-sparse-overrides-and-retires-recapture ()
+  (emacsvox-test--with-layered-editor
+   (let* ((base emacsvox-aural-voice-editor--context)
+          (source (current-buffer))
+          (input (plist-put (emacsvox-test--voice-context-input '(base bolden) '(rich (:richness 9 :echo nil))) :source source)))
+     (with-temp-buffer
+       (emacsvox-aural-voice-context-mode)
+       (setq emacsvox-aural-voice-context--base base emacsvox-aural-voice-context--input input)
+       (setq writes nil)
+       (emacsvox-aural-voice-context-play)
+       (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
+              (row (nth 1 (plist-get (plist-get request :voice) :choices))))
+         (should (equal (plist-get request :context) '(:richness (:op "set" :value 1.0) :echo (:op "default"))))
+         (should (equal (plist-get (plist-get row :adjustments) :richness) '(:op "set" :value 0.0))))
+       (omnivox-preview-test--control-line speaker (omnivox-preview-test--terminal))
+       (should (= (length writes) 2))
+       (cl-letf (((symbol-function 'emacsvox-aural-voice-context--capture) (lambda () (copy-tree input))))
+         (emacsvox-aural-voice-context-recapture))
+       (omnivox-preview-test--control-line speaker (omnivox-preview-test--terminal 42))
+       (should-not emacsvox-aural-voice-context--playback)
+       (omnivox-preview-test--clean speaker)))))
+
 (provide 'emacsvox-aural-voice-context-tests)
 ;;; emacsvox-aural-voice-context-tests.el ends here

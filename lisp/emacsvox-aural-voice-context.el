@@ -31,6 +31,7 @@
 ;;; Code:
 
 (require 'emacsvox-aural-voice-editor)
+(declare-function omnivox-preview-voice-sequence "omnivox-voices" (entries callback))
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-tools)
 
@@ -40,6 +41,8 @@
 (defvar-local emacsvox-aural-voice-context--origin-field nil)
 (defvar-local emacsvox-aural-voice-context--playback nil)
 (defvar-local emacsvox-aural-voice-context--generation 0)
+(defvar-local emacsvox-aural-voice-context--operation nil)
+(defvar-local emacsvox-aural-voice-context--startup nil)
 
 (defun emacsvox-aural-voice-context--patch-field (rule dimension action value)
   "Return RULE with DIMENSION set to VALUE, or removed for ACTION inherit.
@@ -182,9 +185,9 @@ Keep requested nil distinct from the ACSS transport's no-reset behavior."
               "This context selects a different base; edits to the open named voice do not affect it.\n"))
     (unless (plist-get result :speaks) (insert "Content speech is suppressed in this context.\n"))
     (when (plist-get result :nil-acss)
-      (insert (format "Explicit nil for %s reports nil but sends no ACSS reset over the base.\n"
+      (insert (format "Explicit nil for %s reports nil but does not clear the underlying voice setting.\n"
                       (plist-get result :nil-acss))))
-    (insert "\nRequested settings and sources\n")
+    (insert "\nShared and context requests and sources\nA customized fallback may supply other values; playback identifies the row used.\n")
     (dolist (dimension (append '(average-pitch pitch-range stress richness rate-offset)
                                emacsvox-aural-post-synthesis-dimensions))
       (let* ((value (plist-get style (emacsvox-aural--voice-dimension-key dimension)))
@@ -213,31 +216,66 @@ Keep requested nil distinct from the ACSS transport's no-reset behavior."
   "Preview the captured context, with original comparison when COMPARE."
   (let* ((base emacsvox-aural-voice-context--base)
          (buffer (current-buffer))
+         (input emacsvox-aural-voice-context--input)
+         (adapter tts-voice-preview-function)
+         (process tts-speaker-process)
+         (revision (emacsvox-aural-voice-draft-revision (plist-get base :draft)))
+         (base-generation (plist-get base :preview-generation))
          (generation (cl-incf emacsvox-aural-voice-context--generation))
-         entries)
+         (current
+          (lambda ()
+            (and (buffer-live-p buffer) (eq adapter tts-voice-preview-function) (eq process tts-speaker-process)
+                 (with-current-buffer buffer
+                   (and (eq base emacsvox-aural-voice-context--base)
+                        (eq input emacsvox-aural-voice-context--input)
+                        (= generation emacsvox-aural-voice-context--generation)
+                        (equal base-generation (plist-get base :preview-generation))
+                        (= revision (emacsvox-aural-voice-draft-revision (plist-get base :draft))))))))
+         (startup (when (and (processp process) (eq adapter #'omnivox-preview-voice-sequence))
+                    (cons process current)))
+         entries operation returned)
     (dolist (original (if compare '(t nil) '(nil)))
       (let* ((result (emacsvox-aural-voice-context--current original))
-             (entry (emacsvox-aural-voice-editing--preview
-                     (plist-get result :snapshot) (plist-get base :palette)
-                     (plist-get base :policy) (plist-get base :text))))
+             (entry (emacsvox-aural-voice-editing--cascade
+                     (plist-get result :base-snapshot) (plist-get base :palette)
+                     (plist-get base :policy) (plist-get base :text) (plist-get result :context))))
         (unless (plist-get result :speaks) (user-error "Content speech is suppressed in this context"))
+        (setq entry (plist-put entry :variant (if original 'original 'edited)))
         (setq entries (append entries
-                              (list (plist-put (copy-tree entry) :text
-                                               (if original "Original in context." "Edited in context.")) entry)))))
+                              (list (plist-put (plist-put (copy-tree entry) :text
+                                                          (if original "Original in context." "Edited in context."))
+                                               :role 'label) entry)))))
+    (when startup
+      (when-let* ((admitted (omnivox--preview-token-operation emacsvox-aural-voice-context--startup)))
+        (setq emacsvox-aural-voice-context--operation admitted))
+      (setq emacsvox-aural-voice-context--startup startup))
     (setq emacsvox-aural-voice-editor--preview-owner buffer)
-    (tts-preview-voices
-     entries
-     (lambda (result)
-       (when (buffer-live-p buffer)
-         (with-current-buffer buffer
-           (when (= generation emacsvox-aural-voice-context--generation)
-             (when (eq emacsvox-aural-voice-editor--preview-owner buffer)
-               (setq emacsvox-aural-voice-editor--preview-owner nil))
-             (setq emacsvox-aural-voice-context--playback (copy-tree result))
-             ;; A source can change while audio is pending. Retain evidence
-             ;; without attempting to re-inspect an invalid source in a callback.
-             (condition-case nil (emacsvox-aural-voice-context-refresh) (user-error nil))
-             (tts-notify (emacsvox-aural-voice-editor--preview-status result)))))))))
+    (unwind-protect
+        (progn
+          (setq operation
+                (emacsvox-aural-voice-editor--submit-preview
+                 entries
+                 (lambda (result)
+                   (when (funcall current)
+                     (with-current-buffer buffer
+                       (setq result (plist-put result :draft-revision revision))
+                       (setq result (plist-put result :context-generation generation))
+                       (when (eq emacsvox-aural-voice-editor--preview-owner buffer)
+                         (setq emacsvox-aural-voice-editor--preview-owner nil))
+                       (setq emacsvox-aural-voice-context--operation nil
+                             emacsvox-aural-voice-context--playback (copy-tree result))
+                       ;; Preserve captured evidence if its source changed during playback.
+                       (condition-case nil (emacsvox-aural-voice-context-refresh) (user-error nil))
+                       (when (funcall current)
+                         (tts-notify (emacsvox-aural-voice-editor--preview-status result)))))) current))
+          (when (and (funcall current) (eq emacsvox-aural-voice-editor--preview-owner buffer))
+            (setq emacsvox-aural-voice-context--operation operation))
+          (setq returned t))
+      (when (and (not returned) (funcall current)
+                 (eq emacsvox-aural-voice-editor--preview-owner buffer))
+        (setq emacsvox-aural-voice-editor--preview-owner nil))
+      (when (eq startup emacsvox-aural-voice-context--startup)
+        (setq emacsvox-aural-voice-context--startup nil)))))
 
 (defun emacsvox-aural-voice-context-play ()
   "Play the edited voice against captured context without saving."
@@ -281,6 +319,7 @@ Keep requested nil distinct from the ACSS transport's no-reset behavior."
   "Refresh the captured rules and facts after validating the source identity."
   (interactive)
   (emacsvox-aural-voice-context--check)
+  (emacsvox-aural-voice-context-stop)
   (setq emacsvox-aural-voice-context--input (emacsvox-aural-voice-context--capture))
   (emacsvox-aural-voice-context-refresh))
 
@@ -288,9 +327,16 @@ Keep requested nil distinct from the ACSS transport's no-reset behavior."
   "Stop this context preview without cancelling a newer editor's playback."
   (interactive)
   (cl-incf emacsvox-aural-voice-context--generation)
-  (when (eq emacsvox-aural-voice-editor--preview-owner (current-buffer))
-    (setq emacsvox-aural-voice-editor--preview-owner nil)
-    (tts-stop)))
+  (when emacsvox-aural-voice-context--playback
+    (setq emacsvox-aural-voice-context--playback (plist-put emacsvox-aural-voice-context--playback :earlier t)))
+  (let ((operation emacsvox-aural-voice-context--operation)
+        (startup emacsvox-aural-voice-context--startup)
+        (owned (eq emacsvox-aural-voice-editor--preview-owner (current-buffer))))
+    (setq emacsvox-aural-voice-context--operation nil emacsvox-aural-voice-context--startup nil)
+    (when owned (setq emacsvox-aural-voice-editor--preview-owner nil))
+    (cond (operation (omnivox--preview-cancel operation))
+          ((and owned (not startup)) (tts-stop)))
+    (when startup (omnivox--preview-cancel startup))))
 
 (defun emacsvox-aural-voice-context-return ()
   "Return to the same field in the base editor."
@@ -315,18 +361,29 @@ Keep requested nil distinct from the ACSS transport's no-reset behavior."
 
 (defun emacsvox-aural-voice-context-next ()
   "Move to and read the next context field."
-  (interactive) (emacsvox-aural-voice-context-stop) (forward-button 1 t t)
-  (emacsvox-aural-ui-speak (button-label (button-at (point)))))
+  (interactive) (emacsvox-aural-voice-context--move 1))
 (defun emacsvox-aural-voice-context-previous ()
   "Move to and read the previous context field."
-  (interactive) (emacsvox-aural-voice-context-stop) (backward-button 1 t t)
-  (emacsvox-aural-ui-speak (button-label (button-at (point)))))
+  (interactive) (emacsvox-aural-voice-context--move -1))
+
+(defun emacsvox-aural-voice-context--move (direction)
+  "Move in DIRECTION without wrapping, reading the field or boundary."
+  (emacsvox-aural-voice-context-stop)
+  (let* ((current (button-at (point)))
+         (next (if (> direction 0) (next-button (if current (button-end current) (point)))
+                 (previous-button (if current (button-start current) (point))))))
+    (when next (goto-char (button-start next)))
+    (emacsvox-aural-ui-speak
+     (concat (unless next (if (> direction 0) "Last field. " "First field. "))
+             (if (or next current) (button-label (or next current)) "No fields")))))
 
 (defvar emacsvox-aural-voice-context-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map emacsvox-aural-interface-mode-map)
     (dolist (key '("n" "<down>" "TAB")) (define-key map (kbd key) #'emacsvox-aural-voice-context-next))
     (dolist (key '("p" "<up>" "<backtab>")) (define-key map (kbd key) #'emacsvox-aural-voice-context-previous))
+    (define-key map [remap forward-button] #'emacsvox-aural-voice-context-next)
+    (define-key map [remap backward-button] #'emacsvox-aural-voice-context-previous)
     (define-key map (kbd "P") #'emacsvox-aural-voice-context-play)
     (define-key map (kbd "B") #'emacsvox-aural-voice-context-compare)
     (define-key map (kbd "S") #'emacsvox-aural-voice-context-stop)

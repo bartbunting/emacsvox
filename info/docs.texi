@@ -5113,6 +5113,9 @@ S-SPC		scroll-down-command
 <down>		emacsvox-aural-voice-context-next
 <up>		emacsvox-aural-voice-context-previous
 
+<remap> <backward-button>	emacsvox-aural-voice-context-previous
+<remap> <forward-button>	emacsvox-aural-voice-context-next
+
 C-c C-a		emacsvox-aural-ui-actions
 C-c TAB		emacsvox-aural-ui-open-manual
 

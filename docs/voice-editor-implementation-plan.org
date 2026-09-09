@@ -57,8 +57,9 @@ complete, with twelve reproduced gaps and forty independent desired cases.
 The maintainer resumed at High. The owned coordinator and guarded startup are
 implemented. Private v2 request/terminal handling now passes 595 selected tests
 and muted local/remote compiled acceptance. Pure editor snapshot/context
-projection now passes 607 selected tests. Connecting views and optional
-controls remains next; no new product decision is required.
+projection and view integration now pass 621 selected tests. Optional controls,
+clearer field-source explanations and experiment keeps remain next; no new
+product decision is required.
 Scope A remains selected; broader cross-call tuning is deferred. Preview and
 editor work remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
@@ -823,7 +824,7 @@ substitute, policy fallback, Stop and reconnect. Ordinary named playback retains
 actual-fallback receipts on both lanes and transports after reconnect. This
 slice supplies the service; it does not yet connect the new editor projection.
 
-**** TODO Complete preview and editor controls
+**** DONE Connect editor previews and view revision ownership
 
 The ordinary consumer slices and private preview service are complete.
 Pure editor projection now retains the full chain, sparse context and selected
@@ -835,11 +836,28 @@ in individual auditions. It preserves an explicitly empty captured engine order.
 Six new contracts plus the existing editing suite expand the selected matrix to
 607 passing tests; compiled parity covers the new pure entry points.
 
-Continue at High by connecting editor original-row auditions and contextual
-previews with view/draft revision ownership and adapter capability checks.
-Finally add optional per-choice
-controls, revision-aware explanations and experiment keeps over those tested
-services. The [[file:voice-editor-preview-handoff-review.org][handoff]] specifies lifecycle, compatibility and evidence gates.
+Editor and context views now use these services with draft/view revisions and
+adapter capability checks. A bounded startup handle exists before admission;
+the previous operation token remains available until supersession. Reentrant
+startup cannot replace a newer view's token, and a rejected preparation cannot
+lose the old token. Original-row comparison follows stable IDs; temporary IDs
+for old snapshots do not force schema promotion on a shared-only save.
+Text changes, undo, save, Stop and recapture invalidate callbacks first. Spoken
+labels are separate from sample starts, and retained older results are labelled.
+Picker auditions use the same service; row replacement asks keep/reset when
+custom settings exist. Context navigation no longer wraps.
+
+Fourteen additional contracts bring the selected matrix to 621 passing tests.
+The live muted editor flow verifies fallback, reordered comparison, sparse
+context and text cancellation through foreground reconnect without changing the
+notification lane. Compiled and documentation gates are recorded in the handoff
+report. No live profile was restarted or personal configuration changed.
+
+**** TODO Complete optional controls and explanations
+
+Continue at High with optional per-choice controls, clearer field-source
+explanations and experiment keeps over the tested services. The
+[[file:voice-editor-preview-handoff-review.org][handoff]] specifies lifecycle, compatibility and evidence gates.
 Verify fresh compiled behavior, update current documentation and commit each
 completed slice. Stop for a real contract conflict or the spoken acceptance
 boundary, rather than treating review evidence as feature completion.

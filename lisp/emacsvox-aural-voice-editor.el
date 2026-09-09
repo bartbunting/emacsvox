@@ -34,6 +34,15 @@
 (require 'button)
 (require 'emacsvox-aural-voice-editing)
 (require 'emacsvox-aural-voice-workbench)
+(defvar emacsvox-aural-voice-context--base)
+(declare-function emacsvox-aural-voice-context-stop "emacsvox-aural-voice-context" ())
+(declare-function omnivox-preview-voice-sequence "omnivox-voices" (entries callback))
+(declare-function omnivox--choice-tuning-supported-p "omnivox-voices" (process))
+(declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
+(declare-function omnivox--preview-layered-sequence "omnivox-preview" (entries callback &optional current))
+(declare-function omnivox--preview-sequence "omnivox-preview" (entries callback individual &optional current))
+(declare-function omnivox--preview-cancel "omnivox-preview" (operation))
+(declare-function omnivox--preview-token-operation "omnivox-preview" (token))
 (autoload 'emacsvox-aural-voice-context-open "emacsvox-aural-voice-context"
   "Inspect this voice draft in a captured source context." t)
 
@@ -43,14 +52,133 @@
   "Context owning the current editor sample.")
 (defvar-local emacsvox-aural-voice-editor--context nil)
 
+(defun emacsvox-aural-voice-editor--submit-preview (entries callback current)
+  "Submit private ENTRIES with CALLBACK while CURRENT still owns the view.
+Select a faithful wire form before any entry interrupts foreground speech."
+  (let* ((entries (tts--dispatch-copy-data entries))
+         (process tts-speaker-process)
+         (adapter tts-voice-preview-function)
+         (omnivox (and (eq adapter #'omnivox-preview-voice-sequence)
+                       (processp process) (process-live-p process)))
+         (layered (and omnivox (omnivox--choice-tuning-supported-p process)))
+         (individual (eq (plist-get (plist-get (car entries) :selection) :mode) 'choice))
+         (prepared (unless layered (mapcar #'emacsvox-aural-voice-editing--legacy-preview entries)))
+         (kind (if layered 'layered (if individual 'individual-audition 'shared-chain)))
+         (receive
+          (lambda (result)
+            (setq result (copy-tree result))
+            (cl-loop for item in (plist-get result :results) for entry in entries do
+                     (plist-put item :request-snapshot (copy-tree entry)))
+            (funcall callback (plist-put result :preview-kind kind)))))
+    (unless (and (eq adapter tts-voice-preview-function) (eq process tts-speaker-process) (funcall current))
+      (user-error "Preview input or connection changed during preparation"))
+    (unless layered
+      (cl-loop for entry in entries for legacy in prepared do
+               (let* ((voice (plist-get entry :voice))
+                      (id (plist-get (plist-get entry :selection) :choice-id))
+                      (row (cl-find id (plist-get voice :choices) :test #'equal
+                                    :key (lambda (choice) (plist-get choice :id))))
+                      (customized (or (plist-get row :adjustments) (plist-get entry :context))))
+                 (when (and individual customized)
+                   (unless omnivox
+                     (user-error "This adapter cannot faithfully audition individual tuning"))
+                   (when (> (length entries) 1)
+                     (user-error "Comparing individual tuning needs the complete voice-choice bundle; audition one row at a time"))
+                   (let ((engine (plist-get (plist-get legacy :selector) :engine-id))
+                         (disabled (plist-get entry :disabled-engine-ids)))
+                     (when (and disabled (or (null engine) (member engine disabled)))
+                       (user-error "This older audition cannot preserve the captured engine disablement")))
+                   (when (and (plist-get legacy :effects)
+                              (not (omnivox--process-supports-p process "post_synthesis_effects_v1")))
+                     (user-error "This audition needs post-synthesis effect support"))
+                   (when (and (numberp (plist-get legacy :rate-offset))
+                              (/= (plist-get legacy :rate-offset) 0)
+                              (not (omnivox--process-supports-p process "relative_rate_v1")))
+                     (user-error "This audition needs relative rate support"))))))
+    (cond (layered (omnivox--preview-layered-sequence entries receive current))
+          (omnivox (omnivox--preview-sequence prepared receive individual current))
+          (t (tts-preview-voices prepared receive) nil))))
+
+(defun emacsvox-aural-voice-editor--invalidate (context)
+  "Invalidate CONTEXT before cancelling its exact operation or notifying views."
+  (when context
+    (dolist (key '(:preview-generation :preview-operation :preview-startup :preview-result))
+      (unless (plist-member context key) (nconc context (list key nil))))
+    (setf (plist-get context :preview-generation) (1+ (or (plist-get context :preview-generation) 0)))
+    (when (plist-get context :preview-result)
+      (setf (plist-get context :preview-result) (plist-put (plist-get context :preview-result) :earlier t)))
+    (let ((operation (plist-get context :preview-operation))
+          (startup (plist-get context :preview-startup))
+          (owned (eq emacsvox-aural-voice-editor--preview-owner context)))
+      (setf (plist-get context :preview-operation) nil (plist-get context :preview-startup) nil)
+      (when owned (setq emacsvox-aural-voice-editor--preview-owner nil))
+      (cond (operation (omnivox--preview-cancel operation))
+            ((and owned (not startup)) (tts-stop)))
+      (when startup (omnivox--preview-cancel startup)))))
+
+(defun emacsvox-aural-voice-editor--current-view (context generation revision buffer)
+  "Whether CONTEXT's GENERATION and draft REVISION still belong to BUFFER."
+  (and (buffer-live-p buffer) (eq buffer (plist-get context :buffer))
+       (eq context (buffer-local-value 'emacsvox-aural-voice-editor--context buffer))
+       (= generation (plist-get context :preview-generation))
+       (= revision (emacsvox-aural-voice-draft-revision (plist-get context :draft)))))
+
+(defun emacsvox-aural-voice-editor--start-entries (context entries revision)
+  "Own prepared ENTRIES for CONTEXT at captured draft REVISION."
+  (let* ((buffer (plist-get context :buffer))
+         (adapter tts-voice-preview-function)
+         (process tts-speaker-process)
+         (generation (1+ (or (plist-get context :preview-generation) 0)))
+         (current (lambda () (and (eq adapter tts-voice-preview-function) (eq process tts-speaker-process)
+                                   (emacsvox-aural-voice-editor--current-view context generation revision buffer))))
+         (startup (when (and (processp process) (eq adapter #'omnivox-preview-voice-sequence))
+                    (cons process current)))
+         returned operation)
+    (emacsvox-aural-voice-editor--context-put context :preview-generation generation)
+    (unless (funcall current) (user-error "Voice draft changed during preview preparation"))
+    (when startup
+      (when-let* ((previous (plist-get context :preview-startup))
+                  (admitted (omnivox--preview-token-operation previous)))
+        (emacsvox-aural-voice-editor--context-put context :preview-operation admitted))
+      (emacsvox-aural-voice-editor--context-put context :preview-startup startup))
+    (setq emacsvox-aural-voice-editor--preview-owner context)
+    (unwind-protect
+        (progn
+          (setq operation
+                (emacsvox-aural-voice-editor--submit-preview
+                 entries
+                 (lambda (result)
+                   (when (funcall current)
+                     (setq result (plist-put result :draft-revision revision))
+                     (setq result (plist-put result :view-generation generation))
+                     (setf (plist-get context :preview-result) (copy-tree result))
+                     (when (eq emacsvox-aural-voice-editor--preview-owner context)
+                       (setq emacsvox-aural-voice-editor--preview-owner nil))
+                     (with-current-buffer buffer
+                       (emacsvox-aural-voice-editor--put :preview-operation nil)
+                       (emacsvox-aural-voice-editor-refresh))
+                     (when (and (funcall current) (memq (plist-get result :status) '(failed error unsupported)))
+                       (tts-notify (emacsvox-aural-voice-editor--preview-status result))))) current))
+          (when (and (funcall current) (eq emacsvox-aural-voice-editor--preview-owner context))
+            (emacsvox-aural-voice-editor--context-put context :preview-operation operation))
+          (setq returned t))
+      (when (and (not returned) (funcall current)
+                 (eq emacsvox-aural-voice-editor--preview-owner context))
+        (setq emacsvox-aural-voice-editor--preview-owner nil))
+      (when (eq startup (plist-get context :preview-startup))
+        (emacsvox-aural-voice-editor--context-put context :preview-startup nil)))))
+
 (defun emacsvox-aural-voice-editor--get (key)
   "Read KEY from the current editor context."
   (plist-get emacsvox-aural-voice-editor--context key))
 (defun emacsvox-aural-voice-editor--put (key value)
   "Store KEY with VALUE in the retained current context."
-  (unless (plist-member emacsvox-aural-voice-editor--context key)
-    (nconc emacsvox-aural-voice-editor--context (list key nil)))
-  (setf (plist-get emacsvox-aural-voice-editor--context key) value))
+  (emacsvox-aural-voice-editor--context-put emacsvox-aural-voice-editor--context key value))
+(defun emacsvox-aural-voice-editor--context-put (context key value)
+  "Store KEY with VALUE in explicit CONTEXT, independent of buffer switches."
+  (unless context (error "No voice editor context"))
+  (unless (plist-member context key) (nconc context (list key nil)))
+  (setf (plist-get context key) value))
 (defun emacsvox-aural-voice-editor--draft ()
   "Return the current authoritative draft."
   (emacsvox-aural-voice-editor--get :draft))
@@ -137,17 +265,45 @@
                   ((and chain (not engine)) " [engine support not known]")))))
 
 (defun emacsvox-aural-voice-editor--preview-status (result)
-  "Describe actual accepted audio evidence in terminal RESULT."
-  (let* ((played (delete-dups (apply #'append (mapcar (lambda (entry) (copy-tree (plist-get entry :realizations)))
-                                                      (plist-get result :results)))))
+  "Describe RESULT without confusing spoken labels or accepted audio with starts."
+  (if (eq (plist-get result :preview-kind) 'layered)
+      (let* ((samples (cl-remove-if-not
+                       (lambda (entry) (eq (plist-get (plist-get entry :request-snapshot) :role) 'sample))
+                       (plist-get result :results)))
+             (latest (car (last samples)))
+             (started (cl-find-if (lambda (entry) (plist-get entry :last-started)) (reverse samples)))
+             (identity (plist-get started :last-started))
+             (physical (plist-get identity :realized))
+             (rows (plist-get (plist-get (plist-get started :request-snapshot) :voice) :choices))
+             (position (cl-position (plist-get identity :choice_id) rows :test #'equal
+                                    :key (lambda (row) (plist-get row :id))))
+             (accepted (cl-some (lambda (entry) (> (length (plist-get entry :accepted-audio)) 0)) samples))
+             (degraded (append (plist-get identity :degraded_acss) (plist-get identity :degraded_effects) nil)))
+        (concat (if (plist-get result :earlier) "Earlier preview " "Preview ")
+                (format "%s" (plist-get result :status))
+                (if identity
+                    (format "; last sample playback started on %s/%s; %s"
+                            (plist-get physical :engine_id) (plist-get physical :voice_id)
+                            (if (eq (plist-get identity :choice_id) :null) "policy fallback"
+                              (format "choice %s" (if position (1+ position) "from this sample"))))
+                  (if accepted "; audio accepted; no sample start confirmed" "; no sample start confirmed"))
+                (unless (plist-get latest :terminal-confirmed) "; latest sample playback unconfirmed")
+                (when degraded (format "; unsupported adjustments: %s"
+                                        (mapconcat (lambda (field) (replace-regexp-in-string "_" " " field)) degraded ", ")))
+                (when (plist-get result :message) (format "; %s" (plist-get result :message)))))
+    (let* ((played (delete-dups (apply #'append (mapcar (lambda (entry) (copy-tree (plist-get entry :realizations)))
+                                                       (plist-get result :results)))))
          (last (car (last (plist-get result :results))))
          (degraded (append (plist-get last :degraded-acss) (plist-get last :degraded-effects))))
-    (format "Preview %s%s%s%s" (or (plist-get result :status) "not played")
+    (format "%s%s %s%s%s%s%s" (if (plist-get result :earlier) "Earlier " "")
+            (if (eq (plist-get result :preview-kind) 'individual-audition) "Individual audition" "Preview")
+            (or (plist-get result :status) "not played")
+            (if (eq (plist-get result :completion-guarantee) 'queued-only) "; playback unconfirmed" "")
             (if played (format "; audio from %s" (mapconcat (lambda (voice)
                                                               (format "%s/%s" (plist-get voice :engine-id) (plist-get voice :voice-id))) played ", ")) "")
             (if degraded (format "; unsupported adjustments: %s" degraded) "")
             (if (or (plist-get result :message) (plist-get last :message))
-                (format "; %s" (or (plist-get result :message) (plist-get last :message))) ""))))
+                (format "; %s" (or (plist-get result :message) (plist-get last :message))) "")))))
 
 (defun emacsvox-aural-voice-editor-refresh ()
   "Refresh the common editor, preserving the current field and point's column."
@@ -164,7 +320,7 @@
     (insert (format "Edit %s — %s\n%s\n\n"
                     (or voice "physical voice experiment") (or palette "no destination yet")
                     (plist-get (emacsvox-aural-voice-drafts--status draft) :label)))
-    (insert (if voice "Adjustments apply to every fallback choice in this named voice.\n"
+    (insert (if voice "Shared settings provide the base for every fallback choice. Customized rows can override them.\n"
               "Temporary experiment. Choose a destination before saving.\n"))
     (when (emacsvox-aural-voice-editor--get :temporary)
       (insert "Temporary routing is active. Base previews and saves exclude it.\n"))
@@ -198,10 +354,12 @@
                                            (lambda () (emacsvox-aural-voice-editor--toggle :expanded 'fallbacks)))
       (when (emacsvox-aural-voice-editor--get :expanded)
         (cl-loop for choice in chain for index from 0 do
-                 (let ((selected index))
+                 (let ((selected (plist-get (nth index (emacsvox-aural-voice-editing--rows snapshot)) :id)))
                    (emacsvox-aural-voice-editor--button (cons 'choice index)
-                                                        (format "%d. %s — shared adjustments" (1+ index)
-                                                                (emacsvox-aural-voice-workbench--selector-description choice))
+                                                        (format "%d. %s — %s" (1+ index)
+                                                                (emacsvox-aural-voice-workbench--selector-description choice)
+                                                                (if (plist-get (nth index (plist-get snapshot :choices)) :adjustments)
+                                                                    "customized" "uses shared settings"))
                                                         (lambda () (emacsvox-aural-voice-editor-choice-actions selected)))))
         (emacsvox-aural-voice-editor--button 'add "Add fallback" (lambda () (emacsvox-aural-voice-editor-choose nil)))
         (emacsvox-aural-voice-editor--button 'automatic "Use Automatic; clear explicit choices" #'emacsvox-aural-voice-editor-automatic)
@@ -260,9 +418,7 @@
 (defun emacsvox-aural-voice-editor-stop ()
   "Stop this editor's sample without stopping another editor's newer preview."
   (interactive)
-  (when (eq emacsvox-aural-voice-editor--preview-owner emacsvox-aural-voice-editor--context)
-    (setq emacsvox-aural-voice-editor--preview-owner nil)
-    (tts-stop)))
+  (emacsvox-aural-voice-editor--invalidate emacsvox-aural-voice-editor--context))
 (defun emacsvox-aural-voice-editor-speak ()
   "Read the current labelled field using the ordinary navigation voice."
   (interactive)
@@ -395,83 +551,101 @@
                                             '("Use this voice" "Audition candidate" "Search again" "Cancel") nil t))
               (when (equal action "Audition candidate")
                 (let* ((snapshot (plist-put (emacsvox-aural-voice-editor--working) :selectors (list selector)))
-                       (entry (emacsvox-aural-voice-editing--preview
+                       (_ (setq snapshot (plist-put snapshot :choices
+                                                    (list (list :id "candidate" :selector selector :adjustments nil)))))
+                       (entry (emacsvox-aural-voice-editing--cascade
                                snapshot (emacsvox-aural-voice-editor--get :palette)
-                               (emacsvox-aural-voice-editor--get :policy) (emacsvox-aural-voice-editor--get :text))))
-                  (setq entry (map-delete (map-delete (map-delete entry :selectors) :fallback-policy) :disabled-engine-ids))
-                  (setq emacsvox-aural-voice-editor--preview-owner emacsvox-aural-voice-editor--context)
-                  (tts-preview-voices
-                   (list (plist-put entry :selector selector))
-                   (lambda (result)
-                     (when (memq (plist-get result :status) '(failed error unsupported))
-                       (tts-notify (emacsvox-aural-voice-editor--preview-status result))))))))
+                               (emacsvox-aural-voice-editor--get :policy) (emacsvox-aural-voice-editor--get :text)
+                               nil "candidate")))
+                  (emacsvox-aural-voice-editor--start-entries
+                   emacsvox-aural-voice-editor--context (list entry)
+                   (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft))))))
+            (emacsvox-aural-voice-editor-stop)
             (pcase action
               ("Cancel" (user-error "Choice unchanged"))
               ("Use this voice" (setq selected selector)))))
       (emacsvox-aural-voice-editor-stop))
     selected))
-(defun emacsvox-aural-voice-editor-choose (index)
-  "Replace choice INDEX, or append a fallback when INDEX is nil."
-  (let ((selector (emacsvox-aural-voice-editor--pick)))
+(defun emacsvox-aural-voice-editor-choose (choice)
+  "Replace stable CHOICE (or a current index), or append when CHOICE is nil."
+  (let* ((snapshot (emacsvox-aural-voice-editor--working))
+         (revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))
+         (rows (emacsvox-aural-voice-editing--rows snapshot))
+         (index (if (stringp choice) (cl-position choice rows :test #'equal :key (lambda (row) (plist-get row :id))) choice))
+         (row (and index (nth index rows)))
+         (selector (progn (when (and (stringp choice) (null index)) (user-error "This fallback row no longer exists"))
+                           (emacsvox-aural-voice-editor--pick)))
+         (replacement (emacsvox-aural-voice-editor--replacement row)))
+    (unless (= revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))
+      (user-error "Voice changed while choosing a replacement; choose the row again"))
     (emacsvox-aural-voice-editor--changed
-     (emacsvox-aural-voice-editing--keep (emacsvox-aural-voice-editor--working)
+     (emacsvox-aural-voice-editing--keep snapshot
                                          (list :selectors (list selector)) 'physical
-                                         (if index 'replace 'fallback) index))))
+                                         (if index 'replace 'fallback) index replacement))))
+
+(defun emacsvox-aural-voice-editor--replacement (row)
+  "Choose explicitly whether replacement ROW should retain its custom settings."
+  (if (not (plist-get row :adjustments)) 'keep
+    (if (equal (completing-read "New physical voice may need different tuning: "
+                                '("Use shared settings" "Keep this row's custom settings") nil t)
+               "Use shared settings") 'reset 'keep)))
 (defun emacsvox-aural-voice-editor-automatic ()
   "Explicitly replace the saved choice chain with Automatic."
   (interactive)
   (let ((snapshot (emacsvox-aural-voice-editor--working)))
     (setq snapshot (plist-put snapshot :selectors nil))
+    (setq snapshot (plist-put snapshot :choices nil))
     (emacsvox-aural-voice-editor--changed (plist-put snapshot :reset-choices t))))
-(defun emacsvox-aural-voice-editor-choice-actions (index)
-  "Edit, reorder, remove or individually audition choice INDEX."
-  (let* ((action (completing-read "Choice action: " '("Replace" "Move earlier" "Move later" "Remove" "Audition this choice") nil t))
-         (snapshot (emacsvox-aural-voice-editor--working))
-         (chain (plist-get snapshot :selectors)))
+(defun emacsvox-aural-voice-editor-choice-actions (choice)
+  "Edit, reorder, remove or audition stable CHOICE (or a current index)."
+  (let* ((snapshot (emacsvox-aural-voice-editor--working))
+         (revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))
+         (rows (emacsvox-aural-voice-editing--rows snapshot))
+         (index (if (stringp choice) (cl-position choice rows :test #'equal :key (lambda (row) (plist-get row :id))) choice))
+         (id (and index (plist-get (nth index rows) :id)))
+         (action (progn (unless id (user-error "This fallback row no longer exists"))
+                        (completing-read "Choice action: " '("Replace" "Move earlier" "Move later" "Remove" "Audition this choice"
+                                                               "Compare original and edited choice") nil t))))
+    (unless id (user-error "This fallback row no longer exists"))
+    (unless (= revision (emacsvox-aural-voice-draft-revision (emacsvox-aural-voice-editor--draft)))
+      (user-error "Voice changed while choosing an action; choose the row again"))
     (pcase action
-      ("Replace" (emacsvox-aural-voice-editor-choose index))
-      ("Audition this choice" (emacsvox-aural-voice-editor--preview nil index))
-      (_ (if (equal action "Remove") (setq chain (append (cl-subseq chain 0 index) (nthcdr (1+ index) chain)))
+      ("Replace" (emacsvox-aural-voice-editor-choose id))
+      ("Audition this choice" (emacsvox-aural-voice-editor--preview nil id))
+      ("Compare original and edited choice" (emacsvox-aural-voice-editor--preview t id))
+      (_ (if (equal action "Remove") (setq rows (append (cl-subseq rows 0 index) (nthcdr (1+ index) rows)))
            (let ((target (+ index (if (equal action "Move earlier") -1 1))))
-             (unless (< -1 target (length chain)) (user-error "Already at the boundary"))
-             (cl-rotatef (nth index chain) (nth target chain))))
-         (emacsvox-aural-voice-editor--changed (plist-put snapshot :selectors chain))))))
+             (unless (< -1 target (length rows)) (user-error "Already at the boundary"))
+             (setq rows (emacsvox-aural-voice-data--move-choice rows id target))))
+         (setq snapshot (plist-put snapshot :choices rows))
+         (emacsvox-aural-voice-editor--changed
+          (plist-put snapshot :selectors (emacsvox-aural-voice-data--selectors rows)))))))
 
 (defun emacsvox-aural-voice-editor--preview (compare &optional individual value-label)
   "Preview COMPARE or INDIVIDUAL voices, prefixing sample text with VALUE-LABEL."
   (let* ((context emacsvox-aural-voice-editor--context)
-         (generation (1+ (emacsvox-aural-voice-editor--get :preview-generation)))
          (draft (emacsvox-aural-voice-editor--draft))
+         (revision (emacsvox-aural-voice-draft-revision draft))
          (policy (emacsvox-aural-voice-editor--get :policy))
          (text (concat (when value-label (concat value-label ". "))
                        (emacsvox-aural-voice-editor--get :text)))
          (palette (emacsvox-aural-voice-editor--get :palette))
+         (working (emacsvox-aural-voice-draft-working draft))
+         (id (cond ((stringp individual) individual)
+                   ((or individual (not (emacsvox-aural-voice-editor--get :voice)))
+                    (or (plist-get (nth (or individual 0) (emacsvox-aural-voice-editing--rows working)) :id)
+                        (user-error "No physical row to audition")))))
          (snapshots (append (when compare (list (emacsvox-aural-voice-draft-original draft)))
-                            (list (emacsvox-aural-voice-draft-working draft)))) entries)
-    (emacsvox-aural-voice-editor--put :preview-generation generation)
+                            (list working))) entries)
     (cl-loop for snapshot in snapshots for index from 0 do
-             (let ((entry (emacsvox-aural-voice-editing--preview snapshot palette policy text)))
-               (when (or individual (not (emacsvox-aural-voice-editor--get :voice)))
-                 (setq entry (list :text text :selector (nth (or individual 0) (plist-get snapshot :selectors))
-                                   :acss (plist-get entry :acss) :effects (plist-get entry :effects)
-                                   :rate-offset (plist-get entry :rate-offset) :language (plist-get entry :language))))
+             (let ((entry (emacsvox-aural-voice-editing--cascade snapshot palette policy text nil id)))
+               (setq entry (plist-put entry :variant (if (and compare (= index 0)) 'original 'edited)))
                (setq entries (append entries
                                      (if compare
                                          (let ((label (if (= index 0) "Original" "Edited")))
-                                           (list (plist-put (copy-tree entry) :text (concat label ".")) entry))
+                                           (list (plist-put (plist-put (copy-tree entry) :text (concat label ".")) :role 'label) entry))
                                        (list entry))))))
-    (setq emacsvox-aural-voice-editor--preview-owner context)
-    (tts-preview-voices entries
-                        (lambda (result)
-                          (when (= generation (plist-get context :preview-generation))
-                            (setf (plist-get context :preview-result) (copy-tree result))
-                            (when (eq emacsvox-aural-voice-editor--preview-owner context)
-                              (setq emacsvox-aural-voice-editor--preview-owner nil))
-                            (when (buffer-live-p (plist-get context :buffer))
-                              (with-current-buffer (plist-get context :buffer)
-                                (emacsvox-aural-voice-editor-refresh)))
-                            (when (memq (plist-get result :status) '(failed error unsupported))
-                              (tts-notify (emacsvox-aural-voice-editor--preview-status result))))))))
+    (emacsvox-aural-voice-editor--start-entries context entries revision)))
 (defun emacsvox-aural-voice-editor-play () "Play the edited base voice without saving." (interactive) (emacsvox-aural-voice-editor--preview nil))
 (defun emacsvox-aural-voice-editor-compare () "Compare captured original and edited base voices." (interactive) (emacsvox-aural-voice-editor--preview t))
 (defun emacsvox-aural-voice-editor-text ()
@@ -479,6 +653,7 @@
   (interactive)
   (let ((text (read-string "Sample text: " (emacsvox-aural-voice-editor--get :text))))
     (when (string-empty-p text) (user-error "Sample text must not be empty"))
+    (emacsvox-aural-voice-editor-stop)
     (emacsvox-aural-voice-editor--put :text text) (emacsvox-aural-voice-editor-refresh)))
 (defun emacsvox-aural-voice-editor-undo ()
   "Undo the last draft change."
@@ -563,7 +738,11 @@
         (emacsvox-aural-voice-editor--show context (current-buffer))
         (user-error "Resumed destination draft; experiment retained")))
     (emacsvox-aural-voice-drafts--edit draft
-                                       (emacsvox-aural-voice-editing--keep (emacsvox-aural-voice-draft-baseline draft) experiment part placement))
+     (emacsvox-aural-voice-editing--keep
+      (emacsvox-aural-voice-draft-baseline draft) experiment part placement nil
+      (when (and (memq part '(physical both)) (eq placement 'replace))
+        (emacsvox-aural-voice-editor--replacement
+         (car (emacsvox-aural-voice-editing--rows (emacsvox-aural-voice-draft-baseline draft)))))))
     (setf (plist-get context :experiment) origin)
     (emacsvox-aural-voice-editor--show context (current-buffer))
     (emacsvox-aural-ui-speak "Destination proposal ready. Preview now plays the proposed saved combination. Save and apply to keep it.")))
@@ -573,7 +752,7 @@
   (interactive)
   (let ((context emacsvox-aural-voice-editor--context))
     (with-help-window "*Voice editor details*"
-      (princ (format "Base voice in %s; definition owner %s.\nAdjustments are shared by all fallback choices.\nSelection after Save and apply lasts for this session. Use a Presentation Profile to retain it after restart.\n\nWorking voice: %S\n\nWorkstation policy: %S\n\nTemporary override: %S\n\nLast playback evidence: %S\n"
+      (princ (format "Base voice in %s; definition owner %s.\nShared settings are the base; each row can override individual fields.\nSelection after Save and apply lasts for this session. Use a Presentation Profile to retain it after restart.\n\nWorking voice: %S\n\nWorkstation policy: %S\n\nTemporary override: %S\n\nLast playback evidence: %S\n"
                      (plist-get context :palette) (plist-get context :owner)
                      (emacsvox-aural-voice-draft-working (plist-get context :draft))
                      (plist-get context :policy) (plist-get context :temporary) (plist-get context :preview-result))))))
@@ -634,7 +813,8 @@
 (defun emacsvox-aural-voice-editor--show (context source)
   "Show retained CONTEXT, recording a return position in SOURCE."
   ;; Keep context identity stable for the registry and asynchronous callbacks.
-  (dolist (key '(:origin-row :origin-column :announced-apply))
+  (emacsvox-aural-voice-editor--invalidate context)
+  (dolist (key '(:origin-row :origin-column :announced-apply :seen-revision))
     (unless (plist-member context key) (nconc context (list key nil))))
   (let ((ordinary (and (buffer-live-p source) (emacsvox-aural-inspection-remember-source-buffer source)))
         (buffer (or (and (buffer-live-p (plist-get context :buffer)) (plist-get context :buffer))
@@ -665,7 +845,9 @@
                          :voice-id (plist-get (cadr pair) :voice-id)))
          (key (list 'experiment selector))
          (context (or (gethash key emacsvox-aural-voice-editor--contexts)
-                      (list :draft (emacsvox-aural-voice-drafts--open key (list :definition nil :selectors (list selector) :language (plist-get (cadr pair) :language)))
+                      (list :draft (emacsvox-aural-voice-drafts--open
+                                    key (emacsvox-aural-voice-editing--freeze
+                                         (list :definition nil :selectors (list selector) :language (plist-get (cadr pair) :language)) nil))
                             :palette nil :voice nil :experiment t :policy (emacsvox-aural-voice-editor--policy)
                             :text text :expanded nil :effects nil :automatic-sample t :preview-generation 0
                             :preview-result nil :origin nil :buffer nil))))
@@ -676,6 +858,10 @@
   "Refresh DRAFT views and announce completed applies without moving focus."
   (maphash (lambda (_ context)
              (when (eq draft (plist-get context :draft))
+               (unless (equal (plist-get context :seen-revision) (emacsvox-aural-voice-draft-revision draft))
+                 (emacsvox-aural-voice-editor--invalidate context)
+                 (unless (plist-member context :seen-revision) (nconc context (list :seen-revision nil)))
+                 (setf (plist-get context :seen-revision) (emacsvox-aural-voice-draft-revision draft)))
                (when (buffer-live-p (plist-get context :buffer))
                  (with-current-buffer (plist-get context :buffer) (emacsvox-aural-voice-editor-refresh)))
                (when-let* ((proposal (emacsvox-aural-voice-draft-proposal draft))
@@ -691,6 +877,9 @@
     (with-current-buffer buffer
       (cond ((derived-mode-p 'emacsvox-aural-voice-palette-previews-mode)
              (emacsvox-aural-voice-palette-previews-refresh))
+            ((and (derived-mode-p 'emacsvox-aural-voice-context-mode)
+                  (eq draft (plist-get emacsvox-aural-voice-context--base :draft)))
+             (emacsvox-aural-voice-context-stop))
             ((derived-mode-p 'emacsvox-aural-voice-workbench-mode)
              (emacsvox-aural-voice-workbench-refresh))))))
 (add-hook 'emacsvox-aural-voice-drafts--changed-hook #'emacsvox-aural-voice-editor--draft-changed)

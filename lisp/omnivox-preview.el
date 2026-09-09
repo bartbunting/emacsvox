@@ -57,7 +57,7 @@
 
 (cl-defstruct (omnivox--preview (:constructor omnivox--preview-create))
   process generation capabilities guard items callback observer timer pending
-  response results base-rate disabled busy finished notification interrupt individual)
+  response results base-rate disabled busy finished notification interrupt individual current)
 
 (defun omnivox--preview-copy (value)
   "Copy bounded preview VALUE including mutable strings, rejecting cycles."
@@ -258,13 +258,13 @@
           :base-rate (plist-get response :base_rate) :effective-disabled-engine-ids disabled
           :message (unless (eq (plist-get response :message) :null) (plist-get response :message)))))
 
-(defun omnivox--preview-layered-sequence (entries callback)
-  "Preview complete raw private ENTRIES, delivering bounded evidence to CALLBACK."
+(defun omnivox--preview-layered-sequence (entries callback &optional current)
+  "Preview private ENTRIES with CALLBACK while the optional CURRENT guard holds."
   (let ((entries (omnivox--preview-copy entries)))
     (unless (and (proper-list-p entries)
                  (cl-every (lambda (entry) (and (listp entry) (plist-member entry :voice))) entries))
       (user-error "Private preview requires complete voice entries"))
-    (omnivox--preview-sequence entries callback nil)))
+    (omnivox--preview-sequence entries callback nil current)))
 
 (defun omnivox--preview-current-p (operation)
   "Whether OPERATION still owns the frozen foreground connection and settings."
@@ -276,7 +276,23 @@
          (equal (omnivox--preview-generation operation)
                 (process-get process 'tts--speech-process-generation))
          (equal (omnivox--preview-capabilities operation)
-                (process-get process omnivox--control-capabilities-property)))))
+                (process-get process omnivox--control-capabilities-property))
+         (or (null (omnivox--preview-current operation))
+             (condition-case nil (funcall (omnivox--preview-current operation)) (error nil))))))
+
+(defun omnivox--preview-token-operation (token)
+  "Resolve private TOKEN without evaluating its possibly invalidated view guard."
+  (if (omnivox--preview-p token) token
+    (when (and (consp token) (processp (car token)))
+      (let ((current (process-get (car token) 'omnivox--preview-operation)))
+        (and current (eq (cdr token) (omnivox--preview-current current)) current)))))
+
+(defun omnivox--preview-cancel (operation)
+  "Cancel OPERATION or its (process . view-guard) startup handle.
+Never interrupt a newer preview or a changed speech queue."
+  (setq operation (omnivox--preview-token-operation operation))
+  (when (omnivox--preview-p operation)
+    (omnivox--preview-finish operation 'cancelled "Preview input changed; playback unconfirmed" t)))
 
 (defun omnivox--preview-clear-entry (operation)
   "Detach OPERATION's pending request and timer without invoking user code."
@@ -322,6 +338,7 @@ nonlocal caller exit without retaining an asynchronous callback."
                     (list :status status :completion-guarantee 'playback
                           :message message :results (nreverse (omnivox--preview-results operation)))))
             (omnivox--preview-callback operation) nil
+            (omnivox--preview-current operation) nil
             (omnivox--preview-results operation) nil
             (omnivox--preview-items operation) nil)
       (omnivox--preview-clear-entry operation)
@@ -385,9 +402,9 @@ No user code runs until the interrupt has left its write and observer stacks."
                           (when (eql identifier (omnivox--preview-pending operation))
                             (omnivox--preview-finish operation 'failed
                                                      "Voice preview timed out; playback unconfirmed" t))))))
-            (if (omnivox--preview-current-p operation)
-                (setf (omnivox--preview-timer operation) timer)
-              (when timer (cancel-timer timer))))
+            (if (omnivox--preview-finished operation)
+                (when timer (cancel-timer timer))
+              (setf (omnivox--preview-timer operation) timer)))
           (when (omnivox--preview-current-p operation)
             (let ((command (omnivox--preview-command request identifier)))
               (tts-queue--send process command (tts-queue--describe command 'neutral)
@@ -426,7 +443,7 @@ No user code runs until the interrupt has left its write and observer stacks."
               (while (and (not waiting) (not (omnivox--preview-finished operation)))
                 (cond
                  ((not (omnivox--preview-current-p operation))
-                  (omnivox--preview-finish operation 'cancelled "Preview connection or settings changed"))
+                  (omnivox--preview-finish operation 'cancelled "Preview connection or settings changed" t))
                  ((not (tts-queue--guard-valid-p (omnivox--preview-guard operation)))
                   (error "Speech input changed during preview; playback unconfirmed"))
                  ((omnivox--preview-response operation) (omnivox--preview-consume operation))
@@ -443,9 +460,10 @@ No user code runs until the interrupt has left its write and observer stacks."
     (when (and failure (omnivox--preview-individual operation))
       (signal (car failure) (cdr failure)))))
 
-(defun omnivox--preview-sequence (entries callback individual)
+(defun omnivox--preview-sequence (entries callback individual &optional current)
   "Preflight ENTRIES, then own their preview until CALLBACK or cancellation.
-INDIVIDUAL retains the legacy exact-audition wire and response shape."
+INDIVIDUAL retains the legacy exact-audition wire and response shape.
+CURRENT is an optional pure view/revision predicate. Return the operation token."
   (let* ((process tts-speaker-process)
          (previous (and (processp process) (process-get process 'omnivox--preview-operation)))
          (generation (and (processp process) (process-get process 'tts--speech-process-generation)))
@@ -457,6 +475,8 @@ INDIVIDUAL retains the legacy exact-audition wire and response shape."
          (bytes 0) items operation returned failure)
     (unless (and (proper-list-p entries) (<= 1 (length entries) 64))
       (user-error "Preview requires between one and 64 entries"))
+    (unless (or (null current) (and (functionp current) (funcall current)))
+      (user-error "Preview view or input changed"))
     (when (> (+ omnivox--control-request-sequence (length entries)) omnivox--choice-u64-max)
       (user-error "Omnivox control request IDs exhausted"))
     (unless (and (numberp omnivox-voice-preview-timeout) (> omnivox-voice-preview-timeout 0)
@@ -487,13 +507,14 @@ INDIVIDUAL retains the legacy exact-audition wire and response shape."
                  (equal generation (process-get process 'tts--speech-process-generation))
                  (equal epoch (process-get process 'tts--dispatch-cancellation-epoch))
                  (equal capabilities (process-get process omnivox--control-capabilities-property))
-                 (eq previous (process-get process 'omnivox--preview-operation)))
-      (user-error "Preview connection changed during preflight"))
+                 (eq previous (process-get process 'omnivox--preview-operation))
+                 (or (null current) (funcall current)))
+      (user-error "Preview connection or input changed during preflight"))
     (unless (and guard (tts-queue--guard-valid-p guard))
       (user-error "Preview needs an unchanged, proven speech input boundary"))
     (setq operation (omnivox--preview-create
                      :process process :generation generation :capabilities capabilities :guard guard
-                     :items (nreverse items) :callback callback :individual individual :busy t))
+                     :items (nreverse items) :callback callback :individual individual :busy t :current current))
     (setf (omnivox--preview-observer operation)
           (lambda (owner)
             (when (eq owner process)
@@ -519,7 +540,8 @@ INDIVIDUAL retains the legacy exact-audition wire and response shape."
       (setf (omnivox--preview-busy operation) nil)
       (omnivox--preview-notify operation))
     (unless (omnivox--preview-finished operation) (omnivox--preview-drive operation))
-    (when (and failure individual) (signal (car failure) (cdr failure)))))
+    (when (and failure individual) (signal (car failure) (cdr failure)))
+    operation))
 
 (provide 'omnivox-preview)
 ;;; omnivox-preview.el ends here

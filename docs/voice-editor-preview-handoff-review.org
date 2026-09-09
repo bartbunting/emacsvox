@@ -9,8 +9,8 @@ The maintainer's accepted choices still cover the feature; no new product
 decision is needed. The maintainer resumed at High. The first implementation
 slice now gives complete v1 and individual auditions one owned coordinator,
 guarded startup, deferred advancement and unwind-safe request cleanup. Private
-preview v2 request/terminal handling and pure editor projection are implemented;
-view integration and optional controls remain pending. Continue the implementation
+preview v2, pure projection and revision-aware view integration are implemented.
+Optional controls, clearer source explanations and experiment keeps remain pending. Continue the implementation
 slices below, stopping for a contract conflict or user spoken acceptance.
 
 All Emacsvox ADRs 0001–0017 and Omnivox ADRs 0001–0011 were read together.
@@ -31,10 +31,10 @@ Run [[file:../test/diagnose-choice-preview.el][diagnose-choice-preview.el]] with
 At review commit =3c62f414b=, twelve assertions reproduced the baseline using
 synthetic drafts, private pipe objects and muted writes/timers. The six ownership
 observations have now become positive tests in [[file:../test/omnivox-preview-tests.el][omnivox-preview-tests.el]].
-Strict decoding has also become a positive contract. The diagnostic retains
-five pending projection/view observations and the
-fixture checks. The table below records the historical findings, not current
-failures of the implemented coordinator.
+Strict decoding and the remaining view/projection observations have also become
+positive preview/editor/context tests. The diagnostic now checks fixture data
+consistency only. The table below records historical findings, not current
+failures of the implemented services.
 
 | Observation | Consequence |
 |-------------+-------------|
@@ -53,11 +53,10 @@ failures of the implemented coordinator.
 
 The baseline also lacked individual-sequence timeout/pending-ID cleanup and
 installed the complete preview Stop hook after its initial public Stop. Those
-coordinator gaps are fixed. Picker notifications still lack view ownership,
-and the draft record has no
-revision field. The current editor mutates selector lists by index, whereas
-the save projector already rejects disagreement with complete choice records.
-New controls must use those complete records throughout.
+coordinator gaps are fixed. Picker notifications now have view ownership, and
+drafts have monotonic revisions. Row actions preserve complete records by ID;
+the save projector continues to reject a conflicting selector projection.
+New controls must keep using those complete records throughout.
 
 The server already validates private requests, preserves original indices in
 choice auditions and collects accepted/started evidence in its worker/reporter.
@@ -280,13 +279,14 @@ save recovery. This implements accepted behavior rather than changing storage.
    unchanged wire shapes. Turn the lifecycle observations into positive tests,
    including both supersession directions, early replies, all nonlocal exits,
    callback-started replacement, retired process and notification isolation.
-2. IN PROGRESS: The strict v2 request/terminal service and pure editor projection
+2. DONE: The strict v2 request/terminal service and editor projection
    are implemented, including automatic, original-row and paired sequence
-   handling. Connect editor views to those services. Test
+   handling. Editor views use those services. Tests cover
    independent [[file:../test/fixtures/voice-editor/preview-handoff.el][handoff cases]] and the existing [[file:../test/fixtures/voice-editor/fallback-tuning-wire.json][paired wire fixture]], including
    duplicate physical voices, missing originals, nullable fields, truncated
    last-started evidence, no silent old-server flattening and metadata changes.
-3. Add per-choice controls, generation-aware context/Details and experiment keeps
+3. IN PROGRESS: Context/view generations are implemented. Add per-choice controls,
+   clearer field-source Details and experiment keeps
    over these services. Test spoken labels, boundaries, save/dirty status and
    retained drafts through both entry paths. Verify actual fallback and context
    parity with a muted real server locally and over private loopback, including
@@ -297,9 +297,9 @@ save recovery. This implements accepted behavior rather than changing storage.
    acceptance boundary: automated checks cannot judge engine sound or navigation
    comfort. Keep optional controls and whole-feature completion pending until then.
 
-The fixture describes desired behavior independently; the diagnostic retains
-the five remaining projection/view gaps. Fixture consistency and baseline
-reproduction do not establish the remaining runtime behavior.
+The fixture describes desired behavior independently; the diagnostic now checks
+that data's consistency. Runtime tests and spoken acceptance remain separate
+from fixture consistency.
 
 * Original review validation
 
@@ -375,17 +375,62 @@ retains actual-fallback receipts on both lanes and transports after reconnect.
 One malformed-wire fixture initially used =json-serialize=, which removes
 duplicate plist keys; it now supplies literal duplicate-key JSON.
 
-The editor views still use their old preview calls. The pure projection slice
+The pure projection slice
 now retains complete rows and sparse context independently of the effective
 legacy display. It rejects missing selected IDs and inconsistent selector/row
 snapshots, and refuses older individual auditions with surviving native resets.
 Six new contracts cover equal-to-shared overrides, preset resets, row identity,
 default/zero and frozen empty policy. Including the existing editing suite
 expands the selected matrix to 607 passing tests; fresh compiled parity checks
-the new entry points. View revisions, adapter capability checks, compatibility
-presentation and optional controls remain pending.
+the new entry points. The following slice connects the views; optional controls
+and clearer field-source explanations remain pending.
 
 Byte-code and documentation preflight pass. The expanded isolated compiled run
 also caught the paired terminal fixture relying on a test-directory load path;
 it now resolves its file relative to its own source at load time. This changes
 the test harness only. No live session was restarted or personal data changed.
+
+* Implemented editor view slice
+
+Base, original-row, picker and contextual previews now select the private v2
+service on a supporting foreground connection. Older servers retain faithful
+legacy forms; customized whole-chain previews and individual reset/compare
+forms that cannot preserve the contract refuse before interruption.
+Original-row comparisons retain IDs across reorder, and missing originals
+reject without sending either half. Old snapshots receive temporary row IDs;
+shared-only saves retain their existing schema and immutable local reference.
+
+Draft revisions never rewind with undo. View generations invalidate text,
+Stop, leave, save and recapture callbacks before cancellation. Each view retains
+its previous operation plus at most one provisional startup handle. A nested
+start can identify an admitted provisional operation, while a rejected
+preflight retains the previous token. Cancellation resolves only that handle's
+process and guard; it cannot adopt another view's newer operation. Early
+completion or a callback-started replacement cannot overwrite newer ownership.
+The coordinator releases the captured predicate with its other resources.
+
+Status speech counts only sample =last_started= evidence, not accepted-only PCM
+or spoken comparison labels. It names the physical voice and original row
+position and labels retained results as earlier. Context navigation does not
+wrap. Existing customized rows are identified, and physical replacement asks
+whether to keep or reset their settings.
+
+Fourteen new contracts bring the selected source matrix to 621 passing tests.
+They cover real editor-to-codec delivery, original-row reorder, missing original,
+text/undo/save invalidation, preflight rejection/Stop, reentrant startup, older
+server gates, label-only playback, recapture, schema preservation and monotonic
+draft revision. Killing the view during preparation cannot write state into
+the buffer returned to afterward. Isolated compiled parity passes. Muted real-editor acceptance
+passes locally from source and compiled code, and over authenticated loopback
+from compiled code, including foreground reconnect and notification isolation.
+The test fixture establishes interface punctuation before counting preview I/O;
+the isolated compiled manifest loads preview test dependencies before the editor
+tests. The live source-only fixture loader initializes compressed-file support
+before loading system source dependencies.
+
+The full macro rebuild ran while implementation continued; its final stale-code
+check correctly required an incremental refresh. That refresh passes. The Org preview, tracked manual/reference regeneration,
+non-mutating documentation release check, header check and fixture consistency
+check pass. No live
+profile was restarted or runtime installed. Optional tuning controls, clearer
+source explanations, experiment keeps and the spoken walkthrough remain open.

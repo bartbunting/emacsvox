@@ -3965,37 +3965,37 @@ Function Index
 * emacsvox-aural-voice-context-mode <1>: emacsvox-aural-voice-context.
                                                              (line   45)
 * emacsvox-aural-voice-context-next:     emacsvox-aural-voice-context.
-                                                             (line   83)
+                                                             (line   86)
 * emacsvox-aural-voice-context-next <1>: emacsvox-aural-voice-context.
-                                                             (line   84)
+                                                             (line   87)
 * emacsvox-aural-voice-context-open:     emacsvox-aural-voice-context.
-                                                             (line   90)
+                                                             (line   93)
 * emacsvox-aural-voice-context-open <1>: emacsvox-aural-voice-context.
-                                                             (line   91)
+                                                             (line   94)
 * emacsvox-aural-voice-context-play:     emacsvox-aural-voice-context.
-                                                             (line  100)
+                                                             (line  103)
 * emacsvox-aural-voice-context-play <1>: emacsvox-aural-voice-context.
-                                                             (line  101)
+                                                             (line  104)
 * emacsvox-aural-voice-context-previous: emacsvox-aural-voice-context.
-                                                             (line  107)
+                                                             (line  110)
 * emacsvox-aural-voice-context-previous <1>: emacsvox-aural-voice-context.
-                                                             (line  108)
+                                                             (line  111)
 * emacsvox-aural-voice-context-recapture: emacsvox-aural-voice-context.
-                                                             (line  114)
+                                                             (line  117)
 * emacsvox-aural-voice-context-recapture <1>: emacsvox-aural-voice-context.
-                                                             (line  115)
+                                                             (line  118)
 * emacsvox-aural-voice-context-refresh:  emacsvox-aural-voice-context.
-                                                             (line  121)
+                                                             (line  124)
 * emacsvox-aural-voice-context-refresh <1>: emacsvox-aural-voice-context.
-                                                             (line  122)
+                                                             (line  125)
 * emacsvox-aural-voice-context-return:   emacsvox-aural-voice-context.
-                                                             (line  128)
+                                                             (line  131)
 * emacsvox-aural-voice-context-return <1>: emacsvox-aural-voice-context.
-                                                             (line  129)
+                                                             (line  132)
 * emacsvox-aural-voice-context-stop:     emacsvox-aural-voice-context.
-                                                             (line  135)
+                                                             (line  138)
 * emacsvox-aural-voice-context-stop <1>: emacsvox-aural-voice-context.
-                                                             (line  136)
+                                                             (line  139)
 * emacsvox-aural-voice-editor-activate:  emacsvox-aural-voice-editor.
                                                              (line   17)
 * emacsvox-aural-voice-editor-activate <1>: emacsvox-aural-voice-editor.

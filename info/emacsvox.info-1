@@ -2919,6 +2919,30 @@ shared adjustments belong to one draft and one save action.  The voice
 list separates _Physical voice_, _Engine_, _Adjustments_, and _State_,
 including unfinished editor changes.
 
+   Shared settings provide the base for the whole voice.  Expand
+_Fallbacks_ to see which rows _use shared settings_ and which are
+_customized_.  A row's action menu can audition that row or compare its
+original and edited versions.  Comparison follows the same row after
+reordering, including two rows mapped to the same physical voice.  A
+newly added row has no original to compare yet; audition it or compare
+the complete voice instead.  Replacing a customized physical voice asks
+whether to keep its settings or return to shared settings.
+
+   With Omnivox's per-choice tuning support, complete previews retain
+the full fallback chain and each row's settings.  _Last sample playback
+started on …_ identifies the engine and physical voice whose audio
+started.  Audio merely accepted for playback, or the spoken label
+_Original_ or _Edited_, does not confirm that the sample started.  Stop
+and text, draft or context changes retire pending previews; retained
+results are labelled _Earlier preview_.  Saving and application status
+remain separate from playback evidence.
+
+   Older Omnivox servers retain shared-only previews.  Customized
+complete previews require per-choice support; an individual audition is
+available only when its settings can be represented faithfully,
+including adapter defaults.  Saving remains available when that preview
+is unavailable.
+
    For a legacy palette, the editor shows the saved routing profile used
 as its source.  First save asks for an independent personal palette name
 and copies its effective definitions and explicit choices.  Opening and
@@ -3094,11 +3118,14 @@ do not add together.
    ‘P’ plays the edited voice in this context; ‘B’ compares original and
 edited using the same captured facts, rules and text.  These voice-only
 previews omit cues, spatial placement and temporary routing overrides.
-Family remains a portable fallback outside full preview.  Requested
-values are separate from accepted playback evidence and unsupported
-adjustments.  A changed or deleted source is rejected.  After saving a
-rule, use _Refresh facts and rules from this source item_ to capture its
-new contribution.  ‘q’ returns to the base editor.
+Family remains a portable fallback outside full preview.  On a server
+with per-choice support, the actual fallback's settings are applied
+before the captured context.  An explicit rule value still overrides
+that row when it happens to equal the shared value.  Requested values
+are separate from confirmed sample starts, accepted audio and
+unsupported adjustments.  A changed or deleted source is rejected.
+After saving a rule, use _Refresh facts and rules from this source item_
+to capture its new contribution.  ‘q’ returns to the base editor.
 
    _Adjust for this context_ presents the matching criteria and asks
 whether the rule lasts always (personal), for this Emacs session, or for

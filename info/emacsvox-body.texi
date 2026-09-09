@@ -2984,6 +2984,27 @@ choice and shared adjustments belong to one draft and one save action.
 The voice list separates @emph{Physical voice}@comma{} @emph{Engine}@comma{} @emph{Adjustments}@comma{} and
 @emph{State}@comma{} including unfinished editor changes.
 
+Shared settings provide the base for the whole voice. Expand @emph{Fallbacks} to
+see which rows @emph{use shared settings} and which are @emph{customized}. A row's action
+menu can audition that row or compare its original and edited versions.
+Comparison follows the same row after reordering@comma{} including two rows mapped to
+the same physical voice. A newly added row has no original to compare yet;
+audition it or compare the complete voice instead. Replacing a customized
+physical voice asks whether to keep its settings or return to shared settings.
+
+With Omnivox's per-choice tuning support@comma{} complete previews retain the full
+fallback chain and each row's settings. @emph{Last sample playback started on …}
+identifies the engine and physical voice whose audio started. Audio merely
+accepted for playback@comma{} or the spoken label @emph{Original} or @emph{Edited}@comma{} does not
+confirm that the sample started. Stop and text@comma{} draft or context changes retire
+pending previews; retained results are labelled @emph{Earlier preview}. Saving and
+application status remain separate from playback evidence.
+
+Older Omnivox servers retain shared-only previews. Customized complete previews
+require per-choice support; an individual audition is available only when its
+settings can be represented faithfully@comma{} including adapter defaults. Saving
+remains available when that preview is unavailable.
+
 For a legacy palette@comma{} the editor shows the saved routing profile used as its
 source. First save asks for an independent personal palette name and copies
 its effective definitions and explicit choices. Opening and previewing do not
@@ -3146,7 +3167,10 @@ relative-rate values do not add together.
 @kbd{B} compares original and edited using the same captured facts@comma{}
 rules and text. These voice-only previews omit cues@comma{} spatial placement and
 temporary routing overrides. Family remains a portable fallback outside full
-preview. Requested values are separate from accepted playback evidence and
+preview. On a server with per-choice support@comma{} the actual fallback's settings
+are applied before the captured context. An explicit rule value still overrides
+that row when it happens to equal the shared value. Requested values are
+separate from confirmed sample starts@comma{} accepted audio and
 unsupported adjustments. A changed or deleted source is rejected. After saving
 a rule@comma{} use @emph{Refresh facts and rules from this source item} to capture its new
 contribution. @kbd{q} returns to the base editor.

@@ -33,6 +33,13 @@ handling. Stop and newer previews retire the previous sample's pending work;
 late replies cannot start another comparison entry. Individual auditions also
 have a playback timeout. A failed or interrupted write is never replayed.
 
+With Omnivox per-choice tuning support, editor previews now preserve individual
+fallback settings and contextual overrides. A row can be auditioned or compared
+with its original after reordering. Playback feedback distinguishes the sample
+from spoken comparison labels and audio that was accepted but never started.
+Text changes, undo, save and context recapture retire stale previews. Earlier
+playback evidence cannot replace a newer view's result.
+
 ** Omnivox 1.9.0 minimum for voice previews
 
 Omnivox 1.9.0 or newer is now the supported speech-server baseline for complete

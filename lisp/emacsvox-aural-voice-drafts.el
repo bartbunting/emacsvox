@@ -37,7 +37,7 @@
 (define-error 'emacsvox-aural-voice-draft-conflict "Voice draft destination changed")
 
 (cl-defstruct (emacsvox-aural-voice-draft (:constructor emacsvox-aural-voice-drafts--make))
-  key baseline working original history proposal watches)
+  key baseline working original history proposal watches (revision 0))
 
 (cl-defstruct (emacsvox-aural-voice-save (:constructor emacsvox-aural-voice-drafts--make-save))
   id draft snapshot palette choice-sets select watches before-palette
@@ -64,6 +64,7 @@ SOURCES identifies palettes to watch for edits made after opening."
 
 (defun emacsvox-aural-voice-drafts--changed (draft)
   "Notify observers of DRAFT without requiring any view buffer to survive."
+  (cl-incf (emacsvox-aural-voice-draft-revision draft))
   (run-hook-with-args 'emacsvox-aural-voice-drafts--changed-hook draft))
 
 (defun emacsvox-aural-voice-drafts--dirty-fields (draft)

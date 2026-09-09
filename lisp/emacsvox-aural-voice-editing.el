@@ -73,6 +73,8 @@ Temporary choices are deliberately excluded from the editable saved base."
   "Freeze symbolic style values in SNAPSHOT for PALETTE.
 Preserve the saved representation alongside the captured values."
   (let ((copy (copy-tree snapshot)))
+    (unless (plist-member snapshot :choices) (setq copy (plist-put copy :transient-choices t)))
+    (setq copy (plist-put copy :choices (emacsvox-aural-voice-editing--rows snapshot)))
     (if (symbolp (plist-get snapshot :definition))
         (plist-put copy :frozen-style (emacsvox-aural-voice-editing--style snapshot palette))
       copy)))
@@ -89,10 +91,11 @@ Preserve optional omissions until edited and retain zero and explicit nil."
     (emacsvox-aural--validate-voice-style style "Voice editor")
     (plist-put result :definition style)))
 
-(defun emacsvox-aural-voice-editing--keep (destination experiment part placement &optional index)
+(defun emacsvox-aural-voice-editing--keep (destination experiment part placement &optional index replacement)
   "Combine DESTINATION and EXPERIMENT without flattening their other choices.
 PART is physical, adjustments or both.  PLACEMENT is replace, preferred or
-fallback; INDEX selects the replaced choice, defaulting to the first."
+fallback; INDEX selects the replaced choice, defaulting to the first.
+REPLACEMENT explicitly keeps or resets a replaced row's custom settings."
   (unless (memq part '(physical adjustments both)) (user-error "Choose what to keep"))
   (let ((result (copy-tree destination))
         (selector (copy-tree (car (plist-get experiment :selectors))))
@@ -115,7 +118,19 @@ fallback; INDEX selects the replaced choice, defaulting to the first."
                        ((or (< index 0) (>= index (length chain))) (user-error "Choice no longer exists"))
                        (t (setf (nth index chain) selector) chain))))
               (_ (user-error "Choose where to place the physical voice"))))
-      (setq result (plist-put result :selectors chain)))
+      (setq result (plist-put result :selectors chain))
+      (when (plist-member destination :choices)
+        (let* ((rows (emacsvox-aural-voice-editing--rows destination))
+               (row (and (eq placement 'replace) (nth (or index 0) rows))))
+          (if row
+              (progn
+                (when (and (plist-get row :adjustments) (not (memq replacement '(keep reset))))
+                  (user-error "Choose whether to keep or reset this row's custom settings"))
+                (setq rows (emacsvox-aural-voice-data--replace-choice
+                            rows (plist-get row :id) selector (or replacement 'keep))))
+            (let ((new (list :id (emacsvox-aural-voice-editing--new-id) :selector selector :adjustments nil)))
+              (setq rows (if (eq placement 'preferred) (cons new rows) (append rows (list new))))))
+          (setq result (plist-put result :choices rows)))))
     result))
 
 (defun emacsvox-aural-voice-editing--new-id ()
@@ -159,7 +174,10 @@ Legacy conversion uses explicitly captured ROUTING.  No registry is changed."
                            (plist-get properties :local-choices)))
            (definition (plist-get snapshot :definition))
            (layered (or (eq (plist-get data :schema-version) 3)
-                        (plist-member snapshot :choices) (plist-member old-choices :choices)))
+                        (and (plist-member snapshot :choices)
+                             (or (not (plist-get snapshot :transient-choices))
+                                 (cl-some (lambda (row) (plist-get row :adjustments)) (plist-get snapshot :choices))))
+                        (plist-member old-choices :choices)))
            (rows (when layered
                    (cond
                     ((and (plist-get snapshot :reset-choices)

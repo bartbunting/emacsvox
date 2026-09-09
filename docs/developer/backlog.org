@@ -124,7 +124,13 @@ audition, unavailable-row refusal, policy fallback and reconnect. Ordinary
 two-lane playback still produces verified fallback receipts. Pure editor
 projection now keeps the chosen base, complete rows and sparse context separate;
 six new contracts and an expanded 607-test matrix pass, with compiled parity.
-View integration, revisions, optional controls and experiment keeps remain next. Individual
+Editor and context views now use those services, with draft/view revision guards,
+stable-row comparison and precise cancellation during startup. Fourteen further
+contracts bring the selected matrix to 621 passing tests. Shared-only saves keep
+their existing schema; sample starts are distinguished from labels and accepted
+audio. Muted real-editor checks cover fallback, reordered comparison, sparse
+context, text cancellation and reconnect. Optional controls, clearer source
+explanations and experiment keeps remain next. Individual
 controls and spoken acceptance remain pending; this is not complete feature
 delivery. Earlier, the maintainer
 selected shared tuning first, with explicit
