@@ -33,8 +33,8 @@ The subsequent XHI preparation review is complete: 20 diagnostic observations
 expose cancellation before/during preparation and interrupted reservation leaks.
 The selected refinement uses cancellable scopes, explicit own-stop preservation
 and unwind-safe bookkeeping. High implementation now covers preparation
-cancellation and generic reservations. Shared-choice metadata cleanup and the
-remaining feature work are still pending.
+cancellation and generic/shared-choice reservation cleanup. All 482 selected
+source tests pass. The remaining consumer audit, preview and editor work follow.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
 The maintainer selected option A, independent conversion on first save.
 [[file:adr/0015-palette-owned-voices-and-migration.org][ADR 0015]] records that decision, and the
@@ -620,7 +620,7 @@ update status and commit this slice. Implemented with 16 new regression
 contracts and all 477 selected source tests passing. Shared choice metadata
 attachment remains the separate next slice below.
 
-**** TODO Make per-choice metadata reservation unwind-safe at High
+**** DONE Make per-choice metadata reservation unwind-safe at High
 
 Commit context ownership, shared snapshot references and byte charges together,
 and release only acquired resources exactly once. Integrate final choice
@@ -628,6 +628,9 @@ admission with scope cancellation. Turn the first/shared/last-reference and
 pending-quit cases into passing regressions. Run the complete selected source
 matrix, rebuilt compiled gate and muted real-server both-lane/reconnect runner;
 update status and commit before resuming the remaining consumers and editor work.
+Implemented with five additional contracts and all 482 selected source tests
+passing. All pending-quit diagnostic cases now release every byte and reference;
+shared owners keep their own reservation intact.
 
 **** TODO Complete ordinary consumers, preview and editor controls
 

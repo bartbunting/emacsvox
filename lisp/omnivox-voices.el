@@ -534,45 +534,81 @@ Return non-nil when LINE is a control event, including a malformed one."
 
 (defun omnivox--choice-dispatch-release (owner)
   "Release OWNER's shared registry charge after its last retained ticket."
-  (let* ((process (tts--dispatch-owner-process owner))
-         (snapshot (plist-get (tts--dispatch-owner-context owner) :registration))
-         (references (process-get process 'omnivox--choice-snapshot-references))
-         (entry (gethash snapshot references)))
-    (when entry
-      (if (> (car entry) 1)
-          (setcar entry (1- (car entry)))
-        (remhash snapshot references)
-        (process-put process 'tts--dispatch-metadata-bytes
-                     (- (process-get process 'tts--dispatch-metadata-bytes) (cdr entry)))))
-    (setf (tts--dispatch-owner-context owner) nil)))
+  (when-let* ((context (tts--dispatch-owner-context owner)))
+    (let* ((process (tts--dispatch-owner-process owner))
+           (snapshot (plist-get context :registration))
+           (references (process-get process 'omnivox--choice-snapshot-references))
+           (entry (gethash snapshot references))
+           (used (process-get process 'tts--dispatch-metadata-bytes))
+           (inhibit-quit t) complete)
+      (unless entry (error "Individual voice snapshot reservation is missing"))
+      (unwind-protect
+          (progn
+            (if (> (car entry) 1)
+                (puthash snapshot (cons (1- (car entry)) (cdr entry)) references)
+              (remhash snapshot references)
+              (process-put process 'tts--dispatch-metadata-bytes (- used (cdr entry))))
+            (setf (tts--dispatch-owner-context owner) nil)
+            (setq complete t))
+        (unless complete
+          (puthash snapshot entry references)
+          (process-put process 'tts--dispatch-metadata-bytes used)
+          (setf (tts--dispatch-owner-context owner) context))))))
 
 (defun omnivox--prepare-choice-dispatch (owner snapshot spans)
   "Attach frozen SNAPSHOT and compact SPANS to inactive OWNER within budget."
+  ;; Copy and size before touching shared state. Re-read reservations afterward:
+  ;; a nested operation may have retained or released this same snapshot.
   (let* ((process (tts--dispatch-owner-process owner))
-         (references (or (process-get process 'omnivox--choice-snapshot-references)
-                         (make-hash-table :test #'eq)))
-         (retained (gethash snapshot references))
+         (context (list :protocol-version 4 :registration snapshot
+                        :lane (if (eq process tts-notify-process) 'notification 'main)
+                        :spans (tts--dispatch-copy-data spans)
+                        :last-started nil :observations nil :truncated nil))
          (print-circle t) (print-length nil) (print-level nil)
-         (span-bytes (+ (string-bytes (prin1-to-string spans))
+         (span-bytes (+ (string-bytes (prin1-to-string (plist-get context :spans)))
                         (* (1+ omnivox--choice-observation-limit) omnivox--choice-observation-bytes)))
-         (registry-bytes (if retained 0 (string-bytes (prin1-to-string snapshot))))
-         (used (or (process-get process 'tts--dispatch-metadata-bytes) 0)))
-    (unless (eq (tts--dispatch-owner-state owner) 'prepared)
-      (error "Individual voice metadata requires an inactive speech dispatch"))
-    (when (> (+ used span-bytes registry-bytes) tts--dispatch-metadata-limit)
-      (error "Individual voice dispatch metadata capacity is exhausted"))
-    (let ((context (list :protocol-version 4 :registration snapshot
-                         :lane (if (eq process tts-notify-process) 'notification 'main)
-                         :spans (tts--dispatch-copy-data spans)
-                         :last-started nil :observations nil :truncated nil)))
-      (process-put process 'omnivox--choice-snapshot-references references)
-      (if retained (setcar retained (1+ (car retained)))
-        (puthash snapshot (cons 1 registry-bytes) references))
-      (process-put process 'tts--dispatch-metadata-bytes (+ used span-bytes registry-bytes))
-      (cl-incf (tts--dispatch-owner-metadata-bytes owner) span-bytes)
-      (setf (tts--dispatch-owner-context owner) context
-            (tts--dispatch-owner-admission-function owner) #'omnivox--choice-dispatch-admission
-            (tts--dispatch-owner-release-function owner) #'omnivox--choice-dispatch-release))))
+         (snapshot-bytes
+          (or (when-let* ((references (process-get process 'omnivox--choice-snapshot-references))
+                          (entry (gethash snapshot references)))
+                (cdr entry))
+              (string-bytes (prin1-to-string snapshot)))))
+    (tts--preparation-check (tts--dispatch-owner-preparation owner))
+    (when (or (tts--dispatch-owner-retired owner) (tts--dispatch-owner-released owner))
+      (signal 'tts--preparation-cancelled nil))
+    (unless (and (eq (tts--dispatch-owner-state owner) 'prepared)
+                 (tts--dispatch-owner-reserved owner)
+                 (not (tts--dispatch-owner-context owner))
+                 (not (tts--dispatch-owner-release-function owner)))
+      (error "Individual voice metadata requires an unattached inactive speech dispatch"))
+    (let* ((previous-references (process-get process 'omnivox--choice-snapshot-references))
+           (references (or previous-references (make-hash-table :test #'eq)))
+           (retained (gethash snapshot references))
+           (registry-bytes (if retained 0 snapshot-bytes))
+           (used (process-get process 'tts--dispatch-metadata-bytes))
+           (old-owner-bytes (tts--dispatch-owner-metadata-bytes owner))
+           (old-admission (tts--dispatch-owner-admission-function owner))
+           (inhibit-quit t) complete)
+      (when (> (+ used span-bytes registry-bytes) tts--dispatch-metadata-limit)
+        (error "Individual voice dispatch metadata capacity is exhausted"))
+      (unwind-protect
+          (progn
+            (setf (tts--dispatch-owner-context owner) context
+                  (tts--dispatch-owner-admission-function owner) #'omnivox--choice-dispatch-admission
+                  (tts--dispatch-owner-release-function owner) #'omnivox--choice-dispatch-release)
+            (process-put process 'omnivox--choice-snapshot-references references)
+            (puthash snapshot (if retained (cons (1+ (car retained)) (cdr retained))
+                                (cons 1 registry-bytes)) references)
+            (process-put process 'tts--dispatch-metadata-bytes (+ used span-bytes registry-bytes))
+            (setf (tts--dispatch-owner-metadata-bytes owner) (+ old-owner-bytes span-bytes))
+            (setq complete t))
+        (unless complete
+          (if retained (puthash snapshot retained references) (remhash snapshot references))
+          (process-put process 'omnivox--choice-snapshot-references previous-references)
+          (process-put process 'tts--dispatch-metadata-bytes used)
+          (setf (tts--dispatch-owner-metadata-bytes owner) old-owner-bytes
+                (tts--dispatch-owner-context owner) nil
+                (tts--dispatch-owner-admission-function owner) old-admission
+                (tts--dispatch-owner-release-function owner) nil))))))
 
 (defun omnivox--choice-provenance (snapshot logical)
   "Return the immutable provenance for LOGICAL in SNAPSHOT."

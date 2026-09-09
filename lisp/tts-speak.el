@@ -440,28 +440,41 @@ a `cancelled' record when pending input interrupts that wait.")
              tts--dispatch-lifecycles)
     (remhash id tts--prepared-owners)))
 
+(defun tts--dispatch-release-reservation (owner)
+  "Release OWNER's generic reservation, or leave it intact on failure."
+  (when (tts--dispatch-owner-reserved owner)
+    (let ((process (tts--dispatch-owner-process owner)))
+      (tts--dispatch-set-accounting
+       process (1- (process-get process 'tts--dispatch-owner-count))
+       (- (process-get process 'tts--dispatch-metadata-bytes)
+          (tts--dispatch-owner-metadata-bytes owner)))
+      (setf (tts--dispatch-owner-reserved owner) nil))))
+
 (defun tts--dispatch-release (owner)
   "Release OWNER's reservation and indexes exactly once."
   (unless (tts--dispatch-owner-released owner)
-    (let ((process (tts--dispatch-owner-process owner))
-          (id (tts--dispatch-owner-id owner))
+    (let ((id (tts--dispatch-owner-id owner))
           (inhibit-quit t))
       (unwind-protect
-          (when-let* ((release (tts--dispatch-owner-release-function owner)))
-            (funcall release owner)
-            (setf (tts--dispatch-owner-release-function owner) nil))
-        (when (tts--dispatch-owner-reserved owner)
-          (tts--dispatch-set-accounting
-           process (1- (process-get process 'tts--dispatch-owner-count))
-           (- (process-get process 'tts--dispatch-metadata-bytes)
-              (tts--dispatch-owner-metadata-bytes owner)))
-          (setf (tts--dispatch-owner-reserved owner) nil))
-        (remhash id tts--prepared-owners)
-        (remhash id tts--tracked-dispatches)
-        (remhash id tts--marker-dispatches)
-        (remhash id tts--dispatch-lifecycles)
-        (unless (tts--dispatch-owner-release-function owner)
-          (setf (tts--dispatch-owner-released owner) t))))))
+          (unwind-protect
+              (when-let* ((release (tts--dispatch-owner-release-function owner)))
+                (funcall release owner)
+                (setf (tts--dispatch-owner-release-function owner) nil))
+            ;; Internal metadata release rolls back an interrupted mutation.
+            ;; Finish that cleanup before propagating the original exit.
+            (when-let* ((release (tts--dispatch-owner-release-function owner)))
+              (funcall release owner)
+              (setf (tts--dispatch-owner-release-function owner) nil)))
+        (unwind-protect
+            (unwind-protect (tts--dispatch-release-reservation owner)
+              (tts--dispatch-release-reservation owner))
+          (unless (or (tts--dispatch-owner-reserved owner)
+                      (tts--dispatch-owner-release-function owner))
+            (remhash id tts--prepared-owners)
+            (remhash id tts--tracked-dispatches)
+            (remhash id tts--marker-dispatches)
+            (remhash id tts--dispatch-lifecycles)
+            (setf (tts--dispatch-owner-released owner) t)))))))
 
 (defun tts--dispatch-discard-notifications (owner)
   "Remove queued notifications for OWNER and release their budget."

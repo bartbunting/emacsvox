@@ -12,9 +12,10 @@ cover cancellation before owner allocation, during the policy stop, in nested
 hooks and legacy dispatch, plus pending quits during bookkeeping. The selected
 refinement uses cancellable preparation scopes, explicit own-stop preservation
 and unwind-safe reservations. Implementation resumed at High. Generic scopes,
-Stop ownership and generic reservation cleanup are implemented; shared choice
-metadata cleanup remains the next slice before consumer audits, preview v2 and
-editor controls. No new product choice or reasoning-level change is needed.
+Stop ownership, generic reservation cleanup and shared choice metadata cleanup
+are implemented. All 482 selected source tests pass. Consumer audits, preview
+v2 and editor controls remain next. No new product choice or reasoning-level
+change is needed.
 The server bundle is complete at Omnivox =31a0b9a=. Emacsvox =8064c7443= adds
 lossless value conversion and =ccf193879= adds per-lane registration with frozen
 acknowledged definitions and explicit older-server limitations. Acknowledged structured submissions now use layered transport and correlated
@@ -740,10 +741,30 @@ exits. Release cleanup handles peers and repeated abandonment. Sixteen new ERT
 contracts cover the diagnostic cancellation cases, both lanes, final admission,
 ordinary legacy speech, pending handoff, full owner capacity and quit/error/throw
 injection during scope/owner registration and release. All 477 selected source
-tests pass. The two shared-choice snapshot quit probes still reproduce their
-known leaks; those are explicitly reserved for the next slice.
+tests pass. At this checkpoint the two shared-choice snapshot quit probes still
+reproduced their known leaks, reserved for the following slice.
 
 The isolated compiled gate and muted real-server both-lane/reconnect runner
 pass. Full byte-code regeneration completed; a final indentation edit to the
 transport required the ordinary incremental refresh before its current-bytecode
 preflight. Documentation and header gates pass after that refresh.
+
+* Shared choice reservation implementation at High
+
+Choice context copies and sizing precede mutation. Attachment rechecks ownership
+and current reservations, then commits context/release responsibility, snapshot
+references and all byte charges together. Short critical sections defer pending
+quits, and error/throw rollback restores the exact prior reservation, including
+when another dispatch already owns the snapshot. Reattachment is rejected without
+altering the first context. Shared snapshots reuse their already measured size.
+
+Release similarly restores an interrupted reference/charge mutation and finishes
+remaining cleanup before propagating the original exit. Generic accounting and
+indexes settle even when a published owner's first cleanup attempt fails. Cleanup
+never resubmits speech. Five additional contracts cover first/shared attachment,
+last/shared release, both snapshot and generic byte-charge failures, cancellation
+during copying and duplicate attachment. All 482 selected source tests pass.
+All 20 diagnostic observations now show the intended cancellation/control results
+and zero leaked reservations in the three pending-quit cases.
+Current byte-code, the isolated compiled gate, fresh compiled real-server
+both-lane/reconnect acceptance, documentation and header checks all pass.

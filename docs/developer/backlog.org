@@ -82,7 +82,9 @@ before owner allocation and pending quits that leak reservation accounting.
 The selected design adds bounded cancellable scopes, explicit own-stop
 preservation and unwind-safe reservation/release. High implementation now covers
 generic preparation cancellation and reservation cleanup, with 16 new contracts
-and all 477 selected source tests passing. Shared-choice metadata cleanup is next.
+and all 477 selected source tests passing. Shared-choice metadata cleanup adds
+five more contracts; all 482 selected source tests pass, and every pending-quit
+diagnostic now leaves zero leaked reservations. The consumer audit is next.
 The remaining ordinary-consumer audit, preview v2, individual controls and spoken acceptance
 are still pending; this is not complete feature delivery. Earlier, the maintainer
 selected shared tuning first, with explicit
