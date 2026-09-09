@@ -3380,6 +3380,100 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                   (point-min) (point-max))))))
       (should (equal spoken "Thought heading")))))
 
+(ert-deftest emacsvox-agent-shell-folded-navigation-restores-heading-actions ()
+  "Visual motion past hidden text must still land on an actionable heading."
+  (with-temp-buffer
+    (insert "Previous row\n\n")
+    (let* ((range
+            (agent-shell-ui-update-fragment
+             (agent-shell-ui-make-fragment-model
+              :namespace-id "1" :block-id "agent_thought_chunk"
+              :label-left "Thinking" :body "Hidden reasoning summary")
+             :expanded nil))
+           (start (map-nested-elt range '(:block :start)))
+           (end (map-nested-elt range '(:block :end)))
+           (heading-end (map-nested-elt range '(:label-left :end))))
+      (setq major-mode 'agent-shell-mode
+            buffer-invisibility-spec t)
+      (use-local-map (make-sparse-keymap))
+      (local-set-key (kbd "RET") 'agent-shell-submit)
+      (dolist (case '((next-line forward 1) (previous-line backward 1)
+                      (next-line forward -1) (previous-line backward -1)))
+        (pcase-let ((`(,command ,direction ,count) case))
+          (goto-char (point-min))
+          (let ((ems--interactive-fn-name command)
+                (line-move-visual t)
+                (visual-line-mode t)
+                (emacsvox-agent-shell--vertical-navigation-active-p t)
+                (emacsvox-agent-shell--vertical-navigation-origin nil)
+                presented facts spoken)
+            ;; Reproduce the display engine's landing at the padding newline,
+            ;; outside the fragment's state and heading keymap.  Batch frames
+            ;; do not reliably reproduce visual motion over invisible text.
+            (cl-letf
+                (((symbol-function
+                   'emacsvox-agent-shell--present-current-navigation-line)
+                  (lambda ()
+                    (setq presented (point)
+                          facts
+                          (emacsvox-agent-shell--vertical-block-entry-facts)))))
+              (should
+               (eq (emacsvox-agent-shell--vertical-motion-around
+                    (lambda (&rest _)
+                      (goto-char end)
+                      (should (eq (key-binding (kbd "RET"))
+                                  'agent-shell-submit))
+                      'moved)
+                    direction (list count))
+                   'moved)))
+            (should (= presented (1- heading-end)))
+            (should (eq (key-binding (kbd "RET"))
+                        'agent-shell-ui-toggle-fragment))
+            (should (eq (plist-get facts :visibility) 'folded))
+            (should (memq 'focus-entered (plist-get facts :events)))
+            (let ((emacsvox-agent-shell--vertical-navigation-active-p nil))
+              (emacsvox-agent-shell--speak-visual-line-around
+               (lambda (&rest _)
+                 (setq spoken (buffer-substring-no-properties
+                               (point-min) (point-max))))))
+            (should (equal spoken
+                           (buffer-substring-no-properties
+                            start heading-end)))))))))
+
+(ert-deftest emacsvox-agent-shell-folded-navigation-preserves-other-positions ()
+  "Blank lines, prompt text, and valid wrapped headings retain their point."
+  (dolist (expanded '(nil t))
+    (with-temp-buffer
+      (let* ((range
+              (agent-shell-ui-update-fragment
+               (agent-shell-ui-make-fragment-model
+                :namespace-id "1" :block-id "tool-1"
+                :label-left "completed"
+                :label-right (make-string 100 ?x)
+                :body "Tool output\n\n")
+               :expanded expanded))
+             (end (map-nested-elt range '(:block :end)))
+             (wrapped (+ 20 (map-nested-elt range '(:label-right :start)))))
+        (goto-char (point-max))
+        (let ((prompt (point)))
+          (let ((inhibit-read-only t)) (insert "Codex> "))
+          (setq major-mode 'agent-shell-mode
+                buffer-invisibility-spec t)
+          (dolist (destination (append (list wrapped (1+ end) prompt)
+                                      (and expanded (list end))))
+            (goto-char (point-min))
+            (let ((ems--interactive-fn-name 'next-line)
+                  (line-move-visual t)
+                  (visual-line-mode t)
+                  presented)
+              (cl-letf
+                  (((symbol-function
+                     'emacsvox-agent-shell--present-current-navigation-line)
+                    (lambda () (setq presented (point)))))
+                (emacsvox-agent-shell--vertical-motion-around
+                 (lambda (&rest _) (goto-char destination)) 'forward '(1)))
+              (should (= presented destination)))))))))
+
 (ert-deftest emacsvox-agent-shell-folded-wrapped-heading-speaks-current-row ()
   "Wrapped folded headings should not repeat their complete physical line."
   (with-temp-buffer

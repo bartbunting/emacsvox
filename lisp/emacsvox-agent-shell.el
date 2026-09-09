@@ -888,6 +888,34 @@ visual row instead of inheriting a goal column that can skip it."
         (emacsvox-speak-visual-line)
       (emacsvox-speak-line))))
 
+(defun emacsvox-agent-shell--normalize-folded-heading-position ()
+  "Keep a collapsed heading's visual end inside its actionable text.
+
+Visual motion can retain a goal column past the heading and land after its
+invisible body.  That padding newline shares the heading's display row but
+has neither its fragment state nor its RET binding."
+  (when (and (or line-move-visual visual-line-mode)
+             (> (point) (point-min))
+             (or (eobp) (eq (char-after) ?\n))
+             (not (get-text-property (point) 'agent-shell-ui-state))
+             (not (invisible-p (point)))
+             (get-text-property (1- (point)) 'invisible)
+             (invisible-p (1- (point))))
+    (let* ((hidden-start
+            (previous-single-property-change
+             (point) 'invisible nil (point-min)))
+           (heading-position (1- hidden-start)))
+      (when (and (>= heading-position (point-min))
+                 (not (invisible-p heading-position))
+                 (map-elt (get-text-property
+                           heading-position 'agent-shell-ui-state)
+                          :collapsed)
+                 (memq (get-text-property
+                        heading-position 'agent-shell-ui-section)
+                       '(indicator label-left label-right)))
+        ;; Retain the last display row when the heading itself wraps.
+        (goto-char heading-position)))))
+
 (defun emacsvox-agent-shell--vertical-motion-around
     (original-function nominal-direction arguments)
   "Normalize presentational chat rows during interactive vertical motion.
@@ -974,6 +1002,7 @@ a positive argument to the advised command."
            (t
             (emacsvox-agent-shell--move-beyond-visual-source-row
              direction origin-source-bounds)))))
+      (emacsvox-agent-shell--normalize-folded-heading-position)
       (emacsvox-agent-shell--present-current-navigation-line))
     result))
 
