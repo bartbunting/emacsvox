@@ -55,8 +55,9 @@ muted local/remote named playback and verified fallback receipts on both lanes
 and reconnect. The [[file:voice-editor-preview-handoff-review.org][XHI preview-operation and original-row/context handoff]] is
 complete, with twelve reproduced gaps and forty independent desired cases.
 The maintainer resumed at High. The owned coordinator and guarded startup are
-implemented with 582 selected tests passing. Strict v2 projection and optional
-editor integration remain next; no new product decision is required.
+implemented. Private v2 request/terminal handling now passes 595 selected tests
+and muted local/remote compiled acceptance. Editor snapshot/context projection
+and optional controls remain next; no new product decision is required.
 Scope A remains selected; broader cross-call tuning is deferred. Preview and
 editor work remain pending.
 The [[file:voice-editor-design.org][interaction design]] remains the UX specification.
@@ -802,11 +803,30 @@ made during the build. The new module is included in the explicit normal-build
 manifest and dependency order. Byte-code preflight, headers, generated reference,
 documentation release and whitespace checks pass. No live profile was restarted.
 
+**** DONE Add private v2 requests and strict playback evidence
+
+The coordinator now accepts a distinct private layered entry: raw shared style,
+complete ordered choice records, sparse context, placement and automatic or
+stable-row selection. It checks the complete bundle and all comparison entries
+before Stop. Existing shared-only and individual wire forms remain unchanged.
+Strict decoding preserves null, false and arrays; ambiguous envelope identities
+cannot consume reservations. Validated terminals distinguish accepted audio
+from last-started evidence, correlate original indices and exact selectors, and
+preserve evidence through comparison metadata changes. Private receipts do not
+overwrite ordinary playback evidence.
+
+Thirteen new contracts and all 595 selected tests pass, including the paired
+server terminal fixture. Fresh compiled local and private-loopback checks pass
+automatic comparison, original row two, unavailable-row refusal without a
+substitute, policy fallback, Stop and reconnect. Ordinary named playback retains
+actual-fallback receipts on both lanes and transports after reconnect. This
+slice supplies the service; it does not yet connect the new editor projection.
+
 **** TODO Complete preview and editor controls
 
-The ordinary consumer slices, preview review and shared coordinator are complete.
-Continue at High with strict private preview v2, original-row
-auditions and unflattened context projection. Finally add optional per-choice
+The ordinary consumer slices and private preview service are complete.
+Continue at High with editor original-row auditions and unflattened context
+projection. Finally add optional per-choice
 controls, revision-aware explanations and experiment keeps over those tested
 services. The [[file:voice-editor-preview-handoff-review.org][handoff]] specifies lifecycle, compatibility and evidence gates.
 Verify fresh compiled behavior, update current documentation and commit each

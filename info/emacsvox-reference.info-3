@@ -613,8 +613,8 @@ File: emacsvox-reference.info,  Node: omnivox-preview,  Next: omnivox-remote,  P
 
 Complete and individual samples share process ownership, guarded
 startup, bounded preparation and unwind-safe control reservations.
-Draft projection and wire-version-specific normalization remain in
-omnivox-voices.el.
+Private layered samples preserve raw choices/context and validate server
+playback evidence.
 
 
 File: emacsvox-reference.info,  Node: omnivox-remote,  Next: omnivox-voices,  Prev: omnivox-preview,  Up: Emacsvox Commands And Options

@@ -9,7 +9,8 @@ The maintainer's accepted choices still cover the feature; no new product
 decision is needed. The maintainer resumed at High. The first implementation
 slice now gives complete v1 and individual auditions one owned coordinator,
 guarded startup, deferred advancement and unwind-safe request cleanup. Private
-preview v2 and optional controls remain pending. Continue the implementation
+preview v2 request/terminal handling is now implemented; editor projection and
+optional controls remain pending. Continue the implementation
 slices below, stopping for a contract conflict or user spoken acceptance.
 
 All Emacsvox ADRs 0001–0017 and Omnivox ADRs 0001–0011 were read together.
@@ -30,7 +31,8 @@ Run [[file:../test/diagnose-choice-preview.el][diagnose-choice-preview.el]] with
 At review commit =3c62f414b=, twelve assertions reproduced the baseline using
 synthetic drafts, private pipe objects and muted writes/timers. The six ownership
 observations have now become positive tests in [[file:../test/omnivox-preview-tests.el][omnivox-preview-tests.el]].
-The diagnostic retains six pending projection/view/decoder observations and the
+Strict decoding has also become a positive contract. The diagnostic retains
+five pending projection/view observations and the
 fixture checks. The table below records the historical findings, not current
 failures of the implemented coordinator.
 
@@ -278,8 +280,9 @@ save recovery. This implements accepted behavior rather than changing storage.
    unchanged wire shapes. Turn the lifecycle observations into positive tests,
    including both supersession directions, early replies, all nonlocal exits,
    callback-started replacement, retired process and notification isolation.
-2. Add the strict v2 request/terminal codec and raw snapshot/context projection.
-   Connect automatic, row and paired comparisons to that coordinator. Test
+2. IN PROGRESS: The strict v2 request/terminal service is implemented, including
+   automatic, original-row and paired sequence handling. Add the editor's raw
+   snapshot/context projection and connect it to that service. Test
    independent [[file:../test/fixtures/voice-editor/preview-handoff.el][handoff cases]] and the existing [[file:../test/fixtures/voice-editor/fallback-tuning-wire.json][paired wire fixture]], including
    duplicate physical voices, missing originals, nullable fields, truncated
    last-started evidence, no silent old-server flattening and metadata changes.
@@ -295,7 +298,7 @@ save recovery. This implements accepted behavior rather than changing storage.
    comfort. Keep optional controls and whole-feature completion pending until then.
 
 The fixture describes desired behavior independently; the diagnostic retains
-the six remaining projection/view/decoder gaps. Fixture consistency and baseline
+the five remaining projection/view gaps. Fixture consistency and baseline
 reproduction do not establish the remaining runtime behavior.
 
 * Original review validation
@@ -344,3 +347,33 @@ ignored legacy test byte-code cannot supply obsolete fixtures.
 The full rebuild plus an incremental refresh for edits during that build passes
 byte-code preflight. Header, generated-reference, documentation-release and
 whitespace checks pass. No live profile was restarted or runtime installed.
+
+* Implemented private v2 service slice
+
+The coordinator accepts a distinct private layered entry with complete raw
+choices and context. It normalizes once before interruption, gates the full
+bundle on the foreground connection and preserves original row indices.
+Strict response decoding retains nullable fields, booleans and arrays. A
+duplicate envelope identity cannot remove a pending callback; a malformed
+correlatable terminal fails its entry without advancing the comparison.
+
+Accepted identities and last-started identity are validated independently,
+including truncated output and cancelled/failed terminals. Exact selectors,
+original indices, selected rows and captured policy constrain identity claims.
+Only validated server terminals carry confirmed evidence. Local cancellation
+cannot fabricate a playback record, and private results leave ordinary receipts
+unchanged. The first completed entry's rate and disablement constrain subsequent
+comparison results without hiding already observed audio.
+
+Thirteen new tests cover projection, types, bounds, malformed identities,
+duplicate physical voices, policy substitutes, truncation, comparison changes,
+Stop and the paired server fixture. All 595 selected source tests pass. Compiled
+parity and fresh compiled muted acceptance pass locally and over authenticated
+private loopback, including automatic fallback, original row two, unavailable
+individual refusal, policy fallback and reconnect. Ordinary playback regression
+retains actual-fallback receipts on both lanes and transports after reconnect.
+One malformed-wire fixture initially used =json-serialize=, which removes
+duplicate plist keys; it now supplies literal duplicate-key JSON.
+
+The editor still uses its old projection. Its sparse context handoff, view
+revisions, compatibility presentation and optional controls remain pending.

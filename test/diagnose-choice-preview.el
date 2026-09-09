@@ -6,7 +6,7 @@
 ;; Run with the Emacs selected by local.mk: -Q --batch -l this file.
 ;; Source-only, synthetic drafts, private pipe objects and muted writes/timers.
 ;; Assertions reproduce the remaining projection/view gaps, not correct UX.
-;; Ownership observations have become positive tests in omnivox-preview-tests.el.
+;; Ownership and strict decoder observations are positive omnivox-preview-tests.
 ;;; Code:
 (setq load-prefer-newer t)
 (require 'jka-compr)
@@ -89,18 +89,11 @@
          (and (plist-member entry :context) t)
          (plist-get (plist-get entry :acss) :average-pitch)) (list t nil (/ 3.0 9))))
 
-;; Old decoding cannot validate v2 required nullable identities and booleans.
-(let* ((payload (base64-encode-string "{\"a\":null,\"b\":false,\"c\":[]}" t))
-       (decoded (omnivox--decode-control-response payload)))
-  (emacsvox-preview-diagnostic--report
-   'legacy-decoder-collapses-null-false-empty-array
-   (list (plist-get decoded :a) (plist-get decoded :b) (plist-get decoded :c)) '(nil nil nil)))
-
 (princ (format "%d baseline observations reproduced; preview fixes remain pending.\n"
                emacsvox-preview-diagnostic--count))
 
 ;; Check the independent input/expected-value examples against existing pure
-;; validators only. The future lifecycle/evidence/compatibility service is absent.
+;; validators only. These checks do not prove remaining editor integration.
 (let* ((read-circle nil)
        (fixture (with-temp-buffer
                   (insert-file-contents

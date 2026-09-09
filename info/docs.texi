@@ -24492,8 +24492,8 @@ ACSS meaning.  Physical route selection belongs to the server.
 @section omnivox-preview
 
 Complete and individual samples share process ownership, guarded startup,
-bounded preparation and unwind-safe control reservations. Draft projection
-and wire-version-specific normalization remain in omnivox-voices.el.
+bounded preparation and unwind-safe control reservations. Private layered
+samples preserve raw choices/context and validate server playback evidence.
 
 @node omnivox-remote
 @section omnivox-remote

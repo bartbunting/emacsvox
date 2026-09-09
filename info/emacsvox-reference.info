@@ -16,7 +16,7 @@ Indirect:
 emacsvox-reference.info-1: 397
 emacsvox-reference.info-2: 305013
 emacsvox-reference.info-3: 616106
-emacsvox-reference.info-4: 1018786
+emacsvox-reference.info-4: 1018792
 
 Tag Table:
 (Indirect)
@@ -307,26 +307,26 @@ Node: mac-voices629764
 Node: omaps630173
 Node: omnivox-choice-codec630403
 Node: omnivox-preview630805
-Node: omnivox-remote631214
-Node: omnivox-voices631616
-Node: outloud-voices631943
-Node: pip632541
-Node: plain-voices634302
-Node: soundscape634660
-Node: sox639326
-Node: sox-gen641984
-Node: swiftmac-voices648293
-Node: tetris648539
-Node: tts-queue-state648698
-Node: tts-speak649021
-Node: voice-defs663754
-Node: voice-setup669403
-Node: xbacklight672552
-Node: URL Templates673727
-Node: Reference Concept Index679026
-Node: Key Index679210
-Node: Function Index710654
-Node: Variable Index1018786
+Node: omnivox-remote631220
+Node: omnivox-voices631622
+Node: outloud-voices631949
+Node: pip632547
+Node: plain-voices634308
+Node: soundscape634666
+Node: sox639332
+Node: sox-gen641990
+Node: swiftmac-voices648299
+Node: tetris648545
+Node: tts-queue-state648704
+Node: tts-speak649027
+Node: voice-defs663760
+Node: voice-setup669409
+Node: xbacklight672558
+Node: URL Templates673733
+Node: Reference Concept Index679032
+Node: Key Index679216
+Node: Function Index710660
+Node: Variable Index1018792
 
 End Tag Table
 

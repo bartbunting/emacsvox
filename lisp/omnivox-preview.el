@@ -24,8 +24,8 @@
 
 ;;; Commentary:
 ;; Complete and individual samples share process ownership, guarded startup,
-;; bounded preparation and unwind-safe control reservations. Draft projection
-;; and wire-version-specific normalization remain in omnivox-voices.el.
+;; bounded preparation and unwind-safe control reservations. Private layered
+;; samples preserve raw choices/context and validate server playback evidence.
 ;;; Code:
 (require 'cl-lib)
 (require 'tts-queue-state)
@@ -40,6 +40,11 @@
 (declare-function omnivox--process-supports-p "omnivox-voices" (process feature))
 (declare-function omnivox--preview-complete-request "omnivox-voices" (entry process))
 (declare-function omnivox--preview-individual-request "omnivox-voices" (entry process))
+(declare-function omnivox--choice-tuning-supported-p "omnivox-voices" (process))
+(declare-function omnivox--preview-validate-values "omnivox-voices" (entry))
+(declare-function omnivox--preview-validate-selector "omnivox-voices" (selector))
+(declare-function omnivox--preview-policy-json "omnivox-voices" (policy disabled))
+(declare-function omnivox--preview-valid-id-p "omnivox-voices" (value limit &optional pattern))
 (declare-function omnivox--normalize-complete-preview-response "omnivox-voices" (entry response))
 (declare-function omnivox--normalize-preview-response "omnivox-voices" (entry response effects-supported rate-supported))
 (declare-function omnivox--encode-control-request "omnivox-voices" (request))
@@ -81,6 +86,185 @@
   (format "omnivox_control {%s}\n"
           (omnivox--encode-control-request
            (append (list :protocol_version 1 :request_id identifier) request))))
+
+(defun omnivox--preview-layered-request (entry process)
+  "Preflight raw private ENTRY for PROCESS without flattening its cascade."
+  (unless (and (process-live-p process) (omnivox--choice-tuning-supported-p process))
+    (user-error "Individual tuning preview needs the complete Omnivox voice-choice bundle; saving remains available"))
+  (emacsvox-aural-routing--strict-properties
+   entry '(:text :voice :context :placement :selection :fallback-policy :disabled-engine-ids
+                 :expected-base-rate :role :variant)
+   '(:text :voice :context :placement :selection :fallback-policy :disabled-engine-ids))
+  (omnivox--choice-string (plist-get entry :text) (* 16 1024))
+  (let* ((voice (plist-get entry :voice))
+         (style (plist-get voice :shared))
+         (rows (plist-get voice :choices))
+         (placement (plist-get entry :placement))
+         (selection (plist-get entry :selection))
+         (policy (plist-get entry :fallback-policy))
+         (expected (plist-get entry :expected-base-rate)))
+    (omnivox--choice-object-keys voice '(:language :shared :choices))
+    (when style
+      (emacsvox-aural-routing--strict-properties style emacsvox-aural--voice-style-keys nil)
+      (emacsvox-aural--validate-voice-style style "Private preview shared style"))
+    ;; Preset/family resolution belongs to the snapshot projector, not this codec.
+    (when (or (plist-get style :preset) (plist-get style :family))
+      (error "Private preview requires an explicitly resolved shared style"))
+    (omnivox--preview-validate-values (list :language (plist-get voice :language)
+                                          :expected-base-rate expected))
+    (emacsvox-aural-routing--validate-choices rows)
+    (dolist (selector (append (mapcar (lambda (row) (plist-get row :selector)) rows)
+                             (when (plist-get policy :global-default)
+                               (list (plist-get policy :global-default)))))
+      (emacsvox-aural-routing--strict-properties
+       selector '(:kind :scope :engine-id :voice-id :language :gender) '(:kind))
+      (omnivox--preview-validate-selector selector))
+    (omnivox--choice-object-keys placement '(:pan))
+    (omnivox--choice-normalized-number (plist-get placement :pan))
+    (pcase (plist-get selection :mode)
+      ('automatic (omnivox--choice-object-keys selection '(:mode)))
+      ('choice
+       (omnivox--choice-object-keys selection '(:mode :choice-id))
+       (unless (cl-find (plist-get selection :choice-id) rows :test #'equal
+                        :key (lambda (row) (plist-get row :id)))
+         (error "Selected preview choice is absent from the captured voice")))
+      (_ (error "Invalid private preview selection")))
+    (omnivox--choice-object-keys
+     policy '(:preferred-engines :allow-same-language-on-requested-engine :global-default :fallback-engines))
+    (when (and (plist-member entry :role) (not (memq (plist-get entry :role) '(label sample))))
+      (error "Invalid private preview entry role"))
+    (when (and (plist-member entry :variant) (not (memq (plist-get entry :variant) '(original edited))))
+      (error "Invalid private preview comparison variant"))
+    (append
+     (list :type "preview_voice_v2" :text (plist-get entry :text)
+           :voice (list :language (or (plist-get voice :language) :null)
+                        :shared (omnivox--choice-style-json style)
+                        :choices (omnivox--choice-records-json rows))
+           :context (omnivox--choice-patch-json (plist-get entry :context) t)
+           :placement (list :pan (omnivox--choice-normalized-number (plist-get placement :pan)))
+           :selection (if (eq (plist-get selection :mode) 'automatic) '(:mode "automatic")
+                        (list :mode "choice" :choice_id (plist-get selection :choice-id)))
+           :fallback_policy (omnivox--preview-policy-json policy (plist-get entry :disabled-engine-ids))
+           :disabled_engine_ids (vconcat (plist-get entry :disabled-engine-ids)))
+     (when expected (list :expected_base_rate expected)))))
+
+(defun omnivox--preview-identity-key (identity)
+  "Return an order-independent comparison key for validated audio IDENTITY."
+  (let ((reason (plist-get identity :reason)) (physical (plist-get identity :realized)))
+    (list (plist-get identity :choice_id) (plist-get reason :reason)
+          (or (plist-get reason :preference_index) (plist-get reason :preferred_index)
+              (plist-get reason :fallback_index))
+          (plist-get physical :engine_id) (plist-get physical :voice_id)
+          (sort (append (plist-get identity :degraded_acss) nil) #'string-lessp)
+          (sort (append (plist-get identity :degraded_effects) nil) #'string-lessp))))
+
+(defun omnivox--preview-correlate-identity (entry identity disabled)
+  "Correlate validated IDENTITY with frozen ENTRY and effective DISABLED set."
+  (let* ((rows (plist-get (plist-get entry :voice) :choices))
+         (id (plist-get identity :choice_id))
+         (index (cl-position id rows :test #'equal :key (lambda (row) (plist-get row :id))))
+         (reason (plist-get identity :reason))
+         (physical (plist-get identity :realized))
+         (engine (plist-get physical :engine_id))
+         (policy (plist-get entry :fallback-policy))
+         (selection (plist-get entry :selection))
+         selector)
+    (when (member engine disabled) (error "Preview reports playback on a disabled engine"))
+    (when (and (eq (plist-get selection :mode) 'choice)
+               (not (equal id (plist-get selection :choice-id))))
+      (error "Individual audition substituted another choice"))
+    (if (not (eq id :null))
+        (progn
+          (unless (and index
+                       (pcase (plist-get reason :reason)
+                         ("preferred" (= index 0))
+                         ("explicit_alternative" (= index (plist-get reason :preference_index)))))
+            (error "Preview identity does not match the original fallback index"))
+          (setq selector (plist-get (nth index rows) :selector)))
+      (pcase (plist-get reason :reason)
+        ("same_language_on_requested_engine"
+         (unless (and (plist-get policy :allow-same-language-on-requested-engine)
+                      (plist-get (plist-get entry :voice) :language)
+                      (equal engine (plist-get (plist-get (car rows) :selector) :engine-id)))
+           (error "Preview identity disagrees with same-language policy")))
+        ((or "preferred_engine" "fallback_engine")
+         (let* ((preferred (equal (plist-get reason :reason) "preferred_engine"))
+                (engines (plist-get policy (if preferred :preferred-engines :fallback-engines)))
+                (position (plist-get reason (if preferred :preferred_index :fallback_index))))
+           (unless (and (< position (length engines)) (equal engine (nth position engines)))
+             (error "Preview identity disagrees with captured engine order"))))
+        ("global_default"
+         (setq selector (plist-get policy :global-default))
+         (unless selector (error "Preview reports an absent global default")))))
+    (when selector
+      (when (and (plist-get selector :engine-id)
+                 (not (equal engine (plist-get selector :engine-id))))
+        (error "Preview identity disagrees with selected engine"))
+      (when (and (eq (plist-get selector :kind) 'exact)
+                 (not (equal (plist-get physical :voice_id) (plist-get selector :voice-id))))
+        (error "Preview identity disagrees with exact physical voice")))))
+
+(defun omnivox--normalize-layered-preview-response (entry response)
+  "Validate private RESPONSE against frozen ENTRY, retaining started evidence."
+  (unless (eql (plist-get response :protocol_version) 1) (error "Invalid preview envelope version"))
+  (omnivox--choice-unsigned (plist-get response :request_id) nil t)
+  (when (equal (plist-get response :type) "error")
+    (omnivox--choice-object-keys response '(:protocol_version :request_id :type :code :message))
+    (omnivox--choice-string (plist-get response :code) 128)
+    (omnivox--choice-string (plist-get response :message) 1024 nil t)
+    (error "Preview not confirmed: %s" (plist-get response :message)))
+  (omnivox--choice-object-keys
+   response '(:protocol_version :request_id :type :status :accepted_audio :accepted_audio_truncated
+                               :last_started :message :base_rate :effective_disabled_engine_ids))
+  (unless (and (equal (plist-get response :type) "preview_voice_completed_v2")
+               (member (plist-get response :status) '("completed" "cancelled" "failed"))
+               (numberp (plist-get response :base_rate)) (<= 0 (plist-get response :base_rate) 2)
+               (memq (plist-get response :accepted_audio_truncated) '(t :false)))
+    (error "Invalid private preview terminal metadata"))
+  (omnivox--choice-string (plist-get response :message) 1024 t t)
+  (let* ((accepted (plist-get response :accepted_audio))
+         (last (plist-get response :last_started))
+         (disabled (plist-get response :effective_disabled_engine_ids))
+         (truncated (eq (plist-get response :accepted_audio_truncated) t))
+         (seen (make-hash-table :test #'equal)) started)
+    (unless (and (vectorp accepted) (<= (length accepted) 32) (vectorp disabled))
+      (error "Invalid private preview terminal arrays"))
+    (dolist (engine (append disabled nil))
+      (unless (omnivox--preview-valid-id-p engine 128 "\\`[0-9A-Za-z_.-]+\\'")
+        (error "Invalid private preview disabled engine")))
+    (setq disabled (append disabled nil))
+    (unless (= (length disabled) (length (delete-dups (copy-sequence disabled))))
+      (error "Duplicate private preview disabled engine"))
+    (unless (cl-subsetp (plist-get entry :disabled-engine-ids) disabled :test #'equal)
+      (error "Preview omitted requested engine disablement"))
+    (dolist (identity (append accepted nil))
+      (omnivox--choice-audio-identity identity t)
+      (omnivox--preview-correlate-identity entry identity disabled)
+      (let ((key (omnivox--preview-identity-key identity)))
+        (when (gethash key seen) (error "Duplicate accepted preview identity"))
+        (puthash key identity seen))
+      (when (eq (plist-get identity :playback_started) t) (setq started t)))
+    (if (eq last :null)
+        (when started (error "Started preview audio omitted its last-started identity"))
+      (omnivox--choice-audio-identity last)
+      (omnivox--preview-correlate-identity entry last disabled)
+      (let ((retained (gethash (omnivox--preview-identity-key last) seen)))
+        (unless (if retained (eq (plist-get retained :playback_started) t) truncated)
+          (error "Preview last-started identity disagrees with accepted audio"))))
+    (list :status (intern (plist-get response :status)) :completion-guarantee 'playback
+          :terminal-confirmed t :request-snapshot (omnivox--preview-copy entry)
+          :accepted-audio (omnivox--preview-copy accepted) :accepted-audio-truncated truncated
+          :last-started (unless (eq last :null) (omnivox--preview-copy last))
+          :base-rate (plist-get response :base_rate) :effective-disabled-engine-ids disabled
+          :message (unless (eq (plist-get response :message) :null) (plist-get response :message)))))
+
+(defun omnivox--preview-layered-sequence (entries callback)
+  "Preview complete raw private ENTRIES, delivering bounded evidence to CALLBACK."
+  (let ((entries (omnivox--preview-copy entries)))
+    (unless (and (proper-list-p entries)
+                 (cl-every (lambda (entry) (and (listp entry) (plist-member entry :voice))) entries))
+      (user-error "Private preview requires complete voice entries"))
+    (omnivox--preview-sequence entries callback nil)))
 
 (defun omnivox--preview-current-p (operation)
   "Whether OPERATION still owns the frozen foreground connection and settings."
@@ -168,10 +352,14 @@ No user code runs until the interrupt has left its write and observer stacks."
              (not (omnivox--preview-finished operation)))
     (let ((result
            (condition-case err
-               (if (omnivox--preview-individual operation)
-                   (omnivox--normalize-preview-response (car item) response (nth 2 item) (nth 3 item))
-                 (omnivox--normalize-complete-preview-response (car item) response))
-             (error (list :status 'failed :message (error-message-string err))))))
+               (cond
+                ((plist-member (car item) :voice) (omnivox--normalize-layered-preview-response (car item) response))
+                ((omnivox--preview-individual operation)
+                 (omnivox--normalize-preview-response (car item) response (nth 2 item) (nth 3 item)))
+                (t (omnivox--normalize-complete-preview-response (car item) response)))
+             (error (list :status 'failed :terminal-confirmed nil
+                          :request-snapshot (omnivox--preview-copy (car item))
+                          :message (error-message-string err))))))
       (unless (memq (plist-get result :status) '(completed cancelled failed))
         (setq result '(:status failed :message "Invalid preview status")))
       (setf (omnivox--preview-response operation) result))
@@ -275,10 +463,13 @@ INDIVIDUAL retains the legacy exact-audition wire and response shape."
                  (< omnivox-voice-preview-timeout 1.0e+INF))
       (user-error "Preview timeout must be a positive finite number"))
     (dolist (entry entries)
-      (unless (eq (and (plist-member entry :selector) t) (and individual t))
+      (unless (and (eq (and (plist-member entry :selector) t) (and individual t))
+                   (eq (and (plist-member entry :voice) t)
+                       (and (plist-member (car entries) :voice) t)))
         (user-error "A comparison must use the same preview form for every entry"))
-      (let* ((request (if individual (omnivox--preview-individual-request entry process)
-                        (omnivox--preview-complete-request entry process)))
+      (let* ((request (cond ((plist-member entry :voice) (omnivox--preview-layered-request entry process))
+                            (individual (omnivox--preview-individual-request entry process))
+                            (t (omnivox--preview-complete-request entry process))))
              (bounded (copy-tree request)))
         (unless individual (setq bounded (plist-put bounded :expected_base_rate 1.2345678901234567)))
         (let ((command (omnivox--preview-command bounded omnivox--choice-u64-max)))

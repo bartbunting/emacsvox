@@ -335,17 +335,21 @@ cannot overtake server initialization or fail capability checks prematurely."
              omnivox-control-max-payload-bytes))
     (base64-encode-string payload t)))
 
-(defun omnivox--decode-control-response (payload)
-  "Decode and validate one Base64-JSON control response PAYLOAD."
+(defun omnivox--decode-control-response (payload &optional strict)
+  "Decode bounded Base64-JSON PAYLOAD, retaining native types when STRICT."
   (when (> (string-bytes payload) omnivox-control-max-encoded-bytes)
     (error "Encoded Omnivox control response exceeds its size limit"))
   (let ((decoded (base64-decode-string payload)))
     (when (> (string-bytes decoded) omnivox-control-max-payload-bytes)
       (error "Decoded Omnivox control response exceeds its size limit"))
-    (json-parse-string
-     (decode-coding-string decoded 'utf-8 t)
-     :object-type 'plist :array-type 'list
-     :null-object nil :false-object nil)))
+    (let ((text (decode-coding-string decoded 'utf-8 t)))
+      (when (and strict
+                 (not (and (equal payload (base64-encode-string decoded t))
+                           (equal decoded (encode-coding-string text 'utf-8 t)))))
+        (error "Invalid private preview encoding"))
+      (json-parse-string
+       text :object-type 'plist :array-type (if strict 'array 'list)
+       :null-object (if strict :null nil) :false-object (if strict :false nil)))))
 
 (defun omnivox--decode-marker-event (payload)
   "Decode and validate one bounded Base64-JSON marker event PAYLOAD."
@@ -404,8 +408,9 @@ CALLBACK receives PROCESS and the decoded response plist."
 
 (defun omnivox--dispatch-control-response (process response)
   "Match decoded control RESPONSE to its request on PROCESS."
-  (unless (= (or (plist-get response :protocol_version) -1)
-             omnivox-control-protocol-version)
+  (omnivox--control-response-identity response)
+  (unless (eql (plist-get response :protocol_version)
+               omnivox-control-protocol-version)
     (error "Unsupported Omnivox control response version"))
   (let* ((identifier (plist-get response :request_id))
          (pending (omnivox--pending-requests process))
@@ -417,15 +422,31 @@ CALLBACK receives PROCESS and the decoded response plist."
      ((equal (plist-get response :type) "error")
       (omnivox--record-control-error process response)))))
 
+(defun omnivox--control-response-identity (response)
+  "Require unambiguous envelope identity in RESPONSE before consuming a ticket."
+  (unless (and (proper-list-p response) (zerop (% (length response) 2)))
+    (error "Invalid Omnivox control envelope"))
+  (dolist (key '(:protocol_version :request_id))
+    (unless (= 1 (cl-loop for (field _value) on response by #'cddr count (eq key field)))
+      (error "Missing or duplicate control identity %s" key)))
+  (when (integerp (plist-get response :request_id))
+    (omnivox--choice-unsigned (plist-get response :request_id))))
+
 (defun omnivox--handle-control-line (process line)
   "Handle an Omnivox control event LINE from PROCESS.
 Return non-nil when LINE is a control event, including a malformed one."
   (when (string-prefix-p omnivox-control-event-prefix line)
     (condition-case error-data
-        (omnivox--dispatch-control-response
-         process
-         (omnivox--decode-control-response
-          (substring line (length omnivox-control-event-prefix))))
+        (let* ((payload (substring line (length omnivox-control-event-prefix)))
+               (response (omnivox--decode-control-response payload))
+               (operation (process-get process 'omnivox--preview-operation)))
+          (omnivox--control-response-identity response)
+          (when (or (equal (plist-get response :type) "preview_voice_completed_v2")
+                    (and operation
+                         (eql (plist-get response :request_id) (omnivox--preview-pending operation))
+                         (plist-member (caar (omnivox--preview-items operation)) :voice)))
+            (setq response (omnivox--decode-control-response payload t)))
+          (omnivox--dispatch-control-response process response))
       (error
        (setq omnivox-control-last-error
              (list :process process :error error-data :time (current-time)))
